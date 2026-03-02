@@ -1,0 +1,125 @@
+import type { ExchangeRates } from "./types";
+
+export function generateId(): string {
+  return Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+}
+
+const CURRENCY_SYMBOLS: Record<string, { prefix: string; suffix: string }> = {
+  USD: { prefix: "$", suffix: "" },
+  EUR: { prefix: "€", suffix: "" },
+  GBP: { prefix: "£", suffix: "" },
+  GBX: { prefix: "", suffix: "p" },
+  GBp: { prefix: "", suffix: "p" },
+  DKK: { prefix: "", suffix: " DKK" },
+  CAD: { prefix: "CA$", suffix: "" },
+  CHF: { prefix: "CHF ", suffix: "" },
+  JPY: { prefix: "¥", suffix: "" },
+  SEK: { prefix: "", suffix: " SEK" },
+  NOK: { prefix: "", suffix: " NOK" },
+};
+
+export function formatCurrency(value: number, currency: string): string {
+  const sym = CURRENCY_SYMBOLS[currency];
+
+  if (sym) {
+    const formatted = Math.abs(value).toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+    const sign = value < 0 ? "-" : "";
+    return `${sign}${sym.prefix}${formatted}${sym.suffix}`;
+  }
+
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
+  } catch {
+    return `${currency} ${value.toFixed(2)}`;
+  }
+}
+
+export function formatPercent(value: number): string {
+  const sign = value >= 0 ? "+" : "";
+  return `${sign}${value.toFixed(2)}%`;
+}
+
+export function formatNumber(value: number): string {
+  return new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
+export function formatCompactNumber(value: number): string {
+  if (value >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(1)}B`;
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
+  return value.toFixed(0);
+}
+
+export function normalizeCurrency(currency: string): string {
+  if (currency === "GBp") return "GBX";
+  return currency;
+}
+
+/**
+ * Convert an amount from one currency to EUR using exchange rates.
+ * Exchange rates are stored as "1 EUR = X units of foreign currency"
+ * (e.g., EURUSD=1.17 means 1 EUR = 1.17 USD).
+ */
+export function convertToEUR(
+  amount: number,
+  fromCurrency: string,
+  rates: ExchangeRates
+): number {
+  const normalized = normalizeCurrency(fromCurrency);
+  if (normalized === "EUR") return amount;
+
+  if (normalized === "GBX") {
+    const gbpRate = rates["EURGBP"];
+    if (!gbpRate) return amount;
+    return (amount / 100) / gbpRate;
+  }
+
+  const rateKey = `EUR${normalized}`;
+  const rate = rates[rateKey];
+  if (!rate) return amount;
+  return amount / rate;
+}
+
+/**
+ * Convert an amount from one currency to another.
+ */
+export function convertCurrency(
+  amount: number,
+  fromCurrency: string,
+  toCurrency: string,
+  rates: ExchangeRates
+): number {
+  const fromNorm = normalizeCurrency(fromCurrency);
+  const toNorm = normalizeCurrency(toCurrency);
+  if (fromNorm === toNorm) return amount;
+
+  const amountInEUR = convertToEUR(amount, fromCurrency, rates);
+
+  if (toNorm === "EUR") return amountInEUR;
+
+  if (toNorm === "GBX") {
+    const gbpRate = rates["EURGBP"];
+    if (!gbpRate) return amount;
+    return amountInEUR * gbpRate * 100;
+  }
+
+  const targetKey = `EUR${toNorm}`;
+  const targetRate = rates[targetKey];
+  if (!targetRate) return amount;
+  return amountInEUR * targetRate;
+}
+
+export function cn(...classes: (string | boolean | undefined | null)[]): string {
+  return classes.filter(Boolean).join(" ");
+}
