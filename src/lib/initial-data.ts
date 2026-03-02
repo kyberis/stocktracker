@@ -82,7 +82,7 @@ export const initialHoldings: Holding[] = [
   {
     id: generateId(),
     name: "Constellation Software Inc",
-    ticker: "CSU.TO",
+    ticker: "W9C",
     isin: "CA21037X1006",
     shares: 2,
     purchasePrice: 1670.0,

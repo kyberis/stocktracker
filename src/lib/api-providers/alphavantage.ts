@@ -8,7 +8,8 @@ import type {
 } from "./types";
 
 const AV_BASE = "https://www.alphavantage.co/query";
-const AV_MIN_DELAY = 1300;
+// 75 requests/minute ~= 800ms between calls. Keep slight safety buffer.
+const AV_MIN_DELAY = 850;
 
 let pendingChain: Promise<void> = Promise.resolve();
 let lastCallTime = 0;
@@ -254,4 +255,5 @@ export class AlphaVantageProvider implements StockDataProvider {
       forwardPE: parseFloatOrNull(d["ForwardPE"]),
     };
   }
+
 }

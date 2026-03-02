@@ -67,6 +67,23 @@ export function normalizeCurrency(currency: string): string {
 }
 
 /**
+ * Some providers can report UK prices as pence while still labeling currency as GBP.
+ * When a holding is denominated in GBX and the quote says GBP, treat quote as GBX.
+ */
+export function resolveQuoteCurrency(
+  holdingDisplayCurrency: string,
+  quoteCurrency: string
+): string {
+  const holdingNorm = normalizeCurrency(holdingDisplayCurrency);
+  const quoteNorm = normalizeCurrency(quoteCurrency);
+  // Defensive rule: GBX holdings are priced in pence in this app.
+  // Provider labels can vary (GBP/GBp/GBX/other), but the numeric quote is
+  // interpreted as pence to avoid 100x inflation.
+  if (holdingNorm === "GBX") return "GBX";
+  return quoteNorm;
+}
+
+/**
  * Convert an amount from one currency to EUR using exchange rates.
  * Exchange rates are stored as "1 EUR = X units of foreign currency"
  * (e.g., EURUSD=1.17 means 1 EUR = 1.17 USD).

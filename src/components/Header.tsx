@@ -13,12 +13,12 @@ interface HeaderProps {
 
 export default function Header({ onAddStock, onOpenSettings }: HeaderProps) {
   const { isLoading, refreshQuotes, lastUpdated } = usePortfolio();
-  const { provider, isAlphaVantage, avCallsToday, avDailyLimit } = useSettings();
+  const { provider, isAlphaVantage, avCallsThisMinute, avMinuteLimit } = useSettings();
   const { user, logout } = useAuth();
   const { t } = useI18n();
 
   const providerLabel = provider === "alphavantage" ? "Alpha Vantage" : "Yahoo";
-  const usageRatio = avCallsToday / avDailyLimit;
+  const usageRatio = avCallsThisMinute / avMinuteLimit;
   const usageColor =
     usageRatio >= 0.9 ? "text-red-400" : usageRatio >= 0.6 ? "text-amber-400" : "text-emerald-400";
 
@@ -49,7 +49,7 @@ export default function Header({ onAddStock, onOpenSettings }: HeaderProps) {
               <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
-              {avCallsToday}/{avDailyLimit}
+              {avCallsThisMinute}/{avMinuteLimit}
             </span>
           )}
           {lastUpdated && (

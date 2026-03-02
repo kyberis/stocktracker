@@ -24,6 +24,7 @@ export interface QuoteData {
   fiftyTwoWeekLow: number;
   marketCap?: number;
   providerUsed?: string;
+  fetchedAt?: number;
 }
 
 export interface CompanyOverview {

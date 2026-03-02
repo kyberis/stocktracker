@@ -19,6 +19,8 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [selected, setSelected] = useState<SearchResult | null>(null);
+  const [stockName, setStockName] = useState("");
+  const [ticker, setTicker] = useState("");
   const [shares, setShares] = useState("");
   const [price, setPrice] = useState("");
   const [currency, setCurrency] = useState("USD");
@@ -34,6 +36,8 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
       setQuery("");
       setResults([]);
       setSelected(null);
+      setStockName("");
+      setTicker("");
       setShares("");
       setPrice("");
       setCurrency("USD");
@@ -73,21 +77,23 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
   const handleSelect = (result: SearchResult) => {
     setSelected(result);
     setQuery(result.symbol);
+    setStockName(result.shortname);
+    setTicker(result.symbol);
     setExchange(result.exchange);
     setResults([]);
   };
 
   const handleSubmit = () => {
-    if (!selected || !shares || !price) return;
+    if (!stockName.trim() || !ticker.trim() || !exchange.trim() || !shares || !price) return;
 
     addHolding({
-      name: selected.shortname,
-      ticker: selected.symbol,
+      name: stockName.trim(),
+      ticker: ticker.trim().toUpperCase(),
       isin: "",
       shares: parseFloat(shares),
       purchasePrice: parseFloat(price),
       displayCurrency: currency,
-      exchange: exchange || selected.exchange,
+      exchange: exchange.trim().toUpperCase(),
       valueInEUR: 0,
     });
 
@@ -137,12 +143,45 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
             )}
           </div>
 
-          {selected && (
+          {(selected || stockName || ticker) && (
             <div className="bg-slate-900/50 rounded-lg px-3 py-2 border border-slate-700">
-              <span className="text-blue-400 font-medium">{selected.symbol}</span>
-              <span className="text-slate-300 text-sm ml-2">{selected.shortname}</span>
+              <span className="text-blue-400 font-medium">{ticker || t("ticker")}</span>
+              <span className="text-slate-300 text-sm ml-2">{stockName || t("name")}</span>
             </div>
           )}
+
+          <div>
+            <label className="block text-sm text-slate-400 mb-1.5">{t("name")}</label>
+            <input
+              type="text"
+              value={stockName}
+              onChange={(e) => setStockName(e.target.value)}
+              placeholder={t("name")}
+              className="w-full"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm text-slate-400 mb-1.5">{t("ticker")}</label>
+            <input
+              type="text"
+              value={ticker}
+              onChange={(e) => setTicker(e.target.value)}
+              placeholder={t("ticker")}
+              className="w-full"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm text-slate-400 mb-1.5">{t("editExchange")}</label>
+            <input
+              type="text"
+              value={exchange}
+              onChange={(e) => setExchange(e.target.value)}
+              placeholder={t("editExchange")}
+              className="w-full"
+            />
+          </div>
 
           <div>
             <label className="block text-sm text-slate-400 mb-1.5">{t("shares")}</label>
@@ -195,7 +234,7 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
           </button>
           <button
             onClick={handleSubmit}
-            disabled={!selected || !shares || !price}
+            disabled={!stockName.trim() || !ticker.trim() || !exchange.trim() || !shares || !price}
             className="btn-primary disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {t("addToPortfolio")}

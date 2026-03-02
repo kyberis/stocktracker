@@ -4,7 +4,15 @@ import { useState, useEffect, useCallback } from "react";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useSettings } from "@/lib/settings-context";
 import { useI18n } from "@/lib/i18n";
-import { formatCurrency, formatPercent, formatCompactNumber, convertCurrency, normalizeCurrency } from "@/lib/utils";
+import {
+  formatCurrency,
+  formatPercent,
+  formatCompactNumber,
+  convertCurrency,
+  convertToEUR,
+  normalizeCurrency,
+  resolveQuoteCurrency,
+} from "@/lib/utils";
 import StockChart from "./StockChart";
 import type { Holding, QuoteData, CompanyOverview } from "@/lib/types";
 
@@ -119,17 +127,38 @@ function OverviewSection({ overview }: { overview: CompanyOverview }) {
 }
 
 export default function StockRow({ holding }: StockRowProps) {
-  const { quotes, exchangeRates, removeHolding } = usePortfolio();
+  const {
+    quotes,
+    quoteUpdatedAt,
+    refreshingTickers,
+    exchangeRates,
+    removeHolding,
+    updateHolding,
+    refreshSingleQuote,
+  } = usePortfolio();
   const { isAlphaVantage, getApiHeaders, provider, trackAvCalls } = useSettings();
   const { t } = useI18n();
   const [expanded, setExpanded] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [overview, setOverview] = useState<CompanyOverview | null>(null);
   const [overviewLoading, setOverviewLoading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editName, setEditName] = useState(holding.name);
+  const [editTicker, setEditTicker] = useState(holding.ticker);
+  const [editIsin, setEditIsin] = useState(holding.isin);
+  const [editShares, setEditShares] = useState(String(holding.shares));
+  const [editPurchasePrice, setEditPurchasePrice] = useState(String(holding.purchasePrice));
+  const [editDisplayCurrency, setEditDisplayCurrency] = useState(holding.displayCurrency);
+  const [editExchange, setEditExchange] = useState(holding.exchange);
 
   const quote: QuoteData | undefined = quotes[holding.ticker];
   const isFallback = isAlphaVantage && quote?.providerUsed === "yahoo";
-  const quoteCurrency = quote ? normalizeCurrency(quote.currency) : holding.displayCurrency;
+  const isAvSource = quote?.providerUsed === "alphavantage";
+  const isRefreshing = refreshingTickers.has(holding.ticker);
+  const lastFetchedAt = quoteUpdatedAt[holding.ticker] ?? quote?.fetchedAt;
+  const quoteCurrency = quote
+    ? resolveQuoteCurrency(holding.displayCurrency, quote.currency)
+    : holding.displayCurrency;
 
   let currentPriceInDisplay = 0;
   let hasQuote = false;
@@ -145,6 +174,18 @@ export default function StockRow({ holding }: StockRowProps) {
         holding.displayCurrency,
         exchangeRates
       );
+    }
+  }
+
+  if (hasQuote && holding.displayCurrency === "GBX" && holding.valueInEUR > 0) {
+    const derivedValueEUR = convertToEUR(
+      holding.shares * currentPriceInDisplay,
+      holding.displayCurrency,
+      exchangeRates
+    );
+    if (derivedValueEUR > holding.valueInEUR * 10) {
+      hasQuote = false;
+      currentPriceInDisplay = 0;
     }
   }
 
@@ -164,6 +205,50 @@ export default function StockRow({ holding }: StockRowProps) {
   const handleDelete = () => {
     removeHolding(holding.id);
     setShowDeleteConfirm(false);
+  };
+
+  const handleStartEdit = () => {
+    setEditName(holding.name);
+    setEditTicker(holding.ticker);
+    setEditIsin(holding.isin);
+    setEditShares(String(holding.shares));
+    setEditPurchasePrice(String(holding.purchasePrice));
+    setEditDisplayCurrency(holding.displayCurrency);
+    setEditExchange(holding.exchange);
+    setIsEditing(true);
+    setShowDeleteConfirm(false);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+  };
+
+  const handleSaveEdit = async () => {
+    const parsedShares = parseFloat(editShares);
+    const parsedPurchasePrice = parseFloat(editPurchasePrice);
+    if (
+      !editName.trim() ||
+      !editTicker.trim() ||
+      !editDisplayCurrency.trim() ||
+      !editExchange.trim() ||
+      Number.isNaN(parsedShares) ||
+      Number.isNaN(parsedPurchasePrice) ||
+      parsedShares <= 0 ||
+      parsedPurchasePrice < 0
+    ) {
+      return;
+    }
+
+    await updateHolding(holding.id, {
+      name: editName.trim(),
+      ticker: editTicker.trim().toUpperCase(),
+      isin: editIsin.trim(),
+      shares: parsedShares,
+      purchasePrice: parsedPurchasePrice,
+      displayCurrency: editDisplayCurrency.trim().toUpperCase(),
+      exchange: editExchange.trim().toUpperCase(),
+    });
+    setIsEditing(false);
   };
 
   let display52High = 0;
@@ -217,16 +302,49 @@ export default function StockRow({ holding }: StockRowProps) {
         <div className="col-span-4 sm:col-span-3">
           <div className="flex items-center gap-1.5">
             <p className="font-medium text-white text-sm truncate">{holding.name}</p>
-            {isFallback && (
+            {isFallback ? (
               <span
                 className="flex-shrink-0 text-[9px] font-semibold px-1 py-px rounded bg-blue-500/15 text-blue-400 border border-blue-500/20"
                 title={t("yahooFallback")}
               >
                 Yahoo
               </span>
-            )}
+            ) : isAvSource ? (
+              <span
+                className="flex-shrink-0 text-[9px] font-semibold px-1 py-px rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/20"
+                title={t("avSource")}
+              >
+                AV
+              </span>
+            ) : null}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                refreshSingleQuote(holding.ticker);
+              }}
+              disabled={isRefreshing}
+              className="flex-shrink-0 p-0.5 rounded text-slate-400 hover:text-slate-200 hover:bg-slate-700/70 disabled:opacity-40 disabled:cursor-not-allowed"
+              title={t("refreshOne")}
+            >
+              <svg
+                className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin" : ""}`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                />
+              </svg>
+            </button>
           </div>
-          <p className="text-xs text-slate-400">{holding.ticker} · {holding.exchange}</p>
+          <p className="text-xs text-slate-400">
+            {holding.ticker} · {holding.exchange}
+            {lastFetchedAt ? ` · ${t("lastUpdated")}: ${new Date(lastFetchedAt).toLocaleTimeString()}` : ""}
+          </p>
         </div>
         <div className="col-span-2 sm:col-span-1 text-right">
           <p className="text-sm text-slate-200">{holding.shares}</p>
@@ -264,6 +382,89 @@ export default function StockRow({ holding }: StockRowProps) {
 
       {expanded && (
         <div className="px-4 pb-4 bg-slate-800/30">
+          {isEditing && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4 pt-3">
+              <div>
+                <label className="block text-xs text-slate-400 mb-1">{t("editName")}</label>
+                <input
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full"
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-slate-400 mb-1">{t("editTicker")}</label>
+                <input
+                  value={editTicker}
+                  onChange={(e) => setEditTicker(e.target.value)}
+                  className="w-full"
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-slate-400 mb-1">{t("editISIN")}</label>
+                <input
+                  value={editIsin}
+                  onChange={(e) => setEditIsin(e.target.value)}
+                  className="w-full"
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-slate-400 mb-1">{t("editExchange")}</label>
+                <input
+                  value={editExchange}
+                  onChange={(e) => setEditExchange(e.target.value)}
+                  className="w-full"
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-slate-400 mb-1">{t("shares")}</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="any"
+                  value={editShares}
+                  onChange={(e) => setEditShares(e.target.value)}
+                  className="w-full"
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-slate-400 mb-1">{t("purchasePrice")}</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="any"
+                  value={editPurchasePrice}
+                  onChange={(e) => setEditPurchasePrice(e.target.value)}
+                  className="w-full"
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-slate-400 mb-1">{t("editCurrency")}</label>
+                <select
+                  value={editDisplayCurrency}
+                  onChange={(e) => setEditDisplayCurrency(e.target.value)}
+                  className="w-full"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <option value="USD">$ USD</option>
+                  <option value="EUR">€ EUR</option>
+                  <option value="GBP">£ GBP</option>
+                  <option value="GBX">GBX (pence)</option>
+                  <option value="DKK">DKK</option>
+                  <option value="CAD">CA$ CAD</option>
+                  <option value="CHF">CHF</option>
+                  <option value="JPY">¥ JPY</option>
+                </select>
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4 pt-2">
             <div className="bg-slate-800 rounded-lg px-3 py-2">
               <p className="text-xs text-slate-400">{t("gainLoss")}</p>
@@ -327,12 +528,37 @@ export default function StockRow({ holding }: StockRowProps) {
                 </button>
               </div>
             ) : (
-              <button
-                onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(true); }}
-                className="text-sm text-red-400 hover:text-red-300 transition-colors px-3 py-1"
-              >
-                {t("removeStock")}
-              </button>
+              <div className="flex items-center gap-2">
+                {isEditing ? (
+                  <>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleSaveEdit(); }}
+                      className="btn-primary text-sm px-3 py-1"
+                    >
+                      {t("saveChanges")}
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleCancelEdit(); }}
+                      className="btn-secondary text-sm px-3 py-1"
+                    >
+                      {t("cancel")}
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleStartEdit(); }}
+                    className="text-sm text-blue-400 hover:text-blue-300 transition-colors px-3 py-1"
+                  >
+                    {t("editValues")}
+                  </button>
+                )}
+                <button
+                  onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(true); }}
+                  className="text-sm text-red-400 hover:text-red-300 transition-colors px-3 py-1"
+                >
+                  {t("removeStock")}
+                </button>
+              </div>
             )}
           </div>
         </div>

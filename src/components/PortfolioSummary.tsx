@@ -2,44 +2,19 @@
 
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useI18n } from "@/lib/i18n";
-import { formatCurrency, formatPercent, convertToEUR, normalizeCurrency } from "@/lib/utils";
+import { formatCurrency, formatPercent } from "@/lib/utils";
+import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
 
 export default function PortfolioSummary() {
   const { holdings, quotes, exchangeRates, isLoading } = usePortfolio();
   const { t } = useI18n();
-
-  let totalCurrentEUR = 0;
-  let totalCostEUR = 0;
-
-  holdings.forEach((h) => {
-    const quote = quotes[h.ticker];
-
-    const costInDisplayCurrency = h.shares * h.purchasePrice;
-    const costEUR = convertToEUR(costInDisplayCurrency, h.displayCurrency, exchangeRates);
-
-    if (quote && quote.regularMarketPrice > 0) {
-      const quoteCurrency = normalizeCurrency(quote.currency);
-      const valueInQuoteCurrency = h.shares * quote.regularMarketPrice;
-      const currentEUR = convertToEUR(valueInQuoteCurrency, quoteCurrency, exchangeRates);
-
-      if (currentEUR !== valueInQuoteCurrency || quoteCurrency === "EUR") {
-        totalCurrentEUR += currentEUR;
-      } else {
-        totalCurrentEUR += h.valueInEUR;
-      }
-    } else {
-      totalCurrentEUR += h.valueInEUR;
-    }
-
-    if (costEUR !== costInDisplayCurrency || h.displayCurrency === "EUR") {
-      totalCostEUR += costEUR;
-    } else {
-      totalCostEUR += h.valueInEUR;
-    }
-  });
-
-  const totalGainLoss = totalCurrentEUR - totalCostEUR;
-  const totalGainLossPercent = totalCostEUR > 0 ? (totalGainLoss / totalCostEUR) * 100 : 0;
+  const {
+    totalCurrentEUR,
+    totalCostEUR,
+    totalGainLoss,
+    totalGainLossPercent,
+    dayGainLossEUR,
+  } = calculatePortfolioTotals(holdings, quotes, exchangeRates);
 
   const summaryCards = [
     {
@@ -53,10 +28,15 @@ export default function PortfolioSummary() {
       color: "text-slate-300",
     },
     {
-      label: t("totalGainLoss"),
+      label: t("totalGainLossSinceStart"),
       value: formatCurrency(totalGainLoss, "EUR"),
       subValue: formatPercent(totalGainLossPercent),
       color: totalGainLoss >= 0 ? "text-green-400" : "text-red-400",
+    },
+    {
+      label: t("dayGainLoss"),
+      value: formatCurrency(dayGainLossEUR, "EUR"),
+      color: dayGainLossEUR >= 0 ? "text-emerald-400" : "text-red-400",
     },
     {
       label: t("holdings"),
@@ -66,7 +46,7 @@ export default function PortfolioSummary() {
   ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 xl:grid-cols-5 gap-4">
       {summaryCards.map((card) => (
         <div key={card.label} className="card">
           <p className="text-sm text-slate-400 mb-1">{card.label}</p>

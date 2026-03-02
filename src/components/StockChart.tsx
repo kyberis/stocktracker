@@ -142,8 +142,19 @@ export default function StockChart({ ticker, purchasePrice, displayCurrency }: S
           </span>
         )}
         {isAlphaVantage && chartProviderUsed === "yahoo" && (
-          <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/20 ml-auto">
+          <span
+            className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/20 ml-auto"
+            title={t("yahooFallback")}
+          >
             Yahoo
+          </span>
+        )}
+        {isAlphaVantage && chartProviderUsed === "alphavantage" && (
+          <span
+            className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 ml-auto"
+            title={t("avSource")}
+          >
+            AV
           </span>
         )}
       </div>

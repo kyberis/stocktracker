@@ -96,6 +96,11 @@ async function runMigrations(client: Client) {
 
     PRAGMA foreign_keys = ON;
   `);
+
+  // Normalize legacy Constellation ticker for existing datasets.
+  await client.execute({
+    sql: "UPDATE holdings SET ticker = 'W9C' WHERE ticker = 'CSU.TO' AND name = 'Constellation Software Inc'",
+  });
 }
 
 async function ensureAdminUser(client: Client) {

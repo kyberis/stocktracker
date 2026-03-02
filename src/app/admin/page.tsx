@@ -11,12 +11,19 @@ interface AdminUser {
   createdAt: string;
 }
 
+type ProviderName = "yahoo" | "alphavantage";
+
 export default function AdminPage() {
   const router = useRouter();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [resetPassword, setResetPassword] = useState<Record<string, string>>({});
+
+  const [avProvider, setAvProvider] = useState<ProviderName>("yahoo");
+  const [avApiKey, setAvApiKey] = useState("");
+  const [showAvKey, setShowAvKey] = useState(false);
+  const [avSaved, setAvSaved] = useState(false);
 
   const loadUsers = async () => {
     setLoading(true);
@@ -29,13 +36,23 @@ export default function AdminPage() {
         return;
       }
 
-      const res = await fetch("/api/admin/users", { cache: "no-store" });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || "Failed to load users.");
+      const [usersRes, settingsRes] = await Promise.all([
+        fetch("/api/admin/users", { cache: "no-store" }),
+        fetch("/api/user-settings", { cache: "no-store" }),
+      ]);
+
+      const usersData = await usersRes.json();
+      if (!usersRes.ok) {
+        setError(usersData.error || "Failed to load users.");
         return;
       }
-      setUsers(data.users || []);
+      setUsers(usersData.users || []);
+
+      if (settingsRes.ok) {
+        const settings = await settingsRes.json();
+        setAvProvider(settings.provider === "alphavantage" ? "alphavantage" : "yahoo");
+        setAvApiKey(settings.alphaVantageApiKey || "");
+      }
     } catch {
       setError("Failed to load users.");
     } finally {
@@ -47,6 +64,20 @@ export default function AdminPage() {
     loadUsers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const handleSaveApiSettings = async () => {
+    try {
+      const res = await fetch("/api/user-settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ provider: avProvider, alphaVantageApiKey: avApiKey }),
+      });
+      if (res.ok) {
+        setAvSaved(true);
+        setTimeout(() => setAvSaved(false), 2000);
+      }
+    } catch { /* ignore */ }
+  };
 
   const handlePasswordReset = async (e: FormEvent, userId: string) => {
     e.preventDefault();
@@ -87,6 +118,53 @@ export default function AdminPage() {
             Back
           </button>
         </div>
+
+        {!loading && !error && (
+          <div className="card p-5 mb-6">
+            <h2 className="text-lg font-semibold text-white mb-4">API Settings</h2>
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
+              <div>
+                <label className="block text-xs text-slate-400 mb-1">Data Provider</label>
+                <select
+                  value={avProvider}
+                  onChange={(e) => setAvProvider(e.target.value as ProviderName)}
+                  className="bg-slate-800 border border-slate-700 text-sm rounded px-3 py-2 text-white"
+                >
+                  <option value="yahoo">Yahoo Finance</option>
+                  <option value="alphavantage">Alpha Vantage</option>
+                </select>
+              </div>
+              <div className="flex-1 w-full sm:w-auto">
+                <label className="block text-xs text-slate-400 mb-1">Alpha Vantage API Key</label>
+                <div className="relative">
+                  <input
+                    type={showAvKey ? "text" : "password"}
+                    value={avApiKey}
+                    onChange={(e) => setAvApiKey(e.target.value)}
+                    placeholder="Enter your API key"
+                    className="w-full text-sm pr-10 bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowAvKey(!showAvKey)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-300"
+                  >
+                    {showAvKey ? "Hide" : "Show"}
+                  </button>
+                </div>
+              </div>
+              <button
+                onClick={handleSaveApiSettings}
+                className="btn-primary text-sm px-4 py-2 whitespace-nowrap"
+              >
+                {avSaved ? "Saved!" : "Save"}
+              </button>
+            </div>
+            {avProvider === "alphavantage" && !avApiKey.trim() && (
+              <p className="text-xs text-amber-400 mt-2">An API key is required for Alpha Vantage.</p>
+            )}
+          </div>
+        )}
 
         {loading && <p className="text-slate-400">Loading users...</p>}
         {error && <p className="text-red-400">{error}</p>}
