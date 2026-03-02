@@ -41,8 +41,12 @@ let _initialized = false;
 function getClient(): Client {
   if (_client) return _client;
 
-  const tursoUrl = process.env.STOCKTRACKER_TURSO_DATABASE_URL;
-  const tursoToken = process.env.STOCKTRACKER_TURSO_AUTH_TOKEN;
+  const tursoUrl =
+    process.env.STOCKTRACKER_TURSO_DATABASE_URL ||
+    process.env.stocktracker_TURSO_DATABASE_URL;
+  const tursoToken =
+    process.env.STOCKTRACKER_TURSO_AUTH_TOKEN ||
+    process.env.stocktracker_TURSO_AUTH_TOKEN;
 
   if (tursoUrl) {
     _client = createClient({

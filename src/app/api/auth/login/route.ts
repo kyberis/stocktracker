@@ -7,18 +7,30 @@ import {
 } from "@/lib/auth/session";
 import { ensureSessionSecret } from "@/lib/auth/session-secret";
 
+async function parseBody(req: NextRequest): Promise<{ username?: string; password?: string }> {
+  const raw = await req.text();
+  if (!raw) return {};
+  return JSON.parse(raw) as { username?: string; password?: string };
+}
+
 export async function POST(req: NextRequest) {
   ensureSessionSecret();
 
+  let body: { username?: string; password?: string } = {};
   try {
-    const body = (await req.json()) as { username?: string; password?: string };
-    const username = (body.username || "").trim();
-    const password = body.password || "";
+    body = await parseBody(req);
+  } catch {
+    return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
+  }
 
-    if (!username || !password) {
-      return NextResponse.json({ error: "Username and password are required." }, { status: 400 });
-    }
+  const username = (body.username || "").trim();
+  const password = body.password || "";
 
+  if (!username || !password) {
+    return NextResponse.json({ error: "Username and password are required." }, { status: 400 });
+  }
+
+  try {
     const user = await findUserByUsername(username);
     if (!user) {
       return NextResponse.json({ error: "Invalid credentials." }, { status: 401 });
@@ -39,7 +51,8 @@ export async function POST(req: NextRequest) {
     const response = NextResponse.json({ user: toPublicUser(user) });
     response.cookies.set(getSessionCookieConfig(token));
     return response;
-  } catch {
-    return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
+  } catch (error) {
+    console.error("Login failed:", error);
+    return NextResponse.json({ error: "Server configuration error." }, { status: 500 });
   }
 }
