@@ -125,9 +125,15 @@ async function runMigrations(client: Client) {
   await client.execute({
     sql: "UPDATE holdings SET ticker = 'W9C' WHERE ticker = 'CSU.TO' AND name = 'Constellation Software Inc'",
   });
-  await client.execute({
-    sql: "UPDATE holdings SET ticker = 'ITX.MC' WHERE ticker = 'ITX' AND UPPER(exchange) = 'MAD'",
-  });
+
+  // Auto-append exchange suffix for any bare ticker on a known exchange.
+  for (const [exch, suffix] of Object.entries(EXCHANGE_SUFFIX_MAP)) {
+    await client.execute({
+      sql: `UPDATE holdings SET ticker = ticker || ?
+            WHERE UPPER(exchange) = ? AND ticker NOT LIKE '%.%'`,
+      args: [suffix, exch],
+    });
+  }
   await client.execute({
     sql: "UPDATE holdings SET asset_type = 'etf' WHERE UPPER(name) LIKE '%ETF%'",
   });
@@ -194,6 +200,36 @@ function num(val: unknown): number {
 
 function holdingAssetType(val: unknown): HoldingAssetType {
   return val === "etf" ? "etf" : "stock";
+}
+
+const EXCHANGE_SUFFIX_MAP: Record<string, string> = {
+  XET: ".DE",
+  FRA: ".F",
+  MAD: ".MC",
+  BME: ".MC",
+  LSE: ".L",
+  OMK: ".CO",
+  CPH: ".CO",
+  PAR: ".PA",
+  AMS: ".AS",
+  BRU: ".BR",
+  MIL: ".MI",
+  HEL: ".HE",
+  VIE: ".VI",
+  SWX: ".SW",
+  TSE: ".TO",
+  TOR: ".TO",
+};
+
+/**
+ * Ensures the ticker carries the correct exchange suffix for Yahoo/AV lookups.
+ * Only appends the suffix when the ticker doesn't already contain a dot
+ * (i.e. it's a bare symbol) and the exchange is one we know needs a suffix.
+ */
+function normalizeTickerForExchange(ticker: string, exchange: string): string {
+  if (ticker.includes(".")) return ticker;
+  const suffix = EXCHANGE_SUFFIX_MAP[exchange.toUpperCase()];
+  return suffix ? `${ticker}${suffix}` : ticker;
 }
 
 function rowToDbUser(row: Row): DbUser {
@@ -428,18 +464,19 @@ export async function addHolding(
 ): Promise<Holding> {
   const client = await ensureInitialized();
   const id = randomUUID();
+  const ticker = normalizeTickerForExchange(holding.ticker, holding.exchange);
   await client.execute({
     sql: `INSERT INTO holdings (
             id, user_id, name, ticker, isin, asset_type, shares, purchase_price, display_currency, exchange, value_in_eur
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
-      id, userId, holding.name, holding.ticker, holding.isin,
+      id, userId, holding.name, ticker, holding.isin,
       holding.assetType ?? "stock",
       holding.shares, holding.purchasePrice, holding.displayCurrency,
       holding.exchange, holding.valueInEUR,
     ],
   });
-  return { ...holding, id };
+  return { ...holding, id, ticker };
 }
 
 export async function updateHolding(
@@ -457,15 +494,17 @@ export async function updateHolding(
   if (result.rows.length === 0) return null;
   const current = result.rows[0];
 
+  const exchange = updates.exchange ?? str(current.exchange);
+  const rawTicker = updates.ticker ?? str(current.ticker);
   const next = {
     name: updates.name ?? str(current.name),
-    ticker: updates.ticker ?? str(current.ticker),
+    ticker: normalizeTickerForExchange(rawTicker, exchange),
     isin: updates.isin ?? str(current.isin),
     assetType: updates.assetType ?? holdingAssetType(current.asset_type),
     shares: updates.shares ?? num(current.shares),
     purchasePrice: updates.purchasePrice ?? num(current.purchase_price),
     displayCurrency: updates.displayCurrency ?? str(current.display_currency),
-    exchange: updates.exchange ?? str(current.exchange),
+    exchange,
     valueInEUR: updates.valueInEUR ?? num(current.value_in_eur),
   };
 
