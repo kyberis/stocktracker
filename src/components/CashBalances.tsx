@@ -38,19 +38,19 @@ export default function CashBalances() {
   return (
     <div className="card">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-base font-semibold text-gray-900">{t("cashBalances")}</h3>
+        <h3 className="text-base font-semibold text-gray-900 dark:text-white">{t("cashBalances")}</h3>
       </div>
 
       <div className="space-y-2 mb-4">
         {cashEntries.length === 0 && (
-          <p className="text-sm text-gray-400">{t("noCashEntries")}</p>
+          <p className="text-sm text-gray-400 dark:text-slate-500">{t("noCashEntries")}</p>
         )}
         {cashEntries.map((entry) => {
           const isEditing = editingId === entry.id;
           return (
             <div
               key={entry.id}
-              className="rounded-xl border border-gray-200 bg-gray-50/50 px-3 py-2.5 flex items-center gap-2"
+              className="rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50/50 dark:bg-slate-800/50 px-3 py-2.5 flex items-center gap-2"
             >
               {isEditing ? (
                 <>
@@ -76,18 +76,18 @@ export default function CashBalances() {
                 </>
               ) : (
                 <>
-                  <p className="text-sm text-gray-700 flex-1">{entry.name}</p>
-                  <p className="text-sm font-medium text-gray-900 w-36 text-right">
+                  <p className="text-sm text-gray-700 dark:text-slate-200 flex-1">{entry.name}</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white w-36 text-right">
                     {formatCurrency(entry.amountEUR, "EUR")}
                   </p>
                   <button
-                    className="text-sm text-emerald-600 hover:text-emerald-700 px-2"
+                    className="text-sm text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 px-2"
                     onClick={() => startEdit(entry.id, entry.name, entry.amountEUR)}
                   >
                     {t("editValues")}
                   </button>
                   <button
-                    className="text-sm text-red-500 hover:text-red-600 px-2"
+                    className="text-sm text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 px-2"
                     onClick={() => removeCashEntry(entry.id)}
                   >
                     {t("removeStock")}

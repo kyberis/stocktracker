@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
+import { ThemeProvider } from "@/lib/theme-context";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -42,7 +43,7 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+    <main className="min-h-screen bg-gray-50 dark:bg-slate-900 flex items-center justify-center px-4">
       <div className="w-full max-w-md card">
         <div className="flex items-center gap-2 mb-6">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center">
@@ -50,13 +51,13 @@ export default function LoginPage() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Login</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Login</h1>
         </div>
-        <p className="text-sm text-gray-500 mb-6">Sign in to your StockTracker account.</p>
+        <p className="text-sm text-gray-500 dark:text-slate-400 mb-6">Sign in to your StockTracker account.</p>
 
         <form onSubmit={onSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm text-gray-600 mb-1.5">Username</label>
+            <label className="block text-sm text-gray-600 dark:text-slate-300 mb-1.5">Username</label>
             <input
               value={username}
               onChange={(e) => setUsername(e.target.value)}
@@ -66,7 +67,7 @@ export default function LoginPage() {
             />
           </div>
           <div>
-            <label className="block text-sm text-gray-600 mb-1.5">Password</label>
+            <label className="block text-sm text-gray-600 dark:text-slate-300 mb-1.5">Password</label>
             <input
               type="password"
               value={password}
@@ -84,13 +85,21 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="text-sm text-gray-500 mt-5">
+        <p className="text-sm text-gray-500 dark:text-slate-400 mt-5">
           No account yet?{" "}
-          <Link href="/signup" className="text-emerald-600 hover:text-emerald-700 font-medium">
+          <Link href="/signup" className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-medium">
             Create one
           </Link>
         </p>
       </div>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <ThemeProvider>
+      <LoginForm />
+    </ThemeProvider>
   );
 }

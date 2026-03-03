@@ -13,6 +13,7 @@ import {
 import { usePortfolio } from "@/lib/portfolio-context";
 import { convertToEUR, formatPercent } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
+import { useTheme } from "@/lib/theme-context";
 import type { HistoricalDataPoint, TimePeriod } from "@/lib/types";
 
 interface SeriesPoint {
@@ -72,6 +73,7 @@ function closeOnOrBeforeDate(series: HistoricalDataPoint[], date: string): numbe
 export default function PortfolioBenchmarkChart() {
   const { holdings, exchangeRates } = usePortfolio();
   const { t } = useI18n();
+  const { isDark } = useTheme();
   const [period, setPeriod] = useState<TimePeriod>("3m");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -209,6 +211,9 @@ export default function PortfolioBenchmarkChart() {
   const portfolioVsStart = current ? current.portfolio - 100 : 0;
   const allSelected = selectedBenchmarks.length === BENCHMARKS.length;
 
+  const tickFill = isDark ? "#94a3b8" : "#9ca3af";
+  const axisStroke = isDark ? "#334155" : "#e5e7eb";
+
   const chartData = useMemo(
     () =>
       data.map((point) => {
@@ -229,15 +234,22 @@ export default function PortfolioBenchmarkChart() {
     );
   };
 
+  const pillClass = (active: boolean) =>
+    `px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+      active
+        ? "bg-emerald-500 text-white"
+        : "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-600"
+    }`;
+
   return (
     <div className="card">
       <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
         <div>
-          <p className="text-sm font-medium text-gray-700">{t("benchmarkComparison")}</p>
+          <p className="text-sm font-medium text-gray-700 dark:text-slate-200">{t("benchmarkComparison")}</p>
           {!loading && data.length > 0 && (
             <p
               className={`text-xs mt-0.5 ${
-                portfolioVsStart >= 0 ? "text-emerald-600" : "text-red-500"
+                portfolioVsStart >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"
               }`}
             >
               {t("portfolioVsStart")}: {formatPercent(portfolioVsStart)}
@@ -245,51 +257,22 @@ export default function PortfolioBenchmarkChart() {
           )}
         </div>
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-xs text-gray-400 mr-1">{t("compareWith")}:</span>
-          <button
-            onClick={() => setSelectedBenchmarks(BENCHMARKS.map((b) => b.key))}
-            className={`px-2.5 py-1 rounded-full text-xs font-medium ${
-              allSelected ? "bg-emerald-500 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-            }`}
-          >
+          <span className="text-xs text-gray-400 dark:text-slate-500 mr-1">{t("compareWith")}:</span>
+          <button onClick={() => setSelectedBenchmarks(BENCHMARKS.map((b) => b.key))} className={pillClass(allSelected)}>
             {t("allMarkets")}
           </button>
-          <button
-            onClick={() => setSelectedBenchmarks([])}
-            className={`px-2.5 py-1 rounded-full text-xs font-medium ${
-              selectedBenchmarks.length === 0
-                ? "bg-emerald-500 text-white"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-            }`}
-          >
+          <button onClick={() => setSelectedBenchmarks([])} className={pillClass(selectedBenchmarks.length === 0)}>
             {t("none")}
           </button>
-          {BENCHMARKS.map((b) => {
-            const selected = selectedBenchmarks.includes(b.key);
-            return (
-              <button
-                key={b.key}
-                onClick={() => toggleBenchmark(b.key)}
-                className={`px-2.5 py-1 rounded-full text-xs font-medium ${
-                  selected ? "bg-emerald-500 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
-              >
-                {t(b.labelKey as Parameters<typeof t>[0])}
-              </button>
-            );
-          })}
+          {BENCHMARKS.map((b) => (
+            <button key={b.key} onClick={() => toggleBenchmark(b.key)} className={pillClass(selectedBenchmarks.includes(b.key))}>
+              {t(b.labelKey as Parameters<typeof t>[0])}
+            </button>
+          ))}
         </div>
         <div className="flex items-center gap-1.5">
           {PERIOD_KEYS.map((key) => (
-            <button
-              key={key}
-              onClick={() => setPeriod(key)}
-              className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
-                period === key
-                  ? "bg-emerald-500 text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              }`}
-            >
+            <button key={key} onClick={() => setPeriod(key)} className={pillClass(period === key)}>
               {t(PERIOD_LABELS[key] as Parameters<typeof t>[0])}
             </button>
           ))}
@@ -301,11 +284,11 @@ export default function PortfolioBenchmarkChart() {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500" />
         </div>
       ) : error ? (
-        <div className="h-[320px] flex items-center justify-center text-sm text-amber-600">
+        <div className="h-[320px] flex items-center justify-center text-sm text-amber-600 dark:text-amber-400">
           {error}
         </div>
       ) : data.length === 0 ? (
-        <div className="h-[320px] flex items-center justify-center text-sm text-gray-400">
+        <div className="h-[320px] flex items-center justify-center text-sm text-gray-400 dark:text-slate-500">
           {t("benchmarkUnavailable")}
         </div>
       ) : (
@@ -314,14 +297,14 @@ export default function PortfolioBenchmarkChart() {
             <XAxis
               dataKey="date"
               tickFormatter={formatDate}
-              tick={{ fill: "#9ca3af", fontSize: 11 }}
-              axisLine={{ stroke: "#e5e7eb" }}
+              tick={{ fill: tickFill, fontSize: 11 }}
+              axisLine={{ stroke: axisStroke }}
               tickLine={false}
               minTickGap={40}
             />
             <YAxis
               tickFormatter={(v: number) => `${v.toFixed(0)}`}
-              tick={{ fill: "#9ca3af", fontSize: 11 }}
+              tick={{ fill: tickFill, fontSize: 11 }}
               axisLine={false}
               tickLine={false}
               width={45}
@@ -332,6 +315,12 @@ export default function PortfolioBenchmarkChart() {
                 return [`${numeric.toFixed(2)} (base 100)`, name || ""];
               }}
               labelFormatter={(label) => label}
+              contentStyle={{
+                backgroundColor: isDark ? "#1e293b" : "#ffffff",
+                borderColor: isDark ? "#475569" : "#e5e7eb",
+                borderRadius: 8,
+                color: isDark ? "#f1f5f9" : "#0f172a",
+              }}
             />
             <Legend />
             <Line type="monotone" dataKey="portfolio" name={t("portfolio")} stroke="#10b981" strokeWidth={2.5} dot={false} />

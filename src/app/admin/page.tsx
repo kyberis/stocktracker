@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { ThemeProvider } from "@/lib/theme-context";
 
 interface AdminUser {
   id: string;
@@ -13,7 +14,7 @@ interface AdminUser {
 
 type ProviderName = "yahoo" | "alphavantage";
 
-export default function AdminPage() {
+function AdminContent() {
   const router = useRouter();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -110,10 +111,10 @@ export default function AdminPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-50 px-4 py-8">
+    <main className="min-h-screen bg-gray-50 dark:bg-slate-900 px-4 py-8">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Admin - User Management</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Admin - User Management</h1>
           <button onClick={() => router.push("/")} className="btn-secondary">
             Back
           </button>
@@ -121,10 +122,10 @@ export default function AdminPage() {
 
         {!loading && !error && (
           <div className="card p-5 mb-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">API Settings</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">API Settings</h2>
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Data Provider</label>
+                <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">Data Provider</label>
                 <select
                   value={avProvider}
                   onChange={(e) => setAvProvider(e.target.value as ProviderName)}
@@ -135,7 +136,7 @@ export default function AdminPage() {
                 </select>
               </div>
               <div className="flex-1 w-full sm:w-auto">
-                <label className="block text-xs text-gray-500 mb-1">Alpha Vantage API Key</label>
+                <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">Alpha Vantage API Key</label>
                 <div className="relative">
                   <input
                     type={showAvKey ? "text" : "password"}
@@ -147,7 +148,7 @@ export default function AdminPage() {
                   <button
                     type="button"
                     onClick={() => setShowAvKey(!showAvKey)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 dark:text-slate-500 dark:hover:text-slate-300"
                   >
                     {showAvKey ? "Hide" : "Show"}
                   </button>
@@ -161,20 +162,20 @@ export default function AdminPage() {
               </button>
             </div>
             {avProvider === "alphavantage" && !avApiKey.trim() && (
-              <p className="text-xs text-amber-600 mt-2">An API key is required for Alpha Vantage.</p>
+              <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">An API key is required for Alpha Vantage.</p>
             )}
           </div>
         )}
 
-        {loading && <p className="text-gray-500">Loading users...</p>}
+        {loading && <p className="text-gray-500 dark:text-slate-400">Loading users...</p>}
         {error && <p className="text-red-500">{error}</p>}
 
         {!loading && !error && (
           <div className="card p-0 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50">
-                  <tr className="text-gray-500">
+                <thead className="bg-gray-50 dark:bg-slate-800/50">
+                  <tr className="text-gray-500 dark:text-slate-400">
                     <th className="text-left p-3 font-medium">Username</th>
                     <th className="text-left p-3 font-medium">Role</th>
                     <th className="text-left p-3 font-medium">Created</th>
@@ -183,23 +184,23 @@ export default function AdminPage() {
                 </thead>
                 <tbody>
                   {users.map((user) => (
-                    <tr key={user.id} className="border-t border-gray-100 text-gray-700 align-top">
+                    <tr key={user.id} className="border-t border-gray-100 dark:border-slate-700 text-gray-700 dark:text-slate-200 align-top">
                       <td className="p-3">
-                        <div className="font-medium text-gray-900">{user.username}</div>
+                        <div className="font-medium text-gray-900 dark:text-white">{user.username}</div>
                         {user.mustChangePassword && (
-                          <div className="text-xs text-amber-600 mt-1">Must change password</div>
+                          <div className="text-xs text-amber-600 dark:text-amber-400 mt-1">Must change password</div>
                         )}
                       </td>
                       <td className="p-3">
                         <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
                           user.role === "admin"
-                            ? "bg-indigo-50 text-indigo-700"
-                            : "bg-gray-100 text-gray-600"
+                            ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400"
+                            : "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300"
                         }`}>
                           {user.role}
                         </span>
                       </td>
-                      <td className="p-3 text-gray-500">{new Date(user.createdAt).toLocaleString()}</td>
+                      <td className="p-3 text-gray-500 dark:text-slate-400">{new Date(user.createdAt).toLocaleString()}</td>
                       <td className="p-3 space-y-2">
                         <form
                           className="flex items-center gap-2"
@@ -251,5 +252,13 @@ export default function AdminPage() {
         )}
       </div>
     </main>
+  );
+}
+
+export default function AdminPage() {
+  return (
+    <ThemeProvider>
+      <AdminContent />
+    </ThemeProvider>
   );
 }

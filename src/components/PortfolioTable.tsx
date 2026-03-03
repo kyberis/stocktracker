@@ -70,7 +70,9 @@ export default function PortfolioTable() {
     <button
       onClick={() => toggleSort(field)}
       className={`text-xs font-medium transition-colors ${
-        sortField === field ? "text-emerald-600" : "text-gray-400 hover:text-gray-700"
+        sortField === field
+          ? "text-emerald-600 dark:text-emerald-400"
+          : "text-gray-400 hover:text-gray-700 dark:text-slate-500 dark:hover:text-slate-200"
       }`}
     >
       {label}
@@ -83,14 +85,14 @@ export default function PortfolioTable() {
   if (holdings.length === 0) {
     return (
       <div className="card text-center py-12">
-        <p className="text-gray-400 text-lg">{t("noHoldings")}</p>
+        <p className="text-gray-400 dark:text-slate-500 text-lg">{t("noHoldings")}</p>
       </div>
     );
   }
 
   return (
     <div className="card p-0 overflow-hidden">
-      <div className="p-4 border-b border-gray-100 flex items-center gap-3 flex-wrap">
+      <div className="p-4 border-b border-gray-100 dark:border-slate-700 flex items-center gap-3 flex-wrap">
         <input
           type="text"
           value={filter}
@@ -100,7 +102,7 @@ export default function PortfolioTable() {
         />
       </div>
 
-      <div className="hidden sm:grid grid-cols-12 gap-2 px-4 py-2.5 bg-gray-50 border-b border-gray-100">
+      <div className="hidden sm:grid grid-cols-12 gap-2 px-4 py-2.5 bg-gray-50 dark:bg-slate-800/50 border-b border-gray-100 dark:border-slate-700">
         <div className="col-span-3">
           {renderSortButton("name", t("stock"))}
         </div>
@@ -108,10 +110,10 @@ export default function PortfolioTable() {
           {renderSortButton("shares", t("shares"))}
         </div>
         <div className="col-span-2 text-right">
-          <span className="text-xs text-gray-400">{t("purchasePrice")}</span>
+          <span className="text-xs text-gray-400 dark:text-slate-500">{t("purchasePrice")}</span>
         </div>
         <div className="col-span-2 text-right">
-          <span className="text-xs text-gray-400">{t("currentPrice")}</span>
+          <span className="text-xs text-gray-400 dark:text-slate-500">{t("currentPrice")}</span>
         </div>
         <div className="col-span-2 text-right">
           {renderSortButton("value", t("value"))}

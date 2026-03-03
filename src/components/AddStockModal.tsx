@@ -107,13 +107,13 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white border border-gray-200 rounded-2xl p-6 w-full max-w-md mx-4 shadow-xl">
-        <h2 className="text-xl font-bold text-gray-900 mb-5">{t("addStock")}</h2>
+      <div className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl p-6 w-full max-w-md mx-4 shadow-xl">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-5">{t("addStock")}</h2>
 
         <div className="space-y-4">
           <div className="relative">
-            <label className="block text-sm text-gray-500 mb-1.5">{t("search")}</label>
+            <label className="block text-sm text-gray-500 dark:text-slate-400 mb-1.5">{t("search")}</label>
             <input
               ref={inputRef}
               type="text"
@@ -128,18 +128,18 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
               </div>
             )}
             {results.length > 0 && !selected && (
-              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+              <div className="absolute z-10 w-full mt-1 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-xl shadow-lg max-h-48 overflow-y-auto">
                 {results.map((r) => (
                   <button
                     key={r.symbol}
                     onClick={() => handleSelect(r)}
-                    className="w-full text-left px-3 py-2.5 hover:bg-gray-50 transition-colors flex items-center justify-between"
+                    className="w-full text-left px-3 py-2.5 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors flex items-center justify-between"
                   >
                     <div>
-                      <span className="font-medium text-gray-900">{r.symbol}</span>
-                      <span className="text-gray-500 text-sm ml-2">{r.shortname}</span>
+                      <span className="font-medium text-gray-900 dark:text-white">{r.symbol}</span>
+                      <span className="text-gray-500 dark:text-slate-400 text-sm ml-2">{r.shortname}</span>
                     </div>
-                    <span className="text-xs text-gray-400">{r.exchange}</span>
+                    <span className="text-xs text-gray-400 dark:text-slate-500">{r.exchange}</span>
                   </button>
                 ))}
               </div>
@@ -147,14 +147,14 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
           </div>
 
           {(selected || stockName || ticker) && (
-            <div className="bg-emerald-50 rounded-lg px-3 py-2 border border-emerald-200">
-              <span className="text-emerald-700 font-medium">{ticker || t("ticker")}</span>
-              <span className="text-gray-600 text-sm ml-2">{stockName || t("name")}</span>
+            <div className="bg-emerald-50 dark:bg-emerald-500/10 rounded-lg px-3 py-2 border border-emerald-200 dark:border-emerald-500/20">
+              <span className="text-emerald-700 dark:text-emerald-300 font-medium">{ticker || t("ticker")}</span>
+              <span className="text-gray-600 dark:text-slate-400 text-sm ml-2">{stockName || t("name")}</span>
             </div>
           )}
 
           <div>
-            <label className="block text-sm text-gray-500 mb-1.5">{t("name")}</label>
+            <label className="block text-sm text-gray-500 dark:text-slate-400 mb-1.5">{t("name")}</label>
             <input
               type="text"
               value={stockName}
@@ -165,7 +165,7 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
           </div>
 
           <div>
-            <label className="block text-sm text-gray-500 mb-1.5">{t("ticker")}</label>
+            <label className="block text-sm text-gray-500 dark:text-slate-400 mb-1.5">{t("ticker")}</label>
             <input
               type="text"
               value={ticker}
@@ -176,7 +176,7 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
           </div>
 
           <div>
-            <label className="block text-sm text-gray-500 mb-1.5">{t("editExchange")}</label>
+            <label className="block text-sm text-gray-500 dark:text-slate-400 mb-1.5">{t("editExchange")}</label>
             <input
               type="text"
               value={exchange}
@@ -187,7 +187,7 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
           </div>
 
           <div>
-            <label className="block text-sm text-gray-500 mb-1.5">{t("assetType")}</label>
+            <label className="block text-sm text-gray-500 dark:text-slate-400 mb-1.5">{t("assetType")}</label>
             <select
               value={assetType}
               onChange={(e) => setAssetType((e.target.value as "stock" | "etf"))}
@@ -199,7 +199,7 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
           </div>
 
           <div>
-            <label className="block text-sm text-gray-500 mb-1.5">{t("shares")}</label>
+            <label className="block text-sm text-gray-500 dark:text-slate-400 mb-1.5">{t("shares")}</label>
             <input
               type="number"
               value={shares}
@@ -212,7 +212,7 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
           </div>
 
           <div>
-            <label className="block text-sm text-gray-500 mb-1.5">{t("purchasePrice")}</label>
+            <label className="block text-sm text-gray-500 dark:text-slate-400 mb-1.5">{t("purchasePrice")}</label>
             <input
               type="number"
               value={price}
@@ -225,7 +225,7 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
           </div>
 
           <div>
-            <label className="block text-sm text-gray-500 mb-1.5">{t("currency")}</label>
+            <label className="block text-sm text-gray-500 dark:text-slate-400 mb-1.5">{t("currency")}</label>
             <select
               value={currency}
               onChange={(e) => setCurrency(e.target.value)}
