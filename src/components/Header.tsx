@@ -23,10 +23,10 @@ export default function Header({ onAddStock, onOpenSettings }: HeaderProps) {
     usageRatio >= 0.9 ? "text-red-400" : usageRatio >= 0.6 ? "text-amber-400" : "text-emerald-400";
 
   return (
-    <header className="border-b border-slate-800 bg-slate-900/80 backdrop-blur-sm sticky top-0 z-40">
+    <header className="border-b border-slate-800 bg-nav-bg sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center">
             <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
             </svg>
@@ -100,7 +100,7 @@ export default function Header({ onAddStock, onOpenSettings }: HeaderProps) {
             <div className="hidden sm:flex items-center gap-2 text-xs text-slate-300 bg-slate-800 rounded-lg px-2 py-1.5">
               <span>{user.username}</span>
               {user.role === "admin" && (
-                <a href="/admin" className="text-blue-400 hover:text-blue-300">
+                <a href="/admin" className="text-emerald-400 hover:text-emerald-300">
                   {t("admin")}
                 </a>
               )}

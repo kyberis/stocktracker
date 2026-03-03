@@ -7,10 +7,15 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        gain: "#22c55e",
+        gain: "#10b981",
         loss: "#ef4444",
-        card: "#1e293b",
-        surface: "#0f172a",
+        accent: "#10b981",
+        "accent-light": "#d1fae5",
+        "nav-bg": "#0f172a",
+        "nav-text": "#f1f5f9",
+      },
+      boxShadow: {
+        card: "0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04)",
       },
     },
   },

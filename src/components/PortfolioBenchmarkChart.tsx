@@ -95,7 +95,7 @@ export default function PortfolioBenchmarkChart() {
       const filtered = parsed.filter((k) => allowed.has(k));
       setSelectedBenchmarks(filtered);
     } catch {
-      // ignore and keep defaults
+      // ignore
     }
   }, []);
 
@@ -233,11 +233,11 @@ export default function PortfolioBenchmarkChart() {
     <div className="card">
       <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
         <div>
-          <p className="text-sm text-slate-400">{t("benchmarkComparison")}</p>
+          <p className="text-sm font-medium text-gray-700">{t("benchmarkComparison")}</p>
           {!loading && data.length > 0 && (
             <p
               className={`text-xs mt-0.5 ${
-                portfolioVsStart >= 0 ? "text-emerald-400" : "text-red-400"
+                portfolioVsStart >= 0 ? "text-emerald-600" : "text-red-500"
               }`}
             >
               {t("portfolioVsStart")}: {formatPercent(portfolioVsStart)}
@@ -245,21 +245,21 @@ export default function PortfolioBenchmarkChart() {
           )}
         </div>
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-xs text-slate-400 mr-1">{t("compareWith")}:</span>
+          <span className="text-xs text-gray-400 mr-1">{t("compareWith")}:</span>
           <button
             onClick={() => setSelectedBenchmarks(BENCHMARKS.map((b) => b.key))}
-            className={`px-2 py-1 rounded text-xs ${
-              allSelected ? "bg-blue-600 text-white" : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+            className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+              allSelected ? "bg-emerald-500 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           >
             {t("allMarkets")}
           </button>
           <button
             onClick={() => setSelectedBenchmarks([])}
-            className={`px-2 py-1 rounded text-xs ${
+            className={`px-2.5 py-1 rounded-full text-xs font-medium ${
               selectedBenchmarks.length === 0
-                ? "bg-blue-600 text-white"
-                : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+                ? "bg-emerald-500 text-white"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           >
             {t("none")}
@@ -270,8 +270,8 @@ export default function PortfolioBenchmarkChart() {
               <button
                 key={b.key}
                 onClick={() => toggleBenchmark(b.key)}
-                className={`px-2 py-1 rounded text-xs ${
-                  selected ? "bg-blue-600 text-white" : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+                className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+                  selected ? "bg-emerald-500 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}
               >
                 {t(b.labelKey as Parameters<typeof t>[0])}
@@ -284,10 +284,10 @@ export default function PortfolioBenchmarkChart() {
             <button
               key={key}
               onClick={() => setPeriod(key)}
-              className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+              className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
                 period === key
-                  ? "bg-blue-600 text-white"
-                  : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+                  ? "bg-emerald-500 text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
             >
               {t(PERIOD_LABELS[key] as Parameters<typeof t>[0])}
@@ -298,14 +298,14 @@ export default function PortfolioBenchmarkChart() {
 
       {loading ? (
         <div className="h-[320px] flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500" />
         </div>
       ) : error ? (
-        <div className="h-[320px] flex items-center justify-center text-sm text-amber-400">
+        <div className="h-[320px] flex items-center justify-center text-sm text-amber-600">
           {error}
         </div>
       ) : data.length === 0 ? (
-        <div className="h-[320px] flex items-center justify-center text-sm text-slate-500">
+        <div className="h-[320px] flex items-center justify-center text-sm text-gray-400">
           {t("benchmarkUnavailable")}
         </div>
       ) : (
@@ -314,14 +314,14 @@ export default function PortfolioBenchmarkChart() {
             <XAxis
               dataKey="date"
               tickFormatter={formatDate}
-              tick={{ fill: "#94a3b8", fontSize: 11 }}
-              axisLine={{ stroke: "#334155" }}
+              tick={{ fill: "#9ca3af", fontSize: 11 }}
+              axisLine={{ stroke: "#e5e7eb" }}
               tickLine={false}
               minTickGap={40}
             />
             <YAxis
               tickFormatter={(v: number) => `${v.toFixed(0)}`}
-              tick={{ fill: "#94a3b8", fontSize: 11 }}
+              tick={{ fill: "#9ca3af", fontSize: 11 }}
               axisLine={false}
               tickLine={false}
               width={45}
@@ -334,12 +334,12 @@ export default function PortfolioBenchmarkChart() {
               labelFormatter={(label) => label}
             />
             <Legend />
-            <Line type="monotone" dataKey="portfolio" name={t("portfolio")} stroke="#22c55e" strokeWidth={2.5} dot={false} />
+            <Line type="monotone" dataKey="portfolio" name={t("portfolio")} stroke="#10b981" strokeWidth={2.5} dot={false} />
             {selectedBenchmarks.includes("sp500") && (
-              <Line type="monotone" dataKey="sp500" name={t("benchmarkSp500")} stroke="#60a5fa" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="sp500" name={t("benchmarkSp500")} stroke="#3b82f6" strokeWidth={2} dot={false} />
             )}
             {selectedBenchmarks.includes("nasdaq") && (
-              <Line type="monotone" dataKey="nasdaq" name={t("benchmarkNasdaq")} stroke="#a78bfa" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="nasdaq" name={t("benchmarkNasdaq")} stroke="#8b5cf6" strokeWidth={2} dot={false} />
             )}
             {selectedBenchmarks.includes("dow") && (
               <Line type="monotone" dataKey="dow" name={t("benchmarkDowJones")} stroke="#f59e0b" strokeWidth={2} dot={false} />
@@ -349,7 +349,7 @@ export default function PortfolioBenchmarkChart() {
                 type="monotone"
                 dataKey="eurostoxx50"
                 name={t("benchmarkEuroStoxx50")}
-                stroke="#f43f5e"
+                stroke="#ef4444"
                 strokeWidth={2}
                 dot={false}
               />
@@ -359,7 +359,7 @@ export default function PortfolioBenchmarkChart() {
                 type="monotone"
                 dataKey="marketAverage"
                 name={t("marketAverage")}
-                stroke="#e2e8f0"
+                stroke="#6b7280"
                 strokeDasharray="4 3"
                 strokeWidth={2}
                 dot={false}

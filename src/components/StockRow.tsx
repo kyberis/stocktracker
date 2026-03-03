@@ -65,24 +65,24 @@ function OverviewSection({ overview }: { overview: CompanyOverview }) {
 
   return (
     <div className="mt-3">
-      <p className="text-xs text-slate-400 font-medium mb-2">{t("fundamentals")}</p>
+      <p className="text-xs text-gray-500 font-medium mb-2">{t("fundamentals")}</p>
 
       {overview.description && (
-        <p className="text-xs text-slate-400 mb-3 line-clamp-2">{overview.description}</p>
+        <p className="text-xs text-gray-400 mb-3 line-clamp-2">{overview.description}</p>
       )}
 
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-2 mb-3">
         {items.map(({ label, value }) => (
-          <div key={label} className="bg-slate-800/80 rounded-lg px-2.5 py-1.5">
-            <p className="text-[10px] text-slate-500">{label}</p>
-            <p className="text-xs font-medium text-slate-200">{value}</p>
+          <div key={label} className="bg-gray-50 rounded-lg px-2.5 py-1.5">
+            <p className="text-[10px] text-gray-400">{label}</p>
+            <p className="text-xs font-medium text-gray-800">{value}</p>
           </div>
         ))}
       </div>
 
       {ratings && totalRatings > 0 && (
-        <div className="bg-slate-800/80 rounded-lg px-3 py-2">
-          <p className="text-[10px] text-slate-500 mb-1.5">{t("analystRatings")}</p>
+        <div className="bg-gray-50 rounded-lg px-3 py-2">
+          <p className="text-[10px] text-gray-400 mb-1.5">{t("analystRatings")}</p>
           <div className="flex gap-0.5 h-3 rounded-full overflow-hidden mb-1.5">
             {ratings.strongBuy > 0 && (
               <div
@@ -115,10 +115,10 @@ function OverviewSection({ overview }: { overview: CompanyOverview }) {
               />
             )}
           </div>
-          <div className="flex justify-between text-[10px] text-slate-400">
-            <span className="text-emerald-400">{t("buy")} {ratings.strongBuy + ratings.buy}</span>
-            <span className="text-amber-400">{t("hold")} {ratings.hold}</span>
-            <span className="text-red-400">{t("sell")} {ratings.sell + ratings.strongSell}</span>
+          <div className="flex justify-between text-[10px] text-gray-500">
+            <span className="text-emerald-600">{t("buy")} {ratings.strongBuy + ratings.buy}</span>
+            <span className="text-amber-600">{t("hold")} {ratings.hold}</span>
+            <span className="text-red-500">{t("sell")} {ratings.sell + ratings.strongSell}</span>
           </div>
         </div>
       )}
@@ -205,8 +205,8 @@ export default function StockRow({ holding }: StockRowProps) {
   const dayChangePercent = quote?.regularMarketChangePercent ?? 0;
 
   const isPositive = gainLoss >= 0;
-  const gainColor = isPositive ? "text-green-400" : "text-red-400";
-  const gainBg = isPositive ? "bg-green-500/10" : "bg-red-500/10";
+  const gainColor = isPositive ? "text-emerald-600" : "text-red-500";
+  const gainBg = isPositive ? "bg-emerald-50" : "bg-red-50";
 
   const cur = holding.displayCurrency;
 
@@ -335,33 +335,32 @@ export default function StockRow({ holding }: StockRowProps) {
     }
   }, [expanded, isAlphaVantage, overview, overviewLoading, fetchOverview]);
 
-  // Reset overview when provider changes
   useEffect(() => {
     setOverview(null);
   }, [provider]);
 
   return (
-    <div className="border-b border-slate-700/50 last:border-b-0">
+    <div className="border-b border-gray-100 last:border-b-0">
       <div
-        className="grid grid-cols-12 gap-2 px-4 py-3 items-center hover:bg-slate-800/50 cursor-pointer transition-colors"
+        className="grid grid-cols-12 gap-2 px-4 py-3 items-center hover:bg-gray-50 cursor-pointer transition-colors"
         onClick={() => setExpanded(!expanded)}
       >
         <div className="col-span-4 sm:col-span-3">
           <div className="flex items-center gap-1.5">
-            <p className="font-medium text-white text-sm truncate">{holding.name}</p>
-            <span className="flex-shrink-0 text-[9px] font-semibold px-1 py-px rounded bg-slate-700/70 text-slate-200 border border-slate-600/60">
+            <p className="font-medium text-gray-900 text-sm truncate">{holding.name}</p>
+            <span className="flex-shrink-0 text-[9px] font-semibold px-1 py-px rounded bg-gray-100 text-gray-600 border border-gray-200">
               {(holding.assetType ?? "stock").toUpperCase()}
             </span>
             {isFallback ? (
               <span
-                className="flex-shrink-0 text-[9px] font-semibold px-1 py-px rounded bg-blue-500/15 text-blue-400 border border-blue-500/20"
+                className="flex-shrink-0 text-[9px] font-semibold px-1 py-px rounded bg-blue-50 text-blue-600 border border-blue-200"
                 title={t("yahooFallback")}
               >
                 Yahoo
               </span>
             ) : isAvSource ? (
               <span
-                className="flex-shrink-0 text-[9px] font-semibold px-1 py-px rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/20"
+                className="flex-shrink-0 text-[9px] font-semibold px-1 py-px rounded bg-emerald-50 text-emerald-600 border border-emerald-200"
                 title={t("avSource")}
               >
                 AV
@@ -373,7 +372,7 @@ export default function StockRow({ holding }: StockRowProps) {
                 refreshSingleQuote(holding.ticker);
               }}
               disabled={isRefreshing}
-              className="flex-shrink-0 p-0.5 rounded text-slate-400 hover:text-slate-200 hover:bg-slate-700/70 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex-shrink-0 p-0.5 rounded text-gray-400 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
               title={t("refreshOne")}
             >
               <svg
@@ -391,51 +390,51 @@ export default function StockRow({ holding }: StockRowProps) {
               </svg>
             </button>
           </div>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-gray-400">
             {holding.ticker} · {holding.exchange}
             {lastFetchedAt ? ` · ${t("lastUpdated")}: ${new Date(lastFetchedAt).toLocaleTimeString()}` : ""}
           </p>
         </div>
         <div className="col-span-2 sm:col-span-1 text-right">
-          <p className="text-sm text-slate-200">{holding.shares}</p>
+          <p className="text-sm text-gray-700">{holding.shares}</p>
         </div>
         <div className="col-span-3 sm:col-span-2 text-right hidden sm:block">
-          <p className="text-sm text-slate-300">
+          <p className="text-sm text-gray-600">
             {formatCurrency(holding.purchasePrice, cur)}
           </p>
         </div>
         <div className="col-span-3 sm:col-span-2 text-right">
           {hasQuote ? (
             <div>
-              <p className="text-sm text-white font-medium">
+              <p className="text-sm text-gray-900 font-medium">
                 {formatCurrency(currentPriceInDisplay, cur)}
               </p>
-              <p className={`text-xs ${dayChangePercent >= 0 ? "text-green-400" : "text-red-400"}`}>
+              <p className={`text-xs ${dayChangePercent >= 0 ? "text-emerald-600" : "text-red-500"}`}>
                 {formatPercent(dayChangePercent)}
               </p>
             </div>
           ) : (
-            <p className="text-sm text-slate-500">--</p>
+            <p className="text-sm text-gray-400">--</p>
           )}
         </div>
         <div className="col-span-3 sm:col-span-2 text-right">
-          <p className="text-sm text-white">
+          <p className="text-sm text-gray-900">
             {formatCurrency(totalValue, cur)}
           </p>
         </div>
         <div className="col-span-12 sm:col-span-2 text-right">
-          <span className={`inline-block px-2 py-0.5 rounded-md text-sm font-medium ${gainBg} ${gainColor}`}>
+          <span className={`inline-block px-2.5 py-0.5 rounded-full text-sm font-semibold ${gainBg} ${gainColor}`}>
             {formatPercent(gainLossPercent)}
           </span>
         </div>
       </div>
 
       {expanded && (
-        <div className="px-4 pb-4 bg-slate-800/30">
+        <div className="px-4 pb-4 bg-gray-50/50">
           {isEditing && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4 pt-3">
               <div>
-                <label className="block text-xs text-slate-400 mb-1">{t("editName")}</label>
+                <label className="block text-xs text-gray-500 mb-1">{t("editName")}</label>
                 <input
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
@@ -444,7 +443,7 @@ export default function StockRow({ holding }: StockRowProps) {
                 />
               </div>
               <div>
-                <label className="block text-xs text-slate-400 mb-1">{t("editTicker")}</label>
+                <label className="block text-xs text-gray-500 mb-1">{t("editTicker")}</label>
                 <input
                   value={editTicker}
                   onChange={(e) => setEditTicker(e.target.value)}
@@ -453,7 +452,7 @@ export default function StockRow({ holding }: StockRowProps) {
                 />
               </div>
               <div>
-                <label className="block text-xs text-slate-400 mb-1">{t("editISIN")}</label>
+                <label className="block text-xs text-gray-500 mb-1">{t("editISIN")}</label>
                 <input
                   value={editIsin}
                   onChange={(e) => setEditIsin(e.target.value)}
@@ -462,7 +461,7 @@ export default function StockRow({ holding }: StockRowProps) {
                 />
               </div>
               <div>
-                <label className="block text-xs text-slate-400 mb-1">{t("editExchange")}</label>
+                <label className="block text-xs text-gray-500 mb-1">{t("editExchange")}</label>
                 <input
                   value={editExchange}
                   onChange={(e) => setEditExchange(e.target.value)}
@@ -471,7 +470,7 @@ export default function StockRow({ holding }: StockRowProps) {
                 />
               </div>
               <div>
-                <label className="block text-xs text-slate-400 mb-1">{t("assetType")}</label>
+                <label className="block text-xs text-gray-500 mb-1">{t("assetType")}</label>
                 <select
                   value={editAssetType}
                   onChange={(e) => setEditAssetType(e.target.value as "stock" | "etf")}
@@ -484,7 +483,7 @@ export default function StockRow({ holding }: StockRowProps) {
               </div>
               {!isCashHolding && (
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1">{t("shares")}</label>
+                  <label className="block text-xs text-gray-500 mb-1">{t("shares")}</label>
                   <input
                     type="number"
                     min="0"
@@ -497,7 +496,7 @@ export default function StockRow({ holding }: StockRowProps) {
                 </div>
               )}
               <div>
-                <label className="block text-xs text-slate-400 mb-1">
+                <label className="block text-xs text-gray-500 mb-1">
                   {isCashHolding ? t("cashAmount") : t("purchasePrice")}
                 </label>
                 <input
@@ -511,7 +510,7 @@ export default function StockRow({ holding }: StockRowProps) {
                 />
               </div>
               <div>
-                <label className="block text-xs text-slate-400 mb-1">{t("editCurrency")}</label>
+                <label className="block text-xs text-gray-500 mb-1">{t("editCurrency")}</label>
                 <select
                   value={editDisplayCurrency}
                   onChange={(e) => setEditDisplayCurrency(e.target.value)}
@@ -534,7 +533,7 @@ export default function StockRow({ holding }: StockRowProps) {
           {!isEditing && !isCashHolding && (
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 mb-4 pt-3">
               <div>
-                <label className="block text-xs text-slate-400 mb-1">{t("tradeAction")}</label>
+                <label className="block text-xs text-gray-500 mb-1">{t("tradeAction")}</label>
                 <select
                   value={tradeAction}
                   onChange={(e) => setTradeAction(e.target.value as "buy" | "sell")}
@@ -546,7 +545,7 @@ export default function StockRow({ holding }: StockRowProps) {
                 </select>
               </div>
               <div>
-                <label className="block text-xs text-slate-400 mb-1">{t("tradeQuantity")}</label>
+                <label className="block text-xs text-gray-500 mb-1">{t("tradeQuantity")}</label>
                 <input
                   type="number"
                   min="0"
@@ -558,7 +557,7 @@ export default function StockRow({ holding }: StockRowProps) {
                 />
               </div>
               <div>
-                <label className="block text-xs text-slate-400 mb-1">{t("tradePrice")}</label>
+                <label className="block text-xs text-gray-500 mb-1">{t("tradePrice")}</label>
                 <input
                   type="number"
                   min="0"
@@ -575,44 +574,44 @@ export default function StockRow({ holding }: StockRowProps) {
                     e.stopPropagation();
                     handleApplyTrade();
                   }}
-                  className="btn-primary text-sm px-3 py-1 w-full"
+                  className="btn-primary text-sm px-3 py-2 w-full"
                 >
                   {t("applyTrade")}
                 </button>
               </div>
               {tradeError && (
-                <p className="text-xs text-red-400 sm:col-span-4">{tradeError}</p>
+                <p className="text-xs text-red-500 sm:col-span-4">{tradeError}</p>
               )}
             </div>
           )}
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4 pt-2">
-            <div className="bg-slate-800 rounded-lg px-3 py-2">
-              <p className="text-xs text-slate-400">{t("gainLoss")}</p>
+            <div className="bg-white rounded-xl px-3 py-2 shadow-sm border border-gray-100">
+              <p className="text-xs text-gray-500">{t("gainLoss")}</p>
               <p className={`text-sm font-bold ${gainColor}`}>
                 {formatCurrency(gainLoss, cur)}
               </p>
             </div>
             {hasQuote && display52High > 0 && (
-              <div className="bg-slate-800 rounded-lg px-3 py-2">
-                <p className="text-xs text-slate-400">{t("week52High")}</p>
-                <p className="text-sm font-medium text-white">
+              <div className="bg-white rounded-xl px-3 py-2 shadow-sm border border-gray-100">
+                <p className="text-xs text-gray-500">{t("week52High")}</p>
+                <p className="text-sm font-medium text-gray-900">
                   {formatCurrency(display52High, cur)}
                 </p>
               </div>
             )}
             {hasQuote && display52Low > 0 && (
-              <div className="bg-slate-800 rounded-lg px-3 py-2">
-                <p className="text-xs text-slate-400">{t("week52Low")}</p>
-                <p className="text-sm font-medium text-white">
+              <div className="bg-white rounded-xl px-3 py-2 shadow-sm border border-gray-100">
+                <p className="text-xs text-gray-500">{t("week52Low")}</p>
+                <p className="text-sm font-medium text-gray-900">
                   {formatCurrency(display52Low, cur)}
                 </p>
               </div>
             )}
             {hasQuote && quote?.marketCap && quote.marketCap > 0 && (
-              <div className="bg-slate-800 rounded-lg px-3 py-2">
-                <p className="text-xs text-slate-400">{t("marketCap")}</p>
-                <p className="text-sm font-medium text-white">
+              <div className="bg-white rounded-xl px-3 py-2 shadow-sm border border-gray-100">
+                <p className="text-xs text-gray-500">{t("marketCap")}</p>
+                <p className="text-sm font-medium text-gray-900">
                   {formatCompactNumber(quote.marketCap)}
                 </p>
               </div>
@@ -626,8 +625,8 @@ export default function StockRow({ holding }: StockRowProps) {
           />
 
           {isAlphaVantage && overviewLoading && (
-            <div className="mt-3 flex items-center gap-2 text-xs text-slate-400">
-              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-500" />
+            <div className="mt-3 flex items-center gap-2 text-xs text-gray-400">
+              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-emerald-500" />
               {t("loadingOverview")}
             </div>
           )}
@@ -637,7 +636,7 @@ export default function StockRow({ holding }: StockRowProps) {
           <div className="mt-3 flex justify-end">
             {showDeleteConfirm ? (
               <div className="flex items-center gap-2">
-                <span className="text-sm text-slate-400">{t("deleteConfirm")}</span>
+                <span className="text-sm text-gray-500">{t("deleteConfirm")}</span>
                 <button onClick={handleDelete} className="btn-danger text-sm px-3 py-1">
                   {t("confirm")}
                 </button>
@@ -668,14 +667,14 @@ export default function StockRow({ holding }: StockRowProps) {
                 ) : (
                   <button
                     onClick={(e) => { e.stopPropagation(); handleStartEdit(); }}
-                    className="text-sm text-blue-400 hover:text-blue-300 transition-colors px-3 py-1"
+                    className="text-sm text-emerald-600 hover:text-emerald-700 transition-colors px-3 py-1"
                   >
                     {t("editValues")}
                   </button>
                 )}
                 <button
                   onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(true); }}
-                  className="text-sm text-red-400 hover:text-red-300 transition-colors px-3 py-1"
+                  className="text-sm text-red-500 hover:text-red-600 transition-colors px-3 py-1"
                 >
                   {t("removeStock")}
                 </button>

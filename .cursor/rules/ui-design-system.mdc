@@ -1,0 +1,53 @@
+---
+description: StockTracker UI design system - light fintech theme with emerald accent
+globs: "**/*.tsx"
+alwaysApply: false
+---
+
+# StockTracker Design System
+
+Light-mode fintech dashboard inspired by modern trading platforms. Dark navy header, light gray content area, white cards.
+
+## Color Palette
+
+- **Background**: `bg-gray-50` (main content area)
+- **Cards**: `bg-white` with `border-gray-100 rounded-2xl shadow-sm`
+- **Header/Nav**: `bg-nav-bg` (dark navy #0f172a) with white/slate text
+- **Accent (primary)**: emerald-500 (#10b981) — buttons, active states, links, positive values
+- **Positive/Gain**: `text-emerald-600`, `bg-emerald-50`
+- **Negative/Loss**: `text-red-500`, `bg-red-50`
+- **Primary text**: `text-gray-900`
+- **Secondary text**: `text-gray-500` (labels, descriptions)
+- **Muted text**: `text-gray-400` (timestamps, hints)
+- **Borders**: `border-gray-100` (cards), `border-gray-200` (inputs, stronger separators)
+
+## Components
+
+- **Cards**: Use `.card` class → `bg-white border border-gray-100 rounded-2xl p-5 shadow-sm`
+- **Primary button**: `.btn-primary` → `bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg shadow-sm`
+- **Secondary button**: `.btn-secondary` → `bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg`
+- **Danger button**: `.btn-danger` → `bg-red-500 hover:bg-red-600 text-white rounded-lg shadow-sm`
+- **Pill selectors** (time periods, filters): `rounded-full` with `bg-emerald-500 text-white` (active) / `bg-gray-100 text-gray-600` (inactive)
+- **Badges**: `rounded` with light bg + matching text, e.g. `bg-emerald-50 text-emerald-600 border border-emerald-200`
+- **Modals**: `bg-white border-gray-200 rounded-2xl shadow-xl` over `bg-black/40 backdrop-blur-sm`
+- **Inputs**: White background, `border-gray-300`, `focus:border-emerald-500 focus:ring-emerald-500`
+- **Tables**: White background, `bg-gray-50` header, `border-gray-100` row separators
+
+## Chart Colors
+
+- Portfolio line: `#10b981` (emerald)
+- S&P 500: `#3b82f6` (blue)
+- NASDAQ: `#8b5cf6` (violet)
+- Dow Jones: `#f59e0b` (amber)
+- Euro Stoxx: `#ef4444` (red)
+- Purchase reference line: `#f59e0b` (amber dashed)
+- Axis/grid: `#e5e7eb` lines, `#9ca3af` tick text
+- Tooltips: `bg-white border-gray-200 shadow-lg rounded-lg`
+
+## Rules
+
+- Never use dark-mode slate classes (bg-slate-800, text-slate-300, etc.) in content area
+- Header stays dark navy — keep slate classes only there
+- Use `rounded-2xl` for cards and modals, `rounded-full` for pills/badges, `rounded-lg` for buttons/inputs
+- Prefer shadows over heavy borders for card separation
+- Gain/loss colors: emerald-600/red-500 for text, emerald-50/red-50 for backgrounds

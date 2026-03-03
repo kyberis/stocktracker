@@ -29,35 +29,35 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-slate-800 border border-slate-700 rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl">
-        <h2 className="text-xl font-bold text-white mb-5">{t("settings")}</h2>
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-white border border-gray-200 rounded-2xl p-6 w-full max-w-md mx-4 shadow-xl">
+        <h2 className="text-xl font-bold text-gray-900 mb-5">{t("settings")}</h2>
 
         <div className="space-y-5">
           <div>
-            <label className="block text-sm text-slate-400 mb-2">{t("dataProvider")}</label>
+            <label className="block text-sm text-gray-500 mb-2">{t("dataProvider")}</label>
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => setLocalProvider("yahoo")}
                 className={`px-4 py-3 rounded-xl border-2 transition-all text-left ${
                   localProvider === "yahoo"
-                    ? "border-blue-500 bg-blue-500/10"
-                    : "border-slate-600 bg-slate-900/50 hover:border-slate-500"
+                    ? "border-emerald-500 bg-emerald-50"
+                    : "border-gray-200 bg-white hover:border-gray-300"
                 }`}
               >
-                <p className="font-semibold text-white text-sm">Yahoo Finance</p>
-                <p className="text-xs text-slate-400 mt-0.5">{t("yahooDesc")}</p>
+                <p className="font-semibold text-gray-900 text-sm">Yahoo Finance</p>
+                <p className="text-xs text-gray-500 mt-0.5">{t("yahooDesc")}</p>
               </button>
               <button
                 onClick={() => setLocalProvider("alphavantage")}
                 className={`px-4 py-3 rounded-xl border-2 transition-all text-left ${
                   localProvider === "alphavantage"
-                    ? "border-blue-500 bg-blue-500/10"
-                    : "border-slate-600 bg-slate-900/50 hover:border-slate-500"
+                    ? "border-emerald-500 bg-emerald-50"
+                    : "border-gray-200 bg-white hover:border-gray-300"
                 }`}
               >
-                <p className="font-semibold text-white text-sm">Alpha Vantage</p>
-                <p className="text-xs text-slate-400 mt-0.5">{t("alphaVantageDesc")}</p>
+                <p className="font-semibold text-gray-900 text-sm">Alpha Vantage</p>
+                <p className="text-xs text-gray-500 mt-0.5">{t("alphaVantageDesc")}</p>
               </button>
             </div>
           </div>
@@ -65,7 +65,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           {localProvider === "alphavantage" && (
             <div className="space-y-3 animate-in slide-in-from-top-2">
               <div>
-                <label className="block text-sm text-slate-400 mb-1.5">{t("apiKey")}</label>
+                <label className="block text-sm text-gray-500 mb-1.5">{t("apiKey")}</label>
                 <div className="relative">
                   <input
                     type={showApiKey ? "text" : "password"}
@@ -77,7 +77,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   <button
                     type="button"
                     onClick={() => setShowApiKey(!showApiKey)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-300"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
                   >
                     {showApiKey ? (
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -94,17 +94,17 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               </div>
 
               {!localApiKey.trim() && (
-                <p className="text-xs text-amber-400">{t("apiKeyRequired")}</p>
+                <p className="text-xs text-amber-600">{t("apiKeyRequired")}</p>
               )}
 
-              <div className="bg-slate-900/60 rounded-lg p-3 border border-slate-700">
-                <p className="text-xs text-slate-300 font-medium mb-1">{t("alphaVantageInfo")}</p>
-                <ul className="text-xs text-slate-400 space-y-0.5 list-disc list-inside">
+              <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                <p className="text-xs text-gray-700 font-medium mb-1">{t("alphaVantageInfo")}</p>
+                <ul className="text-xs text-gray-500 space-y-0.5 list-disc list-inside">
                   <li>{t("avFeature1")}</li>
                   <li>{t("avFeature2")}</li>
                   <li>{t("avFeature3")}</li>
                 </ul>
-                <p className="text-xs text-amber-400/80 mt-2">{t("avRateLimit")}</p>
+                <p className="text-xs text-amber-600 mt-2">{t("avRateLimit")}</p>
               </div>
             </div>
           )}

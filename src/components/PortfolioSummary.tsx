@@ -20,28 +20,38 @@ export default function PortfolioSummary() {
     {
       label: t("totalValue"),
       value: formatCurrency(totalCurrentEUR, "EUR"),
-      color: "text-blue-400",
+      color: "text-gray-900",
+      iconBg: "bg-emerald-50",
+      iconColor: "text-emerald-500",
     },
     {
       label: t("totalCost"),
       value: formatCurrency(totalCostEUR, "EUR"),
-      color: "text-slate-300",
+      color: "text-gray-700",
+      iconBg: "bg-gray-50",
+      iconColor: "text-gray-400",
     },
     {
       label: t("totalGainLossSinceStart"),
       value: formatCurrency(totalGainLoss, "EUR"),
       subValue: formatPercent(totalGainLossPercent),
-      color: totalGainLoss >= 0 ? "text-green-400" : "text-red-400",
+      color: totalGainLoss >= 0 ? "text-emerald-600" : "text-red-500",
+      iconBg: totalGainLoss >= 0 ? "bg-emerald-50" : "bg-red-50",
+      iconColor: totalGainLoss >= 0 ? "text-emerald-500" : "text-red-500",
     },
     {
       label: t("dayGainLoss"),
       value: formatCurrency(dayGainLossEUR, "EUR"),
-      color: dayGainLossEUR >= 0 ? "text-emerald-400" : "text-red-400",
+      color: dayGainLossEUR >= 0 ? "text-emerald-600" : "text-red-500",
+      iconBg: dayGainLossEUR >= 0 ? "bg-emerald-50" : "bg-red-50",
+      iconColor: dayGainLossEUR >= 0 ? "text-emerald-500" : "text-red-500",
     },
     {
       label: t("holdings"),
       value: (holdings.length + cashEntries.length).toString(),
-      color: "text-purple-400",
+      color: "text-indigo-600",
+      iconBg: "bg-indigo-50",
+      iconColor: "text-indigo-500",
     },
   ];
 
@@ -49,7 +59,7 @@ export default function PortfolioSummary() {
     <div className="grid grid-cols-2 xl:grid-cols-5 gap-4">
       {summaryCards.map((card) => (
         <div key={card.label} className="card">
-          <p className="text-sm text-slate-400 mb-1">{card.label}</p>
+          <p className="text-sm text-gray-500 mb-1">{card.label}</p>
           <p className={`text-xl lg:text-2xl font-bold ${card.color} ${isLoading ? "animate-pulse" : ""}`}>
             {card.value}
           </p>

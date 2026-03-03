@@ -96,7 +96,7 @@ export default function StockChart({ ticker, purchasePrice, displayCurrency }: S
 
   const lastPrice = data.length > 0 ? data[data.length - 1].close : 0;
   const isAbovePurchase = lastPrice >= purchasePrice;
-  const chartColor = isAbovePurchase ? "#22c55e" : "#ef4444";
+  const chartColor = isAbovePurchase ? "#10b981" : "#ef4444";
 
   const formatDate = (date: string) => {
     const d = new Date(date);
@@ -110,9 +110,9 @@ export default function StockChart({ ticker, purchasePrice, displayCurrency }: S
     if (!active || !payload?.length) return null;
     const point = payload[0].payload;
     return (
-      <div className="bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 shadow-xl">
-        <p className="text-xs text-slate-400">{point.date}</p>
-        <p className="text-sm font-semibold text-white">
+      <div className="bg-white border border-gray-200 rounded-lg px-3 py-2 shadow-lg">
+        <p className="text-xs text-gray-400">{point.date}</p>
+        <p className="text-sm font-semibold text-gray-900">
           {formatCurrency(point.close, displayCurrency)}
         </p>
       </div>
@@ -122,28 +122,28 @@ export default function StockChart({ ticker, purchasePrice, displayCurrency }: S
   return (
     <div>
       <div className="flex items-center gap-2 mb-4 flex-wrap">
-        <span className="text-sm text-slate-400 mr-2">{t("priceHistory")}:</span>
+        <span className="text-sm text-gray-500 mr-2">{t("priceHistory")}:</span>
         {PERIOD_KEYS.map((key) => (
           <button
             key={key}
             onClick={() => setPeriod(key)}
-            className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${
+            className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
               period === key
-                ? "bg-blue-600 text-white"
-                : "bg-slate-700 text-slate-300 hover:bg-slate-600"
+                ? "bg-emerald-500 text-white shadow-sm"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           >
             {t(PERIOD_LABELS[key] as Parameters<typeof t>[0])}
           </button>
         ))}
         {needsConversion && (
-          <span className="text-xs text-amber-400/70 ml-2">
+          <span className="text-xs text-amber-600 ml-2">
             (converted to {displayCurrency})
           </span>
         )}
         {isAlphaVantage && chartProviderUsed === "yahoo" && (
           <span
-            className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/20 ml-auto"
+            className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-200 ml-auto"
             title={t("yahooFallback")}
           >
             Yahoo
@@ -151,7 +151,7 @@ export default function StockChart({ ticker, purchasePrice, displayCurrency }: S
         )}
         {isAlphaVantage && chartProviderUsed === "alphavantage" && (
           <span
-            className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 ml-auto"
+            className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 ml-auto"
             title={t("avSource")}
           >
             AV
@@ -161,10 +161,10 @@ export default function StockChart({ ticker, purchasePrice, displayCurrency }: S
 
       {loading ? (
         <div className="h-[300px] flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500" />
         </div>
       ) : data.length === 0 ? (
-        <div className="h-[300px] flex items-center justify-center text-slate-400">
+        <div className="h-[300px] flex items-center justify-center text-gray-400">
           No data available
         </div>
       ) : (
@@ -172,21 +172,21 @@ export default function StockChart({ ticker, purchasePrice, displayCurrency }: S
           <AreaChart data={data} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
             <defs>
               <linearGradient id={`gradient-${ticker}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={chartColor} stopOpacity={0.3} />
+                <stop offset="5%" stopColor={chartColor} stopOpacity={0.15} />
                 <stop offset="95%" stopColor={chartColor} stopOpacity={0} />
               </linearGradient>
             </defs>
             <XAxis
               dataKey="date"
               tickFormatter={formatDate}
-              tick={{ fill: "#94a3b8", fontSize: 11 }}
-              axisLine={{ stroke: "#334155" }}
+              tick={{ fill: "#9ca3af", fontSize: 11 }}
+              axisLine={{ stroke: "#e5e7eb" }}
               tickLine={false}
               minTickGap={40}
             />
             <YAxis
               domain={["auto", "auto"]}
-              tick={{ fill: "#94a3b8", fontSize: 11 }}
+              tick={{ fill: "#9ca3af", fontSize: 11 }}
               axisLine={false}
               tickLine={false}
               width={60}
@@ -195,12 +195,12 @@ export default function StockChart({ ticker, purchasePrice, displayCurrency }: S
             <Tooltip content={<CustomTooltip />} />
             <ReferenceLine
               y={purchasePrice}
-              stroke="#fbbf24"
+              stroke="#f59e0b"
               strokeDasharray="6 4"
               strokeWidth={1.5}
               label={{
                 value: t("purchaseLine"),
-                fill: "#fbbf24",
+                fill: "#f59e0b",
                 fontSize: 11,
                 position: "insideTopRight",
               }}
