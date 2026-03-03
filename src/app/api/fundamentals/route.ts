@@ -27,7 +27,8 @@ export async function GET(request: Request) {
   };
 
   const methodName = methodMap[type];
-  const method = (provider as Record<string, unknown>)[methodName];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const method = (provider as any)[methodName];
 
   if (typeof method !== "function") {
     return Response.json(
