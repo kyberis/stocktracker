@@ -10,6 +10,12 @@ import type {
   CashFlowReport,
   EarningsReport,
   FundamentalData,
+  NewsArticle,
+  InsiderTransaction,
+  InstitutionalHolder,
+  EarningsTranscript,
+  EconIndicatorResult,
+  EconDataPoint,
 } from "./types";
 
 const AV_BASE = "https://www.alphavantage.co/query";
@@ -386,6 +392,156 @@ export class AlphaVantageProvider implements StockDataProvider {
         estimatedEPS: parseFloatOrNull(r["estimatedEPS"]),
         surprise: parseFloatOrNull(r["surprise"]),
         surprisePercentage: parseFloatOrNull(r["surprisePercentage"]),
+      })),
+    };
+  }
+
+  /* ── Alpha Intelligence ─────────────────────────────────────── */
+
+  async getNewsSentiment(symbol: string): Promise<NewsArticle[]> {
+    const data = await this.avFetch({
+      function: "NEWS_SENTIMENT",
+      tickers: symbol,
+      limit: "50",
+      sort: "LATEST",
+    });
+
+    const feed = data["feed"] as Array<Record<string, unknown>> | undefined;
+    if (!feed) return [];
+
+    return feed.map((item) => {
+      const tickerSentiment = (
+        (item["ticker_sentiment"] as Array<Record<string, string>>) || []
+      ).map((ts) => ({
+        ticker: ts["ticker"] || "",
+        relevance: parseFloat0(ts["relevance_score"]),
+        sentimentScore: parseFloat0(ts["ticker_sentiment_score"]),
+        sentimentLabel: ts["ticker_sentiment_label"] || "",
+      }));
+
+      const topics = (
+        (item["topics"] as Array<Record<string, string>>) || []
+      ).map((t) => t["topic"] || "");
+
+      return {
+        title: String(item["title"] || ""),
+        url: String(item["url"] || ""),
+        source: String(item["source"] || ""),
+        publishedAt: String(item["time_published"] || ""),
+        summary: String(item["summary"] || ""),
+        overallSentiment: String(item["overall_sentiment_label"] || ""),
+        overallSentimentScore: parseFloat0(item["overall_sentiment_score"]),
+        tickerSentiment,
+        topics,
+      };
+    });
+  }
+
+  async getInsiderTransactions(symbol: string): Promise<InsiderTransaction[]> {
+    const data = await this.avFetch({
+      function: "INSIDER_TRANSACTIONS",
+      symbol,
+    });
+
+    const txns = data["data"] as Array<Record<string, string>> | undefined;
+    if (!txns) return [];
+
+    return txns.slice(0, 50).map((r) => ({
+      fullName: r["full_name"] || "",
+      title: r["executive_title"] || "",
+      transactionDate: r["transaction_date"] || "",
+      transactionType: r["acquisition_or_disposition"] === "D" ? "Disposition" : "Acquisition",
+      shares: parseFloat0(r["shares"]),
+      sharePrice: parseFloat0(r["share_price"]),
+      totalValue: parseFloat0(r["shares"]) * parseFloat0(r["share_price"]),
+      sharesOwned: parseFloatOrNull(r["shares_total"]),
+    }));
+  }
+
+  async getInstitutionalHoldings(symbol: string): Promise<InstitutionalHolder[]> {
+    const data = await this.avFetch({
+      function: "INSTITUTIONAL_OWNERSHIP",
+      symbol,
+    });
+
+    const holders = data["data"] as Array<Record<string, string>> | undefined;
+    if (!holders) return [];
+
+    const latestQuarter = holders[0]?.["quarterEndDate"];
+    if (!latestQuarter) return [];
+
+    return holders
+      .filter((h) => h["quarterEndDate"] === latestQuarter)
+      .slice(0, 30)
+      .map((r) => ({
+        investor: r["investor"] || "",
+        shares: parseFloat0(r["shares"]),
+        value: parseFloat0(r["value"]),
+        weight: parseFloat0(r["weight"]),
+        quarterEndDate: r["quarterEndDate"] || "",
+      }));
+  }
+
+  async getEarningsTranscript(symbol: string, quarter: string): Promise<EarningsTranscript | null> {
+    const [y, q] = quarter.split("Q");
+    const data = await this.avFetch({
+      function: "EARNINGS_CALL_TRANSCRIPT",
+      symbol,
+      year: y,
+      quarter: q,
+    });
+
+    const transcript = data["transcript"] as string | undefined;
+    if (!transcript) return null;
+
+    return {
+      symbol,
+      quarter,
+      transcript,
+      sentiment: String(data["sentiment"] || ""),
+      sentimentScore: parseFloatOrNull(data["sentiment_score"]),
+    };
+  }
+
+  /* ── Economic Indicators ─────────────────────────────────── */
+
+  async getEconomicIndicator(
+    func: string,
+    interval?: string,
+    maturity?: string
+  ): Promise<EconIndicatorResult | null> {
+    const VALID = new Set([
+      "REAL_GDP", "REAL_GDP_PER_CAPITA", "TREASURY_YIELD",
+      "FEDERAL_FUNDS_RATE", "CPI", "INFLATION",
+      "RETAIL_SALES", "DURABLES", "UNEMPLOYMENT", "NONFARM_PAYROLL",
+    ]);
+    if (!VALID.has(func)) return null;
+
+    const params = new URLSearchParams({ function: func, apikey: this.apiKey });
+    if (interval) params.set("interval", interval);
+    if (maturity) params.set("maturity", maturity);
+
+    const data = await throttled(async () => {
+      this._callCount++;
+      const res = await fetch(`${AV_BASE}?${params}`);
+      if (!res.ok) throw new Error(`AV ${func}: ${res.status}`);
+      return res.json();
+    });
+
+    if (data["Error Message"] || data["Note"]) return null;
+
+    const rawName = String(data["name"] || func);
+    const rawInterval = String(data["interval"] || interval || "");
+    const rawUnit = String(data["unit"] || "");
+    const rawData = (data["data"] || []) as { date: string; value: string }[];
+
+    return {
+      name: rawName,
+      interval: rawInterval,
+      unit: rawUnit,
+      data: rawData.map((d) => ({
+        date: d.date,
+        value: d.value === "." || d.value === "" ? null : parseFloat(d.value),
       })),
     };
   }

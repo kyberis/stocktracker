@@ -78,7 +78,7 @@ function parseExchangeRatesFromApi(
 }
 
 export function PortfolioProvider({ children }: { children: React.ReactNode }) {
-  const { provider, alphaVantageApiKey, getApiHeaders, trackAvCalls } = useSettings();
+  const { provider, getApiHeaders, trackAvCalls } = useSettings();
   const [holdings, setHoldings] = useState<Holding[]>([]);
   const [cashEntries, setCashEntries] = useState<CashEntry[]>([]);
   const [quotes, setQuotes] = useState<Record<string, QuoteData>>({});
@@ -153,15 +153,11 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
 
   const fetchExchangeRates = useCallback(async (): Promise<ExchangeRates> => {
     const params = new URLSearchParams({ pairs: FX_PAIRS.join(",") });
-    const headers: Record<string, string> = {};
-    if (alphaVantageApiKey) {
-      headers["x-api-key"] = alphaVantageApiKey;
-    }
-    const res = await fetch(`/api/exchange-rates?${params}`, { headers });
+    const res = await fetch(`/api/exchange-rates?${params}`);
     if (!res.ok) throw new Error("Failed to fetch exchange rates");
     const data = await res.json();
     return parseExchangeRatesFromApi(data);
-  }, [alphaVantageApiKey]);
+  }, []);
 
   const fetchQuotes = useCallback(async (tickers: string[]) => {
     if (fetchingRef.current || tickers.length === 0) return;
@@ -212,6 +208,18 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
     const tickers = [...new Set(holdings.map((h) => h.ticker))];
     await fetchQuotes(tickers);
   }, [holdings, fetchQuotes]);
+
+  const { refreshInterval } = useSettings();
+
+  useEffect(() => {
+    if (holdings.length === 0) return;
+    const ms = refreshInterval * 60 * 1000;
+    const id = window.setInterval(() => {
+      const tickers = [...new Set(holdings.map((h) => h.ticker))];
+      if (tickers.length > 0) fetchQuotes(tickers);
+    }, ms);
+    return () => window.clearInterval(id);
+  }, [holdings, refreshInterval, fetchQuotes]);
 
   const refreshSingleQuote = useCallback(async (ticker: string) => {
     if (!ticker || fetchingRef.current || refreshingTickers.has(ticker)) return;

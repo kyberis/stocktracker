@@ -28,6 +28,16 @@ export async function POST(request: Request) {
     cashflow?: Record<string, unknown>;
     earnings?: Record<string, unknown>;
     language?: string;
+    analysisType?: string;
+    news?: Record<string, unknown>[];
+    insiderTransactions?: Record<string, unknown>[];
+    institutionalHoldings?: Record<string, unknown>[];
+    earningsTranscript?: string;
+    focusTab?: string;
+    indicatorName?: string;
+    indicatorData?: { date: string; value: number | null }[];
+    indicatorUnit?: string;
+    indicatorInterval?: string;
   };
 
   try {
@@ -42,28 +52,106 @@ export async function POST(request: Request) {
     : body.ticker || "this company";
 
   const dataSections: string[] = [];
+  const isIntelligence = body.analysisType === "intelligence";
+  const isEconomic = body.analysisType === "economic_indicator";
 
-  if (body.overview) {
-    dataSections.push(`## Company Overview\n${JSON.stringify(body.overview, null, 2)}`);
-  }
-  if (body.income) {
-    dataSections.push(`## Income Statement (latest periods)\n${JSON.stringify(body.income, null, 2)}`);
-  }
-  if (body.balance) {
-    dataSections.push(`## Balance Sheet (latest periods)\n${JSON.stringify(body.balance, null, 2)}`);
-  }
-  if (body.cashflow) {
-    dataSections.push(`## Cash Flow (latest periods)\n${JSON.stringify(body.cashflow, null, 2)}`);
-  }
-  if (body.earnings) {
-    dataSections.push(`## Earnings (latest periods)\n${JSON.stringify(body.earnings, null, 2)}`);
+  if (isEconomic) {
+    if (body.indicatorData && body.indicatorData.length > 0) {
+      const recent = body.indicatorData.slice(0, 40);
+      dataSections.push(
+        `## ${body.indicatorName || "Economic Indicator"}\n` +
+        `Unit: ${body.indicatorUnit || "N/A"}\n` +
+        `Interval: ${body.indicatorInterval || "N/A"}\n\n` +
+        `### Data (most recent first)\n` +
+        recent.map((d) => `${d.date}: ${d.value ?? "N/A"}`).join("\n")
+      );
+    }
+  } else if (!isIntelligence) {
+    if (body.overview) {
+      dataSections.push(`## Company Overview\n${JSON.stringify(body.overview, null, 2)}`);
+    }
+    if (body.income) {
+      dataSections.push(`## Income Statement (latest periods)\n${JSON.stringify(body.income, null, 2)}`);
+    }
+    if (body.balance) {
+      dataSections.push(`## Balance Sheet (latest periods)\n${JSON.stringify(body.balance, null, 2)}`);
+    }
+    if (body.cashflow) {
+      dataSections.push(`## Cash Flow (latest periods)\n${JSON.stringify(body.cashflow, null, 2)}`);
+    }
+    if (body.earnings) {
+      dataSections.push(`## Earnings (latest periods)\n${JSON.stringify(body.earnings, null, 2)}`);
+    }
+  } else {
+    if (body.news && body.news.length > 0) {
+      dataSections.push(`## Recent News & Sentiment\n${JSON.stringify(body.news, null, 2)}`);
+    }
+    if (body.insiderTransactions && body.insiderTransactions.length > 0) {
+      dataSections.push(`## Insider Transactions\n${JSON.stringify(body.insiderTransactions, null, 2)}`);
+    }
+    if (body.institutionalHoldings && body.institutionalHoldings.length > 0) {
+      dataSections.push(`## Institutional Holdings\n${JSON.stringify(body.institutionalHoldings, null, 2)}`);
+    }
+    if (body.earningsTranscript) {
+      dataSections.push(`## Earnings Call Transcript (excerpt)\n${body.earningsTranscript}`);
+    }
   }
 
   if (dataSections.length === 0) {
     return Response.json({ error: "No financial data provided" }, { status: 400 });
   }
 
-  const systemPrompt = `You are a friendly financial analyst who explains company financials to beginners. 
+  let systemPrompt: string;
+  let userPrompt: string;
+
+  if (isEconomic) {
+    systemPrompt = `You are a friendly economist who explains macroeconomic data to beginners.
+Your audience has NO economics or finance background.
+
+Rules:
+- Write in ${lang}.
+- Use simple, everyday language. When you must mention an economic term, explain it briefly in parentheses.
+- Structure your response with clear headings using markdown ##.
+- Start with a one-sentence "Quick Take" — is the trend positive, negative, or stable?
+- Explain what the indicator measures and why it matters for ordinary people (jobs, prices, savings, etc.).
+- Describe the trend you see in the data — is it going up, down, or sideways? Any notable turning points?
+- If relevant, mention how the current level compares to historical norms.
+- Keep the total response under 500 words.
+- Be honest — if the data looks concerning, say so diplomatically.`;
+
+    userPrompt = `Here is recent data for a US economic indicator.
+Please analyze the trend and explain what it means in simple terms.
+
+${dataSections.join("\n\n")}`;
+  } else if (isIntelligence) {
+    const focusMap: Record<string, string> = {
+      news: "news sentiment and what the media narrative means for the stock",
+      insider: "insider transactions — are executives buying or selling and what does that signal",
+      institutional: "institutional ownership — who the big investors are and what their positions suggest",
+      transcript: "the earnings call transcript — key takeaways, management tone, and forward outlook",
+    };
+    const focusHint = body.focusTab ? focusMap[body.focusTab] || "" : "";
+
+    systemPrompt = `You are a friendly market intelligence analyst who explains stock market signals to beginners.
+Your audience has NO financial background.
+
+Rules:
+- Write in ${lang}.
+- Use simple, everyday language. When you must mention a market term, explain it briefly in parentheses.
+- Structure your response with clear headings using markdown ##.
+- Start with a brief "Signal Summary" — one or two sentences on what the data suggests overall (bullish, bearish, or mixed).
+- ${focusHint ? `Focus especially on ${focusHint}.` : "Cover all available data sections."}
+- Explain what patterns you see and why they might matter for the stock price.
+- Highlight notable red flags or positive signals.
+- Keep the total response under 600 words.
+- Be honest — if signals are mixed or unclear, say so.`;
+
+    userPrompt = `Here is market intelligence data for ${companyLabel} (exchange: ${body.exchange || "unknown"}).
+Please analyze it and explain what these signals mean in simple terms.
+
+${dataSections.join("\n\n")}`;
+  } else {
+    systemPrompt = `You are a friendly financial analyst who explains company financials to beginners. 
 Your audience has NO financial background — they don't know what P/E ratio, EBITDA, or cash flow means.
 
 Rules:
@@ -76,10 +164,11 @@ Rules:
 - Keep the total response under 600 words.
 - Be honest — if numbers look bad, say so diplomatically.`;
 
-  const userPrompt = `Here is the financial data for ${companyLabel} (exchange: ${body.exchange || "unknown"}).
+    userPrompt = `Here is the financial data for ${companyLabel} (exchange: ${body.exchange || "unknown"}).
 Please analyze it and explain what these numbers mean in simple terms.
 
 ${dataSections.join("\n\n")}`;
+  }
 
   try {
     const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {

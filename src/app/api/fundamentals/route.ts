@@ -17,7 +17,7 @@ export async function GET(request: Request) {
     );
   }
 
-  const provider = getProviderFromRequest(request);
+  const provider = await getProviderFromRequest(request);
 
   const methodMap: Record<string, string> = {
     income: "getIncomeStatement",

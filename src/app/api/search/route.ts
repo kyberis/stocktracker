@@ -16,7 +16,7 @@ export async function GET(request: Request) {
     return Response.json([]);
   }
 
-  const provider = getProviderFromRequest(request);
+  const provider = await getProviderFromRequest(request);
 
   try {
     const results = await provider.search(query);

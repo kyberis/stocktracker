@@ -1,6 +1,7 @@
 import type { StockDataProvider } from "./types";
 import { YahooProvider } from "./yahoo";
 import { AlphaVantageProvider } from "./alphavantage";
+import { getGlobalAlphaVantageApiKey } from "@/lib/db";
 
 export type ApiProviderName = "yahoo" | "alphavantage";
 
@@ -26,12 +27,13 @@ export function createProvider(
   }
 }
 
-export function getProviderFromRequest(request: Request): StockDataProvider {
+export async function getProviderFromRequest(request: Request): Promise<StockDataProvider> {
   const { searchParams } = new URL(request.url);
   const rawProviderName = searchParams.get("provider");
   const providerName: ApiProviderName =
     rawProviderName === "alphavantage" ? "alphavantage" : "yahoo";
-  const apiKey = request.headers.get("x-api-key") || searchParams.get("apiKey") || "";
+  const apiKey =
+    providerName === "alphavantage" ? await getGlobalAlphaVantageApiKey() : "";
   return createProvider(providerName, apiKey);
 }
 

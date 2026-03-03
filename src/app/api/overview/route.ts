@@ -11,7 +11,7 @@ export async function GET(request: Request) {
     return Response.json({ error: "symbol parameter required" }, { status: 400 });
   }
 
-  const provider = getProviderFromRequest(request);
+  const provider = await getProviderFromRequest(request);
 
   if (!provider.getOverview) {
     return Response.json(

@@ -218,5 +218,38 @@
     "displayCurrency": "USD",
     "exchange": "NSY",
     "valueInEUR": 427.94
+  },
+  {
+    "name": "iShares USD Treasury Bond 0-1yr UCITS ETF Dist",
+    "ticker": "IB01",
+    "isin": "IE00BGSF1X88",
+    "assetType": "etf",
+    "shares": 69,
+    "purchasePrice": 118.023985,
+    "displayCurrency": "USD",
+    "exchange": "LSE",
+    "valueInEUR": 7052.96
+  },
+  {
+    "name": "iShares Gold Producers UCITS ETF USD Acc",
+    "ticker": "IS0E",
+    "isin": "IE00B6R52036",
+    "assetType": "etf",
+    "shares": 6,
+    "purchasePrice": 30.685,
+    "displayCurrency": "EUR",
+    "exchange": "TDG",
+    "valueInEUR": 269.88
+  },
+  {
+    "name": "iShares MSCI China UCITS ETF USD Acc",
+    "ticker": "ICGA",
+    "isin": "IE00BJ5JPG56",
+    "assetType": "etf",
+    "shares": 238,
+    "purchasePrice": 5.106882,
+    "displayCurrency": "EUR",
+    "exchange": "XET",
+    "valueInEUR": 1214.99
   }
 ]

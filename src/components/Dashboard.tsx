@@ -2,28 +2,41 @@
 
 import { useState } from "react";
 import PortfolioSummary from "./PortfolioSummary";
-import PortfolioBenchmarkChart from "./PortfolioBenchmarkChart";
+import PerformanceMetrics from "./PerformanceMetrics";
+import MarketAndCash from "./MarketAndCash";
 import PortfolioTable from "./PortfolioTable";
-import CashBalances from "./CashBalances";
 import AddStockModal from "./AddStockModal";
 import SettingsModal from "./SettingsModal";
+import ImportPortfolioModal from "./ImportPortfolioModal";
+import ResetPortfolioModal from "./ResetPortfolioModal";
+import WhatsNewModal, { useWhatsNewAutoShow } from "./WhatsNewModal";
 import Header from "./Header";
 
 export default function Dashboard() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showImport, setShowImport] = useState(false);
+  const [showReset, setShowReset] = useState(false);
+  const [showWhatsNew, setShowWhatsNew] = useState(false);
+  const { showWhatsNew: autoShowWhatsNew, dismissWhatsNew } = useWhatsNewAutoShow();
+
+  const whatsNewOpen = showWhatsNew || autoShowWhatsNew;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
       <Header
         onAddStock={() => setShowAddModal(true)}
         onOpenSettings={() => setShowSettings(true)}
+        onImportPortfolio={() => setShowImport(true)}
+        onResetPortfolio={() => setShowReset(true)}
+        onWhatsNew={() => setShowWhatsNew(true)}
+        hasNewRelease={autoShowWhatsNew}
       />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
         <PortfolioSummary />
-        <PortfolioBenchmarkChart />
-        <CashBalances />
+        <PerformanceMetrics />
+        <MarketAndCash />
         <PortfolioTable />
       </main>
 
@@ -38,6 +51,24 @@ export default function Dashboard() {
           onClose={() => setShowSettings(false)}
         />
       )}
+
+      <ImportPortfolioModal
+        isOpen={showImport}
+        onClose={() => setShowImport(false)}
+      />
+
+      <ResetPortfolioModal
+        isOpen={showReset}
+        onClose={() => setShowReset(false)}
+      />
+
+      <WhatsNewModal
+        isOpen={whatsNewOpen}
+        onClose={() => {
+          setShowWhatsNew(false);
+          dismissWhatsNew();
+        }}
+      />
     </div>
   );
 }

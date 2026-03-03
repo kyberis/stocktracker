@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
-import type { ApiProviderName } from "./types";
+import type { ApiProviderName, RefreshInterval } from "./types";
 
 const AV_USAGE_KEY = "stocktracker-av-usage";
 const AV_MINUTE_LIMIT = 75;
@@ -13,9 +13,10 @@ interface MinuteUsage {
 
 interface SettingsContextType {
   provider: ApiProviderName;
-  alphaVantageApiKey: string;
+  refreshInterval: RefreshInterval;
+  hasGlobalAvKey: boolean;
   setProvider: (provider: ApiProviderName) => void;
-  setAlphaVantageApiKey: (key: string) => void;
+  setRefreshInterval: (interval: RefreshInterval) => void;
   isAlphaVantage: boolean;
   getApiHeaders: () => Record<string, string>;
   getApiParams: () => URLSearchParams;
@@ -54,7 +55,8 @@ function saveMinuteUsage(usage: MinuteUsage) {
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [provider, setProviderState] = useState<ApiProviderName>("yahoo");
-  const [alphaVantageApiKey, setAlphaVantageApiKeyState] = useState("");
+  const [refreshInterval, setRefreshIntervalState] = useState<RefreshInterval>(15);
+  const [hasGlobalAvKey, setHasGlobalAvKey] = useState(false);
   const [avCallsThisMinute, setAvCallsThisMinute] = useState(() => loadMinuteUsage().count);
 
   useEffect(() => {
@@ -66,8 +68,11 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
           if (settings.provider === "yahoo" || settings.provider === "alphavantage") {
             setProviderState(settings.provider);
           }
-          if (typeof settings.alphaVantageApiKey === "string") {
-            setAlphaVantageApiKeyState(settings.alphaVantageApiKey);
+          if ([15, 30, 60].includes(settings.refreshInterval)) {
+            setRefreshIntervalState(settings.refreshInterval);
+          }
+          if (typeof settings.hasGlobalAvKey === "boolean") {
+            setHasGlobalAvKey(settings.hasGlobalAvKey);
           }
         }
       } catch {
@@ -108,13 +113,13 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const setAlphaVantageApiKey = useCallback(async (key: string) => {
-    setAlphaVantageApiKeyState(key);
+  const setRefreshInterval = useCallback(async (interval: RefreshInterval) => {
+    setRefreshIntervalState(interval);
     try {
       await fetch("/api/user-settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ alphaVantageApiKey: key }),
+        body: JSON.stringify({ refreshInterval: interval }),
       });
     } catch {
       // Keep optimistic UI state.
@@ -122,11 +127,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const getApiHeaders = useCallback((): Record<string, string> => {
-    if (provider === "alphavantage" && alphaVantageApiKey) {
-      return { "x-api-key": alphaVantageApiKey };
-    }
     return {};
-  }, [provider, alphaVantageApiKey]);
+  }, []);
 
   const getApiParams = useCallback((): URLSearchParams => {
     const params = new URLSearchParams();
@@ -152,9 +154,10 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     <SettingsContext.Provider
       value={{
         provider,
-        alphaVantageApiKey,
+        refreshInterval,
+        hasGlobalAvKey,
         setProvider,
-        setAlphaVantageApiKey,
+        setRefreshInterval,
         isAlphaVantage: provider === "alphavantage",
         getApiHeaders,
         getApiParams,

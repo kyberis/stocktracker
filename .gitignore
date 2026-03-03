@@ -39,6 +39,10 @@ yarn-error.log*
 data/*.db
 data/*.db-*
 
+# promo assets (screenshots & video)
+promo-screenshots/
+promo-video.mp4
+
 # vercel
 .vercel
 

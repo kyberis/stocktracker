@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { addHolding, listHoldings, removeHolding, updateHolding } from "@/lib/db";
+import { addHolding, listHoldings, removeHolding, updateHolding, trackEvent } from "@/lib/db";
 import type { Holding } from "@/lib/types";
 
 export async function GET(req: NextRequest) {
@@ -21,6 +21,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid holding payload." }, { status: 400 });
     }
     const created = await addHolding(session.userId, body);
+    trackEvent(session.userId, "holding_add", { ticker: created.ticker });
     return NextResponse.json(created, { status: 201 });
   } catch {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
@@ -60,5 +61,6 @@ export async function DELETE(req: NextRequest) {
   if (!deleted) {
     return NextResponse.json({ error: "Holding not found." }, { status: 404 });
   }
+  trackEvent(session.userId, "holding_delete", { holdingId: id });
   return NextResponse.json({ ok: true });
 }

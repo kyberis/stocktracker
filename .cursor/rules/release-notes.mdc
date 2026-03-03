@@ -1,0 +1,26 @@
+---
+description: Reminder to add a release log entry when implementing new features, improvements, or bug fixes
+globs: src/lib/release-notes.ts
+alwaysApply: true
+---
+
+# Release Notes
+
+When adding a new feature, improvement, or bug fix, **always add a release log entry** in `src/lib/release-notes.ts`.
+
+## Steps
+
+1. Add a new entry to the `changes` array of the current version, or create a new version entry at the top of `releaseNotes` if the version was bumped.
+2. Bump `CURRENT_VERSION` when creating a new release entry.
+3. Include both English `text` and Spanish `textEs` for each change.
+4. Set the correct `type`: `"feature"` for new capabilities, `"improvement"` for enhancements, `"fix"` for bug fixes.
+
+## Example
+
+```typescript
+{
+  type: "feature",
+  text: "Added real-time WebSocket price updates",
+  textEs: "Actualizaciones de precios en tiempo real vía WebSocket",
+}
+```

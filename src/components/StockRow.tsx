@@ -298,6 +298,25 @@ export default function StockRow({ holding }: StockRowProps) {
       shares: nextShares,
       purchasePrice: nextPurchasePrice,
     });
+
+    fetch("/api/transactions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        holdingId: holding.id,
+        ticker: holding.ticker,
+        type: tradeAction,
+        date: new Date().toISOString().slice(0, 10),
+        shares: qty,
+        pricePerShare: price,
+        totalAmount: qty * price,
+        fees: 0,
+        taxes: 0,
+        currency: holding.displayCurrency || "EUR",
+        notes: "",
+      }),
+    }).catch(() => {});
+
     setTradeQuantity("");
     setTradePrice("");
   };
@@ -668,16 +687,30 @@ export default function StockRow({ holding }: StockRowProps) {
           {isAlphaVantage && overview && <OverviewSection overview={overview} />}
 
           <div className="mt-3 flex items-center justify-between">
-            <Link
-              href={`/stock/${encodeURIComponent(holding.ticker)}?exchange=${encodeURIComponent(holding.exchange)}`}
-              onClick={(e) => e.stopPropagation()}
-              className="text-sm text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors flex items-center gap-1"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-              {t("viewDetails")}
-            </Link>
+            <div className="flex items-center gap-3">
+              <Link
+                href={`/stock/${encodeURIComponent(holding.ticker)}?exchange=${encodeURIComponent(holding.exchange)}`}
+                onClick={(e) => e.stopPropagation()}
+                className="text-sm text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors flex items-center gap-1"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+                {t("viewDetails")}
+              </Link>
+              {isAlphaVantage && (
+                <Link
+                  href={`/stock/${encodeURIComponent(holding.ticker)}/intelligence?exchange=${encodeURIComponent(holding.exchange)}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-sm text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition-colors flex items-center gap-1"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                  </svg>
+                  {t("viewIntelligence")}
+                </Link>
+              )}
+            </div>
             {showDeleteConfirm ? (
               <div className="flex items-center gap-2">
                 <span className="text-sm text-gray-500 dark:text-slate-400">{t("deleteConfirm")}</span>

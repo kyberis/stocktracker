@@ -9,6 +9,9 @@ interface AuthUser {
   username: string;
   role: AuthUserRole;
   mustChangePassword: boolean;
+  email: string;
+  displayName: string;
+  avatarUrl: string;
 }
 
 interface AuthContextType {

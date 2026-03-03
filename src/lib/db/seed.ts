@@ -15,6 +15,11 @@ interface SeedHolding {
   valueInEUR: number;
 }
 
+interface SeedCash {
+  name: string;
+  amountEUR: number;
+}
+
 function inferAssetType(row: SeedHolding): "stock" | "etf" {
   if (row.assetType === "etf") return "etf";
   if (row.assetType === "stock") return "stock";
@@ -25,6 +30,16 @@ function getSeedHoldings(): SeedHolding[] {
   const filePath = path.join(process.cwd(), "data", "seed-holdings.json");
   const raw = readFileSync(filePath, "utf8");
   return JSON.parse(raw) as SeedHolding[];
+}
+
+function getSeedCash(): SeedCash[] {
+  try {
+    const filePath = path.join(process.cwd(), "data", "seed-cash.json");
+    const raw = readFileSync(filePath, "utf8");
+    return JSON.parse(raw) as SeedCash[];
+  } catch {
+    return [];
+  }
 }
 
 export async function seedHoldingsForUser(client: Client, userId: string): Promise<number> {
@@ -50,4 +65,18 @@ export async function seedHoldingsForUser(client: Client, userId: string): Promi
 
   await client.batch(stmts, "write");
   return holdings.length;
+}
+
+export async function seedCashForUser(client: Client, userId: string): Promise<number> {
+  const cash = getSeedCash();
+  if (cash.length === 0) return 0;
+
+  const stmts = cash.map((row) => ({
+    sql: `INSERT OR IGNORE INTO cash_entries (id, user_id, name, amount_eur)
+          VALUES (?, ?, ?, ?)`,
+    args: [randomUUID(), userId, row.name, row.amountEUR],
+  }));
+
+  await client.batch(stmts, "write");
+  return cash.length;
 }

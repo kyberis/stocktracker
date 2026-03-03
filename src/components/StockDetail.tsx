@@ -7,6 +7,7 @@ import { usePortfolio } from "@/lib/portfolio-context";
 import { useI18n } from "@/lib/i18n";
 import { formatCompactNumber } from "@/lib/utils";
 import { getMarketStatus } from "@/lib/market-hours";
+import { useTrack } from "@/lib/use-track";
 import StockChart from "./StockChart";
 import type {
   CompanyOverview,
@@ -59,7 +60,12 @@ export default function StockDetail({ ticker, exchange }: StockDetailProps) {
   const [aiStatus, setAiStatus] = useState<AiStatus>("idle");
   const [aiText, setAiText] = useState("");
 
+  const track = useTrack();
   const marketStatus = exchange ? getMarketStatus(exchange, now) : null;
+
+  useEffect(() => {
+    track("stock_view", { ticker });
+  }, [ticker]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 60_000);
@@ -96,6 +102,7 @@ export default function StockDetail({ ticker, exchange }: StockDetailProps) {
     if (aiStatus === "loading") return;
     setAiStatus("loading");
     setAiText("");
+    track("ai_analysis", { ticker });
 
     const payload: Record<string, unknown> = {
       companyName: holding?.name,
@@ -261,12 +268,25 @@ export default function StockDetail({ ticker, exchange }: StockDetailProps) {
                 )}
               </p>
             </div>
-            {overview && (
-              <div className="text-right">
-                <p className="text-xs text-gray-400 dark:text-slate-500">{overview.sector}</p>
-                <p className="text-xs text-gray-500 dark:text-slate-400">{overview.industry}</p>
-              </div>
-            )}
+            <div className="flex flex-col items-end gap-1.5">
+              {overview && (
+                <div className="text-right">
+                  <p className="text-xs text-gray-400 dark:text-slate-500">{overview.sector}</p>
+                  <p className="text-xs text-gray-500 dark:text-slate-400">{overview.industry}</p>
+                </div>
+              )}
+              {isAlphaVantage && (
+                <Link
+                  href={`/stock/${encodeURIComponent(ticker)}/intelligence?exchange=${encodeURIComponent(exchange)}`}
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition-colors"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                  </svg>
+                  {t("viewIntelligence")}
+                </Link>
+              )}
+            </div>
           </div>
         </div>
 

@@ -54,7 +54,7 @@ export async function GET(request: Request) {
     return Response.json({ error: "symbols parameter required" }, { status: 400 });
   }
 
-  const provider = getProviderFromRequest(request);
+  const provider = await getProviderFromRequest(request);
   const isAV = provider.name === "alphavantage";
   const stockSymbols = symbols.split(",").map((s) => s.trim()).filter(Boolean);
   const results: Record<string, unknown> = {};

@@ -12,12 +12,83 @@ export interface Holding {
   displayCurrency: string;
   exchange: string;
   valueInEUR: number;
+  accountId?: string;
+  sector?: string;
+  region?: string;
+  assetClass?: string;
 }
 
 export interface CashEntry {
   id: string;
   name: string;
   amountEUR: number;
+}
+
+/* ── Transaction Ledger ──────────────────────────────────── */
+
+export type TransactionType = "buy" | "sell" | "dividend" | "fee";
+
+export interface Transaction {
+  id: string;
+  holdingId: string;
+  ticker: string;
+  type: TransactionType;
+  date: string;
+  shares: number;
+  pricePerShare: number;
+  totalAmount: number;
+  fees: number;
+  taxes: number;
+  currency: string;
+  notes: string;
+  createdAt: string;
+}
+
+/* ── Watchlist ────────────────────────────────────────────── */
+
+export interface WatchlistItem {
+  id: string;
+  ticker: string;
+  name: string;
+  exchange: string;
+  addedAt: string;
+}
+
+/* ── Accounts / Portfolios ────────────────────────────────── */
+
+export interface Account {
+  id: string;
+  name: string;
+  broker: string;
+  currency: string;
+  createdAt: string;
+}
+
+/* ── Taxonomy / Classification ────────────────────────────── */
+
+export interface TaxonomyAllocation {
+  label: string;
+  valueEUR: number;
+  percent: number;
+  color: string;
+}
+
+/* ── Rebalancing ──────────────────────────────────────────── */
+
+export interface RebalanceTarget {
+  id: string;
+  category: string;
+  label: string;
+  targetPercent: number;
+}
+
+export interface RebalanceDrift {
+  label: string;
+  targetPercent: number;
+  actualPercent: number;
+  driftPercent: number;
+  valueEUR: number;
+  actionEUR: number;
 }
 
 export interface QuoteData {
@@ -155,3 +226,16 @@ export type ExchangeRates = Record<string, number>;
 export type TimePeriod = "1w" | "1m" | "3m" | "6m" | "1y" | "all";
 
 export type Language = "en" | "es";
+
+export type RefreshInterval = 15 | 30 | 60;
+
+/* ── Alpha Intelligence types ──────────────────────────────── */
+
+export type {
+  NewsArticle,
+  InsiderTransaction,
+  InstitutionalHolder,
+  EarningsTranscript,
+  EconDataPoint,
+  EconIndicatorResult,
+} from "./api-providers/types";

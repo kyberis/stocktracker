@@ -121,6 +121,61 @@ export interface FundamentalData<T> {
 
 export type TimePeriod = "1w" | "1m" | "3m" | "6m" | "1y" | "all";
 
+/* ── Alpha Intelligence types ──────────────────────────────── */
+
+export interface NewsArticle {
+  title: string;
+  url: string;
+  source: string;
+  publishedAt: string;
+  summary: string;
+  overallSentiment: string;
+  overallSentimentScore: number;
+  tickerSentiment: { ticker: string; relevance: number; sentimentScore: number; sentimentLabel: string }[];
+  topics: string[];
+}
+
+export interface InsiderTransaction {
+  fullName: string;
+  title: string;
+  transactionDate: string;
+  transactionType: string;
+  shares: number;
+  sharePrice: number;
+  totalValue: number;
+  sharesOwned: number | null;
+}
+
+export interface InstitutionalHolder {
+  investor: string;
+  shares: number;
+  value: number;
+  weight: number;
+  quarterEndDate: string;
+}
+
+export interface EarningsTranscript {
+  symbol: string;
+  quarter: string;
+  transcript: string;
+  sentiment: string;
+  sentimentScore: number | null;
+}
+
+/* ── Economic Indicators types ───────────────────────────── */
+
+export interface EconDataPoint {
+  date: string;
+  value: number | null;
+}
+
+export interface EconIndicatorResult {
+  name: string;
+  interval: string;
+  unit: string;
+  data: EconDataPoint[];
+}
+
 export interface StockDataProvider {
   getQuote(symbol: string): Promise<ProviderQuoteResult>;
   search(query: string): Promise<ProviderSearchResult[]>;
@@ -131,6 +186,11 @@ export interface StockDataProvider {
   getBalanceSheet?(symbol: string): Promise<FundamentalData<BalanceSheetReport> | null>;
   getCashFlow?(symbol: string): Promise<FundamentalData<CashFlowReport> | null>;
   getEarnings?(symbol: string): Promise<FundamentalData<EarningsReport> | null>;
+  getNewsSentiment?(symbol: string): Promise<NewsArticle[]>;
+  getInsiderTransactions?(symbol: string): Promise<InsiderTransaction[]>;
+  getInstitutionalHoldings?(symbol: string): Promise<InstitutionalHolder[]>;
+  getEarningsTranscript?(symbol: string, quarter: string): Promise<EarningsTranscript | null>;
+  getEconomicIndicator?(func: string, interval?: string, maturity?: string): Promise<EconIndicatorResult | null>;
   readonly name: string;
   readonly callCount?: number;
 }

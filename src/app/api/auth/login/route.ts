@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { findUserByUsername, toPublicUser } from "@/lib/db";
+import { findUserByUsername, toPublicUser, trackEvent } from "@/lib/db";
 import { verifyPassword } from "@/lib/auth/password";
 import {
   createSessionToken,
@@ -48,6 +48,7 @@ export async function POST(req: NextRequest) {
       mustChangePassword: user.must_change_password === 1,
     });
 
+    trackEvent(user.id, "login");
     const response = NextResponse.json({ user: toPublicUser(user) });
     response.cookies.set(getSessionCookieConfig(token));
     return response;

@@ -1,5 +1,6 @@
 import { AlphaVantageProvider } from "@/lib/api-providers/alphavantage";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
+import { getGlobalAlphaVantageApiKey } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -31,10 +32,7 @@ export async function GET(request: Request) {
     );
   }
 
-  const avApiKey =
-    request.headers.get("x-api-key") ||
-    searchParams.get("apiKey") ||
-    "";
+  const avApiKey = await getGlobalAlphaVantageApiKey();
 
   let av: AlphaVantageProvider | null = null;
   if (avApiKey) {
