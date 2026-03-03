@@ -12,7 +12,7 @@ interface CacheEntry<T> {
   timestamp: number;
 }
 
-const FX_PAIRS = ["EURUSD=X", "EURGBP=X", "EURDKK=X", "EURCAD=X"];
+const FX_PAIRS = ["EURUSD", "EURGBP", "EURDKK", "EURCAD"];
 
 interface PortfolioContextType {
   holdings: Holding[];
@@ -65,20 +65,20 @@ function saveToStorage<T>(key: string, data: T) {
   localStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() }));
 }
 
-function parseExchangeRates(quotes: Record<string, QuoteData>): ExchangeRates {
+function parseExchangeRatesFromApi(
+  data: Record<string, { rate: number; provider: string }>
+): ExchangeRates {
   const rates: ExchangeRates = {};
-  for (const pair of FX_PAIRS) {
-    const quote = quotes[pair];
-    if (quote && quote.regularMarketPrice > 0) {
-      const key = pair.replace("=X", "");
-      rates[key] = quote.regularMarketPrice;
+  for (const [pair, val] of Object.entries(data)) {
+    if (val && val.rate > 0) {
+      rates[pair] = val.rate;
     }
   }
   return rates;
 }
 
 export function PortfolioProvider({ children }: { children: React.ReactNode }) {
-  const { provider, getApiHeaders, trackAvCalls } = useSettings();
+  const { provider, alphaVantageApiKey, getApiHeaders, trackAvCalls } = useSettings();
   const [holdings, setHoldings] = useState<Holding[]>([]);
   const [cashEntries, setCashEntries] = useState<CashEntry[]>([]);
   const [quotes, setQuotes] = useState<Record<string, QuoteData>>({});
@@ -151,6 +151,18 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
     [provider]
   );
 
+  const fetchExchangeRates = useCallback(async (): Promise<ExchangeRates> => {
+    const params = new URLSearchParams({ pairs: FX_PAIRS.join(",") });
+    const headers: Record<string, string> = {};
+    if (alphaVantageApiKey) {
+      headers["x-api-key"] = alphaVantageApiKey;
+    }
+    const res = await fetch(`/api/exchange-rates?${params}`, { headers });
+    if (!res.ok) throw new Error("Failed to fetch exchange rates");
+    const data = await res.json();
+    return parseExchangeRatesFromApi(data);
+  }, [alphaVantageApiKey]);
+
   const fetchQuotes = useCallback(async (tickers: string[]) => {
     if (fetchingRef.current || tickers.length === 0) return;
     fetchingRef.current = true;
@@ -158,13 +170,12 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
     setError(null);
 
     try {
-      const allSymbols = [...tickers, ...FX_PAIRS];
       const allQuotes: Record<string, QuoteData> = {};
       const batchSize = 10;
       const headers = getApiHeaders();
 
-      for (let i = 0; i < allSymbols.length; i += batchSize) {
-        const batch = allSymbols.slice(i, i + batchSize);
+      for (let i = 0; i < tickers.length; i += batchSize) {
+        const batch = tickers.slice(i, i + batchSize);
         const url = buildFetchUrl("/api/quote", { symbols: batch.join(",") });
         const res = await fetch(url, { headers });
         trackAvCalls(res);
@@ -177,13 +188,11 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
       const now = Date.now();
       const updatedAtByTicker: Record<string, number> = {};
       for (const [key, val] of Object.entries(allQuotes)) {
-        if (!key.includes("=X")) {
-          stockQuotes[key] = { ...val, fetchedAt: now };
-          updatedAtByTicker[key] = now;
-        }
+        stockQuotes[key] = { ...val, fetchedAt: now };
+        updatedAtByTicker[key] = now;
       }
 
-      const rates = parseExchangeRates(allQuotes);
+      const rates = await fetchExchangeRates();
 
       setQuotes(stockQuotes);
       setQuoteUpdatedAt(updatedAtByTicker);
@@ -197,7 +206,7 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(false);
       fetchingRef.current = false;
     }
-  }, [getApiHeaders, buildFetchUrl, trackAvCalls]);
+  }, [getApiHeaders, buildFetchUrl, trackAvCalls, fetchExchangeRates]);
 
   const refreshQuotes = useCallback(async () => {
     const tickers = [...new Set(holdings.map((h) => h.ticker))];
@@ -215,8 +224,7 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
 
     try {
       const headers = getApiHeaders();
-      const symbols = [ticker, ...FX_PAIRS];
-      const url = buildFetchUrl("/api/quote", { symbols: symbols.join(",") });
+      const url = buildFetchUrl("/api/quote", { symbols: ticker });
       const res = await fetch(url, { headers });
       trackAvCalls(res);
       if (!res.ok) throw new Error("Failed to fetch quote");
@@ -234,7 +242,7 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
         setQuoteUpdatedAt((prev) => ({ ...prev, [ticker]: now }));
       }
 
-      const rates = parseExchangeRates(allQuotes);
+      const rates = await fetchExchangeRates();
       setExchangeRates((prev) => {
         const merged = { ...prev, ...rates };
         saveToStorage(RATES_CACHE_KEY, merged);
@@ -250,7 +258,7 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
         return next;
       });
     }
-  }, [buildFetchUrl, getApiHeaders, refreshingTickers, trackAvCalls]);
+  }, [buildFetchUrl, getApiHeaders, refreshingTickers, trackAvCalls, fetchExchangeRates]);
 
   const addHolding = useCallback(async (holding: Omit<Holding, "id">) => {
     const tempId = generateId();

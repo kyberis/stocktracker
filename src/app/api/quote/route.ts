@@ -56,11 +56,8 @@ export async function GET(request: Request) {
 
   const provider = getProviderFromRequest(request);
   const isAV = provider.name === "alphavantage";
-  const tickerList = symbols.split(",").map((s) => s.trim()).filter(Boolean);
+  const stockSymbols = symbols.split(",").map((s) => s.trim()).filter(Boolean);
   const results: Record<string, unknown> = {};
-
-  const fxSymbols = tickerList.filter((s) => s.includes("=X"));
-  const stockSymbols = tickerList.filter((s) => !s.includes("=X"));
 
   let rateLimitHit = false;
   let yahoo: YahooProvider | null = null;
@@ -151,72 +148,6 @@ export async function GET(request: Request) {
       }
     }
 
-    // FX pairs: if rate limit hit, batch with Yahoo in parallel; otherwise sequential via AV
-    if (rateLimitHit) {
-      await Promise.all(fxSymbols.map(async (symbol) => {
-        try {
-          const quote = await getYahoo().getQuote(symbol);
-          results[symbol] = {
-            symbol,
-            shortName: symbol,
-            regularMarketPrice: quote.regularMarketPrice,
-            regularMarketChange: 0,
-            regularMarketChangePercent: 0,
-            currency: quote.currency,
-            regularMarketPreviousClose: quote.regularMarketPrice,
-            fiftyTwoWeekHigh: 0,
-            fiftyTwoWeekLow: 0,
-            marketCap: 0,
-          };
-        } catch {
-          results[symbol] = { ...errorQuote(symbol), error: true };
-        }
-      }));
-    } else {
-      for (const symbol of fxSymbols) {
-        try {
-          const pair = symbol.replace("=X", "");
-          const from = pair.substring(0, 3);
-          const to = pair.substring(3);
-          const rate = await provider.getExchangeRate(from, to);
-          results[symbol] = {
-            symbol,
-            shortName: symbol,
-            regularMarketPrice: rate,
-            regularMarketChange: 0,
-            regularMarketChangePercent: 0,
-            currency: to,
-            regularMarketPreviousClose: rate,
-            fiftyTwoWeekHigh: 0,
-            fiftyTwoWeekLow: 0,
-            marketCap: 0,
-          };
-        } catch (err) {
-          if (isRateLimitError(err)) {
-            rateLimitHit = true;
-            try {
-              const quote = await getYahoo().getQuote(symbol);
-              results[symbol] = {
-                symbol,
-                shortName: symbol,
-                regularMarketPrice: quote.regularMarketPrice,
-                regularMarketChange: 0,
-                regularMarketChangePercent: 0,
-                currency: quote.currency,
-                regularMarketPreviousClose: quote.regularMarketPrice,
-                fiftyTwoWeekHigh: 0,
-                fiftyTwoWeekLow: 0,
-                marketCap: 0,
-              };
-            } catch {
-              results[symbol] = { ...errorQuote(symbol), error: true };
-            }
-          } else {
-            results[symbol] = { ...errorQuote(symbol), error: true };
-          }
-        }
-      }
-    }
   } else {
     // Yahoo or other — parallel as before
     const stockPromises = stockSymbols.map(async (symbol) => {
@@ -241,31 +172,7 @@ export async function GET(request: Request) {
       }
     });
 
-    const fxPromises = fxSymbols.map(async (symbol) => {
-      try {
-        const pair = symbol.replace("=X", "");
-        const from = pair.substring(0, 3);
-        const to = pair.substring(3);
-        const rate = await provider.getExchangeRate(from, to);
-        results[symbol] = {
-          symbol,
-          shortName: symbol,
-          regularMarketPrice: rate,
-          regularMarketChange: 0,
-          regularMarketChangePercent: 0,
-          currency: to,
-          regularMarketPreviousClose: rate,
-          fiftyTwoWeekHigh: 0,
-          fiftyTwoWeekLow: 0,
-          marketCap: 0,
-        };
-      } catch (err) {
-        console.error(`Failed to fetch FX rate for ${symbol}:`, err instanceof Error ? err.message : err);
-        results[symbol] = { ...errorQuote(symbol), error: true };
-      }
-    });
-
-    await Promise.all([...stockPromises, ...fxPromises]);
+    await Promise.all(stockPromises);
   }
 
   return jsonWithCallCount(provider, results);

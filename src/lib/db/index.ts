@@ -4,6 +4,7 @@ import path from "path";
 import { createClient, type Client, type Row } from "@libsql/client";
 import bcrypt from "bcryptjs";
 import type { ApiProviderName, CashEntry, Holding, HoldingAssetType, Language } from "@/lib/types";
+import { encrypt, decrypt } from "@/lib/crypto";
 import { seedHoldingsForUser } from "./seed";
 
 export type UserRole = "admin" | "user";
@@ -125,6 +126,9 @@ async function runMigrations(client: Client) {
   await client.execute({
     sql: "UPDATE holdings SET ticker = 'W9C' WHERE ticker = 'CSU.TO' AND name = 'Constellation Software Inc'",
   });
+  await client.execute({
+    sql: "UPDATE holdings SET ticker = 'IS0E' WHERE ticker = 'ISOE' AND UPPER(exchange) IN ('TDG', 'TGD')",
+  });
 
   // Auto-append exchange suffix for any bare ticker on a known exchange.
   for (const [exch, suffix] of Object.entries(EXCHANGE_SUFFIX_MAP)) {
@@ -152,6 +156,22 @@ async function runMigrations(client: Client) {
   await client.execute({
     sql: "DELETE FROM holdings WHERE UPPER(exchange) = 'CASH' OR UPPER(ticker) LIKE 'CASH-%'",
   });
+
+  // Encrypt any plaintext AV API keys that were stored before encryption was added.
+  const keysResult = await client.execute(
+    "SELECT user_id, alpha_vantage_api_key FROM user_settings WHERE alpha_vantage_api_key != ''"
+  );
+  for (const row of keysResult.rows) {
+    const raw = str(row.alpha_vantage_api_key);
+    const decrypted = decrypt(raw);
+    if (decrypted === raw && !raw.includes("=")) {
+      // Value didn't change after decrypt and isn't base64 -> still plaintext
+      await client.execute({
+        sql: "UPDATE user_settings SET alpha_vantage_api_key = ? WHERE user_id = ?",
+        args: [encrypt(raw), str(row.user_id)],
+      });
+    }
+  }
 }
 
 async function ensureAdminUser(client: Client) {
@@ -205,6 +225,7 @@ function holdingAssetType(val: unknown): HoldingAssetType {
 const EXCHANGE_SUFFIX_MAP: Record<string, string> = {
   XET: ".DE",
   TGD: ".DE",
+  TDG: ".DE",
   FRA: ".F",
   MAD: ".MC",
   BME: ".MC",
@@ -349,7 +370,7 @@ export async function getUserSettings(userId: string): Promise<UserSettings> {
   const row = result.rows[0];
   return {
     provider: (row.provider === "alphavantage" ? "alphavantage" : "yahoo") as ApiProviderName,
-    alphaVantageApiKey: str(row.alpha_vantage_api_key),
+    alphaVantageApiKey: decrypt(str(row.alpha_vantage_api_key)),
     language: (row.language === "es" ? "es" : "en") as Language,
   };
 }
@@ -368,7 +389,7 @@ export async function updateUserSettings(
   const client = await ensureInitialized();
   await client.execute({
     sql: "UPDATE user_settings SET provider = ?, alpha_vantage_api_key = ?, language = ? WHERE user_id = ?",
-    args: [next.provider, next.alphaVantageApiKey, next.language, userId],
+    args: [next.provider, encrypt(next.alphaVantageApiKey), next.language, userId],
   });
 
   return next;

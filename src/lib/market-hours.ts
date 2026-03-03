@@ -26,6 +26,7 @@ const EXCHANGE_SCHEDULES: Record<string, ExchangeSchedule> = {
   // Germany - XETRA, Tradegate, Frankfurt
   XET: { tz: "Europe/Berlin", openHour: 9, openMinute: 0, closeHour: 17, closeMinute: 30 },
   TGD: { tz: "Europe/Berlin", openHour: 8, openMinute: 0, closeHour: 22, closeMinute: 0 },
+  TDG: { tz: "Europe/Berlin", openHour: 8, openMinute: 0, closeHour: 22, closeMinute: 0 },
   FRA: { tz: "Europe/Berlin", openHour: 8, openMinute: 0, closeHour: 20, closeMinute: 0 },
   GER: { tz: "Europe/Berlin", openHour: 9, openMinute: 0, closeHour: 17, closeMinute: 30 },
 
