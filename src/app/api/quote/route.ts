@@ -5,6 +5,8 @@ import { YahooProvider } from "@/lib/api-providers/yahoo";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+const DE_FALLBACK_SUFFIXES = [".F", ".DU", ".MU"];
+
 function isRateLimitError(err: unknown): boolean {
   return err instanceof Error && err.message.includes("rate limit");
 }
@@ -23,6 +25,25 @@ function errorQuote(symbol: string) {
     marketCap: 0,
     error: true,
   };
+}
+
+async function tryGermanFallback(
+  yahoo: YahooProvider,
+  symbol: string
+): Promise<{ quote: Awaited<ReturnType<YahooProvider["getQuote"]>>; usedSymbol: string } | null> {
+  if (!symbol.toUpperCase().endsWith(".DE")) return null;
+  const base = symbol.slice(0, -3);
+  for (const suffix of DE_FALLBACK_SUFFIXES) {
+    try {
+      const q = await yahoo.getQuote(`${base}${suffix}`);
+      if (q.regularMarketPrice > 0) {
+        return { quote: q, usedSymbol: `${base}${suffix}` };
+      }
+    } catch {
+      // try next
+    }
+  }
+  return null;
 }
 
 export async function GET(request: Request) {
@@ -54,10 +75,22 @@ export async function GET(request: Request) {
       if (rateLimitHit) {
         try {
           const quote = await getYahoo().getQuote(symbol);
-          results[symbol] = { ...quote, providerUsed: "yahoo" };
+          if (quote.regularMarketPrice > 0) {
+            results[symbol] = { ...quote, providerUsed: "yahoo" };
+          } else {
+            const fb = await tryGermanFallback(getYahoo(), symbol);
+            results[symbol] = fb
+              ? { ...fb.quote, symbol, providerUsed: "yahoo" }
+              : { ...quote, providerUsed: "yahoo" };
+          }
         } catch (err) {
-          console.error(`Yahoo fallback failed for ${symbol}:`, err instanceof Error ? err.message : err);
-          results[symbol] = { ...errorQuote(symbol), providerUsed: "yahoo" };
+          const fb = await tryGermanFallback(getYahoo(), symbol).catch(() => null);
+          if (fb) {
+            results[symbol] = { ...fb.quote, symbol, providerUsed: "yahoo" };
+          } else {
+            console.error(`Yahoo fallback failed for ${symbol}:`, err instanceof Error ? err.message : err);
+            results[symbol] = { ...errorQuote(symbol), providerUsed: "yahoo" };
+          }
         }
         continue;
       }
@@ -74,8 +107,20 @@ export async function GET(request: Request) {
 
         const quote = await provider.getQuote(symbol);
         if (quote.error || quote.regularMarketPrice === 0) {
-          const yahooQuote = await getYahoo().getQuote(symbol);
-          results[symbol] = { ...yahooQuote, providerUsed: "yahoo" };
+          let resolved = false;
+          try {
+            const yahooQuote = await getYahoo().getQuote(symbol);
+            if (yahooQuote.regularMarketPrice > 0) {
+              results[symbol] = { ...yahooQuote, providerUsed: "yahoo" };
+              resolved = true;
+            }
+          } catch { /* try German fallback below */ }
+          if (!resolved) {
+            const fb = await tryGermanFallback(getYahoo(), symbol);
+            results[symbol] = fb
+              ? { ...fb.quote, symbol, providerUsed: "yahoo" }
+              : { ...errorQuote(symbol), providerUsed: "yahoo" };
+          }
         } else {
           results[symbol] = { ...quote, providerUsed: "alphavantage" };
         }
@@ -86,10 +131,22 @@ export async function GET(request: Request) {
         }
         try {
           const quote = await getYahoo().getQuote(symbol);
-          results[symbol] = { ...quote, providerUsed: "yahoo" };
+          if (quote.regularMarketPrice > 0) {
+            results[symbol] = { ...quote, providerUsed: "yahoo" };
+          } else {
+            const fb = await tryGermanFallback(getYahoo(), symbol);
+            results[symbol] = fb
+              ? { ...fb.quote, symbol, providerUsed: "yahoo" }
+              : { ...quote, providerUsed: "yahoo" };
+          }
         } catch (fallbackErr) {
-          console.error(`Yahoo fallback failed for ${symbol}:`, fallbackErr instanceof Error ? fallbackErr.message : fallbackErr);
-          results[symbol] = { ...errorQuote(symbol), providerUsed: "yahoo" };
+          const fb = await tryGermanFallback(getYahoo(), symbol).catch(() => null);
+          if (fb) {
+            results[symbol] = { ...fb.quote, symbol, providerUsed: "yahoo" };
+          } else {
+            console.error(`Yahoo fallback failed for ${symbol}:`, fallbackErr instanceof Error ? fallbackErr.message : fallbackErr);
+            results[symbol] = { ...errorQuote(symbol), providerUsed: "yahoo" };
+          }
         }
       }
     }
@@ -165,10 +222,22 @@ export async function GET(request: Request) {
     const stockPromises = stockSymbols.map(async (symbol) => {
       try {
         const quote = await provider.getQuote(symbol);
-        results[symbol] = { ...quote, providerUsed: provider.name };
+        if (quote.regularMarketPrice > 0) {
+          results[symbol] = { ...quote, providerUsed: provider.name };
+        } else {
+          const fb = await tryGermanFallback(getYahoo(), symbol);
+          results[symbol] = fb
+            ? { ...fb.quote, symbol, providerUsed: provider.name }
+            : { ...quote, providerUsed: provider.name };
+        }
       } catch (err) {
-        console.error(`Failed to fetch quote for ${symbol}:`, err instanceof Error ? err.message : err);
-        results[symbol] = errorQuote(symbol);
+        const fb = await tryGermanFallback(getYahoo(), symbol).catch(() => null);
+        if (fb) {
+          results[symbol] = { ...fb.quote, symbol, providerUsed: provider.name };
+        } else {
+          console.error(`Failed to fetch quote for ${symbol}:`, err instanceof Error ? err.message : err);
+          results[symbol] = errorQuote(symbol);
+        }
       }
     });
 

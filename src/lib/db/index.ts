@@ -204,6 +204,7 @@ function holdingAssetType(val: unknown): HoldingAssetType {
 
 const EXCHANGE_SUFFIX_MAP: Record<string, string> = {
   XET: ".DE",
+  TGD: ".DE",
   FRA: ".F",
   MAD: ".MC",
   BME: ".MC",
