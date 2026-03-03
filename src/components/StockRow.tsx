@@ -13,6 +13,7 @@ import {
   normalizeCurrency,
   resolveQuoteCurrency,
 } from "@/lib/utils";
+import { getMarketStatus } from "@/lib/market-hours";
 import StockChart from "./StockChart";
 import type { Holding, QuoteData, CompanyOverview } from "@/lib/types";
 
@@ -138,6 +139,7 @@ export default function StockRow({ holding }: StockRowProps) {
   } = usePortfolio();
   const { isAlphaVantage, getApiHeaders, provider, trackAvCalls } = useSettings();
   const { t } = useI18n();
+  const [now, setNow] = useState(() => new Date());
   const [expanded, setExpanded] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [overview, setOverview] = useState<CompanyOverview | null>(null);
@@ -163,6 +165,7 @@ export default function StockRow({ holding }: StockRowProps) {
   const isFallback = isAlphaVantage && quote?.providerUsed === "yahoo";
   const isAvSource = quote?.providerUsed === "alphavantage";
   const isRefreshing = refreshingTickers.has(holding.ticker);
+  const marketStatus = isCashHolding ? null : getMarketStatus(holding.exchange, now);
   const lastFetchedAt = quoteUpdatedAt[holding.ticker] ?? quote?.fetchedAt;
   const quoteCurrency = quote
     ? resolveQuoteCurrency(holding.displayCurrency, quote.currency)
@@ -339,6 +342,11 @@ export default function StockRow({ holding }: StockRowProps) {
     setOverview(null);
   }, [provider]);
 
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(id);
+  }, []);
+
   return (
     <div className="border-b border-gray-100 dark:border-slate-700 last:border-b-0">
       <div
@@ -390,9 +398,29 @@ export default function StockRow({ holding }: StockRowProps) {
               </svg>
             </button>
           </div>
-          <p className="text-xs text-gray-400 dark:text-slate-500">
-            {holding.ticker} · {holding.exchange}
-            {lastFetchedAt ? ` · ${t("lastUpdated")}: ${new Date(lastFetchedAt).toLocaleTimeString()}` : ""}
+          <p className="text-xs text-gray-400 dark:text-slate-500 flex items-center gap-1.5 flex-wrap">
+            <span>{holding.ticker} · {holding.exchange}</span>
+            {marketStatus && (
+              <span
+                className={`inline-flex items-center gap-1 text-[9px] font-semibold px-1.5 py-px rounded-full ${
+                  marketStatus.isOpen
+                    ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20"
+                    : "bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-slate-400 border border-gray-200 dark:border-slate-600"
+                }`}
+                title={marketStatus.isOpen ? t("marketOpenTooltip") : t("marketClosedTooltip")}
+              >
+                <span className={`inline-block w-1.5 h-1.5 rounded-full ${
+                  marketStatus.isOpen ? "bg-emerald-500 animate-pulse" : "bg-gray-400 dark:bg-slate-500"
+                }`} />
+                {marketStatus.isOpen ? t("marketOpen") : t("marketClosed")}
+                {marketStatus.isOpen && marketStatus.nextEvent && (
+                  <span className="font-normal opacity-75">· {marketStatus.nextEvent}</span>
+                )}
+              </span>
+            )}
+            {lastFetchedAt && (
+              <span>· {t("lastUpdated")}: {new Date(lastFetchedAt).toLocaleTimeString()}</span>
+            )}
           </p>
         </div>
         <div className="col-span-2 sm:col-span-1 text-right">
@@ -412,6 +440,11 @@ export default function StockRow({ holding }: StockRowProps) {
               <p className={`text-xs ${dayChangePercent >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
                 {formatPercent(dayChangePercent)}
               </p>
+              {marketStatus && (
+                <p className="text-[9px] text-gray-400 dark:text-slate-500 mt-0.5 hidden sm:block">
+                  {marketStatus.isOpen ? t("delayLabel") : t("prevCloseLabel")}
+                </p>
+              )}
             </div>
           ) : (
             <p className="text-sm text-gray-400 dark:text-slate-500">--</p>

@@ -153,6 +153,13 @@ const translations = {
     addCash: "Add Cash",
     cashName: "Label",
     noCashEntries: "No cash balances yet.",
+    marketOpen: "LIVE",
+    marketClosed: "CLOSED",
+    marketOpenTooltip: "Market open — data is 15-min delayed",
+    marketClosedTooltip: "Market closed — showing last close price",
+    closesIn: "Closes in",
+    delayLabel: "15m delay",
+    prevCloseLabel: "Prev close",
   },
   es: {
     appTitle: "StockTracker",
@@ -303,6 +310,13 @@ const translations = {
     addCash: "Agregar efectivo",
     cashName: "Etiqueta",
     noCashEntries: "Aún no hay saldos de efectivo.",
+    marketOpen: "EN VIVO",
+    marketClosed: "CERRADO",
+    marketOpenTooltip: "Mercado abierto — datos con 15 min de retraso",
+    marketClosedTooltip: "Mercado cerrado — mostrando precio de cierre anterior",
+    closesIn: "Cierra en",
+    delayLabel: "15 min retraso",
+    prevCloseLabel: "Cierre ant.",
   },
 } as const;
 
