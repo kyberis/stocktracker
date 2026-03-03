@@ -37,7 +37,7 @@ describe("calculatePortfolioTotals", () => {
       EURGBP: 0.86,
     };
 
-    const totals = calculatePortfolioTotals(holdings, quotes, exchangeRates);
+    const totals = calculatePortfolioTotals(holdings, [], quotes, exchangeRates);
 
     // Expected: 1275 * 186 pence = 2371.5 GBP -> 2757.56 EUR approx
     // If misread as GBP units directly this would explode to ~275k EUR.
@@ -80,7 +80,7 @@ describe("calculatePortfolioTotals", () => {
 
     const quoteValue = holdings[0].shares * quotes["SRB.L"].regularMarketPrice;
     const naiveAsGBP = convertToEUR(quoteValue, "GBP", exchangeRates);
-    const corrected = calculatePortfolioTotals(holdings, quotes, exchangeRates).totalCurrentEUR;
+    const corrected = calculatePortfolioTotals(holdings, [], quotes, exchangeRates).totalCurrentEUR;
 
     // Naive path is inflated by interpreting pence as pounds.
     expect(naiveAsGBP / corrected).toBeGreaterThan(90);
@@ -122,7 +122,7 @@ describe("calculatePortfolioTotals", () => {
       EURUSD: 1.1,
     };
 
-    const totals = calculatePortfolioTotals(holdings, quotes, exchangeRates);
+    const totals = calculatePortfolioTotals(holdings, [], quotes, exchangeRates);
     expect(totals.totalCurrentEUR).toBeGreaterThan(2000);
     expect(totals.totalCurrentEUR).toBeLessThan(10000);
   });
@@ -160,7 +160,22 @@ describe("calculatePortfolioTotals", () => {
       EURGBP: 0.86,
     };
 
-    const totals = calculatePortfolioTotals(holdings, quotes, exchangeRates);
+    const totals = calculatePortfolioTotals(holdings, [], quotes, exchangeRates);
     expect(totals.totalCurrentEUR).toBe(5209.08);
+  });
+
+  it("adds EUR cash balances into total value and total cost", () => {
+    const holdings: Holding[] = [];
+    const quotes: Record<string, QuoteData> = {};
+    const exchangeRates = {};
+    const cashEntries = [
+      { id: "c1", name: "Cash EUR", amountEUR: 542.39 },
+      { id: "c2", name: "Cash USD converted", amountEUR: 10.54 },
+    ];
+
+    const totals = calculatePortfolioTotals(holdings, cashEntries, quotes, exchangeRates);
+    expect(totals.totalCurrentEUR).toBeCloseTo(552.93, 2);
+    expect(totals.totalCostEUR).toBeCloseTo(552.93, 2);
+    expect(totals.totalGainLoss).toBeCloseTo(0, 6);
   });
 });

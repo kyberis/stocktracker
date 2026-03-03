@@ -102,6 +102,7 @@ export class AlphaVantageProvider implements StockDataProvider {
     const prevClose = parseFloat0(gq["08. previous close"]);
     const change = parseFloat0(gq["09. change"]);
     const changePercent = parseFloat0(gq["10. change percent"]?.replace("%", ""));
+    const currency = this.inferCurrency(symbol);
 
     return {
       symbol: gq["01. symbol"] || symbol,
@@ -109,12 +110,28 @@ export class AlphaVantageProvider implements StockDataProvider {
       regularMarketPrice: price,
       regularMarketChange: change,
       regularMarketChangePercent: changePercent,
-      currency: "USD",
+      currency,
       regularMarketPreviousClose: prevClose,
       fiftyTwoWeekHigh: 0,
       fiftyTwoWeekLow: 0,
       marketCap: 0,
     };
+  }
+
+  private inferCurrency(symbol: string): string {
+    const s = symbol.toUpperCase();
+    if (s.endsWith(".MC") || s.endsWith(".BME")) return "EUR";
+    if (s.endsWith(".DE") || s.endsWith(".F") || s.endsWith(".XETRA")) return "EUR";
+    if (s.endsWith(".PA")) return "EUR";
+    if (s.endsWith(".AS") || s.endsWith(".BR")) return "EUR";
+    if (s.endsWith(".MI")) return "EUR";
+    if (s.endsWith(".HE") || s.endsWith(".VI")) return "EUR";
+    if (s.endsWith(".L")) return "GBX";
+    if (s.endsWith(".CO")) return "DKK";
+    if (s.endsWith(".TO") || s.endsWith(".V")) return "CAD";
+    if (s.endsWith(".T")) return "JPY";
+    if (s.endsWith(".SW")) return "CHF";
+    return "USD";
   }
 
   async search(query: string): Promise<ProviderSearchResult[]> {

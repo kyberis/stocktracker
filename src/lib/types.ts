@@ -1,15 +1,23 @@
 export type ApiProviderName = "yahoo" | "alphavantage";
+export type HoldingAssetType = "stock" | "etf";
 
 export interface Holding {
   id: string;
   name: string;
   ticker: string;
   isin: string;
+  assetType?: HoldingAssetType;
   shares: number;
   purchasePrice: number;
   displayCurrency: string;
   exchange: string;
   valueInEUR: number;
+}
+
+export interface CashEntry {
+  id: string;
+  name: string;
+  amountEUR: number;
 }
 
 export interface QuoteData {

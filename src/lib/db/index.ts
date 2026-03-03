@@ -3,7 +3,7 @@ import { mkdirSync } from "fs";
 import path from "path";
 import { createClient, type Client, type Row } from "@libsql/client";
 import bcrypt from "bcryptjs";
-import type { ApiProviderName, Holding, Language } from "@/lib/types";
+import type { ApiProviderName, CashEntry, Holding, HoldingAssetType, Language } from "@/lib/types";
 import { seedHoldingsForUser } from "./seed";
 
 export type UserRole = "admin" | "user";
@@ -81,6 +81,7 @@ async function runMigrations(client: Client) {
       name TEXT NOT NULL,
       ticker TEXT NOT NULL,
       isin TEXT NOT NULL DEFAULT '',
+      asset_type TEXT NOT NULL DEFAULT 'stock',
       shares REAL NOT NULL,
       purchase_price REAL NOT NULL,
       display_currency TEXT NOT NULL,
@@ -88,6 +89,17 @@ async function runMigrations(client: Client) {
       value_in_eur REAL NOT NULL DEFAULT 0,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS cash_entries (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      amount_eur REAL NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
+      UNIQUE(user_id, name)
     );
 
     CREATE TABLE IF NOT EXISTS user_settings (
@@ -101,9 +113,38 @@ async function runMigrations(client: Client) {
     PRAGMA foreign_keys = ON;
   `);
 
-  // Normalize legacy Constellation ticker for existing datasets.
+  const holdingColumns = await client.execute("PRAGMA table_info(holdings)");
+  const hasAssetType = holdingColumns.rows.some((row) => str(row.name) === "asset_type");
+  if (!hasAssetType) {
+    await client.execute({
+      sql: "ALTER TABLE holdings ADD COLUMN asset_type TEXT NOT NULL DEFAULT 'stock'",
+    });
+  }
+
+  // Normalize legacy tickers for existing datasets.
   await client.execute({
     sql: "UPDATE holdings SET ticker = 'W9C' WHERE ticker = 'CSU.TO' AND name = 'Constellation Software Inc'",
+  });
+  await client.execute({
+    sql: "UPDATE holdings SET ticker = 'ITX.MC' WHERE ticker = 'ITX' AND UPPER(exchange) = 'MAD'",
+  });
+  await client.execute({
+    sql: "UPDATE holdings SET asset_type = 'etf' WHERE UPPER(name) LIKE '%ETF%'",
+  });
+  await client.execute({
+    sql: "UPDATE holdings SET asset_type = 'stock' WHERE asset_type IS NULL OR asset_type NOT IN ('stock', 'etf')",
+  });
+  // Move legacy cash rows out of holdings into dedicated cash table.
+  await client.execute({
+    sql: `
+      INSERT OR IGNORE INTO cash_entries (id, user_id, name, amount_eur)
+      SELECT id, user_id, name, value_in_eur
+      FROM holdings
+      WHERE UPPER(exchange) = 'CASH' OR UPPER(ticker) LIKE 'CASH-%'
+    `,
+  });
+  await client.execute({
+    sql: "DELETE FROM holdings WHERE UPPER(exchange) = 'CASH' OR UPPER(ticker) LIKE 'CASH-%'",
   });
 }
 
@@ -149,6 +190,10 @@ function num(val: unknown): number {
   if (val == null) return 0;
   const n = Number(val);
   return isNaN(n) ? 0 : n;
+}
+
+function holdingAssetType(val: unknown): HoldingAssetType {
+  return val === "etf" ? "etf" : "stock";
 }
 
 function rowToDbUser(row: Row): DbUser {
@@ -295,7 +340,7 @@ export async function updateUserSettings(
 export async function listHoldings(userId: string): Promise<Holding[]> {
   const client = await ensureInitialized();
   const result = await client.execute({
-    sql: `SELECT id, name, ticker, isin, shares, purchase_price, display_currency, exchange, value_in_eur
+    sql: `SELECT id, name, ticker, isin, asset_type, shares, purchase_price, display_currency, exchange, value_in_eur
           FROM holdings WHERE user_id = ? ORDER BY created_at ASC`,
     args: [userId],
   });
@@ -305,12 +350,76 @@ export async function listHoldings(userId: string): Promise<Holding[]> {
     name: str(row.name),
     ticker: str(row.ticker),
     isin: str(row.isin),
+    assetType: holdingAssetType(row.asset_type),
     shares: num(row.shares),
     purchasePrice: num(row.purchase_price),
     displayCurrency: str(row.display_currency),
     exchange: str(row.exchange),
     valueInEUR: num(row.value_in_eur),
   }));
+}
+
+export async function listCashEntries(userId: string): Promise<CashEntry[]> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: `SELECT id, name, amount_eur
+          FROM cash_entries WHERE user_id = ? ORDER BY created_at ASC`,
+    args: [userId],
+  });
+  return result.rows.map((row) => ({
+    id: str(row.id),
+    name: str(row.name),
+    amountEUR: num(row.amount_eur),
+  }));
+}
+
+export async function addCashEntry(
+  userId: string,
+  entry: Omit<CashEntry, "id">
+): Promise<CashEntry> {
+  const client = await ensureInitialized();
+  const id = randomUUID();
+  await client.execute({
+    sql: `INSERT INTO cash_entries (id, user_id, name, amount_eur)
+          VALUES (?, ?, ?, ?)`,
+    args: [id, userId, entry.name, entry.amountEUR],
+  });
+  return { ...entry, id };
+}
+
+export async function updateCashEntry(
+  userId: string,
+  cashId: string,
+  updates: Partial<Omit<CashEntry, "id">>
+): Promise<CashEntry | null> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: `SELECT id, name, amount_eur
+          FROM cash_entries WHERE id = ? AND user_id = ?`,
+    args: [cashId, userId],
+  });
+  if (result.rows.length === 0) return null;
+  const current = result.rows[0];
+  const next = {
+    name: updates.name ?? str(current.name),
+    amountEUR: updates.amountEUR ?? num(current.amount_eur),
+  };
+  await client.execute({
+    sql: `UPDATE cash_entries
+          SET name = ?, amount_eur = ?, updated_at = datetime('now')
+          WHERE id = ? AND user_id = ?`,
+    args: [next.name, next.amountEUR, cashId, userId],
+  });
+  return { id: cashId, ...next };
+}
+
+export async function removeCashEntry(userId: string, cashId: string): Promise<boolean> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: "DELETE FROM cash_entries WHERE id = ? AND user_id = ?",
+    args: [cashId, userId],
+  });
+  return (result.rowsAffected ?? 0) > 0;
 }
 
 export async function addHolding(
@@ -321,10 +430,11 @@ export async function addHolding(
   const id = randomUUID();
   await client.execute({
     sql: `INSERT INTO holdings (
-            id, user_id, name, ticker, isin, shares, purchase_price, display_currency, exchange, value_in_eur
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            id, user_id, name, ticker, isin, asset_type, shares, purchase_price, display_currency, exchange, value_in_eur
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       id, userId, holding.name, holding.ticker, holding.isin,
+      holding.assetType ?? "stock",
       holding.shares, holding.purchasePrice, holding.displayCurrency,
       holding.exchange, holding.valueInEUR,
     ],
@@ -339,7 +449,7 @@ export async function updateHolding(
 ): Promise<Holding | null> {
   const client = await ensureInitialized();
   const result = await client.execute({
-    sql: `SELECT id, name, ticker, isin, shares, purchase_price, display_currency, exchange, value_in_eur
+    sql: `SELECT id, name, ticker, isin, asset_type, shares, purchase_price, display_currency, exchange, value_in_eur
           FROM holdings WHERE id = ? AND user_id = ?`,
     args: [holdingId, userId],
   });
@@ -351,6 +461,7 @@ export async function updateHolding(
     name: updates.name ?? str(current.name),
     ticker: updates.ticker ?? str(current.ticker),
     isin: updates.isin ?? str(current.isin),
+    assetType: updates.assetType ?? holdingAssetType(current.asset_type),
     shares: updates.shares ?? num(current.shares),
     purchasePrice: updates.purchasePrice ?? num(current.purchase_price),
     displayCurrency: updates.displayCurrency ?? str(current.display_currency),
@@ -360,11 +471,11 @@ export async function updateHolding(
 
   await client.execute({
     sql: `UPDATE holdings
-          SET name = ?, ticker = ?, isin = ?, shares = ?, purchase_price = ?,
+          SET name = ?, ticker = ?, isin = ?, asset_type = ?, shares = ?, purchase_price = ?,
               display_currency = ?, exchange = ?, value_in_eur = ?
           WHERE id = ? AND user_id = ?`,
     args: [
-      next.name, next.ticker, next.isin, next.shares, next.purchasePrice,
+      next.name, next.ticker, next.isin, next.assetType, next.shares, next.purchasePrice,
       next.displayCurrency, next.exchange, next.valueInEUR,
       holdingId, userId,
     ],

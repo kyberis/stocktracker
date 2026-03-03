@@ -4,6 +4,7 @@ import { useState } from "react";
 import PortfolioSummary from "./PortfolioSummary";
 import PortfolioBenchmarkChart from "./PortfolioBenchmarkChart";
 import PortfolioTable from "./PortfolioTable";
+import CashBalances from "./CashBalances";
 import AddStockModal from "./AddStockModal";
 import SettingsModal from "./SettingsModal";
 import Header from "./Header";
@@ -22,6 +23,7 @@ export default function Dashboard() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
         <PortfolioSummary />
         <PortfolioBenchmarkChart />
+        <CashBalances />
         <PortfolioTable />
       </main>
 

@@ -150,8 +150,16 @@ export default function StockRow({ holding }: StockRowProps) {
   const [editPurchasePrice, setEditPurchasePrice] = useState(String(holding.purchasePrice));
   const [editDisplayCurrency, setEditDisplayCurrency] = useState(holding.displayCurrency);
   const [editExchange, setEditExchange] = useState(holding.exchange);
+  const [editAssetType, setEditAssetType] = useState<"stock" | "etf">(holding.assetType ?? "stock");
+  const [tradeAction, setTradeAction] = useState<"buy" | "sell">("buy");
+  const [tradeQuantity, setTradeQuantity] = useState("");
+  const [tradePrice, setTradePrice] = useState("");
+  const [tradeError, setTradeError] = useState<string | null>(null);
 
   const quote: QuoteData | undefined = quotes[holding.ticker];
+  const isCashHolding =
+    holding.exchange.trim().toUpperCase() === "CASH" ||
+    holding.ticker.trim().toUpperCase().startsWith("CASH-");
   const isFallback = isAlphaVantage && quote?.providerUsed === "yahoo";
   const isAvSource = quote?.providerUsed === "alphavantage";
   const isRefreshing = refreshingTickers.has(holding.ticker);
@@ -215,6 +223,7 @@ export default function StockRow({ holding }: StockRowProps) {
     setEditPurchasePrice(String(holding.purchasePrice));
     setEditDisplayCurrency(holding.displayCurrency);
     setEditExchange(holding.exchange);
+    setEditAssetType(holding.assetType ?? "stock");
     setIsEditing(true);
     setShowDeleteConfirm(false);
   };
@@ -226,15 +235,17 @@ export default function StockRow({ holding }: StockRowProps) {
   const handleSaveEdit = async () => {
     const parsedShares = parseFloat(editShares);
     const parsedPurchasePrice = parseFloat(editPurchasePrice);
+    const nextShares = isCashHolding ? 1 : parsedShares;
+    const nextPurchasePrice = parsedPurchasePrice;
     if (
       !editName.trim() ||
       !editTicker.trim() ||
       !editDisplayCurrency.trim() ||
       !editExchange.trim() ||
-      Number.isNaN(parsedShares) ||
-      Number.isNaN(parsedPurchasePrice) ||
-      parsedShares <= 0 ||
-      parsedPurchasePrice < 0
+      Number.isNaN(nextShares) ||
+      Number.isNaN(nextPurchasePrice) ||
+      nextShares <= 0 ||
+      nextPurchasePrice < 0
     ) {
       return;
     }
@@ -243,12 +254,48 @@ export default function StockRow({ holding }: StockRowProps) {
       name: editName.trim(),
       ticker: editTicker.trim().toUpperCase(),
       isin: editIsin.trim(),
-      shares: parsedShares,
-      purchasePrice: parsedPurchasePrice,
+      assetType: editAssetType,
+      shares: nextShares,
+      purchasePrice: nextPurchasePrice,
       displayCurrency: editDisplayCurrency.trim().toUpperCase(),
       exchange: editExchange.trim().toUpperCase(),
     });
     setIsEditing(false);
+  };
+
+  const handleApplyTrade = async () => {
+    const qty = parseFloat(tradeQuantity);
+    const price = parseFloat(tradePrice);
+    if (Number.isNaN(qty) || Number.isNaN(price) || qty <= 0 || price < 0) {
+      setTradeError(t("tradeInvalid"));
+      return;
+    }
+
+    if (tradeAction === "sell" && qty >= holding.shares) {
+      setTradeError(t("sellExceedsShares"));
+      return;
+    }
+
+    setTradeError(null);
+    let nextShares = holding.shares;
+    let nextPurchasePrice = holding.purchasePrice;
+
+    if (tradeAction === "buy") {
+      const prevCost = holding.shares * holding.purchasePrice;
+      const addCost = qty * price;
+      nextShares = holding.shares + qty;
+      nextPurchasePrice = nextShares > 0 ? (prevCost + addCost) / nextShares : 0;
+    } else {
+      nextShares = holding.shares - qty;
+      nextPurchasePrice = holding.purchasePrice;
+    }
+
+    await updateHolding(holding.id, {
+      shares: nextShares,
+      purchasePrice: nextPurchasePrice,
+    });
+    setTradeQuantity("");
+    setTradePrice("");
   };
 
   let display52High = 0;
@@ -302,6 +349,9 @@ export default function StockRow({ holding }: StockRowProps) {
         <div className="col-span-4 sm:col-span-3">
           <div className="flex items-center gap-1.5">
             <p className="font-medium text-white text-sm truncate">{holding.name}</p>
+            <span className="flex-shrink-0 text-[9px] font-semibold px-1 py-px rounded bg-slate-700/70 text-slate-200 border border-slate-600/60">
+              {(holding.assetType ?? "stock").toUpperCase()}
+            </span>
             {isFallback ? (
               <span
                 className="flex-shrink-0 text-[9px] font-semibold px-1 py-px rounded bg-blue-500/15 text-blue-400 border border-blue-500/20"
@@ -421,19 +471,35 @@ export default function StockRow({ holding }: StockRowProps) {
                 />
               </div>
               <div>
-                <label className="block text-xs text-slate-400 mb-1">{t("shares")}</label>
-                <input
-                  type="number"
-                  min="0"
-                  step="any"
-                  value={editShares}
-                  onChange={(e) => setEditShares(e.target.value)}
+                <label className="block text-xs text-slate-400 mb-1">{t("assetType")}</label>
+                <select
+                  value={editAssetType}
+                  onChange={(e) => setEditAssetType(e.target.value as "stock" | "etf")}
                   className="w-full"
                   onClick={(e) => e.stopPropagation()}
-                />
+                >
+                  <option value="stock">{t("stockType")}</option>
+                  <option value="etf">{t("etfType")}</option>
+                </select>
               </div>
+              {!isCashHolding && (
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">{t("shares")}</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    value={editShares}
+                    onChange={(e) => setEditShares(e.target.value)}
+                    className="w-full"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </div>
+              )}
               <div>
-                <label className="block text-xs text-slate-400 mb-1">{t("purchasePrice")}</label>
+                <label className="block text-xs text-slate-400 mb-1">
+                  {isCashHolding ? t("cashAmount") : t("purchasePrice")}
+                </label>
                 <input
                   type="number"
                   min="0"
@@ -462,6 +528,61 @@ export default function StockRow({ holding }: StockRowProps) {
                   <option value="JPY">¥ JPY</option>
                 </select>
               </div>
+            </div>
+          )}
+
+          {!isEditing && !isCashHolding && (
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 mb-4 pt-3">
+              <div>
+                <label className="block text-xs text-slate-400 mb-1">{t("tradeAction")}</label>
+                <select
+                  value={tradeAction}
+                  onChange={(e) => setTradeAction(e.target.value as "buy" | "sell")}
+                  className="w-full"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <option value="buy">{t("buy")}</option>
+                  <option value="sell">{t("sell")}</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs text-slate-400 mb-1">{t("tradeQuantity")}</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="any"
+                  value={tradeQuantity}
+                  onChange={(e) => setTradeQuantity(e.target.value)}
+                  className="w-full"
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-slate-400 mb-1">{t("tradePrice")}</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="any"
+                  value={tradePrice}
+                  onChange={(e) => setTradePrice(e.target.value)}
+                  className="w-full"
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </div>
+              <div className="flex items-end">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleApplyTrade();
+                  }}
+                  className="btn-primary text-sm px-3 py-1 w-full"
+                >
+                  {t("applyTrade")}
+                </button>
+              </div>
+              {tradeError && (
+                <p className="text-xs text-red-400 sm:col-span-4">{tradeError}</p>
+              )}
             </div>
           )}
 

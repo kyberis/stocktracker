@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from "react";
-import type { Holding, QuoteData, ExchangeRates } from "./types";
+import type { CashEntry, Holding, QuoteData, ExchangeRates } from "./types";
 import { generateId } from "./utils";
 import { useSettings } from "./settings-context";
 
@@ -16,6 +16,7 @@ const FX_PAIRS = ["EURUSD=X", "EURGBP=X", "EURDKK=X", "EURCAD=X"];
 
 interface PortfolioContextType {
   holdings: Holding[];
+  cashEntries: CashEntry[];
   quotes: Record<string, QuoteData>;
   quoteUpdatedAt: Record<string, number>;
   refreshingTickers: Set<string>;
@@ -25,6 +26,9 @@ interface PortfolioContextType {
   addHolding: (holding: Omit<Holding, "id">) => Promise<void>;
   removeHolding: (id: string) => Promise<void>;
   updateHolding: (id: string, updates: Partial<Holding>) => Promise<void>;
+  addCashEntry: (entry: Omit<CashEntry, "id">) => Promise<void>;
+  removeCashEntry: (id: string) => Promise<void>;
+  updateCashEntry: (id: string, updates: Partial<CashEntry>) => Promise<void>;
   refreshQuotes: () => Promise<void>;
   refreshSingleQuote: (ticker: string) => Promise<void>;
   lastUpdated: Date | null;
@@ -76,6 +80,7 @@ function parseExchangeRates(quotes: Record<string, QuoteData>): ExchangeRates {
 export function PortfolioProvider({ children }: { children: React.ReactNode }) {
   const { provider, getApiHeaders, trackAvCalls } = useSettings();
   const [holdings, setHoldings] = useState<Holding[]>([]);
+  const [cashEntries, setCashEntries] = useState<CashEntry[]>([]);
   const [quotes, setQuotes] = useState<Record<string, QuoteData>>({});
   const [quoteUpdatedAt, setQuoteUpdatedAt] = useState<Record<string, number>>({});
   const [refreshingTickers, setRefreshingTickers] = useState<Set<string>>(new Set());
@@ -97,12 +102,25 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const fetchCashEntries = useCallback(async () => {
+    try {
+      const res = await fetch("/api/cash", { cache: "no-store" });
+      if (!res.ok) throw new Error("Failed to fetch cash entries");
+      const loaded = (await res.json()) as CashEntry[];
+      setCashEntries(loaded);
+      return loaded;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to fetch cash entries");
+      return [] as CashEntry[];
+    }
+  }, []);
+
   useEffect(() => {
     const init = async () => {
       setIsLoading(true);
       setError(null);
 
-      await fetchHoldings();
+      await Promise.all([fetchHoldings(), fetchCashEntries()]);
       const cachedQuotes = loadCacheEntry<Record<string, QuoteData>>(QUOTES_CACHE_KEY);
       if (cachedQuotes?.data) {
         setQuotes(cachedQuotes.data);
@@ -123,7 +141,7 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
 
     init();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchHoldings]);
+  }, [fetchHoldings, fetchCashEntries]);
 
   const buildFetchUrl = useCallback(
     (base: string, extra: Record<string, string> = {}) => {
@@ -288,10 +306,60 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
     }
   }, [holdings]);
 
+  const addCashEntry = useCallback(async (entry: Omit<CashEntry, "id">) => {
+    const tempId = generateId();
+    const optimistic = { ...entry, id: tempId };
+    setCashEntries((prev) => [...prev, optimistic]);
+    try {
+      const res = await fetch("/api/cash", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(entry),
+      });
+      if (!res.ok) throw new Error("Failed to add cash entry");
+      const created = (await res.json()) as CashEntry;
+      setCashEntries((prev) => prev.map((c) => (c.id === tempId ? created : c)));
+    } catch (err) {
+      setCashEntries((prev) => prev.filter((c) => c.id !== tempId));
+      setError(err instanceof Error ? err.message : "Failed to add cash entry");
+    }
+  }, []);
+
+  const removeCashEntry = useCallback(async (id: string) => {
+    const previous = cashEntries;
+    setCashEntries((prev) => prev.filter((c) => c.id !== id));
+    try {
+      const res = await fetch(`/api/cash?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to remove cash entry");
+    } catch (err) {
+      setCashEntries(previous);
+      setError(err instanceof Error ? err.message : "Failed to remove cash entry");
+    }
+  }, [cashEntries]);
+
+  const updateCashEntry = useCallback(async (id: string, updates: Partial<CashEntry>) => {
+    const previous = cashEntries;
+    setCashEntries((prev) => prev.map((c) => (c.id === id ? { ...c, ...updates } : c)));
+    try {
+      const res = await fetch("/api/cash", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, updates }),
+      });
+      if (!res.ok) throw new Error("Failed to update cash entry");
+      const updated = (await res.json()) as CashEntry;
+      setCashEntries((prev) => prev.map((c) => (c.id === id ? updated : c)));
+    } catch (err) {
+      setCashEntries(previous);
+      setError(err instanceof Error ? err.message : "Failed to update cash entry");
+    }
+  }, [cashEntries]);
+
   return (
     <PortfolioContext.Provider
       value={{
         holdings,
+        cashEntries,
         quotes,
         quoteUpdatedAt,
         refreshingTickers,
@@ -301,6 +369,9 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
         addHolding,
         removeHolding,
         updateHolding,
+        addCashEntry,
+        removeCashEntry,
+        updateCashEntry,
         refreshQuotes,
         refreshSingleQuote,
         lastUpdated,

@@ -1,4 +1,4 @@
-import type { ExchangeRates, Holding, QuoteData } from "./types";
+import type { CashEntry, ExchangeRates, Holding, QuoteData } from "./types";
 import { convertToEUR, resolveQuoteCurrency } from "./utils";
 
 export interface PortfolioTotals {
@@ -11,6 +11,7 @@ export interface PortfolioTotals {
 
 export function calculatePortfolioTotals(
   holdings: Holding[],
+  cashEntries: CashEntry[],
   quotes: Record<string, QuoteData>,
   exchangeRates: ExchangeRates
 ): PortfolioTotals {
@@ -53,6 +54,11 @@ export function calculatePortfolioTotals(
       totalCostEUR += h.valueInEUR;
     }
   });
+
+  for (const cash of cashEntries) {
+    totalCurrentEUR += cash.amountEUR;
+    totalCostEUR += cash.amountEUR;
+  }
 
   const totalGainLoss = totalCurrentEUR - totalCostEUR;
   const totalGainLossPercent = totalCostEUR > 0 ? (totalGainLoss / totalCostEUR) * 100 : 0;

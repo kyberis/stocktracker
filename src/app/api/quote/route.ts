@@ -64,21 +64,23 @@ export async function GET(request: Request) {
 
       try {
         const quote = await provider.getQuote(symbol);
-        results[symbol] = { ...quote, providerUsed: "alphavantage" };
+        if (quote.error || quote.regularMarketPrice === 0) {
+          const yahooQuote = await getYahoo().getQuote(symbol);
+          results[symbol] = { ...yahooQuote, providerUsed: "yahoo" };
+        } else {
+          results[symbol] = { ...quote, providerUsed: "alphavantage" };
+        }
       } catch (err) {
         if (isRateLimitError(err)) {
           rateLimitHit = true;
           console.warn(`Alpha Vantage rate limit hit at ${symbol}, falling back to Yahoo`);
-          try {
-            const quote = await getYahoo().getQuote(symbol);
-            results[symbol] = { ...quote, providerUsed: "yahoo" };
-          } catch (fallbackErr) {
-            console.error(`Yahoo fallback failed for ${symbol}:`, fallbackErr instanceof Error ? fallbackErr.message : fallbackErr);
-            results[symbol] = { ...errorQuote(symbol), providerUsed: "yahoo" };
-          }
-        } else {
-          console.error(`Failed to fetch quote for ${symbol}:`, err instanceof Error ? err.message : err);
-          results[symbol] = errorQuote(symbol);
+        }
+        try {
+          const quote = await getYahoo().getQuote(symbol);
+          results[symbol] = { ...quote, providerUsed: "yahoo" };
+        } catch (fallbackErr) {
+          console.error(`Yahoo fallback failed for ${symbol}:`, fallbackErr instanceof Error ? fallbackErr.message : fallbackErr);
+          results[symbol] = { ...errorQuote(symbol), providerUsed: "yahoo" };
         }
       }
     }

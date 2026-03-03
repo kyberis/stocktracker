@@ -6,7 +6,7 @@ import { formatCurrency, formatPercent } from "@/lib/utils";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
 
 export default function PortfolioSummary() {
-  const { holdings, quotes, exchangeRates, isLoading } = usePortfolio();
+  const { holdings, cashEntries, quotes, exchangeRates, isLoading } = usePortfolio();
   const { t } = useI18n();
   const {
     totalCurrentEUR,
@@ -14,7 +14,7 @@ export default function PortfolioSummary() {
     totalGainLoss,
     totalGainLossPercent,
     dayGainLossEUR,
-  } = calculatePortfolioTotals(holdings, quotes, exchangeRates);
+  } = calculatePortfolioTotals(holdings, cashEntries, quotes, exchangeRates);
 
   const summaryCards = [
     {
@@ -40,7 +40,7 @@ export default function PortfolioSummary() {
     },
     {
       label: t("holdings"),
-      value: holdings.length.toString(),
+      value: (holdings.length + cashEntries.length).toString(),
       color: "text-purple-400",
     },
   ];

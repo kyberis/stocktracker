@@ -25,6 +25,7 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
   const [price, setPrice] = useState("");
   const [currency, setCurrency] = useState("USD");
   const [exchange, setExchange] = useState("");
+  const [assetType, setAssetType] = useState<"stock" | "etf">("stock");
   const searchTimeout = useRef<NodeJS.Timeout | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -42,6 +43,7 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
       setPrice("");
       setCurrency("USD");
       setExchange("");
+      setAssetType("stock");
     }
   }, [isOpen]);
 
@@ -90,6 +92,7 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
       name: stockName.trim(),
       ticker: ticker.trim().toUpperCase(),
       isin: "",
+      assetType,
       shares: parseFloat(shares),
       purchasePrice: parseFloat(price),
       displayCurrency: currency,
@@ -181,6 +184,18 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
               placeholder={t("editExchange")}
               className="w-full"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm text-slate-400 mb-1.5">{t("assetType")}</label>
+            <select
+              value={assetType}
+              onChange={(e) => setAssetType((e.target.value as "stock" | "etf"))}
+              className="w-full"
+            >
+              <option value="stock">{t("stockType")}</option>
+              <option value="etf">{t("etfType")}</option>
+            </select>
           </div>
 
           <div>
