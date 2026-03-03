@@ -485,8 +485,39 @@ export async function addHolding(
   holding: Omit<Holding, "id">
 ): Promise<Holding> {
   const client = await ensureInitialized();
-  const id = randomUUID();
   const ticker = normalizeTickerForExchange(holding.ticker, holding.exchange);
+
+  const existing = await client.execute({
+    sql: `SELECT id, shares, purchase_price FROM holdings
+          WHERE user_id = ? AND UPPER(ticker) = UPPER(?) AND UPPER(exchange) = UPPER(?)`,
+    args: [userId, ticker, holding.exchange],
+  });
+
+  if (existing.rows.length > 0) {
+    const row = existing.rows[0];
+    const oldShares = Number(row.shares) || 0;
+    const oldPrice = Number(row.purchase_price) || 0;
+    const newShares = holding.shares;
+    const newPrice = holding.purchasePrice;
+    const totalShares = oldShares + newShares;
+
+    // Only recalculate average when buying more shares (positive addition).
+    // Selling (negative shares) keeps the existing cost basis unchanged.
+    const avgPrice =
+      newShares > 0 && totalShares > 0
+        ? (oldShares * oldPrice + newShares * newPrice) / totalShares
+        : oldPrice;
+
+    const finalShares = Math.max(totalShares, 0);
+    const existingId = str(row.id);
+    await client.execute({
+      sql: `UPDATE holdings SET shares = ?, purchase_price = ? WHERE id = ? AND user_id = ?`,
+      args: [finalShares, avgPrice, existingId, userId],
+    });
+    return { ...holding, id: existingId, ticker, shares: finalShares, purchasePrice: avgPrice };
+  }
+
+  const id = randomUUID();
   await client.execute({
     sql: `INSERT INTO holdings (
             id, user_id, name, ticker, isin, asset_type, shares, purchase_price, display_currency, exchange, value_in_eur

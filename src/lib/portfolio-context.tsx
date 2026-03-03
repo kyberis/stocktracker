@@ -273,7 +273,17 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
       });
       if (!res.ok) throw new Error("Failed to add holding");
       const created = (await res.json()) as Holding;
-      setHoldings((prev) => prev.map((h) => (h.id === tempId ? created : h)));
+      setHoldings((prev) => {
+        const merged = prev.some(
+          (h) => h.id !== tempId && h.id === created.id
+        );
+        if (merged) {
+          return prev
+            .filter((h) => h.id !== tempId)
+            .map((h) => (h.id === created.id ? created : h));
+        }
+        return prev.map((h) => (h.id === tempId ? created : h));
+      });
     } catch (err) {
       setHoldings((prev) => prev.filter((h) => h.id !== tempId));
       setError(err instanceof Error ? err.message : "Failed to add holding");

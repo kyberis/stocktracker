@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useSettings } from "@/lib/settings-context";
 import { useI18n } from "@/lib/i18n";
@@ -666,7 +667,17 @@ export default function StockRow({ holding }: StockRowProps) {
 
           {isAlphaVantage && overview && <OverviewSection overview={overview} />}
 
-          <div className="mt-3 flex justify-end">
+          <div className="mt-3 flex items-center justify-between">
+            <Link
+              href={`/stock/${encodeURIComponent(holding.ticker)}?exchange=${encodeURIComponent(holding.exchange)}`}
+              onClick={(e) => e.stopPropagation()}
+              className="text-sm text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors flex items-center gap-1"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+              {t("viewDetails")}
+            </Link>
             {showDeleteConfirm ? (
               <div className="flex items-center gap-2">
                 <span className="text-sm text-gray-500 dark:text-slate-400">{t("deleteConfirm")}</span>

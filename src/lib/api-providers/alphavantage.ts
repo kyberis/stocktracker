@@ -5,6 +5,11 @@ import type {
   ProviderHistoricalPoint,
   CompanyOverview,
   TimePeriod,
+  IncomeStatementReport,
+  BalanceSheetReport,
+  CashFlowReport,
+  EarningsReport,
+  FundamentalData,
 } from "./types";
 
 const AV_BASE = "https://www.alphavantage.co/query";
@@ -270,6 +275,118 @@ export class AlphaVantageProvider implements StockDataProvider {
       twoHundredDayMA: parseFloatOrNull(d["200DayMovingAverage"]),
       sharesOutstanding: parseFloatOrNull(d["SharesOutstanding"]),
       forwardPE: parseFloatOrNull(d["ForwardPE"]),
+    };
+  }
+
+  async getIncomeStatement(symbol: string): Promise<FundamentalData<IncomeStatementReport> | null> {
+    const data = await this.avFetch({ function: "INCOME_STATEMENT", symbol });
+    const annual = data["annualReports"] as Array<Record<string, string>> | undefined;
+    const quarterly = data["quarterlyReports"] as Array<Record<string, string>> | undefined;
+    if (!annual && !quarterly) return null;
+
+    const parse = (r: Record<string, string>): IncomeStatementReport => ({
+      fiscalDateEnding: r["fiscalDateEnding"] || "",
+      reportedCurrency: r["reportedCurrency"] || "USD",
+      totalRevenue: parseFloatOrNull(r["totalRevenue"]),
+      costOfRevenue: parseFloatOrNull(r["costOfRevenue"]),
+      grossProfit: parseFloatOrNull(r["grossProfit"]),
+      operatingExpenses: parseFloatOrNull(r["operatingExpenses"]),
+      operatingIncome: parseFloatOrNull(r["operatingIncome"]),
+      incomeBeforeTax: parseFloatOrNull(r["incomeBeforeTax"]),
+      incomeTaxExpense: parseFloatOrNull(r["incomeTaxExpense"]),
+      netIncome: parseFloatOrNull(r["netIncome"]),
+      ebitda: parseFloatOrNull(r["ebitda"]),
+      researchAndDevelopment: parseFloatOrNull(r["researchAndDevelopment"]),
+      sellingGeneralAndAdmin: parseFloatOrNull(r["sellingGeneralAndAdministrative"]),
+      interestExpense: parseFloatOrNull(r["interestExpense"]),
+    });
+
+    return {
+      annual: (annual || []).map(parse),
+      quarterly: (quarterly || []).slice(0, 12).map(parse),
+    };
+  }
+
+  async getBalanceSheet(symbol: string): Promise<FundamentalData<BalanceSheetReport> | null> {
+    const data = await this.avFetch({ function: "BALANCE_SHEET", symbol });
+    const annual = data["annualReports"] as Array<Record<string, string>> | undefined;
+    const quarterly = data["quarterlyReports"] as Array<Record<string, string>> | undefined;
+    if (!annual && !quarterly) return null;
+
+    const parse = (r: Record<string, string>): BalanceSheetReport => ({
+      fiscalDateEnding: r["fiscalDateEnding"] || "",
+      reportedCurrency: r["reportedCurrency"] || "USD",
+      totalAssets: parseFloatOrNull(r["totalAssets"]),
+      totalCurrentAssets: parseFloatOrNull(r["totalCurrentAssets"]),
+      cashAndEquivalents: parseFloatOrNull(r["cashAndCashEquivalentsAtCarryingValue"]),
+      totalNonCurrentAssets: parseFloatOrNull(r["totalNonCurrentAssets"]),
+      totalLiabilities: parseFloatOrNull(r["totalLiabilities"]),
+      totalCurrentLiabilities: parseFloatOrNull(r["totalCurrentLiabilities"]),
+      totalNonCurrentLiabilities: parseFloatOrNull(r["totalNonCurrentLiabilities"]),
+      totalShareholderEquity: parseFloatOrNull(r["totalShareholderEquity"]),
+      retainedEarnings: parseFloatOrNull(r["retainedEarnings"]),
+      longTermDebt: parseFloatOrNull(r["longTermDebt"]),
+      shortTermDebt: parseFloatOrNull(r["shortTermDebt"]),
+      commonStockSharesOutstanding: parseFloatOrNull(r["commonStockSharesOutstanding"]),
+    });
+
+    return {
+      annual: (annual || []).map(parse),
+      quarterly: (quarterly || []).slice(0, 12).map(parse),
+    };
+  }
+
+  async getCashFlow(symbol: string): Promise<FundamentalData<CashFlowReport> | null> {
+    const data = await this.avFetch({ function: "CASH_FLOW", symbol });
+    const annual = data["annualReports"] as Array<Record<string, string>> | undefined;
+    const quarterly = data["quarterlyReports"] as Array<Record<string, string>> | undefined;
+    if (!annual && !quarterly) return null;
+
+    const parse = (r: Record<string, string>): CashFlowReport => {
+      const opCash = parseFloatOrNull(r["operatingCashflow"]);
+      const capEx = parseFloatOrNull(r["capitalExpenditures"]);
+      const fcf = opCash != null && capEx != null ? opCash - Math.abs(capEx) : null;
+      return {
+        fiscalDateEnding: r["fiscalDateEnding"] || "",
+        reportedCurrency: r["reportedCurrency"] || "USD",
+        operatingCashflow: opCash,
+        capitalExpenditures: capEx,
+        changeInCash: parseFloatOrNull(r["changeInCashAndCashEquivalents"]),
+        freeCashFlow: fcf,
+        dividendPayout: parseFloatOrNull(r["dividendPayout"]),
+        shareRepurchase: parseFloatOrNull(r["paymentsForRepurchaseOfCommonStock"]),
+        proceedsFromIssuanceOfDebt: parseFloatOrNull(r["proceedsFromIssuanceOfLongTermDebtAndCapitalSecuritiesNet"]),
+        paymentsForRepurchaseOfEquity: parseFloatOrNull(r["paymentsForRepurchaseOfEquity"]),
+      };
+    };
+
+    return {
+      annual: (annual || []).map(parse),
+      quarterly: (quarterly || []).slice(0, 12).map(parse),
+    };
+  }
+
+  async getEarnings(symbol: string): Promise<FundamentalData<EarningsReport> | null> {
+    const data = await this.avFetch({ function: "EARNINGS", symbol });
+    const annual = data["annualEarnings"] as Array<Record<string, string>> | undefined;
+    const quarterly = data["quarterlyEarnings"] as Array<Record<string, string>> | undefined;
+    if (!annual && !quarterly) return null;
+
+    return {
+      annual: (annual || []).slice(0, 10).map((r) => ({
+        fiscalDateEnding: r["fiscalDateEnding"] || "",
+        reportedEPS: parseFloatOrNull(r["reportedEPS"]),
+        estimatedEPS: null,
+        surprise: null,
+        surprisePercentage: null,
+      })),
+      quarterly: (quarterly || []).slice(0, 16).map((r) => ({
+        fiscalDateEnding: r["fiscalDateEnding"] || "",
+        reportedEPS: parseFloatOrNull(r["reportedEPS"]),
+        estimatedEPS: parseFloatOrNull(r["estimatedEPS"]),
+        surprise: parseFloatOrNull(r["surprise"]),
+        surprisePercentage: parseFloatOrNull(r["surprisePercentage"]),
+      })),
     };
   }
 
