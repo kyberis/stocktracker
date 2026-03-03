@@ -63,6 +63,15 @@ export async function GET(request: Request) {
       }
 
       try {
+        // LSE is multi-currency (GBX, GBP, USD, EUR) and AV doesn't return
+        // currency info, so always use Yahoo for .L tickers to get an accurate
+        // currency label alongside the price.
+        if (symbol.toUpperCase().endsWith(".L")) {
+          const yahooQuote = await getYahoo().getQuote(symbol);
+          results[symbol] = { ...yahooQuote, providerUsed: "yahoo" };
+          continue;
+        }
+
         const quote = await provider.getQuote(symbol);
         if (quote.error || quote.regularMarketPrice === 0) {
           const yahooQuote = await getYahoo().getQuote(symbol);

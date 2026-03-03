@@ -67,8 +67,13 @@ export function normalizeCurrency(currency: string): string {
 }
 
 /**
- * Some providers can report UK prices as pence while still labeling currency as GBP.
- * When a holding is denominated in GBX and the quote says GBP, treat quote as GBX.
+ * Resolve the actual quote currency, guarding against GBP/GBX confusion.
+ *
+ * LSE is a multi-currency exchange — some instruments trade in GBX (pence),
+ * others in USD, EUR, or GBP.  We only force GBX when the holding says GBX
+ * AND the provider returned a GBP-family label (GBP / GBp / GBX), which is
+ * the known mislabel case.  If the provider says USD or EUR we trust it,
+ * since those are clearly distinct currencies (e.g. IB01.L trades in USD).
  */
 export function resolveQuoteCurrency(
   holdingDisplayCurrency: string,
@@ -76,10 +81,12 @@ export function resolveQuoteCurrency(
 ): string {
   const holdingNorm = normalizeCurrency(holdingDisplayCurrency);
   const quoteNorm = normalizeCurrency(quoteCurrency);
-  // Defensive rule: GBX holdings are priced in pence in this app.
-  // Provider labels can vary (GBP/GBp/GBX/other), but the numeric quote is
-  // interpreted as pence to avoid 100x inflation.
-  if (holdingNorm === "GBX") return "GBX";
+  if (
+    holdingNorm === "GBX" &&
+    (quoteNorm === "GBP" || quoteNorm === "GBX")
+  ) {
+    return "GBX";
+  }
   return quoteNorm;
 }
 

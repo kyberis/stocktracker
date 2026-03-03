@@ -164,6 +164,45 @@ describe("calculatePortfolioTotals", () => {
     expect(totals.totalCurrentEUR).toBe(5209.08);
   });
 
+  it("respects USD currency for USD-denominated LSE ETFs (e.g. IB01.L)", () => {
+    const holdings: Holding[] = [
+      {
+        id: "1",
+        name: "iShares $ Treasury Bond 0-1yr",
+        ticker: "IB01.L",
+        isin: "",
+        shares: 10,
+        purchasePrice: 110,
+        displayCurrency: "USD",
+        exchange: "LSE",
+        valueInEUR: 1000,
+      },
+    ];
+
+    const quotes: Record<string, QuoteData> = {
+      "IB01.L": {
+        symbol: "IB01.L",
+        shortName: "iShares $ Treasury Bond 0-1yr",
+        regularMarketPrice: 119.52,
+        regularMarketChange: 0.2,
+        regularMarketChangePercent: 0.17,
+        currency: "USD",
+        regularMarketPreviousClose: 119.32,
+        fiftyTwoWeekHigh: 120,
+        fiftyTwoWeekLow: 110,
+      },
+    };
+
+    const exchangeRates = {
+      EURUSD: 1.08,
+      EURGBP: 0.86,
+    };
+
+    const totals = calculatePortfolioTotals(holdings, [], quotes, exchangeRates);
+    const expectedEUR = (10 * 119.52) / 1.08;
+    expect(totals.totalCurrentEUR).toBeCloseTo(expectedEUR, 0);
+  });
+
   it("adds EUR cash balances into total value and total cost", () => {
     const holdings: Holding[] = [];
     const quotes: Record<string, QuoteData> = {};
