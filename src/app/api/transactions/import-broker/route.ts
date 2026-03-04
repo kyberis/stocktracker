@@ -42,6 +42,12 @@ const KNOWN_ISINS: Record<string, string> = {
   "GB00BG5NDX91": "SRB.L",
   "IE00B6R52036": "IS0E",
   "IE00BJ5JPG56": "ICGA",
+  "IE00B53HP851": "ISF.L",
+  "IE00B5BMR087": "SXR8.DE",
+  "IE0032077012": "EQQQ.L",
+  "IE00B3XXRP09": "VUSA.L",
+  "IE00B8GKDB10": "VHYL.L",
+  "IE000ZIJ5B20": "WCOS.L",
 };
 
 function inferExchangeFromTicker(ticker: string): string {
@@ -104,7 +110,8 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
       const sorted = [...parsed].sort((a, b) => a.date.localeCompare(b.date));
       let imported = 0;
       for (const tx of sorted) {
-        const assetType = tx.name.toUpperCase().includes("ETF") ? "etf" : "stock";
+        const nameUp = tx.name.toUpperCase();
+        const assetType = (nameUp.includes("ETF") || nameUp.includes("UCITS")) ? "etf" : "stock";
         await addTransaction(session.userId, {
           holdingId: "",
           ticker: tx.ticker,

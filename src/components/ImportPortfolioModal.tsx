@@ -253,7 +253,8 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
             name: tx.name,
             exchange: holdings.find((h) => h.ticker === tx.ticker)?.exchange || "",
             isin: "",
-            assetType: holdings.find((h) => h.ticker === tx.ticker)?.assetType || "stock",
+            assetType: holdings.find((h) => h.ticker === tx.ticker)?.assetType
+              || ((tx.name.toUpperCase().includes("ETF") || tx.name.toUpperCase().includes("UCITS")) ? "etf" : "stock"),
             accountId: "",
             type: tx.type,
             date: tx.date,
