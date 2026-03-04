@@ -215,7 +215,7 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
   };
 
   const handleImportAll = async () => {
-    const derivedTransactions: ExtractedTransaction[] = transactions.length > 0
+    const unsorted: ExtractedTransaction[] = transactions.length > 0
       ? transactions
       : holdings.map((h) => ({
           date: new Date().toISOString().slice(0, 10),
@@ -228,6 +228,9 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
           fees: 0,
           currency: h.displayCurrency || "EUR",
         }));
+
+    // Sort chronologically so buys happen before sells for correct holding sync
+    const derivedTransactions = [...unsorted].sort((a, b) => a.date.localeCompare(b.date));
 
     const total = derivedTransactions.filter((tx) => tx.ticker && tx.date).length;
     setImportProgress({ current: 0, total, errors: 0 });

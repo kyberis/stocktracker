@@ -100,8 +100,10 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
     }
 
     if (action === "import") {
+      // Sort chronologically so buys precede sells for correct holding sync
+      const sorted = [...parsed].sort((a, b) => a.date.localeCompare(b.date));
       let imported = 0;
-      for (const tx of parsed) {
+      for (const tx of sorted) {
         const assetType = tx.name.toUpperCase().includes("ETF") ? "etf" : "stock";
         await addTransaction(session.userId, {
           holdingId: "",
@@ -157,8 +159,9 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
     }
 
     if (action === "import") {
+      const sorted = [...parsed].sort((a, b) => a.date.localeCompare(b.date));
       let imported = 0;
-      for (const tx of parsed) {
+      for (const tx of sorted) {
         await addTransaction(session.userId, {
           holdingId: "",
           ticker: tx.ticker,

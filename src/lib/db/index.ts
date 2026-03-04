@@ -1039,7 +1039,7 @@ export async function listHoldings(userId: string): Promise<Holding[]> {
   });
 
   if (holdingsResult.rows.length > 0) {
-    return holdingsResult.rows.map((row) => ({
+    const rows = holdingsResult.rows.map((row) => ({
       id: str(row.id),
       name: str(row.name),
       ticker: str(row.ticker),
@@ -1055,6 +1055,24 @@ export async function listHoldings(userId: string): Promise<Holding[]> {
       assetClass: str(row.asset_class),
       accountId: str(row.account_id),
     }));
+
+    // Deduplicate: merge rows with the same ticker (case-insensitive)
+    const byTicker = new Map<string, Holding>();
+    for (const h of rows) {
+      const key = h.ticker.toUpperCase();
+      const prev = byTicker.get(key);
+      if (prev) {
+        const oldCost = prev.shares * prev.purchasePrice;
+        const addCost = h.shares * h.purchasePrice;
+        prev.shares += h.shares;
+        prev.purchasePrice = prev.shares > 0 ? (oldCost + addCost) / prev.shares : 0;
+      } else {
+        byTicker.set(key, { ...h });
+      }
+    }
+    return Array.from(byTicker.values())
+      .filter((h) => h.shares > 0)
+      .sort((a, b) => a.name.localeCompare(b.name));
   }
 
   const txCount = await client.execute({
@@ -1377,6 +1395,54 @@ export async function addTransaction(userId: string, tx: Omit<Transaction, "id" 
 
 /* ── Incremental Holdings Sync ──────────────────────────── */
 
+async function findHoldingForTicker(
+  client: Awaited<ReturnType<typeof ensureInitialized>>,
+  userId: string,
+  ticker: string,
+  exchange: string,
+): Promise<{ id: string; shares: number; purchasePrice: number } | null> {
+  // Exact match on ticker+exchange first
+  let result = await client.execute({
+    sql: "SELECT id, shares, purchase_price FROM holdings WHERE user_id = ? AND UPPER(ticker) = ? AND UPPER(exchange) = ?",
+    args: [userId, ticker, exchange],
+  });
+
+  // Fallback: match ticker only (handles exchange mismatch between imports)
+  if (result.rows.length === 0 && exchange === "") {
+    result = await client.execute({
+      sql: "SELECT id, shares, purchase_price FROM holdings WHERE user_id = ? AND UPPER(ticker) = ?",
+      args: [userId, ticker],
+    });
+  }
+  if (result.rows.length === 0) return null;
+
+  // Merge duplicates into the first row if multiple exist
+  if (result.rows.length > 1) {
+    const keep = result.rows[0];
+    let mergedShares = num(keep.shares);
+    let mergedCost = mergedShares * num(keep.purchase_price);
+    for (let i = 1; i < result.rows.length; i++) {
+      const dup = result.rows[i];
+      const dupShares = num(dup.shares);
+      mergedShares += dupShares;
+      mergedCost += dupShares * num(dup.purchase_price);
+      await client.execute({
+        sql: "DELETE FROM holdings WHERE id = ? AND user_id = ?",
+        args: [str(dup.id), userId],
+      });
+    }
+    const mergedPrice = mergedShares > 0 ? mergedCost / mergedShares : 0;
+    await client.execute({
+      sql: "UPDATE holdings SET shares = ?, purchase_price = ? WHERE id = ? AND user_id = ?",
+      args: [mergedShares, mergedPrice, str(keep.id), userId],
+    });
+    return { id: str(keep.id), shares: mergedShares, purchasePrice: mergedPrice };
+  }
+
+  const row = result.rows[0];
+  return { id: str(row.id), shares: num(row.shares), purchasePrice: num(row.purchase_price) };
+}
+
 async function syncHoldingForTransaction(
   userId: string,
   tx: { ticker: string; exchange: string; name: string; isin: string; assetType: string; type: string; shares: number; totalAmount: number; fees: number; taxes: number; currency: string; displayCurrency?: string; accountId?: string }
@@ -1386,23 +1452,17 @@ async function syncHoldingForTransaction(
   const client = await ensureInitialized();
   const ticker = tx.ticker.toUpperCase();
   const exchange = (tx.exchange || "").toUpperCase();
-
-  const existing = await client.execute({
-    sql: "SELECT id, shares, purchase_price FROM holdings WHERE user_id = ? AND UPPER(ticker) = ? AND UPPER(exchange) = ?",
-    args: [userId, ticker, exchange],
-  });
+  const existing = await findHoldingForTicker(client, userId, ticker, exchange);
 
   if (tx.type === "buy") {
-    if (existing.rows.length > 0) {
-      const row = existing.rows[0];
-      const oldShares = num(row.shares);
-      const oldCost = oldShares * num(row.purchase_price);
-      const newShares = oldShares + tx.shares;
+    if (existing) {
+      const newShares = existing.shares + tx.shares;
+      const oldCost = existing.shares * existing.purchasePrice;
       const newCost = oldCost + tx.totalAmount + (tx.fees || 0) + (tx.taxes || 0);
       const newPrice = newShares > 0 ? newCost / newShares : 0;
       await client.execute({
         sql: "UPDATE holdings SET shares = ?, purchase_price = ? WHERE id = ? AND user_id = ?",
-        args: [newShares, newPrice, str(row.id), userId],
+        args: [newShares, newPrice, existing.id, userId],
       });
     } else {
       const id = randomUUID();
@@ -1414,25 +1474,22 @@ async function syncHoldingForTransaction(
       });
     }
   } else if (tx.type === "sell") {
-    if (existing.rows.length > 0) {
-      const row = existing.rows[0];
-      const oldShares = num(row.shares);
-      const oldCost = oldShares * num(row.purchase_price);
-      const sold = Math.min(tx.shares, oldShares);
-      const avgCost = oldShares > 0 ? oldCost / oldShares : 0;
-      const newShares = oldShares - sold;
-      const newCost = Math.max(0, oldCost - sold * avgCost);
+    if (existing) {
+      const sold = Math.min(tx.shares, existing.shares);
+      const avgCost = existing.shares > 0 ? (existing.shares * existing.purchasePrice) / existing.shares : 0;
+      const newShares = existing.shares - sold;
+      const newCost = Math.max(0, existing.shares * existing.purchasePrice - sold * avgCost);
       const newPrice = newShares > 0 ? newCost / newShares : 0;
 
       if (newShares <= 0) {
         await client.execute({
           sql: "DELETE FROM holdings WHERE id = ? AND user_id = ?",
-          args: [str(row.id), userId],
+          args: [existing.id, userId],
         });
       } else {
         await client.execute({
           sql: "UPDATE holdings SET shares = ?, purchase_price = ? WHERE id = ? AND user_id = ?",
-          args: [newShares, newPrice, str(row.id), userId],
+          args: [newShares, newPrice, existing.id, userId],
         });
       }
     }
