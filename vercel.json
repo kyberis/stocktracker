@@ -1,6 +1,6 @@
 {
   "framework": "nextjs",
   "crons": [
-    { "path": "/api/cron/push-gauges", "schedule": "* * * * *" }
+    { "path": "/api/cron/push-gauges", "schedule": "0 0 * * *" }
   ]
 }
