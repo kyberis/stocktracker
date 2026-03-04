@@ -281,30 +281,17 @@ export default function StockRow({ holding }: StockRowProps) {
     }
 
     setTradeError(null);
-    let nextShares = holding.shares;
-    let nextPurchasePrice = holding.purchasePrice;
-
-    if (tradeAction === "buy") {
-      const prevCost = holding.shares * holding.purchasePrice;
-      const addCost = qty * price;
-      nextShares = holding.shares + qty;
-      nextPurchasePrice = nextShares > 0 ? (prevCost + addCost) / nextShares : 0;
-    } else {
-      nextShares = holding.shares - qty;
-      nextPurchasePrice = holding.purchasePrice;
-    }
-
-    await updateHolding(holding.id, {
-      shares: nextShares,
-      purchasePrice: nextPurchasePrice,
-    });
-
-    fetch("/api/transactions", {
+    const response = await fetch("/api/transactions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        holdingId: holding.id,
+        holdingId: "",
         ticker: holding.ticker,
+        name: holding.name,
+        exchange: holding.exchange,
+        isin: holding.isin,
+        assetType: holding.assetType || "stock",
+        accountId: holding.accountId || "",
         type: tradeAction,
         date: new Date().toISOString().slice(0, 10),
         shares: qty,
@@ -313,12 +300,16 @@ export default function StockRow({ holding }: StockRowProps) {
         fees: 0,
         taxes: 0,
         currency: holding.displayCurrency || "EUR",
+        displayCurrency: holding.displayCurrency || "EUR",
         notes: "",
       }),
-    }).catch(() => {});
+    }).catch(() => null);
 
     setTradeQuantity("");
     setTradePrice("");
+    if (response?.ok) {
+      window.location.reload();
+    }
   };
 
   let display52High = 0;

@@ -1,7 +1,12 @@
+import { NextRequest } from "next/server";
 import { getProviderFromRequest } from "@/lib/api-providers";
 import { jsonWithCallCount } from "@/lib/api-providers/response";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 import type { TimePeriod } from "@/lib/api-providers/types";
+import { requireRateLimit } from "@/lib/auth/guards";
+import { recordAvUsageAsync } from "@/lib/rate-limit";
+import { withMetrics } from "@/lib/with-metrics";
+import { waitUntil } from "@vercel/functions";
 
 export const dynamic = "force-dynamic";
 
@@ -29,7 +34,7 @@ async function tryGermanHistoricalFallback(
   return null;
 }
 
-export async function GET(request: Request) {
+export const GET = withMetrics("/api/historical", async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const symbol = searchParams.get("symbol");
   const period = (searchParams.get("period") || "1m") as TimePeriod;
@@ -40,6 +45,13 @@ export async function GET(request: Request) {
 
   const provider = await getProviderFromRequest(request);
   const yahoo = new YahooProvider();
+
+  let rateLimitUserId: string | null = null;
+  if (provider.name === "alphavantage") {
+    const rl = await requireRateLimit(request, "alphavantage");
+    if (rl.error) return rl.error;
+    rateLimitUserId = rl.session?.userId ?? null;
+  }
 
   try {
     const data = await provider.getHistorical(symbol, period);
@@ -68,5 +80,9 @@ export async function GET(request: Request) {
 
     console.error(`Failed to fetch historical data for ${symbol}:`, err instanceof Error ? err.message : err);
     return jsonWithCallCount(provider, { error: "Failed to fetch historical data" }, { status: 500 });
+  } finally {
+    if (rateLimitUserId && provider.callCount) {
+      waitUntil(recordAvUsageAsync(rateLimitUserId, provider.callCount));
+    }
   }
-}
+});

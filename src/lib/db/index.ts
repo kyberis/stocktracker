@@ -5,9 +5,11 @@ import { createClient, type Client, type Row } from "@libsql/client";
 import bcrypt from "bcryptjs";
 import type { ApiProviderName, CashEntry, Holding, HoldingAssetType, Language, RefreshInterval, Transaction, TransactionType, WatchlistItem, Account, RebalanceTarget } from "@/lib/types";
 import { encrypt, decrypt } from "@/lib/crypto";
-import { seedHoldingsForUser, seedCashForUser } from "./seed";
+import { deriveHoldingsFromTransactions } from "@/lib/derive-holdings";
+import { seedHoldingsForUser, seedCashForUser, seedTransactionsForUser } from "./seed";
 
 export type UserRole = "admin" | "user";
+export type UserPlan = "free" | "pro";
 
 export interface DbUser {
   id: string;
@@ -19,6 +21,14 @@ export interface DbUser {
   email: string;
   display_name: string;
   avatar_url: string;
+  plan: UserPlan;
+  stripe_customer_id: string;
+  stripe_subscription_id: string;
+  plan_expires_at: string;
+  ai_calls_this_month: number;
+  ai_calls_reset_at: string;
+  ai_calls_today: number;
+  ai_daily_reset_at: string;
 }
 
 export interface PublicUser {
@@ -30,6 +40,12 @@ export interface PublicUser {
   email: string;
   displayName: string;
   avatarUrl: string;
+  plan: UserPlan;
+  planExpiresAt: string;
+  aiCallsThisMonth: number;
+  aiCallsResetAt: string;
+  aiCallsToday: number;
+  aiDailyResetAt: string;
 }
 
 export interface UserSettings {
@@ -80,7 +96,13 @@ async function runMigrations(client: Client) {
       password_hash TEXT NOT NULL,
       role TEXT NOT NULL CHECK(role IN ('admin', 'user')),
       must_change_password INTEGER NOT NULL DEFAULT 0,
-      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      plan TEXT NOT NULL DEFAULT 'free' CHECK(plan IN ('free', 'pro')),
+      stripe_customer_id TEXT NOT NULL DEFAULT '',
+      stripe_subscription_id TEXT NOT NULL DEFAULT '',
+      plan_expires_at TEXT NOT NULL DEFAULT '',
+      ai_calls_this_month INTEGER NOT NULL DEFAULT 0,
+      ai_calls_reset_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
     CREATE TABLE IF NOT EXISTS holdings (
@@ -172,6 +194,33 @@ async function runMigrations(client: Client) {
     await client.execute({ sql: "ALTER TABLE users ADD COLUMN display_name TEXT NOT NULL DEFAULT ''" });
     await client.execute({ sql: "ALTER TABLE users ADD COLUMN avatar_url TEXT NOT NULL DEFAULT ''" });
   }
+  const hasPlan = userColumns.rows.some((row) => str(row.name) === "plan");
+  if (!hasPlan) {
+    await client.execute({ sql: "ALTER TABLE users ADD COLUMN plan TEXT NOT NULL DEFAULT 'free'" });
+  }
+  const hasStripeCustomerId = userColumns.rows.some((row) => str(row.name) === "stripe_customer_id");
+  if (!hasStripeCustomerId) {
+    await client.execute({ sql: "ALTER TABLE users ADD COLUMN stripe_customer_id TEXT NOT NULL DEFAULT ''" });
+  }
+  const hasStripeSubscriptionId = userColumns.rows.some((row) => str(row.name) === "stripe_subscription_id");
+  if (!hasStripeSubscriptionId) {
+    await client.execute({ sql: "ALTER TABLE users ADD COLUMN stripe_subscription_id TEXT NOT NULL DEFAULT ''" });
+  }
+  const hasPlanExpiresAt = userColumns.rows.some((row) => str(row.name) === "plan_expires_at");
+  if (!hasPlanExpiresAt) {
+    await client.execute({ sql: "ALTER TABLE users ADD COLUMN plan_expires_at TEXT NOT NULL DEFAULT ''" });
+  }
+  const hasAiCallsThisMonth = userColumns.rows.some((row) => str(row.name) === "ai_calls_this_month");
+  if (!hasAiCallsThisMonth) {
+    await client.execute({ sql: "ALTER TABLE users ADD COLUMN ai_calls_this_month INTEGER NOT NULL DEFAULT 0" });
+  }
+  const hasAiCallsResetAt = userColumns.rows.some((row) => str(row.name) === "ai_calls_reset_at");
+  if (!hasAiCallsResetAt) {
+    await client.execute({ sql: "ALTER TABLE users ADD COLUMN ai_calls_reset_at TEXT NOT NULL DEFAULT ''" });
+  }
+  await client.execute({
+    sql: "UPDATE users SET ai_calls_reset_at = datetime('now') WHERE ai_calls_reset_at = '' OR ai_calls_reset_at IS NULL",
+  });
 
   // Add refresh_interval column to user_settings if missing.
   const settingsColumns = await client.execute("PRAGMA table_info(user_settings)");
@@ -182,6 +231,14 @@ async function runMigrations(client: Client) {
     });
   }
 
+  // Add openai_api_key column to user_settings if missing.
+  const hasOpenAIKey = settingsColumns.rows.some((row) => str(row.name) === "openai_api_key");
+  if (!hasOpenAIKey) {
+    await client.execute({
+      sql: "ALTER TABLE user_settings ADD COLUMN openai_api_key TEXT NOT NULL DEFAULT ''",
+    });
+  }
+
   // ── New tables for transactions, watchlist, accounts, rebalance targets ──
   await client.executeMultiple(`
     CREATE TABLE IF NOT EXISTS transactions (
@@ -189,6 +246,11 @@ async function runMigrations(client: Client) {
       user_id TEXT NOT NULL,
       holding_id TEXT,
       ticker TEXT NOT NULL,
+      name TEXT NOT NULL DEFAULT '',
+      exchange TEXT NOT NULL DEFAULT '',
+      isin TEXT NOT NULL DEFAULT '',
+      asset_type TEXT NOT NULL DEFAULT 'stock',
+      account_id TEXT NOT NULL DEFAULT '',
       type TEXT NOT NULL CHECK(type IN ('buy', 'sell', 'dividend', 'fee')),
       date TEXT NOT NULL,
       shares REAL NOT NULL DEFAULT 0,
@@ -197,6 +259,7 @@ async function runMigrations(client: Client) {
       fees REAL NOT NULL DEFAULT 0,
       taxes REAL NOT NULL DEFAULT 0,
       currency TEXT NOT NULL DEFAULT 'EUR',
+      display_currency TEXT NOT NULL DEFAULT 'EUR',
       notes TEXT NOT NULL DEFAULT '',
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -244,6 +307,72 @@ async function runMigrations(client: Client) {
     await client.execute({ sql: "ALTER TABLE holdings ADD COLUMN account_id TEXT NOT NULL DEFAULT ''" });
   }
 
+  const transactionCols = await client.execute("PRAGMA table_info(transactions)");
+  const hasTxName = transactionCols.rows.some((row) => str(row.name) === "name");
+  if (!hasTxName) {
+    await client.execute({ sql: "ALTER TABLE transactions ADD COLUMN name TEXT NOT NULL DEFAULT ''" });
+  }
+  const hasTxExchange = transactionCols.rows.some((row) => str(row.name) === "exchange");
+  if (!hasTxExchange) {
+    await client.execute({ sql: "ALTER TABLE transactions ADD COLUMN exchange TEXT NOT NULL DEFAULT ''" });
+  }
+  const hasTxIsin = transactionCols.rows.some((row) => str(row.name) === "isin");
+  if (!hasTxIsin) {
+    await client.execute({ sql: "ALTER TABLE transactions ADD COLUMN isin TEXT NOT NULL DEFAULT ''" });
+  }
+  const hasTxAssetType = transactionCols.rows.some((row) => str(row.name) === "asset_type");
+  if (!hasTxAssetType) {
+    await client.execute({ sql: "ALTER TABLE transactions ADD COLUMN asset_type TEXT NOT NULL DEFAULT 'stock'" });
+  }
+  const hasTxAccountId = transactionCols.rows.some((row) => str(row.name) === "account_id");
+  if (!hasTxAccountId) {
+    await client.execute({ sql: "ALTER TABLE transactions ADD COLUMN account_id TEXT NOT NULL DEFAULT ''" });
+  }
+  const hasTxDisplayCurrency = transactionCols.rows.some((row) => str(row.name) === "display_currency");
+  if (!hasTxDisplayCurrency) {
+    await client.execute({ sql: "ALTER TABLE transactions ADD COLUMN display_currency TEXT NOT NULL DEFAULT 'EUR'" });
+  }
+
+  await client.execute({
+    sql: `
+      UPDATE transactions
+      SET exchange = COALESCE((
+        SELECT h.exchange FROM holdings h
+        WHERE h.user_id = transactions.user_id
+          AND UPPER(h.ticker) = UPPER(transactions.ticker)
+        ORDER BY h.created_at DESC LIMIT 1
+      ), exchange)
+      WHERE exchange = ''
+    `,
+  });
+  await client.execute({
+    sql: `
+      UPDATE transactions
+      SET name = COALESCE((
+        SELECT h.name FROM holdings h
+        WHERE h.user_id = transactions.user_id
+          AND UPPER(h.ticker) = UPPER(transactions.ticker)
+        ORDER BY h.created_at DESC LIMIT 1
+      ), name)
+      WHERE name = ''
+    `,
+  });
+  await client.execute({
+    sql: `
+      UPDATE transactions
+      SET display_currency = COALESCE((
+        SELECT h.display_currency FROM holdings h
+        WHERE h.user_id = transactions.user_id
+          AND UPPER(h.ticker) = UPPER(transactions.ticker)
+        ORDER BY h.created_at DESC LIMIT 1
+      ), display_currency)
+      WHERE display_currency = ''
+    `,
+  });
+  await client.execute({
+    sql: "UPDATE transactions SET display_currency = currency WHERE display_currency = '' OR display_currency IS NULL",
+  });
+
   // ── Analytics events table ──
   await client.executeMultiple(`
     CREATE TABLE IF NOT EXISTS analytics_events (
@@ -258,6 +387,44 @@ async function runMigrations(client: Client) {
     CREATE INDEX IF NOT EXISTS idx_analytics_events_event ON analytics_events(event);
     CREATE INDEX IF NOT EXISTS idx_analytics_events_created ON analytics_events(created_at);
   `);
+
+  // ── Landing page anonymous analytics ──
+  await client.executeMultiple(`
+    CREATE TABLE IF NOT EXISTS landing_events (
+      id TEXT PRIMARY KEY,
+      event TEXT NOT NULL,
+      metadata TEXT,
+      referrer TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_landing_events_event ON landing_events(event);
+    CREATE INDEX IF NOT EXISTS idx_landing_events_created ON landing_events(created_at);
+  `);
+
+  // ── Rate limits table ──
+  await client.executeMultiple(`
+    CREATE TABLE IF NOT EXISTS rate_limits (
+      user_id TEXT NOT NULL,
+      provider TEXT NOT NULL,
+      call_count INTEGER NOT NULL DEFAULT 0,
+      window_start TEXT NOT NULL,
+      PRIMARY KEY(user_id, provider)
+    );
+  `);
+
+  // Add ai_calls_today / ai_daily_reset_at columns to users if missing.
+  const userColsRL = await client.execute("PRAGMA table_info(users)");
+  const hasAiCallsToday = userColsRL.rows.some((row) => str(row.name) === "ai_calls_today");
+  if (!hasAiCallsToday) {
+    await client.execute({ sql: "ALTER TABLE users ADD COLUMN ai_calls_today INTEGER NOT NULL DEFAULT 0" });
+  }
+  const hasAiDailyResetAt = userColsRL.rows.some((row) => str(row.name) === "ai_daily_reset_at");
+  if (!hasAiDailyResetAt) {
+    await client.execute({ sql: "ALTER TABLE users ADD COLUMN ai_daily_reset_at TEXT NOT NULL DEFAULT ''" });
+  }
+  await client.execute({
+    sql: "UPDATE users SET ai_daily_reset_at = datetime('now') WHERE ai_daily_reset_at = '' OR ai_daily_reset_at IS NULL",
+  });
 
   // Encrypt any plaintext AV API keys that were stored before encryption was added.
   const keysResult = await client.execute(
@@ -282,13 +449,14 @@ async function ensureAdminUser(client: Client) {
     sql: "SELECT id FROM users WHERE username = ?",
     args: [ADMIN_DEFAULT_USERNAME],
   });
+  const isNew = existing.rows.length === 0;
   const adminId = (existing.rows[0]?.id as string) || randomUUID();
 
   await client.batch(
     [
       {
-        sql: `INSERT OR IGNORE INTO users (id, username, password_hash, role, must_change_password)
-              VALUES (?, ?, ?, 'admin', 1)`,
+        sql: `INSERT OR IGNORE INTO users (id, username, password_hash, role, must_change_password, ai_calls_reset_at)
+              VALUES (?, ?, ?, 'admin', 1, datetime('now'))`,
         args: [adminId, ADMIN_DEFAULT_USERNAME, passwordHash],
       },
       {
@@ -299,6 +467,19 @@ async function ensureAdminUser(client: Client) {
     ],
     "write"
   );
+
+  // Seed transactions from DEGIRO CSV on first run (if admin has no transactions yet)
+  if (isNew) {
+    await seedTransactionsForUser(client, adminId);
+  } else {
+    const txCount = await client.execute({
+      sql: "SELECT COUNT(*) as cnt FROM transactions WHERE user_id = ?",
+      args: [adminId],
+    });
+    if (num(txCount.rows[0]?.cnt) === 0) {
+      await seedTransactionsForUser(client, adminId);
+    }
+  }
 }
 
 async function ensureInitialized(): Promise<Client> {
@@ -367,6 +548,14 @@ function rowToDbUser(row: Row): DbUser {
     email: str(row.email),
     display_name: str(row.display_name),
     avatar_url: str(row.avatar_url),
+    plan: row.plan === "pro" ? "pro" : "free",
+    stripe_customer_id: str(row.stripe_customer_id),
+    stripe_subscription_id: str(row.stripe_subscription_id),
+    plan_expires_at: str(row.plan_expires_at),
+    ai_calls_this_month: num(row.ai_calls_this_month),
+    ai_calls_reset_at: str(row.ai_calls_reset_at),
+    ai_calls_today: num(row.ai_calls_today),
+    ai_daily_reset_at: str(row.ai_daily_reset_at),
   };
 }
 
@@ -380,6 +569,12 @@ function mapUser(user: DbUser): PublicUser {
     email: user.email,
     displayName: user.display_name,
     avatarUrl: user.avatar_url,
+    plan: user.plan,
+    planExpiresAt: user.plan_expires_at,
+    aiCallsThisMonth: user.ai_calls_this_month,
+    aiCallsResetAt: user.ai_calls_reset_at,
+    aiCallsToday: user.ai_calls_today,
+    aiDailyResetAt: user.ai_daily_reset_at,
   };
 }
 
@@ -420,8 +615,8 @@ export async function createUser(params: {
   await client.batch(
     [
       {
-        sql: `INSERT INTO users (id, username, password_hash, role, must_change_password)
-              VALUES (?, ?, ?, 'user', 0)`,
+        sql: `INSERT INTO users (id, username, password_hash, role, must_change_password, ai_calls_reset_at)
+              VALUES (?, ?, ?, 'user', 0, datetime('now'))`,
         args: [id, params.username, params.passwordHash],
       },
       {
@@ -435,6 +630,7 @@ export async function createUser(params: {
 
   if (params.seedWithData) {
     await seedHoldingsForUser(client, id);
+    await seedTransactionsForUser(client, id);
   }
 
   const created = await findUserById(id);
@@ -481,6 +677,244 @@ export async function updateUserRole(userId: string, role: UserRole): Promise<vo
     sql: "UPDATE users SET role = ? WHERE id = ?",
     args: [role, userId],
   });
+}
+
+function monthWindowKey(date: Date): string {
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
+}
+
+function shouldResetAiWindow(lastResetAt: string): boolean {
+  if (!lastResetAt) return true;
+  const parsed = new Date(lastResetAt);
+  if (isNaN(parsed.getTime())) return true;
+  return monthWindowKey(parsed) !== monthWindowKey(new Date());
+}
+
+export async function updateUserSubscription(
+  userId: string,
+  updates: Partial<{
+    plan: UserPlan;
+    stripeCustomerId: string;
+    stripeSubscriptionId: string;
+    planExpiresAt: string;
+  }>
+): Promise<void> {
+  const client = await ensureInitialized();
+  const user = await findUserById(userId);
+  if (!user) return;
+  const nextPlan = updates.plan ?? user.plan;
+  const nextStripeCustomerId = updates.stripeCustomerId ?? user.stripe_customer_id;
+  const nextStripeSubscriptionId = updates.stripeSubscriptionId ?? user.stripe_subscription_id;
+  const nextPlanExpiresAt = updates.planExpiresAt ?? user.plan_expires_at;
+  await client.execute({
+    sql: `UPDATE users
+          SET plan = ?, stripe_customer_id = ?, stripe_subscription_id = ?, plan_expires_at = ?
+          WHERE id = ?`,
+    args: [nextPlan, nextStripeCustomerId, nextStripeSubscriptionId, nextPlanExpiresAt, userId],
+  });
+}
+
+export async function findUserByStripeCustomerId(customerId: string): Promise<DbUser | null> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: "SELECT * FROM users WHERE stripe_customer_id = ?",
+    args: [customerId],
+  });
+  if (result.rows.length === 0) return null;
+  return rowToDbUser(result.rows[0]);
+}
+
+export async function findUserByStripeSubscriptionId(subscriptionId: string): Promise<DbUser | null> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: "SELECT * FROM users WHERE stripe_subscription_id = ?",
+    args: [subscriptionId],
+  });
+  if (result.rows.length === 0) return null;
+  return rowToDbUser(result.rows[0]);
+}
+
+export async function resetAiUsageWindow(userId: string): Promise<void> {
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: "UPDATE users SET ai_calls_this_month = 0, ai_calls_reset_at = datetime('now') WHERE id = ?",
+    args: [userId],
+  });
+}
+
+export async function getAiUsage(userId: string): Promise<{
+  plan: UserPlan;
+  aiCallsThisMonth: number;
+  aiCallsResetAt: string;
+}> {
+  const user = await findUserById(userId);
+  if (!user) {
+    return { plan: "free", aiCallsThisMonth: 0, aiCallsResetAt: new Date().toISOString() };
+  }
+  if (shouldResetAiWindow(user.ai_calls_reset_at)) {
+    await resetAiUsageWindow(userId);
+    return { plan: user.plan, aiCallsThisMonth: 0, aiCallsResetAt: new Date().toISOString() };
+  }
+  return {
+    plan: user.plan,
+    aiCallsThisMonth: user.ai_calls_this_month,
+    aiCallsResetAt: user.ai_calls_reset_at,
+  };
+}
+
+export async function incrementAiUsage(userId: string): Promise<number> {
+  const usage = await getAiUsage(userId);
+  const client = await ensureInitialized();
+  const next = usage.aiCallsThisMonth + 1;
+  await client.execute({
+    sql: "UPDATE users SET ai_calls_this_month = ? WHERE id = ?",
+    args: [next, userId],
+  });
+  return next;
+}
+
+/* ── Daily AI usage (Pro) ─────────────────────────────────── */
+
+function shouldResetDailyAiWindow(resetAt: string): boolean {
+  if (!resetAt) return true;
+  const d = new Date(resetAt);
+  const now = new Date();
+  return d.getUTCFullYear() !== now.getUTCFullYear() ||
+    d.getUTCMonth() !== now.getUTCMonth() ||
+    d.getUTCDate() !== now.getUTCDate();
+}
+
+export async function getDailyAiUsage(userId: string): Promise<{ aiCallsToday: number; aiDailyResetAt: string }> {
+  const user = await findUserById(userId);
+  if (!user) return { aiCallsToday: 0, aiDailyResetAt: new Date().toISOString() };
+  if (shouldResetDailyAiWindow(user.ai_daily_reset_at)) {
+    const client = await ensureInitialized();
+    await client.execute({
+      sql: "UPDATE users SET ai_calls_today = 0, ai_daily_reset_at = datetime('now') WHERE id = ?",
+      args: [userId],
+    });
+    return { aiCallsToday: 0, aiDailyResetAt: new Date().toISOString() };
+  }
+  return { aiCallsToday: user.ai_calls_today, aiDailyResetAt: user.ai_daily_reset_at };
+}
+
+export async function incrementDailyAiUsage(userId: string): Promise<number> {
+  const usage = await getDailyAiUsage(userId);
+  const next = usage.aiCallsToday + 1;
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: "UPDATE users SET ai_calls_today = ? WHERE id = ?",
+    args: [next, userId],
+  });
+  return next;
+}
+
+/* ── Rate limits (per-user, per-provider) ─────────────────── */
+
+export async function checkAndIncrementRateLimit(
+  userId: string,
+  provider: string,
+  maxCalls: number,
+  windowKey: string,
+): Promise<{ allowed: boolean; remaining: number; resetAt: string }> {
+  const client = await ensureInitialized();
+
+  const existing = await client.execute({
+    sql: "SELECT call_count, window_start FROM rate_limits WHERE user_id = ? AND provider = ?",
+    args: [userId, provider],
+  });
+
+  if (existing.rows.length === 0) {
+    await client.execute({
+      sql: "INSERT INTO rate_limits (user_id, provider, call_count, window_start) VALUES (?, ?, 1, ?)",
+      args: [userId, provider, windowKey],
+    });
+    return { allowed: true, remaining: maxCalls - 1, resetAt: windowKey };
+  }
+
+  const row = existing.rows[0];
+  const currentWindow = str(row.window_start);
+
+  if (currentWindow !== windowKey) {
+    await client.execute({
+      sql: "UPDATE rate_limits SET call_count = 1, window_start = ? WHERE user_id = ? AND provider = ?",
+      args: [windowKey, userId, provider],
+    });
+    return { allowed: true, remaining: maxCalls - 1, resetAt: windowKey };
+  }
+
+  const currentCount = num(row.call_count);
+  if (currentCount >= maxCalls) {
+    return { allowed: false, remaining: 0, resetAt: windowKey };
+  }
+
+  await client.execute({
+    sql: "UPDATE rate_limits SET call_count = call_count + 1 WHERE user_id = ? AND provider = ?",
+    args: [userId, provider],
+  });
+  return { allowed: true, remaining: maxCalls - currentCount - 1, resetAt: windowKey };
+}
+
+export async function recordRateLimitUsage(
+  userId: string,
+  provider: string,
+  count: number,
+  windowKey: string,
+): Promise<void> {
+  if (count <= 0) return;
+  const client = await ensureInitialized();
+  const existing = await client.execute({
+    sql: "SELECT call_count, window_start FROM rate_limits WHERE user_id = ? AND provider = ?",
+    args: [userId, provider],
+  });
+
+  if (existing.rows.length === 0) {
+    await client.execute({
+      sql: "INSERT INTO rate_limits (user_id, provider, call_count, window_start) VALUES (?, ?, ?, ?)",
+      args: [userId, provider, count, windowKey],
+    });
+    return;
+  }
+
+  const currentWindow = str(existing.rows[0].window_start);
+  if (currentWindow !== windowKey) {
+    await client.execute({
+      sql: "UPDATE rate_limits SET call_count = ?, window_start = ? WHERE user_id = ? AND provider = ?",
+      args: [count, windowKey, userId, provider],
+    });
+  } else {
+    await client.execute({
+      sql: "UPDATE rate_limits SET call_count = call_count + ? WHERE user_id = ? AND provider = ?",
+      args: [count, userId, provider],
+    });
+  }
+}
+
+export async function countProSubscribers(): Promise<number> {
+  const client = await ensureInitialized();
+  const result = await client.execute("SELECT COUNT(*) as cnt FROM users WHERE plan = 'pro'");
+  return num(result.rows[0]?.cnt);
+}
+
+export async function getRateLimitStats(): Promise<{
+  perUser: { userId: string; username: string; provider: string; callCount: number; windowStart: string }[];
+}> {
+  const client = await ensureInitialized();
+  const result = await client.execute(
+    `SELECT rl.user_id, u.username, rl.provider, rl.call_count, rl.window_start
+     FROM rate_limits rl
+     JOIN users u ON u.id = rl.user_id
+     ORDER BY rl.call_count DESC`
+  );
+  return {
+    perUser: result.rows.map((r) => ({
+      userId: str(r.user_id),
+      username: str(r.username),
+      provider: str(r.provider),
+      callCount: num(r.call_count),
+      windowStart: str(r.window_start),
+    })),
+  };
 }
 
 export async function deleteUser(userId: string) {
@@ -568,30 +1002,70 @@ export async function setGlobalAlphaVantageApiKey(key: string): Promise<void> {
   });
 }
 
-export async function listHoldings(userId: string): Promise<Holding[]> {
+/* ── Global OpenAI API Key (admin-managed, shared) ── */
+
+export async function getGlobalOpenAIApiKey(): Promise<string> {
   const client = await ensureInitialized();
   const result = await client.execute({
+    sql: `SELECT us.openai_api_key FROM user_settings us
+          JOIN users u ON u.id = us.user_id
+          WHERE u.role = 'admin' AND us.openai_api_key != ''
+          ORDER BY u.created_at ASC LIMIT 1`,
+  });
+  if (result.rows.length === 0) return "";
+  return decrypt(str(result.rows[0].openai_api_key));
+}
+
+export async function setGlobalOpenAIApiKey(key: string): Promise<void> {
+  const client = await ensureInitialized();
+  const admin = await client.execute({
+    sql: "SELECT id FROM users WHERE username = ?",
+    args: [ADMIN_DEFAULT_USERNAME],
+  });
+  if (admin.rows.length === 0) throw new Error("Admin user not found");
+  const adminId = str(admin.rows[0].id);
+  await client.execute({
+    sql: "UPDATE user_settings SET openai_api_key = ? WHERE user_id = ?",
+    args: [key ? encrypt(key) : "", adminId],
+  });
+}
+
+export async function listHoldings(userId: string): Promise<Holding[]> {
+  const client = await ensureInitialized();
+  const holdingsResult = await client.execute({
     sql: `SELECT id, name, ticker, isin, asset_type, shares, purchase_price, display_currency, exchange, value_in_eur, sector, region, asset_class, account_id
-          FROM holdings WHERE user_id = ? ORDER BY created_at ASC`,
+          FROM holdings WHERE user_id = ? ORDER BY name ASC`,
     args: [userId],
   });
 
-  return result.rows.map((row) => ({
-    id: str(row.id),
-    name: str(row.name),
-    ticker: str(row.ticker),
-    isin: str(row.isin),
-    assetType: holdingAssetType(row.asset_type),
-    shares: num(row.shares),
-    purchasePrice: num(row.purchase_price),
-    displayCurrency: str(row.display_currency),
-    exchange: str(row.exchange),
-    valueInEUR: num(row.value_in_eur),
-    sector: str(row.sector),
-    region: str(row.region),
-    assetClass: str(row.asset_class),
-    accountId: str(row.account_id),
-  }));
+  if (holdingsResult.rows.length > 0) {
+    return holdingsResult.rows.map((row) => ({
+      id: str(row.id),
+      name: str(row.name),
+      ticker: str(row.ticker),
+      isin: str(row.isin),
+      assetType: holdingAssetType(row.asset_type),
+      shares: num(row.shares),
+      purchasePrice: num(row.purchase_price),
+      displayCurrency: str(row.display_currency),
+      exchange: str(row.exchange),
+      valueInEUR: num(row.value_in_eur),
+      sector: str(row.sector),
+      region: str(row.region),
+      assetClass: str(row.asset_class),
+      accountId: str(row.account_id),
+    }));
+  }
+
+  const txCount = await client.execute({
+    sql: "SELECT COUNT(*) as cnt FROM transactions WHERE user_id = ?",
+    args: [userId],
+  });
+  if (num(txCount.rows[0]?.cnt) > 0) {
+    return rebuildHoldings(userId);
+  }
+
+  return [];
 }
 
 export async function listCashEntries(userId: string): Promise<CashEntry[]> {
@@ -781,10 +1255,15 @@ export async function resetUserHoldings(
     sql: "DELETE FROM cash_entries WHERE user_id = ?",
     args: [userId],
   });
+  await client.execute({
+    sql: "DELETE FROM transactions WHERE user_id = ?",
+    args: [userId],
+  });
   if (useSeedData) {
     const holdingsCount = await seedHoldingsForUser(client, userId);
     const cashCount = await seedCashForUser(client, userId);
-    return holdingsCount + cashCount;
+    const txCount = await seedTransactionsForUser(client, userId);
+    return holdingsCount + cashCount + txCount;
   }
   return 0;
 }
@@ -812,6 +1291,11 @@ export async function listTransactions(userId: string, holdingId?: string): Prom
     id: str(r.id),
     holdingId: str(r.holding_id),
     ticker: str(r.ticker),
+    name: str(r.name),
+    exchange: str(r.exchange),
+    isin: str(r.isin),
+    assetType: holdingAssetType(r.asset_type),
+    accountId: str(r.account_id),
     type: txType(r.type),
     date: str(r.date),
     shares: num(r.shares),
@@ -820,6 +1304,7 @@ export async function listTransactions(userId: string, holdingId?: string): Prom
     fees: num(r.fees),
     taxes: num(r.taxes),
     currency: str(r.currency),
+    displayCurrency: str(r.display_currency),
     notes: str(r.notes),
     createdAt: str(r.created_at),
   }));
@@ -829,18 +1314,191 @@ export async function addTransaction(userId: string, tx: Omit<Transaction, "id" 
   const client = await ensureInitialized();
   const id = randomUUID();
   const total = tx.totalAmount || tx.shares * tx.pricePerShare;
+  const exchange = (tx.exchange || "").toUpperCase();
+  const ticker = normalizeTickerForExchange(tx.ticker, exchange);
   await client.execute({
-    sql: `INSERT INTO transactions (id, user_id, holding_id, ticker, type, date, shares, price_per_share, total_amount, fees, taxes, currency, notes)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    args: [id, userId, tx.holdingId || "", tx.ticker, tx.type, tx.date, tx.shares, tx.pricePerShare, total, tx.fees || 0, tx.taxes || 0, tx.currency || "EUR", tx.notes || ""],
+    sql: `INSERT INTO transactions (
+            id, user_id, holding_id, ticker, name, exchange, isin, asset_type, account_id,
+            type, date, shares, price_per_share, total_amount, fees, taxes, currency, display_currency, notes
+          )
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    args: [
+      id,
+      userId,
+      tx.holdingId || "",
+      ticker,
+      tx.name || "",
+      exchange,
+      tx.isin || "",
+      tx.assetType || "stock",
+      tx.accountId || "",
+      tx.type,
+      tx.date,
+      tx.shares,
+      tx.pricePerShare,
+      total,
+      tx.fees || 0,
+      tx.taxes || 0,
+      tx.currency || "EUR",
+      tx.displayCurrency || tx.currency || "EUR",
+      tx.notes || "",
+    ],
   });
-  return { ...tx, id, totalAmount: total, fees: tx.fees || 0, taxes: tx.taxes || 0, notes: tx.notes || "", createdAt: new Date().toISOString() };
+  const created: Transaction = {
+    ...tx,
+    id,
+    ticker,
+    exchange,
+    totalAmount: total,
+    fees: tx.fees || 0,
+    taxes: tx.taxes || 0,
+    notes: tx.notes || "",
+    createdAt: new Date().toISOString(),
+  };
+
+  await syncHoldingForTransaction(userId, {
+    ticker,
+    exchange,
+    name: tx.name || "",
+    isin: tx.isin || "",
+    assetType: tx.assetType || "stock",
+    type: tx.type,
+    shares: tx.shares,
+    totalAmount: total,
+    fees: tx.fees || 0,
+    taxes: tx.taxes || 0,
+    currency: tx.currency || "EUR",
+    displayCurrency: tx.displayCurrency || tx.currency || "EUR",
+    accountId: tx.accountId || "",
+  });
+
+  return created;
+}
+
+/* ── Incremental Holdings Sync ──────────────────────────── */
+
+async function syncHoldingForTransaction(
+  userId: string,
+  tx: { ticker: string; exchange: string; name: string; isin: string; assetType: string; type: string; shares: number; totalAmount: number; fees: number; taxes: number; currency: string; displayCurrency?: string; accountId?: string }
+): Promise<void> {
+  if (tx.type !== "buy" && tx.type !== "sell") return;
+
+  const client = await ensureInitialized();
+  const ticker = tx.ticker.toUpperCase();
+  const exchange = (tx.exchange || "").toUpperCase();
+
+  const existing = await client.execute({
+    sql: "SELECT id, shares, purchase_price FROM holdings WHERE user_id = ? AND UPPER(ticker) = ? AND UPPER(exchange) = ?",
+    args: [userId, ticker, exchange],
+  });
+
+  if (tx.type === "buy") {
+    if (existing.rows.length > 0) {
+      const row = existing.rows[0];
+      const oldShares = num(row.shares);
+      const oldCost = oldShares * num(row.purchase_price);
+      const newShares = oldShares + tx.shares;
+      const newCost = oldCost + tx.totalAmount + (tx.fees || 0) + (tx.taxes || 0);
+      const newPrice = newShares > 0 ? newCost / newShares : 0;
+      await client.execute({
+        sql: "UPDATE holdings SET shares = ?, purchase_price = ? WHERE id = ? AND user_id = ?",
+        args: [newShares, newPrice, str(row.id), userId],
+      });
+    } else {
+      const id = randomUUID();
+      const price = tx.shares > 0 ? (tx.totalAmount + (tx.fees || 0) + (tx.taxes || 0)) / tx.shares : 0;
+      await client.execute({
+        sql: `INSERT INTO holdings (id, user_id, name, ticker, isin, asset_type, shares, purchase_price, display_currency, exchange, value_in_eur, account_id)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)`,
+        args: [id, userId, tx.name || ticker, ticker, tx.isin || "", tx.assetType || "stock", tx.shares, price, tx.displayCurrency || tx.currency || "EUR", exchange, tx.accountId || ""],
+      });
+    }
+  } else if (tx.type === "sell") {
+    if (existing.rows.length > 0) {
+      const row = existing.rows[0];
+      const oldShares = num(row.shares);
+      const oldCost = oldShares * num(row.purchase_price);
+      const sold = Math.min(tx.shares, oldShares);
+      const avgCost = oldShares > 0 ? oldCost / oldShares : 0;
+      const newShares = oldShares - sold;
+      const newCost = Math.max(0, oldCost - sold * avgCost);
+      const newPrice = newShares > 0 ? newCost / newShares : 0;
+
+      if (newShares <= 0) {
+        await client.execute({
+          sql: "DELETE FROM holdings WHERE id = ? AND user_id = ?",
+          args: [str(row.id), userId],
+        });
+      } else {
+        await client.execute({
+          sql: "UPDATE holdings SET shares = ?, purchase_price = ? WHERE id = ? AND user_id = ?",
+          args: [newShares, newPrice, str(row.id), userId],
+        });
+      }
+    }
+  }
+}
+
+export async function rebuildHoldings(userId: string): Promise<Holding[]> {
+  const client = await ensureInitialized();
+
+  const metadataRows = await client.execute({
+    sql: `SELECT id, name, ticker, isin, asset_type, display_currency, exchange, sector, region, asset_class, account_id
+          FROM holdings WHERE user_id = ?`,
+    args: [userId],
+  });
+
+  const metadataByKey = new Map<string, {
+    id: string; name: string; isin: string; assetType: HoldingAssetType;
+    displayCurrency: string; sector: string; region: string; assetClass: string; accountId: string;
+  }>();
+  for (const row of metadataRows.rows) {
+    const key = `${str(row.ticker).toUpperCase()}|${str(row.exchange).toUpperCase()}`;
+    if (!metadataByKey.has(key)) {
+      metadataByKey.set(key, {
+        id: str(row.id), name: str(row.name), isin: str(row.isin),
+        assetType: holdingAssetType(row.asset_type), displayCurrency: str(row.display_currency),
+        sector: str(row.sector), region: str(row.region), assetClass: str(row.asset_class),
+        accountId: str(row.account_id),
+      });
+    }
+  }
+
+  const transactions = await listTransactions(userId);
+  const derived = deriveHoldingsFromTransactions(transactions, metadataByKey);
+
+  await client.execute({ sql: "DELETE FROM holdings WHERE user_id = ?", args: [userId] });
+
+  for (const h of derived) {
+    const id = randomUUID();
+    await client.execute({
+      sql: `INSERT INTO holdings (id, user_id, name, ticker, isin, asset_type, shares, purchase_price, display_currency, exchange, value_in_eur, sector, region, asset_class, account_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [id, userId, h.name, h.ticker, h.isin || "", h.assetType || "stock", h.shares, h.purchasePrice, h.displayCurrency, h.exchange, h.valueInEUR || 0, h.sector || "", h.region || "", h.assetClass || "", h.accountId || ""],
+    });
+  }
+
+  return derived;
 }
 
 export async function deleteTransaction(userId: string, txId: string): Promise<boolean> {
   const client = await ensureInitialized();
   const result = await client.execute({ sql: "DELETE FROM transactions WHERE id = ? AND user_id = ?", args: [txId, userId] });
   return (result.rowsAffected ?? 0) > 0;
+}
+
+export async function deleteTransactionsForPosition(
+  userId: string,
+  ticker: string,
+  exchange: string
+): Promise<number> {
+  const client = await ensureInitialized();
+  const normalizedTicker = normalizeTickerForExchange(ticker, exchange);
+  const result = await client.execute({
+    sql: "DELETE FROM transactions WHERE user_id = ? AND UPPER(ticker) = UPPER(?) AND UPPER(exchange) = UPPER(?)",
+    args: [userId, normalizedTicker, exchange],
+  });
+  return Number(result.rowsAffected ?? 0);
 }
 
 /* ── Watchlist ────────────────────────────────────────────── */
@@ -944,6 +1602,30 @@ export async function trackEvent(
   }
 }
 
+export async function trackLandingEvent(
+  event: string,
+  metadata?: Record<string, string>,
+  referrer?: string
+): Promise<void> {
+  try {
+    const client = await ensureInitialized();
+    await client.execute({
+      sql: "INSERT INTO landing_events (id, event, metadata, referrer) VALUES (?, ?, ?, ?)",
+      args: [randomUUID(), event, metadata ? JSON.stringify(metadata) : null, referrer || null],
+    });
+  } catch (err) {
+    console.error("Failed to track landing event:", err instanceof Error ? err.message : err);
+  }
+}
+
+export interface LandingAnalytics {
+  totalPageViews: number;
+  totalCtaClicks: number;
+  eventsByType: { event: string; count: number }[];
+  ctaBreakdown: { cta: string; count: number }[];
+  dailyViews: { date: string; views: number }[];
+}
+
 export interface AnalyticsSummary {
   totalUsers: number;
   activeUsers7d: number;
@@ -953,13 +1635,16 @@ export interface AnalyticsSummary {
   topStocks: { ticker: string; views: number }[];
   dailyActivity: { date: string; users: number; events: number }[];
   signupsByDay: { date: string; count: number }[];
+  landing: LandingAnalytics;
 }
 
 export async function getAnalyticsSummary(days = 30): Promise<AnalyticsSummary> {
   const client = await ensureInitialized();
 
-  const [usersResult, active7d, active30d, totalEvents, eventsByType, topStocks, dailyActivity, signupsByDay] =
-    await Promise.all([
+  const [
+    usersResult, active7d, active30d, totalEvents, eventsByType, topStocks, dailyActivity, signupsByDay,
+    landingPageViews, landingCtaClicks, landingEventsByType, landingCtaBreakdown, landingDailyViews,
+  ] = await Promise.all([
       client.execute("SELECT COUNT(*) as cnt FROM users"),
       client.execute({
         sql: "SELECT COUNT(DISTINCT user_id) as cnt FROM analytics_events WHERE created_at >= datetime('now', '-7 days')",
@@ -1000,6 +1685,34 @@ export async function getAnalyticsSummary(days = 30): Promise<AnalyticsSummary> 
               GROUP BY day ORDER BY day ASC`,
         args: [`-${days} days`],
       }),
+      client.execute({
+        sql: "SELECT COUNT(*) as cnt FROM landing_events WHERE event = 'landing_page_view' AND created_at >= datetime('now', ?)",
+        args: [`-${days} days`],
+      }),
+      client.execute({
+        sql: "SELECT COUNT(*) as cnt FROM landing_events WHERE event = 'landing_cta_click' AND created_at >= datetime('now', ?)",
+        args: [`-${days} days`],
+      }),
+      client.execute({
+        sql: `SELECT event, COUNT(*) as cnt FROM landing_events
+              WHERE created_at >= datetime('now', ?)
+              GROUP BY event ORDER BY cnt DESC`,
+        args: [`-${days} days`],
+      }),
+      client.execute({
+        sql: `SELECT json_extract(metadata, '$.cta') as cta, COUNT(*) as cnt
+              FROM landing_events
+              WHERE event = 'landing_cta_click' AND created_at >= datetime('now', ?)
+              GROUP BY cta ORDER BY cnt DESC`,
+        args: [`-${days} days`],
+      }),
+      client.execute({
+        sql: `SELECT date(created_at) as day, COUNT(*) as cnt
+              FROM landing_events
+              WHERE event = 'landing_page_view' AND created_at >= datetime('now', ?)
+              GROUP BY day ORDER BY day ASC`,
+        args: [`-${days} days`],
+      }),
     ]);
 
   return {
@@ -1015,5 +1728,57 @@ export async function getAnalyticsSummary(days = 30): Promise<AnalyticsSummary> 
       events: num(r.events),
     })),
     signupsByDay: signupsByDay.rows.map((r) => ({ date: str(r.day), count: num(r.cnt) })),
+    landing: {
+      totalPageViews: num(landingPageViews.rows[0]?.cnt),
+      totalCtaClicks: num(landingCtaClicks.rows[0]?.cnt),
+      eventsByType: landingEventsByType.rows.map((r) => ({ event: str(r.event), count: num(r.cnt) })),
+      ctaBreakdown: landingCtaBreakdown.rows.map((r) => ({ cta: str(r.cta), count: num(r.cnt) })),
+      dailyViews: landingDailyViews.rows.map((r) => ({ date: str(r.day), views: num(r.cnt) })),
+    },
+  };
+}
+
+/* ── Prometheus Metrics Snapshot ────────────────────────────── */
+
+export interface MetricsSnapshot {
+  freeUsers: number;
+  proUsers: number;
+  activeUsers7d: number;
+  activeUsers30d: number;
+  holdingsCount: number;
+  transactionsCount: number;
+  eventsLast24h: { event: string; count: number }[];
+}
+
+export async function getMetricsSnapshot(): Promise<MetricsSnapshot> {
+  const client = await ensureInitialized();
+
+  const [freeUsers, proUsers, active7d, active30d, holdings, transactions, events24h] =
+    await Promise.all([
+      client.execute("SELECT COUNT(*) as cnt FROM users WHERE plan = 'free'"),
+      client.execute("SELECT COUNT(*) as cnt FROM users WHERE plan = 'pro'"),
+      client.execute({
+        sql: "SELECT COUNT(DISTINCT user_id) as cnt FROM analytics_events WHERE created_at >= datetime('now', '-7 days')",
+      }),
+      client.execute({
+        sql: "SELECT COUNT(DISTINCT user_id) as cnt FROM analytics_events WHERE created_at >= datetime('now', '-30 days')",
+      }),
+      client.execute("SELECT COUNT(*) as cnt FROM holdings"),
+      client.execute("SELECT COUNT(*) as cnt FROM transactions"),
+      client.execute({
+        sql: `SELECT event, COUNT(*) as cnt FROM analytics_events
+              WHERE created_at >= datetime('now', '-1 day')
+              GROUP BY event ORDER BY cnt DESC`,
+      }),
+    ]);
+
+  return {
+    freeUsers: num(freeUsers.rows[0]?.cnt),
+    proUsers: num(proUsers.rows[0]?.cnt),
+    activeUsers7d: num(active7d.rows[0]?.cnt),
+    activeUsers30d: num(active30d.rows[0]?.cnt),
+    holdingsCount: num(holdings.rows[0]?.cnt),
+    transactionsCount: num(transactions.rows[0]?.cnt),
+    eventsLast24h: events24h.rows.map((r) => ({ event: str(r.event), count: num(r.cnt) })),
   };
 }

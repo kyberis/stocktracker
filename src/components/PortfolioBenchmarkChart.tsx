@@ -12,6 +12,7 @@ import {
 } from "recharts";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { convertToEUR, formatPercent } from "@/lib/utils";
+import { closeOnOrBeforeDate } from "@/lib/performance";
 import { useI18n } from "@/lib/i18n";
 import { useTheme } from "@/lib/theme-context";
 import type { HistoricalDataPoint, TimePeriod } from "@/lib/types";
@@ -55,19 +56,6 @@ function normalizeSeries(values: number[]): number[] {
   const first = values[0];
   if (!first || first <= 0) return values.map(() => 0);
   return values.map((v) => (v / first) * 100);
-}
-
-function closeOnOrBeforeDate(series: HistoricalDataPoint[], date: string): number | null {
-  if (series.length === 0) return null;
-  let result: number | null = null;
-  for (const point of series) {
-    if (point.date <= date) {
-      result = point.close;
-    } else {
-      break;
-    }
-  }
-  return result;
 }
 
 export default function PortfolioBenchmarkChart() {

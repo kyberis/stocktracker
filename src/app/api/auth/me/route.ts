@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
 import { findUserById } from "@/lib/db";
+import { withMetrics } from "@/lib/with-metrics";
 
-export async function GET(req: NextRequest) {
+export const GET = withMetrics("/api/auth/me", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
 
@@ -17,6 +18,12 @@ export async function GET(req: NextRequest) {
       email: user?.email || "",
       displayName: user?.display_name || "",
       avatarUrl: user?.avatar_url || "",
+      plan: user?.plan || session.plan || "free",
+      planExpiresAt: user?.plan_expires_at || "",
+      aiCallsThisMonth: user?.ai_calls_this_month || 0,
+      aiCallsResetAt: user?.ai_calls_reset_at || "",
+      aiCallsToday: user?.ai_calls_today || 0,
+      aiDailyResetAt: user?.ai_daily_reset_at || "",
     },
   });
-}
+});

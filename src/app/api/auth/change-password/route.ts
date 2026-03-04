@@ -3,6 +3,8 @@ import { requireSession } from "@/lib/auth/guards";
 import { findUserById, updateUserPassword } from "@/lib/db";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { createSessionToken, getSessionCookieConfig } from "@/lib/auth/session";
+import { withMetrics } from "@/lib/with-metrics";
+import { authEventsTotal } from "@/lib/metrics";
 
 async function parseBody(req: NextRequest): Promise<{ currentPassword?: string; newPassword?: string }> {
   const raw = await req.text();
@@ -10,7 +12,7 @@ async function parseBody(req: NextRequest): Promise<{ currentPassword?: string; 
   return JSON.parse(raw) as { currentPassword?: string; newPassword?: string };
 }
 
-export async function POST(req: NextRequest) {
+export const POST = withMetrics("/api/auth/change-password", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
 
@@ -56,8 +58,10 @@ export async function POST(req: NextRequest) {
       username: user.username,
       role: user.role,
       mustChangePassword: false,
+      plan: user.plan,
     });
 
+    authEventsTotal.inc({ event: "password_change" });
     const response = NextResponse.json({ ok: true });
     response.cookies.set(getSessionCookieConfig(token));
     return response;
@@ -65,4 +69,4 @@ export async function POST(req: NextRequest) {
     console.error("Change password failed:", error);
     return NextResponse.json({ error: "Server configuration error." }, { status: 500 });
   }
-}
+});

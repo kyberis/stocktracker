@@ -190,10 +190,30 @@ export default function Header({ onAddStock, onOpenSettings, onImportPortfolio, 
                   {t("admin")}
                 </a>
               )}
-              <button onClick={() => logout()} className="text-slate-400 hover:text-slate-200">
-                {t("signOut")}
-              </button>
             </div>
+          )}
+          <button
+            onClick={() => logout()}
+            className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors text-xs"
+            title={t("signOut")}
+            aria-label={t("signOut")}
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H6a2 2 0 01-2-2V7a2 2 0 012-2h5a2 2 0 012 2v1" />
+            </svg>
+            {t("signOut")}
+          </button>
+          {user && (
+            <button
+              onClick={() => logout()}
+              className="sm:hidden p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
+              title={t("signOut")}
+              aria-label={t("signOut")}
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H6a2 2 0 01-2-2V7a2 2 0 012-2h5a2 2 0 012 2v1" />
+              </svg>
+            </button>
           )}
           <LanguageSwitcher />
         </div>

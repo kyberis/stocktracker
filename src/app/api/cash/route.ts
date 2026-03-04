@@ -2,16 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
 import { addCashEntry, listCashEntries, removeCashEntry, updateCashEntry } from "@/lib/db";
 import type { CashEntry } from "@/lib/types";
+import { withMetrics } from "@/lib/with-metrics";
 
-export async function GET(req: NextRequest) {
+export const GET = withMetrics("/api/cash", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
 
   const cash = await listCashEntries(session.userId);
   return NextResponse.json(cash);
-}
+});
 
-export async function POST(req: NextRequest) {
+export const POST = withMetrics("/api/cash", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
 
@@ -27,9 +28,9 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
-}
+});
 
-export async function PUT(req: NextRequest) {
+export const PUT = withMetrics("/api/cash", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
 
@@ -59,9 +60,9 @@ export async function PUT(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
-}
+});
 
-export async function DELETE(req: NextRequest) {
+export const DELETE = withMetrics("/api/cash", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
 
@@ -75,4 +76,4 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: "Cash entry not found." }, { status: 404 });
   }
   return NextResponse.json({ ok: true });
-}
+});

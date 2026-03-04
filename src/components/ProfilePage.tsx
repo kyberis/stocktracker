@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useSettings } from "@/lib/settings-context";
 import { useI18n } from "@/lib/i18n";
 import type { ApiProviderName } from "@/lib/types";
+import ProCompareCard from "@/components/ProCompareCard";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -27,6 +28,11 @@ export default function ProfilePage() {
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [passwordMsg, setPasswordMsg] = useState("");
   const [passwordError, setPasswordError] = useState("");
+
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleteError, setDeleteError] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -103,12 +109,42 @@ export default function ProfilePage() {
     }
   };
 
+  const handleDeleteAccount = async (e: FormEvent) => {
+    e.preventDefault();
+    setDeleteError("");
+    if (!deletePassword) {
+      setDeleteError(t("deleteAccountPasswordRequired"));
+      return;
+    }
+    setDeleting(true);
+    try {
+      const res = await fetch("/api/auth/delete-account", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: deletePassword }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        setDeleteError(data?.error || t("deleteAccountError"));
+        setDeleting(false);
+        return;
+      }
+      window.location.href = "/login";
+    } catch {
+      setDeleteError(t("deleteAccountError"));
+      setDeleting(false);
+    }
+  };
+
   const initials = (displayName || user?.username || "U")
     .split(" ")
     .map((w) => w[0])
     .join("")
     .toUpperCase()
     .slice(0, 2);
+  const isPro = user?.plan === "pro";
+  const avProviderDisabled = !hasGlobalAvKey || !isPro;
+  const aiLimit = 5;
 
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-slate-900 px-4 py-8">
@@ -208,12 +244,12 @@ export default function ProfilePage() {
                 <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">{t("yahooDesc")}</p>
               </button>
               <button
-                onClick={() => hasGlobalAvKey && setLocalProvider("alphavantage")}
-                disabled={!hasGlobalAvKey}
+                onClick={() => !avProviderDisabled && setLocalProvider("alphavantage")}
+                disabled={avProviderDisabled}
                 className={`px-4 py-3 rounded-xl border-2 transition-all text-left ${
                   localProvider === "alphavantage"
                     ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10"
-                    : !hasGlobalAvKey
+                    : avProviderDisabled
                       ? "border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 opacity-50 cursor-not-allowed"
                       : "border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 hover:border-gray-300 dark:hover:border-slate-500"
                 }`}
@@ -222,9 +258,9 @@ export default function ProfilePage() {
                 <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">{t("alphaVantageDesc")}</p>
               </button>
             </div>
-            {!hasGlobalAvKey && (
+            {avProviderDisabled && (
               <p className="text-xs text-gray-400 dark:text-slate-500 mt-2">
-                {t("avKeyManagedByAdmin")}
+                {!isPro ? t("alphaVantageProOnly") : t("avKeyManagedByAdmin")}
               </p>
             )}
           </div>
@@ -237,6 +273,30 @@ export default function ProfilePage() {
               {dataSaved ? t("profileSaved") : t("saveSettings")}
             </button>
           </div>
+        </div>
+
+        {/* Subscription */}
+        <div className="card p-6 space-y-4">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t("subscription")}</h2>
+          <div className="rounded-xl border border-gray-200 dark:border-slate-600 p-4 bg-gray-50 dark:bg-slate-800/40">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium text-gray-900 dark:text-white">
+                {isPro ? t("planPro") : t("planFree")}
+              </p>
+              <span className={`text-xs px-2 py-1 rounded-full ${
+                isPro
+                  ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"
+                  : "bg-gray-200 text-gray-700 dark:bg-slate-700 dark:text-slate-200"
+              }`}>
+                {isPro ? t("proBadge") : t("freeBadge")}
+              </span>
+            </div>
+          </div>
+          <ProCompareCard
+            surface="profile_always_on"
+            reason={isPro ? undefined : "upgrade_required"}
+            aiUsage={isPro ? undefined : { used: user?.aiCallsThisMonth ?? 0, limit: aiLimit }}
+          />
         </div>
 
         {/* Change Password */}
@@ -302,6 +362,57 @@ export default function ProfilePage() {
             <p className="text-sm text-gray-500 dark:text-slate-400">{t("notificationsComingSoon")}</p>
           </div>
         </div>
+
+        {/* Delete Account */}
+        {user?.role !== "admin" && (
+          <div className="card p-6 space-y-4 border-red-200 dark:border-red-500/20">
+            <h2 className="text-lg font-semibold text-red-600 dark:text-red-400">{t("deleteAccount")}</h2>
+            <p className="text-sm text-gray-600 dark:text-slate-400">{t("deleteAccountWarning")}</p>
+
+            {!showDeleteConfirm ? (
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="btn-danger text-sm"
+              >
+                {t("deleteAccountButton")}
+              </button>
+            ) : (
+              <form onSubmit={handleDeleteAccount} className="space-y-3">
+                <p className="text-sm font-medium text-red-600 dark:text-red-400">{t("deleteAccountConfirm")}</p>
+                <div>
+                  <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">{t("deleteAccountEnterPassword")}</label>
+                  <input
+                    type="password"
+                    value={deletePassword}
+                    onChange={(e) => setDeletePassword(e.target.value)}
+                    className="w-full text-sm"
+                    autoFocus
+                    required
+                  />
+                </div>
+                {deleteError && (
+                  <p className="text-xs text-red-500 dark:text-red-400">{deleteError}</p>
+                )}
+                <div className="flex items-center gap-2">
+                  <button
+                    type="submit"
+                    disabled={deleting || !deletePassword}
+                    className="btn-danger text-sm disabled:opacity-40"
+                  >
+                    {deleting ? t("deleteAccountDeleting") : t("deleteAccountConfirmButton")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setShowDeleteConfirm(false); setDeletePassword(""); setDeleteError(""); }}
+                    className="btn-secondary text-sm"
+                  >
+                    {t("cancel")}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        )}
       </div>
     </main>
   );

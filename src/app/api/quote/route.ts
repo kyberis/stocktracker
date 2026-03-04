@@ -1,6 +1,11 @@
+import { NextRequest } from "next/server";
 import { getProviderFromRequest } from "@/lib/api-providers";
 import { jsonWithCallCount } from "@/lib/api-providers/response";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
+import { requireRateLimit } from "@/lib/auth/guards";
+import { recordAvUsageAsync } from "@/lib/rate-limit";
+import { withMetrics } from "@/lib/with-metrics";
+import { waitUntil } from "@vercel/functions";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -23,6 +28,8 @@ function errorQuote(symbol: string) {
     fiftyTwoWeekHigh: 0,
     fiftyTwoWeekLow: 0,
     marketCap: 0,
+    trailingAnnualDividendRate: undefined,
+    trailingAnnualDividendYield: undefined,
     error: true,
   };
 }
@@ -46,7 +53,7 @@ async function tryGermanFallback(
   return null;
 }
 
-export async function GET(request: Request) {
+export const GET = withMetrics("/api/quote", async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const symbols = searchParams.get("symbols");
 
@@ -56,6 +63,13 @@ export async function GET(request: Request) {
 
   const provider = await getProviderFromRequest(request);
   const isAV = provider.name === "alphavantage";
+
+  let rateLimitUserId: string | null = null;
+  if (isAV) {
+    const rl = await requireRateLimit(request, "alphavantage");
+    if (rl.error) return rl.error;
+    rateLimitUserId = rl.session?.userId ?? null;
+  }
   const stockSymbols = symbols.split(",").map((s) => s.trim()).filter(Boolean);
   const results: Record<string, unknown> = {};
 
@@ -175,5 +189,9 @@ export async function GET(request: Request) {
     await Promise.all(stockPromises);
   }
 
+  if (rateLimitUserId && provider.callCount) {
+    waitUntil(recordAvUsageAsync(rateLimitUserId, provider.callCount));
+  }
+
   return jsonWithCallCount(provider, results);
-}
+});

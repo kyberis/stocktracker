@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getSessionFromRequest } from "./session";
+import { findUserById, getAiUsage, trackEvent } from "@/lib/db";
+import { canAccessFeature } from "@/lib/subscription";
+import type { SubscriptionFeature } from "@/lib/types";
+import { paywallHitsTotal, rateLimitHitsTotal } from "@/lib/metrics";
+import { checkAvRateLimit, checkAiRateLimit, checkAiImportRateLimit } from "@/lib/rate-limit";
+import type { RateLimitProvider } from "@/lib/platform-config";
 
 export async function requireSession(req: NextRequest) {
   const session = await getSessionFromRequest(req);
@@ -23,4 +29,102 @@ export async function requireAdmin(req: NextRequest) {
     };
   }
   return { session, error: null };
+}
+
+export async function requirePro(req: NextRequest) {
+  const { session, error } = await requireSession(req);
+  if (error || !session) return { session: null, error: error! };
+  const user = await findUserById(session.userId);
+  const isPro = (user?.plan || session.plan) === "pro";
+  if (!isPro) {
+    return {
+      session: null,
+      error: NextResponse.json(
+        { error: "Pro subscription required", reason: "upgrade_required", feature: "pro" },
+        { status: 403 }
+      ),
+    };
+  }
+  return { session, error: null };
+}
+
+export async function requireFeatureAccess(req: NextRequest, feature: SubscriptionFeature) {
+  const { session, error } = await requireSession(req);
+  if (error || !session) return { session: null, error: error! };
+
+  const user = await findUserById(session.userId);
+  if (!user) {
+    return {
+      session: null,
+      error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
+    };
+  }
+
+  const usage = await getAiUsage(session.userId);
+  const entitlement = canAccessFeature(feature, {
+    plan: user.plan,
+    aiCallsThisMonth: usage.aiCallsThisMonth,
+  });
+  if (entitlement.allowed) return { session, error: null };
+
+  const reason = entitlement.reason || "upgrade_required";
+  paywallHitsTotal.inc({ feature, reason });
+  trackEvent(session.userId, "paywall_shown", { feature, reason });
+
+  return {
+    session: null,
+    error: NextResponse.json(
+      {
+        error: entitlement.reason === "ai_limit_reached"
+          ? "Free AI monthly limit reached"
+          : "Pro subscription required",
+        reason: entitlement.reason || "upgrade_required",
+        feature,
+        limit: entitlement.limit,
+        used: entitlement.used,
+      },
+      { status: 403 }
+    ),
+  };
+}
+
+export async function requireRateLimit(
+  req: NextRequest,
+  provider: RateLimitProvider,
+) {
+  const { session, error } = await requireSession(req);
+  if (error || !session) return { session: null, error: error! };
+
+  let result: { allowed: boolean; remaining: number; limit: number; resetAt: string };
+
+  if (provider === "alphavantage") {
+    result = await checkAvRateLimit(session.userId);
+  } else if (provider === "openai") {
+    const user = await findUserById(session.userId);
+    result = await checkAiRateLimit(session.userId, user?.plan || "free");
+  } else {
+    result = await checkAiImportRateLimit(session.userId);
+  }
+
+  if (result.allowed) {
+    return { session, error: null, rateLimit: result };
+  }
+
+  rateLimitHitsTotal.inc({ provider });
+
+  const retryAfter = provider === "alphavantage" ? 60 : 86400;
+  const res = NextResponse.json(
+    {
+      error: "Rate limit exceeded",
+      reason: "rate_limited",
+      provider,
+      limit: result.limit,
+      remaining: 0,
+      retryAfter,
+    },
+    { status: 429 }
+  );
+  res.headers.set("Retry-After", String(retryAfter));
+
+  return { session: null, error: res, rateLimit: result };
 }

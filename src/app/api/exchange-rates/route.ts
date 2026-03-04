@@ -1,6 +1,11 @@
+import { NextRequest } from "next/server";
 import { AlphaVantageProvider } from "@/lib/api-providers/alphavantage";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
+import { requireRateLimit } from "@/lib/auth/guards";
 import { getGlobalAlphaVantageApiKey } from "@/lib/db";
+import { recordAvUsageAsync } from "@/lib/rate-limit";
+import { withMetrics } from "@/lib/with-metrics";
+import { waitUntil } from "@vercel/functions";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -21,7 +26,7 @@ async function fetchRateYahoo(from: string, to: string): Promise<number> {
   return yahoo.getExchangeRate(from, to);
 }
 
-export async function GET(request: Request) {
+export const GET = withMetrics("/api/exchange-rates", async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const pairsParam = searchParams.get("pairs");
 
@@ -35,9 +40,16 @@ export async function GET(request: Request) {
   const avApiKey = await getGlobalAlphaVantageApiKey();
 
   let av: AlphaVantageProvider | null = null;
+  let rateLimitUserId: string | null = null;
   if (avApiKey) {
     try {
       av = new AlphaVantageProvider(avApiKey);
+      const rl = await requireRateLimit(request, "alphavantage");
+      if (rl.error) {
+        av = null; // fall back to Yahoo when rate limited
+      } else {
+        rateLimitUserId = rl.session?.userId ?? null;
+      }
     } catch {
       av = null;
     }
@@ -82,5 +94,9 @@ export async function GET(request: Request) {
 
   await Promise.all(tasks);
 
+  if (rateLimitUserId && av?.callCount) {
+    waitUntil(recordAvUsageAsync(rateLimitUserId, av.callCount));
+  }
+
   return Response.json(results);
-}
+});

@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
 import { listAccounts, addAccount, deleteAccount } from "@/lib/db";
+import { withMetrics } from "@/lib/with-metrics";
 
-export async function GET(req: NextRequest) {
+export const GET = withMetrics("/api/accounts", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
   return NextResponse.json(await listAccounts(session.userId));
-}
+});
 
-export async function POST(req: NextRequest) {
+export const POST = withMetrics("/api/accounts", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
 
@@ -20,9 +21,9 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
-}
+});
 
-export async function DELETE(req: NextRequest) {
+export const DELETE = withMetrics("/api/accounts", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
 
@@ -32,4 +33,4 @@ export async function DELETE(req: NextRequest) {
   const deleted = await deleteAccount(session.userId, id);
   if (!deleted) return NextResponse.json({ error: "Not found." }, { status: 404 });
   return NextResponse.json({ ok: true });
-}
+});

@@ -1,11 +1,19 @@
+import { NextRequest } from "next/server";
 import { getProviderFromRequest } from "@/lib/api-providers";
 import { jsonWithCallCount } from "@/lib/api-providers/response";
+import { requireFeatureAccess, requireRateLimit } from "@/lib/auth/guards";
+import { recordAvUsageAsync } from "@/lib/rate-limit";
+import { withMetrics } from "@/lib/with-metrics";
+import { waitUntil } from "@vercel/functions";
 
 export const dynamic = "force-dynamic";
 
 const VALID_TYPES = new Set(["income", "balance", "cashflow", "earnings"]);
 
-export async function GET(request: Request) {
+export const GET = withMetrics("/api/fundamentals", async (request: NextRequest) => {
+  const { error } = await requireFeatureAccess(request, "fundamentals");
+  if (error) return error;
+
   const { searchParams } = new URL(request.url);
   const symbol = searchParams.get("symbol");
   const type = searchParams.get("type");
@@ -18,6 +26,13 @@ export async function GET(request: Request) {
   }
 
   const provider = await getProviderFromRequest(request);
+
+  let rateLimitUserId: string | null = null;
+  if (provider.name === "alphavantage") {
+    const rl = await requireRateLimit(request, "alphavantage");
+    if (rl.error) return rl.error;
+    rateLimitUserId = rl.session?.userId ?? null;
+  }
 
   const methodMap: Record<string, string> = {
     income: "getIncomeStatement",
@@ -49,5 +64,9 @@ export async function GET(request: Request) {
       err instanceof Error ? err.message : err
     );
     return jsonWithCallCount(provider, { error: "Failed to fetch data" }, { status: 500 });
+  } finally {
+    if (rateLimitUserId && provider.callCount) {
+      waitUntil(recordAvUsageAsync(rateLimitUserId, provider.callCount));
+    }
   }
-}
+});

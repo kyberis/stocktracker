@@ -1,19 +1,40 @@
 export const dynamic = "force-dynamic";
-export const runtime = "edge";
 
-function getOpenAIKey(): string | undefined {
-  return (
-    process.env.STOCKTRACKER_OPENAI_API_KEY ||
-    process.env.stocktracker_OPENAI_API_KEY ||
-    process.env.OPENAI_API_KEY
-  );
-}
+import { NextRequest } from "next/server";
+import { requireFeatureAccess } from "@/lib/auth/guards";
+import { getGlobalOpenAIApiKey, incrementAiUsage, incrementDailyAiUsage, findUserById } from "@/lib/db";
+import { aiCallsTotal, aiRequestDuration, rateLimitHitsTotal } from "@/lib/metrics";
+import { checkAiRateLimit } from "@/lib/rate-limit";
+import { withMetrics } from "@/lib/with-metrics";
 
-export async function POST(request: Request) {
-  const apiKey = getOpenAIKey();
+export const POST = withMetrics("/api/ai-analysis", async (request: NextRequest) => {
+  const { session, error } = await requireFeatureAccess(request, "ai");
+  if (error || !session) return error;
+
+  const user = await findUserById(session.userId);
+  const plan = user?.plan || "free";
+  if (plan === "pro") {
+    const rl = await checkAiRateLimit(session.userId, plan);
+    if (!rl.allowed) {
+      rateLimitHitsTotal.inc({ provider: "openai" });
+      return Response.json(
+        {
+          error: "Daily AI analysis limit reached",
+          reason: "rate_limited",
+          provider: "openai",
+          limit: rl.limit,
+          remaining: 0,
+          retryAfter: 86400,
+        },
+        { status: 429, headers: { "Retry-After": "86400" } }
+      );
+    }
+  }
+
+  const apiKey = await getGlobalOpenAIApiKey();
   if (!apiKey) {
     return Response.json(
-      { error: "OpenAI API key not configured. Set STOCKTRACKER_OPENAI_API_KEY." },
+      { error: "OpenAI API key not configured. Ask your admin to set it in the Admin panel." },
       { status: 501 }
     );
   }
@@ -101,6 +122,13 @@ export async function POST(request: Request) {
     return Response.json({ error: "No financial data provided" }, { status: 400 });
   }
 
+  const analysisTypeLabel =
+    body.analysisType === "intelligence"
+      ? "intelligence"
+      : body.analysisType === "economic_indicator"
+        ? "economic"
+        : "fundamental";
+
   let systemPrompt: string;
   let userPrompt: string;
 
@@ -170,6 +198,8 @@ Please analyze it and explain what these numbers mean in simple terms.
 ${dataSections.join("\n\n")}`;
   }
 
+  const endTimer = aiRequestDuration.startTimer({ analysis_type: analysisTypeLabel });
+
   try {
     const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -189,7 +219,10 @@ ${dataSections.join("\n\n")}`;
       }),
     });
 
+    endTimer();
+
     if (!openaiRes.ok) {
+      aiCallsTotal.inc({ status: "error", analysis_type: analysisTypeLabel });
       const errText = await openaiRes.text();
       console.error("OpenAI error:", openaiRes.status, errText);
       return Response.json(
@@ -197,6 +230,10 @@ ${dataSections.join("\n\n")}`;
         { status: 502 }
       );
     }
+
+    aiCallsTotal.inc({ status: "success", analysis_type: analysisTypeLabel });
+    await incrementAiUsage(session.userId);
+    await incrementDailyAiUsage(session.userId);
 
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();
@@ -253,4 +290,4 @@ ${dataSections.join("\n\n")}`;
     console.error("AI analysis error:", err instanceof Error ? err.message : err);
     return Response.json({ error: "Failed to contact AI service" }, { status: 500 });
   }
-}
+});

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useSettings } from "@/lib/settings-context";
 import { useI18n } from "@/lib/i18n";
+import { useAuth } from "@/lib/auth-context";
 import {
   LineChart,
   Line,
@@ -15,8 +16,10 @@ import {
 } from "recharts";
 import { useTheme } from "@/lib/theme-context";
 import type { EconDataPoint } from "@/lib/types";
+import ProCompareCard from "@/components/ProCompareCard";
+import type { UpsellReason } from "@/lib/upsell";
 
-type AiStatus = "idle" | "loading" | "done" | "error" | "no-key";
+type AiStatus = "idle" | "loading" | "done" | "error" | "no-key" | "ai-limit" | "upgrade";
 
 interface IndicatorConfig {
   func: string;
@@ -110,6 +113,7 @@ interface CachedResult {
 
 export default function EconomicIndicators() {
   const { isAlphaVantage, provider, getApiHeaders, trackAvCalls } = useSettings();
+  const { user } = useAuth();
   const { t, language } = useI18n();
   const { isDark } = useTheme();
 
@@ -123,10 +127,13 @@ export default function EconomicIndicators() {
 
   const [aiStatus, setAiStatus] = useState<AiStatus>("idle");
   const [aiText, setAiText] = useState("");
+  const [aiLimitInfo, setAiLimitInfo] = useState<{ used: number; limit: number } | null>(null);
+  const [lockedReason, setLockedReason] = useState<UpsellReason | null>(null);
 
   const [chartRange, setChartRange] = useState<"all" | "10y" | "5y" | "2y" | "1y">("5y");
 
   const config = INDICATORS[activeIdx];
+  const isFree = user?.plan !== "pro";
 
   const fetchIndicator = useCallback(async () => {
     setLoading(true);
@@ -134,6 +141,8 @@ export default function EconomicIndicators() {
     setResult(null);
     setAiStatus("idle");
     setAiText("");
+    setAiLimitInfo(null);
+    setLockedReason(null);
 
     const headers = getApiHeaders();
     const params = new URLSearchParams({ func: config.func, provider });
@@ -145,6 +154,11 @@ export default function EconomicIndicators() {
       trackAvCalls(res);
       if (!res.ok) {
         const err = await res.json().catch(() => null);
+        if (res.status === 403 && err?.reason === "upgrade_required") {
+          setLockedReason("upgrade_required");
+          setError("");
+          return;
+        }
         setError(err?.error || "Failed to fetch data");
         return;
       }
@@ -200,6 +214,7 @@ export default function EconomicIndicators() {
     if (aiStatus === "loading" || !result) return;
     setAiStatus("loading");
     setAiText("");
+    setAiLimitInfo(null);
 
     const payload = {
       language,
@@ -218,6 +233,21 @@ export default function EconomicIndicators() {
       });
 
       if (res.status === 501) { setAiStatus("no-key"); return; }
+      if (res.status === 403) {
+        const body = await res.json().catch(() => null);
+        if (body?.reason === "ai_limit_reached") {
+          setAiLimitInfo({
+            used: Number(body?.used || 0),
+            limit: Number(body?.limit || 5),
+          });
+          setAiStatus("ai-limit");
+          return;
+        }
+        if (body?.reason === "upgrade_required") {
+          setAiStatus("upgrade");
+          return;
+        }
+      }
       if (!res.ok) { setAiStatus("error"); return; }
 
       const reader = res.body?.getReader();
@@ -277,11 +307,18 @@ export default function EconomicIndicators() {
         </div>
 
         {!isAlphaVantage ? (
-          <div className="card p-8 text-center">
-            <p className="text-gray-500 dark:text-slate-400">{t("econRequireAV")}</p>
-          </div>
+          isFree ? (
+            <ProCompareCard surface="economic_locked" reason="upgrade_required" />
+          ) : (
+            <div className="card p-8 text-center">
+              <p className="text-gray-500 dark:text-slate-400">{t("econRequireAV")}</p>
+            </div>
+          )
         ) : (
           <>
+            {lockedReason && isFree && (
+              <ProCompareCard surface="economic_locked" reason={lockedReason} />
+            )}
             {/* Indicator tabs */}
             <div className="flex flex-wrap gap-1.5">
               {INDICATORS.map((ind, idx) => (
@@ -483,6 +520,7 @@ export default function EconomicIndicators() {
                   status={aiStatus}
                   text={aiText}
                   onAnalyze={requestAiAnalysis}
+                  aiLimitInfo={aiLimitInfo}
                   t={t}
                 />
               </>
@@ -523,14 +561,29 @@ function AiSection({
   status,
   text,
   onAnalyze,
+  aiLimitInfo,
   t,
 }: {
   status: AiStatus;
   text: string;
   onAnalyze: () => void;
+  aiLimitInfo: { used: number; limit: number } | null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   t: (key: any) => string;
 }) {
+  if (status === "ai-limit") {
+    return (
+      <ProCompareCard
+        surface="ai_limit"
+        reason="ai_limit_reached"
+        aiUsage={aiLimitInfo || { used: 0, limit: 5 }}
+      />
+    );
+  }
+  if (status === "upgrade") {
+    return <ProCompareCard surface="ai_limit" reason="upgrade_required" />;
+  }
+
   return (
     <div className="card p-5 space-y-3">
       <div className="flex items-center justify-between">

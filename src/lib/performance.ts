@@ -1,8 +1,17 @@
-import type { Transaction } from "./types";
+import type { ExchangeRates, HistoricalDataPoint, Holding, Transaction } from "./types";
+import { convertToEUR } from "./utils";
 
 /**
- * True-Time Weighted Rate of Return (TTWROR)
- * Geometric linking of sub-period returns between cash flows.
+ * Modified Dietz Rate of Return.
+ *
+ * This is the industry-standard approximation of TTWROR when intra-period
+ * portfolio valuations are not available. It weights each external cash flow
+ * by the fraction of the period remaining after the flow occurred.
+ *
+ *   R = (V_end - V_start - CF) / (V_start + sum(w_i * cf_i))
+ *
+ * Where w_i = (T - t_i) / T  (fraction of total days remaining).
+ *
  * Returns a percentage (e.g. 12.5 for +12.5%).
  */
 export function calculateTTWROR(
@@ -22,43 +31,57 @@ export function calculateTTWROR(
       : 0;
   }
 
-  // Simple approximation: compound sub-period returns between cash flow dates
-  let portfolioValue = 0;
-  let compoundReturn = 1;
+  const firstDate = new Date(sorted[0].date).getTime();
+  const today = Date.now();
+  const totalDays = Math.max((today - firstDate) / 86400000, 1);
+
+  let netCashFlow = 0;
+  let weightedCashFlow = 0;
 
   for (const tx of sorted) {
-    const cashFlow =
+    const flow =
       tx.type === "buy"
         ? tx.totalAmount + (tx.fees || 0) + (tx.taxes || 0)
         : -(tx.totalAmount - (tx.fees || 0) - (tx.taxes || 0));
 
-    if (portfolioValue > 0 && cashFlow !== 0) {
-      const subPeriodReturn = (portfolioValue + cashFlow) / portfolioValue;
-      if (subPeriodReturn > 0) compoundReturn *= subPeriodReturn;
-    }
+    const txDate = new Date(tx.date).getTime();
+    const daysSinceStart = Math.max((txDate - firstDate) / 86400000, 0);
+    const weight = (totalDays - daysSinceStart) / totalDays;
 
-    portfolioValue += cashFlow;
+    netCashFlow += flow;
+    weightedCashFlow += weight * flow;
   }
 
-  if (portfolioValue > 0 && currentValueEUR > 0) {
-    compoundReturn *= currentValueEUR / portfolioValue;
+  const denominator = weightedCashFlow;
+  if (Math.abs(denominator) < 0.01) {
+    return totalInvestedEUR > 0
+      ? ((currentValueEUR - totalInvestedEUR) / totalInvestedEUR) * 100
+      : 0;
   }
 
-  return (compoundReturn - 1) * 100;
+  const modifiedDietz = (currentValueEUR - netCashFlow) / denominator;
+  return modifiedDietz * 100;
 }
 
 /**
- * Internal Rate of Return via Newton-Raphson XIRR
- * Takes dated cash flows (negative = outflow, positive = inflow)
+ * Internal Rate of Return via Newton-Raphson XIRR.
+ * Takes dated cash flows (negative = outflow, positive = inflow).
  * Returns annualized rate as percentage (e.g. 8.5 for +8.5%).
+ *
+ * Returns null when the time span is too short for meaningful annualization
+ * (< 7 days between first and last cash flow).
  */
 export function calculateXIRR(
   cashFlows: { date: Date; amount: number }[]
-): number {
-  if (cashFlows.length < 2) return 0;
+): number | null {
+  if (cashFlows.length < 2) return null;
 
   const sorted = [...cashFlows].sort((a, b) => a.date.getTime() - b.date.getTime());
   const d0 = sorted[0].date.getTime();
+  const dN = sorted[sorted.length - 1].date.getTime();
+
+  const spanDays = (dN - d0) / 86400000;
+  if (spanDays < 7) return null;
 
   function yearFrac(d: Date): number {
     return (d.getTime() - d0) / (365.25 * 86400000);
@@ -131,4 +154,61 @@ export function buildXIRRCashFlows(
   }
 
   return flows;
+}
+
+/**
+ * Find the close price on or before a given date from a sorted series.
+ * Returns null if no data exists at or before the date.
+ */
+export function closeOnOrBeforeDate(
+  series: HistoricalDataPoint[],
+  date: string
+): number | null {
+  if (series.length === 0) return null;
+  let result: number | null = null;
+  for (const point of series) {
+    if (point.date <= date) {
+      result = point.close;
+    } else {
+      break;
+    }
+  }
+  return result;
+}
+
+export interface HoldingSeriesEntry {
+  holding: Holding;
+  series: HistoricalDataPoint[];
+}
+
+/**
+ * Compute portfolio value in EUR on a given date using historical close prices.
+ * Projects current holdings backward — does not account for sold positions.
+ * Cash is excluded (no historical cash balance available).
+ */
+export function calculatePortfolioValueOnDate(
+  entries: HoldingSeriesEntry[],
+  date: string,
+  exchangeRates: ExchangeRates
+): number {
+  let sumEUR = 0;
+  for (const item of entries) {
+    const close = closeOnOrBeforeDate(item.series, date);
+    if (close == null || close <= 0) continue;
+    const value = item.holding.shares * close;
+    sumEUR += convertToEUR(value, item.holding.displayCurrency, exchangeRates);
+  }
+  return sumEUR;
+}
+
+/**
+ * Simple period return: (end - start) / start * 100.
+ * Returns null when startValue <= 0 or invalid.
+ */
+export function calculatePeriodReturn(
+  currentValueEUR: number,
+  valueOnDateEUR: number
+): number | null {
+  if (valueOnDateEUR <= 0 || !Number.isFinite(currentValueEUR)) return null;
+  return ((currentValueEUR - valueOnDateEUR) / valueOnDateEUR) * 100;
 }

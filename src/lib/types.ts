@@ -1,4 +1,16 @@
 export type ApiProviderName = "yahoo" | "alphavantage";
+export type SubscriptionPlan = "free" | "pro";
+export type BillingInterval = "monthly" | "annual";
+export type SubscriptionFeature =
+  | "yahoo"
+  | "charts"
+  | "cash"
+  | "benchmarks"
+  | "alphavantage"
+  | "fundamentals"
+  | "intelligence"
+  | "economic-indicators"
+  | "ai";
 export type HoldingAssetType = "stock" | "etf";
 
 export interface Holding {
@@ -32,6 +44,11 @@ export interface Transaction {
   id: string;
   holdingId: string;
   ticker: string;
+  name?: string;
+  exchange?: string;
+  isin?: string;
+  assetType?: HoldingAssetType;
+  accountId?: string;
   type: TransactionType;
   date: string;
   shares: number;
@@ -40,6 +57,7 @@ export interface Transaction {
   fees: number;
   taxes: number;
   currency: string;
+  displayCurrency?: string;
   notes: string;
   createdAt: string;
 }
@@ -102,6 +120,8 @@ export interface QuoteData {
   fiftyTwoWeekHigh: number;
   fiftyTwoWeekLow: number;
   marketCap?: number;
+  trailingAnnualDividendRate?: number;
+  trailingAnnualDividendYield?: number;
   providerUsed?: string;
   fetchedAt?: number;
 }

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
 import { resetUserHoldings } from "@/lib/db";
+import { withMetrics } from "@/lib/with-metrics";
 
-export async function POST(req: NextRequest) {
+export const POST = withMetrics("/api/reset-portfolio", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
 
@@ -14,4 +15,4 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
-}
+});

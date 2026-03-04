@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { useSettings } from "@/lib/settings-context";
 import { useI18n } from "@/lib/i18n";
+import { useAuth } from "@/lib/auth-context";
 import type { ApiProviderName, RefreshInterval } from "@/lib/types";
+import ProCompareCard from "@/components/ProCompareCard";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -13,11 +15,12 @@ interface SettingsModalProps {
 export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const { provider, refreshInterval, hasGlobalAvKey, setProvider, setRefreshInterval } = useSettings();
   const { t } = useI18n();
+  const { user } = useAuth();
 
   const [localProvider, setLocalProvider] = useState<ApiProviderName>(provider);
   const [localRefreshInterval, setLocalRefreshInterval] = useState<RefreshInterval>(refreshInterval);
 
-  const avDisabled = !hasGlobalAvKey;
+  const avDisabled = !hasGlobalAvKey || user?.plan !== "pro";
 
   const handleSave = () => {
     setProvider(localProvider);
@@ -34,6 +37,18 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-5">{t("settings")}</h2>
 
         <div className="space-y-5">
+          <div className="rounded-xl border border-gray-200 dark:border-slate-600 p-3 bg-gray-50 dark:bg-slate-800/40">
+            <p className="text-sm text-gray-700 dark:text-slate-200">
+              {t("currentPlan")}:{" "}
+              <span className="font-semibold">{user?.plan === "pro" ? t("planPro") : t("planFree")}</span>
+            </p>
+          </div>
+          <ProCompareCard
+            surface="settings_always_on"
+            reason={user?.plan === "pro" ? undefined : "upgrade_required"}
+            compact
+            aiUsage={user?.plan === "pro" ? undefined : { used: user?.aiCallsThisMonth ?? 0, limit: 5 }}
+          />
           <div>
             <label className="block text-sm text-gray-500 dark:text-slate-400 mb-2">{t("dataProvider")}</label>
             <div className="grid grid-cols-2 gap-2">
@@ -65,7 +80,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             </div>
             {avDisabled && (
               <p className="text-xs text-gray-400 dark:text-slate-500 mt-2">
-                {t("avKeyManagedByAdmin")}
+                {user?.plan !== "pro" ? t("alphaVantageProOnly") : t("avKeyManagedByAdmin")}
               </p>
             )}
           </div>
@@ -98,7 +113,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline"
             onClick={onClose}
           >
-            {t("profile")} →
+            {user?.plan === "pro" ? t("manageSubscription") : t("upgradeToPro")} →
           </a>
           <div className="flex gap-3">
             <button onClick={onClose} className="btn-secondary">

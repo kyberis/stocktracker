@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifySessionToken } from "@/lib/auth/session";
 
-const PUBLIC_ROUTES = new Set(["/login", "/signup"]);
+const PUBLIC_ROUTES = new Set(["/login", "/signup", "/landing"]);
 const PUBLIC_API_ROUTES = new Set([
   "/api/auth/login",
   "/api/auth/signup",
   "/api/auth/logout",
+  "/api/billing/webhook",
+  "/api/analytics/landing",
+  "/api/metrics",
+  "/api/cron/push-gauges",
 ]);
 
 function isPublicPath(pathname: string): boolean {

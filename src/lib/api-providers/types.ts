@@ -9,6 +9,8 @@ export interface ProviderQuoteResult {
   fiftyTwoWeekHigh: number;
   fiftyTwoWeekLow: number;
   marketCap: number;
+  trailingAnnualDividendRate?: number;
+  trailingAnnualDividendYield?: number;
   error?: boolean;
 }
 

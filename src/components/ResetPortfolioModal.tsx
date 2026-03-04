@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { usePortfolio } from "@/lib/portfolio-context";
 import { useI18n } from "@/lib/i18n";
 
 interface ResetPortfolioModalProps {
@@ -11,30 +10,31 @@ interface ResetPortfolioModalProps {
 
 export default function ResetPortfolioModal({ isOpen, onClose }: ResetPortfolioModalProps) {
   const { t } = useI18n();
-  const { refreshQuotes } = usePortfolio();
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleReset = async (mode: "empty" | "seed") => {
     setLoading(true);
+    setError(null);
     try {
       const res = await fetch("/api/reset-portfolio", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mode }),
       });
-      if (res.ok) {
-        setDone(true);
-        await refreshQuotes();
-        setTimeout(() => {
-          setDone(false);
-          onClose();
-          window.location.reload();
-        }, 1500);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || "Reset failed. Please try again.");
+        setLoading(false);
+        return;
       }
+      setDone(true);
+      setTimeout(() => {
+        window.location.reload();
+      }, 1200);
     } catch {
-      // ignore
-    } finally {
+      setError("Network error. Please try again.");
       setLoading(false);
     }
   };
@@ -74,18 +74,22 @@ export default function ResetPortfolioModal({ isOpen, onClose }: ResetPortfolioM
                 disabled={loading}
                 className="w-full btn-danger text-sm py-2.5 disabled:opacity-50"
               >
-                {t("resetPortfolioEmpty")}
+                {loading ? "Resetting..." : t("resetPortfolioEmpty")}
               </button>
               <button
                 onClick={() => handleReset("seed")}
                 disabled={loading}
                 className="w-full btn-secondary text-sm py-2.5 disabled:opacity-50"
               >
-                {t("resetPortfolioSeed")}
+                {loading ? "Resetting..." : t("resetPortfolioSeed")}
               </button>
             </div>
 
-            <button onClick={onClose} className="w-full btn-secondary text-sm">
+            {error && (
+              <p className="text-xs text-red-500 text-center mb-3">{error}</p>
+            )}
+
+            <button onClick={onClose} disabled={loading} className="w-full btn-secondary text-sm">
               {t("cancel")}
             </button>
           </>

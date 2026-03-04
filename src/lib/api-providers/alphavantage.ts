@@ -17,6 +17,7 @@ import type {
   EconIndicatorResult,
   EconDataPoint,
 } from "./types";
+import { providerRequestsTotal, providerRequestDuration } from "@/lib/metrics";
 
 const AV_BASE = "https://www.alphavantage.co/query";
 // 75 requests/minute ~= 800ms between calls. Keep slight safety buffer.
@@ -83,7 +84,20 @@ export class AlphaVantageProvider implements StockDataProvider {
 
   private avFetch(params: Record<string, string>): Promise<Record<string, unknown>> {
     this._callCount++;
-    return throttled(() => avFetchRaw({ ...params, apikey: this.apiKey }));
+    const operation = (params.function || "unknown").toLowerCase();
+    return throttled(async () => {
+      const end = providerRequestDuration.startTimer({ provider: "alphavantage", operation });
+      try {
+        const result = await avFetchRaw({ ...params, apikey: this.apiKey });
+        providerRequestsTotal.inc({ provider: "alphavantage", operation, status: "success" });
+        return result;
+      } catch (err) {
+        providerRequestsTotal.inc({ provider: "alphavantage", operation, status: "error" });
+        throw err;
+      } finally {
+        end();
+      }
+    });
   }
 
   async getQuote(symbol: string): Promise<ProviderQuoteResult> {
@@ -521,11 +535,22 @@ export class AlphaVantageProvider implements StockDataProvider {
     if (interval) params.set("interval", interval);
     if (maturity) params.set("maturity", maturity);
 
+    const operation = func.toLowerCase();
     const data = await throttled(async () => {
       this._callCount++;
-      const res = await fetch(`${AV_BASE}?${params}`);
-      if (!res.ok) throw new Error(`AV ${func}: ${res.status}`);
-      return res.json();
+      const end = providerRequestDuration.startTimer({ provider: "alphavantage", operation });
+      try {
+        const res = await fetch(`${AV_BASE}?${params}`);
+        if (!res.ok) throw new Error(`AV ${func}: ${res.status}`);
+        const json = await res.json();
+        providerRequestsTotal.inc({ provider: "alphavantage", operation, status: "success" });
+        return json;
+      } catch (err) {
+        providerRequestsTotal.inc({ provider: "alphavantage", operation, status: "error" });
+        throw err;
+      } finally {
+        end();
+      }
     });
 
     if (data["Error Message"] || data["Note"]) return null;

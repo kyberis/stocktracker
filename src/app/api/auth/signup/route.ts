@@ -6,6 +6,8 @@ import {
   getSessionCookieConfig,
 } from "@/lib/auth/session";
 import { ensureSessionSecret } from "@/lib/auth/session-secret";
+import { withMetrics } from "@/lib/with-metrics";
+import { authEventsTotal } from "@/lib/metrics";
 
 async function parseBody(
   req: NextRequest
@@ -15,7 +17,7 @@ async function parseBody(
   return JSON.parse(raw) as { username?: string; password?: string; seedWithData?: boolean };
 }
 
-export async function POST(req: NextRequest) {
+export const POST = withMetrics("/api/auth/signup", async (req: NextRequest) => {
   ensureSessionSecret();
 
   let body: { username?: string; password?: string; seedWithData?: boolean } = {};
@@ -55,9 +57,11 @@ export async function POST(req: NextRequest) {
       username: user.username,
       role: user.role,
       mustChangePassword: user.mustChangePassword,
+      plan: user.plan,
     });
 
     trackEvent(user.id, "signup");
+    authEventsTotal.inc({ event: "signup" });
     const response = NextResponse.json({ user }, { status: 201 });
     response.cookies.set(getSessionCookieConfig(token));
     return response;
@@ -65,4 +69,4 @@ export async function POST(req: NextRequest) {
     console.error("Signup failed:", error);
     return NextResponse.json({ error: "Server configuration error." }, { status: 500 });
   }
-}
+});

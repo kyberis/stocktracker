@@ -8,6 +8,9 @@ import { useI18n } from "@/lib/i18n";
 import { formatCompactNumber } from "@/lib/utils";
 import { getMarketStatus } from "@/lib/market-hours";
 import { useTrack } from "@/lib/use-track";
+import { useAuth } from "@/lib/auth-context";
+import ProCompareCard from "@/components/ProCompareCard";
+import type { UpsellReason } from "@/lib/upsell";
 import type {
   NewsArticle,
   InsiderTransaction,
@@ -15,7 +18,7 @@ import type {
 } from "@/lib/types";
 
 type IntelTab = "news" | "insider" | "institutional" | "transcript";
-type AiStatus = "idle" | "loading" | "done" | "error" | "no-key";
+type AiStatus = "idle" | "loading" | "done" | "error" | "no-key" | "ai-limit" | "upgrade";
 
 interface StockIntelligenceProps {
   ticker: string;
@@ -25,6 +28,7 @@ interface StockIntelligenceProps {
 export default function StockIntelligence({ ticker, exchange }: StockIntelligenceProps) {
   const { isAlphaVantage, provider, getApiHeaders, trackAvCalls } = useSettings();
   const { holdings } = usePortfolio();
+  const { user } = useAuth();
   const { t, language } = useI18n();
   const track = useTrack();
 
@@ -58,8 +62,11 @@ export default function StockIntelligence({ ticker, exchange }: StockIntelligenc
 
   const [aiStatus, setAiStatus] = useState<AiStatus>("idle");
   const [aiText, setAiText] = useState("");
+  const [aiLimitInfo, setAiLimitInfo] = useState<{ used: number; limit: number } | null>(null);
+  const [lockedReason, setLockedReason] = useState<UpsellReason | null>(null);
 
   const marketStatus = exchange ? getMarketStatus(exchange, now) : null;
+  const isFree = user?.plan !== "pro";
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 60_000);
@@ -75,6 +82,11 @@ export default function StockIntelligence({ ticker, exchange }: StockIntelligenc
       }
       const res = await fetch(`/api/intelligence?${params}`, { headers });
       trackAvCalls(res);
+      if (res.status === 403) {
+        const body = await res.json().catch(() => null);
+        if (body?.reason === "upgrade_required") setLockedReason("upgrade_required");
+        return null;
+      }
       if (!res.ok) return null;
       return res.json();
     },
@@ -156,6 +168,7 @@ export default function StockIntelligence({ ticker, exchange }: StockIntelligenc
     if (aiStatus === "loading") return;
     setAiStatus("loading");
     setAiText("");
+    setAiLimitInfo(null);
     track("ai_analysis", { ticker, type: "intelligence" });
 
     const payload: Record<string, unknown> = {
@@ -198,6 +211,21 @@ export default function StockIntelligence({ ticker, exchange }: StockIntelligenc
       if (res.status === 501) {
         setAiStatus("no-key");
         return;
+      }
+      if (res.status === 403) {
+        const body = await res.json().catch(() => null);
+        if (body?.reason === "ai_limit_reached") {
+          setAiLimitInfo({
+            used: Number(body?.used || 0),
+            limit: Number(body?.limit || 5),
+          });
+          setAiStatus("ai-limit");
+          return;
+        }
+        if (body?.reason === "upgrade_required") {
+          setAiStatus("upgrade");
+          return;
+        }
       }
       if (!res.ok) {
         setAiStatus("error");
@@ -310,19 +338,27 @@ export default function StockIntelligence({ ticker, exchange }: StockIntelligenc
 
         {/* AV Required */}
         {!isAlphaVantage && (
-          <div className="card px-6 py-10 text-center">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-amber-50 dark:bg-amber-500/10 mb-4">
-              <svg className="w-6 h-6 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+          isFree ? (
+            <ProCompareCard surface="intelligence_locked" reason="upgrade_required" />
+          ) : (
+            <div className="card px-6 py-10 text-center">
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-amber-50 dark:bg-amber-500/10 mb-4">
+                <svg className="w-6 h-6 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <p className="text-gray-600 dark:text-slate-300 text-sm max-w-md mx-auto">
+                {t("intelligenceRequireAV")}
+              </p>
+              <Link href="/" className="inline-block mt-4 text-sm text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors">
+                {t("backToPortfolio")}
+              </Link>
             </div>
-            <p className="text-gray-600 dark:text-slate-300 text-sm max-w-md mx-auto">
-              {t("intelligenceRequireAV")}
-            </p>
-            <Link href="/" className="inline-block mt-4 text-sm text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors">
-              {t("backToPortfolio")}
-            </Link>
-          </div>
+          )
+        )}
+
+        {isAlphaVantage && lockedReason && isFree && (
+          <ProCompareCard surface="intelligence_locked" reason={lockedReason} />
         )}
 
         {/* Intelligence Content */}
@@ -351,6 +387,7 @@ export default function StockIntelligence({ ticker, exchange }: StockIntelligenc
                 status={aiStatus}
                 text={aiText}
                 onAnalyze={requestAiAnalysis}
+                aiLimitInfo={aiLimitInfo}
               />
             )}
 
@@ -385,10 +422,12 @@ function AiIntelligenceSection({
   status,
   text,
   onAnalyze,
+  aiLimitInfo,
 }: {
   status: AiStatus;
   text: string;
   onAnalyze: () => void;
+  aiLimitInfo: { used: number; limit: number } | null;
 }) {
   const { t } = useI18n();
 
@@ -431,6 +470,18 @@ function AiIntelligenceSection({
         </div>
       </div>
     );
+  }
+  if (status === "ai-limit") {
+    return (
+      <ProCompareCard
+        surface="ai_limit"
+        reason="ai_limit_reached"
+        aiUsage={aiLimitInfo || { used: 0, limit: 5 }}
+      />
+    );
+  }
+  if (status === "upgrade") {
+    return <ProCompareCard surface="ai_limit" reason="upgrade_required" />;
   }
 
   return (

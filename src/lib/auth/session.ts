@@ -1,6 +1,7 @@
 import { SignJWT, jwtVerify } from "jose";
 import type { NextRequest } from "next/server";
 import type { UserRole } from "@/lib/db";
+import type { SubscriptionPlan } from "@/lib/types";
 
 const SESSION_COOKIE = "stocktracker_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7;
@@ -15,6 +16,7 @@ export interface SessionPayload {
   username: string;
   role: UserRole;
   mustChangePassword: boolean;
+  plan: SubscriptionPlan;
 }
 
 export async function createSessionToken(payload: SessionPayload): Promise<string> {
@@ -35,6 +37,7 @@ export async function verifySessionToken(token: string): Promise<SessionPayload 
       username: String(payload.username),
       role: payload.role === "admin" ? "admin" : "user",
       mustChangePassword: Boolean(payload.mustChangePassword),
+      plan: payload.plan === "pro" ? "pro" : "free",
     };
   } catch {
     return null;

@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { getUserSettings, updateUserSettings, getGlobalAlphaVantageApiKey } from "@/lib/db";
+import { getUserSettings, updateUserSettings, getGlobalAlphaVantageApiKey, getGlobalOpenAIApiKey } from "@/lib/db";
 import type { ApiProviderName, Language, RefreshInterval } from "@/lib/types";
+import { withMetrics } from "@/lib/with-metrics";
 
-export async function GET(req: NextRequest) {
+export const GET = withMetrics("/api/user-settings", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
 
-  const [settings, globalAvKey] = await Promise.all([
+  const [settings, globalAvKey, globalOpenAIKey] = await Promise.all([
     getUserSettings(session.userId),
     getGlobalAlphaVantageApiKey(),
+    getGlobalOpenAIApiKey(),
   ]);
 
   return NextResponse.json({
@@ -17,10 +19,11 @@ export async function GET(req: NextRequest) {
     language: settings.language,
     refreshInterval: settings.refreshInterval,
     hasGlobalAvKey: globalAvKey.length > 0,
+    hasOpenAIKey: globalOpenAIKey.length > 0,
   });
-}
+});
 
-export async function PUT(req: NextRequest) {
+export const PUT = withMetrics("/api/user-settings", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
 
@@ -56,4 +59,4 @@ export async function PUT(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
-}
+});

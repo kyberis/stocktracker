@@ -1,0 +1,6 @@
+ticker,type,price,amount,currency
+AAPL,buy,178.50,10,USD
+GOOGL,buy,141.20,5,USD
+MSFT,buy,415.60,8,USD
+O,buy,56.30,20,USD
+VZ,buy,42.10,15,USD

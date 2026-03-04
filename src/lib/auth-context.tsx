@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
+import type { SubscriptionPlan } from "@/lib/types";
 
 type AuthUserRole = "admin" | "user";
 
@@ -12,6 +13,12 @@ interface AuthUser {
   email: string;
   displayName: string;
   avatarUrl: string;
+  plan: SubscriptionPlan;
+  planExpiresAt: string;
+  aiCallsThisMonth: number;
+  aiCallsResetAt: string;
+  aiCallsToday: number;
+  aiDailyResetAt: string;
 }
 
 interface AuthContextType {

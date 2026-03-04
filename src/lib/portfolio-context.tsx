@@ -154,6 +154,7 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
   const fetchExchangeRates = useCallback(async (): Promise<ExchangeRates> => {
     const params = new URLSearchParams({ pairs: FX_PAIRS.join(",") });
     const res = await fetch(`/api/exchange-rates?${params}`);
+    if (res.status === 429) throw new Error("rate_limited");
     if (!res.ok) throw new Error("Failed to fetch exchange rates");
     const data = await res.json();
     return parseExchangeRatesFromApi(data);
@@ -175,6 +176,7 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
         const url = buildFetchUrl("/api/quote", { symbols: batch.join(",") });
         const res = await fetch(url, { headers });
         trackAvCalls(res);
+        if (res.status === 429) throw new Error("rate_limited");
         if (!res.ok) throw new Error("Failed to fetch quotes");
         const data = await res.json();
         Object.assign(allQuotes, data);
@@ -197,7 +199,8 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
       saveToStorage(RATES_CACHE_KEY, rates);
       setLastUpdated(new Date());
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch quotes");
+      const msg = err instanceof Error ? err.message : "Failed to fetch quotes";
+      setError(msg === "rate_limited" ? "Rate limit reached. Retrying shortly..." : msg);
     } finally {
       setIsLoading(false);
       fetchingRef.current = false;

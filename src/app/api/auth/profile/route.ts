@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
 import { findUserById, updateUserProfile } from "@/lib/db";
+import { withMetrics } from "@/lib/with-metrics";
 
-export async function GET(req: NextRequest) {
+export const GET = withMetrics("/api/auth/profile", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
 
@@ -21,9 +22,9 @@ export async function GET(req: NextRequest) {
       role: user.role,
     },
   });
-}
+});
 
-export async function PUT(req: NextRequest) {
+export const PUT = withMetrics("/api/auth/profile", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
 
@@ -59,4 +60,4 @@ export async function PUT(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
-}
+});

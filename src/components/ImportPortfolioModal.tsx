@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useRef, useCallback, DragEvent } from "react";
-import { usePortfolio } from "@/lib/portfolio-context";
 import { useI18n } from "@/lib/i18n";
+
+type CsvFormat = "degiro" | "simple";
 
 interface ImportPortfolioModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onImportComplete?: () => void;
 }
 
 interface ExtractedHolding {
@@ -19,32 +21,65 @@ interface ExtractedHolding {
   assetType: "stock" | "etf";
 }
 
-type Step = "upload" | "extracting" | "preview" | "done" | "error";
+interface ExtractedTransaction {
+  date: string;
+  type: "buy" | "sell" | "dividend" | "fee";
+  ticker: string;
+  name: string;
+  shares: number;
+  pricePerShare: number;
+  totalAmount: number;
+  fees: number;
+  currency: string;
+}
 
-export default function ImportPortfolioModal({ isOpen, onClose }: ImportPortfolioModalProps) {
-  const { addHolding } = usePortfolio();
+type Step = "upload" | "extracting" | "preview" | "importing" | "done" | "error";
+type PreviewTab = "holdings" | "transactions";
+
+const TX_TYPE_COLORS: Record<string, string> = {
+  buy: "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+  sell: "bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400",
+  dividend: "bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-400",
+  fee: "bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400",
+};
+
+export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete }: ImportPortfolioModalProps) {
   const { t } = useI18n();
 
   const [step, setStep] = useState<Step>("upload");
+  const [csvFormat, setCsvFormat] = useState<CsvFormat>("degiro");
   const [holdings, setHoldings] = useState<ExtractedHolding[]>([]);
+  const [transactions, setTransactions] = useState<ExtractedTransaction[]>([]);
+  const [previewTab, setPreviewTab] = useState<PreviewTab>("holdings");
   const [errorMsg, setErrorMsg] = useState("");
   const [importedCount, setImportedCount] = useState(0);
+  const [importedTxCount, setImportedTxCount] = useState(0);
+  const [importProgress, setImportProgress] = useState({ current: 0, total: 0, errors: 0 });
   const [isDragOver, setIsDragOver] = useState(false);
+  const [isImageImport, setIsImageImport] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const reset = () => {
     setStep("upload");
+    setCsvFormat("degiro");
     setHoldings([]);
+    setTransactions([]);
+    setPreviewTab("holdings");
     setErrorMsg("");
     setImportedCount(0);
+    setImportedTxCount(0);
+    setImportProgress({ current: 0, total: 0, errors: 0 });
     setIsDragOver(false);
+    setIsImageImport(false);
     setPreview(null);
   };
 
   const handleClose = () => {
+    const wasImport = step === "done";
     reset();
     onClose();
+    if (wasImport && onImportComplete) onImportComplete();
   };
 
   const processFile = useCallback(async (file: File) => {
@@ -52,20 +87,74 @@ export default function ImportPortfolioModal({ isOpen, onClose }: ImportPortfoli
     setErrorMsg("");
     setPreview(null);
 
-    if (file.type.startsWith("image/")) {
+    const isImage = file.type.startsWith("image/");
+    setIsImageImport(isImage);
+
+    if (isImage) {
       const reader = new FileReader();
       reader.onload = () => setPreview(reader.result as string);
       reader.readAsDataURL(file);
     }
 
-    const formData = new FormData();
-    formData.append("file", file);
-
     try {
-      const res = await fetch("/api/import-portfolio", {
-        method: "POST",
-        body: formData,
-      });
+      const isCsv = file.type === "text/csv" || file.name.endsWith(".csv") || file.type === "application/vnd.ms-excel";
+
+      if (isCsv) {
+        const csv = await file.text();
+        const parseForm = new FormData();
+        parseForm.append("action", "parse");
+        parseForm.append("broker", csvFormat);
+        parseForm.append("csv", csv);
+        const parseRes = await fetch("/api/transactions/import-broker", {
+          method: "POST",
+          body: parseForm,
+        });
+        if (!parseRes.ok) {
+          const data = await parseRes.json().catch(() => null);
+          const apiError = data?.error || "";
+          if (parseRes.status === 401) {
+            setErrorMsg(apiError || "Session expired. Please log in again.");
+          } else if (parseRes.status === 403) {
+            setErrorMsg(apiError || "Access denied.");
+          } else {
+            setErrorMsg(apiError || t("importDegiroFailed"));
+          }
+          setStep("error");
+          return;
+        }
+        const data = await parseRes.json();
+        const parsedTransactions = Array.isArray(data.transactions) ? data.transactions : [];
+
+        if (parsedTransactions.length === 0) {
+          const unmapped = data.summary?.unmapped;
+          const hint = unmapped?.length
+            ? ` ${t("importUnmappedIsins")}: ${unmapped.join(", ")}`
+            : "";
+          setErrorMsg((t("importNoTransactions") || "No transactions found in CSV.") + hint);
+          setStep("error");
+          return;
+        }
+
+        setHoldings([]);
+        setTransactions(parsedTransactions.map((tx: Record<string, unknown>) => ({
+          date: String(tx.date || ""),
+          type: (String(tx.type || "buy") as ExtractedTransaction["type"]),
+          ticker: String(tx.ticker || "").toUpperCase(),
+          name: String(tx.name || ""),
+          shares: Number(tx.shares || 0),
+          pricePerShare: Number(tx.pricePerShare || 0),
+          totalAmount: Number(tx.totalAmount || 0),
+          fees: Number(tx.fees || 0),
+          currency: String(tx.currency || "EUR").toUpperCase(),
+        })));
+        setPreviewTab("transactions");
+        setStep("preview");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/import-portfolio", { method: "POST", body: formData });
 
       if (res.status === 501) {
         setErrorMsg("OpenAI API key not configured.");
@@ -80,19 +169,25 @@ export default function ImportPortfolioModal({ isOpen, onClose }: ImportPortfoli
       }
 
       const data = await res.json();
-      if (!data.holdings || data.holdings.length === 0) {
+      const h = data.holdings || [];
+      const tx = data.transactions || [];
+
+      if (h.length === 0 && tx.length === 0) {
         setErrorMsg(t("importNoData"));
         setStep("error");
         return;
       }
 
-      setHoldings(data.holdings);
+      setHoldings(h);
+      setTransactions(tx);
+      setPreviewTab(h.length > 0 ? "holdings" : "transactions");
       setStep("preview");
-    } catch {
-      setErrorMsg("Network error.");
+    } catch (err) {
+      console.error("[ImportPortfolio] upload failed:", err);
+      setErrorMsg(err instanceof Error ? err.message : "Network error.");
       setStep("error");
     }
-  }, [t]);
+  }, [t, csvFormat]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -111,36 +206,85 @@ export default function ImportPortfolioModal({ isOpen, onClose }: ImportPortfoli
     setIsDragOver(true);
   };
 
-  const removeRow = (idx: number) => {
+  const removeHolding = (idx: number) => {
     setHoldings((prev) => prev.filter((_, i) => i !== idx));
   };
 
+  const removeTx = (idx: number) => {
+    setTransactions((prev) => prev.filter((_, i) => i !== idx));
+  };
+
   const handleImportAll = async () => {
-    let count = 0;
-    for (const h of holdings) {
-      if (!h.ticker) continue;
-      try {
-        await addHolding({
-          name: h.name,
+    const derivedTransactions: ExtractedTransaction[] = transactions.length > 0
+      ? transactions
+      : holdings.map((h) => ({
+          date: new Date().toISOString().slice(0, 10),
+          type: "buy" as const,
           ticker: h.ticker,
-          isin: "",
-          assetType: h.assetType,
+          name: h.name,
           shares: h.shares,
-          purchasePrice: h.purchasePrice,
-          displayCurrency: h.displayCurrency,
-          exchange: h.exchange,
-          valueInEUR: 0,
+          pricePerShare: h.purchasePrice,
+          totalAmount: h.shares * h.purchasePrice,
+          fees: 0,
+          currency: h.displayCurrency || "EUR",
+        }));
+
+    const total = derivedTransactions.filter((tx) => tx.ticker && tx.date).length;
+    setImportProgress({ current: 0, total, errors: 0 });
+    setStep("importing");
+
+    const hCount = holdings.length;
+    let txCount = 0;
+    let errorCount = 0;
+    const importSource = isImageImport ? "Image import" : `${csvFormat === "degiro" ? "DEGIRO" : "CSV"} import`;
+
+    for (const tx of derivedTransactions) {
+      if (!tx.ticker || !tx.date) continue;
+      try {
+        const res = await fetch("/api/transactions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            holdingId: "",
+            ticker: tx.ticker,
+            name: tx.name,
+            exchange: holdings.find((h) => h.ticker === tx.ticker)?.exchange || "",
+            isin: "",
+            assetType: holdings.find((h) => h.ticker === tx.ticker)?.assetType || "stock",
+            accountId: "",
+            type: tx.type,
+            date: tx.date,
+            shares: tx.shares,
+            pricePerShare: tx.pricePerShare,
+            totalAmount: tx.totalAmount || tx.shares * tx.pricePerShare,
+            fees: tx.fees,
+            taxes: 0,
+            currency: tx.currency,
+            displayCurrency: tx.currency,
+            notes: importSource,
+          }),
         });
-        count++;
+        if (res.ok) txCount++;
+        else errorCount++;
       } catch {
-        // skip failed entries
+        errorCount++;
       }
+      setImportProgress({ current: txCount + errorCount, total, errors: errorCount });
     }
-    setImportedCount(count);
-    setStep("done");
+
+    setImportedCount(hCount);
+    setImportedTxCount(txCount);
+    if (errorCount > 0 && txCount === 0) {
+      setErrorMsg(t("importError"));
+      setStep("error");
+    } else {
+      setStep("done");
+    }
   };
 
   if (!isOpen) return null;
+
+  const totalItems = holdings.length + transactions.length;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -165,32 +309,72 @@ export default function ImportPortfolioModal({ isOpen, onClose }: ImportPortfoli
         {/* Body */}
         <div className="flex-1 overflow-y-auto px-6 py-5">
           {step === "upload" && (
-            <div
-              onClick={() => fileRef.current?.click()}
-              onDrop={handleDrop}
-              onDragOver={handleDragOver}
-              onDragLeave={() => setIsDragOver(false)}
-              className={`border-2 border-dashed rounded-2xl p-12 text-center cursor-pointer transition-colors ${
-                isDragOver
-                  ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10"
-                  : "border-gray-300 dark:border-slate-600 hover:border-emerald-400 dark:hover:border-emerald-500/50 bg-gray-50 dark:bg-slate-700/30"
-              }`}
-            >
-              <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-emerald-100 dark:bg-emerald-500/15 flex items-center justify-center">
-                <svg className="w-7 h-7 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-                </svg>
+            <>
+              {/* Format selector */}
+              <div className="flex gap-1 bg-gray-100 dark:bg-slate-700/50 rounded-xl p-1 mb-4">
+                <button
+                  onClick={() => setCsvFormat("degiro")}
+                  className={`flex-1 text-xs font-medium px-3 py-2 rounded-lg transition-colors ${
+                    csvFormat === "degiro"
+                      ? "bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-sm"
+                      : "text-gray-500 dark:text-slate-400"
+                  }`}
+                >
+                  DeGiro
+                </button>
+                <button
+                  onClick={() => setCsvFormat("simple")}
+                  className={`flex-1 text-xs font-medium px-3 py-2 rounded-lg transition-colors ${
+                    csvFormat === "simple"
+                      ? "bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-sm"
+                      : "text-gray-500 dark:text-slate-400"
+                  }`}
+                >
+                  {t("simpleCSV")}
+                </button>
               </div>
-              <p className="text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">{t("importDragDrop")}</p>
-              <p className="text-xs text-gray-400 dark:text-slate-500">{t("importAccepted")}</p>
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/*,.csv,text/csv"
-                onChange={handleFileSelect}
-                className="hidden"
-              />
-            </div>
+
+              {csvFormat === "degiro" ? (
+                <div className="bg-blue-50 dark:bg-blue-500/10 rounded-xl p-3 mb-4">
+                  <img src="/degiro-logo.svg" alt="DEGIRO logo" className="h-5 w-auto mb-2" />
+                  <p className="text-xs text-blue-700 dark:text-blue-300 font-medium mb-1">{t("degiroOnlySupportTitle")}</p>
+                  <p className="text-[10px] text-blue-600 dark:text-blue-400">{t("degiroInstructionsDetail")}</p>
+                </div>
+              ) : (
+                <div className="bg-blue-50 dark:bg-blue-500/10 rounded-xl p-3 mb-4">
+                  <p className="text-xs text-blue-700 dark:text-blue-300 font-medium mb-1">{t("simpleCsvTitle")}</p>
+                  <p className="text-[10px] text-blue-600 dark:text-blue-400 font-mono">ticker,type,price,amount,currency</p>
+                  <p className="text-[10px] text-blue-600 dark:text-blue-400 mt-1">{t("simpleCsvDesc")}</p>
+                </div>
+              )}
+
+              <div
+                onClick={() => fileRef.current?.click()}
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                onDragLeave={() => setIsDragOver(false)}
+                className={`border-2 border-dashed rounded-2xl p-12 text-center cursor-pointer transition-colors ${
+                  isDragOver
+                    ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10"
+                    : "border-gray-300 dark:border-slate-600 hover:border-emerald-400 dark:hover:border-emerald-500/50 bg-gray-50 dark:bg-slate-700/30"
+                }`}
+              >
+                <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-emerald-100 dark:bg-emerald-500/15 flex items-center justify-center">
+                  <svg className="w-7 h-7 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                  </svg>
+                </div>
+                <p className="text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">{t("importDragDrop")}</p>
+                <p className="text-xs text-gray-400 dark:text-slate-500">{t("importAccepted")}</p>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept=".csv,text/csv"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+              </div>
+            </>
           )}
 
           {step === "extracting" && (
@@ -199,7 +383,9 @@ export default function ImportPortfolioModal({ isOpen, onClose }: ImportPortfoli
                 <img src={preview} alt="Upload preview" className="max-h-40 mx-auto rounded-xl border border-gray-200 dark:border-slate-700 mb-4" />
               )}
               <div className="w-10 h-10 mx-auto border-3 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-              <p className="text-sm text-gray-600 dark:text-slate-300">{t("importExtracting")}</p>
+              <p className="text-sm text-gray-600 dark:text-slate-300">
+                {isImageImport ? t("importExtracting") : t("importParsingCsv")}
+              </p>
             </div>
           )}
 
@@ -224,64 +410,167 @@ export default function ImportPortfolioModal({ isOpen, onClose }: ImportPortfoli
                   <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{t("importPreview")}</h3>
                   <p className="text-xs text-gray-500 dark:text-slate-400">{t("importPreviewDesc")}</p>
                 </div>
-                <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-1 rounded-full">
-                  {holdings.length} items
-                </span>
               </div>
 
               {preview && (
                 <img src={preview} alt="Source" className="max-h-28 rounded-xl border border-gray-200 dark:border-slate-700" />
               )}
 
-              <div className="border border-gray-200 dark:border-slate-700 rounded-xl overflow-hidden">
-                <div className="overflow-x-auto max-h-72 overflow-y-auto">
-                  <table className="w-full text-xs">
-                    <thead className="bg-gray-50 dark:bg-slate-800/50 sticky top-0">
-                      <tr className="text-gray-500 dark:text-slate-400">
-                        <th className="text-left p-2 font-medium">{t("name")}</th>
-                        <th className="text-left p-2 font-medium">{t("ticker")}</th>
-                        <th className="text-right p-2 font-medium">{t("shares")}</th>
-                        <th className="text-right p-2 font-medium">{t("purchasePrice")}</th>
-                        <th className="text-left p-2 font-medium">{t("currency")}</th>
-                        <th className="text-left p-2 font-medium">{t("editExchange")}</th>
-                        <th className="text-left p-2 font-medium">{t("assetType")}</th>
-                        <th className="p-2"></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {holdings.map((h, i) => (
-                        <tr key={i} className="border-t border-gray-100 dark:border-slate-700 text-gray-700 dark:text-slate-300">
-                          <td className="p-2 max-w-[140px] truncate">{h.name}</td>
-                          <td className="p-2 font-mono font-medium text-gray-900 dark:text-white">{h.ticker}</td>
-                          <td className="p-2 text-right font-mono">{h.shares}</td>
-                          <td className="p-2 text-right font-mono">{h.purchasePrice.toFixed(2)}</td>
-                          <td className="p-2">{h.displayCurrency}</td>
-                          <td className="p-2">{h.exchange}</td>
-                          <td className="p-2">
-                            <span className={`inline-flex px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
-                              h.assetType === "etf"
-                                ? "bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-400"
-                                : "bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400"
-                            }`}>
-                              {h.assetType.toUpperCase()}
-                            </span>
-                          </td>
-                          <td className="p-2">
-                            <button
-                              onClick={() => removeRow(i)}
-                              className="text-red-400 hover:text-red-600 dark:hover:text-red-300 transition-colors"
-                              title={t("importRemoveRow")}
-                            >
-                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                              </svg>
-                            </button>
-                          </td>
+              {/* Tab toggles */}
+              <div className="flex gap-1 bg-gray-100 dark:bg-slate-700/50 rounded-xl p-1">
+                {holdings.length > 0 && (
+                  <button
+                    onClick={() => setPreviewTab("holdings")}
+                    className={`flex-1 text-xs font-medium px-3 py-2 rounded-lg transition-colors ${
+                      previewTab === "holdings"
+                        ? "bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-sm"
+                        : "text-gray-500 dark:text-slate-400"
+                    }`}
+                  >
+                    {t("importHoldings")} ({holdings.length})
+                  </button>
+                )}
+                {transactions.length > 0 && (
+                  <button
+                    onClick={() => setPreviewTab("transactions")}
+                    className={`flex-1 text-xs font-medium px-3 py-2 rounded-lg transition-colors ${
+                      previewTab === "transactions"
+                        ? "bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-sm"
+                        : "text-gray-500 dark:text-slate-400"
+                    }`}
+                  >
+                    {t("importPreviewTx")} ({transactions.length})
+                  </button>
+                )}
+              </div>
+
+              {/* Holdings table */}
+              {previewTab === "holdings" && holdings.length > 0 && (
+                <div className="border border-gray-200 dark:border-slate-700 rounded-xl overflow-hidden">
+                  <div className="overflow-x-auto max-h-72 overflow-y-auto">
+                    <table className="w-full text-xs">
+                      <thead className="bg-gray-50 dark:bg-slate-800/50 sticky top-0">
+                        <tr className="text-gray-500 dark:text-slate-400">
+                          <th className="text-left p-2 font-medium">{t("name")}</th>
+                          <th className="text-left p-2 font-medium">{t("ticker")}</th>
+                          <th className="text-right p-2 font-medium">{t("shares")}</th>
+                          <th className="text-right p-2 font-medium">{t("purchasePrice")}</th>
+                          <th className="text-left p-2 font-medium">{t("currency")}</th>
+                          <th className="text-left p-2 font-medium">{t("editExchange")}</th>
+                          <th className="text-left p-2 font-medium">{t("assetType")}</th>
+                          <th className="p-2"></th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {holdings.map((h, i) => (
+                          <tr key={i} className="border-t border-gray-100 dark:border-slate-700 text-gray-700 dark:text-slate-300">
+                            <td className="p-2 max-w-[140px] truncate">{h.name}</td>
+                            <td className="p-2 font-mono font-medium text-gray-900 dark:text-white">{h.ticker}</td>
+                            <td className="p-2 text-right font-mono">{h.shares}</td>
+                            <td className="p-2 text-right font-mono">{h.purchasePrice.toFixed(2)}</td>
+                            <td className="p-2">{h.displayCurrency}</td>
+                            <td className="p-2">{h.exchange}</td>
+                            <td className="p-2">
+                              <span className={`inline-flex px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
+                                h.assetType === "etf"
+                                  ? "bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-400"
+                                  : "bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400"
+                              }`}>
+                                {h.assetType.toUpperCase()}
+                              </span>
+                            </td>
+                            <td className="p-2">
+                              <button
+                                onClick={() => removeHolding(i)}
+                                className="text-red-400 hover:text-red-600 dark:hover:text-red-300 transition-colors"
+                                title={t("importRemoveRow")}
+                              >
+                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
+              )}
+
+              {/* Transactions table */}
+              {previewTab === "transactions" && transactions.length > 0 && (
+                <div className="border border-gray-200 dark:border-slate-700 rounded-xl overflow-hidden">
+                  <div className="overflow-x-auto max-h-72 overflow-y-auto">
+                    <table className="w-full text-xs">
+                      <thead className="bg-gray-50 dark:bg-slate-800/50 sticky top-0">
+                        <tr className="text-gray-500 dark:text-slate-400">
+                          <th className="text-left p-2 font-medium">{t("transactionDate")}</th>
+                          <th className="text-left p-2 font-medium">{t("transactionType")}</th>
+                          <th className="text-left p-2 font-medium">{t("ticker")}</th>
+                          <th className="text-right p-2 font-medium">{t("transactionShares")}</th>
+                          <th className="text-right p-2 font-medium">{t("transactionPrice")}</th>
+                          <th className="text-right p-2 font-medium">{t("transactionTotal")}</th>
+                          <th className="text-right p-2 font-medium">{t("transactionFees")}</th>
+                          <th className="p-2"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {transactions.map((tx, i) => (
+                          <tr key={i} className="border-t border-gray-100 dark:border-slate-700 text-gray-700 dark:text-slate-300">
+                            <td className="p-2">{tx.date}</td>
+                            <td className="p-2">
+                              <span className={`inline-flex px-1.5 py-0.5 rounded-full text-[10px] font-medium ${TX_TYPE_COLORS[tx.type] || ""}`}>
+                                {tx.type}
+                              </span>
+                            </td>
+                            <td className="p-2 font-mono font-medium text-gray-900 dark:text-white">{tx.ticker}</td>
+                            <td className="p-2 text-right font-mono">{tx.shares > 0 ? tx.shares : "—"}</td>
+                            <td className="p-2 text-right font-mono">{tx.pricePerShare > 0 ? tx.pricePerShare.toFixed(2) : "—"}</td>
+                            <td className="p-2 text-right font-mono font-medium text-gray-900 dark:text-white">{tx.totalAmount.toFixed(2)}</td>
+                            <td className="p-2 text-right font-mono text-gray-400">{tx.fees > 0 ? tx.fees.toFixed(2) : "—"}</td>
+                            <td className="p-2">
+                              <button
+                                onClick={() => removeTx(i)}
+                                className="text-red-400 hover:text-red-600 dark:hover:text-red-300 transition-colors"
+                              >
+                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {step === "importing" && (
+            <div className="py-16 text-center space-y-5">
+              <div className="w-14 h-14 mx-auto rounded-full bg-emerald-100 dark:bg-emerald-500/15 flex items-center justify-center">
+                <svg className="w-7 h-7 text-emerald-600 dark:text-emerald-400 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                </svg>
+              </div>
+              <p className="text-sm font-medium text-gray-700 dark:text-slate-200">
+                {t("importImporting").replace("{current}", String(importProgress.current)).replace("{total}", String(importProgress.total))}
+              </p>
+              <div className="max-w-xs mx-auto">
+                <div className="h-2 bg-gray-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-emerald-500 rounded-full transition-all duration-300 ease-out"
+                    style={{ width: importProgress.total > 0 ? `${(importProgress.current / importProgress.total) * 100}%` : "0%" }}
+                  />
+                </div>
+                {importProgress.errors > 0 && (
+                  <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
+                    {importProgress.errors} {importProgress.errors === 1 ? "error" : "errors"}
+                  </p>
+                )}
               </div>
             </div>
           )}
@@ -293,9 +582,23 @@ export default function ImportPortfolioModal({ isOpen, onClose }: ImportPortfoli
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                 </svg>
               </div>
-              <p className="text-sm font-medium text-gray-900 dark:text-white">
-                {t("importSuccess").replace("{count}", String(importedCount))}
-              </p>
+              <div className="space-y-1">
+                {importedCount > 0 && (
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">
+                    {t("importSuccess").replace("{count}", String(importedCount))}
+                  </p>
+                )}
+                {importedTxCount > 0 && (
+                  <p className="text-sm text-gray-600 dark:text-slate-300">
+                    {t("importTxSuccess").replace("{count}", String(importedTxCount))}
+                  </p>
+                )}
+                {importProgress.errors > 0 && (
+                  <p className="text-xs text-amber-600 dark:text-amber-400">
+                    {importProgress.errors} {importProgress.errors === 1 ? "transaction" : "transactions"} failed
+                  </p>
+                )}
+              </div>
               <button onClick={handleClose} className="btn-primary text-sm">
                 {t("close")}
               </button>
@@ -304,17 +607,19 @@ export default function ImportPortfolioModal({ isOpen, onClose }: ImportPortfoli
         </div>
 
         {/* Footer */}
-        {step === "preview" && holdings.length > 0 && (
+        {step === "preview" && (
           <div className="border-t border-gray-100 dark:border-slate-700 px-6 py-4 flex items-center justify-between">
             <button onClick={reset} className="btn-secondary text-sm">
               {t("cancel")}
             </button>
-            <button onClick={handleImportAll} className="btn-primary text-sm flex items-center gap-1.5">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-              </svg>
-              {t("importConfirm")} ({holdings.length})
-            </button>
+            {totalItems > 0 && (
+              <button onClick={handleImportAll} className="btn-primary text-sm flex items-center gap-1.5">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+                {t("importConfirm")} ({totalItems})
+              </button>
+            )}
           </div>
         )}
       </div>

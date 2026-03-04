@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/guards";
 import { findUserById, resetUserHoldings } from "@/lib/db";
+import { withMetrics } from "@/lib/with-metrics";
 
-export async function POST(req: NextRequest) {
+export const POST = withMetrics("/api/admin/reset-data", async (req: NextRequest) => {
   const { error } = await requireAdmin(req);
   if (error) return error;
 
@@ -25,4 +26,4 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
-}
+});

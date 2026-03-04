@@ -29,6 +29,7 @@ export default function TransactionHistory({ holdingId, ticker }: Props) {
   const [formNotes, setFormNotes] = useState("");
   const [loading, setLoading] = useState(false);
 
+
   const fetchTxs = useCallback(async () => {
     const params = new URLSearchParams();
     if (holdingId) params.set("holdingId", holdingId);

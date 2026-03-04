@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import PortfolioSummary from "./PortfolioSummary";
+import PortfolioGrowthPeriods from "./PortfolioGrowthPeriods";
 import PerformanceMetrics from "./PerformanceMetrics";
+import PortfolioProjection from "./PortfolioProjection";
 import MarketAndCash from "./MarketAndCash";
 import PortfolioTable from "./PortfolioTable";
 import AddStockModal from "./AddStockModal";
@@ -20,6 +22,10 @@ export default function Dashboard() {
   const [showWhatsNew, setShowWhatsNew] = useState(false);
   const { showWhatsNew: autoShowWhatsNew, dismissWhatsNew } = useWhatsNewAutoShow();
 
+  const handleImportComplete = useCallback(() => {
+    window.location.reload();
+  }, []);
+
   const whatsNewOpen = showWhatsNew || autoShowWhatsNew;
 
   return (
@@ -35,7 +41,9 @@ export default function Dashboard() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
         <PortfolioSummary />
+        <PortfolioGrowthPeriods />
         <PerformanceMetrics />
+        <PortfolioProjection />
         <MarketAndCash />
         <PortfolioTable />
       </main>
@@ -55,6 +63,7 @@ export default function Dashboard() {
       <ImportPortfolioModal
         isOpen={showImport}
         onClose={() => setShowImport(false)}
+        onImportComplete={handleImportComplete}
       />
 
       <ResetPortfolioModal

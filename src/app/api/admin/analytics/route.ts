@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/guards";
 import { getAnalyticsSummary } from "@/lib/db";
+import { withMetrics } from "@/lib/with-metrics";
 
-export async function GET(req: NextRequest) {
+export const GET = withMetrics("/api/admin/analytics", async (req: NextRequest) => {
   const { error } = await requireAdmin(req);
   if (error) return error;
 
@@ -11,4 +12,4 @@ export async function GET(req: NextRequest) {
 
   const summary = await getAnalyticsSummary(days);
   return NextResponse.json(summary);
-}
+});

@@ -1,17 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/guards";
-import { deleteUser, findUserById, listUsers, updateUserPassword, updateUserRole } from "@/lib/db";
-import type { UserRole } from "@/lib/db";
+import { deleteUser, findUserById, listUsers, updateUserPassword, updateUserRole, updateUserSubscription } from "@/lib/db";
+import type { UserRole, UserPlan } from "@/lib/db";
 import { hashPassword } from "@/lib/auth/password";
+import { withMetrics } from "@/lib/with-metrics";
 
-export async function GET(req: NextRequest) {
+export const GET = withMetrics("/api/admin/users", async (req: NextRequest) => {
   const { error } = await requireAdmin(req);
   if (error) return error;
 
   return NextResponse.json({ users: await listUsers() });
-}
+});
 
-export async function POST(req: NextRequest) {
+export const POST = withMetrics("/api/admin/users", async (req: NextRequest) => {
   const { error } = await requireAdmin(req);
   if (error) return error;
 
@@ -21,6 +22,7 @@ export async function POST(req: NextRequest) {
       newPassword?: string;
       action?: string;
       role?: UserRole;
+      plan?: UserPlan;
     };
 
     if (!body.userId) {
@@ -43,6 +45,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true });
     }
 
+    if (body.action === "setPlan") {
+      if (!body.plan || !["free", "pro"].includes(body.plan)) {
+        return NextResponse.json({ error: "Valid plan (free|pro) is required." }, { status: 400 });
+      }
+      const planExpiresAt = body.plan === "pro"
+        ? new Date(Date.now() + 365 * 86400000).toISOString()
+        : "";
+      await updateUserSubscription(user.id, { plan: body.plan, planExpiresAt });
+      return NextResponse.json({ ok: true });
+    }
+
     if (!body.newPassword) {
       return NextResponse.json({ error: "newPassword is required." }, { status: 400 });
     }
@@ -56,9 +69,9 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
-}
+});
 
-export async function DELETE(req: NextRequest) {
+export const DELETE = withMetrics("/api/admin/users", async (req: NextRequest) => {
   const { error } = await requireAdmin(req);
   if (error) return error;
 
@@ -77,4 +90,4 @@ export async function DELETE(req: NextRequest) {
 
   await deleteUser(userId);
   return NextResponse.json({ ok: true });
-}
+});

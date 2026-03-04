@@ -1,5 +1,10 @@
+import { NextRequest } from "next/server";
 import { getProviderFromRequest } from "@/lib/api-providers";
 import { jsonWithCallCount } from "@/lib/api-providers/response";
+import { requireFeatureAccess, requireRateLimit } from "@/lib/auth/guards";
+import { recordAvUsageAsync } from "@/lib/rate-limit";
+import { withMetrics } from "@/lib/with-metrics";
+import { waitUntil } from "@vercel/functions";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +14,10 @@ const VALID_FUNCTIONS = new Set([
   "RETAIL_SALES", "DURABLES", "UNEMPLOYMENT", "NONFARM_PAYROLL",
 ]);
 
-export async function GET(request: Request) {
+export const GET = withMetrics("/api/economic-indicators", async (request: NextRequest) => {
+  const { error } = await requireFeatureAccess(request, "economic-indicators");
+  if (error) return error;
+
   const { searchParams } = new URL(request.url);
   const func = searchParams.get("func");
 
@@ -36,6 +44,10 @@ export async function GET(request: Request) {
     );
   }
 
+  const rl = await requireRateLimit(request, "alphavantage");
+  if (rl.error) return rl.error;
+  const rateLimitUserId = rl.session?.userId ?? null;
+
   const interval = searchParams.get("interval") || undefined;
   const maturity = searchParams.get("maturity") || undefined;
 
@@ -53,5 +65,9 @@ export async function GET(request: Request) {
       err instanceof Error ? err.message : err
     );
     return jsonWithCallCount(provider, { error: "Failed to fetch data" }, { status: 500 });
+  } finally {
+    if (rateLimitUserId && provider.callCount) {
+      waitUntil(recordAvUsageAsync(rateLimitUserId, provider.callCount));
+    }
   }
-}
+});

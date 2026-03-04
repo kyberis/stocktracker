@@ -1,0 +1,39 @@
+---
+description: Keep the public landing page updated when adding significant new features
+globs: src/app/landing/page.tsx
+alwaysApply: true
+---
+
+# Landing Page Maintenance
+
+When adding a **new user-facing feature** (type `"feature"` in release notes), evaluate whether it should appear on the landing page at `src/app/landing/page.tsx`.
+
+## When to Update
+
+Update the landing page when the new feature:
+
+- Is a top-level capability visible to customers (e.g. new dashboard section, new tool, new data source)
+- Strengthens the Free-to-Pro value proposition
+- Would be compelling to investors or potential users on first impression
+
+Do **not** update for internal improvements, minor fixes, or backend-only changes.
+
+## What to Update
+
+1. **FEATURES array** — add or update entries in the `FEATURES` constant with `title`, `description`, `screenshot`, and optional `badge` ("Pro").
+2. **Feature card grid** — if the feature deserves a quick summary card (6-card grid below the main features), add or replace a card.
+3. **Pricing tier lists** — if the feature changes what Free or Pro includes, update the `PRICING` tiers.
+4. **Screenshot** — take a new screenshot with `browser_take_screenshot` and save it to `public/screenshots/`. Use `1280x800` resolution.
+
+## Screenshot Conventions
+
+- Save to `public/screenshots/<feature-slug>.png`
+- Use the dark theme for consistency
+- Reference via `/screenshots/<feature-slug>.png` in the `FEATURES` array
+
+## Quality Checklist
+
+- [ ] Feature title and description are clear and benefit-oriented
+- [ ] Screenshot is high-quality and shows the feature in context
+- [ ] Pro features include the `badge: "Pro"` property
+- [ ] Pricing lists stay accurate with current tier structure
