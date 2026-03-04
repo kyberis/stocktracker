@@ -6,6 +6,11 @@
  *   Variación (currency), Variación (amount), Saldo (currency), Saldo (amount), ID Orden
  */
 
+export interface DegiroCashBalance {
+  currency: string;
+  amount: number;
+}
+
 export interface DegiroTransaction {
   date: string;            // YYYY-MM-DD
   type: "buy" | "sell" | "dividend" | "fee";
@@ -287,6 +292,34 @@ export function parseDegiroCSV(csv: string, isinToTicker: Record<string, string>
   // Sort by date descending
   transactions.sort((a, b) => b.date.localeCompare(a.date));
   return transactions;
+}
+
+/**
+ * Extract the latest cash balance per currency from the Saldo columns.
+ * The CSV is sorted newest-first so the first row for each currency is the current balance.
+ */
+export function parseDegiroCashBalances(csv: string): DegiroCashBalance[] {
+  const lines = csv.split("\n").filter((l) => l.trim());
+  if (lines.length < 2) return [];
+
+  const seen = new Set<string>();
+  const balances: DegiroCashBalance[] = [];
+
+  for (let i = 1; i < lines.length; i++) {
+    const cols = parseCSVLine(lines[i]);
+    const currency = cols[9]?.trim() || "";
+    const amountRaw = cols[10]?.trim() || "";
+
+    if (!currency || seen.has(currency)) continue;
+    seen.add(currency);
+
+    const amount = parseEuropeanNumber(amountRaw);
+    if (amount > 0) {
+      balances.push({ currency, amount });
+    }
+  }
+
+  return balances;
 }
 
 /**

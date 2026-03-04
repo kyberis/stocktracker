@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { listHoldings, addTransaction, trackEvent } from "@/lib/db";
+import { listHoldings, addTransaction, trackEvent, listCashEntries, addCashEntry, removeCashEntry } from "@/lib/db";
 import { withMetrics } from "@/lib/with-metrics";
 import { portfolioImportsTotal } from "@/lib/metrics";
-import { parseDegiroCSV, buildIsinMap, type DegiroTransaction } from "@/lib/degiro-parser";
+import { parseDegiroCSV, parseDegiroCashBalances, buildIsinMap, type DegiroTransaction } from "@/lib/degiro-parser";
 import { parseSimpleCSV } from "@/lib/simple-csv-parser";
+import { YahooProvider } from "@/lib/api-providers/yahoo";
 
 const KNOWN_ISINS: Record<string, string> = {
   "CA0641491075": "BNS",
@@ -94,6 +95,7 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
     const parsed = parseDegiroCSV(csv, isinMap);
 
     if (action === "parse") {
+      const cashBalances = parseDegiroCashBalances(csv);
       const summary = {
         total: parsed.length,
         buys: parsed.filter((t) => t.type === "buy").length,
@@ -101,6 +103,7 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
         dividends: parsed.filter((t) => t.type === "dividend").length,
         fees: parsed.filter((t) => t.type === "fee").length,
         unmapped: parsed.filter((t) => !t.ticker && t.isin).map((t) => t.isin).filter((v, i, a) => a.indexOf(v) === i),
+        cashBalances,
       };
       return NextResponse.json({ transactions: parsed, summary });
     }
@@ -133,9 +136,73 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
         });
         imported++;
       }
+      // Extract and save cash balances from the Saldo columns
+      let cashImported = 0;
+      const cashBalances = parseDegiroCashBalances(csv);
+      if (cashBalances.length > 0) {
+        const existingCash = await listCashEntries(session.userId);
+        for (const entry of existingCash) {
+          if (entry.name.startsWith("DEGIRO")) {
+            await removeCashEntry(session.userId, entry.id);
+          }
+        }
+
+        const yahoo = new YahooProvider();
+        for (const balance of cashBalances) {
+          let amountEUR = balance.amount;
+          if (balance.currency !== "EUR") {
+            try {
+              const rate = await yahoo.getExchangeRate(balance.currency, "EUR");
+              if (rate > 0) amountEUR = +(balance.amount * rate).toFixed(2);
+            } catch {
+              // keep original amount if FX conversion fails
+            }
+          }
+          await addCashEntry(session.userId, {
+            name: `DEGIRO – ${balance.currency}`,
+            amountEUR,
+          });
+          cashImported++;
+        }
+      }
+
       trackEvent(session.userId, "portfolio_import", { broker: "degiro", count: String(imported) });
       portfolioImportsTotal.inc({ source: "broker", status: "success" });
-      return NextResponse.json({ imported });
+      return NextResponse.json({ imported, cashImported });
+    }
+
+    if (action === "import-cash") {
+      const cashBalances = parseDegiroCashBalances(csv);
+      if (cashBalances.length === 0) {
+        return NextResponse.json({ cashImported: 0 });
+      }
+
+      const existingCash = await listCashEntries(session.userId);
+      for (const entry of existingCash) {
+        if (entry.name.startsWith("DEGIRO")) {
+          await removeCashEntry(session.userId, entry.id);
+        }
+      }
+
+      const yahoo = new YahooProvider();
+      let cashImported = 0;
+      for (const balance of cashBalances) {
+        let amountEUR = balance.amount;
+        if (balance.currency !== "EUR") {
+          try {
+            const rate = await yahoo.getExchangeRate(balance.currency, "EUR");
+            if (rate > 0) amountEUR = +(balance.amount * rate).toFixed(2);
+          } catch {
+            // keep original amount if FX conversion fails
+          }
+        }
+        await addCashEntry(session.userId, {
+          name: `DEGIRO – ${balance.currency}`,
+          amountEUR,
+        });
+        cashImported++;
+      }
+      return NextResponse.json({ cashImported });
     }
   }
 

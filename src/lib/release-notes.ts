@@ -14,9 +14,35 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "0.17.3";
+export const CURRENT_VERSION = "0.17.5";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "0.17.5",
+    date: "2026-03-04",
+    title: "Import cash balances from DEGIRO CSV",
+    titleEs: "Importar saldos de efectivo desde CSV de DEGIRO",
+    changes: [
+      {
+        type: "feature",
+        text: "DEGIRO imports now automatically detect remaining cash balances per currency and add them to the Cash section, with FX conversion to EUR",
+        textEs: "Las importaciones de DEGIRO ahora detectan automáticamente los saldos de efectivo por moneda y los añaden a la sección de Efectivo, con conversión FX a EUR",
+      },
+    ],
+  },
+  {
+    version: "0.17.4",
+    date: "2026-03-04",
+    title: "External Services quick links in Admin",
+    titleEs: "Enlaces rápidos a servicios externos en Admin",
+    changes: [
+      {
+        type: "feature",
+        text: "Added External Services card in Admin Settings with quick links to Stripe, Grafana, Upstash Redis, Vercel, Turso, Alpha Vantage, and OpenAI dashboards",
+        textEs: "Añadida tarjeta de Servicios Externos en Configuración de Admin con enlaces rápidos a los paneles de Stripe, Grafana, Upstash Redis, Vercel, Turso, Alpha Vantage y OpenAI",
+      },
+    ],
+  },
   {
     version: "0.17.3",
     date: "2026-03-04",

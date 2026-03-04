@@ -33,6 +33,11 @@ interface ExtractedTransaction {
   currency: string;
 }
 
+interface CashBalance {
+  currency: string;
+  amount: number;
+}
+
 type Step = "upload" | "extracting" | "preview" | "importing" | "done" | "error";
 type PreviewTab = "holdings" | "transactions";
 
@@ -58,6 +63,8 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
   const [isDragOver, setIsDragOver] = useState(false);
   const [isImageImport, setIsImageImport] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
+  const [cashBalances, setCashBalances] = useState<CashBalance[]>([]);
+  const rawCsvRef = useRef<string>("");
   const fileRef = useRef<HTMLInputElement>(null);
 
   const reset = () => {
@@ -73,6 +80,8 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
     setIsDragOver(false);
     setIsImageImport(false);
     setPreview(null);
+    setCashBalances([]);
+    rawCsvRef.current = "";
   };
 
   const handleClose = () => {
@@ -101,6 +110,7 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
 
       if (isCsv) {
         const csv = await file.text();
+        rawCsvRef.current = csv;
         const parseForm = new FormData();
         parseForm.append("action", "parse");
         parseForm.append("broker", csvFormat);
@@ -134,6 +144,11 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
           setStep("error");
           return;
         }
+
+        const parsedCash: CashBalance[] = Array.isArray(data.summary?.cashBalances)
+          ? data.summary.cashBalances.filter((c: CashBalance) => c.currency && c.amount > 0)
+          : [];
+        setCashBalances(parsedCash);
 
         setHoldings([]);
         setTransactions(parsedTransactions.map((tx: Record<string, unknown>) => ({
@@ -274,6 +289,27 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
         errorCount++;
       }
       setImportProgress({ current: txCount + errorCount, total, errors: errorCount });
+    }
+
+    // Import cash balances for DEGIRO imports
+    let cashCount = 0;
+    if (csvFormat === "degiro" && cashBalances.length > 0 && rawCsvRef.current) {
+      try {
+        const cashForm = new FormData();
+        cashForm.append("action", "import-cash");
+        cashForm.append("broker", "degiro");
+        cashForm.append("csv", rawCsvRef.current);
+        const cashRes = await fetch("/api/transactions/import-broker", {
+          method: "POST",
+          body: cashForm,
+        });
+        if (cashRes.ok) {
+          const cashData = await cashRes.json();
+          cashCount = cashData.cashImported || 0;
+        }
+      } catch {
+        // cash import failure is non-blocking
+      }
     }
 
     setImportedCount(hCount);
@@ -547,6 +583,24 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
                         ))}
                       </tbody>
                     </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Cash balances from DEGIRO */}
+              {cashBalances.length > 0 && (
+                <div className="flex items-center gap-2 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 px-3 py-2.5">
+                  <svg className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
+                  </svg>
+                  <div className="text-xs text-emerald-700 dark:text-emerald-300">
+                    <span className="font-medium">{t("cash")}:</span>{" "}
+                    {cashBalances.map((c) =>
+                      `${c.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${c.currency}`
+                    ).join(", ")}
+                    <span className="text-emerald-600/70 dark:text-emerald-400/70 ml-1">
+                      ({t("importCashWillBeAdded")})
+                    </span>
                   </div>
                 </div>
               )}
