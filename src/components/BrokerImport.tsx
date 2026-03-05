@@ -230,6 +230,7 @@ export default function BrokerImport() {
           body: JSON.stringify({
             holdingId: "",
             ticker: tx.ticker,
+            name: tx.name || "",
             type: tx.type,
             date: tx.date,
             shares: tx.shares,

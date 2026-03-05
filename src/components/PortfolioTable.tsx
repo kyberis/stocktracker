@@ -102,24 +102,14 @@ export default function PortfolioTable() {
         />
       </div>
 
-      <div className="hidden sm:grid grid-cols-12 gap-2 px-4 py-2.5 bg-gray-50 dark:bg-slate-800/50 border-b border-gray-100 dark:border-slate-700">
-        <div className="col-span-3">
-          {renderSortButton("name", t("stock"))}
+      <div className="hidden sm:flex sm:items-center sm:justify-between px-4 py-2.5 bg-gray-50 dark:bg-slate-800/50 border-b border-gray-100 dark:border-slate-700">
+        <div className="flex items-center gap-3">
+          {renderSortButton("name", t("priceTimesCount"))}
         </div>
-        <div className="col-span-1 text-right">
-          {renderSortButton("shares", t("shares"))}
-        </div>
-        <div className="col-span-2 text-right">
-          <span className="text-xs text-gray-400 dark:text-slate-500">{t("purchasePrice")}</span>
-        </div>
-        <div className="col-span-2 text-right">
-          <span className="text-xs text-gray-400 dark:text-slate-500">{t("currentPrice")}</span>
-        </div>
-        <div className="col-span-2 text-right">
+        <div className="flex items-center gap-3">
           {renderSortButton("value", t("value"))}
-        </div>
-        <div className="col-span-2 text-right">
-          {renderSortButton("gainLoss", t("returnPercent"))}
+          <span className="text-gray-300 dark:text-slate-600">·</span>
+          {renderSortButton("gainLoss", t("dayPlusMinus"))}
         </div>
       </div>
 

@@ -46,11 +46,11 @@ export default function Dashboard() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
         <PortfolioSummary />
+        <PortfolioTable />
         <PortfolioGrowthPeriods />
         <PerformanceMetrics />
-        <PortfolioProjection />
         <MarketAndCash />
-        <PortfolioTable />
+        <PortfolioProjection />
       </main>
 
       {showAddModal && (

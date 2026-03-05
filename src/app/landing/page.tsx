@@ -48,7 +48,7 @@ const FEATURES: Feature[] = [
   {
     title: "Real-Time Portfolio Dashboard",
     description:
-      "See your total value, cost basis, gains, and daily performance at a glance. Multi-exchange support for NYSE, XETRA, LSE, MAD, and more.",
+      "Clean, broker-style portfolio view — see your total value and daily change at a glance, with per-stock EUR values, exchange info, and price breakdowns. Multi-exchange support for NYSE, XETRA, LSE, MAD, and more.",
     screenshot: "/screenshots/dashboard-overview.png",
   },
   {

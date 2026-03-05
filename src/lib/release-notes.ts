@@ -14,9 +14,27 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "0.22.0";
+export const CURRENT_VERSION = "0.23.0";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "0.23.0",
+    date: "2026-03-05",
+    title: "Simplified Portfolio View",
+    titleEs: "Vista de Cartera Simplificada",
+    changes: [
+      {
+        type: "feature",
+        text: "Simplified portfolio view inspired by DeGiro — see total value, per-stock values in EUR, and daily changes at a glance",
+        textEs: "Vista de cartera simplificada inspirada en DeGiro — consulta el valor total, valor por acción en EUR y cambios diarios de un vistazo",
+      },
+      {
+        type: "improvement",
+        text: "Compact portfolio summary header replaces the 5-card grid for a cleaner dashboard",
+        textEs: "Cabecera compacta del resumen del portafolio reemplaza la cuadrícula de 5 tarjetas para un panel más limpio",
+      },
+    ],
+  },
   {
     version: "0.22.0",
     date: "2026-03-05",

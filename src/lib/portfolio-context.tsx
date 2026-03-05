@@ -394,6 +394,24 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
     }
   }, [cashEntries]);
 
+  const enrichedNamesRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    const enrichable = holdings.filter(
+      (h) =>
+        !enrichedNamesRef.current.has(h.id) &&
+        h.name === h.ticker &&
+        quotes[h.ticker]?.shortName &&
+        quotes[h.ticker].shortName !== h.ticker
+    );
+    if (enrichable.length === 0) return;
+
+    for (const h of enrichable) {
+      enrichedNamesRef.current.add(h.id);
+      updateHolding(h.id, { name: quotes[h.ticker].shortName });
+    }
+  }, [quotes, holdings, updateHolding]);
+
   const value = useMemo(
     () => ({
       holdings,

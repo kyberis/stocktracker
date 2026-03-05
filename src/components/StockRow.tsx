@@ -211,10 +211,19 @@ function StockRow({ holding }: StockRowProps) {
   const gainLossPercent = totalCost > 0 ? (gainLoss / totalCost) * 100 : 0;
 
   const dayChangePercent = quote?.regularMarketChangePercent ?? 0;
+  const dayChangeAmountEUR = hasQuote && quote
+    ? convertToEUR(holding.shares * (quote.regularMarketChange ?? 0), quoteCurrency, exchangeRates)
+    : 0;
+  const totalValueEUR = hasQuote
+    ? convertToEUR(totalValue, holding.displayCurrency, exchangeRates)
+    : holding.valueInEUR;
 
   const isPositive = gainLoss >= 0;
   const gainColor = isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400";
   const gainBg = isPositive ? "bg-emerald-50 dark:bg-emerald-500/10" : "bg-red-50 dark:bg-red-500/10";
+
+  const dayIsPositive = dayChangeAmountEUR >= 0;
+  const dayColor = dayIsPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400";
 
   const cur = holding.displayCurrency;
 
@@ -386,41 +395,15 @@ function StockRow({ holding }: StockRowProps) {
   return (
     <div className="border-b border-gray-100 dark:border-slate-700 last:border-b-0">
       <div
-        className="grid grid-cols-12 gap-2 px-4 py-3 items-center hover:bg-gray-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors"
+        className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors"
         onClick={() => setExpanded(!expanded)}
       >
-        <div className="col-span-4 sm:col-span-3">
+        <div className="min-w-0 flex-1 mr-4">
           <div className="flex items-center gap-1.5">
             <p className="font-medium text-gray-900 dark:text-white text-sm truncate">{holding.name}</p>
-            <span className="flex-shrink-0 text-[9px] font-semibold px-1 py-px rounded bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300 border border-gray-200 dark:border-slate-600">
-              {(holding.assetType ?? "stock").toUpperCase()}
-            </span>
-            {isFallback ? (
-              <span
-                className="flex-shrink-0 text-[9px] font-semibold px-1 py-px rounded bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20"
-                title={t("yahooFallback")}
-              >
-                Yahoo
-              </span>
-            ) : isAvSource ? (
-              <span
-                className="flex-shrink-0 text-[9px] font-semibold px-1 py-px rounded bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20"
-                title={t("avSource")}
-              >
-                AV
-              </span>
-            ) : null}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                refreshSingleQuote(holding.ticker);
-              }}
-              disabled={isRefreshing}
-              className="flex-shrink-0 p-0.5 rounded text-gray-400 hover:text-gray-700 dark:text-slate-500 dark:hover:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed"
-              title={t("refreshOne")}
-            >
+            {isRefreshing && (
               <svg
-                className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin" : ""}`}
+                className="w-3.5 h-3.5 animate-spin flex-shrink-0 text-gray-400 dark:text-slate-500"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -432,88 +415,23 @@ function StockRow({ holding }: StockRowProps) {
                   d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                 />
               </svg>
-            </button>
+            )}
           </div>
-          <p className="text-xs text-gray-400 dark:text-slate-500 flex items-center gap-1.5 flex-wrap">
-            <span>{holding.ticker} · {holding.exchange}</span>
-            {marketStatus && (
-              <span
-                className={`inline-flex items-center gap-1 text-[9px] font-semibold px-1.5 py-px rounded-full ${
-                  marketStatus.isOpen
-                    ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20"
-                    : "bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-slate-400 border border-gray-200 dark:border-slate-600"
-                }`}
-                title={marketStatus.isOpen ? t("marketOpenTooltip") : t("marketClosedTooltip")}
-              >
-                <span className={`inline-block w-1.5 h-1.5 rounded-full ${
-                  marketStatus.isOpen ? "bg-emerald-500 animate-pulse" : "bg-gray-400 dark:bg-slate-500"
-                }`} />
-                {marketStatus.isOpen ? t("marketOpen") : t("marketClosed")}
-                {marketStatus.isOpen && marketStatus.nextEvent && (
-                  <span className="font-normal opacity-75">· {marketStatus.nextEvent}</span>
-                )}
-              </span>
-            )}
-            {lastFetchedAt && (
-              <span>· {t("lastUpdated")}: {new Date(lastFetchedAt).toLocaleTimeString()}</span>
-            )}
+          <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5">
+            {holding.exchange} | {hasQuote ? formatCurrency(currentPriceInDisplay, cur) : formatCurrency(holding.purchasePrice, cur)} × {holding.shares}
           </p>
         </div>
-        <div className="col-span-2 sm:col-span-1 text-right">
-          <p className="text-sm text-gray-700 dark:text-slate-200">{holding.shares}</p>
-        </div>
-        <div className="col-span-3 sm:col-span-2 text-right hidden sm:block">
-          <p className="text-sm text-gray-600 dark:text-slate-300">
-            {formatCurrency(holding.purchasePrice, cur)}
+        <div className="text-right flex-shrink-0">
+          <p className="text-sm font-semibold text-gray-900 dark:text-white">
+            {formatCurrency(totalValueEUR, "EUR")}
           </p>
-        </div>
-        <div className="col-span-3 sm:col-span-2 text-right">
           {hasQuote ? (
-            <div>
-              <p className="text-sm text-gray-900 dark:text-white font-medium">
-                {formatCurrency(currentPriceInDisplay, cur)}
-              </p>
-              <p className={`text-xs ${dayChangePercent >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
-                {formatPercent(dayChangePercent)}
-              </p>
-              {marketStatus && (
-                <p className="text-[9px] text-gray-400 dark:text-slate-500 mt-0.5 hidden sm:block">
-                  {marketStatus.isOpen ? t("delayLabel") : t("prevCloseLabel")}
-                </p>
-              )}
-            </div>
+            <p className={`text-xs mt-0.5 ${dayColor}`}>
+              {dayIsPositive ? "+" : ""}{formatCurrency(dayChangeAmountEUR, "EUR")} ({formatPercent(dayChangePercent)})
+            </p>
           ) : (
-            <div className="flex items-center justify-end gap-1.5">
-              <p className="text-sm text-gray-400 dark:text-slate-500">--</p>
-              {!isCashHolding && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleReportMissingPrice();
-                  }}
-                  disabled={reportSent || reportSending}
-                  className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full transition-colors ${
-                    reportSent
-                      ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20"
-                      : "bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20 hover:bg-amber-100 dark:hover:bg-amber-500/20"
-                  } disabled:opacity-60`}
-                  title={t("reportMissingPriceTooltip")}
-                >
-                  {reportSending ? "..." : reportSent ? t("reportMissingPriceSent") : t("reportMissingPrice")}
-                </button>
-              )}
-            </div>
+            <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5">--</p>
           )}
-        </div>
-        <div className="col-span-3 sm:col-span-2 text-right">
-          <p className="text-sm text-gray-900 dark:text-white">
-            {formatCurrency(totalValue, cur)}
-          </p>
-        </div>
-        <div className="col-span-12 sm:col-span-2 text-right">
-          <span className={`inline-block px-2.5 py-0.5 rounded-full text-sm font-semibold ${gainBg} ${gainColor}`}>
-            {formatPercent(gainLossPercent)}
-          </span>
         </div>
       </div>
 
