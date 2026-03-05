@@ -958,6 +958,27 @@ function SettingsTab() {
         endpoint="/api/admin/resend-key"
         placeholder="Enter Resend API key (re_...)"
       />
+
+      {/* Developer Tools */}
+      <div className="card p-6">
+        <div className="flex items-start justify-between">
+          <div>
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Developer Tools</h3>
+            <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">
+              Architecture reference for every feature domain — components, API routes, libraries, patterns, and tech stack.
+            </p>
+          </div>
+          <a
+            href="/developer"
+            className="btn-secondary text-xs px-4 py-2 inline-flex items-center gap-1.5 shrink-0"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+            </svg>
+            Open Developer Page
+          </a>
+        </div>
+      </div>
     </div>
   );
 }

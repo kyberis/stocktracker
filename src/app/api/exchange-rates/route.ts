@@ -5,7 +5,7 @@ import { requireRateLimit } from "@/lib/auth/guards";
 import { getGlobalAlphaVantageApiKey } from "@/lib/db";
 import { recordAvUsageAsync } from "@/lib/rate-limit";
 import { withMetrics } from "@/lib/with-metrics";
-import { waitUntil } from "@vercel/functions";
+import { deferTask } from "@/lib/task-runner";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -95,7 +95,7 @@ export const GET = withMetrics("/api/exchange-rates", async (request: NextReques
   await Promise.all(tasks);
 
   if (rateLimitUserId && av?.callCount) {
-    waitUntil(recordAvUsageAsync(rateLimitUserId, av.callCount));
+    deferTask(() => recordAvUsageAsync(rateLimitUserId, av.callCount!));
   }
 
   return Response.json(results, {

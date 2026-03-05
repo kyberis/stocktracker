@@ -172,7 +172,9 @@ export const POST = withMetrics("/api/import-portfolio", async (req: NextRequest
     }
 
     const data = await openaiRes.json();
-    const raw = data.choices?.[0]?.message?.content || "{}";
+    let raw = data.choices?.[0]?.message?.content || "{}";
+
+    raw = raw.replace(/```(?:json)?\s*/gi, "").replace(/```\s*/g, "");
 
     const objMatch = raw.match(/\{[\s\S]*\}/);
     let parsed: Record<string, unknown> = {};
@@ -194,15 +196,20 @@ export const POST = withMetrics("/api/import-portfolio", async (req: NextRequest
     const rawHoldings = Array.isArray(parsed.holdings) ? parsed.holdings : [];
     const rawTxs = Array.isArray(parsed.transactions) ? parsed.transactions : [];
 
-    const holdings = rawHoldings.map((h: Record<string, unknown>) => ({
-      name: String(h.name || "Unknown"),
-      ticker: String(h.ticker || "").toUpperCase(),
-      shares: Number(h.shares) || 0,
-      purchasePrice: Number(h.purchasePrice) || 0,
-      displayCurrency: String(h.displayCurrency || "USD").toUpperCase(),
-      exchange: String(h.exchange || "").toUpperCase(),
-      assetType: h.assetType === "etf" ? "etf" : "stock",
-    }));
+    const TICKER_RE = /^[A-Z0-9]{1,12}([.-][A-Z0-9]{1,6})?$/;
+    const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+    const holdings = rawHoldings
+      .map((h: Record<string, unknown>) => ({
+        name: String(h.name || "Unknown"),
+        ticker: String(h.ticker || "").toUpperCase(),
+        shares: Number(h.shares) || 0,
+        purchasePrice: Number(h.purchasePrice) || 0,
+        displayCurrency: String(h.displayCurrency || "USD").toUpperCase(),
+        exchange: String(h.exchange || "").toUpperCase(),
+        assetType: h.assetType === "etf" ? "etf" : "stock",
+      }))
+      .filter((h) => h.ticker && TICKER_RE.test(h.ticker));
 
     const validTypes = new Set(["buy", "sell", "dividend", "fee"]);
     const transactions = rawTxs
@@ -217,11 +224,36 @@ export const POST = withMetrics("/api/import-portfolio", async (req: NextRequest
         totalAmount: Math.abs(Number(t.totalAmount) || 0),
         fees: Math.abs(Number(t.fees) || 0),
         currency: String(t.currency || "USD").toUpperCase(),
-      }));
+      }))
+      .filter((t) => TICKER_RE.test(t.ticker) && DATE_RE.test(t.date));
+
+    const hadInput = rawHoldings.length > 0 || rawTxs.length > 0;
+    const droppedHoldings = rawHoldings.length - holdings.length;
+    const droppedTxs = rawTxs.length - transactions.length;
+
+    if (holdings.length === 0 && transactions.length === 0) {
+      portfolioImportsTotal.inc({ source: "csv", status: "empty" });
+      return NextResponse.json({
+        holdings,
+        transactions,
+        warning: hadInput
+          ? "AI extracted data but all entries had invalid tickers or dates and were filtered out. Please review your source file."
+          : "No holdings or transactions could be extracted from the provided data.",
+      });
+    }
 
     trackEvent(session.userId, "portfolio_import", { method: contentType.includes("multipart") ? "file" : "csv" });
     portfolioImportsTotal.inc({ source: "csv", status: "success" });
-    return NextResponse.json({ holdings, transactions });
+
+    const warnings: string[] = [];
+    if (droppedHoldings > 0) warnings.push(`${droppedHoldings} holding(s) removed due to invalid ticker format.`);
+    if (droppedTxs > 0) warnings.push(`${droppedTxs} transaction(s) removed due to invalid ticker or date format.`);
+
+    return NextResponse.json({
+      holdings,
+      transactions,
+      ...(warnings.length > 0 ? { warning: warnings.join(" ") } : {}),
+    });
   } catch (err) {
     console.error("Import extraction failed:", err instanceof Error ? err.message : err);
     portfolioImportsTotal.inc({ source: "csv", status: "error" });

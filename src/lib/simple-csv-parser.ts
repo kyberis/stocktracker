@@ -99,6 +99,7 @@ export function parseSimpleCSV(csv: string): DegiroTransaction[] {
 
     const totalAmount = rawType === "fee" ? price : shares * price;
 
+    const absTotalAmount = Math.abs(totalAmount);
     transactions.push({
       date,
       type: rawType,
@@ -107,11 +108,12 @@ export function parseSimpleCSV(csv: string): DegiroTransaction[] {
       isin: "",
       shares: rawType === "fee" ? 0 : shares,
       pricePerShare: price,
-      totalAmount: Math.abs(totalAmount),
+      totalAmount: absTotalAmount,
       fees: 0,
       taxes: 0,
       currency,
       orderId: "",
+      sourceRef: `simple|${date}|${rawType}|${ticker}|${absTotalAmount}`,
     });
   }
 

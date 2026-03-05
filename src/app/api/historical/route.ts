@@ -6,7 +6,7 @@ import type { TimePeriod } from "@/lib/api-providers/types";
 import { requireRateLimit } from "@/lib/auth/guards";
 import { recordAvUsageAsync } from "@/lib/rate-limit";
 import { withMetrics } from "@/lib/with-metrics";
-import { waitUntil } from "@vercel/functions";
+import { deferTask } from "@/lib/task-runner";
 
 export const dynamic = "force-dynamic";
 
@@ -82,7 +82,7 @@ export const GET = withMetrics("/api/historical", async (request: NextRequest) =
     return jsonWithCallCount(provider, { error: "Failed to fetch historical data" }, { status: 500 });
   } finally {
     if (rateLimitUserId && provider.callCount) {
-      waitUntil(recordAvUsageAsync(rateLimitUserId, provider.callCount));
+      deferTask(() => recordAvUsageAsync(rateLimitUserId, provider.callCount!));
     }
   }
 });

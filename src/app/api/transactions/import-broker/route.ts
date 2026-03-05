@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { listHoldings, addTransaction, trackEvent, listCashEntries, addCashEntry, removeCashEntry } from "@/lib/db";
+import { listHoldings, addTransaction, trackEvent, listCashEntries, addCashEntry, removeCashEntry, listTransactionSourceRefs, rebuildHoldings } from "@/lib/db";
 import { withMetrics } from "@/lib/with-metrics";
 import { portfolioImportsTotal } from "@/lib/metrics";
 import { parseDegiroCSV, parseDegiroCashBalances, buildIsinMap, type DegiroTransaction } from "@/lib/degiro-parser";
 import { parseSimpleCSV } from "@/lib/simple-csv-parser";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
+import { enrichHoldingClassifications } from "@/lib/enrich-classifications";
+import { deferTask, submitJob, getJobStatus } from "@/lib/task-runner";
 
 const KNOWN_ISINS: Record<string, string> = {
   "CA0641491075": "BNS",
@@ -102,8 +104,10 @@ function inferExchangeFromTicker(ticker: string): string {
 }
 
 /** POST /api/transactions/import-broker
- *  - action=parse: parse CSV, return preview
- *  - action=import: actually save transactions
+ *  - action=parse:       parse CSV, return preview
+ *  - action=import:      start async import, return { jobId }
+ *  - action=status:      poll job progress
+ *  - action=import-cash: import cash balances only
  */
 export const POST = withMetrics("/api/transactions/import-broker", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
@@ -112,6 +116,15 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
   const formData = await req.formData();
   const action = formData.get("action") as string;
   const broker = formData.get("broker") as string;
+
+  /* ── Poll job status ── */
+  if (action === "status") {
+    const jobId = formData.get("jobId") as string;
+    if (!jobId) return NextResponse.json({ error: "Missing jobId" }, { status: 400 });
+    const status = getJobStatus(jobId);
+    if (!status) return NextResponse.json({ error: "Job not found" }, { status: 404 });
+    return NextResponse.json(status);
+  }
 
   if (broker === "degiro") {
     const file = formData.get("file") as File | null;
@@ -152,66 +165,83 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
     }
 
     if (action === "import") {
-      // Sort chronologically so buys precede sells for correct holding sync
-      const sorted = [...parsed].sort((a, b) => a.date.localeCompare(b.date));
-      let imported = 0;
-      for (const tx of sorted) {
-        const nameUp = tx.name.toUpperCase();
-        const assetType = (nameUp.includes("ETF") || nameUp.includes("UCITS")) ? "etf" : "stock";
-        await addTransaction(session.userId, {
-          holdingId: "",
-          ticker: tx.ticker,
-          name: tx.name,
-          exchange: inferExchangeFromTicker(tx.ticker),
-          isin: tx.isin,
-          assetType,
-          accountId: "",
-          type: tx.type,
-          date: tx.date,
-          shares: tx.shares,
-          pricePerShare: tx.pricePerShare,
-          totalAmount: tx.totalAmount,
-          fees: tx.fees,
-          taxes: tx.taxes,
-          currency: tx.currency,
-          displayCurrency: tx.currency,
-          notes: tx.name || "DEGIRO import",
-        });
-        imported++;
-      }
-      // Extract and save cash balances from the Saldo columns
-      let cashImported = 0;
-      const cashBalances = parseDegiroCashBalances(csv);
-      if (cashBalances.length > 0) {
-        const existingCash = await listCashEntries(session.userId);
-        for (const entry of existingCash) {
-          if (entry.name.startsWith("DEGIRO")) {
-            await removeCashEntry(session.userId, entry.id);
-          }
+      const jobId = crypto.randomUUID();
+      const userId = session.userId;
+
+      submitJob(jobId, async () => {
+        const existingRefs = await listTransactionSourceRefs(userId);
+        const toImport = parsed.filter((tx) => !existingRefs.has(tx.sourceRef));
+
+        const sorted = [...toImport].sort((a, b) => a.date.localeCompare(b.date));
+        let imported = 0;
+        for (const tx of sorted) {
+          const nameUp = tx.name.toUpperCase();
+          const assetType = (nameUp.includes("ETF") || nameUp.includes("UCITS")) ? "etf" : "stock";
+          await addTransaction(userId, {
+            holdingId: "",
+            ticker: tx.ticker,
+            name: tx.name,
+            exchange: inferExchangeFromTicker(tx.ticker),
+            isin: tx.isin,
+            assetType,
+            accountId: "",
+            type: tx.type,
+            date: tx.date,
+            shares: tx.shares,
+            pricePerShare: tx.pricePerShare,
+            totalAmount: tx.totalAmount,
+            fees: tx.fees,
+            taxes: tx.taxes,
+            currency: tx.currency,
+            displayCurrency: tx.currency,
+            notes: tx.name || "DEGIRO import",
+            sourceRef: tx.sourceRef,
+          });
+          imported++;
         }
 
-        const yahoo = new YahooProvider();
-        for (const balance of cashBalances) {
-          let amountEUR = balance.amount;
-          if (balance.currency !== "EUR") {
-            try {
-              const rate = await yahoo.getExchangeRate(balance.currency, "EUR");
-              if (rate > 0) amountEUR = +(balance.amount * rate).toFixed(2);
-            } catch {
-              // keep original amount if FX conversion fails
+        if (imported > 0) {
+          await rebuildHoldings(userId);
+        }
+
+        let cashImported = 0;
+        const cashBalances = parseDegiroCashBalances(csv);
+        if (cashBalances.length > 0) {
+          const existingCash = await listCashEntries(userId);
+          for (const entry of existingCash) {
+            if (entry.name.startsWith("DEGIRO")) {
+              await removeCashEntry(userId, entry.id);
             }
           }
-          await addCashEntry(session.userId, {
-            name: `DEGIRO – ${balance.currency}`,
-            amountEUR,
-          });
-          cashImported++;
-        }
-      }
 
-      trackEvent(session.userId, "portfolio_import", { broker: "degiro", count: String(imported) });
-      portfolioImportsTotal.inc({ source: "broker", status: "success" });
-      return NextResponse.json({ imported, cashImported });
+          const yahoo = new YahooProvider();
+          for (const balance of cashBalances) {
+            let amountEUR = balance.amount;
+            if (balance.currency !== "EUR") {
+              try {
+                const rate = await yahoo.getExchangeRate(balance.currency, "EUR");
+                if (rate > 0) amountEUR = +(balance.amount * rate).toFixed(2);
+              } catch {
+                // keep original amount if FX conversion fails
+              }
+            }
+            await addCashEntry(userId, {
+              name: `DEGIRO – ${balance.currency}`,
+              amountEUR,
+            });
+            cashImported++;
+          }
+        }
+
+        trackEvent(userId, "portfolio_import", { broker: "degiro", count: String(imported) });
+        portfolioImportsTotal.inc({ source: "broker", status: "success" });
+
+        await enrichHoldingClassifications(userId).catch(() => {});
+
+        return { imported, cashImported };
+      });
+
+      return NextResponse.json({ jobId }, { status: 202 });
     }
 
     if (action === "import-cash") {
@@ -276,32 +306,51 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
     }
 
     if (action === "import") {
-      const sorted = [...parsed].sort((a, b) => a.date.localeCompare(b.date));
-      let imported = 0;
-      for (const tx of sorted) {
-        await addTransaction(session.userId, {
-          holdingId: "",
-          ticker: tx.ticker,
-          name: tx.name,
-          exchange: inferExchangeFromTicker(tx.ticker),
-          isin: "",
-          assetType: "stock",
-          accountId: "",
-          type: tx.type,
-          date: tx.date,
-          shares: tx.shares,
-          pricePerShare: tx.pricePerShare,
-          totalAmount: tx.totalAmount,
-          fees: tx.fees,
-          taxes: tx.taxes,
-          currency: tx.currency,
-          displayCurrency: tx.currency,
-          notes: "Simple CSV import",
-        });
-        imported++;
-      }
-      trackEvent(session.userId, "portfolio_import", { broker: "simple", count: String(imported) });
-      return NextResponse.json({ imported });
+      const jobId = crypto.randomUUID();
+      const userId = session.userId;
+
+      submitJob(jobId, async () => {
+        const existingRefs = await listTransactionSourceRefs(userId);
+        const toImport = parsed.filter((tx) => !existingRefs.has(tx.sourceRef));
+
+        const sorted = [...toImport].sort((a, b) => a.date.localeCompare(b.date));
+        let imported = 0;
+        for (const tx of sorted) {
+          await addTransaction(userId, {
+            holdingId: "",
+            ticker: tx.ticker,
+            name: tx.name,
+            exchange: inferExchangeFromTicker(tx.ticker),
+            isin: "",
+            assetType: "stock",
+            accountId: "",
+            type: tx.type,
+            date: tx.date,
+            shares: tx.shares,
+            pricePerShare: tx.pricePerShare,
+            totalAmount: tx.totalAmount,
+            fees: tx.fees,
+            taxes: tx.taxes,
+            currency: tx.currency,
+            displayCurrency: tx.currency,
+            notes: "Simple CSV import",
+            sourceRef: tx.sourceRef,
+          });
+          imported++;
+        }
+
+        if (imported > 0) {
+          await rebuildHoldings(userId);
+        }
+
+        trackEvent(userId, "portfolio_import", { broker: "simple", count: String(imported) });
+
+        await enrichHoldingClassifications(userId).catch(() => {});
+
+        return { imported };
+      });
+
+      return NextResponse.json({ jobId }, { status: 202 });
     }
   }
 

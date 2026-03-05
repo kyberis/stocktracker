@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { listTransactions, addTransaction, deleteTransaction } from "@/lib/db";
+import { listTransactions, addTransaction, deleteTransaction, rebuildHoldings } from "@/lib/db";
 import { withMetrics } from "@/lib/with-metrics";
 import { transactionsOpsTotal } from "@/lib/metrics";
 
@@ -40,6 +40,7 @@ export const DELETE = withMetrics("/api/transactions", async (req: NextRequest) 
 
   const deleted = await deleteTransaction(session.userId, id);
   if (!deleted) return NextResponse.json({ error: "Not found." }, { status: 404 });
+  await rebuildHoldings(session.userId);
   transactionsOpsTotal.inc({ operation: "delete" });
   return NextResponse.json({ ok: true });
 });

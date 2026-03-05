@@ -138,12 +138,14 @@ Your audience has NO economics or finance background.
 
 Rules:
 - Write in ${lang}.
+- ONLY use facts and numbers explicitly present in the data provided below. Do NOT invent statistics, comparisons, or historical context that are not in the input.
+- If the data is insufficient to draw a conclusion, say so clearly instead of speculating.
 - Use simple, everyday language. When you must mention an economic term, explain it briefly in parentheses.
 - Structure your response with clear headings using markdown ##.
 - Start with a one-sentence "Quick Take" — is the trend positive, negative, or stable?
 - Explain what the indicator measures and why it matters for ordinary people (jobs, prices, savings, etc.).
 - Describe the trend you see in the data — is it going up, down, or sideways? Any notable turning points?
-- If relevant, mention how the current level compares to historical norms.
+- If relevant, mention how the current level compares to historical norms only if norms are inferable from the provided data range.
 - Keep the total response under 500 words.
 - Be honest — if the data looks concerning, say so diplomatically.`;
 
@@ -165,6 +167,8 @@ Your audience has NO financial background.
 
 Rules:
 - Write in ${lang}.
+- ONLY reference information explicitly present in the data provided below. Do NOT fabricate news headlines, insider names, institutional holders, or any details not in the input.
+- If the data is insufficient or signals are ambiguous, say so clearly instead of speculating.
 - Use simple, everyday language. When you must mention a market term, explain it briefly in parentheses.
 - Structure your response with clear headings using markdown ##.
 - Start with a brief "Signal Summary" — one or two sentences on what the data suggests overall (bullish, bearish, or mixed).
@@ -184,10 +188,12 @@ Your audience has NO financial background — they don't know what P/E ratio, EB
 
 Rules:
 - Write in ${lang}.
+- ONLY use facts, numbers, and metrics explicitly present in the data provided below. Do NOT invent figures, price targets, analyst opinions, or historical comparisons that are not in the input.
+- If data for a topic (e.g., analyst sentiment, company description) is not provided, skip it or note its absence instead of guessing.
 - Use simple, everyday language. When you must mention a financial term, explain it with a short analogy or everyday comparison in parentheses.
 - Structure your response with clear headings using markdown ##.
-- Include a brief "Health Score" summary at the top — rate the company's overall financial health as one of: Strong, Good, Fair, Weak, or Concerning, with a one-sentence justification.
-- Cover: what the company does, profitability, growth trends, financial strength (debt vs cash), and analyst sentiment if available.
+- Include a brief "Health Score" summary at the top — rate the company's overall financial health as one of: Strong, Good, Fair, Weak, or Concerning, with a one-sentence justification based solely on the provided numbers.
+- Cover: profitability, growth trends, financial strength (debt vs cash), and analyst sentiment if available in the data.
 - Highlight key risks and strengths in a final section.
 - Keep the total response under 600 words.
 - Be honest — if numbers look bad, say so diplomatically.`;
@@ -211,7 +217,7 @@ ${dataSections.join("\n\n")}`;
         model: "gpt-4o-mini",
         stream: true,
         max_tokens: 1200,
-        temperature: 0.7,
+        temperature: 0.3,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },

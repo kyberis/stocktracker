@@ -130,6 +130,33 @@ export class YahooProvider implements StockDataProvider {
     }
   }
 
+  async getClassification(symbol: string): Promise<{ sector: string; region: string; assetClass: string } | null> {
+    const end = providerRequestDuration.startTimer({ provider: "yahoo", operation: "classification" });
+    let ok = false;
+    try {
+      const result = await yahooFinance.quoteSummary(symbol, { modules: ["assetProfile", "quoteType"] });
+      ok = true;
+      const profile = result.assetProfile;
+      const qt = result.quoteType;
+
+      const quoteType = qt?.quoteType ?? "";
+      let assetClass = "Equity";
+      if (quoteType === "ETF") assetClass = "ETF";
+      else if (quoteType === "MUTUALFUND") assetClass = "Fund";
+
+      return {
+        sector: profile?.sector ?? "",
+        region: profile?.country ?? "",
+        assetClass,
+      };
+    } catch {
+      return null;
+    } finally {
+      end();
+      providerRequestsTotal.inc({ provider: "yahoo", operation: "classification", status: ok ? "success" : "error" });
+    }
+  }
+
   async getExchangeRate(from: string, to: string): Promise<number> {
     const end = providerRequestDuration.startTimer({ provider: "yahoo", operation: "exchange_rate" });
     let ok = false;

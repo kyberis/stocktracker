@@ -64,6 +64,7 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
   const [isImageImport, setIsImageImport] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [cashBalances, setCashBalances] = useState<CashBalance[]>([]);
+  const [importWarning, setImportWarning] = useState("");
   const rawCsvRef = useRef<string>("");
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -81,6 +82,7 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
     setIsImageImport(false);
     setPreview(null);
     setCashBalances([]);
+    setImportWarning("");
     rawCsvRef.current = "";
   };
 
@@ -191,11 +193,12 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
       const tx = data.transactions || [];
 
       if (h.length === 0 && tx.length === 0) {
-        setErrorMsg(t("importNoData"));
+        setErrorMsg(data.warning || t("importNoData"));
         setStep("error");
         return;
       }
 
+      if (data.warning) setImportWarning(data.warning);
       setHoldings(h);
       setTransactions(tx);
       setPreviewTab(h.length > 0 ? "holdings" : "transactions");
@@ -458,6 +461,15 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
 
               {preview && (
                 <img src={preview} alt="Source" className="max-h-28 rounded-xl border border-gray-200 dark:border-slate-700" />
+              )}
+
+              {importWarning && (
+                <div className="flex items-start gap-2 rounded-lg bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 px-3 py-2">
+                  <svg className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                  </svg>
+                  <p className="text-xs text-amber-700 dark:text-amber-300">{importWarning}</p>
+                </div>
               )}
 
               {/* Tab toggles */}

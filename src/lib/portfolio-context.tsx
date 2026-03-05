@@ -29,6 +29,7 @@ interface PortfolioContextType {
   addCashEntry: (entry: Omit<CashEntry, "id">) => Promise<void>;
   removeCashEntry: (id: string) => Promise<void>;
   updateCashEntry: (id: string, updates: Partial<CashEntry>) => Promise<void>;
+  refreshHoldings: () => Promise<void>;
   refreshQuotes: () => Promise<void>;
   refreshSingleQuote: (ticker: string) => Promise<void>;
   lastUpdated: Date | null;
@@ -412,6 +413,10 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
     }
   }, [quotes, holdings, updateHolding]);
 
+  const refreshHoldings = useCallback(async () => {
+    await fetchHoldings();
+  }, [fetchHoldings]);
+
   const value = useMemo(
     () => ({
       holdings,
@@ -428,6 +433,7 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
       addCashEntry,
       removeCashEntry,
       updateCashEntry,
+      refreshHoldings,
       refreshQuotes,
       refreshSingleQuote,
       lastUpdated,
@@ -435,7 +441,7 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
     [
       holdings, cashEntries, quotes, quoteUpdatedAt, refreshingTickers, exchangeRates,
       isLoading, error, addHolding, removeHolding, updateHolding, addCashEntry,
-      removeCashEntry, updateCashEntry, refreshQuotes, refreshSingleQuote, lastUpdated,
+      removeCashEntry, updateCashEntry, refreshHoldings, refreshQuotes, refreshSingleQuote, lastUpdated,
     ]
   );
 

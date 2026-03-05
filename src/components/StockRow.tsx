@@ -418,7 +418,7 @@ function StockRow({ holding }: StockRowProps) {
             )}
           </div>
           <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5">
-            {holding.exchange} | {hasQuote ? formatCurrency(currentPriceInDisplay, cur) : formatCurrency(holding.purchasePrice, cur)} × {holding.shares}
+            {holding.exchange ? `${holding.exchange} | ` : ""}{holding.ticker} | {hasQuote ? formatCurrency(currentPriceInDisplay, cur) : formatCurrency(holding.purchasePrice, cur)} × {holding.shares}
           </p>
         </div>
         <div className="text-right flex-shrink-0">

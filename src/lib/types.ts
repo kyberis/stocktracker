@@ -75,6 +75,7 @@ export interface Transaction {
   currency: string;
   displayCurrency?: string;
   notes: string;
+  sourceRef?: string;
   createdAt: string;
 }
 

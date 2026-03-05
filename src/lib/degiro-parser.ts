@@ -24,6 +24,7 @@ export interface DegiroTransaction {
   taxes: number;           // withholding taxes on dividends
   currency: string;
   orderId: string;
+  sourceRef: string;       // fingerprint for deduplication
 }
 
 function parseEuropeanNumber(raw: string): number {
@@ -142,6 +143,7 @@ export function parseDegiroCSV(csv: string, isinToTicker: Record<string, string>
           consumedFees.add(fee);
           return sum + fee.amount;
         }, 0);
+      const buyTotal = Math.abs(row.changeAmount) || shares * price;
       transactions.push({
         date,
         type: "buy",
@@ -150,11 +152,12 @@ export function parseDegiroCSV(csv: string, isinToTicker: Record<string, string>
         isin: row.isin,
         shares,
         pricePerShare: price,
-        totalAmount: Math.abs(row.changeAmount) || shares * price,
+        totalAmount: buyTotal,
         fees,
         taxes: 0,
         currency: tradeCurrency,
         orderId: row.orderId,
+        sourceRef: `degiro|${date}|buy|${row.isin}|${row.orderId}|${buyTotal}`,
       });
       continue;
     }
@@ -172,6 +175,7 @@ export function parseDegiroCSV(csv: string, isinToTicker: Record<string, string>
           consumedFees.add(fee);
           return sum + fee.amount;
         }, 0);
+      const sellTotal = Math.abs(row.changeAmount) || shares * price;
       transactions.push({
         date,
         type: "sell",
@@ -180,11 +184,12 @@ export function parseDegiroCSV(csv: string, isinToTicker: Record<string, string>
         isin: row.isin,
         shares,
         pricePerShare: price,
-        totalAmount: Math.abs(row.changeAmount) || shares * price,
+        totalAmount: sellTotal,
         fees,
         taxes: 0,
         currency: tradeCurrency,
         orderId: row.orderId,
+        sourceRef: `degiro|${date}|sell|${row.isin}|${row.orderId}|${sellTotal}`,
       });
       continue;
     }
@@ -238,6 +243,7 @@ export function parseDegiroCSV(csv: string, isinToTicker: Record<string, string>
           taxes: 0,
           currency: row.changeCurrency,
           orderId: "",
+          sourceRef: `degiro|${date}|fee||${row.changeCurrency}|${amt}`,
         });
       }
       continue;
@@ -250,8 +256,9 @@ export function parseDegiroCSV(csv: string, isinToTicker: Record<string, string>
     for (const fee of feeEntries) {
       if (consumedFees.has(fee) || fee.amount <= 0) continue;
       const ticker = isinToTicker[fee.isin] || "";
+      const feeDate = parseDegiroDate(fee.date);
       transactions.push({
-        date: parseDegiroDate(fee.date),
+        date: feeDate,
         type: "fee",
         ticker,
         name: fee.product || "Costes de transacción",
@@ -263,6 +270,7 @@ export function parseDegiroCSV(csv: string, isinToTicker: Record<string, string>
         taxes: 0,
         currency: fee.currency,
         orderId: fee.orderId,
+        sourceRef: `degiro|${feeDate}|fee|${fee.isin}|${fee.orderId}|${fee.amount}`,
       });
     }
   }
@@ -286,6 +294,7 @@ export function parseDegiroCSV(csv: string, isinToTicker: Record<string, string>
       taxes: taxAmount,
       currency: group.currency,
       orderId: "",
+      sourceRef: `degiro|${group.date}|dividend|${group.isin}||${grossAmount}`,
     });
   }
 

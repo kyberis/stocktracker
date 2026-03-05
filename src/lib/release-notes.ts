@@ -14,9 +14,78 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "0.23.0";
+export const CURRENT_VERSION = "0.24.2";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "0.24.2",
+    date: "2026-03-05",
+    title: "Transaction & Holdings Sync Fixes",
+    titleEs: "Correcciones de sincronización de transacciones y posiciones",
+    changes: [
+      {
+        type: "fix",
+        text: "Portfolio reset no longer has transactions re-appear after a cold start",
+        textEs: "Restablecer el portafolio ya no hace que las transacciones reaparezcan tras un reinicio en frío",
+      },
+      {
+        type: "fix",
+        text: "Deleting a transaction now rebuilds holdings so portfolio values update immediately",
+        textEs: "Eliminar una transacción ahora reconstruye las posiciones para que los valores del portafolio se actualicen inmediatamente",
+      },
+      {
+        type: "improvement",
+        text: "Stock rows now display the exchange and ticker symbol for clearer identification",
+        textEs: "Las filas de acciones ahora muestran la bolsa y el símbolo del ticker para una identificación más clara",
+      },
+    ],
+  },
+  {
+    version: "0.24.1",
+    date: "2026-03-05",
+    title: "AI Hallucination Safeguards",
+    titleEs: "Protecciones contra Alucinación de IA",
+    changes: [
+      {
+        type: "improvement",
+        text: "AI analysis prompts now include strict grounding rules — the model is instructed to only reference data provided and never fabricate facts",
+        textEs: "Los prompts de análisis IA ahora incluyen reglas estrictas de fundamentación — el modelo solo referencia datos proporcionados y nunca inventa hechos",
+      },
+      {
+        type: "improvement",
+        text: "Lowered AI analysis temperature from 0.7 to 0.3 for more deterministic, fact-based financial summaries",
+        textEs: "Reducida la temperatura del análisis IA de 0.7 a 0.3 para resúmenes financieros más deterministas y basados en hechos",
+      },
+      {
+        type: "improvement",
+        text: "AI portfolio import now validates ticker formats and date formats, filtering out hallucinated or malformed entries",
+        textEs: "La importación IA de portafolio ahora valida formatos de ticker y fecha, filtrando entradas alucinadas o malformadas",
+      },
+      {
+        type: "fix",
+        text: "AI import now correctly handles responses wrapped in markdown code fences",
+        textEs: "La importación IA ahora maneja correctamente respuestas envueltas en bloques de código markdown",
+      },
+      {
+        type: "improvement",
+        text: "AI import shows warnings when entries are filtered out due to invalid tickers or dates, and provides clear messages on empty extractions",
+        textEs: "La importación IA muestra advertencias cuando se filtran entradas por tickers o fechas inválidas, y proporciona mensajes claros en extracciones vacías",
+      },
+    ],
+  },
+  {
+    version: "0.24.0",
+    date: "2026-03-05",
+    title: "Developer Architecture Page",
+    titleEs: "Página de Arquitectura para Desarrolladores",
+    changes: [
+      {
+        type: "feature",
+        text: "Admin-only Developer page with feature domain registry, architecture overview, API route explorer, and code pattern reference",
+        textEs: "Página de Desarrollador solo para admin con registro de dominios de funcionalidades, vista de arquitectura, explorador de rutas API y referencia de patrones de código",
+      },
+    ],
+  },
   {
     version: "0.23.0",
     date: "2026-03-05",
@@ -32,6 +101,16 @@ export const releaseNotes: ReleaseEntry[] = [
         type: "improvement",
         text: "Compact portfolio summary header replaces the 5-card grid for a cleaner dashboard",
         textEs: "Cabecera compacta del resumen del portafolio reemplaza la cuadrícula de 5 tarjetas para un panel más limpio",
+      },
+      {
+        type: "feature",
+        text: "Auto-classify holdings by sector, region, and asset class using Yahoo Finance data on import or on demand",
+        textEs: "Auto-clasificación de posiciones por sector, región y clase de activo usando datos de Yahoo Finance al importar o bajo demanda",
+      },
+      {
+        type: "improvement",
+        text: "CSV broker import now runs asynchronously with job polling, fixing local dev timeouts and improving reliability",
+        textEs: "La importación CSV de broker ahora se ejecuta de forma asíncrona con sondeo de estado, corrigiendo timeouts en desarrollo local y mejorando la fiabilidad",
       },
     ],
   },

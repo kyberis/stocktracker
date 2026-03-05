@@ -52,7 +52,7 @@ export async function checkAvRateLimit(userId: string): Promise<RateLimitResult>
 
 /**
  * Record actual AV call count to Turso for admin dashboard reporting.
- * Designed to be called via waitUntil() so it never blocks the response.
+ * Designed to be called via deferTask() so it never blocks the response.
  */
 export async function recordAvUsageAsync(userId: string, callCount: number): Promise<void> {
   if (callCount <= 0) return;

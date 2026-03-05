@@ -16,10 +16,11 @@ type Category = "sector" | "region" | "assetClass" | "assetType";
 
 export default function TaxonomyView() {
   const { t } = useI18n();
-  const { holdings, quotes, exchangeRates } = usePortfolio();
+  const { holdings, quotes, exchangeRates, refreshHoldings } = usePortfolio();
   const [category, setCategory] = useState<Category>("sector");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editVal, setEditVal] = useState("");
+  const [autoClassifying, setAutoClassifying] = useState(false);
 
   const allocations = useMemo((): TaxonomyAllocation[] => {
     const buckets: Record<string, number> = {};
@@ -61,6 +62,20 @@ export default function TaxonomyView() {
     setEditVal("");
   };
 
+  const hasUnclassified = holdings.some((h) => !h.sector && !h.region && !h.assetClass);
+
+  const handleAutoClassify = async () => {
+    setAutoClassifying(true);
+    try {
+      await fetch("/api/holdings/autofill-classification", { method: "POST" });
+      await refreshHoldings();
+    } catch {
+      // silently ignore — user can retry
+    } finally {
+      setAutoClassifying(false);
+    }
+  };
+
   const categories: { key: Category; label: string }[] = [
     { key: "sector", label: t("sector") },
     { key: "region", label: t("region") },
@@ -93,7 +108,18 @@ export default function TaxonomyView() {
   return (
     <div className="card">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{t("taxonomy")}</h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{t("taxonomy")}</h3>
+          {hasUnclassified && (
+            <button
+              onClick={handleAutoClassify}
+              disabled={autoClassifying}
+              className="text-[10px] font-medium px-2 py-1 rounded-lg transition-colors bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 disabled:opacity-50"
+            >
+              {autoClassifying ? t("autoClassifying") : t("autoClassify")}
+            </button>
+          )}
+        </div>
         <div className="flex gap-1">
           {categories.map((c) => (
             <button

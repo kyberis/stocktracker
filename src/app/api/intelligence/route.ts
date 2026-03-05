@@ -4,7 +4,7 @@ import { jsonWithCallCount } from "@/lib/api-providers/response";
 import { requireFeatureAccess, requireRateLimit } from "@/lib/auth/guards";
 import { recordAvUsageAsync } from "@/lib/rate-limit";
 import { withMetrics } from "@/lib/with-metrics";
-import { waitUntil } from "@vercel/functions";
+import { deferTask } from "@/lib/task-runner";
 
 export const dynamic = "force-dynamic";
 
@@ -81,7 +81,7 @@ export const GET = withMetrics("/api/intelligence", async (request: NextRequest)
     return jsonWithCallCount(provider, { error: "Failed to fetch data" }, { status: 500 });
   } finally {
     if (rateLimitUserId && provider.callCount) {
-      waitUntil(recordAvUsageAsync(rateLimitUserId, provider.callCount));
+      deferTask(() => recordAvUsageAsync(rateLimitUserId, provider.callCount!));
     }
   }
 });

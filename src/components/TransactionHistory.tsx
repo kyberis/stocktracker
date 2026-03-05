@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useI18n } from "@/lib/i18n";
+import { usePortfolio } from "@/lib/portfolio-context";
 import type { Transaction, TransactionType } from "@/lib/types";
 
 interface Props {
@@ -18,6 +19,7 @@ const TYPE_COLORS: Record<TransactionType, string> = {
 
 export default function TransactionHistory({ holdingId, ticker }: Props) {
   const { t } = useI18n();
+  const { refreshHoldings } = usePortfolio();
   const [txs, setTxs] = useState<Transaction[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [formType, setFormType] = useState<TransactionType>("buy");
@@ -70,11 +72,13 @@ export default function TransactionHistory({ holdingId, ticker }: Props) {
     setFormNotes("");
     setLoading(false);
     fetchTxs();
+    refreshHoldings();
   };
 
   const handleDelete = async (id: string) => {
     await fetch(`/api/transactions?id=${id}`, { method: "DELETE" });
     fetchTxs();
+    refreshHoldings();
   };
 
   const typeLabel = (type: TransactionType) => {

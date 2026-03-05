@@ -202,6 +202,36 @@ export default function BrokerImport() {
     }
   };
 
+  const pollJobStatus = async (jobId: string) => {
+    const POLL_MS = 1500;
+    const MAX_POLLS = 120;
+    for (let i = 0; i < MAX_POLLS; i++) {
+      await new Promise((r) => setTimeout(r, POLL_MS));
+      try {
+        const form = new FormData();
+        form.append("action", "status");
+        form.append("jobId", jobId);
+        const res = await fetch("/api/transactions/import-broker", { method: "POST", body: form });
+        if (!res.ok) continue;
+        const data = await res.json();
+        if (data.status === "completed") {
+          setImportedCount(data.result?.imported || 0);
+          setStep("done");
+          return;
+        }
+        if (data.status === "failed") {
+          setError(data.error || "Import failed.");
+          setStep("preview");
+          return;
+        }
+      } catch {
+        // transient network error — keep polling
+      }
+    }
+    setError("Import timed out.");
+    setStep("preview");
+  };
+
   const handleImport = async () => {
     setStep("importing");
     setError("");
@@ -215,8 +245,12 @@ export default function BrokerImport() {
         const res = await fetch("/api/transactions/import-broker", { method: "POST", body: form });
         if (!res.ok) { setError("Import failed."); setStep("preview"); return; }
         const data = await res.json();
-        setImportedCount(data.imported || 0);
-        setStep("done");
+        if (data.jobId) {
+          await pollJobStatus(data.jobId);
+        } else {
+          setImportedCount(data.imported || 0);
+          setStep("done");
+        }
       } catch {
         setError("Import failed.");
         setStep("preview");

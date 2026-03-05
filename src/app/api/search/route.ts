@@ -5,7 +5,7 @@ import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { requireRateLimit } from "@/lib/auth/guards";
 import { recordAvUsageAsync } from "@/lib/rate-limit";
 import { withMetrics } from "@/lib/with-metrics";
-import { waitUntil } from "@vercel/functions";
+import { deferTask } from "@/lib/task-runner";
 
 export const dynamic = "force-dynamic";
 
@@ -50,7 +50,7 @@ export const GET = withMetrics("/api/search", async (request: NextRequest) => {
     return jsonWithCallCount(provider, []);
   } finally {
     if (rateLimitUserId && provider.callCount) {
-      waitUntil(recordAvUsageAsync(rateLimitUserId, provider.callCount));
+      deferTask(() => recordAvUsageAsync(rateLimitUserId, provider.callCount!));
     }
   }
 });

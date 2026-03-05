@@ -10,6 +10,7 @@ export default function PortfolioSummary() {
   const { t } = useI18n();
   const {
     totalCurrentEUR,
+    totalCostEUR,
     dayGainLossEUR,
     totalGainLoss,
     totalGainLossPercent,
@@ -27,9 +28,14 @@ export default function PortfolioSummary() {
     <div className="card px-5 py-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex items-center gap-4 flex-wrap">
-          <p className={`text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white ${isLoading ? "animate-pulse" : ""}`}>
-            {formatCurrency(totalCurrentEUR, "EUR")}
-          </p>
+          <div>
+            <p className={`text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white ${isLoading ? "animate-pulse" : ""}`}>
+              {formatCurrency(totalCurrentEUR, "EUR")}
+            </p>
+            <p className="text-xs text-gray-400 dark:text-slate-500">
+              {t("cost")}: {formatCurrency(totalCostEUR, "EUR")}
+            </p>
+          </div>
           <span
             className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold ${
               dayIsPositive

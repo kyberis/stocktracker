@@ -263,6 +263,7 @@ async function runMigrations(client: Client) {
       currency TEXT NOT NULL DEFAULT 'EUR',
       display_currency TEXT NOT NULL DEFAULT 'EUR',
       notes TEXT NOT NULL DEFAULT '',
+      source_ref TEXT NOT NULL DEFAULT '',
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
     );
@@ -333,6 +334,10 @@ async function runMigrations(client: Client) {
   const hasTxDisplayCurrency = transactionCols.rows.some((row) => str(row.name) === "display_currency");
   if (!hasTxDisplayCurrency) {
     await client.execute({ sql: "ALTER TABLE transactions ADD COLUMN display_currency TEXT NOT NULL DEFAULT 'EUR'" });
+  }
+  const hasTxSourceRef = transactionCols.rows.some((row) => str(row.name) === "source_ref");
+  if (!hasTxSourceRef) {
+    await client.execute({ sql: "ALTER TABLE transactions ADD COLUMN source_ref TEXT NOT NULL DEFAULT ''" });
   }
 
   await client.execute({
@@ -522,17 +527,8 @@ async function ensureAdminUser(client: Client) {
     "write"
   );
 
-  // Seed transactions from DEGIRO CSV on first run (if admin has no transactions yet)
   if (isNew) {
     await seedTransactionsForUser(client, adminId);
-  } else {
-    const txCount = await client.execute({
-      sql: "SELECT COUNT(*) as cnt FROM transactions WHERE user_id = ?",
-      args: [adminId],
-    });
-    if (num(txCount.rows[0]?.cnt) === 0) {
-      await seedTransactionsForUser(client, adminId);
-    }
   }
 }
 
@@ -1432,6 +1428,7 @@ export async function listTransactions(userId: string, holdingId?: string): Prom
     currency: str(r.currency),
     displayCurrency: str(r.display_currency),
     notes: str(r.notes),
+    sourceRef: str(r.source_ref),
     createdAt: str(r.created_at),
   }));
 }
@@ -1445,9 +1442,9 @@ export async function addTransaction(userId: string, tx: Omit<Transaction, "id" 
   await client.execute({
     sql: `INSERT INTO transactions (
             id, user_id, holding_id, ticker, name, exchange, isin, asset_type, account_id,
-            type, date, shares, price_per_share, total_amount, fees, taxes, currency, display_currency, notes
+            type, date, shares, price_per_share, total_amount, fees, taxes, currency, display_currency, notes, source_ref
           )
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       id,
       userId,
@@ -1468,6 +1465,7 @@ export async function addTransaction(userId: string, tx: Omit<Transaction, "id" 
       tx.currency || "EUR",
       tx.displayCurrency || tx.currency || "EUR",
       tx.notes || "",
+      tx.sourceRef || "",
     ],
   });
   const created: Transaction = {
@@ -1664,6 +1662,33 @@ export async function deleteTransactionsForPosition(
     args: [userId, normalizedTicker, exchange],
   });
   return Number(result.rowsAffected ?? 0);
+}
+
+export async function deleteAllTransactions(userId: string): Promise<number> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: "DELETE FROM transactions WHERE user_id = ?",
+    args: [userId],
+  });
+  return Number(result.rowsAffected ?? 0);
+}
+
+export async function deleteAllHoldings(userId: string): Promise<number> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: "DELETE FROM holdings WHERE user_id = ?",
+    args: [userId],
+  });
+  return Number(result.rowsAffected ?? 0);
+}
+
+export async function listTransactionSourceRefs(userId: string): Promise<Set<string>> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: "SELECT source_ref FROM transactions WHERE user_id = ? AND source_ref != ''",
+    args: [userId],
+  });
+  return new Set(result.rows.map((r) => str(r.source_ref)));
 }
 
 /* ── Watchlist ────────────────────────────────────────────── */
