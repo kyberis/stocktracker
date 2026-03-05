@@ -80,8 +80,17 @@ export const POST = withMetrics("/api/billing/checkout", async (req: NextRequest
 
     billingEventsTotal.inc({ event: "checkout_started" });
     return NextResponse.json({ url: checkout.url });
-  } catch (err) {
-    console.error("Failed to create checkout session:", err instanceof Error ? err.message : err);
-    return NextResponse.json({ error: "Failed to create checkout session" }, { status: 500 });
+  } catch (err: unknown) {
+    const stripeErr = err as { type?: string; code?: string; message?: string };
+    const detail = stripeErr.message || (err instanceof Error ? err.message : String(err));
+    console.error("Failed to create checkout session:", detail);
+
+    if (detail.includes("STRIPE_SECRET_KEY")) {
+      return NextResponse.json({ error: "Stripe is not configured on this server." }, { status: 501 });
+    }
+    return NextResponse.json(
+      { error: "Failed to create checkout session", detail },
+      { status: 500 },
+    );
   }
 });

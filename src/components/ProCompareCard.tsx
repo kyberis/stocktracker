@@ -95,7 +95,10 @@ export default function ProCompareCard({
       });
       const data = await res.json().catch(() => null);
       if (!res.ok || !data?.url) {
-        setBillingError(data?.error || t("billingCheckoutError"));
+        const msg = data?.detail
+          ? `${data.error}: ${data.detail}`
+          : (data?.error || t("billingCheckoutError"));
+        setBillingError(msg);
         setBillingLoading("");
         return;
       }
