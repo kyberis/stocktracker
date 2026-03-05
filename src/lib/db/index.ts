@@ -3,7 +3,7 @@ import { mkdirSync } from "fs";
 import path from "path";
 import { createClient, type Client, type Row } from "@libsql/client";
 import bcrypt from "bcryptjs";
-import type { ApiProviderName, CashEntry, Holding, HoldingAssetType, Language, RefreshInterval, Transaction, TransactionType, WatchlistItem, Account, RebalanceTarget } from "@/lib/types";
+import type { AlertCondition, ApiProviderName, CashEntry, Holding, HoldingAssetType, Language, PriceAlert, RefreshInterval, Transaction, TransactionType, WatchlistItem, Account, RebalanceTarget } from "@/lib/types";
 import { encrypt, decrypt } from "@/lib/crypto";
 import { deriveHoldingsFromTransactions } from "@/lib/derive-holdings";
 import { seedHoldingsForUser, seedCashForUser, seedTransactionsForUser } from "./seed";
@@ -29,6 +29,7 @@ export interface DbUser {
   ai_calls_reset_at: string;
   ai_calls_today: number;
   ai_daily_reset_at: string;
+  email_verified: number;
 }
 
 export interface PublicUser {
@@ -46,6 +47,7 @@ export interface PublicUser {
   aiCallsResetAt: string;
   aiCallsToday: number;
   aiDailyResetAt: string;
+  emailVerified: boolean;
 }
 
 export interface UserSettings {
@@ -443,6 +445,41 @@ async function runMigrations(client: Client) {
     sql: "UPDATE users SET ai_daily_reset_at = datetime('now') WHERE ai_daily_reset_at = '' OR ai_daily_reset_at IS NULL",
   });
 
+  // ── Price alerts table ──
+  await client.executeMultiple(`
+    CREATE TABLE IF NOT EXISTS price_alerts (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      ticker TEXT NOT NULL,
+      name TEXT NOT NULL DEFAULT '',
+      condition TEXT NOT NULL CHECK(condition IN ('above', 'below')),
+      threshold REAL NOT NULL,
+      currency TEXT NOT NULL DEFAULT 'USD',
+      active INTEGER NOT NULL DEFAULT 1,
+      triggered INTEGER NOT NULL DEFAULT 0,
+      triggered_at TEXT NOT NULL DEFAULT '',
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS idx_price_alerts_user ON price_alerts(user_id);
+    CREATE INDEX IF NOT EXISTS idx_price_alerts_active ON price_alerts(active);
+  `);
+
+  // Add email_verified column to users if missing.
+  const userColsEmail = await client.execute("PRAGMA table_info(users)");
+  const hasEmailVerified = userColsEmail.rows.some((row) => str(row.name) === "email_verified");
+  if (!hasEmailVerified) {
+    await client.execute({ sql: "ALTER TABLE users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 0" });
+  }
+
+  // ── Platform settings (admin-managed feature flags & keys) ──
+  await client.execute({
+    sql: `CREATE TABLE IF NOT EXISTS platform_settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL DEFAULT ''
+    )`,
+  });
+
   // Encrypt any plaintext AV API keys that were stored before encryption was added.
   const keysResult = await client.execute(
     "SELECT user_id, alpha_vantage_api_key FROM user_settings WHERE alpha_vantage_api_key != ''"
@@ -573,6 +610,7 @@ function rowToDbUser(row: Row): DbUser {
     ai_calls_reset_at: str(row.ai_calls_reset_at),
     ai_calls_today: num(row.ai_calls_today),
     ai_daily_reset_at: str(row.ai_daily_reset_at),
+    email_verified: num(row.email_verified),
   };
 }
 
@@ -592,6 +630,7 @@ function mapUser(user: DbUser): PublicUser {
     aiCallsResetAt: user.ai_calls_reset_at,
     aiCallsToday: user.ai_calls_today,
     aiDailyResetAt: user.ai_daily_reset_at,
+    emailVerified: user.email_verified === 1,
   };
 }
 
@@ -1045,6 +1084,58 @@ export async function setGlobalOpenAIApiKey(key: string): Promise<void> {
     sql: "UPDATE user_settings SET openai_api_key = ? WHERE user_id = ?",
     args: [key ? encrypt(key) : "", adminId],
   });
+}
+
+/* ── Platform Settings (admin-managed key-value store) ── */
+
+export type PlatformFeature = "alerts_enabled" | "csv_export_enabled";
+
+export async function getPlatformSetting(key: string): Promise<string> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: "SELECT value FROM platform_settings WHERE key = ?",
+    args: [key],
+  });
+  if (result.rows.length === 0) return "";
+  return str(result.rows[0].value);
+}
+
+export async function setPlatformSetting(key: string, value: string): Promise<void> {
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: `INSERT INTO platform_settings (key, value) VALUES (?, ?)
+          ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+    args: [key, value],
+  });
+}
+
+export async function isFeatureEnabled(feature: PlatformFeature): Promise<boolean> {
+  const val = await getPlatformSetting(feature);
+  return val === "true";
+}
+
+export async function setFeatureEnabled(feature: PlatformFeature, enabled: boolean): Promise<void> {
+  await setPlatformSetting(feature, enabled ? "true" : "false");
+}
+
+export async function getGlobalResendApiKey(): Promise<string> {
+  const val = await getPlatformSetting("resend_api_key");
+  if (!val) return "";
+  return decrypt(val);
+}
+
+export async function setGlobalResendApiKey(key: string): Promise<void> {
+  await setPlatformSetting("resend_api_key", key ? encrypt(key) : "");
+}
+
+export async function getAllPlatformSettings(): Promise<Record<string, string>> {
+  const client = await ensureInitialized();
+  const result = await client.execute("SELECT key, value FROM platform_settings");
+  const settings: Record<string, string> = {};
+  for (const row of result.rows) {
+    settings[str(row.key)] = str(row.value);
+  }
+  return settings;
 }
 
 export async function listHoldings(userId: string): Promise<Holding[]> {
@@ -1909,6 +2000,124 @@ export async function replyToFeedback(
     args: [reply, status, feedbackId],
   });
   return (result.rowsAffected ?? 0) > 0;
+}
+
+/* ── Price Alerts ──────────────────────────────────────────── */
+
+function alertCondition(val: unknown): AlertCondition {
+  return val === "below" ? "below" : "above";
+}
+
+export async function listAlerts(userId: string): Promise<PriceAlert[]> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: "SELECT * FROM price_alerts WHERE user_id = ? ORDER BY created_at DESC",
+    args: [userId],
+  });
+  return result.rows.map((r) => ({
+    id: str(r.id),
+    ticker: str(r.ticker),
+    name: str(r.name),
+    condition: alertCondition(r.condition),
+    threshold: num(r.threshold),
+    currency: str(r.currency),
+    active: num(r.active) === 1,
+    triggered: num(r.triggered) === 1,
+    triggeredAt: str(r.triggered_at),
+    createdAt: str(r.created_at),
+  }));
+}
+
+export async function countActiveAlerts(userId: string): Promise<number> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: "SELECT COUNT(*) as cnt FROM price_alerts WHERE user_id = ? AND active = 1",
+    args: [userId],
+  });
+  return num(result.rows[0]?.cnt);
+}
+
+export async function createAlert(
+  userId: string,
+  alert: Omit<PriceAlert, "id" | "active" | "triggered" | "triggeredAt" | "createdAt">
+): Promise<PriceAlert> {
+  const client = await ensureInitialized();
+  const id = randomUUID();
+  await client.execute({
+    sql: `INSERT INTO price_alerts (id, user_id, ticker, name, condition, threshold, currency)
+          VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    args: [id, userId, alert.ticker, alert.name, alert.condition, alert.threshold, alert.currency],
+  });
+  return {
+    ...alert,
+    id,
+    active: true,
+    triggered: false,
+    triggeredAt: "",
+    createdAt: new Date().toISOString(),
+  };
+}
+
+export async function deleteAlert(userId: string, alertId: string): Promise<boolean> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: "DELETE FROM price_alerts WHERE id = ? AND user_id = ?",
+    args: [alertId, userId],
+  });
+  return (result.rowsAffected ?? 0) > 0;
+}
+
+export async function toggleAlert(userId: string, alertId: string, active: boolean): Promise<boolean> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: "UPDATE price_alerts SET active = ?, triggered = 0, triggered_at = '' WHERE id = ? AND user_id = ?",
+    args: [active ? 1 : 0, alertId, userId],
+  });
+  return (result.rowsAffected ?? 0) > 0;
+}
+
+export async function markAlertTriggered(alertId: string): Promise<void> {
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: "UPDATE price_alerts SET triggered = 1, triggered_at = datetime('now'), active = 0 WHERE id = ?",
+    args: [alertId],
+  });
+}
+
+export async function listActiveAlertsForCron(): Promise<
+  (PriceAlert & { userId: string; email: string; emailVerified: boolean; plan: string })[]
+> {
+  const client = await ensureInitialized();
+  const result = await client.execute(
+    `SELECT pa.*, u.email, u.email_verified, u.plan
+     FROM price_alerts pa
+     JOIN users u ON u.id = pa.user_id
+     WHERE pa.active = 1`
+  );
+  return result.rows.map((r) => ({
+    id: str(r.id),
+    userId: str(r.user_id),
+    ticker: str(r.ticker),
+    name: str(r.name),
+    condition: alertCondition(r.condition),
+    threshold: num(r.threshold),
+    currency: str(r.currency),
+    active: true,
+    triggered: false,
+    triggeredAt: "",
+    createdAt: str(r.created_at),
+    email: str(r.email),
+    emailVerified: num(r.email_verified) === 1,
+    plan: str(r.plan),
+  }));
+}
+
+export async function setEmailVerified(userId: string, verified: boolean): Promise<void> {
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: "UPDATE users SET email_verified = ? WHERE id = ?",
+    args: [verified ? 1 : 0, userId],
+  });
 }
 
 /* ── Prometheus Metrics Snapshot ────────────────────────────── */

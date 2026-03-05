@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useI18n } from "@/lib/i18n";
 import { formatCurrency, formatPercent } from "@/lib/utils";
@@ -16,7 +17,7 @@ export default function PortfolioSummary() {
     dayGainLossEUR,
   } = calculatePortfolioTotals(holdings, cashEntries, quotes, exchangeRates);
 
-  const summaryCards = [
+  const summaryCards = useMemo(() => [
     {
       label: t("totalValue"),
       value: formatCurrency(totalCurrentEUR, "EUR"),
@@ -53,7 +54,7 @@ export default function PortfolioSummary() {
       iconBg: "bg-indigo-50 dark:bg-indigo-500/10",
       iconColor: "text-indigo-500",
     },
-  ];
+  ], [t, totalCurrentEUR, totalCostEUR, totalGainLoss, totalGainLossPercent, dayGainLossEUR, holdings.length, cashEntries.length]);
 
   return (
     <div className="grid grid-cols-2 xl:grid-cols-5 gap-4">

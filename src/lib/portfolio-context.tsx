@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef, useMemo } from "react";
 import type { CashEntry, Holding, QuoteData, ExchangeRates } from "./types";
 import { generateId } from "./utils";
 import { useSettings } from "./settings-context";
@@ -171,14 +171,26 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
       const batchSize = 10;
       const headers = getApiHeaders();
 
+      const batches: string[][] = [];
       for (let i = 0; i < tickers.length; i += batchSize) {
-        const batch = tickers.slice(i, i + batchSize);
-        const url = buildFetchUrl("/api/quote", { symbols: batch.join(",") });
-        const res = await fetch(url, { headers });
-        trackAvCalls(res);
-        if (res.status === 429) throw new Error("rate_limited");
-        if (!res.ok) throw new Error("Failed to fetch quotes");
-        const data = await res.json();
+        batches.push(tickers.slice(i, i + batchSize));
+      }
+
+      const [batchResults, rates] = await Promise.all([
+        Promise.all(
+          batches.map(async (batch) => {
+            const url = buildFetchUrl("/api/quote", { symbols: batch.join(",") });
+            const res = await fetch(url, { headers });
+            trackAvCalls(res);
+            if (res.status === 429) throw new Error("rate_limited");
+            if (!res.ok) throw new Error("Failed to fetch quotes");
+            return res.json();
+          })
+        ),
+        fetchExchangeRates(),
+      ]);
+
+      for (const data of batchResults) {
         Object.assign(allQuotes, data);
       }
 
@@ -189,8 +201,6 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
         stockQuotes[key] = { ...val, fetchedAt: now };
         updatedAtByTicker[key] = now;
       }
-
-      const rates = await fetchExchangeRates();
 
       setQuotes(stockQuotes);
       setQuoteUpdatedAt(updatedAtByTicker);
@@ -384,28 +394,35 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
     }
   }, [cashEntries]);
 
+  const value = useMemo(
+    () => ({
+      holdings,
+      cashEntries,
+      quotes,
+      quoteUpdatedAt,
+      refreshingTickers,
+      exchangeRates,
+      isLoading,
+      error,
+      addHolding,
+      removeHolding,
+      updateHolding,
+      addCashEntry,
+      removeCashEntry,
+      updateCashEntry,
+      refreshQuotes,
+      refreshSingleQuote,
+      lastUpdated,
+    }),
+    [
+      holdings, cashEntries, quotes, quoteUpdatedAt, refreshingTickers, exchangeRates,
+      isLoading, error, addHolding, removeHolding, updateHolding, addCashEntry,
+      removeCashEntry, updateCashEntry, refreshQuotes, refreshSingleQuote, lastUpdated,
+    ]
+  );
+
   return (
-    <PortfolioContext.Provider
-      value={{
-        holdings,
-        cashEntries,
-        quotes,
-        quoteUpdatedAt,
-        refreshingTickers,
-        exchangeRates,
-        isLoading,
-        error,
-        addHolding,
-        removeHolding,
-        updateHolding,
-        addCashEntry,
-        removeCashEntry,
-        updateCashEntry,
-        refreshQuotes,
-        refreshSingleQuote,
-        lastUpdated,
-      }}
-    >
+    <PortfolioContext.Provider value={value}>
       {children}
     </PortfolioContext.Provider>
   );

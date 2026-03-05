@@ -58,7 +58,9 @@ export const GET = withMetrics("/api/economic-indicators", async (request: NextR
       return jsonWithCallCount(provider, { error: "No data available" }, { status: 404 });
     }
 
-    return jsonWithCallCount(provider, result);
+    return jsonWithCallCount(provider, result, {
+      headers: { "Cache-Control": "public, max-age=3600, stale-while-revalidate=7200" },
+    });
   } catch (err) {
     console.error(
       `Failed to fetch economic indicator ${func}:`,

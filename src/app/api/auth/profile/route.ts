@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { findUserById, updateUserProfile } from "@/lib/db";
+import { findUserById, updateUserProfile, setEmailVerified } from "@/lib/db";
 import { withMetrics } from "@/lib/with-metrics";
 
 export const GET = withMetrics("/api/auth/profile", async (req: NextRequest) => {
@@ -49,6 +49,11 @@ export const PUT = withMetrics("/api/auth/profile", async (req: NextRequest) => 
     }
     if (typeof body.avatarUrl === "string") {
       updates.avatarUrl = body.avatarUrl.trim().slice(0, 500);
+    }
+
+    const user = await findUserById(session.userId);
+    if (updates.email && user && updates.email !== user.email) {
+      await setEmailVerified(session.userId, false);
     }
 
     const updated = await updateUserProfile(session.userId, updates);

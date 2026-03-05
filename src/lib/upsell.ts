@@ -9,7 +9,8 @@ export type UpsellSurface =
   | "economic_locked"
   | "dashboard_projection_locked"
   | "profile_always_on"
-  | "settings_always_on";
+  | "settings_always_on"
+  | "alerts_limit";
 
 export interface UpsellConfig {
   subtitleKey: TranslationKey;
@@ -78,6 +79,13 @@ const UPSSELL_BY_SURFACE: Record<UpsellSurface, UpsellConfig> = {
     subtitleKey: "upsellCompareSubtitleAlways",
     attemptedActionKey: "upsellAttemptIntelligence",
     feature: "settings",
+    freeItems: DEFAULT_FREE_ITEMS,
+    proItems: DEFAULT_PRO_ITEMS,
+  },
+  alerts_limit: {
+    subtitleKey: "upsellCompareSubtitleLocked",
+    attemptedActionKey: "upsellAttemptAlerts",
+    feature: "alerts",
     freeItems: DEFAULT_FREE_ITEMS,
     proItems: DEFAULT_PRO_ITEMS,
   },

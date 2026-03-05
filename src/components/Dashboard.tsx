@@ -1,20 +1,23 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, Suspense } from "react";
+import dynamic from "next/dynamic";
 import PortfolioSummary from "./PortfolioSummary";
-import PortfolioGrowthPeriods from "./PortfolioGrowthPeriods";
-import PerformanceMetrics from "./PerformanceMetrics";
-import PortfolioProjection from "./PortfolioProjection";
 import MarketAndCash from "./MarketAndCash";
 import PortfolioTable from "./PortfolioTable";
-import AddStockModal from "./AddStockModal";
-import SettingsModal from "./SettingsModal";
-import ImportPortfolioModal from "./ImportPortfolioModal";
-import ResetPortfolioModal from "./ResetPortfolioModal";
-import WhatsNewModal, { useWhatsNewAutoShow } from "./WhatsNewModal";
-import FeedbackModal from "./FeedbackModal";
+import { useWhatsNewAutoShow } from "./WhatsNewModal";
 import DashboardToolbar from "./DashboardToolbar";
 import { useI18n } from "@/lib/i18n";
+
+const PortfolioGrowthPeriods = dynamic(() => import("./PortfolioGrowthPeriods"), { ssr: false });
+const PerformanceMetrics = dynamic(() => import("./PerformanceMetrics"), { ssr: false });
+const PortfolioProjection = dynamic(() => import("./PortfolioProjection"), { ssr: false });
+const AddStockModal = dynamic(() => import("./AddStockModal"), { ssr: false });
+const SettingsModal = dynamic(() => import("./SettingsModal"), { ssr: false });
+const ImportPortfolioModal = dynamic(() => import("./ImportPortfolioModal"), { ssr: false });
+const ResetPortfolioModal = dynamic(() => import("./ResetPortfolioModal"), { ssr: false });
+const WhatsNewModal = dynamic(() => import("./WhatsNewModal"), { ssr: false });
+const FeedbackModal = dynamic(() => import("./FeedbackModal"), { ssr: false });
 
 export default function Dashboard() {
   const [showAddModal, setShowAddModal] = useState(false);
@@ -50,10 +53,12 @@ export default function Dashboard() {
         <PortfolioTable />
       </main>
 
-      <AddStockModal
-        isOpen={showAddModal}
-        onClose={() => setShowAddModal(false)}
-      />
+      {showAddModal && (
+        <AddStockModal
+          isOpen={showAddModal}
+          onClose={() => setShowAddModal(false)}
+        />
+      )}
 
       {showSettings && (
         <SettingsModal
@@ -62,29 +67,37 @@ export default function Dashboard() {
         />
       )}
 
-      <ImportPortfolioModal
-        isOpen={showImport}
-        onClose={() => setShowImport(false)}
-        onImportComplete={handleImportComplete}
-      />
+      {showImport && (
+        <ImportPortfolioModal
+          isOpen={showImport}
+          onClose={() => setShowImport(false)}
+          onImportComplete={handleImportComplete}
+        />
+      )}
 
-      <ResetPortfolioModal
-        isOpen={showReset}
-        onClose={() => setShowReset(false)}
-      />
+      {showReset && (
+        <ResetPortfolioModal
+          isOpen={showReset}
+          onClose={() => setShowReset(false)}
+        />
+      )}
 
-      <WhatsNewModal
-        isOpen={whatsNewOpen}
-        onClose={() => {
-          setShowWhatsNew(false);
-          dismissWhatsNew();
-        }}
-      />
+      {whatsNewOpen && (
+        <WhatsNewModal
+          isOpen={whatsNewOpen}
+          onClose={() => {
+            setShowWhatsNew(false);
+            dismissWhatsNew();
+          }}
+        />
+      )}
 
-      <FeedbackModal
-        isOpen={showFeedback}
-        onClose={() => setShowFeedback(false)}
-      />
+      {showFeedback && (
+        <FeedbackModal
+          isOpen={showFeedback}
+          onClose={() => setShowFeedback(false)}
+        />
+      )}
 
       {/* Floating feedback button */}
       <button

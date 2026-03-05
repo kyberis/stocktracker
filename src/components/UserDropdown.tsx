@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Image from "next/image";
 import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n";
 
@@ -31,7 +32,7 @@ export default function UserDropdown() {
         className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors text-sm"
       >
         {user.avatarUrl ? (
-          <img src={user.avatarUrl} alt="" className="w-6 h-6 rounded-full object-cover" />
+          <Image src={user.avatarUrl} alt="" width={24} height={24} className="w-6 h-6 rounded-full object-cover" />
         ) : (
           <div className="w-6 h-6 rounded-full bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-[10px] font-bold text-white">
             {initials}

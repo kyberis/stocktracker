@@ -24,6 +24,7 @@ export const GET = withMetrics("/api/auth/me", async (req: NextRequest) => {
       aiCallsResetAt: user?.ai_calls_reset_at || "",
       aiCallsToday: user?.ai_calls_today || 0,
       aiDailyResetAt: user?.ai_daily_reset_at || "",
+      emailVerified: user?.email_verified === 1,
     },
   });
 });

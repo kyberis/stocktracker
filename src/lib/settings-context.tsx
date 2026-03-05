@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect, useMemo } from "react";
 import type { ApiProviderName, RefreshInterval } from "./types";
 
 const AV_USAGE_KEY = "stocktracker-av-usage";
@@ -15,6 +15,8 @@ interface SettingsContextType {
   provider: ApiProviderName;
   refreshInterval: RefreshInterval;
   hasGlobalAvKey: boolean;
+  alertsEnabled: boolean;
+  csvExportEnabled: boolean;
   setProvider: (provider: ApiProviderName) => void;
   setRefreshInterval: (interval: RefreshInterval) => void;
   isAlphaVantage: boolean;
@@ -57,6 +59,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [provider, setProviderState] = useState<ApiProviderName>("yahoo");
   const [refreshInterval, setRefreshIntervalState] = useState<RefreshInterval>(15);
   const [hasGlobalAvKey, setHasGlobalAvKey] = useState(false);
+  const [alertsEnabled, setAlertsEnabled] = useState(false);
+  const [csvExportEnabled, setCsvExportEnabled] = useState(false);
   const [avCallsThisMinute, setAvCallsThisMinute] = useState(() => loadMinuteUsage().count);
 
   useEffect(() => {
@@ -73,6 +77,12 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
           }
           if (typeof settings.hasGlobalAvKey === "boolean") {
             setHasGlobalAvKey(settings.hasGlobalAvKey);
+          }
+          if (typeof settings.alertsEnabled === "boolean") {
+            setAlertsEnabled(settings.alertsEnabled);
+          }
+          if (typeof settings.csvExportEnabled === "boolean") {
+            setCsvExportEnabled(settings.csvExportEnabled);
           }
         }
       } catch {
@@ -150,22 +160,33 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  const isAlphaVantage = provider === "alphavantage";
+
+  const value = useMemo(
+    () => ({
+      provider,
+      refreshInterval,
+      hasGlobalAvKey,
+      alertsEnabled,
+      csvExportEnabled,
+      setProvider,
+      setRefreshInterval,
+      isAlphaVantage,
+      getApiHeaders,
+      getApiParams,
+      avCallsThisMinute,
+      avMinuteLimit: AV_MINUTE_LIMIT,
+      trackAvCalls,
+    }),
+    [
+      provider, refreshInterval, hasGlobalAvKey, alertsEnabled, csvExportEnabled,
+      setProvider, setRefreshInterval, isAlphaVantage, getApiHeaders, getApiParams,
+      avCallsThisMinute, trackAvCalls,
+    ]
+  );
+
   return (
-    <SettingsContext.Provider
-      value={{
-        provider,
-        refreshInterval,
-        hasGlobalAvKey,
-        setProvider,
-        setRefreshInterval,
-        isAlphaVantage: provider === "alphavantage",
-        getApiHeaders,
-        getApiParams,
-        avCallsThisMinute,
-        avMinuteLimit: AV_MINUTE_LIMIT,
-        trackAvCalls,
-      }}
-    >
+    <SettingsContext.Provider value={value}>
       {children}
     </SettingsContext.Provider>
   );

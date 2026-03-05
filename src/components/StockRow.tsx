@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, memo } from "react";
 import Link from "next/link";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useSettings } from "@/lib/settings-context";
@@ -14,9 +14,11 @@ import {
   normalizeCurrency,
   resolveQuoteCurrency,
 } from "@/lib/utils";
+import dynamic from "next/dynamic";
 import { getMarketStatus } from "@/lib/market-hours";
-import StockChart from "./StockChart";
 import type { Holding, QuoteData, CompanyOverview } from "@/lib/types";
+
+const StockChart = dynamic(() => import("./StockChart"), { ssr: false });
 
 interface StockRowProps {
   holding: Holding;
@@ -128,7 +130,7 @@ function OverviewSection({ overview }: { overview: CompanyOverview }) {
   );
 }
 
-export default function StockRow({ holding }: StockRowProps) {
+function StockRow({ holding }: StockRowProps) {
   const {
     quotes,
     quoteUpdatedAt,
@@ -796,3 +798,5 @@ export default function StockRow({ holding }: StockRowProps) {
     </div>
   );
 }
+
+export default memo(StockRow);

@@ -20,6 +20,9 @@ export const PLATFORM_LIMITS = {
 
   /** Max AI-powered portfolio imports per day (any tier). */
   AI_IMPORT_DAILY_LIMIT: 5,
+
+  /** Max active price alerts for Free users. Pro is unlimited. */
+  FREE_ALERT_LIMIT: 2,
 } as const;
 
 export type RateLimitProvider = "alphavantage" | "openai" | "openai_import";

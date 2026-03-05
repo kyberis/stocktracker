@@ -83,6 +83,12 @@ const FEATURES: Feature[] = [
     screenshot: "/screenshots/holdings-table.png",
     badge: "Pro",
   },
+  {
+    title: "Price Alerts",
+    description:
+      "Set price alerts for any stock — get notified instantly when a stock crosses your target price. Free users get 2 alerts, Pro users get unlimited with email delivery.",
+    screenshot: "/screenshots/dashboard-overview.png",
+  },
 ];
 
 /* ─── pricing tiers ─── */
@@ -113,6 +119,7 @@ const PRICING: PricingTier[] = [
       "Dark & light mode",
       "English + Spanish",
       "5 AI analysis calls/month",
+      "2 price alerts (in-app)",
     ],
     cta: "Get Started Free",
   },
@@ -129,6 +136,7 @@ const PRICING: PricingTier[] = [
       "Institutional holdings data",
       "Economic indicators dashboard",
       "Alpha Vantage premium data",
+      "Unlimited price alerts + email delivery",
       "Priority support",
       "Export to CSV",
     ],

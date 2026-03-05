@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { getUserSettings, updateUserSettings, getGlobalAlphaVantageApiKey, getGlobalOpenAIApiKey } from "@/lib/db";
+import { getUserSettings, updateUserSettings, getGlobalAlphaVantageApiKey, getGlobalOpenAIApiKey, isFeatureEnabled } from "@/lib/db";
 import type { ApiProviderName, Language, RefreshInterval } from "@/lib/types";
 import { withMetrics } from "@/lib/with-metrics";
 
@@ -8,10 +8,12 @@ export const GET = withMetrics("/api/user-settings", async (req: NextRequest) =>
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
 
-  const [settings, globalAvKey, globalOpenAIKey] = await Promise.all([
+  const [settings, globalAvKey, globalOpenAIKey, alertsEnabled, csvExportEnabled] = await Promise.all([
     getUserSettings(session.userId),
     getGlobalAlphaVantageApiKey(),
     getGlobalOpenAIApiKey(),
+    isFeatureEnabled("alerts_enabled"),
+    isFeatureEnabled("csv_export_enabled"),
   ]);
 
   return NextResponse.json({
@@ -20,6 +22,8 @@ export const GET = withMetrics("/api/user-settings", async (req: NextRequest) =>
     refreshInterval: settings.refreshInterval,
     hasGlobalAvKey: globalAvKey.length > 0,
     hasOpenAIKey: globalOpenAIKey.length > 0,
+    alertsEnabled,
+    csvExportEnabled,
   });
 });
 

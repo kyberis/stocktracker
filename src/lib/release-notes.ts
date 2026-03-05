@@ -14,9 +14,88 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "0.19.0";
+export const CURRENT_VERSION = "0.22.0";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "0.22.0",
+    date: "2026-03-05",
+    title: "Performance Optimizations",
+    titleEs: "Optimizaciones de Rendimiento",
+    changes: [
+      {
+        type: "improvement",
+        text: "Lazy-load charts, modals, and tool tabs — reduced initial bundle size by up to 75% on key pages",
+        textEs: "Carga diferida de gráficos, modales y pestañas de herramientas — reducción del tamaño inicial del bundle hasta un 75% en páginas clave",
+      },
+      {
+        type: "improvement",
+        text: "Parallel quote and exchange-rate fetching — faster portfolio data loading",
+        textEs: "Obtención paralela de cotizaciones y tipos de cambio — carga de datos del portfolio más rápida",
+      },
+      {
+        type: "improvement",
+        text: "Memoized context providers and list components to reduce unnecessary re-renders",
+        textEs: "Proveedores de contexto y componentes de lista memorizados para reducir re-renderizados innecesarios",
+      },
+      {
+        type: "improvement",
+        text: "Added Cache-Control headers to exchange-rate, search, and economic-indicator API routes",
+        textEs: "Añadidas cabeceras Cache-Control a las rutas API de tipos de cambio, búsqueda e indicadores económicos",
+      },
+    ],
+  },
+  {
+    version: "0.21.0",
+    date: "2026-03-05",
+    title: "Admin Feature Flags",
+    titleEs: "Flags de Funcionalidad para Admin",
+    changes: [
+      {
+        type: "feature",
+        text: "Admin-managed feature flags — enable or disable Price Alerts and CSV Export globally from the admin Settings panel",
+        textEs: "Flags de funcionalidad gestionados por admin — habilita o deshabilita Alertas de Precio y Exportación CSV globalmente desde el panel de Configuración de admin",
+      },
+      {
+        type: "feature",
+        text: "Admin-managed Resend API key — configure email delivery credentials from the admin panel instead of environment variables",
+        textEs: "Clave API de Resend gestionada por admin — configura las credenciales de envío de email desde el panel de admin en lugar de variables de entorno",
+      },
+      {
+        type: "improvement",
+        text: "Features hidden from UI when disabled by admin — alerts tab and CSV export buttons only appear when the admin has enabled them",
+        textEs: "Funcionalidades ocultas en la UI cuando están deshabilitadas por admin — la pestaña de alertas y los botones de exportación CSV solo aparecen cuando el admin los ha habilitado",
+      },
+    ],
+  },
+  {
+    version: "0.20.0",
+    date: "2026-03-05",
+    title: "Price Alerts & CSV Export",
+    titleEs: "Alertas de Precio y Exportación CSV",
+    changes: [
+      {
+        type: "feature",
+        text: "Price alerts — set above/below price targets for any stock. Free users get 2 alerts; Pro users get unlimited with email delivery",
+        textEs: "Alertas de precio — establece objetivos de precio por encima/debajo para cualquier acción. Usuarios Free tienen 2 alertas; usuarios Pro tienen ilimitadas con envío por email",
+      },
+      {
+        type: "feature",
+        text: "Email verification flow — verify your email in Profile to receive price alert notifications via Resend",
+        textEs: "Flujo de verificación de email — verifica tu correo en Perfil para recibir notificaciones de alertas de precio vía Resend",
+      },
+      {
+        type: "feature",
+        text: "CSV export for portfolio holdings, transactions, and cash balances (Pro feature)",
+        textEs: "Exportación CSV de posiciones, transacciones y saldos de efectivo (función Pro)",
+      },
+      {
+        type: "improvement",
+        text: "Automated cron job checks price alerts every 15 minutes and triggers email notifications for Pro users",
+        textEs: "Tarea cron automatizada verifica alertas de precio cada 15 minutos y envía notificaciones por email a usuarios Pro",
+      },
+    ],
+  },
   {
     version: "0.19.0",
     date: "2026-03-05",

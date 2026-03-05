@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { SubscriptionPlan } from "@/lib/types";
 
 type AuthUserRole = "admin" | "user";
@@ -19,6 +19,7 @@ interface AuthUser {
   aiCallsResetAt: string;
   aiCallsToday: number;
   aiDailyResetAt: string;
+  emailVerified: boolean;
 }
 
 interface AuthContextType {
@@ -63,8 +64,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refreshUser();
   }, [refreshUser]);
 
+  const value = useMemo(
+    () => ({ user, isLoading, refreshUser, logout }),
+    [user, isLoading, refreshUser, logout]
+  );
+
   return (
-    <AuthContext.Provider value={{ user, isLoading, refreshUser, logout }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

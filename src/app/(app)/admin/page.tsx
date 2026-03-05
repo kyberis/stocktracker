@@ -756,10 +756,188 @@ function ExternalServicesCard() {
   );
 }
 
+interface SetupStep {
+  text: string;
+  done?: boolean;
+}
+
+function FeatureToggle({
+  label,
+  description,
+  enabled,
+  saving,
+  onToggle,
+  steps,
+}: {
+  label: string;
+  description: string;
+  enabled: boolean;
+  saving: boolean;
+  onToggle: (enabled: boolean) => void;
+  steps?: SetupStep[];
+}) {
+  const [stepsOpen, setStepsOpen] = useState(false);
+
+  return (
+    <div className="py-3">
+      <div className="flex items-center justify-between gap-4">
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-gray-900 dark:text-white">{label}</p>
+          <p className="text-xs text-gray-500 dark:text-slate-400">{description}</p>
+        </div>
+        <button
+          type="button"
+          disabled={saving}
+          onClick={() => onToggle(!enabled)}
+          className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+            enabled ? "bg-emerald-500" : "bg-gray-300 dark:bg-slate-600"
+          } ${saving ? "opacity-50 cursor-wait" : ""}`}
+          role="switch"
+          aria-checked={enabled}
+        >
+          <span
+            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+              enabled ? "translate-x-5" : "translate-x-0"
+            }`}
+          />
+        </button>
+      </div>
+
+      {steps && steps.length > 0 && (
+        <div className="mt-1.5">
+          <button
+            type="button"
+            onClick={() => setStepsOpen((v) => !v)}
+            className="flex items-center gap-1 text-[11px] font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors"
+          >
+            <svg
+              className={`w-3 h-3 transition-transform duration-150 ${stepsOpen ? "rotate-90" : ""}`}
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2.5}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+            Setup steps ({steps.filter((s) => s.done).length}/{steps.length} done)
+          </button>
+
+          {stepsOpen && (
+            <ol className="mt-2 ml-0.5 space-y-1.5">
+              {steps.map((step, i) => (
+                <li key={i} className="flex items-start gap-2">
+                  {step.done ? (
+                    <svg className="w-4 h-4 mt-px flex-shrink-0 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  ) : (
+                    <span className="w-4 h-4 mt-px flex-shrink-0 rounded-full border-2 border-gray-300 dark:border-slate-500" />
+                  )}
+                  <span className={`text-xs ${step.done ? "text-gray-400 dark:text-slate-500 line-through" : "text-gray-600 dark:text-slate-300"}`}>
+                    {step.text}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FeatureTogglesCard() {
+  const [flags, setFlags] = useState<Record<string, boolean>>({});
+  const [hasResendKey, setHasResendKey] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState<string | null>(null);
+
+  useEffect(() => {
+    Promise.all([
+      fetch("/api/admin/feature-flags", { cache: "no-store" }).then((r) => r.json()),
+      fetch("/api/admin/resend-key", { cache: "no-store" }).then((r) => r.json()).catch(() => ({ hasKey: false })),
+    ])
+      .then(([flagsData, resendData]) => {
+        setFlags(flagsData.flags ?? {});
+        setHasResendKey(resendData.hasKey ?? false);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleToggle = async (flag: string, enabled: boolean) => {
+    setSaving(flag);
+    try {
+      const res = await fetch("/api/admin/feature-flags", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ flag, enabled }),
+      });
+      if (res.ok) {
+        setFlags((prev) => ({ ...prev, [flag]: enabled }));
+      }
+    } catch {
+      // Keep previous state on failure.
+    }
+    setSaving(null);
+  };
+
+  if (loading) {
+    return (
+      <div className="card p-6">
+        <div className="h-4 w-32 bg-gray-200 dark:bg-slate-700 rounded animate-pulse" />
+      </div>
+    );
+  }
+
+  const alertsOn = flags.alerts_enabled ?? false;
+  const csvOn = flags.csv_export_enabled ?? false;
+
+  const alertsSteps: SetupStep[] = [
+    { text: "Enable this toggle", done: alertsOn },
+    { text: "Configure the Resend API key below for email delivery", done: hasResendKey },
+    { text: "Deploy the Vercel Cron job (/api/cron/check-alerts every 15 min) and set CRON_SECRET env var", done: false },
+    { text: "Users verify their email in Profile to receive alert emails", done: false },
+  ];
+
+  const csvSteps: SetupStep[] = [
+    { text: "Enable this toggle", done: csvOn },
+    { text: "No additional configuration required — works out of the box for Pro users", done: csvOn },
+  ];
+
+  return (
+    <div className="card p-6">
+      <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">Feature Flags</h3>
+      <p className="text-xs text-gray-500 dark:text-slate-400 mb-4">
+        Enable or disable user-facing features globally. Changes take effect immediately.
+      </p>
+      <div className="divide-y divide-gray-200 dark:divide-slate-700">
+        <FeatureToggle
+          label="Price Alerts"
+          description="Allow users to create price alerts. Free users get 2 alerts; Pro users get unlimited with email delivery."
+          enabled={alertsOn}
+          saving={saving === "alerts_enabled"}
+          onToggle={(v) => handleToggle("alerts_enabled", v)}
+          steps={alertsSteps}
+        />
+        <FeatureToggle
+          label="CSV Export"
+          description="Allow Pro users to export portfolio holdings, transactions, and cash balances as CSV files."
+          enabled={csvOn}
+          saving={saving === "csv_export_enabled"}
+          onToggle={(v) => handleToggle("csv_export_enabled", v)}
+          steps={csvSteps}
+        />
+      </div>
+    </div>
+  );
+}
+
 function SettingsTab() {
   return (
     <div className="space-y-6">
       <ExternalServicesCard />
+      <FeatureTogglesCard />
       <CapacityCard />
       <MetricsCard />
       <ApiKeyCard
@@ -773,6 +951,12 @@ function SettingsTab() {
         description="This key is stored encrypted and shared with all users. It enables AI-powered features such as financial analysis, stock intelligence, and portfolio import from screenshots."
         endpoint="/api/admin/openai-key"
         placeholder="Enter OpenAI API key (sk-...)"
+      />
+      <ApiKeyCard
+        title="Resend API Key"
+        description="This key is stored encrypted and enables email delivery for price alerts and email verification. Get a key at resend.com."
+        endpoint="/api/admin/resend-key"
+        placeholder="Enter Resend API key (re_...)"
       />
     </div>
   );

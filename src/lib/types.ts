@@ -10,7 +10,23 @@ export type SubscriptionFeature =
   | "fundamentals"
   | "intelligence"
   | "economic-indicators"
-  | "ai";
+  | "ai"
+  | "alerts-email";
+
+export type AlertCondition = "above" | "below";
+
+export interface PriceAlert {
+  id: string;
+  ticker: string;
+  name: string;
+  condition: AlertCondition;
+  threshold: number;
+  currency: string;
+  active: boolean;
+  triggered: boolean;
+  triggeredAt: string;
+  createdAt: string;
+}
 export type HoldingAssetType = "stock" | "etf";
 
 export interface Holding {

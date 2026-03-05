@@ -16,6 +16,11 @@ const ALLOWED_EVENTS = new Set([
   "upgrade_compare_shown",
   "upgrade_compare_clicked",
   "portfolio_period_returns_viewed",
+  "alert_created",
+  "alert_triggered",
+  "alert_limit_reached",
+  "alert_email_sent",
+  "csv_exported",
 ]);
 
 export const POST = withMetrics("/api/analytics/events", async (req: NextRequest) => {

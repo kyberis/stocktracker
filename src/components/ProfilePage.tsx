@@ -35,10 +35,15 @@ export default function ProfilePage() {
   const [deleteError, setDeleteError] = useState("");
   const [deleting, setDeleting] = useState(false);
 
+  const [verifyingSending, setVerifyingSending] = useState(false);
+  const [verifyMsg, setVerifyMsg] = useState("");
+  const [verifyError, setVerifyError] = useState("");
+
   const [billingSync, setBillingSync] = useState<"idle" | "syncing" | "done" | "timeout">("idle");
   const billingSyncRan = useRef(false);
 
   const returnedFromCheckout = searchParams.get("billing") === "success";
+  const emailJustVerified = searchParams.get("emailVerified") === "true";
   const needsSync = user && user.plan !== "pro";
 
   useEffect(() => {
@@ -89,6 +94,13 @@ export default function ProfilePage() {
       setAvatarUrl(user.avatarUrl || "");
     }
   }, [user]);
+
+  useEffect(() => {
+    if (emailJustVerified) {
+      refreshUser();
+      setVerifyMsg(t("emailVerified"));
+    }
+  }, [emailJustVerified, refreshUser, t]);
 
   useEffect(() => {
     setLocalProvider(provider);
@@ -419,17 +431,60 @@ export default function ProfilePage() {
           </form>
         </div>
 
-        {/* Notifications (Coming Soon) */}
+        {/* Email Verification */}
         <div className="card p-6 space-y-3">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t("notificationSettings")}</h2>
-          <div className="flex items-center gap-3 py-4">
-            <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-slate-700 flex items-center justify-center">
-              <svg className="w-5 h-5 text-gray-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-              </svg>
+
+          {user?.emailVerified ? (
+            <div className="flex items-center gap-3 py-2">
+              <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-500/15 flex items-center justify-center">
+                <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-900 dark:text-white">{t("emailVerified")}</p>
+                <p className="text-xs text-gray-500 dark:text-slate-400">{t("emailVerifiedDesc")}</p>
+              </div>
             </div>
-            <p className="text-sm text-gray-500 dark:text-slate-400">{t("notificationsComingSoon")}</p>
-          </div>
+          ) : (
+            <div className="flex items-center gap-3 py-2">
+              <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-500/15 flex items-center justify-center">
+                <svg className="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900 dark:text-white">{t("emailNotVerified")}</p>
+                <p className="text-xs text-gray-500 dark:text-slate-400">{t("emailNotVerifiedDesc")}</p>
+              </div>
+              <button
+                disabled={verifyingSending || !user?.email}
+                onClick={async () => {
+                  setVerifyingSending(true);
+                  setVerifyMsg("");
+                  setVerifyError("");
+                  try {
+                    const res = await fetch("/api/auth/verify-email", { method: "POST" });
+                    if (res.ok) {
+                      setVerifyMsg(t("verificationEmailSent"));
+                    } else {
+                      const data = await res.json().catch(() => null);
+                      setVerifyError(data?.error || "Failed to send.");
+                    }
+                  } catch {
+                    setVerifyError("Network error.");
+                  }
+                  setVerifyingSending(false);
+                }}
+                className="btn-primary text-xs whitespace-nowrap disabled:opacity-40"
+              >
+                {verifyingSending ? t("loading") : t("sendVerificationEmail")}
+              </button>
+            </div>
+          )}
+          {verifyMsg && <p className="text-xs text-emerald-600 dark:text-emerald-400">{verifyMsg}</p>}
+          {verifyError && <p className="text-xs text-red-500 dark:text-red-400">{verifyError}</p>}
         </div>
 
         {/* Delete Account */}

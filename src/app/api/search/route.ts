@@ -32,7 +32,9 @@ export const GET = withMetrics("/api/search", async (request: NextRequest) => {
 
   try {
     const results = await provider.search(query);
-    return jsonWithCallCount(provider, results);
+    return jsonWithCallCount(provider, results, {
+      headers: { "Cache-Control": "public, max-age=30, stale-while-revalidate=120" },
+    });
   } catch (err) {
     if (provider.name === "alphavantage" && isRateLimitError(err)) {
       console.warn(`Alpha Vantage rate limit hit for search, falling back to Yahoo`);

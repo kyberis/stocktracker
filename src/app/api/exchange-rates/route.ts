@@ -98,5 +98,7 @@ export const GET = withMetrics("/api/exchange-rates", async (request: NextReques
     waitUntil(recordAvUsageAsync(rateLimitUserId, av.callCount));
   }
 
-  return Response.json(results);
+  return Response.json(results, {
+    headers: { "Cache-Control": "public, max-age=60, stale-while-revalidate=300" },
+  });
 });
