@@ -32,11 +32,12 @@ export const POST = withMetrics("/api/billing/sync", async (req: NextRequest) =>
 
     const activeSub = subs.data[0];
     if (activeSub && user.plan !== "pro") {
+      const periodEnd = (activeSub as unknown as { current_period_end?: number }).current_period_end;
       await updateUserSubscription(user.id, {
         plan: "pro",
         stripeSubscriptionId: activeSub.id,
-        planExpiresAt: activeSub.cancel_at_period_end
-          ? new Date(activeSub.current_period_end * 1000).toISOString()
+        planExpiresAt: activeSub.cancel_at_period_end && periodEnd
+          ? new Date(periodEnd * 1000).toISOString()
           : "",
       });
       return NextResponse.json({ plan: "pro", synced: true });
