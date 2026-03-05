@@ -412,6 +412,23 @@ async function runMigrations(client: Client) {
     );
   `);
 
+  // ── Feedback table ──
+  await client.executeMultiple(`
+    CREATE TABLE IF NOT EXISTS feedback (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      subject TEXT NOT NULL,
+      message TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'open' CHECK(status IN ('open', 'answered', 'closed')),
+      admin_reply TEXT NOT NULL DEFAULT '',
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      replied_at TEXT NOT NULL DEFAULT '',
+      FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS idx_feedback_user ON feedback(user_id);
+    CREATE INDEX IF NOT EXISTS idx_feedback_status ON feedback(status);
+  `);
+
   // Add ai_calls_today / ai_daily_reset_at columns to users if missing.
   const userColsRL = await client.execute("PRAGMA table_info(users)");
   const hasAiCallsToday = userColsRL.rows.some((row) => str(row.name) === "ai_calls_today");
@@ -1793,6 +1810,105 @@ export async function getAnalyticsSummary(days = 30): Promise<AnalyticsSummary> 
       dailyViews: landingDailyViews.rows.map((r) => ({ date: str(r.day), views: num(r.cnt) })),
     },
   };
+}
+
+/* ── Feedback ──────────────────────────────────────────────── */
+
+export interface FeedbackEntry {
+  id: string;
+  userId: string;
+  username: string;
+  subject: string;
+  message: string;
+  status: "open" | "answered" | "closed";
+  adminReply: string;
+  createdAt: string;
+  repliedAt: string;
+}
+
+export async function createFeedback(
+  userId: string,
+  subject: string,
+  message: string
+): Promise<FeedbackEntry> {
+  const client = await ensureInitialized();
+  const id = randomUUID();
+  await client.execute({
+    sql: `INSERT INTO feedback (id, user_id, subject, message) VALUES (?, ?, ?, ?)`,
+    args: [id, userId, subject, message],
+  });
+  const user = await findUserById(userId);
+  return {
+    id,
+    userId,
+    username: user?.username || "",
+    subject,
+    message,
+    status: "open",
+    adminReply: "",
+    createdAt: new Date().toISOString(),
+    repliedAt: "",
+  };
+}
+
+function feedbackStatus(val: unknown): "open" | "answered" | "closed" {
+  const v = String(val);
+  if (v === "answered" || v === "closed") return v;
+  return "open";
+}
+
+export async function getFeedbackByUser(userId: string): Promise<FeedbackEntry[]> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: `SELECT f.*, u.username FROM feedback f
+          JOIN users u ON u.id = f.user_id
+          WHERE f.user_id = ? ORDER BY f.created_at DESC`,
+    args: [userId],
+  });
+  return result.rows.map((r) => ({
+    id: str(r.id),
+    userId: str(r.user_id),
+    username: str(r.username),
+    subject: str(r.subject),
+    message: str(r.message),
+    status: feedbackStatus(r.status),
+    adminReply: str(r.admin_reply),
+    createdAt: str(r.created_at),
+    repliedAt: str(r.replied_at),
+  }));
+}
+
+export async function getAllFeedback(): Promise<FeedbackEntry[]> {
+  const client = await ensureInitialized();
+  const result = await client.execute(
+    `SELECT f.*, u.username FROM feedback f
+     JOIN users u ON u.id = f.user_id
+     ORDER BY f.created_at DESC`
+  );
+  return result.rows.map((r) => ({
+    id: str(r.id),
+    userId: str(r.user_id),
+    username: str(r.username),
+    subject: str(r.subject),
+    message: str(r.message),
+    status: feedbackStatus(r.status),
+    adminReply: str(r.admin_reply),
+    createdAt: str(r.created_at),
+    repliedAt: str(r.replied_at),
+  }));
+}
+
+export async function replyToFeedback(
+  feedbackId: string,
+  reply: string,
+  status: "open" | "answered" | "closed"
+): Promise<boolean> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: `UPDATE feedback SET admin_reply = ?, status = ?, replied_at = datetime('now') WHERE id = ?`,
+    args: [reply, status, feedbackId],
+  });
+  return (result.rowsAffected ?? 0) > 0;
 }
 
 /* ── Prometheus Metrics Snapshot ────────────────────────────── */

@@ -185,6 +185,15 @@ export default function Header({ onAddStock, onOpenSettings, onImportPortfolio, 
                 )}
                 <span>{user.displayName || user.username}</span>
               </a>
+              {user.plan === "pro" ? (
+                <span className="px-1.5 py-0.5 text-[10px] font-bold rounded bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-400 border border-emerald-500/30">
+                  {t("proBadge")}
+                </span>
+              ) : (
+                <span className="px-1.5 py-0.5 text-[10px] font-medium rounded bg-slate-700 text-slate-400 border border-slate-600">
+                  {t("freeBadge")}
+                </span>
+              )}
               {user.role === "admin" && (
                 <a href="/admin" className="text-emerald-400 hover:text-emerald-300">
                   {t("admin")}

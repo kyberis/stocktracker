@@ -14,9 +14,40 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "0.17.5";
+export const CURRENT_VERSION = "0.18.0";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "0.18.0",
+    date: "2026-03-05",
+    title: "Feedback system and Pro badge in header",
+    titleEs: "Sistema de feedback y distintivo Pro en el encabezado",
+    changes: [
+      {
+        type: "feature",
+        text: "Submit feedback or report issues directly from the dashboard — admin can view and reply from the Admin panel",
+        textEs: "Envía feedback o reporta problemas directamente desde el panel — el admin puede verlos y responder desde el panel de administración",
+      },
+      {
+        type: "improvement",
+        text: "Pro/Free plan badge is now prominently displayed next to your username in the header",
+        textEs: "El distintivo de plan Pro/Free ahora se muestra de forma destacada junto a tu nombre de usuario en el encabezado",
+      },
+    ],
+  },
+  {
+    version: "0.17.6",
+    date: "2026-03-05",
+    title: "Fix Pro plan not activating after Stripe checkout",
+    titleEs: "Corregir plan Pro no activándose tras checkout de Stripe",
+    changes: [
+      {
+        type: "fix",
+        text: "Pro plan now activates immediately after returning from Stripe checkout instead of staying on Free due to webhook delay",
+        textEs: "El plan Pro ahora se activa inmediatamente al volver del checkout de Stripe en lugar de quedarse en Free por retraso del webhook",
+      },
+    ],
+  },
   {
     version: "0.17.5",
     date: "2026-03-04",

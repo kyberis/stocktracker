@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useRef, FormEvent } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { useSettings } from "@/lib/settings-context";
 import { useI18n } from "@/lib/i18n";
@@ -10,6 +10,7 @@ import ProCompareCard from "@/components/ProCompareCard";
 
 export default function ProfilePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, refreshUser } = useAuth();
   const { provider, hasGlobalAvKey, setProvider } = useSettings();
   const { t } = useI18n();
@@ -33,6 +34,53 @@ export default function ProfilePage() {
   const [deletePassword, setDeletePassword] = useState("");
   const [deleteError, setDeleteError] = useState("");
   const [deleting, setDeleting] = useState(false);
+
+  const [billingSync, setBillingSync] = useState<"idle" | "syncing" | "done" | "timeout">("idle");
+  const billingSyncRan = useRef(false);
+
+  const returnedFromCheckout = searchParams.get("billing") === "success";
+  const needsSync = user && user.plan !== "pro";
+
+  useEffect(() => {
+    if (!needsSync) return;
+    if (billingSyncRan.current) return;
+    billingSyncRan.current = true;
+
+    let cancelled = false;
+    const sync = async () => {
+      setBillingSync("syncing");
+      try {
+        const res = await fetch("/api/billing/sync", { method: "POST" });
+        const data = await res.json().catch(() => null);
+        if (!cancelled && data?.plan === "pro") {
+          await refreshUser();
+          setBillingSync("done");
+          return;
+        }
+      } catch { /* fall through to polling when returning from checkout */ }
+
+      if (!returnedFromCheckout) {
+        if (!cancelled) setBillingSync("idle");
+        return;
+      }
+
+      const MAX_POLLS = 5;
+      const POLL_MS = 2000;
+      for (let i = 0; i < MAX_POLLS && !cancelled; i++) {
+        await new Promise((r) => setTimeout(r, POLL_MS));
+        await refreshUser();
+        const fresh = await fetch("/api/auth/me", { cache: "no-store" });
+        const me = await fresh.json().catch(() => null);
+        if (me?.user?.plan === "pro") {
+          if (!cancelled) setBillingSync("done");
+          return;
+        }
+      }
+      if (!cancelled) setBillingSync("timeout");
+    };
+    sync();
+    return () => { cancelled = true; };
+  }, [needsSync, returnedFromCheckout, refreshUser]);
 
   useEffect(() => {
     if (user) {
@@ -278,6 +326,33 @@ export default function ProfilePage() {
         {/* Subscription */}
         <div className="card p-6 space-y-4">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t("subscription")}</h2>
+
+          {billingSync === "syncing" && (
+            <div className="rounded-xl border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50/60 dark:bg-emerald-500/10 p-4 flex items-center gap-3">
+              <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400 animate-spin flex-shrink-0" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              <p className="text-sm text-emerald-700 dark:text-emerald-300">{t("billingVerifying")}</p>
+            </div>
+          )}
+          {billingSync === "done" && (
+            <div className="rounded-xl border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50/60 dark:bg-emerald-500/10 p-4 flex items-center gap-3">
+              <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+              <p className="text-sm text-emerald-700 dark:text-emerald-300">{t("billingVerified")}</p>
+            </div>
+          )}
+          {billingSync === "timeout" && (
+            <div className="rounded-xl border border-amber-200 dark:border-amber-500/30 bg-amber-50/60 dark:bg-amber-500/10 p-4 flex items-center gap-3">
+              <svg className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-sm text-amber-700 dark:text-amber-300">{t("billingVerifyTimeout")}</p>
+            </div>
+          )}
+
           <div className="rounded-xl border border-gray-200 dark:border-slate-600 p-4 bg-gray-50 dark:bg-slate-800/40">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium text-gray-900 dark:text-white">

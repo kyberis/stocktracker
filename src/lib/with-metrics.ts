@@ -22,9 +22,29 @@ export function withMetrics<T extends Request>(
     try {
       const res = await handler(req, ctx);
       statusCode = res?.status ?? 200;
+
+      if (statusCode >= 500) {
+        try {
+          const body = await res.clone().json();
+          const msg = body?.error || body?.message || "Unknown error";
+          console.error(`[${route}] ${method} ${statusCode}: ${msg}`);
+        } catch {
+          console.error(`[${route}] ${method} ${statusCode}`);
+        }
+      } else if (statusCode >= 400) {
+        try {
+          const body = await res.clone().json();
+          const msg = body?.error || body?.message || "Client error";
+          console.warn(`[${route}] ${method} ${statusCode}: ${msg}`);
+        } catch {
+          console.warn(`[${route}] ${method} ${statusCode}`);
+        }
+      }
+
       return res;
     } catch (err) {
       statusCode = 500;
+      console.error(`[${route}] ${method} unhandled:`, err instanceof Error ? err.message : err);
       throw err;
     } finally {
       end();

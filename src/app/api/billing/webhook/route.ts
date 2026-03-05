@@ -53,8 +53,9 @@ export const POST = withMetrics("/api/billing/webhook", async (req: NextRequest)
     const stripe = getStripeClient();
     event = stripe.webhooks.constructEvent(body, signature, secret);
   } catch (err) {
+    console.error("[billing/webhook] Signature validation failed:", err instanceof Error ? err.message : err);
     return NextResponse.json(
-      { error: `Invalid webhook signature: ${err instanceof Error ? err.message : "unknown"}` },
+      { error: "Invalid webhook signature" },
       { status: 400 }
     );
   }

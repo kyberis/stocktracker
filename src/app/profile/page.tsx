@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { ThemeProvider } from "@/lib/theme-context";
 import { AuthProvider } from "@/lib/auth-context";
 import { I18nProvider } from "@/lib/i18n";
@@ -12,7 +13,9 @@ export default function Profile() {
       <AuthProvider>
         <I18nProvider>
           <SettingsProvider>
-            <ProfilePage />
+            <Suspense>
+              <ProfilePage />
+            </Suspense>
           </SettingsProvider>
         </I18nProvider>
       </AuthProvider>

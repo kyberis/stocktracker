@@ -39,7 +39,7 @@ interface AnalyticsSummary {
   landing: LandingAnalytics;
 }
 
-type Tab = "users" | "settings" | "analytics";
+type Tab = "users" | "settings" | "analytics" | "feedback";
 
 /* ── Summary Card ─────────────────────────────────────────── */
 
@@ -1001,6 +1001,151 @@ function UsersTab() {
   );
 }
 
+/* ── Feedback Tab ─────────────────────────────────────────── */
+
+interface FeedbackItem {
+  id: string;
+  userId: string;
+  username: string;
+  subject: string;
+  message: string;
+  status: "open" | "answered" | "closed";
+  adminReply: string;
+  createdAt: string;
+  repliedAt: string;
+}
+
+function FeedbackTab() {
+  const [items, setItems] = useState<FeedbackItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [replyMap, setReplyMap] = useState<Record<string, string>>({});
+  const [statusMap, setStatusMap] = useState<Record<string, string>>({});
+  const [sendingMap, setSendingMap] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      try {
+        const res = await fetch("/api/feedback", { cache: "no-store" });
+        if (res.ok) {
+          const data = await res.json();
+          setItems(data);
+          const rMap: Record<string, string> = {};
+          const sMap: Record<string, string> = {};
+          for (const item of data) {
+            rMap[item.id] = item.adminReply || "";
+            sMap[item.id] = item.status;
+          }
+          setReplyMap(rMap);
+          setStatusMap(sMap);
+        }
+      } catch {
+        // ignore
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  const handleReply = async (id: string) => {
+    setSendingMap((prev) => ({ ...prev, [id]: true }));
+    try {
+      const res = await fetch("/api/feedback", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id,
+          reply: replyMap[id] || "",
+          status: statusMap[id] || "answered",
+        }),
+      });
+      if (res.ok) {
+        setItems((prev) =>
+          prev.map((item) =>
+            item.id === id
+              ? { ...item, adminReply: replyMap[id] || "", status: (statusMap[id] || "answered") as FeedbackItem["status"], repliedAt: new Date().toISOString() }
+              : item
+          )
+        );
+      }
+    } catch {
+      // ignore
+    } finally {
+      setSendingMap((prev) => ({ ...prev, [id]: false }));
+    }
+  };
+
+  if (loading) return <p className="text-gray-500 dark:text-slate-400">Loading...</p>;
+  if (items.length === 0) return <p className="text-gray-500 dark:text-slate-400">No feedback yet.</p>;
+
+  const statusColor = (status: string) => {
+    if (status === "answered") return "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400";
+    if (status === "closed") return "bg-gray-100 text-gray-600 dark:bg-slate-600/30 dark:text-slate-400";
+    return "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400";
+  };
+
+  return (
+    <div className="space-y-4">
+      {items.map((item) => (
+        <div key={item.id} className="card p-4 space-y-3">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h3 className="font-medium text-gray-900 dark:text-white truncate">
+                {item.subject}
+              </h3>
+              <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
+                From <span className="font-medium">{item.username}</span> &middot;{" "}
+                {new Date(item.createdAt).toLocaleDateString()}
+              </p>
+            </div>
+            <span
+              className={`shrink-0 text-xs font-medium px-2 py-0.5 rounded-full ${statusColor(item.status)}`}
+            >
+              {item.status}
+            </span>
+          </div>
+
+          <p className="text-sm text-gray-700 dark:text-slate-300 whitespace-pre-wrap">
+            {item.message}
+          </p>
+
+          {/* Reply form */}
+          <div className="border-t border-gray-200 dark:border-slate-700 pt-3 space-y-2">
+            <textarea
+              value={replyMap[item.id] ?? ""}
+              onChange={(e) =>
+                setReplyMap((prev) => ({ ...prev, [item.id]: e.target.value }))
+              }
+              placeholder="Write a reply..."
+              className="w-full text-sm min-h-[60px] resize-y"
+            />
+            <div className="flex items-center gap-3">
+              <select
+                value={statusMap[item.id] ?? item.status}
+                onChange={(e) =>
+                  setStatusMap((prev) => ({ ...prev, [item.id]: e.target.value }))
+                }
+                className="text-sm"
+              >
+                <option value="open">Open</option>
+                <option value="answered">Answered</option>
+                <option value="closed">Closed</option>
+              </select>
+              <button
+                onClick={() => handleReply(item.id)}
+                disabled={sendingMap[item.id]}
+                className="btn-primary text-sm disabled:opacity-50"
+              >
+                {sendingMap[item.id] ? "Sending..." : "Send Reply"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /* ── Main Admin Page ──────────────────────────────────────── */
 
 function AdminContent() {
@@ -1019,7 +1164,7 @@ function AdminContent() {
 
         {/* Tab bar */}
         <div className="flex gap-1 mb-6 border-b border-gray-200 dark:border-slate-700">
-          {(["users", "settings", "analytics"] as const).map((t) => (
+          {(["users", "settings", "analytics", "feedback"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -1029,12 +1174,12 @@ function AdminContent() {
                   : "border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200"
               }`}
             >
-              {t === "users" ? "Users" : t === "settings" ? "Settings" : "Analytics"}
+              {t === "users" ? "Users" : t === "settings" ? "Settings" : t === "analytics" ? "Analytics" : "Feedback"}
             </button>
           ))}
         </div>
 
-        {tab === "users" ? <UsersTab /> : tab === "settings" ? <SettingsTab /> : <AnalyticsTab />}
+        {tab === "users" ? <UsersTab /> : tab === "settings" ? <SettingsTab /> : tab === "analytics" ? <AnalyticsTab /> : <FeedbackTab />}
       </div>
     </main>
   );
