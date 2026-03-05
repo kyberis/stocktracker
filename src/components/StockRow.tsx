@@ -158,6 +158,8 @@ export default function StockRow({ holding }: StockRowProps) {
   const [tradeQuantity, setTradeQuantity] = useState("");
   const [tradePrice, setTradePrice] = useState("");
   const [tradeError, setTradeError] = useState<string | null>(null);
+  const [reportSent, setReportSent] = useState(false);
+  const [reportSending, setReportSending] = useState(false);
 
   const quote: QuoteData | undefined = quotes[holding.ticker];
   const isCashHolding =
@@ -312,6 +314,27 @@ export default function StockRow({ holding }: StockRowProps) {
     }
   };
 
+  const handleReportMissingPrice = async () => {
+    if (reportSending || reportSent) return;
+    setReportSending(true);
+    try {
+      const isinPart = holding.isin ? ` (ISIN: ${holding.isin})` : "";
+      await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subject: `${t("reportMissingPriceSubject")}: ${holding.ticker}`,
+          message: `Ticker "${holding.ticker}"${isinPart} on exchange ${holding.exchange} (${holding.displayCurrency}) is not returning a current price. Holding: ${holding.name}, ${holding.shares} shares @ ${holding.purchasePrice} ${holding.displayCurrency}.`,
+        }),
+      });
+      setReportSent(true);
+    } catch {
+      // Silently fail — non-critical action
+    } finally {
+      setReportSending(false);
+    }
+  };
+
   let display52High = 0;
   let display52Low = 0;
   if (hasQuote && quote) {
@@ -458,7 +481,26 @@ export default function StockRow({ holding }: StockRowProps) {
               )}
             </div>
           ) : (
-            <p className="text-sm text-gray-400 dark:text-slate-500">--</p>
+            <div className="flex items-center justify-end gap-1.5">
+              <p className="text-sm text-gray-400 dark:text-slate-500">--</p>
+              {!isCashHolding && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleReportMissingPrice();
+                  }}
+                  disabled={reportSent || reportSending}
+                  className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full transition-colors ${
+                    reportSent
+                      ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20"
+                      : "bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20 hover:bg-amber-100 dark:hover:bg-amber-500/20"
+                  } disabled:opacity-60`}
+                  title={t("reportMissingPriceTooltip")}
+                >
+                  {reportSending ? "..." : reportSent ? t("reportMissingPriceSent") : t("reportMissingPrice")}
+                </button>
+              )}
+            </div>
           )}
         </div>
         <div className="col-span-3 sm:col-span-2 text-right">

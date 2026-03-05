@@ -36,13 +36,13 @@ const KNOWN_ISINS: Record<string, string> = {
   "US7561091049": "O",
   "US8299331004": "SIRI",
   "US92343V1044": "VZ",
-  "CA21037X1006": "W9C",
+  "CA21037X1006": "W9C.F",
   "DE000A3H2200": "NA9.DE",
   "DK0062498333": "NOVO-B.CO",
   "ES0148396007": "ITX.MC",
   "GB00BG5NDX91": "SRB.L",
-  "IE00B6R52036": "IS0E",
-  "IE00BJ5JPG56": "ICGA",
+  "IE00B6R52036": "IS0E.DE",
+  "IE00BJ5JPG56": "ICGA.DE",
   "IE00B53HP851": "ISF.L",
   "IE00B5BMR087": "SXR8.DE",
   "IE0032077012": "EQQQ.L",
@@ -50,6 +50,42 @@ const KNOWN_ISINS: Record<string, string> = {
   "IE00B8GKDB10": "VHYL.L",
   "IE000ZIJ5B20": "WCOS.L",
 };
+
+function extractUniqueIsins(csv: string): string[] {
+  const isins = new Set<string>();
+  const lines = csv.split("\n").filter((l) => l.trim());
+  for (let i = 1; i < lines.length; i++) {
+    const cols = lines[i].split(",");
+    const isin = cols[4]?.replace(/"/g, "").trim() || "";
+    if (/^[A-Z]{2}[A-Z0-9]{10}$/.test(isin)) isins.add(isin);
+  }
+  return Array.from(isins);
+}
+
+async function resolveIsinsViaYahoo(
+  unmappedIsins: string[],
+  isinMap: Record<string, string>
+): Promise<Record<string, string>> {
+  if (unmappedIsins.length === 0) return isinMap;
+  const yahoo = new YahooProvider();
+  const resolved = { ...isinMap };
+  const MAX_LOOKUPS = 15;
+  const batch = unmappedIsins.slice(0, MAX_LOOKUPS);
+
+  await Promise.all(
+    batch.map(async (isin) => {
+      try {
+        const results = await yahoo.search(isin);
+        if (results.length > 0) {
+          resolved[isin] = results[0].symbol;
+        }
+      } catch {
+        // Skip — ISIN will remain unmapped
+      }
+    })
+  );
+  return resolved;
+}
 
 function inferExchangeFromTicker(ticker: string): string {
   if (!ticker) return "";
@@ -91,7 +127,14 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
     }
 
     const holdings = await listHoldings(session.userId);
-    const isinMap = { ...KNOWN_ISINS, ...buildIsinMap(holdings) };
+    let isinMap = { ...KNOWN_ISINS, ...buildIsinMap(holdings) };
+
+    const allIsins = extractUniqueIsins(csv);
+    const unmapped = allIsins.filter((isin) => !isinMap[isin]);
+    if (unmapped.length > 0) {
+      isinMap = await resolveIsinsViaYahoo(unmapped, isinMap);
+    }
+
     const parsed = parseDegiroCSV(csv, isinMap);
 
     if (action === "parse") {

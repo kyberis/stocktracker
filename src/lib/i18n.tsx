@@ -523,6 +523,10 @@ const translations = {
     feedbackSendReply: "Send Reply",
     feedbackReplyPlaceholder: "Write a reply...",
     feedbackFrom: "From",
+    reportMissingPrice: "Report",
+    reportMissingPriceTooltip: "Report this stock so we can fix pricing",
+    reportMissingPriceSent: "Reported!",
+    reportMissingPriceSubject: "Missing price",
   },
   es: {
     appTitle: "StockTracker",
@@ -1043,6 +1047,10 @@ const translations = {
     feedbackSendReply: "Enviar Respuesta",
     feedbackReplyPlaceholder: "Escribe una respuesta...",
     feedbackFrom: "De",
+    reportMissingPrice: "Reportar",
+    reportMissingPriceTooltip: "Reportar esta acción para que arreglemos el precio",
+    reportMissingPriceSent: "¡Reportado!",
+    reportMissingPriceSubject: "Precio faltante",
   },
 } as const;
 

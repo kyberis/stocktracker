@@ -14,9 +14,32 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "0.18.0";
+export const CURRENT_VERSION = "0.18.1";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "0.18.1",
+    date: "2026-03-05",
+    title: "Missing price reporting and automatic ISIN resolution",
+    titleEs: "Reporte de precios faltantes y resolución automática de ISIN",
+    changes: [
+      {
+        type: "feature",
+        text: "Report button appears on holdings with missing prices — submits a feedback report so the admin can fix the ticker mapping",
+        textEs: "Botón de reporte aparece en posiciones sin precio — envía un reporte de feedback para que el admin corrija el mapeo del ticker",
+      },
+      {
+        type: "improvement",
+        text: "DEGIRO import now auto-resolves unmapped ISINs via Yahoo Finance search, reducing manual ticker mapping",
+        textEs: "La importación DEGIRO ahora resuelve ISINs no mapeados automáticamente vía búsqueda de Yahoo Finance, reduciendo el mapeo manual de tickers",
+      },
+      {
+        type: "fix",
+        text: "Constellation Software, iShares Gold Producers, and iShares MSCI China now resolve correct prices after DEGIRO import by using proper exchange-suffixed tickers",
+        textEs: "Constellation Software, iShares Gold Producers e iShares MSCI China ahora muestran precios correctos tras importación DEGIRO al usar tickers con sufijo de bolsa adecuado",
+      },
+    ],
+  },
   {
     version: "0.18.0",
     date: "2026-03-05",
