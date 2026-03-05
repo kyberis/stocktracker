@@ -1,21 +1,23 @@
 "use client";
 
-import { Suspense } from "react";
 import { ThemeProvider } from "@/lib/theme-context";
 import { AuthProvider } from "@/lib/auth-context";
 import { I18nProvider } from "@/lib/i18n";
 import { SettingsProvider } from "@/lib/settings-context";
-import ProfilePage from "@/components/ProfilePage";
+import AppNav from "@/components/AppNav";
+import MobileTabBar from "@/components/MobileTabBar";
 
-export default function Profile() {
+export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider>
       <AuthProvider>
         <I18nProvider>
           <SettingsProvider>
-            <Suspense>
-              <ProfilePage />
-            </Suspense>
+            <div className="min-h-screen bg-gray-50 dark:bg-slate-900 pb-14 sm:pb-0">
+              <AppNav />
+              {children}
+              <MobileTabBar />
+            </div>
           </SettingsProvider>
         </I18nProvider>
       </AuthProvider>

@@ -527,6 +527,8 @@ const translations = {
     reportMissingPriceTooltip: "Report this stock so we can fix pricing",
     reportMissingPriceSent: "Reported!",
     reportMissingPriceSubject: "Missing price",
+    toolsNav: "Tools",
+    indicatorsNav: "Indicators",
   },
   es: {
     appTitle: "StockTracker",
@@ -1051,6 +1053,8 @@ const translations = {
     reportMissingPriceTooltip: "Reportar esta acción para que arreglemos el precio",
     reportMissingPriceSent: "¡Reportado!",
     reportMissingPriceSubject: "Precio faltante",
+    toolsNav: "Herramientas",
+    indicatorsNav: "Indicadores",
   },
 } as const;
 

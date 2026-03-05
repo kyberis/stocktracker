@@ -2,7 +2,6 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ThemeProvider } from "@/lib/theme-context";
 import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer,
@@ -1149,18 +1148,12 @@ function FeedbackTab() {
 /* ── Main Admin Page ──────────────────────────────────────── */
 
 function AdminContent() {
-  const router = useRouter();
   const [tab, setTab] = useState<Tab>("users");
 
   return (
-    <main className="min-h-screen bg-gray-50 dark:bg-slate-900 px-4 py-8">
+    <main className="px-4 py-8">
       <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Admin</h1>
-          <button onClick={() => router.push("/")} className="btn-secondary">
-            Back
-          </button>
-        </div>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Admin</h1>
 
         {/* Tab bar */}
         <div className="flex gap-1 mb-6 border-b border-gray-200 dark:border-slate-700">
@@ -1186,9 +1179,5 @@ function AdminContent() {
 }
 
 export default function AdminPage() {
-  return (
-    <ThemeProvider>
-      <AdminContent />
-    </ThemeProvider>
-  );
+  return <AdminContent />;
 }

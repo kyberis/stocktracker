@@ -2,7 +2,6 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ThemeProvider } from "@/lib/theme-context";
 
 function ChangePasswordForm() {
   const router = useRouter();
@@ -46,7 +45,7 @@ function ChangePasswordForm() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-50 dark:bg-slate-900 flex items-center justify-center px-4">
+    <main className="flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md card">
         <div className="flex items-center gap-2 mb-6">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center">
@@ -108,9 +107,5 @@ function ChangePasswordForm() {
 }
 
 export default function ChangePasswordPage() {
-  return (
-    <ThemeProvider>
-      <ChangePasswordForm />
-    </ThemeProvider>
-  );
+  return <ChangePasswordForm />;
 }

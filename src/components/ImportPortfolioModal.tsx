@@ -84,7 +84,10 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
     rawCsvRef.current = "";
   };
 
+  const isBusy = step === "extracting" || step === "importing";
+
   const handleClose = () => {
+    if (isBusy) return;
     const wasImport = step === "done";
     reset();
     onClose();
@@ -328,7 +331,7 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm" onClick={handleClose} />
+      <div className={`absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm${isBusy ? " cursor-not-allowed" : ""}`} onClick={isBusy ? undefined : handleClose} />
       <div className="relative bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl w-full max-w-2xl mx-4 shadow-xl max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-slate-700">
@@ -338,7 +341,8 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
           </div>
           <button
             onClick={handleClose}
-            className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-400 dark:text-slate-500 transition-colors"
+            disabled={isBusy}
+            className={`p-1.5 rounded-lg transition-colors ${isBusy ? "opacity-30 cursor-not-allowed text-gray-400 dark:text-slate-500" : "hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-400 dark:text-slate-500"}`}
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />

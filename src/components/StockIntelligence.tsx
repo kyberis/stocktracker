@@ -271,43 +271,7 @@ export default function StockIntelligence({ ticker, exchange }: StockIntelligenc
     (activeTab === "transcript" && transcript && transcript.length > 0);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
-      {/* Header */}
-      <header className="bg-nav-bg text-white">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link
-              href={`/stock/${encodeURIComponent(ticker)}?exchange=${encodeURIComponent(exchange)}`}
-              className="text-sm text-slate-300 hover:text-white transition-colors flex items-center gap-1.5"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-              </svg>
-              {t("stockDetailTitle")}
-            </Link>
-          </div>
-          <div className="flex items-center gap-3">
-            {marketStatus && (
-              <span
-                className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${
-                  marketStatus.isOpen
-                    ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                    : "bg-slate-700 text-slate-400 border border-slate-600"
-                }`}
-              >
-                <span
-                  className={`inline-block w-1.5 h-1.5 rounded-full ${
-                    marketStatus.isOpen ? "bg-emerald-400 animate-pulse" : "bg-slate-500"
-                  }`}
-                />
-                {marketStatus.isOpen ? t("marketOpen") : t("marketClosed")}
-              </span>
-            )}
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-6xl mx-auto px-4 py-6 space-y-6">
+    <main className="max-w-6xl mx-auto px-4 py-6 space-y-6">
         {/* Stock Identity */}
         <div className="card px-6 py-5">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
@@ -323,13 +287,25 @@ export default function StockIntelligence({ ticker, exchange }: StockIntelligenc
                   {t("intelligence")}
                 </span>
               </div>
-              <p className="text-sm text-gray-500 dark:text-slate-400 mt-0.5 flex items-center gap-2">
+              <p className="text-sm text-gray-500 dark:text-slate-400 mt-0.5 flex items-center gap-2 flex-wrap">
                 <span>{ticker}</span>
                 {exchange && (
                   <>
                     <span className="text-gray-300 dark:text-slate-600">&middot;</span>
                     <span>{exchange}</span>
                   </>
+                )}
+                {marketStatus && (
+                  <span
+                    className={`inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                      marketStatus.isOpen
+                        ? "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30"
+                        : "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-400 border border-gray-200 dark:border-slate-600"
+                    }`}
+                  >
+                    <span className={`inline-block w-1.5 h-1.5 rounded-full ${marketStatus.isOpen ? "bg-emerald-500 animate-pulse" : "bg-gray-400 dark:bg-slate-500"}`} />
+                    {marketStatus.isOpen ? t("marketOpen") : t("marketClosed")}
+                  </span>
                 )}
               </p>
             </div>
@@ -411,8 +387,7 @@ export default function StockIntelligence({ ticker, exchange }: StockIntelligenc
             )}
           </>
         )}
-      </main>
-    </div>
+    </main>
   );
 }
 

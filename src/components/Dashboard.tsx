@@ -13,7 +13,7 @@ import ImportPortfolioModal from "./ImportPortfolioModal";
 import ResetPortfolioModal from "./ResetPortfolioModal";
 import WhatsNewModal, { useWhatsNewAutoShow } from "./WhatsNewModal";
 import FeedbackModal from "./FeedbackModal";
-import Header from "./Header";
+import DashboardToolbar from "./DashboardToolbar";
 import { useI18n } from "@/lib/i18n";
 
 export default function Dashboard() {
@@ -33,14 +33,12 @@ export default function Dashboard() {
   const whatsNewOpen = showWhatsNew || autoShowWhatsNew;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
-      <Header
+    <>
+      <DashboardToolbar
         onAddStock={() => setShowAddModal(true)}
         onOpenSettings={() => setShowSettings(true)}
         onImportPortfolio={() => setShowImport(true)}
         onResetPortfolio={() => setShowReset(true)}
-        onWhatsNew={() => setShowWhatsNew(true)}
-        hasNewRelease={autoShowWhatsNew}
       />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
@@ -91,7 +89,7 @@ export default function Dashboard() {
       {/* Floating feedback button */}
       <button
         onClick={() => setShowFeedback(true)}
-        className="fixed bottom-6 right-6 z-30 flex items-center gap-2 px-4 py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium shadow-lg transition-colors"
+        className="fixed bottom-20 sm:bottom-6 right-6 z-30 flex items-center gap-2 px-4 py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium shadow-lg transition-colors"
         title={t("feedback")}
       >
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -99,6 +97,6 @@ export default function Dashboard() {
         </svg>
         <span className="hidden sm:inline">{t("feedback")}</span>
       </button>
-    </div>
+    </>
   );
 }

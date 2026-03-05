@@ -195,15 +195,9 @@ export default function ProfilePage() {
   const aiLimit = 5;
 
   return (
-    <main className="min-h-screen bg-gray-50 dark:bg-slate-900 px-4 py-8">
+    <main className="px-4 py-8">
       <div className="max-w-2xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t("profile")}</h1>
-          <button onClick={() => router.push("/")} className="btn-secondary text-sm">
-            {t("backToPortfolio")}
-          </button>
-        </div>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t("profile")}</h1>
 
         {/* Profile Card */}
         <div className="card p-6 space-y-5">

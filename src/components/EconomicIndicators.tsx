@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import Link from "next/link";
 import { useSettings } from "@/lib/settings-context";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth-context";
@@ -271,26 +270,7 @@ export default function EconomicIndicators() {
   const gridColor = isDark ? "#334155" : "#e5e7eb";
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
-      <header className="bg-nav-bg text-white">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link
-              href="/"
-              className="text-sm text-slate-300 hover:text-white transition-colors flex items-center gap-1.5"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-              </svg>
-              {t("backToPortfolio")}
-            </Link>
-          </div>
-          <h1 className="text-lg font-bold">{t("economicIndicators")}</h1>
-          <div className="w-24" />
-        </div>
-      </header>
-
-      <main className="max-w-6xl mx-auto px-4 py-6 space-y-6">
+    <main className="max-w-6xl mx-auto px-4 py-6 space-y-6">
         {/* Title card */}
         <div className="card p-5">
           <div className="flex items-center gap-3 mb-1">
@@ -527,8 +507,7 @@ export default function EconomicIndicators() {
             )}
           </>
         )}
-      </main>
-    </div>
+    </main>
   );
 }
 

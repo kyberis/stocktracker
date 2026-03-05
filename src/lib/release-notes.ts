@@ -14,9 +14,37 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "0.18.1";
+export const CURRENT_VERSION = "0.19.0";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "0.19.0",
+    date: "2026-03-05",
+    title: "Redesigned navigation header and mobile bottom tabs",
+    titleEs: "Navegación rediseñada con cabecera y pestañas móviles inferiores",
+    changes: [
+      {
+        type: "feature",
+        text: "New two-row header: persistent global navigation bar (Portfolio, Tools, Indicators) with contextual action bar per page",
+        textEs: "Nueva cabecera de dos filas: barra de navegación global persistente (Portafolio, Herramientas, Indicadores) con barra de acciones contextual por página",
+      },
+      {
+        type: "feature",
+        text: "Mobile bottom tab bar for quick access to all main sections on small screens",
+        textEs: "Barra de pestañas inferior en móvil para acceso rápido a todas las secciones principales en pantallas pequeñas",
+      },
+      {
+        type: "improvement",
+        text: "User dropdown menu consolidates profile, admin access, plan badge, and sign-out into a single compact control",
+        textEs: "Menú desplegable de usuario consolida perfil, acceso admin, insignia de plan y cierre de sesión en un solo control compacto",
+      },
+      {
+        type: "improvement",
+        text: "Shared layout across all authenticated pages eliminates duplicate provider wrappers and inconsistent per-page headers",
+        textEs: "Layout compartido en todas las páginas autenticadas elimina proveedores duplicados y cabeceras inconsistentes por página",
+      },
+    ],
+  },
   {
     version: "0.18.1",
     date: "2026-03-05",
@@ -37,6 +65,11 @@ export const releaseNotes: ReleaseEntry[] = [
         type: "fix",
         text: "Constellation Software, iShares Gold Producers, and iShares MSCI China now resolve correct prices after DEGIRO import by using proper exchange-suffixed tickers",
         textEs: "Constellation Software, iShares Gold Producers e iShares MSCI China ahora muestran precios correctos tras importación DEGIRO al usar tickers con sufijo de bolsa adecuado",
+      },
+      {
+        type: "fix",
+        text: "Import modal can no longer be dismissed by clicking outside while an import is in progress, preventing partial imports",
+        textEs: "El modal de importación ya no se puede cerrar haciendo clic fuera mientras una importación está en progreso, evitando importaciones parciales",
       },
     ],
   },
