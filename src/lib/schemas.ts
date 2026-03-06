@@ -102,7 +102,13 @@ export const updateCashSchema = z.object({
 
 export const userSettingsSchema = z.object({
   provider: z.enum(["yahoo", "alphavantage"]).optional(),
-  language: z.enum(["en", "es"]).optional(),
+  language: z.enum([
+    "en", "es", "fr", "de", "it", "pt", "nl", "pl",
+    "cs", "sk", "hu", "ro", "bg", "hr", "sl", "el",
+    "sv", "da", "fi", "et", "lv", "lt", "ga", "mt",
+    "nb", "uk", "tr", "sr", "is", "sq", "bs", "mk",
+    "be", "ca", "cy",
+  ]).optional(),
   refreshInterval: z.union([z.literal(15), z.literal(30), z.literal(60)]).optional(),
 });
 

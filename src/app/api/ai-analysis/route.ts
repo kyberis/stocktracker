@@ -5,6 +5,7 @@ import { requireFeatureAccess } from "@/lib/auth/guards";
 import { getGlobalOpenAIApiKey, incrementAiUsage, incrementDailyAiUsage, findUserById } from "@/lib/db";
 import { aiCallsTotal, aiRequestDuration, rateLimitHitsTotal } from "@/lib/metrics";
 import { checkAiRateLimit } from "@/lib/rate-limit";
+import { languageCodeToName } from "@/lib/languages";
 import { withMetrics } from "@/lib/with-metrics";
 
 export const POST = withMetrics("/api/ai-analysis", async (request: NextRequest) => {
@@ -67,7 +68,7 @@ export const POST = withMetrics("/api/ai-analysis", async (request: NextRequest)
     return Response.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  const lang = body.language === "es" ? "Spanish" : "English";
+  const lang = languageCodeToName(body.language || "en");
   const companyLabel = body.companyName
     ? `${body.companyName} (${body.ticker})`
     : body.ticker || "this company";

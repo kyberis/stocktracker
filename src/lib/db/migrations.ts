@@ -80,7 +80,7 @@ async function bootstrapSchema(client: Client): Promise<void> {
       user_id TEXT PRIMARY KEY,
       provider TEXT NOT NULL DEFAULT 'yahoo' CHECK(provider IN ('yahoo', 'alphavantage')),
       alpha_vantage_api_key TEXT NOT NULL DEFAULT '',
-      language TEXT NOT NULL DEFAULT 'en' CHECK(language IN ('en', 'es')),
+      language TEXT NOT NULL DEFAULT 'en',
       FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
     );
 
@@ -307,18 +307,49 @@ async function bootstrapSchema(client: Client): Promise<void> {
   }
 }
 
-// Future migrations go here. Each runs exactly once.
 const MIGRATIONS: Migration[] = [
   {
     version: 1,
     description: "Bootstrap: full schema creation and legacy data migrations",
     up: bootstrapSchema,
   },
-  // {
-  //   version: 2,
-  //   description: "Example future migration",
-  //   up: async (client) => { ... },
-  // },
+  {
+    version: 2,
+    description: "Remove restrictive language CHECK constraint from user_settings",
+    up: async (client: Client) => {
+      const cols = await client.execute("PRAGMA table_info(user_settings)");
+      const colNames = cols.rows.map((r) => str(r.name));
+      if (!colNames.includes("language")) return;
+
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS user_settings_new (
+          user_id TEXT PRIMARY KEY,
+          provider TEXT NOT NULL DEFAULT 'yahoo' CHECK(provider IN ('yahoo', 'alphavantage')),
+          alpha_vantage_api_key TEXT NOT NULL DEFAULT '',
+          language TEXT NOT NULL DEFAULT 'en',
+          refresh_interval INTEGER NOT NULL DEFAULT 15,
+          openai_api_key TEXT NOT NULL DEFAULT '',
+          FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        INSERT OR IGNORE INTO user_settings_new
+          SELECT user_id, provider, alpha_vantage_api_key, language, refresh_interval, openai_api_key
+          FROM user_settings;
+        DROP TABLE user_settings;
+        ALTER TABLE user_settings_new RENAME TO user_settings;
+      `);
+    },
+  },
+  {
+    version: 3,
+    description: "Add exchange_rate_eur to transactions for historical FX accuracy",
+    up: async (client: Client) => {
+      const cols = await client.execute("PRAGMA table_info(transactions)");
+      const colNames = new Set(cols.rows.map((r) => str(r.name)));
+      if (!colNames.has("exchange_rate_eur")) {
+        await client.execute({ sql: "ALTER TABLE transactions ADD COLUMN exchange_rate_eur REAL" });
+      }
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

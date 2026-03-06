@@ -40,13 +40,14 @@ function changeIcon(type: ChangeType) {
   }
 }
 
-function changeLabel(type: ChangeType, isEs: boolean) {
-  const labels = {
-    feature: isEs ? "Nuevo" : "New",
-    improvement: isEs ? "Mejora" : "Improved",
-    fix: isEs ? "Corrección" : "Fixed",
-  };
-  return labels[type];
+const changeLabelTranslations: Record<ChangeType, Record<string, string>> = {
+  feature: { en: "New", es: "Nuevo", fr: "Nouveau", de: "Neu", it: "Nuovo", pt: "Novo" },
+  improvement: { en: "Improved", es: "Mejora", fr: "Amélioré", de: "Verbessert", it: "Migliorato", pt: "Melhorado" },
+  fix: { en: "Fixed", es: "Corrección", fr: "Corrigé", de: "Behoben", it: "Corretto", pt: "Corrigido" },
+};
+
+function changeLabel(type: ChangeType, lang: string) {
+  return changeLabelTranslations[type][lang] || changeLabelTranslations[type].en;
 }
 
 function changeLabelColor(type: ChangeType) {
@@ -88,7 +89,7 @@ export function useWhatsNewAutoShow() {
 
 export default function WhatsNewModal({ isOpen, onClose }: WhatsNewModalProps) {
   const { language } = useI18n();
-  const isEs = language === "es";
+  const lang = language;
 
   const handleClose = () => {
     try {
@@ -115,10 +116,10 @@ export default function WhatsNewModal({ isOpen, onClose }: WhatsNewModalProps) {
             </div>
             <div>
               <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-                {isEs ? "Novedades" : "What's New"}
+                {lang !== "en" ? "Novedades" : "What's New"}
               </h2>
               <p className="text-xs text-gray-500 dark:text-slate-400">
-                {isEs ? "Últimas actualizaciones y mejoras" : "Latest updates and improvements"}
+                {"Latest updates and improvements"}
               </p>
             </div>
           </div>
@@ -141,7 +142,7 @@ export default function WhatsNewModal({ isOpen, onClose }: WhatsNewModalProps) {
                   v{release.version}
                 </span>
                 <span className="text-xs text-gray-400 dark:text-slate-500">
-                  {new Date(release.date).toLocaleDateString(isEs ? "es-ES" : "en-US", {
+                  {new Date(release.date).toLocaleDateString(lang !== "en" ? `${lang}` : "en-US", {
                     year: "numeric",
                     month: "short",
                     day: "numeric",
@@ -149,12 +150,12 @@ export default function WhatsNewModal({ isOpen, onClose }: WhatsNewModalProps) {
                 </span>
                 {idx === 0 && (
                   <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-400 border border-violet-200 dark:border-violet-500/20">
-                    {isEs ? "ACTUAL" : "LATEST"}
+                    LATEST
                   </span>
                 )}
               </div>
               <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
-                {isEs ? (release.titleEs || release.title) : release.title}
+                {release.titleTranslations?.[lang] || release.title}
               </h3>
               <ul className="space-y-2">
                 {release.changes.map((change, changeIdx) => (
@@ -162,10 +163,10 @@ export default function WhatsNewModal({ isOpen, onClose }: WhatsNewModalProps) {
                     {changeIcon(change.type)}
                     <div className="flex-1 min-w-0">
                       <span className={`inline-block text-[10px] font-semibold px-1.5 py-0.5 rounded-full mr-1.5 ${changeLabelColor(change.type)}`}>
-                        {changeLabel(change.type, isEs)}
+                        {changeLabel(change.type, lang)}
                       </span>
                       <span className="text-sm text-gray-700 dark:text-slate-300">
-                        {isEs ? (change.textEs || change.text) : change.text}
+                        {change.translations?.[lang] || change.text}
                       </span>
                     </div>
                   </li>
@@ -184,7 +185,7 @@ export default function WhatsNewModal({ isOpen, onClose }: WhatsNewModalProps) {
             onClick={handleClose}
             className="btn-primary text-sm px-5"
           >
-            {isEs ? "Entendido" : "Got it"}
+            {"Got it"}
           </button>
         </div>
       </div>

@@ -2,6 +2,7 @@ import { ensureInitialized } from "./client";
 import { str, parseRefreshInterval, ADMIN_DEFAULT_USERNAME } from "./helpers";
 import type { UserSettings } from "./helpers";
 import type { ApiProviderName, Language } from "@/lib/types";
+import { isValidLanguage } from "@/lib/languages";
 import { encrypt, tryDecryptOrPlaintext } from "@/lib/crypto";
 
 export type PlatformFeature = "alerts_enabled" | "csv_export_enabled";
@@ -26,7 +27,7 @@ export async function getUserSettings(userId: string): Promise<UserSettings> {
   return {
     provider: (row.provider === "alphavantage" ? "alphavantage" : "yahoo") as ApiProviderName,
     alphaVantageApiKey: tryDecryptOrPlaintext(str(row.alpha_vantage_api_key)),
-    language: (row.language === "es" ? "es" : "en") as Language,
+    language: (isValidLanguage(String(row.language)) ? String(row.language) : "en") as Language,
     refreshInterval: parseRefreshInterval(row.refresh_interval),
   };
 }

@@ -2,6 +2,7 @@ import type { Row } from "@libsql/client";
 import type {
   AlertCondition,
   HoldingAssetType,
+  Language,
   RefreshInterval,
   TransactionType,
 } from "@/lib/types";
@@ -51,7 +52,7 @@ export interface PublicUser {
 export interface UserSettings {
   provider: "yahoo" | "alphavantage";
   alphaVantageApiKey: string;
-  language: "en" | "es";
+  language: Language;
   refreshInterval: RefreshInterval;
 }
 

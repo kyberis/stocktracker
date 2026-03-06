@@ -74,6 +74,7 @@ export interface Transaction {
   taxes: number;
   currency: string;
   displayCurrency?: string;
+  exchangeRateEur?: number;
   notes: string;
   sourceRef?: string;
   createdAt: string;
@@ -262,7 +263,12 @@ export type ExchangeRates = Record<string, number>;
 
 export type TimePeriod = "1w" | "1m" | "3m" | "6m" | "1y" | "all";
 
-export type Language = "en" | "es";
+export type Language =
+  | "en" | "es" | "fr" | "de" | "it" | "pt" | "nl" | "pl"
+  | "cs" | "sk" | "hu" | "ro" | "bg" | "hr" | "sl" | "el"
+  | "sv" | "da" | "fi" | "et" | "lv" | "lt" | "ga" | "mt"
+  | "nb" | "uk" | "tr" | "sr" | "is" | "sq" | "bs" | "mk"
+  | "be" | "ca" | "cy";
 
 export type RefreshInterval = 15 | 30 | 60;
 
