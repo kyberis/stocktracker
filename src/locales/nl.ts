@@ -377,6 +377,7 @@ const nl: TranslationStrings = {
   importTxSuccess: "{count} transacties geïmporteerd.",
   importCashWillBeAdded: "wordt toegevoegd aan Contant",
   importDuplicatesRemoved: "{count} dubbele transacties die al in uw portefeuille staan, zijn verwijderd.",
+  importHoldingsCapped: "{count} holding(s) overgeslagen — Het gratisplan staat maximaal 15 holdings toe. Upgrade naar Pro voor onbeperkt.",
   importError: "Kon gegevens niet extraheren. Probeer het opnieuw.",
   importRemoveRow: "Verwijderen",
   resetPortfolio: "Portfolio resetten",

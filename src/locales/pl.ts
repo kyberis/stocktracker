@@ -377,6 +377,7 @@ const pl: TranslationStrings = {
   importTxSuccess: "{count} transakcji zaimportowano.",
   importCashWillBeAdded: "zostanie dodane do Gotówki",
   importDuplicatesRemoved: "{count} zduplikowanych transakcji już istniejących w Twoim portfelu zostało usuniętych.",
+  importHoldingsCapped: "{count} pozycji pominięto — Plan darmowy pozwala na maksymalnie 15 pozycji. Przejdź na Pro, aby uzyskać nieograniczoną liczbę.",
   importError: "Nie udało się wyodrębnić danych. Spróbuj ponownie.",
   importRemoveRow: "Usuń",
   resetPortfolio: "Resetuj portfel",

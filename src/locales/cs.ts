@@ -377,6 +377,7 @@ const cs: TranslationStrings = {
   importTxSuccess: "{count} transakcí importováno.",
   importCashWillBeAdded: "bude přidáno do Hotovosti",
   importDuplicatesRemoved: "{count} duplicitních transakcí, které již byly ve vašem portfoliu, bylo odebráno.",
+  importHoldingsCapped: "{count} pozic přeskočeno — Bezplatný plán umožňuje až 15 pozic. Aktualizujte na Pro pro neomezené.",
   importError: "Nepodařilo se extrahovat data. Zkuste to znovu.",
   importRemoveRow: "Odebrat",
   resetPortfolio: "Resetovat portfolio",

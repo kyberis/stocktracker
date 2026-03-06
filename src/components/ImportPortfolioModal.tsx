@@ -68,6 +68,7 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
   const [cashBalances, setCashBalances] = useState<CashBalance[]>([]);
   const [duplicatesRemoved, setDuplicatesRemoved] = useState(0);
   const [importWarning, setImportWarning] = useState("");
+  const [holdingsCapped, setHoldingsCapped] = useState(0);
   const rawCsvRef = useRef<string>("");
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -87,6 +88,7 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
     setCashBalances([]);
     setDuplicatesRemoved(0);
     setImportWarning("");
+    setHoldingsCapped(0);
     rawCsvRef.current = "";
   };
 
@@ -283,41 +285,59 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
     };
     const importSource = isImageImport ? "Image import" : `${formatLabels[csvFormat]} import`;
 
-    for (const tx of validTransactions) {
-      const ticker = tx.ticker || tx.isin || (tx.type === "fee" ? "FEE" : "UNKNOWN");
+    const CHUNK_SIZE = 50;
+    let limitReached = false;
+    let totalHoldingsCapped = 0;
+    for (let i = 0; i < validTransactions.length; i += CHUNK_SIZE) {
+      const chunk = validTransactions.slice(i, i + CHUNK_SIZE);
+      const isLastChunk = i + CHUNK_SIZE >= validTransactions.length || limitReached;
+      const payload = chunk.map((tx) => ({
+        holdingId: "",
+        ticker: tx.ticker || tx.isin || (tx.type === "fee" ? "FEE" : "UNKNOWN"),
+        name: tx.name,
+        exchange: holdings.find((h) => h.ticker === tx.ticker)?.exchange || "",
+        isin: tx.isin || "",
+        assetType: holdings.find((h) => h.ticker === tx.ticker)?.assetType
+          || ((tx.name.toUpperCase().includes("ETF") || tx.name.toUpperCase().includes("UCITS")) ? "etf" : "stock"),
+        accountId: "",
+        type: tx.type,
+        date: tx.date,
+        shares: tx.shares,
+        pricePerShare: tx.pricePerShare,
+        totalAmount: tx.totalAmount || tx.shares * tx.pricePerShare,
+        fees: tx.fees,
+        taxes: 0,
+        currency: tx.currency,
+        displayCurrency: tx.currency,
+        notes: importSource,
+        sourceRef: tx.sourceRef || "",
+      }));
+
       try {
-        const res = await fetch("/api/transactions", {
+        const res = await fetch("/api/transactions/bulk", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            holdingId: "",
-            ticker,
-            name: tx.name,
-            exchange: holdings.find((h) => h.ticker === tx.ticker)?.exchange || "",
-            isin: tx.isin || "",
-            assetType: holdings.find((h) => h.ticker === tx.ticker)?.assetType
-              || ((tx.name.toUpperCase().includes("ETF") || tx.name.toUpperCase().includes("UCITS")) ? "etf" : "stock"),
-            accountId: "",
-            type: tx.type,
-            date: tx.date,
-            shares: tx.shares,
-            pricePerShare: tx.pricePerShare,
-            totalAmount: tx.totalAmount || tx.shares * tx.pricePerShare,
-            fees: tx.fees,
-            taxes: 0,
-            currency: tx.currency,
-            displayCurrency: tx.currency,
-            notes: importSource,
-            sourceRef: tx.sourceRef || "",
-          }),
+          body: JSON.stringify({ transactions: payload, finalize: isLastChunk }),
         });
-        if (res.ok) txCount++;
-        else errorCount++;
+        if (res.ok) {
+          const data = await res.json();
+          txCount += data.inserted || 0;
+          errorCount += data.skipped || 0;
+          if (data.holdingsCapped > 0) {
+            totalHoldingsCapped = data.holdingsCapped;
+            limitReached = true;
+          }
+        } else {
+          errorCount += chunk.length;
+        }
       } catch {
-        errorCount++;
+        errorCount += chunk.length;
       }
       setImportProgress({ current: txCount + errorCount, total, errors: errorCount });
+
+      if (limitReached) break;
     }
+    setHoldingsCapped(totalHoldingsCapped);
 
     // Import cash balances for DEGIRO imports
     let cashCount = 0;
@@ -724,6 +744,17 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
                   </p>
                 )}
               </div>
+              {holdingsCapped > 0 && (
+                <div className="flex items-start gap-2 rounded-lg bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 px-3 py-2 max-w-sm mx-auto">
+                  <svg className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                  </svg>
+                  <p className="text-xs text-amber-700 dark:text-amber-300">
+                    {(t("importHoldingsCapped") || "{count} holding(s) skipped — Free plan allows up to 15 holdings. Upgrade to Pro for unlimited.")
+                      .replace("{count}", String(holdingsCapped))}
+                  </p>
+                </div>
+              )}
               <button onClick={handleClose} className="btn-primary text-sm">
                 {t("close")}
               </button>

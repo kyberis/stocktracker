@@ -377,6 +377,7 @@ const cy: TranslationStrings = {
   importTxSuccess: "{count} o drafodion wedi'u mewnforio.",
   importCashWillBeAdded: "yn cael ei ychwanegu at Arian Parod",
   importDuplicatesRemoved: "{count} trafodiad dyblyg a oedd eisoes yn eich portffolio wedi'u tynnu.",
+  importHoldingsCapped: "{count} deiliad(a) a hepgorwyd — Mae'r cynllun am ddim yn caniatáu hyd at 15 deiliad. Uwchraddiwch i Pro am ddiderfyn.",
   importError: "Methwyd â echdynnu data. Rhowch gynnig arall arni.",
   importRemoveRow: "Tynnu",
   resetPortfolio: "Ailosod Portffolio",

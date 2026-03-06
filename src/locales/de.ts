@@ -377,6 +377,7 @@ const de: TranslationStrings = {
   importTxSuccess: "{count} Transaktionen importiert.",
   importCashWillBeAdded: "wird zu Bargeld hinzugefügt",
   importDuplicatesRemoved: "{count} doppelte Transaktionen, die bereits in Ihrem Portfolio vorhanden sind, wurden entfernt.",
+  importHoldingsCapped: "{count} Position(en) übersprungen — Der kostenlose Plan erlaubt bis zu 15 Positionen. Upgrade auf Pro für unbegrenzt.",
   importError: "Daten konnten nicht extrahiert werden. Bitte versuchen Sie es erneut.",
   importRemoveRow: "Entfernen",
   resetPortfolio: "Portfolio zurücksetzen",

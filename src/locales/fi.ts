@@ -377,6 +377,7 @@ const fi: TranslationStrings = {
   importTxSuccess: "{count} kauppaa tuotu.",
   importCashWillBeAdded: "lisätään Käteiseen",
   importDuplicatesRemoved: "{count} salkussasi jo olevaa kaksoiskappaletta poistettiin.",
+  importHoldingsCapped: "{count} omistusta ohitettu — Ilmainen suunnitelma sallii enintään 15 omistusta. Päivitä Pro-versioon rajoittamattomalle.",
   importError: "Datan poiminta epäonnistui. Yritä uudelleen.",
   importRemoveRow: "Poista",
   resetPortfolio: "Nollaa salkku",

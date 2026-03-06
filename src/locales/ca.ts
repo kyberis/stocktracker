@@ -377,6 +377,7 @@ const ca: TranslationStrings = {
   importTxSuccess: "{count} transaccions importades.",
   importCashWillBeAdded: "s'afegirà a Efectiu",
   importDuplicatesRemoved: "{count} transaccions duplicades que ja eren a la teva cartera han estat eliminades.",
+  importHoldingsCapped: "{count} posició(s) omesa(s) — El pla gratuït permet fins a 15 posicions. Actualitzeu a Pro per a il·limitades.",
   importError: "Error en extreure dades. Torneu-ho a provar.",
   importRemoveRow: "Eliminar",
   resetPortfolio: "Reiniciar Cartera",

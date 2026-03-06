@@ -377,6 +377,7 @@ const sk: TranslationStrings = {
   importTxSuccess: "{count} transakcií importovaných.",
   importCashWillBeAdded: "bude pridané do Hotovosti",
   importDuplicatesRemoved: "{count} duplicitných transakcií, ktoré už boli vo vašom portfóliu, bolo odstránených.",
+  importHoldingsCapped: "{count} pozície preskočené — Bezplatný plán umožňuje až 15 pozícií. Inovujte na Pro pre neobmedzené.",
   importError: "Nepodarilo sa extrahovať údaje. Skúste to znova.",
   importRemoveRow: "Odstrániť",
   resetPortfolio: "Resetovať portfólio",

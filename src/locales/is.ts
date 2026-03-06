@@ -377,6 +377,7 @@ const is: TranslationStrings = {
   importTxSuccess: "{count} viðskipti innflutt.",
   importCashWillBeAdded: "verður bætt við Handbært fé",
   importDuplicatesRemoved: "{count} tvítekin viðskipti sem þegar voru í eignasafninu þínu voru fjarlægð.",
+  importHoldingsCapped: "{count} eign(ir) sleppt — Ókeypis áætlunin leyfir allt að 15 eignir. Uppfærðu í Pro fyrir ótakmarkaðar.",
   importError: "Gat ekki dregið út gögn. Reyndu aftur.",
   importRemoveRow: "Fjarlægja",
   resetPortfolio: "Endurstilla eignasafn",

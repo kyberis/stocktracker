@@ -24,6 +24,11 @@ export const releaseNotes: ReleaseEntry[] = [
     titleTranslations: { es: "Soporte para 35 idiomas europeos" },
     changes: [
       {
+        type: "improvement",
+        text: "Bulk import now gracefully stops at the 15-holding free-tier limit instead of failing the entire import",
+        translations: { es: "La importación masiva ahora se detiene correctamente al alcanzar el límite de 15 posiciones del plan gratuito en lugar de fallar toda la importación" },
+      },
+      {
         type: "feature",
         text: "The app now supports 35 European languages including all 24 official EU languages plus Norwegian, Ukrainian, Turkish, Serbian, Icelandic, Albanian, Bosnian, Macedonian, Belarusian, Catalan, and Welsh",
         translations: { es: "La app ahora soporta 35 idiomas europeos incluyendo los 24 idiomas oficiales de la UE más noruego, ucraniano, turco, serbio, islandés, albanés, bosnio, macedonio, bielorruso, catalán y galés" },

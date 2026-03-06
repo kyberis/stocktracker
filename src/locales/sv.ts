@@ -377,6 +377,7 @@ const sv: TranslationStrings = {
   importTxSuccess: "{count} transaktioner importerade.",
   importCashWillBeAdded: "kommer att läggas till i Kontanter",
   importDuplicatesRemoved: "{count} dubbletter av transaktioner som redan finns i din portfölj har tagits bort.",
+  importHoldingsCapped: "{count} innehav överhoppade — Gratisplanen tillåter upp till 15 innehav. Uppgradera till Pro för obegränsat.",
   importError: "Kunde inte extrahera data. Försök igen.",
   importRemoveRow: "Ta bort",
   resetPortfolio: "Återställ portfölj",

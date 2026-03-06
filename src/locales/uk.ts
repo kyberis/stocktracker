@@ -377,6 +377,7 @@ const uk: TranslationStrings = {
   importTxSuccess: "{count} угод імпортовано.",
   importCashWillBeAdded: "буде додано до Готівки",
   importDuplicatesRemoved: "{count} дублікатів транзакцій, які вже були у вашому портфелі, було видалено.",
+  importHoldingsCapped: "{count} позицій пропущено — Безкоштовний план дозволяє до 15 позицій. Оновіть до Pro для необмеженої кількості.",
   importError: "Не вдалося витягти дані. Спробуйте ще раз.",
   importRemoveRow: "Видалити",
   resetPortfolio: "Скинути портфель",

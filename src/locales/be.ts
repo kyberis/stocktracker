@@ -377,6 +377,7 @@ const be: TranslationStrings = {
   importTxSuccess: "{count} транзакцый імпартавана.",
   importCashWillBeAdded: "будзе дадана да Наяўных",
   importDuplicatesRemoved: "{count} дублікатаў транзакцый, якія ўжо былі ў вашому партфелі, было выдалена.",
+  importHoldingsCapped: "{count} пазіцый(ы) прапушчана — Бясплатны план дазваляе да 15 пазіцый. Абнавіце да Pro для неабмежаванай колькасці.",
   importError: "Не ўдалося здабыць даныя. Паспрабуйце зноў.",
   importRemoveRow: "Выдаліць",
   resetPortfolio: "Скінуць партфель",

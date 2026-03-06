@@ -377,6 +377,7 @@ const hr: TranslationStrings = {
   importTxSuccess: "{count} transakcija uvezeno.",
   importCashWillBeAdded: "bit će dodano u Gotovinu",
   importDuplicatesRemoved: "{count} dupliciranih transakcija koje su već bile u vašem portfelju uklonjeno je.",
+  importHoldingsCapped: "{count} holding(a) preskočeno — Besplatan plan dozvoljava do 15 holdinga. Nadogradite na Pro za neograničeno.",
   importError: "Izvlačenje podataka nije uspjelo. Molimo pokušajte ponovno.",
   importRemoveRow: "Ukloni",
   resetPortfolio: "Resetiraj portfelj",

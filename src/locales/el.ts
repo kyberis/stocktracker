@@ -377,6 +377,7 @@ const el: TranslationStrings = {
   importTxSuccess: "{count} συναλλαγές εισήχθησαν.",
   importCashWillBeAdded: "θα προστεθούν στα Μετρητά",
   importDuplicatesRemoved: "{count} διπλότυπες συναλλαγές που υπήρχαν ήδη στο χαρτοφυλάκιό σας αφαιρέθηκαν.",
+  importHoldingsCapped: "{count} θέση(εις) παραλειφθείσες — Το δωρεάν πλάνο επιτρέπει έως 15 θέσεις. Αναβαθμίστε στο Pro για απεριόριστο.",
   importError: "Η εξαγωγή δεδομένων απέτυχε. Παρακαλώ δοκιμάστε ξανά.",
   importRemoveRow: "Αφαίρεση",
   resetPortfolio: "Επαναφορά χαρτοφυλακίου",

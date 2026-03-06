@@ -377,6 +377,7 @@ const ro: TranslationStrings = {
   importTxSuccess: "{count} tranzacții importate.",
   importCashWillBeAdded: "va fi adăugat la Numerar",
   importDuplicatesRemoved: "{count} tranzacții duplicate deja existente în portofoliul dvs. au fost eliminate.",
+  importHoldingsCapped: "{count} poziție(i) omise — Planul gratuit permite până la 15 poziții. Faceți upgrade la Pro pentru nelimitat.",
   importError: "Extragerea datelor a eșuat. Încercați din nou.",
   importRemoveRow: "Elimină",
   resetPortfolio: "Resetează Portofoliu",

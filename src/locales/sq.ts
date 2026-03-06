@@ -377,6 +377,7 @@ const sq: TranslationStrings = {
   importTxSuccess: "{count} transaksione u importuan.",
   importCashWillBeAdded: "do të shtohet te Para",
   importDuplicatesRemoved: "{count} transaksione të dyfishta që ishin tashmë në portofolin tuaj u hoqën.",
+  importHoldingsCapped: "{count} holding(u) u anashkaluan — Plani falas lejon deri në 15 holdinge. Përditësoni në Pro për të pakufizuara.",
   importError: "Dështoi nxjerrja e të dhënave. Ju lutemi provoni përsëri.",
   importRemoveRow: "Hiq",
   resetPortfolio: "Rivendos portofolin",

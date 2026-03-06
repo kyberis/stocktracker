@@ -196,6 +196,53 @@ export async function addTransaction(userId: string, tx: Omit<Transaction, "id" 
   return created;
 }
 
+export async function addTransactionsBulk(
+  userId: string,
+  txs: Omit<Transaction, "id" | "createdAt">[],
+): Promise<{ inserted: number; skipped: number }> {
+  if (txs.length === 0) return { inserted: 0, skipped: 0 };
+
+  const client = await ensureInitialized();
+  const BATCH_SIZE = 50;
+  let inserted = 0;
+  let skipped = 0;
+
+  for (let i = 0; i < txs.length; i += BATCH_SIZE) {
+    const batch = txs.slice(i, i + BATCH_SIZE);
+    const stmts = batch.map((tx) => {
+      const id = randomUUID();
+      const total = tx.totalAmount || tx.shares * tx.pricePerShare;
+      const exchange = (tx.exchange || "").toUpperCase();
+      const ticker = normalizeTickerForExchange(tx.ticker, exchange);
+      const sourceRef = tx.sourceRef || "";
+
+      return {
+        sql: `INSERT OR IGNORE INTO transactions (
+                id, user_id, holding_id, ticker, name, exchange, isin, asset_type, account_id,
+                type, date, shares, price_per_share, total_amount, fees, taxes, currency, display_currency, exchange_rate_eur, notes, source_ref
+              )
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        args: [
+          id, userId, tx.holdingId || "", ticker, tx.name || "", exchange,
+          tx.isin || "", tx.assetType || "stock", tx.accountId || "",
+          tx.type, tx.date, tx.shares, tx.pricePerShare, total,
+          tx.fees || 0, tx.taxes || 0, tx.currency || "EUR",
+          tx.displayCurrency || tx.currency || "EUR", tx.exchangeRateEur ?? null,
+          tx.notes || "", sourceRef,
+        ],
+      };
+    });
+
+    const results = await client.batch(stmts, "write");
+    for (const r of results) {
+      if ((r.rowsAffected ?? 0) > 0) inserted++;
+      else skipped++;
+    }
+  }
+
+  return { inserted, skipped };
+}
+
 export async function deleteTransaction(userId: string, txId: string): Promise<boolean> {
   const client = await ensureInitialized();
   const result = await client.execute({ sql: "DELETE FROM transactions WHERE id = ? AND user_id = ?", args: [txId, userId] });

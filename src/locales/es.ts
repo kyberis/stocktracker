@@ -377,6 +377,7 @@ const es: TranslationStrings = {
   importTxSuccess: "{count} transacciones importadas.",
   importCashWillBeAdded: "se añadirá a Efectivo",
   importDuplicatesRemoved: "{count} transacciones duplicadas que ya estaban en tu cartera fueron eliminadas.",
+  importHoldingsCapped: "{count} posición(es) omitida(s) — El plan gratuito permite hasta 15 posiciones. Actualiza a Pro para ilimitadas.",
   importAllDuplicates: "Las {count} transacciones de este archivo ya están en tu cartera.",
   importError: "Error al extraer datos. Inténtalo de nuevo.",
   importRemoveRow: "Eliminar",

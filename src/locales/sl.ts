@@ -377,6 +377,7 @@ const sl: TranslationStrings = {
   importTxSuccess: "{count} transakcij uvoženih.",
   importCashWillBeAdded: "bo dodano v Gotovino",
   importDuplicatesRemoved: "{count} podvojenih transakcij, ki so že bile v vašem portfelju, je bilo odstranjenih.",
+  importHoldingsCapped: "{count} holding(ov) preskočeno — Brezplačni načrt dovoljuje do 15 holdingov. Nadgradite na Pro za neomejeno.",
   importError: "Izvlečenje podatkov ni uspelo. Prosimo, poskusite znova.",
   importRemoveRow: "Odstrani",
   resetPortfolio: "Ponastavi portfelj",

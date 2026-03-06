@@ -377,6 +377,7 @@ const sr: TranslationStrings = {
   importTxSuccess: "{count} трансакција увезено.",
   importCashWillBeAdded: "биће додато у Готовину",
   importDuplicatesRemoved: "{count} дуплираних трансакција које су већ биле у вашем портфолију су уклоњене.",
+  importHoldingsCapped: "{count} држање(ња) прескочено — Бесплатан план дозвољава до 15 држања. Надоградите на Pro за неограничено.",
   importError: "Није могуће извући податке. Молимо покушајте поново.",
   importRemoveRow: "Уклони",
   resetPortfolio: "Ресетуј портфељ",

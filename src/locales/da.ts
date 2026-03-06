@@ -377,6 +377,7 @@ const da: TranslationStrings = {
   importTxSuccess: "{count} transaktioner importeret.",
   importCashWillBeAdded: "vil blive tilføjet til Kontanter",
   importDuplicatesRemoved: "{count} duplikerede transaktioner, der allerede er i din portefølje, blev fjernet.",
+  importHoldingsCapped: "{count} beholdning(er) sprunget over — Gratisplanen tillader op til 15 beholdninger. Opgrader til Pro for ubegrænset.",
   importError: "Kunne ikke udtrække data. Prøv igen.",
   importRemoveRow: "Fjern",
   resetPortfolio: "Nulstil portefølje",

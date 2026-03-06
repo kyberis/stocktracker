@@ -377,6 +377,7 @@ const ga: TranslationStrings = {
   importTxSuccess: "{count} idirbhearta iompórtáladh.",
   importCashWillBeAdded: "cuirfear le Airgead",
   importDuplicatesRemoved: "{count} idirbheart dúbailte a bhí i do phortafóilió cheana féin a baineadh.",
+  importHoldingsCapped: "{count} sealbhú(n) sáraíodh — Ceadaíonn an plean saor in aisce suas le 15 sealbhú. Uasghrádaigh go Pro le haghaidh gan teorainn.",
   importError: "Theip ar bhaint na sonraí. Bain triail as arís.",
   importRemoveRow: "Bain",
   resetPortfolio: "Athshocraigh Portafóilió",

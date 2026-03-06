@@ -377,6 +377,7 @@ const fr: TranslationStrings = {
   importTxSuccess: "{count} transactions importées.",
   importCashWillBeAdded: "sera ajouté à la Trésorerie",
   importDuplicatesRemoved: "{count} transactions en double déjà dans votre portefeuille ont été supprimées.",
+  importHoldingsCapped: "{count} position(s) ignorée(s) — Le plan gratuit permet jusqu'à 15 positions. Passez à Pro pour illimité.",
   importError: "Échec de l'extraction des données. Veuillez réessayer.",
   importRemoveRow: "Supprimer",
   resetPortfolio: "Réinitialiser le portefeuille",
