@@ -24,6 +24,8 @@ export {
   deleteUser,
   toPublicUser,
   setEmailVerified,
+  getPortfolioReviewUsage,
+  incrementPortfolioReviewUsage,
 } from "./users";
 
 export {

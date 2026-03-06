@@ -270,6 +270,34 @@ export function toPublicUser(user: DbUser): PublicUser {
   return mapUser(user);
 }
 
+export async function getPortfolioReviewUsage(userId: string): Promise<{
+  count: number;
+  resetAt: string;
+}> {
+  const user = await findUserById(userId);
+  if (!user) return { count: 0, resetAt: new Date().toISOString() };
+  if (shouldResetAiWindow(user.portfolio_review_reset_at)) {
+    const client = await ensureInitialized();
+    await client.execute({
+      sql: "UPDATE users SET portfolio_review_count = 0, portfolio_review_reset_at = datetime('now') WHERE id = ?",
+      args: [userId],
+    });
+    return { count: 0, resetAt: new Date().toISOString() };
+  }
+  return { count: user.portfolio_review_count, resetAt: user.portfolio_review_reset_at };
+}
+
+export async function incrementPortfolioReviewUsage(userId: string): Promise<number> {
+  const usage = await getPortfolioReviewUsage(userId);
+  const next = usage.count + 1;
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: "UPDATE users SET portfolio_review_count = ? WHERE id = ?",
+    args: [next, userId],
+  });
+  return next;
+}
+
 export async function setEmailVerified(userId: string, verified: boolean): Promise<void> {
   const client = await ensureInitialized();
   await client.execute({

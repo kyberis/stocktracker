@@ -294,6 +294,8 @@ describe("mapUser", () => {
       email_verified: 1,
       auth_provider: "credentials" as const,
       google_id: "",
+      portfolio_review_count: 0,
+      portfolio_review_reset_at: "",
     };
 
     const publicUser = mapUser(dbUser);
@@ -315,6 +317,8 @@ describe("mapUser", () => {
       aiDailyResetAt: "2025-03-05",
       emailVerified: true,
       authProvider: "credentials",
+      portfolioReviewCount: 0,
+      portfolioReviewResetAt: "",
     });
   });
 
@@ -340,6 +344,8 @@ describe("mapUser", () => {
       email_verified: 0,
       auth_provider: "credentials" as const,
       google_id: "",
+      portfolio_review_count: 0,
+      portfolio_review_reset_at: "",
     };
 
     const publicUser = mapUser(dbUser);
@@ -371,6 +377,8 @@ describe("mapUser", () => {
       email_verified: 0,
       auth_provider: "credentials" as const,
       google_id: "",
+      portfolio_review_count: 0,
+      portfolio_review_reset_at: "",
     };
 
     const publicUser = mapUser(dbUser);
@@ -400,6 +408,8 @@ describe("mapUser", () => {
       email_verified: 1,
       auth_provider: "credentials" as const,
       google_id: "",
+      portfolio_review_count: 0,
+      portfolio_review_reset_at: "",
     };
 
     const publicUser = mapUser(dbUser);

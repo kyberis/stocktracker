@@ -572,6 +572,16 @@ const es: TranslationStrings = {
   autoClassify: "Auto-clasificar",
   autoClassifying: "Clasificando...",
   developer: "Desarrollador",
+  portfolioReview: "Revisión de Portafolio con IA",
+  portfolioReviewDescription: "Obtén análisis y recomendaciones de IA para tu portafolio",
+  portfolioReviewButton: "Analizar Mi Portafolio",
+  portfolioReviewRunning: "Analizando...",
+  portfolioReviewUsage: "{used} de {limit} revisiones usadas este mes",
+  portfolioReviewEmpty: "Añade posiciones a tu portafolio para obtener una revisión de IA",
+  portfolioReviewProOnly: "Actualiza a Pro para desbloquear revisiones de portafolio con IA",
+  portfolioReviewLimitReached: "Límite mensual de revisiones alcanzado. Se renueva el próximo mes.",
+  portfolioReviewError: "Error al generar la revisión. Inténtalo de nuevo.",
+  portfolioReviewDisclaimer: "Análisis generado por IA — no es asesoramiento financiero personalizado.",
 };
 
 export default es;

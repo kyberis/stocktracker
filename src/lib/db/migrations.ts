@@ -396,6 +396,22 @@ const MIGRATIONS: Migration[] = [
       });
     },
   },
+  {
+    version: 6,
+    description: "Add portfolio_review_count and portfolio_review_reset_at columns",
+    up: async (client: Client) => {
+      for (const stmt of [
+        "ALTER TABLE users ADD COLUMN portfolio_review_count INTEGER NOT NULL DEFAULT 0",
+        "ALTER TABLE users ADD COLUMN portfolio_review_reset_at TEXT NOT NULL DEFAULT ''",
+      ]) {
+        try { await client.execute({ sql: stmt }); }
+        catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : String(e);
+          if (!msg.includes("duplicate column")) throw e;
+        }
+      }
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

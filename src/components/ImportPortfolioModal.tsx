@@ -126,11 +126,19 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
         const parseForm = new FormData();
         parseForm.append("action", "parse");
         parseForm.append("broker", csvFormat);
-        parseForm.append("csv", csv);
-        const parseRes = await fetch("/api/transactions/import-broker", {
-          method: "POST",
-          body: parseForm,
-        });
+        parseForm.append("file", new Blob([csv], { type: "text/csv" }), "import.csv");
+        const parseController = new AbortController();
+        const parseTimer = setTimeout(() => parseController.abort(), 30_000);
+        let parseRes: Response;
+        try {
+          parseRes = await fetch("/api/transactions/import-broker", {
+            method: "POST",
+            body: parseForm,
+            signal: parseController.signal,
+          });
+        } finally {
+          clearTimeout(parseTimer);
+        }
         if (!parseRes.ok) {
           const data = await parseRes.json().catch(() => null);
           const apiError = data?.error || "";
@@ -224,7 +232,11 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
       setStep("preview");
     } catch (err) {
       console.error("[ImportPortfolio] upload failed:", err);
-      setErrorMsg(err instanceof Error ? err.message : "Network error.");
+      if (err instanceof DOMException && err.name === "AbortError") {
+        setErrorMsg("Parsing took too long. Try a smaller CSV or check your network.");
+      } else {
+        setErrorMsg(err instanceof Error ? err.message : "Network error.");
+      }
       setStep("error");
     }
   }, [t, csvFormat]);
@@ -347,7 +359,7 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
         const cashForm = new FormData();
         cashForm.append("action", "import-cash");
         cashForm.append("broker", "degiro");
-        cashForm.append("csv", rawCsvRef.current);
+        cashForm.append("file", new Blob([rawCsvRef.current], { type: "text/csv" }), "import.csv");
         const cashRes = await fetch("/api/transactions/import-broker", {
           method: "POST",
           body: cashForm,

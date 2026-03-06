@@ -20,6 +20,8 @@ interface AuthUser {
   aiCallsToday: number;
   aiDailyResetAt: string;
   emailVerified: boolean;
+  portfolioReviewCount: number;
+  portfolioReviewResetAt: string;
 }
 
 interface AuthContextType {

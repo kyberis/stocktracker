@@ -26,6 +26,9 @@ export const PLATFORM_LIMITS = {
 
   /** Max holdings (stocks + ETFs) for Free users. Pro is unlimited. */
   FREE_HOLDINGS_LIMIT: 15,
+
+  /** Max AI portfolio reviews per month for Pro users. */
+  PORTFOLIO_REVIEW_MONTHLY_LIMIT: 5,
 } as const;
 
 export type RateLimitProvider = "alphavantage" | "openai" | "openai_import";

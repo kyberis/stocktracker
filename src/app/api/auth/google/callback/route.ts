@@ -138,6 +138,8 @@ export async function GET(req: NextRequest) {
         email_verified: googleUser.email_verified ? 1 : 0,
         auth_provider: "google",
         google_id: googleUser.sub,
+        portfolio_review_count: 0,
+        portfolio_review_reset_at: "",
       };
       trackEvent(publicUser.id, "signup");
       authEventsTotal.inc({ event: "signup" });

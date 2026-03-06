@@ -14,9 +14,22 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "0.30.0";
+export const CURRENT_VERSION = "0.31.0";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "0.31.0",
+    date: "2026-03-06",
+    title: "AI Portfolio Review",
+    titleTranslations: { es: "Revisión de Portafolio con IA" },
+    changes: [
+      {
+        type: "feature",
+        text: "AI Portfolio Review -- get personalized feedback and recommendations for your portfolio powered by OpenAI (Pro, 5 reviews/month)",
+        translations: { es: "Revisión de Portafolio con IA -- obtén análisis y recomendaciones personalizadas para tu portafolio con OpenAI (Pro, 5 revisiones/mes)" },
+      },
+    ],
+  },
   {
     version: "0.30.0",
     date: "2026-03-06",

@@ -55,6 +55,16 @@ const KNOWN_ISINS: Record<string, string> = {
   "IE000ZIJ5B20": "WCOS.L",
 };
 
+const ISIN_LOOKUP_TIMEOUT_MS = 5_000;
+const ISIN_BATCH_TIMEOUT_MS = 15_000;
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | undefined> {
+  return Promise.race([
+    promise,
+    new Promise<undefined>((resolve) => setTimeout(() => resolve(undefined), ms)),
+  ]);
+}
+
 async function resolveIsinsViaYahoo(
   unmappedIsins: string[],
   isinMap: Record<string, string>
@@ -65,11 +75,11 @@ async function resolveIsinsViaYahoo(
   const MAX_LOOKUPS = 50;
   const batch = unmappedIsins.slice(0, MAX_LOOKUPS);
 
-  await Promise.all(
+  const batchWork = Promise.all(
     batch.map(async (isin) => {
       try {
-        const results = await yahoo.search(isin);
-        if (results.length > 0) {
+        const results = await withTimeout(yahoo.search(isin), ISIN_LOOKUP_TIMEOUT_MS);
+        if (results && results.length > 0) {
           resolved[isin] = results[0].symbol;
         }
       } catch {
@@ -77,6 +87,8 @@ async function resolveIsinsViaYahoo(
       }
     })
   );
+
+  await withTimeout(batchWork, ISIN_BATCH_TIMEOUT_MS);
   return resolved;
 }
 
@@ -98,6 +110,7 @@ async function buildIsinMapForBroker(
   csv: string,
   userId: string,
   extractIsins?: (csv: string) => string[],
+  skipYahoo = false,
 ): Promise<Record<string, string>> {
   const holdings = await listHoldings(userId);
   let isinMap = { ...KNOWN_ISINS, ...buildIsinMap(holdings) };
@@ -105,7 +118,7 @@ async function buildIsinMapForBroker(
   if (extractIsins) {
     const allIsins = extractIsins(csv);
     const unmapped = allIsins.filter((isin) => !isinMap[isin]);
-    if (unmapped.length > 0) {
+    if (unmapped.length > 0 && !skipYahoo) {
       isinMap = await resolveIsinsViaYahoo(unmapped, isinMap);
     }
   }
@@ -245,11 +258,14 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
   }
 
   /* ── Read CSV data ── */
-  const file = formData.get("file") as File | null;
-  const csvText = formData.get("csv") as string | null;
-  let csv = csvText || "";
-  if (file && !csv) {
-    csv = await file.text();
+  const file = formData.get("file");
+  const csvRaw = formData.get("csv");
+  let csv = typeof csvRaw === "string" ? csvRaw : "";
+  if (!csv && csvRaw && typeof csvRaw === "object" && typeof (csvRaw as Blob).text === "function") {
+    csv = await (csvRaw as Blob).text();
+  }
+  if (!csv && file && typeof file === "object" && typeof (file as Blob).text === "function") {
+    csv = await (file as Blob).text();
   }
   if (!csv) {
     portfolioImportsTotal.inc({ source: "broker", status: "error" });
@@ -303,8 +319,18 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
     return NextResponse.json({ error: "Unsupported broker or action." }, { status: 400 });
   }
 
-  const isinMap = await buildIsinMapForBroker(csv, session.userId, parser.extractIsins?.bind(parser));
-  const parsed = parser.parse(csv, isinMap);
+  let isinMap: Record<string, string>;
+  let parsed: ParsedTransaction[];
+  const skipYahoo = action === "parse";
+  try {
+    isinMap = await buildIsinMapForBroker(csv, session.userId, parser.extractIsins?.bind(parser), skipYahoo);
+    parsed = parser.parse(csv, isinMap);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error(`[import-broker] parse error for ${broker}:`, msg);
+    portfolioImportsTotal.inc({ source: "broker", status: "error" });
+    return NextResponse.json({ error: `Failed to parse CSV: ${msg}` }, { status: 500 });
+  }
 
   if (action === "parse") {
     const existingRefs = await listTransactionSourceRefs(session.userId);

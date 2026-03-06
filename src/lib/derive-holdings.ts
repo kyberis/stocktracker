@@ -45,13 +45,14 @@ export function deriveHoldingsFromTransactions(
     const key = holdingKey(ticker, exchange);
 
     const meta = metadataByKey.get(key);
+    const isTradeType = tx.type === "buy" || tx.type === "sell";
     const current = aggregates.get(key) || {
       ticker,
       exchange,
       shares: 0,
       costAmount: 0,
       name: tx.name || meta?.name || ticker,
-      displayCurrency: tx.displayCurrency || tx.currency || meta?.displayCurrency || "EUR",
+      displayCurrency: (isTradeType ? (tx.displayCurrency || tx.currency) : null) || meta?.displayCurrency || "EUR",
       isin: tx.isin || meta?.isin || "",
       assetType: tx.assetType || meta?.assetType || "stock",
     };
@@ -67,7 +68,9 @@ export function deriveHoldingsFromTransactions(
     }
 
     if (tx.name) current.name = tx.name;
-    if (tx.displayCurrency || tx.currency) current.displayCurrency = tx.displayCurrency || tx.currency;
+    if ((tx.type === "buy" || tx.type === "sell") && (tx.displayCurrency || tx.currency)) {
+      current.displayCurrency = tx.displayCurrency || tx.currency;
+    }
     if (tx.assetType) current.assetType = tx.assetType;
     if (tx.isin) current.isin = tx.isin;
 

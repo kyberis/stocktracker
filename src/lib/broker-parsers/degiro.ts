@@ -2,6 +2,7 @@ import type { BrokerParser, ParsedTransaction, CashBalance } from "./types";
 import {
   parseDegiroCSV,
   parseDegiroCashBalances,
+  parseCSVLine,
   type DegiroTransaction,
 } from "../degiro-parser";
 
@@ -28,8 +29,8 @@ function extractIsins(csv: string): string[] {
   const isins = new Set<string>();
   const lines = csv.split("\n").filter((l) => l.trim());
   for (let i = 1; i < lines.length; i++) {
-    const cols = lines[i].split(",");
-    const isin = cols[4]?.replace(/"/g, "").trim() || "";
+    const cols = parseCSVLine(lines[i]);
+    const isin = cols[4]?.trim() || "";
     if (/^[A-Z]{2}[A-Z0-9]{10}$/.test(isin)) isins.add(isin);
   }
   return Array.from(isins);

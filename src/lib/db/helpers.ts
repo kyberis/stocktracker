@@ -33,6 +33,8 @@ export interface DbUser {
   email_verified: number;
   auth_provider: AuthProvider;
   google_id: string;
+  portfolio_review_count: number;
+  portfolio_review_reset_at: string;
 }
 
 export interface PublicUser {
@@ -52,6 +54,8 @@ export interface PublicUser {
   aiDailyResetAt: string;
   emailVerified: boolean;
   authProvider: AuthProvider;
+  portfolioReviewCount: number;
+  portfolioReviewResetAt: string;
 }
 
 export interface UserSettings {
@@ -155,6 +159,8 @@ export function rowToDbUser(row: Row): DbUser {
     email_verified: num(row.email_verified),
     auth_provider: str(row.auth_provider) === "google" ? "google" : "credentials",
     google_id: str(row.google_id),
+    portfolio_review_count: num(row.portfolio_review_count),
+    portfolio_review_reset_at: str(row.portfolio_review_reset_at),
   };
 }
 
@@ -176,6 +182,8 @@ export function mapUser(user: DbUser): PublicUser {
     aiDailyResetAt: user.ai_daily_reset_at,
     emailVerified: user.email_verified === 1,
     authProvider: user.auth_provider,
+    portfolioReviewCount: user.portfolio_review_count,
+    portfolioReviewResetAt: user.portfolio_review_reset_at,
   };
 }
 

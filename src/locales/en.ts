@@ -572,6 +572,16 @@ const en: TranslationStrings = {
   autoClassify: "Auto-classify",
   autoClassifying: "Classifying...",
   developer: "Developer",
+  portfolioReview: "AI Portfolio Review",
+  portfolioReviewDescription: "Get AI-powered feedback and recommendations for your portfolio",
+  portfolioReviewButton: "Analyze My Portfolio",
+  portfolioReviewRunning: "Analyzing...",
+  portfolioReviewUsage: "{used} of {limit} reviews used this month",
+  portfolioReviewEmpty: "Add holdings to your portfolio to get an AI review",
+  portfolioReviewProOnly: "Upgrade to Pro to unlock AI portfolio reviews",
+  portfolioReviewLimitReached: "Monthly review limit reached. Resets next month.",
+  portfolioReviewError: "Failed to generate review. Please try again.",
+  portfolioReviewDisclaimer: "AI-generated analysis — not personalized financial advice.",
 };
 
 export default en;

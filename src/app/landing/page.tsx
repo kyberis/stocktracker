@@ -72,10 +72,10 @@ const HERO_FEATURES = [
       "Get plain-language explanations of stock fundamentals, market news sentiment, insider trades, and institutional holdings. Powered by GPT for clear, actionable insights.",
     screenshot: "/screenshots/holdings-table.png",
     points: [
+      "AI Portfolio Review with recommendations",
       "Company fundamentals analysis",
       "News sentiment (bullish/bearish)",
       "Insider & institutional activity",
-      "Economic indicators dashboard",
     ],
   },
   {
@@ -172,6 +172,7 @@ const PRICING: PricingTier[] = [
       "Institutional holdings data",
       "Economic indicators dashboard",
       "Alpha Vantage premium data",
+      "AI Portfolio Review (5/month)",
       "Unlimited price alerts + email delivery",
       "Priority support",
       "Export to CSV",

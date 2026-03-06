@@ -22,6 +22,7 @@ const ResetPortfolioModal = dynamic(() => import("./ResetPortfolioModal"), { ssr
 const WhatsNewModal = dynamic(() => import("./WhatsNewModal"), { ssr: false });
 const FeedbackModal = dynamic(() => import("./FeedbackModal"), { ssr: false });
 const ProCompareCard = dynamic(() => import("./ProCompareCard"), { ssr: false });
+const PortfolioReviewCard = dynamic(() => import("./PortfolioReviewCard"), { ssr: false });
 
 export default function Dashboard() {
   const [showAddModal, setShowAddModal] = useState(false);
@@ -75,6 +76,7 @@ export default function Dashboard() {
         )}
 
         <PortfolioSummary />
+        {holdingsCount > 0 && <PortfolioReviewCard />}
         <PortfolioTable />
         <PortfolioGrowthPeriods />
         <PerformanceMetrics />
