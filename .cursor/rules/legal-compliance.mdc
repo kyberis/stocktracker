@@ -1,0 +1,38 @@
+---
+description: Legal compliance guardrails — triggers legal-advisor skill review when changes touch user data, payments, consent, AI, third-party services, financial content, or marketing
+globs: "**/*.tsx,**/*.ts"
+alwaysApply: true
+---
+
+# Legal Compliance Guardrails
+
+Before completing any change, check if it triggers a legal review. If **any** condition below matches, read and follow the `legal-advisor` skill at `.cursor/skills/legal-advisor/SKILL.md`.
+
+## Trigger Conditions
+
+Involve `legal-advisor` when the change:
+
+1. **Collects new user data** — any new form field, API parameter, or stored value derived from user input.
+2. **Adds or changes a third-party service** — new API integration, SDK, analytics provider, or external data processor.
+3. **Modifies AI features** — changes to prompts, data sent to AI models, or how AI output is displayed.
+4. **Touches payments or subscriptions** — pricing, billing, cancellation, refund, or Stripe integration changes.
+5. **Changes signup, login, or consent flows** — any modification to how users agree to legal terms.
+6. **Updates marketing copy or landing page** — claims about security, data handling, pricing, or product capabilities.
+7. **Modifies cookies or session handling** — adding cookies, changing session behavior, or adding client-side storage.
+8. **Changes data export or deletion** — account deletion, data download, or retention logic.
+9. **Displays financial data or analysis** — new pages or components showing market data, AI analysis, or investment projections.
+10. **Modifies middleware or security headers** — authentication, CSRF, CSP, or rate limiting changes.
+
+## Quick Checks (No Full Review Needed)
+
+If the change is purely cosmetic (styling, layout) or internal (refactoring without behavior change), no legal review is needed. But verify:
+
+- No new data fields are being persisted.
+- No new third-party requests are being made.
+- Financial disclaimers remain intact on pages that show market/investment data.
+
+## Key Legal Documents
+
+- Privacy Policy: `src/app/privacy/page.tsx`
+- Terms of Service: `src/app/terms/page.tsx`
+- Legal strategy: `docs/COMMERCIALIZATION_PLAN.md` (Section 4)

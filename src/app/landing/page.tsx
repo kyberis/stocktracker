@@ -1031,8 +1031,8 @@ function Footer() {
       { label: "Log In", href: "/login" },
     ],
     legal: [
-      { label: "Privacy Policy", href: "#" },
-      { label: "Terms of Service", href: "#" },
+      { label: "Privacy Policy", href: "/privacy" },
+      { label: "Terms of Service", href: "/terms" },
     ],
   };
 
@@ -1085,9 +1085,9 @@ function Footer() {
             <ul className="space-y-3">
               {footerLinks.legal.map((link) => (
                 <li key={link.label}>
-                  <a href={link.href} className="text-sm text-slate-400 hover:text-white transition-colors">
+                  <Link href={link.href} className="text-sm text-slate-400 hover:text-white transition-colors">
                     {link.label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>

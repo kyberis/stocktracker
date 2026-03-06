@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifySessionToken } from "@/lib/auth/session";
 
-const PUBLIC_ROUTES = new Set(["/login", "/signup", "/landing"]);
+const PUBLIC_ROUTES = new Set(["/login", "/signup", "/landing", "/privacy", "/terms"]);
 const PUBLIC_API_ROUTES = new Set([
   "/api/auth/login",
   "/api/auth/signup",
@@ -18,6 +18,7 @@ function isPublicPath(pathname: string): boolean {
   if (pathname === "/favicon.ico") return true;
   if (pathname === "/robots.txt") return true;
   if (pathname === "/sitemap.xml") return true;
+  if (/\.(png|jpg|jpeg|gif|svg|webp|ico|mp4|webm|css|js|woff2?)$/.test(pathname)) return true;
   return false;
 }
 
@@ -35,7 +36,10 @@ export async function middleware(req: NextRequest) {
     if (pathname.startsWith("/api/")) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    return NextResponse.redirect(new URL("/landing", req.url));
+    if (pathname === "/") {
+      return NextResponse.rewrite(new URL("/landing", req.url));
+    }
+    return NextResponse.redirect(new URL("/", req.url));
   }
 
   if (
@@ -50,7 +54,7 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/change-password", req.url));
   }
 
-  if ((pathname === "/login" || pathname === "/signup") && session) {
+  if (["/login", "/signup", "/landing"].includes(pathname) && session) {
     return NextResponse.redirect(new URL("/", req.url));
   }
 

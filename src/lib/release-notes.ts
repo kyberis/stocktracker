@@ -14,9 +14,32 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "0.27.0";
+export const CURRENT_VERSION = "0.28.0";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "0.28.0",
+    date: "2026-03-06",
+    title: "Privacy Policy, Terms of Service & Routing Improvements",
+    titleEs: "Política de privacidad, términos de servicio y mejoras de navegación",
+    changes: [
+      {
+        type: "feature",
+        text: "Privacy Policy and Terms of Service pages are now available from the landing page footer",
+        textEs: "Las páginas de Política de privacidad y Términos de servicio están ahora disponibles desde el pie de la página principal",
+      },
+      {
+        type: "improvement",
+        text: "Unauthenticated visitors now land on the homepage at / instead of being redirected to /landing",
+        textEs: "Los visitantes no autenticados ahora llegan a la página principal en / en lugar de ser redirigidos a /landing",
+      },
+      {
+        type: "improvement",
+        text: "Logging out now returns you to the homepage instead of the login page",
+        textEs: "Al cerrar sesión ahora vuelves a la página principal en vez de a la página de inicio de sesión",
+      },
+    ],
+  },
   {
     version: "0.27.0",
     date: "2026-03-05",
