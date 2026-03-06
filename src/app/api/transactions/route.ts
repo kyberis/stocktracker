@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { listTransactions, addTransaction, deleteTransaction, rebuildHoldings, listHoldings, findUserById, listTransactionSourceRefs } from "@/lib/db";
+import { listTransactions, addTransaction, deleteTransaction, rebuildHoldings, listHoldings, findUserById } from "@/lib/db";
 import { withMetrics } from "@/lib/with-metrics";
 import { transactionsOpsTotal } from "@/lib/metrics";
 import { parseBody } from "@/lib/api-response";
@@ -52,13 +52,10 @@ export const POST = withMetrics("/api/transactions", async (req: NextRequest) =>
     } catch { /* non-critical — performance calc falls back to current rates */ }
   }
 
-  if (txData.sourceRef) {
-    const existingRefs = await listTransactionSourceRefs(session.userId);
-    if (existingRefs.has(txData.sourceRef)) {
-      return NextResponse.json({ skipped: true, reason: "duplicate_source_ref" }, { status: 200 });
-    }
-  }
   const created = await addTransaction(session.userId, txData);
+  if (!created) {
+    return NextResponse.json({ skipped: true, reason: "duplicate_source_ref" }, { status: 200 });
+  }
   transactionsOpsTotal.inc({ operation: "add" });
   return NextResponse.json(created, { status: 201 });
 });

@@ -133,42 +133,38 @@ async function syncHoldingForTransaction(
   }
 }
 
-export async function addTransaction(userId: string, tx: Omit<Transaction, "id" | "createdAt">): Promise<Transaction> {
+export async function addTransaction(userId: string, tx: Omit<Transaction, "id" | "createdAt">): Promise<Transaction | null> {
   const client = await ensureInitialized();
   const id = randomUUID();
   const total = tx.totalAmount || tx.shares * tx.pricePerShare;
   const exchange = (tx.exchange || "").toUpperCase();
   const ticker = normalizeTickerForExchange(tx.ticker, exchange);
-  await client.execute({
-    sql: `INSERT INTO transactions (
-            id, user_id, holding_id, ticker, name, exchange, isin, asset_type, account_id,
-            type, date, shares, price_per_share, total_amount, fees, taxes, currency, display_currency, exchange_rate_eur, notes, source_ref
-          )
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    args: [
-      id,
-      userId,
-      tx.holdingId || "",
-      ticker,
-      tx.name || "",
-      exchange,
-      tx.isin || "",
-      tx.assetType || "stock",
-      tx.accountId || "",
-      tx.type,
-      tx.date,
-      tx.shares,
-      tx.pricePerShare,
-      total,
-      tx.fees || 0,
-      tx.taxes || 0,
-      tx.currency || "EUR",
-      tx.displayCurrency || tx.currency || "EUR",
-      tx.exchangeRateEur ?? null,
-      tx.notes || "",
-      tx.sourceRef || "",
-    ],
-  });
+  const sourceRef = tx.sourceRef || "";
+
+  try {
+    await client.execute({
+      sql: `INSERT INTO transactions (
+              id, user_id, holding_id, ticker, name, exchange, isin, asset_type, account_id,
+              type, date, shares, price_per_share, total_amount, fees, taxes, currency, display_currency, exchange_rate_eur, notes, source_ref
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [
+        id, userId, tx.holdingId || "", ticker, tx.name || "", exchange,
+        tx.isin || "", tx.assetType || "stock", tx.accountId || "",
+        tx.type, tx.date, tx.shares, tx.pricePerShare, total,
+        tx.fees || 0, tx.taxes || 0, tx.currency || "EUR",
+        tx.displayCurrency || tx.currency || "EUR", tx.exchangeRateEur ?? null,
+        tx.notes || "", sourceRef,
+      ],
+    });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (sourceRef && msg.includes("UNIQUE constraint failed")) {
+      return null;
+    }
+    throw err;
+  }
+
   const created: Transaction = {
     ...tx,
     id,

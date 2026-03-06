@@ -62,6 +62,9 @@ export const POST = withMetrics("/api/holdings", async (req: NextRequest) => {
     displayCurrency,
     notes: "Added from holdings flow",
   });
+  if (!createdTx) {
+    return NextResponse.json({ error: "Duplicate transaction." }, { status: 409 });
+  }
   const nextHoldings = await listHoldings(session.userId);
   const created = nextHoldings.find((h) => h.ticker === createdTx.ticker && h.exchange === (createdTx.exchange || ""));
   const fallback = {

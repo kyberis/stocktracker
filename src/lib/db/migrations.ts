@@ -350,6 +350,17 @@ const MIGRATIONS: Migration[] = [
       }
     },
   },
+  {
+    version: 4,
+    description: "Add unique partial index on source_ref to prevent duplicate imports",
+    up: async (client: Client) => {
+      await client.execute({
+        sql: `CREATE UNIQUE INDEX IF NOT EXISTS idx_transactions_user_source_ref
+              ON transactions(user_id, source_ref)
+              WHERE source_ref != ''`,
+      });
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {
