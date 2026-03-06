@@ -52,16 +52,16 @@ Scale from free tiers before ad spend begins.
 
 ---
 
-## 3. Legal Compliance Updates (Priority: High)
+## 3. Legal Compliance Updates (Priority: High) — DONE
 
 These are triggered by the v0.34.0 changes per the legal-advisor skill.
 
-| # | Task | Notes |
-|---|------|-------|
-| 3.1 | **Update Privacy Policy** | Add Cloudflare Turnstile to the third-party services table. Disclose that IP addresses and browser signals are sent to Cloudflare for bot detection. |
-| 3.2 | **Update Privacy Policy — data retention** | Document the 90-day analytics event retention period. |
-| 3.3 | **Verify Cloudflare DPA** | Cloudflare offers a standard DPA at cloudflare.com/supplemental-dpa. Confirm it covers Turnstile data processing. |
-| 3.4 | **Cookie audit** | Turnstile may set a `cf_clearance` cookie. If so, classify it as essential (bot protection) in the Privacy Policy. |
+| # | Task | Notes | Status |
+|---|------|-------|--------|
+| 3.1 | **Update Privacy Policy** | Added Cloudflare Turnstile + Resend to third-party services table. Disclosed IP addresses and browser signals sent to Cloudflare for bot detection. | **DONE** |
+| 3.2 | **Update Privacy Policy — data retention** | Documented 90-day analytics event retention period in Section 7. | **DONE** |
+| 3.3 | **Verify Cloudflare DPA** | Verified: Cloudflare provides a dedicated Turnstile Privacy Addendum (separate from the general DPA). Turnstile acts as processor + independent controller. Disclosed in Privacy Policy Section 10. | **DONE** |
+| 3.4 | **Cookie audit** | Turnstile does not set `cf_clearance` (that's Cloudflare challenge pages only). May set transient `cf_bm` cookie — classified as essential (bot protection) in Privacy Policy Section 9. | **DONE** |
 
 ---
 
@@ -104,7 +104,7 @@ Run through this before flipping the ads on:
 [x] Google OAuth redirect updated for production domain
 [ ] Grafana alerts configured
 [ ] OpenAI billing cap set ($50/month)
-[ ] Privacy Policy updated for Turnstile + retention
+[x] Privacy Policy updated for Turnstile + retention
 [ ] Impressum page added (if required)
 [ ] Vercel upgraded to Pro
 [ ] First $50 ad budget ready

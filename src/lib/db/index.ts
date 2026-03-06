@@ -26,6 +26,7 @@ export {
   setEmailVerified,
   getPortfolioReviewUsage,
   incrementPortfolioReviewUsage,
+  unlinkGoogleAccount,
 } from "./users";
 
 export {
@@ -90,7 +91,7 @@ export {
   deleteRebalanceTarget,
 } from "./rebalance";
 
-export type { LandingAnalytics, AnalyticsSummary } from "./analytics";
+export type { FunnelStage, LandingAnalytics, AnalyticsSummary } from "./analytics";
 export {
   trackEvent,
   trackLandingEvent,

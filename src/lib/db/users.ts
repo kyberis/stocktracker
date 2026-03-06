@@ -305,3 +305,11 @@ export async function setEmailVerified(userId: string, verified: boolean): Promi
     args: [verified ? 1 : 0, userId],
   });
 }
+
+export async function unlinkGoogleAccount(userId: string): Promise<void> {
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: "UPDATE users SET google_id = NULL WHERE id = ?",
+    args: [userId],
+  });
+}

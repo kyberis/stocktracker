@@ -193,6 +193,16 @@ export default function PrivacyPolicyPage() {
                     <td className="py-3 pr-6">Market data (Pro)</td>
                     <td className="py-3">Stock ticker symbols requested</td>
                   </tr>
+                  <tr>
+                    <td className="py-3 pr-6">Cloudflare Turnstile</td>
+                    <td className="py-3 pr-6">Bot protection</td>
+                    <td className="py-3">IP address and browser signals (used to distinguish humans from bots during signup and login)</td>
+                  </tr>
+                  <tr>
+                    <td className="py-3 pr-6">Resend</td>
+                    <td className="py-3 pr-6">Transactional email</td>
+                    <td className="py-3">Email address (for verification, password resets, and service notifications)</td>
+                  </tr>
                 </tbody>
               </table>
             </div>
@@ -224,6 +234,11 @@ export default function PrivacyPolicyPage() {
                 <strong className="text-slate-200">Portfolio data</strong> — retained
                 for as long as your account is active. If your Pro subscription
                 lapses, your data is preserved and accessible when you resubscribe.
+              </li>
+              <li>
+                <strong className="text-slate-200">Analytics events</strong> — 
+                anonymous, aggregated usage events are automatically purged after
+                90 days.
               </li>
               <li>
                 <strong className="text-slate-200">After account deletion</strong>{" "}
@@ -291,6 +306,13 @@ export default function PrivacyPolicyPage() {
                 httpOnly, secure cookie that maintains your authenticated session.
                 Expires when you log out or after the session timeout period.
               </li>
+              <li>
+                <strong className="text-slate-200">Cloudflare Turnstile</strong> — 
+                Turnstile may set a transient cookie (<code className="text-xs text-slate-300 bg-slate-800 px-1 py-0.5 rounded">cf_bm</code>)
+                to complete its bot-detection challenge on signup and login forms.
+                This cookie is classified as strictly necessary (bot protection)
+                and contains no personal identifiers.
+              </li>
             </ul>
             <p>
               We do not use advertising, tracking, or third-party cookies. Because
@@ -303,9 +325,17 @@ export default function PrivacyPolicyPage() {
             <h2>10. International Transfers</h2>
             <p>
               Your data may be processed outside the EEA by our third-party
-              service providers (Vercel, OpenAI, Stripe). Where this occurs,
-              we ensure appropriate safeguards are in place, including Standard
-              Contractual Clauses (SCCs) approved by the European Commission.
+              service providers (Vercel, OpenAI, Stripe, Cloudflare). Where
+              this occurs, we ensure appropriate safeguards are in place,
+              including Standard Contractual Clauses (SCCs) approved by the
+              European Commission.
+            </p>
+            <p>
+              Cloudflare processes Turnstile bot-detection data as both a data
+              processor (acting on our instructions to protect our forms) and
+              an independent data controller (to improve its bot-detection
+              models under legitimate interest). Cloudflare&apos;s Turnstile
+              Privacy Addendum governs this processing.
             </p>
           </section>
 

@@ -26,6 +26,23 @@ export async function loginViaUI(page: Page, identifier: string, password: strin
   await page.locator('input[autocomplete="username"]').fill(identifier);
   await page.locator('input[autocomplete="current-password"]').fill(password);
   await page.click('button[type="submit"]');
+  await expect(page.getByText(/No holdings yet|Portfolio Performance|holdings/i).first()).toBeVisible({ timeout: 15000 });
+}
+
+export async function dismissOverlays(page: Page) {
+  // Cookie banner has z-[9999] and sits on top of everything — dismiss first
+  const cookieAccept = page.getByRole("button", { name: "Accept" });
+  if (await cookieAccept.isVisible({ timeout: 2000 }).catch(() => false)) {
+    await cookieAccept.click({ force: true });
+    await page.waitForTimeout(500);
+  }
+
+  // What's New modal sits above the dashboard
+  const whatsNewClose = page.getByRole("button", { name: "Got it" });
+  if (await whatsNewClose.isVisible({ timeout: 2000 }).catch(() => false)) {
+    await whatsNewClose.click({ force: true });
+    await page.waitForTimeout(500);
+  }
 }
 
 export async function ensureLoggedOut(request: APIRequestContext) {

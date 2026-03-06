@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer,
+  Tooltip, ResponsiveContainer, FunnelChart, Funnel, LabelList, Cell,
 } from "recharts";
 
 interface AdminUser {
@@ -26,6 +26,11 @@ interface LandingAnalytics {
   dailyViews: { date: string; views: number }[];
 }
 
+interface FunnelStage {
+  stage: string;
+  count: number;
+}
+
 interface AnalyticsSummary {
   totalUsers: number;
   activeUsers7d: number;
@@ -36,6 +41,7 @@ interface AnalyticsSummary {
   dailyActivity: { date: string; users: number; events: number }[];
   signupsByDay: { date: string; count: number }[];
   landing: LandingAnalytics;
+  funnel: FunnelStage[];
 }
 
 type Tab = "users" | "settings" | "analytics" | "feedback";
@@ -47,6 +53,126 @@ function StatCard({ label, value }: { label: string; value: string | number }) {
     <div className="card p-4">
       <p className="text-xs text-gray-500 dark:text-slate-400 uppercase tracking-wide">{label}</p>
       <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{value}</p>
+    </div>
+  );
+}
+
+/* ── Conversion Funnel ────────────────────────────────────── */
+
+const FUNNEL_COLORS = ["#6366f1", "#8b5cf6", "#a78bfa", "#c4b5fd", "#10b981"];
+
+function ConversionFunnel({ stages }: { stages: FunnelStage[] }) {
+  const hasData = stages.some((s) => s.count > 0);
+  if (!hasData) return null;
+
+  const funnelData = stages.map((s, i) => ({
+    name: s.stage,
+    value: s.count,
+    fill: FUNNEL_COLORS[i % FUNNEL_COLORS.length],
+  }));
+
+  const maxCount = Math.max(...stages.map((s) => s.count), 1);
+
+  return (
+    <div className="card p-4">
+      <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">Conversion Funnel</h3>
+      <p className="text-xs text-gray-500 dark:text-slate-400 mb-5">Unique users at each stage of the free-to-paid journey</p>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Visual funnel bars */}
+        <div className="space-y-2">
+          {stages.map((stage, i) => {
+            const widthPct = maxCount > 0 ? Math.max((stage.count / maxCount) * 100, 8) : 8;
+            const prevCount = i > 0 ? stages[i - 1].count : 0;
+            const dropoff = i > 0 && prevCount > 0
+              ? `${((1 - stage.count / prevCount) * 100).toFixed(0)}% drop`
+              : null;
+
+            return (
+              <div key={stage.stage} className="group">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-medium text-gray-700 dark:text-slate-300">{stage.stage}</span>
+                  <div className="flex items-center gap-2">
+                    {dropoff && (
+                      <span className="text-[10px] text-red-400 dark:text-red-400/80">{dropoff}</span>
+                    )}
+                    <span className="text-xs font-bold text-gray-900 dark:text-white tabular-nums">{stage.count}</span>
+                  </div>
+                </div>
+                <div className="relative h-7 w-full flex justify-center">
+                  <div
+                    className="h-full rounded-md transition-all duration-500"
+                    style={{
+                      width: `${widthPct}%`,
+                      backgroundColor: FUNNEL_COLORS[i % FUNNEL_COLORS.length],
+                      opacity: 0.85,
+                    }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Recharts funnel */}
+        <div className="hidden lg:block">
+          <ResponsiveContainer width="100%" height={220}>
+            <FunnelChart>
+              <Tooltip
+                contentStyle={{ fontSize: 12, borderRadius: 8 }}
+                formatter={(value) => [value ?? 0, "Users"]}
+              />
+              <Funnel dataKey="value" data={funnelData} isAnimationActive>
+                <LabelList
+                  dataKey="name"
+                  position="right"
+                  fill="currentColor"
+                  className="text-gray-600 dark:text-slate-300"
+                  style={{ fontSize: 11 }}
+                />
+                {funnelData.map((entry, i) => (
+                  <Cell key={i} fill={entry.fill} />
+                ))}
+              </Funnel>
+            </FunnelChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Stage-to-stage conversion rates */}
+      <div className="mt-4 pt-3 border-t border-gray-200 dark:border-slate-700">
+        <div className="flex flex-wrap gap-3">
+          {stages.map((stage, i) => {
+            if (i === 0) return null;
+            const prev = stages[i - 1];
+            const rate = prev.count > 0 ? ((stage.count / prev.count) * 100).toFixed(1) : "0.0";
+            return (
+              <div key={stage.stage} className="flex items-center gap-1.5 text-xs">
+                <span className="text-gray-500 dark:text-slate-400">{prev.stage}</span>
+                <svg className="w-3 h-3 text-gray-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+                <span className="text-gray-500 dark:text-slate-400">{stage.stage}</span>
+                <span className={`font-bold tabular-nums ${
+                  parseFloat(rate) >= 20 ? "text-emerald-600 dark:text-emerald-400" :
+                  parseFloat(rate) >= 5 ? "text-amber-600 dark:text-amber-400" :
+                  "text-red-500 dark:text-red-400"
+                }`}>
+                  {rate}%
+                </span>
+              </div>
+            );
+          })}
+          {stages.length >= 2 && stages[0].count > 0 && (
+            <div className="flex items-center gap-1.5 text-xs ml-auto">
+              <span className="text-gray-500 dark:text-slate-400">Overall</span>
+              <span className="font-bold tabular-nums text-indigo-600 dark:text-indigo-400">
+                {((stages[stages.length - 1].count / stages[0].count) * 100).toFixed(1)}%
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -173,6 +299,9 @@ function AnalyticsTab() {
           </ResponsiveContainer>
         </div>
       )}
+
+      {/* ── Conversion Funnel ── */}
+      {data.funnel && <ConversionFunnel stages={data.funnel} />}
 
       {/* ── Landing Page Analytics ── */}
       {data.landing && (data.landing.totalPageViews > 0 || data.landing.totalCtaClicks > 0) && (

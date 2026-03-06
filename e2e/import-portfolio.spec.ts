@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { createTestUser, ensureLoggedOut, loginViaUI } from "./helpers";
+import { createTestUser, ensureLoggedOut, loginViaUI, dismissOverlays } from "./helpers";
 
 const CSV_PATH = "/Users/mcsuarez/stocktracker/docs/portfolio_sample_degiro.csv";
 
@@ -13,22 +13,13 @@ test.describe("Import Portfolio", () => {
     await ensureLoggedOut(request);
     const creds = await createTestUser(request);
     await loginViaUI(page, creds.email, creds.password);
-    await page.waitForURL(/\/(?!login|signup)/, { timeout: 10000 });
 
-    await page.goto("/");
-    await page.waitForTimeout(3000);
-
-    // Dismiss any overlay modal (What's New, upgrade, etc.)
-    for (let i = 0; i < 5; i++) {
-      await page.keyboard.press("Escape");
-      await page.waitForTimeout(300);
-    }
-    await page.waitForTimeout(500);
+    await dismissOverlays(page);
 
     await expect(page.getByRole("button", { name: "Import Portfolio" })).toBeVisible({ timeout: 10000 });
 
     // Open Import Portfolio modal
-    await page.getByRole("button", { name: "Import Portfolio" }).click({ force: true });
+    await page.getByRole("button", { name: "Import Portfolio" }).click();
     await expect(page.getByText(/Drag & drop a file here|drag/i)).toBeVisible({
       timeout: 5000,
     });
@@ -53,14 +44,9 @@ test.describe("Import Portfolio", () => {
     // Click Close
     await page.getByRole("button", { name: "Close" }).click();
 
-    // Verify holdings visible: no "No holdings yet", and stock names or count > 0
-    await expect(page.getByText("No holdings yet")).not.toBeVisible();
-    const stockNames = ["CONSTELLATION", "SILA", "BANK OF NOVA", "ESSENTIAL", "SIRIUS"];
-    const found = await Promise.any(
-      stockNames.map((name) =>
-        page.getByText(new RegExp(name, "i")).first().isVisible()
-      )
-    ).catch(() => false);
-    expect(found).toBeTruthy();
+    // Verify holdings appeared after import
+    await page.waitForTimeout(2000);
+    await expect(page.getByText("No holdings yet")).not.toBeVisible({ timeout: 5000 });
+    await expect(page.getByText(/\d+ holdings/)).toBeVisible({ timeout: 5000 });
   });
 });

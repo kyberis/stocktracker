@@ -14,9 +14,22 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "0.34.0";
+export const CURRENT_VERSION = "0.34.1";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "0.34.1",
+    date: "2026-03-06",
+    title: "Conversion Funnel Analytics",
+    titleTranslations: { es: "Analíticas de Embudo de Conversión" },
+    changes: [
+      {
+        type: "feature",
+        text: "Admin conversion funnel view showing the free-to-paid journey: Signups → Upsell Shown → Upsell Clicked → Checkout Started → Checkout Completed, with stage-by-stage drop-off rates",
+        translations: { es: "Vista de embudo de conversión en admin mostrando el recorrido de gratis a pago: Registros → Upsell Mostrado → Upsell Clicado → Checkout Iniciado → Checkout Completado, con tasas de abandono por etapa" },
+      },
+    ],
+  },
   {
     version: "0.34.0",
     date: "2026-03-06",

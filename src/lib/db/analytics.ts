@@ -11,6 +11,11 @@ export interface LandingAnalytics {
   dailyViews: { date: string; views: number }[];
 }
 
+export interface FunnelStage {
+  stage: string;
+  count: number;
+}
+
 export interface AnalyticsSummary {
   totalUsers: number;
   activeUsers7d: number;
@@ -21,6 +26,7 @@ export interface AnalyticsSummary {
   dailyActivity: { date: string; users: number; events: number }[];
   signupsByDay: { date: string; count: number }[];
   landing: LandingAnalytics;
+  funnel: FunnelStage[];
 }
 
 export async function trackEvent(
@@ -61,6 +67,7 @@ export async function getAnalyticsSummary(days = 30): Promise<AnalyticsSummary> 
   const [
     usersResult, active7d, active30d, totalEvents, eventsByType, topStocks, dailyActivity, signupsByDay,
     landingPageViews, landingCtaClicks, landingEventsByType, landingCtaBreakdown, landingDailyViews,
+    funnelSignups, funnelUpsellShown, funnelUpsellClicked, funnelCheckoutStarted, funnelCheckoutCompleted,
   ] = await Promise.all([
       client.execute("SELECT COUNT(*) as cnt FROM users"),
       client.execute({
@@ -130,6 +137,26 @@ export async function getAnalyticsSummary(days = 30): Promise<AnalyticsSummary> 
               GROUP BY day ORDER BY day ASC`,
         args: [`-${days} days`],
       }),
+      client.execute({
+        sql: "SELECT COUNT(DISTINCT user_id) as cnt FROM analytics_events WHERE event = 'signup' AND created_at >= datetime('now', ?)",
+        args: [`-${days} days`],
+      }),
+      client.execute({
+        sql: "SELECT COUNT(DISTINCT user_id) as cnt FROM analytics_events WHERE event = 'upgrade_compare_shown' AND created_at >= datetime('now', ?)",
+        args: [`-${days} days`],
+      }),
+      client.execute({
+        sql: "SELECT COUNT(DISTINCT user_id) as cnt FROM analytics_events WHERE event = 'upgrade_compare_clicked' AND created_at >= datetime('now', ?)",
+        args: [`-${days} days`],
+      }),
+      client.execute({
+        sql: "SELECT COUNT(DISTINCT user_id) as cnt FROM analytics_events WHERE event = 'billing_checkout_started' AND created_at >= datetime('now', ?)",
+        args: [`-${days} days`],
+      }),
+      client.execute({
+        sql: "SELECT COUNT(DISTINCT user_id) as cnt FROM analytics_events WHERE event = 'billing_checkout_completed' AND created_at >= datetime('now', ?)",
+        args: [`-${days} days`],
+      }),
     ]);
 
   return {
@@ -152,6 +179,13 @@ export async function getAnalyticsSummary(days = 30): Promise<AnalyticsSummary> 
       ctaBreakdown: landingCtaBreakdown.rows.map((r) => ({ cta: str(r.cta), count: num(r.cnt) })),
       dailyViews: landingDailyViews.rows.map((r) => ({ date: str(r.day), views: num(r.cnt) })),
     },
+    funnel: [
+      { stage: "Signups", count: num(funnelSignups.rows[0]?.cnt) },
+      { stage: "Upsell Shown", count: num(funnelUpsellShown.rows[0]?.cnt) },
+      { stage: "Upsell Clicked", count: num(funnelUpsellClicked.rows[0]?.cnt) },
+      { stage: "Checkout Started", count: num(funnelCheckoutStarted.rows[0]?.cnt) },
+      { stage: "Checkout Completed", count: num(funnelCheckoutCompleted.rows[0]?.cnt) },
+    ],
   };
 }
 
