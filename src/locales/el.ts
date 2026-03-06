@@ -376,6 +376,7 @@ const el: TranslationStrings = {
   importSuccess: "Επιτυχής εισαγωγή {count} θέσεων!",
   importTxSuccess: "{count} συναλλαγές εισήχθησαν.",
   importCashWillBeAdded: "θα προστεθούν στα Μετρητά",
+  importDuplicatesRemoved: "{count} διπλότυπες συναλλαγές που υπήρχαν ήδη στο χαρτοφυλάκιό σας αφαιρέθηκαν.",
   importError: "Η εξαγωγή δεδομένων απέτυχε. Παρακαλώ δοκιμάστε ξανά.",
   importRemoveRow: "Αφαίρεση",
   resetPortfolio: "Επαναφορά χαρτοφυλακίου",

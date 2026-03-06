@@ -376,6 +376,7 @@ const en: TranslationStrings = {
   importSuccess: "Successfully imported {count} holdings!",
   importTxSuccess: "{count} transactions imported.",
   importCashWillBeAdded: "will be added to Cash",
+  importDuplicatesRemoved: "{count} duplicate transactions already in your portfolio were removed.",
   importError: "Failed to extract data. Please try again.",
   importRemoveRow: "Remove",
   resetPortfolio: "Reset Portfolio",

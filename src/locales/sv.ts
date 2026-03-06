@@ -376,6 +376,7 @@ const sv: TranslationStrings = {
   importSuccess: "Framgångsrikt importerat {count} innehav!",
   importTxSuccess: "{count} transaktioner importerade.",
   importCashWillBeAdded: "kommer att läggas till i Kontanter",
+  importDuplicatesRemoved: "{count} dubbletter av transaktioner som redan finns i din portfölj har tagits bort.",
   importError: "Kunde inte extrahera data. Försök igen.",
   importRemoveRow: "Ta bort",
   resetPortfolio: "Återställ portfölj",

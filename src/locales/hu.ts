@@ -376,6 +376,7 @@ const hu: TranslationStrings = {
   importSuccess: "Sikeresen importálva {count} befektetés!",
   importTxSuccess: "{count} tranzakció importálva.",
   importCashWillBeAdded: "hozzáadódik a Készpénzhez",
+  importDuplicatesRemoved: "{count} duplikált tranzakció, amely már a portfóliójában volt, eltávolításra került.",
   importError: "Nem sikerült adatokat kinyerni. Próbáld újra.",
   importRemoveRow: "Eltávolítás",
   resetPortfolio: "Portfólió visszaállítása",

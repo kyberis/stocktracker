@@ -376,6 +376,7 @@ const lv: TranslationStrings = {
   importSuccess: "Veiksmīgi importēts {count} turējumu!",
   importTxSuccess: "{count} darījumu importēts.",
   importCashWillBeAdded: "tiks pievienots Skaidrai naudai",
+  importDuplicatesRemoved: "{count} dublikātu darījumi, kas jau bija jūsu portfelī, tika noņemti.",
   importError: "Datu izvilkšana neizdevās. Mēģiniet vēlreiz.",
   importRemoveRow: "Noņemt",
   resetPortfolio: "Atiestatīt portfeli",

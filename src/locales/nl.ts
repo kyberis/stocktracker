@@ -376,6 +376,7 @@ const nl: TranslationStrings = {
   importSuccess: "{count} posities succesvol geïmporteerd!",
   importTxSuccess: "{count} transacties geïmporteerd.",
   importCashWillBeAdded: "wordt toegevoegd aan Contant",
+  importDuplicatesRemoved: "{count} dubbele transacties die al in uw portefeuille staan, zijn verwijderd.",
   importError: "Kon gegevens niet extraheren. Probeer het opnieuw.",
   importRemoveRow: "Verwijderen",
   resetPortfolio: "Portfolio resetten",

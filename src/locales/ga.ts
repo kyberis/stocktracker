@@ -376,6 +376,7 @@ const ga: TranslationStrings = {
   importSuccess: "Iompórtáladh {count} seilbh go rathúil!",
   importTxSuccess: "{count} idirbhearta iompórtáladh.",
   importCashWillBeAdded: "cuirfear le Airgead",
+  importDuplicatesRemoved: "{count} idirbheart dúbailte a bhí i do phortafóilió cheana féin a baineadh.",
   importError: "Theip ar bhaint na sonraí. Bain triail as arís.",
   importRemoveRow: "Bain",
   resetPortfolio: "Athshocraigh Portafóilió",

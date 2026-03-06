@@ -376,6 +376,7 @@ const ro: TranslationStrings = {
   importSuccess: "Au fost importate cu succes {count} poziții!",
   importTxSuccess: "{count} tranzacții importate.",
   importCashWillBeAdded: "va fi adăugat la Numerar",
+  importDuplicatesRemoved: "{count} tranzacții duplicate deja existente în portofoliul dvs. au fost eliminate.",
   importError: "Extragerea datelor a eșuat. Încercați din nou.",
   importRemoveRow: "Elimină",
   resetPortfolio: "Resetează Portofoliu",

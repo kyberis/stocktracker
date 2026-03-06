@@ -376,6 +376,7 @@ const hr: TranslationStrings = {
   importSuccess: "Uspješno uvezeno {count} pozicija!",
   importTxSuccess: "{count} transakcija uvezeno.",
   importCashWillBeAdded: "bit će dodano u Gotovinu",
+  importDuplicatesRemoved: "{count} dupliciranih transakcija koje su već bile u vašem portfelju uklonjeno je.",
   importError: "Izvlačenje podataka nije uspjelo. Molimo pokušajte ponovno.",
   importRemoveRow: "Ukloni",
   resetPortfolio: "Resetiraj portfelj",

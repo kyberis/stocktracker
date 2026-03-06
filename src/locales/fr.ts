@@ -376,6 +376,7 @@ const fr: TranslationStrings = {
   importSuccess: "{count} positions importées avec succès !",
   importTxSuccess: "{count} transactions importées.",
   importCashWillBeAdded: "sera ajouté à la Trésorerie",
+  importDuplicatesRemoved: "{count} transactions en double déjà dans votre portefeuille ont été supprimées.",
   importError: "Échec de l'extraction des données. Veuillez réessayer.",
   importRemoveRow: "Supprimer",
   resetPortfolio: "Réinitialiser le portefeuille",

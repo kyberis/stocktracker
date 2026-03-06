@@ -153,7 +153,7 @@ async function importTransactions(
     }
     const nameUp = (tx.name || "").toUpperCase();
     const assetType = (nameUp.includes("ETF") || nameUp.includes("UCITS")) ? "etf" : "stock";
-    await addTransaction(userId, {
+    const created = await addTransaction(userId, {
       holdingId: "",
       ticker: tx.ticker,
       name: tx.name,
@@ -174,7 +174,7 @@ async function importTransactions(
       notes: tx.name || `${broker} import`,
       sourceRef: tx.sourceRef,
     });
-    imported++;
+    if (created) imported++;
   }
 
   if (imported > 0) {
@@ -264,15 +264,19 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
     const parsed = parseSimpleCSV(csv);
 
     if (action === "parse") {
+      const existingRefs = await listTransactionSourceRefs(session.userId);
+      const deduped = parsed.filter((tx) => !tx.sourceRef || !existingRefs.has(tx.sourceRef));
+      const duplicatesRemoved = parsed.length - deduped.length;
       const summary = {
-        total: parsed.length,
-        buys: parsed.filter((t) => t.type === "buy").length,
-        sells: parsed.filter((t) => t.type === "sell").length,
-        dividends: parsed.filter((t) => t.type === "dividend").length,
-        fees: parsed.filter((t) => t.type === "fee").length,
+        total: deduped.length,
+        buys: deduped.filter((t) => t.type === "buy").length,
+        sells: deduped.filter((t) => t.type === "sell").length,
+        dividends: deduped.filter((t) => t.type === "dividend").length,
+        fees: deduped.filter((t) => t.type === "fee").length,
         unmapped: [] as string[],
+        duplicatesRemoved,
       };
-      return NextResponse.json({ transactions: parsed, summary });
+      return NextResponse.json({ transactions: deduped, summary });
     }
 
     if (action === "import") {
@@ -303,20 +307,24 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
   const parsed = parser.parse(csv, isinMap);
 
   if (action === "parse") {
+    const existingRefs = await listTransactionSourceRefs(session.userId);
+    const deduped = parsed.filter((tx) => !tx.sourceRef || !existingRefs.has(tx.sourceRef));
+    const duplicatesRemoved = parsed.length - deduped.length;
     const cashBalances = parser.parseCashBalances?.(csv) || [];
     const summary = {
-      total: parsed.length,
-      buys: parsed.filter((t) => t.type === "buy").length,
-      sells: parsed.filter((t) => t.type === "sell").length,
-      dividends: parsed.filter((t) => t.type === "dividend").length,
-      fees: parsed.filter((t) => t.type === "fee").length,
-      unmapped: parsed
+      total: deduped.length,
+      buys: deduped.filter((t) => t.type === "buy").length,
+      sells: deduped.filter((t) => t.type === "sell").length,
+      dividends: deduped.filter((t) => t.type === "dividend").length,
+      fees: deduped.filter((t) => t.type === "fee").length,
+      unmapped: deduped
         .filter((t) => !t.ticker && t.isin)
         .map((t) => t.isin)
         .filter((v, i, a) => a.indexOf(v) === i),
       cashBalances,
+      duplicatesRemoved,
     };
-    return NextResponse.json({ transactions: parsed, summary });
+    return NextResponse.json({ transactions: deduped, summary });
   }
 
   if (action === "import") {

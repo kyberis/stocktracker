@@ -376,6 +376,7 @@ const et: TranslationStrings = {
   importSuccess: "Tuotu {count} omistusta onnistuneesti!",
   importTxSuccess: "{count} kauppaa tuotu.",
   importCashWillBeAdded: "lisätään Käteiseen",
+  importDuplicatesRemoved: "{count} portfellis juba olemas olnud duplikaattehingut eemaldati.",
   importError: "Datan poiminta epäonnistui. Yritä uudelleen.",
   importRemoveRow: "Poista",
   resetPortfolio: "Nollaa salkku",

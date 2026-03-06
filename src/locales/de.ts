@@ -376,6 +376,7 @@ const de: TranslationStrings = {
   importSuccess: "{count} Positionen erfolgreich importiert!",
   importTxSuccess: "{count} Transaktionen importiert.",
   importCashWillBeAdded: "wird zu Bargeld hinzugefügt",
+  importDuplicatesRemoved: "{count} doppelte Transaktionen, die bereits in Ihrem Portfolio vorhanden sind, wurden entfernt.",
   importError: "Daten konnten nicht extrahiert werden. Bitte versuchen Sie es erneut.",
   importRemoveRow: "Entfernen",
   resetPortfolio: "Portfolio zurücksetzen",

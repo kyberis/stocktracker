@@ -376,6 +376,7 @@ const pl: TranslationStrings = {
   importSuccess: "Pomyślnie zaimportowano {count} pozycji!",
   importTxSuccess: "{count} transakcji zaimportowano.",
   importCashWillBeAdded: "zostanie dodane do Gotówki",
+  importDuplicatesRemoved: "{count} zduplikowanych transakcji już istniejących w Twoim portfelu zostało usuniętych.",
   importError: "Nie udało się wyodrębnić danych. Spróbuj ponownie.",
   importRemoveRow: "Usuń",
   resetPortfolio: "Resetuj portfel",

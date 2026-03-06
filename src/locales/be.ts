@@ -376,6 +376,7 @@ const be: TranslationStrings = {
   importSuccess: "Паспяхова імпартавана {count} пазіцый!",
   importTxSuccess: "{count} транзакцый імпартавана.",
   importCashWillBeAdded: "будзе дадана да Наяўных",
+  importDuplicatesRemoved: "{count} дублікатаў транзакцый, якія ўжо былі ў вашому партфелі, было выдалена.",
   importError: "Не ўдалося здабыць даныя. Паспрабуйце зноў.",
   importRemoveRow: "Выдаліць",
   resetPortfolio: "Скінуць партфель",

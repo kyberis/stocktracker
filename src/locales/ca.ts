@@ -376,6 +376,7 @@ const ca: TranslationStrings = {
   importSuccess: "S'han importat correctament {count} posicions!",
   importTxSuccess: "{count} transaccions importades.",
   importCashWillBeAdded: "s'afegirà a Efectiu",
+  importDuplicatesRemoved: "{count} transaccions duplicades que ja eren a la teva cartera han estat eliminades.",
   importError: "Error en extreure dades. Torneu-ho a provar.",
   importRemoveRow: "Eliminar",
   resetPortfolio: "Reiniciar Cartera",

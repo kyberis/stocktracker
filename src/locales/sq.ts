@@ -376,6 +376,7 @@ const sq: TranslationStrings = {
   importSuccess: "U importuan me sukses {count} aktive!",
   importTxSuccess: "{count} transaksione u importuan.",
   importCashWillBeAdded: "do të shtohet te Para",
+  importDuplicatesRemoved: "{count} transaksione të dyfishta që ishin tashmë në portofolin tuaj u hoqën.",
   importError: "Dështoi nxjerrja e të dhënave. Ju lutemi provoni përsëri.",
   importRemoveRow: "Hiq",
   resetPortfolio: "Rivendos portofolin",

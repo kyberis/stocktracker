@@ -376,6 +376,7 @@ const da: TranslationStrings = {
   importSuccess: "Importeret {count} beholdninger!",
   importTxSuccess: "{count} transaktioner importeret.",
   importCashWillBeAdded: "vil blive tilføjet til Kontanter",
+  importDuplicatesRemoved: "{count} duplikerede transaktioner, der allerede er i din portefølje, blev fjernet.",
   importError: "Kunne ikke udtrække data. Prøv igen.",
   importRemoveRow: "Fjern",
   resetPortfolio: "Nulstil portefølje",

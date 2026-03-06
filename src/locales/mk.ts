@@ -376,6 +376,7 @@ const mk: TranslationStrings = {
   importSuccess: "Успешно увезени {count} позиции!",
   importTxSuccess: "{count} трансакции увезени.",
   importCashWillBeAdded: "ќе се додаде во Готовина",
+  importDuplicatesRemoved: "{count} дуплирани трансакции кои веќе беа во вашето портфолио беа отстранети.",
   importError: "Не може да се извлечат податоци. Обидете се повторно.",
   importRemoveRow: "Отстрани",
   resetPortfolio: "Ресетирај портфолио",

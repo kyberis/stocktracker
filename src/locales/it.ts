@@ -376,6 +376,7 @@ const it: TranslationStrings = {
   importSuccess: "{count} posizioni importate con successo!",
   importTxSuccess: "{count} transazioni importate.",
   importCashWillBeAdded: "sarà aggiunto a Contanti",
+  importDuplicatesRemoved: "{count} transazioni duplicate già presenti nel tuo portafoglio sono state rimosse.",
   importError: "Estrazione dati fallita. Riprova.",
   importRemoveRow: "Rimuovi",
   resetPortfolio: "Reimposta portafoglio",

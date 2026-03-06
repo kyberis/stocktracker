@@ -376,6 +376,7 @@ const tr: TranslationStrings = {
   importSuccess: "{count} varlık başarıyla içe aktarıldı!",
   importTxSuccess: "{count} işlem içe aktarıldı.",
   importCashWillBeAdded: "Nakite eklenecek",
+  importDuplicatesRemoved: "Portföyünüzde zaten bulunan {count} yinelenen işlem kaldırıldı.",
   importError: "Veri çıkarılamadı. Lütfen tekrar deneyin.",
   importRemoveRow: "Kaldır",
   resetPortfolio: "Portföyü Sıfırla",

@@ -376,6 +376,7 @@ const lt: TranslationStrings = {
   importSuccess: "Sėkmingai importuota {count} turėjimų!",
   importTxSuccess: "{count} sandorių importuota.",
   importCashWillBeAdded: "bus pridėta prie Grynieji",
+  importDuplicatesRemoved: "{count} pasikartojančių sandorių, kurie jau buvo jūsų portfelyje, buvo pašalinti.",
   importError: "Nepavyko ištraukti duomenų. Bandykite dar kartą.",
   importRemoveRow: "Pašalinti",
   resetPortfolio: "Atstatyti portfelį",

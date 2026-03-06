@@ -376,6 +376,7 @@ const sk: TranslationStrings = {
   importSuccess: "Úspešne importovaných {count} pozícií!",
   importTxSuccess: "{count} transakcií importovaných.",
   importCashWillBeAdded: "bude pridané do Hotovosti",
+  importDuplicatesRemoved: "{count} duplicitných transakcií, ktoré už boli vo vašom portfóliu, bolo odstránených.",
   importError: "Nepodarilo sa extrahovať údaje. Skúste to znova.",
   importRemoveRow: "Odstrániť",
   resetPortfolio: "Resetovať portfólio",
