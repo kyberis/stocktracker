@@ -3,8 +3,11 @@ import {
   checkAndIncrementRateLimit,
   recordRateLimitUsage,
   getDailyAiUsage,
+  getPlatformSetting,
+  setPlatformSetting,
 } from "@/lib/db";
-import { avRateLimiter, aiImportRateLimiter } from "@/lib/upstash";
+import { avRateLimiter, aiImportRateLimiter, signupRateLimiter, loginRateLimiter } from "@/lib/upstash";
+import type { NextRequest } from "next/server";
 
 export interface RateLimitResult {
   allowed: boolean;
@@ -124,4 +127,61 @@ export function getRateLimitProvider(providerName: string): RateLimitProvider | 
   if (providerName === "openai") return "openai";
   if (providerName === "openai_import") return "openai_import";
   return null;
+}
+
+// ── IP-based auth rate limiting ──────────────────────────────
+
+export function getClientIp(req: NextRequest): string {
+  return (
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    req.headers.get("x-real-ip") ||
+    "unknown"
+  );
+}
+
+export async function checkSignupRateLimit(ip: string): Promise<RateLimitResult> {
+  const limiter = signupRateLimiter();
+  if (limiter) {
+    const { success, limit, remaining, reset } = await limiter.limit(ip);
+    return { allowed: success, remaining, limit, resetAt: new Date(reset).toISOString() };
+  }
+  const limit = PLATFORM_LIMITS.AUTH_SIGNUP_PER_IP_PER_HOUR;
+  const windowKey = `signup:${new Date().toISOString().slice(0, 13)}`;
+  const { allowed, remaining, resetAt } = await checkAndIncrementRateLimit(ip, "alphavantage", limit, windowKey);
+  return { allowed, remaining, limit, resetAt };
+}
+
+export async function checkLoginRateLimit(ip: string): Promise<RateLimitResult> {
+  const limiter = loginRateLimiter();
+  if (limiter) {
+    const { success, limit, remaining, reset } = await limiter.limit(ip);
+    return { allowed: success, remaining, limit, resetAt: new Date(reset).toISOString() };
+  }
+  const limit = PLATFORM_LIMITS.AUTH_LOGIN_PER_IP_PER_15MIN;
+  const now = new Date();
+  const quarter = Math.floor(now.getMinutes() / 15);
+  const windowKey = `login:${now.toISOString().slice(0, 13)}:${quarter}`;
+  const { allowed, remaining, resetAt } = await checkAndIncrementRateLimit(ip, "alphavantage", limit, windowKey);
+  return { allowed, remaining, limit, resetAt };
+}
+
+// ── Global OpenAI monthly call cap ──────────────────────────
+
+const OPENAI_CALLS_KEY = "openai_monthly_calls";
+
+export async function checkGlobalAiCap(): Promise<{ allowed: boolean; used: number; cap: number }> {
+  const cap = PLATFORM_LIMITS.OPENAI_MONTHLY_CALL_CAP;
+  const monthKey = new Date().toISOString().slice(0, 7);
+  const raw = await getPlatformSetting(OPENAI_CALLS_KEY);
+  const [countStr, storedMonth] = raw.split("|");
+  const used = storedMonth === monthKey ? parseInt(countStr, 10) || 0 : 0;
+  return { allowed: used < cap, used, cap };
+}
+
+export async function incrementGlobalAiCalls(): Promise<void> {
+  const monthKey = new Date().toISOString().slice(0, 7);
+  const raw = await getPlatformSetting(OPENAI_CALLS_KEY);
+  const [countStr, storedMonth] = raw.split("|");
+  const current = storedMonth === monthKey ? parseInt(countStr, 10) || 0 : 0;
+  await setPlatformSetting(OPENAI_CALLS_KEY, `${current + 1}|${monthKey}`);
 }

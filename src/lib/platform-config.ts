@@ -4,7 +4,7 @@
  */
 export const PLATFORM_LIMITS = {
   /** Hard cap on concurrent Pro subscribers. Block checkout when reached. */
-  MAX_PRO_SUBSCRIBERS: 10,
+  MAX_PRO_SUBSCRIBERS: 500,
 
   /** Alpha Vantage plan: 75 requests/minute (shared across all users). */
   AV_GLOBAL_PER_MINUTE: 75,
@@ -29,6 +29,21 @@ export const PLATFORM_LIMITS = {
 
   /** Max AI portfolio reviews per month for Pro users. */
   PORTFOLIO_REVIEW_MONTHLY_LIMIT: 5,
+
+  /** Signup attempts per IP per hour. */
+  AUTH_SIGNUP_PER_IP_PER_HOUR: 5,
+
+  /** Login attempts per IP per 15 minutes. */
+  AUTH_LOGIN_PER_IP_PER_15MIN: 10,
+
+  /**
+   * Global cap on OpenAI API calls per calendar month (all endpoints combined).
+   * Prevents runaway costs from ad-driven traffic spikes.
+   */
+  OPENAI_MONTHLY_CALL_CAP: 10_000,
+
+  /** Days to retain analytics_events rows before automatic purge. */
+  ANALYTICS_RETENTION_DAYS: 90,
 } as const;
 
 export type RateLimitProvider = "alphavantage" | "openai" | "openai_import";

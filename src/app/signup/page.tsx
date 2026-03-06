@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { FormEvent, useState, useCallback } from "react";
 import { ThemeProvider } from "@/lib/theme-context";
+import TurnstileWidget from "@/components/TurnstileWidget";
 
 function GoogleIcon() {
   return (
@@ -25,6 +26,8 @@ function SignupForm() {
   const [seedWithData, setSeedWithData] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const onTurnstileToken = useCallback((token: string) => setTurnstileToken(token), []);
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -44,7 +47,7 @@ function SignupForm() {
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, displayName: displayName || undefined, seedWithData }),
+        body: JSON.stringify({ email, password, displayName: displayName || undefined, seedWithData, turnstileToken: turnstileToken || undefined }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -52,7 +55,7 @@ function SignupForm() {
         return;
       }
 
-      router.replace("/");
+      router.replace("/verify-email");
       router.refresh();
     } catch {
       setError("Signup failed.");
@@ -172,6 +175,8 @@ function SignupForm() {
               />
               Start with sample portfolio data
             </label>
+
+            <TurnstileWidget onToken={onTurnstileToken} />
 
             {error && (
               <div className="flex items-start gap-2 rounded-lg bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 px-3 py-2">

@@ -44,9 +44,25 @@ test.describe("Broker Import – DEGIRO", () => {
         csv: MINI_CSV,
       },
     });
-    expect(res.status()).toBe(200);
-    const data = await res.json();
-    expect(data.imported).toBeGreaterThanOrEqual(2);
+    expect(res.status()).toBe(202);
+    const { jobId } = await res.json();
+    expect(jobId).toBeTruthy();
+
+    let jobDone = false;
+    for (let i = 0; i < 30; i++) {
+      await new Promise((r) => setTimeout(r, 1000));
+      const poll = await request.post("/api/transactions/import-broker", {
+        multipart: { action: "status", broker: "degiro", jobId, csv: "" },
+      });
+      const status = await poll.json();
+      if (status.status === "completed") {
+        jobDone = true;
+        expect(status.result?.imported).toBeGreaterThanOrEqual(2);
+        break;
+      }
+      if (status.status === "failed") throw new Error(status.error);
+    }
+    expect(jobDone).toBe(true);
 
     const txList = await request.get("/api/transactions");
     const txs = await txList.json();

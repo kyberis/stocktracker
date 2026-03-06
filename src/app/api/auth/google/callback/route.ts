@@ -152,6 +152,7 @@ export async function GET(req: NextRequest) {
       role: dbUser.role,
       mustChangePassword: false,
       plan: dbUser.plan,
+      emailVerified: dbUser.email_verified === 1,
     });
 
     trackEvent(dbUser.id, "login");

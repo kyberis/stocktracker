@@ -11,6 +11,7 @@ import {
   trackEvent,
 } from "@/lib/db";
 import { PLATFORM_LIMITS } from "@/lib/platform-config";
+import { checkGlobalAiCap, incrementGlobalAiCalls } from "@/lib/rate-limit";
 import { aiCallsTotal, aiRequestDuration } from "@/lib/metrics";
 import { languageCodeToName } from "@/lib/languages";
 import { withMetrics } from "@/lib/with-metrics";
@@ -31,6 +32,14 @@ export const POST = withMetrics("/api/portfolio-review", async (request: NextReq
         used: usage.count,
       },
       { status: 429 }
+    );
+  }
+
+  const globalCap = await checkGlobalAiCap();
+  if (!globalCap.allowed) {
+    return Response.json(
+      { error: "Platform AI usage limit reached for this month. Please try again next month." },
+      { status: 429, headers: { "Retry-After": "86400" } },
     );
   }
 
@@ -152,7 +161,10 @@ ${portfolioData}`;
     }
 
     aiCallsTotal.inc({ status: "success", analysis_type: "portfolio_review" });
-    await incrementPortfolioReviewUsage(session.userId);
+    await Promise.all([
+      incrementPortfolioReviewUsage(session.userId),
+      incrementGlobalAiCalls(),
+    ]);
     trackEvent(session.userId, "portfolio_review_completed", {
       holdingsCount: String(holdings.length),
     });

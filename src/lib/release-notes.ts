@@ -14,9 +14,75 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "0.32.0";
+export const CURRENT_VERSION = "0.34.0";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "0.34.0",
+    date: "2026-03-06",
+    title: "Security Hardening & Scaling Readiness",
+    titleTranslations: { es: "Refuerzo de Seguridad y Preparación para Escalado" },
+    changes: [
+      {
+        type: "improvement",
+        text: "IP-based rate limiting on signup (5/hour) and login (10/15 min) to prevent abuse and brute-force attacks",
+        translations: { es: "Limitación de intentos por IP en registro (5/hora) e inicio de sesión (10/15 min) para prevenir abuso y ataques de fuerza bruta" },
+      },
+      {
+        type: "feature",
+        text: "Cloudflare Turnstile CAPTCHA on signup and login forms to block automated bot signups",
+        translations: { es: "CAPTCHA Cloudflare Turnstile en formularios de registro e inicio de sesión para bloquear registros automáticos de bots" },
+      },
+      {
+        type: "improvement",
+        text: "Global monthly OpenAI call cap (10,000/month) prevents runaway AI costs from traffic spikes",
+        translations: { es: "Límite mensual global de llamadas a OpenAI (10.000/mes) para prevenir costes desbocados por picos de tráfico" },
+      },
+      {
+        type: "improvement",
+        text: "Automatic analytics event cleanup — events older than 90 days are purged daily to control database growth",
+        translations: { es: "Limpieza automática de eventos analíticos — los eventos de más de 90 días se eliminan diariamente para controlar el crecimiento de la base de datos" },
+      },
+      {
+        type: "improvement",
+        text: "Added HSTS and Content-Security-Policy headers for stronger browser security",
+        translations: { es: "Añadidas cabeceras HSTS y Content-Security-Policy para mayor seguridad del navegador" },
+      },
+      {
+        type: "improvement",
+        text: "Session secret now enforced in production — the app refuses to start without APP_SESSION_SECRET set",
+        translations: { es: "Secreto de sesión ahora obligatorio en producción — la app no arranca sin APP_SESSION_SECRET configurado" },
+      },
+      {
+        type: "improvement",
+        text: "Pro subscriber capacity raised from 10 to 500 for ad campaign readiness",
+        translations: { es: "Capacidad de suscriptores Pro aumentada de 10 a 500 para preparación de campañas publicitarias" },
+      },
+    ],
+  },
+  {
+    version: "0.33.0",
+    date: "2026-03-06",
+    title: "Mandatory Email Verification",
+    titleTranslations: { es: "Verificación de Email Obligatoria" },
+    changes: [
+      {
+        type: "feature",
+        text: "Email verification is now required after signup — new users must verify their email before accessing the app",
+        translations: { es: "La verificación de email es ahora obligatoria tras el registro — los nuevos usuarios deben verificar su email antes de acceder a la aplicación" },
+      },
+      {
+        type: "improvement",
+        text: "Redesigned verification email with professional branded template",
+        translations: { es: "Rediseño del email de verificación con plantilla profesional de marca" },
+      },
+      {
+        type: "improvement",
+        text: "Verification email is now sent automatically on signup with a dedicated interstitial page",
+        translations: { es: "El email de verificación se envía automáticamente al registrarse con una página de espera dedicada" },
+      },
+    ],
+  },
   {
     version: "0.32.0",
     date: "2026-03-06",

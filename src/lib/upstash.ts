@@ -48,3 +48,35 @@ export function aiImportRateLimiter(): Ratelimit | null {
   });
   return _aiImportLimiter;
 }
+
+let _signupLimiter: Ratelimit | null | undefined;
+export function signupRateLimiter(): Ratelimit | null {
+  if (_signupLimiter !== undefined) return _signupLimiter;
+  const redis = getRedis();
+  if (!redis) {
+    _signupLimiter = null;
+    return null;
+  }
+  _signupLimiter = new Ratelimit({
+    redis,
+    limiter: Ratelimit.fixedWindow(PLATFORM_LIMITS.AUTH_SIGNUP_PER_IP_PER_HOUR, "1h"),
+    prefix: "rl:signup",
+  });
+  return _signupLimiter;
+}
+
+let _loginLimiter: Ratelimit | null | undefined;
+export function loginRateLimiter(): Ratelimit | null {
+  if (_loginLimiter !== undefined) return _loginLimiter;
+  const redis = getRedis();
+  if (!redis) {
+    _loginLimiter = null;
+    return null;
+  }
+  _loginLimiter = new Ratelimit({
+    redis,
+    limiter: Ratelimit.fixedWindow(PLATFORM_LIMITS.AUTH_LOGIN_PER_IP_PER_15MIN, "15m"),
+    prefix: "rl:login",
+  });
+  return _loginLimiter;
+}

@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { findUserById, updateUserProfile, setEmailVerified } from "@/lib/db";
+import { findUserById, setEmailVerified, trackEvent } from "@/lib/db";
 import {
   createVerificationToken,
   sendVerificationEmail,
   verifyVerificationToken,
 } from "@/lib/email";
+import {
+  createSessionToken,
+  getSessionCookieConfig,
+  verifySessionToken,
+} from "@/lib/auth/session";
 import { withMetrics } from "@/lib/with-metrics";
 
 export const POST = withMetrics("/api/auth/verify-email", async (req: NextRequest) => {
@@ -30,12 +35,14 @@ export const POST = withMetrics("/api/auth/verify-email", async (req: NextReques
     return NextResponse.json({ error: "Failed to send verification email" }, { status: 500 });
   }
 
+  trackEvent(session.userId, "email_verification_resent");
   return NextResponse.json({ ok: true, message: "Verification email sent" });
 });
 
 export const GET = withMetrics("/api/auth/verify-email", async (req: NextRequest) => {
   const url = new URL(req.url);
   const token = url.searchParams.get("token");
+  const baseUrl = process.env.APP_BASE_URL || "http://localhost:3000";
 
   if (!token) {
     return NextResponse.json({ error: "Missing token" }, { status: 400 });
@@ -56,7 +63,20 @@ export const GET = withMetrics("/api/auth/verify-email", async (req: NextRequest
   }
 
   await setEmailVerified(payload.userId, true);
+  trackEvent(payload.userId, "email_verification_completed");
 
-  const baseUrl = process.env.APP_BASE_URL || "http://localhost:3000";
-  return NextResponse.redirect(`${baseUrl}/profile?emailVerified=true`);
+  const existingToken = req.cookies.get("trefolio_session")?.value;
+  const existingSession = existingToken ? await verifySessionToken(existingToken) : null;
+
+  if (existingSession && existingSession.userId === payload.userId) {
+    const newSessionToken = await createSessionToken({
+      ...existingSession,
+      emailVerified: true,
+    });
+    const response = NextResponse.redirect(`${baseUrl}/`);
+    response.cookies.set(getSessionCookieConfig(newSessionToken));
+    return response;
+  }
+
+  return NextResponse.redirect(`${baseUrl}/login?emailVerified=true`);
 });

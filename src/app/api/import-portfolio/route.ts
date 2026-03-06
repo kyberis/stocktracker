@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
 import { trackEvent, getGlobalOpenAIApiKey, listHoldings, findUserById } from "@/lib/db";
-import { checkAiImportRateLimit } from "@/lib/rate-limit";
+import { checkAiImportRateLimit, checkGlobalAiCap, incrementGlobalAiCalls } from "@/lib/rate-limit";
 import { withMetrics } from "@/lib/with-metrics";
 import { portfolioImportsTotal, rateLimitHitsTotal } from "@/lib/metrics";
 import { PLATFORM_LIMITS } from "@/lib/platform-config";
@@ -66,6 +66,14 @@ export const POST = withMetrics("/api/import-portfolio", async (req: NextRequest
         retryAfter: 86400,
       },
       { status: 429, headers: { "Retry-After": "86400" } }
+    );
+  }
+
+  const globalCap = await checkGlobalAiCap();
+  if (!globalCap.allowed) {
+    return NextResponse.json(
+      { error: "Platform AI usage limit reached for this month. Please try again next month." },
+      { status: 429, headers: { "Retry-After": "86400" } },
     );
   }
 
@@ -245,6 +253,7 @@ export const POST = withMetrics("/api/import-portfolio", async (req: NextRequest
 
     trackEvent(session.userId, "portfolio_import", { method: contentType.includes("multipart") ? "file" : "csv" });
     portfolioImportsTotal.inc({ source: "csv", status: "success" });
+    incrementGlobalAiCalls().catch(() => {});
 
     const warnings: string[] = [];
     if (droppedHoldings > 0) warnings.push(`${droppedHoldings} holding(s) removed due to invalid ticker format.`);

@@ -6,10 +6,10 @@ test.describe("Authentication", () => {
     await ensureLoggedOut(request);
   });
 
-  test("shows login page for unauthenticated users", async ({ page }) => {
+  test("shows landing page for unauthenticated users", async ({ page }) => {
     await page.goto("/");
-    await expect(page).toHaveURL(/\/login/);
-    await expect(page.locator('input[autocomplete="username"]')).toBeVisible();
+    await expect(page).toHaveURL("/");
+    await expect(page.getByText("Simple and Powerful")).toBeVisible();
   });
 
   test("rejects invalid credentials", async ({ page }) => {
@@ -21,7 +21,7 @@ test.describe("Authentication", () => {
     await expect(page).toHaveURL(/\/login/);
   });
 
-  test("signup creates account and redirects to dashboard", async ({ page }) => {
+  test("signup creates account and redirects", async ({ page }) => {
     const email = `e2e_signup_${Date.now()}@test.example.com`;
     const password = "SecurePass1!";
 
@@ -31,8 +31,8 @@ test.describe("Authentication", () => {
     await pwInputs.nth(0).fill(password);
     await pwInputs.nth(1).fill(password);
     await page.click('button[type="submit"]');
-    await page.waitForURL("/", { timeout: 10_000 });
-    await expect(page).toHaveURL("/");
+    await page.waitForURL(/\/(verify-email)?$/, { timeout: 10_000 });
+    await expect(page).not.toHaveURL(/\/signup/);
   });
 
   test("signup rejects duplicate email via API", async ({ request }) => {

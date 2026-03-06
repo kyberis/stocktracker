@@ -127,7 +127,9 @@ test.describe("Portfolio API", () => {
     const target = await add.json();
 
     const list = await request.get("/api/rebalance-targets");
+    expect(list.status()).toBe(200);
     const targets = await list.json();
+    expect(Array.isArray(targets)).toBe(true);
     expect(targets.some((t: { id: string }) => t.id === target.id)).toBe(true);
 
     const del = await request.delete(`/api/rebalance-targets?id=${target.id}`);

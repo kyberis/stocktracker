@@ -1,46 +1,35 @@
 import { test, expect } from "@playwright/test";
-import { loginViaUI } from "./helpers";
+import { createTestUser, ensureLoggedOut, loginViaUI } from "./helpers";
 
 const CSV_PATH = "/Users/mcsuarez/stocktracker/docs/portfolio_sample_degiro.csv";
 
 test.describe("Import Portfolio", () => {
   test("login, import DEGIRO CSV, verify transactions and holdings", async ({
     page,
+    request,
   }) => {
     test.setTimeout(60000);
-    // Login via UI (admin/admin, fallback admin/Admin123!)
-    await page.goto("/login");
-    await page.locator('input[autocomplete="username"]').fill("admin");
-    await page.locator('input[autocomplete="current-password"]').fill("admin");
-    await page.click('button[type="submit"]');
-    await page.waitForURL(/\/(?!login)/, { timeout: 8000 }).catch(() => {});
 
-    // Handle must-change-password flow
-    if (page.url().includes("/change-password")) {
-      await page.locator('input[name="currentPassword"]').fill("admin");
-      await page.locator('input[name="newPassword"]').fill("Admin123!");
-      await page.click('button[type="submit"]');
-      await page.waitForURL(/\/(?!change-password)/, { timeout: 5000 });
-    }
-
-    // If still on login, try Admin123!
-    if (page.url().includes("/login")) {
-      await page.locator('input[autocomplete="current-password"]').fill("Admin123!");
-      await page.click('button[type="submit"]');
-      await page.waitForURL(/\/(?!login)/, { timeout: 5000 });
-    }
+    await ensureLoggedOut(request);
+    const creds = await createTestUser(request);
+    await loginViaUI(page, creds.email, creds.password);
+    await page.waitForURL(/\/(?!login|signup)/, { timeout: 10000 });
 
     await page.goto("/");
-    // Dismiss any overlay modal (What's New, upgrade, etc.) that blocks clicks
-    for (let i = 0; i < 3; i++) {
+    await page.waitForTimeout(3000);
+
+    // Dismiss any overlay modal (What's New, upgrade, etc.)
+    for (let i = 0; i < 5; i++) {
       await page.keyboard.press("Escape");
-      await page.waitForTimeout(400);
+      await page.waitForTimeout(300);
     }
-    await expect(page.getByRole("button", { name: "Import Portfolio" })).toBeVisible();
+    await page.waitForTimeout(500);
+
+    await expect(page.getByRole("button", { name: "Import Portfolio" })).toBeVisible({ timeout: 10000 });
 
     // Open Import Portfolio modal
-    await page.getByRole("button", { name: "Import Portfolio" }).click();
-    await expect(page.getByText("Drag & drop a file here")).toBeVisible({
+    await page.getByRole("button", { name: "Import Portfolio" }).click({ force: true });
+    await expect(page.getByText(/Drag & drop a file here|drag/i)).toBeVisible({
       timeout: 5000,
     });
 

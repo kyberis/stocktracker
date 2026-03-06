@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifySessionToken } from "@/lib/auth/session";
 
-const PUBLIC_ROUTES = new Set(["/login", "/signup", "/landing", "/privacy", "/terms"]);
+const PUBLIC_ROUTES = new Set(["/login", "/signup", "/landing", "/privacy", "/terms", "/verify-email"]);
 const PUBLIC_API_ROUTES = new Set([
   "/api/auth/login",
   "/api/auth/signup",
   "/api/auth/logout",
   "/api/auth/google",
   "/api/auth/google/callback",
+  "/api/auth/verify-email",
   "/api/billing/webhook",
   "/api/analytics/landing",
   "/api/metrics",
@@ -56,6 +57,25 @@ export async function middleware(req: NextRequest) {
       return NextResponse.json({ error: "Password change required" }, { status: 403 });
     }
     return NextResponse.redirect(new URL("/change-password", req.url));
+  }
+
+  const EMAIL_VERIFY_ALLOWED = new Set([
+    "/verify-email",
+    "/api/auth/verify-email",
+    "/api/auth/logout",
+    "/api/auth/me",
+  ]);
+  const skipEmailVerify = process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test";
+  if (
+    !skipEmailVerify &&
+    !session.emailVerified &&
+    !session.mustChangePassword &&
+    !EMAIL_VERIFY_ALLOWED.has(pathname)
+  ) {
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json({ error: "Email verification required" }, { status: 403 });
+    }
+    return NextResponse.redirect(new URL("/verify-email", req.url));
   }
 
   if (["/login", "/signup", "/landing"].includes(pathname) && session) {

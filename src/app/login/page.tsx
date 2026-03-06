@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { FormEvent, useState, useEffect, Suspense } from "react";
+import { FormEvent, useState, useEffect, Suspense, useCallback } from "react";
 import { ThemeProvider } from "@/lib/theme-context";
+import TurnstileWidget from "@/components/TurnstileWidget";
 
 function GoogleIcon() {
   return (
@@ -24,9 +25,14 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [emailVerifiedSuccess, setEmailVerifiedSuccess] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const onTurnstileToken = useCallback((token: string) => setTurnstileToken(token), []);
+
   useEffect(() => {
     const oauthError = searchParams.get("error");
     if (oauthError) setError(oauthError);
+    if (searchParams.get("emailVerified") === "true") setEmailVerifiedSuccess(true);
   }, [searchParams]);
 
   const onSubmit = async (e: FormEvent) => {
@@ -38,7 +44,7 @@ function LoginForm() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ identifier, password }),
+        body: JSON.stringify({ identifier, password, turnstileToken: turnstileToken || undefined }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -85,6 +91,15 @@ function LoginForm() {
         </div>
 
         <div className="card p-6">
+          {emailVerifiedSuccess && (
+            <div className="flex items-center gap-2 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 px-3 py-2 mb-4">
+              <svg className="w-4 h-4 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-sm text-emerald-600 dark:text-emerald-400">Email verified! Please sign in.</p>
+            </div>
+          )}
+
           {/* Google sign-in */}
           <a
             href="/api/auth/google"
@@ -133,6 +148,8 @@ function LoginForm() {
                 required
               />
             </div>
+
+            <TurnstileWidget onToken={onTurnstileToken} />
 
             {error && (
               <div className="flex items-start gap-2 rounded-lg bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 px-3 py-2">

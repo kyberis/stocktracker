@@ -1,4 +1,5 @@
 import { randomUUID } from "crypto";
+import { PLATFORM_LIMITS } from "@/lib/platform-config";
 import { ensureInitialized } from "./client";
 import { str, num } from "./helpers";
 
@@ -152,4 +153,26 @@ export async function getAnalyticsSummary(days = 30): Promise<AnalyticsSummary> 
       dailyViews: landingDailyViews.rows.map((r) => ({ date: str(r.day), views: num(r.cnt) })),
     },
   };
+}
+
+/**
+ * Delete analytics_events and landing_events older than the configured retention period.
+ * Returns the total number of rows deleted.
+ */
+export async function purgeOldAnalyticsEvents(): Promise<number> {
+  const client = await ensureInitialized();
+  const days = PLATFORM_LIMITS.ANALYTICS_RETENTION_DAYS;
+
+  const [a, b] = await Promise.all([
+    client.execute({
+      sql: "DELETE FROM analytics_events WHERE created_at < datetime('now', ?)",
+      args: [`-${days} days`],
+    }),
+    client.execute({
+      sql: "DELETE FROM landing_events WHERE created_at < datetime('now', ?)",
+      args: [`-${days} days`],
+    }),
+  ]);
+
+  return (a.rowsAffected ?? 0) + (b.rowsAffected ?? 0);
 }

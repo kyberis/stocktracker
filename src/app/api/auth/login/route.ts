@@ -10,14 +10,34 @@ import { withMetrics } from "@/lib/with-metrics";
 import { authEventsTotal } from "@/lib/metrics";
 import { parseBody } from "@/lib/api-response";
 import { loginSchema } from "@/lib/schemas";
+import { checkLoginRateLimit, getClientIp } from "@/lib/rate-limit";
+import { verifyTurnstileToken } from "@/lib/turnstile";
 
 export const POST = withMetrics("/api/auth/login", async (req: NextRequest) => {
   ensureSessionSecret();
+
+  const ip = getClientIp(req);
+  const isDev = process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test";
+  if (!isDev) {
+    const rl = await checkLoginRateLimit(ip);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: "Too many login attempts. Please try again later." },
+        { status: 429, headers: { "Retry-After": "900" } },
+      );
+    }
+  }
 
   const result = await parseBody(req, loginSchema);
   if (!result.success) return result.error;
   const { identifier, password } = result.data;
   const trimmed = identifier.trim();
+
+  const cfToken = (result.data as Record<string, unknown>).turnstileToken as string | undefined;
+  const captchaOk = await verifyTurnstileToken(cfToken, ip);
+  if (!captchaOk) {
+    return NextResponse.json({ error: "CAPTCHA verification failed. Please try again." }, { status: 403 });
+  }
 
   try {
     const isEmail = trimmed.includes("@");
@@ -50,6 +70,7 @@ export const POST = withMetrics("/api/auth/login", async (req: NextRequest) => {
       role: user.role,
       mustChangePassword: user.must_change_password === 1,
       plan: user.plan,
+      emailVerified: user.email_verified === 1,
     });
 
     trackEvent(user.id, "login");

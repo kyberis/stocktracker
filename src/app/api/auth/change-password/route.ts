@@ -37,6 +37,7 @@ export const POST = withMetrics("/api/auth/change-password", async (req: NextReq
       role: user.role,
       mustChangePassword: false,
       plan: user.plan,
+      emailVerified: user.email_verified === 1,
     });
 
     authEventsTotal.inc({ event: "password_change" });

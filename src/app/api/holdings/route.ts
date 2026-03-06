@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { addTransaction, deleteTransactionsForPosition, listHoldings, updateHolding, trackEvent, findUserById } from "@/lib/db";
+import { addTransaction, deleteTransactionsForPosition, listHoldings, updateHolding, removeHolding, trackEvent, findUserById } from "@/lib/db";
 import { withMetrics } from "@/lib/with-metrics";
 import { holdingsOpsTotal } from "@/lib/metrics";
 import { parseBody } from "@/lib/api-response";
@@ -119,6 +119,7 @@ export const DELETE = withMetrics("/api/holdings", async (req: NextRequest) => {
     return NextResponse.json({ error: "Holding not found." }, { status: 404 });
   }
   const deletedCount = await deleteTransactionsForPosition(session.userId, target.ticker, target.exchange);
+  await removeHolding(session.userId, id);
   if (deletedCount === 0) {
     return NextResponse.json({ error: "No transactions found for holding." }, { status: 404 });
   }

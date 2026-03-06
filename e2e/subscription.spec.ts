@@ -18,17 +18,19 @@ test.describe("Subscription tiering", () => {
   test("profile shows upgrade CTAs for free users", async ({ page, request }) => {
     const creds = await createTestUser(request);
     await loginViaUI(page, creds.email, creds.password);
+    await page.waitForURL(/\/(?!login|signup)/, { timeout: 10000 });
     await page.goto("/profile");
-    await expect(page.getByText("Free vs Pro").first()).toBeVisible();
-    await expect(page.getByText("Upgrade: 2 EUR/month")).toBeVisible();
-    await expect(page.getByText("Upgrade: 20 EUR/year")).toBeVisible();
+    await expect(page.getByText("Free vs Pro").first()).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText("Upgrade: €4.99/month")).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText("Upgrade: €39.99/year")).toBeVisible({ timeout: 5000 });
   });
 
   test("economic indicators shows contextual compare for free users", async ({ page, request }) => {
     const creds = await createTestUser(request);
     await loginViaUI(page, creds.email, creds.password);
+    await page.waitForURL(/\/(?!login|signup)/, { timeout: 10000 });
     await page.goto("/economic-indicators");
-    await expect(page.getByText("Free vs Pro").first()).toBeVisible();
-    await expect(page.getByText("Explore premium economic indicators.")).toBeVisible();
+    await expect(page.getByText("Free vs Pro").first()).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText("Explore premium economic indicators.")).toBeVisible({ timeout: 5000 });
   });
 });

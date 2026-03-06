@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getMetricsSnapshot, recordRateLimitUsage } from "@/lib/db";
+import { getMetricsSnapshot, purgeOldAnalyticsEvents, recordRateLimitUsage } from "@/lib/db";
 import { pushGauges } from "@/lib/grafana-push";
 import { getRedisClient } from "@/lib/upstash";
 
@@ -63,10 +63,14 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const [snapshot, redisSynced] = await Promise.all([
+  const [snapshot, redisSynced, purged] = await Promise.all([
     getMetricsSnapshot(),
     syncRedisCountersToTurso().catch((err) => {
       console.error("Redis→Turso sync failed:", err);
+      return 0;
+    }),
+    purgeOldAnalyticsEvents().catch((err) => {
+      console.error("Analytics purge failed:", err);
       return 0;
     }),
   ]);
@@ -90,5 +94,5 @@ export async function GET(req: NextRequest) {
 
   await pushGauges(points);
 
-  return NextResponse.json({ ok: true, pushed: points.length, redisSynced });
+  return NextResponse.json({ ok: true, pushed: points.length, redisSynced, purged });
 }

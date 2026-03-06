@@ -95,6 +95,7 @@ export {
   trackEvent,
   trackLandingEvent,
   getAnalyticsSummary,
+  purgeOldAnalyticsEvents,
 } from "./analytics";
 
 export type { FeedbackEntry } from "./feedback";

@@ -8,7 +8,12 @@ const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7;
 const DEV_FALLBACK_SECRET = "trefolio-dev-session-secret-change-me";
 
 function getSessionSecret(): string {
-  return process.env.APP_SESSION_SECRET || DEV_FALLBACK_SECRET;
+  const secret = process.env.APP_SESSION_SECRET;
+  if (secret) return secret;
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("APP_SESSION_SECRET must be set in production. Generate one with: openssl rand -hex 32");
+  }
+  return DEV_FALLBACK_SECRET;
 }
 
 export interface SessionPayload {
@@ -18,6 +23,7 @@ export interface SessionPayload {
   role: UserRole;
   mustChangePassword: boolean;
   plan: SubscriptionPlan;
+  emailVerified: boolean;
 }
 
 export async function createSessionToken(payload: SessionPayload): Promise<string> {
@@ -40,6 +46,7 @@ export async function verifySessionToken(token: string): Promise<SessionPayload 
       role: payload.role === "admin" ? "admin" : "user",
       mustChangePassword: Boolean(payload.mustChangePassword),
       plan: payload.plan === "pro" ? "pro" : "free",
+      emailVerified: Boolean(payload.emailVerified),
     };
   } catch {
     return null;

@@ -4,7 +4,7 @@ import { NextRequest } from "next/server";
 import { requireFeatureAccess } from "@/lib/auth/guards";
 import { getGlobalOpenAIApiKey, incrementAiUsage, incrementDailyAiUsage, findUserById } from "@/lib/db";
 import { aiCallsTotal, aiRequestDuration, rateLimitHitsTotal } from "@/lib/metrics";
-import { checkAiRateLimit } from "@/lib/rate-limit";
+import { checkAiRateLimit, checkGlobalAiCap, incrementGlobalAiCalls } from "@/lib/rate-limit";
 import { languageCodeToName } from "@/lib/languages";
 import { withMetrics } from "@/lib/with-metrics";
 
@@ -30,6 +30,14 @@ export const POST = withMetrics("/api/ai-analysis", async (request: NextRequest)
         { status: 429, headers: { "Retry-After": "86400" } }
       );
     }
+  }
+
+  const globalCap = await checkGlobalAiCap();
+  if (!globalCap.allowed) {
+    return Response.json(
+      { error: "Platform AI usage limit reached for this month. Please try again next month.", used: globalCap.used, cap: globalCap.cap },
+      { status: 429, headers: { "Retry-After": "86400" } },
+    );
   }
 
   const apiKey = await getGlobalOpenAIApiKey();
@@ -239,8 +247,11 @@ ${dataSections.join("\n\n")}`;
     }
 
     aiCallsTotal.inc({ status: "success", analysis_type: analysisTypeLabel });
-    await incrementAiUsage(session.userId);
-    await incrementDailyAiUsage(session.userId);
+    await Promise.all([
+      incrementAiUsage(session.userId),
+      incrementDailyAiUsage(session.userId),
+      incrementGlobalAiCalls(),
+    ]);
 
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();
