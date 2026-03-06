@@ -79,6 +79,7 @@ export const createTransactionSchema = z.object({
   taxes: z.number().optional().default(0),
   currency: z.string().optional().default("EUR"),
   displayCurrency: z.string().optional(),
+  exchangeRateEur: z.number().optional(),
   notes: z.string().optional().default(""),
   sourceRef: z.string().optional().default(""),
 });
