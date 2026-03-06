@@ -26,6 +26,7 @@ interface ExtractedTransaction {
   type: "buy" | "sell" | "dividend" | "fee";
   ticker: string;
   name: string;
+  isin?: string;
   shares: number;
   pricePerShare: number;
   totalAmount: number;
@@ -165,6 +166,7 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
           type: (String(tx.type || "buy") as ExtractedTransaction["type"]),
           ticker: String(tx.ticker || "").toUpperCase(),
           name: String(tx.name || ""),
+          isin: String(tx.isin || ""),
           shares: Number(tx.shares || 0),
           pricePerShare: Number(tx.pricePerShare || 0),
           totalAmount: Number(tx.totalAmount || 0),
@@ -273,7 +275,7 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
     const importSource = isImageImport ? "Image import" : `${formatLabels[csvFormat]} import`;
 
     for (const tx of validTransactions) {
-      const ticker = tx.ticker || (tx.type === "fee" ? "FEE" : "UNKNOWN");
+      const ticker = tx.ticker || tx.isin || (tx.type === "fee" ? "FEE" : "UNKNOWN");
       try {
         const res = await fetch("/api/transactions", {
           method: "POST",
@@ -283,7 +285,7 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
             ticker,
             name: tx.name,
             exchange: holdings.find((h) => h.ticker === tx.ticker)?.exchange || "",
-            isin: "",
+            isin: tx.isin || "",
             assetType: holdings.find((h) => h.ticker === tx.ticker)?.assetType
               || ((tx.name.toUpperCase().includes("ETF") || tx.name.toUpperCase().includes("UCITS")) ? "etf" : "stock"),
             accountId: "",
