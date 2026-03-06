@@ -492,6 +492,7 @@ const cs: TranslationStrings = {
   simpleCSV: "Simple CSV",
   simpleCsvTitle: "Formát Simple CSV",
   simpleCsvDesc: "Sloupce: ticker, type (buy/sell/dividend/fee), price, amount, currency. Volitelné: date, name.",
+  downloadTemplate: "Stáhnout šablonu Excel",
   total: "Celkem",
   portfolioPerformance: "Výkonnost portfolia",
   sinceInception: "Od začátku",

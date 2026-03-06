@@ -492,6 +492,7 @@ const hr: TranslationStrings = {
   simpleCSV: "Simple CSV",
   simpleCsvTitle: "Format Simple CSV",
   simpleCsvDesc: "Stupci: ticker, type (buy/sell/dividend/fee), price, amount, currency. Opcionalno: date, name.",
+  downloadTemplate: "Preuzmi Excel predložak",
   total: "Ukupno",
   portfolioPerformance: "Učinak portfelja",
   sinceInception: "Od početka",

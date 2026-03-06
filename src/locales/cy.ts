@@ -492,6 +492,7 @@ const cy: TranslationStrings = {
   simpleCSV: "Simple CSV",
   simpleCsvTitle: "Fformat Simple CSV",
   simpleCsvDesc: "Colofnau: ticker, type (buy/sell/dividend/fee), price, amount, currency. Opsiynol: date, name.",
+  downloadTemplate: "Lawrlwytho templed Excel",
   total: "Cyfanswm",
   portfolioPerformance: "Perfformiad Portffolio",
   sinceInception: "Er Dechrau",

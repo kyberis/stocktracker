@@ -492,6 +492,7 @@ const tr: TranslationStrings = {
   simpleCSV: "Basit CSV",
   simpleCsvTitle: "Basit CSV formatı",
   simpleCsvDesc: "Sütunlar: ticker, type (buy/sell/dividend/fee), price, amount, currency. Opsiyonel: date, name.",
+  downloadTemplate: "Excel şablonunu indir",
   total: "Toplam",
   portfolioPerformance: "Portföy Performansı",
   sinceInception: "Başlangıçtan",

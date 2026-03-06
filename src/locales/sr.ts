@@ -492,6 +492,7 @@ const sr: TranslationStrings = {
   simpleCSV: "Simple CSV",
   simpleCsvTitle: "Simple CSV формат",
   simpleCsvDesc: "Колоне: ticker, type (buy/sell/dividend/fee), price, amount, currency. Опционо: date, name.",
+  downloadTemplate: "Преузми Excel шаблон",
   total: "Укупно",
   portfolioPerformance: "Перформансе портфеља",
   sinceInception: "Од почетка",

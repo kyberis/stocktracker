@@ -492,6 +492,7 @@ const be: TranslationStrings = {
   simpleCSV: "Simple CSV",
   simpleCsvTitle: "Фармат Simple CSV",
   simpleCsvDesc: "Слупкі: ticker, type (buy/sell/dividend/fee), price, amount, currency. Апцыянальна: date, name.",
+  downloadTemplate: "Спампаваць шаблон Excel",
   total: "Усяго",
   portfolioPerformance: "Прадукцыйнасць партфеля",
   sinceInception: "З пачатку",

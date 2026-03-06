@@ -492,6 +492,7 @@ const el: TranslationStrings = {
   simpleCSV: "Simple CSV",
   simpleCsvTitle: "Μορφή Simple CSV",
   simpleCsvDesc: "Στήλες: ticker, type (buy/sell/dividend/fee), price, amount, currency. Προαιρετικό: date, name.",
+  downloadTemplate: "Λήψη προτύπου Excel",
   total: "Σύνολο",
   portfolioPerformance: "Απόδοση χαρτοφυλακίου",
   sinceInception: "Από την έναρξη",

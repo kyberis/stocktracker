@@ -492,6 +492,7 @@ const lv: TranslationStrings = {
   simpleCSV: "Simple CSV",
   simpleCsvTitle: "Simple CSV formāts",
   simpleCsvDesc: "Kolonnas: ticker, type (buy/sell/dividend/fee), price, amount, currency. Neobligāti: date, name.",
+  downloadTemplate: "Lejupielādēt Excel veidni",
   total: "Kopā",
   portfolioPerformance: "Portfeļa veiktspēja",
   sinceInception: "No sākuma",

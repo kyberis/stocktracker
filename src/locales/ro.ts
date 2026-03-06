@@ -492,6 +492,7 @@ const ro: TranslationStrings = {
   simpleCSV: "CSV Simple",
   simpleCsvTitle: "Format CSV simplu",
   simpleCsvDesc: "Coloane: ticker, type (buy/sell/dividend/fee), price, amount, currency. Opțional: date, name.",
+  downloadTemplate: "Descarcă șablon Excel",
   total: "Total",
   portfolioPerformance: "Performanță Portofoliu",
   sinceInception: "De la Început",

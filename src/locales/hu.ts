@@ -492,6 +492,7 @@ const hu: TranslationStrings = {
   simpleCSV: "Simple CSV",
   simpleCsvTitle: "Simple CSV formátum",
   simpleCsvDesc: "Oszlopok: ticker, type (buy/sell/dividend/fee), price, amount, currency. Opcionális: date, name.",
+  downloadTemplate: "Excel sablon letöltése",
   total: "Összesen",
   portfolioPerformance: "Portfólió teljesítmény",
   sinceInception: "Kezdettől",

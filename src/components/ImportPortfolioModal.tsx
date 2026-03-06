@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, DragEvent } from "react";
 import { useI18n } from "@/lib/i18n";
+import { downloadImportTemplate } from "@/lib/download-import-template";
 
 type CsvFormat = "degiro" | "interactive_brokers" | "trading_212" | "revolut" | "simple";
 
@@ -452,6 +453,16 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
                   <p className="text-xs text-blue-700 dark:text-blue-300 font-medium mb-1">{t("simpleCsvTitle")}</p>
                   <p className="text-[10px] text-blue-600 dark:text-blue-400 font-mono">ticker,type,price,amount,currency</p>
                   <p className="text-[10px] text-blue-600 dark:text-blue-400 mt-1">{t("simpleCsvDesc")}</p>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); downloadImportTemplate(); }}
+                    className="mt-2 inline-flex items-center gap-1.5 text-[11px] font-medium text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-100 underline underline-offset-2 decoration-blue-300 dark:decoration-blue-500/40 hover:decoration-blue-500 transition-colors"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                    </svg>
+                    {t("downloadTemplate")}
+                  </button>
                 </div>
               )}
 

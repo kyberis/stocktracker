@@ -492,6 +492,7 @@ const is: TranslationStrings = {
   simpleCSV: "Simple CSV",
   simpleCsvTitle: "Simple CSV snið",
   simpleCsvDesc: "Dálkar: ticker, type (buy/sell/dividend/fee), price, amount, currency. Valkvætt: date, name.",
+  downloadTemplate: "Hlaða niður Excel sniðmáti",
   total: "Heild",
   portfolioPerformance: "Frammistaða eignasafns",
   sinceInception: "Frá upphafi",

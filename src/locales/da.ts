@@ -492,6 +492,7 @@ const da: TranslationStrings = {
   simpleCSV: "Simple CSV",
   simpleCsvTitle: "Simple CSV-format",
   simpleCsvDesc: "Kolonner: ticker, type (buy/sell/dividend/fee), price, amount, currency. Valgfrit: date, name.",
+  downloadTemplate: "Download Excel-skabelon",
   total: "Total",
   portfolioPerformance: "Porteføljepræstation",
   sinceInception: "Siden start",

@@ -492,6 +492,7 @@ const sv: TranslationStrings = {
   simpleCSV: "Simple CSV",
   simpleCsvTitle: "Simple CSV-format",
   simpleCsvDesc: "Kolumner: ticker, type (buy/sell/dividend/fee), price, amount, currency. Valfritt: date, name.",
+  downloadTemplate: "Ladda ner Excel-mall",
   total: "Totalt",
   portfolioPerformance: "Portföljprestanda",
   sinceInception: "Sedan start",

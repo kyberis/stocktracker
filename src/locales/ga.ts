@@ -492,6 +492,7 @@ const ga: TranslationStrings = {
   simpleCSV: "Simple CSV",
   simpleCsvTitle: "Formáid Simple CSV",
   simpleCsvDesc: "Colúin: ticker, type (buy/sell/dividend/fee), price, amount, currency. Roghnach: date, name.",
+  downloadTemplate: "Íoslódáil teimpléad Excel",
   total: "Iomlán",
   portfolioPerformance: "Feidhmíocht Portafóilió",
   sinceInception: "Ó Thús",

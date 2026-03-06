@@ -492,6 +492,7 @@ const ca: TranslationStrings = {
   simpleCSV: "CSV Simple",
   simpleCsvTitle: "Format CSV simple",
   simpleCsvDesc: "Columnes: ticker, type (buy/sell/dividend/fee), price, amount, currency. Opcional: date, name.",
+  downloadTemplate: "Descarrega plantilla Excel",
   total: "Total",
   portfolioPerformance: "Rendiment de la Cartera",
   sinceInception: "Des de l'Inici",

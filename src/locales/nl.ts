@@ -492,6 +492,7 @@ const nl: TranslationStrings = {
   simpleCSV: "Simple CSV",
   simpleCsvTitle: "Simple CSV-formaat",
   simpleCsvDesc: "Kolommen: ticker, type (buy/sell/dividend/fee), price, amount, currency. Optioneel: date, name.",
+  downloadTemplate: "Download Excel-sjabloon",
   total: "Totaal",
   portfolioPerformance: "Portfolioprestaties",
   sinceInception: "Sinds start",

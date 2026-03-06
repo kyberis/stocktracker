@@ -492,6 +492,7 @@ const et: TranslationStrings = {
   simpleCSV: "Simple CSV",
   simpleCsvTitle: "Simple CSV -muoto",
   simpleCsvDesc: "Sarakkeet: ticker, type (buy/sell/dividend/fee), price, amount, currency. Valinnainen: date, name.",
+  downloadTemplate: "Laadi alla Exceli mall",
   total: "Yhteensä",
   portfolioPerformance: "Salkun suoritus",
   sinceInception: "Alusta",

@@ -492,6 +492,7 @@ const sq: TranslationStrings = {
   simpleCSV: "Simple CSV",
   simpleCsvTitle: "Formati Simple CSV",
   simpleCsvDesc: "Kolonat: ticker, type (buy/sell/dividend/fee), price, amount, currency. Opsionale: date, name.",
+  downloadTemplate: "Shkarko shabllonin Excel",
   total: "Totali",
   portfolioPerformance: "Performanca e portofolit",
   sinceInception: "Që nga fillimi",

@@ -492,6 +492,7 @@ const uk: TranslationStrings = {
   simpleCSV: "Simple CSV",
   simpleCsvTitle: "Формат Simple CSV",
   simpleCsvDesc: "Стовпці: ticker, type (buy/sell/dividend/fee), price, amount, currency. Опціонально: date, name.",
+  downloadTemplate: "Завантажити шаблон Excel",
   total: "Сума",
   portfolioPerformance: "Результати портфеля",
   sinceInception: "З початку",

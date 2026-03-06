@@ -492,6 +492,7 @@ const lt: TranslationStrings = {
   simpleCSV: "Simple CSV",
   simpleCsvTitle: "Simple CSV formatas",
   simpleCsvDesc: "Stulpeliai: ticker, type (buy/sell/dividend/fee), price, amount, currency. Pasirinktinai: date, name.",
+  downloadTemplate: "Atsisiųsti Excel šabloną",
   total: "Iš viso",
   portfolioPerformance: "Portfelio veikla",
   sinceInception: "Nuo pradžių",
