@@ -272,7 +272,7 @@ export default function PrivacyPolicyPage() {
             </p>
           </section>
 
-          <section>
+          <section id="cookies">
             <h2>9. Cookies</h2>
             <p>
               trefolio uses only <strong className="text-white">essential cookies</strong>{" "}

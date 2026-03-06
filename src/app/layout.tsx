@@ -3,6 +3,7 @@ import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import CookieConsent from "@/components/CookieConsent";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -20,6 +21,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${GeistSans.variable} ${GeistMono.variable} font-sans antialiased`}>
         {children}
+        <CookieConsent />
         <Analytics />
         <SpeedInsights />
       </body>
