@@ -20,6 +20,8 @@ function isPublicPath(pathname: string): boolean {
   if (pathname === "/favicon.ico") return true;
   if (pathname === "/robots.txt") return true;
   if (pathname === "/sitemap.xml") return true;
+  if (pathname === "/llms.txt") return true;
+  if (pathname === "/llms-full.txt") return true;
   if (/\.(png|jpg|jpeg|gif|svg|webp|ico|mp4|webm|css|js|woff2?)$/.test(pathname)) return true;
   return false;
 }

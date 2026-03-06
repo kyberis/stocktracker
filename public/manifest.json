@@ -1,0 +1,16 @@
+{
+  "name": "trefolio — Portfolio Tracker",
+  "short_name": "trefolio",
+  "description": "Simple portfolio tracking with AI insights for European investors.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#10b981",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ]
+}

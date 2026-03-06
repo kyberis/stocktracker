@@ -14,9 +14,32 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "0.31.0";
+export const CURRENT_VERSION = "0.32.0";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "0.32.0",
+    date: "2026-03-06",
+    title: "SEO & AI Discoverability",
+    titleTranslations: { es: "SEO y Descubrimiento por IA" },
+    changes: [
+      {
+        type: "improvement",
+        text: "Added sitemap, robots.txt, structured data (JSON-LD), Open Graph, and Twitter card metadata for better search engine visibility",
+        translations: { es: "Añadido sitemap, robots.txt, datos estructurados (JSON-LD), Open Graph y metadatos de Twitter Card para mejor visibilidad en motores de búsqueda" },
+      },
+      {
+        type: "feature",
+        text: "Added llms.txt and llms-full.txt for AI search engine discoverability (ChatGPT, Perplexity, Google AI Overviews)",
+        translations: { es: "Añadido llms.txt y llms-full.txt para descubrimiento por motores de búsqueda con IA (ChatGPT, Perplexity, Google AI Overviews)" },
+      },
+      {
+        type: "improvement",
+        text: "Security headers (X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy) added to all responses",
+        translations: { es: "Cabeceras de seguridad (X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy) añadidas a todas las respuestas" },
+      },
+    ],
+  },
   {
     version: "0.31.0",
     date: "2026-03-06",

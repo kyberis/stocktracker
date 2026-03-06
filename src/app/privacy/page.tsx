@@ -4,7 +4,8 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Privacy Policy — trefolio",
   description:
-    "How trefolio collects, processes, and protects your personal data. GDPR-compliant privacy practices for European investors.",
+    "trefolio is a GDPR-compliant portfolio tracker. Learn how we collect, process, and protect your personal data. No tracking cookies, no data selling.",
+  alternates: { canonical: "https://trefolio.app/privacy" },
 };
 
 export default function PrivacyPolicyPage() {

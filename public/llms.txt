@@ -1,0 +1,23 @@
+# trefolio
+
+> The simplest way to track your stock portfolio with AI-powered insights. Built for European investors.
+
+## What is trefolio?
+
+trefolio is a web-based portfolio tracker that supports real-time quotes from NYSE, NASDAQ, XETRA, LSE, and more. It offers one-click import from DEGIRO, Interactive Brokers, Trading 212, and Revolut. Features include dividend tracking, growth projections, performance metrics (TTWROR, IRR), and AI-powered stock analysis.
+
+## Pricing
+
+- Free: Up to 15 holdings, real-time quotes, charts, broker import, 5 AI calls/month
+- Pro (€4.99/month or €39.99/year): Unlimited holdings, unlimited AI analysis, fundamentals, stock intelligence, economic indicators
+
+## Key Pages
+
+- Landing: https://trefolio.app/landing
+- Sign Up: https://trefolio.app/signup
+- Privacy Policy: https://trefolio.app/privacy
+- Terms of Service: https://trefolio.app/terms
+
+## Optional
+
+- [Full details](https://trefolio.app/llms-full.txt)

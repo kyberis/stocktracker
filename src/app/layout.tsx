@@ -7,9 +7,23 @@ import CookieConsent from "@/components/CookieConsent";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://trefolio.app"),
   title: "trefolio - Portfolio Manager",
-  description: "Track your stock portfolio, monitor price evolution, and analyze your investment gains.",
-  icons: { icon: "/favicon.ico" },
+  description:
+    "trefolio is a portfolio tracker for European investors. Real-time quotes, broker imports (DEGIRO, IBKR, T212, Revolut), AI analysis, and dividend projections. Free to start.",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "48x48" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    apple: "/icon.svg",
+  },
+  manifest: "/manifest.json",
+  openGraph: {
+    siteName: "trefolio",
+    locale: "en_US",
+    type: "website",
+  },
 };
 
 export default function RootLayout({

@@ -4,7 +4,8 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Terms of Service — trefolio",
   description:
-    "Terms and conditions governing the use of trefolio portfolio tracking service, including subscription terms, liability limitations, and acceptable use.",
+    "trefolio Terms of Service. Subscription terms, acceptable use, financial disclaimers, and liability limitations for our portfolio tracking service.",
+  alternates: { canonical: "https://trefolio.app/terms" },
 };
 
 export default function TermsOfServicePage() {

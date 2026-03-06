@@ -1,0 +1,149 @@
+# trefolio — Full Product Information
+
+> The simplest way to track your stock portfolio with AI-powered insights. Built for European investors.
+
+## What is trefolio?
+
+trefolio is a web-based portfolio tracking application designed for European retail investors. It provides a clean, modern dashboard to track stock and ETF holdings across multiple exchanges, with real-time quotes, dividend tracking, performance metrics, and AI-powered analysis.
+
+## Target Audience
+
+- Primary: Beginner-to-intermediate retail investors in Europe (roughly 5–50 stocks/ETFs)
+- Secondary: Expats with multi-currency portfolios
+- Tertiary: Non-English-speaking European investors (35 languages supported)
+
+## Core Features
+
+### Portfolio Dashboard
+- Real-time stock quotes from Yahoo Finance
+- Multi-exchange support: NYSE, NASDAQ, XETRA, LSE, Amsterdam (AMS), Madrid (MAD), Copenhagen (OMK), and more
+- Multi-currency: automatic conversion between EUR, USD, GBP, DKK, and CAD
+- Daily changes, total value, per-stock breakdowns
+- Benchmark comparison with S&P 500, Nasdaq, Dow Jones, and Euro Stoxx 50
+- Portfolio growth projections with customizable parameters
+
+### Performance Metrics
+- TTWROR (Time-Weighted Rate of Return) using the Modified Dietz method
+- IRR (Internal Rate of Return) using the XIRR method
+- Clear methodology explanations in the UI
+
+### Dividend Tracking
+- Estimated annual dividend income
+- Per-stock yield breakdowns
+- 5-year growth projections
+- Historical dividend calendar
+
+### Broker Import
+One-click import from popular European brokers:
+- DEGIRO Account CSV (includes cash balance detection)
+- Interactive Brokers Activity Statement and Flex Query CSV
+- Trading 212 History CSV export
+- Revolut Account Statement (Excel/CSV)
+- Simple CSV format (ticker, type, price, amount, currency)
+- AI-powered smart import from screenshots and unstructured data
+
+### AI Analysis (Pro)
+- AI Portfolio Review with personalized recommendations (5 reviews/month)
+- Plain-language stock fundamentals analysis
+- News sentiment analysis (bullish/bearish)
+- Insider and institutional activity insights
+- Economic indicators analysis
+- Powered by OpenAI GPT
+
+### Additional Features
+- Price alerts (2 for Free, unlimited + email for Pro)
+- CSV export of holdings, transactions, and cash balances (Pro)
+- Dark and light mode
+- 35 European languages
+- Cash balance tracking
+- Privacy-first: no tracking cookies, no data selling
+
+## Pricing Details
+
+### Free Plan (€0 forever)
+- Up to 15 stocks & ETFs
+- Real-time Yahoo Finance quotes
+- Historical price charts
+- Cash balance tracking
+- Benchmark comparison (S&P 500, etc.)
+- DEGIRO, IBKR, Trading 212 & Revolut import
+- Dark & light mode
+- English + Spanish
+- 5 AI analysis calls/month
+- 2 price alerts (in-app)
+
+### Pro Plan (€4.99/month or €39.99/year)
+Everything in Free, plus:
+- Unlimited holdings
+- Unlimited AI analysis
+- Company fundamentals (income, balance, cash flow)
+- Stock intelligence (news sentiment, insider trades)
+- Institutional holdings data
+- Economic indicators dashboard
+- Alpha Vantage premium data
+- AI Portfolio Review (5/month)
+- Unlimited price alerts + email delivery
+- Priority support
+- Export to CSV
+
+## Supported Exchanges
+
+NYSE, NASDAQ, XETRA, LSE, Amsterdam (AMS), Madrid (MAD), Copenhagen (OMK), and additional exchanges via Yahoo Finance.
+
+## Data & Privacy
+
+- GDPR-compliant, built in Europe
+- Passwords hashed with bcrypt
+- Sessions use secure HTTP-only cookies
+- All data encrypted at rest
+- No advertising, tracking, or third-party cookies
+- Data never sold or shared with third parties
+- Users can delete their account and data at any time
+
+## Third-Party Services
+
+- Yahoo Finance: real-time market data
+- Alpha Vantage: premium market data (Pro)
+- OpenAI: AI-powered analysis
+- Stripe: payment processing
+- Vercel: hosting and deployment
+- Turso (libSQL): database
+
+## Frequently Asked Questions
+
+### How do I import my portfolio?
+Go to your Dashboard and click the upload icon in the header. Choose your broker (DEGIRO, Interactive Brokers, Trading 212, Revolut, or Simple CSV), drag & drop your file, review the parsed transactions, and click Import All. Your holdings will appear on the dashboard immediately.
+
+### What CSV formats are supported?
+Five formats: (1) DEGIRO Account.csv, (2) Interactive Brokers Activity Statement or Flex Query CSV, (3) Trading 212 History CSV export, (4) Revolut Account Statement (Excel/CSV), and (5) Simple CSV with columns: ticker, type, price, amount, currency.
+
+### Is my data secure?
+Yes. All data is encrypted at rest, passwords are hashed with bcrypt, and sessions use secure HTTP-only cookies. We never sell or share your data with third parties.
+
+### What exchanges are supported?
+trefolio supports NYSE, NASDAQ, XETRA, LSE, Amsterdam (AMS), Madrid (MAD), Copenhagen (OMK), and more. Multi-currency conversion between EUR, USD, GBP, DKK, and CAD is handled automatically.
+
+### How are performance metrics calculated?
+TTWROR uses the Modified Dietz method, which weights each cash flow by the fraction of the period remaining — so returns reflect market performance only, not deposit timing. IRR (XIRR) finds the annualized rate that makes the net present value of all dated cash flows equal zero.
+
+### What's the difference between Free and Pro?
+Free includes up to 15 holdings, real-time quotes, charts, broker import, and 5 AI calls/month. Pro (€4.99/month) adds unlimited holdings, unlimited AI analysis, company fundamentals, stock intelligence, economic indicators, and Alpha Vantage premium data.
+
+### Can I cancel Pro anytime?
+Yes. Pro is billed monthly (€4.99) or annually (€39.99/year, save 33%). You can cancel anytime from the billing portal — your Pro features remain active until the end of the billing period.
+
+### How do dividends and fees get tracked?
+When you import a broker CSV (DEGIRO, IBKR, Trading 212, or Revolut), dividends, withholding taxes, and broker fees are parsed automatically. For Simple CSV imports, use the type column with 'dividend' or 'fee' values. All transactions are stored in your ledger and reflected in performance metrics.
+
+## Key Pages
+
+- Landing: https://trefolio.app/landing
+- Sign Up: https://trefolio.app/signup
+- Log In: https://trefolio.app/login
+- Privacy Policy: https://trefolio.app/privacy
+- Terms of Service: https://trefolio.app/terms
+
+## Contact
+
+- Support: support@trefolio.com
+- Privacy: privacy@trefolio.com
