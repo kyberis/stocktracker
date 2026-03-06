@@ -11,7 +11,7 @@
  */
 
 import type { BrokerParser, ParsedTransaction } from "./types";
-import { parseCSVLine, extractDate, num } from "./utils";
+import { parseCSVLine, extractDate, num, deduplicateSourceRefs } from "./utils";
 
 /* ── Section field names ── */
 
@@ -210,6 +210,7 @@ function parseIBKR(csv: string, isinToTicker: Record<string, string>): ParsedTra
     }
   }
 
+  deduplicateSourceRefs(transactions);
   transactions.sort((a, b) => b.date.localeCompare(a.date));
   return transactions;
 }

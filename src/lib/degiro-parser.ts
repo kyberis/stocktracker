@@ -6,6 +6,8 @@
  *   Variación (currency), Variación (amount), Saldo (currency), Saldo (amount), ID Orden
  */
 
+import { deduplicateSourceRefs } from "./broker-parsers/utils";
+
 export interface DegiroCashBalance {
   currency: string;
   amount: number;
@@ -322,6 +324,8 @@ export function parseDegiroCSV(csv: string, isinToTicker: Record<string, string>
       sourceRef: `degiro|${group.date}|dividend|${group.isin}||${grossAmount}`,
     });
   }
+
+  deduplicateSourceRefs(transactions);
 
   // Sort by date descending
   transactions.sort((a, b) => b.date.localeCompare(a.date));

@@ -15,7 +15,7 @@
  */
 
 import type { BrokerParser, ParsedTransaction } from "./types";
-import { parseCSVLine, buildColumnMap, cell, num } from "./utils";
+import { parseCSVLine, buildColumnMap, cell, num, deduplicateSourceRefs } from "./utils";
 
 interface DividendGroup {
   symbol: string;
@@ -141,6 +141,7 @@ function parseRevolut(csv: string, _isinToTicker: Record<string, string>): Parse
     });
   }
 
+  deduplicateSourceRefs(transactions);
   transactions.sort((a, b) => b.date.localeCompare(a.date));
   return transactions;
 }

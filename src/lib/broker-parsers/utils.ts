@@ -51,3 +51,18 @@ export function extractDate(raw: string): string {
   if (compactMatch) return `${compactMatch[1]}-${compactMatch[2]}-${compactMatch[3]}`;
   return raw;
 }
+
+/**
+ * Ensure every sourceRef in a list of parsed transactions is unique.
+ * First occurrence keeps the original ref (backward-compatible with DB);
+ * subsequent collisions get a `|1`, `|2`, … suffix.
+ */
+export function deduplicateSourceRefs<T extends { sourceRef: string }>(txs: T[]): T[] {
+  const seen = new Map<string, number>();
+  for (const tx of txs) {
+    const n = seen.get(tx.sourceRef) ?? 0;
+    seen.set(tx.sourceRef, n + 1);
+    if (n > 0) tx.sourceRef += `|${n}`;
+  }
+  return txs;
+}

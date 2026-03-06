@@ -14,7 +14,7 @@
  */
 
 import type { BrokerParser, ParsedTransaction } from "./types";
-import { parseCSVLine, buildColumnMap, cell, num } from "./utils";
+import { parseCSVLine, buildColumnMap, cell, num, deduplicateSourceRefs } from "./utils";
 
 const FEE_COLUMN_PATTERNS = [
   "charge amount",
@@ -115,6 +115,7 @@ function parseTrading212(csv: string, _isinToTicker: Record<string, string>): Pa
     });
   }
 
+  deduplicateSourceRefs(transactions);
   transactions.sort((a, b) => b.date.localeCompare(a.date));
   return transactions;
 }

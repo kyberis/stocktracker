@@ -6,6 +6,7 @@
  */
 
 import type { DegiroTransaction } from "./degiro-parser";
+import { deduplicateSourceRefs } from "./broker-parsers/utils";
 
 type TxType = DegiroTransaction["type"];
 
@@ -117,6 +118,7 @@ export function parseSimpleCSV(csv: string): DegiroTransaction[] {
     });
   }
 
+  deduplicateSourceRefs(transactions);
   transactions.sort((a, b) => b.date.localeCompare(a.date));
   return transactions;
 }
