@@ -28,6 +28,7 @@ export async function listTransactions(userId: string, holdingId?: string): Prom
     taxes: num(r.taxes),
     currency: str(r.currency),
     displayCurrency: str(r.display_currency),
+    exchangeRateEur: r.exchange_rate_eur != null ? Number(r.exchange_rate_eur) || undefined : undefined,
     notes: str(r.notes),
     sourceRef: str(r.source_ref),
     createdAt: str(r.created_at),
@@ -141,9 +142,9 @@ export async function addTransaction(userId: string, tx: Omit<Transaction, "id" 
   await client.execute({
     sql: `INSERT INTO transactions (
             id, user_id, holding_id, ticker, name, exchange, isin, asset_type, account_id,
-            type, date, shares, price_per_share, total_amount, fees, taxes, currency, display_currency, notes, source_ref
+            type, date, shares, price_per_share, total_amount, fees, taxes, currency, display_currency, exchange_rate_eur, notes, source_ref
           )
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       id,
       userId,
@@ -163,6 +164,7 @@ export async function addTransaction(userId: string, tx: Omit<Transaction, "id" 
       tx.taxes || 0,
       tx.currency || "EUR",
       tx.displayCurrency || tx.currency || "EUR",
+      tx.exchangeRateEur ?? null,
       tx.notes || "",
       tx.sourceRef || "",
     ],

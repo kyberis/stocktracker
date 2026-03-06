@@ -18,6 +18,7 @@ function toTransaction(tx: DegiroTransaction): ParsedTransaction {
     fees: tx.fees,
     taxes: tx.taxes,
     currency: tx.currency,
+    exchangeRateEur: tx.exchangeRateEur,
     orderId: tx.orderId,
     sourceRef: tx.sourceRef,
   };

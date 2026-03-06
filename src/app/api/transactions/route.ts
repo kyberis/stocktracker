@@ -6,6 +6,7 @@ import { transactionsOpsTotal } from "@/lib/metrics";
 import { parseBody } from "@/lib/api-response";
 import { createTransactionSchema } from "@/lib/schemas";
 import { PLATFORM_LIMITS } from "@/lib/platform-config";
+import { YahooProvider } from "@/lib/api-providers/yahoo";
 
 export const GET = withMetrics("/api/transactions", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
@@ -43,7 +44,15 @@ export const POST = withMetrics("/api/transactions", async (req: NextRequest) =>
     }
   }
 
-  const created = await addTransaction(session.userId, result.data);
+  const txData = { ...result.data };
+  if (!txData.exchangeRateEur && txData.currency && txData.currency !== "EUR") {
+    try {
+      const rate = await new YahooProvider().getExchangeRate("EUR", txData.currency);
+      if (rate > 0) txData.exchangeRateEur = rate;
+    } catch { /* non-critical — performance calc falls back to current rates */ }
+  }
+
+  const created = await addTransaction(session.userId, txData);
   transactionsOpsTotal.inc({ operation: "add" });
   return NextResponse.json(created, { status: 201 });
 });

@@ -23,6 +23,7 @@ export interface DegiroTransaction {
   fees: number;
   taxes: number;           // withholding taxes on dividends
   currency: string;
+  exchangeRateEur?: number; // 1 EUR = X foreign (from "Retirada Cambio de Divisa" rows)
   orderId: string;
   sourceRef: string;       // fingerprint for deduplication
 }
@@ -59,6 +60,7 @@ interface RawRow {
   product: string;
   isin: string;
   description: string;
+  tipo: string;
   changeCurrency: string;
   changeAmount: number;
   orderId: string;
@@ -76,6 +78,7 @@ function parseRows(csv: string): RawRow[] {
       product: cols[3]?.trim() || "",
       isin: cols[4]?.trim() || "",
       description: cols[5]?.trim() || "",
+      tipo: cols[6]?.trim() || "",
       changeCurrency: cols[7]?.trim() || "",
       changeAmount: parseEuropeanNumber(cols[8] || ""),
       orderId: cols[11]?.trim() || "",
@@ -86,6 +89,7 @@ function parseRows(csv: string): RawRow[] {
 const BUY_RE = /^(?:Compra|Buy)\s+(\d+(?:[.,]\d+)?)\s+.+@([\d.,]+)\s+([A-Z]{3})/i;
 const SELL_RE = /^(?:Venta|Sell)\s+(\d+(?:[.,]\d+)?)\s+.+@([\d.,]+)\s+([A-Z]{3})/i;
 const TX_FEE_RE = /Costes de transacción/i;
+const FX_WITHDRAWAL_RE = /Retirada Cambio de Divisa/i;
 
 interface OrderFeeEntry {
   date: string;
@@ -121,6 +125,21 @@ export function parseDegiroCSV(csv: string, isinToTicker: Record<string, string>
 
   const consumedFees = new Set<OrderFeeEntry>();
 
+  // Collect FX rates from "Retirada Cambio de Divisa" rows.
+  // The "Tipo" column contains the rate (e.g. "1,1718" = 1 EUR = 1.1718 USD).
+  const fxRateByOrder: Record<string, number> = {};
+  const fxRateByDate: Record<string, number> = {};
+  for (const row of rows) {
+    if (FX_WITHDRAWAL_RE.test(row.description) && row.tipo) {
+      const rate = parseEuropeanNumber(row.tipo);
+      if (rate > 0) {
+        if (row.orderId) fxRateByOrder[row.orderId] = rate;
+        const dateKey = parseDegiroDate(row.valueDate || row.date);
+        fxRateByDate[dateKey] = rate;
+      }
+    }
+  }
+
   // Group dividend-related rows by ISIN + value date
   const dividendGroups: Record<string, { product: string; isin: string; date: string; currency: string; gross: number; tax: number }> = {};
 
@@ -144,6 +163,7 @@ export function parseDegiroCSV(csv: string, isinToTicker: Record<string, string>
           return sum + fee.amount;
         }, 0);
       const buyTotal = Math.abs(row.changeAmount) || shares * price;
+      const buyFxRate = (row.orderId && fxRateByOrder[row.orderId]) || fxRateByDate[date] || undefined;
       transactions.push({
         date,
         type: "buy",
@@ -156,6 +176,7 @@ export function parseDegiroCSV(csv: string, isinToTicker: Record<string, string>
         fees,
         taxes: 0,
         currency: tradeCurrency,
+        exchangeRateEur: tradeCurrency !== "EUR" ? buyFxRate : undefined,
         orderId: row.orderId,
         sourceRef: `degiro|${date}|buy|${row.isin}|${row.orderId}|${buyTotal}`,
       });
@@ -176,6 +197,7 @@ export function parseDegiroCSV(csv: string, isinToTicker: Record<string, string>
           return sum + fee.amount;
         }, 0);
       const sellTotal = Math.abs(row.changeAmount) || shares * price;
+      const sellFxRate = (row.orderId && fxRateByOrder[row.orderId]) || fxRateByDate[date] || undefined;
       transactions.push({
         date,
         type: "sell",
@@ -188,6 +210,7 @@ export function parseDegiroCSV(csv: string, isinToTicker: Record<string, string>
         fees,
         taxes: 0,
         currency: tradeCurrency,
+        exchangeRateEur: tradeCurrency !== "EUR" ? sellFxRate : undefined,
         orderId: row.orderId,
         sourceRef: `degiro|${date}|sell|${row.isin}|${row.orderId}|${sellTotal}`,
       });
@@ -281,6 +304,7 @@ export function parseDegiroCSV(csv: string, isinToTicker: Record<string, string>
     if (grossAmount <= 0) continue; // skip corrections that net to zero or negative
     const ticker = isinToTicker[group.isin] || "";
     const taxAmount = Math.abs(group.tax);
+    const divFxRate = fxRateByDate[group.date] || undefined;
     transactions.push({
       date: group.date,
       type: "dividend",
@@ -293,6 +317,7 @@ export function parseDegiroCSV(csv: string, isinToTicker: Record<string, string>
       fees: 0,
       taxes: taxAmount,
       currency: group.currency,
+      exchangeRateEur: group.currency !== "EUR" ? divFxRate : undefined,
       orderId: "",
       sourceRef: `degiro|${group.date}|dividend|${group.isin}||${grossAmount}`,
     });

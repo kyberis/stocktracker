@@ -10,6 +10,7 @@ export interface ParsedTransaction {
   fees: number;
   taxes: number;
   currency: string;
+  exchangeRateEur?: number;
   orderId: string;
   sourceRef: string;
 }

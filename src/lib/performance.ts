@@ -2,6 +2,17 @@ import type { ExchangeRates, HistoricalDataPoint, Holding, Transaction } from ".
 import { convertToEUR } from "./utils";
 
 /**
+ * Convert a transaction amount to EUR using the stored historical rate when
+ * available, falling back to current exchange rates.
+ */
+function txAmountToEUR(amount: number, tx: Transaction, exchangeRates: ExchangeRates): number {
+  const cur = tx.currency || "EUR";
+  if (cur === "EUR") return amount;
+  if (tx.exchangeRateEur && tx.exchangeRateEur > 0) return amount / tx.exchangeRateEur;
+  return convertToEUR(amount, cur, exchangeRates);
+}
+
+/**
  * Modified Dietz Rate of Return.
  *
  * This is the industry-standard approximation of TTWROR when intra-period
@@ -17,7 +28,8 @@ import { convertToEUR } from "./utils";
 export function calculateTTWROR(
   transactions: Transaction[],
   currentValueEUR: number,
-  totalInvestedEUR: number
+  totalInvestedEUR: number,
+  exchangeRates: ExchangeRates
 ): number {
   if (totalInvestedEUR <= 0 || transactions.length === 0) return 0;
 
@@ -39,10 +51,14 @@ export function calculateTTWROR(
   let weightedCashFlow = 0;
 
   for (const tx of sorted) {
+    const amount = txAmountToEUR(tx.totalAmount, tx, exchangeRates);
+    const fees = txAmountToEUR(tx.fees || 0, tx, exchangeRates);
+    const taxes = txAmountToEUR(tx.taxes || 0, tx, exchangeRates);
+
     const flow =
       tx.type === "buy"
-        ? tx.totalAmount + (tx.fees || 0) + (tx.taxes || 0)
-        : -(tx.totalAmount - (tx.fees || 0) - (tx.taxes || 0));
+        ? amount + fees + taxes
+        : -(amount - fees - taxes);
 
     const txDate = new Date(tx.date).getTime();
     const daysSinceStart = Math.max((txDate - firstDate) / 86400000, 0);
@@ -125,7 +141,8 @@ export function calculateXIRR(
  */
 export function buildXIRRCashFlows(
   transactions: Transaction[],
-  currentValueEUR: number
+  currentValueEUR: number,
+  exchangeRates: ExchangeRates
 ): { date: Date; amount: number }[] {
   const flows: { date: Date; amount: number }[] = [];
 
@@ -133,18 +150,22 @@ export function buildXIRRCashFlows(
     const d = new Date(tx.date);
     if (isNaN(d.getTime())) continue;
 
+    const amount = txAmountToEUR(tx.totalAmount, tx, exchangeRates);
+    const fees = txAmountToEUR(tx.fees || 0, tx, exchangeRates);
+    const taxes = txAmountToEUR(tx.taxes || 0, tx, exchangeRates);
+
     switch (tx.type) {
       case "buy":
-        flows.push({ date: d, amount: -(tx.totalAmount + (tx.fees || 0) + (tx.taxes || 0)) });
+        flows.push({ date: d, amount: -(amount + fees + taxes) });
         break;
       case "sell":
-        flows.push({ date: d, amount: tx.totalAmount - (tx.fees || 0) - (tx.taxes || 0) });
+        flows.push({ date: d, amount: amount - fees - taxes });
         break;
       case "dividend":
-        flows.push({ date: d, amount: tx.totalAmount });
+        flows.push({ date: d, amount });
         break;
       case "fee":
-        flows.push({ date: d, amount: -tx.totalAmount });
+        flows.push({ date: d, amount: -amount });
         break;
     }
   }

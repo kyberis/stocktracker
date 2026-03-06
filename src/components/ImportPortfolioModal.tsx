@@ -361,25 +361,26 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
         <div className="flex-1 overflow-y-auto px-6 py-5">
           {step === "upload" && (
             <>
-              {/* Format selector */}
-              <div className="flex flex-wrap gap-1 bg-gray-100 dark:bg-slate-700/50 rounded-xl p-1 mb-4">
+              {/* Broker selector */}
+              <div className="flex flex-col gap-2 mb-4">
                 {([
-                  { id: "degiro" as CsvFormat, label: "DeGiro" },
-                  { id: "interactive_brokers" as CsvFormat, label: "IBKR" },
-                  { id: "trading_212" as CsvFormat, label: "Trading 212" },
-                  { id: "revolut" as CsvFormat, label: "Revolut" },
-                  { id: "simple" as CsvFormat, label: t("simpleCSV") },
+                  { id: "degiro" as CsvFormat, label: "DEGIRO", desc: "Account.csv" },
+                  { id: "interactive_brokers" as CsvFormat, label: "Interactive Brokers", desc: "Activity Statement CSV" },
+                  { id: "trading_212" as CsvFormat, label: "Trading 212", desc: "History CSV export" },
+                  { id: "revolut" as CsvFormat, label: "Revolut", desc: "Account statement (Excel/CSV)" },
+                  { id: "simple" as CsvFormat, label: t("simpleCSV"), desc: "ticker, type, price, amount, currency" },
                 ]).map((fmt) => (
                   <button
                     key={fmt.id}
                     onClick={() => setCsvFormat(fmt.id)}
-                    className={`flex-1 text-xs font-medium px-2 py-2 rounded-lg transition-colors min-w-[60px] ${
+                    className={`text-left px-3 py-2.5 rounded-xl border-2 transition-all ${
                       csvFormat === fmt.id
-                        ? "bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-sm"
-                        : "text-gray-500 dark:text-slate-400"
+                        ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10"
+                        : "border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 hover:border-gray-300 dark:hover:border-slate-500"
                     }`}
                   >
-                    {fmt.label}
+                    <p className="text-xs font-semibold text-gray-900 dark:text-white">{fmt.label}</p>
+                    <p className="text-[10px] text-gray-500 dark:text-slate-400 mt-0.5">{fmt.desc}</p>
                   </button>
                 ))}
               </div>

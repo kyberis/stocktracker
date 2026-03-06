@@ -170,6 +170,7 @@ async function importTransactions(
       taxes: tx.taxes,
       currency: tx.currency,
       displayCurrency: tx.currency,
+      exchangeRateEur: tx.exchangeRateEur,
       notes: tx.name || `${broker} import`,
       sourceRef: tx.sourceRef,
     });

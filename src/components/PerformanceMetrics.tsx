@@ -18,8 +18,8 @@ export default function PerformanceMetrics() {
 
   const { totalCurrentEUR, totalCostEUR } = calculatePortfolioTotals(holdings, cashEntries, quotes, exchangeRates);
 
-  const ttwror = calculateTTWROR(txs, totalCurrentEUR, totalCostEUR);
-  const cashFlows = buildXIRRCashFlows(txs, totalCurrentEUR);
+  const ttwror = calculateTTWROR(txs, totalCurrentEUR, totalCostEUR, exchangeRates);
+  const cashFlows = buildXIRRCashFlows(txs, totalCurrentEUR, exchangeRates);
   const irr = cashFlows.length >= 2 ? calculateXIRR(cashFlows) : null;
 
   const simpleReturn = totalCostEUR > 0 ? ((totalCurrentEUR - totalCostEUR) / totalCostEUR) * 100 : 0;
