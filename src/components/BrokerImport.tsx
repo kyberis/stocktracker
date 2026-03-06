@@ -26,7 +26,7 @@ interface ImportSummary {
   unmapped: string[];
 }
 
-type Broker = "degiro";
+type Broker = "degiro" | "interactive_brokers" | "trading_212" | "revolut";
 type Step = "upload" | "preview" | "importing" | "done";
 
 const TYPE_COLORS: Record<TransactionType, string> = {
@@ -36,94 +36,12 @@ const TYPE_COLORS: Record<TransactionType, string> = {
   fee: "bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400",
 };
 
-const BROKERS: { id: Broker; label: string; desc: string; serverParsed: boolean }[] = [
-  { id: "degiro", label: "DEGIRO", desc: "Account.csv", serverParsed: true },
+const BROKERS: { id: Broker; label: string; desc: string; descEs: string; serverParsed: boolean }[] = [
+  { id: "degiro", label: "DEGIRO", desc: "Account.csv", descEs: "Account.csv", serverParsed: true },
+  { id: "interactive_brokers", label: "Interactive Brokers", desc: "Activity Statement CSV", descEs: "Extracto de actividad CSV", serverParsed: true },
+  { id: "trading_212", label: "Trading 212", desc: "History CSV export", descEs: "Exportar historial CSV", serverParsed: true },
+  { id: "revolut", label: "Revolut", desc: "Account statement (Excel/CSV)", descEs: "Extracto de cuenta (Excel/CSV)", serverParsed: true },
 ];
-
-/* ── Client-side parsing for non-DEGIRO brokers ── */
-
-interface ColConfig {
-  dateCol: string; typeCol: string; tickerCol: string; sharesCol: string;
-  priceCol: string; totalCol: string; feesCol: string; currencyCol: string;
-  buyKw: string[]; sellKw: string[]; divKw: string[];
-}
-
-const COL_CONFIGS: Record<string, ColConfig> = {
-  interactive_brokers: {
-    dateCol: "Date/Time", typeCol: "Buy/Sell", tickerCol: "Symbol", sharesCol: "Quantity",
-    priceCol: "T. Price", totalCol: "Proceeds", feesCol: "Comm/Fee", currencyCol: "Currency",
-    buyKw: ["BUY", "BOT"], sellKw: ["SELL", "SLD"], divKw: ["DIVIDEND"],
-  },
-  trade_republic: {
-    dateCol: "Date", typeCol: "Type", tickerCol: "ISIN", sharesCol: "Shares",
-    priceCol: "Rate", totalCol: "Amount", feesCol: "Fee", currencyCol: "Currency",
-    buyKw: ["Buy", "Purchase", "Kauf"], sellKw: ["Sell", "Verkauf"], divKw: ["Dividend", "Dividende"],
-  },
-  generic: {
-    dateCol: "date", typeCol: "type", tickerCol: "ticker", sharesCol: "shares",
-    priceCol: "price", totalCol: "total", feesCol: "fees", currencyCol: "currency",
-    buyKw: ["buy"], sellKw: ["sell"], divKw: ["dividend"],
-  },
-};
-
-function parseCSVLines(text: string): string[][] {
-  return text.split("\n").filter((l) => l.trim()).map((line) => {
-    const result: string[] = [];
-    let current = "";
-    let inQuotes = false;
-    for (const ch of line) {
-      if (ch === '"') { inQuotes = !inQuotes; continue; }
-      if (ch === "," && !inQuotes) { result.push(current.trim()); current = ""; continue; }
-      current += ch;
-    }
-    result.push(current.trim());
-    return result;
-  });
-}
-
-function clientParse(text: string, broker: Broker): ParsedTx[] {
-  const cfg = COL_CONFIGS[broker];
-  if (!cfg) return [];
-  const rows = parseCSVLines(text);
-  if (rows.length < 2) return [];
-  const hdrs = rows[0];
-  const find = (target: string) => hdrs.findIndex((h) => h.toLowerCase().includes(target.toLowerCase()));
-  const dateIdx = find(cfg.dateCol);
-  const typeIdx = find(cfg.typeCol);
-  const tickerIdx = find(cfg.tickerCol);
-  const sharesIdx = find(cfg.sharesCol);
-  const priceIdx = find(cfg.priceCol);
-  const totalIdx = find(cfg.totalCol);
-  const feesIdx = find(cfg.feesCol);
-  const currIdx = find(cfg.currencyCol);
-
-  const detect = (val: string): ParsedTx["type"] => {
-    const lower = val.toLowerCase();
-    if (cfg.divKw.some((k) => lower.includes(k.toLowerCase()))) return "dividend";
-    if (cfg.sellKw.some((k) => lower.includes(k.toLowerCase()))) return "sell";
-    if (cfg.buyKw.some((k) => lower.includes(k.toLowerCase()))) return "buy";
-    return "buy";
-  };
-
-  const txs: ParsedTx[] = [];
-  for (const row of rows.slice(1)) {
-    if (row.length < 3) continue;
-    const rawDate = dateIdx >= 0 ? row[dateIdx] : "";
-    const date = rawDate.length >= 10 ? rawDate.slice(0, 10) : rawDate;
-    if (!date) continue;
-    txs.push({
-      date,
-      type: typeIdx >= 0 ? detect(row[typeIdx]) : "buy",
-      ticker: tickerIdx >= 0 ? row[tickerIdx].replace(/['"]/g, "") : "",
-      shares: sharesIdx >= 0 ? Math.abs(parseFloat(row[sharesIdx]) || 0) : 0,
-      price: priceIdx >= 0 ? Math.abs(parseFloat(row[priceIdx]) || 0) : 0,
-      total: totalIdx >= 0 ? Math.abs(parseFloat(row[totalIdx]) || 0) : 0,
-      fees: feesIdx >= 0 ? Math.abs(parseFloat(row[feesIdx]) || 0) : 0,
-      currency: currIdx >= 0 ? row[currIdx] || "EUR" : "EUR",
-    });
-  }
-  return txs.filter((tx) => tx.ticker && tx.date);
-}
 
 /* ── Component ── */
 
@@ -156,49 +74,35 @@ export default function BrokerImport() {
     setError("");
     const text = await file.text();
 
-    if (brokerInfo.serverParsed) {
-      setCsvText(text);
-      const form = new FormData();
-      form.append("action", "parse");
-      form.append("broker", broker);
-      form.append("csv", text);
-      try {
-        const res = await fetch("/api/transactions/import-broker", { method: "POST", body: form });
-        if (!res.ok) {
-          setError("Failed to parse CSV.");
-          return;
-        }
-        const data = await res.json();
-        const txs: ParsedTx[] = (data.transactions || []).map((tx: Record<string, unknown>) => ({
-          date: tx.date as string,
-          type: tx.type as ParsedTx["type"],
-          ticker: tx.ticker as string,
-          name: tx.name as string,
-          shares: tx.shares as number,
-          price: tx.pricePerShare as number,
-          total: tx.totalAmount as number,
-          fees: tx.fees as number,
-          taxes: tx.taxes as number,
-          currency: tx.currency as string,
-        }));
-        setParsed(txs);
-        setSummary(data.summary);
-        setStep("preview");
-      } catch {
+    setCsvText(text);
+    const form = new FormData();
+    form.append("action", "parse");
+    form.append("broker", broker);
+    form.append("csv", text);
+    try {
+      const res = await fetch("/api/transactions/import-broker", { method: "POST", body: form });
+      if (!res.ok) {
         setError("Failed to parse CSV.");
+        return;
       }
-    } else {
-      const txs = clientParse(text, broker);
+      const data = await res.json();
+      const txs: ParsedTx[] = (data.transactions || []).map((tx: Record<string, unknown>) => ({
+        date: tx.date as string,
+        type: tx.type as ParsedTx["type"],
+        ticker: tx.ticker as string,
+        name: tx.name as string,
+        shares: tx.shares as number,
+        price: tx.pricePerShare as number,
+        total: tx.totalAmount as number,
+        fees: tx.fees as number,
+        taxes: tx.taxes as number,
+        currency: tx.currency as string,
+      }));
       setParsed(txs);
-      setSummary({
-        total: txs.length,
-        buys: txs.filter((t) => t.type === "buy").length,
-        sells: txs.filter((t) => t.type === "sell").length,
-        dividends: txs.filter((t) => t.type === "dividend").length,
-        fees: txs.filter((t) => t.type === "fee").length,
-        unmapped: [],
-      });
+      setSummary(data.summary);
       setStep("preview");
+    } catch {
+      setError("Failed to parse CSV.");
     }
   };
 
@@ -236,50 +140,23 @@ export default function BrokerImport() {
     setStep("importing");
     setError("");
 
-    if (brokerInfo.serverParsed) {
-      const form = new FormData();
-      form.append("action", "import");
-      form.append("broker", broker);
-      form.append("csv", csvText);
-      try {
-        const res = await fetch("/api/transactions/import-broker", { method: "POST", body: form });
-        if (!res.ok) { setError("Import failed."); setStep("preview"); return; }
-        const data = await res.json();
-        if (data.jobId) {
-          await pollJobStatus(data.jobId);
-        } else {
-          setImportedCount(data.imported || 0);
-          setStep("done");
-        }
-      } catch {
-        setError("Import failed.");
-        setStep("preview");
+    const form = new FormData();
+    form.append("action", "import");
+    form.append("broker", broker);
+    form.append("csv", csvText);
+    try {
+      const res = await fetch("/api/transactions/import-broker", { method: "POST", body: form });
+      if (!res.ok) { setError("Import failed."); setStep("preview"); return; }
+      const data = await res.json();
+      if (data.jobId) {
+        await pollJobStatus(data.jobId);
+      } else {
+        setImportedCount(data.imported || 0);
+        setStep("done");
       }
-    } else {
-      let count = 0;
-      for (const tx of parsed) {
-        const res = await fetch("/api/transactions", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            holdingId: "",
-            ticker: tx.ticker,
-            name: tx.name || "",
-            type: tx.type,
-            date: tx.date,
-            shares: tx.shares,
-            pricePerShare: tx.price,
-            totalAmount: tx.total || tx.shares * tx.price,
-            fees: tx.fees,
-            taxes: tx.taxes || 0,
-            currency: tx.currency,
-            notes: `Imported from ${brokerInfo.label}`,
-          }),
-        });
-        if (res.ok) count++;
-      }
-      setImportedCount(count);
-      setStep("done");
+    } catch {
+      setError("Import failed.");
+      setStep("preview");
     }
   };
 
@@ -293,7 +170,7 @@ export default function BrokerImport() {
         <>
           <div className="mb-4">
             <label className="text-xs text-gray-600 dark:text-slate-400 block mb-2">{t("selectBroker")}</label>
-            <div className="grid grid-cols-1 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               {BROKERS.map((b) => (
                 <button
                   key={b.id}
@@ -304,11 +181,6 @@ export default function BrokerImport() {
                       : "border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 hover:border-gray-300 dark:hover:border-slate-500"
                   }`}
                 >
-                  <img
-                    src="/degiro-logo.svg"
-                    alt="DEGIRO"
-                    className="h-5 w-auto mb-1"
-                  />
                   <p className="text-xs font-semibold text-gray-900 dark:text-white">{b.label}</p>
                   <p className="text-[10px] text-gray-500 dark:text-slate-400 mt-0.5">{b.desc}</p>
                 </button>
@@ -318,13 +190,26 @@ export default function BrokerImport() {
 
           {broker === "degiro" && (
             <div className="bg-blue-50 dark:bg-blue-500/10 rounded-xl p-3 mb-4">
-              <img
-                src="/degiro-logo.svg"
-                alt="DEGIRO logo"
-                className="h-5 w-auto mb-2"
-              />
               <p className="text-xs text-blue-700 dark:text-blue-300 font-medium mb-1">{t("degiroInstructions")}</p>
               <p className="text-[10px] text-blue-600 dark:text-blue-400">{t("degiroInstructionsDetail")}</p>
+            </div>
+          )}
+          {broker === "interactive_brokers" && (
+            <div className="bg-blue-50 dark:bg-blue-500/10 rounded-xl p-3 mb-4">
+              <p className="text-xs text-blue-700 dark:text-blue-300 font-medium mb-1">Interactive Brokers</p>
+              <p className="text-[10px] text-blue-600 dark:text-blue-400">Performance &amp; Reports → Statements → CSV format. Supports Activity Statement and Flex Query exports.</p>
+            </div>
+          )}
+          {broker === "trading_212" && (
+            <div className="bg-blue-50 dark:bg-blue-500/10 rounded-xl p-3 mb-4">
+              <p className="text-xs text-blue-700 dark:text-blue-300 font-medium mb-1">Trading 212</p>
+              <p className="text-[10px] text-blue-600 dark:text-blue-400">Menu → History → Export. Select your timeframe and export as CSV.</p>
+            </div>
+          )}
+          {broker === "revolut" && (
+            <div className="bg-blue-50 dark:bg-blue-500/10 rounded-xl p-3 mb-4">
+              <p className="text-xs text-blue-700 dark:text-blue-300 font-medium mb-1">Revolut</p>
+              <p className="text-[10px] text-blue-600 dark:text-blue-400">Invest → More → Statements → Account statement → Excel format.</p>
             </div>
           )}
 

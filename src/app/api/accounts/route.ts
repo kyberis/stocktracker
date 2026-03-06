@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
 import { listAccounts, addAccount, deleteAccount } from "@/lib/db";
 import { withMetrics } from "@/lib/with-metrics";
+import { parseBody } from "@/lib/api-response";
+import { createAccountSchema } from "@/lib/schemas";
 
 export const GET = withMetrics("/api/accounts", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
@@ -13,14 +15,10 @@ export const POST = withMetrics("/api/accounts", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
 
-  try {
-    const body = await req.json();
-    if (!body?.name) return NextResponse.json({ error: "name is required." }, { status: 400 });
-    const acct = await addAccount(session.userId, body);
-    return NextResponse.json(acct, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
-  }
+  const result = await parseBody(req, createAccountSchema);
+  if (!result.success) return result.error;
+  const acct = await addAccount(session.userId, result.data);
+  return NextResponse.json(acct, { status: 201 });
 });
 
 export const DELETE = withMetrics("/api/accounts", async (req: NextRequest) => {

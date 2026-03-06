@@ -32,7 +32,7 @@ type HistoricalApiResponse = {
 };
 
 const PERIOD_KEYS: TimePeriod[] = ["1w", "1m", "3m", "6m", "1y", "all"];
-const BENCHMARK_SELECTION_KEY = "stocktracker-benchmark-selection-v1";
+const BENCHMARK_SELECTION_KEY = "trefolio-benchmark-selection-v1";
 
 const PERIOD_LABELS: Record<TimePeriod, string> = {
   "1w": "period1w",

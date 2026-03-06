@@ -72,12 +72,12 @@ function buildOtlpPayload(points: DataPoint[]) {
       {
         resource: {
           attributes: [
-            { key: "service.name", value: { stringValue: "stocktracker" } },
+            { key: "service.name", value: { stringValue: "trefolio" } },
           ],
         },
         scopeMetrics: [
           {
-            scope: { name: "stocktracker", version: "1.0.0" },
+            scope: { name: "trefolio", version: "1.0.0" },
             metrics,
           },
         ],
@@ -114,13 +114,13 @@ export function pushRequestMetric(
 ): void {
   const points: DataPoint[] = [
     {
-      name: "stocktracker_http_requests_total",
+      name: "trefolio_http_requests_total",
       description: "Total HTTP requests",
       attributes: { route, method, status_code: String(statusCode) },
       value: 1,
     },
     {
-      name: "stocktracker_http_request_duration_seconds",
+      name: "trefolio_http_request_duration_seconds",
       description: "HTTP request duration in seconds",
       unit: "s",
       attributes: { route, method },

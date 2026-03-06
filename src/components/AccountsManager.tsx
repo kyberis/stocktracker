@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useI18n } from "@/lib/i18n";
-import type { Account } from "@/lib/types";
+import { useAccounts } from "@/lib/hooks/use-api";
 
 interface Props {
   onAccountChange?: () => void;
@@ -10,14 +10,10 @@ interface Props {
 
 export default function AccountsManager({ onAccountChange }: Props) {
   const { t } = useI18n();
-  const [accounts, setAccounts] = useState<Account[]>([]);
+  const { data: accounts = [], mutate } = useAccounts();
   const [newName, setNewName] = useState("");
   const [newBroker, setNewBroker] = useState("");
   const [newCurrency, setNewCurrency] = useState("EUR");
-
-  useEffect(() => {
-    fetch("/api/accounts").then((r) => r.ok ? r.json() : []).then(setAccounts);
-  }, []);
 
   const handleAdd = async () => {
     if (!newName) return;
@@ -27,17 +23,16 @@ export default function AccountsManager({ onAccountChange }: Props) {
       body: JSON.stringify({ name: newName, broker: newBroker, currency: newCurrency }),
     });
     if (res.ok) {
-      const acct = await res.json();
-      setAccounts((prev) => [...prev, acct]);
       setNewName("");
       setNewBroker("");
+      mutate();
       onAccountChange?.();
     }
   };
 
   const handleDelete = async (id: string) => {
     await fetch(`/api/accounts?id=${id}`, { method: "DELETE" });
-    setAccounts((prev) => prev.filter((a) => a.id !== id));
+    mutate();
     onAccountChange?.();
   };
 

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
 import { addCashEntry, listCashEntries, removeCashEntry, updateCashEntry } from "@/lib/db";
-import type { CashEntry } from "@/lib/types";
 import { withMetrics } from "@/lib/with-metrics";
+import { parseBody } from "@/lib/api-response";
+import { createCashSchema, updateCashSchema } from "@/lib/schemas";
 
 export const GET = withMetrics("/api/cash", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
@@ -16,50 +17,25 @@ export const POST = withMetrics("/api/cash", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
 
-  try {
-    const body = (await req.json()) as Omit<CashEntry, "id">;
-    const name = String(body?.name || "").trim();
-    const amountEUR = Number(body?.amountEUR);
-    if (!name || Number.isNaN(amountEUR) || amountEUR < 0) {
-      return NextResponse.json({ error: "Invalid cash payload." }, { status: 400 });
-    }
-    const created = await addCashEntry(session.userId, { name, amountEUR });
-    return NextResponse.json(created, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
-  }
+  const result = await parseBody(req, createCashSchema);
+  if (!result.success) return result.error;
+  const { name, amountEUR } = result.data;
+  const created = await addCashEntry(session.userId, { name, amountEUR });
+  return NextResponse.json(created, { status: 201 });
 });
 
 export const PUT = withMetrics("/api/cash", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
 
-  try {
-    const body = (await req.json()) as { id?: string; updates?: Partial<Omit<CashEntry, "id">> };
-    if (!body.id || !body.updates) {
-      return NextResponse.json({ error: "id and updates are required." }, { status: 400 });
-    }
-    const nextUpdates: Partial<Omit<CashEntry, "id">> = {};
-    if (body.updates.name != null) {
-      const name = String(body.updates.name).trim();
-      if (!name) return NextResponse.json({ error: "name cannot be empty." }, { status: 400 });
-      nextUpdates.name = name;
-    }
-    if (body.updates.amountEUR != null) {
-      const amountEUR = Number(body.updates.amountEUR);
-      if (Number.isNaN(amountEUR) || amountEUR < 0) {
-        return NextResponse.json({ error: "amountEUR must be >= 0." }, { status: 400 });
-      }
-      nextUpdates.amountEUR = amountEUR;
-    }
-    const updated = await updateCashEntry(session.userId, body.id, nextUpdates);
-    if (!updated) {
-      return NextResponse.json({ error: "Cash entry not found." }, { status: 404 });
-    }
-    return NextResponse.json(updated);
-  } catch {
-    return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
+  const result = await parseBody(req, updateCashSchema);
+  if (!result.success) return result.error;
+  const { id, updates } = result.data;
+  const updated = await updateCashEntry(session.userId, id, updates);
+  if (!updated) {
+    return NextResponse.json({ error: "Cash entry not found." }, { status: 404 });
   }
+  return NextResponse.json(updated);
 });
 
 export const DELETE = withMetrics("/api/cash", async (req: NextRequest) => {

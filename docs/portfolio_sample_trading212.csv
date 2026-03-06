@@ -1,0 +1,8 @@
+Action,Time,ISIN,Ticker,Name,No. of shares,Price / share,Currency (Price / share),Exchange rate,Result (GBP),Total (GBP),Withholding tax,Currency (Withholding tax),Charge amount (GBP),Stamp duty reserve tax (GBP),Notes,ID
+Market buy,2024-01-15 10:30:00,US0378331005,AAPL,Apple Inc,10,150.50,USD,0.79,,1189.00,,,,,,abc-001
+Market buy,2024-02-10 09:15:00,IE00B5BMR087,SXR8,iShares Core S&P 500 UCITS ETF,5,480.00,EUR,0.86,,2064.00,,,,,,abc-002
+Market sell,2024-03-20 14:00:00,US0378331005,AAPL,Apple Inc,5,175.25,USD,0.79,98.00,693.00,,,,,,abc-003
+Limit buy,2024-04-05 11:00:00,US5949181045,MSFT,Microsoft Corp,3,410.00,USD,0.79,,972.00,,,1.50,,,abc-004
+Dividend (Ordinary),2024-03-15 00:00:00,US0378331005,AAPL,Apple Inc - Cash Dividend,,,USD,0.79,,1.90,0.36,USD,,,,abc-005
+Dividend (Ordinary),2024-06-15 00:00:00,US5949181045,MSFT,Microsoft Corp - Cash Dividend,,,USD,0.79,,1.78,0.34,USD,,,,abc-006
+Deposit,2024-01-01 08:00:00,,,,,,GBP,,,5000.00,,,,,,abc-007

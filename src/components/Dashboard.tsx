@@ -8,6 +8,9 @@ import PortfolioTable from "./PortfolioTable";
 import { useWhatsNewAutoShow } from "./WhatsNewModal";
 import DashboardToolbar from "./DashboardToolbar";
 import { useI18n } from "@/lib/i18n";
+import { usePortfolio } from "@/lib/portfolio-context";
+import { useAuth } from "@/lib/auth-context";
+import { PLATFORM_LIMITS } from "@/lib/platform-config";
 
 const PortfolioGrowthPeriods = dynamic(() => import("./PortfolioGrowthPeriods"), { ssr: false });
 const PerformanceMetrics = dynamic(() => import("./PerformanceMetrics"), { ssr: false });
@@ -18,6 +21,7 @@ const ImportPortfolioModal = dynamic(() => import("./ImportPortfolioModal"), { s
 const ResetPortfolioModal = dynamic(() => import("./ResetPortfolioModal"), { ssr: false });
 const WhatsNewModal = dynamic(() => import("./WhatsNewModal"), { ssr: false });
 const FeedbackModal = dynamic(() => import("./FeedbackModal"), { ssr: false });
+const ProCompareCard = dynamic(() => import("./ProCompareCard"), { ssr: false });
 
 export default function Dashboard() {
   const [showAddModal, setShowAddModal] = useState(false);
@@ -28,12 +32,20 @@ export default function Dashboard() {
   const [showFeedback, setShowFeedback] = useState(false);
   const { showWhatsNew: autoShowWhatsNew, dismissWhatsNew } = useWhatsNewAutoShow();
   const { t } = useI18n();
+  const { holdings, refreshHoldings } = usePortfolio();
+  const { user } = useAuth();
 
   const handleImportComplete = useCallback(() => {
-    window.location.reload();
-  }, []);
+    refreshHoldings();
+  }, [refreshHoldings]);
 
   const whatsNewOpen = showWhatsNew || autoShowWhatsNew;
+
+  const isPro = user?.plan === "pro";
+  const holdingsCount = holdings.length;
+  const holdingsLimit = PLATFORM_LIMITS.FREE_HOLDINGS_LIMIT;
+  const showHoldingsBanner = !isPro && holdingsCount >= holdingsLimit - 2 && holdingsCount > 0;
+  const holdingsAtLimit = !isPro && holdingsCount >= holdingsLimit;
 
   return (
     <>
@@ -45,6 +57,23 @@ export default function Dashboard() {
       />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+        {showHoldingsBanner && !holdingsAtLimit && (
+          <div className="rounded-lg border border-amber-300 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 p-3 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 min-w-0">
+              <svg className="w-5 h-5 text-amber-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+              <span className="text-sm text-amber-800 dark:text-amber-200">
+                {t("holdingsUsage").replace("{used}", String(holdingsCount)).replace("{limit}", String(holdingsLimit))}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {holdingsAtLimit && (
+          <ProCompareCard surface="holdings_limit" reason="holdings_limit_reached" />
+        )}
+
         <PortfolioSummary />
         <PortfolioTable />
         <PortfolioGrowthPeriods />

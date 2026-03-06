@@ -15,14 +15,14 @@ const globalForMetrics = globalThis as typeof globalThis & {
 function getRegistry(): Registry {
   if (!globalForMetrics.__metricsRegistry) {
     globalForMetrics.__metricsRegistry = new Registry();
-    globalForMetrics.__metricsRegistry.setDefaultLabels({ app: "stocktracker" });
+    globalForMetrics.__metricsRegistry.setDefaultLabels({ app: "trefolio" });
   }
   return globalForMetrics.__metricsRegistry;
 }
 
 function ensureDefaults() {
   if (globalForMetrics.__metricsInitialized) return;
-  collectDefaultMetrics({ register: getRegistry(), prefix: "stocktracker_" });
+  collectDefaultMetrics({ register: getRegistry(), prefix: "trefolio_" });
   globalForMetrics.__metricsInitialized = true;
 }
 
@@ -36,10 +36,10 @@ function getOrCreate<T>(name: string, factory: () => T): T {
 /* ── HTTP Metrics ──────────────────────────────────────────── */
 
 export const httpRequestsTotal = getOrCreate(
-  "stocktracker_http_requests_total",
+  "trefolio_http_requests_total",
   () =>
     new Counter({
-      name: "stocktracker_http_requests_total",
+      name: "trefolio_http_requests_total",
       help: "Total HTTP requests by route, method, and status code",
       labelNames: ["route", "method", "status_code"] as const,
       registers: [getRegistry()],
@@ -47,10 +47,10 @@ export const httpRequestsTotal = getOrCreate(
 );
 
 export const httpRequestDuration = getOrCreate(
-  "stocktracker_http_request_duration_seconds",
+  "trefolio_http_request_duration_seconds",
   () =>
     new Histogram({
-      name: "stocktracker_http_request_duration_seconds",
+      name: "trefolio_http_request_duration_seconds",
       help: "HTTP request duration in seconds",
       labelNames: ["route", "method"] as const,
       buckets: [0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10],
@@ -61,10 +61,10 @@ export const httpRequestDuration = getOrCreate(
 /* ── External Provider Metrics ─────────────────────────────── */
 
 export const providerRequestsTotal = getOrCreate(
-  "stocktracker_provider_requests_total",
+  "trefolio_provider_requests_total",
   () =>
     new Counter({
-      name: "stocktracker_provider_requests_total",
+      name: "trefolio_provider_requests_total",
       help: "External data provider requests",
       labelNames: ["provider", "operation", "status"] as const,
       registers: [getRegistry()],
@@ -72,10 +72,10 @@ export const providerRequestsTotal = getOrCreate(
 );
 
 export const providerRequestDuration = getOrCreate(
-  "stocktracker_provider_request_duration_seconds",
+  "trefolio_provider_request_duration_seconds",
   () =>
     new Histogram({
-      name: "stocktracker_provider_request_duration_seconds",
+      name: "trefolio_provider_request_duration_seconds",
       help: "External data provider request duration in seconds",
       labelNames: ["provider", "operation"] as const,
       buckets: [0.05, 0.1, 0.25, 0.5, 1, 2, 5, 10, 30],
@@ -86,10 +86,10 @@ export const providerRequestDuration = getOrCreate(
 /* ── Auth Metrics ──────────────────────────────────────────── */
 
 export const authEventsTotal = getOrCreate(
-  "stocktracker_auth_events_total",
+  "trefolio_auth_events_total",
   () =>
     new Counter({
-      name: "stocktracker_auth_events_total",
+      name: "trefolio_auth_events_total",
       help: "Authentication events",
       labelNames: ["event"] as const,
       registers: [getRegistry()],
@@ -99,10 +99,10 @@ export const authEventsTotal = getOrCreate(
 /* ── Business Metrics ──────────────────────────────────────── */
 
 export const holdingsOpsTotal = getOrCreate(
-  "stocktracker_holdings_operations_total",
+  "trefolio_holdings_operations_total",
   () =>
     new Counter({
-      name: "stocktracker_holdings_operations_total",
+      name: "trefolio_holdings_operations_total",
       help: "Holdings CRUD operations",
       labelNames: ["operation"] as const,
       registers: [getRegistry()],
@@ -110,10 +110,10 @@ export const holdingsOpsTotal = getOrCreate(
 );
 
 export const transactionsOpsTotal = getOrCreate(
-  "stocktracker_transactions_operations_total",
+  "trefolio_transactions_operations_total",
   () =>
     new Counter({
-      name: "stocktracker_transactions_operations_total",
+      name: "trefolio_transactions_operations_total",
       help: "Transaction operations",
       labelNames: ["operation"] as const,
       registers: [getRegistry()],
@@ -121,10 +121,10 @@ export const transactionsOpsTotal = getOrCreate(
 );
 
 export const portfolioImportsTotal = getOrCreate(
-  "stocktracker_portfolio_imports_total",
+  "trefolio_portfolio_imports_total",
   () =>
     new Counter({
-      name: "stocktracker_portfolio_imports_total",
+      name: "trefolio_portfolio_imports_total",
       help: "Portfolio import attempts",
       labelNames: ["source", "status"] as const,
       registers: [getRegistry()],
@@ -132,10 +132,10 @@ export const portfolioImportsTotal = getOrCreate(
 );
 
 export const aiCallsTotal = getOrCreate(
-  "stocktracker_ai_calls_total",
+  "trefolio_ai_calls_total",
   () =>
     new Counter({
-      name: "stocktracker_ai_calls_total",
+      name: "trefolio_ai_calls_total",
       help: "AI analysis calls",
       labelNames: ["status", "analysis_type"] as const,
       registers: [getRegistry()],
@@ -143,10 +143,10 @@ export const aiCallsTotal = getOrCreate(
 );
 
 export const aiRequestDuration = getOrCreate(
-  "stocktracker_ai_request_duration_seconds",
+  "trefolio_ai_request_duration_seconds",
   () =>
     new Histogram({
-      name: "stocktracker_ai_request_duration_seconds",
+      name: "trefolio_ai_request_duration_seconds",
       help: "AI analysis request duration in seconds",
       labelNames: ["analysis_type"] as const,
       buckets: [0.5, 1, 2, 5, 10, 20, 30, 60],
@@ -157,10 +157,10 @@ export const aiRequestDuration = getOrCreate(
 /* ── Billing Metrics ───────────────────────────────────────── */
 
 export const billingEventsTotal = getOrCreate(
-  "stocktracker_billing_events_total",
+  "trefolio_billing_events_total",
   () =>
     new Counter({
-      name: "stocktracker_billing_events_total",
+      name: "trefolio_billing_events_total",
       help: "Billing and subscription events",
       labelNames: ["event"] as const,
       registers: [getRegistry()],
@@ -170,10 +170,10 @@ export const billingEventsTotal = getOrCreate(
 /* ── Paywall Metrics ───────────────────────────────────────── */
 
 export const paywallHitsTotal = getOrCreate(
-  "stocktracker_paywall_hits_total",
+  "trefolio_paywall_hits_total",
   () =>
     new Counter({
-      name: "stocktracker_paywall_hits_total",
+      name: "trefolio_paywall_hits_total",
       help: "Paywall hit events",
       labelNames: ["feature", "reason"] as const,
       registers: [getRegistry()],
@@ -183,10 +183,10 @@ export const paywallHitsTotal = getOrCreate(
 /* ── Rate Limit Metrics ───────────────────────────────────── */
 
 export const rateLimitHitsTotal = getOrCreate(
-  "stocktracker_rate_limit_hits_total",
+  "trefolio_rate_limit_hits_total",
   () =>
     new Counter({
-      name: "stocktracker_rate_limit_hits_total",
+      name: "trefolio_rate_limit_hits_total",
       help: "Rate limit 429 responses",
       labelNames: ["provider"] as const,
       registers: [getRegistry()],
@@ -194,20 +194,20 @@ export const rateLimitHitsTotal = getOrCreate(
 );
 
 export const proSubscribersCurrent = getOrCreate(
-  "stocktracker_pro_subscribers_current",
+  "trefolio_pro_subscribers_current",
   () =>
     new Gauge({
-      name: "stocktracker_pro_subscribers_current",
+      name: "trefolio_pro_subscribers_current",
       help: "Current number of Pro subscribers",
       registers: [getRegistry()],
     })
 );
 
 export const proCapacityMax = getOrCreate(
-  "stocktracker_pro_capacity_max",
+  "trefolio_pro_capacity_max",
   () => {
     const g = new Gauge({
-      name: "stocktracker_pro_capacity_max",
+      name: "trefolio_pro_capacity_max",
       help: "Maximum Pro subscribers allowed",
       registers: [getRegistry()],
     });
@@ -221,9 +221,9 @@ export const proCapacityMax = getOrCreate(
 
 /* ── App Info Gauge ────────────────────────────────────────── */
 
-export const appInfo = getOrCreate("stocktracker_app_info", () => {
+export const appInfo = getOrCreate("trefolio_app_info", () => {
   const g = new Gauge({
-    name: "stocktracker_app_info",
+    name: "trefolio_app_info",
     help: "Application version info",
     labelNames: ["version"] as const,
     registers: [getRegistry()],
@@ -235,10 +235,10 @@ export const appInfo = getOrCreate("stocktracker_app_info", () => {
 /* ── DB-Derived Gauges (updated at scrape time) ────────────── */
 
 export const usersTotal = getOrCreate(
-  "stocktracker_users_total",
+  "trefolio_users_total",
   () =>
     new Gauge({
-      name: "stocktracker_users_total",
+      name: "trefolio_users_total",
       help: "Total registered users by plan",
       labelNames: ["plan"] as const,
       registers: [getRegistry()],
@@ -246,10 +246,10 @@ export const usersTotal = getOrCreate(
 );
 
 export const usersActive = getOrCreate(
-  "stocktracker_users_active",
+  "trefolio_users_active",
   () =>
     new Gauge({
-      name: "stocktracker_users_active",
+      name: "trefolio_users_active",
       help: "Active users by time window",
       labelNames: ["window"] as const,
       registers: [getRegistry()],
@@ -257,30 +257,30 @@ export const usersActive = getOrCreate(
 );
 
 export const dbHoldingsTotal = getOrCreate(
-  "stocktracker_db_holdings_total",
+  "trefolio_db_holdings_total",
   () =>
     new Gauge({
-      name: "stocktracker_db_holdings_total",
+      name: "trefolio_db_holdings_total",
       help: "Total holdings across all users",
       registers: [getRegistry()],
     })
 );
 
 export const dbTransactionsTotal = getOrCreate(
-  "stocktracker_db_transactions_total",
+  "trefolio_db_transactions_total",
   () =>
     new Gauge({
-      name: "stocktracker_db_transactions_total",
+      name: "trefolio_db_transactions_total",
       help: "Total transactions across all users",
       registers: [getRegistry()],
     })
 );
 
 export const eventsLast24h = getOrCreate(
-  "stocktracker_events_last_24h",
+  "trefolio_events_last_24h",
   () =>
     new Gauge({
-      name: "stocktracker_events_last_24h",
+      name: "trefolio_events_last_24h",
       help: "Analytics events in the last 24 hours by type",
       labelNames: ["event"] as const,
       registers: [getRegistry()],

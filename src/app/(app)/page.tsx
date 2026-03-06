@@ -1,12 +1,24 @@
-"use client";
+import { getServerSession } from "@/lib/auth/server-session";
+import { listHoldings, listCashEntries } from "@/lib/db";
+import DashboardShell from "./dashboard-shell";
 
-import { PortfolioProvider } from "@/lib/portfolio-context";
-import Dashboard from "@/components/Dashboard";
+export default async function Home() {
+  const session = await getServerSession();
 
-export default function Home() {
+  let initialHoldings;
+  let initialCash;
+
+  if (session) {
+    [initialHoldings, initialCash] = await Promise.all([
+      listHoldings(session.userId),
+      listCashEntries(session.userId),
+    ]);
+  }
+
   return (
-    <PortfolioProvider>
-      <Dashboard />
-    </PortfolioProvider>
+    <DashboardShell
+      initialHoldings={initialHoldings ?? []}
+      initialCash={initialCash ?? []}
+    />
   );
 }

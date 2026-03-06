@@ -3,7 +3,8 @@ import { requireSession } from "@/lib/auth/guards";
 import { findUserById, listAlerts, countActiveAlerts, createAlert, deleteAlert, toggleAlert, trackEvent, isFeatureEnabled } from "@/lib/db";
 import { PLATFORM_LIMITS } from "@/lib/platform-config";
 import { withMetrics } from "@/lib/with-metrics";
-import type { AlertCondition } from "@/lib/types";
+import { parseBody } from "@/lib/api-response";
+import { createAlertSchema, toggleAlertSchema } from "@/lib/schemas";
 
 export const GET = withMetrics("/api/alerts", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
@@ -31,33 +32,9 @@ export const POST = withMetrics("/api/alerts", async (req: NextRequest) => {
     return NextResponse.json({ error: "Price alerts are not enabled" }, { status: 403 });
   }
 
-  let body: {
-    ticker?: string;
-    name?: string;
-    condition?: AlertCondition;
-    threshold?: number;
-    currency?: string;
-  };
-  try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid body" }, { status: 400 });
-  }
-
-  if (!body.ticker || !body.condition || typeof body.threshold !== "number") {
-    return NextResponse.json(
-      { error: "ticker, condition, and threshold are required" },
-      { status: 400 }
-    );
-  }
-
-  if (body.condition !== "above" && body.condition !== "below") {
-    return NextResponse.json({ error: "condition must be 'above' or 'below'" }, { status: 400 });
-  }
-
-  if (body.threshold <= 0) {
-    return NextResponse.json({ error: "threshold must be positive" }, { status: 400 });
-  }
+  const result = await parseBody(req, createAlertSchema);
+  if (!result.success) return result.error;
+  const { ticker, name, condition, threshold, currency } = result.data;
 
   const user = await findUserById(session.userId);
   const isPro = user?.plan === "pro";
@@ -82,11 +59,11 @@ export const POST = withMetrics("/api/alerts", async (req: NextRequest) => {
   }
 
   const alert = await createAlert(session.userId, {
-    ticker: body.ticker.toUpperCase(),
-    name: body.name || body.ticker.toUpperCase(),
-    condition: body.condition,
-    threshold: body.threshold,
-    currency: body.currency || "USD",
+    ticker: ticker.toUpperCase(),
+    name: name || ticker.toUpperCase(),
+    condition,
+    threshold,
+    currency,
   });
 
   trackEvent(session.userId, "alert_created", {
@@ -120,18 +97,11 @@ export const PATCH = withMetrics("/api/alerts", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
 
-  let body: { id?: string; active?: boolean };
-  try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid body" }, { status: 400 });
-  }
+  const result = await parseBody(req, toggleAlertSchema);
+  if (!result.success) return result.error;
+  const { id, active } = result.data;
 
-  if (!body.id || typeof body.active !== "boolean") {
-    return NextResponse.json({ error: "id and active are required" }, { status: 400 });
-  }
-
-  if (body.active) {
+  if (active) {
     const user = await findUserById(session.userId);
     const isPro = user?.plan === "pro";
     if (!isPro) {
@@ -145,7 +115,7 @@ export const PATCH = withMetrics("/api/alerts", async (req: NextRequest) => {
     }
   }
 
-  const toggled = await toggleAlert(session.userId, body.id, body.active);
+  const toggled = await toggleAlert(session.userId, id, active);
   if (!toggled) {
     return NextResponse.json({ error: "Alert not found" }, { status: 404 });
   }

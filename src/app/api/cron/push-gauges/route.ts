@@ -72,17 +72,17 @@ export async function GET(req: NextRequest) {
   ]);
 
   const points: { name: string; labels: Record<string, string>; value: number }[] = [
-    { name: "stocktracker_users_total", labels: { plan: "free" }, value: snapshot.freeUsers },
-    { name: "stocktracker_users_total", labels: { plan: "pro" }, value: snapshot.proUsers },
-    { name: "stocktracker_users_active", labels: { window: "7d" }, value: snapshot.activeUsers7d },
-    { name: "stocktracker_users_active", labels: { window: "30d" }, value: snapshot.activeUsers30d },
-    { name: "stocktracker_db_holdings_total", labels: {}, value: snapshot.holdingsCount },
-    { name: "stocktracker_db_transactions_total", labels: {}, value: snapshot.transactionsCount },
+    { name: "trefolio_users_total", labels: { plan: "free" }, value: snapshot.freeUsers },
+    { name: "trefolio_users_total", labels: { plan: "pro" }, value: snapshot.proUsers },
+    { name: "trefolio_users_active", labels: { window: "7d" }, value: snapshot.activeUsers7d },
+    { name: "trefolio_users_active", labels: { window: "30d" }, value: snapshot.activeUsers30d },
+    { name: "trefolio_db_holdings_total", labels: {}, value: snapshot.holdingsCount },
+    { name: "trefolio_db_transactions_total", labels: {}, value: snapshot.transactionsCount },
   ];
 
   for (const ev of snapshot.eventsLast24h) {
     points.push({
-      name: "stocktracker_events_last_24h",
+      name: "trefolio_events_last_24h",
       labels: { event: ev.event },
       value: ev.count,
     });

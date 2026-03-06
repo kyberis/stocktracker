@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, DragEvent } from "react";
 import { useI18n } from "@/lib/i18n";
 
-type CsvFormat = "degiro" | "simple";
+type CsvFormat = "degiro" | "interactive_brokers" | "trading_212" | "revolut" | "simple";
 
 interface ImportPortfolioModalProps {
   isOpen: boolean;
@@ -260,7 +260,11 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
     const hCount = holdings.length;
     let txCount = 0;
     let errorCount = 0;
-    const importSource = isImageImport ? "Image import" : `${csvFormat === "degiro" ? "DEGIRO" : "CSV"} import`;
+    const formatLabels: Record<CsvFormat, string> = {
+      degiro: "DEGIRO", interactive_brokers: "IBKR", trading_212: "Trading 212",
+      revolut: "Revolut", simple: "CSV",
+    };
+    const importSource = isImageImport ? "Image import" : `${formatLabels[csvFormat]} import`;
 
     for (const tx of derivedTransactions) {
       if (!tx.ticker || !tx.date) continue;
@@ -358,36 +362,53 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
           {step === "upload" && (
             <>
               {/* Format selector */}
-              <div className="flex gap-1 bg-gray-100 dark:bg-slate-700/50 rounded-xl p-1 mb-4">
-                <button
-                  onClick={() => setCsvFormat("degiro")}
-                  className={`flex-1 text-xs font-medium px-3 py-2 rounded-lg transition-colors ${
-                    csvFormat === "degiro"
-                      ? "bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-sm"
-                      : "text-gray-500 dark:text-slate-400"
-                  }`}
-                >
-                  DeGiro
-                </button>
-                <button
-                  onClick={() => setCsvFormat("simple")}
-                  className={`flex-1 text-xs font-medium px-3 py-2 rounded-lg transition-colors ${
-                    csvFormat === "simple"
-                      ? "bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-sm"
-                      : "text-gray-500 dark:text-slate-400"
-                  }`}
-                >
-                  {t("simpleCSV")}
-                </button>
+              <div className="flex flex-wrap gap-1 bg-gray-100 dark:bg-slate-700/50 rounded-xl p-1 mb-4">
+                {([
+                  { id: "degiro" as CsvFormat, label: "DeGiro" },
+                  { id: "interactive_brokers" as CsvFormat, label: "IBKR" },
+                  { id: "trading_212" as CsvFormat, label: "Trading 212" },
+                  { id: "revolut" as CsvFormat, label: "Revolut" },
+                  { id: "simple" as CsvFormat, label: t("simpleCSV") },
+                ]).map((fmt) => (
+                  <button
+                    key={fmt.id}
+                    onClick={() => setCsvFormat(fmt.id)}
+                    className={`flex-1 text-xs font-medium px-2 py-2 rounded-lg transition-colors min-w-[60px] ${
+                      csvFormat === fmt.id
+                        ? "bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-sm"
+                        : "text-gray-500 dark:text-slate-400"
+                    }`}
+                  >
+                    {fmt.label}
+                  </button>
+                ))}
               </div>
 
-              {csvFormat === "degiro" ? (
+              {csvFormat === "degiro" && (
                 <div className="bg-blue-50 dark:bg-blue-500/10 rounded-xl p-3 mb-4">
-                  <img src="/degiro-logo.svg" alt="DEGIRO logo" className="h-5 w-auto mb-2" />
                   <p className="text-xs text-blue-700 dark:text-blue-300 font-medium mb-1">{t("degiroOnlySupportTitle")}</p>
                   <p className="text-[10px] text-blue-600 dark:text-blue-400">{t("degiroInstructionsDetail")}</p>
                 </div>
-              ) : (
+              )}
+              {csvFormat === "interactive_brokers" && (
+                <div className="bg-blue-50 dark:bg-blue-500/10 rounded-xl p-3 mb-4">
+                  <p className="text-xs text-blue-700 dark:text-blue-300 font-medium mb-1">Interactive Brokers</p>
+                  <p className="text-[10px] text-blue-600 dark:text-blue-400">Performance &amp; Reports → Statements → CSV. Supports Activity Statement and Flex Query.</p>
+                </div>
+              )}
+              {csvFormat === "trading_212" && (
+                <div className="bg-blue-50 dark:bg-blue-500/10 rounded-xl p-3 mb-4">
+                  <p className="text-xs text-blue-700 dark:text-blue-300 font-medium mb-1">Trading 212</p>
+                  <p className="text-[10px] text-blue-600 dark:text-blue-400">Menu → History → Export as CSV.</p>
+                </div>
+              )}
+              {csvFormat === "revolut" && (
+                <div className="bg-blue-50 dark:bg-blue-500/10 rounded-xl p-3 mb-4">
+                  <p className="text-xs text-blue-700 dark:text-blue-300 font-medium mb-1">Revolut</p>
+                  <p className="text-[10px] text-blue-600 dark:text-blue-400">Invest → More → Statements → Account statement → Excel.</p>
+                </div>
+              )}
+              {csvFormat === "simple" && (
                 <div className="bg-blue-50 dark:bg-blue-500/10 rounded-xl p-3 mb-4">
                   <p className="text-xs text-blue-700 dark:text-blue-300 font-medium mb-1">{t("simpleCsvTitle")}</p>
                   <p className="text-[10px] text-blue-600 dark:text-blue-400 font-mono">ticker,type,price,amount,currency</p>

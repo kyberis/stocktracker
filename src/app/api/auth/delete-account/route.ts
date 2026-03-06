@@ -5,22 +5,16 @@ import { verifyPassword } from "@/lib/auth/password";
 import { getExpiredSessionCookieConfig } from "@/lib/auth/session";
 import { withMetrics } from "@/lib/with-metrics";
 import { authEventsTotal } from "@/lib/metrics";
+import { parseBody } from "@/lib/api-response";
+import { deleteAccountSchema } from "@/lib/schemas";
 
 export const POST = withMetrics("/api/auth/delete-account", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
 
-  let body: { password?: string } = {};
-  try {
-    body = (await req.json()) as { password?: string };
-  } catch {
-    return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
-  }
-
-  const password = body.password || "";
-  if (!password) {
-    return NextResponse.json({ error: "Password is required." }, { status: 400 });
-  }
+  const result = await parseBody(req, deleteAccountSchema);
+  if (!result.success) return result.error;
+  const { password } = result.data;
 
   if (session.role === "admin") {
     return NextResponse.json(

@@ -4,23 +4,17 @@ import { useState, useEffect, useCallback } from "react";
 import { useI18n } from "@/lib/i18n";
 import { useSettings } from "@/lib/settings-context";
 import { formatCurrency } from "@/lib/utils";
-import type { WatchlistItem, QuoteData, SearchResult } from "@/lib/types";
+import { useWatchlist } from "@/lib/hooks/use-api";
+import type { QuoteData, SearchResult } from "@/lib/types";
 
 export default function Watchlist() {
   const { t } = useI18n();
   const { provider, getApiHeaders, trackAvCalls } = useSettings();
-  const [items, setItems] = useState<WatchlistItem[]>([]);
+  const { data: items = [], mutate } = useWatchlist();
   const [quotes, setQuotes] = useState<Record<string, QuoteData>>({});
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
-
-  const fetchItems = useCallback(async () => {
-    const res = await fetch("/api/watchlist");
-    if (res.ok) setItems(await res.json());
-  }, []);
-
-  useEffect(() => { fetchItems(); }, [fetchItems]);
 
   useEffect(() => {
     if (items.length === 0) return;
@@ -49,12 +43,12 @@ export default function Watchlist() {
     });
     setQuery("");
     setResults([]);
-    fetchItems();
+    mutate();
   };
 
   const handleRemove = async (id: string) => {
     await fetch(`/api/watchlist?id=${id}`, { method: "DELETE" });
-    setItems((prev) => prev.filter((i) => i.id !== id));
+    mutate();
   };
 
   let searchTimeout: ReturnType<typeof setTimeout>;

@@ -28,14 +28,14 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  const token = req.cookies.get("stocktracker_session")?.value;
+  const token = req.cookies.get("trefolio_session")?.value;
   const session = token ? await verifySessionToken(token) : null;
 
   if (!session) {
     if (pathname.startsWith("/api/")) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    return NextResponse.redirect(new URL("/login", req.url));
+    return NextResponse.redirect(new URL("/landing", req.url));
   }
 
   if (

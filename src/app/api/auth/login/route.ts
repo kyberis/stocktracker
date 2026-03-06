@@ -8,32 +8,19 @@ import {
 import { ensureSessionSecret } from "@/lib/auth/session-secret";
 import { withMetrics } from "@/lib/with-metrics";
 import { authEventsTotal } from "@/lib/metrics";
-
-async function parseBody(req: NextRequest): Promise<{ username?: string; password?: string }> {
-  const raw = await req.text();
-  if (!raw) return {};
-  return JSON.parse(raw) as { username?: string; password?: string };
-}
+import { parseBody } from "@/lib/api-response";
+import { loginSchema } from "@/lib/schemas";
 
 export const POST = withMetrics("/api/auth/login", async (req: NextRequest) => {
   ensureSessionSecret();
 
-  let body: { username?: string; password?: string } = {};
-  try {
-    body = await parseBody(req);
-  } catch {
-    return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
-  }
-
-  const username = (body.username || "").trim();
-  const password = body.password || "";
-
-  if (!username || !password) {
-    return NextResponse.json({ error: "Username and password are required." }, { status: 400 });
-  }
+  const result = await parseBody(req, loginSchema);
+  if (!result.success) return result.error;
+  const { username, password } = result.data;
+  const trimmedUsername = username.trim();
 
   try {
-    const user = await findUserByUsername(username);
+    const user = await findUserByUsername(trimmedUsername);
     if (!user) {
       authEventsTotal.inc({ event: "login_failure" });
       return NextResponse.json({ error: "Invalid credentials." }, { status: 401 });

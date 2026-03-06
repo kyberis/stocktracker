@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import { useI18n } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/portfolio-context";
+import { useTransactions } from "@/lib/hooks/use-api";
 import type { Transaction, TransactionType } from "@/lib/types";
 
 interface Props {
@@ -20,7 +21,7 @@ const TYPE_COLORS: Record<TransactionType, string> = {
 export default function TransactionHistory({ holdingId, ticker }: Props) {
   const { t } = useI18n();
   const { refreshHoldings } = usePortfolio();
-  const [txs, setTxs] = useState<Transaction[]>([]);
+  const { data: txs = [], mutate } = useTransactions(holdingId);
   const [showForm, setShowForm] = useState(false);
   const [formType, setFormType] = useState<TransactionType>("buy");
   const [formDate, setFormDate] = useState(new Date().toISOString().slice(0, 10));
@@ -29,21 +30,11 @@ export default function TransactionHistory({ holdingId, ticker }: Props) {
   const [formFees, setFormFees] = useState("");
   const [formTaxes, setFormTaxes] = useState("");
   const [formNotes, setFormNotes] = useState("");
-  const [loading, setLoading] = useState(false);
-
-
-  const fetchTxs = useCallback(async () => {
-    const params = new URLSearchParams();
-    if (holdingId) params.set("holdingId", holdingId);
-    const res = await fetch(`/api/transactions?${params}`);
-    if (res.ok) setTxs(await res.json());
-  }, [holdingId]);
-
-  useEffect(() => { fetchTxs(); }, [fetchTxs]);
+  const [mutationLoading, setMutationLoading] = useState(false);
 
   const handleAdd = async () => {
     if (!formDate) return;
-    setLoading(true);
+    setMutationLoading(true);
     const shares = parseFloat(formShares) || 0;
     const price = parseFloat(formPrice) || 0;
     const total = formType === "dividend" || formType === "fee" ? parseFloat(formPrice) || 0 : shares * price;
@@ -70,14 +61,14 @@ export default function TransactionHistory({ holdingId, ticker }: Props) {
     setFormFees("");
     setFormTaxes("");
     setFormNotes("");
-    setLoading(false);
-    fetchTxs();
+    setMutationLoading(false);
+    mutate();
     refreshHoldings();
   };
 
   const handleDelete = async (id: string) => {
     await fetch(`/api/transactions?id=${id}`, { method: "DELETE" });
-    fetchTxs();
+    mutate();
     refreshHoldings();
   };
 
@@ -127,7 +118,7 @@ export default function TransactionHistory({ holdingId, ticker }: Props) {
             <input type="number" placeholder={t("transactionTaxes")} value={formTaxes} onChange={(e) => setFormTaxes(e.target.value)} className="text-sm" step="any" />
             <input type="text" placeholder={t("transactionNotes")} value={formNotes} onChange={(e) => setFormNotes(e.target.value)} className="text-sm" />
           </div>
-          <button onClick={handleAdd} disabled={loading} className="btn-primary text-xs px-4 py-1.5 disabled:opacity-50">
+          <button onClick={handleAdd} disabled={mutationLoading} className="btn-primary text-xs px-4 py-1.5 disabled:opacity-50">
             {t("addTransaction")}
           </button>
         </div>

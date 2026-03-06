@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { listHoldings, addTransaction, trackEvent, listCashEntries, addCashEntry, removeCashEntry, listTransactionSourceRefs, rebuildHoldings } from "@/lib/db";
+import { listHoldings, addTransaction, trackEvent, listCashEntries, addCashEntry, removeCashEntry, listTransactionSourceRefs, rebuildHoldings, findUserById } from "@/lib/db";
 import { withMetrics } from "@/lib/with-metrics";
 import { portfolioImportsTotal } from "@/lib/metrics";
-import { parseDegiroCSV, parseDegiroCashBalances, buildIsinMap, type DegiroTransaction } from "@/lib/degiro-parser";
+import { buildIsinMap } from "@/lib/degiro-parser";
 import { parseSimpleCSV } from "@/lib/simple-csv-parser";
+import { getBrokerParser, type ParsedTransaction } from "@/lib/broker-parsers";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { enrichHoldingClassifications } from "@/lib/enrich-classifications";
 import { deferTask, submitJob, getJobStatus } from "@/lib/task-runner";
+import { PLATFORM_LIMITS } from "@/lib/platform-config";
 
 const KNOWN_ISINS: Record<string, string> = {
   "CA0641491075": "BNS",
@@ -53,17 +55,6 @@ const KNOWN_ISINS: Record<string, string> = {
   "IE000ZIJ5B20": "WCOS.L",
 };
 
-function extractUniqueIsins(csv: string): string[] {
-  const isins = new Set<string>();
-  const lines = csv.split("\n").filter((l) => l.trim());
-  for (let i = 1; i < lines.length; i++) {
-    const cols = lines[i].split(",");
-    const isin = cols[4]?.replace(/"/g, "").trim() || "";
-    if (/^[A-Z]{2}[A-Z0-9]{10}$/.test(isin)) isins.add(isin);
-  }
-  return Array.from(isins);
-}
-
 async function resolveIsinsViaYahoo(
   unmappedIsins: string[],
   isinMap: Record<string, string>
@@ -103,6 +94,132 @@ function inferExchangeFromTicker(ticker: string): string {
   return "";
 }
 
+async function buildIsinMapForBroker(
+  csv: string,
+  userId: string,
+  extractIsins?: (csv: string) => string[],
+): Promise<Record<string, string>> {
+  const holdings = await listHoldings(userId);
+  let isinMap = { ...KNOWN_ISINS, ...buildIsinMap(holdings) };
+
+  if (extractIsins) {
+    const allIsins = extractIsins(csv);
+    const unmapped = allIsins.filter((isin) => !isinMap[isin]);
+    if (unmapped.length > 0) {
+      isinMap = await resolveIsinsViaYahoo(unmapped, isinMap);
+    }
+  }
+
+  return isinMap;
+}
+
+async function importTransactions(
+  userId: string,
+  parsed: ParsedTransaction[],
+  broker: string,
+  csv: string,
+  parseCashBalances?: (csv: string) => { currency: string; amount: number }[],
+  isPro?: boolean,
+): Promise<{ imported: number; cashImported: number; holdingsCapped?: number }> {
+  const existingRefs = await listTransactionSourceRefs(userId);
+  const toImport = parsed.filter((tx) => !existingRefs.has(tx.sourceRef));
+
+  const sorted = [...toImport].sort((a, b) => a.date.localeCompare(b.date));
+
+  let holdingsCapped = 0;
+  let allowedTickers: Set<string> | null = null;
+  if (!isPro) {
+    const existing = await listHoldings(userId);
+    const existingTickerSet = new Set(existing.map((h) => `${h.ticker}|${h.exchange || ""}`));
+    const newTickers = new Set<string>();
+    for (const tx of sorted) {
+      const key = `${tx.ticker}|${inferExchangeFromTicker(tx.ticker)}`;
+      if (!existingTickerSet.has(key)) newTickers.add(key);
+    }
+    const slotsAvailable = Math.max(0, PLATFORM_LIMITS.FREE_HOLDINGS_LIMIT - existing.length);
+    if (newTickers.size > slotsAvailable) {
+      const newArr = [...newTickers];
+      const allowed = new Set(newArr.slice(0, slotsAvailable));
+      holdingsCapped = newTickers.size - slotsAvailable;
+      allowedTickers = new Set([...existingTickerSet, ...allowed]);
+    }
+  }
+
+  let imported = 0;
+  for (const tx of sorted) {
+    if (allowedTickers) {
+      const key = `${tx.ticker}|${inferExchangeFromTicker(tx.ticker)}`;
+      if (!allowedTickers.has(key)) continue;
+    }
+    const nameUp = (tx.name || "").toUpperCase();
+    const assetType = (nameUp.includes("ETF") || nameUp.includes("UCITS")) ? "etf" : "stock";
+    await addTransaction(userId, {
+      holdingId: "",
+      ticker: tx.ticker,
+      name: tx.name,
+      exchange: inferExchangeFromTicker(tx.ticker),
+      isin: tx.isin,
+      assetType,
+      accountId: "",
+      type: tx.type,
+      date: tx.date,
+      shares: tx.shares,
+      pricePerShare: tx.pricePerShare,
+      totalAmount: tx.totalAmount,
+      fees: tx.fees,
+      taxes: tx.taxes,
+      currency: tx.currency,
+      displayCurrency: tx.currency,
+      notes: tx.name || `${broker} import`,
+      sourceRef: tx.sourceRef,
+    });
+    imported++;
+  }
+
+  if (imported > 0) {
+    await rebuildHoldings(userId);
+  }
+
+  let cashImported = 0;
+  if (parseCashBalances) {
+    const cashBalances = parseCashBalances(csv);
+    if (cashBalances.length > 0) {
+      const existingCash = await listCashEntries(userId);
+      const brokerUpper = broker.toUpperCase();
+      for (const entry of existingCash) {
+        if (entry.name.toUpperCase().startsWith(brokerUpper)) {
+          await removeCashEntry(userId, entry.id);
+        }
+      }
+
+      const yahoo = new YahooProvider();
+      for (const balance of cashBalances) {
+        let amountEUR = balance.amount;
+        if (balance.currency !== "EUR") {
+          try {
+            const rate = await yahoo.getExchangeRate(balance.currency, "EUR");
+            if (rate > 0) amountEUR = +(balance.amount * rate).toFixed(2);
+          } catch {
+            // keep original amount if FX conversion fails
+          }
+        }
+        await addCashEntry(userId, {
+          name: `${broker.toUpperCase()} – ${balance.currency}`,
+          amountEUR,
+        });
+        cashImported++;
+      }
+    }
+  }
+
+  trackEvent(userId, "portfolio_import", { broker, count: String(imported) });
+  portfolioImportsTotal.inc({ source: "broker", status: "success" });
+
+  await enrichHoldingClassifications(userId).catch(() => {});
+
+  return { imported, cashImported, ...(holdingsCapped > 0 ? { holdingsCapped } : {}) };
+}
+
 /** POST /api/transactions/import-broker
  *  - action=parse:       parse CSV, return preview
  *  - action=import:      start async import, return { jobId }
@@ -126,171 +243,23 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
     return NextResponse.json(status);
   }
 
-  if (broker === "degiro") {
-    const file = formData.get("file") as File | null;
-    const csvText = formData.get("csv") as string | null;
-
-    let csv = csvText || "";
-    if (file && !csv) {
-      csv = await file.text();
-    }
-    if (!csv) {
-      portfolioImportsTotal.inc({ source: "broker", status: "error" });
-      return NextResponse.json({ error: "No CSV data provided." }, { status: 400 });
-    }
-
-    const holdings = await listHoldings(session.userId);
-    let isinMap = { ...KNOWN_ISINS, ...buildIsinMap(holdings) };
-
-    const allIsins = extractUniqueIsins(csv);
-    const unmapped = allIsins.filter((isin) => !isinMap[isin]);
-    if (unmapped.length > 0) {
-      isinMap = await resolveIsinsViaYahoo(unmapped, isinMap);
-    }
-
-    const parsed = parseDegiroCSV(csv, isinMap);
-
-    if (action === "parse") {
-      const cashBalances = parseDegiroCashBalances(csv);
-      const summary = {
-        total: parsed.length,
-        buys: parsed.filter((t) => t.type === "buy").length,
-        sells: parsed.filter((t) => t.type === "sell").length,
-        dividends: parsed.filter((t) => t.type === "dividend").length,
-        fees: parsed.filter((t) => t.type === "fee").length,
-        unmapped: parsed.filter((t) => !t.ticker && t.isin).map((t) => t.isin).filter((v, i, a) => a.indexOf(v) === i),
-        cashBalances,
-      };
-      return NextResponse.json({ transactions: parsed, summary });
-    }
-
-    if (action === "import") {
-      const jobId = crypto.randomUUID();
-      const userId = session.userId;
-
-      submitJob(jobId, async () => {
-        const existingRefs = await listTransactionSourceRefs(userId);
-        const toImport = parsed.filter((tx) => !existingRefs.has(tx.sourceRef));
-
-        const sorted = [...toImport].sort((a, b) => a.date.localeCompare(b.date));
-        let imported = 0;
-        for (const tx of sorted) {
-          const nameUp = tx.name.toUpperCase();
-          const assetType = (nameUp.includes("ETF") || nameUp.includes("UCITS")) ? "etf" : "stock";
-          await addTransaction(userId, {
-            holdingId: "",
-            ticker: tx.ticker,
-            name: tx.name,
-            exchange: inferExchangeFromTicker(tx.ticker),
-            isin: tx.isin,
-            assetType,
-            accountId: "",
-            type: tx.type,
-            date: tx.date,
-            shares: tx.shares,
-            pricePerShare: tx.pricePerShare,
-            totalAmount: tx.totalAmount,
-            fees: tx.fees,
-            taxes: tx.taxes,
-            currency: tx.currency,
-            displayCurrency: tx.currency,
-            notes: tx.name || "DEGIRO import",
-            sourceRef: tx.sourceRef,
-          });
-          imported++;
-        }
-
-        if (imported > 0) {
-          await rebuildHoldings(userId);
-        }
-
-        let cashImported = 0;
-        const cashBalances = parseDegiroCashBalances(csv);
-        if (cashBalances.length > 0) {
-          const existingCash = await listCashEntries(userId);
-          for (const entry of existingCash) {
-            if (entry.name.startsWith("DEGIRO")) {
-              await removeCashEntry(userId, entry.id);
-            }
-          }
-
-          const yahoo = new YahooProvider();
-          for (const balance of cashBalances) {
-            let amountEUR = balance.amount;
-            if (balance.currency !== "EUR") {
-              try {
-                const rate = await yahoo.getExchangeRate(balance.currency, "EUR");
-                if (rate > 0) amountEUR = +(balance.amount * rate).toFixed(2);
-              } catch {
-                // keep original amount if FX conversion fails
-              }
-            }
-            await addCashEntry(userId, {
-              name: `DEGIRO – ${balance.currency}`,
-              amountEUR,
-            });
-            cashImported++;
-          }
-        }
-
-        trackEvent(userId, "portfolio_import", { broker: "degiro", count: String(imported) });
-        portfolioImportsTotal.inc({ source: "broker", status: "success" });
-
-        await enrichHoldingClassifications(userId).catch(() => {});
-
-        return { imported, cashImported };
-      });
-
-      return NextResponse.json({ jobId }, { status: 202 });
-    }
-
-    if (action === "import-cash") {
-      const cashBalances = parseDegiroCashBalances(csv);
-      if (cashBalances.length === 0) {
-        return NextResponse.json({ cashImported: 0 });
-      }
-
-      const existingCash = await listCashEntries(session.userId);
-      for (const entry of existingCash) {
-        if (entry.name.startsWith("DEGIRO")) {
-          await removeCashEntry(session.userId, entry.id);
-        }
-      }
-
-      const yahoo = new YahooProvider();
-      let cashImported = 0;
-      for (const balance of cashBalances) {
-        let amountEUR = balance.amount;
-        if (balance.currency !== "EUR") {
-          try {
-            const rate = await yahoo.getExchangeRate(balance.currency, "EUR");
-            if (rate > 0) amountEUR = +(balance.amount * rate).toFixed(2);
-          } catch {
-            // keep original amount if FX conversion fails
-          }
-        }
-        await addCashEntry(session.userId, {
-          name: `DEGIRO – ${balance.currency}`,
-          amountEUR,
-        });
-        cashImported++;
-      }
-      return NextResponse.json({ cashImported });
-    }
+  /* ── Read CSV data ── */
+  const file = formData.get("file") as File | null;
+  const csvText = formData.get("csv") as string | null;
+  let csv = csvText || "";
+  if (file && !csv) {
+    csv = await file.text();
+  }
+  if (!csv) {
+    portfolioImportsTotal.inc({ source: "broker", status: "error" });
+    return NextResponse.json({ error: "No CSV data provided." }, { status: 400 });
   }
 
+  const user = await findUserById(session.userId);
+  const isPro = (user?.plan || session.plan) === "pro";
+
+  /* ── Simple CSV (legacy format) ── */
   if (broker === "simple") {
-    const file = formData.get("file") as File | null;
-    const csvText = formData.get("csv") as string | null;
-
-    let csv = csvText || "";
-    if (file && !csv) {
-      csv = await file.text();
-    }
-    if (!csv) {
-      return NextResponse.json({ error: "No CSV data provided." }, { status: 400 });
-    }
-
     const parsed = parseSimpleCSV(csv);
 
     if (action === "parse") {
@@ -310,48 +279,100 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
       const userId = session.userId;
 
       submitJob(jobId, async () => {
-        const existingRefs = await listTransactionSourceRefs(userId);
-        const toImport = parsed.filter((tx) => !existingRefs.has(tx.sourceRef));
-
-        const sorted = [...toImport].sort((a, b) => a.date.localeCompare(b.date));
-        let imported = 0;
-        for (const tx of sorted) {
-          await addTransaction(userId, {
-            holdingId: "",
-            ticker: tx.ticker,
-            name: tx.name,
-            exchange: inferExchangeFromTicker(tx.ticker),
-            isin: "",
-            assetType: "stock",
-            accountId: "",
-            type: tx.type,
-            date: tx.date,
-            shares: tx.shares,
-            pricePerShare: tx.pricePerShare,
-            totalAmount: tx.totalAmount,
-            fees: tx.fees,
-            taxes: tx.taxes,
-            currency: tx.currency,
-            displayCurrency: tx.currency,
-            notes: "Simple CSV import",
-            sourceRef: tx.sourceRef,
-          });
-          imported++;
-        }
-
-        if (imported > 0) {
-          await rebuildHoldings(userId);
-        }
-
-        trackEvent(userId, "portfolio_import", { broker: "simple", count: String(imported) });
-
-        await enrichHoldingClassifications(userId).catch(() => {});
-
-        return { imported };
+        const asParsed: ParsedTransaction[] = parsed.map((tx) => ({
+          date: tx.date, type: tx.type, ticker: tx.ticker, name: tx.name,
+          isin: tx.isin, shares: tx.shares, pricePerShare: tx.pricePerShare,
+          totalAmount: tx.totalAmount, fees: tx.fees, taxes: tx.taxes,
+          currency: tx.currency, orderId: tx.orderId, sourceRef: tx.sourceRef,
+        }));
+        return importTransactions(userId, asParsed, "simple", csv, undefined, isPro);
       });
 
       return NextResponse.json({ jobId }, { status: 202 });
     }
+  }
+
+  /* ── Registry-based broker parsers ── */
+  const parser = getBrokerParser(broker);
+  if (!parser) {
+    return NextResponse.json({ error: "Unsupported broker or action." }, { status: 400 });
+  }
+
+  const isinMap = await buildIsinMapForBroker(csv, session.userId, parser.extractIsins?.bind(parser));
+  const parsed = parser.parse(csv, isinMap);
+
+  if (action === "parse") {
+    const cashBalances = parser.parseCashBalances?.(csv) || [];
+    const summary = {
+      total: parsed.length,
+      buys: parsed.filter((t) => t.type === "buy").length,
+      sells: parsed.filter((t) => t.type === "sell").length,
+      dividends: parsed.filter((t) => t.type === "dividend").length,
+      fees: parsed.filter((t) => t.type === "fee").length,
+      unmapped: parsed
+        .filter((t) => !t.ticker && t.isin)
+        .map((t) => t.isin)
+        .filter((v, i, a) => a.indexOf(v) === i),
+      cashBalances,
+    };
+    return NextResponse.json({ transactions: parsed, summary });
+  }
+
+  if (action === "import") {
+    const jobId = crypto.randomUUID();
+    const userId = session.userId;
+
+    submitJob(jobId, async () => {
+      return importTransactions(
+        userId,
+        parsed,
+        broker,
+        csv,
+        parser.parseCashBalances?.bind(parser),
+        isPro,
+      );
+    });
+
+    return NextResponse.json({ jobId }, { status: 202 });
+  }
+
+  if (action === "import-cash") {
+    if (!parser.parseCashBalances) {
+      return NextResponse.json({ cashImported: 0 });
+    }
+
+    const cashBalances = parser.parseCashBalances(csv);
+    if (cashBalances.length === 0) {
+      return NextResponse.json({ cashImported: 0 });
+    }
+
+    const existingCash = await listCashEntries(session.userId);
+    const brokerUpper = parser.label.toUpperCase();
+    for (const entry of existingCash) {
+      if (entry.name.toUpperCase().startsWith(brokerUpper)) {
+        await removeCashEntry(session.userId, entry.id);
+      }
+    }
+
+    const yahoo = new YahooProvider();
+    let cashImported = 0;
+    for (const balance of cashBalances) {
+      let amountEUR = balance.amount;
+      if (balance.currency !== "EUR") {
+        try {
+          const rate = await yahoo.getExchangeRate(balance.currency, "EUR");
+          if (rate > 0) amountEUR = +(balance.amount * rate).toFixed(2);
+        } catch {
+          // keep original amount if FX conversion fails
+        }
+      }
+      await addCashEntry(session.userId, {
+        name: `${parser.label.toUpperCase()} – ${balance.currency}`,
+        amountEUR,
+      });
+      cashImported++;
+    }
+    return NextResponse.json({ cashImported });
   }
 
   return NextResponse.json({ error: "Unsupported broker or action." }, { status: 400 });

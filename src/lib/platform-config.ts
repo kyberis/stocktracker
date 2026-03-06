@@ -23,6 +23,9 @@ export const PLATFORM_LIMITS = {
 
   /** Max active price alerts for Free users. Pro is unlimited. */
   FREE_ALERT_LIMIT: 2,
+
+  /** Max holdings (stocks + ETFs) for Free users. Pro is unlimited. */
+  FREE_HOLDINGS_LIMIT: 15,
 } as const;
 
 export type RateLimitProvider = "alphavantage" | "openai" | "openai_import";

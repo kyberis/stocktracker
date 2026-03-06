@@ -390,7 +390,7 @@ function MetricsCard() {
   const grafanaDashboardUrl = grafanaUrl
     ? grafanaSource === "cloud"
       ? grafanaUrl
-      : `${grafanaUrl.replace(/\/$/, "")}/d/stocktracker-main/stocktracker?orgId=1&refresh=15s`
+      : `${grafanaUrl.replace(/\/$/, "")}/d/trefolio-main/trefolio?orgId=1&refresh=15s`
     : null;
 
   return (

@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { listTransactions, addTransaction, deleteTransaction, rebuildHoldings } from "@/lib/db";
+import { listTransactions, addTransaction, deleteTransaction, rebuildHoldings, listHoldings, findUserById } from "@/lib/db";
 import { withMetrics } from "@/lib/with-metrics";
 import { transactionsOpsTotal } from "@/lib/metrics";
+import { parseBody } from "@/lib/api-response";
+import { createTransactionSchema } from "@/lib/schemas";
+import { PLATFORM_LIMITS } from "@/lib/platform-config";
 
 export const GET = withMetrics("/api/transactions", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
@@ -18,17 +21,31 @@ export const POST = withMetrics("/api/transactions", async (req: NextRequest) =>
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
 
-  try {
-    const body = await req.json();
-    if (!body?.ticker || !body?.type || !body?.date) {
-      return NextResponse.json({ error: "ticker, type, and date are required." }, { status: 400 });
+  const result = await parseBody(req, createTransactionSchema);
+  if (!result.success) return result.error;
+
+  const user = await findUserById(session.userId);
+  if ((user?.plan || session.plan) !== "pro" && result.data.type === "buy") {
+    const currentHoldings = await listHoldings(session.userId);
+    const alreadyOwned = currentHoldings.some(
+      (h) => h.ticker === result.data.ticker && h.exchange === (result.data.exchange || "")
+    );
+    if (!alreadyOwned && currentHoldings.length >= PLATFORM_LIMITS.FREE_HOLDINGS_LIMIT) {
+      return NextResponse.json(
+        {
+          error: "Free plan limit: 15 holdings",
+          reason: "holdings_limit_reached",
+          limit: PLATFORM_LIMITS.FREE_HOLDINGS_LIMIT,
+          current: currentHoldings.length,
+        },
+        { status: 403 }
+      );
     }
-    const created = await addTransaction(session.userId, body);
-    transactionsOpsTotal.inc({ operation: "add" });
-    return NextResponse.json(created, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
+
+  const created = await addTransaction(session.userId, result.data);
+  transactionsOpsTotal.inc({ operation: "add" });
+  return NextResponse.json(created, { status: 201 });
 });
 
 export const DELETE = withMetrics("/api/transactions", async (req: NextRequest) => {

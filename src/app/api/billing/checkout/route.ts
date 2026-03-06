@@ -4,21 +4,17 @@ import { findUserById, trackEvent, updateUserSubscription, countProSubscribers }
 import { billingEventsTotal } from "@/lib/metrics";
 import { PLATFORM_LIMITS } from "@/lib/platform-config";
 import { getBillingBaseUrl, getStripeClient } from "@/lib/stripe";
-import type { BillingInterval } from "@/lib/types";
+import { parseBody } from "@/lib/api-response";
+import { checkoutSchema } from "@/lib/schemas";
 import { withMetrics } from "@/lib/with-metrics";
 
 export const POST = withMetrics("/api/billing/checkout", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
 
-  let body: { interval?: BillingInterval } = {};
-  try {
-    body = (await req.json()) as { interval?: BillingInterval };
-  } catch {
-    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
-  }
-
-  const interval: BillingInterval = body.interval === "annual" ? "annual" : "monthly";
+  const result = await parseBody(req, checkoutSchema);
+  if (!result.success) return result.error;
+  const { interval } = result.data;
   const priceId =
     interval === "annual"
       ? process.env.STRIPE_PRICE_PRO_ANNUAL

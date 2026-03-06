@@ -14,9 +14,96 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "0.24.2";
+export const CURRENT_VERSION = "0.27.0";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "0.27.0",
+    date: "2026-03-05",
+    title: "Updated Pricing & Free-Tier Holdings Cap",
+    titleEs: "Precios actualizados y límite de posiciones en el plan Free",
+    changes: [
+      {
+        type: "improvement",
+        text: "Pro pricing adjusted to €4.99/month (€39.99/year) — still up to 2x cheaper than alternatives",
+        textEs: "Precios de Pro ajustados a 4,99 €/mes (39,99 €/año) — sigue siendo hasta 2x más barato que las alternativas",
+      },
+      {
+        type: "feature",
+        text: "Free plan now includes up to 15 holdings; Pro users enjoy unlimited holdings",
+        textEs: "El plan Free ahora incluye hasta 15 posiciones; los usuarios Pro disfrutan de posiciones ilimitadas",
+      },
+    ],
+  },
+  {
+    version: "0.26.1",
+    date: "2026-03-05",
+    title: "Rebrand: StockTracker is now trefolio",
+    titleEs: "Cambio de marca: StockTracker ahora es trefolio",
+    changes: [
+      {
+        type: "improvement",
+        text: "The product has been renamed from StockTracker to trefolio — a new identity inspired by growth and good fortune",
+        textEs: "El producto ha sido renombrado de StockTracker a trefolio — una nueva identidad inspirada en el crecimiento y la buena fortuna",
+      },
+    ],
+  },
+  {
+    version: "0.26.0",
+    date: "2026-03-05",
+    title: "Multi-Broker Import: IBKR, Trading 212 & Revolut",
+    titleEs: "Importación multi-broker: IBKR, Trading 212 y Revolut",
+    changes: [
+      {
+        type: "feature",
+        text: "Import transactions from Interactive Brokers (Activity Statement & Flex Query CSV)",
+        textEs: "Importa transacciones desde Interactive Brokers (Extracto de Actividad y Flex Query CSV)",
+      },
+      {
+        type: "feature",
+        text: "Import transactions from Trading 212 (History CSV export with automatic fee detection)",
+        textEs: "Importa transacciones desde Trading 212 (exportación CSV del historial con detección automática de comisiones)",
+      },
+      {
+        type: "feature",
+        text: "Import transactions from Revolut (Account statement Excel/CSV with dividend grouping)",
+        textEs: "Importa transacciones desde Revolut (extracto de cuenta Excel/CSV con agrupación de dividendos)",
+      },
+      {
+        type: "improvement",
+        text: "Unified broker parser architecture with shared deduplication and ISIN resolution across all brokers",
+        textEs: "Arquitectura unificada de parsers de brokers con deduplicación compartida y resolución de ISIN entre todos los brokers",
+      },
+    ],
+  },
+  {
+    version: "0.25.0",
+    date: "2026-03-05",
+    title: "Professional Landing Page Redesign",
+    titleEs: "Rediseño profesional de la página de inicio",
+    changes: [
+      {
+        type: "feature",
+        text: "Unauthenticated visitors now see a professional marketing landing page at / instead of a bare login form",
+        textEs: "Los visitantes no autenticados ahora ven una página de inicio profesional en / en lugar de un formulario de inicio de sesión básico",
+      },
+      {
+        type: "improvement",
+        text: "Redesigned landing page with structured value propositions, alternating feature sections with real screenshots, testimonials, positive comparison table, and multi-column footer",
+        textEs: "Página de inicio rediseñada con propuestas de valor estructuradas, secciones de funcionalidades alternadas con capturas reales, testimonios, tabla comparativa positiva y pie de página multicolumna",
+      },
+      {
+        type: "improvement",
+        text: "Landing page navbar now includes section anchor links (Features, Pricing, FAQ) and a mobile hamburger menu",
+        textEs: "La barra de navegación de la página de inicio ahora incluye enlaces ancla a secciones (Funcionalidades, Precios, FAQ) y un menú hamburguesa para móvil",
+      },
+      {
+        type: "improvement",
+        text: "Login and signup pages now link back to the landing page via the logo",
+        textEs: "Las páginas de inicio de sesión y registro ahora enlazan a la página de inicio a través del logo",
+      },
+    ],
+  },
   {
     version: "0.24.2",
     date: "2026-03-05",

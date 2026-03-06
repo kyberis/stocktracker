@@ -1,4 +1,4 @@
-# StockTracker — Commercialization Plan
+# trefolio — Commercialization Plan
 
 > **Version:** 1.0 — March 2026
 > **Price:** 2 EUR/month (Pro plan) | Free tier available
@@ -29,11 +29,11 @@
 
 ### One-liner
 
-**StockTracker** — The simplest way to track your stock portfolio with AI-powered insights, for just 2 EUR/month.
+**trefolio** — The simplest way to track your stock portfolio with AI-powered insights, for just 2 EUR/month.
 
-### Why StockTracker?
+### Why trefolio?
 
-| Pain point | How StockTracker solves it |
+| Pain point | How trefolio solves it |
 |---|---|
 | Most portfolio trackers are complex, designed for traders | Simple UI for people who just want to track long-term holdings |
 | Free tools lack fundamentals and AI analysis | Pro tier includes company fundamentals, economic indicators, and AI explanations in plain language |
@@ -49,13 +49,13 @@
 
 ### Competitive Landscape
 
-| Competitor | Price | Weakness StockTracker exploits |
+| Competitor | Price | Weakness trefolio exploits |
 |---|---|---|
 | Yahoo Finance | Free | No AI, cluttered UI, no multi-currency portfolio |
 | Seeking Alpha | 19.99 USD/mo | Expensive, US-focused, complex |
 | Simply Wall St | 10 USD/mo | Expensive for casual investors |
 | Portfolio Performance | Free (desktop) | No web/mobile, no AI, steep learning curve |
-| **StockTracker** | **2 EUR/mo** | Simple, AI-powered, cheap, multi-language, web-based |
+| **trefolio** | **2 EUR/mo** | Simple, AI-powered, cheap, multi-language, web-based |
 
 ---
 
@@ -199,7 +199,7 @@ ALTER TABLE users ADD COLUMN ai_calls_reset_at TEXT;
 
 **Stripe setup steps:**
 1. Create Stripe account at stripe.com
-2. Create a Product ("StockTracker Pro") with a Price (2 EUR/month, recurring)
+2. Create a Product ("trefolio Pro") with a Price (2 EUR/month, recurring)
 3. Set up webhook endpoint pointing to `/api/billing/webhook`
 4. Store `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` in env vars
 
@@ -337,7 +337,7 @@ Since pricing is in EUR and the audience is European, GDPR applies regardless of
 
 | Element | Value |
 |---|---|
-| **Name** | StockTracker (or "StockTracker.eu" / "Trakr" if domain unavailable) |
+| **Name** | trefolio (trefolio.com) |
 | **Tagline** | "Your portfolio. Understood." |
 | **Alt taglines** | "Smart portfolio tracking for everyone" / "Track smarter, not harder" |
 | **Tone** | Friendly, approachable, jargon-free — like explaining stocks to a friend |
@@ -350,16 +350,16 @@ Since pricing is in EUR and the audience is European, GDPR applies regardless of
 **Option A: Wordmark + Growth Arrow**
 ```
   ↗
-StockTracker
+trefolio
 ```
 The current app already has this: a rounded square with a growth arrow icon. Formalize it:
 - Emerald gradient square (rounded-lg) with white upward-trending arrow
-- "StockTracker" in Inter or DM Sans, bold, dark navy
+- "trefolio" in Inter or DM Sans, bold, dark navy
 - The arrow doubles as a chart line — symbolizes growth
 
-**Option B: Monogram "ST"**
-- Letters S and T intertwined, with the T's vertical stroke being a chart line going up
-- Works well as favicon and app icon
+**Option B: Trefoil Clover Mark**
+- A stylized three-leaf clover (trefoil) with leaves forming an upward arrow
+- Works well as favicon and app icon — ties directly to the brand name
 
 **Option C: Abstract chart**
 - Three bars of increasing height (like a bar chart) in emerald gradient
@@ -385,7 +385,7 @@ The current app already has this: a rounded square with a growth arrow icon. For
 
 ### Structure
 
-A single-page marketing site at the root domain (e.g., `stocktracker.eu`), separate from the app (`app.stocktracker.eu`).
+A single-page marketing site at the root domain (e.g., `trefolio.com`), separate from the app (`app.trefolio.com`).
 
 **Sections:**
 
@@ -396,8 +396,8 @@ A single-page marketing site at the root domain (e.g., `stocktracker.eu`), separ
    - Screenshot/mockup of the dashboard (dark mode looks best for fintech)
 
 2. **Problem/Solution**
-   - "Most portfolio trackers are built for traders. StockTracker is built for you."
-   - Three pain points with icons → how StockTracker solves them
+   - "Most portfolio trackers are built for traders. trefolio is built for you."
+   - Three pain points with icons → how trefolio solves them
 
 3. **Feature Showcase** (with screenshots)
    - Portfolio dashboard
@@ -452,7 +452,7 @@ A single-page marketing site at the root domain (e.g., `stocktracker.eu`), separ
 | Post on Hacker News ("Show HN: I built a portfolio tracker for 2 EUR/month") | HN | 0 EUR |
 | Product Hunt launch preparation | Product Hunt | 0 EUR |
 | Create Twitter/X account, post dev journey | Twitter/X | 0 EUR |
-| Write a blog post: "Why I built StockTracker" | Blog/Medium/Dev.to | 0 EUR |
+| Write a blog post: "Why I built trefolio" | Blog/Medium/Dev.to | 0 EUR |
 | Create short demo video (screen recording + voiceover) | YouTube/Twitter | 0 EUR |
 
 ### Phase 2: Launch Week
@@ -474,7 +474,7 @@ A single-page marketing site at the root domain (e.g., `stocktracker.eu`), separ
 | **SEO content** | Blog posts: "Best portfolio trackers 2026", "How to track European stocks", "Understanding P/E ratio" | 0 EUR (time) |
 | **Referral program** | "Invite a friend → both get 1 month free" | Cost of 1 month free |
 | **Twitter/X presence** | Daily market commentary, feature announcements, tips | 0 EUR |
-| **YouTube tutorials** | "How to set up StockTracker", "Understanding your portfolio with AI" | 0 EUR |
+| **YouTube tutorials** | "How to set up trefolio", "Understanding your portfolio with AI" | 0 EUR |
 | **Google Ads** (optional) | Target: "stock portfolio tracker", "best free portfolio tracker Europe" | 50-100 EUR/month |
 | **Affiliate program** (future) | Finance bloggers get 30% recurring commission | 0.60 EUR/user/month |
 | **Partnerships** | Partner with investment communities, forums, newsletters | 0 EUR |
@@ -553,7 +553,7 @@ These need your input before implementation:
 
 | # | Question | Options | My Recommendation |
 |---|---|---|---|
-| 1 | **Domain name** | stocktracker.eu, stocktrkr.com, trakr.io, or your own? | `stocktracker.eu` if available — clear, EU-focused |
+| 1 | **Domain name** | trefolio.com (REGISTERED), trefolio.io, trefolio.app | `trefolio.com` — registered March 2026 |
 | 2 | **Legal entity** | Sole proprietor, Ltd/GmbH/SL, Estonian e-Residency? | Start as sole proprietor |
 | 3 | **Email provider** | Resend, SendGrid, AWS SES? | Resend (best DX for Next.js) |
 | 4 | **Free tier AI limit** | 5/month, 10/month, or 3/month? | 5/month — enough to hook users |
@@ -563,7 +563,7 @@ These need your input before implementation:
 | 8 | **Landing page** | Same Next.js repo, or separate (Framer/Carrd)? | Same repo (route group `/marketing`) |
 | 9 | **Logo** | DIY, AI-generated, or hire designer? | Start with polished version of current icon; hire on Fiverr later (~30 EUR) |
 | 10 | **Country of operation** | Where are you based? (Affects VAT, Imprint, legal) | Need your input |
-| 11 | **Contact email** | support@stocktracker.eu or personal? | Dedicated domain email |
+| 11 | **Contact email** | support@trefolio.com or personal? | Dedicated domain email |
 | 12 | **Analytics** | None, Plausible (privacy-friendly), or Vercel Analytics? | Plausible — no cookie banner needed, GDPR-friendly |
 
 ---

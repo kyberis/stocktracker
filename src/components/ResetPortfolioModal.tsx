@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useI18n } from "@/lib/i18n";
+import { usePortfolio } from "@/lib/portfolio-context";
 
 interface ResetPortfolioModalProps {
   isOpen: boolean;
@@ -10,6 +11,7 @@ interface ResetPortfolioModalProps {
 
 export default function ResetPortfolioModal({ isOpen, onClose }: ResetPortfolioModalProps) {
   const { t } = useI18n();
+  const { refreshHoldings } = usePortfolio();
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +33,8 @@ export default function ResetPortfolioModal({ isOpen, onClose }: ResetPortfolioM
       }
       setDone(true);
       setTimeout(() => {
-        window.location.reload();
+        refreshHoldings();
+        onClose();
       }, 1200);
     } catch {
       setError("Network error. Please try again.");

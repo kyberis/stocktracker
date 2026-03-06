@@ -22,7 +22,7 @@ const ThemeContext = createContext<ThemeContextValue>({
   toggleTheme: () => {},
 });
 
-const STORAGE_KEY = "stocktracker-theme";
+const STORAGE_KEY = "trefolio-theme";
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>("light");

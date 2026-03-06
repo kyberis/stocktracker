@@ -1,29 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/guards";
 import { findUserById, resetUserHoldings } from "@/lib/db";
+import { parseBody } from "@/lib/api-response";
+import { adminResetDataSchema } from "@/lib/schemas";
 import { withMetrics } from "@/lib/with-metrics";
 
 export const POST = withMetrics("/api/admin/reset-data", async (req: NextRequest) => {
   const { error } = await requireAdmin(req);
   if (error) return error;
 
-  try {
-    const body = (await req.json()) as { userId?: string; mode?: "seed" | "empty" };
-    if (!body.userId || !body.mode) {
-      return NextResponse.json({ error: "userId and mode are required." }, { status: 400 });
-    }
-    if (body.mode !== "seed" && body.mode !== "empty") {
-      return NextResponse.json({ error: "mode must be seed or empty." }, { status: 400 });
-    }
+  const result = await parseBody(req, adminResetDataSchema);
+  if (!result.success) return result.error;
+  const { userId, mode } = result.data;
 
-    const user = await findUserById(body.userId);
+  const user = await findUserById(userId);
     if (!user) {
       return NextResponse.json({ error: "User not found." }, { status: 404 });
     }
 
-    const inserted = await resetUserHoldings(user.id, body.mode === "seed");
-    return NextResponse.json({ ok: true, inserted });
-  } catch {
-    return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
-  }
+  const inserted = await resetUserHoldings(user.id, mode === "seed");
+  return NextResponse.json({ ok: true, inserted });
 });

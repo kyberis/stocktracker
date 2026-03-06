@@ -2,16 +2,13 @@ import { NextRequest } from "next/server";
 import { getProviderFromRequest } from "@/lib/api-providers";
 import { jsonWithCallCount } from "@/lib/api-providers/response";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
+import { isRateLimitError } from "@/lib/api-providers/market-data-helpers";
 import { requireRateLimit } from "@/lib/auth/guards";
 import { recordAvUsageAsync } from "@/lib/rate-limit";
 import { withMetrics } from "@/lib/with-metrics";
 import { deferTask } from "@/lib/task-runner";
 
 export const dynamic = "force-dynamic";
-
-function isRateLimitError(err: unknown): boolean {
-  return err instanceof Error && err.message.includes("rate limit");
-}
 
 export const GET = withMetrics("/api/search", async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);

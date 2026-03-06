@@ -15,6 +15,10 @@ const config: Config = {
         "nav-bg": "#0f172a",
         "nav-text": "#f1f5f9",
       },
+      fontFamily: {
+        sans: ["var(--font-geist-sans)", "system-ui", "sans-serif"],
+        mono: ["var(--font-geist-mono)", "ui-monospace", "monospace"],
+      },
       boxShadow: {
         card: "0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04)",
       },

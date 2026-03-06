@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/guards";
 import { deleteUser, findUserById, listUsers, updateUserPassword, updateUserRole, updateUserSubscription } from "@/lib/db";
-import type { UserRole, UserPlan } from "@/lib/db";
 import { hashPassword } from "@/lib/auth/password";
+import { parseBody } from "@/lib/api-response";
+import { adminUserActionSchema } from "@/lib/schemas";
 import { withMetrics } from "@/lib/with-metrics";
 
 export const GET = withMetrics("/api/admin/users", async (req: NextRequest) => {
@@ -16,59 +17,47 @@ export const POST = withMetrics("/api/admin/users", async (req: NextRequest) => 
   const { error } = await requireAdmin(req);
   if (error) return error;
 
+  let raw: unknown;
   try {
-    const body = (await req.json()) as {
-      userId?: string;
-      newPassword?: string;
-      action?: string;
-      role?: UserRole;
-      plan?: UserPlan;
-    };
-
-    if (!body.userId) {
-      return NextResponse.json({ error: "userId is required." }, { status: 400 });
-    }
-
-    const user = await findUserById(body.userId);
-    if (!user) {
-      return NextResponse.json({ error: "User not found." }, { status: 404 });
-    }
-
-    if (body.action === "setRole") {
-      if (!body.role || !["admin", "user"].includes(body.role)) {
-        return NextResponse.json({ error: "Valid role (admin|user) is required." }, { status: 400 });
-      }
-      if (user.username === "admin" && body.role !== "admin") {
-        return NextResponse.json({ error: "Cannot change the default admin's role." }, { status: 400 });
-      }
-      await updateUserRole(user.id, body.role);
-      return NextResponse.json({ ok: true });
-    }
-
-    if (body.action === "setPlan") {
-      if (!body.plan || !["free", "pro"].includes(body.plan)) {
-        return NextResponse.json({ error: "Valid plan (free|pro) is required." }, { status: 400 });
-      }
-      const planExpiresAt = body.plan === "pro"
-        ? new Date(Date.now() + 365 * 86400000).toISOString()
-        : "";
-      await updateUserSubscription(user.id, { plan: body.plan, planExpiresAt });
-      return NextResponse.json({ ok: true });
-    }
-
-    if (!body.newPassword) {
-      return NextResponse.json({ error: "newPassword is required." }, { status: 400 });
-    }
-    if (body.newPassword.length < 4) {
-      return NextResponse.json({ error: "Password must have at least 4 characters." }, { status: 400 });
-    }
-
-    const hash = await hashPassword(body.newPassword);
-    await updateUserPassword(user.id, hash, false);
-    return NextResponse.json({ ok: true });
+    raw = await req.json();
   } catch {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
+  const body = typeof raw === "object" && raw !== null && !("action" in raw)
+    ? { ...raw, action: "setPassword" as const }
+    : raw;
+
+  const result = adminUserActionSchema.safeParse(body);
+  if (!result.success) {
+    const message = result.error.issues[0]?.message || "Invalid request";
+    return NextResponse.json({ error: message }, { status: 400 });
+  }
+  const data = result.data;
+
+  const user = await findUserById(data.userId);
+  if (!user) {
+    return NextResponse.json({ error: "User not found." }, { status: 404 });
+  }
+
+  if (data.action === "setRole") {
+    if (user.username === "admin" && data.role !== "admin") {
+      return NextResponse.json({ error: "Cannot change the default admin's role." }, { status: 400 });
+    }
+    await updateUserRole(user.id, data.role);
+    return NextResponse.json({ ok: true });
+  }
+
+  if (data.action === "setPlan") {
+    const planExpiresAt = data.plan === "pro"
+      ? new Date(Date.now() + 365 * 86400000).toISOString()
+      : "";
+    await updateUserSubscription(user.id, { plan: data.plan, planExpiresAt });
+    return NextResponse.json({ ok: true });
+  }
+
+  const hash = await hashPassword(data.newPassword);
+  await updateUserPassword(user.id, hash, false);
+  return NextResponse.json({ ok: true });
 });
 
 export const DELETE = withMetrics("/api/admin/users", async (req: NextRequest) => {

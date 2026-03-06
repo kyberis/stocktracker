@@ -1,6 +1,6 @@
 import type { TranslationKey } from "@/lib/i18n";
 
-export type UpsellReason = "ai_limit_reached" | "upgrade_required";
+export type UpsellReason = "ai_limit_reached" | "upgrade_required" | "holdings_limit_reached";
 
 export type UpsellSurface =
   | "ai_limit"
@@ -10,7 +10,8 @@ export type UpsellSurface =
   | "dashboard_projection_locked"
   | "profile_always_on"
   | "settings_always_on"
-  | "alerts_limit";
+  | "alerts_limit"
+  | "holdings_limit";
 
 export interface UpsellConfig {
   subtitleKey: TranslationKey;
@@ -89,6 +90,21 @@ const UPSSELL_BY_SURFACE: Record<UpsellSurface, UpsellConfig> = {
     freeItems: DEFAULT_FREE_ITEMS,
     proItems: DEFAULT_PRO_ITEMS,
   },
+  holdings_limit: {
+    subtitleKey: "upsellCompareSubtitleLocked",
+    attemptedActionKey: "upsellAttemptHoldings",
+    feature: "holdings",
+    freeItems: [
+      "upsellFreeItemHoldingsLimit",
+      "upsellFreeItemYahoo",
+      "upsellFreeItemAiLimited",
+    ],
+    proItems: [
+      "upsellProItemUnlimitedHoldings",
+      "upsellProItemAlphaVantage",
+      "upsellProItemAiUnlimited",
+    ],
+  },
 };
 
 export function getUpsellConfig(surface: UpsellSurface): UpsellConfig {
@@ -97,5 +113,6 @@ export function getUpsellConfig(surface: UpsellSurface): UpsellConfig {
 
 export function getUpsellReasonKey(reason?: UpsellReason): TranslationKey {
   if (reason === "ai_limit_reached") return "upsellAiLimitReached";
+  if (reason === "holdings_limit_reached") return "upsellHoldingsLimitReached";
   return "upsellUpgradeRequired";
 }

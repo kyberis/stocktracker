@@ -3,9 +3,9 @@ import type { NextRequest } from "next/server";
 import type { UserRole } from "@/lib/db";
 import type { SubscriptionPlan } from "@/lib/types";
 
-const SESSION_COOKIE = "stocktracker_session";
+const SESSION_COOKIE = "trefolio_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7;
-const DEV_FALLBACK_SECRET = "stocktracker-dev-session-secret-change-me";
+const DEV_FALLBACK_SECRET = "trefolio-dev-session-secret-change-me";
 
 function getSessionSecret(): string {
   return process.env.APP_SESSION_SECRET || DEV_FALLBACK_SECRET;

@@ -46,14 +46,16 @@ function LoginForm() {
     <main className="min-h-screen bg-gray-50 dark:bg-slate-900 flex items-center justify-center px-4">
       <div className="w-full max-w-md card">
         <div className="flex items-center gap-2 mb-6">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center">
-            <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-            </svg>
-          </div>
+          <Link href="/landing" className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center">
+              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+              </svg>
+            </div>
+          </Link>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Login</h1>
         </div>
-        <p className="text-sm text-gray-500 dark:text-slate-400 mb-6">Sign in to your StockTracker account.</p>
+        <p className="text-sm text-gray-500 dark:text-slate-400 mb-6">Sign in to your trefolio account.</p>
 
         <form onSubmit={onSubmit} className="space-y-4">
           <div>

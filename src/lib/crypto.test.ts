@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { encrypt, decrypt } from "./crypto";
+import { encrypt, decrypt, tryDecryptOrPlaintext } from "./crypto";
 
 describe("encrypt / decrypt", () => {
   it("round-trips a plain string", () => {
@@ -23,9 +23,12 @@ describe("encrypt / decrypt", () => {
     expect(decrypt("")).toBe("");
   });
 
-  it("returns original when decrypting invalid base64 (graceful fallback)", () => {
-    const bad = "not-valid-base64!@@";
-    expect(decrypt(bad)).toBe(bad);
+  it("throws when decrypting invalid data", () => {
+    expect(() => decrypt("not-valid-base64!@@")).toThrow();
+  });
+
+  it("throws when ciphertext is too short", () => {
+    expect(() => decrypt("dG9vc2hvcnQ=")).toThrow("Ciphertext too short");
   });
 
   it("handles unicode characters", () => {
@@ -36,5 +39,22 @@ describe("encrypt / decrypt", () => {
   it("handles very long strings", () => {
     const original = "x".repeat(10_000);
     expect(decrypt(encrypt(original))).toBe(original);
+  });
+});
+
+describe("tryDecryptOrPlaintext", () => {
+  it("decrypts valid ciphertext", () => {
+    const original = "my-api-key";
+    const encrypted = encrypt(original);
+    expect(tryDecryptOrPlaintext(encrypted)).toBe(original);
+  });
+
+  it("returns plaintext for invalid ciphertext (migration fallback)", () => {
+    const plaintext = "old-unencrypted-key";
+    expect(tryDecryptOrPlaintext(plaintext)).toBe(plaintext);
+  });
+
+  it("returns empty string for empty input", () => {
+    expect(tryDecryptOrPlaintext("")).toBe("");
   });
 });

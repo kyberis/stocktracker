@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { trackEvent, getGlobalOpenAIApiKey } from "@/lib/db";
+import { trackEvent, getGlobalOpenAIApiKey, listHoldings, findUserById } from "@/lib/db";
 import { checkAiImportRateLimit } from "@/lib/rate-limit";
 import { withMetrics } from "@/lib/with-metrics";
 import { portfolioImportsTotal, rateLimitHitsTotal } from "@/lib/metrics";
+import { PLATFORM_LIMITS } from "@/lib/platform-config";
 
 const EXTRACTION_PROMPT = `You are a portfolio data extractor. Analyze the provided data and extract two things:
 1. Current stock/ETF **holdings** (net positions).
@@ -249,8 +250,27 @@ export const POST = withMetrics("/api/import-portfolio", async (req: NextRequest
     if (droppedHoldings > 0) warnings.push(`${droppedHoldings} holding(s) removed due to invalid ticker format.`);
     if (droppedTxs > 0) warnings.push(`${droppedTxs} transaction(s) removed due to invalid ticker or date format.`);
 
+    const user = await findUserById(session.userId);
+    const isPro = (user?.plan || session.plan) === "pro";
+    let cappedHoldings = holdings;
+    if (!isPro) {
+      const existing = await listHoldings(session.userId);
+      const existingTickers = new Set(existing.map((h) => `${h.ticker}|${h.exchange || ""}`));
+      const newOnly = holdings.filter((h) => !existingTickers.has(`${h.ticker}|${h.exchange || ""}`));
+      const slotsAvailable = Math.max(0, PLATFORM_LIMITS.FREE_HOLDINGS_LIMIT - existing.length);
+      if (newOnly.length > slotsAvailable) {
+        const kept = holdings.filter((h) => existingTickers.has(`${h.ticker}|${h.exchange || ""}`));
+        const allowed = newOnly.slice(0, slotsAvailable);
+        cappedHoldings = [...kept, ...allowed];
+        const dropped = newOnly.length - slotsAvailable;
+        warnings.push(
+          `${dropped} holding(s) excluded — Free plan allows up to ${PLATFORM_LIMITS.FREE_HOLDINGS_LIMIT} holdings. Upgrade to Pro for unlimited.`
+        );
+      }
+    }
+
     return NextResponse.json({
-      holdings,
+      holdings: cappedHoldings,
       transactions,
       ...(warnings.length > 0 ? { warning: warnings.join(" ") } : {}),
     });

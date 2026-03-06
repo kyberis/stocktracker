@@ -1,12 +1,24 @@
-"use client";
+import { getServerSession } from "@/lib/auth/server-session";
+import { listHoldings, listCashEntries } from "@/lib/db";
+import ToolsShell from "./tools-shell";
 
-import { PortfolioProvider } from "@/lib/portfolio-context";
-import PortfolioTools from "@/components/PortfolioTools";
+export default async function ToolsPage() {
+  const session = await getServerSession();
 
-export default function ToolsPage() {
+  let initialHoldings;
+  let initialCash;
+
+  if (session) {
+    [initialHoldings, initialCash] = await Promise.all([
+      listHoldings(session.userId),
+      listCashEntries(session.userId),
+    ]);
+  }
+
   return (
-    <PortfolioProvider>
-      <PortfolioTools />
-    </PortfolioProvider>
+    <ToolsShell
+      initialHoldings={initialHoldings ?? []}
+      initialCash={initialCash ?? []}
+    />
   );
 }

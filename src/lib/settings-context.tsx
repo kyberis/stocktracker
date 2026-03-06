@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useMemo } from "react";
 import type { ApiProviderName, RefreshInterval } from "./types";
 
-const AV_USAGE_KEY = "stocktracker-av-usage";
+const AV_USAGE_KEY = "trefolio-av-usage";
 const AV_MINUTE_LIMIT = 75;
 
 interface MinuteUsage {
@@ -118,8 +118,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (typeof window !== "undefined") {
-      localStorage.removeItem("stocktracker-quotes-v3");
-      localStorage.removeItem("stocktracker-rates-v1");
+      localStorage.removeItem("trefolio-quotes-v3");
+      localStorage.removeItem("trefolio-rates-v1");
     }
   }, []);
 

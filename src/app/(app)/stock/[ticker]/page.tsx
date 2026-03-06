@@ -1,20 +1,35 @@
-"use client";
-
-import { PortfolioProvider } from "@/lib/portfolio-context";
-import StockDetail from "@/components/StockDetail";
+import { getServerSession } from "@/lib/auth/server-session";
+import { listHoldings, listCashEntries } from "@/lib/db";
+import StockDetailShell from "./stock-detail-shell";
 
 interface PageProps {
-  params: { ticker: string };
-  searchParams: { exchange?: string };
+  params: Promise<{ ticker: string }>;
+  searchParams: Promise<{ exchange?: string }>;
 }
 
-export default function StockDetailPage({ params, searchParams }: PageProps) {
+export default async function StockDetailPage({ params, searchParams }: PageProps) {
+  const [{ ticker }, { exchange }, session] = await Promise.all([
+    params,
+    searchParams,
+    getServerSession(),
+  ]);
+
+  let initialHoldings;
+  let initialCash;
+
+  if (session) {
+    [initialHoldings, initialCash] = await Promise.all([
+      listHoldings(session.userId),
+      listCashEntries(session.userId),
+    ]);
+  }
+
   return (
-    <PortfolioProvider>
-      <StockDetail
-        ticker={decodeURIComponent(params.ticker)}
-        exchange={searchParams.exchange || ""}
-      />
-    </PortfolioProvider>
+    <StockDetailShell
+      ticker={decodeURIComponent(ticker)}
+      exchange={exchange || ""}
+      initialHoldings={initialHoldings ?? []}
+      initialCash={initialCash ?? []}
+    />
   );
 }

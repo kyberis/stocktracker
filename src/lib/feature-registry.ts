@@ -165,7 +165,7 @@ export const featureDomains: FeatureDomain[] = [
       { path: "src/middleware.ts", description: "Next.js middleware for route protection" },
     ],
     patterns: [
-      "JWT stored in httpOnly cookie (stocktracker_session, 7-day expiry)",
+      "JWT stored in httpOnly cookie (trefolio_session, 7-day expiry)",
       "requireSession guard for authenticated routes, requireAdmin for admin routes",
       "Middleware redirects unauthenticated users to /login, returns 401 for API",
       "Client-side useAuth() context provides user, isLoading, refreshUser, logout",

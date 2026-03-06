@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { releaseNotes, CURRENT_VERSION, type ChangeType } from "@/lib/release-notes";
 import { useI18n } from "@/lib/i18n";
 
-const SEEN_VERSION_KEY = "stocktracker_seen_version";
+const SEEN_VERSION_KEY = "trefolio_seen_version";
 
 interface WhatsNewModalProps {
   isOpen: boolean;

@@ -1,0 +1,247 @@
+import { randomUUID } from "crypto";
+import { ensureInitialized } from "./client";
+import {
+  type DbUser,
+  type PublicUser,
+  type UserRole,
+  type UserPlan,
+  str,
+  rowToDbUser,
+  mapUser,
+  shouldResetAiWindow,
+  shouldResetDailyAiWindow,
+  num,
+} from "./helpers";
+import { seedHoldingsForUser, seedTransactionsForUser } from "./seed";
+
+export async function findUserByUsername(username: string): Promise<DbUser | null> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: "SELECT * FROM users WHERE username = ?",
+    args: [username],
+  });
+  if (result.rows.length === 0) return null;
+  return rowToDbUser(result.rows[0]);
+}
+
+export async function findUserById(userId: string): Promise<DbUser | null> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: "SELECT * FROM users WHERE id = ?",
+    args: [userId],
+  });
+  if (result.rows.length === 0) return null;
+  return rowToDbUser(result.rows[0]);
+}
+
+export async function listUsers(): Promise<PublicUser[]> {
+  const client = await ensureInitialized();
+  const result = await client.execute("SELECT * FROM users ORDER BY created_at ASC");
+  return result.rows.map(rowToDbUser).map(mapUser);
+}
+
+export async function createUser(params: {
+  username: string;
+  passwordHash: string;
+  seedWithData: boolean;
+}): Promise<PublicUser> {
+  const client = await ensureInitialized();
+  const id = randomUUID();
+
+  await client.batch(
+    [
+      {
+        sql: `INSERT INTO users (id, username, password_hash, role, must_change_password, ai_calls_reset_at)
+              VALUES (?, ?, ?, 'user', 0, datetime('now'))`,
+        args: [id, params.username, params.passwordHash],
+      },
+      {
+        sql: `INSERT INTO user_settings (user_id, provider, alpha_vantage_api_key, language)
+              VALUES (?, 'yahoo', '', 'en')`,
+        args: [id],
+      },
+    ],
+    "write"
+  );
+
+  if (params.seedWithData) {
+    await seedHoldingsForUser(client, id);
+    await seedTransactionsForUser(client, id);
+  }
+
+  const created = await findUserById(id);
+  if (!created) throw new Error("Failed to create user");
+  return mapUser(created);
+}
+
+export async function updateUserPassword(
+  userId: string,
+  passwordHash: string,
+  mustChangePassword: boolean
+) {
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: "UPDATE users SET password_hash = ?, must_change_password = ? WHERE id = ?",
+    args: [passwordHash, mustChangePassword ? 1 : 0, userId],
+  });
+}
+
+export async function updateUserProfile(
+  userId: string,
+  updates: Partial<{ email: string; displayName: string; avatarUrl: string }>
+): Promise<PublicUser | null> {
+  const client = await ensureInitialized();
+  const user = await findUserById(userId);
+  if (!user) return null;
+
+  const email = updates.email ?? user.email;
+  const displayName = updates.displayName ?? user.display_name;
+  const avatarUrl = updates.avatarUrl ?? user.avatar_url;
+
+  await client.execute({
+    sql: "UPDATE users SET email = ?, display_name = ?, avatar_url = ? WHERE id = ?",
+    args: [email, displayName, avatarUrl, userId],
+  });
+
+  const updated = await findUserById(userId);
+  return updated ? mapUser(updated) : null;
+}
+
+export async function updateUserRole(userId: string, role: UserRole): Promise<void> {
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: "UPDATE users SET role = ? WHERE id = ?",
+    args: [role, userId],
+  });
+}
+
+export async function updateUserSubscription(
+  userId: string,
+  updates: Partial<{
+    plan: UserPlan;
+    stripeCustomerId: string;
+    stripeSubscriptionId: string;
+    planExpiresAt: string;
+  }>
+): Promise<void> {
+  const client = await ensureInitialized();
+  const user = await findUserById(userId);
+  if (!user) return;
+  const nextPlan = updates.plan ?? user.plan;
+  const nextStripeCustomerId = updates.stripeCustomerId ?? user.stripe_customer_id;
+  const nextStripeSubscriptionId = updates.stripeSubscriptionId ?? user.stripe_subscription_id;
+  const nextPlanExpiresAt = updates.planExpiresAt ?? user.plan_expires_at;
+  await client.execute({
+    sql: `UPDATE users
+          SET plan = ?, stripe_customer_id = ?, stripe_subscription_id = ?, plan_expires_at = ?
+          WHERE id = ?`,
+    args: [nextPlan, nextStripeCustomerId, nextStripeSubscriptionId, nextPlanExpiresAt, userId],
+  });
+}
+
+export async function findUserByStripeCustomerId(customerId: string): Promise<DbUser | null> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: "SELECT * FROM users WHERE stripe_customer_id = ?",
+    args: [customerId],
+  });
+  if (result.rows.length === 0) return null;
+  return rowToDbUser(result.rows[0]);
+}
+
+export async function findUserByStripeSubscriptionId(subscriptionId: string): Promise<DbUser | null> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: "SELECT * FROM users WHERE stripe_subscription_id = ?",
+    args: [subscriptionId],
+  });
+  if (result.rows.length === 0) return null;
+  return rowToDbUser(result.rows[0]);
+}
+
+export async function resetAiUsageWindow(userId: string): Promise<void> {
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: "UPDATE users SET ai_calls_this_month = 0, ai_calls_reset_at = datetime('now') WHERE id = ?",
+    args: [userId],
+  });
+}
+
+export async function getAiUsage(userId: string): Promise<{
+  plan: UserPlan;
+  aiCallsThisMonth: number;
+  aiCallsResetAt: string;
+}> {
+  const user = await findUserById(userId);
+  if (!user) {
+    return { plan: "free", aiCallsThisMonth: 0, aiCallsResetAt: new Date().toISOString() };
+  }
+  if (shouldResetAiWindow(user.ai_calls_reset_at)) {
+    await resetAiUsageWindow(userId);
+    return { plan: user.plan, aiCallsThisMonth: 0, aiCallsResetAt: new Date().toISOString() };
+  }
+  return {
+    plan: user.plan,
+    aiCallsThisMonth: user.ai_calls_this_month,
+    aiCallsResetAt: user.ai_calls_reset_at,
+  };
+}
+
+export async function incrementAiUsage(userId: string): Promise<number> {
+  const usage = await getAiUsage(userId);
+  const client = await ensureInitialized();
+  const next = usage.aiCallsThisMonth + 1;
+  await client.execute({
+    sql: "UPDATE users SET ai_calls_this_month = ? WHERE id = ?",
+    args: [next, userId],
+  });
+  return next;
+}
+
+export async function getDailyAiUsage(userId: string): Promise<{ aiCallsToday: number; aiDailyResetAt: string }> {
+  const user = await findUserById(userId);
+  if (!user) return { aiCallsToday: 0, aiDailyResetAt: new Date().toISOString() };
+  if (shouldResetDailyAiWindow(user.ai_daily_reset_at)) {
+    const client = await ensureInitialized();
+    await client.execute({
+      sql: "UPDATE users SET ai_calls_today = 0, ai_daily_reset_at = datetime('now') WHERE id = ?",
+      args: [userId],
+    });
+    return { aiCallsToday: 0, aiDailyResetAt: new Date().toISOString() };
+  }
+  return { aiCallsToday: user.ai_calls_today, aiDailyResetAt: user.ai_daily_reset_at };
+}
+
+export async function incrementDailyAiUsage(userId: string): Promise<number> {
+  const usage = await getDailyAiUsage(userId);
+  const next = usage.aiCallsToday + 1;
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: "UPDATE users SET ai_calls_today = ? WHERE id = ?",
+    args: [next, userId],
+  });
+  return next;
+}
+
+export async function countProSubscribers(): Promise<number> {
+  const client = await ensureInitialized();
+  const result = await client.execute("SELECT COUNT(*) as cnt FROM users WHERE plan = 'pro'");
+  return num(result.rows[0]?.cnt);
+}
+
+export async function deleteUser(userId: string) {
+  const client = await ensureInitialized();
+  await client.execute({ sql: "DELETE FROM users WHERE id = ?", args: [userId] });
+}
+
+export function toPublicUser(user: DbUser): PublicUser {
+  return mapUser(user);
+}
+
+export async function setEmailVerified(userId: string, verified: boolean): Promise<void> {
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: "UPDATE users SET email_verified = ? WHERE id = ?",
+    args: [verified ? 1 : 0, userId],
+  });
+}

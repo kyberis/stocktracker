@@ -1,0 +1,12 @@
+Trades,Header,DataDiscriminator,Asset Category,Currency,Symbol,Date/Time,Quantity,T. Price,Proceeds,Comm/Fee,ISIN,Buy/Sell,Description,Trade ID
+Trades,Data,Trade,Stocks,USD,AAPL,2024-01-15;103000,100,150.50,-15050.00,-1.00,US0378331005,BUY,APPLE INC,1001
+Trades,Data,Trade,Stocks,USD,AAPL,2024-03-20;140000,-50,175.25,8762.50,-1.00,US0378331005,SELL,APPLE INC,1002
+Trades,Data,Trade,Stocks,USD,MSFT,2024-02-10;090000,30,410.00,-12300.00,-0.75,US5949181045,BUY,MICROSOFT CORP,1003
+Trades,Data,Trade,Stocks,EUR,SXR8.DE,2024-01-20;110000,20,480.50,-9610.00,-2.50,IE00B5BMR087,BUY,ISHARES CORE S&P 500 UCITS ETF,1004
+Trades,Data,ClosedLot,Stocks,USD,AAPL,2024-03-20;140000,-50,150.50,7525.00,0,US0378331005,SELL,APPLE INC,1002
+Dividends,Header,Currency,Date,Description,Amount
+Dividends,Data,USD,2024-03-15,AAPL(US0378331005) Cash Dividend USD 0.24 per Share,24.00
+Dividends,Data,USD,2024-06-15,MSFT(US5949181045) Cash Dividend USD 0.75 per Share,22.50
+Withholding Tax,Header,Currency,Date,Description,Amount
+Withholding Tax,Data,USD,2024-03-15,AAPL(US0378331005) Cash Dividend USD 0.24 per Share - US Tax,-3.60
+Withholding Tax,Data,USD,2024-06-15,MSFT(US5949181045) Cash Dividend USD 0.75 per Share - US Tax,-3.38

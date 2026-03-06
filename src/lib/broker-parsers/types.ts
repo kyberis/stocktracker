@@ -1,0 +1,29 @@
+export interface ParsedTransaction {
+  date: string;
+  type: "buy" | "sell" | "dividend" | "fee";
+  ticker: string;
+  name: string;
+  isin: string;
+  shares: number;
+  pricePerShare: number;
+  totalAmount: number;
+  fees: number;
+  taxes: number;
+  currency: string;
+  orderId: string;
+  sourceRef: string;
+}
+
+export interface CashBalance {
+  currency: string;
+  amount: number;
+}
+
+export interface BrokerParser {
+  id: string;
+  label: string;
+  fileHint: string;
+  parse(csv: string, isinToTicker: Record<string, string>): ParsedTransaction[];
+  parseCashBalances?(csv: string): CashBalance[];
+  extractIsins?(csv: string): string[];
+}

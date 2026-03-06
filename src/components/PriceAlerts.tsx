@@ -5,18 +5,21 @@ import { useI18n } from "@/lib/i18n";
 import { useSettings } from "@/lib/settings-context";
 import { useAuth } from "@/lib/auth-context";
 import { formatCurrency } from "@/lib/utils";
-import type { PriceAlert, QuoteData, SearchResult, AlertCondition } from "@/lib/types";
+import { useAlerts } from "@/lib/hooks/use-api";
+import type { QuoteData, SearchResult, AlertCondition } from "@/lib/types";
 import ProCompareCard from "@/components/ProCompareCard";
 
 export default function PriceAlerts() {
   const { t } = useI18n();
   const { user } = useAuth();
   const { provider, getApiHeaders, trackAvCalls } = useSettings();
+  const { data, mutate } = useAlerts();
 
-  const [alerts, setAlerts] = useState<PriceAlert[]>([]);
-  const [activeCount, setActiveCount] = useState(0);
-  const [limit, setLimit] = useState<number | null>(null);
-  const [isPro, setIsPro] = useState(false);
+  const alerts = data?.alerts ?? [];
+  const activeCount = data?.activeCount ?? 0;
+  const limit = data?.limit ?? null;
+  const isPro = data?.isPro ?? false;
+
   const [quotes, setQuotes] = useState<Record<string, QuoteData>>({});
 
   const [query, setQuery] = useState("");
@@ -28,21 +31,6 @@ export default function PriceAlerts() {
   const [creating, setCreating] = useState(false);
   const [formError, setFormError] = useState("");
   const [limitReached, setLimitReached] = useState(false);
-
-  const fetchAlerts = useCallback(async () => {
-    const res = await fetch("/api/alerts");
-    if (res.ok) {
-      const data = await res.json();
-      setAlerts(data.alerts);
-      setActiveCount(data.activeCount);
-      setLimit(data.limit);
-      setIsPro(data.isPro);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchAlerts();
-  }, [fetchAlerts]);
 
   useEffect(() => {
     if (alerts.length === 0) return;
@@ -117,7 +105,7 @@ export default function PriceAlerts() {
       if (res.ok) {
         setSelectedStock(null);
         setThreshold("");
-        fetchAlerts();
+        mutate();
       } else {
         const data = await res.json().catch(() => null);
         if (data?.reason === "alert_limit_reached") {
@@ -134,9 +122,8 @@ export default function PriceAlerts() {
 
   const handleDelete = async (id: string) => {
     await fetch(`/api/alerts?id=${id}`, { method: "DELETE" });
-    setAlerts((prev) => prev.filter((a) => a.id !== id));
-    setActiveCount((c) => Math.max(0, c - 1));
     setLimitReached(false);
+    mutate();
   };
 
   const handleToggle = async (id: string, active: boolean) => {
@@ -146,7 +133,7 @@ export default function PriceAlerts() {
       body: JSON.stringify({ id, active }),
     });
     if (res.ok) {
-      fetchAlerts();
+      mutate();
     } else {
       const data = await res.json().catch(() => null);
       if (data?.reason === "alert_limit_reached") {

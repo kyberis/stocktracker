@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
 import { listWatchlist, addWatchlistItem, removeWatchlistItem } from "@/lib/db";
 import { withMetrics } from "@/lib/with-metrics";
+import { parseBody } from "@/lib/api-response";
+import { addWatchlistSchema } from "@/lib/schemas";
 
 export const GET = withMetrics("/api/watchlist", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
@@ -13,14 +15,10 @@ export const POST = withMetrics("/api/watchlist", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
 
-  try {
-    const body = await req.json();
-    if (!body?.ticker) return NextResponse.json({ error: "ticker is required." }, { status: 400 });
-    const item = await addWatchlistItem(session.userId, body);
-    return NextResponse.json(item, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
-  }
+  const result = await parseBody(req, addWatchlistSchema);
+  if (!result.success) return result.error;
+  const item = await addWatchlistItem(session.userId, result.data);
+  return NextResponse.json(item, { status: 201 });
 });
 
 export const DELETE = withMetrics("/api/watchlist", async (req: NextRequest) => {

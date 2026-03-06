@@ -17,117 +17,14 @@ import {
 import dynamic from "next/dynamic";
 import { getMarketStatus } from "@/lib/market-hours";
 import type { Holding, QuoteData, CompanyOverview } from "@/lib/types";
+import OverviewSection from "./stock-row/OverviewSection";
+import EditForm from "./stock-row/EditForm";
+import TradePanel from "./stock-row/TradePanel";
 
 const StockChart = dynamic(() => import("./StockChart"), { ssr: false });
 
 interface StockRowProps {
   holding: Holding;
-}
-
-function OverviewSection({ overview }: { overview: CompanyOverview }) {
-  const { t } = useI18n();
-
-  const items: Array<{ label: string; value: string | null }> = [
-    { label: t("sector"), value: overview.sector || null },
-    { label: t("industry"), value: overview.industry || null },
-    { label: t("peRatio"), value: overview.peRatio != null ? overview.peRatio.toFixed(2) : null },
-    { label: t("forwardPE"), value: overview.forwardPE != null ? overview.forwardPE.toFixed(2) : null },
-    { label: t("pegRatio"), value: overview.pegRatio != null ? overview.pegRatio.toFixed(2) : null },
-    { label: t("eps"), value: overview.eps != null ? `$${overview.eps.toFixed(2)}` : null },
-    {
-      label: t("dividendYield"),
-      value: overview.dividendYield != null ? `${(overview.dividendYield * 100).toFixed(2)}%` : null,
-    },
-    {
-      label: t("dividendPerShare"),
-      value: overview.dividendPerShare != null ? `$${overview.dividendPerShare.toFixed(2)}` : null,
-    },
-    { label: t("beta"), value: overview.beta != null ? overview.beta.toFixed(2) : null },
-    {
-      label: t("profitMargin"),
-      value: overview.profitMargin != null ? `${(overview.profitMargin * 100).toFixed(1)}%` : null,
-    },
-    {
-      label: t("returnOnEquity"),
-      value: overview.returnOnEquity != null ? `${(overview.returnOnEquity * 100).toFixed(1)}%` : null,
-    },
-    {
-      label: t("analystTarget"),
-      value: overview.analystTargetPrice != null ? `$${overview.analystTargetPrice.toFixed(2)}` : null,
-    },
-    { label: t("fiftyDayMA"), value: overview.fiftyDayMA != null ? `$${overview.fiftyDayMA.toFixed(2)}` : null },
-    {
-      label: t("twoHundredDayMA"),
-      value: overview.twoHundredDayMA != null ? `$${overview.twoHundredDayMA.toFixed(2)}` : null,
-    },
-  ].filter((i) => i.value != null);
-
-  const ratings = overview.analystRatings;
-  const totalRatings = ratings
-    ? ratings.strongBuy + ratings.buy + ratings.hold + ratings.sell + ratings.strongSell
-    : 0;
-
-  return (
-    <div className="mt-3">
-      <p className="text-xs text-gray-500 dark:text-slate-400 font-medium mb-2">{t("fundamentals")}</p>
-
-      {overview.description && (
-        <p className="text-xs text-gray-400 dark:text-slate-500 mb-3 line-clamp-2">{overview.description}</p>
-      )}
-
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-2 mb-3">
-        {items.map(({ label, value }) => (
-          <div key={label} className="bg-gray-50 dark:bg-slate-700/50 rounded-lg px-2.5 py-1.5">
-            <p className="text-[10px] text-gray-400 dark:text-slate-500">{label}</p>
-            <p className="text-xs font-medium text-gray-800 dark:text-slate-100">{value}</p>
-          </div>
-        ))}
-      </div>
-
-      {ratings && totalRatings > 0 && (
-        <div className="bg-gray-50 dark:bg-slate-700/50 rounded-lg px-3 py-2">
-          <p className="text-[10px] text-gray-400 dark:text-slate-500 mb-1.5">{t("analystRatings")}</p>
-          <div className="flex gap-0.5 h-3 rounded-full overflow-hidden mb-1.5">
-            {ratings.strongBuy > 0 && (
-              <div
-                className="bg-emerald-500"
-                style={{ width: `${(ratings.strongBuy / totalRatings) * 100}%` }}
-              />
-            )}
-            {ratings.buy > 0 && (
-              <div
-                className="bg-green-400"
-                style={{ width: `${(ratings.buy / totalRatings) * 100}%` }}
-              />
-            )}
-            {ratings.hold > 0 && (
-              <div
-                className="bg-amber-400"
-                style={{ width: `${(ratings.hold / totalRatings) * 100}%` }}
-              />
-            )}
-            {ratings.sell > 0 && (
-              <div
-                className="bg-orange-400"
-                style={{ width: `${(ratings.sell / totalRatings) * 100}%` }}
-              />
-            )}
-            {ratings.strongSell > 0 && (
-              <div
-                className="bg-red-500"
-                style={{ width: `${(ratings.strongSell / totalRatings) * 100}%` }}
-              />
-            )}
-          </div>
-          <div className="flex justify-between text-[10px] text-gray-500 dark:text-slate-400">
-            <span className="text-emerald-600 dark:text-emerald-400">{t("buy")} {ratings.strongBuy + ratings.buy}</span>
-            <span className="text-amber-600 dark:text-amber-400">{t("hold")} {ratings.hold}</span>
-            <span className="text-red-500 dark:text-red-400">{t("sell")} {ratings.sell + ratings.strongSell}</span>
-          </div>
-        </div>
-      )}
-    </div>
-  );
 }
 
 function StockRow({ holding }: StockRowProps) {
@@ -139,6 +36,7 @@ function StockRow({ holding }: StockRowProps) {
     removeHolding,
     updateHolding,
     refreshSingleQuote,
+    refreshHoldings,
   } = usePortfolio();
   const { isAlphaVantage, getApiHeaders, provider, trackAvCalls } = useSettings();
   const { t } = useI18n();
@@ -321,7 +219,7 @@ function StockRow({ holding }: StockRowProps) {
     setTradeQuantity("");
     setTradePrice("");
     if (response?.ok) {
-      window.location.reload();
+      refreshHoldings();
     }
   };
 
@@ -438,157 +336,27 @@ function StockRow({ holding }: StockRowProps) {
       {expanded && (
         <div className="px-4 pb-4 bg-gray-50/50 dark:bg-slate-800/30">
           {isEditing && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4 pt-3">
-              <div>
-                <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">{t("editName")}</label>
-                <input
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  className="w-full"
-                  onClick={(e) => e.stopPropagation()}
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">{t("editTicker")}</label>
-                <input
-                  value={editTicker}
-                  onChange={(e) => setEditTicker(e.target.value)}
-                  className="w-full"
-                  onClick={(e) => e.stopPropagation()}
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">{t("editISIN")}</label>
-                <input
-                  value={editIsin}
-                  onChange={(e) => setEditIsin(e.target.value)}
-                  className="w-full"
-                  onClick={(e) => e.stopPropagation()}
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">{t("editExchange")}</label>
-                <input
-                  value={editExchange}
-                  onChange={(e) => setEditExchange(e.target.value)}
-                  className="w-full"
-                  onClick={(e) => e.stopPropagation()}
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">{t("assetType")}</label>
-                <select
-                  value={editAssetType}
-                  onChange={(e) => setEditAssetType(e.target.value as "stock" | "etf")}
-                  className="w-full"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <option value="stock">{t("stockType")}</option>
-                  <option value="etf">{t("etfType")}</option>
-                </select>
-              </div>
-              {!isCashHolding && (
-                <div>
-                  <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">{t("shares")}</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="any"
-                    value={editShares}
-                    onChange={(e) => setEditShares(e.target.value)}
-                    className="w-full"
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                </div>
-              )}
-              <div>
-                <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">
-                  {isCashHolding ? t("cashAmount") : t("purchasePrice")}
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  step="any"
-                  value={editPurchasePrice}
-                  onChange={(e) => setEditPurchasePrice(e.target.value)}
-                  className="w-full"
-                  onClick={(e) => e.stopPropagation()}
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">{t("editCurrency")}</label>
-                <select
-                  value={editDisplayCurrency}
-                  onChange={(e) => setEditDisplayCurrency(e.target.value)}
-                  className="w-full"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <option value="USD">$ USD</option>
-                  <option value="EUR">€ EUR</option>
-                  <option value="GBP">£ GBP</option>
-                  <option value="GBX">GBX (pence)</option>
-                  <option value="DKK">DKK</option>
-                  <option value="CAD">CA$ CAD</option>
-                  <option value="CHF">CHF</option>
-                  <option value="JPY">¥ JPY</option>
-                </select>
-              </div>
-            </div>
+            <EditForm
+              isCashHolding={isCashHolding}
+              editName={editName} setEditName={setEditName}
+              editTicker={editTicker} setEditTicker={setEditTicker}
+              editIsin={editIsin} setEditIsin={setEditIsin}
+              editExchange={editExchange} setEditExchange={setEditExchange}
+              editAssetType={editAssetType} setEditAssetType={setEditAssetType}
+              editShares={editShares} setEditShares={setEditShares}
+              editPurchasePrice={editPurchasePrice} setEditPurchasePrice={setEditPurchasePrice}
+              editDisplayCurrency={editDisplayCurrency} setEditDisplayCurrency={setEditDisplayCurrency}
+            />
           )}
 
           {!isEditing && !isCashHolding && (
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 mb-4 pt-3">
-              <div>
-                <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">{t("tradeAction")}</label>
-                <select
-                  value={tradeAction}
-                  onChange={(e) => setTradeAction(e.target.value as "buy" | "sell")}
-                  className="w-full"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <option value="buy">{t("buy")}</option>
-                  <option value="sell">{t("sell")}</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">{t("tradeQuantity")}</label>
-                <input
-                  type="number"
-                  min="0"
-                  step="any"
-                  value={tradeQuantity}
-                  onChange={(e) => setTradeQuantity(e.target.value)}
-                  className="w-full"
-                  onClick={(e) => e.stopPropagation()}
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">{t("tradePrice")}</label>
-                <input
-                  type="number"
-                  min="0"
-                  step="any"
-                  value={tradePrice}
-                  onChange={(e) => setTradePrice(e.target.value)}
-                  className="w-full"
-                  onClick={(e) => e.stopPropagation()}
-                />
-              </div>
-              <div className="flex items-end">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleApplyTrade();
-                  }}
-                  className="btn-primary text-sm px-3 py-2 w-full"
-                >
-                  {t("applyTrade")}
-                </button>
-              </div>
-              {tradeError && (
-                <p className="text-xs text-red-500 sm:col-span-4">{tradeError}</p>
-              )}
-            </div>
+            <TradePanel
+              tradeAction={tradeAction} setTradeAction={setTradeAction}
+              tradeQuantity={tradeQuantity} setTradeQuantity={setTradeQuantity}
+              tradePrice={tradePrice} setTradePrice={setTradePrice}
+              tradeError={tradeError}
+              onApply={handleApplyTrade}
+            />
           )}
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4 pt-2">

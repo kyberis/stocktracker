@@ -5,8 +5,8 @@ import type { CashEntry, Holding, QuoteData, ExchangeRates } from "./types";
 import { generateId } from "./utils";
 import { useSettings } from "./settings-context";
 
-const QUOTES_CACHE_KEY = "stocktracker-quotes-v3";
-const RATES_CACHE_KEY = "stocktracker-rates-v1";
+const QUOTES_CACHE_KEY = "trefolio-quotes-v3";
+const RATES_CACHE_KEY = "trefolio-rates-v1";
 interface CacheEntry<T> {
   data: T;
   timestamp: number;
@@ -78,10 +78,17 @@ function parseExchangeRatesFromApi(
   return rates;
 }
 
-export function PortfolioProvider({ children }: { children: React.ReactNode }) {
+export interface PortfolioProviderProps {
+  children: React.ReactNode;
+  initialHoldings?: Holding[];
+  initialCash?: CashEntry[];
+}
+
+export function PortfolioProvider({ children, initialHoldings, initialCash }: PortfolioProviderProps) {
   const { provider, getApiHeaders, trackAvCalls } = useSettings();
-  const [holdings, setHoldings] = useState<Holding[]>([]);
-  const [cashEntries, setCashEntries] = useState<CashEntry[]>([]);
+  const hasServerData = !!(initialHoldings || initialCash);
+  const [holdings, setHoldings] = useState<Holding[]>(initialHoldings ?? []);
+  const [cashEntries, setCashEntries] = useState<CashEntry[]>(initialCash ?? []);
   const [quotes, setQuotes] = useState<Record<string, QuoteData>>({});
   const [quoteUpdatedAt, setQuoteUpdatedAt] = useState<Record<string, number>>({});
   const [refreshingTickers, setRefreshingTickers] = useState<Set<string>>(new Set());
@@ -121,7 +128,10 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(true);
       setError(null);
 
-      await Promise.all([fetchHoldings(), fetchCashEntries()]);
+      // Skip API fetch for holdings/cash if server-provided initial data exists
+      if (!hasServerData) {
+        await Promise.all([fetchHoldings(), fetchCashEntries()]);
+      }
       const cachedQuotes = loadCacheEntry<Record<string, QuoteData>>(QUOTES_CACHE_KEY);
       if (cachedQuotes?.data) {
         setQuotes(cachedQuotes.data);
@@ -293,7 +303,10 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(holding),
       });
-      if (!res.ok) throw new Error("Failed to add holding");
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error || "Failed to add holding");
+      }
       const created = (await res.json()) as Holding;
       setHoldings((prev) => {
         const merged = prev.some(

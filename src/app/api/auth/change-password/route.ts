@@ -5,39 +5,16 @@ import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { createSessionToken, getSessionCookieConfig } from "@/lib/auth/session";
 import { withMetrics } from "@/lib/with-metrics";
 import { authEventsTotal } from "@/lib/metrics";
-
-async function parseBody(req: NextRequest): Promise<{ currentPassword?: string; newPassword?: string }> {
-  const raw = await req.text();
-  if (!raw) return {};
-  return JSON.parse(raw) as { currentPassword?: string; newPassword?: string };
-}
+import { parseBody } from "@/lib/api-response";
+import { changePasswordSchema } from "@/lib/schemas";
 
 export const POST = withMetrics("/api/auth/change-password", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
 
-  let body: { currentPassword?: string; newPassword?: string } = {};
-  try {
-    body = await parseBody(req);
-  } catch {
-    return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
-  }
-
-  const currentPassword = body.currentPassword || "";
-  const newPassword = body.newPassword || "";
-
-  if (!currentPassword || !newPassword) {
-    return NextResponse.json(
-      { error: "Current and new password are required." },
-      { status: 400 }
-    );
-  }
-  if (newPassword.length < 4) {
-    return NextResponse.json(
-      { error: "New password must have at least 4 characters." },
-      { status: 400 }
-    );
-  }
+  const result = await parseBody(req, changePasswordSchema);
+  if (!result.success) return result.error;
+  const { currentPassword, newPassword } = result.data;
 
   try {
     const user = await findUserById(session.userId);

@@ -46,7 +46,7 @@ export const GET = withMetrics("/api/export/portfolio", async (req: NextRequest)
       status: 200,
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
-        "Content-Disposition": `attachment; filename="stocktracker-transactions-${new Date().toISOString().slice(0, 10)}.csv"`,
+        "Content-Disposition": `attachment; filename="trefolio-transactions-${new Date().toISOString().slice(0, 10)}.csv"`,
       },
     });
   }
@@ -63,7 +63,7 @@ export const GET = withMetrics("/api/export/portfolio", async (req: NextRequest)
       status: 200,
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
-        "Content-Disposition": `attachment; filename="stocktracker-cash-${new Date().toISOString().slice(0, 10)}.csv"`,
+        "Content-Disposition": `attachment; filename="trefolio-cash-${new Date().toISOString().slice(0, 10)}.csv"`,
       },
     });
   }
@@ -91,7 +91,7 @@ export const GET = withMetrics("/api/export/portfolio", async (req: NextRequest)
     status: 200,
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="stocktracker-holdings-${new Date().toISOString().slice(0, 10)}.csv"`,
+      "Content-Disposition": `attachment; filename="trefolio-holdings-${new Date().toISOString().slice(0, 10)}.csv"`,
     },
   });
 });

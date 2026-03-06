@@ -12,7 +12,7 @@ async function getResendClient(): Promise<Resend | null> {
 }
 
 function getSessionSecret(): string {
-  return process.env.APP_SESSION_SECRET || "stocktracker-dev-session-secret-change-me";
+  return process.env.APP_SESSION_SECRET || "trefolio-dev-session-secret-change-me";
 }
 
 function getBaseUrl(): string {
@@ -20,7 +20,7 @@ function getBaseUrl(): string {
 }
 
 function getFromAddress(): string {
-  return process.env.RESEND_FROM_ADDRESS || "StockTracker <noreply@stocktracker.eu>";
+  return process.env.RESEND_FROM_ADDRESS || "trefolio <noreply@trefolio.com>";
 }
 
 export async function createVerificationToken(userId: string, email: string): Promise<string> {
@@ -64,10 +64,10 @@ export async function sendVerificationEmail(
     await resend.emails.send({
       from: getFromAddress(),
       to: email,
-      subject: "Verify your email — StockTracker",
+      subject: "Verify your email — trefolio",
       html: `
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 0;">
-          <h2 style="color: #10b981;">StockTracker</h2>
+          <h2 style="color: #10b981;">trefolio</h2>
           <p>Click the button below to verify your email address:</p>
           <a href="${verifyUrl}" style="display: inline-block; padding: 12px 24px; background: #10b981; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600;">Verify Email</a>
           <p style="margin-top: 24px; font-size: 13px; color: #64748b;">This link expires in 24 hours. If you didn't request this, you can safely ignore this email.</p>
@@ -102,7 +102,7 @@ export async function sendAlertEmail(
       subject: `Price Alert: ${alert.ticker} ${direction} ${alert.currency} ${alert.threshold}`,
       html: `
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 0;">
-          <h2 style="color: #10b981;">StockTracker — Price Alert</h2>
+          <h2 style="color: #10b981;">trefolio — Price Alert</h2>
           <p style="font-size: 16px;"><strong>${alert.name || alert.ticker}</strong> (${alert.ticker}) has ${direction} your target of <strong>${alert.currency} ${alert.threshold.toFixed(2)}</strong>.</p>
           <p style="font-size: 18px; padding: 16px; background: #f0fdf4; border-radius: 8px; text-align: center;">Current price: <strong>${alert.currency} ${alert.currentPrice.toFixed(2)}</strong></p>
           <a href="${dashboardUrl}" style="display: inline-block; margin-top: 16px; padding: 12px 24px; background: #10b981; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600;">Open Dashboard</a>

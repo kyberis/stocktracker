@@ -1,0 +1,95 @@
+import { randomUUID } from "crypto";
+import { ensureInitialized } from "./client";
+import { str, feedbackStatus } from "./helpers";
+import { findUserById } from "./users";
+
+export interface FeedbackEntry {
+  id: string;
+  userId: string;
+  username: string;
+  subject: string;
+  message: string;
+  status: "open" | "answered" | "closed";
+  adminReply: string;
+  createdAt: string;
+  repliedAt: string;
+}
+
+export async function createFeedback(
+  userId: string,
+  subject: string,
+  message: string
+): Promise<FeedbackEntry> {
+  const client = await ensureInitialized();
+  const id = randomUUID();
+  await client.execute({
+    sql: `INSERT INTO feedback (id, user_id, subject, message) VALUES (?, ?, ?, ?)`,
+    args: [id, userId, subject, message],
+  });
+  const user = await findUserById(userId);
+  return {
+    id,
+    userId,
+    username: user?.username || "",
+    subject,
+    message,
+    status: "open",
+    adminReply: "",
+    createdAt: new Date().toISOString(),
+    repliedAt: "",
+  };
+}
+
+export async function getFeedbackByUser(userId: string): Promise<FeedbackEntry[]> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: `SELECT f.*, u.username FROM feedback f
+          JOIN users u ON u.id = f.user_id
+          WHERE f.user_id = ? ORDER BY f.created_at DESC`,
+    args: [userId],
+  });
+  return result.rows.map((r) => ({
+    id: str(r.id),
+    userId: str(r.user_id),
+    username: str(r.username),
+    subject: str(r.subject),
+    message: str(r.message),
+    status: feedbackStatus(r.status),
+    adminReply: str(r.admin_reply),
+    createdAt: str(r.created_at),
+    repliedAt: str(r.replied_at),
+  }));
+}
+
+export async function getAllFeedback(): Promise<FeedbackEntry[]> {
+  const client = await ensureInitialized();
+  const result = await client.execute(
+    `SELECT f.*, u.username FROM feedback f
+     JOIN users u ON u.id = f.user_id
+     ORDER BY f.created_at DESC`
+  );
+  return result.rows.map((r) => ({
+    id: str(r.id),
+    userId: str(r.user_id),
+    username: str(r.username),
+    subject: str(r.subject),
+    message: str(r.message),
+    status: feedbackStatus(r.status),
+    adminReply: str(r.admin_reply),
+    createdAt: str(r.created_at),
+    repliedAt: str(r.replied_at),
+  }));
+}
+
+export async function replyToFeedback(
+  feedbackId: string,
+  reply: string,
+  status: "open" | "answered" | "closed"
+): Promise<boolean> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: `UPDATE feedback SET admin_reply = ?, status = ?, replied_at = datetime('now') WHERE id = ?`,
+    args: [reply, status, feedbackId],
+  });
+  return (result.rowsAffected ?? 0) > 0;
+}

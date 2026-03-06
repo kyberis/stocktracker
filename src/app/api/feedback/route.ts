@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession, requireAdmin } from "@/lib/auth/guards";
 import { createFeedback, getFeedbackByUser, getAllFeedback, replyToFeedback } from "@/lib/db";
+import { parseBody } from "@/lib/api-response";
+import { createFeedbackSchema, replyFeedbackSchema } from "@/lib/schemas";
 import { withMetrics } from "@/lib/with-metrics";
 
 export const GET = withMetrics("/api/feedback", async (req: NextRequest) => {
@@ -19,51 +21,25 @@ export const POST = withMetrics("/api/feedback", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
 
-  try {
-    const body = await req.json();
-    const subject = (body?.subject || "").trim();
-    const message = (body?.message || "").trim();
+  const result = await parseBody(req, createFeedbackSchema);
+  if (!result.success) return result.error;
+  const { subject, message } = result.data;
 
-    if (!subject || !message) {
-      return NextResponse.json(
-        { error: "Subject and message are required." },
-        { status: 400 }
-      );
-    }
-
-    const entry = await createFeedback(session.userId, subject, message);
-    return NextResponse.json(entry, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
-  }
+  const entry = await createFeedback(session.userId, subject, message);
+  return NextResponse.json(entry, { status: 201 });
 });
 
 export const PUT = withMetrics("/api/feedback", async (req: NextRequest) => {
   const { session, error } = await requireAdmin(req);
   if (error || !session) return error;
 
-  try {
-    const body = await req.json();
-    const id = body?.id;
-    const reply = (body?.reply ?? "").trim();
-    const status = body?.status;
+  const result = await parseBody(req, replyFeedbackSchema);
+  if (!result.success) return result.error;
+  const { id, reply, status } = result.data;
 
-    if (!id) {
-      return NextResponse.json({ error: "id is required." }, { status: 400 });
-    }
-    if (!["open", "answered", "closed"].includes(status)) {
-      return NextResponse.json(
-        { error: "status must be open, answered, or closed." },
-        { status: 400 }
-      );
-    }
-
-    const updated = await replyToFeedback(id, reply, status);
-    if (!updated) {
-      return NextResponse.json({ error: "Not found." }, { status: 404 });
-    }
-    return NextResponse.json({ ok: true });
-  } catch {
-    return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
+  const updated = await replyToFeedback(id, reply, status);
+  if (!updated) {
+    return NextResponse.json({ error: "Not found." }, { status: 404 });
   }
+  return NextResponse.json({ ok: true });
 });

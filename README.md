@@ -1,12 +1,12 @@
-# StockTracker
+# trefolio
 
 **Your portfolio. Understood.**
 
 A modern, AI-powered stock portfolio tracker built for people who invest but don't speak Wall Street. Track your holdings across multiple exchanges and currencies, get plain-language AI analysis of company fundamentals, and explore economic indicators — all in a clean, fast interface.
 
-## Why StockTracker?
+## Why trefolio?
 
-- **Built for real people, not traders.** Most portfolio tools are cluttered with features you'll never use. StockTracker shows you what matters: what you own, what it's worth, and whether it's doing well.
+- **Built for real people, not traders.** Most portfolio tools are cluttered with features you'll never use. trefolio shows you what matters: what you own, what it's worth, and whether it's doing well.
 - **AI that explains, not confuses.** Click a button and get a plain-language breakdown of any company's financials, market intelligence, or economic trends. No jargon.
 - **Multi-currency, multi-exchange.** Holding stocks in NYSE, XETRA, LSE, and MAD? Cash in EUR and USD? It all works together, converted automatically.
 - **2 EUR/month for Pro.** Cheaper than a coffee. Includes Alpha Vantage data, unlimited AI analysis, stock intelligence, and economic indicators.
@@ -67,8 +67,8 @@ Everything in Free, plus:
 ### Quick Start
 
 ```bash
-git clone https://github.com/kyberis/stocktracker.git
-cd stocktracker
+git clone https://github.com/kyberis/trefolio.git
+cd trefolio
 npm install
 npm run dev
 ```
@@ -93,10 +93,9 @@ cp .env.local.example .env.local
 
 | Variable | Required | Description |
 |---|---|---|
-| `STOCKTRACKER_TURSO_DATABASE_URL` | Production | Turso database URL (`libsql://...`) |
-| `STOCKTRACKER_TURSO_AUTH_TOKEN` | Production | Turso auth token |
+| `TREFOLIO_TURSO_DATABASE_URL` | Production | Turso database URL (`libsql://...`) |
+| `TREFOLIO_TURSO_AUTH_TOKEN` | Production | Turso auth token |
 | `APP_SESSION_SECRET` | Production | 64-char hex for JWTs. Generate: `openssl rand -hex 32` |
-| `STOCKTRACKER_OPENAI_API_KEY` | For AI features | OpenAI API key |
 | `STRIPE_SECRET_KEY` | For payments | Stripe secret key |
 | `STRIPE_WEBHOOK_SECRET` | For payments | Stripe webhook signing secret |
 | `RESEND_API_KEY` | For emails | Resend API key |
@@ -108,9 +107,9 @@ cp .env.local.example .env.local
 ```bash
 brew install tursodatabase/tap/turso
 turso auth signup
-turso db create stocktracker
-turso db show stocktracker --url
-turso db tokens create stocktracker
+turso db create trefolio
+turso db show trefolio --url
+turso db tokens create trefolio
 ```
 
 ### 2. Set Environment Variables in Vercel
@@ -177,4 +176,4 @@ Proprietary. All rights reserved.
 
 ---
 
-**StockTracker** — Track smarter, not harder.
+**trefolio** — Your portfolio. Understood.
