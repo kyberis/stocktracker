@@ -31,6 +31,7 @@ interface ExtractedTransaction {
   totalAmount: number;
   fees: number;
   currency: string;
+  sourceRef?: string;
 }
 
 interface CashBalance {
@@ -166,6 +167,7 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
           totalAmount: Number(tx.totalAmount || 0),
           fees: Number(tx.fees || 0),
           currency: String(tx.currency || "EUR").toUpperCase(),
+          sourceRef: tx.sourceRef ? String(tx.sourceRef) : undefined,
         })));
         setPreviewTab("transactions");
         setStep("preview");
@@ -291,6 +293,7 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
             currency: tx.currency,
             displayCurrency: tx.currency,
             notes: importSource,
+            sourceRef: tx.sourceRef || "",
           }),
         });
         if (res.ok) txCount++;
