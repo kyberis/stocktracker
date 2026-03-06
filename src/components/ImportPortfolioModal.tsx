@@ -144,12 +144,21 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
         const data = await parseRes.json();
         const parsedTransactions = Array.isArray(data.transactions) ? data.transactions : [];
 
+        const dupCount = Number(data.summary?.duplicatesRemoved) || 0;
+
         if (parsedTransactions.length === 0) {
-          const unmapped = data.summary?.unmapped;
-          const hint = unmapped?.length
-            ? ` ${t("importUnmappedIsins")}: ${unmapped.join(", ")}`
-            : "";
-          setErrorMsg((t("importNoTransactions") || "No transactions found in CSV.") + hint);
+          if (dupCount > 0) {
+            setErrorMsg(
+              (t("importAllDuplicates") || "All {count} transactions in this file are already in your portfolio.")
+                .replace("{count}", String(dupCount))
+            );
+          } else {
+            const unmapped = data.summary?.unmapped;
+            const hint = unmapped?.length
+              ? ` ${t("importUnmappedIsins")}: ${unmapped.join(", ")}`
+              : "";
+            setErrorMsg((t("importNoTransactions") || "No transactions found in CSV.") + hint);
+          }
           setStep("error");
           return;
         }
