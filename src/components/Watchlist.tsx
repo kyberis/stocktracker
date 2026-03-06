@@ -5,6 +5,7 @@ import { useI18n } from "@/lib/i18n";
 import { useSettings } from "@/lib/settings-context";
 import { formatCurrency } from "@/lib/utils";
 import { useWatchlist } from "@/lib/hooks/use-api";
+import { getMarketStatus } from "@/lib/market-hours";
 import type { QuoteData, SearchResult } from "@/lib/types";
 
 export default function Watchlist() {
@@ -15,6 +16,12 @@ export default function Watchlist() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     if (items.length === 0) return;
@@ -96,6 +103,7 @@ export default function Watchlist() {
         <div className="space-y-1">
           {items.map((item) => {
             const q = quotes[item.ticker];
+            const mktStatus = item.exchange ? getMarketStatus(item.exchange, now) : null;
             return (
               <div key={item.id} className="flex items-center justify-between bg-gray-50 dark:bg-slate-700/30 rounded-lg px-3 py-2">
                 <div className="flex items-center gap-3">
@@ -110,7 +118,11 @@ export default function Watchlist() {
                       <p className="text-xs font-mono font-medium text-gray-900 dark:text-white">
                         {formatCurrency(q.regularMarketPrice, q.currency)}
                       </p>
-                      <p className={`text-[10px] font-mono ${q.regularMarketChangePercent >= 0 ? "text-emerald-500" : "text-red-500"}`}>
+                      <p className={`text-[10px] font-mono ${
+                        mktStatus?.isOpen
+                          ? `${q.regularMarketChangePercent >= 0 ? "text-emerald-500" : "text-red-500"} animate-live-pulse`
+                          : "text-gray-400 dark:text-slate-500"
+                      }`}>
                         {q.regularMarketChangePercent >= 0 ? "+" : ""}{q.regularMarketChangePercent.toFixed(2)}%
                       </p>
                     </div>

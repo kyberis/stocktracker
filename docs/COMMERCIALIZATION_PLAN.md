@@ -1,8 +1,10 @@
 # trefolio — Commercialization Plan
 
-> **Version:** 1.0 — March 2026
-> **Price:** 2 EUR/month (Pro plan) | Free tier available
-> **Target launch:** Q2 2026
+> **Plan version:** 2.0 — March 2026
+> **App version:** v0.29.0
+> **Price:** 4.99 EUR/month (Pro plan) | Free tier available
+> **Annual:** 39.99 EUR/year (save 33%)
+> **Status:** Technical foundation ready — remaining items are legal entity, domain purchase, and production Stripe configuration
 
 ---
 
@@ -10,18 +12,15 @@
 
 1. [Product Vision & Positioning](#1-product-vision--positioning)
 2. [Tier Structure & Pricing](#2-tier-structure--pricing)
-3. [Technical Roadmap](#3-technical-roadmap)
-   - 3.1 Email Verification & Registration Flow
-   - 3.2 Payment Integration (Stripe)
-   - 3.3 Subscription Management
-   - 3.4 Data Encryption & Security
-   - 3.5 Infrastructure & Scaling
-4. [Legal & Compliance](#4-legal--compliance)
-5. [Branding & Logo](#5-branding--logo)
-6. [Landing Page](#6-landing-page)
-7. [Marketing Plan](#7-marketing-plan)
-8. [Launch Checklist](#8-launch-checklist)
-9. [Decision Points (Needs Your Input)](#9-decision-points)
+3. [Technical Status](#3-technical-status)
+4. [Features Shipped](#4-features-shipped)
+5. [Legal & Compliance](#5-legal--compliance)
+6. [Branding & Domain](#6-branding--domain)
+7. [Landing Page](#7-landing-page)
+8. [Marketing & Advertising Plan](#8-marketing--advertising-plan)
+9. [Launch Checklist](#9-launch-checklist)
+10. [Decision Points](#10-decision-points)
+11. [Revenue Projections](#11-revenue-projections)
 
 ---
 
@@ -29,7 +28,7 @@
 
 ### One-liner
 
-**trefolio** — The simplest way to track your stock portfolio with AI-powered insights, for just 2 EUR/month.
+**trefolio** — The simplest way to track your stock portfolio with AI-powered insights, in 35 European languages, for just 4.99 EUR/month.
 
 ### Why trefolio?
 
@@ -37,25 +36,27 @@
 |---|---|
 | Most portfolio trackers are complex, designed for traders | Simple UI for people who just want to track long-term holdings |
 | Free tools lack fundamentals and AI analysis | Pro tier includes company fundamentals, economic indicators, and AI explanations in plain language |
-| Multi-currency portfolios are messy | Automatic currency conversion, multi-exchange support (LSE, XETRA, MAD, NYSE, etc.) |
-| Data privacy concerns with big platforms | Self-hostable option; all data encrypted at rest; no selling of user data |
-| English-only tools | English + Spanish (expandable to German, French, etc.) |
+| Multi-currency portfolios are messy | Automatic currency conversion, multi-exchange support (NYSE, XETRA, LSE, AMS, MAD, OMK, etc.) |
+| Data privacy concerns with big platforms | All data encrypted at rest; no selling of user data; EU cookie consent and GDPR-compliant |
+| English-only tools exclude most of Europe | 35 European languages including all 24 official EU languages |
+| Importing portfolio data is painful | One-click import from DEGIRO, Interactive Brokers, Trading 212, and Revolut |
 
 ### Target Audience
 
-- **Primary:** Beginner-to-intermediate retail investors in Europe who hold 5-50 stocks/ETFs
+- **Primary:** Beginner-to-intermediate retail investors across Europe who hold 5-50 stocks/ETFs
 - **Secondary:** Expats with multi-currency portfolios
-- **Tertiary:** Spanish-speaking investors (Latin America, Spain)
+- **Tertiary:** Non-English-speaking European investors (leveraging 35-language support)
 
 ### Competitive Landscape
 
 | Competitor | Price | Weakness trefolio exploits |
 |---|---|---|
-| Yahoo Finance | Free | No AI, cluttered UI, no multi-currency portfolio |
-| Seeking Alpha | 19.99 USD/mo | Expensive, US-focused, complex |
-| Simply Wall St | 10 USD/mo | Expensive for casual investors |
-| Portfolio Performance | Free (desktop) | No web/mobile, no AI, steep learning curve |
-| **trefolio** | **2 EUR/mo** | Simple, AI-powered, cheap, multi-language, web-based |
+| Yahoo Finance | Free | No AI, cluttered UI, no multi-currency portfolio, English only |
+| Seeking Alpha | $19.99/mo | 4x more expensive, US-focused, complex |
+| Simply Wall St | $10/mo | 2x more expensive, no broker import, limited languages |
+| Portfolio Performance | Free (desktop) | No web/mobile, no AI, steep learning curve, no broker CSV import |
+| Snowball Analytics | $8/mo | More expensive, no AI analysis, fewer languages |
+| **trefolio** | **4.99 EUR/mo** | Simple, AI-powered, 35 languages, 4 broker imports, cheapest paid option |
 
 ---
 
@@ -65,261 +66,282 @@
 
 | Feature | Included |
 |---|---|
-| Portfolio tracking (unlimited stocks/ETFs) | Yes |
-| Yahoo Finance data | Yes |
-| Historical charts | Yes |
+| Portfolio tracking (up to **15 holdings**) | Yes |
+| Yahoo Finance real-time quotes | Yes |
+| Historical price charts | Yes |
 | Cash balance tracking | Yes |
-| Benchmark comparison (S&P 500, etc.) | Yes |
+| Benchmark comparison (S&P 500, Nasdaq, Euro Stoxx 50) | Yes |
+| DEGIRO, IBKR, Trading 212, Revolut & Simple CSV import | Yes |
 | Dark/Light mode | Yes |
-| English + Spanish | Yes |
+| **35 European languages** | Yes |
+| Portfolio growth projection (blurred preview) | Yes |
+| Feedback system | Yes |
 | **AI analysis** | **5 calls/month** |
+| **Price alerts** | **2 alerts (in-app only)** |
+| **Unlimited holdings** | No |
 | **Alpha Vantage data** | No |
 | **Fundamentals (Income, Balance, Cash Flow)** | No |
 | **Intelligence (News, Insider, Institutional)** | No |
 | **Economic Indicators** | No |
+| **CSV Export** | No |
 
-### Pro Tier — 2 EUR/month
+### Pro Tier — 4.99 EUR/month (39.99 EUR/year)
 
 Everything in Free, plus:
 
 | Feature | Included |
 |---|---|
-| Alpha Vantage real-time data | Yes |
+| **Unlimited holdings** | Yes |
+| Alpha Vantage premium data | Yes |
 | Company fundamentals | Yes |
-| Stock Intelligence (news sentiment, insider trades, institutional holdings) | Yes |
-| Economic Indicators dashboard | Yes |
-| AI analysis | **Unlimited** |
+| Stock intelligence (news sentiment, insider trades, institutional holdings) | Yes |
+| Economic indicators dashboard | Yes |
+| AI analysis | **30 calls/day** |
+| Unlimited price alerts + email delivery | Yes |
+| CSV export (holdings, transactions, cash) | Yes |
+| Portfolio growth projection (full access) | Yes |
 | Priority support | Yes |
-| Export to CSV | Yes |
 
-### Why 2 EUR/month?
+### Why 4.99 EUR/month?
 
-- Below the "impulse buy" threshold — most people won't think twice
-- Covers Alpha Vantage API costs (~$0 per user on their free tier, but AV's premium tiers can be shared across users)
+- Still below the "impulse buy" threshold for fintech
+- **Up to 2x cheaper than any paid alternative** (Simply Wall St at $10, Seeking Alpha at $19.99)
+- Covers Alpha Vantage API costs (~$50/month premium key shared across users)
 - Covers OpenAI API costs (~0.10-0.30 EUR/user/month at typical usage)
-- At 500 paying users = 1,000 EUR/month = covers all infrastructure + profit
-- At 2,000 users = sustainable small SaaS business
+- Net revenue per user after Stripe fees: ~4.22 EUR/month
+- At 500 paying users = **2,495 EUR/month** — covers all infrastructure with healthy profit
+- At 2,000 users = **~10,000 EUR/month** — sustainable SaaS business
 
-### Future Pricing Options
+### Pricing Options
 
-- **Annual plan:** 20 EUR/year (save 17%) — incentivizes commitment
-- **Family plan:** 5 EUR/month for up to 3 accounts
-- **Self-hosted license:** One-time 49 EUR for Docker image with all Pro features
+- **Monthly plan:** 4.99 EUR/month
+- **Annual plan:** 39.99 EUR/year (save 33%) — incentivizes commitment, increases LTV
+- **Family plan (future):** 12 EUR/month for up to 3 accounts
+- **Self-hosted license (future):** One-time 99 EUR for Docker image with all Pro features
+
+### Platform Limits
+
+Current rate limiting and capacity configuration:
+
+| Limit | Value | Notes |
+|---|---|---|
+| `MAX_PRO_SUBSCRIBERS` | 10 | Increase as infrastructure scales |
+| `FREE_HOLDINGS_LIMIT` | 15 | Pro users get unlimited |
+| `FREE_ALERT_LIMIT` | 2 | Pro users get unlimited + email |
+| `AI_FREE_MONTHLY_LIMIT` | 5 calls/month | |
+| `AI_PRO_DAILY_LIMIT` | 30 calls/day | |
+| `AI_IMPORT_DAILY_LIMIT` | 5/day | Any tier |
+| `AV_GLOBAL_PER_MINUTE` | 75 | Shared across all users |
+| `AV_PER_USER_PER_MINUTE` | 15 | Prevents a single user hogging the pool |
 
 ---
 
-## 3. Technical Roadmap
+## 3. Technical Status
 
-### 3.1 Email Verification & Registration Flow
+All major technical milestones from the original plan are **implemented and deployed**.
 
-**Current state:** Open signup with username/password, no email.
+### 3.1 Email Verification & Registration — COMPLETED
 
-**Target state:**
+| Component | Implementation |
+|---|---|
+| Email field | `email` column on `users` table, unique, required |
+| Email sending | **Resend** — API key admin-managed from the admin panel |
+| Verification token | JWT signed with `APP_SESSION_SECRET`, expires in 24h |
+| Verification flow | Profile page → send verification → click link → verified |
+| Password reset | Email-based reset flow with signed JWT (1h expiry) |
+| Rate limiting | Per-customer via Upstash Redis |
 
-```
-[Sign Up Form]
-  → email + password + (optional) name
-  → Server creates user with status="pending"
-  → Send verification email with a signed token (valid 24h)
-  → User clicks link → status="verified"
-  → Can now log in
-```
-
-**Implementation:**
-
-| Component | Technology | Notes |
-|---|---|---|
-| Email field | Add `email` column to `users` table | Unique, required |
-| Email sending | **Resend** (resend.com) | Free tier: 3,000 emails/month, great DX, works on Edge |
-| Verification token | JWT signed with `APP_SESSION_SECRET` | Contains userId, expires in 24h |
-| Email templates | React Email (from Resend) | Branded HTML emails |
-| Rate limiting | In-memory or Redis | Prevent abuse of signup/email endpoints |
-
-**Alternative email providers:**
-- SendGrid (free: 100/day)
-- AWS SES (cheapest at scale)
-- Postmark (great deliverability)
-
-**Recommendation:** Resend — simplest integration, free tier is generous, built for Next.js.
-
-**Password reset flow:**
-```
-[Forgot Password]
-  → Enter email
-  → Server sends reset link (signed JWT, valid 1h)
-  → User clicks link → enters new password
-  → Password updated, all sessions invalidated
-```
-
-### 3.2 Payment Integration (Stripe)
-
-**Why Stripe:**
-- Native EUR support
-- Stripe Checkout = no PCI compliance burden
-- Built-in subscription management, invoicing, tax collection
-- Webhook-based — works with serverless (Vercel)
-
-**Flow:**
-
-```
-[User clicks "Upgrade to Pro"]
-  → Redirect to Stripe Checkout (hosted page)
-  → User pays 2 EUR/month
-  → Stripe sends webhook → server updates user.plan = "pro"
-  → User redirected back with Pro features unlocked
-
-[User cancels]
-  → Stripe webhook → server sets user.plan = "free" at period end
-  → Pro features degrade gracefully (no data loss)
-```
-
-**Database changes:**
-
-```sql
-ALTER TABLE users ADD COLUMN email TEXT UNIQUE;
-ALTER TABLE users ADD COLUMN email_verified INTEGER DEFAULT 0;
-ALTER TABLE users ADD COLUMN plan TEXT DEFAULT 'free';        -- 'free' | 'pro'
-ALTER TABLE users ADD COLUMN stripe_customer_id TEXT;
-ALTER TABLE users ADD COLUMN stripe_subscription_id TEXT;
-ALTER TABLE users ADD COLUMN plan_expires_at TEXT;            -- ISO date
-ALTER TABLE users ADD COLUMN ai_calls_this_month INTEGER DEFAULT 0;
-ALTER TABLE users ADD COLUMN ai_calls_reset_at TEXT;
-```
-
-**New API routes:**
+### 3.2 Payment Integration (Stripe) — COMPLETED
 
 | Route | Purpose |
 |---|---|
-| `POST /api/billing/checkout` | Creates Stripe Checkout session |
-| `POST /api/billing/webhook` | Handles Stripe webhooks (subscription created/updated/canceled) |
-| `GET /api/billing/portal` | Redirects to Stripe Customer Portal (manage subscription) |
-| `POST /api/auth/verify-email` | Verifies email token |
-| `POST /api/auth/forgot-password` | Sends password reset email |
-| `POST /api/auth/reset-password` | Resets password with token |
+| `POST /api/billing/checkout` | Creates Stripe Checkout session (monthly or annual) |
+| `POST /api/billing/webhook` | Handles subscription lifecycle events |
+| `GET /api/billing/portal` | Redirects to Stripe Customer Portal |
+| `POST /api/billing/sync` | Syncs plan status after checkout (before webhook arrives) |
+| `GET /api/billing/capacity` | Returns current Pro count vs `MAX_PRO_SUBSCRIBERS` |
 
-**Stripe setup steps:**
-1. Create Stripe account at stripe.com
-2. Create a Product ("trefolio Pro") with a Price (2 EUR/month, recurring)
-3. Set up webhook endpoint pointing to `/api/billing/webhook`
-4. Store `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` in env vars
+Stripe cost: ~1.5% + 0.25 EUR per transaction in Europe = ~0.32 EUR per 4.99 EUR payment = 6.4% fee. Net revenue per user: ~4.22 EUR/month.
 
-**Cost:** Stripe takes 1.5% + 0.25 EUR per transaction in Europe = ~0.28 EUR per 2 EUR payment = 14% fee. Net revenue per user: ~1.72 EUR/month.
+### 3.3 Subscription Management — COMPLETED
 
-### 3.3 Subscription Management
+Feature gating implemented in `src/lib/subscription.ts` with `canAccessFeature()`. Eight upsell surfaces defined in `src/lib/upsell.ts` for contextual upgrade prompts across AI limits, stock detail, intelligence, economic indicators, projections, profile, settings, and alerts.
 
-**Feature gating logic:**
+Graceful degradation: when a Pro subscription lapses, all user data is preserved, Yahoo Finance features continue working, and Pro features show an upgrade prompt instead of data.
 
-```typescript
-// In settings context or middleware
-function canAccessFeature(user: User, feature: string): boolean {
-  const FREE_FEATURES = ["yahoo", "charts", "cash", "benchmarks"];
-  const PRO_FEATURES = ["alphavantage", "fundamentals", "intelligence", "economic-indicators"];
-
-  if (FREE_FEATURES.includes(feature)) return true;
-  if (PRO_FEATURES.includes(feature)) return user.plan === "pro";
-
-  // AI: free users get 5/month, pro gets unlimited
-  if (feature === "ai") {
-    if (user.plan === "pro") return true;
-    return user.aiCallsThisMonth < 5;
-  }
-  return false;
-}
-```
-
-**Graceful degradation:** When a Pro user's subscription lapses:
-- They keep all their data (holdings, cash, settings)
-- Yahoo data continues working
-- Pro features show an "Upgrade to Pro" prompt instead of data
-- No data is deleted
-
-### 3.4 Data Encryption & Security
-
-**Current state (already implemented):**
+### 3.4 Data Encryption & Security — COMPLETED
 
 | Layer | Status |
 |---|---|
 | Passwords hashed with bcrypt | Done |
 | JWT sessions in httpOnly cookies | Done |
-| Alpha Vantage API key encrypted with AES-256-GCM | Done |
+| API keys encrypted with AES-256-GCM (AV, OpenAI, Resend) | Done |
 | HTTPS enforced on Vercel | Done |
 | Middleware route protection | Done |
+| Database encryption at rest (Turso) | Done |
+| Per-customer rate limiting via Upstash Redis | Done |
+| Admin feature flags (alerts, CSV export) | Done |
+| AI hallucination safeguards (temperature 0.3, grounding rules) | Done |
+| EU cookie consent banner | Done |
 
-**Additional for commercial launch:**
+**Still needed:**
+- Security headers in `next.config.mjs` (CSP, X-Frame-Options, HSTS)
+- CSRF protection upgrade (SameSite=Strict + CSRF tokens on mutations)
+- 2FA via TOTP (nice-to-have for v2)
 
-| Measure | Implementation |
+### 3.5 Infrastructure & Observability — COMPLETED
+
+| Component | Implementation |
 |---|---|
-| Database encryption at rest | Turso encrypts at rest by default (libSQL on Fly.io) |
-| Email encryption | Store emails hashed for lookup + encrypted for display |
-| CSRF protection | Add `SameSite=Strict` to cookies (already `Lax`), add CSRF token to mutation routes |
-| Rate limiting | Implement per-IP and per-user rate limiting on auth/API routes |
-| Input sanitization | Already handled by parameterized queries, add explicit validation |
-| Security headers | Add `Content-Security-Policy`, `X-Frame-Options`, `Strict-Transport-Security` via `next.config.mjs` |
-| Dependency auditing | Add `npm audit` to CI pipeline |
-| 2FA (future) | TOTP-based (Google Authenticator) — nice-to-have for v2 |
+| Hosting | Vercel (serverless) |
+| Database | Turso (libSQL, encrypted at rest) |
+| Rate limiting | Upstash Redis (sub-millisecond checks) |
+| Metrics | Prometheus `/api/metrics` endpoint |
+| Observability | Grafana Cloud via OTLP HTTP push |
+| Cron: price alerts | Every 15 minutes — fetches quotes, triggers email for Pro users |
+| Cron: gauge push | Daily — pushes DB-derived metrics to Grafana Cloud |
+| Performance | 75% bundle reduction via lazy loading, parallel quote fetching, Cache-Control headers |
+| Testing | Pre-deploy suite: unit tests (Vitest) + E2E tests (Playwright) |
 
-**Privacy messaging for marketing:**
-- "Your data never leaves your encrypted database"
-- "We don't sell your data — ever"
-- "Bank-grade AES-256 encryption for sensitive data"
-- "Open-source: audit our code yourself"
-
-### 3.5 Infrastructure & Scaling
+**Scaling plan:**
 
 | Users | Infrastructure | Monthly Cost |
 |---|---|---|
-| 0-500 | Vercel Free/Pro + Turso Free | 0-20 EUR |
-| 500-2,000 | Vercel Pro + Turso Scaler | ~50 EUR |
-| 2,000-10,000 | Vercel Pro + Turso Scaler + Redis (Upstash) | ~100 EUR |
+| 0-500 | Vercel Free/Pro + Turso Free + Upstash Free | 0-20 EUR |
+| 500-2,000 | Vercel Pro + Turso Scaler + Upstash Pro | ~50 EUR |
+| 2,000-10,000 | Vercel Pro + Turso Scaler + Upstash Pro | ~100 EUR |
 | 10,000+ | Consider dedicated hosting or Vercel Enterprise | ~300+ EUR |
-
-**Alpha Vantage API strategy:**
-- Free AV key: 25 calls/day — not viable for multi-user
-- Premium AV key ($49.99/mo): 75 calls/min — serves ~100-200 active users
-- At scale: Cache aggressively (economic indicators change monthly/quarterly, fundamentals quarterly)
-- Consider a shared AV key model: the platform holds one premium key, users don't need their own
 
 ---
 
-## 4. Legal & Compliance
+## 4. Features Shipped
 
-### Required Documents
+30 versions shipped from v0.5.0 (December 2025) through v0.29.0 (March 2026).
 
-| Document | Purpose |
+### Core Portfolio
+
+- Real-time dashboard with Yahoo Finance quotes
+- Multi-exchange support: NYSE, NASDAQ, XETRA, LSE, AMS, MAD, OMK
+- Cash balance tracking with multi-currency (EUR, USD, GBP, DKK, CAD)
+- Simplified portfolio view inspired by DEGIRO (v0.23.0)
+- Holdings auto-classification by sector, region, and asset class via Yahoo Finance (v0.23.0)
+- Performance metrics: TTWROR (Modified Dietz) and IRR/XIRR with methodology notes (v0.12.0)
+- Portfolio growth periods: YTD, 1 Month, 1 Year (v0.14.0)
+- Multi-currency performance accuracy with historical FX rates (v0.28.1)
+- Benchmark comparison: S&P 500, Nasdaq, Dow Jones, Euro Stoxx 50
+
+### Import & Data
+
+- **DEGIRO** CSV import: transactions, dividends, fees, cash balances (v0.10.0-v0.12.0)
+- **Interactive Brokers** import: Activity Statement & Flex Query CSV (v0.26.0)
+- **Trading 212** History CSV import with automatic fee detection (v0.26.0)
+- **Revolut** Account Statement import (Excel/CSV) with dividend grouping (v0.26.0)
+- **Simple CSV** format with manual column mapping (v0.12.0)
+- **AI-powered smart import** from screenshots or CSV via OpenAI (v0.9.0)
+- Unified broker parser architecture with shared deduplication and ISIN resolution (v0.26.0)
+- Automatic ISIN-to-ticker resolution via Yahoo Finance search (v0.18.1)
+
+### Intelligence & Analysis (Pro)
+
+- Stock detail pages with interactive price charts (v0.7.0)
+- Financial statements: income, balance sheet, cash flow, earnings (v0.7.0)
+- News sentiment analysis with bullish/bearish indicators (v0.8.0)
+- Insider transactions tracking (v0.8.0)
+- Institutional holdings breakdown by top investors (v0.8.0)
+- Earnings call transcript viewer (v0.8.0)
+- US economic indicators dashboard: GDP, CPI, unemployment, treasury yields (v0.9.0)
+- AI-powered analysis with hallucination safeguards (temperature 0.3, grounding rules, ticker/date validation) (v0.9.0, v0.24.1)
+- AI responses generated in the user's selected language (v0.29.0)
+
+### Dividends & Projections
+
+- Dividend tracking with estimated annual income (v0.9.6)
+- Per-stock dividend breakdowns with yield percentages (v0.9.6)
+- 5-year dividend growth projections (v0.9.6)
+- Historical dividend calendar from imported broker data (v0.9.8)
+- Portfolio growth projection with customizable growth rate, dividend reinvestment, and yearly contributions (v0.9.9)
+
+### Price Alerts & CSV Export (Pro)
+
+- Price alerts: set above/below targets for any stock (v0.20.0)
+- Free users: 2 active alerts (in-app only)
+- Pro users: unlimited alerts with email delivery via Resend
+- Automated cron job checks alerts every 15 minutes (v0.20.0)
+- CSV export for holdings, transactions, and cash balances (v0.20.0)
+- Both features toggleable via admin feature flags (v0.21.0)
+
+### User & Admin
+
+- Authentication with secure session management (v0.6.0)
+- User profiles with avatar, display name, email (v0.6.0)
+- Email verification flow via Resend (v0.20.0)
+- Change password, delete account with GDPR compliance (v0.9.5)
+- Admin panel with tabs: Users, Settings, Analytics, Feedback (v0.6.0+)
+- Admin-managed API keys: Alpha Vantage, OpenAI, Resend — all encrypted, no env vars needed (v0.9.2, v0.9.4, v0.21.0)
+- Admin feature flags for alerts and CSV export (v0.21.0)
+- Admin user tier management (Free/Pro) (v0.13.0)
+- Feedback system with admin replies and status tracking (v0.18.0)
+- Missing price reporting with admin notification (v0.18.1)
+- Developer architecture page (admin-only) (v0.24.0)
+- External services quick links in admin (Stripe, Grafana, Upstash, Vercel, Turso, AV, OpenAI) (v0.17.4)
+
+### Platform & Operations
+
+- Stripe subscriptions: monthly (4.99 EUR) and annual (39.99 EUR), checkout, webhooks, billing portal (v0.11.0, v0.27.0)
+- Pro subscriber capacity cap with visible counter and checkout blocking (v0.16.0)
+- Per-customer rate limiting via Upstash Redis for AV, AI analysis, and AI imports (v0.16.0)
+- Prometheus `/api/metrics` endpoint (v0.15.0)
+- Grafana Cloud observability via OTLP HTTP push (v0.17.0)
+- Pre-deploy test suite: unit tests (Vitest) + E2E tests (Playwright) (v0.10.1)
+- Vercel Analytics + Speed Insights (v0.9.1)
+- Internal event tracking for feature usage (v0.9.1)
+- Admin analytics dashboard with usage charts, top stocks, signup trends, landing page analytics (v0.9.1)
+
+### UX & Localization
+
+- **35 European languages** with searchable native-name dropdown (v0.29.0) — includes all 24 EU official languages plus Norwegian, Ukrainian, Turkish, Serbian, Icelandic, Albanian, Bosnian, Macedonian, Belarusian, Catalan, and Welsh
+- Dark/light mode (v0.6.0)
+- Redesigned two-row navigation header with contextual action bar (v0.19.0)
+- Mobile bottom tab bar for small screens (v0.19.0)
+- Professional landing page at root (`/`) with value propositions, feature showcase, testimonials, comparison table, FAQ, pricing cards, and video tutorial (v0.11.0, v0.25.0)
+- Privacy Policy and Terms of Service pages linked from landing footer (v0.28.0)
+- EU cookie consent banner (v0.28.0)
+- Performance: 75% bundle reduction via lazy loading, parallel quote fetching, memoized providers, Cache-Control headers (v0.22.0)
+
+---
+
+## 5. Legal & Compliance
+
+### Document Status
+
+| Document | Status |
 |---|---|
-| **Terms of Service** | Liability limitation, acceptable use, subscription terms |
-| **Privacy Policy** | GDPR-required: what data you collect, how you process it, retention periods |
-| **Cookie Policy** | Required in EU — explain httpOnly session cookies |
-| **Financial Disclaimer** | "Not financial advice" — critical for any investment-related tool |
-| **Imprint (Impressum)** | Required in Germany/Austria/Switzerland if operating from there |
-| **Cancellation Policy** | EU consumers have right to cancel subscriptions |
+| **Terms of Service** | DONE — accessible from landing page footer |
+| **Privacy Policy** | DONE — GDPR-compliant, accessible from landing page footer |
+| **Cookie Consent** | DONE — EU cookie consent banner implemented |
+| **Financial Disclaimer** | DONE — "Not financial advice" present in the app |
+| **Imprint (Impressum)** | PENDING — required if operating from Germany/Austria/Switzerland |
+| **Cancellation Policy** | DONE — handled via Stripe billing portal, cancel anytime |
 
 ### GDPR Compliance
 
-Since pricing is in EUR and the audience is European, GDPR applies regardless of where the server is located.
-
-**Key requirements:**
-
-| Requirement | Implementation |
+| Requirement | Status |
 |---|---|
-| Consent for data processing | Checkbox on signup: "I agree to the Terms and Privacy Policy" |
-| Right to access | Add "Download my data" button in settings (export JSON) |
-| Right to deletion | Add "Delete my account" button — deletes all user data |
-| Data portability | CSV/JSON export of holdings and settings |
-| Data processing agreement | If using Turso/Vercel/Stripe, they act as data processors — check their DPAs |
-| Cookie consent | Minimal: only essential cookies (session) — no analytics cookies = no banner needed |
-| Breach notification | Procedure to notify users within 72 hours if data is compromised |
+| Consent for data processing | DONE — signup flow |
+| Right to access | DONE — CSV export of holdings, transactions, cash |
+| Right to deletion | DONE — "Delete my account" in Profile page |
+| Data portability | DONE — CSV export (Pro), JSON export planned |
+| Cookie consent | DONE — EU banner implemented |
+| Breach notification | PLANNED — procedure to notify within 72 hours |
 
 ### Tax Considerations
 
-- Selling to EU consumers: you must charge **VAT** (varies by country: 19% DE, 21% ES, 20% FR, etc.)
-- **Stripe Tax** handles this automatically — calculates and collects the correct VAT based on customer location
-- You'll need a VAT number if revenue exceeds thresholds (varies by country)
-- Consider registering for **VAT OSS (One-Stop Shop)** — file VAT for all EU countries in your home country
+- Selling to EU consumers: **VAT** applies (varies by country: 19% DE, 21% ES, 20% FR, etc.)
+- **Stripe Tax** handles this automatically — calculates and collects correct VAT by customer location
+- VAT number needed if revenue exceeds thresholds (varies by country)
+- Consider **VAT OSS (One-Stop Shop)** — file VAT for all EU countries in your home country
 
 ### Legal Entity
-
-**Options:**
 
 | Type | Pros | Cons |
 |---|---|---|
@@ -331,47 +353,69 @@ Since pricing is in EUR and the audience is European, GDPR applies regardless of
 
 ---
 
-## 5. Branding & Logo
+## 6. Branding & Domain
 
 ### Brand Identity
 
 | Element | Value |
 |---|---|
-| **Name** | trefolio (trefolio.com) |
+| **Name** | trefolio |
+| **Meaning** | Inspired by the trefoil (three-leaf clover) — symbolizes growth, good fortune, and balance |
 | **Tagline** | "Your portfolio. Understood." |
 | **Alt taglines** | "Smart portfolio tracking for everyone" / "Track smarter, not harder" |
 | **Tone** | Friendly, approachable, jargon-free — like explaining stocks to a friend |
-| **Primary color** | Emerald (#10b981) — already in the app, conveys growth/money/trust |
+| **Primary color** | Emerald (#10b981) — conveys growth/money/trust |
 | **Secondary color** | Slate/Navy (#0f172a) — professional, fintech feel |
 | **Accent** | Violet (#8b5cf6) — for premium/AI features |
 
-### Logo Concept
+### Logo Concepts
 
-**Option A: Wordmark + Growth Arrow**
-```
-  ↗
-trefolio
-```
-The current app already has this: a rounded square with a growth arrow icon. Formalize it:
+**Option A: Wordmark + Growth Arrow** (current)
 - Emerald gradient square (rounded-lg) with white upward-trending arrow
 - "trefolio" in Inter or DM Sans, bold, dark navy
 - The arrow doubles as a chart line — symbolizes growth
 
 **Option B: Trefoil Clover Mark**
 - A stylized three-leaf clover (trefoil) with leaves forming an upward arrow
-- Works well as favicon and app icon — ties directly to the brand name
+- Ties directly to the brand name — works well as favicon and app icon
 
 **Option C: Abstract chart**
-- Three bars of increasing height (like a bar chart) in emerald gradient
+- Three bars of increasing height in emerald gradient
 - Clean, universally understood
 
-**Recommendation:** Option A — it's already in the app and recognizable. Just polish it for marketing materials.
+**Recommendation:** Option B — the trefoil mark ties the name to the visual identity and is distinctive. Polish it for external use.
 
-**Logo deliverables needed:**
+**Logo deliverables still needed:**
 - SVG for web (header, favicon)
 - PNG at 512x512 for app stores / social profiles
 - White-on-transparent version for dark backgrounds
-- Consider using Figma or hiring on Fiverr (~20-50 EUR) for professional polish
+- Consider using Figma or hiring on Fiverr (~30-50 EUR) for professional polish
+
+### Domain Name Recommendations
+
+The product was rebranded from StockTracker to **trefolio** in v0.26.1. Domain availability checked via WHOIS on March 5, 2026.
+
+**Taken:**
+- `trefolio.com` — registered via GoDaddy (proxy-protected)
+
+**Available (verified):**
+
+| Domain | TLD | Why It Works | GoDaddy Link |
+|---|---|---|---|
+| `trefolio.app` | .app | Modern, implies software, HTTPS-only by default | [Check](https://www.godaddy.com/domainsearch/find?domainToCheck=trefolio.app) |
+| `trefolio.eu` | .eu | Perfect brand + EU positioning | [Check](https://www.godaddy.com/domainsearch/find?domainToCheck=trefolio.eu) |
+| `trefolio.io` | .io | Modern SaaS TLD, widely recognized | [Check](https://www.godaddy.com/domainsearch/find?domainToCheck=trefolio.io) |
+| `trefolio.co` | .co | Short, professional, common for startups | [Check](https://www.godaddy.com/domainsearch/find?domainToCheck=trefolio.co) |
+| `trefolio.net` | .net | Classic TLD, good fallback | [Check](https://www.godaddy.com/domainsearch/find?domainToCheck=trefolio.net) |
+| `trefolio.org` | .org | Available as secondary/community domain | [Check](https://www.godaddy.com/domainsearch/find?domainToCheck=trefolio.org) |
+
+**Top 3 Recommendations:**
+
+1. **trefolio.app** — Best overall: .app is modern, implies software, enforces HTTPS, and matches the product perfectly
+2. **trefolio.eu** — Best for EU positioning: signals European identity, matches the target audience, affordable
+3. **trefolio.io** — Best for developer/SaaS credibility: widely recognized in the tech community
+
+**Strategy:** Register `trefolio.app` as the primary domain and `trefolio.eu` as a redirect. Also grab `trefolio.io` to protect the brand. Total cost: ~30-50 EUR/year for all three.
 
 ### Typography
 
@@ -381,103 +425,90 @@ The current app already has this: a rounded square with a growth arrow icon. For
 
 ---
 
-## 6. Landing Page
+## 7. Landing Page — COMPLETED
 
-### Structure
+The landing page has been built in Next.js (same repo) and is deployed at the root route (`/`). Unauthenticated visitors see the landing page; authenticated users are routed to the dashboard.
 
-A single-page marketing site at the root domain (e.g., `trefolio.com`), separate from the app (`app.trefolio.com`).
+### Current Sections
 
-**Sections:**
+1. **Hero** — "Track Your Portfolio With Clarity" with gradient text, CTA buttons, dashboard screenshot
+2. **Stats bar** — 5+ exchanges, 35 languages, 4.99 EUR/mo Pro, 25+ features
+3. **Feature showcase** — Tabbed interface with screenshots for Portfolio, Dividends, AI Insights, and Import
+4. **Feature grid** — 6 cards: Performance Metrics, Multi-Currency, AI Analysis, CSV Import, Price Alerts, Privacy First
+5. **Video tutorial** — "See It in Action" with how-to-upload video and step-by-step guide
+6. **FAQ** — 8 questions covering import, security, exchanges, pricing, performance metrics, dividends
+7. **Pricing** — Free vs Pro cards with feature lists, annual plan callout
+8. **Competitor comparison** — Feature matrix: trefolio vs others (checkmarks for AI, multi-currency, CSV import, broker import, under $10/mo)
+9. **Price comparison** — trefolio Pro at 40 EUR/year vs typical plans at 80-90 EUR/year
+10. **Investor metrics** — 50M+ European investors, sub-EUR infrastructure cost, low user count to profitability
+11. **CTA** — "Join investors across Europe who track their portfolios with trefolio"
+12. **Footer** — Product links, Legal (Privacy Policy, Terms of Service), Resources, and social links
 
-1. **Hero**
-   - Headline: "Track your stocks. Understand your portfolio."
-   - Subheadline: "AI-powered insights, real-time data, and clean design — for just 2 EUR/month."
-   - CTA: "Start Free" → signup
-   - Screenshot/mockup of the dashboard (dark mode looks best for fintech)
+### Landing Page Analytics
 
-2. **Problem/Solution**
-   - "Most portfolio trackers are built for traders. trefolio is built for you."
-   - Three pain points with icons → how trefolio solves them
-
-3. **Feature Showcase** (with screenshots)
-   - Portfolio dashboard
-   - AI analysis ("AI explains your stocks in plain language")
-   - Economic indicators
-   - Stock intelligence
-   - Dark mode
-   - Multi-language
-
-4. **Pricing**
-   - Two cards: Free vs Pro (2 EUR/month)
-   - Feature comparison table
-   - "No credit card required for Free tier"
-
-5. **Security & Privacy**
-   - "Bank-grade encryption"
-   - "Your data stays yours"
-   - "Open-source" (if applicable)
-   - GDPR badge
-
-6. **Testimonials / Social Proof** (add after launch)
-   - Early user quotes
-   - "Trusted by X investors across Europe"
-
-7. **FAQ**
-   - "Is my data safe?"
-   - "Can I cancel anytime?"
-   - "What happens if I cancel Pro?"
-   - "Is this financial advice?" → "No."
-
-8. **Footer**
-   - Links: Terms, Privacy, Imprint, Contact
-   - Social links
-   - "Made in [your country] with emerald green"
-
-### Tech for Landing Page
-
-**Option A:** Build in Next.js (same repo, separate route group)
-**Option B:** Use a landing page builder (Framer, Carrd, or Webflow)
-**Recommendation:** Build in Next.js — keeps everything in one codebase, SEO-friendly, fast.
+Anonymous tracking implemented with IntersectionObserver for section views and click tracking for CTAs. Events: `landing_page_view`, `landing_cta_click`, `landing_section_view`, `landing_feature_tab`, `landing_faq_open`, `landing_pricing_view`.
 
 ---
 
-## 7. Marketing Plan
+## 8. Marketing & Advertising Plan
 
-### Phase 1: Pre-Launch (4-6 weeks before)
+### Phase 0: Build in Public (Start Now, 0 EUR)
 
-| Action | Channel | Cost |
+| Channel | Tactic |
+|---|---|
+| **Twitter/X** | Weekly dev updates, screenshots, milestones. Hashtags: #buildinpublic #indiehacker #fintech #SaaS |
+| **Indie Hackers** | Post milestones, revenue updates. Reference: Wealthfolio went viral on IH by emphasizing simplicity and privacy |
+| **Dev.to / Hashnode** | Technical posts: "How I built a 35-language portfolio tracker with Next.js and AI", "Scaling a solo fintech SaaS on Vercel" |
+| **LinkedIn** | "Why I built trefolio" long-form post targeting European finance professionals |
+
+### Phase 1: Free Distribution Channels (Launch Week)
+
+| Platform | Tactic | Why |
 |---|---|---|
-| Create landing page with email waitlist | Website | 0 EUR |
-| Post on Reddit (r/investing, r/eupersonalfinance, r/stocks, r/SideProject) | Reddit | 0 EUR |
-| Post on Hacker News ("Show HN: I built a portfolio tracker for 2 EUR/month") | HN | 0 EUR |
-| Product Hunt launch preparation | Product Hunt | 0 EUR |
-| Create Twitter/X account, post dev journey | Twitter/X | 0 EUR |
-| Write a blog post: "Why I built trefolio" | Blog/Medium/Dev.to | 0 EUR |
-| Create short demo video (screen recording + voiceover) | YouTube/Twitter | 0 EUR |
+| **Product Hunt** | Schedule Tue-Thu. Tagline: "trefolio — Track your portfolio in 35 languages for under 5 EUR/month". 4 dark-mode screenshots, maker comment, 60s GIF | Top portfolio trackers (Snowball, Wealthfolio) got early users here |
+| **Hacker News** | "Show HN: trefolio — AI portfolio tracker for European investors in 35 languages" | HN loves simple tools with clear pricing and technical depth |
+| **Reddit** | Authentic posts in r/eupersonalfinance, r/investing, r/SideProject, r/selfhosted, r/degiro, r/interactivebrokers, r/trading212 | Lead with value; broker-specific subreddits are high-intent |
+| **BetaList** | Submit 2-4 weeks before launch for waitlist signups | Free, curated early adopter audience |
+| **SaaSHub / AlternativeTo** | List as alternative to Simply Wall St, Seeking Alpha, Portfolio Performance | Captures comparison shoppers |
+| **FinTech Weekly** | Submit for newsletter inclusion | Targeted fintech audience |
 
-### Phase 2: Launch Week
+### Phase 2: Content-Led Growth (Month 1-3, 0 EUR)
 
-| Action | Channel | Cost |
+| Content Type | Topics | Distribution |
 |---|---|---|
-| Launch on Product Hunt | Product Hunt | 0 EUR |
-| Post on all subreddits above | Reddit | 0 EUR |
-| Submit to HN | Hacker News | 0 EUR |
-| Post demo video | Twitter, YouTube, LinkedIn | 0 EUR |
-| Reach out to finance/tech bloggers | Email | 0 EUR |
-| Post in Facebook investing groups | Facebook | 0 EUR |
-| Submit to SaaS directories (BetaList, SaaSHub, AlternativeTo) | Directories | 0 EUR |
+| **SEO blog posts** | "Best portfolio trackers for European investors 2026", "How to import your DEGIRO/IBKR/T212 portfolio", "Understanding TTWROR vs IRR" | Blog on trefolio.app, cross-post to Medium |
+| **YouTube tutorials** | "Import your broker portfolio in 30 seconds" (one per broker), "AI stock analysis demo" | YouTube + embed on landing page |
+| **TikTok/Reels** | 15-30s clips: before/after import, AI analysis demo, "5 EUR vs 20 USD" competitor comparison | TikTok, Instagram Reels, YouTube Shorts |
+| **LinkedIn articles** | "Why I built a portfolio tracker for under 5 EUR/month", "35 languages for 50M+ European investors" | LinkedIn + European finance groups |
+| **Localized content** | Blog posts in German, French, Spanish, Dutch, Italian targeting local-language search | SEO in local-language results |
 
-### Phase 3: Growth (ongoing)
+### Phase 3: Paid Advertising (Month 3+, 100-300 EUR/month budget)
 
-| Strategy | Details | Cost |
-|---|---|---|
-| **SEO content** | Blog posts: "Best portfolio trackers 2026", "How to track European stocks", "Understanding P/E ratio" | 0 EUR (time) |
-| **Referral program** | "Invite a friend → both get 1 month free" | Cost of 1 month free |
-| **Twitter/X presence** | Daily market commentary, feature announcements, tips | 0 EUR |
-| **YouTube tutorials** | "How to set up trefolio", "Understanding your portfolio with AI" | 0 EUR |
-| **Google Ads** (optional) | Target: "stock portfolio tracker", "best free portfolio tracker Europe" | 50-100 EUR/month |
-| **Affiliate program** (future) | Finance bloggers get 30% recurring commission | 0.60 EUR/user/month |
-| **Partnerships** | Partner with investment communities, forums, newsletters | 0 EUR |
+| Platform | Strategy | Budget | Expected CPA |
+|---|---|---|---|
+| **Google Ads** | Target: "portfolio tracker", "DEGIRO portfolio tracker", "Interactive Brokers portfolio tool", "best free portfolio tracker Europe" | 50-100 EUR/mo | 3-8 EUR/signup |
+| **Reddit Ads** | Target r/eupersonalfinance, r/investing, r/degiro, r/interactivebrokers with native-style ads | 30-50 EUR/mo | 4-10 EUR/signup |
+| **Twitter/X Ads** | Promote feature tweets to finance interest audiences across EU | 30-50 EUR/mo | 3-6 EUR/signup |
+| **Google Ads (localized)** | German, French, Spanish, Dutch campaigns targeting local-language keywords | 30-50 EUR/mo | Test per market |
+| **Fintech ad networks** | PropellerAds, Blockchain-Ads for targeted fintech audiences | 20-50 EUR/mo | Test and iterate |
+
+### Phase 4: Growth Loops (Month 6+)
+
+- **Referral program:** "Invite a friend, both get 1 month Pro free" — viral coefficient target: 0.3
+- **Affiliate program:** 30% recurring commission for finance bloggers (~1.50 EUR/user/month)
+- **Email drip sequence:** 5-email onboarding series (import guide, AI demo, Pro value, testimonial, upgrade prompt) — sent in the user's language
+- **Community:** Discord or Telegram group for power users, feature voting, beta access
+- **Partnerships:** European finance newsletters, broker user communities (DEGIRO, IBKR, T212, Revolut), expat forums
+- **Localization partnerships:** Partner with finance content creators in Germany, France, Netherlands, Spain, Italy for local-language promotion
+
+### Creative Campaign Ideas
+
+1. **"The 5 EUR Challenge"** — Social campaign: "What do you get for 5 EUR/month? trefolio vs Seeking Alpha ($20) vs Simply Wall St ($10)". Visual comparison cards for Twitter/Instagram.
+2. **"My Portfolio in 30 Seconds"** — UGC campaign: screen-record your first import. Each supported broker gets its own challenge. Prize: 1 year Pro free.
+3. **"AI Explains Your Stocks"** — Short video series: AI analysis of popular European stocks (ASML, SAP, Inditex, Nestle, LVMH) in plain language. One per language market.
+4. **"Expat Investor Spotlight"** — Blog/video series: expats managing multi-currency portfolios with trefolio.
+5. **"trefolio in Your Language"** — 35 community members record 5-second clips saying "I track my portfolio with trefolio" in their native language. Stitch into a single viral video.
+6. **"Switch from [Broker] in 30 Seconds"** — Broker-specific content: "How to go from DEGIRO CSV to a full dashboard in under a minute". One video per broker.
 
 ### Key Metrics to Track
 
@@ -487,113 +518,147 @@ A single-page marketing site at the root domain (e.g., `trefolio.com`), separate
 | Signups (free) | 100 | 500 |
 | Conversion to Pro | 10% | 8-12% |
 | Paying users | 10 | 50-60 |
-| Monthly revenue | 20 EUR | 100-120 EUR |
+| Monthly revenue | 50 EUR | 275 EUR |
 | Churn rate | — | < 5%/month |
 
 ### Content Calendar (First Month)
 
 | Week | Content |
 |---|---|
-| 1 | Launch post on HN/Reddit/PH + demo video |
+| 1 | Launch on Product Hunt / HN / Reddit + demo video |
 | 2 | Blog: "Why most portfolio trackers fail beginners" |
-| 3 | Blog: "How AI can explain your stocks in plain language" |
-| 4 | Blog: "Understanding economic indicators without a finance degree" |
+| 3 | Blog: "How AI can explain your stocks in plain language" + YouTube tutorial per broker |
+| 4 | Blog: "Understanding economic indicators without a finance degree" + localized posts (DE, FR, ES) |
 
 ---
 
-## 8. Launch Checklist
+## 9. Launch Checklist
 
-### Technical
+### Technical — COMPLETED
 
-- [ ] Email field added to registration
-- [ ] Email verification flow (Resend)
-- [ ] Forgot password / reset password flow
-- [ ] Stripe integration (checkout + webhooks + portal)
-- [ ] Feature gating (free vs pro) in middleware and components
-- [ ] AI call counting (5/month for free tier)
-- [ ] Security headers in `next.config.mjs`
-- [ ] Rate limiting on auth and API routes
-- [ ] "Delete my account" feature (GDPR)
-- [ ] "Export my data" feature (GDPR)
-- [ ] Shared Alpha Vantage API key (platform-level, not per-user for Pro)
-- [ ] Landing page built and deployed
+- [x] Email field + verification flow (Resend)
+- [x] Stripe integration (checkout + webhooks + portal + sync + capacity)
+- [x] Feature gating (free vs pro) via `canAccessFeature()` + 8 upsell surfaces
+- [x] AI call counting (5/month free, 30/day pro, 5 imports/day)
+- [x] Rate limiting via Upstash Redis (AV, AI, imports)
+- [x] "Delete my account" feature (GDPR)
+- [x] CSV export for holdings, transactions, cash (Pro)
+- [x] Shared Alpha Vantage API key (admin-managed)
+- [x] Landing page redesigned and deployed at root (`/`)
+- [x] Price alerts with email delivery + cron
+- [x] Admin feature flags (alerts, CSV export)
+- [x] Grafana Cloud observability
+- [x] Pre-deploy test suite (unit + E2E)
+- [x] Multi-broker import (DEGIRO, IBKR, Trading 212, Revolut)
+- [x] 35-language support
+- [x] Performance optimizations (75% bundle reduction)
+- [x] AI hallucination safeguards
+- [x] Holdings auto-classification by sector/region/asset class
+- [ ] Security headers in `next.config.mjs` (CSP, X-Frame-Options, HSTS)
+- [ ] CSRF protection upgrade (SameSite=Strict + CSRF tokens)
 
-### Legal
+### Legal — MOSTLY COMPLETED
 
-- [ ] Terms of Service written
-- [ ] Privacy Policy written (GDPR-compliant)
-- [ ] Financial disclaimer on every page
-- [ ] Cookie policy (minimal — session cookies only)
-- [ ] Imprint page (if required in your jurisdiction)
+- [x] Terms of Service (accessible from landing footer)
+- [x] Privacy Policy (GDPR-compliant, accessible from landing footer)
+- [x] EU cookie consent banner
+- [x] Financial disclaimer
+- [ ] Imprint page (if required by jurisdiction)
 - [ ] Stripe Tax enabled for EU VAT collection
 - [ ] VAT registration (if needed in your country)
 
-### Branding
+### Branding — PARTIALLY COMPLETED
 
-- [ ] Logo finalized (SVG + PNG)
-- [ ] Favicon updated
+- [x] Product rebranded to trefolio (v0.26.1)
+- [x] Logo and icon updated in app
+- [ ] Logo finalized for external use (SVG + PNG, multiple sizes)
+- [ ] Favicon verified for trefolio brand
 - [ ] Open Graph images for social sharing
-- [ ] App screenshots for landing page (light + dark mode)
-- [ ] Demo video recorded
+- [ ] Demo video recorded with new branding
 
-### Marketing
+### Marketing — REMAINING
 
-- [ ] Landing page live
+- [ ] Domain purchased (trefolio.app recommended)
+- [ ] DNS setup + SSL configuration
 - [ ] Product Hunt listing prepared
 - [ ] Reddit posts drafted
 - [ ] HN "Show HN" post drafted
-- [ ] Twitter/X account created and first posts scheduled
+- [ ] Twitter/X account created
 - [ ] Blog post written
+- [ ] Localized marketing content (DE, FR, ES, NL, IT)
+
+### Infrastructure — REMAINING
+
+- [ ] Production Stripe products (verify not still in test mode)
+- [ ] Increase `MAX_PRO_SUBSCRIBERS` cap when ready for more users
+- [ ] Set up monitoring alerts in Grafana for critical thresholds
 
 ---
 
-## 9. Decision Points
+## 10. Decision Points
 
-These need your input before implementation:
+| # | Decision | Status |
+|---|---|---|
+| 1 | **Product name** | DECIDED: **trefolio** (v0.26.1) |
+| 2 | **Domain name** | trefolio.app, .eu, .io all AVAILABLE — see Section 6 |
+| 3 | **Legal entity** | Still pending — recommend sole proprietor to start |
+| 4 | **Email provider** | DECIDED: **Resend** (implemented, admin-managed key) |
+| 5 | **Free tier AI limit** | DECIDED: **5/month** (implemented) |
+| 6 | **Shared AV key** | DECIDED: **Platform key** (admin-managed, encrypted) |
+| 7 | **Open source** | Still pending — recommend private for commercial, self-hosted license later |
+| 8 | **Annual plan** | DECIDED: **From day one** — 39.99 EUR/year (save 33%) |
+| 9 | **Landing page** | DECIDED: **Same repo** — root `/` route, professionally redesigned |
+| 10 | **Logo** | Partially done — rebranded in app, needs external-use assets |
+| 11 | **Country of operation** | Still pending — affects VAT, Imprint, legal entity |
+| 12 | **Contact email** | Still pending — need domain first (e.g., support@trefolio.app) |
+| 13 | **Analytics** | DECIDED: **Vercel Analytics + internal event tracking** (implemented) |
+| 14 | **Pricing** | DECIDED: **4.99 EUR/month, 39.99 EUR/year** (v0.27.0) |
+| 15 | **Free tier limits** | DECIDED: **15 holdings, 2 alerts, 5 AI/month** (v0.27.0) |
+| 16 | **Languages** | DECIDED: **35 European languages** (v0.29.0) |
+| 17 | **Legal documents** | DECIDED: **Privacy Policy + Terms of Service live** (v0.28.0) |
 
-| # | Question | Options | My Recommendation |
-|---|---|---|---|
-| 1 | **Domain name** | trefolio.com (REGISTERED), trefolio.io, trefolio.app | `trefolio.com` — registered March 2026 |
-| 2 | **Legal entity** | Sole proprietor, Ltd/GmbH/SL, Estonian e-Residency? | Start as sole proprietor |
-| 3 | **Email provider** | Resend, SendGrid, AWS SES? | Resend (best DX for Next.js) |
-| 4 | **Free tier AI limit** | 5/month, 10/month, or 3/month? | 5/month — enough to hook users |
-| 5 | **Shared AV key** | Platform holds one AV Premium key, or users bring their own? | Platform key for Pro users — simpler UX |
-| 6 | **Open source?** | Keep the repo public, or make it private? | Private for commercial — offer self-hosted license separately |
-| 7 | **Annual plan** | 20 EUR/year (17% off) from day one, or add later? | From day one — increases LTV |
-| 8 | **Landing page** | Same Next.js repo, or separate (Framer/Carrd)? | Same repo (route group `/marketing`) |
-| 9 | **Logo** | DIY, AI-generated, or hire designer? | Start with polished version of current icon; hire on Fiverr later (~30 EUR) |
-| 10 | **Country of operation** | Where are you based? (Affects VAT, Imprint, legal) | Need your input |
-| 11 | **Contact email** | support@trefolio.com or personal? | Dedicated domain email |
-| 12 | **Analytics** | None, Plausible (privacy-friendly), or Vercel Analytics? | Plausible — no cookie banner needed, GDPR-friendly |
+**Remaining decisions that need your input:**
+- Domain name (recommend trefolio.app)
+- Legal entity (sole proprietor vs Ltd/GmbH/SL)
+- Country of operation (affects VAT + Imprint)
+- Contact email (once domain is purchased)
+- Open source vs private
 
 ---
 
-## Revenue Projections
+## 11. Revenue Projections
+
+Net revenue per user after Stripe fees: ~4.22 EUR/month (Stripe takes ~1.5% + 0.25 EUR = ~0.32 EUR per 4.99 EUR payment).
 
 | Month | Free Users | Pro Users | MRR (EUR) | Costs (EUR) | Profit (EUR) |
 |---|---|---|---|---|---|
-| 1 | 80 | 8 | 16 | 20 | -4 |
-| 3 | 200 | 25 | 50 | 30 | 20 |
-| 6 | 500 | 55 | 110 | 50 | 60 |
-| 12 | 1,200 | 140 | 280 | 80 | 200 |
-| 24 | 3,000 | 350 | 700 | 150 | 550 |
+| 1 | 80 | 8 | 40 | 20 | 20 |
+| 3 | 200 | 25 | 125 | 30 | 95 |
+| 6 | 500 | 55 | 275 | 50 | 225 |
+| 12 | 1,200 | 140 | 699 | 80 | 619 |
+| 24 | 3,000 | 350 | 1,747 | 150 | 1,597 |
 
 *Assumes 8-12% free-to-pro conversion, 4% monthly churn, organic growth.*
-*Costs include: Vercel Pro (~20 EUR), Turso (~10 EUR), AV Premium ($50 ≈ 46 EUR), Resend (~0 EUR on free tier), Stripe fees (~14% of revenue).*
+*Costs include: Vercel Pro (~20 EUR), Turso (~10 EUR), AV Premium ($50 ≈ 46 EUR), Upstash Redis (~5 EUR), Resend (~0 EUR on free tier), Stripe fees (~6.4% of revenue).*
+
+**Breakeven point:** ~5 paying users (covers basic infrastructure at ~20 EUR/month).
+**Profitability target:** 50 paying users = ~250 EUR/month net profit.
 
 ---
 
 ## Next Steps (Priority Order)
 
-1. **Answer the 12 decision points above** — I need these to start implementation
-2. **Email + verification** — Foundation for everything else
-3. **Stripe integration** — Revenue from day one
-4. **Feature gating** — Enforce free vs pro boundaries
-5. **Legal documents** — Terms, Privacy, Disclaimer
-6. **Landing page** — Start collecting signups
-7. **Logo polish** — Professional first impression
-8. **Launch on Product Hunt / HN / Reddit** — Free distribution
+1. **Purchase domain** — trefolio.app (primary) + trefolio.eu (redirect) + trefolio.io (brand protection)
+2. **Decide legal entity and country of operation** — affects VAT, Imprint, contact email
+3. **Verify Stripe is in production mode** — test vs live keys
+4. **Increase MAX_PRO_SUBSCRIBERS** — raise cap from 10 when ready for public launch
+5. **Add security headers** — CSP, X-Frame-Options, HSTS in next.config.mjs
+6. **Finalize logo for external use** — SVG, PNG, Open Graph images
+7. **Record demo video** — with trefolio branding
+8. **Prepare launch materials** — Product Hunt listing, HN post, Reddit posts, blog post
+9. **Create social accounts** — Twitter/X, LinkedIn, Indie Hackers
+10. **Launch** — Product Hunt / HN / Reddit in the same week for maximum impact
 
 ---
 
-*This plan is a living document. Update it as decisions are made and features are implemented.*
+*This plan is a living document. Last updated: March 2026 (v0.29.0).*

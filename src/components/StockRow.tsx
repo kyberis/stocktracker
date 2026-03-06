@@ -324,7 +324,11 @@ function StockRow({ holding }: StockRowProps) {
             {formatCurrency(totalValueEUR, "EUR")}
           </p>
           {hasQuote ? (
-            <p className={`text-xs mt-0.5 ${dayColor}`}>
+            <p className={`text-xs mt-0.5 ${
+              marketStatus?.isOpen
+                ? `${dayColor} animate-live-pulse`
+                : "text-gray-400 dark:text-slate-500"
+            }`}>
               {dayIsPositive ? "+" : ""}{formatCurrency(dayChangeAmountEUR, "EUR")} ({formatPercent(dayChangePercent)})
             </p>
           ) : (
