@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   title: "Terms of Service — trefolio",
   description:
     "trefolio Terms of Service. Subscription terms, acceptable use, financial disclaimers, and liability limitations for our portfolio tracking service.",
-  alternates: { canonical: "https://trefolio.app/terms" },
+  alternates: { canonical: "https://trefolio.com/terms" },
 };
 
 export default function TermsOfServicePage() {

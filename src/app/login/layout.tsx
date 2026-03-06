@@ -4,7 +4,7 @@ export const metadata: Metadata = {
   title: "Log In — trefolio",
   description:
     "Log in to trefolio to track your stock portfolio. Real-time quotes, broker imports, AI analysis, and dividend projections for European investors.",
-  alternates: { canonical: "https://trefolio.app/login" },
+  alternates: { canonical: "https://trefolio.com/login" },
 };
 
 export default function LoginLayout({ children }: { children: React.ReactNode }) {

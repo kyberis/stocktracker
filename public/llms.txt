@@ -13,11 +13,11 @@ trefolio is a web-based portfolio tracker that supports real-time quotes from NY
 
 ## Key Pages
 
-- Landing: https://trefolio.app/landing
-- Sign Up: https://trefolio.app/signup
-- Privacy Policy: https://trefolio.app/privacy
-- Terms of Service: https://trefolio.app/terms
+- Landing: https://trefolio.com/landing
+- Sign Up: https://trefolio.com/signup
+- Privacy Policy: https://trefolio.com/privacy
+- Terms of Service: https://trefolio.com/terms
 
 ## Optional
 
-- [Full details](https://trefolio.app/llms-full.txt)
+- [Full details](https://trefolio.com/llms-full.txt)

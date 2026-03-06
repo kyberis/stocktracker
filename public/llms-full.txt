@@ -137,11 +137,11 @@ When you import a broker CSV (DEGIRO, IBKR, Trading 212, or Revolut), dividends,
 
 ## Key Pages
 
-- Landing: https://trefolio.app/landing
-- Sign Up: https://trefolio.app/signup
-- Log In: https://trefolio.app/login
-- Privacy Policy: https://trefolio.app/privacy
-- Terms of Service: https://trefolio.app/terms
+- Landing: https://trefolio.com/landing
+- Sign Up: https://trefolio.com/signup
+- Log In: https://trefolio.com/login
+- Privacy Policy: https://trefolio.com/privacy
+- Terms of Service: https://trefolio.com/terms
 
 ## Contact
 

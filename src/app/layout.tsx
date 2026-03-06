@@ -7,7 +7,7 @@ import CookieConsent from "@/components/CookieConsent";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://trefolio.app"),
+  metadataBase: new URL("https://trefolio.com"),
   title: "trefolio - Portfolio Manager",
   description:
     "trefolio is a portfolio tracker for European investors. Real-time quotes, broker imports (DEGIRO, IBKR, T212, Revolut), AI analysis, and dividend projections. Free to start.",

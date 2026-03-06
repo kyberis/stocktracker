@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   title: "Privacy Policy — trefolio",
   description:
     "trefolio is a GDPR-compliant portfolio tracker. Learn how we collect, process, and protect your personal data. No tracking cookies, no data selling.",
-  alternates: { canonical: "https://trefolio.app/privacy" },
+  alternates: { canonical: "https://trefolio.com/privacy" },
 };
 
 export default function PrivacyPolicyPage() {

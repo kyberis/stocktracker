@@ -9,6 +9,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/api/", "/admin/", "/developer/"],
       },
     ],
-    sitemap: "https://trefolio.app/sitemap.xml",
+    sitemap: "https://trefolio.com/sitemap.xml",
   };
 }

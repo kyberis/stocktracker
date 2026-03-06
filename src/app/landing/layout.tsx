@@ -5,12 +5,12 @@ export const metadata: Metadata = {
   title: "trefolio — Simple Portfolio Tracking with AI Insights",
   description:
     "trefolio is a portfolio tracker for European investors. Real-time quotes, broker imports (DEGIRO, IBKR, T212, Revolut), AI analysis, and dividend projections. Free to start, Pro for €4.99/month.",
-  alternates: { canonical: "https://trefolio.app" },
+  alternates: { canonical: "https://trefolio.com" },
   openGraph: {
     title: "trefolio — Simple Portfolio Tracking with AI Insights",
     description:
       "The simplest way to manage your stock portfolio. Real-time quotes, dividend tracking, growth projections, and AI analysis — for just €4.99/month.",
-    url: "https://trefolio.app",
+    url: "https://trefolio.com",
     siteName: "trefolio",
     locale: "en_US",
     type: "website",
@@ -36,8 +36,8 @@ const ORGANIZATION_SCHEMA = {
   "@context": "https://schema.org",
   "@type": "Organization",
   name: "trefolio",
-  url: "https://trefolio.app",
-  logo: "https://trefolio.app/favicon.ico",
+  url: "https://trefolio.com",
+  logo: "https://trefolio.com/favicon.ico",
   description:
     "Simple portfolio tracking with AI insights for European investors",
 };
@@ -48,7 +48,7 @@ const SOFTWARE_APP_SCHEMA = {
   name: "trefolio",
   applicationCategory: "FinanceApplication",
   operatingSystem: "Web",
-  url: "https://trefolio.app",
+  url: "https://trefolio.com",
   description:
     "Portfolio tracker with real-time quotes, broker imports, AI analysis, and dividend projections for European investors.",
   offers: [
