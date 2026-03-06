@@ -375,14 +375,15 @@ const MIGRATIONS: Migration[] = [
     version: 5,
     description: "Add auth_provider and google_id columns for OAuth support",
     up: async (client: Client) => {
-      const cols = await client.execute("PRAGMA table_info(users)");
-      const colNames = new Set(cols.rows.map((r) => str(r.name)));
-
-      if (!colNames.has("auth_provider")) {
-        await client.execute({ sql: "ALTER TABLE users ADD COLUMN auth_provider TEXT NOT NULL DEFAULT 'credentials'" });
-      }
-      if (!colNames.has("google_id")) {
-        await client.execute({ sql: "ALTER TABLE users ADD COLUMN google_id TEXT NOT NULL DEFAULT ''" });
+      for (const stmt of [
+        "ALTER TABLE users ADD COLUMN auth_provider TEXT NOT NULL DEFAULT 'credentials'",
+        "ALTER TABLE users ADD COLUMN google_id TEXT NOT NULL DEFAULT ''",
+      ]) {
+        try { await client.execute({ sql: stmt }); }
+        catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : String(e);
+          if (!msg.includes("duplicate column")) throw e;
+        }
       }
 
       await client.execute({
