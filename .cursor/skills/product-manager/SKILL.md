@@ -1,6 +1,6 @@
 ---
 name: product-manager
-description: Evaluates feature requests against customer value, business goals, and available product analytics. Use when discussing feature scope, prioritization, roadmap decisions, or trade-offs.
+description: Evaluates feature requests against customer value, business goals, and available product analytics. Also reviews any design or UI/UX changes and produces interactive mockups. Use when discussing feature scope, prioritization, roadmap decisions, trade-offs, or any visual/design changes.
 ---
 
 # Product Manager
@@ -16,6 +16,7 @@ Apply this skill when the user asks for:
 - prioritization or scope decisions
 - product trade-off guidance (value vs effort)
 - go/no-go recommendations
+- **any design or UI/UX change** — layout modifications, new pages/sections, component redesigns, navigation changes, visual overhauls, or theme updates
 
 ## Decision Workflow
 
@@ -29,6 +30,7 @@ PM Decision Checklist
 - [ ] Existing analytics/release signals were checked
 - [ ] Success metric and instrumentation were defined
 - [ ] Scope is right-sized for current release
+- [ ] Design mockup created (if change has visual impact)
 ```
 
 ### 1) Clarify user problem
@@ -79,6 +81,60 @@ Recommendation: [Proceed / Defer / Reject]
 
 ### Instrumentation
 - Events to track: [...]
+```
+
+## Design Review & Mockup Generation
+
+**Every change that affects what the user sees must go through PM design review before implementation begins.** This ensures design decisions are intentional, user-centered, and aligned with the product.
+
+### When to generate a mockup
+
+Generate an interactive HTML mockup using the `browser_canvas` tool when the change involves:
+- A new page, modal, or multi-step flow
+- A redesigned or significantly altered existing component/section
+- Changes to layout, navigation, or information hierarchy
+- New data visualizations or chart types
+- Onboarding, empty states, or error states
+
+Skip the mockup only for trivial cosmetic tweaks (e.g., changing a single color value, fixing a typo, adjusting padding by a few pixels).
+
+### Mockup workflow
+
+1. **Audit the current state** — read the relevant component files and, if the app is running, take a `browser_take_screenshot` of the current UI for reference.
+2. **Draft the design direction** — write a short design brief covering:
+   - What changes and why (user problem being solved)
+   - Key UI elements and their purpose
+   - Interaction patterns (hover, click, transitions)
+   - Responsive considerations (mobile vs desktop)
+   - Accessibility notes (contrast, focus, screen reader)
+3. **Build the mockup** — create a canvas via `browser_canvas` with:
+   - A descriptive `title` (e.g., "Portfolio Summary Redesign Mockup")
+   - Faithful use of the app's existing design tokens (dark theme, color palette, font choices from `globals.css` and tailwind config)
+   - Realistic placeholder data that matches the domain (stock tickers, portfolio values, dates)
+   - Interactive states where useful (hover effects, tab switching, expandable sections)
+4. **Present for approval** — show the mockup to the user with a summary of design decisions and trade-offs. Ask for explicit approval before proceeding to implementation.
+5. **Iterate if needed** — update the canvas in-place (reuse the `id`) based on feedback until approved.
+
+### Mockup quality standards
+
+- Match the existing app's visual language — do not invent a new design system.
+- Use dark theme by default (consistent with the app).
+- Show realistic content, not "Lorem ipsum."
+- Label sections clearly so the user understands what each part represents.
+- Include annotations or callouts for non-obvious interactions.
+
+### Design review output
+
+When reviewing a design change, add this section to the PM output:
+
+```md
+### Design Review
+- Visual impact: [High / Medium / Low]
+- Mockup: [Created — see canvas / Not needed — trivial change]
+- Design direction: [Brief summary of the approach]
+- Accessibility: [Notes on contrast, focus, keyboard nav]
+- Responsive: [Mobile behavior notes]
+- Approval status: [Pending user approval / Approved / Needs revision]
 ```
 
 ## Extra Resources
