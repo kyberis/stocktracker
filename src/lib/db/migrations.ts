@@ -352,8 +352,18 @@ const MIGRATIONS: Migration[] = [
   },
   {
     version: 4,
-    description: "Add unique partial index on source_ref to prevent duplicate imports",
+    description: "Deduplicate existing source_refs and add unique partial index",
     up: async (client: Client) => {
+      await client.execute({
+        sql: `DELETE FROM transactions
+              WHERE source_ref != ''
+                AND id NOT IN (
+                  SELECT MIN(id) FROM transactions
+                  WHERE source_ref != ''
+                  GROUP BY user_id, source_ref
+                )`,
+      });
+
       await client.execute({
         sql: `CREATE UNIQUE INDEX IF NOT EXISTS idx_transactions_user_source_ref
               ON transactions(user_id, source_ref)
