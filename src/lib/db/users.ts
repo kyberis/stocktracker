@@ -24,6 +24,26 @@ export async function findUserByUsername(username: string): Promise<DbUser | nul
   return rowToDbUser(result.rows[0]);
 }
 
+export async function findUserByEmail(email: string): Promise<DbUser | null> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: "SELECT * FROM users WHERE LOWER(email) = LOWER(?)",
+    args: [email],
+  });
+  if (result.rows.length === 0) return null;
+  return rowToDbUser(result.rows[0]);
+}
+
+export async function findUserByGoogleId(googleId: string): Promise<DbUser | null> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: "SELECT * FROM users WHERE google_id = ?",
+    args: [googleId],
+  });
+  if (result.rows.length === 0) return null;
+  return rowToDbUser(result.rows[0]);
+}
+
 export async function findUserById(userId: string): Promise<DbUser | null> {
   const client = await ensureInitialized();
   const result = await client.execute({
@@ -43,6 +63,12 @@ export async function listUsers(): Promise<PublicUser[]> {
 export async function createUser(params: {
   username: string;
   passwordHash: string;
+  email?: string;
+  displayName?: string;
+  authProvider?: "credentials" | "google";
+  googleId?: string;
+  avatarUrl?: string;
+  emailVerified?: boolean;
   seedWithData: boolean;
 }): Promise<PublicUser> {
   const client = await ensureInitialized();
@@ -51,9 +77,15 @@ export async function createUser(params: {
   await client.batch(
     [
       {
-        sql: `INSERT INTO users (id, username, password_hash, role, must_change_password, ai_calls_reset_at)
-              VALUES (?, ?, ?, 'user', 0, datetime('now'))`,
-        args: [id, params.username, params.passwordHash],
+        sql: `INSERT INTO users (id, username, password_hash, role, must_change_password,
+              ai_calls_reset_at, email, display_name, avatar_url, auth_provider, google_id, email_verified)
+              VALUES (?, ?, ?, 'user', 0, datetime('now'), ?, ?, ?, ?, ?, ?)`,
+        args: [
+          id, params.username, params.passwordHash,
+          params.email || "", params.displayName || "", params.avatarUrl || "",
+          params.authProvider || "credentials", params.googleId || "",
+          params.emailVerified ? 1 : 0,
+        ],
       },
       {
         sql: `INSERT INTO user_settings (user_id, provider, alpha_vantage_api_key, language)

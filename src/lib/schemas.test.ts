@@ -11,54 +11,59 @@ import {
 } from "./schemas";
 
 describe("loginSchema", () => {
-  it("accepts valid username and password", () => {
-    const result = loginSchema.safeParse({ username: "johndoe", password: "secret123" });
+  it("accepts valid identifier and password", () => {
+    const result = loginSchema.safeParse({ identifier: "user@example.com", password: "secret123" });
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data).toEqual({ username: "johndoe", password: "secret123" });
+      expect(result.data).toEqual({ identifier: "user@example.com", password: "secret123" });
     }
   });
 
-  it("fails when username is missing", () => {
+  it("accepts username as identifier", () => {
+    const result = loginSchema.safeParse({ identifier: "admin", password: "secret123" });
+    expect(result.success).toBe(true);
+  });
+
+  it("fails when identifier is missing", () => {
     const result = loginSchema.safeParse({ password: "secret123" });
     expect(result.success).toBe(false);
   });
 
   it("fails when password is missing", () => {
-    const result = loginSchema.safeParse({ username: "johndoe" });
+    const result = loginSchema.safeParse({ identifier: "johndoe" });
     expect(result.success).toBe(false);
   });
 
-  it("fails when username is empty string", () => {
-    const result = loginSchema.safeParse({ username: "", password: "secret123" });
+  it("fails when identifier is empty string", () => {
+    const result = loginSchema.safeParse({ identifier: "", password: "secret123" });
     expect(result.success).toBe(false);
   });
 
   it("fails when password is empty string", () => {
-    const result = loginSchema.safeParse({ username: "johndoe", password: "" });
+    const result = loginSchema.safeParse({ identifier: "johndoe", password: "" });
     expect(result.success).toBe(false);
   });
 
-  it("fails when username is not a string", () => {
-    const result = loginSchema.safeParse({ username: 123, password: "secret123" });
+  it("fails when identifier is not a string", () => {
+    const result = loginSchema.safeParse({ identifier: 123, password: "secret123" });
     expect(result.success).toBe(false);
   });
 
   it("fails when password is not a string", () => {
-    const result = loginSchema.safeParse({ username: "johndoe", password: null });
+    const result = loginSchema.safeParse({ identifier: "johndoe", password: null });
     expect(result.success).toBe(false);
   });
 });
 
 describe("signupSchema", () => {
-  it("accepts valid username, password", () => {
+  it("accepts valid email and password", () => {
     const result = signupSchema.safeParse({
-      username: "johndoe",
+      email: "john@example.com",
       password: "secret123",
     });
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.username).toBe("johndoe");
+      expect(result.data.email).toBe("john@example.com");
       expect(result.data.password).toBe("secret123");
       expect(result.data.seedWithData).toBeUndefined();
     }
@@ -66,7 +71,7 @@ describe("signupSchema", () => {
 
   it("accepts optional seedWithData", () => {
     const result = signupSchema.safeParse({
-      username: "johndoe",
+      email: "john@example.com",
       password: "secret123",
       seedWithData: true,
     });
@@ -76,28 +81,40 @@ describe("signupSchema", () => {
     }
   });
 
-  it("fails when username is missing", () => {
+  it("accepts optional displayName", () => {
+    const result = signupSchema.safeParse({
+      email: "john@example.com",
+      password: "secret123",
+      displayName: "John Doe",
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.displayName).toBe("John Doe");
+    }
+  });
+
+  it("fails when email is missing", () => {
     const result = signupSchema.safeParse({ password: "secret123" });
     expect(result.success).toBe(false);
   });
 
   it("fails when password is missing", () => {
-    const result = signupSchema.safeParse({ username: "johndoe" });
+    const result = signupSchema.safeParse({ email: "john@example.com" });
     expect(result.success).toBe(false);
   });
 
-  it("fails when username is too short (< 3 chars)", () => {
-    const result = signupSchema.safeParse({ username: "ab", password: "secret123" });
+  it("fails when email is invalid", () => {
+    const result = signupSchema.safeParse({ email: "notanemail", password: "secret123" });
     expect(result.success).toBe(false);
   });
 
-  it("fails when password is too short (< 4 chars)", () => {
-    const result = signupSchema.safeParse({ username: "johndoe", password: "abc" });
+  it("fails when password is too short (< 6 chars)", () => {
+    const result = signupSchema.safeParse({ email: "john@example.com", password: "abc" });
     expect(result.success).toBe(false);
   });
 
-  it("fails when username is not a string", () => {
-    const result = signupSchema.safeParse({ username: 123, password: "secret123" });
+  it("fails when email is not a string", () => {
+    const result = signupSchema.safeParse({ email: 123, password: "secret123" });
     expect(result.success).toBe(false);
   });
 });

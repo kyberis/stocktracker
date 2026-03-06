@@ -6,6 +6,8 @@ const PUBLIC_API_ROUTES = new Set([
   "/api/auth/login",
   "/api/auth/signup",
   "/api/auth/logout",
+  "/api/auth/google",
+  "/api/auth/google/callback",
   "/api/billing/webhook",
   "/api/analytics/landing",
   "/api/metrics",

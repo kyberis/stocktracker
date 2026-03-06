@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { findUserByUsername, toPublicUser, trackEvent } from "@/lib/db";
+import { findUserByUsername, findUserByEmail, toPublicUser, trackEvent } from "@/lib/db";
 import { verifyPassword } from "@/lib/auth/password";
 import {
   createSessionToken,
@@ -16,14 +16,25 @@ export const POST = withMetrics("/api/auth/login", async (req: NextRequest) => {
 
   const result = await parseBody(req, loginSchema);
   if (!result.success) return result.error;
-  const { username, password } = result.data;
-  const trimmedUsername = username.trim();
+  const { identifier, password } = result.data;
+  const trimmed = identifier.trim();
 
   try {
-    const user = await findUserByUsername(trimmedUsername);
+    const isEmail = trimmed.includes("@");
+    const user = isEmail
+      ? await findUserByEmail(trimmed)
+      : await findUserByUsername(trimmed);
+
     if (!user) {
       authEventsTotal.inc({ event: "login_failure" });
       return NextResponse.json({ error: "Invalid credentials." }, { status: 401 });
+    }
+
+    if (user.auth_provider === "google") {
+      return NextResponse.json(
+        { error: "This account uses Google sign-in. Please use the Google button." },
+        { status: 400 },
+      );
     }
 
     const isValid = await verifyPassword(password, user.password_hash);
@@ -35,6 +46,7 @@ export const POST = withMetrics("/api/auth/login", async (req: NextRequest) => {
     const token = await createSessionToken({
       userId: user.id,
       username: user.username,
+      email: user.email,
       role: user.role,
       mustChangePassword: user.must_change_password === 1,
       plan: user.plan,

@@ -1,9 +1,11 @@
 // Barrel re-export — all consumers import from "@/lib/db" unchanged.
 
-export type { UserRole, UserPlan, DbUser, PublicUser, UserSettings } from "./helpers";
+export type { UserRole, UserPlan, AuthProvider, DbUser, PublicUser, UserSettings } from "./helpers";
 
 export {
   findUserByUsername,
+  findUserByEmail,
+  findUserByGoogleId,
   findUserById,
   listUsers,
   createUser,

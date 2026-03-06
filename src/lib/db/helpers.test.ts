@@ -292,6 +292,8 @@ describe("mapUser", () => {
       ai_calls_today: 3,
       ai_daily_reset_at: "2025-03-05",
       email_verified: 1,
+      auth_provider: "credentials" as const,
+      google_id: "",
     };
 
     const publicUser = mapUser(dbUser);
@@ -312,6 +314,7 @@ describe("mapUser", () => {
       aiCallsToday: 3,
       aiDailyResetAt: "2025-03-05",
       emailVerified: true,
+      authProvider: "credentials",
     });
   });
 
@@ -335,6 +338,8 @@ describe("mapUser", () => {
       ai_calls_today: 0,
       ai_daily_reset_at: "",
       email_verified: 0,
+      auth_provider: "credentials" as const,
+      google_id: "",
     };
 
     const publicUser = mapUser(dbUser);
@@ -364,6 +369,8 @@ describe("mapUser", () => {
       ai_calls_today: 0,
       ai_daily_reset_at: "",
       email_verified: 0,
+      auth_provider: "credentials" as const,
+      google_id: "",
     };
 
     const publicUser = mapUser(dbUser);
@@ -391,6 +398,8 @@ describe("mapUser", () => {
       ai_calls_today: 0,
       ai_daily_reset_at: "",
       email_verified: 1,
+      auth_provider: "credentials" as const,
+      google_id: "",
     };
 
     const publicUser = mapUser(dbUser);

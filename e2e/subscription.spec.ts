@@ -17,7 +17,7 @@ test.describe("Subscription tiering", () => {
 
   test("profile shows upgrade CTAs for free users", async ({ page, request }) => {
     const creds = await createTestUser(request);
-    await loginViaUI(page, creds.username, creds.password);
+    await loginViaUI(page, creds.email, creds.password);
     await page.goto("/profile");
     await expect(page.getByText("Free vs Pro").first()).toBeVisible();
     await expect(page.getByText("Upgrade: 2 EUR/month")).toBeVisible();
@@ -26,7 +26,7 @@ test.describe("Subscription tiering", () => {
 
   test("economic indicators shows contextual compare for free users", async ({ page, request }) => {
     const creds = await createTestUser(request);
-    await loginViaUI(page, creds.username, creds.password);
+    await loginViaUI(page, creds.email, creds.password);
     await page.goto("/economic-indicators");
     await expect(page.getByText("Free vs Pro").first()).toBeVisible();
     await expect(page.getByText("Explore premium economic indicators.")).toBeVisible();

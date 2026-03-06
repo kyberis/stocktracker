@@ -14,15 +14,43 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "0.29.0";
+export const CURRENT_VERSION = "0.30.0";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "0.30.0",
+    date: "2026-03-06",
+    title: "Google Login & Email-Based Authentication",
+    titleTranslations: { es: "Inicio de sesión con Google y autenticación por email" },
+    changes: [
+      {
+        type: "feature",
+        text: "Sign in with Google -- create an account or log in instantly with your Google account",
+        translations: { es: "Inicio de sesión con Google -- crea una cuenta o inicia sesión al instante con tu cuenta de Google" },
+      },
+      {
+        type: "feature",
+        text: "Email is now the primary identifier for new accounts, replacing username-based signup",
+        translations: { es: "El email es ahora el identificador principal para nuevas cuentas, reemplazando el registro por nombre de usuario" },
+      },
+      {
+        type: "improvement",
+        text: "Redesigned login and signup pages with a modern, clean layout",
+        translations: { es: "Páginas de inicio de sesión y registro rediseñadas con un diseño moderno y limpio" },
+      },
+    ],
+  },
   {
     version: "0.29.0",
     date: "2026-03-06",
     title: "Support for 35 European Languages",
     titleTranslations: { es: "Soporte para 35 idiomas europeos" },
     changes: [
+      {
+        type: "improvement",
+        text: "Portfolio CSV import is now up to 20x faster thanks to batched transaction processing",
+        translations: { es: "La importación de CSV de cartera es ahora hasta 20 veces más rápida gracias al procesamiento por lotes" },
+      },
       {
         type: "improvement",
         text: "Bulk import now gracefully stops at the 15-holding free-tier limit instead of failing the entire import",

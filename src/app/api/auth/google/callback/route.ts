@@ -1,0 +1,175 @@
+import { NextRequest, NextResponse } from "next/server";
+import {
+  findUserByGoogleId,
+  findUserByEmail,
+  createUser,
+  trackEvent,
+  toPublicUser,
+} from "@/lib/db";
+import type { DbUser } from "@/lib/db";
+import {
+  createSessionToken,
+  getSessionCookieConfig,
+} from "@/lib/auth/session";
+import { ensureSessionSecret } from "@/lib/auth/session-secret";
+import { authEventsTotal } from "@/lib/metrics";
+
+const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
+const GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo";
+
+interface GoogleUserInfo {
+  sub: string;
+  email: string;
+  email_verified: boolean;
+  name: string;
+  picture: string;
+}
+
+function getRedirectUri(req: NextRequest): string {
+  const base = process.env.APP_BASE_URL || req.nextUrl.origin;
+  return `${base}/api/auth/google/callback`;
+}
+
+function errorRedirect(req: NextRequest, message: string): NextResponse {
+  const url = new URL("/login", req.nextUrl.origin);
+  url.searchParams.set("error", message);
+  return NextResponse.redirect(url);
+}
+
+export async function GET(req: NextRequest) {
+  ensureSessionSecret();
+
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  if (!clientId || !clientSecret) {
+    return errorRedirect(req, "Google OAuth is not configured.");
+  }
+
+  const code = req.nextUrl.searchParams.get("code");
+  const state = req.nextUrl.searchParams.get("state");
+  const storedState = req.cookies.get("google_oauth_state")?.value;
+
+  if (!code || !state || state !== storedState) {
+    return errorRedirect(req, "Invalid OAuth state. Please try again.");
+  }
+
+  try {
+    const tokenRes = await fetch(GOOGLE_TOKEN_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        code,
+        client_id: clientId,
+        client_secret: clientSecret,
+        redirect_uri: getRedirectUri(req),
+        grant_type: "authorization_code",
+      }),
+    });
+
+    if (!tokenRes.ok) {
+      console.error("Google token exchange failed:", await tokenRes.text());
+      return errorRedirect(req, "Google authentication failed.");
+    }
+
+    const tokenData = await tokenRes.json();
+    const accessToken = tokenData.access_token;
+    if (!accessToken) {
+      return errorRedirect(req, "Google authentication failed.");
+    }
+
+    const userInfoRes = await fetch(GOOGLE_USERINFO_URL, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!userInfoRes.ok) {
+      return errorRedirect(req, "Failed to fetch Google profile.");
+    }
+
+    const googleUser: GoogleUserInfo = await userInfoRes.json();
+    if (!googleUser.email) {
+      return errorRedirect(req, "No email returned from Google.");
+    }
+
+    let dbUser: DbUser | null = await findUserByGoogleId(googleUser.sub);
+
+    if (!dbUser) {
+      const existingEmail = await findUserByEmail(googleUser.email);
+      if (existingEmail) {
+        if (existingEmail.auth_provider === "credentials") {
+          return errorRedirect(
+            req,
+            "An account with this email already exists. Please sign in with your password.",
+          );
+        }
+        dbUser = existingEmail;
+      }
+    }
+
+    if (!dbUser) {
+      const username = googleUser.email.split("@")[0].replace(/[^a-zA-Z0-9._-]/g, "").slice(0, 30) || "user";
+      const publicUser = await createUser({
+        username,
+        passwordHash: "",
+        email: googleUser.email.toLowerCase(),
+        displayName: googleUser.name || "",
+        avatarUrl: googleUser.picture || "",
+        authProvider: "google",
+        googleId: googleUser.sub,
+        emailVerified: googleUser.email_verified,
+        seedWithData: false,
+      });
+      dbUser = {
+        id: publicUser.id,
+        username: publicUser.username,
+        password_hash: "",
+        role: publicUser.role,
+        must_change_password: 0,
+        created_at: publicUser.createdAt,
+        email: publicUser.email,
+        display_name: publicUser.displayName,
+        avatar_url: publicUser.avatarUrl,
+        plan: publicUser.plan,
+        stripe_customer_id: "",
+        stripe_subscription_id: "",
+        plan_expires_at: "",
+        ai_calls_this_month: 0,
+        ai_calls_reset_at: "",
+        ai_calls_today: 0,
+        ai_daily_reset_at: "",
+        email_verified: googleUser.email_verified ? 1 : 0,
+        auth_provider: "google",
+        google_id: googleUser.sub,
+      };
+      trackEvent(publicUser.id, "signup");
+      authEventsTotal.inc({ event: "signup" });
+    }
+
+    const token = await createSessionToken({
+      userId: dbUser.id,
+      username: dbUser.username,
+      email: dbUser.email,
+      role: dbUser.role,
+      mustChangePassword: false,
+      plan: dbUser.plan,
+    });
+
+    trackEvent(dbUser.id, "login");
+    authEventsTotal.inc({ event: "login_success" });
+
+    const response = NextResponse.redirect(new URL("/", req.nextUrl.origin));
+    response.cookies.set(getSessionCookieConfig(token));
+    response.cookies.set({
+      name: "google_oauth_state",
+      value: "",
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 0,
+    });
+
+    return response;
+  } catch (error) {
+    console.error("Google OAuth callback failed:", error);
+    return errorRedirect(req, "Google authentication failed.");
+  }
+}

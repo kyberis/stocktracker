@@ -371,6 +371,30 @@ const MIGRATIONS: Migration[] = [
       });
     },
   },
+  {
+    version: 5,
+    description: "Add auth_provider and google_id columns for OAuth support",
+    up: async (client: Client) => {
+      const cols = await client.execute("PRAGMA table_info(users)");
+      const colNames = new Set(cols.rows.map((r) => str(r.name)));
+
+      if (!colNames.has("auth_provider")) {
+        await client.execute({ sql: "ALTER TABLE users ADD COLUMN auth_provider TEXT NOT NULL DEFAULT 'credentials'" });
+      }
+      if (!colNames.has("google_id")) {
+        await client.execute({ sql: "ALTER TABLE users ADD COLUMN google_id TEXT NOT NULL DEFAULT ''" });
+      }
+
+      await client.execute({
+        sql: `CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_unique
+              ON users(email) WHERE email != ''`,
+      });
+      await client.execute({
+        sql: `CREATE UNIQUE INDEX IF NOT EXISTS idx_users_google_id_unique
+              ON users(google_id) WHERE google_id != ''`,
+      });
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

@@ -33,6 +33,7 @@ export const POST = withMetrics("/api/auth/change-password", async (req: NextReq
     const token = await createSessionToken({
       userId: user.id,
       username: user.username,
+      email: user.email,
       role: user.role,
       mustChangePassword: false,
       plan: user.plan,

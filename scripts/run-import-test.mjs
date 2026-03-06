@@ -44,17 +44,23 @@ async function main() {
     await page.goto(`${BASE}/`);
     await page.evaluate(() => {
       try {
-        localStorage.setItem("stocktracker_seen_version", "0.11.0");
+        localStorage.setItem("trefolio_seen_version", "0.29.0");
       } catch {}
     });
     await page.reload();
     await page.waitForLoadState("networkidle").catch(() => {});
 
-    // Dismiss any remaining overlay by clicking backdrop
-    const backdrop = page.locator('div.absolute.inset-0[class*="bg-black"]').first();
-    if (await backdrop.isVisible().catch(() => false)) {
-      await backdrop.click({ force: true });
-      await page.waitForTimeout(300);
+    // Dismiss What's New modal - click "Got it" or backdrop
+    const gotIt = page.getByRole("button", { name: "Got it" });
+    if (await gotIt.isVisible().catch(() => false)) {
+      await gotIt.click();
+      await page.waitForTimeout(500);
+    } else {
+      const backdrop = page.locator('div.absolute.inset-0[class*="bg-black"]').first();
+      if (await backdrop.isVisible().catch(() => false)) {
+        await backdrop.click({ force: true });
+        await page.waitForTimeout(500);
+      }
     }
 
     // Open Import Portfolio
@@ -78,9 +84,16 @@ async function main() {
       throw new Error("Import failed");
     }
 
-    // Wait for preview (Import All button)
+    // Wait for preview (Import All button) - large CSV parse + ISIN lookups can take 60-90s
     const importAllBtn = page.getByRole("button", { name: /Import All|Importar Todo/ });
-    await importAllBtn.waitFor({ state: "visible", timeout: 30000 });
+    try {
+      await importAllBtn.waitFor({ state: "visible", timeout: 120000 });
+    } catch (e) {
+      await page.screenshot({ path: "import-parse-timeout.png" });
+      const bodyText = await page.locator("body").textContent();
+      results.errors.push(`Parse timeout. Body snippet: ${bodyText?.slice(0, 500)}`);
+      throw e;
+    }
     const btnText = await importAllBtn.textContent();
     results.messages.push(`Preview: ${btnText?.trim() || "Import All (N)"}`);
 

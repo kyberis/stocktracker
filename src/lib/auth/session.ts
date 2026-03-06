@@ -14,6 +14,7 @@ function getSessionSecret(): string {
 export interface SessionPayload {
   userId: string;
   username: string;
+  email: string;
   role: UserRole;
   mustChangePassword: boolean;
   plan: SubscriptionPlan;
@@ -35,6 +36,7 @@ export async function verifySessionToken(token: string): Promise<SessionPayload 
     return {
       userId: String(payload.userId),
       username: String(payload.username),
+      email: String(payload.email || ""),
       role: payload.role === "admin" ? "admin" : "user",
       mustChangePassword: Boolean(payload.mustChangePassword),
       plan: payload.plan === "pro" ? "pro" : "free",

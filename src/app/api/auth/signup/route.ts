@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createUser, findUserByUsername, trackEvent } from "@/lib/db";
+import { createUser, findUserByEmail, trackEvent } from "@/lib/db";
 import { hashPassword } from "@/lib/auth/password";
 import {
   createSessionToken,
@@ -11,31 +11,44 @@ import { authEventsTotal } from "@/lib/metrics";
 import { parseBody } from "@/lib/api-response";
 import { signupSchema } from "@/lib/schemas";
 
+function deriveUsername(email: string): string {
+  const prefix = email.split("@")[0].replace(/[^a-zA-Z0-9._-]/g, "");
+  return prefix.slice(0, 30) || "user";
+}
+
 export const POST = withMetrics("/api/auth/signup", async (req: NextRequest) => {
   ensureSessionSecret();
 
   const result = await parseBody(req, signupSchema);
   if (!result.success) return result.error;
-  const { username, password, seedWithData } = result.data;
-  const trimmedUsername = username.trim();
-  if (trimmedUsername.length < 3) {
-    return NextResponse.json({ error: "Username must be at least 3 characters." }, { status: 400 });
-  }
-  if (trimmedUsername.toLowerCase() === "admin") {
-    return NextResponse.json({ error: "Username is reserved." }, { status: 400 });
+  const { email, password, displayName, seedWithData } = result.data;
+  const normalizedEmail = email.trim().toLowerCase();
+
+  if (normalizedEmail.length < 5) {
+    return NextResponse.json({ error: "Invalid email address." }, { status: 400 });
   }
 
   try {
-    const existing = await findUserByUsername(trimmedUsername);
+    const existing = await findUserByEmail(normalizedEmail);
     if (existing) {
-      return NextResponse.json({ error: "Username already exists." }, { status: 409 });
+      return NextResponse.json({ error: "An account with this email already exists." }, { status: 409 });
     }
 
     const passwordHash = await hashPassword(password);
-    const user = await createUser({ username: trimmedUsername, passwordHash, seedWithData: Boolean(seedWithData) });
+    const username = deriveUsername(normalizedEmail);
+    const user = await createUser({
+      username,
+      passwordHash,
+      email: normalizedEmail,
+      displayName: displayName || "",
+      authProvider: "credentials",
+      seedWithData: Boolean(seedWithData),
+    });
+
     const token = await createSessionToken({
       userId: user.id,
       username: user.username,
+      email: user.email,
       role: user.role,
       mustChangePassword: user.mustChangePassword,
       plan: user.plan,

@@ -72,6 +72,12 @@ export default function PrivacyPolicyPage() {
                 a one-way bcrypt hash. We never store or have access to your
                 plaintext password.
               </li>
+              <li>
+                <strong className="text-slate-200">Third-party sign-in (Google)</strong> — 
+                if you sign in with Google, we receive and store your name, email
+                address, and profile picture from your Google account. We do not
+                receive or store your Google password.
+              </li>
             </ul>
 
             <h3>Portfolio Data</h3>

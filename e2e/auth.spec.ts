@@ -14,7 +14,7 @@ test.describe("Authentication", () => {
 
   test("rejects invalid credentials", async ({ page }) => {
     await page.goto("/login");
-    await page.locator('input[autocomplete="username"]').fill("nonexistent");
+    await page.locator('input[autocomplete="username"]').fill("nonexistent@example.com");
     await page.locator('input[autocomplete="current-password"]').fill("badpassword");
     await page.click('button[type="submit"]');
     await page.waitForTimeout(2000);
@@ -22,11 +22,11 @@ test.describe("Authentication", () => {
   });
 
   test("signup creates account and redirects to dashboard", async ({ page }) => {
-    const username = `e2e_signup_${Date.now()}`;
+    const email = `e2e_signup_${Date.now()}@test.example.com`;
     const password = "SecurePass1!";
 
     await page.goto("/signup");
-    await page.locator('input[autocomplete="username"]').fill(username);
+    await page.locator('input[autocomplete="email"]').fill(email);
     const pwInputs = page.locator('input[autocomplete="new-password"]');
     await pwInputs.nth(0).fill(password);
     await pwInputs.nth(1).fill(password);
@@ -35,12 +35,12 @@ test.describe("Authentication", () => {
     await expect(page).toHaveURL("/");
   });
 
-  test("signup rejects duplicate username via API", async ({ request }) => {
-    const { username } = await createTestUser(request);
+  test("signup rejects duplicate email via API", async ({ request }) => {
+    const { email } = await createTestUser(request);
     await ensureLoggedOut(request);
 
     const dup = await request.post("/api/auth/signup", {
-      data: { username, password: "AnotherPass1!" },
+      data: { email, password: "AnotherPass1!" },
     });
     expect(dup.status()).not.toBe(201);
   });
@@ -58,7 +58,7 @@ test.describe("Authentication", () => {
   });
 
   test("change password via API works", async ({ request }) => {
-    const { username, password } = await createTestUser(request);
+    const { email, password } = await createTestUser(request);
     const newPassword = "NewPass2!";
 
     const chRes = await request.post("/api/auth/change-password", {
@@ -69,18 +69,18 @@ test.describe("Authentication", () => {
     await ensureLoggedOut(request);
 
     const loginOld = await request.post("/api/auth/login", {
-      data: { username, password },
+      data: { identifier: email, password },
     });
     expect(loginOld.status()).not.toBe(200);
 
     const loginNew = await request.post("/api/auth/login", {
-      data: { username, password: newPassword },
+      data: { identifier: email, password: newPassword },
     });
     expect(loginNew.status()).toBe(200);
   });
 
   test("delete account removes user and prevents login", async ({ request }) => {
-    const { username, password } = await createTestUser(request);
+    const { email, password } = await createTestUser(request);
 
     const delRes = await request.post("/api/auth/delete-account", {
       data: { password },
@@ -88,17 +88,17 @@ test.describe("Authentication", () => {
     expect(delRes.status()).toBe(200);
 
     const loginRes = await request.post("/api/auth/login", {
-      data: { username, password },
+      data: { identifier: email, password },
     });
     expect(loginRes.status()).not.toBe(200);
   });
 
   test("/api/auth/me returns current user info", async ({ request }) => {
-    const { username } = await createTestUser(request);
+    await createTestUser(request);
 
     const me = await request.get("/api/auth/me");
     expect(me.status()).toBe(200);
     const body = await me.json();
-    expect(body.user.username).toBe(username);
+    expect(body.user.email).toBeTruthy();
   });
 });

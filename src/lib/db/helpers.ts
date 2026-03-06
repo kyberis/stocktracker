@@ -10,6 +10,8 @@ import type {
 export type UserRole = "admin" | "user";
 export type UserPlan = "free" | "pro";
 
+export type AuthProvider = "credentials" | "google";
+
 export interface DbUser {
   id: string;
   username: string;
@@ -29,6 +31,8 @@ export interface DbUser {
   ai_calls_today: number;
   ai_daily_reset_at: string;
   email_verified: number;
+  auth_provider: AuthProvider;
+  google_id: string;
 }
 
 export interface PublicUser {
@@ -47,6 +51,7 @@ export interface PublicUser {
   aiCallsToday: number;
   aiDailyResetAt: string;
   emailVerified: boolean;
+  authProvider: AuthProvider;
 }
 
 export interface UserSettings {
@@ -148,6 +153,8 @@ export function rowToDbUser(row: Row): DbUser {
     ai_calls_today: num(row.ai_calls_today),
     ai_daily_reset_at: str(row.ai_daily_reset_at),
     email_verified: num(row.email_verified),
+    auth_provider: str(row.auth_provider) === "google" ? "google" : "credentials",
+    google_id: str(row.google_id),
   };
 }
 
@@ -168,6 +175,7 @@ export function mapUser(user: DbUser): PublicUser {
     aiCallsToday: user.ai_calls_today,
     aiDailyResetAt: user.ai_daily_reset_at,
     emailVerified: user.email_verified === 1,
+    authProvider: user.auth_provider,
   };
 }
 
