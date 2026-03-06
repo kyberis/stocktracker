@@ -48,11 +48,19 @@ function ChangePasswordForm() {
     <main className="flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md card">
         <div className="flex items-center gap-2 mb-6">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center">
-            <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-            </svg>
-          </div>
+          <svg className="w-8 h-8 rounded-lg" viewBox="0 0 32 32">
+            <defs>
+              <linearGradient id="cp-a" x1=".5" y1="0" x2=".5" y2="1"><stop offset="0%" stopColor="#6ee7b7"/><stop offset="100%" stopColor="#10b981"/></linearGradient>
+              <linearGradient id="cp-b" x1="0" y1=".3" x2="1" y2=".7"><stop offset="0%" stopColor="#34d399"/><stop offset="100%" stopColor="#059669"/></linearGradient>
+              <linearGradient id="cp-c" x1="1" y1=".3" x2="0" y2=".7"><stop offset="0%" stopColor="#10b981"/><stop offset="100%" stopColor="#047857"/></linearGradient>
+            </defs>
+            <rect width="32" height="32" rx="7" fill="#0f172a"/>
+            <g transform="translate(16,16)">
+              <ellipse cx="0" cy="-5" rx="4.5" ry="6.5" fill="url(#cp-a)"/>
+              <ellipse cx="0" cy="-5" rx="4.5" ry="6.5" fill="url(#cp-b)" transform="rotate(120)"/>
+              <ellipse cx="0" cy="-5" rx="4.5" ry="6.5" fill="url(#cp-c)" transform="rotate(240)"/>
+            </g>
+          </svg>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Change password</h1>
         </div>
         <p className="text-sm text-gray-500 dark:text-slate-400 mb-6">

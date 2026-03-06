@@ -67,11 +67,19 @@ function SignupForm() {
         {/* Logo + branding */}
         <div className="text-center mb-8">
           <Link href="/landing" className="inline-flex items-center gap-2.5 mb-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-              </svg>
-            </div>
+            <svg className="w-10 h-10 rounded-xl shadow-lg shadow-emerald-500/20" viewBox="0 0 32 32">
+              <defs>
+                <linearGradient id="su-a" x1=".5" y1="0" x2=".5" y2="1"><stop offset="0%" stopColor="#6ee7b7"/><stop offset="100%" stopColor="#10b981"/></linearGradient>
+                <linearGradient id="su-b" x1="0" y1=".3" x2="1" y2=".7"><stop offset="0%" stopColor="#34d399"/><stop offset="100%" stopColor="#059669"/></linearGradient>
+                <linearGradient id="su-c" x1="1" y1=".3" x2="0" y2=".7"><stop offset="0%" stopColor="#10b981"/><stop offset="100%" stopColor="#047857"/></linearGradient>
+              </defs>
+              <rect width="32" height="32" rx="7" fill="#0f172a"/>
+              <g transform="translate(16,16)">
+                <ellipse cx="0" cy="-5" rx="4.5" ry="6.5" fill="url(#su-a)"/>
+                <ellipse cx="0" cy="-5" rx="4.5" ry="6.5" fill="url(#su-b)" transform="rotate(120)"/>
+                <ellipse cx="0" cy="-5" rx="4.5" ry="6.5" fill="url(#su-c)" transform="rotate(240)"/>
+              </g>
+            </svg>
             <span className="text-xl font-bold text-gray-900 dark:text-white">trefolio</span>
           </Link>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Create your account</h1>

@@ -37,9 +37,17 @@ const ORGANIZATION_SCHEMA = {
   "@type": "Organization",
   name: "trefolio",
   url: "https://trefolio.com",
-  logo: "https://trefolio.com/favicon.ico",
+  logo: "https://trefolio.com/icon.svg",
   description:
     "Simple portfolio tracking with AI insights for European investors",
+  email: "support@trefolio.com",
+  foundingDate: "2025",
+  contactPoint: {
+    "@type": "ContactPoint",
+    email: "support@trefolio.com",
+    contactType: "customer support",
+    availableLanguage: ["English", "Spanish"],
+  },
 };
 
 const SOFTWARE_APP_SCHEMA = {

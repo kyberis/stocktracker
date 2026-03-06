@@ -40,11 +40,19 @@ export default function AppNav({ onWhatsNew, hasNewRelease }: AppNavProps) {
         {/* Left: Logo + Nav */}
         <div className="flex items-center gap-1 sm:gap-6">
           <a href="/" className="flex items-center gap-2 mr-2 sm:mr-0">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center">
-              <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-              </svg>
-            </div>
+            <svg className="w-7 h-7 rounded-lg" viewBox="0 0 32 32">
+              <defs>
+                <linearGradient id="nav-a" x1=".5" y1="0" x2=".5" y2="1"><stop offset="0%" stopColor="#6ee7b7"/><stop offset="100%" stopColor="#10b981"/></linearGradient>
+                <linearGradient id="nav-b" x1="0" y1=".3" x2="1" y2=".7"><stop offset="0%" stopColor="#34d399"/><stop offset="100%" stopColor="#059669"/></linearGradient>
+                <linearGradient id="nav-c" x1="1" y1=".3" x2="0" y2=".7"><stop offset="0%" stopColor="#10b981"/><stop offset="100%" stopColor="#047857"/></linearGradient>
+              </defs>
+              <rect width="32" height="32" rx="7" fill="#0f172a"/>
+              <g transform="translate(16,16)">
+                <ellipse cx="0" cy="-5" rx="4.5" ry="6.5" fill="url(#nav-a)"/>
+                <ellipse cx="0" cy="-5" rx="4.5" ry="6.5" fill="url(#nav-b)" transform="rotate(120)"/>
+                <ellipse cx="0" cy="-5" rx="4.5" ry="6.5" fill="url(#nav-c)" transform="rotate(240)"/>
+              </g>
+            </svg>
             <span className="hidden sm:inline text-base font-bold text-gray-900 dark:text-white">{t("appTitle")}</span>
           </a>
 

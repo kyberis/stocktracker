@@ -274,11 +274,19 @@ function FeatureIcon({ type }: { type: string }) {
 
 function Logo({ className = "w-10 h-10" }: { className?: string }) {
   return (
-    <div className={`${className} rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/25`}>
-      <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-      </svg>
-    </div>
+    <svg className={`${className} rounded-xl shadow-lg shadow-emerald-500/25`} viewBox="0 0 32 32">
+      <defs>
+        <linearGradient id="logo-a" x1=".5" y1="0" x2=".5" y2="1"><stop offset="0%" stopColor="#6ee7b7"/><stop offset="100%" stopColor="#10b981"/></linearGradient>
+        <linearGradient id="logo-b" x1="0" y1=".3" x2="1" y2=".7"><stop offset="0%" stopColor="#34d399"/><stop offset="100%" stopColor="#059669"/></linearGradient>
+        <linearGradient id="logo-c" x1="1" y1=".3" x2="0" y2=".7"><stop offset="0%" stopColor="#10b981"/><stop offset="100%" stopColor="#047857"/></linearGradient>
+      </defs>
+      <rect width="32" height="32" rx="7" fill="#0f172a"/>
+      <g transform="translate(16,16)">
+        <ellipse cx="0" cy="-5" rx="4.5" ry="6.5" fill="url(#logo-a)"/>
+        <ellipse cx="0" cy="-5" rx="4.5" ry="6.5" fill="url(#logo-b)" transform="rotate(120)"/>
+        <ellipse cx="0" cy="-5" rx="4.5" ry="6.5" fill="url(#logo-c)" transform="rotate(240)"/>
+      </g>
+    </svg>
   );
 }
 
