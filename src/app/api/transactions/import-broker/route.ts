@@ -62,7 +62,7 @@ async function resolveIsinsViaYahoo(
   if (unmappedIsins.length === 0) return isinMap;
   const yahoo = new YahooProvider();
   const resolved = { ...isinMap };
-  const MAX_LOOKUPS = 15;
+  const MAX_LOOKUPS = 50;
   const batch = unmappedIsins.slice(0, MAX_LOOKUPS);
 
   await Promise.all(

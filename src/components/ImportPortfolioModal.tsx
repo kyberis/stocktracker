@@ -258,7 +258,8 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
     // Sort chronologically so buys happen before sells for correct holding sync
     const derivedTransactions = [...unsorted].sort((a, b) => a.date.localeCompare(b.date));
 
-    const total = derivedTransactions.filter((tx) => tx.ticker && tx.date).length;
+    const validTransactions = derivedTransactions.filter((tx) => tx.date);
+    const total = validTransactions.length;
     setImportProgress({ current: 0, total, errors: 0 });
     setStep("importing");
 
@@ -271,15 +272,15 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
     };
     const importSource = isImageImport ? "Image import" : `${formatLabels[csvFormat]} import`;
 
-    for (const tx of derivedTransactions) {
-      if (!tx.ticker || !tx.date) continue;
+    for (const tx of validTransactions) {
+      const ticker = tx.ticker || (tx.type === "fee" ? "FEE" : "UNKNOWN");
       try {
         const res = await fetch("/api/transactions", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             holdingId: "",
-            ticker: tx.ticker,
+            ticker,
             name: tx.name,
             exchange: holdings.find((h) => h.ticker === tx.ticker)?.exchange || "",
             isin: "",
