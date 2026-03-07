@@ -187,6 +187,7 @@ export async function POST(req: NextRequest) {
         portfolio_review_count: 0,
         portfolio_review_reset_at: "",
         widget_token_hash: "",
+        device_passkey_hash: "",
       };
       trackEvent(publicUser.id, "signup");
       authEventsTotal.inc({ event: "signup" });
