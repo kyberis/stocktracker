@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { verifySessionToken } from "@/lib/auth/session";
+import { isFeatureEnabled } from "@/lib/db";
 
 const APPLE_AUTH_URL = "https://appleid.apple.com/auth/authorize";
 
@@ -10,6 +11,13 @@ function getRedirectUri(req: NextRequest): string {
 }
 
 export async function GET(req: NextRequest) {
+  if (!(await isFeatureEnabled("apple_signin_enabled"))) {
+    return NextResponse.json(
+      { error: "Apple Sign In is not enabled." },
+      { status: 403 },
+    );
+  }
+
   const clientId = process.env.APPLE_CLIENT_ID;
   if (!clientId) {
     return NextResponse.json(

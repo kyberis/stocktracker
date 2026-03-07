@@ -1031,6 +1031,7 @@ function FeatureTogglesCard() {
 
   const alertsOn = flags.alerts_enabled ?? false;
   const csvOn = flags.csv_export_enabled ?? false;
+  const appleOn = flags.apple_signin_enabled ?? false;
 
   const alertsSteps: SetupStep[] = [
     { text: "Enable this toggle", done: alertsOn },
@@ -1042,6 +1043,13 @@ function FeatureTogglesCard() {
   const csvSteps: SetupStep[] = [
     { text: "Enable this toggle", done: csvOn },
     { text: "No additional configuration required — works out of the box for Pro users", done: csvOn },
+  ];
+
+  const appleSteps: SetupStep[] = [
+    { text: "Enable this toggle", done: appleOn },
+    { text: "Set APPLE_CLIENT_ID (Services ID from Apple Developer portal)", done: !!process.env.NEXT_PUBLIC_APPLE_CLIENT_ID },
+    { text: "Set APPLE_TEAM_ID, APPLE_KEY_ID, and APPLE_PRIVATE_KEY env vars", done: false },
+    { text: "Register the callback URL in Apple Developer: {APP_BASE_URL}/api/auth/apple/callback", done: false },
   ];
 
   return (
@@ -1066,6 +1074,14 @@ function FeatureTogglesCard() {
           saving={saving === "csv_export_enabled"}
           onToggle={(v) => handleToggle("csv_export_enabled", v)}
           steps={csvSteps}
+        />
+        <FeatureToggle
+          label="Sign in with Apple"
+          description="Show the Apple sign-in button on login and signup pages. Requires Apple Developer credentials."
+          enabled={appleOn}
+          saving={saving === "apple_signin_enabled"}
+          onToggle={(v) => handleToggle("apple_signin_enabled", v)}
+          steps={appleSteps}
         />
       </div>
     </div>

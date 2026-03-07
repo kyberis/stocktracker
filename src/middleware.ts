@@ -13,6 +13,7 @@ const PUBLIC_API_ROUTES = new Set([
   "/api/auth/verify-email",
   "/api/auth/passkey/login-options",
   "/api/auth/passkey/login-verify",
+  "/api/feature-flags",
   "/api/billing/webhook",
   "/api/analytics/landing",
   "/api/metrics",

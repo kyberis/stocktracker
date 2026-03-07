@@ -24,7 +24,7 @@ export default function WidgetSetupPage() {
     <main className="px-4 py-8">
       <div className="max-w-2xl mx-auto space-y-6">
         <div>
-          <Link href="/app/profile" className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline mb-2 inline-block">
+          <Link href="/profile" className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline mb-2 inline-block">
             &larr; Back to Profile
           </Link>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
@@ -102,7 +102,7 @@ export default function WidgetSetupPage() {
                 <li className="flex gap-3">
                   <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 flex items-center justify-center text-xs font-bold">1</span>
                   <span>
-                    <Link href="/app/profile" className="text-emerald-600 dark:text-emerald-400 underline">Generate a Widget Token</Link> from your profile
+                    <Link href="/profile" className="text-emerald-600 dark:text-emerald-400 underline">Generate a Widget Token</Link> from your profile
                   </span>
                 </li>
                 <li className="flex gap-3">
@@ -181,7 +181,7 @@ export default function WidgetSetupPage() {
                 After installing the PWA, long-press the trefolio icon on your home screen to access shortcuts for Portfolio, Dividends, and the Widget view.
               </p>
               <p className="text-sm text-gray-600 dark:text-slate-400">
-                You can also open the <Link href="/app/widget" className="text-emerald-600 dark:text-emerald-400 underline">Widget View</Link> directly for a compact portfolio summary that auto-refreshes.
+                You can also open the <Link href="/widget" className="text-emerald-600 dark:text-emerald-400 underline">Widget View</Link> directly for a compact portfolio summary that auto-refreshes.
               </p>
             </div>
           </>

@@ -6,6 +6,7 @@ import {
   createUser,
   trackEvent,
   toPublicUser,
+  isFeatureEnabled,
 } from "@/lib/db";
 import type { DbUser } from "@/lib/db";
 import {
@@ -56,6 +57,10 @@ interface AppleIdTokenClaims {
 
 export async function POST(req: NextRequest) {
   ensureSessionSecret();
+
+  if (!(await isFeatureEnabled("apple_signin_enabled"))) {
+    return errorRedirect(req, "Apple Sign In is not enabled.");
+  }
 
   const clientId = process.env.APPLE_CLIENT_ID;
   const teamId = process.env.APPLE_TEAM_ID;

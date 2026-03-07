@@ -822,7 +822,7 @@ export default function ProfilePage() {
                 </button>
               </div>
               <a
-                href="/app/widget/setup"
+                href="/widget/setup"
                 className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline"
               >
                 View setup instructions &rarr;
@@ -855,7 +855,7 @@ export default function ProfilePage() {
                 )}
               </div>
               <a
-                href="/app/widget/setup"
+                href="/widget/setup"
                 className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline inline-block"
               >
                 View setup instructions &rarr;
