@@ -1,0 +1,39 @@
+# LILYGO T4-S3 (ESP32-S3) Firmware
+
+PlatformIO project targeting the LILYGO T4-S3 development board.
+
+## Board
+
+- **MCU**: ESP32-S3R8, dual-core LX7 @ 240 MHz
+- **Memory**: 16 MB Flash, 8 MB PSRAM
+- **Display**: 2.41" AMOLED 450x600 (RM690B0)
+- **Touch**: Capacitive (CST226SE)
+- **Connectivity**: WiFi 2.4 GHz, Bluetooth 5 LE
+
+## Quick Start
+
+```bash
+# Build firmware
+pio run
+
+# Flash to board (connect via USB-C)
+pio run --target upload
+
+# Serial monitor
+pio device monitor
+
+# Build + flash + monitor
+pio run --target upload && pio device monitor
+```
+
+## Debugging
+
+The ESP32-S3 has built-in USB JTAG. Press **F5** in VS Code/Cursor to start a debug session with breakpoints and variable inspection.
+
+If the board is not detected, hold **Boot** while pressing **Reset**, then release Boot to enter download mode.
+
+## Resources
+
+- [LilyGo-AMOLED-Series](https://github.com/Xinyuan-LilyGO/LilyGo-AMOLED-Series) — official library and examples
+- [T4-S3 product page](https://lilygo.cc/en-us/products/t4-s3)
+- [PlatformIO docs](https://docs.platformio.org/)
