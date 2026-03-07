@@ -628,7 +628,7 @@ const es: TranslationStrings = {
   ibkrDisconnectConfirm: "¿Estás seguro de que quieres desconectar tu cuenta de IBKR?",
   ibkrSetupWhatYouNeed: "Necesitarás tu inicio de sesión de IBKR Client Portal y unos 2 minutos. Te guiaremos para crear un informe Flex Query y habilitar el acceso API.",
   ibkrSetupStep1Title: "Crear una Flex Query",
-  ibkrSetupStep1Desc: "Inicia sesión en Client Portal → Performance & Reports → Flex Queries. Crea una Activity Flex Query que incluya Operaciones, Dividendos y Retención de impuestos. Establece el formato de salida en CSV. Anota el Query ID que aparece tras guardar.",
+  ibkrSetupStep1Desc: "Inicia sesión en Client Portal → Performance & Reports → Flex Queries. Crea una Activity Flex Query y en la lista de Secciones marca al menos \"Trades\" y \"Cash Transactions\" (para dividendos y retenciones). Establece el formato de salida en CSV. Anota el Query ID que aparece tras guardar.",
   ibkrSetupStep2Title: "Habilitar acceso API",
   ibkrSetupStep2Desc: "En la misma página, haz clic en \"Flex Web Service Configuration\" a la derecha. Habilita el servicio, establece la expiración del token en 1 año y copia el token generado.",
   ibkrSetupStep3Title: "Pegar a continuación",
