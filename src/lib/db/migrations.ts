@@ -450,6 +450,20 @@ const MIGRATIONS: Migration[] = [
       });
     },
   },
+  {
+    version: 9,
+    description: "Add widget_token_hash column for PWA widget API auth",
+    up: async (client: Client) => {
+      try {
+        await client.execute({
+          sql: "ALTER TABLE users ADD COLUMN widget_token_hash TEXT NOT NULL DEFAULT ''",
+        });
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("duplicate column")) throw e;
+      }
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect, useRef, FormEvent } from "react";
+import { useState, useEffect, useRef, useCallback, FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { useSettings } from "@/lib/settings-context";
 import { useI18n } from "@/lib/i18n";
 import type { ApiProviderName } from "@/lib/types";
 import ProCompareCard from "@/components/ProCompareCard";
+import { Smartphone, Copy, Check, Trash2 } from "lucide-react";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -45,6 +46,11 @@ export default function ProfilePage() {
   const [unlinking, setUnlinking] = useState(false);
   const [googleMsg, setGoogleMsg] = useState("");
   const [googleError, setGoogleError] = useState("");
+
+  const [widgetHasToken, setWidgetHasToken] = useState(false);
+  const [widgetToken, setWidgetToken] = useState("");
+  const [widgetCopied, setWidgetCopied] = useState(false);
+  const [widgetLoading, setWidgetLoading] = useState(false);
 
   const returnedFromCheckout = searchParams.get("billing") === "success";
   const emailJustVerified = searchParams.get("emailVerified") === "true";
@@ -100,6 +106,42 @@ export default function ProfilePage() {
       setAvatarUrl(user.avatarUrl || "");
     }
   }, [user]);
+
+  useEffect(() => {
+    fetch("/api/widget-token")
+      .then((r) => r.json())
+      .then((d) => setWidgetHasToken(!!d.hasToken))
+      .catch(() => {});
+  }, []);
+
+  const handleGenerateToken = useCallback(async () => {
+    setWidgetLoading(true);
+    try {
+      const res = await fetch("/api/widget-token", { method: "POST" });
+      const data = await res.json();
+      if (data.token) {
+        setWidgetToken(data.token);
+        setWidgetHasToken(true);
+      }
+    } catch { /* ignore */ }
+    setWidgetLoading(false);
+  }, []);
+
+  const handleRevokeToken = useCallback(async () => {
+    setWidgetLoading(true);
+    try {
+      await fetch("/api/widget-token", { method: "DELETE" });
+      setWidgetHasToken(false);
+      setWidgetToken("");
+    } catch { /* ignore */ }
+    setWidgetLoading(false);
+  }, []);
+
+  const handleCopyToken = useCallback(() => {
+    navigator.clipboard.writeText(widgetToken);
+    setWidgetCopied(true);
+    setTimeout(() => setWidgetCopied(false), 2000);
+  }, [widgetToken]);
 
   useEffect(() => {
     if (emailJustVerified) {
@@ -567,6 +609,80 @@ export default function ProfilePage() {
           )}
           {verifyMsg && <p className="text-xs text-emerald-600 dark:text-emerald-400">{verifyMsg}</p>}
           {verifyError && <p className="text-xs text-red-500 dark:text-red-400">{verifyError}</p>}
+        </div>
+
+        {/* Widget Access */}
+        <div className="card p-6 space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-500/15 flex items-center justify-center">
+              <Smartphone className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Widget Access</h2>
+              <p className="text-xs text-gray-500 dark:text-slate-400">
+                Use a token to connect home screen widgets
+              </p>
+            </div>
+          </div>
+
+          {widgetToken ? (
+            <div className="space-y-3">
+              <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+                Copy this token now &mdash; it won&apos;t be shown again.
+              </p>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 text-xs bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 px-3 py-2 rounded-lg font-mono break-all">
+                  {widgetToken}
+                </code>
+                <button
+                  onClick={handleCopyToken}
+                  className="btn-secondary p-2 shrink-0"
+                  aria-label="Copy token"
+                >
+                  {widgetCopied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+                </button>
+              </div>
+              <a
+                href="/app/widget/setup"
+                className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline"
+              >
+                View setup instructions &rarr;
+              </a>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {widgetHasToken && (
+                <p className="text-xs text-gray-500 dark:text-slate-400">
+                  A widget token is active. Generate a new one to replace it, or revoke it.
+                </p>
+              )}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleGenerateToken}
+                  disabled={widgetLoading}
+                  className="btn-primary text-sm disabled:opacity-40"
+                >
+                  {widgetLoading ? "Generating..." : widgetHasToken ? "Regenerate Token" : "Generate Token"}
+                </button>
+                {widgetHasToken && (
+                  <button
+                    onClick={handleRevokeToken}
+                    disabled={widgetLoading}
+                    className="btn-secondary text-sm flex items-center gap-1.5 disabled:opacity-40"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Revoke
+                  </button>
+                )}
+              </div>
+              <a
+                href="/app/widget/setup"
+                className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline inline-block"
+              >
+                View setup instructions &rarr;
+              </a>
+            </div>
+          )}
         </div>
 
         {/* Delete Account */}

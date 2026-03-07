@@ -6,6 +6,7 @@ import { I18nProvider } from "@/lib/i18n";
 import { SettingsProvider } from "@/lib/settings-context";
 import AppNav from "@/components/AppNav";
 import MobileTabBar from "@/components/MobileTabBar";
+import InstallPrompt from "@/components/InstallPrompt";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -17,6 +18,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <AppNav />
               {children}
               <MobileTabBar />
+              <InstallPrompt />
             </div>
           </SettingsProvider>
         </I18nProvider>

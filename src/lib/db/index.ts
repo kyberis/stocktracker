@@ -31,6 +31,9 @@ export {
   unlinkGoogleAccount,
   linkAppleAccount,
   unlinkAppleAccount,
+  generateWidgetToken,
+  revokeWidgetToken,
+  findUserByWidgetToken,
 } from "./users";
 
 export {

@@ -210,6 +210,7 @@ describe("rowToDbUser", () => {
       apple_id: "",
       portfolio_review_count: 0,
       portfolio_review_reset_at: "",
+      widget_token_hash: "",
     });
   });
 
@@ -302,6 +303,7 @@ describe("mapUser", () => {
       apple_id: "",
       portfolio_review_count: 0,
       portfolio_review_reset_at: "",
+      widget_token_hash: "",
     };
 
     const publicUser = mapUser(dbUser);
@@ -325,6 +327,7 @@ describe("mapUser", () => {
       authProvider: "credentials",
       portfolioReviewCount: 0,
       portfolioReviewResetAt: "",
+      hasWidgetToken: false,
     });
   });
 
@@ -353,6 +356,7 @@ describe("mapUser", () => {
       apple_id: "",
       portfolio_review_count: 0,
       portfolio_review_reset_at: "",
+      widget_token_hash: "",
     };
 
     const publicUser = mapUser(dbUser);
@@ -387,6 +391,7 @@ describe("mapUser", () => {
       apple_id: "",
       portfolio_review_count: 0,
       portfolio_review_reset_at: "",
+      widget_token_hash: "",
     };
 
     const publicUser = mapUser(dbUser);
@@ -419,6 +424,7 @@ describe("mapUser", () => {
       apple_id: "",
       portfolio_review_count: 0,
       portfolio_review_reset_at: "",
+      widget_token_hash: "",
     };
 
     const publicUser = mapUser(dbUser);

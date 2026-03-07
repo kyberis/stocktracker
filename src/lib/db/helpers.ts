@@ -36,6 +36,7 @@ export interface DbUser {
   apple_id: string;
   portfolio_review_count: number;
   portfolio_review_reset_at: string;
+  widget_token_hash: string;
 }
 
 export interface PublicUser {
@@ -57,6 +58,7 @@ export interface PublicUser {
   authProvider: AuthProvider;
   portfolioReviewCount: number;
   portfolioReviewResetAt: string;
+  hasWidgetToken: boolean;
 }
 
 export interface UserSettings {
@@ -165,6 +167,7 @@ export function rowToDbUser(row: Row): DbUser {
     apple_id: str(row.apple_id),
     portfolio_review_count: num(row.portfolio_review_count),
     portfolio_review_reset_at: str(row.portfolio_review_reset_at),
+    widget_token_hash: str(row.widget_token_hash),
   };
 }
 
@@ -188,6 +191,7 @@ export function mapUser(user: DbUser): PublicUser {
     authProvider: user.auth_provider,
     portfolioReviewCount: user.portfolio_review_count,
     portfolioReviewResetAt: user.portfolio_review_reset_at,
+    hasWidgetToken: !!user.widget_token_hash,
   };
 }
 

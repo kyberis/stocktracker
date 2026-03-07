@@ -1,10 +1,14 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import CookieConsent from "@/components/CookieConsent";
 import "./globals.css";
+
+export const viewport: Viewport = {
+  themeColor: "#10b981",
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://trefolio.com"),
@@ -13,12 +17,17 @@ export const metadata: Metadata = {
     "trefolio is a portfolio tracker for European investors. Real-time quotes, broker imports (DEGIRO, IBKR, T212, Revolut), AI analysis, and dividend projections. Free to start.",
   icons: {
     icon: [
-      { url: "/favicon.ico", sizes: "48x48" },
+      { url: "/favicon.png", sizes: "48x48", type: "image/png" },
       { url: "/icon.svg", type: "image/svg+xml" },
     ],
-    apple: "/icon.svg",
+    apple: "/icons/apple-touch-icon.png",
   },
   manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "trefolio",
+  },
   openGraph: {
     siteName: "trefolio",
     locale: "en_US",
@@ -38,6 +47,11 @@ export default function RootLayout({
         <CookieConsent />
         <Analytics />
         <SpeedInsights />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `if("serviceWorker"in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("/sw.js").catch(()=>{})})}`,
+          }}
+        />
       </body>
     </html>
   );

@@ -14,9 +14,37 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "0.40.0";
+export const CURRENT_VERSION = "0.41.0";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "0.41.0",
+    date: "2026-03-07",
+    title: "PWA & Home Screen Widgets",
+    titleTranslations: { es: "PWA y Widgets de Pantalla de Inicio" },
+    changes: [
+      {
+        type: "feature",
+        text: "Install trefolio as a PWA on your phone — add to home screen for a native app experience",
+        translations: { es: "Instala trefolio como PWA en tu teléfono — añade a la pantalla de inicio para una experiencia de app nativa" },
+      },
+      {
+        type: "feature",
+        text: "iOS home screen widget via Scriptable — see portfolio value and daily P/L at a glance",
+        translations: { es: "Widget de pantalla de inicio en iOS vía Scriptable — ve el valor de tu portafolio y P/L diario de un vistazo" },
+      },
+      {
+        type: "feature",
+        text: "Widget API token for secure out-of-browser access to portfolio summary",
+        translations: { es: "Token de API de widget para acceso seguro al resumen del portafolio fuera del navegador" },
+      },
+      {
+        type: "improvement",
+        text: "Service worker for offline app shell caching and faster subsequent loads",
+        translations: { es: "Service worker para caché de la app offline y cargas posteriores más rápidas" },
+      },
+    ],
+  },
   {
     version: "0.40.0",
     date: "2026-03-07",

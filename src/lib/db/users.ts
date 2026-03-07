@@ -1,4 +1,4 @@
-import { randomUUID } from "crypto";
+import { randomUUID, randomBytes, createHash } from "crypto";
 import { ensureInitialized } from "./client";
 import {
   type DbUser,
@@ -347,4 +347,39 @@ export async function unlinkAppleAccount(userId: string): Promise<void> {
     sql: "UPDATE users SET apple_id = '' WHERE id = ?",
     args: [userId],
   });
+}
+
+function hashToken(token: string): string {
+  return createHash("sha256").update(token).digest("hex");
+}
+
+export async function generateWidgetToken(userId: string): Promise<string> {
+  const client = await ensureInitialized();
+  const token = `tfw_${randomBytes(24).toString("hex")}`;
+  const hash = hashToken(token);
+  await client.execute({
+    sql: "UPDATE users SET widget_token_hash = ? WHERE id = ?",
+    args: [hash, userId],
+  });
+  return token;
+}
+
+export async function revokeWidgetToken(userId: string): Promise<void> {
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: "UPDATE users SET widget_token_hash = '' WHERE id = ?",
+    args: [userId],
+  });
+}
+
+export async function findUserByWidgetToken(token: string): Promise<DbUser | null> {
+  if (!token || !token.startsWith("tfw_")) return null;
+  const client = await ensureInitialized();
+  const hash = hashToken(token);
+  const result = await client.execute({
+    sql: "SELECT * FROM users WHERE widget_token_hash = ?",
+    args: [hash],
+  });
+  if (result.rows.length === 0) return null;
+  return rowToDbUser(result.rows[0]);
 }

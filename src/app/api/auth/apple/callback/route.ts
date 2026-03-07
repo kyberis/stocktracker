@@ -181,6 +181,7 @@ export async function POST(req: NextRequest) {
         apple_id: appleSub,
         portfolio_review_count: 0,
         portfolio_review_reset_at: "",
+        widget_token_hash: "",
       };
       trackEvent(publicUser.id, "signup");
       authEventsTotal.inc({ event: "signup" });

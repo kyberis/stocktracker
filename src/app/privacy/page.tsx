@@ -101,6 +101,13 @@ export default function PrivacyPolicyPage() {
                 AES-256-GCM and stored so you can re-sync your portfolio on demand.
                 You can disconnect at any time, which permanently deletes these credentials.
               </li>
+              <li>
+                <strong className="text-slate-200">Widget access token (optional)</strong> —
+                if you generate a widget token for home screen widget access, we
+                store a one-way SHA-256 hash of the token. The plaintext token is
+                shown once and never stored. You can revoke it at any time from
+                your profile, which permanently deletes the hash.
+              </li>
             </ul>
 
             <h3>Automatically Collected Data</h3>
@@ -234,6 +241,7 @@ export default function PrivacyPolicyPage() {
               <li>Passwords are hashed with bcrypt (one-way, non-reversible).</li>
               <li>Sessions use secure, httpOnly JWT cookies with SameSite protection.</li>
               <li>Sensitive API keys and broker connection tokens are encrypted with AES-256-GCM.</li>
+              <li>Widget access tokens are stored as one-way SHA-256 hashes (non-reversible).</li>
               <li>All connections use HTTPS/TLS encryption in transit.</li>
               <li>Database is encrypted at rest (Turso/libSQL).</li>
               <li>
