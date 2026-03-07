@@ -1,23 +1,227 @@
 "use client";
 
-import { useState } from "react";
-import { Copy, Check, Smartphone, Apple, MonitorSmartphone } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Copy, Check, Smartphone, Apple, MonitorSmartphone, RefreshCw, Trash2, KeyRound } from "lucide-react";
 import Link from "next/link";
 
 const SCRIPT_URL = "https://trefolio.com/widget/trefolio-scriptable.js";
 
+const SCRIPTABLE_TEMPLATE = `// trefolio — Portfolio Widget for Scriptable (iOS)
+// Paste this script in the Scriptable app, then add a Scriptable widget to your home screen.
+
+const TOKEN = "__TOKEN__";
+const API_URL = "https://trefolio.com/api/portfolio/summary";
+
+const BG = new Color("#0f172a");
+const TEXT = new Color("#f1f5f9");
+const MUTED = new Color("#94a3b8");
+const GREEN = new Color("#10b981");
+const RED = new Color("#ef4444");
+
+async function fetchData() {
+  const req = new Request(API_URL);
+  req.headers = { Authorization: \`Bearer \${TOKEN}\` };
+  req.timeoutInterval = 15;
+  return await req.loadJSON();
+}
+
+function fmt(n) {
+  return n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function sign(n) {
+  return n >= 0 ? "+" : "";
+}
+
+function createSmallWidget(data) {
+  const w = new ListWidget();
+  w.backgroundColor = BG;
+  w.setPadding(12, 14, 12, 14);
+
+  const title = w.addText("trefolio");
+  title.font = Font.boldSystemFont(10);
+  title.textColor = GREEN;
+
+  w.addSpacer(4);
+
+  const value = w.addText(\`€\${fmt(data.totalValueEUR)}\`);
+  value.font = Font.boldSystemFont(22);
+  value.textColor = TEXT;
+  value.minimumScaleFactor = 0.6;
+
+  w.addSpacer(2);
+
+  const isUp = data.dayChangeEUR >= 0;
+  const change = w.addText(\`\${sign(data.dayChangeEUR)}€\${fmt(data.dayChangeEUR)} (\${sign(data.dayChangePercent)}\${data.dayChangePercent.toFixed(2)}%)\`);
+  change.font = Font.mediumSystemFont(11);
+  change.textColor = isUp ? GREEN : RED;
+
+  w.addSpacer(4);
+
+  const gainUp = data.totalGainLoss >= 0;
+  const pl = w.addText(\`P/L \${sign(data.totalGainLoss)}€\${fmt(data.totalGainLoss)}\`);
+  pl.font = Font.regularSystemFont(10);
+  pl.textColor = gainUp ? GREEN : RED;
+
+  w.addSpacer(null);
+
+  const footer = w.addText(\`\${data.holdingsCount} holdings\`);
+  footer.font = Font.regularSystemFont(8);
+  footer.textColor = MUTED;
+
+  return w;
+}
+
+function createMediumWidget(data) {
+  const w = new ListWidget();
+  w.backgroundColor = BG;
+  w.setPadding(12, 14, 12, 14);
+
+  const header = w.addStack();
+  header.layoutHorizontally();
+  header.centerAlignContent();
+
+  const title = header.addText("trefolio");
+  title.font = Font.boldSystemFont(10);
+  title.textColor = GREEN;
+
+  header.addSpacer();
+
+  const count = header.addText(\`\${data.holdingsCount} holdings\`);
+  count.font = Font.regularSystemFont(9);
+  count.textColor = MUTED;
+
+  w.addSpacer(4);
+
+  const value = w.addText(\`€\${fmt(data.totalValueEUR)}\`);
+  value.font = Font.boldSystemFont(26);
+  value.textColor = TEXT;
+  value.minimumScaleFactor = 0.6;
+
+  const isUp = data.dayChangeEUR >= 0;
+  const changeLine = w.addStack();
+  changeLine.layoutHorizontally();
+  changeLine.centerAlignContent();
+  changeLine.spacing = 6;
+
+  const change = changeLine.addText(\`\${sign(data.dayChangeEUR)}€\${fmt(data.dayChangeEUR)}\`);
+  change.font = Font.semiboldSystemFont(12);
+  change.textColor = isUp ? GREEN : RED;
+
+  const pct = changeLine.addText(\`(\${sign(data.dayChangePercent)}\${data.dayChangePercent.toFixed(2)}%)\`);
+  pct.font = Font.regularSystemFont(11);
+  pct.textColor = isUp ? GREEN : RED;
+
+  const gainUp = data.totalGainLoss >= 0;
+  const plText = changeLine.addText(\`  P/L \${sign(data.totalGainLoss)}\${data.totalGainLossPercent.toFixed(1)}%\`);
+  plText.font = Font.regularSystemFont(10);
+  plText.textColor = gainUp ? GREEN : RED;
+
+  w.addSpacer(8);
+
+  if (data.topHoldings && data.topHoldings.length > 0) {
+    const grid = w.addStack();
+    grid.layoutHorizontally();
+    grid.spacing = 0;
+
+    for (const h of data.topHoldings.slice(0, 4)) {
+      const col = grid.addStack();
+      col.layoutVertically();
+      col.size = new Size(0, 0);
+      col.addSpacer(null);
+
+      const ticker = col.addText(h.ticker);
+      ticker.font = Font.semiboldSystemFont(10);
+      ticker.textColor = TEXT;
+      ticker.lineLimit = 1;
+
+      const hUp = h.dayChange >= 0;
+      const dc = col.addText(\`\${sign(h.dayChange)}\${h.dayChange.toFixed(1)}%\`);
+      dc.font = Font.mediumSystemFont(9);
+      dc.textColor = hUp ? GREEN : RED;
+
+      grid.addSpacer(null);
+    }
+  }
+
+  return w;
+}
+
+async function run() {
+  let data;
+  try {
+    data = await fetchData();
+    if (data.error) throw new Error(data.error);
+  } catch (e) {
+    const w = new ListWidget();
+    w.backgroundColor = BG;
+    const err = w.addText("Unable to load portfolio");
+    err.font = Font.regularSystemFont(12);
+    err.textColor = RED;
+    w.presentSmall();
+    return;
+  }
+
+  const family = config.widgetFamily || "small";
+  const widget = family === "medium" ? createMediumWidget(data) : createSmallWidget(data);
+
+  if (config.runsInWidget) {
+    Script.setWidget(widget);
+  } else {
+    family === "medium" ? widget.presentMedium() : widget.presentSmall();
+  }
+  Script.complete();
+}
+
+await run();`;
+
+function buildScript(token: string) {
+  return SCRIPTABLE_TEMPLATE.replace("__TOKEN__", token || "YOUR_TOKEN_HERE");
+}
+
 export default function WidgetSetupPage() {
   const [copiedScript, setCopiedScript] = useState(false);
   const [activeTab, setActiveTab] = useState<"ios" | "android">("ios");
+  const [widgetToken, setWidgetToken] = useState("");
+  const [widgetHasToken, setWidgetHasToken] = useState(false);
+  const [widgetLoading, setWidgetLoading] = useState(false);
 
-  const handleCopyScript = async () => {
+  useEffect(() => {
+    fetch("/api/widget-token")
+      .then((r) => r.json())
+      .then((d) => setWidgetHasToken(!!d.hasToken))
+      .catch(() => {});
+  }, []);
+
+  const handleGenerateToken = useCallback(async () => {
+    setWidgetLoading(true);
     try {
-      const res = await fetch("/widget/trefolio-scriptable.js");
-      const text = await res.text();
-      await navigator.clipboard.writeText(text);
+      const res = await fetch("/api/widget-token", { method: "POST" });
+      const data = await res.json();
+      if (data.token) {
+        setWidgetToken(data.token);
+        setWidgetHasToken(true);
+      }
+    } catch { /* ignore */ }
+    setWidgetLoading(false);
+  }, []);
+
+  const handleRevokeToken = useCallback(async () => {
+    setWidgetLoading(true);
+    try {
+      await fetch("/api/widget-token", { method: "DELETE" });
+      setWidgetHasToken(false);
+      setWidgetToken("");
+    } catch { /* ignore */ }
+    setWidgetLoading(false);
+  }, []);
+
+  const handleCopyScript = () => {
+    const script = buildScript(widgetToken);
+    navigator.clipboard.writeText(script).then(() => {
       setCopiedScript(true);
       setTimeout(() => setCopiedScript(false), 2000);
-    } catch { /* ignore */ }
+    }).catch(() => {});
   };
 
   return (
@@ -98,12 +302,62 @@ export default function WidgetSetupPage() {
                 Use the free <a href="https://apps.apple.com/app/scriptable/id1405459188" target="_blank" rel="noopener noreferrer" className="text-emerald-600 dark:text-emerald-400 underline">Scriptable</a> app to display a live portfolio widget on your home screen.
               </p>
 
+              {/* Token management */}
+              <div className="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-4 border border-slate-200 dark:border-slate-700 space-y-3">
+                <div className="flex items-center gap-2">
+                  <KeyRound className="w-4 h-4 text-emerald-500" />
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">Widget Token</span>
+                </div>
+
+                {widgetToken ? (
+                  <div className="space-y-2">
+                    <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+                      Token ready &mdash; it&apos;s already embedded in the script below.
+                    </p>
+                    <code className="block text-xs bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 px-3 py-2 rounded-lg font-mono break-all">
+                      {widgetToken}
+                    </code>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {widgetHasToken ? (
+                      <p className="text-xs text-gray-500 dark:text-slate-400">
+                        A widget token is active. Generate a new one to get a copy-ready script, or revoke it.
+                      </p>
+                    ) : (
+                      <p className="text-xs text-gray-500 dark:text-slate-400">
+                        Generate a token first so the script is ready to paste into Scriptable.
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleGenerateToken}
+                    disabled={widgetLoading}
+                    className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1.5"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${widgetLoading ? "animate-spin" : ""}`} />
+                    {widgetHasToken ? "Regenerate Token" : "Generate Token"}
+                  </button>
+                  {widgetHasToken && (
+                    <button
+                      onClick={handleRevokeToken}
+                      disabled={widgetLoading}
+                      className="btn-secondary text-xs px-3 py-1.5 flex items-center gap-1.5 text-red-600 dark:text-red-400"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      Revoke
+                    </button>
+                  )}
+                </div>
+              </div>
+
               <ol className="space-y-3 text-sm text-gray-700 dark:text-slate-300">
                 <li className="flex gap-3">
                   <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 flex items-center justify-center text-xs font-bold">1</span>
-                  <span>
-                    <Link href="/profile" className="text-emerald-600 dark:text-emerald-400 underline">Generate a Widget Token</Link> from your profile
-                  </span>
+                  <span>Generate a widget token above</span>
                 </li>
                 <li className="flex gap-3">
                   <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 flex items-center justify-center text-xs font-bold">2</span>
@@ -111,14 +365,10 @@ export default function WidgetSetupPage() {
                 </li>
                 <li className="flex gap-3">
                   <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 flex items-center justify-center text-xs font-bold">3</span>
-                  <span>Copy the widget script below and paste it into a new Scriptable script</span>
+                  <span>Copy the script below {widgetToken ? "(token is already included)" : ""} and paste it into a new Scriptable script</span>
                 </li>
                 <li className="flex gap-3">
                   <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 flex items-center justify-center text-xs font-bold">4</span>
-                  <span>Replace <code className="text-xs bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded">YOUR_TOKEN_HERE</code> with your widget token</span>
-                </li>
-                <li className="flex gap-3">
-                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 flex items-center justify-center text-xs font-bold">5</span>
                   <span>Long-press your home screen &rarr; tap <strong>+</strong> &rarr; search <strong>Scriptable</strong> &rarr; choose Small or Medium &rarr; select the script</span>
                 </li>
               </ol>
@@ -131,17 +381,13 @@ export default function WidgetSetupPage() {
                     className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 hover:underline"
                   >
                     {copiedScript ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                    {copiedScript ? "Copied" : "Copy Script"}
+                    {copiedScript ? "Copied!" : widgetToken ? "Copy Script (with token)" : "Copy Script"}
                   </button>
                 </div>
-                <a
-                  href={SCRIPT_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline break-all"
-                >
-                  {SCRIPT_URL}
-                </a>
+                <pre className="text-[10px] leading-relaxed text-slate-600 dark:text-slate-400 font-mono overflow-x-auto max-h-40 scrollbar-thin">
+                  {buildScript(widgetToken).split("\n").slice(0, 8).join("\n")}
+                  {"\n// ..."}
+                </pre>
               </div>
             </div>
           </>
