@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { findUserById } from "@/lib/db";
+import { findUserById, countPasskeysByUserId } from "@/lib/db";
 import { withMetrics } from "@/lib/with-metrics";
 
 export const GET = withMetrics("/api/auth/me", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
 
-  const user = await findUserById(session.userId);
+  const [user, passkeyCount] = await Promise.all([
+    findUserById(session.userId),
+    countPasskeysByUserId(session.userId),
+  ]);
 
   return NextResponse.json({
     user: {
@@ -27,6 +30,7 @@ export const GET = withMetrics("/api/auth/me", async (req: NextRequest) => {
       emailVerified: user?.email_verified === 1,
       authProvider: user?.auth_provider || "credentials",
       googleLinked: !!user?.google_id,
+      passkeyCount,
       portfolioReviewCount: user?.portfolio_review_count || 0,
       portfolioReviewResetAt: user?.portfolio_review_reset_at || "",
     },

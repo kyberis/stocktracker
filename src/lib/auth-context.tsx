@@ -5,7 +5,7 @@ import type { SubscriptionPlan } from "@/lib/types";
 
 type AuthUserRole = "admin" | "user";
 
-type AuthProvider = "credentials" | "google";
+type AuthProvider = "credentials" | "google" | "apple" | "passkey";
 
 interface AuthUser {
   id: string;
@@ -24,6 +24,7 @@ interface AuthUser {
   emailVerified: boolean;
   authProvider: AuthProvider;
   googleLinked: boolean;
+  passkeyCount: number;
   portfolioReviewCount: number;
   portfolioReviewResetAt: string;
 }

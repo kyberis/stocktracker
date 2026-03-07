@@ -14,9 +14,27 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "0.41.0";
+export const CURRENT_VERSION = "0.42.0";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "0.42.0",
+    date: "2026-03-07",
+    title: "Passkey Authentication",
+    titleTranslations: { es: "Autenticación con Llaves de Acceso" },
+    changes: [
+      {
+        type: "feature",
+        text: "Sign in with passkeys — passwordless authentication using biometrics, security keys, or your device",
+        translations: { es: "Inicia sesión con llaves de acceso — autenticación sin contraseña usando biometría, llaves de seguridad o tu dispositivo" },
+      },
+      {
+        type: "feature",
+        text: "Manage passkeys from your profile — register, rename, and remove passkeys",
+        translations: { es: "Gestiona llaves de acceso desde tu perfil — registra, renombra y elimina llaves de acceso" },
+      },
+    ],
+  },
   {
     version: "0.41.0",
     date: "2026-03-07",

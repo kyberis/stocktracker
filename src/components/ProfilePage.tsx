@@ -2,12 +2,22 @@
 
 import { useState, useEffect, useRef, useCallback, FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { startRegistration, browserSupportsWebAuthn } from "@simplewebauthn/browser";
 import { useAuth } from "@/lib/auth-context";
 import { useSettings } from "@/lib/settings-context";
 import { useI18n } from "@/lib/i18n";
 import type { ApiProviderName } from "@/lib/types";
 import ProCompareCard from "@/components/ProCompareCard";
 import { Smartphone, Copy, Check, Trash2 } from "lucide-react";
+
+interface PasskeyEntry {
+  id: string;
+  name: string;
+  createdAt: string;
+  lastUsedAt: string;
+  deviceType: string;
+  backedUp: boolean;
+}
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -51,6 +61,14 @@ export default function ProfilePage() {
   const [widgetToken, setWidgetToken] = useState("");
   const [widgetCopied, setWidgetCopied] = useState(false);
   const [widgetLoading, setWidgetLoading] = useState(false);
+
+  const [passkeys, setPasskeys] = useState<PasskeyEntry[]>([]);
+  const [passkeySupported, setPasskeySupported] = useState(false);
+  const [passkeyLoading, setPasskeyLoading] = useState(false);
+  const [passkeyMsg, setPasskeyMsg] = useState("");
+  const [passkeyError, setPasskeyError] = useState("");
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState("");
 
   const returnedFromCheckout = searchParams.get("billing") === "success";
   const emailJustVerified = searchParams.get("emailVerified") === "true";
@@ -113,6 +131,88 @@ export default function ProfilePage() {
       .then((d) => setWidgetHasToken(!!d.hasToken))
       .catch(() => {});
   }, []);
+
+  const fetchPasskeys = useCallback(async () => {
+    try {
+      const res = await fetch("/api/auth/passkey/list");
+      if (res.ok) {
+        const data = await res.json();
+        setPasskeys(data.passkeys || []);
+      }
+    } catch { /* ignore */ }
+  }, []);
+
+  useEffect(() => {
+    setPasskeySupported(browserSupportsWebAuthn());
+    fetchPasskeys();
+  }, [fetchPasskeys]);
+
+  const handleAddPasskey = useCallback(async () => {
+    setPasskeyLoading(true);
+    setPasskeyMsg("");
+    setPasskeyError("");
+    try {
+      const optRes = await fetch("/api/auth/passkey/register-options", { method: "POST" });
+      if (!optRes.ok) throw new Error("Failed to get options");
+      const options = await optRes.json();
+
+      const credential = await startRegistration(options);
+
+      const verifyRes = await fetch("/api/auth/passkey/register-verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ credential }),
+      });
+      if (!verifyRes.ok) {
+        const data = await verifyRes.json().catch(() => null);
+        setPasskeyError(data?.error || t("passkeyRegistrationFailed"));
+      } else {
+        setPasskeyMsg(t("passkeyAdded"));
+        setTimeout(() => setPasskeyMsg(""), 4000);
+        await fetchPasskeys();
+        await refreshUser();
+      }
+    } catch {
+      setPasskeyError(t("passkeyRegistrationFailed"));
+    }
+    setPasskeyLoading(false);
+  }, [fetchPasskeys, refreshUser, t]);
+
+  const handleRemovePasskey = useCallback(async (id: string) => {
+    if (!confirm(t("confirmRemovePasskey"))) return;
+    setPasskeyMsg("");
+    setPasskeyError("");
+    try {
+      const res = await fetch(`/api/auth/passkey/${encodeURIComponent(id)}`, { method: "DELETE" });
+      if (res.ok) {
+        setPasskeyMsg(t("passkeyRemoved"));
+        setTimeout(() => setPasskeyMsg(""), 4000);
+        await fetchPasskeys();
+        await refreshUser();
+      }
+    } catch {
+      setPasskeyError("Failed to remove passkey.");
+    }
+  }, [fetchPasskeys, refreshUser, t]);
+
+  const handleRenamePasskey = useCallback(async (id: string) => {
+    const name = renameValue.trim();
+    if (!name) return;
+    try {
+      const res = await fetch(`/api/auth/passkey/${encodeURIComponent(id)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name }),
+      });
+      if (res.ok) {
+        setRenamingId(null);
+        setRenameValue("");
+        setPasskeyMsg(t("passkeyRenamed"));
+        setTimeout(() => setPasskeyMsg(""), 4000);
+        await fetchPasskeys();
+      }
+    } catch { /* ignore */ }
+  }, [renameValue, fetchPasskeys, t]);
 
   const handleGenerateToken = useCallback(async () => {
     setWidgetLoading(true);
@@ -399,6 +499,85 @@ export default function ProfilePage() {
 
           {googleMsg && <p className="text-xs text-emerald-600 dark:text-emerald-400">{googleMsg}</p>}
           {googleError && <p className="text-xs text-red-500 dark:text-red-400">{googleError}</p>}
+        </div>
+
+        {/* Passkeys */}
+        <div className="card p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t("passkeys")}</h2>
+            {passkeySupported && (
+              <button
+                onClick={handleAddPasskey}
+                disabled={passkeyLoading}
+                className="btn-primary text-xs"
+              >
+                {passkeyLoading ? t("loading") : t("addPasskey")}
+              </button>
+            )}
+          </div>
+
+          {!passkeySupported && (
+            <p className="text-xs text-gray-400 dark:text-slate-500">{t("passkeyNotSupported")}</p>
+          )}
+
+          {passkeySupported && passkeys.length === 0 && (
+            <p className="text-sm text-gray-500 dark:text-slate-400">{t("noPasskeys")}</p>
+          )}
+
+          {passkeys.map((pk) => (
+            <div key={pk.id} className="flex items-center gap-3 py-2 border-t border-gray-100 dark:border-slate-700/50">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 flex items-center justify-center">
+                <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M15 11a4 4 0 1 0-2.68 3.77" />
+                  <path d="M12.68 14.77L11 23l2.5-1.5L16 23l-1.32-5.23" />
+                  <circle cx="15" cy="7" r="1" fill="currentColor" stroke="none" />
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                {renamingId === pk.id ? (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={renameValue}
+                      onChange={(e) => setRenameValue(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") handleRenamePasskey(pk.id); if (e.key === "Escape") setRenamingId(null); }}
+                      className="text-sm w-full"
+                      autoFocus
+                      placeholder={t("passkeyNamePlaceholder")}
+                    />
+                    <button onClick={() => handleRenamePasskey(pk.id)} className="btn-primary text-xs px-2 py-1">{t("save")}</button>
+                    <button onClick={() => setRenamingId(null)} className="btn-secondary text-xs px-2 py-1">{t("cancel")}</button>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{pk.name}</p>
+                    <p className="text-xs text-gray-500 dark:text-slate-400">
+                      {t("passkeyLastUsed")}: {pk.lastUsedAt ? new Date(pk.lastUsedAt).toLocaleDateString() : t("passkeyNeverUsed")}
+                    </p>
+                  </>
+                )}
+              </div>
+              {renamingId !== pk.id && (
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => { setRenamingId(pk.id); setRenameValue(pk.name); }}
+                    className="btn-secondary text-xs px-2 py-1"
+                  >
+                    {t("renamePasskey")}
+                  </button>
+                  <button
+                    onClick={() => handleRemovePasskey(pk.id)}
+                    className="btn-secondary text-xs px-2 py-1 text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300"
+                  >
+                    {t("removePasskey")}
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+
+          {passkeyMsg && <p className="text-xs text-emerald-600 dark:text-emerald-400">{passkeyMsg}</p>}
+          {passkeyError && <p className="text-xs text-red-500 dark:text-red-400">{passkeyError}</p>}
         </div>
 
         {/* Data Provider & API Key */}

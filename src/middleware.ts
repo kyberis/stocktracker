@@ -11,6 +11,8 @@ const PUBLIC_API_ROUTES = new Set([
   "/api/auth/apple",
   "/api/auth/apple/callback",
   "/api/auth/verify-email",
+  "/api/auth/passkey/login-options",
+  "/api/auth/passkey/login-verify",
   "/api/billing/webhook",
   "/api/analytics/landing",
   "/api/metrics",

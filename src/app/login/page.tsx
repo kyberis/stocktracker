@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useState, useEffect, Suspense, useCallback } from "react";
+import { startAuthentication, browserSupportsWebAuthn } from "@simplewebauthn/browser";
 import { ThemeProvider } from "@/lib/theme-context";
 import TurnstileWidget from "@/components/TurnstileWidget";
 
@@ -25,6 +26,16 @@ function AppleIcon() {
   );
 }
 
+function PasskeyIcon() {
+  return (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M15 11a4 4 0 1 0-2.68 3.77" />
+      <path d="M12.68 14.77L11 23l2.5-1.5L16 23l-1.32-5.23" />
+      <circle cx="15" cy="7" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -32,6 +43,8 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [passkeyLoading, setPasskeyLoading] = useState(false);
+  const [supportsPasskey, setSupportsPasskey] = useState(false);
 
   const [emailVerifiedSuccess, setEmailVerifiedSuccess] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
@@ -42,6 +55,43 @@ function LoginForm() {
     if (oauthError) setError(oauthError);
     if (searchParams.get("emailVerified") === "true") setEmailVerifiedSuccess(true);
   }, [searchParams]);
+
+  useEffect(() => {
+    setSupportsPasskey(browserSupportsWebAuthn());
+  }, []);
+
+  const onPasskeyLogin = async () => {
+    setPasskeyLoading(true);
+    setError(null);
+    try {
+      const optRes = await fetch("/api/auth/passkey/login-options", { method: "POST" });
+      if (!optRes.ok) throw new Error("Failed to get options");
+      const options = await optRes.json();
+
+      const credential = await startAuthentication(options);
+
+      const verifyRes = await fetch("/api/auth/passkey/login-verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ credential }),
+      });
+      const data = await verifyRes.json();
+      if (!verifyRes.ok) {
+        setError(data.error || "Passkey sign-in failed.");
+        return;
+      }
+      if (data.user?.mustChangePassword) {
+        router.replace("/change-password");
+      } else {
+        router.replace("/");
+      }
+      router.refresh();
+    } catch {
+      setError("Passkey sign-in failed. Please try again.");
+    } finally {
+      setPasskeyLoading(false);
+    }
+  };
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -111,8 +161,19 @@ function LoginForm() {
             </div>
           )}
 
-          {/* OAuth sign-in */}
+          {/* Passkey + OAuth sign-in */}
           <div className="space-y-3">
+            {supportsPasskey && (
+              <button
+                type="button"
+                onClick={onPasskeyLogin}
+                disabled={passkeyLoading}
+                className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-xl border-2 border-emerald-300 dark:border-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors text-sm font-medium text-emerald-700 dark:text-emerald-300"
+              >
+                <PasskeyIcon />
+                {passkeyLoading ? "Verifying..." : "Sign in with a passkey"}
+              </button>
+            )}
             <a
               href="/api/auth/google"
               className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-xl border-2 border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors text-sm font-medium text-gray-700 dark:text-slate-200"

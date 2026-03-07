@@ -82,6 +82,15 @@ export default function PrivacyPolicyPage() {
                 Apple private relay address). We do not receive or store your
                 Apple password.
               </li>
+              <li>
+                <strong className="text-slate-200">Passkeys (WebAuthn)</strong> — if
+                you register a passkey for passwordless sign-in, we store the
+                cryptographic public key and credential metadata (credential ID,
+                device type, sign-in counter) associated with your account. The
+                private key and any biometric data remain on your device and are
+                never transmitted to or stored by us. You can remove passkeys at
+                any time from your profile.
+              </li>
             </ul>
 
             <h3>Portfolio Data</h3>
@@ -242,6 +251,7 @@ export default function PrivacyPolicyPage() {
               <li>Sessions use secure, httpOnly JWT cookies with SameSite protection.</li>
               <li>Sensitive API keys and broker connection tokens are encrypted with AES-256-GCM.</li>
               <li>Widget access tokens are stored as one-way SHA-256 hashes (non-reversible).</li>
+              <li>Passkey credentials store only the public key; the private key and biometric data never leave your device.</li>
               <li>All connections use HTTPS/TLS encryption in transit.</li>
               <li>Database is encrypted at rest (Turso/libSQL).</li>
               <li>

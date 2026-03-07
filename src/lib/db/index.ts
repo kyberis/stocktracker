@@ -143,3 +143,15 @@ export {
   updateIbkrLastSynced,
   deleteIbkrConnection,
 } from "./ibkr-connections";
+
+export type { DbPasskey, PublicPasskey } from "./passkeys";
+export {
+  getPasskeysByUserId,
+  getPasskeyById,
+  createPasskey,
+  updatePasskeyCounter,
+  renamePasskey,
+  deletePasskey,
+  countPasskeysByUserId,
+  mapPasskey,
+} from "./passkeys";

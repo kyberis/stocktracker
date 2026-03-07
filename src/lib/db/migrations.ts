@@ -464,6 +464,28 @@ const MIGRATIONS: Migration[] = [
       }
     },
   },
+  {
+    version: 10,
+    description: "Create passkeys table for WebAuthn passkey authentication",
+    up: async (client: Client) => {
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS passkeys (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          credential_public_key TEXT NOT NULL,
+          counter INTEGER NOT NULL DEFAULT 0,
+          device_type TEXT NOT NULL DEFAULT '',
+          backed_up INTEGER NOT NULL DEFAULT 0,
+          transports TEXT NOT NULL DEFAULT '[]',
+          name TEXT NOT NULL DEFAULT 'Passkey',
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          last_used_at TEXT NOT NULL DEFAULT '',
+          FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_passkeys_user ON passkeys(user_id);
+      `);
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {
