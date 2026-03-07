@@ -8,7 +8,7 @@ import { useSettings } from "@/lib/settings-context";
 import { useI18n } from "@/lib/i18n";
 import type { ApiProviderName } from "@/lib/types";
 import ProCompareCard from "@/components/ProCompareCard";
-import { Smartphone, Copy, Check, Trash2 } from "lucide-react";
+import { Smartphone, Monitor, Copy, Check, Trash2 } from "lucide-react";
 
 interface PasskeyEntry {
   id: string;
@@ -61,6 +61,11 @@ export default function ProfilePage() {
   const [widgetToken, setWidgetToken] = useState("");
   const [widgetCopied, setWidgetCopied] = useState(false);
   const [widgetLoading, setWidgetLoading] = useState(false);
+
+  const [deviceHasPasskey, setDeviceHasPasskey] = useState(false);
+  const [devicePasskey, setDevicePasskey] = useState("");
+  const [deviceCopied, setDeviceCopied] = useState(false);
+  const [deviceLoading, setDeviceLoading] = useState(false);
 
   const [passkeys, setPasskeys] = useState<PasskeyEntry[]>([]);
   const [passkeySupported, setPasskeySupported] = useState(false);
@@ -129,6 +134,10 @@ export default function ProfilePage() {
     fetch("/api/widget-token")
       .then((r) => r.json())
       .then((d) => setWidgetHasToken(!!d.hasToken))
+      .catch(() => {});
+    fetch("/api/device-passkey")
+      .then((r) => r.json())
+      .then((d) => setDeviceHasPasskey(!!d.hasPasskey))
       .catch(() => {});
   }, []);
 
@@ -242,6 +251,35 @@ export default function ProfilePage() {
     setWidgetCopied(true);
     setTimeout(() => setWidgetCopied(false), 2000);
   }, [widgetToken]);
+
+  const handleGenerateDevicePasskey = useCallback(async () => {
+    setDeviceLoading(true);
+    try {
+      const res = await fetch("/api/device-passkey", { method: "POST" });
+      const data = await res.json();
+      if (data.passkey) {
+        setDevicePasskey(data.passkey);
+        setDeviceHasPasskey(true);
+      }
+    } catch { /* ignore */ }
+    setDeviceLoading(false);
+  }, []);
+
+  const handleRevokeDevicePasskey = useCallback(async () => {
+    setDeviceLoading(true);
+    try {
+      await fetch("/api/device-passkey", { method: "DELETE" });
+      setDeviceHasPasskey(false);
+      setDevicePasskey("");
+    } catch { /* ignore */ }
+    setDeviceLoading(false);
+  }, []);
+
+  const handleCopyDevicePasskey = useCallback(() => {
+    navigator.clipboard.writeText(devicePasskey);
+    setDeviceCopied(true);
+    setTimeout(() => setDeviceCopied(false), 2000);
+  }, [devicePasskey]);
 
   useEffect(() => {
     if (emailJustVerified) {
@@ -860,6 +898,71 @@ export default function ProfilePage() {
               >
                 View setup instructions &rarr;
               </a>
+            </div>
+          )}
+        </div>
+
+        {/* Device Passkey (T4-S3) */}
+        <div className="card p-6 space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-violet-100 dark:bg-violet-500/15 flex items-center justify-center">
+              <Monitor className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Device Passkey</h2>
+              <p className="text-xs text-gray-500 dark:text-slate-400">
+                Connect your T4-S3 hardware display
+              </p>
+            </div>
+          </div>
+
+          {devicePasskey ? (
+            <div className="space-y-3">
+              <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+                Copy this passkey now &mdash; it won&apos;t be shown again.
+              </p>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 text-2xl tracking-[0.25em] bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 px-4 py-3 rounded-lg font-mono text-center">
+                  {devicePasskey}
+                </code>
+                <button
+                  onClick={handleCopyDevicePasskey}
+                  className="btn-secondary p-2 shrink-0"
+                  aria-label="Copy passkey"
+                >
+                  {deviceCopied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+                </button>
+              </div>
+              <p className="text-xs text-gray-500 dark:text-slate-400">
+                Enter this code on your device to link it to your account.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {deviceHasPasskey && (
+                <p className="text-xs text-gray-500 dark:text-slate-400">
+                  A device passkey is active. Generate a new one to replace it, or revoke it.
+                </p>
+              )}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleGenerateDevicePasskey}
+                  disabled={deviceLoading}
+                  className="btn-primary text-sm disabled:opacity-40"
+                >
+                  {deviceLoading ? "Generating..." : deviceHasPasskey ? "Regenerate Passkey" : "Generate Passkey"}
+                </button>
+                {deviceHasPasskey && (
+                  <button
+                    onClick={handleRevokeDevicePasskey}
+                    disabled={deviceLoading}
+                    className="btn-secondary text-sm flex items-center gap-1.5 disabled:opacity-40"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Revoke
+                  </button>
+                )}
+              </div>
             </div>
           )}
         </div>

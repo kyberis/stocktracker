@@ -37,6 +37,7 @@ export interface DbUser {
   portfolio_review_count: number;
   portfolio_review_reset_at: string;
   widget_token_hash: string;
+  device_passkey_hash: string;
 }
 
 export interface PublicUser {
@@ -59,6 +60,7 @@ export interface PublicUser {
   portfolioReviewCount: number;
   portfolioReviewResetAt: string;
   hasWidgetToken: boolean;
+  hasDevicePasskey: boolean;
 }
 
 export interface UserSettings {
@@ -168,6 +170,7 @@ export function rowToDbUser(row: Row): DbUser {
     portfolio_review_count: num(row.portfolio_review_count),
     portfolio_review_reset_at: str(row.portfolio_review_reset_at),
     widget_token_hash: str(row.widget_token_hash),
+    device_passkey_hash: str(row.device_passkey_hash),
   };
 }
 
@@ -192,6 +195,7 @@ export function mapUser(user: DbUser): PublicUser {
     portfolioReviewCount: user.portfolio_review_count,
     portfolioReviewResetAt: user.portfolio_review_reset_at,
     hasWidgetToken: !!user.widget_token_hash,
+    hasDevicePasskey: !!user.device_passkey_hash,
   };
 }
 

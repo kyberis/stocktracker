@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>T4-S3 Device Redesign — trefolio Design System</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg: #0f172a;        /* slate-900 */
+    --card: #1e293b;      /* slate-800 */
+    --border: #334155;    /* slate-700 */
+    --accent: #10b981;    /* emerald-500 */
+    --accent-light: #34d399; /* emerald-400 */
+    --violet: #8b5cf6;    /* violet-500 */
+    --violet-light: #a78bfa; /* violet-400 */
+    --green: #34d399;     /* emerald-400 */
+    --red: #f87171;       /* red-400 */
+    --text: #f1f5f9;      /* slate-100 */
+    --text-sec: #94a3b8;  /* slate-400 */
+    --dim: #64748b;       /* slate-500 */
+    --sep: #334155;       /* slate-700 */
+
+    --gain-bg: rgba(16, 185, 129, 0.1);
+    --loss-bg: rgba(248, 113, 113, 0.1);
+    --violet-bg: rgba(139, 92, 246, 0.15);
+    --accent-bg: rgba(16, 185, 129, 0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #020617;
+    font-family: 'Inter', sans-serif;
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 48px;
+    padding: 40px 20px 80px;
+  }
+
+  h1 { font-size: 24px; font-weight: 700; color: var(--text); }
+  h2 { font-size: 18px; font-weight: 600; color: var(--text-sec); margin-bottom: 16px; }
+  .subtitle { font-size: 14px; color: var(--dim); margin-top: 4px; }
+
+  .screen-frame {
+    width: 600px;
+    height: 450px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid var(--border);
+    position: relative;
+    background: var(--bg);
+  }
+
+  .label-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .label-row .badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    background: var(--accent-bg);
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* ── Token Entry Screen ── */
+  .token-screen {
+    display: flex;
+    width: 100%;
+    height: 100%;
+  }
+  .token-left {
+    width: 240px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+  }
+  .token-logo {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 28px;
+  }
+  .token-logo svg { width: 20px; height: 20px; }
+  .token-icon-circle {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(16, 185, 129, 0.2));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+  }
+  .token-icon-circle svg { width: 24px; height: 24px; color: var(--accent); }
+  .token-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .token-hint {
+    font-size: 13px;
+    color: var(--text-sec);
+    line-height: 1.5;
+    margin-bottom: auto;
+  }
+  .token-display-card {
+    background: var(--card);
+    border: 1px solid var(--accent);
+    border-radius: 16px;
+    padding: 16px;
+    text-align: center;
+    margin-bottom: 16px;
+  }
+  .token-digits {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+  }
+  .token-stored {
+    font-size: 11px;
+    color: var(--dim);
+  }
+
+  .token-right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .numpad-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 86px);
+    gap: 8px;
+  }
+  .numpad-btn {
+    height: 56px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text);
+    font-size: 22px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .numpad-btn:hover { background: #263548; }
+  .numpad-btn:active { background: #334155; transform: scale(0.96); }
+  .numpad-btn.back { color: var(--red); font-size: 18px; }
+  .numpad-btn.empty { visibility: hidden; }
+  .connect-btn {
+    width: calc(86px * 3 + 16px);
+    height: 48px;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: all 0.2s;
+  }
+  .connect-btn.ready {
+    background: var(--accent);
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+  }
+  .connect-btn.disabled {
+    background: var(--dim);
+    opacity: 0.6;
+    cursor: default;
+  }
+
+  /* ── Dashboard Screen ── */
+  .dash-header {
+    height: 42px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    justify-content: space-between;
+  }
+  .dash-logo {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .dash-logo svg { width: 16px; height: 16px; }
+  .dash-live {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--green);
+    letter-spacing: 0.05em;
+  }
+  .dash-live-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .dash-body {
+    display: flex;
+    height: calc(100% - 42px - 28px);
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .dash-footer {
+    height: 28px;
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    font-size: 11px;
+    color: var(--dim);
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  /* Summary card (left) */
+  .summary-card {
+    width: 195px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+  }
+  .summary-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-sec);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .summary-value {
+    font-size: 30px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .day-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 600;
+    width: fit-content;
+    margin-bottom: 4px;
+  }
+  .day-badge.gain {
+    background: var(--gain-bg);
+    color: var(--green);
+  }
+  .day-badge.loss {
+    background: var(--loss-bg);
+    color: var(--red);
+  }
+  .cost-label {
+    font-size: 11px;
+    color: var(--dim);
+    margin-bottom: 14px;
+  }
+  .summary-sep {
+    height: 1px;
+    background: var(--sep);
+    margin: 0 -16px;
+    width: calc(100% + 32px);
+  }
+  .pl-section {
+    margin-top: 14px;
+  }
+  .pl-value {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+  .pl-pct {
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .holdings-count {
+    margin-top: auto;
+    font-size: 11px;
+    color: var(--dim);
+  }
+
+  /* Right column */
+  .right-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* Holdings card */
+  .holdings-card {
+    flex: 1;
+  }
+  .holdings-header {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 14px 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-sec);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .holding-row {
+    display: flex;
+    align-items: center;
+    padding: 7px 14px;
+    border-top: 1px solid var(--sep);
+    gap: 8px;
+  }
+  .holding-left { flex: 1; min-width: 0; }
+  .holding-ticker {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .holding-name {
+    font-size: 10px;
+    color: var(--dim);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .holding-weight {
+    font-size: 11px;
+    color: var(--text-sec);
+    min-width: 40px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .holding-change {
+    font-size: 12px;
+    font-weight: 600;
+    min-width: 60px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .holding-change.gain { color: var(--green); }
+  .holding-change.loss { color: var(--red); }
+  .holding-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .holding-dot.gain { background: var(--green); }
+  .holding-dot.loss { background: var(--red); }
+
+  /* AI card */
+  .ai-card {
+    padding: 12px;
+    border-color: transparent;
+    background: var(--card);
+    position: relative;
+    overflow: visible;
+  }
+  .ai-card::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: 17px;
+    background: linear-gradient(135deg, var(--violet), var(--accent));
+    z-index: -1;
+    opacity: 0.4;
+  }
+  .ai-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .ai-icon-circle {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--violet), var(--accent));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .ai-icon-circle svg { width: 14px; height: 14px; color: white; }
+  .ai-title {
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .ai-pro-badge {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 2px 6px;
+    border-radius: 9999px;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(16, 185, 129, 0.2));
+    color: var(--accent-light);
+    margin-left: auto;
+  }
+  .ai-text {
+    font-size: 11px;
+    color: var(--text-sec);
+    line-height: 1.5;
+  }
+  .ai-ask-btn {
+    position: absolute;
+    bottom: 10px;
+    right: 12px;
+    background: var(--accent);
+    border: none;
+    border-radius: 8px;
+    padding: 5px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 0 14px rgba(16, 185, 129, 0.25);
+  }
+
+  /* ── Error Screen ── */
+  .error-inner {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .error-card {
+    width: 340px;
+    padding: 28px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  .error-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--loss-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 4px;
+  }
+  .error-icon svg { width: 24px; height: 24px; color: var(--red); }
+  .error-title { font-size: 16px; font-weight: 600; }
+  .error-msg { font-size: 13px; color: var(--text-sec); }
+  .error-btn {
+    background: var(--accent);
+    border: none;
+    border-radius: 10px;
+    padding: 10px 40px;
+    font-size: 14px;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 0 16px rgba(16, 185, 129, 0.3);
+    margin-top: 4px;
+  }
+
+  /* ── Loading Screen ── */
+  .loading-inner {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+  }
+  .spinner {
+    width: 44px;
+    height: 44px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text {
+    font-size: 14px;
+    color: var(--text-sec);
+  }
+
+  /* Annotations */
+  .annotation {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    max-width: 600px;
+  }
+  .annotation-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-sec);
+    line-height: 1.5;
+  }
+  .annotation-list .item {
+    display: flex;
+    gap: 6px;
+    align-items: baseline;
+  }
+  .annotation-list .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+    margin-top: 5px;
+  }
+
+  .section { width: 100%; max-width: 660px; }
+  .color-swatch {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+  }
+  .swatch {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    position: relative;
+  }
+  .swatch-label {
+    font-size: 9px;
+    color: var(--dim);
+    text-align: center;
+    margin-top: 4px;
+  }
+</style>
+</head>
+<body>
+
+<div class="section" style="text-align: center;">
+  <h1>T4-S3 Device Redesign</h1>
+  <p class="subtitle">Adapting the trefolio web design system to the 600×450 AMOLED display</p>
+</div>
+
+<!-- Color Reference -->
+<div class="section">
+  <h2>Color Palette (from trefolio dark theme)</h2>
+  <div class="color-swatch">
+    <div><div class="swatch" style="background: #0f172a"></div><div class="swatch-label">bg<br>#0f172a</div></div>
+    <div><div class="swatch" style="background: #1e293b"></div><div class="swatch-label">card<br>#1e293b</div></div>
+    <div><div class="swatch" style="background: #334155"></div><div class="swatch-label">border<br>#334155</div></div>
+    <div><div class="swatch" style="background: #10b981"></div><div class="swatch-label">accent<br>#10b981</div></div>
+    <div><div class="swatch" style="background: #34d399"></div><div class="swatch-label">gain<br>#34d399</div></div>
+    <div><div class="swatch" style="background: #f87171"></div><div class="swatch-label">loss<br>#f87171</div></div>
+    <div><div class="swatch" style="background: #8b5cf6"></div><div class="swatch-label">violet<br>#8b5cf6</div></div>
+    <div><div class="swatch" style="background: #f1f5f9"></div><div class="swatch-label">text<br>#f1f5f9</div></div>
+    <div><div class="swatch" style="background: #94a3b8"></div><div class="swatch-label">sec text<br>#94a3b8</div></div>
+    <div><div class="swatch" style="background: #64748b"></div><div class="swatch-label">dim<br>#64748b</div></div>
+  </div>
+</div>
+
+<!-- 1. Dashboard -->
+<div class="section">
+  <div class="label-row">
+    <h2 style="margin:0">Dashboard</h2>
+    <span class="badge">Main Screen</span>
+  </div>
+  <div class="screen-frame">
+    <!-- Header -->
+    <div class="dash-header">
+      <div class="dash-logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        trefolio
+      </div>
+      <div class="dash-live">
+        <div class="dash-live-dot"></div>
+        LIVE
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div class="dash-body">
+      <!-- Left: Summary -->
+      <div class="card summary-card">
+        <div class="summary-label">Total Value</div>
+        <div class="summary-value">€55,696</div>
+        <div class="day-badge gain">
+          <svg width="10" height="10" viewBox="0 0 10 10"><path d="M5 2L8 6H2L5 2Z" fill="currentColor"/></svg>
+          +€66.45 (+0.12%)
+        </div>
+        <div class="cost-label">Cost: €78,201</div>
+        <div class="summary-sep"></div>
+        <div class="pl-section">
+          <div class="summary-label">Gain / Loss</div>
+          <div class="pl-value" style="color: var(--red)">-28.78%</div>
+          <div class="pl-pct" style="color: var(--red)">-€22,505</div>
+        </div>
+        <div class="holdings-count">30 holdings</div>
+      </div>
+
+      <!-- Right column -->
+      <div class="right-col">
+        <!-- Holdings -->
+        <div class="card holdings-card">
+          <div class="holdings-header">
+            <span>Top Holdings</span>
+            <span>Day</span>
+          </div>
+          <div class="holding-row">
+            <div class="holding-left">
+              <div class="holding-ticker">IB01.L</div>
+              <div class="holding-name">ISHARES $ TREASURY BOND</div>
+            </div>
+            <div class="holding-weight">12.8%</div>
+            <div class="holding-dot loss"></div>
+            <div class="holding-change loss">-0.02%</div>
+          </div>
+          <div class="holding-row">
+            <div class="holding-left">
+              <div class="holding-ticker">SRB.L</div>
+              <div class="holding-name">SERABI GOLD PLC</div>
+            </div>
+            <div class="holding-weight">9.2%</div>
+            <div class="holding-dot loss"></div>
+            <div class="holding-change loss">-0.29%</div>
+          </div>
+          <div class="holding-row">
+            <div class="holding-left">
+              <div class="holding-ticker">SILA</div>
+              <div class="holding-name">SILA REALTY TRUST INC</div>
+            </div>
+            <div class="holding-weight">8.2%</div>
+            <div class="holding-dot loss"></div>
+            <div class="holding-change loss">-0.64%</div>
+          </div>
+          <div class="holding-row">
+            <div class="holding-left">
+              <div class="holding-ticker">GOOGL</div>
+              <div class="holding-name">ALPHABET INC CLASS A</div>
+            </div>
+            <div class="holding-weight">7.8%</div>
+            <div class="holding-dot loss"></div>
+            <div class="holding-change loss">-0.78%</div>
+          </div>
+          <div class="holding-row">
+            <div class="holding-left">
+              <div class="holding-ticker">OXY</div>
+              <div class="holding-name">OCCIDENTAL PETROLEUM</div>
+            </div>
+            <div class="holding-weight">6.7%</div>
+            <div class="holding-dot gain"></div>
+            <div class="holding-change gain">+1.78%</div>
+          </div>
+        </div>
+
+        <!-- AI Card -->
+        <div class="card ai-card">
+          <div class="ai-header">
+            <div class="ai-icon-circle">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+            </div>
+            <div class="ai-title">AI Portfolio Review</div>
+            <div class="ai-pro-badge">Pro</div>
+          </div>
+          <div class="ai-text">Tap to request AI summary</div>
+          <button class="ai-ask-btn">Ask AI</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="dash-footer">
+      <span>Updated 2 min ago</span>
+      <span>trefolio.com</span>
+    </div>
+  </div>
+</div>
+
+<!-- Design notes for dashboard -->
+<div class="section">
+  <div class="annotation-list">
+    <div class="item"><div class="dot"></div><div>Cards use <strong>slate-800</strong> bg with <strong>slate-700</strong> border and <strong>16px</strong> radius (matching web's <code>rounded-2xl</code>)</div></div>
+    <div class="item"><div class="dot"></div><div>Day change uses a <strong>pill badge</strong> with translucent gain/loss background (same as web's <code>PortfolioSummary</code>)</div></div>
+    <div class="item"><div class="dot"></div><div>AI card has a <strong>violet → emerald gradient border</strong> matching web's <code>ai-cta-shimmer</code></div></div>
+    <div class="item"><div class="dot"></div><div>Green dot with <strong>pulse animation</strong> for LIVE indicator (same as web's market-open dot)</div></div>
+    <div class="item"><div class="dot"></div><div>Holdings rows use <strong>dot indicator</strong> + gain/loss colors matching web's <code>StockRow</code> component</div></div>
+    <div class="item"><div class="dot"></div><div>Brand changed from "STOCKTRACKER" to <strong>trefolio</strong> to match the web app</div></div>
+  </div>
+</div>
+
+<!-- 2. Token Entry -->
+<div class="section">
+  <div class="label-row">
+    <h2 style="margin:0">Device Passkey Entry</h2>
+    <span class="badge">Login</span>
+  </div>
+  <div class="screen-frame">
+    <div class="token-screen">
+      <div class="token-left">
+        <div class="token-logo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          trefolio
+        </div>
+        <div class="token-icon-circle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        </div>
+        <div class="token-title">Device Passkey</div>
+        <div class="token-hint">Generate a passkey in your profile at <strong style="color:var(--accent)">trefolio.com</strong></div>
+        <div style="flex: 1"></div>
+        <div class="token-display-card">
+          <div class="token-digits">4 9 2 7 - _ _ _ _</div>
+        </div>
+        <div class="token-stored">Stored locally on device</div>
+      </div>
+      <div class="token-right">
+        <div class="numpad-grid">
+          <button class="numpad-btn">1</button>
+          <button class="numpad-btn">2</button>
+          <button class="numpad-btn">3</button>
+          <button class="numpad-btn">4</button>
+          <button class="numpad-btn">5</button>
+          <button class="numpad-btn">6</button>
+          <button class="numpad-btn">7</button>
+          <button class="numpad-btn">8</button>
+          <button class="numpad-btn">9</button>
+          <button class="numpad-btn empty"></button>
+          <button class="numpad-btn">0</button>
+          <button class="numpad-btn back">⌫</button>
+        </div>
+        <button class="connect-btn disabled">Connect</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 3. Loading -->
+<div class="section">
+  <div class="label-row">
+    <h2 style="margin:0">Loading</h2>
+    <span class="badge">Transition</span>
+  </div>
+  <div class="screen-frame">
+    <div class="loading-inner">
+      <div class="spinner"></div>
+      <div class="loading-text">Loading portfolio...</div>
+    </div>
+  </div>
+</div>
+
+<!-- 4. Error -->
+<div class="section">
+  <div class="label-row">
+    <h2 style="margin:0">Error State</h2>
+    <span class="badge">Recovery</span>
+  </div>
+  <div class="screen-frame">
+    <div class="error-inner">
+      <div class="card error-card">
+        <div class="error-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+        <div class="error-title">Connection Error</div>
+        <div class="error-msg">Could not reach trefolio.com<br>Check your WiFi connection</div>
+        <button class="error-btn">Try Again</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

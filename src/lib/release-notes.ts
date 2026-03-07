@@ -14,9 +14,42 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "0.42.0";
+export const CURRENT_VERSION = "0.43.0";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "0.43.0",
+    date: "2026-03-07",
+    title: "T4-S3 Device Dashboard",
+    titleTranslations: { es: "Panel del Dispositivo T4-S3" },
+    changes: [
+      {
+        type: "feature",
+        text: "LILYGO T4-S3 AMOLED device dashboard — view your portfolio, top holdings, and AI insights on a dedicated hardware display",
+        translations: { es: "Panel AMOLED para dispositivo LILYGO T4-S3 — consulta tu cartera, principales posiciones e insights de IA en una pantalla dedicada" },
+      },
+      {
+        type: "feature",
+        text: "Device AI summary API — condensed Pro-only portfolio review optimized for small screens",
+        translations: { es: "API de resumen IA para dispositivo — revisión de cartera condensada solo para Pro, optimizada para pantallas pequeñas" },
+      },
+      {
+        type: "improvement",
+        text: "Simple 8-digit device passkey (XXXX-XXXX) replaces long token for easy entry on the touch screen",
+        translations: { es: "Clave de dispositivo de 8 dígitos (XXXX-XXXX) reemplaza el token largo para una entrada fácil en la pantalla táctil" },
+      },
+      {
+        type: "improvement",
+        text: "Device UI redesigned to match the trefolio web dark theme — emerald accent, slate card backgrounds, pill badges, and violet AI gradient",
+        translations: { es: "Interfaz del dispositivo rediseñada para coincidir con el tema oscuro de trefolio — acento esmeralda, fondos de tarjeta slate, badges tipo pastilla y gradiente violeta para IA" },
+      },
+      {
+        type: "improvement",
+        text: "Portfolio summary API now includes cost basis for display on device and widgets",
+        translations: { es: "La API de resumen de cartera ahora incluye la base de coste para mostrar en el dispositivo y widgets" },
+      },
+    ],
+  },
   {
     version: "0.42.0",
     date: "2026-03-07",

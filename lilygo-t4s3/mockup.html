@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=600">
+<title>StockTracker T4-S3 — Dashboard Mockup</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #111; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; font-family: 'Inter', sans-serif; color: #fff; }
+  h2 { font-size: 14px; color: #8E8E93; margin-bottom: 16px; letter-spacing: 1px; text-transform: uppercase; }
+
+  .device-frame {
+    width: 600px; height: 450px; background: #000; border-radius: 18px;
+    border: 3px solid #333; overflow: hidden; position: relative;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  }
+
+  /* ── Header ─────────────────────────────── */
+  .header {
+    height: 40px; background: #0A0A14; display: flex; align-items: center;
+    padding: 0 16px; border-bottom: 1px solid #38383A;
+  }
+  .header .logo { color: #0A84FF; font-weight: 700; font-size: 15px; letter-spacing: 0.5px; }
+  .header .logo span { font-size: 18px; margin-right: 4px; }
+  .header .right { margin-left: auto; display: flex; align-items: center; gap: 12px; color: #8E8E93; font-size: 13px; }
+  .header .dot { width: 7px; height: 7px; border-radius: 50%; background: #30D158; }
+
+  /* ── Main ────────────────────────────────── */
+  .main { display: flex; height: 380px; }
+
+  /* ── Left panel ─────────────────────────── */
+  .left {
+    width: 200px; padding: 16px; display: flex; flex-direction: column;
+    border-right: 1px solid #38383A;
+  }
+  .total-label { font-size: 11px; color: #8E8E93; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px; }
+  .total-value { font-size: 34px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 16px; }
+  .change-row { display: flex; align-items: baseline; gap: 6px; margin-bottom: 4px; }
+  .change-abs { font-size: 20px; font-weight: 600; }
+  .change-pct { font-size: 14px; font-weight: 500; }
+  .green { color: #30D158; }
+  .red { color: #FF453A; }
+  .section-label { font-size: 11px; color: #8E8E93; text-transform: uppercase; letter-spacing: 0.8px; margin-top: 20px; margin-bottom: 4px; }
+  .pl-value { font-size: 22px; font-weight: 600; }
+  .pl-pct { font-size: 14px; color: #8E8E93; margin-top: 2px; }
+
+  /* ── Right panel ────────────────────────── */
+  .right-panel { flex: 1; display: flex; flex-direction: column; }
+
+  /* Holdings */
+  .holdings-header {
+    display: flex; justify-content: space-between; padding: 10px 16px 6px;
+    font-size: 11px; color: #8E8E93; text-transform: uppercase; letter-spacing: 0.8px;
+  }
+  .holding-row {
+    display: grid; grid-template-columns: 60px 1fr 60px 70px;
+    align-items: center; padding: 7px 16px; border-bottom: 1px solid #1C1C1E;
+  }
+  .holding-row:hover { background: #1C1C1E; }
+  .h-ticker { font-weight: 600; font-size: 14px; color: #fff; }
+  .h-name { font-size: 12px; color: #8E8E93; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .h-weight { font-size: 13px; color: #8E8E93; text-align: right; }
+  .h-change { font-size: 13px; font-weight: 500; text-align: right; }
+
+  /* AI card */
+  .ai-card {
+    margin: 8px 12px; background: #1C1C1E; border-radius: 10px; padding: 12px 14px;
+    flex: 1; display: flex; flex-direction: column;
+  }
+  .ai-title { font-size: 12px; font-weight: 600; color: #0A84FF; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+  .ai-text { font-size: 12px; color: #CCCCCC; line-height: 1.5; }
+  .badge { background: #0A84FF22; color: #0A84FF; font-size: 10px; padding: 1px 6px; border-radius: 4px; font-weight: 600; }
+
+  /* ── Footer ─────────────────────────────── */
+  .footer {
+    height: 30px; background: #0A0A14; border-top: 1px solid #38383A;
+    display: flex; align-items: center; padding: 0 16px;
+    font-size: 11px; color: #8E8E93;
+  }
+  .footer span { margin-right: 20px; }
+
+  /* ── Token screen ───────────────────────── */
+  .screen-token { display: none; }
+  .screen-token.active { display: flex; }
+  .screen-dash { display: flex; flex-direction: column; }
+  .screen-dash.hidden { display: none; }
+
+  .token-screen {
+    width: 600px; height: 450px; background: #000; border-radius: 18px;
+    border: 3px solid #333; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 20px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6); margin-top: 30px;
+  }
+  .token-screen .icon { font-size: 48px; }
+  .token-screen h3 { font-size: 22px; font-weight: 600; }
+  .token-screen p { font-size: 13px; color: #8E8E93; text-align: center; max-width: 340px; }
+  .passkey-display {
+    font-size: 36px; font-family: monospace; letter-spacing: 0.25em;
+    color: #fff; text-align: center; padding: 8px 0;
+  }
+  .numpad { display: grid; grid-template-columns: repeat(3, 80px); gap: 10px; justify-content: center; }
+  .numpad button {
+    width: 80px; height: 52px; background: #1C1C1E; border: none; border-radius: 10px;
+    color: #fff; font-size: 22px; font-family: inherit; cursor: pointer;
+  }
+  .numpad button:hover { background: #38383A; }
+  .numpad button.accent { background: #0A84FF; }
+  .numpad button.accent:hover { background: #0974e0; }
+  .numpad button.danger { color: #FF453A; }
+
+  .tab-bar { display: flex; gap: 10px; margin-bottom: 24px; }
+  .tab { padding: 6px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; background: #1C1C1E; color: #8E8E93; border: none; font-family: inherit; }
+  .tab.active { background: #0A84FF; color: #fff; }
+</style>
+</head>
+<body>
+
+<h2>T4-S3 StockTracker — Device Mockup (600 x 450)</h2>
+
+<div class="tab-bar">
+  <button class="tab active" onclick="showScreen('dash')">Dashboard</button>
+  <button class="tab" onclick="showScreen('token')">Token Entry</button>
+</div>
+
+<!-- ── Dashboard screen ─────────────────── -->
+<div class="device-frame screen-dash" id="dash">
+  <div class="header">
+    <div class="logo"><span>◉</span> STOCKTRACKER</div>
+    <div class="right">
+      <div class="dot"></div>
+      <span>14:32</span>
+      <span>WiFi</span>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="left">
+      <div class="total-label">Total Value</div>
+      <div class="total-value">€24,531</div>
+
+      <div class="change-row">
+        <span class="change-abs green">+€127.43</span>
+      </div>
+      <div class="change-pct green" style="font-size:15px;">+0.52% today</div>
+
+      <div class="section-label">Total P/L</div>
+      <div class="pl-value green">+€3,241</div>
+      <div class="pl-pct">+15.2%</div>
+
+      <div style="flex:1"></div>
+      <div style="font-size:11px; color:#8E8E93;">15 holdings</div>
+    </div>
+
+    <div class="right-panel">
+      <div class="holdings-header">
+        <span style="width:60px">Ticker</span>
+        <span>Name</span>
+        <span style="width:60px;text-align:right">Weight</span>
+        <span style="width:70px;text-align:right">Day Chg</span>
+      </div>
+
+      <div class="holding-row">
+        <span class="h-ticker">AAPL</span>
+        <span class="h-name">Apple Inc.</span>
+        <span class="h-weight">32.1%</span>
+        <span class="h-change green">+1.24%</span>
+      </div>
+      <div class="holding-row">
+        <span class="h-ticker">MSFT</span>
+        <span class="h-name">Microsoft Corp.</span>
+        <span class="h-weight">18.4%</span>
+        <span class="h-change red">-0.31%</span>
+      </div>
+      <div class="holding-row">
+        <span class="h-ticker">NVDA</span>
+        <span class="h-name">NVIDIA Corp.</span>
+        <span class="h-weight">12.7%</span>
+        <span class="h-change green">+2.10%</span>
+      </div>
+      <div class="holding-row">
+        <span class="h-ticker">GOOGL</span>
+        <span class="h-name">Alphabet Inc.</span>
+        <span class="h-weight">9.8%</span>
+        <span class="h-change green">+0.82%</span>
+      </div>
+      <div class="holding-row">
+        <span class="h-ticker">AMZN</span>
+        <span class="h-name">Amazon.com Inc.</span>
+        <span class="h-weight">7.2%</span>
+        <span class="h-change red">-0.53%</span>
+      </div>
+
+      <div class="ai-card">
+        <div class="ai-title">🤖 AI Insight <span class="badge">Pro</span></div>
+        <div class="ai-text">
+          Portfolio is well-diversified across 5 sectors. Top holding AAPL at 32% is slightly concentrated. Consider adding emerging market exposure for better geographic balance.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>Last sync: 14:32</span>
+    <span>Refresh in 45s</span>
+    <span style="margin-left:auto;">trefolio.com</span>
+  </div>
+</div>
+
+<!-- ── Token entry screen ───────────────── -->
+<div class="token-screen screen-token" id="token">
+  <div class="icon">🔐</div>
+  <h3>Enter Device Passkey</h3>
+  <p>Generate a passkey in your profile at <strong style="color:#0A84FF">trefolio.com/profile</strong></p>
+  <div class="passkey-display" id="passkey-display">_ _ _ _ - _ _ _ _</div>
+  <div class="numpad" id="numpad">
+    <button onclick="addDigit('1')">1</button><button onclick="addDigit('2')">2</button><button onclick="addDigit('3')">3</button>
+    <button onclick="addDigit('4')">4</button><button onclick="addDigit('5')">5</button><button onclick="addDigit('6')">6</button>
+    <button onclick="addDigit('7')">7</button><button onclick="addDigit('8')">8</button><button onclick="addDigit('9')">9</button>
+    <button></button><button onclick="addDigit('0')">0</button><button class="danger" onclick="delDigit()">&larr;</button>
+  </div>
+  <button class="numpad" style="display:block;width:270px;margin-top:10px;"><button class="accent" style="width:100%;height:44px;border-radius:10px;font-size:15px;font-weight:600;" onclick="connectPasskey()">Connect</button></button>
+  <p style="font-size:11px; color:#555; margin-top:8px;">The passkey is stored locally on this device.</p>
+</div>
+
+<script>
+function showScreen(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('dash').style.display = name === 'dash' ? 'flex' : 'none';
+  document.getElementById('dash').style.flexDirection = 'column';
+  document.getElementById('token').style.display = name === 'token' ? 'flex' : 'none';
+}
+
+let digits = '';
+function updateDisplay() {
+  let d = '';
+  for (let i = 0; i < 4; i++) d += i < digits.length ? digits[i] : '_';
+  d += ' - ';
+  for (let i = 0; i < 4; i++) d += (i+4) < digits.length ? digits[i+4] : '_';
+  document.getElementById('passkey-display').textContent = d;
+}
+function addDigit(c) { if (digits.length < 8) { digits += c; updateDisplay(); } }
+function delDigit() { digits = digits.slice(0, -1); updateDisplay(); }
+function connectPasskey() { if (digits.length === 8) alert('Connecting with: ' + digits.slice(0,4) + '-' + digits.slice(4)); }
+</script>
+</body>
+</html>

@@ -34,6 +34,9 @@ export {
   generateWidgetToken,
   revokeWidgetToken,
   findUserByWidgetToken,
+  generateDevicePasskey,
+  revokeDevicePasskey,
+  findUserByDevicePasskey,
 } from "./users";
 
 export {

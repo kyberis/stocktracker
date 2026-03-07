@@ -7,22 +7,28 @@
 #include <Arduino.h>
 #endif
 
-constexpr int MAX_STOCKS  = 6;
-constexpr int HISTORY_LEN = 30;
+constexpr int MAX_TOP_HOLDINGS = 5;
+constexpr int AI_SUMMARY_MAX   = 512;
 
-struct Stock {
-    const char *symbol;
-    const char *name;
-    float price;
-    float prevClose;
-    float dayOpen;
-    float dayHigh;
-    float dayLow;
-    float history[HISTORY_LEN];
-    float volatilityMul;
+struct TopHolding {
+    char ticker[12];
+    char name[40];
+    float weight;
+    float dayChange;
 };
 
-void   stocks_init();
-void   stocks_tick();
-Stock &stocks_get(int index);
-int    stocks_count();
+struct PortfolioData {
+    float totalValueEUR;
+    float costBasis;
+    float dayChangeEUR;
+    float dayChangePercent;
+    float totalGainLoss;
+    float totalGainLossPercent;
+    int   holdingsCount;
+    int   topCount;
+    TopHolding top[MAX_TOP_HOLDINGS];
+    char  aiSummary[AI_SUMMARY_MAX];
+    bool  aiLoaded;
+};
+
+void portfolio_clear(PortfolioData &d);

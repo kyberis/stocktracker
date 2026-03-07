@@ -383,3 +383,40 @@ export async function findUserByWidgetToken(token: string): Promise<DbUser | nul
   if (result.rows.length === 0) return null;
   return rowToDbUser(result.rows[0]);
 }
+
+export async function generateDevicePasskey(userId: string): Promise<string> {
+  const client = await ensureInitialized();
+  const digits = Array.from(randomBytes(4))
+    .map((b) => (b % 10).toString())
+    .join("");
+  const digits2 = Array.from(randomBytes(4))
+    .map((b) => (b % 10).toString())
+    .join("");
+  const passkey = `${digits}-${digits2}`;
+  const hash = hashToken(passkey);
+  await client.execute({
+    sql: "UPDATE users SET device_passkey_hash = ? WHERE id = ?",
+    args: [hash, userId],
+  });
+  return passkey;
+}
+
+export async function revokeDevicePasskey(userId: string): Promise<void> {
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: "UPDATE users SET device_passkey_hash = '' WHERE id = ?",
+    args: [userId],
+  });
+}
+
+export async function findUserByDevicePasskey(passkey: string): Promise<DbUser | null> {
+  if (!passkey || !/^\d{4}-\d{4}$/.test(passkey)) return null;
+  const client = await ensureInitialized();
+  const hash = hashToken(passkey);
+  const result = await client.execute({
+    sql: "SELECT * FROM users WHERE device_passkey_hash = ?",
+    args: [hash],
+  });
+  if (result.rows.length === 0) return null;
+  return rowToDbUser(result.rows[0]);
+}

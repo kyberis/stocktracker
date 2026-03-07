@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromRequest } from "@/lib/auth/session";
-import { findUserByWidgetToken, listHoldings, listCashEntries } from "@/lib/db";
+import { findUserByWidgetToken, findUserByDevicePasskey, listHoldings, listCashEntries } from "@/lib/db";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { withMetrics } from "@/lib/with-metrics";
@@ -15,7 +15,7 @@ async function resolveUserId(req: NextRequest): Promise<string | null> {
   const auth = req.headers.get("authorization");
   if (auth?.startsWith("Bearer ")) {
     const token = auth.slice(7);
-    const user = await findUserByWidgetToken(token);
+    const user = await findUserByWidgetToken(token) ?? await findUserByDevicePasskey(token);
     if (user) return user.id;
   }
   return null;
@@ -35,6 +35,7 @@ export const GET = withMetrics("/api/portfolio/summary", async (req: NextRequest
   if (holdings.length === 0 && cashEntries.length === 0) {
     return NextResponse.json({
       totalValueEUR: 0,
+      costBasis: 0,
       dayChangeEUR: 0,
       dayChangePercent: 0,
       totalGainLoss: 0,
@@ -107,6 +108,7 @@ export const GET = withMetrics("/api/portfolio/summary", async (req: NextRequest
 
   return NextResponse.json({
     totalValueEUR: Math.round(totals.totalCurrentEUR * 100) / 100,
+    costBasis: Math.round(totals.totalCostEUR * 100) / 100,
     dayChangeEUR: Math.round(totals.dayGainLossEUR * 100) / 100,
     dayChangePercent: Math.round(dayChangePercent * 100) / 100,
     totalGainLoss: Math.round(totals.totalGainLoss * 100) / 100,

@@ -486,6 +486,20 @@ const MIGRATIONS: Migration[] = [
       `);
     },
   },
+  {
+    version: 11,
+    description: "Add device_passkey_hash column for T4-S3 device auth",
+    up: async (client: Client) => {
+      try {
+        await client.execute({
+          sql: "ALTER TABLE users ADD COLUMN device_passkey_hash TEXT NOT NULL DEFAULT ''",
+        });
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("duplicate column")) throw e;
+      }
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {
