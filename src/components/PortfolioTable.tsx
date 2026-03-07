@@ -4,12 +4,18 @@ import { useState, useMemo } from "react";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useI18n } from "@/lib/i18n";
 import StockRow from "./StockRow";
+import type { Holding } from "@/lib/types";
 
 type SortField = "name" | "gainLoss" | "value" | "shares";
 type SortDir = "asc" | "desc";
 
-export default function PortfolioTable() {
-  const { holdings, quotes } = usePortfolio();
+interface Props {
+  holdings?: Holding[];
+}
+
+export default function PortfolioTable({ holdings: holdingsProp }: Props) {
+  const { holdings: ctxHoldings, quotes } = usePortfolio();
+  const holdings = holdingsProp ?? ctxHoldings;
   const { t } = useI18n();
   const [sortField, setSortField] = useState<SortField>("name");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
@@ -66,6 +72,15 @@ export default function PortfolioTable() {
     });
   }, [holdings, quotes, sortField, sortDir, filter]);
 
+  const stocks = useMemo(
+    () => sortedHoldings.filter((h) => (h.assetType ?? "stock") !== "etf"),
+    [sortedHoldings]
+  );
+  const etfs = useMemo(
+    () => sortedHoldings.filter((h) => h.assetType === "etf"),
+    [sortedHoldings]
+  );
+
   const renderSortButton = (field: SortField, label: string) => (
     <button
       onClick={() => toggleSort(field)}
@@ -114,9 +129,36 @@ export default function PortfolioTable() {
       </div>
 
       <div className="max-h-[600px] overflow-y-auto">
-        {sortedHoldings.map((holding) => (
-          <StockRow key={holding.id} holding={holding} />
-        ))}
+        {stocks.length > 0 && (
+          <>
+            <div className="sticky top-0 z-[1] px-4 py-2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border-b border-gray-100 dark:border-slate-700 flex items-center gap-2">
+              <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">
+                {t("stocksGroup")}
+              </span>
+              <span className="text-[10px] font-medium text-gray-400 dark:text-slate-500">
+                ({stocks.length})
+              </span>
+            </div>
+            {stocks.map((holding) => (
+              <StockRow key={holding.id} holding={holding} />
+            ))}
+          </>
+        )}
+        {etfs.length > 0 && (
+          <>
+            <div className="sticky top-0 z-[1] px-4 py-2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border-b border-gray-100 dark:border-slate-700 flex items-center gap-2">
+              <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">
+                {t("etfsGroup")}
+              </span>
+              <span className="text-[10px] font-medium text-gray-400 dark:text-slate-500">
+                ({etfs.length})
+              </span>
+            </div>
+            {etfs.map((holding) => (
+              <StockRow key={holding.id} holding={holding} />
+            ))}
+          </>
+        )}
       </div>
     </div>
   );

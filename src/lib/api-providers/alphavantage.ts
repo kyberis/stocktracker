@@ -48,7 +48,8 @@ function throttled<T>(fn: () => Promise<T>): Promise<T> {
 async function avFetchRaw(params: Record<string, string>): Promise<Record<string, unknown>> {
   const url = new URL(AV_BASE);
   for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
-  const res = await fetch(url.toString());
+  const finalUrl = url.toString().replace(/%2C/gi, ",");
+  const res = await fetch(finalUrl);
   if (!res.ok) throw new Error(`Alpha Vantage request failed: ${res.status}`);
   const data = await res.json();
   if (data["Information"]) throw new Error("Alpha Vantage rate limit reached");
@@ -412,14 +413,7 @@ export class AlphaVantageProvider implements StockDataProvider {
 
   /* ── Alpha Intelligence ─────────────────────────────────────── */
 
-  async getNewsSentiment(symbol: string): Promise<NewsArticle[]> {
-    const data = await this.avFetch({
-      function: "NEWS_SENTIMENT",
-      tickers: symbol,
-      limit: "50",
-      sort: "LATEST",
-    });
-
+  private parseNewsFeed(data: Record<string, unknown>): NewsArticle[] {
     const feed = data["feed"] as Array<Record<string, unknown>> | undefined;
     if (!feed) return [];
 
@@ -449,6 +443,27 @@ export class AlphaVantageProvider implements StockDataProvider {
         topics,
       };
     });
+  }
+
+  async getNewsSentiment(symbol: string): Promise<NewsArticle[]> {
+    const data = await this.avFetch({
+      function: "NEWS_SENTIMENT",
+      tickers: symbol,
+      limit: "50",
+      sort: "LATEST",
+    });
+    return this.parseNewsFeed(data);
+  }
+
+  async getPortfolioNewsSentiment(symbols: string[]): Promise<NewsArticle[]> {
+    const tickers = symbols.slice(0, 10).join(",");
+    const data = await this.avFetch({
+      function: "NEWS_SENTIMENT",
+      tickers,
+      limit: "50",
+      sort: "LATEST",
+    });
+    return this.parseNewsFeed(data);
   }
 
   async getInsiderTransactions(symbol: string): Promise<InsiderTransaction[]> {

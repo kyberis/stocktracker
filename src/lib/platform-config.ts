@@ -42,6 +42,9 @@ export const PLATFORM_LIMITS = {
    */
   OPENAI_MONTHLY_CALL_CAP: 10_000,
 
+  /** Max IBKR Flex Web Service API fetches per user per day. */
+  IBKR_FLEX_DAILY_LIMIT: 10,
+
   /** Days to retain analytics_events rows before automatic purge. */
   ANALYTICS_RETENTION_DAYS: 90,
 } as const;

@@ -29,11 +29,20 @@ interface ProjectionPoint {
   withContributions: number;
 }
 
-export default function PortfolioProjection() {
+import type { Holding, CashEntry } from "@/lib/types";
+
+interface Props {
+  holdings?: Holding[];
+  cashEntries?: CashEntry[];
+}
+
+export default function PortfolioProjection({ holdings: holdingsProp, cashEntries: cashEntriesProp }: Props) {
   const { t } = useI18n();
   const { isDark } = useTheme();
   const { user } = useAuth();
-  const { holdings, cashEntries, quotes, exchangeRates } = usePortfolio();
+  const { holdings: ctxHoldings, cashEntries: ctxCashEntries, quotes, exchangeRates } = usePortfolio();
+  const holdings = holdingsProp ?? ctxHoldings;
+  const cashEntries = cashEntriesProp ?? ctxCashEntries;
 
   const [growthRate, setGrowthRate] = useState(7);
   const [reinvestDividends, setReinvestDividends] = useState(true);

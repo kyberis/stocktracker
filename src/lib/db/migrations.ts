@@ -412,6 +412,25 @@ const MIGRATIONS: Migration[] = [
       }
     },
   },
+  {
+    version: 7,
+    description: "Create ibkr_connections table for Flex Web Service API credentials",
+    up: async (client: Client) => {
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS ibkr_connections (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          token_encrypted TEXT NOT NULL,
+          query_id TEXT NOT NULL,
+          label TEXT NOT NULL DEFAULT '',
+          last_synced_at TEXT NOT NULL DEFAULT '',
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_ibkr_connections_user ON ibkr_connections(user_id);
+      `);
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

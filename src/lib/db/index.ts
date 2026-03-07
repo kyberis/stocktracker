@@ -76,6 +76,8 @@ export {
 export {
   listAccounts,
   addAccount,
+  findAccountByBroker,
+  findOrCreateBrokerAccount,
   deleteAccount,
 } from "./accounts";
 
@@ -125,3 +127,12 @@ export {
 
 export type { MetricsSnapshot } from "./metrics-snapshot";
 export { getMetricsSnapshot } from "./metrics-snapshot";
+
+export type { IbkrConnection } from "./ibkr-connections";
+export {
+  getIbkrConnection,
+  getIbkrConnectionToken,
+  saveIbkrConnection,
+  updateIbkrLastSynced,
+  deleteIbkrConnection,
+} from "./ibkr-connections";

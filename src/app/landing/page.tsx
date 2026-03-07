@@ -73,8 +73,8 @@ const HERO_FEATURES = [
     screenshot: "/screenshots/holdings-table.png",
     points: [
       "AI Portfolio Review with recommendations",
+      "Portfolio news feed with sentiment",
       "Company fundamentals analysis",
-      "News sentiment (bullish/bearish)",
       "Insider & institutional activity",
     ],
   },
@@ -82,13 +82,13 @@ const HERO_FEATURES = [
     tag: "Import",
     title: "Import Your Portfolio in Seconds",
     description:
-      "Upload your broker CSV — DEGIRO, Interactive Brokers, Trading 212, or Revolut — and buys, sells, dividends, and fees are parsed automatically. Your dashboard updates instantly.",
+      "Upload your broker CSV — DEGIRO, Interactive Brokers, Trading 212, or Revolut — and buys, sells, dividends, and fees are parsed automatically. Pro users can connect to IBKR via API with a guided 3-step setup that takes under 2 minutes.",
     screenshot: "/screenshots/tools-page.png",
     points: [
       "DEGIRO, IBKR, Trading 212 & Revolut",
-      "Simple CSV format support",
+      "IBKR API with guided setup wizard (Pro)",
       "AI-powered smart import",
-      "Full transaction history",
+      "Filter totals by broker",
     ],
   },
 ];
@@ -106,13 +106,13 @@ const FEATURE_CARDS = [
   },
   {
     icon: "sparkle",
-    title: "AI Analysis",
-    desc: "Plain-language insights on stocks, news, and economic indicators",
+    title: "AI & News",
+    desc: "Portfolio news feed, sentiment analysis, and AI-powered stock insights",
   },
   {
     icon: "upload",
-    title: "CSV Import",
-    desc: "DEGIRO, IBKR, Trading 212, Revolut & Simple CSV import",
+    title: "Broker Import",
+    desc: "CSV import + IBKR API with guided setup (Pro). DEGIRO, Trading 212, Revolut",
   },
   {
     icon: "bell",
@@ -168,12 +168,14 @@ const PRICING: PricingTier[] = [
       "Unlimited holdings",
       "Unlimited AI analysis",
       "Company fundamentals (income, balance, cash flow)",
-      "Stock intelligence (news sentiment, insider trades)",
+      "Stock intelligence (news, insider trades)",
+      "Portfolio news feed across all holdings",
       "Institutional holdings data",
       "Economic indicators dashboard",
       "Alpha Vantage premium data",
       "AI Portfolio Review (5/month)",
       "Unlimited price alerts + email delivery",
+      "IBKR direct API import & sync",
       "Priority support",
       "Export to CSV",
     ],
@@ -187,11 +189,11 @@ const PRICING: PricingTier[] = [
 const FAQ_ITEMS = [
   {
     q: "How do I import my portfolio?",
-    a: "Go to your Dashboard and click the upload icon in the header. Choose your broker (DEGIRO, Interactive Brokers, Trading 212, Revolut, or Simple CSV), drag & drop your file, review the parsed transactions, and click Import All. Your holdings will appear on the dashboard immediately.",
+    a: "Go to your Dashboard and click the upload icon in the header. Choose your broker (DEGIRO, Interactive Brokers, Trading 212, Revolut, or Simple CSV), drag & drop your file, review the parsed transactions, and click Import All. Pro users can also connect to Interactive Brokers via API — a guided 3-step wizard walks you through creating a Flex Query and enabling API access in under 2 minutes.",
   },
   {
     q: "What CSV formats are supported?",
-    a: "Five formats: (1) DEGIRO Account.csv, (2) Interactive Brokers Activity Statement or Flex Query CSV, (3) Trading 212 History CSV export, (4) Revolut Account Statement (Excel/CSV), and (5) Simple CSV with columns: ticker, type, price, amount, currency.",
+    a: "Five formats: (1) DEGIRO Account.csv, (2) Interactive Brokers Activity Statement or Flex Query CSV, (3) Trading 212 History CSV export, (4) Revolut Account Statement (Excel/CSV), and (5) Simple CSV with columns: ticker, type, price, amount, currency. Pro users get a guided IBKR API setup wizard — connect once, then re-sync your portfolio anytime with one click.",
   },
   {
     q: "Is my data secure?",
@@ -682,7 +684,7 @@ function WhySection() {
     { feature: "Real-time quotes", us: true, others: true, spreadsheets: false },
     { feature: "Multi-exchange & multi-currency", us: true, others: true, spreadsheets: false },
     { feature: "AI-powered analysis", us: true, others: false, spreadsheets: false },
-    { feature: "Broker CSV import", us: true, others: true, spreadsheets: false },
+    { feature: "Broker CSV + API import", us: true, others: true, spreadsheets: false },
     { feature: "Dividend tracking & projections", us: true, others: true, spreadsheets: false },
     { feature: "Privacy-first (no data selling)", us: true, others: false, spreadsheets: true },
     { feature: "Pro plan under €40/year", us: true, others: false, spreadsheets: true },

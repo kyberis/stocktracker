@@ -14,9 +14,61 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "0.34.1";
+export const CURRENT_VERSION = "0.38.0";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "0.38.0",
+    date: "2026-03-07",
+    title: "Free News Fallback",
+    titleTranslations: { es: "Noticias con Proveedor Gratuito" },
+    changes: [
+      {
+        type: "improvement",
+        text: "Portfolio news now falls back to Finnhub when Alpha Vantage is unavailable or returns no results, so Pro users always get news for their holdings.",
+        translations: { es: "Las noticias del portafolio ahora usan Finnhub como respaldo cuando Alpha Vantage no está disponible o no devuelve resultados, para que los usuarios Pro siempre reciban noticias de sus posiciones." },
+      },
+    ],
+  },
+  {
+    version: "0.37.0",
+    date: "2026-03-07",
+    title: "Interactive Brokers API Import",
+    titleTranslations: { es: "Importación vía API de Interactive Brokers" },
+    changes: [
+      {
+        type: "feature",
+        text: "Import your portfolio directly from Interactive Brokers using the Flex Web Service API. Connect once, then re-sync on demand — no more manual CSV downloads. Pro feature with encrypted credential storage.",
+        translations: { es: "Importa tu portafolio directamente desde Interactive Brokers usando la API Flex Web Service. Conéctate una vez y re-sincroniza bajo demanda — sin más descargas manuales de CSV. Función Pro con almacenamiento cifrado de credenciales." },
+      },
+    ],
+  },
+  {
+    version: "0.36.0",
+    date: "2026-03-07",
+    title: "Broker-Linked Portfolio Filter",
+    titleTranslations: { es: "Filtro de Portafolio por Bróker" },
+    changes: [
+      {
+        type: "feature",
+        text: "Transactions imported from brokers (DEGIRO, IBKR, Trading 212, Revolut) are now automatically linked to their source broker. Filter your dashboard totals by broker to see per-provider breakdowns.",
+        translations: { es: "Las transacciones importadas de brókers (DEGIRO, IBKR, Trading 212, Revolut) ahora se vinculan automáticamente a su bróker de origen. Filtra los totales del panel por bróker para ver desgloses por proveedor." },
+      },
+    ],
+  },
+  {
+    version: "0.35.0",
+    date: "2026-03-07",
+    title: "Portfolio News Feed",
+    titleTranslations: { es: "Noticias del Portafolio" },
+    changes: [
+      {
+        type: "feature",
+        text: "Portfolio News tab on the dashboard showing aggregated news and sentiment for your holdings, powered by Alpha Vantage (Pro)",
+        translations: { es: "Pestaña de Noticias del Portafolio en el panel principal mostrando noticias y sentimiento agregados de tus posiciones, con Alpha Vantage (Pro)" },
+      },
+    ],
+  },
   {
     version: "0.34.1",
     date: "2026-03-06",

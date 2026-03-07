@@ -189,6 +189,7 @@ export interface StockDataProvider {
   getCashFlow?(symbol: string): Promise<FundamentalData<CashFlowReport> | null>;
   getEarnings?(symbol: string): Promise<FundamentalData<EarningsReport> | null>;
   getNewsSentiment?(symbol: string): Promise<NewsArticle[]>;
+  getPortfolioNewsSentiment?(symbols: string[]): Promise<NewsArticle[]>;
   getInsiderTransactions?(symbol: string): Promise<InsiderTransaction[]>;
   getInstitutionalHoldings?(symbol: string): Promise<InstitutionalHolder[]>;
   getEarningsTranscript?(symbol: string, quarter: string): Promise<EarningsTranscript | null>;

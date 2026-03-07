@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { listHoldings, addTransaction, trackEvent, listCashEntries, addCashEntry, removeCashEntry, listTransactionSourceRefs, rebuildHoldings, findUserById } from "@/lib/db";
+import { listHoldings, addTransaction, trackEvent, listCashEntries, addCashEntry, removeCashEntry, listTransactionSourceRefs, rebuildHoldings, findUserById, findOrCreateBrokerAccount } from "@/lib/db";
 import { withMetrics } from "@/lib/with-metrics";
 import { portfolioImportsTotal } from "@/lib/metrics";
 import { buildIsinMap } from "@/lib/degiro-parser";
@@ -133,11 +133,14 @@ async function importTransactions(
   csv: string,
   parseCashBalances?: (csv: string) => { currency: string; amount: number }[],
   isPro?: boolean,
+  brokerLabel?: string,
 ): Promise<{ imported: number; cashImported: number; holdingsCapped?: number }> {
   const existingRefs = await listTransactionSourceRefs(userId);
   const toImport = parsed.filter((tx) => !existingRefs.has(tx.sourceRef));
 
   const sorted = [...toImport].sort((a, b) => a.date.localeCompare(b.date));
+
+  const account = await findOrCreateBrokerAccount(userId, broker, brokerLabel || broker.toUpperCase());
 
   let holdingsCapped = 0;
   let allowedTickers: Set<string> | null = null;
@@ -173,7 +176,7 @@ async function importTransactions(
       exchange: inferExchangeFromTicker(tx.ticker),
       isin: tx.isin,
       assetType,
-      accountId: "",
+      accountId: account.id,
       type: tx.type,
       date: tx.date,
       shares: tx.shares,
@@ -306,7 +309,7 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
           totalAmount: tx.totalAmount, fees: tx.fees, taxes: tx.taxes,
           currency: tx.currency, orderId: tx.orderId, sourceRef: tx.sourceRef,
         }));
-        return importTransactions(userId, asParsed, "simple", csv, undefined, isPro);
+        return importTransactions(userId, asParsed, "simple", csv, undefined, isPro, "Simple CSV");
       });
 
       return NextResponse.json({ jobId }, { status: 202 });
@@ -365,6 +368,7 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
         csv,
         parser.parseCashBalances?.bind(parser),
         isPro,
+        parser.label,
       );
     });
 

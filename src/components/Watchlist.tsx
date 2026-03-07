@@ -118,11 +118,12 @@ export default function Watchlist() {
                       <p className="text-xs font-mono font-medium text-gray-900 dark:text-white">
                         {formatCurrency(q.regularMarketPrice, q.currency)}
                       </p>
-                      <p className={`text-[10px] font-mono ${
-                        mktStatus?.isOpen
-                          ? `${q.regularMarketChangePercent >= 0 ? "text-emerald-500" : "text-red-500"} animate-live-pulse`
-                          : "text-gray-400 dark:text-slate-500"
+                      <p className={`text-[10px] font-mono flex items-center gap-1 ${
+                        q.regularMarketChangePercent >= 0 ? "text-emerald-500" : "text-red-500"
                       }`}>
+                        {mktStatus?.isOpen && (
+                          <span className="inline-block w-1 h-1 rounded-full bg-emerald-500 animate-pulse flex-shrink-0" />
+                        )}
                         {q.regularMarketChangePercent >= 0 ? "+" : ""}{q.regularMarketChangePercent.toFixed(2)}%
                       </p>
                     </div>

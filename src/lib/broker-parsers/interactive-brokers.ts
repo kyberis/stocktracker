@@ -97,9 +97,165 @@ function extractIsins(csv: string): string[] {
   return Array.from(isins);
 }
 
-/* ── Parser ── */
+/* ── Flex Query CSV format parser ── */
+
+/**
+ * Flex Query CSV is a multi-table format: each "section" is a flat CSV table
+ * with its own header row. Sections are identified by the presence of
+ * "ClientAccountID" as the first column. Different sections have different
+ * column sets — trade sections include "TradeDate", "BuySell", "TradePrice", etc.
+ */
+
+interface FlexTable {
+  columns: Record<string, number>;
+  rows: string[][];
+}
+
+function splitFlexTables(csv: string): FlexTable[] {
+  const lines = csv.split("\n").filter((l) => l.trim());
+  const tables: FlexTable[] = [];
+  let currentCols: Record<string, number> | null = null;
+  let currentRows: string[][] = [];
+
+  for (const line of lines) {
+    const cells = parseCSVLine(line);
+    const first = cells[0]?.trim();
+
+    // Header row: first cell is "ClientAccountID" AND the row contains
+    // mostly non-numeric values (column names), not data
+    if (first === "ClientAccountID" && cells.length > 3) {
+      // Save the previous table if it had rows
+      if (currentCols && currentRows.length > 0) {
+        tables.push({ columns: currentCols, rows: currentRows });
+      }
+      currentCols = {};
+      for (let i = 0; i < cells.length; i++) {
+        currentCols[cells[i].trim()] = i;
+      }
+      currentRows = [];
+      continue;
+    }
+
+    if (currentCols) {
+      currentRows.push(cells);
+    }
+  }
+  if (currentCols && currentRows.length > 0) {
+    tables.push({ columns: currentCols, rows: currentRows });
+  }
+  return tables;
+}
+
+function flexCell(row: string[], colMap: Record<string, number>, field: string): string {
+  const idx = colMap[field];
+  if (idx === undefined || idx >= row.length) return "";
+  return row[idx].trim();
+}
+
+function parseFlexQueryCSV(csv: string, isinToTicker: Record<string, string>): ParsedTransaction[] {
+  const tables = splitFlexTables(csv);
+  const transactions: ParsedTransaction[] = [];
+
+  for (const table of tables) {
+    const col = table.columns;
+    const hasTrades = "TradeDate" in col && "Symbol" in col && "Quantity" in col;
+    const hasDividends = ("PayDate" in col || "ReportDate" in col) && "GrossAmount" in col;
+    const hasWithholding = "Tax" in col && "Description" in col && ("PayDate" in col || "ReportDate" in col);
+
+    if (hasTrades) {
+      for (const row of table.rows) {
+        const symbol = flexCell(row, col, "Symbol");
+        const rawQty = num(flexCell(row, col, "Quantity"));
+        const price = num(flexCell(row, col, "TradePrice"));
+        const proceeds = num(flexCell(row, col, "Proceeds") || flexCell(row, col, "TradeMoney"));
+        const commFee = num(flexCell(row, col, "IBCommission") || flexCell(row, col, "Commission"));
+        const currency = flexCell(row, col, "CurrencyPrimary") || flexCell(row, col, "Currency");
+        const dateRaw = flexCell(row, col, "TradeDate") || flexCell(row, col, "DateTime");
+        const date = extractDate(dateRaw);
+        const tradeId = flexCell(row, col, "TradeID") || flexCell(row, col, "TransactionID") || "";
+
+        const buySell = flexCell(row, col, "BuySell");
+        const isBuy = buySell
+          ? buySell.toUpperCase().startsWith("BUY") || buySell === "BOT"
+          : rawQty > 0;
+
+        const assetClass = flexCell(row, col, "AssetClass");
+        if (assetClass && assetClass !== "STK" && assetClass !== "OPT") continue;
+
+        const type = isBuy ? "buy" : "sell";
+        const shares = Math.abs(rawQty);
+        const totalAmount = Math.abs(proceeds) || shares * price;
+        const fees = Math.abs(commFee);
+
+        const isin = flexCell(row, col, "ISIN") || flexCell(row, col, "SecurityID") || "";
+        const ticker = symbol || isinToTicker[isin] || "";
+
+        if (!date || (!ticker && !isin)) continue;
+
+        transactions.push({
+          date,
+          type,
+          ticker,
+          name: flexCell(row, col, "Description") || symbol,
+          isin,
+          shares,
+          pricePerShare: price,
+          totalAmount,
+          fees,
+          taxes: 0,
+          currency,
+          orderId: tradeId,
+          sourceRef: `ibkr|${date}|${type}|${symbol}|${tradeId || totalAmount}`,
+        });
+      }
+    }
+
+    if (hasDividends && !hasWithholding) {
+      for (const row of table.rows) {
+        const desc = flexCell(row, col, "Description") || flexCell(row, col, "Symbol");
+        const dateRaw = flexCell(row, col, "PayDate") || flexCell(row, col, "ReportDate");
+        const date = extractDate(dateRaw);
+        const amount = num(flexCell(row, col, "GrossAmount") || flexCell(row, col, "Amount"));
+        const currency = flexCell(row, col, "CurrencyPrimary") || flexCell(row, col, "Currency");
+        const tax = num(flexCell(row, col, "Tax") || "0");
+        const symbol = flexCell(row, col, "Symbol") || desc.split(/[(\s]/)[0] || "";
+
+        if (amount <= 0 || !date) continue;
+
+        transactions.push({
+          date,
+          type: "dividend",
+          ticker: symbol,
+          name: desc,
+          isin: flexCell(row, col, "ISIN") || "",
+          shares: 0,
+          pricePerShare: 0,
+          totalAmount: amount,
+          fees: 0,
+          taxes: Math.abs(tax),
+          currency,
+          orderId: "",
+          sourceRef: `ibkr|${date}|dividend|${symbol}|${amount}`,
+        });
+      }
+    }
+  }
+
+  deduplicateSourceRefs(transactions);
+  transactions.sort((a, b) => b.date.localeCompare(a.date));
+  return transactions;
+}
+
+/* ── Activity Statement CSV parser ── */
 
 function parseIBKR(csv: string, isinToTicker: Record<string, string>): ParsedTransaction[] {
+  // Detect Flex Query CSV format: first cell of first non-empty line is "ClientAccountID"
+  const firstLine = csv.split("\n").find((l) => l.trim());
+  const firstCells = firstLine ? parseCSVLine(firstLine) : [];
+  if (firstCells[0]?.trim() === "ClientAccountID") {
+    return parseFlexQueryCSV(csv, isinToTicker);
+  }
+
   const sections = parseSections(csv);
   const transactions: ParsedTransaction[] = [];
 

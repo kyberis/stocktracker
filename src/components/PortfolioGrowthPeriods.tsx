@@ -10,7 +10,7 @@ import {
   calculatePeriodReturn,
   type HoldingSeriesEntry,
 } from "@/lib/performance";
-import type { HistoricalDataPoint } from "@/lib/types";
+import type { HistoricalDataPoint, Holding } from "@/lib/types";
 
 type HistoricalApiResponse = {
   data?: HistoricalDataPoint[];
@@ -31,8 +31,13 @@ function getTargetDates(): { ytd: string; oneMonth: string; oneYear: string } {
   return { ytd, oneMonth, oneYear };
 }
 
-export default function PortfolioGrowthPeriods() {
-  const { holdings, exchangeRates, quotes } = usePortfolio();
+interface Props {
+  holdings?: Holding[];
+}
+
+export default function PortfolioGrowthPeriods({ holdings: holdingsProp }: Props) {
+  const { holdings: ctxHoldings, exchangeRates, quotes } = usePortfolio();
+  const holdings = holdingsProp ?? ctxHoldings;
   const { t } = useI18n();
   const track = useTrack();
   const tracked = useRef(false);

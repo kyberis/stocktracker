@@ -324,11 +324,14 @@ function StockRow({ holding }: StockRowProps) {
             {formatCurrency(totalValueEUR, "EUR")}
           </p>
           {hasQuote ? (
-            <p className={`text-xs mt-0.5 ${
-              marketStatus?.isOpen
-                ? `${dayColor} animate-live-pulse`
-                : "text-gray-400 dark:text-slate-500"
-            }`}>
+            <p className={`text-xs mt-0.5 flex items-center justify-end gap-1 ${dayColor}`}>
+              {marketStatus && (
+                <span className={`inline-block w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                  marketStatus.isOpen
+                    ? "bg-emerald-500 animate-pulse"
+                    : "bg-gray-400 dark:bg-slate-500"
+                }`} />
+              )}
               {dayIsPositive ? "+" : ""}{formatCurrency(dayChangeAmountEUR, "EUR")} ({formatPercent(dayChangePercent)})
             </p>
           ) : (

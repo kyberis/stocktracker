@@ -5,6 +5,15 @@ import type { Holding, HoldingAssetType } from "@/lib/types";
 import { deriveHoldingsFromTransactions } from "@/lib/derive-holdings";
 import { seedHoldingsForUser, seedCashForUser, seedTransactionsForUser } from "./seed";
 import { listTransactions } from "./transactions";
+import { findOrCreateBrokerAccount } from "./accounts";
+
+const SOURCE_REF_BROKER_MAP: Record<string, { id: string; label: string }> = {
+  degiro: { id: "degiro", label: "DEGIRO" },
+  ibkr: { id: "interactive_brokers", label: "Interactive Brokers" },
+  trading212: { id: "trading_212", label: "Trading 212" },
+  revolut: { id: "revolut", label: "Revolut" },
+  simple: { id: "simple", label: "Simple CSV" },
+};
 
 export async function listHoldings(userId: string): Promise<Holding[]> {
   const client = await ensureInitialized();
@@ -213,6 +222,33 @@ export async function rebuildHoldings(userId: string): Promise<Holding[]> {
   }
 
   const transactions = await listTransactions(userId);
+
+  const unlinked = transactions.filter((tx) => !tx.accountId && tx.sourceRef);
+  if (unlinked.length > 0) {
+    const byPrefix = new Map<string, string[]>();
+    for (const tx of unlinked) {
+      const pipeIdx = tx.sourceRef!.indexOf("|");
+      const prefix = pipeIdx > 0 ? tx.sourceRef!.slice(0, pipeIdx) : "";
+      if (prefix && SOURCE_REF_BROKER_MAP[prefix]) {
+        const ids = byPrefix.get(prefix) || [];
+        ids.push(tx.id);
+        byPrefix.set(prefix, ids);
+      }
+    }
+    for (const [prefix, txIds] of byPrefix) {
+      const broker = SOURCE_REF_BROKER_MAP[prefix];
+      const account = await findOrCreateBrokerAccount(userId, broker.id, broker.label);
+      const placeholders = txIds.map(() => "?").join(",");
+      await client.execute({
+        sql: `UPDATE transactions SET account_id = ? WHERE id IN (${placeholders}) AND user_id = ?`,
+        args: [account.id, ...txIds, userId],
+      });
+      for (const tx of transactions) {
+        if (txIds.includes(tx.id)) tx.accountId = account.id;
+      }
+    }
+  }
+
   const derived = deriveHoldingsFromTransactions(transactions, metadataByKey);
 
   await client.execute({ sql: "DELETE FROM holdings WHERE user_id = ?", args: [userId] });

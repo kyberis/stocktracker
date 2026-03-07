@@ -21,6 +21,7 @@ interface AggregateState {
   displayCurrency: string;
   isin: string;
   assetType: HoldingAssetType;
+  accountId: string;
 }
 
 function holdingKey(ticker: string, exchange: string): string {
@@ -55,6 +56,7 @@ export function deriveHoldingsFromTransactions(
       displayCurrency: (isTradeType ? (tx.displayCurrency || tx.currency) : null) || meta?.displayCurrency || "EUR",
       isin: tx.isin || meta?.isin || "",
       assetType: tx.assetType || meta?.assetType || "stock",
+      accountId: tx.accountId || meta?.accountId || "",
     };
 
     if (tx.type === "buy" && tx.shares > 0) {
@@ -73,6 +75,7 @@ export function deriveHoldingsFromTransactions(
     }
     if (tx.assetType) current.assetType = tx.assetType;
     if (tx.isin) current.isin = tx.isin;
+    if (tx.accountId) current.accountId = tx.accountId;
 
     aggregates.set(key, current);
   }
@@ -95,7 +98,7 @@ export function deriveHoldingsFromTransactions(
       sector: meta?.sector || "",
       region: meta?.region || "",
       assetClass: meta?.assetClass || "",
-      accountId: meta?.accountId || "",
+      accountId: meta?.accountId || state.accountId || "",
     });
   }
 

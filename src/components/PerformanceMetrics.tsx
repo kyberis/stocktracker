@@ -5,11 +5,18 @@ import { useI18n } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
 import { calculateTTWROR, calculateXIRR, buildXIRRCashFlows } from "@/lib/performance";
-import type { Transaction } from "@/lib/types";
+import type { Transaction, Holding, CashEntry } from "@/lib/types";
 
-export default function PerformanceMetrics() {
+interface Props {
+  holdings?: Holding[];
+  cashEntries?: CashEntry[];
+}
+
+export default function PerformanceMetrics({ holdings: holdingsProp, cashEntries: cashEntriesProp }: Props) {
   const { t } = useI18n();
-  const { holdings, cashEntries, quotes, exchangeRates } = usePortfolio();
+  const { holdings: ctxHoldings, cashEntries: ctxCashEntries, quotes, exchangeRates } = usePortfolio();
+  const holdings = holdingsProp ?? ctxHoldings;
+  const cashEntries = cashEntriesProp ?? ctxCashEntries;
   const [txs, setTxs] = useState<Transaction[]>([]);
 
   useEffect(() => {

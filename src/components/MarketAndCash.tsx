@@ -23,8 +23,17 @@ const INDICES = [
   { symbol: "^STOXX50E", labelKey: "benchmarkEuroStoxx50" },
 ] as const;
 
-export default function MarketAndCash() {
-  const { holdings, cashEntries, quotes, exchangeRates, isLoading, addCashEntry, updateCashEntry, removeCashEntry } = usePortfolio();
+import type { Holding, CashEntry } from "@/lib/types";
+
+interface Props {
+  holdings?: Holding[];
+  cashEntries?: CashEntry[];
+}
+
+export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cashEntriesProp }: Props) {
+  const { holdings: ctxHoldings, cashEntries: ctxCashEntries, quotes, exchangeRates, isLoading, addCashEntry, updateCashEntry, removeCashEntry } = usePortfolio();
+  const holdings = holdingsProp ?? ctxHoldings;
+  const cashEntries = cashEntriesProp ?? ctxCashEntries;
   const { t } = useI18n();
   const [indices, setIndices] = useState<IndexQuote[]>(
     INDICES.map((idx) => ({

@@ -4,9 +4,17 @@ import { usePortfolio } from "@/lib/portfolio-context";
 import { useI18n } from "@/lib/i18n";
 import { formatCurrency, formatPercent } from "@/lib/utils";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
+import type { Holding, CashEntry } from "@/lib/types";
 
-export default function PortfolioSummary() {
-  const { holdings, cashEntries, quotes, exchangeRates, isLoading } = usePortfolio();
+interface Props {
+  holdings?: Holding[];
+  cashEntries?: CashEntry[];
+}
+
+export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: cashEntriesProp }: Props) {
+  const { holdings: ctxHoldings, cashEntries: ctxCashEntries, quotes, exchangeRates, isLoading } = usePortfolio();
+  const holdings = holdingsProp ?? ctxHoldings;
+  const cashEntries = cashEntriesProp ?? ctxCashEntries;
   const { t } = useI18n();
   const {
     totalCurrentEUR,

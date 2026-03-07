@@ -91,6 +91,13 @@ export default function PrivacyPolicyPage() {
                 User preferences (language, theme, display currency, selected
                 benchmarks).
               </li>
+              <li>
+                <strong className="text-slate-200">Broker connection credentials (optional)</strong> —
+                if you connect your Interactive Brokers account via the Flex Web
+                Service API, your access token and query ID are encrypted with
+                AES-256-GCM and stored so you can re-sync your portfolio on demand.
+                You can disconnect at any time, which permanently deletes these credentials.
+              </li>
             </ul>
 
             <h3>Automatically Collected Data</h3>
@@ -194,6 +201,11 @@ export default function PrivacyPolicyPage() {
                     <td className="py-3">Stock ticker symbols requested</td>
                   </tr>
                   <tr>
+                    <td className="py-3 pr-6">Finnhub</td>
+                    <td className="py-3 pr-6">Market news (fallback)</td>
+                    <td className="py-3">Stock ticker symbols requested</td>
+                  </tr>
+                  <tr>
                     <td className="py-3 pr-6">Cloudflare Turnstile</td>
                     <td className="py-3 pr-6">Bot protection</td>
                     <td className="py-3">IP address and browser signals (used to distinguish humans from bots during signup and login)</td>
@@ -202,6 +214,11 @@ export default function PrivacyPolicyPage() {
                     <td className="py-3 pr-6">Resend</td>
                     <td className="py-3 pr-6">Transactional email</td>
                     <td className="py-3">Email address (for verification, password resets, and service notifications)</td>
+                  </tr>
+                  <tr>
+                    <td className="py-3 pr-6">Interactive Brokers (Flex Web Service)</td>
+                    <td className="py-3 pr-6">Portfolio import via API (Pro)</td>
+                    <td className="py-3">User-provided Flex token and Query ID (encrypted at rest); IBKR returns portfolio data directly to our server</td>
                   </tr>
                 </tbody>
               </table>
@@ -213,7 +230,7 @@ export default function PrivacyPolicyPage() {
             <ul className="list-disc pl-6 space-y-2">
               <li>Passwords are hashed with bcrypt (one-way, non-reversible).</li>
               <li>Sessions use secure, httpOnly JWT cookies with SameSite protection.</li>
-              <li>Sensitive API keys are encrypted with AES-256-GCM.</li>
+              <li>Sensitive API keys and broker connection tokens are encrypted with AES-256-GCM.</li>
               <li>All connections use HTTPS/TLS encryption in transit.</li>
               <li>Database is encrypted at rest (Turso/libSQL).</li>
               <li>
@@ -325,7 +342,7 @@ export default function PrivacyPolicyPage() {
             <h2>10. International Transfers</h2>
             <p>
               Your data may be processed outside the EEA by our third-party
-              service providers (Vercel, OpenAI, Stripe, Cloudflare). Where
+              service providers (Vercel, OpenAI, Stripe, Cloudflare, Finnhub, Interactive Brokers). Where
               this occurs, we ensure appropriate safeguards are in place,
               including Standard Contractual Clauses (SCCs) approved by the
               European Commission.

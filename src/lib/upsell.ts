@@ -11,7 +11,9 @@ export type UpsellSurface =
   | "profile_always_on"
   | "settings_always_on"
   | "alerts_limit"
-  | "holdings_limit";
+  | "holdings_limit"
+  | "portfolio_news_locked"
+  | "ibkr_api_import";
 
 export interface UpsellConfig {
   subtitleKey: TranslationKey;
@@ -101,6 +103,28 @@ const UPSSELL_BY_SURFACE: Record<UpsellSurface, UpsellConfig> = {
     ],
     proItems: [
       "upsellProItemUnlimitedHoldings",
+      "upsellProItemAlphaVantage",
+      "upsellProItemAiUnlimited",
+    ],
+  },
+  portfolio_news_locked: {
+    subtitleKey: "upsellCompareSubtitleLocked",
+    attemptedActionKey: "upsellAttemptPortfolioNews",
+    feature: "intelligence",
+    freeItems: DEFAULT_FREE_ITEMS,
+    proItems: DEFAULT_PRO_ITEMS,
+  },
+  ibkr_api_import: {
+    subtitleKey: "upsellCompareSubtitleLocked",
+    attemptedActionKey: "upsellAttemptIbkrApi",
+    feature: "ibkr-api",
+    freeItems: [
+      "upsellFreeItemBrokerCsv",
+      "upsellFreeItemYahoo",
+      "upsellFreeItemBasicCharts",
+    ],
+    proItems: [
+      "upsellProItemIbkrApi",
       "upsellProItemAlphaVantage",
       "upsellProItemAiUnlimited",
     ],
