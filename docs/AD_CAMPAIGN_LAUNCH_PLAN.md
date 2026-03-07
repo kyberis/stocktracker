@@ -40,8 +40,8 @@ Scale from free tiers before ad spend begins.
 
 | # | Task | Est. Monthly Cost | Trigger |
 |---|------|-------------------|---------|
-| 2.1 | **Vercel Pro** | $20/month | Needed for 60s function timeout (broker imports), 1M invocations, and production analytics |
-| 2.2 | **Turso Scaler** | $29/month | Needed when approaching 500M reads or 5 GB storage |
+| 2.1 | **Vercel Pro** | $20/month | ~~Needed for 60s function timeout (broker imports), 1M invocations, and production analytics~~ **DONE** |
+| 2.2 | **Turso Scaler** | $29/month | ~~Needed when approaching 500M reads or 5 GB storage~~ **DONE** |
 | 2.3 | **Upstash Pro** | $10/month | Needed for reliable rate limiting at scale (10K+ daily commands) |
 | 2.4 | **Resend paid plan** | $20/month | Needed when email volume exceeds 3,000/month (verification + alerts) |
 | 2.5 | **Alpha Vantage premium** | $49/month | Needed when global 75 req/min cap becomes a bottleneck (>50 concurrent Pro users) |
@@ -65,14 +65,14 @@ These are triggered by the v0.34.0 changes per the legal-advisor skill.
 
 ---
 
-## 4. Monitoring & Alerts (Priority: Medium)
+## 4. Monitoring & Alerts (Priority: Medium) — DONE
 
-| # | Task | Notes |
-|---|------|-------|
-| 4.1 | **Configure Grafana Cloud alerts** | Set alerts for: signup rate > 100/hour, 5xx error rate > 5%, DB write usage > 80%. |
-| 4.2 | **OpenAI cost alert** | Set a $50/month limit in OpenAI Dashboard → Settings → Billing → Usage limits. |
-| 4.3 | **Stripe webhook monitoring** | Enable webhook alerts in Stripe for failed deliveries. |
-| 4.4 | **Uptime monitoring** | Use Vercel's built-in checks or a free service like UptimeRobot for `trefolio.com`. |
+| # | Task | Notes | Status |
+|---|------|-------|--------|
+| 4.1 | **Configure Grafana Cloud alerts** | Alerts for: signup rate > 100/hour, 5xx error rate > 5%, DB write usage > 80%. | **DONE** |
+| 4.2 | **OpenAI cost alert** | $50/month limit in OpenAI Dashboard → Billing → Usage limits. | **DONE** |
+| 4.3 | **Stripe webhook monitoring** | Webhook failed-delivery alerts enabled in Stripe. | **DONE** |
+| 4.4 | **Uptime monitoring** | Uptime checks configured for `trefolio.com`. | **DONE** |
 
 ---
 
@@ -102,11 +102,11 @@ Run through this before flipping the ads on:
 [x] Turnstile keys configured
 [x] Resend domain verified
 [x] Google OAuth redirect updated for production domain
-[ ] Grafana alerts configured
-[ ] OpenAI billing cap set ($50/month)
+[x] Grafana alerts configured
+[x] OpenAI billing cap set ($50/month)
 [x] Privacy Policy updated for Turnstile + retention
 [ ] Impressum page added (if required)
-[ ] Vercel upgraded to Pro
+[x] Vercel upgraded to Pro
 [ ] First $50 ad budget ready
 [ ] Conversion tracking in place
 ```

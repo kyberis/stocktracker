@@ -68,6 +68,7 @@ export async function middleware(req: NextRequest) {
   const skipEmailVerify = process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test";
   if (
     !skipEmailVerify &&
+    session.role !== "admin" &&
     !session.emailVerified &&
     !session.mustChangePassword &&
     !EMAIL_VERIFY_ALLOWED.has(pathname)
