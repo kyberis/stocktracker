@@ -5,6 +5,8 @@ import type { SubscriptionPlan } from "@/lib/types";
 
 type AuthUserRole = "admin" | "user";
 
+type AuthProvider = "credentials" | "google";
+
 interface AuthUser {
   id: string;
   username: string;
@@ -20,6 +22,8 @@ interface AuthUser {
   aiCallsToday: number;
   aiDailyResetAt: string;
   emailVerified: boolean;
+  authProvider: AuthProvider;
+  googleLinked: boolean;
   portfolioReviewCount: number;
   portfolioReviewResetAt: string;
 }

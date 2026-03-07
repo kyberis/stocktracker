@@ -431,6 +431,25 @@ const MIGRATIONS: Migration[] = [
       `);
     },
   },
+  {
+    version: 8,
+    description: "Add apple_id column for Apple OAuth support",
+    up: async (client: Client) => {
+      try {
+        await client.execute({
+          sql: "ALTER TABLE users ADD COLUMN apple_id TEXT NOT NULL DEFAULT ''",
+        });
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("duplicate column")) throw e;
+      }
+
+      await client.execute({
+        sql: `CREATE UNIQUE INDEX IF NOT EXISTS idx_users_apple_id_unique
+              ON users(apple_id) WHERE apple_id != ''`,
+      });
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

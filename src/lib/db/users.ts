@@ -44,6 +44,16 @@ export async function findUserByGoogleId(googleId: string): Promise<DbUser | nul
   return rowToDbUser(result.rows[0]);
 }
 
+export async function findUserByAppleId(appleId: string): Promise<DbUser | null> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: "SELECT * FROM users WHERE apple_id = ?",
+    args: [appleId],
+  });
+  if (result.rows.length === 0) return null;
+  return rowToDbUser(result.rows[0]);
+}
+
 export async function findUserById(userId: string): Promise<DbUser | null> {
   const client = await ensureInitialized();
   const result = await client.execute({
@@ -65,8 +75,9 @@ export async function createUser(params: {
   passwordHash: string;
   email?: string;
   displayName?: string;
-  authProvider?: "credentials" | "google";
+  authProvider?: "credentials" | "google" | "apple";
   googleId?: string;
+  appleId?: string;
   avatarUrl?: string;
   emailVerified?: boolean;
   seedWithData: boolean;
@@ -78,12 +89,12 @@ export async function createUser(params: {
     [
       {
         sql: `INSERT INTO users (id, username, password_hash, role, must_change_password,
-              ai_calls_reset_at, email, display_name, avatar_url, auth_provider, google_id, email_verified)
-              VALUES (?, ?, ?, 'user', 0, datetime('now'), ?, ?, ?, ?, ?, ?)`,
+              ai_calls_reset_at, email, display_name, avatar_url, auth_provider, google_id, apple_id, email_verified)
+              VALUES (?, ?, ?, 'user', 0, datetime('now'), ?, ?, ?, ?, ?, ?, ?)`,
         args: [
           id, params.username, params.passwordHash,
           params.email || "", params.displayName || "", params.avatarUrl || "",
-          params.authProvider || "credentials", params.googleId || "",
+          params.authProvider || "credentials", params.googleId || "", params.appleId || "",
           params.emailVerified ? 1 : 0,
         ],
       },
@@ -306,10 +317,34 @@ export async function setEmailVerified(userId: string, verified: boolean): Promi
   });
 }
 
+export async function linkGoogleAccount(userId: string, googleId: string): Promise<void> {
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: "UPDATE users SET google_id = ? WHERE id = ?",
+    args: [googleId, userId],
+  });
+}
+
 export async function unlinkGoogleAccount(userId: string): Promise<void> {
   const client = await ensureInitialized();
   await client.execute({
-    sql: "UPDATE users SET google_id = NULL WHERE id = ?",
+    sql: "UPDATE users SET google_id = '' WHERE id = ?",
+    args: [userId],
+  });
+}
+
+export async function linkAppleAccount(userId: string, appleId: string): Promise<void> {
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: "UPDATE users SET apple_id = ? WHERE id = ?",
+    args: [appleId, userId],
+  });
+}
+
+export async function unlinkAppleAccount(userId: string): Promise<void> {
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: "UPDATE users SET apple_id = '' WHERE id = ?",
     args: [userId],
   });
 }

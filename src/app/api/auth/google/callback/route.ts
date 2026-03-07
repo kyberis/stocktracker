@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   findUserByGoogleId,
   findUserByEmail,
+  findUserById,
   createUser,
+  linkGoogleAccount,
   trackEvent,
   toPublicUser,
 } from "@/lib/db";
@@ -10,6 +12,7 @@ import type { DbUser } from "@/lib/db";
 import {
   createSessionToken,
   getSessionCookieConfig,
+  verifySessionToken,
 } from "@/lib/auth/session";
 import { ensureSessionSecret } from "@/lib/auth/session-secret";
 import { authEventsTotal } from "@/lib/metrics";
@@ -36,6 +39,59 @@ function errorRedirect(req: NextRequest, message: string): NextResponse {
   return NextResponse.redirect(url);
 }
 
+function profileErrorRedirect(req: NextRequest, message: string): NextResponse {
+  const url = new URL("/profile", req.nextUrl.origin);
+  url.searchParams.set("linkError", message);
+  return NextResponse.redirect(url);
+}
+
+function clearLinkIntentCookie(response: NextResponse): void {
+  response.cookies.set({
+    name: "google_link_intent",
+    value: "",
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 0,
+  });
+}
+
+async function exchangeCodeForGoogleUser(
+  code: string,
+  clientId: string,
+  clientSecret: string,
+  redirectUri: string,
+): Promise<GoogleUserInfo | null> {
+  const tokenRes = await fetch(GOOGLE_TOKEN_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      code,
+      client_id: clientId,
+      client_secret: clientSecret,
+      redirect_uri: redirectUri,
+      grant_type: "authorization_code",
+    }),
+  });
+
+  if (!tokenRes.ok) {
+    console.error("Google token exchange failed:", await tokenRes.text());
+    return null;
+  }
+
+  const tokenData = await tokenRes.json();
+  const accessToken = tokenData.access_token;
+  if (!accessToken) return null;
+
+  const userInfoRes = await fetch(GOOGLE_USERINFO_URL, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!userInfoRes.ok) return null;
+
+  return userInfoRes.json();
+}
+
 export async function GET(req: NextRequest) {
   ensureSessionSecret();
 
@@ -53,38 +109,96 @@ export async function GET(req: NextRequest) {
     return errorRedirect(req, "Invalid OAuth state. Please try again.");
   }
 
+  const isLinkFlow = req.cookies.get("google_link_intent")?.value === "1";
+
+  if (isLinkFlow) {
+    return handleLinkFlow(req, code, clientId, clientSecret);
+  }
+
+  return handleLoginFlow(req, code, clientId, clientSecret);
+}
+
+async function handleLinkFlow(
+  req: NextRequest,
+  code: string,
+  clientId: string,
+  clientSecret: string,
+): Promise<NextResponse> {
+  const token = req.cookies.get("trefolio_session")?.value;
+  const session = token ? await verifySessionToken(token) : null;
+  if (!session) {
+    const resp = errorRedirect(req, "Session expired. Please log in and try again.");
+    clearLinkIntentCookie(resp);
+    return resp;
+  }
+
+  const googleUser = await exchangeCodeForGoogleUser(
+    code, clientId, clientSecret, getRedirectUri(req),
+  );
+  if (!googleUser?.email) {
+    const resp = profileErrorRedirect(req, "Failed to get Google account info.");
+    clearLinkIntentCookie(resp);
+    return resp;
+  }
+
+  const dbUser = await findUserById(session.userId);
+  if (!dbUser) {
+    const resp = profileErrorRedirect(req, "User not found.");
+    clearLinkIntentCookie(resp);
+    return resp;
+  }
+
+  if (dbUser.email.toLowerCase() !== googleUser.email.toLowerCase()) {
+    const resp = profileErrorRedirect(
+      req,
+      "Google email does not match your account email.",
+    );
+    clearLinkIntentCookie(resp);
+    return resp;
+  }
+
+  const existingGoogleUser = await findUserByGoogleId(googleUser.sub);
+  if (existingGoogleUser && existingGoogleUser.id !== dbUser.id) {
+    const resp = profileErrorRedirect(
+      req,
+      "This Google account is already linked to another user.",
+    );
+    clearLinkIntentCookie(resp);
+    return resp;
+  }
+
+  await linkGoogleAccount(dbUser.id, googleUser.sub);
+  trackEvent(dbUser.id, "google_linked");
+
+  const response = NextResponse.redirect(
+    new URL("/profile?googleLinked=true", req.nextUrl.origin),
+  );
+  response.cookies.set({
+    name: "google_oauth_state",
+    value: "",
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 0,
+  });
+  clearLinkIntentCookie(response);
+  return response;
+}
+
+async function handleLoginFlow(
+  req: NextRequest,
+  code: string,
+  clientId: string,
+  clientSecret: string,
+): Promise<NextResponse> {
   try {
-    const tokenRes = await fetch(GOOGLE_TOKEN_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        code,
-        client_id: clientId,
-        client_secret: clientSecret,
-        redirect_uri: getRedirectUri(req),
-        grant_type: "authorization_code",
-      }),
-    });
-
-    if (!tokenRes.ok) {
-      console.error("Google token exchange failed:", await tokenRes.text());
+    const googleUser = await exchangeCodeForGoogleUser(
+      code, clientId, clientSecret, getRedirectUri(req),
+    );
+    if (!googleUser) {
       return errorRedirect(req, "Google authentication failed.");
     }
-
-    const tokenData = await tokenRes.json();
-    const accessToken = tokenData.access_token;
-    if (!accessToken) {
-      return errorRedirect(req, "Google authentication failed.");
-    }
-
-    const userInfoRes = await fetch(GOOGLE_USERINFO_URL, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    if (!userInfoRes.ok) {
-      return errorRedirect(req, "Failed to fetch Google profile.");
-    }
-
-    const googleUser: GoogleUserInfo = await userInfoRes.json();
     if (!googleUser.email) {
       return errorRedirect(req, "No email returned from Google.");
     }
@@ -97,7 +211,7 @@ export async function GET(req: NextRequest) {
         if (existingEmail.auth_provider === "credentials") {
           return errorRedirect(
             req,
-            "An account with this email already exists. Please sign in with your password.",
+            "An account with this email already exists. Please sign in with your password, then link Google from your profile.",
           );
         }
         dbUser = existingEmail;
@@ -138,6 +252,7 @@ export async function GET(req: NextRequest) {
         email_verified: googleUser.email_verified ? 1 : 0,
         auth_provider: "google",
         google_id: googleUser.sub,
+        apple_id: "",
         portfolio_review_count: 0,
         portfolio_review_reset_at: "",
       };
@@ -145,7 +260,11 @@ export async function GET(req: NextRequest) {
       authEventsTotal.inc({ event: "signup" });
     }
 
-    const token = await createSessionToken({
+    if (!dbUser) {
+      return errorRedirect(req, "Google authentication failed.");
+    }
+
+    const sessionToken = await createSessionToken({
       userId: dbUser.id,
       username: dbUser.username,
       email: dbUser.email,
@@ -159,7 +278,7 @@ export async function GET(req: NextRequest) {
     authEventsTotal.inc({ event: "login_success" });
 
     const response = NextResponse.redirect(new URL("/", req.nextUrl.origin));
-    response.cookies.set(getSessionCookieConfig(token));
+    response.cookies.set(getSessionCookieConfig(sessionToken));
     response.cookies.set({
       name: "google_oauth_state",
       value: "",

@@ -14,9 +14,35 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "0.38.0";
+export const CURRENT_VERSION = "0.40.0";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "0.40.0",
+    date: "2026-03-07",
+    title: "Sign in with Apple",
+    titleTranslations: { es: "Inicio de Sesión con Apple" },
+    changes: [
+      {
+        type: "feature",
+        text: "Sign in with your Apple account — available on login, signup, and account linking",
+        translations: { es: "Inicia sesión con tu cuenta de Apple — disponible en inicio de sesión, registro y vinculación de cuenta" },
+      },
+    ],
+  },
+  {
+    version: "0.39.0",
+    date: "2026-03-07",
+    title: "Google Account Linking",
+    titleTranslations: { es: "Vinculación de Cuenta de Google" },
+    changes: [
+      {
+        type: "feature",
+        text: "Link your Google account from the profile page to enable sign-in with either password or Google",
+        translations: { es: "Vincula tu cuenta de Google desde el perfil para iniciar sesión con contraseña o Google" },
+      },
+    ],
+  },
   {
     version: "0.38.0",
     date: "2026-03-07",

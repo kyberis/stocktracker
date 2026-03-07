@@ -57,6 +57,13 @@ export const POST = withMetrics("/api/auth/login", async (req: NextRequest) => {
       );
     }
 
+    if (user.auth_provider === "apple") {
+      return NextResponse.json(
+        { error: "This account uses Apple sign-in. Please use the Apple button." },
+        { status: 400 },
+      );
+    }
+
     const isValid = await verifyPassword(password, user.password_hash);
     if (!isValid) {
       authEventsTotal.inc({ event: "login_failure" });

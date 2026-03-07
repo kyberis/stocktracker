@@ -6,6 +6,7 @@ export {
   findUserByUsername,
   findUserByEmail,
   findUserByGoogleId,
+  findUserByAppleId,
   findUserById,
   listUsers,
   createUser,
@@ -26,7 +27,10 @@ export {
   setEmailVerified,
   getPortfolioReviewUsage,
   incrementPortfolioReviewUsage,
+  linkGoogleAccount,
   unlinkGoogleAccount,
+  linkAppleAccount,
+  unlinkAppleAccount,
 } from "./users";
 
 export {

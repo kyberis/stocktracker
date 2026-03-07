@@ -10,7 +10,7 @@ import type {
 export type UserRole = "admin" | "user";
 export type UserPlan = "free" | "pro";
 
-export type AuthProvider = "credentials" | "google";
+export type AuthProvider = "credentials" | "google" | "apple";
 
 export interface DbUser {
   id: string;
@@ -33,6 +33,7 @@ export interface DbUser {
   email_verified: number;
   auth_provider: AuthProvider;
   google_id: string;
+  apple_id: string;
   portfolio_review_count: number;
   portfolio_review_reset_at: string;
 }
@@ -157,8 +158,11 @@ export function rowToDbUser(row: Row): DbUser {
     ai_calls_today: num(row.ai_calls_today),
     ai_daily_reset_at: str(row.ai_daily_reset_at),
     email_verified: num(row.email_verified),
-    auth_provider: str(row.auth_provider) === "google" ? "google" : "credentials",
+    auth_provider: (["google", "apple"] as const).includes(str(row.auth_provider) as "google" | "apple")
+      ? (str(row.auth_provider) as "google" | "apple")
+      : "credentials",
     google_id: str(row.google_id),
+    apple_id: str(row.apple_id),
     portfolio_review_count: num(row.portfolio_review_count),
     portfolio_review_reset_at: str(row.portfolio_review_reset_at),
   };

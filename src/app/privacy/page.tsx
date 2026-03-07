@@ -74,10 +74,13 @@ export default function PrivacyPolicyPage() {
                 plaintext password.
               </li>
               <li>
-                <strong className="text-slate-200">Third-party sign-in (Google)</strong> — 
+                <strong className="text-slate-200">Third-party sign-in (Google, Apple)</strong> — 
                 if you sign in with Google, we receive and store your name, email
                 address, and profile picture from your Google account. We do not
-                receive or store your Google password.
+                receive or store your Google password. If you sign in with Apple,
+                we receive and store your name and email address (which may be an
+                Apple private relay address). We do not receive or store your
+                Apple password.
               </li>
             </ul>
 

@@ -2,18 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { verifySessionToken } from "@/lib/auth/session";
 
-const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
+const APPLE_AUTH_URL = "https://appleid.apple.com/auth/authorize";
 
 function getRedirectUri(req: NextRequest): string {
   const base = process.env.APP_BASE_URL || req.nextUrl.origin;
-  return `${base}/api/auth/google/callback`;
+  return `${base}/api/auth/apple/callback`;
 }
 
 export async function GET(req: NextRequest) {
-  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientId = process.env.APPLE_CLIENT_ID;
   if (!clientId) {
     return NextResponse.json(
-      { error: "Google OAuth is not configured." },
+      { error: "Apple OAuth is not configured." },
       { status: 501 },
     );
   }
@@ -35,15 +35,14 @@ export async function GET(req: NextRequest) {
     client_id: clientId,
     redirect_uri: redirectUri,
     response_type: "code",
-    scope: "openid email profile",
-    access_type: "online",
-    prompt: "select_account",
+    scope: "name email",
+    response_mode: "form_post",
     state,
   });
 
-  const response = NextResponse.redirect(`${GOOGLE_AUTH_URL}?${params.toString()}`);
+  const response = NextResponse.redirect(`${APPLE_AUTH_URL}?${params.toString()}`);
   response.cookies.set({
-    name: "google_oauth_state",
+    name: "apple_oauth_state",
     value: state,
     httpOnly: true,
     sameSite: "lax",
@@ -54,7 +53,7 @@ export async function GET(req: NextRequest) {
 
   if (isLinkIntent) {
     response.cookies.set({
-      name: "google_link_intent",
+      name: "apple_link_intent",
       value: "1",
       httpOnly: true,
       sameSite: "lax",

@@ -25,6 +25,8 @@ export const GET = withMetrics("/api/auth/me", async (req: NextRequest) => {
       aiCallsToday: user?.ai_calls_today || 0,
       aiDailyResetAt: user?.ai_daily_reset_at || "",
       emailVerified: user?.email_verified === 1,
+      authProvider: user?.auth_provider || "credentials",
+      googleLinked: !!user?.google_id,
       portfolioReviewCount: user?.portfolio_review_count || 0,
       portfolioReviewResetAt: user?.portfolio_review_reset_at || "",
     },

@@ -72,7 +72,7 @@ export default function TermsOfServicePage() {
           <section>
             <h2>3. Account Registration</h2>
             <ul className="list-disc pl-6 space-y-2">
-              <li>You must provide a valid email address and create a secure password, or sign in using a supported third-party provider (e.g., Google).</li>
+              <li>You must provide a valid email address and create a secure password, or sign in using a supported third-party provider (e.g., Google, Apple).</li>
               <li>You are responsible for maintaining the security of your account credentials and any linked third-party account.</li>
               <li>You must be at least 16 years of age to create an account.</li>
               <li>You may not create multiple accounts or share account access.</li>

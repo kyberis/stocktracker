@@ -205,6 +205,11 @@ describe("rowToDbUser", () => {
       ai_calls_today: 2,
       ai_daily_reset_at: "2025-01-15",
       email_verified: 1,
+      auth_provider: "credentials",
+      google_id: "",
+      apple_id: "",
+      portfolio_review_count: 0,
+      portfolio_review_reset_at: "",
     });
   });
 
@@ -294,6 +299,7 @@ describe("mapUser", () => {
       email_verified: 1,
       auth_provider: "credentials" as const,
       google_id: "",
+      apple_id: "",
       portfolio_review_count: 0,
       portfolio_review_reset_at: "",
     };
@@ -344,6 +350,7 @@ describe("mapUser", () => {
       email_verified: 0,
       auth_provider: "credentials" as const,
       google_id: "",
+      apple_id: "",
       portfolio_review_count: 0,
       portfolio_review_reset_at: "",
     };
@@ -377,6 +384,7 @@ describe("mapUser", () => {
       email_verified: 0,
       auth_provider: "credentials" as const,
       google_id: "",
+      apple_id: "",
       portfolio_review_count: 0,
       portfolio_review_reset_at: "",
     };
@@ -408,6 +416,7 @@ describe("mapUser", () => {
       email_verified: 1,
       auth_provider: "credentials" as const,
       google_id: "",
+      apple_id: "",
       portfolio_review_count: 0,
       portfolio_review_reset_at: "",
     };
