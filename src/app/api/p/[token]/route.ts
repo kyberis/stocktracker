@@ -8,8 +8,8 @@ export const dynamic = "force-dynamic";
 /**
  * GET /api/p/[token] — public read-only portfolio view (no auth required)
  */
-export const GET = withMetrics("/api/p/[token]", async (req: NextRequest, ctx: { params: Promise<{ token: string }> }) => {
-  const { token } = await ctx.params;
+export const GET = withMetrics("/api/p/[token]", async (req: NextRequest) => {
+  const token = req.nextUrl.pathname.split("/").pop() || "";
   if (!token || token.length < 8) {
     return NextResponse.json({ error: "Invalid token" }, { status: 404 });
   }
