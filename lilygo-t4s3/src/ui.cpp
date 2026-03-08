@@ -149,53 +149,24 @@ static lv_obj_t *det_max_lbl        = nullptr;
 static SparklineRequestCb s_sparkline_cb = nullptr;
 static int s_detail_holding_idx     = -1;
 
-// ── Trefolio logo (four-petal clover mark) ──────────────────────────
+// ── Trefolio logo (PNG icon rendered via lv_img) ────────────────────
 static lv_obj_t *make_logo(lv_obj_t *parent, lv_coord_t size) {
-    lv_obj_t *box = lv_obj_create(parent);
-    lv_obj_set_size(box, size, size);
-    lv_obj_set_style_bg_color(box, lv_color_hex(0x0f172a), 0);
-    lv_obj_set_style_bg_opa(box, LV_OPA_COVER, 0);
-    lv_obj_set_style_radius(box, size / 4, 0);
-    lv_obj_set_style_border_width(box, 0, 0);
-    lv_obj_set_style_pad_all(box, 0, 0);
-    lv_obj_set_scrollbar_mode(box, LV_SCROLLBAR_MODE_OFF);
-
-    lv_coord_t r = size * 22 / 100;
-    lv_coord_t off = size * 18 / 100;
-
-    struct { lv_coord_t dx, dy; uint32_t col; } petals[] = {
-        {  0, (lv_coord_t)-off, 0x6ee7b7 },
-        {  off,  0,             0x34d399 },
-        {  0,  off,             0x10b981 },
-        { (lv_coord_t)-off,  0, 0xa7f3d0 },
-    };
-    lv_coord_t cx = size / 2;
-    lv_coord_t cy = size / 2;
-
-    for (auto &p : petals) {
-        lv_obj_t *dot = lv_obj_create(box);
-        lv_obj_set_size(dot, r * 2, r * 2);
-        lv_obj_set_pos(dot, cx + p.dx - r, cy + p.dy - r);
-        lv_obj_set_style_bg_color(dot, lv_color_hex(p.col), 0);
-        lv_obj_set_style_bg_opa(dot, LV_OPA_COVER, 0);
-        lv_obj_set_style_radius(dot, LV_RADIUS_CIRCLE, 0);
-        lv_obj_set_style_border_width(dot, 0, 0);
-        lv_obj_set_style_pad_all(dot, 0, 0);
-        lv_obj_set_scrollbar_mode(dot, LV_SCROLLBAR_MODE_OFF);
+    lv_obj_t *img = lv_img_create(parent);
+    if (size >= 40) {
+        lv_img_set_src(img, &trefolio_icon_48_dsc);
+        if (size != 48) {
+            uint16_t zoom = (uint16_t)(256 * size / 48);
+            lv_img_set_zoom(img, zoom);
+        }
+    } else {
+        lv_img_set_src(img, &trefolio_icon_28_dsc);
+        if (size != 28) {
+            uint16_t zoom = (uint16_t)(256 * size / 28);
+            lv_img_set_zoom(img, zoom);
+        }
     }
-
-    lv_coord_t cr = size * 8 / 100;
-    lv_obj_t *center = lv_obj_create(box);
-    lv_obj_set_size(center, cr * 2, cr * 2);
-    lv_obj_set_pos(center, cx - cr, cy - cr);
-    lv_obj_set_style_bg_color(center, lv_color_hex(0x0f172a), 0);
-    lv_obj_set_style_bg_opa(center, 90, 0);
-    lv_obj_set_style_radius(center, LV_RADIUS_CIRCLE, 0);
-    lv_obj_set_style_border_width(center, 0, 0);
-    lv_obj_set_style_pad_all(center, 0, 0);
-    lv_obj_set_scrollbar_mode(center, LV_SCROLLBAR_MODE_OFF);
-
-    return box;
+    lv_obj_set_size(img, size, size);
+    return img;
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────

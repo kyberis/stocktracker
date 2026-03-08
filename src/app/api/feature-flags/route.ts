@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { isFeatureEnabled } from "@/lib/db";
 import { withMetrics } from "@/lib/with-metrics";
 
+export const dynamic = "force-dynamic";
+
 export const GET = withMetrics("/api/feature-flags", async (_req: NextRequest) => {
   const [alertsEnabled, csvExportEnabled, appleSigninEnabled, deviceEnabled] = await Promise.all([
     isFeatureEnabled("alerts_enabled"),

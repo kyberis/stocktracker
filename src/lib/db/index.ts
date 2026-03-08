@@ -151,6 +151,13 @@ export {
   deleteIbkrConnection,
 } from "./ibkr-connections";
 
+export type { DeviceInterestEntry } from "./device-interest";
+export {
+  addDeviceInterest,
+  listDeviceInterest,
+  countDeviceInterest,
+} from "./device-interest";
+
 export type { DbPasskey, PublicPasskey } from "./passkeys";
 export {
   getPasskeysByUserId,

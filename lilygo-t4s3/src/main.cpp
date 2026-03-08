@@ -21,15 +21,26 @@ static uint32_t last_ota_check = 0;
 static const uint32_t OTA_CHECK_INTERVAL_MS = 6UL * 3600UL * 1000UL; // 6 hours
 static bool dashboard_active = false;
 
+static void on_token_submit(const char *entered_token);
+
+static void handle_passkey_revoked() {
+    Serial.println("Passkey revoked — returning to setup.");
+    config_clear_token();
+    dashboard_active = false;
+    ui_show_token_entry(on_token_submit);
+}
+
 static void fetch_and_show() {
     ui_set_status("Syncing...");
-    bool ok = api_fetch_portfolio(portfolio);
+    int status = api_fetch_portfolio(portfolio);
     last_refresh = millis();
     ui_update_countdown(0);
-    if (ok) {
+    if (status == 200) {
         ui_update_portfolio(portfolio);
         ui_set_live_state(true);
         ota_mark_valid();
+    } else if (status == 401) {
+        handle_passkey_revoked();
     } else {
         ui_set_status("Sync failed - retrying...");
         ui_set_live_state(false);
@@ -92,8 +103,6 @@ static void on_sparkline_request(const char *ticker) {
         Serial.println("Sparkline fetch failed.");
     }
 }
-
-static void on_token_submit(const char *entered_token);
 
 static void on_retry() {
     ui_show_token_entry(on_token_submit);

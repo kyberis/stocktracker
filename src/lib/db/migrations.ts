@@ -542,6 +542,20 @@ const MIGRATIONS: Migration[] = [
       }
     },
   },
+  {
+    version: 15,
+    description: "Create device_interest table for hardware waitlist",
+    up: async (client: Client) => {
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS device_interest (
+          id TEXT PRIMARY KEY,
+          email TEXT NOT NULL,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          UNIQUE(email)
+        )
+      `);
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

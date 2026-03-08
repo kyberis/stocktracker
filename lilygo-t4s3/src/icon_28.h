@@ -1,13 +1,8 @@
-// Auto-generated from icon-512.png — 28x28 BGRA
-// 3136 bytes
+// Auto-generated from icon-512.png - 28x28 BGRA
 #pragma once
 #include <lvgl.h>
 
-#ifndef LV_ATTRIBUTE_MEM_ALIGN
-#define LV_ATTRIBUTE_MEM_ALIGN
-#endif
-
-static const LV_ATTRIBUTE_MEM_ALIGN uint8_t trefolio_icon_28_map[] = {
+static const uint8_t trefolio_icon_28_map[] = {
     0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x2b, 0x16, 0x10, 0x6f,
     0x2b, 0x17, 0x0e, 0xce, 0x2a, 0x17, 0x0f, 0xf6, 0x2a, 0x17, 0x0f, 0xfe, 0x2a, 0x17, 0x0f, 0xff,
     0x2a, 0x17, 0x0f, 0xff, 0x2a, 0x17, 0x0f, 0xff, 0x2a, 0x17, 0x0f, 0xff, 0x2a, 0x17, 0x0f, 0xff,
@@ -207,11 +202,7 @@ static const LV_ATTRIBUTE_MEM_ALIGN uint8_t trefolio_icon_28_map[] = {
 };
 
 static const lv_img_dsc_t trefolio_icon_28_dsc = {
-    .header.cf = LV_IMG_CF_TRUE_COLOR_ALPHA,
-    .header.always_zero = 0,
-    .header.reserved = 0,
-    .header.w = 28,
-    .header.h = 28,
-    .data_size = 3136,
-    .data = trefolio_icon_28_map,
+    {LV_IMG_CF_TRUE_COLOR_ALPHA, 0, 0, 28, 28},
+    3136,
+    trefolio_icon_28_map,
 };

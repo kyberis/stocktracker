@@ -5,8 +5,8 @@
 void api_init(const char *baseUrl, const char *token);
 void api_set_firmware_version(const char *ver);
 
-// Returns true on success, fills `out`. Returns false on HTTP/parse error.
-bool api_fetch_portfolio(PortfolioData &out);
+// Returns 200 on success (fills `out`), 401 on auth failure, -1 on network error.
+int api_fetch_portfolio(PortfolioData &out);
 
 // Returns true on success, writes summary into out.aiSummary. False on error.
 bool api_fetch_ai_summary(PortfolioData &out);

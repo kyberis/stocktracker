@@ -44,7 +44,7 @@ interface AnalyticsSummary {
   funnel: FunnelStage[];
 }
 
-type Tab = "users" | "settings" | "analytics" | "feedback";
+type Tab = "users" | "settings" | "analytics" | "feedback" | "waitlist";
 
 /* ── Summary Card ─────────────────────────────────────────── */
 
@@ -1513,6 +1513,72 @@ function FeedbackTab() {
   );
 }
 
+/* ── Device Waitlist Tab ──────────────────────────────────── */
+
+interface WaitlistEntry {
+  id: string;
+  email: string;
+  createdAt: string;
+}
+
+function WaitlistTab() {
+  const [entries, setEntries] = useState<WaitlistEntry[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/device-interest", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => {
+        setEntries(d.entries || []);
+        setTotal(d.total || 0);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <p className="text-gray-500 dark:text-slate-400">Loading waitlist...</p>;
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <StatCard label="Total Signups" value={total} />
+      </div>
+
+      {entries.length === 0 ? (
+        <p className="text-gray-500 dark:text-slate-400 text-sm text-center py-8">
+          No one has signed up for device notifications yet.
+        </p>
+      ) : (
+        <div className="card p-0 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 dark:bg-slate-800/50">
+                <tr className="text-gray-500 dark:text-slate-400">
+                  <th className="text-left p-3 font-medium">#</th>
+                  <th className="text-left p-3 font-medium">Email</th>
+                  <th className="text-left p-3 font-medium">Signed Up</th>
+                </tr>
+              </thead>
+              <tbody>
+                {entries.map((entry, i) => (
+                  <tr key={entry.id} className="border-t border-gray-100 dark:border-slate-700 text-gray-700 dark:text-slate-200">
+                    <td className="p-3 text-gray-400 dark:text-slate-500 text-xs">{i + 1}</td>
+                    <td className="p-3 font-mono text-sm">{entry.email}</td>
+                    <td className="p-3 text-xs text-gray-500 dark:text-slate-400">
+                      {new Date(entry.createdAt).toLocaleDateString()} {new Date(entry.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ── Main Admin Page ──────────────────────────────────────── */
 
 function AdminContent() {
@@ -1524,23 +1590,30 @@ function AdminContent() {
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Admin</h1>
 
         {/* Tab bar */}
-        <div className="flex gap-1 mb-6 border-b border-gray-200 dark:border-slate-700">
-          {(["users", "settings", "analytics", "feedback"] as const).map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
-                tab === t
-                  ? "border-indigo-600 text-indigo-600 dark:text-indigo-400 dark:border-indigo-400"
-                  : "border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200"
-              }`}
-            >
-              {t === "users" ? "Users" : t === "settings" ? "Settings" : t === "analytics" ? "Analytics" : "Feedback"}
-            </button>
-          ))}
+        <div className="flex gap-1 mb-6 border-b border-gray-200 dark:border-slate-700 overflow-x-auto">
+          {(["users", "settings", "analytics", "feedback", "waitlist"] as const).map((t) => {
+            const labels: Record<Tab, string> = { users: "Users", settings: "Settings", analytics: "Analytics", feedback: "Feedback", waitlist: "Waitlist" };
+            return (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap ${
+                  tab === t
+                    ? "border-indigo-600 text-indigo-600 dark:text-indigo-400 dark:border-indigo-400"
+                    : "border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200"
+                }`}
+              >
+                {labels[t]}
+              </button>
+            );
+          })}
         </div>
 
-        {tab === "users" ? <UsersTab /> : tab === "settings" ? <SettingsTab /> : tab === "analytics" ? <AnalyticsTab /> : <FeedbackTab />}
+        {tab === "users" && <UsersTab />}
+        {tab === "settings" && <SettingsTab />}
+        {tab === "analytics" && <AnalyticsTab />}
+        {tab === "feedback" && <FeedbackTab />}
+        {tab === "waitlist" && <WaitlistTab />}
       </div>
     </main>
   );

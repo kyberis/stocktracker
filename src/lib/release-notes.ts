@@ -14,9 +14,22 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "0.46.0";
+export const CURRENT_VERSION = "0.47.0";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "0.47.0",
+    date: "2026-03-08",
+    title: "Device Passkey Revocation Detection",
+    titleTranslations: { es: "Detección de Revocación de Clave del Dispositivo" },
+    changes: [
+      {
+        type: "improvement",
+        text: "Device automatically returns to passkey setup screen when the passkey is revoked from the web — no reboot needed",
+        translations: { es: "El dispositivo vuelve automáticamente a la pantalla de configuración de clave cuando se revoca desde la web — sin necesidad de reiniciar" },
+      },
+    ],
+  },
   {
     version: "0.46.0",
     date: "2026-03-08",

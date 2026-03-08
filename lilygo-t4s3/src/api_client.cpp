@@ -34,7 +34,7 @@ static size_t curl_write_cb(void *data, size_t size, size_t nmemb, void *userp) 
     return total;
 }
 
-static bool sim_http_get(const char *path, JsonDocument &doc) {
+static int sim_http_get(const char *path, JsonDocument &doc) {
     char url[256];
     snprintf(url, sizeof(url), "%s%s", s_base_url, path);
 
@@ -44,7 +44,7 @@ static bool sim_http_get(const char *path, JsonDocument &doc) {
     snprintf(fw_hdr, sizeof(fw_hdr), "X-Firmware-Version: %s", s_fw_version);
 
     CURL *curl = curl_easy_init();
-    if (!curl) return false;
+    if (!curl) return -1;
 
     std::string body;
     struct curl_slist *headers = nullptr;
@@ -63,17 +63,21 @@ static bool sim_http_get(const char *path, JsonDocument &doc) {
     curl_slist_free_all(headers);
     curl_easy_cleanup(curl);
 
-    if (res != CURLE_OK || http_code != 200) {
-        printf("[API] GET %s -> curl=%d http=%ld\n", path, res, http_code);
-        return false;
+    if (res != CURLE_OK) {
+        printf("[API] GET %s -> curl=%d\n", path, res);
+        return -1;
+    }
+    if (http_code != 200) {
+        printf("[API] GET %s -> http=%ld\n", path, http_code);
+        return (int)http_code;
     }
 
     DeserializationError err = deserializeJson(doc, body);
     if (err) {
         printf("[API] JSON parse error: %s\n", err.c_str());
-        return false;
+        return -1;
     }
-    return true;
+    return 200;
 }
 
 static int sim_http_post(const char *path, JsonDocument &doc) {
@@ -126,11 +130,12 @@ static int sim_http_post(const char *path, JsonDocument &doc) {
     return 200;
 }
 
-bool api_fetch_portfolio(PortfolioData &out) {
+int api_fetch_portfolio(PortfolioData &out) {
     portfolio_clear(out);
 
     JsonDocument doc;
-    if (!sim_http_get("/api/portfolio/summary?full=true", doc)) return false;
+    int status = sim_http_get("/api/portfolio/summary?full=true", doc);
+    if (status != 200) return status;
 
     out.totalValueEUR        = doc["totalValueEUR"]        | 0.0f;
     out.costBasis            = doc["costBasis"]             | 0.0f;
@@ -153,7 +158,7 @@ bool api_fetch_portfolio(PortfolioData &out) {
         t.price     = h["price"]     | 0.0f;
         strncpy(t.currency, h["currency"] | "EUR", sizeof(t.currency) - 1);
     }
-    return true;
+    return 200;
 }
 
 bool api_fetch_ai_summary(PortfolioData &out) {
@@ -187,13 +192,13 @@ bool api_fetch_ai_summary(PortfolioData &out) {
 
 bool api_validate_token() {
     JsonDocument doc;
-    return sim_http_get("/api/portfolio/summary", doc);
+    return sim_http_get("/api/portfolio/summary", doc) == 200;
 }
 
 bool api_fetch_device_config(DeviceConfig &out) {
     device_config_clear(out);
     JsonDocument doc;
-    if (!sim_http_get("/api/device/config", doc)) return false;
+    if (sim_http_get("/api/device/config", doc) != 200) return false;
 
     strncpy(out.plan, doc["plan"] | "free", sizeof(out.plan) - 1);
     out.aiSummaryEnabled  = doc["features"]["aiSummary"] | false;
@@ -210,7 +215,7 @@ bool api_check_firmware_update(FirmwareInfo &out) {
     snprintf(path, sizeof(path), "/api/device/firmware?v=%s&board=t4s3", s_fw_version);
 
     JsonDocument doc;
-    if (!sim_http_get(path, doc)) return false;
+    if (sim_http_get(path, doc) != 200) return false;
 
     out.available = doc["available"] | false;
     if (!out.available) return true;
@@ -229,7 +234,7 @@ bool api_fetch_sparkline(const char *ticker, SparklineData &out) {
     snprintf(path, sizeof(path), "/api/device/sparkline?ticker=%s", ticker);
 
     JsonDocument doc;
-    if (!sim_http_get(path, doc)) return false;
+    if (sim_http_get(path, doc) != 200) return false;
 
     JsonArray pts = doc["points"].as<JsonArray>();
     out.count = 0;
@@ -247,7 +252,7 @@ bool api_fetch_sparkline(const char *ticker, SparklineData &out) {
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 
-static bool http_get_json(const char *path, JsonDocument &doc) {
+static int http_get_json(const char *path, JsonDocument &doc) {
     char url[256];
     snprintf(url, sizeof(url), "%s%s", s_base_url, path);
 
@@ -255,7 +260,7 @@ static bool http_get_json(const char *path, JsonDocument &doc) {
     client.setCACert(ISRG_ROOT_X1_PEM);
 
     HTTPClient http;
-    if (!http.begin(client, url)) return false;
+    if (!http.begin(client, url)) return -1;
 
     char auth[128];
     snprintf(auth, sizeof(auth), "Bearer %s", s_token);
@@ -263,10 +268,15 @@ static bool http_get_json(const char *path, JsonDocument &doc) {
     http.addHeader("X-Firmware-Version", s_fw_version);
 
     int code = http.GET();
+    if (code <= 0) {
+        Serial.printf("HTTP GET %s -> %d\n", path, code);
+        http.end();
+        return -1;
+    }
     if (code != 200) {
         Serial.printf("HTTP GET %s -> %d\n", path, code);
         http.end();
-        return false;
+        return code;
     }
 
     String body = http.getString();
@@ -275,9 +285,9 @@ static bool http_get_json(const char *path, JsonDocument &doc) {
     DeserializationError err = deserializeJson(doc, body);
     if (err) {
         Serial.printf("JSON parse error: %s\n", err.c_str());
-        return false;
+        return -1;
     }
-    return true;
+    return 200;
 }
 
 static int http_post_json(const char *path, JsonDocument &doc) {
@@ -319,11 +329,12 @@ static int http_post_json(const char *path, JsonDocument &doc) {
     return 200;
 }
 
-bool api_fetch_portfolio(PortfolioData &out) {
+int api_fetch_portfolio(PortfolioData &out) {
     portfolio_clear(out);
 
     JsonDocument doc;
-    if (!http_get_json("/api/portfolio/summary?full=true", doc)) return false;
+    int status = http_get_json("/api/portfolio/summary?full=true", doc);
+    if (status != 200) return status;
 
     out.totalValueEUR        = doc["totalValueEUR"]        | 0.0f;
     out.costBasis            = doc["costBasis"]             | 0.0f;
@@ -346,7 +357,7 @@ bool api_fetch_portfolio(PortfolioData &out) {
         t.price     = h["price"]     | 0.0f;
         strncpy(t.currency, h["currency"] | "EUR", sizeof(t.currency) - 1);
     }
-    return true;
+    return 200;
 }
 
 bool api_fetch_ai_summary(PortfolioData &out) {
@@ -380,13 +391,13 @@ bool api_fetch_ai_summary(PortfolioData &out) {
 
 bool api_validate_token() {
     JsonDocument doc;
-    return http_get_json("/api/portfolio/summary", doc);
+    return http_get_json("/api/portfolio/summary", doc) == 200;
 }
 
 bool api_fetch_device_config(DeviceConfig &out) {
     device_config_clear(out);
     JsonDocument doc;
-    if (!http_get_json("/api/device/config", doc)) return false;
+    if (http_get_json("/api/device/config", doc) != 200) return false;
 
     strncpy(out.plan, doc["plan"] | "free", sizeof(out.plan) - 1);
     out.aiSummaryEnabled  = doc["features"]["aiSummary"] | false;
@@ -403,7 +414,7 @@ bool api_check_firmware_update(FirmwareInfo &out) {
     snprintf(path, sizeof(path), "/api/device/firmware?v=%s&board=t4s3", s_fw_version);
 
     JsonDocument doc;
-    if (!http_get_json(path, doc)) return false;
+    if (http_get_json(path, doc) != 200) return false;
 
     out.available = doc["available"] | false;
     if (!out.available) return true;
@@ -422,7 +433,7 @@ bool api_fetch_sparkline(const char *ticker, SparklineData &out) {
     snprintf(path, sizeof(path), "/api/device/sparkline?ticker=%s", ticker);
 
     JsonDocument doc;
-    if (!http_get_json(path, doc)) return false;
+    if (http_get_json(path, doc) != 200) return false;
 
     JsonArray pts = doc["points"].as<JsonArray>();
     out.count = 0;

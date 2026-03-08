@@ -101,19 +101,30 @@ static bool poll_events() {
     return true;
 }
 
+static void on_token_submit(const char *entered_token);
+
+static void handle_passkey_revoked() {
+    printf("[SIM] Passkey revoked — returning to setup.\n");
+    config_clear_token();
+    dashboard_active = false;
+    ui_show_token_entry(on_token_submit);
+}
+
 static void fetch_and_show() {
     ui_set_status("Syncing...");
     printf("[SIM] Fetching portfolio data...\n");
-    bool ok = api_fetch_portfolio(portfolio);
+    int status = api_fetch_portfolio(portfolio);
     last_fetch_ms = SDL_GetTicks();
     ui_update_countdown(0);
-    if (ok) {
+    if (status == 200) {
         printf("[SIM] Portfolio: %.2f EUR, %d holdings\n",
                portfolio.totalValueEUR, portfolio.holdingsCount);
         ui_update_portfolio(portfolio);
         ui_set_live_state(true);
+    } else if (status == 401) {
+        handle_passkey_revoked();
     } else {
-        printf("[SIM] Portfolio fetch FAILED.\n");
+        printf("[SIM] Portfolio fetch FAILED (status=%d).\n", status);
         ui_set_status("Sync failed");
         ui_set_live_state(false);
     }
@@ -189,8 +200,6 @@ static void on_sparkline_request(const char *ticker) {
         printf("[SIM] Sparkline fetch failed.\n");
     }
 }
-
-static void on_token_submit(const char *entered_token);
 
 static void on_retry() {
     ui_show_token_entry(on_token_submit);

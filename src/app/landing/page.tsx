@@ -877,6 +877,10 @@ function InstallAppSection() {
 
 function DeviceSection() {
   const [visible, setVisible] = useState(false);
+  const [email, setEmail] = useState("");
+  const [enrolled, setEnrolled] = useState(false);
+  const [enrollError, setEnrollError] = useState("");
+  const [enrolling, setEnrolling] = useState(false);
   const sectionCb = useCallback(() => trackLanding("landing_section_view", { section: "device" }), []);
   const sectionRef = useInViewOnce(sectionCb);
 
@@ -886,6 +890,34 @@ function DeviceSection() {
       .then((flags) => { if (flags.device_enabled) setVisible(true); })
       .catch(() => {});
   }, []);
+
+  const handleEnroll = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEnrollError("");
+    const trimmed = email.trim();
+    if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      setEnrollError("Please enter a valid email address.");
+      return;
+    }
+    setEnrolling(true);
+    try {
+      const res = await fetch("/api/device-interest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: trimmed }),
+      });
+      if (res.ok) {
+        setEnrolled(true);
+        trackLanding("landing_cta_click", { cta: "device_notify" });
+      } else {
+        setEnrollError("Something went wrong. Please try again.");
+      }
+    } catch {
+      setEnrollError("Something went wrong. Please try again.");
+    } finally {
+      setEnrolling(false);
+    }
+  };
 
   if (!visible) return null;
 
@@ -982,18 +1014,43 @@ function DeviceSection() {
               ))}
             </div>
 
-            <div className="flex items-center gap-4">
-              <Link
-                href="/signup"
-                onClick={() => trackLanding("landing_cta_click", { cta: "device_signup" })}
-                className="inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white font-semibold px-6 py-3 rounded-xl transition-all shadow-lg shadow-violet-600/25 hover:shadow-violet-500/30"
-              >
-                Sign Up to Get Notified
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            {enrolled ? (
+              <div className="flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-5 py-4">
+                <svg className="w-6 h-6 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-              </Link>
-            </div>
+                <div>
+                  <p className="text-sm font-semibold text-emerald-400">You&apos;re on the list!</p>
+                  <p className="text-xs text-slate-400 mt-0.5">We&apos;ll email you when the device is available.</p>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleEnroll} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => { setEmail(e.target.value); setEnrollError(""); }}
+                  placeholder="Enter your email"
+                  className="flex-1 min-w-0 px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 text-sm"
+                  required
+                />
+                <button
+                  type="submit"
+                  disabled={enrolling}
+                  className="inline-flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-wait text-white font-semibold px-6 py-3 rounded-xl transition-all shadow-lg shadow-violet-600/25 hover:shadow-violet-500/30 text-sm whitespace-nowrap"
+                >
+                  {enrolling ? "Joining..." : "Get Notified"}
+                  {!enrolling && (
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                    </svg>
+                  )}
+                </button>
+              </form>
+            )}
+            {enrollError && (
+              <p className="text-xs text-red-400 mt-1">{enrollError}</p>
+            )}
 
             <p className="text-xs text-slate-500">
               Buyers get a free year of trefolio Pro included with the device. Not financial advice.
