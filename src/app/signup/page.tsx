@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { FormEvent, useState, useEffect, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { FormEvent, useState, useEffect, useCallback, Suspense } from "react";
 import { ThemeProvider } from "@/lib/theme-context";
 import TurnstileWidget from "@/components/TurnstileWidget";
 
@@ -27,7 +27,10 @@ function AppleIcon() {
 
 function SignupForm() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const searchParams = useSearchParams();
+  const prefillEmail = searchParams.get("email") ?? "";
+  const deviceRef = searchParams.get("ref") === "device";
+  const [email, setEmail] = useState(prefillEmail);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -37,6 +40,12 @@ function SignupForm() {
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const onTurnstileToken = useCallback((token: string) => setTurnstileToken(token), []);
   const [appleEnabled, setAppleEnabled] = useState(false);
+
+  useEffect(() => {
+    if (deviceRef) {
+      try { sessionStorage.setItem("device_interest_pending", "1"); } catch { /* private browsing */ }
+    }
+  }, [deviceRef]);
 
   useEffect(() => {
     fetch("/api/feature-flags")
@@ -232,7 +241,7 @@ function SignupForm() {
 
         <p className="text-sm text-gray-500 dark:text-slate-400 mt-6 text-center">
           Already have an account?{" "}
-          <Link href="/login" className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-medium">
+          <Link href={deviceRef ? "/login?ref=device" : "/login"} className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-medium">
             Sign in
           </Link>
         </p>
@@ -244,7 +253,9 @@ function SignupForm() {
 export default function SignupPage() {
   return (
     <ThemeProvider>
-      <SignupForm />
+      <Suspense>
+        <SignupForm />
+      </Suspense>
     </ThemeProvider>
   );
 }

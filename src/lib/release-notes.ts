@@ -25,13 +25,18 @@ export const releaseNotes: ReleaseEntry[] = [
     changes: [
       {
         type: "feature",
-        text: "Landing page device section now has an email signup form — visitors can join the waitlist to be notified when the hardware is available",
-        translations: { es: "La sección del dispositivo en la landing ahora tiene un formulario de email — los visitantes pueden unirse a la lista de espera para ser notificados cuando el hardware esté disponible" },
+        text: "Device waitlist 'Get Notified' now redirects to account creation — email is pre-filled, and after signup/login a confirmation popup confirms enrollment",
+        translations: { es: "La lista de espera del dispositivo 'Recibir notificación' ahora redirige a la creación de cuenta — el email se rellena automáticamente, y tras registrarse/iniciar sesión un popup confirma la inscripción" },
       },
       {
         type: "feature",
         text: "New admin Waitlist tab shows all enrolled emails with signup dates and total count",
         translations: { es: "Nueva pestaña de Lista de Espera en admin muestra todos los emails registrados con fechas y recuento total" },
+      },
+      {
+        type: "improvement",
+        text: "Device AI card is now always visible — free users see an upgrade prompt instead of a hidden section",
+        translations: { es: "La tarjeta de IA del dispositivo ahora siempre es visible — los usuarios gratuitos ven una invitación a actualizar en lugar de una sección oculta" },
       },
     ],
   },

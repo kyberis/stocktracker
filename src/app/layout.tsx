@@ -17,6 +17,7 @@ export const metadata: Metadata = {
     "trefolio is a portfolio tracker for European investors. Real-time quotes, broker imports (DEGIRO, IBKR, T212, Revolut), AI analysis, and dividend projections. Free to start.",
   icons: {
     icon: [
+      { url: "/favicon.ico", sizes: "48x48", type: "image/x-icon" },
       { url: "/favicon.png", sizes: "48x48", type: "image/png" },
       { url: "/icon.svg", type: "image/svg+xml" },
     ],

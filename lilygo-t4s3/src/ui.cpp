@@ -94,6 +94,7 @@ static lv_obj_t *dash_count_lbl  = nullptr;
 static lv_obj_t *dash_status_lbl = nullptr;
 static lv_obj_t *dash_ai_text    = nullptr;
 static lv_obj_t *dash_ai_btn     = nullptr;
+static lv_obj_t *dash_ai_btn_lbl = nullptr;
 static lv_obj_t *dash_ai_card    = nullptr;
 static lv_obj_t *dash_ai_usage   = nullptr;
 static lv_obj_t *dash_live_dot   = nullptr;
@@ -738,7 +739,6 @@ static void build_dashboard() {
     lv_obj_set_style_pad_all(ai_card, 12, 0);
     lv_obj_set_style_border_color(ai_card, COL_ACCENT2(), 0);
     lv_obj_set_style_border_opa(ai_card, 100, 0);
-    lv_obj_add_flag(ai_card, LV_OBJ_FLAG_HIDDEN);
 
     // AI icon circle (violet-to-emerald feel)
     lv_obj_t *ai_icon_bg = lv_obj_create(ai_card);
@@ -806,11 +806,17 @@ static void build_dashboard() {
     lv_obj_set_style_shadow_opa(dash_ai_btn, 50, 0);
     lv_obj_add_event_cb(dash_ai_btn, on_ai_click, LV_EVENT_CLICKED, nullptr);
 
-    lv_obj_t *ai_btn_lbl = lv_label_create(dash_ai_btn);
-    lv_label_set_text(ai_btn_lbl, "Ask AI");
-    lv_obj_set_style_text_font(ai_btn_lbl, &lv_font_montserrat_12, 0);
-    lv_obj_set_style_text_color(ai_btn_lbl, lv_color_white(), 0);
-    lv_obj_center(ai_btn_lbl);
+    dash_ai_btn_lbl = lv_label_create(dash_ai_btn);
+    lv_label_set_text(dash_ai_btn_lbl, "Ask AI");
+    lv_obj_set_style_text_font(dash_ai_btn_lbl, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(dash_ai_btn_lbl, lv_color_white(), 0);
+    lv_obj_center(dash_ai_btn_lbl);
+
+    // Default to upsell state until config confirms Pro
+    lv_label_set_text(dash_ai_text, "Upgrade to Pro to unlock\nAI portfolio insights.");
+    lv_obj_add_state(dash_ai_btn, LV_STATE_DISABLED);
+    lv_obj_set_style_bg_opa(dash_ai_btn, 100, 0);
+    lv_label_set_text(dash_ai_btn_lbl, "Pro");
 }
 
 // ── Build: All Holdings list screen ─────────────────────────────────
@@ -1209,13 +1215,19 @@ void ui_set_ai_callback(AiRequestCb cb) {
     s_ai_cb = cb;
 }
 
-void ui_set_ai_visible(bool visible) {
-    if (dash_ai_card) {
-        if (visible) {
-            lv_obj_clear_flag(dash_ai_card, LV_OBJ_FLAG_HIDDEN);
-        } else {
-            lv_obj_add_flag(dash_ai_card, LV_OBJ_FLAG_HIDDEN);
-        }
+void ui_set_ai_visible(bool enabled) {
+    if (!dash_ai_card) return;
+    if (enabled) {
+        lv_label_set_text(dash_ai_text, "Tap to request AI summary");
+        lv_obj_clear_state(dash_ai_btn, LV_STATE_DISABLED);
+        lv_obj_set_style_bg_opa(dash_ai_btn, LV_OPA_COVER, 0);
+        if (dash_ai_btn_lbl) lv_label_set_text(dash_ai_btn_lbl, "Ask AI");
+    } else {
+        lv_label_set_text(dash_ai_text, "Upgrade to Pro to unlock\nAI portfolio insights.");
+        lv_obj_add_state(dash_ai_btn, LV_STATE_DISABLED);
+        lv_obj_set_style_bg_opa(dash_ai_btn, 100, 0);
+        if (dash_ai_btn_lbl) lv_label_set_text(dash_ai_btn_lbl, "Pro");
+        lv_label_set_text(dash_ai_usage, "");
     }
 }
 

@@ -51,10 +51,15 @@ function LoginForm() {
   const onTurnstileToken = useCallback((token: string) => setTurnstileToken(token), []);
   const [appleEnabled, setAppleEnabled] = useState(false);
 
+  const deviceRef = searchParams.get("ref") === "device";
+
   useEffect(() => {
     const oauthError = searchParams.get("error");
     if (oauthError) setError(oauthError);
     if (searchParams.get("emailVerified") === "true") setEmailVerifiedSuccess(true);
+    if (searchParams.get("ref") === "device") {
+      try { sessionStorage.setItem("device_interest_pending", "1"); } catch { /* private browsing */ }
+    }
   }, [searchParams]);
 
   useEffect(() => {
@@ -256,7 +261,7 @@ function LoginForm() {
 
         <p className="text-sm text-gray-500 dark:text-slate-400 mt-6 text-center">
           Don&apos;t have an account?{" "}
-          <Link href="/signup" className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-medium">
+          <Link href={deviceRef ? "/signup?ref=device" : "/signup"} className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-medium">
             Sign up
           </Link>
         </p>
