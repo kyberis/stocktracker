@@ -449,10 +449,9 @@ export default function ImportPageContent() {
                     </div>
                     <button
                       onClick={() => snapTradeApi.connect()}
-                      disabled={snapTradeApi.step === "connecting"}
                       className="btn-primary text-sm px-5 py-3 w-full min-h-[44px]"
                     >
-                      {snapTradeApi.step === "connecting" ? t("brokerSyncConnecting") : t("brokerSyncConnect")}
+                      {t("brokerSyncConnect")}
                     </button>
                   </div>
                 </div>
