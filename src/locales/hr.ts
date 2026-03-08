@@ -328,7 +328,7 @@ const hr: TranslationStrings = {
   proSpotsLow: "Samo {remaining} Trefolio mjesto(a) preostalo!",
   rateLimitReached: "Dosegnut limit. Ponovni pokušaj uskoro...",
   aiDailyUsage: "{used}/{limit} AI analiza korišteno danas",
-  upsellCompareTitle: "Besplatno vs Pro",
+  upsellCompareTitle: "Folio vs Trefolio",
   upsellCompareSubtitleAI: "Možete nadograditi ovdje za nastavak AI analize bez ograničenja.",
   upsellCompareSubtitleLocked: "Ovaj zaslon je korisniji na Trefolio. Usporedite što dobivate u svakom planu.",
   upsellCompareSubtitleAlways: "Vidite razliku u vrijednosti i nadogradite kada ima smisla za vaš rad.",

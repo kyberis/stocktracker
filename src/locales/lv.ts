@@ -328,7 +328,7 @@ const lv: TranslationStrings = {
   proSpotsLow: "Palikušas tikai {remaining} Trefolio vieta(s)!",
   rateLimitReached: "Ātruma limits sasniegts. Drīz mēģināšu vēlreiz...",
   aiDailyUsage: "{used}/{limit} AI analīzes izmantotas šodien",
-  upsellCompareTitle: "Bezmaksas vs Pro",
+  upsellCompareTitle: "Folio vs Trefolio",
   upsellCompareSubtitleAI: "Varat jaunināt šeit, lai turpinātu AI analīzi bez ierobežojumiem.",
   upsellCompareSubtitleLocked: "Šis ekrāns ir noderīgāks ar Trefolio. Salīdziniet, ko saņemat katrā plānā.",
   upsellCompareSubtitleAlways: "Redziet vērtības atšķirību un jauniniet, kad tas atbilst jūsu darbam.",

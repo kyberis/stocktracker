@@ -343,7 +343,7 @@ const it: TranslationStrings = {
   upsellAttemptImportHoldings: "Import all holdings from your broker file.",
   upsellCompareSubtitleImport: "Some holdings were skipped because the Free plan allows up to 15. Upgrade to import everything.",
   upsellFreeTitle: "Gratuito",
-  upsellProTitle: "Pro",
+  upsellProTitle: "Trefolio",
   upsellFreeItemYahoo: "Quotazioni Yahoo e tracking portafoglio",
   upsellFreeItemBasicCharts: "Dashboard e viste posizioni",
   upsellFreeItemAiLimited: "Analisi IA limitata a 5 richieste/mese",

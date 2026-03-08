@@ -85,7 +85,6 @@ export default function BrokerImport() {
   const [csvText, setCsvText] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const [importSource, setImportSource] = useState<"csv">("csv");
 
   const brokerInfo = BROKERS.find((b) => b.id === broker)!;
 
@@ -306,17 +305,6 @@ export default function BrokerImport() {
             <div className="bg-amber-50 dark:bg-amber-500/10 rounded-xl p-3 mb-4">
               <p className="text-xs text-amber-700 dark:text-amber-300 font-medium">{t("unmappedIsins")}</p>
               <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-1 font-mono">{summary.unmapped.join(", ")}</p>
-            </div>
-          )}
-
-          {importSource === "api" && (
-            <div className="bg-indigo-50 dark:bg-indigo-500/10 rounded-xl p-2 mb-3">
-              <p className="text-[10px] text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-1.5">
-                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m9.86-2.813a4.5 4.5 0 00-1.242-7.244l-4.5-4.5a4.5 4.5 0 00-6.364 6.364L4.34 8.374" />
-                </svg>
-                Fetched via IBKR Flex Web Service API
-              </p>
             </div>
           )}
 

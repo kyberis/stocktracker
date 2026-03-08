@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useState, useEffect, useRef, useCallback } from "react";
+import TierIcon from "@/components/TierIcon";
+import type { SubscriptionPlan } from "@/lib/types";
 
 /* ─── anonymous analytics helper ─── */
 
@@ -66,7 +68,7 @@ const HERO_FEATURES = [
   },
   {
     tag: "AI Insights",
-    tagBadge: "Pro",
+    tagBadge: "Trefolio",
     title: "AI-Powered Analysis at Your Fingertips",
     description:
       "Get plain-language explanations of stock fundamentals, market news sentiment, insider trades, and institutional holdings. Powered by GPT for clear, actionable insights.",
@@ -86,7 +88,7 @@ const HERO_FEATURES = [
     screenshot: "/screenshots/tools-page.png",
     points: [
       "13 broker CSV formats: DEGIRO, IBKR, Trading 212, Revolut, Schwab, Fidelity, and more",
-      "Automatic Broker Sync — connect your brokerage directly (Pro)",
+      "Automatic Broker Sync — connect your brokerage directly (Trefolio)",
       "AI Import for any screenshot or unsupported format",
       "Built-in step-by-step guides for each method",
     ],
@@ -130,6 +132,7 @@ const FEATURE_CARDS = [
 
 interface PricingTier {
   name: string;
+  plan: SubscriptionPlan;
   price: string;
   period: string;
   description: string;
@@ -140,7 +143,8 @@ interface PricingTier {
 
 const PRICING: PricingTier[] = [
   {
-    name: "Free",
+    name: "Folio",
+    plan: "free" as SubscriptionPlan,
     price: "€0",
     period: "forever",
     description: "Everything you need to start tracking your investments.",
@@ -157,15 +161,16 @@ const PRICING: PricingTier[] = [
       "2 price alerts (in-app)",
       "30-day portfolio history",
     ],
-    cta: "Get Started Free",
+    cta: "Get Started with Folio",
   },
   {
-    name: "Starter",
+    name: "Bifolio",
+    plan: "starter" as SubscriptionPlan,
     price: "€3.99",
     period: "/month",
     description: "For growing investors who want more room and sharing.",
     features: [
-      "Everything in Free, plus:",
+      "Everything in Folio, plus:",
       "Up to 50 stocks & ETFs",
       "20 AI analysis calls/month",
       "10 price alerts + email delivery",
@@ -173,16 +178,17 @@ const PRICING: PricingTier[] = [
       "Portfolio sharing (public link)",
       "CSV export of holdings & transactions",
     ],
-    cta: "Start with Starter",
+    cta: "Start with Bifolio",
     highlighted: false,
   },
   {
-    name: "Pro",
+    name: "Trefolio",
+    plan: "pro" as SubscriptionPlan,
     price: "€7.49",
     period: "/month",
     description: "Full power for serious investors. 40% cheaper than alternatives.",
     features: [
-      "Everything in Starter, plus:",
+      "Everything in Bifolio, plus:",
       "Unlimited holdings",
       "Unlimited AI analysis",
       "Company fundamentals (income, balance, cash flow)",
@@ -197,7 +203,7 @@ const PRICING: PricingTier[] = [
       "Automatic Broker Sync (20+ brokerages)",
       "Priority support",
     ],
-    cta: "Start Pro Trial",
+    cta: "Start Trefolio Trial",
     highlighted: true,
   },
 ];
@@ -207,11 +213,11 @@ const PRICING: PricingTier[] = [
 const FAQ_ITEMS = [
   {
     q: "How do I import my portfolio?",
-    a: "Go to the /import page to access all import methods: 13 broker CSV formats (DEGIRO, IBKR, Trading 212, Revolut, Schwab, Fidelity, and more), AI Import for screenshots or unsupported formats, and manual entry. Each method has a built-in step-by-step guide. Pro users can also use Broker Sync to connect their brokerage directly and import automatically.",
+    a: "Go to the /import page to access all import methods: 13 broker CSV formats (DEGIRO, IBKR, Trading 212, Revolut, Schwab, Fidelity, and more), AI Import for screenshots or unsupported formats, and manual entry. Each method has a built-in step-by-step guide. Trefolio users can also use Broker Sync to connect their brokerage directly and import automatically.",
   },
   {
     q: "What CSV formats are supported?",
-    a: "13 broker CSV formats: DEGIRO, Interactive Brokers, Trading 212, Revolut, Charles Schwab, Fidelity, Nordnet, Tastytrade, Freetrade, eToro, Wealthsimple, Questrade, Firstrade, plus a Simple CSV format. For any other format, use AI Import — upload a screenshot or paste your file and AI will parse it. Pro users can also use Broker Sync for automatic one-click import from 20+ brokerages.",
+    a: "13 broker CSV formats: DEGIRO, Interactive Brokers, Trading 212, Revolut, Charles Schwab, Fidelity, Nordnet, Tastytrade, Freetrade, eToro, Wealthsimple, Questrade, Firstrade, plus a Simple CSV format. For any other format, use AI Import — upload a screenshot or paste your file and AI will parse it. Trefolio users can also use Broker Sync for automatic one-click import from 20+ brokerages.",
   },
   {
     q: "Is my data secure?",
@@ -227,11 +233,11 @@ const FAQ_ITEMS = [
   },
   {
     q: "What's the difference between the plans?",
-    a: "Free includes 15 holdings, real-time quotes, charts, broker import, and 5 AI calls/month. Starter (€3.99/month) raises the limit to 50 holdings, 20 AI calls, portfolio sharing, and CSV export. Pro (€7.49/month) adds unlimited holdings, unlimited AI, fundamentals, intelligence, economic indicators, Alpha Vantage, and advanced metrics.",
+    a: "Folio includes 15 holdings, real-time quotes, charts, broker import, and 5 AI calls/month. Bifolio (€3.99/month) raises the limit to 50 holdings, 20 AI calls, portfolio sharing, and CSV export. Trefolio (€7.49/month) adds unlimited holdings, unlimited AI, fundamentals, intelligence, economic indicators, Alpha Vantage, and advanced metrics.",
   },
   {
     q: "Can I cancel anytime?",
-    a: "Yes. Starter and Pro are billed monthly or annually (save ~37% with annual billing). Cancel anytime from the billing portal — your paid features remain active until the end of the billing period.",
+    a: "Yes. Bifolio and Trefolio are billed monthly or annually (save ~37% with annual billing). Cancel anytime from the billing portal — your paid features remain active until the end of the billing period.",
   },
   {
     q: "How do dividends and fees get tracked?",
@@ -248,7 +254,7 @@ const TESTIMONIALS = [
     role: "Retail Investor, Netherlands",
   },
   {
-    quote: "The AI analysis gives me quick insights without having to dig through financial reports. Worth every cent of the Pro plan.",
+    quote: "The AI analysis gives me quick insights without having to dig through financial reports. Worth every cent of the Trefolio plan.",
     name: "Laura S.",
     role: "Long-term Investor, Spain",
   },
@@ -709,14 +715,14 @@ function WhySection() {
   const sectionRef = useInViewOnce(sectionCb);
 
   const comparisons = [
-    { feature: "15 holdings free, unlimited on Pro", us: true, others: false, spreadsheets: true },
+    { feature: "15 holdings free, unlimited on Trefolio", us: true, others: false, spreadsheets: true },
     { feature: "Real-time quotes", us: true, others: true, spreadsheets: false },
     { feature: "Multi-exchange & multi-currency", us: true, others: true, spreadsheets: false },
     { feature: "AI-powered analysis", us: true, others: false, spreadsheets: false },
     { feature: "Broker CSV + API import", us: true, others: true, spreadsheets: false },
     { feature: "Dividend tracking & projections", us: true, others: true, spreadsheets: false },
     { feature: "Privacy-first (no data selling)", us: true, others: false, spreadsheets: true },
-    { feature: "Pro plan under €40/year", us: true, others: false, spreadsheets: true },
+    { feature: "Trefolio plan under €40/year", us: true, others: false, spreadsheets: true },
     { feature: "No learning curve", us: true, others: false, spreadsheets: false },
   ];
 
@@ -958,7 +964,7 @@ function DeviceSection() {
         </svg>
       ),
       title: "AI Insights On-Device",
-      desc: "Get a condensed AI portfolio review directly on the hardware display — Pro feature.",
+      desc: "Get a condensed AI portfolio review directly on the hardware display — Trefolio feature.",
     },
     {
       icon: (
@@ -1049,7 +1055,7 @@ function DeviceSection() {
             )}
 
             <p className="text-xs text-slate-500">
-              Buyers get a free year of trefolio Pro included with the device. Not financial advice.
+              Buyers get a free year of Trefolio included with the device. Not financial advice.
             </p>
           </div>
         </div>
@@ -1137,7 +1143,7 @@ function PricingSection() {
             <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">Pricing</span>
           </h2>
           <p className="text-lg text-slate-400 max-w-xl mx-auto">
-            Start free. Starter at €3.99/month, Pro at €7.49/month — up to 40% cheaper than alternatives. No hidden fees, cancel anytime.
+            Start free with Folio. Bifolio at €3.99/month, Trefolio at €7.49/month — up to 40% cheaper than alternatives. No hidden fees, cancel anytime.
           </p>
         </div>
 
@@ -1158,7 +1164,10 @@ function PricingSection() {
               )}
 
               <div className="mb-6">
-                <h3 className="text-xl font-bold text-white mb-2">{tier.name}</h3>
+                <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                  <TierIcon plan={tier.plan} size={22} className="text-emerald-400" />
+                  {tier.name}
+                </h3>
                 <div className="flex items-baseline gap-1">
                   <span className="text-4xl font-extrabold text-white">{tier.price}</span>
                   <span className="text-slate-400">{tier.period}</span>
@@ -1193,7 +1202,7 @@ function PricingSection() {
         </div>
 
         <p className="text-center text-sm text-slate-500 mt-8">
-          Annual plans: Starter €29.99/year, Pro €59.99/year (save ~37%). Cancel anytime.
+          Annual plans: Bifolio €29.99/year, Trefolio €59.99/year (save ~37%). Cancel anytime.
         </p>
 
         {/* Competitor price comparison */}
@@ -1203,7 +1212,7 @@ function PricingSection() {
           </h3>
           <div className="grid grid-cols-3 gap-4">
             {[
-              { name: "trefolio Pro", price: "€60", period: "/year", highlight: true },
+              { name: "Trefolio", price: "€60", period: "/year", highlight: true },
               { name: "Snowball Starter", price: "$80", period: "/year", highlight: false },
               { name: "Snowball Investor", price: "$150", period: "/year", highlight: false },
             ].map((plan) => (
@@ -1230,7 +1239,7 @@ function PricingSection() {
             ))}
           </div>
           <p className="text-center text-sm text-slate-500 mt-6">
-            Up to 2x cheaper than comparable portfolio trackers. Free tier includes 15 holdings — Pro unlocks unlimited.
+            Up to 2x cheaper than comparable portfolio trackers. Folio includes 15 holdings — Trefolio unlocks unlimited.
           </p>
         </div>
       </div>
@@ -1256,7 +1265,7 @@ function CTASection() {
               Start Tracking Your Portfolio Today
             </h2>
             <p className="text-lg text-emerald-100 max-w-xl mx-auto mb-8">
-              Join investors across Europe who trust trefolio. Free to start, powerful enough to stay.
+              Join investors across Europe who trust trefolio. Start with Folio, grow to Trefolio.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link

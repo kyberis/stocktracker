@@ -14,9 +14,22 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "1.5.0";
+export const CURRENT_VERSION = "1.6.0";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "1.6.0",
+    date: "2026-03-08",
+    title: "Tier Rebrand: Folio, Bifolio & Trefolio",
+    titleTranslations: { es: "Renombre de Planes: Folio, Bifolio y Trefolio" },
+    changes: [
+      {
+        type: "feature",
+        text: "Subscription tiers renamed to Folio (free), Bifolio (mid), and Trefolio (top) — with growing clover icons reflecting the trefolio brand",
+        translations: { es: "Los niveles de suscripción se renombraron a Folio (gratis), Bifolio (intermedio) y Trefolio (completo) — con iconos de trébol creciente que reflejan la marca trefolio" },
+      },
+    ],
+  },
   {
     version: "1.5.0",
     date: "2026-03-08",
@@ -25,8 +38,8 @@ export const releaseNotes: ReleaseEntry[] = [
     changes: [
       {
         type: "feature",
-        text: "SnapTrade integration: connect 20+ brokerages (Robinhood, Questrade, Wealthsimple, Webull, and more) and auto-import your holdings via secure OAuth — Pro only",
-        translations: { es: "Integración SnapTrade: conecta más de 20 brókers (Robinhood, Questrade, Wealthsimple, Webull y más) e importa automáticamente tus posiciones vía OAuth seguro — solo Pro" },
+        text: "SnapTrade integration: connect 20+ brokerages (Robinhood, Questrade, Wealthsimple, Webull, and more) and auto-import your holdings via secure OAuth — Trefolio only",
+        translations: { es: "Integración SnapTrade: conecta más de 20 brókers (Robinhood, Questrade, Wealthsimple, Webull y más) e importa automáticamente tus posiciones vía OAuth seguro — solo Trefolio" },
       },
       {
         type: "feature",
@@ -38,18 +51,18 @@ export const releaseNotes: ReleaseEntry[] = [
   {
     version: "1.4.0",
     date: "2026-03-08",
-    title: "New 3-Tier Pricing: Free, Starter & Pro",
-    titleTranslations: { es: "Nuevos 3 Niveles de Precio: Free, Starter y Pro" },
+    title: "New 3-Tier Pricing: Folio, Bifolio & Trefolio",
+    titleTranslations: { es: "Nuevos 3 Niveles de Precio: Folio, Bifolio y Trefolio" },
     changes: [
       {
         type: "feature",
-        text: "New Starter plan (€3.99/mo) — 50 holdings, 20 AI calls, portfolio sharing, CSV export, and 1-year growth history",
-        translations: { es: "Nuevo plan Starter (€3,99/mes) — 50 posiciones, 20 llamadas IA, compartir cartera, exportar CSV e historial de crecimiento de 1 año" },
+        text: "New Bifolio plan (€3.99/mo) — 50 holdings, 20 AI calls, portfolio sharing, CSV export, and 1-year growth history",
+        translations: { es: "Nuevo plan Bifolio (€3,99/mes) — 50 posiciones, 20 llamadas IA, compartir cartera, exportar CSV e historial de crecimiento de 1 año" },
       },
       {
         type: "improvement",
-        text: "Pro plan now includes advanced metrics, full history, economic indicators, and unlimited everything at €7.49/mo — 40% cheaper than alternatives",
-        translations: { es: "El plan Pro ahora incluye métricas avanzadas, historial completo, indicadores económicos y todo ilimitado a €7,49/mes — 40% más barato que las alternativas" },
+        text: "Trefolio plan now includes advanced metrics, full history, economic indicators, and unlimited everything at €7.49/mo — 40% cheaper than alternatives",
+        translations: { es: "El plan Trefolio ahora incluye métricas avanzadas, historial completo, indicadores económicos y todo ilimitado a €7,49/mes — 40% más barato que las alternativas" },
       },
       {
         type: "improvement",

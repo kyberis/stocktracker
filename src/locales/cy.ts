@@ -310,7 +310,7 @@ const cy: TranslationStrings = {
   planFree: "Cynllun am ddim",
   planPro: "Cynllun Pro",
   freeBadge: "Am ddim",
-  proBadge: "Pro",
+  proBadge: "Trefolio",
   aiUsageThisMonth: "Defnydd AI y mis hwn",
   upgradeToPro: "Uwchraddio i Trefolio",
   upgradePromptShort: "Datgloi data sylfaenol, deallusrwydd, arwyddion economaidd ac AI diderfyn.",

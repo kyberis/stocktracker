@@ -64,7 +64,7 @@ export default function TermsOfServicePage() {
               <li>Track stock and ETF holdings with real-time market data.</li>
               <li>View portfolio performance, historical charts, and benchmark comparisons.</li>
               <li>Access AI-powered stock analysis and insights (subject to tier limits).</li>
-              <li>Import portfolio data from broker statements or connect brokerage accounts via third-party aggregators (Pro).</li>
+              <li>Import portfolio data from broker statements or connect brokerage accounts via third-party aggregators (Trefolio).</li>
               <li>Track cash balances and dividend projections.</li>
             </ul>
           </section>
@@ -84,21 +84,30 @@ export default function TermsOfServicePage() {
           </section>
 
           <section>
-            <h2>4. Free and Pro Tiers</h2>
+            <h2>4. Subscription Tiers</h2>
 
-            <h3>Free Tier</h3>
+            <h3>Folio (Free Tier)</h3>
             <p>
-              The free tier provides core portfolio tracking functionality,
+              The Folio tier provides core portfolio tracking functionality,
               including Yahoo Finance market data, historical charts, cash
               balance tracking, benchmark comparisons, and limited AI analysis
               (5 requests per month).
             </p>
 
-            <h3>Pro Tier</h3>
+            <h3>Bifolio Tier</h3>
             <p>
-              The Pro tier is available for a monthly subscription fee (currently
-              €4.99/month, inclusive of applicable VAT). Pro includes everything
-              in Free, plus:
+              The Bifolio tier is available for a monthly subscription fee
+              (currently €3.99/month, inclusive of applicable VAT). Bifolio
+              includes everything in Folio, plus up to 50 holdings, 20 AI
+              analysis calls per month, portfolio sharing, CSV export, and
+              1-year portfolio growth history.
+            </p>
+
+            <h3>Trefolio Tier</h3>
+            <p>
+              The Trefolio tier is available for a monthly subscription fee (currently
+              €7.49/month, inclusive of applicable VAT). Trefolio includes everything
+              in Bifolio, plus:
             </p>
             <ul className="list-disc pl-6 space-y-2">
               <li>Alpha Vantage real-time market data.</li>
@@ -134,7 +143,7 @@ export default function TermsOfServicePage() {
                 . We do not store your credit card details.
               </li>
               <li>
-                Pro subscriptions renew automatically each billing cycle unless
+                Paid subscriptions (Bifolio and Trefolio) renew automatically each billing cycle unless
                 cancelled.
               </li>
               <li>
@@ -155,15 +164,15 @@ export default function TermsOfServicePage() {
             <h3>Cancellation</h3>
             <ul className="list-disc pl-6 space-y-2">
               <li>
-                You may cancel your Pro subscription at any time through your
+                You may cancel your paid subscription at any time through your
                 profile settings or the Stripe billing portal.
               </li>
               <li>
-                Upon cancellation, you retain Pro access until the end of your
+                Upon cancellation, you retain your current tier access until the end of your
                 current billing period.
               </li>
               <li>
-                After your subscription expires, your account reverts to the Free
+                After your subscription expires, your account reverts to the Folio
                 tier. All your data (holdings, transactions, settings) is
                 preserved — you do not lose any data.
               </li>
@@ -173,7 +182,7 @@ export default function TermsOfServicePage() {
             <p>
               Under EU consumer protection law, you have a 14-day right of
               withdrawal from the date of purchase. If you request a refund
-              within this period and have not substantially used Pro features,
+              within this period and have not substantially used paid tier features,
               we will issue a full refund. Contact{" "}
               <a
                 href="mailto:support@trefolio.com"

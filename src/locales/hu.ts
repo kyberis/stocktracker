@@ -328,7 +328,7 @@ const hu: TranslationStrings = {
   proSpotsLow: "Csak {remaining} Trefolio hely maradt!",
   rateLimitReached: "Rate limit elérve. Rövid időn belül újrapróbálás...",
   aiDailyUsage: "{used}/{limit} AI elemzés használva ma",
-  upsellCompareTitle: "Ingyenes vs Pro",
+  upsellCompareTitle: "Folio vs Trefolio",
   upsellCompareSubtitleAI: "Itt frissíthetsz Pro-ra, hogy korlátlan AI elemzést folytathass.",
   upsellCompareSubtitleLocked: "Ez a képernyő hasznosabb Trefolio-n. Hasonlítsd össze, mit kapsz minden csomagon.",
   upsellCompareSubtitleAlways: "Lásd az értékbeli különbséget és frissíts, ha megfelel a munkafolyamatodnak.",

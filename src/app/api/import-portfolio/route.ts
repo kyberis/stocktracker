@@ -274,7 +274,7 @@ export const POST = withMetrics("/api/import-portfolio", async (req: NextRequest
         cappedHoldings = [...kept, ...allowed];
         const dropped = newOnly.length - slotsAvailable;
         warnings.push(
-          `${dropped} holding(s) excluded — Plan allows up to ${holdingsLimit} holdings. Upgrade to Pro for unlimited.`
+          `${dropped} holding(s) excluded — Plan allows up to ${holdingsLimit} holdings. Upgrade to Trefolio for unlimited.`
         );
       }
     }

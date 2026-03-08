@@ -328,7 +328,7 @@ const is: TranslationStrings = {
   proSpotsLow: "Aðeins {remaining} Trefolio pláss eftir!",
   rateLimitReached: "Hraðamörk náð. Reynir aftur bráðlega...",
   aiDailyUsage: "{used}/{limit} AI greiningar notaðar í dag",
-  upsellCompareTitle: "Ókeypis vs Pro",
+  upsellCompareTitle: "Folio vs Trefolio",
   upsellCompareSubtitleAI: "Þú getur uppfært hér til að halda áfram AI greiningu án takmarkana.",
   upsellCompareSubtitleLocked: "Þessi skjár er gagnlegri á Trefolio. Berðu saman hvað þú færð á hverri áskrift.",
   upsellCompareSubtitleAlways: "Sjáðu verðmætabilið og uppfærðu þegar það hefur skilning fyrir þínu vinnu.",

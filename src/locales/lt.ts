@@ -328,7 +328,7 @@ const lt: TranslationStrings = {
   proSpotsLow: "Liko tik {remaining} Trefolio vieta(os)!",
   rateLimitReached: "Pasiekta greičio riba. Netrukus bandysiu dar kartą...",
   aiDailyUsage: "{used}/{limit} AI analizės naudota šiandien",
-  upsellCompareTitle: "Nemokama vs Pro",
+  upsellCompareTitle: "Folio vs Trefolio",
   upsellCompareSubtitleAI: "Galite atnaujinti čia, kad tęstumėte AI analizę be ribų.",
   upsellCompareSubtitleLocked: "Šis ekranas naudingesnis su Trefolio. Palyginkite, ką gaunate kiekviename plane.",
   upsellCompareSubtitleAlways: "Pamatykite vertės skirtumą ir atnaujinkite, kai tai tinka jūsų darbui.",

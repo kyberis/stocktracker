@@ -169,8 +169,8 @@ export default function GrowthTab() {
                   width={70}
                 />
                 <Tooltip
-                  formatter={(v: number) => [formatCurrency(v, "EUR"), t("growthTab")]}
-                  labelFormatter={(l: string) => l}
+                  formatter={(v) => [formatCurrency(Number(v ?? 0), "EUR"), t("growthTab")]}
+                  labelFormatter={(l) => String(l)}
                   contentStyle={{ background: "#1e293b", border: "1px solid #334155", borderRadius: "8px", fontSize: "12px" }}
                 />
                 <Area

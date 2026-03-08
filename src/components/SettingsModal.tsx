@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import type { ApiProviderName, RefreshInterval } from "@/lib/types";
 import ProCompareCard from "@/components/ProCompareCard";
+import TierIcon from "@/components/TierIcon";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -43,7 +44,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           <div className="rounded-xl border border-gray-200 dark:border-slate-600 p-3 bg-gray-50 dark:bg-slate-800/40">
             <p className="text-sm text-gray-700 dark:text-slate-200">
               {t("currentPlan")}:{" "}
-              <span className="font-semibold">{user?.plan === "pro" ? t("planPro") : user?.plan === "starter" ? t("planStarter") : t("planFree")}</span>
+              <span className="inline-flex items-center gap-1 font-semibold"><TierIcon plan={(user?.plan as "free" | "starter" | "pro") || "free"} size={14} />{user?.plan === "pro" ? t("planPro") : user?.plan === "starter" ? t("planStarter") : t("planFree")}</span>
             </p>
           </div>
           {user?.plan !== "pro" && (

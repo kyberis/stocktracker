@@ -23,9 +23,9 @@ registerPost({
 <h2>The Contenders</h2>
 
 <h3>1. trefolio</h3>
-<p><strong>Price:</strong> Free tier (15 holdings) / Pro at €4.99/month</p>
+<p><strong>Price:</strong> Folio (free, 15 holdings) / Bifolio at €3.99/month / Trefolio at €7.49/month</p>
 <p><strong>Best for:</strong> European investors who want one-click broker imports and AI analysis</p>
-<p>trefolio is a web-based tracker built specifically for European investors. It supports direct CSV imports from DEGIRO, Interactive Brokers, Trading 212, and Revolut — the four most popular brokers in Europe. The free tier includes real-time quotes, charts, and basic AI analysis. Pro unlocks unlimited holdings, company fundamentals, news sentiment, and unlimited AI calls.</p>
+<p>trefolio is a web-based tracker built specifically for European investors. It supports direct CSV imports from DEGIRO, Interactive Brokers, Trading 212, and Revolut — the four most popular brokers in Europe. The Folio tier includes real-time quotes, charts, and basic AI analysis. Trefolio unlocks unlimited holdings, company fundamentals, news sentiment, and unlimited AI calls.</p>
 <p>Strengths: native European broker imports, 35 languages, multi-currency (EUR, USD, GBP, DKK, CAD), clean UI, AI-powered portfolio review. Available as a PWA with an iOS home screen widget.</p>
 <p>Weaknesses: newer product, no native mobile app (PWA only), no direct API sync for most brokers (IBKR API is supported).</p>
 
@@ -184,9 +184,9 @@ registerPost({
   ],
   content: /* html */ `
 <h2>Two Ways to Import from Interactive Brokers</h2>
-<p>Interactive Brokers is the broker of choice for serious European investors. trefolio supports two import methods: <strong>direct API connection</strong> (Pro) and <strong>CSV upload</strong> (Free and Pro). The API method syncs your portfolio automatically; the CSV method works with any IBKR account.</p>
+<p>Interactive Brokers is the broker of choice for serious European investors. trefolio supports two import methods: <strong>direct API connection</strong> (Trefolio) and <strong>CSV upload</strong> (all tiers). The API method syncs your portfolio automatically; the CSV method works with any IBKR account.</p>
 
-<h2>Method 1: IBKR API (Recommended for Pro Users)</h2>
+<h2>Method 1: IBKR API (Recommended for Trefolio Users)</h2>
 <p>The API connection lets you sync your portfolio with a single click — no file exports needed.</p>
 
 <h3>Setup (One Time)</h3>
@@ -200,8 +200,8 @@ registerPost({
 <h3>Re-Syncing</h3>
 <p>After the initial setup, return to the Import page and click <strong>Re-sync</strong> to pull your latest transactions. No re-authorization needed.</p>
 
-<h2>Method 2: CSV Upload (Free and Pro)</h2>
-<p>If you prefer not to use the API, or if you're on the free tier, you can import via CSV. IBKR supports two CSV formats — both work with trefolio.</p>
+<h2>Method 2: CSV Upload (All Tiers)</h2>
+<p>If you prefer not to use the API, or if you're on the Folio tier, you can import via CSV. IBKR supports two CSV formats — both work with trefolio.</p>
 
 <h3>Option A: Activity Statement</h3>
 <ol>
@@ -256,7 +256,7 @@ registerPost({
   slug: "free-vs-paid-portfolio-trackers",
   title: "Free vs Paid Portfolio Trackers: What You Actually Need",
   description:
-    "When is a free tracker enough, and when does paying for Pro features make sense? A practical breakdown for European investors.",
+    "When is a free tracker enough, and when does paying for Trefolio features make sense? A practical breakdown for European investors.",
   date: "2026-03-06",
   readingTime: "6 min read",
   keywords: [
@@ -292,7 +292,7 @@ registerPost({
 <h2>What Paid Plans Typically Include</h2>
 <table>
 <thead>
-<tr><th>Feature</th><th>Free</th><th>Paid (e.g. trefolio Pro)</th></tr>
+<tr><th>Feature</th><th>Folio (Free)</th><th>Paid (e.g. Trefolio)</th></tr>
 </thead>
 <tbody>
 <tr><td>Holdings limit</td><td>10–15</td><td>Unlimited</td></tr>
@@ -308,8 +308,8 @@ registerPost({
 </table>
 
 <h2>The Cost Question</h2>
-<p>At €4.99/month (or €39.99/year), a Pro tracker costs less than a single stock trade commission at most European brokers. If AI analysis helps you avoid one bad trade or discover one undervalued stock per year, it pays for itself many times over.</p>
-<p>That said, if you're a passive index investor with 3 ETFs — save your money. The free tier is built for you.</p>
+<p>At €7.49/month (or €59.99/year), a Trefolio subscription costs less than a single stock trade commission at most European brokers. If AI analysis helps you avoid one bad trade or discover one undervalued stock per year, it pays for itself many times over.</p>
+<p>That said, if you're a passive index investor with 3 ETFs — save your money. The Folio tier is built for you.</p>
 
 <h2>Our Recommendation</h2>
 <p>Start free. Most portfolio trackers (including <a href="https://trefolio.com/signup">trefolio</a>) let you try the full experience without a credit card. Import your portfolio, use the free AI calls, and see if the limits matter to you. If they do, upgrading is one click.</p>
@@ -387,10 +387,10 @@ registerPost({
 <h2>The Cost of AI Analysis</h2>
 <p>AI analysis requires computational resources (running large language models isn't cheap), which is why most platforms limit or charge for it. In trefolio:</p>
 <ul>
-<li><strong>Free tier:</strong> 5 AI calls per month — enough to try it out</li>
-<li><strong>Pro tier:</strong> 30 AI calls per day — enough for daily portfolio monitoring</li>
+<li><strong>Folio tier:</strong> 5 AI calls per month — enough to try it out</li>
+<li><strong>Trefolio tier:</strong> 30 AI calls per day — enough for daily portfolio monitoring</li>
 </ul>
-<p>The free tier lets you experience AI analysis before committing. If you find it useful, Pro removes the limits.</p>
+<p>The Folio tier lets you experience AI analysis before committing. If you find it useful, Trefolio removes the limits.</p>
 
 <h2>Try It With Your Portfolio</h2>
 <p>The best way to evaluate AI analysis is to use it with your actual holdings. <a href="https://trefolio.com/signup">Create a free trefolio account</a>, import your portfolio, and run your first AI analysis. You get 5 free calls to see if it adds value to your investment process.</p>

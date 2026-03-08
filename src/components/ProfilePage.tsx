@@ -8,6 +8,7 @@ import { useSettings } from "@/lib/settings-context";
 import { useI18n } from "@/lib/i18n";
 import type { ApiProviderName } from "@/lib/types";
 import ProCompareCard from "@/components/ProCompareCard";
+import TierIcon from "@/components/TierIcon";
 import { Smartphone, Monitor, Copy, Check, Trash2 } from "lucide-react";
 
 interface PasskeyEntry {
@@ -866,10 +867,11 @@ export default function ProfilePage() {
 
           <div className="rounded-xl border border-gray-200 dark:border-slate-600 p-4 bg-gray-50 dark:bg-slate-800/40">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-gray-900 dark:text-white">
+              <p className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-1.5">
+                <TierIcon plan={isPro ? "pro" : isStarter ? "starter" : "free"} size={16} />
                 {isPro ? t("planPro") : isStarter ? t("planStarter") : t("planFree")}
               </p>
-              <span className={`text-xs px-2 py-1 rounded-full ${
+              <span className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full ${
                 isPro
                   ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"
                   : isStarter

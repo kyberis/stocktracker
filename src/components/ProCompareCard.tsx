@@ -6,6 +6,7 @@ import { useI18n } from "@/lib/i18n";
 import { useTrack } from "@/lib/use-track";
 import { getUpsellConfig, getUpsellReasonKey, getUpgradeTarget } from "@/lib/upsell";
 import type { UpsellReason, UpsellSurface } from "@/lib/upsell";
+import TierIcon from "@/components/TierIcon";
 
 interface CapacityInfo {
   available: boolean;
@@ -140,9 +141,9 @@ export default function ProCompareCard({
       )}
 
       <div className={`mt-3 grid gap-2 ${compact ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-3"}`}>
-        {/* Free column */}
+        {/* Folio column */}
         <div className={`rounded-lg border p-3 ${isFree ? "border-gray-400 dark:border-slate-500 bg-gray-50/80 dark:bg-slate-700/50" : "border-gray-200 dark:border-slate-600 bg-white/90 dark:bg-slate-800"}`}>
-          <p className="text-xs font-semibold text-gray-700 dark:text-slate-200">{t("upsellFreeTitle")}</p>
+          <p className="text-xs font-semibold text-gray-700 dark:text-slate-200 flex items-center gap-1"><TierIcon plan="free" size={14} />{t("upsellFreeTitle")}</p>
           <ul className="mt-2 space-y-1">
             {config.freeItems.map((item) => (
               <li key={item} className="text-xs text-gray-600 dark:text-slate-300">- {t(item)}</li>
@@ -150,10 +151,10 @@ export default function ProCompareCard({
           </ul>
         </div>
 
-        {/* Starter column */}
+        {/* Bifolio column */}
         {(!isStarter || !isPro) && (
           <div className={`rounded-lg border p-3 ${isStarter ? "border-blue-400 dark:border-blue-500/40 bg-blue-50/50 dark:bg-blue-900/20" : "border-blue-300 dark:border-blue-500/30 bg-white dark:bg-slate-800"}`}>
-            <p className="text-xs font-semibold text-blue-700 dark:text-blue-300">{t("upsellStarterTitle")} — €3.99/mo</p>
+            <p className="text-xs font-semibold text-blue-700 dark:text-blue-300 flex items-center gap-1"><TierIcon plan="starter" size={14} />{t("upsellStarterTitle")} — €3.99/mo</p>
             <ul className="mt-2 space-y-1">
               {config.starterItems.map((item) => (
                 <li key={item} className="text-xs text-gray-700 dark:text-slate-200">- {t(item)}</li>
@@ -162,9 +163,9 @@ export default function ProCompareCard({
           </div>
         )}
 
-        {/* Pro column */}
+        {/* Trefolio column */}
         <div className={`rounded-lg border p-3 ${isPro ? "border-emerald-400 dark:border-emerald-500/40 bg-emerald-50/50 dark:bg-emerald-900/20" : "border-emerald-300 dark:border-emerald-500/40 bg-white dark:bg-slate-800"}`}>
-          <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">{t("upsellProTitle")} — €7.49/mo</p>
+          <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 flex items-center gap-1"><TierIcon plan="pro" size={14} />{t("upsellProTitle")} — €7.49/mo</p>
           <ul className="mt-2 space-y-1">
             {config.proItems.map((item) => (
               <li key={item} className="text-xs text-gray-700 dark:text-slate-200">- {t(item)}</li>

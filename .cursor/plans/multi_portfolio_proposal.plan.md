@@ -1,45 +1,8 @@
 ---
-name: Multi-Portfolio Support
-overview: |
-  Add multiple portfolio support to trefolio — the largest engineering effort in the roadmap and the highest-differentiation feature vs Snowball Analytics. Free: 1 portfolio. Starter: 1 portfolio. Pro: up to 3 portfolios. Widget and device Leaf show the combined total by default, with per-portfolio selection available from the profile. Device purchase grants 1 year of Pro (the most expensive plan).
-todos:
-  - id: schema
-    content: Create `portfolios` table, add `portfolio_id` to holdings/transactions/snapshots/shares/cash
-    status: pending
-  - id: migrations
-    content: Write DB migration to create portfolios table and backfill default portfolio for existing users
-    status: pending
-  - id: db-layer
-    content: Update all CRUD functions in src/lib/db/ to accept optional portfolioId parameter
-    status: pending
-  - id: api-routes
-    content: Add /api/portfolios CRUD route; update holdings/transactions/cash/snapshot/share routes for portfolio scope
-    status: pending
-  - id: portfolio-context
-    content: Add portfolio selector to PortfolioProvider; store active portfolioId in context and persist to localStorage
-    status: pending
-  - id: dashboard-ui
-    content: Add portfolio switcher to dashboard header; show combined view as default
-    status: pending
-  - id: profile-ui
-    content: Add portfolio management section to ProfilePage (create, rename, delete, set default for widget/device)
-    status: pending
-  - id: widget-device
-    content: Update widget + device APIs to support portfolio selection; default to combined total
-    status: pending
-  - id: import-flow
-    content: Let user choose target portfolio during import; default to active portfolio
-    status: pending
-  - id: subscription-gates
-    content: "Enforce portfolio count limits per plan (Free/Starter: 1, Pro: 3)"
-    status: pending
-  - id: device-grant-update
-    content: Ensure device grant always awards 1 year of Pro (most expensive plan)
-    status: pending
-  - id: release-notes
-    content: Add release note entry and update landing page with multi-portfolio feature
-    status: pending
-isProject: true
+name: ""
+overview: ""
+todos: []
+isProject: false
 ---
 
 # Multi-Portfolio Support — Engineering Proposal

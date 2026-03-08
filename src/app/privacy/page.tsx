@@ -108,7 +108,7 @@ export default function PrivacyPolicyPage() {
                 if you connect your Interactive Brokers account via the Flex Web
                 Service API, your access token and query ID are encrypted with
                 AES-256-GCM and stored so you can re-sync your portfolio on demand.
-                If you connect brokerage accounts via SnapTrade (Pro), we store your
+                If you connect brokerage accounts via SnapTrade (Trefolio), we store your
                 SnapTrade userId and encrypted userSecret; your brokerage credentials
                 are handled by SnapTrade via OAuth, not by us. You can disconnect at
                 any time, which permanently deletes these credentials.
@@ -230,7 +230,7 @@ export default function PrivacyPolicyPage() {
                   </tr>
                   <tr>
                     <td className="py-3 pr-6">Alpha Vantage</td>
-                    <td className="py-3 pr-6">Market data (Pro)</td>
+                    <td className="py-3 pr-6">Market data (Trefolio)</td>
                     <td className="py-3">Stock ticker symbols requested</td>
                   </tr>
                   <tr>
@@ -250,12 +250,12 @@ export default function PrivacyPolicyPage() {
                   </tr>
                   <tr>
                     <td className="py-3 pr-6">Interactive Brokers (Flex Web Service)</td>
-                    <td className="py-3 pr-6">Portfolio import via API (Pro)</td>
+                    <td className="py-3 pr-6">Portfolio import via API (Trefolio)</td>
                     <td className="py-3">User-provided Flex token and Query ID (encrypted at rest); IBKR returns portfolio data directly to our server</td>
                   </tr>
                   <tr>
                     <td className="py-3 pr-6">SnapTrade (Passiv Financial Inc.)</td>
-                    <td className="py-3 pr-6">Brokerage aggregation (Pro)</td>
+                    <td className="py-3 pr-6">Brokerage aggregation (Trefolio)</td>
                     <td className="py-3">Brokerage account data (positions, balances) via OAuth; we store only SnapTrade userId and encrypted userSecret</td>
                   </tr>
                 </tbody>
@@ -289,7 +289,7 @@ export default function PrivacyPolicyPage() {
               </li>
               <li>
                 <strong className="text-slate-200">Portfolio data</strong> — retained
-                for as long as your account is active. If your Pro subscription
+                for as long as your account is active. If your paid subscription
                 lapses, your data is preserved and accessible when you resubscribe.
               </li>
               <li>
@@ -312,7 +312,7 @@ export default function PrivacyPolicyPage() {
           <section>
             <h2>7a. Public Portfolio Sharing</h2>
             <p>
-              Pro subscribers may choose to generate a shareable link that allows anyone with the link to view a
+              Bifolio and Trefolio subscribers may choose to generate a shareable link that allows anyone with the link to view a
               read-only snapshot of their portfolio holdings. This feature is <strong className="text-slate-200">opt-in</strong> and disabled by default.
             </p>
             <ul className="list-disc pl-6 space-y-2">
