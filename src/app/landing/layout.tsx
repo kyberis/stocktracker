@@ -5,7 +5,47 @@ export const metadata: Metadata = {
   title: "trefolio — Simple Portfolio Tracking with AI Insights",
   description:
     "trefolio is a portfolio tracker for European investors. Real-time quotes, broker imports (DEGIRO, IBKR, T212, Revolut), AI analysis, and dividend projections. Free to start, Pro for €4.99/month.",
-  alternates: { canonical: "https://trefolio.com" },
+  alternates: {
+    canonical: "https://trefolio.com",
+    languages: {
+      "en": "https://trefolio.com",
+      "es": "https://trefolio.com",
+      "fr": "https://trefolio.com",
+      "de": "https://trefolio.com",
+      "it": "https://trefolio.com",
+      "pt": "https://trefolio.com",
+      "nl": "https://trefolio.com",
+      "pl": "https://trefolio.com",
+      "cs": "https://trefolio.com",
+      "sk": "https://trefolio.com",
+      "hu": "https://trefolio.com",
+      "ro": "https://trefolio.com",
+      "bg": "https://trefolio.com",
+      "hr": "https://trefolio.com",
+      "sl": "https://trefolio.com",
+      "el": "https://trefolio.com",
+      "sv": "https://trefolio.com",
+      "da": "https://trefolio.com",
+      "fi": "https://trefolio.com",
+      "et": "https://trefolio.com",
+      "lv": "https://trefolio.com",
+      "lt": "https://trefolio.com",
+      "ga": "https://trefolio.com",
+      "mt": "https://trefolio.com",
+      "nb": "https://trefolio.com",
+      "uk": "https://trefolio.com",
+      "tr": "https://trefolio.com",
+      "sr": "https://trefolio.com",
+      "is": "https://trefolio.com",
+      "sq": "https://trefolio.com",
+      "bs": "https://trefolio.com",
+      "mk": "https://trefolio.com",
+      "be": "https://trefolio.com",
+      "ca": "https://trefolio.com",
+      "cy": "https://trefolio.com",
+      "x-default": "https://trefolio.com",
+    },
+  },
   openGraph: {
     title: "trefolio — Simple Portfolio Tracking with AI Insights",
     description:
@@ -29,6 +69,26 @@ export const metadata: Metadata = {
     description:
       "The simplest way to manage your stock portfolio. Real-time quotes, dividend tracking, growth projections, and AI analysis — for just €4.99/month.",
     images: ["/screenshots/dashboard-overview.png"],
+  },
+};
+
+const WEBSITE_SCHEMA = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "trefolio",
+  url: "https://trefolio.com",
+  description:
+    "Simple portfolio tracking with AI insights for European investors",
+  inLanguage: [
+    "en", "es", "fr", "de", "it", "pt", "nl", "pl", "cs", "sk",
+    "hu", "ro", "bg", "hr", "sl", "el", "sv", "da", "fi", "et",
+    "lv", "lt", "ga", "mt", "nb", "uk", "tr", "sr", "is", "sq",
+    "bs", "mk", "be", "ca", "cy",
+  ],
+  potentialAction: {
+    "@type": "SearchAction",
+    target: "https://trefolio.com/signup?q={search_term_string}",
+    "query-input": "required name=search_term_string",
   },
 };
 
@@ -153,6 +213,7 @@ const FAQ_SCHEMA = {
 export default function LandingLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
+      <JsonLd data={WEBSITE_SCHEMA} />
       <JsonLd data={ORGANIZATION_SCHEMA} />
       <JsonLd data={SOFTWARE_APP_SCHEMA} />
       <JsonLd data={FAQ_SCHEMA} />

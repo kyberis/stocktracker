@@ -7,6 +7,7 @@ import { transactionsOpsTotal } from "@/lib/metrics";
 import { parseBody } from "@/lib/api-response";
 import { PLATFORM_LIMITS } from "@/lib/platform-config";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
+import { enrichHoldingClassifications } from "@/lib/enrich-classifications";
 
 const bulkTransactionSchema = z.object({
   transactions: z.array(
@@ -109,6 +110,9 @@ export const POST = withMetrics("/api/transactions/bulk", async (req: NextReques
 
   if (finalize && inserted > 0) {
     await rebuildHoldings(session.userId);
+    enrichHoldingClassifications(session.userId).catch((err) =>
+      console.warn("[bulk] auto-classification failed:", err)
+    );
   }
 
   transactionsOpsTotal.inc({ operation: "add" }, inserted);

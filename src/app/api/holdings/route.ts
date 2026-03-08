@@ -6,6 +6,7 @@ import { holdingsOpsTotal } from "@/lib/metrics";
 import { parseBody } from "@/lib/api-response";
 import { createHoldingSchema, updateHoldingSchema } from "@/lib/schemas";
 import { PLATFORM_LIMITS } from "@/lib/platform-config";
+import { enrichHoldingClassifications } from "@/lib/enrich-classifications";
 
 export const GET = withMetrics("/api/holdings", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
@@ -85,6 +86,9 @@ export const POST = withMetrics("/api/holdings", async (req: NextRequest) => {
   };
   trackEvent(session.userId, "holding_add", { ticker: createdTx.ticker });
   holdingsOpsTotal.inc({ operation: "add" });
+  enrichHoldingClassifications(session.userId).catch((err) =>
+    console.warn("[holdings] auto-classification failed:", err)
+  );
   return NextResponse.json(created || fallback, { status: 201 });
 });
 

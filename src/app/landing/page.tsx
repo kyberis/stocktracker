@@ -1266,6 +1266,7 @@ function Footer() {
       { label: "Features", href: "#features" },
       { label: "Pricing", href: "#pricing" },
       { label: "FAQ", href: "#faq" },
+      { label: "Blog", href: "/blog" },
     ],
     account: [
       { label: "Sign Up", href: "/signup" },
