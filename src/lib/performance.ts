@@ -233,3 +233,216 @@ export function calculatePeriodReturn(
   if (valueOnDateEUR <= 0 || !Number.isFinite(currentValueEUR)) return null;
   return ((currentValueEUR - valueOnDateEUR) / valueOnDateEUR) * 100;
 }
+
+/**
+ * Annualized Volatility of daily returns.
+ * Computed as stdDev(dailyReturns) × sqrt(252) — percentage.
+ * Returns null when fewer than 2 data points are provided.
+ */
+export function calculateAnnualizedVolatility(dailyReturns: number[]): number | null {
+  if (dailyReturns.length < 2) return null;
+  const mean = dailyReturns.reduce((s, r) => s + r, 0) / dailyReturns.length;
+  const variance = dailyReturns.reduce((s, r) => s + (r - mean) ** 2, 0) / (dailyReturns.length - 1);
+  const stdDev = Math.sqrt(variance);
+  return stdDev * Math.sqrt(252);
+}
+
+/**
+ * Sharpe Ratio: (annualizedReturn - riskFreeRate) / annualizedVolatility.
+ * All inputs are percentages (e.g. 12.5 for 12.5%).
+ * Returns null when volatility is zero or insufficient data.
+ */
+export function calculateSharpeRatio(
+  dailyReturns: number[],
+  riskFreeRatePct: number
+): number | null {
+  const vol = calculateAnnualizedVolatility(dailyReturns);
+  if (vol == null || vol === 0) return null;
+  const mean = dailyReturns.reduce((s, r) => s + r, 0) / dailyReturns.length;
+  const annualizedReturn = mean * 252;
+  return (annualizedReturn - riskFreeRatePct) / vol;
+}
+
+/**
+ * Max Drawdown: maximum peak-to-trough decline in portfolio values.
+ * Returns a negative percentage (e.g. -23.4 for a 23.4% drawdown).
+ * Returns null when fewer than 2 values are provided.
+ */
+export function calculateMaxDrawdown(portfolioValues: number[]): number | null {
+  if (portfolioValues.length < 2) return null;
+  let peak = portfolioValues[0];
+  let maxDD = 0;
+  for (const v of portfolioValues) {
+    if (v > peak) peak = v;
+    const dd = peak > 0 ? (v - peak) / peak : 0;
+    if (dd < maxDD) maxDD = dd;
+  }
+  return maxDD * 100;
+}
+
+/**
+ * Beta: ratio of portfolio return covariance with benchmark to benchmark variance.
+ * Both arrays are daily returns in percentage.
+ * Returns null when fewer than 2 paired data points are provided or variance is zero.
+ */
+export function calculateBeta(
+  portfolioReturns: number[],
+  benchmarkReturns: number[]
+): number | null {
+  const n = Math.min(portfolioReturns.length, benchmarkReturns.length);
+  if (n < 2) return null;
+
+  const pReturns = portfolioReturns.slice(0, n);
+  const bReturns = benchmarkReturns.slice(0, n);
+
+  const pMean = pReturns.reduce((s, r) => s + r, 0) / n;
+  const bMean = bReturns.reduce((s, r) => s + r, 0) / n;
+
+  let covariance = 0;
+  let bVariance = 0;
+  for (let i = 0; i < n; i++) {
+    const pd = pReturns[i] - pMean;
+    const bd = bReturns[i] - bMean;
+    covariance += pd * bd;
+    bVariance += bd * bd;
+  }
+  covariance /= n - 1;
+  bVariance /= n - 1;
+
+  if (bVariance < 1e-15) return null;
+  return covariance / bVariance;
+}
+
+/**
+ * Compute daily returns from an array of portfolio values.
+ * Returns (v[i] - v[i-1]) / v[i-1] * 100 for each consecutive pair.
+ */
+export function computeDailyReturns(values: number[]): number[] {
+  const returns: number[] = [];
+  for (let i = 1; i < values.length; i++) {
+    if (values[i - 1] > 0) {
+      returns.push(((values[i] - values[i - 1]) / values[i - 1]) * 100);
+    }
+  }
+  return returns;
+}
+
+/* ── FIFO Realized P&L ─────────────────────────────────────── */
+
+export interface FifoLot {
+  date: string;
+  shares: number;
+  costPerShareEUR: number;
+}
+
+export interface RealizedPL {
+  ticker: string;
+  transactionId: string;
+  sellDate: string;
+  sharesSold: number;
+  proceedsEUR: number;
+  costBasisEUR: number;
+  realizedGainEUR: number;
+}
+
+/**
+ * Calculate FIFO realized P&L for all sell transactions.
+ *
+ * Rules (financial-calculations skill):
+ * - Cost per lot = (shares × purchasePrice + fees + taxes) converted to EUR.
+ * - Use tx.exchangeRateEur when available (historical rate), fall back to exchangeRates.
+ * - GBX: divide price by 100 before GBP/EUR conversion.
+ * - Missing rate guard: if rate cannot be determined, skip the lot/sell and return null for that tx.
+ * - Raw gain/loss only — no tax fabrication.
+ */
+export function calculateFifoRealizedPL(
+  transactions: Transaction[],
+  exchangeRates: ExchangeRates
+): Map<string, RealizedPL> {
+  const result = new Map<string, RealizedPL>();
+
+  const sorted = [...transactions]
+    .filter((t) => t.type === "buy" || t.type === "sell")
+    .sort((a, b) => {
+      if (a.date !== b.date) return a.date.localeCompare(b.date);
+      return a.createdAt.localeCompare(b.createdAt);
+    });
+
+  // Per-ticker FIFO lot queue
+  const lots = new Map<string, FifoLot[]>();
+
+  function resolveEURAmount(amount: number, tx: Transaction): number | null {
+    const cur = (tx.displayCurrency || tx.currency || "EUR").toUpperCase();
+    if (cur === "EUR") return amount;
+
+    // GBX: divide by 100 first (pence → pounds)
+    const normalizedAmount = (cur === "GBX" || cur === "GBP")
+      ? (cur === "GBX" ? amount / 100 : amount)
+      : amount;
+    const normalizedCur = cur === "GBX" ? "GBP" : cur;
+
+    if (normalizedCur === "EUR") return normalizedAmount;
+
+    // Prefer historical stored rate
+    if (tx.exchangeRateEur && tx.exchangeRateEur > 0) {
+      return normalizedAmount / tx.exchangeRateEur;
+    }
+
+    // Fall back to live exchange rates
+    const rateKey = `EUR${normalizedCur}`;
+    if (!exchangeRates[rateKey]) return null; // missing rate guard
+    const convertedAmount = convertToEUR(normalizedAmount, normalizedCur, exchangeRates);
+    return convertedAmount;
+  }
+
+  for (const tx of sorted) {
+    const ticker = (tx.ticker || "").toUpperCase().trim();
+    if (!ticker) continue;
+
+    if (tx.type === "buy" && tx.shares > 0) {
+      // Cost per lot: totalAmount + fees + taxes, all converted to EUR
+      const totalCost = tx.totalAmount + (tx.fees || 0) + (tx.taxes || 0);
+      const totalCostEUR = resolveEURAmount(totalCost, tx);
+      if (totalCostEUR == null) continue; // missing rate — skip lot
+
+      const costPerShareEUR = totalCostEUR / tx.shares;
+      const tickerLots = lots.get(ticker) || [];
+      tickerLots.push({ date: tx.date, shares: tx.shares, costPerShareEUR });
+      lots.set(ticker, tickerLots);
+    } else if (tx.type === "sell" && tx.shares > 0) {
+      const tickerLots = lots.get(ticker);
+      if (!tickerLots || tickerLots.length === 0) continue;
+
+      // Sell proceeds = (totalAmount - fees - taxes) in EUR
+      const proceeds = tx.totalAmount - (tx.fees || 0) - (tx.taxes || 0);
+      const proceedsEUR = resolveEURAmount(proceeds, tx);
+      if (proceedsEUR == null) continue; // missing rate — skip
+
+      let remainingToSell = tx.shares;
+      let costBasisEUR = 0;
+
+      while (remainingToSell > 0 && tickerLots.length > 0) {
+        const lot = tickerLots[0];
+        const soldFromLot = Math.min(remainingToSell, lot.shares);
+        costBasisEUR += soldFromLot * lot.costPerShareEUR;
+        lot.shares -= soldFromLot;
+        remainingToSell -= soldFromLot;
+        if (lot.shares <= 0) tickerLots.shift();
+      }
+
+      lots.set(ticker, tickerLots);
+
+      result.set(tx.id, {
+        ticker,
+        transactionId: tx.id,
+        sellDate: tx.date,
+        sharesSold: tx.shares - remainingToSell,
+        proceedsEUR,
+        costBasisEUR,
+        realizedGainEUR: proceedsEUR - costBasisEUR,
+      });
+    }
+  }
+
+  return result;
+}

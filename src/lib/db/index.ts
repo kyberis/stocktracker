@@ -142,14 +142,14 @@ export {
 export type { MetricsSnapshot } from "./metrics-snapshot";
 export { getMetricsSnapshot } from "./metrics-snapshot";
 
-export type { IbkrConnection } from "./ibkr-connections";
+export type { SnapTradeConnection } from "./snaptrade-connections";
 export {
-  getIbkrConnection,
-  getIbkrConnectionToken,
-  saveIbkrConnection,
-  updateIbkrLastSynced,
-  deleteIbkrConnection,
-} from "./ibkr-connections";
+  getSnapTradeConnection,
+  getSnapTradeConnectionSecret,
+  saveSnapTradeConnection,
+  updateSnapTradeLastSynced,
+  deleteSnapTradeConnection,
+} from "./snaptrade-connections";
 
 export type { DeviceInterestEntry } from "./device-interest";
 export {

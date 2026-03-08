@@ -2,8 +2,9 @@
 
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useI18n } from "@/lib/i18n";
-import { formatCurrency, formatPercent } from "@/lib/utils";
+import { formatCurrency, formatPercent, formatStealthCurrency } from "@/lib/utils";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
+import { useStealthMode } from "@/lib/stealth-context";
 import type { Holding, CashEntry } from "@/lib/types";
 
 interface Props {
@@ -16,6 +17,7 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
   const holdings = holdingsProp ?? ctxHoldings;
   const cashEntries = cashEntriesProp ?? ctxCashEntries;
   const { t } = useI18n();
+  const { stealthMode } = useStealthMode();
   const {
     totalCurrentEUR,
     totalCostEUR,
@@ -37,11 +39,14 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex items-center gap-4 flex-wrap">
           <div>
-            <p className={`text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white ${isLoading ? "animate-pulse" : ""}`}>
-              {formatCurrency(totalCurrentEUR, "EUR")}
+            <p
+              className={`text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white ${isLoading ? "animate-pulse" : ""}`}
+              aria-label={stealthMode ? formatCurrency(totalCurrentEUR, "EUR") : undefined}
+            >
+              {formatStealthCurrency(totalCurrentEUR, "EUR", stealthMode)}
             </p>
             <p className="text-xs text-gray-400 dark:text-slate-500">
-              {t("cost")}: {formatCurrency(totalCostEUR, "EUR")}
+              {t("cost")}: <span aria-label={stealthMode ? formatCurrency(totalCostEUR, "EUR") : undefined}>{formatStealthCurrency(totalCostEUR, "EUR", stealthMode)}</span>
             </p>
           </div>
           <span
@@ -50,8 +55,9 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
                 ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                 : "bg-red-50 dark:bg-red-500/10 text-red-500 dark:text-red-400"
             }`}
+            aria-label={stealthMode ? `${formatCurrency(dayGainLossEUR, "EUR")} (${formatPercent(dayPercent)})` : undefined}
           >
-            {dayIsPositive ? "+" : ""}{formatCurrency(dayGainLossEUR, "EUR")} ({formatPercent(dayPercent)})
+            {stealthMode ? "•••••" : `${dayIsPositive ? "+" : ""}${formatCurrency(dayGainLossEUR, "EUR")} (${formatPercent(dayPercent)})`}
           </span>
         </div>
 

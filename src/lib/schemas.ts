@@ -179,7 +179,7 @@ export const adminUserActionSchema = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("setPlan"),
     userId: z.string().min(1),
-    plan: z.enum(["free", "pro"]),
+    plan: z.enum(["free", "starter", "pro"]),
   }),
   z.object({
     action: z.literal("setPassword").optional().default("setPassword"),
@@ -205,6 +205,7 @@ export const apiKeySchema = z.object({
 /* ── Billing ───────────────────────────────────────────────── */
 
 export const checkoutSchema = z.object({
+  plan: z.enum(["starter", "pro"]).optional().default("pro"),
   interval: z.enum(["monthly", "annual"]).optional().default("monthly"),
   deviceGrant: z.boolean().optional(),
 });
@@ -224,6 +225,14 @@ const ALLOWED_EVENTS = [
   "upgrade_compare_clicked", "portfolio_period_returns_viewed",
   "alert_created", "alert_triggered", "alert_limit_reached",
   "alert_email_sent", "csv_exported",
+  "diversification_tab_viewed", "dividends_tab_viewed",
+  "stealth_mode_enabled", "stealth_mode_disabled",
+  "exdiv_calendar_viewed", "exdiv_ticker_expanded",
+  "metrics_tab_viewed", "metrics_lock_clicked",
+  "growth_tab_viewed", "growth_range_changed",
+  "portfolio_share_created", "portfolio_share_revoked",
+  "portfolio_share_viewed", "share_signup_cta_clicked",
+  "transaction_pl_viewed",
 ] as const;
 
 export const trackEventSchema = z.object({

@@ -14,15 +14,130 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "1.0.0";
+export const CURRENT_VERSION = "1.5.0";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "1.5.0",
+    date: "2026-03-08",
+    title: "SnapTrade Brokerage Sync & Contact Page",
+    titleTranslations: { es: "Sincronización de Bróker SnapTrade y Página de Contacto" },
+    changes: [
+      {
+        type: "feature",
+        text: "SnapTrade integration: connect 20+ brokerages (Robinhood, Questrade, Wealthsimple, Webull, and more) and auto-import your holdings via secure OAuth — Pro only",
+        translations: { es: "Integración SnapTrade: conecta más de 20 brókers (Robinhood, Questrade, Wealthsimple, Webull y más) e importa automáticamente tus posiciones vía OAuth seguro — solo Pro" },
+      },
+      {
+        type: "feature",
+        text: "New Contact Us page with a contact form — reach us directly from the website",
+        translations: { es: "Nueva página de Contacto con formulario — comunícate directamente desde el sitio web" },
+      },
+    ],
+  },
+  {
+    version: "1.4.0",
+    date: "2026-03-08",
+    title: "New 3-Tier Pricing: Free, Starter & Pro",
+    titleTranslations: { es: "Nuevos 3 Niveles de Precio: Free, Starter y Pro" },
+    changes: [
+      {
+        type: "feature",
+        text: "New Starter plan (€3.99/mo) — 50 holdings, 20 AI calls, portfolio sharing, CSV export, and 1-year growth history",
+        translations: { es: "Nuevo plan Starter (€3,99/mes) — 50 posiciones, 20 llamadas IA, compartir cartera, exportar CSV e historial de crecimiento de 1 año" },
+      },
+      {
+        type: "improvement",
+        text: "Pro plan now includes advanced metrics, full history, economic indicators, and unlimited everything at €7.49/mo — 40% cheaper than alternatives",
+        translations: { es: "El plan Pro ahora incluye métricas avanzadas, historial completo, indicadores económicos y todo ilimitado a €7,49/mes — 40% más barato que las alternativas" },
+      },
+      {
+        type: "improvement",
+        text: "Redesigned upgrade cards show all three plans side-by-side with clear feature comparison",
+        translations: { es: "Las tarjetas de mejora rediseñadas muestran los tres planes lado a lado con comparación clara de características" },
+      },
+    ],
+  },
+  {
+    version: "1.3.0",
+    date: "2026-03-08",
+    title: "Public Sharing & Transaction P&L",
+    titleTranslations: { es: "Compartir Cartera y P&L por Transacción" },
+    changes: [
+      {
+        type: "feature",
+        text: "Share your portfolio publicly — generate a read-only link to showcase your holdings (Pro)",
+        translations: { es: "Comparte tu cartera públicamente — genera un enlace de solo lectura para mostrar tus posiciones (Pro)" },
+      },
+      {
+        type: "feature",
+        text: "Realized P&L column in transaction history — see FIFO gain/loss for every sell",
+        translations: { es: "Columna de P&L realizado en el historial de transacciones — visualiza la ganancia/pérdida FIFO en cada venta" },
+      },
+      {
+        type: "improvement",
+        text: "Stealth mode now masks P&L values in transaction history",
+        translations: { es: "El modo sigiloso ahora oculta los valores de P&L en el historial de transacciones" },
+      },
+    ],
+  },
+  {
+    version: "1.2.0",
+    date: "2026-03-08",
+    title: "Advanced Metrics & Portfolio History",
+    titleTranslations: { es: "Métricas Avanzadas e Historial de Cartera" },
+    changes: [
+      {
+        type: "feature",
+        text: "New Metrics tab — Sharpe Ratio, Max Drawdown, and Annualized Volatility for Pro users (TTWROR & IRR free for all)",
+        translations: { es: "Nueva pestaña de Métricas — Ratio de Sharpe, Máx. Drawdown y Volatilidad Anualizada para usuarios Pro (TTWROR e IRR gratis para todos)" },
+      },
+      {
+        type: "feature",
+        text: "New Growth tab — portfolio value history chart with 1M / 3M / 6M / 1Y / All range selector (30-day history free, full history Pro)",
+        translations: { es: "Nueva pestaña de Crecimiento — gráfico del historial del valor de la cartera con selector de rango 1M / 3M / 6M / 1A / Todo (historial de 30 días gratis, historial completo Pro)" },
+      },
+    ],
+  },
+  {
+    version: "1.1.0",
+    date: "2026-03-08",
+    title: "Diversification & Dividends",
+    titleTranslations: { es: "Diversificación y Dividendos" },
+    changes: [
+      {
+        type: "feature",
+        text: "New Diversification tab — sector, region, asset class, and asset type breakdown with donut charts and rebalancing targets",
+        translations: { es: "Nueva pestaña de Diversificación — desglose por sector, región, clase de activo y tipo de activo con gráficos donut y objetivos de rebalanceo" },
+      },
+      {
+        type: "feature",
+        text: "New Dividends tab — dividend history, projections, per-stock breakdown, and monthly income vs. proceeds-from-sales chart",
+        translations: { es: "Nueva pestaña de Dividendos — historial de dividendos, proyecciones, desglose por acción y gráfico de ingresos mensuales frente a ingresos por ventas" },
+      },
+      {
+        type: "feature",
+        text: "Ex-Dividend Calendar — upcoming ex-dividend dates for your holdings in the next 90 days with estimated income",
+        translations: { es: "Calendario Ex-Dividendo — próximas fechas ex-dividendo para tus posiciones en los próximos 90 días con ingresos estimados" },
+      },
+      {
+        type: "feature",
+        text: "Stealth Mode — hide all monetary values with one click for privacy in public spaces",
+        translations: { es: "Modo Sigilo — oculta todos los valores monetarios con un clic para mayor privacidad en espacios públicos" },
+      },
+    ],
+  },
   {
     version: "1.0.0",
     date: "2026-03-08",
     title: "trefolio 1.0",
     titleTranslations: { es: "trefolio 1.0" },
     changes: [
+      {
+        type: "feature",
+        text: "Added 9 new broker statement importers: Charles Schwab, Fidelity, Nordnet, Tastytrade, Freetrade, eToro, Wealthsimple, Questrade, and Firstrade",
+        translations: { es: "Añadidos 9 nuevos importadores de extractos de broker: Charles Schwab, Fidelity, Nordnet, Tastytrade, Freetrade, eToro, Wealthsimple, Questrade y Firstrade" },
+      },
       {
         type: "feature",
         text: "Three-mode power management for trefolio Leaf — Active, Glance, and Sleep modes extend battery life up to 48 hours",

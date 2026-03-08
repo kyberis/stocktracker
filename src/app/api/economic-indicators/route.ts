@@ -1,10 +1,11 @@
 import { NextRequest } from "next/server";
-import { getProviderFromRequest } from "@/lib/api-providers";
+import { AlphaVantageProvider } from "@/lib/api-providers/alphavantage";
 import { jsonWithCallCount } from "@/lib/api-providers/response";
 import { requireFeatureAccess, requireRateLimit } from "@/lib/auth/guards";
 import { recordAvUsageAsync } from "@/lib/rate-limit";
 import { withMetrics } from "@/lib/with-metrics";
 import { deferTask } from "@/lib/task-runner";
+import { getGlobalAlphaVantageApiKey } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
@@ -28,19 +29,21 @@ export const GET = withMetrics("/api/economic-indicators", async (request: NextR
     );
   }
 
-  const provider = await getProviderFromRequest(request);
-
-  if (provider.name !== "alphavantage") {
+  const apiKey = await getGlobalAlphaVantageApiKey();
+  if (!apiKey) {
     return Response.json(
-      { error: "Economic indicators require Alpha Vantage provider" },
-      { status: 400 }
+      { error: "No Alpha Vantage API key configured. Please ask your administrator to add one." },
+      { status: 503 }
     );
   }
 
-  if (typeof provider.getEconomicIndicator !== "function") {
+  let provider: AlphaVantageProvider;
+  try {
+    provider = new AlphaVantageProvider(apiKey);
+  } catch {
     return Response.json(
-      { error: "Economic indicators not available for this provider" },
-      { status: 400 }
+      { error: "Failed to initialize Alpha Vantage provider" },
+      { status: 503 }
     );
   }
 

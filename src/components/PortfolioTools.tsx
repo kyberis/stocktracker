@@ -32,7 +32,7 @@ export default function PortfolioTools() {
   const { user } = useAuth();
   const { alertsEnabled, csvExportEnabled } = useSettings();
   const [activeTab, setActiveTab] = useState<Tab>("transactions");
-  const isPro = user?.plan === "pro";
+  const isPaid = user?.plan === "starter" || user?.plan === "pro";
 
   const visibleTabs = useMemo(() => {
     return ALL_TABS.filter((tab) => {
@@ -64,7 +64,7 @@ export default function PortfolioTools() {
       {/* Header with export */}
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-lg font-bold text-gray-900 dark:text-white">{t("toolsNav")}</h1>
-        {isPro && csvExportEnabled && (
+        {isPaid && csvExportEnabled && (
           <div className="flex items-center gap-1.5">
             <button onClick={() => handleExport("holdings")} className="text-xs text-gray-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>

@@ -19,6 +19,16 @@ import type {
 } from "./types";
 import { providerRequestsTotal, providerRequestDuration } from "@/lib/metrics";
 
+export interface DividendEvent {
+  symbol: string;
+  exDividendDate: string;
+  declarationDate: string;
+  recordDate: string;
+  paymentDate: string;
+  amount: number;
+  currency: string;
+}
+
 const AV_BASE = "https://www.alphavantage.co/query";
 // 75 requests/minute ~= 800ms between calls. Keep slight safety buffer.
 const AV_MIN_DELAY = 850;
@@ -530,6 +540,38 @@ export class AlphaVantageProvider implements StockDataProvider {
       sentiment: String(data["sentiment"] || ""),
       sentimentScore: parseFloatOrNull(data["sentiment_score"]),
     };
+  }
+
+  /* ── Dividend Schedule ───────────────────────────────────── */
+
+  async getDividendSchedule(symbol: string): Promise<DividendEvent[]> {
+    const data = await throttled(() => avFetchRaw({
+      function: "DIVIDENDS",
+      symbol,
+      apikey: this.apiKey,
+    }));
+
+    const rawData = (data["data"] || []) as Array<Record<string, string>>;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const cutoff = new Date(today);
+    cutoff.setDate(cutoff.getDate() + 90);
+
+    return rawData
+      .filter((d) => {
+        if (!d["ex_dividend_date"]) return false;
+        const exDate = new Date(d["ex_dividend_date"]);
+        return exDate >= today && exDate <= cutoff;
+      })
+      .map((d) => ({
+        symbol,
+        exDividendDate: d["ex_dividend_date"] || "",
+        declarationDate: d["declaration_date"] || "",
+        recordDate: d["record_date"] || "",
+        paymentDate: d["payment_date"] || "",
+        amount: parseFloat0(d["amount"]),
+        currency: d["currency"] || "USD",
+      }));
   }
 
   /* ── Economic Indicators ─────────────────────────────────── */

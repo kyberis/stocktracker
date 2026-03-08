@@ -5,7 +5,7 @@ import { withMetrics } from "@/lib/with-metrics";
 import { transactionsOpsTotal } from "@/lib/metrics";
 import { parseBody } from "@/lib/api-response";
 import { createTransactionSchema } from "@/lib/schemas";
-import { PLATFORM_LIMITS } from "@/lib/platform-config";
+import { getHoldingsLimit } from "@/lib/subscription";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 
 export const GET = withMetrics("/api/transactions", async (req: NextRequest) => {
@@ -26,17 +26,19 @@ export const POST = withMetrics("/api/transactions", async (req: NextRequest) =>
   if (!result.success) return result.error;
 
   const user = await findUserById(session.userId);
-  if ((user?.plan || session.plan) !== "pro" && result.data.type === "buy") {
+  const plan = (user?.plan || session.plan) ?? "free";
+  const holdingsLimit = getHoldingsLimit(plan);
+  if (holdingsLimit < Infinity && result.data.type === "buy") {
     const currentHoldings = await listHoldings(session.userId);
     const alreadyOwned = currentHoldings.some(
       (h) => h.ticker === result.data.ticker && h.exchange === (result.data.exchange || "")
     );
-    if (!alreadyOwned && currentHoldings.length >= PLATFORM_LIMITS.FREE_HOLDINGS_LIMIT) {
+    if (!alreadyOwned && currentHoldings.length >= holdingsLimit) {
       return NextResponse.json(
         {
-          error: "Free plan limit: 15 holdings",
+          error: `Plan limit: ${holdingsLimit} holdings`,
           reason: "holdings_limit_reached",
-          limit: PLATFORM_LIMITS.FREE_HOLDINGS_LIMIT,
+          limit: holdingsLimit,
           current: currentHoldings.length,
         },
         { status: 403 }

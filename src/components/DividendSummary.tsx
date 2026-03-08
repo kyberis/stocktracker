@@ -1,10 +1,15 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, Suspense } from "react";
+import dynamic from "next/dynamic";
 import { useI18n } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/portfolio-context";
-import { formatCurrency } from "@/lib/utils";
+import { convertToEUR, formatCurrency, formatStealthCurrency } from "@/lib/utils";
 import type { Transaction } from "@/lib/types";
+import { useTrack } from "@/lib/use-track";
+import { useStealthMode } from "@/lib/stealth-context";
+
+const ExDividendCalendar = dynamic(() => import("./ExDividendCalendar"), { ssr: false });
 
 const GROWTH_RATE = 0.10;
 const PROJECTION_YEARS = 5;
@@ -24,9 +29,13 @@ export default function DividendSummary() {
   const { t } = useI18n();
   const { holdings, quotes, exchangeRates } = usePortfolio();
   const [txs, setTxs] = useState<Transaction[]>([]);
+  const track = useTrack();
+  const { stealthMode } = useStealthMode();
 
   useEffect(() => {
+    track("exdiv_calendar_viewed");
     fetch("/api/transactions").then((r) => r.ok ? r.json() : []).then(setTxs);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const dividendTxs = useMemo(() => txs.filter((tx) => tx.type === "dividend"), [txs]);
@@ -60,7 +69,8 @@ export default function DividendSummary() {
       const yld = q.trailingAnnualDividendYield ?? 0;
       const annualIncome = h.shares * rate;
       const cur = q.currency || h.displayCurrency || "USD";
-      const rateToEUR = cur === "EUR" ? 1 : (exchangeRates[`${cur}_EUR`] || (1 / (exchangeRates[`EUR_${cur}`] || 1)));
+      // financial-calculations skill: use convertToEUR, rate key format EUR{CURRENCY}
+      const annualIncomeEUR = convertToEUR(annualIncome, cur, exchangeRates);
       items.push({
         ticker: h.ticker,
         name: h.name,
@@ -69,7 +79,7 @@ export default function DividendSummary() {
         dividendYield: yld * 100,
         annualIncome,
         currency: cur,
-        annualIncomeEUR: annualIncome * rateToEUR,
+        annualIncomeEUR,
       });
     }
     items.sort((a, b) => b.annualIncomeEUR - a.annualIncomeEUR);
@@ -82,8 +92,9 @@ export default function DividendSummary() {
       const q = quotes[h.ticker];
       if (!q) return s;
       const cur = q.currency || h.displayCurrency || "USD";
-      const rateToEUR = cur === "EUR" ? 1 : (exchangeRates[`${cur}_EUR`] || (1 / (exchangeRates[`EUR_${cur}`] || 1)));
-      return s + h.shares * q.regularMarketPrice * rateToEUR;
+      // financial-calculations skill: use convertToEUR, correct rate key format
+      const valueEUR = convertToEUR(h.shares * q.regularMarketPrice, cur, exchangeRates);
+      return s + valueEUR;
     }, 0);
     return totalValue > 0 ? (totalEstimatedEUR / totalValue) * 100 : 0;
   }, [holdings, quotes, exchangeRates, totalEstimatedEUR]);
@@ -169,6 +180,55 @@ export default function DividendSummary() {
   const hasDividendTxs = dividendTxs.length > 0;
   const hasEstimatedDividends = estimated.length > 0;
 
+  // --- Income sub-view: monthly dividends vs. realized capital gains (sell txs) ---
+  const sellTxs = useMemo(() => txs.filter((tx) => tx.type === "sell"), [txs]);
+
+  const incomeByMonth = useMemo(() => {
+    // Build last-12-months keys
+    const months: string[] = [];
+    const now = new Date();
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+    }
+
+    const divByMonth: Record<string, number> = {};
+    const gainByMonth: Record<string, number> = {};
+    months.forEach((m) => { divByMonth[m] = 0; gainByMonth[m] = 0; });
+
+    dividendTxs.forEach((tx) => {
+      const key = tx.date.slice(0, 7);
+      if (key in divByMonth) {
+        // financial-calculations: net inflow = totalAmount - taxes, use convertToEUR
+        const net = (tx.totalAmount - (tx.taxes || 0));
+        divByMonth[key] += tx.exchangeRateEur
+          ? net * tx.exchangeRateEur
+          : convertToEUR(net, tx.currency || "EUR", exchangeRates);
+      }
+    });
+
+    sellTxs.forEach((tx) => {
+      const key = tx.date.slice(0, 7);
+      if (key in gainByMonth) {
+        // Raw sell proceeds converted to EUR (raw gain/loss only, no tax fabrication)
+        const proceeds = tx.exchangeRateEur
+          ? tx.totalAmount * tx.exchangeRateEur
+          : convertToEUR(tx.totalAmount, tx.currency || "EUR", exchangeRates);
+        gainByMonth[key] += proceeds;
+      }
+    });
+
+    return months.map((m) => ({
+      month: m,
+      dividends: divByMonth[m],
+      gains: gainByMonth[m],
+      total: divByMonth[m] + gainByMonth[m],
+    }));
+  }, [dividendTxs, sellTxs, exchangeRates]);
+
+  const hasIncomeData = incomeByMonth.some((m) => m.total > 0);
+  const maxIncomeBar = Math.max(...incomeByMonth.map((m) => m.total), 1);
+
   if (!hasDividendTxs && !hasEstimatedDividends) {
     return (
       <div className="card">
@@ -199,11 +259,15 @@ export default function DividendSummary() {
             <div className="grid grid-cols-3 gap-3">
               <div className="bg-violet-50 dark:bg-violet-500/10 rounded-xl p-3 text-center">
                 <p className="text-[10px] text-violet-600 dark:text-violet-400 font-medium uppercase">{t("estAnnualIncome")}</p>
-                <p className="text-lg font-bold text-violet-700 dark:text-violet-300">{formatCurrency(totalEstimatedEUR, "EUR")}</p>
+                <p className="text-lg font-bold text-violet-700 dark:text-violet-300"
+                  aria-label={stealthMode ? formatCurrency(totalEstimatedEUR, "EUR") : undefined}>
+                  {formatStealthCurrency(totalEstimatedEUR, "EUR", stealthMode)}</p>
               </div>
               <div className="bg-emerald-50 dark:bg-emerald-500/10 rounded-xl p-3 text-center">
                 <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium uppercase">{t("estMonthlyIncome")}</p>
-                <p className="text-lg font-bold text-emerald-700 dark:text-emerald-300">{formatCurrency(totalEstimatedEUR / 12, "EUR")}</p>
+                <p className="text-lg font-bold text-emerald-700 dark:text-emerald-300"
+                  aria-label={stealthMode ? formatCurrency(totalEstimatedEUR / 12, "EUR") : undefined}>
+                  {formatStealthCurrency(totalEstimatedEUR / 12, "EUR", stealthMode)}</p>
               </div>
               <div className="bg-blue-50 dark:bg-blue-500/10 rounded-xl p-3 text-center">
                 <p className="text-[10px] text-blue-600 dark:text-blue-400 font-medium uppercase">{t("dividendYield")}</p>
@@ -232,7 +296,9 @@ export default function DividendSummary() {
                         style={{ width: `${Math.min(100, (e.annualIncomeEUR / Math.max(estimated[0]?.annualIncomeEUR || 1, 1)) * 100)}%` }}
                       />
                     </div>
-                    <span className="font-mono text-gray-900 dark:text-white w-20 text-right">{formatCurrency(e.annualIncomeEUR, "EUR")}</span>
+                    <span className="font-mono text-gray-900 dark:text-white w-20 text-right"
+                      aria-label={stealthMode ? formatCurrency(e.annualIncomeEUR, "EUR") : undefined}>
+                      {formatStealthCurrency(e.annualIncomeEUR, "EUR", stealthMode)}</span>
                   </div>
                 </div>
               ))}
@@ -391,6 +457,52 @@ export default function DividendSummary() {
             </div>
           )}
         </>
+      )}
+
+      {/* ── Ex-Dividend Calendar ── */}
+      <Suspense fallback={null}>
+        <ExDividendCalendar />
+      </Suspense>
+
+      {/* ── Income sub-view: dividends vs. capital gains (last 12 months) ── */}      {hasIncomeData && (
+        <div className="card" aria-label={t("incomeSubviewLabel")}>
+          <div className="flex items-center gap-3 mb-4">
+            <p className="text-xs font-semibold text-gray-900 dark:text-white flex-1">{t("incomeSubviewLabel")}</p>
+            <div className="flex items-center gap-3 text-[10px] text-gray-500 dark:text-slate-400">
+              <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-violet-500" />{t("dividends")}</span>
+              <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-emerald-500" />{t("incomeCapitalGains")}</span>
+            </div>
+          </div>
+          <div className="space-y-1.5" role="img" aria-label={`${t("incomeSubviewLabel")}: ${t("last12Months")}`}>
+            {incomeByMonth.map(({ month, dividends, gains }) => {
+              const divWidth = maxIncomeBar > 0 ? Math.min(100, (dividends / maxIncomeBar) * 100) : 0;
+              const gainWidth = maxIncomeBar > 0 ? Math.min(100, (gains / maxIncomeBar) * 100) : 0;
+              return (
+                <div key={month} className="flex items-center gap-2 text-xs">
+                  <span className="text-gray-500 dark:text-slate-400 w-14 shrink-0">{month.slice(0, 7)}</span>
+                  <div className="flex-1 flex flex-col gap-0.5">
+                    {dividends > 0 && (
+                      <div className="w-full h-2 bg-gray-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                        <div className="h-full bg-violet-500 rounded-full" style={{ width: `${divWidth}%` }} />
+                      </div>
+                    )}
+                    {gains > 0 && (
+                      <div className="w-full h-2 bg-gray-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                        <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${gainWidth}%` }} />
+                      </div>
+                    )}
+                    {dividends === 0 && gains === 0 && (
+                      <div className="w-full h-2 bg-gray-100 dark:bg-slate-700 rounded-full" />
+                    )}
+                  </div>
+                  <span className="font-mono text-gray-900 dark:text-white w-20 text-right shrink-0">
+                    {formatCurrency(dividends + gains, "EUR")}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       )}
     </div>
   );

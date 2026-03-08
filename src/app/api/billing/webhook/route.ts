@@ -36,6 +36,20 @@ function periodEndIso(subscription: Stripe.Subscription): string {
   return new Date(end * 1000).toISOString();
 }
 
+const STARTER_PRICE_IDS = new Set(
+  [process.env.STRIPE_PRICE_STARTER_MONTHLY, process.env.STRIPE_PRICE_STARTER_ANNUAL].filter(Boolean)
+);
+
+function planFromSubscription(subscription: Stripe.Subscription, metadataPlan?: string): "starter" | "pro" {
+  if (metadataPlan === "starter") return "starter";
+  const items = subscription.items?.data;
+  if (items?.length) {
+    const priceId = typeof items[0].price === "string" ? items[0].price : items[0].price?.id;
+    if (priceId && STARTER_PRICE_IDS.has(priceId)) return "starter";
+  }
+  return "pro";
+}
+
 export const POST = withMetrics("/api/billing/webhook", async (req: NextRequest) => {
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
   if (!secret) {
@@ -71,11 +85,12 @@ export const POST = withMetrics("/api/billing/webhook", async (req: NextRequest)
         const customerId = stripeCustomerId(session.customer as string | Stripe.Customer | null);
         const subscriptionId =
           typeof session.subscription === "string" ? session.subscription : session.subscription?.id || "";
+        const checkoutPlan = (session.metadata?.plan === "starter" ? "starter" : "pro") as "starter" | "pro";
         if (userId) {
           const user = await findUserById(userId);
           if (user) {
             await updateUserSubscription(user.id, {
-              plan: "pro",
+              plan: checkoutPlan,
               stripeCustomerId: customerId || user.stripe_customer_id,
               stripeSubscriptionId: subscriptionId || user.stripe_subscription_id,
               planExpiresAt: "",
@@ -85,6 +100,7 @@ export const POST = withMetrics("/api/billing/webhook", async (req: NextRequest)
             }
             trackEvent(user.id, "billing_checkout_completed", {
               source: "stripe_webhook",
+              plan: checkoutPlan,
               mode: session.metadata?.deviceGrant === "true" ? "device_grant" : "subscription",
             });
           }
@@ -98,8 +114,8 @@ export const POST = withMetrics("/api/billing/webhook", async (req: NextRequest)
         if (!user) break;
         const status = subscription.status;
         const cancelAtPeriodEnd = subscription.cancel_at_period_end;
-        const nextPlan =
-          status === "active" || status === "trialing" || status === "past_due" ? "pro" : "free";
+        const isActive = status === "active" || status === "trialing" || status === "past_due";
+        const nextPlan = isActive ? planFromSubscription(subscription, subscription.metadata?.plan) : "free";
         const nextExpiresAt = cancelAtPeriodEnd ? periodEndIso(subscription) : "";
         await updateUserSubscription(user.id, {
           plan: nextPlan,

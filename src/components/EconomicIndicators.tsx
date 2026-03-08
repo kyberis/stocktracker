@@ -158,6 +158,10 @@ export default function EconomicIndicators() {
           setError("");
           return;
         }
+        if (res.status === 503) {
+          setError(t("econNoApiKey"));
+          return;
+        }
         setError(err?.error || "Failed to fetch data");
         return;
       }

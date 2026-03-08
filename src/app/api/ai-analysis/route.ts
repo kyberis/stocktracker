@@ -13,7 +13,7 @@ export const POST = withMetrics("/api/ai-analysis", async (request: NextRequest)
   if (error || !session) return error;
 
   const user = await findUserById(session.userId);
-  const plan = user?.plan || "free";
+  const plan = (user?.plan || session?.plan || "free") as "free" | "starter" | "pro";
   if (plan === "pro") {
     const rl = await checkAiRateLimit(session.userId, plan);
     if (!rl.allowed) {

@@ -18,14 +18,23 @@ export const PLATFORM_LIMITS = {
   /** Max AI analysis calls per month for Free users (mirrors FREE_AI_MONTHLY_LIMIT). */
   AI_FREE_MONTHLY_LIMIT: 5,
 
+  /** Max AI analysis calls per month for Starter users. */
+  AI_STARTER_MONTHLY_LIMIT: 20,
+
   /** Max AI-powered portfolio imports per day (any tier). */
   AI_IMPORT_DAILY_LIMIT: 5,
 
-  /** Max active price alerts for Free users. Pro is unlimited. */
+  /** Max active price alerts for Free users. Starter: 10. Pro is unlimited. */
   FREE_ALERT_LIMIT: 2,
 
-  /** Max holdings (stocks + ETFs) for Free users. Pro is unlimited. */
+  /** Max active price alerts for Starter users. Pro is unlimited. */
+  STARTER_ALERT_LIMIT: 10,
+
+  /** Max holdings (stocks + ETFs) for Free users. Starter: 50. Pro is unlimited. */
   FREE_HOLDINGS_LIMIT: 15,
+
+  /** Max holdings (stocks + ETFs) for Starter users. Pro is unlimited. */
+  STARTER_HOLDINGS_LIMIT: 50,
 
   /** Max AI portfolio reviews per month for Pro users. */
   PORTFOLIO_REVIEW_MONTHLY_LIMIT: 5,
@@ -44,9 +53,6 @@ export const PLATFORM_LIMITS = {
    * Prevents runaway costs from ad-driven traffic spikes.
    */
   OPENAI_MONTHLY_CALL_CAP: 10_000,
-
-  /** Max IBKR Flex Web Service API fetches per user per day. */
-  IBKR_FLEX_DAILY_LIMIT: 10,
 
   /** Days to retain analytics_events rows before automatic purge. */
   ANALYTICS_RETENTION_DAYS: 90,

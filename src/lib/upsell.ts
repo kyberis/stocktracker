@@ -1,4 +1,5 @@
 import type { TranslationKey } from "@/lib/i18n";
+import type { SubscriptionPlan } from "@/lib/types";
 
 export type UpsellReason = "ai_limit_reached" | "upgrade_required" | "holdings_limit_reached";
 
@@ -13,14 +14,17 @@ export type UpsellSurface =
   | "alerts_limit"
   | "holdings_limit"
   | "portfolio_news_locked"
-  | "ibkr_api_import"
-  | "import_holdings_capped";
+  | "broker_sync_import"
+  | "import_holdings_capped"
+  | "metrics_locked"
+  | "portfolio_history_locked";
 
 export interface UpsellConfig {
   subtitleKey: TranslationKey;
   attemptedActionKey: TranslationKey;
   feature: string;
   freeItems: TranslationKey[];
+  starterItems: TranslationKey[];
   proItems: TranslationKey[];
 }
 
@@ -30,18 +34,25 @@ const DEFAULT_FREE_ITEMS: TranslationKey[] = [
   "upsellFreeItemAiLimited",
 ];
 
+const DEFAULT_STARTER_ITEMS: TranslationKey[] = [
+  "upsellStarterItemMoreHoldings",
+  "upsellStarterItemSharing",
+  "upsellStarterItemMoreAi",
+];
+
 const DEFAULT_PRO_ITEMS: TranslationKey[] = [
   "upsellProItemAlphaVantage",
   "upsellProItemPremiumScreens",
   "upsellProItemAiUnlimited",
 ];
 
-const UPSSELL_BY_SURFACE: Record<UpsellSurface, UpsellConfig> = {
+const UPSELL_BY_SURFACE: Record<UpsellSurface, UpsellConfig> = {
   ai_limit: {
     subtitleKey: "upsellCompareSubtitleAI",
     attemptedActionKey: "upsellAttemptAiAnalysis",
     feature: "ai",
     freeItems: DEFAULT_FREE_ITEMS,
+    starterItems: DEFAULT_STARTER_ITEMS,
     proItems: DEFAULT_PRO_ITEMS,
   },
   stock_detail_locked: {
@@ -49,6 +60,7 @@ const UPSSELL_BY_SURFACE: Record<UpsellSurface, UpsellConfig> = {
     attemptedActionKey: "upsellAttemptFundamentals",
     feature: "fundamentals",
     freeItems: DEFAULT_FREE_ITEMS,
+    starterItems: DEFAULT_STARTER_ITEMS,
     proItems: DEFAULT_PRO_ITEMS,
   },
   intelligence_locked: {
@@ -56,6 +68,7 @@ const UPSSELL_BY_SURFACE: Record<UpsellSurface, UpsellConfig> = {
     attemptedActionKey: "upsellAttemptIntelligence",
     feature: "intelligence",
     freeItems: DEFAULT_FREE_ITEMS,
+    starterItems: DEFAULT_STARTER_ITEMS,
     proItems: DEFAULT_PRO_ITEMS,
   },
   economic_locked: {
@@ -63,6 +76,7 @@ const UPSSELL_BY_SURFACE: Record<UpsellSurface, UpsellConfig> = {
     attemptedActionKey: "upsellAttemptEconomicIndicators",
     feature: "economic-indicators",
     freeItems: DEFAULT_FREE_ITEMS,
+    starterItems: DEFAULT_STARTER_ITEMS,
     proItems: DEFAULT_PRO_ITEMS,
   },
   dashboard_projection_locked: {
@@ -70,6 +84,7 @@ const UPSSELL_BY_SURFACE: Record<UpsellSurface, UpsellConfig> = {
     attemptedActionKey: "upsellAttemptProjection",
     feature: "projection",
     freeItems: DEFAULT_FREE_ITEMS,
+    starterItems: DEFAULT_STARTER_ITEMS,
     proItems: DEFAULT_PRO_ITEMS,
   },
   profile_always_on: {
@@ -77,6 +92,7 @@ const UPSSELL_BY_SURFACE: Record<UpsellSurface, UpsellConfig> = {
     attemptedActionKey: "upsellAttemptAiAnalysis",
     feature: "profile",
     freeItems: DEFAULT_FREE_ITEMS,
+    starterItems: DEFAULT_STARTER_ITEMS,
     proItems: DEFAULT_PRO_ITEMS,
   },
   settings_always_on: {
@@ -84,6 +100,7 @@ const UPSSELL_BY_SURFACE: Record<UpsellSurface, UpsellConfig> = {
     attemptedActionKey: "upsellAttemptIntelligence",
     feature: "settings",
     freeItems: DEFAULT_FREE_ITEMS,
+    starterItems: DEFAULT_STARTER_ITEMS,
     proItems: DEFAULT_PRO_ITEMS,
   },
   alerts_limit: {
@@ -91,6 +108,11 @@ const UPSSELL_BY_SURFACE: Record<UpsellSurface, UpsellConfig> = {
     attemptedActionKey: "upsellAttemptAlerts",
     feature: "alerts",
     freeItems: DEFAULT_FREE_ITEMS,
+    starterItems: [
+      "upsellStarterItemMoreAlerts",
+      "upsellStarterItemSharing",
+      "upsellStarterItemMoreAi",
+    ],
     proItems: DEFAULT_PRO_ITEMS,
   },
   holdings_limit: {
@@ -101,6 +123,11 @@ const UPSSELL_BY_SURFACE: Record<UpsellSurface, UpsellConfig> = {
       "upsellFreeItemHoldingsLimit",
       "upsellFreeItemYahoo",
       "upsellFreeItemAiLimited",
+    ],
+    starterItems: [
+      "upsellStarterItemMoreHoldings",
+      "upsellStarterItemSharing",
+      "upsellStarterItemMoreAi",
     ],
     proItems: [
       "upsellProItemUnlimitedHoldings",
@@ -113,19 +140,25 @@ const UPSSELL_BY_SURFACE: Record<UpsellSurface, UpsellConfig> = {
     attemptedActionKey: "upsellAttemptPortfolioNews",
     feature: "intelligence",
     freeItems: DEFAULT_FREE_ITEMS,
+    starterItems: DEFAULT_STARTER_ITEMS,
     proItems: DEFAULT_PRO_ITEMS,
   },
-  ibkr_api_import: {
+  broker_sync_import: {
     subtitleKey: "upsellCompareSubtitleLocked",
-    attemptedActionKey: "upsellAttemptIbkrApi",
-    feature: "ibkr-api",
+    attemptedActionKey: "upsellAttemptBrokerSync",
+    feature: "broker-sync",
     freeItems: [
       "upsellFreeItemBrokerCsv",
       "upsellFreeItemYahoo",
       "upsellFreeItemBasicCharts",
     ],
+    starterItems: [
+      "upsellStarterItemMoreHoldings",
+      "upsellStarterItemSharing",
+      "upsellStarterItemCsvExport",
+    ],
     proItems: [
-      "upsellProItemIbkrApi",
+      "upsellProItemBrokerSync",
       "upsellProItemAlphaVantage",
       "upsellProItemAiUnlimited",
     ],
@@ -139,16 +172,46 @@ const UPSSELL_BY_SURFACE: Record<UpsellSurface, UpsellConfig> = {
       "upsellFreeItemYahoo",
       "upsellFreeItemAiLimited",
     ],
+    starterItems: [
+      "upsellStarterItemMoreHoldings",
+      "upsellStarterItemSharing",
+      "upsellStarterItemMoreAi",
+    ],
     proItems: [
       "upsellProItemUnlimitedHoldings",
       "upsellProItemAlphaVantage",
       "upsellProItemAiUnlimited",
     ],
   },
+  metrics_locked: {
+    subtitleKey: "upsellCompareSubtitleLocked",
+    attemptedActionKey: "upsellAttemptMetrics",
+    feature: "metrics",
+    freeItems: DEFAULT_FREE_ITEMS,
+    starterItems: DEFAULT_STARTER_ITEMS,
+    proItems: DEFAULT_PRO_ITEMS,
+  },
+  portfolio_history_locked: {
+    subtitleKey: "upsellCompareSubtitleLocked",
+    attemptedActionKey: "upsellAttemptPortfolioHistory",
+    feature: "portfolio-history",
+    freeItems: DEFAULT_FREE_ITEMS,
+    starterItems: DEFAULT_STARTER_ITEMS,
+    proItems: DEFAULT_PRO_ITEMS,
+  },
 };
 
 export function getUpsellConfig(surface: UpsellSurface): UpsellConfig {
-  return UPSSELL_BY_SURFACE[surface];
+  return UPSELL_BY_SURFACE[surface];
+}
+
+/**
+ * Returns the next plan to suggest upgrading to.
+ * Free users → Starter, Starter users → Pro.
+ */
+export function getUpgradeTarget(plan: SubscriptionPlan): "starter" | "pro" {
+  if (plan === "free") return "starter";
+  return "pro";
 }
 
 export function getUpsellReasonKey(reason?: UpsellReason): TranslationKey {

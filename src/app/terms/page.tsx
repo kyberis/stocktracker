@@ -34,7 +34,7 @@ export default function TermsOfServicePage() {
             Terms of Service
           </h1>
           <p className="text-slate-400">
-            Last updated: March 6, 2026
+            Last updated: March 8, 2026
           </p>
         </header>
 
@@ -64,7 +64,7 @@ export default function TermsOfServicePage() {
               <li>Track stock and ETF holdings with real-time market data.</li>
               <li>View portfolio performance, historical charts, and benchmark comparisons.</li>
               <li>Access AI-powered stock analysis and insights (subject to tier limits).</li>
-              <li>Import portfolio data from broker statements.</li>
+              <li>Import portfolio data from broker statements or connect brokerage accounts via third-party aggregators (Pro).</li>
               <li>Track cash balances and dividend projections.</li>
             </ul>
           </section>
@@ -102,6 +102,7 @@ export default function TermsOfServicePage() {
             </p>
             <ul className="list-disc pl-6 space-y-2">
               <li>Alpha Vantage real-time market data.</li>
+              <li>SnapTrade brokerage aggregation (connect 20+ brokerages via OAuth for portfolio import).</li>
               <li>Company fundamentals (income statements, balance sheets, cash flow).</li>
               <li>Stock Intelligence (news sentiment, insider trades, institutional holdings).</li>
               <li>Economic Indicators dashboard.</li>
@@ -244,6 +245,9 @@ export default function TermsOfServicePage() {
                   in stocks and ETFs carries risk, including the risk of total
                   loss.
                 </li>
+                <li>
+                  <strong className="text-white">Shared portfolios</strong> — when you share your portfolio via a public link, the shared view is for informational purposes only. It does not constitute financial advice. You are solely responsible for the content you choose to share publicly.
+                </li>
               </ul>
             </div>
           </section>
@@ -289,8 +293,8 @@ export default function TermsOfServicePage() {
               </li>
               <li>
                 We do not guarantee uninterrupted or error-free service. Market
-                data feeds, AI analysis, and third-party integrations may
-                experience downtime.
+                data feeds, AI analysis, and third-party integrations (including
+                SnapTrade brokerage connections) may experience downtime.
               </li>
             </ul>
           </section>

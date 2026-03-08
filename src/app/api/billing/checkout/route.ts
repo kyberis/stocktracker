@@ -9,6 +9,17 @@ import { parseBody } from "@/lib/api-response";
 import { checkoutSchema } from "@/lib/schemas";
 import { withMetrics } from "@/lib/with-metrics";
 
+function getPriceId(plan: "starter" | "pro", interval: "monthly" | "annual"): string | undefined {
+  if (plan === "starter") {
+    return interval === "annual"
+      ? process.env.STRIPE_PRICE_STARTER_ANNUAL
+      : process.env.STRIPE_PRICE_STARTER_MONTHLY;
+  }
+  return interval === "annual"
+    ? process.env.STRIPE_PRICE_PRO_ANNUAL
+    : process.env.STRIPE_PRICE_PRO_MONTHLY;
+}
+
 export const POST = withMetrics("/api/billing/checkout", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
@@ -16,12 +27,10 @@ export const POST = withMetrics("/api/billing/checkout", async (req: NextRequest
   const result = await parseBody(req, checkoutSchema);
   if (!result.success) return result.error;
   const { deviceGrant } = result.data;
+  const targetPlan = deviceGrant ? "pro" as const : result.data.plan;
   const interval = deviceGrant ? "annual" : result.data.interval;
 
-  const priceId =
-    interval === "annual"
-      ? process.env.STRIPE_PRICE_PRO_ANNUAL
-      : process.env.STRIPE_PRICE_PRO_MONTHLY;
+  const priceId = getPriceId(targetPlan, interval);
   if (!priceId) {
     return NextResponse.json({ error: "Billing plan is not configured" }, { status: 501 });
   }
@@ -47,13 +56,13 @@ export const POST = withMetrics("/api/billing/checkout", async (req: NextRequest
     }
   }
 
-  if (user.plan !== "pro") {
+  if (user.plan !== "pro" && user.plan !== "starter") {
     const proCount = await countProSubscribers();
     if (proCount >= PLATFORM_LIMITS.MAX_PRO_SUBSCRIBERS) {
       billingEventsTotal.inc({ event: "checkout_capacity_blocked" });
       return NextResponse.json(
         {
-          error: "Pro plan is currently at capacity. Please try again later.",
+          error: "Paid plans are currently at capacity. Please try again later.",
           reason: "capacity_reached",
         },
         { status: 503 }
@@ -84,6 +93,7 @@ export const POST = withMetrics("/api/billing/checkout", async (req: NextRequest
       cancel_url: `${baseUrl}/profile?billing=cancelled`,
       metadata: {
         userId: user.id,
+        plan: targetPlan,
         interval,
         ...(deviceGrant ? { deviceGrant: "true" } : {}),
       },
@@ -96,6 +106,7 @@ export const POST = withMetrics("/api/billing/checkout", async (req: NextRequest
     const checkout = await stripe.checkout.sessions.create(checkoutParams);
 
     trackEvent(user.id, "billing_checkout_started", {
+      plan: targetPlan,
       interval,
       source: deviceGrant ? "device_grant" : "billing_api",
     });

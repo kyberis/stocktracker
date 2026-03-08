@@ -1,7 +1,9 @@
 import type { SubscriptionFeature, SubscriptionPlan } from "@/lib/types";
 import { PLATFORM_LIMITS } from "@/lib/platform-config";
-import { countProSubscribers } from "@/lib/db";
 
+/**
+ * Features always available to every plan.
+ */
 const FREE_FEATURES = new Set<SubscriptionFeature>([
   "yahoo",
   "charts",
@@ -9,12 +11,25 @@ const FREE_FEATURES = new Set<SubscriptionFeature>([
   "benchmarks",
 ]);
 
+/**
+ * Features available on Starter and Pro (not Free).
+ */
+const STARTER_FEATURES = new Set<SubscriptionFeature>([
+  "portfolio-sharing",
+  "csv-export",
+]);
+
+/**
+ * Features only available on Pro.
+ */
 const PRO_FEATURES = new Set<SubscriptionFeature>([
   "alphavantage",
   "fundamentals",
   "intelligence",
   "economic-indicators",
   "alerts-email",
+  "metrics",
+  "portfolio-history-full",
 ]);
 
 export interface EntitlementInput {
@@ -31,15 +46,21 @@ export interface EntitlementResult {
 }
 
 export const FREE_AI_MONTHLY_LIMIT = PLATFORM_LIMITS.AI_FREE_MONTHLY_LIMIT;
+export const STARTER_AI_MONTHLY_LIMIT = PLATFORM_LIMITS.AI_STARTER_MONTHLY_LIMIT;
 
 export function canAccessFeature(
   feature: SubscriptionFeature,
   input: EntitlementInput
 ): EntitlementResult {
-  const limit = input.freeAiMonthlyLimit ?? FREE_AI_MONTHLY_LIMIT;
+  const freeLimit = input.freeAiMonthlyLimit ?? FREE_AI_MONTHLY_LIMIT;
 
   if (FREE_FEATURES.has(feature)) {
     return { allowed: true };
+  }
+
+  if (STARTER_FEATURES.has(feature)) {
+    if (input.plan === "starter" || input.plan === "pro") return { allowed: true };
+    return { allowed: false, reason: "upgrade_required" };
   }
 
   if (PRO_FEATURES.has(feature)) {
@@ -49,11 +70,21 @@ export function canAccessFeature(
 
   if (feature === "ai") {
     if (input.plan === "pro") return { allowed: true };
-    if (input.aiCallsThisMonth < limit) return { allowed: true };
+    if (input.plan === "starter") {
+      if (input.aiCallsThisMonth < STARTER_AI_MONTHLY_LIMIT) return { allowed: true };
+      return {
+        allowed: false,
+        reason: "ai_limit_reached",
+        limit: STARTER_AI_MONTHLY_LIMIT,
+        used: input.aiCallsThisMonth,
+      };
+    }
+    // free
+    if (input.aiCallsThisMonth < freeLimit) return { allowed: true };
     return {
       allowed: false,
       reason: "ai_limit_reached",
-      limit,
+      limit: freeLimit,
       used: input.aiCallsThisMonth,
     };
   }
@@ -61,18 +92,35 @@ export function canAccessFeature(
   return { allowed: false, reason: "upgrade_required" };
 }
 
-export async function isProCapacityAvailable(): Promise<{
-  available: boolean;
-  currentCount: number;
-  maxCount: number;
-  remaining: number;
-}> {
-  const currentCount = await countProSubscribers();
-  const maxCount = PLATFORM_LIMITS.MAX_PRO_SUBSCRIBERS;
-  return {
-    available: currentCount < maxCount,
-    currentCount,
-    maxCount,
-    remaining: Math.max(0, maxCount - currentCount),
-  };
+/**
+ * Returns the holdings limit for a given plan.
+ * Pro has no limit (returns Infinity).
+ */
+export function getHoldingsLimit(plan: SubscriptionPlan): number {
+  if (plan === "pro") return Infinity;
+  if (plan === "starter") return PLATFORM_LIMITS.STARTER_HOLDINGS_LIMIT;
+  return PLATFORM_LIMITS.FREE_HOLDINGS_LIMIT;
 }
+
+/**
+ * Returns the price alert limit for a given plan.
+ * Pro has no limit (returns Infinity).
+ */
+export function getAlertLimit(plan: SubscriptionPlan): number {
+  if (plan === "pro") return Infinity;
+  if (plan === "starter") return PLATFORM_LIMITS.STARTER_ALERT_LIMIT;
+  return PLATFORM_LIMITS.FREE_ALERT_LIMIT;
+}
+
+/** Maps internal plan identifiers to user-facing tier names. */
+export function planDisplayName(plan: SubscriptionPlan): string {
+  switch (plan) {
+    case "free":
+      return "Folio";
+    case "starter":
+      return "Bifolio";
+    case "pro":
+      return "Trefolio";
+  }
+}
+

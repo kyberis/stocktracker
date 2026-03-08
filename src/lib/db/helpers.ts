@@ -8,7 +8,7 @@ import type {
 } from "@/lib/types";
 
 export type UserRole = "admin" | "user";
-export type UserPlan = "free" | "pro";
+export type UserPlan = "free" | "starter" | "pro";
 
 export type AuthProvider = "credentials" | "google" | "apple";
 
@@ -157,7 +157,7 @@ export function rowToDbUser(row: Row): DbUser {
     email: str(row.email),
     display_name: str(row.display_name),
     avatar_url: str(row.avatar_url),
-    plan: row.plan === "pro" ? "pro" : "free",
+    plan: row.plan === "pro" ? "pro" : row.plan === "starter" ? "starter" : "free",
     stripe_customer_id: str(row.stripe_customer_id),
     stripe_subscription_id: str(row.stripe_subscription_id),
     plan_expires_at: str(row.plan_expires_at),
@@ -203,7 +203,7 @@ export function mapUser(user: DbUser): PublicUser {
     portfolioReviewResetAt: user.portfolio_review_reset_at,
     hasWidgetToken: !!user.widget_token_hash,
     hasDevicePasskey: !!user.device_passkey_hash,
-    deviceProEligible: !!user.device_linked_at && !user.device_pro_redeemed_at && user.plan === "free",
+    deviceProEligible: !!user.device_linked_at && !user.device_pro_redeemed_at && (user.plan === "free" || user.plan === "starter"),
   };
 }
 

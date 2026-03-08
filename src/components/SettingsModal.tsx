@@ -43,15 +43,17 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           <div className="rounded-xl border border-gray-200 dark:border-slate-600 p-3 bg-gray-50 dark:bg-slate-800/40">
             <p className="text-sm text-gray-700 dark:text-slate-200">
               {t("currentPlan")}:{" "}
-              <span className="font-semibold">{user?.plan === "pro" ? t("planPro") : t("planFree")}</span>
+              <span className="font-semibold">{user?.plan === "pro" ? t("planPro") : user?.plan === "starter" ? t("planStarter") : t("planFree")}</span>
             </p>
           </div>
-          <ProCompareCard
-            surface="settings_always_on"
-            reason={user?.plan === "pro" ? undefined : "upgrade_required"}
-            compact
-            aiUsage={user?.plan === "pro" ? undefined : { used: user?.aiCallsThisMonth ?? 0, limit: 5 }}
-          />
+          {user?.plan !== "pro" && (
+            <ProCompareCard
+              surface="settings_always_on"
+              reason="upgrade_required"
+              compact
+              aiUsage={{ used: user?.aiCallsThisMonth ?? 0, limit: 5 }}
+            />
+          )}
           <div>
             <label className="block text-sm text-gray-500 dark:text-slate-400 mb-2">{t("dataProvider")}</label>
             <div className="grid grid-cols-2 gap-2">
@@ -116,7 +118,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline"
             onClick={onClose}
           >
-            {user?.plan === "pro" ? t("manageSubscription") : t("upgradeToPro")} →
+            {user?.plan === "pro" ? t("manageSubscription") : user?.plan === "starter" ? t("upgradeToPro") : t("upgradeToStarter")} →
           </a>
           <div className="flex gap-3">
             <button onClick={onClose} className="btn-secondary">

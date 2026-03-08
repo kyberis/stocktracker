@@ -34,7 +34,7 @@ export default function PrivacyPolicyPage() {
             Privacy Policy
           </h1>
           <p className="text-slate-400">
-            Last updated: March 6, 2026
+            Last updated: March 8, 2026
           </p>
         </header>
 
@@ -108,7 +108,10 @@ export default function PrivacyPolicyPage() {
                 if you connect your Interactive Brokers account via the Flex Web
                 Service API, your access token and query ID are encrypted with
                 AES-256-GCM and stored so you can re-sync your portfolio on demand.
-                You can disconnect at any time, which permanently deletes these credentials.
+                If you connect brokerage accounts via SnapTrade (Pro), we store your
+                SnapTrade userId and encrypted userSecret; your brokerage credentials
+                are handled by SnapTrade via OAuth, not by us. You can disconnect at
+                any time, which permanently deletes these credentials.
               </li>
               <li>
                 <strong className="text-slate-200">Widget access token (optional)</strong> —
@@ -116,6 +119,16 @@ export default function PrivacyPolicyPage() {
                 store a one-way SHA-256 hash of the token. The plaintext token is
                 shown once and never stored. You can revoke it at any time from
                 your profile, which permanently deletes the hash.
+              </li>
+            </ul>
+
+            <h3>Contact Form Data</h3>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>
+                <strong className="text-slate-200">Name, email, subject, message</strong> —
+                when you submit the contact form, we collect these fields for
+                customer support purposes. Submissions are sent to support@trefolio.com
+                via Resend and are subject to IP-based rate limiting (5 per hour).
               </li>
             </ul>
 
@@ -143,6 +156,7 @@ export default function PrivacyPolicyPage() {
               <li>Process AI analysis requests (portfolio data is sent to OpenAI for analysis; see Section 5).</li>
               <li>Process subscription payments through Stripe (see Section 5).</li>
               <li>Send essential service communications (e.g., password resets, critical security notices).</li>
+              <li>Respond to customer support inquiries submitted via the contact form.</li>
             </ul>
             <p>
               We do <strong className="text-white">not</strong> sell, rent, or
@@ -227,17 +241,22 @@ export default function PrivacyPolicyPage() {
                   <tr>
                     <td className="py-3 pr-6">Cloudflare Turnstile</td>
                     <td className="py-3 pr-6">Bot protection</td>
-                    <td className="py-3">IP address and browser signals (used to distinguish humans from bots during signup and login)</td>
+                    <td className="py-3">IP address and browser signals (used to distinguish humans from bots during signup, login, and contact form submissions)</td>
                   </tr>
                   <tr>
                     <td className="py-3 pr-6">Resend</td>
                     <td className="py-3 pr-6">Transactional email</td>
-                    <td className="py-3">Email address (for verification, password resets, and service notifications)</td>
+                    <td className="py-3">Email address (for verification, password resets, service notifications, and contact form submissions)</td>
                   </tr>
                   <tr>
                     <td className="py-3 pr-6">Interactive Brokers (Flex Web Service)</td>
                     <td className="py-3 pr-6">Portfolio import via API (Pro)</td>
                     <td className="py-3">User-provided Flex token and Query ID (encrypted at rest); IBKR returns portfolio data directly to our server</td>
+                  </tr>
+                  <tr>
+                    <td className="py-3 pr-6">SnapTrade (Passiv Financial Inc.)</td>
+                    <td className="py-3 pr-6">Brokerage aggregation (Pro)</td>
+                    <td className="py-3">Brokerage account data (positions, balances) via OAuth; we store only SnapTrade userId and encrypted userSecret</td>
                   </tr>
                 </tbody>
               </table>
@@ -279,9 +298,35 @@ export default function PrivacyPolicyPage() {
                 90 days.
               </li>
               <li>
+                <strong className="text-slate-200">Contact form submissions</strong> — 
+                retained until the inquiry is resolved, then purged within 90 days.
+              </li>
+              <li>
                 <strong className="text-slate-200">After account deletion</strong>{" "}
                 — all personal data is permanently deleted within 30 days. Backups
                 containing your data are purged within 90 days.
+              </li>
+            </ul>
+          </section>
+
+          <section>
+            <h2>7a. Public Portfolio Sharing</h2>
+            <p>
+              Pro subscribers may choose to generate a shareable link that allows anyone with the link to view a
+              read-only snapshot of their portfolio holdings. This feature is <strong className="text-slate-200">opt-in</strong> and disabled by default.
+            </p>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>
+                <strong className="text-slate-200">What is shared:</strong> Ticker symbols, stock names, exchange, and optionally share counts (configurable by you). Financial values (prices, total values) are never exposed via shared links.
+              </li>
+              <li>
+                <strong className="text-slate-200">Access control:</strong> Shared portfolio pages are accessible by anyone with the link but are not indexed by search engines (<code className="text-xs">noindex</code>). You can revoke access at any time from your profile settings.
+              </li>
+              <li>
+                <strong className="text-slate-200">Visitor data:</strong> We log anonymized access events (no IP address, no personal data) to measure feature usage.
+              </li>
+              <li>
+                <strong className="text-slate-200">Your responsibility:</strong> You are responsible for deciding what holdings to include in your shared portfolio. We recommend reviewing the excluded tickers option before sharing.
               </li>
             </ul>
           </section>
@@ -347,7 +392,7 @@ export default function PrivacyPolicyPage() {
               <li>
                 <strong className="text-slate-200">Cloudflare Turnstile</strong> — 
                 Turnstile may set a transient cookie (<code className="text-xs text-slate-300 bg-slate-800 px-1 py-0.5 rounded">cf_bm</code>)
-                to complete its bot-detection challenge on signup and login forms.
+                to complete its bot-detection challenge on signup, login, and contact forms.
                 This cookie is classified as strictly necessary (bot protection)
                 and contains no personal identifiers.
               </li>
@@ -363,7 +408,7 @@ export default function PrivacyPolicyPage() {
             <h2>10. International Transfers</h2>
             <p>
               Your data may be processed outside the EEA by our third-party
-              service providers (Vercel, OpenAI, Stripe, Cloudflare, Finnhub, Interactive Brokers). Where
+              service providers (Vercel, OpenAI, Stripe, Cloudflare, Finnhub, Interactive Brokers, SnapTrade, Resend). Where
               this occurs, we ensure appropriate safeguards are in place,
               including Standard Contractual Clauses (SCCs) approved by the
               European Commission.

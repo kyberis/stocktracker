@@ -34,6 +34,8 @@ function isPublicPath(pathname: string): boolean {
   if (pathname === "/sitemap.xml") return true;
   if (pathname === "/llms.txt") return true;
   if (pathname === "/llms-full.txt") return true;
+  // Public portfolio share pages
+  if (pathname.startsWith("/p/")) return true;
   if (/\.(png|jpg|jpeg|gif|svg|webp|ico|mp4|webm|css|js|woff2?)$/.test(pathname)) return true;
   return false;
 }
@@ -42,6 +44,11 @@ export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   if (isPublicPath(pathname) || PUBLIC_API_ROUTES.has(pathname)) {
+    return NextResponse.next();
+  }
+
+  // Public portfolio share API (dynamic route)
+  if (pathname.startsWith("/api/p/")) {
     return NextResponse.next();
   }
 

@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect, DragEvent } from "react";
+import { useState, useRef, useCallback, DragEvent } from "react";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth-context";
 import { downloadImportTemplate } from "@/lib/download-import-template";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import ProCompareCard from "@/components/ProCompareCard";
 
-type CsvFormat = "degiro" | "interactive_brokers" | "trading_212" | "revolut" | "simple" | "ai_import";
+type CsvFormat = "degiro" | "interactive_brokers" | "trading_212" | "revolut" | "charles_schwab" | "fidelity" | "nordnet" | "tastytrade" | "freetrade" | "etoro" | "wealthsimple" | "questrade" | "firstrade" | "simple" | "ai_import";
 
 interface ImportPortfolioModalProps {
   isOpen: boolean;
@@ -46,15 +46,6 @@ interface CashBalance {
 
 type Step = "upload" | "extracting" | "preview" | "importing" | "done" | "error";
 type PreviewTab = "holdings" | "transactions";
-type IbkrTab = "csv" | "api";
-
-interface IbkrConnectionInfo {
-  connected: boolean;
-  queryId?: string;
-  label?: string;
-  lastSyncedAt?: string;
-}
-
 const TX_TYPE_COLORS: Record<string, string> = {
   buy: "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
   sell: "bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400",
@@ -70,13 +61,6 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
   const [step, setStep] = useState<Step>("upload");
   const [csvFormat, setCsvFormat] = useState<CsvFormat>("degiro");
 
-  // IBKR API state
-  const [ibkrTab, setIbkrTab] = useState<IbkrTab>("csv");
-  const [ibkrToken, setIbkrToken] = useState("");
-  const [ibkrQueryId, setIbkrQueryId] = useState("");
-  const [ibkrSave, setIbkrSave] = useState(true);
-  const [ibkrFetching, setIbkrFetching] = useState(false);
-  const [ibkrConnection, setIbkrConnection] = useState<IbkrConnectionInfo | null>(null);
   const [holdings, setHoldings] = useState<ExtractedHolding[]>([]);
   const [transactions, setTransactions] = useState<ExtractedTransaction[]>([]);
   const [previewTab, setPreviewTab] = useState<PreviewTab>("holdings");
@@ -112,93 +96,9 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
     setImportWarning("");
     setHoldingsCapped(0);
     rawCsvRef.current = "";
-    setIbkrTab("csv");
-    setIbkrToken("");
-    setIbkrQueryId("");
-    setIbkrSave(true);
-    setIbkrFetching(false);
   };
 
   const isBusy = step === "extracting" || step === "importing";
-
-  const loadIbkrConnection = useCallback(async () => {
-    try {
-      const form = new FormData();
-      form.append("action", "get-connection");
-      const res = await fetch("/api/ibkr-flex", { method: "POST", body: form });
-      if (res.ok) {
-        const data = await res.json();
-        setIbkrConnection(data);
-      }
-    } catch { /* ignore */ }
-  }, []);
-
-  useEffect(() => {
-    if (isOpen && csvFormat === "interactive_brokers") {
-      loadIbkrConnection();
-    }
-  }, [isOpen, csvFormat, loadIbkrConnection]);
-
-  const handleIbkrFetch = async (useSaved = false) => {
-    setErrorMsg("");
-    setIbkrFetching(true);
-    try {
-      const form = new FormData();
-      form.append("action", "fetch");
-      if (useSaved) {
-        form.append("useSaved", "true");
-      } else {
-        form.append("token", ibkrToken);
-        form.append("queryId", ibkrQueryId);
-      }
-      const res = await fetch("/api/ibkr-flex", { method: "POST", body: form });
-      const data = await res.json();
-      if (!res.ok) {
-        setErrorMsg(data.error || t("ibkrFetchError"));
-        return;
-      }
-      setHoldings([]);
-      setTransactions((data.transactions || []).map((tx: Record<string, unknown>) => ({
-        date: String(tx.date || ""),
-        type: (String(tx.type || "buy") as ExtractedTransaction["type"]),
-        ticker: String(tx.ticker || "").toUpperCase(),
-        name: String(tx.name || ""),
-        isin: String(tx.isin || ""),
-        shares: Number(tx.shares || 0),
-        pricePerShare: Number(tx.pricePerShare || 0),
-        totalAmount: Number(tx.totalAmount || 0),
-        fees: Number(tx.fees || 0),
-        currency: String(tx.currency || "EUR").toUpperCase(),
-        sourceRef: tx.sourceRef ? String(tx.sourceRef) : undefined,
-      })));
-      setPreviewTab("transactions");
-      setStep("preview");
-
-      if (!useSaved && ibkrSave && ibkrToken && ibkrQueryId) {
-        const saveForm = new FormData();
-        saveForm.append("action", "save-connection");
-        saveForm.append("token", ibkrToken);
-        saveForm.append("queryId", ibkrQueryId);
-        fetch("/api/ibkr-flex", { method: "POST", body: saveForm })
-          .then(() => loadIbkrConnection())
-          .catch(() => {});
-      }
-    } catch {
-      setErrorMsg(t("ibkrFetchError"));
-    } finally {
-      setIbkrFetching(false);
-    }
-  };
-
-  const handleIbkrDisconnect = async () => {
-    if (!confirm(t("ibkrDisconnectConfirm"))) return;
-    try {
-      const form = new FormData();
-      form.append("action", "delete-connection");
-      await fetch("/api/ibkr-flex", { method: "POST", body: form });
-      setIbkrConnection({ connected: false });
-    } catch { /* ignore */ }
-  };
 
   const handleClose = () => {
     if (isBusy) return;
@@ -399,7 +299,10 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
     let errorCount = 0;
     const formatLabels: Record<CsvFormat, string> = {
       degiro: "DEGIRO", interactive_brokers: "IBKR", trading_212: "Trading 212",
-      revolut: "Revolut", simple: "CSV", ai_import: "AI",
+      revolut: "Revolut", charles_schwab: "Charles Schwab", fidelity: "Fidelity",
+      nordnet: "Nordnet", tastytrade: "Tastytrade", freetrade: "Freetrade",
+      etoro: "eToro", wealthsimple: "Wealthsimple", questrade: "Questrade",
+      firstrade: "Firstrade", simple: "CSV", ai_import: "AI",
     };
     const importSource = isImageImport ? "Image import" : `${formatLabels[csvFormat]} import`;
 
@@ -520,6 +423,24 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
         <div className="flex-1 overflow-y-auto px-6 py-5">
           {step === "upload" && (
             <>
+              {/* Broker Sync banner */}
+              {isPro && (
+                <a
+                  href="/import?method=snaptrade_api"
+                  onClick={onClose}
+                  className="flex items-center gap-3 mb-4 px-4 py-3 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-500/10 dark:to-indigo-500/10 border border-blue-200 dark:border-blue-500/30 hover:from-blue-100 hover:to-indigo-100 dark:hover:from-blue-500/15 dark:hover:to-indigo-500/15 transition-colors"
+                >
+                  <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75" />
+                  </svg>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-gray-900 dark:text-white">{t("brokerSyncConnect")}</p>
+                    <p className="text-[10px] text-gray-500 dark:text-slate-400 truncate">{t("brokerSyncBrokerages")}</p>
+                  </div>
+                  <span className="text-[9px] font-bold bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded-full flex-shrink-0">Pro</span>
+                </a>
+              )}
+
               {/* Broker selector */}
               <div className="flex flex-col gap-2 mb-4">
                 {([
@@ -527,6 +448,15 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
                   { id: "interactive_brokers" as CsvFormat, label: "Interactive Brokers", desc: "Activity Statement CSV" },
                   { id: "trading_212" as CsvFormat, label: "Trading 212", desc: "History CSV export" },
                   { id: "revolut" as CsvFormat, label: "Revolut", desc: "Account statement (Excel/CSV)" },
+                  { id: "charles_schwab" as CsvFormat, label: "Charles Schwab", desc: "Brokerage History CSV" },
+                  { id: "fidelity" as CsvFormat, label: "Fidelity", desc: "Activity & Orders CSV" },
+                  { id: "nordnet" as CsvFormat, label: "Nordnet", desc: "Transactions CSV export" },
+                  { id: "tastytrade" as CsvFormat, label: "Tastytrade", desc: "Transaction History CSV" },
+                  { id: "freetrade" as CsvFormat, label: "Freetrade", desc: "Activity CSV export" },
+                  { id: "etoro" as CsvFormat, label: "eToro", desc: "Account Statement XLS/CSV" },
+                  { id: "wealthsimple" as CsvFormat, label: "Wealthsimple", desc: "Activities Export CSV" },
+                  { id: "questrade" as CsvFormat, label: "Questrade", desc: "Account Activity CSV" },
+                  { id: "firstrade" as CsvFormat, label: "Firstrade", desc: "Account History CSV" },
                   { id: "simple" as CsvFormat, label: t("simpleCSV"), desc: "ticker, type, price, amount, currency" },
                   { id: "ai_import" as CsvFormat, label: t("aiImportLabel"), desc: t("aiImportDesc") },
                 ]).map((fmt) => (
@@ -552,170 +482,10 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
                 </div>
               )}
               {csvFormat === "interactive_brokers" && (
-                <>
-                  {/* Tab switcher: CSV / API */}
-                  <div className="flex rounded-lg bg-gray-100 dark:bg-slate-700/50 p-0.5 mb-4">
-                    <button
-                      onClick={() => setIbkrTab("csv")}
-                      className={`flex-1 text-xs font-medium px-3 py-1.5 rounded-md transition-all ${
-                        ibkrTab === "csv"
-                          ? "bg-white dark:bg-slate-600 text-gray-900 dark:text-white shadow-sm"
-                          : "text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300"
-                      }`}
-                    >
-                      {t("ibkrCsvTab")}
-                    </button>
-                    <button
-                      onClick={() => setIbkrTab("api")}
-                      className={`flex-1 text-xs font-medium px-3 py-1.5 rounded-md transition-all flex items-center justify-center gap-1.5 ${
-                        ibkrTab === "api"
-                          ? "bg-white dark:bg-slate-600 text-gray-900 dark:text-white shadow-sm"
-                          : "text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300"
-                      }`}
-                    >
-                      {t("ibkrApiTab")}
-                      <span className="text-[9px] font-bold bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded-full">
-                        {t("ibkrApiProBadge")}
-                      </span>
-                    </button>
-                  </div>
-
-                  {ibkrTab === "csv" && (
-                    <div className="bg-blue-50 dark:bg-blue-500/10 rounded-xl p-3 mb-4">
-                      <p className="text-xs text-blue-700 dark:text-blue-300 font-medium mb-1">Interactive Brokers</p>
-                      <p className="text-[10px] text-blue-600 dark:text-blue-400">{t("ibkrCsvInstructions")}</p>
-                    </div>
-                  )}
-
-                  {ibkrTab === "api" && (
-                    <div className="mb-4">
-                      {!isPro ? (
-                        <ProCompareCard surface="ibkr_api_import" reason="upgrade_required" compact />
-                      ) : ibkrConnection?.connected ? (
-                        /* Connected state */
-                        <div className="bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 rounded-xl p-4">
-                          <div className="flex items-center gap-2 mb-2">
-                            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                            <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">{t("ibkrConnected")}</span>
-                          </div>
-                          <div className="text-[10px] text-emerald-600 dark:text-emerald-400/80 mb-3">
-                            <p>{t("ibkrQueryId")}: <span className="font-mono">{ibkrConnection.queryId}</span></p>
-                            <p>
-                              {t("ibkrLastSynced")}:{" "}
-                              {ibkrConnection.lastSyncedAt
-                                ? new Date(ibkrConnection.lastSyncedAt).toLocaleString()
-                                : t("ibkrNeverSynced")}
-                            </p>
-                          </div>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => handleIbkrFetch(true)}
-                              disabled={ibkrFetching}
-                              className="btn-primary text-xs px-3 py-1.5"
-                            >
-                              {ibkrFetching ? t("ibkrFetching") : t("ibkrResync")}
-                            </button>
-                            <button
-                              onClick={handleIbkrDisconnect}
-                              className="btn-secondary text-xs px-3 py-1.5 text-red-600 dark:text-red-400"
-                            >
-                              {t("ibkrDisconnect")}
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        /* New connection — guided wizard + form */
-                        <div className="space-y-3">
-                          {/* "What you'll need" card */}
-                          <div className="bg-blue-50 dark:bg-blue-500/10 rounded-xl p-3">
-                            <p className="text-xs text-blue-700 dark:text-blue-300 font-medium mb-0.5">{t("ibkrApiImportTitle")}</p>
-                            <p className="text-[10px] text-blue-600 dark:text-blue-400">{t("ibkrSetupWhatYouNeed")}</p>
-                          </div>
-
-                          {/* Step-by-step wizard */}
-                          <div className="space-y-2">
-                            {[
-                              { n: "1", titleKey: "ibkrSetupStep1Title" as const, descKey: "ibkrSetupStep1Desc" as const },
-                              { n: "2", titleKey: "ibkrSetupStep2Title" as const, descKey: "ibkrSetupStep2Desc" as const },
-                              { n: "3", titleKey: "ibkrSetupStep3Title" as const, descKey: "ibkrSetupStep3Desc" as const },
-                            ].map((s) => (
-                              <div key={s.n} className="flex gap-2.5">
-                                <div className="flex-shrink-0 w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center mt-0.5">
-                                  <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400">{s.n}</span>
-                                </div>
-                                <div>
-                                  <p className="text-[11px] font-semibold text-gray-900 dark:text-white">{t(s.titleKey)}</p>
-                                  <p className="text-[10px] text-gray-500 dark:text-slate-400 leading-relaxed">{t(s.descKey)}</p>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-
-                          {/* Portal link */}
-                          <a
-                            href="https://www.interactivebrokers.com/portal"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center justify-center gap-1.5 text-[11px] font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 rounded-lg px-3 py-2 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors"
-                          >
-                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-                            </svg>
-                            {t("ibkrOpenPortal")}
-                          </a>
-
-                          {/* Divider */}
-                          <div className="border-t border-gray-200 dark:border-slate-700" />
-
-                          {/* Token + Query ID form */}
-                          <div>
-                            <label htmlFor="ibkr-token" className="text-[10px] text-gray-600 dark:text-slate-400 block mb-1">{t("ibkrToken")}</label>
-                            <input
-                              id="ibkr-token"
-                              type="password"
-                              value={ibkrToken}
-                              onChange={(e) => setIbkrToken(e.target.value)}
-                              placeholder={t("ibkrTokenPlaceholder")}
-                              className="w-full text-xs px-3 py-2 rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
-                            />
-                          </div>
-
-                          <div>
-                            <label htmlFor="ibkr-query-id" className="text-[10px] text-gray-600 dark:text-slate-400 block mb-1">{t("ibkrQueryId")}</label>
-                            <input
-                              id="ibkr-query-id"
-                              type="text"
-                              value={ibkrQueryId}
-                              onChange={(e) => setIbkrQueryId(e.target.value)}
-                              placeholder={t("ibkrQueryIdPlaceholder")}
-                              className="w-full text-xs px-3 py-2 rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
-                            />
-                          </div>
-
-                          <label className="flex items-center gap-2 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={ibkrSave}
-                              onChange={(e) => setIbkrSave(e.target.checked)}
-                              className="w-3.5 h-3.5 rounded border-gray-300 dark:border-slate-600 text-emerald-500 focus:ring-emerald-500"
-                            />
-                            <span className="text-[10px] text-gray-600 dark:text-slate-400">{t("ibkrSaveConnection")}</span>
-                          </label>
-
-                          <button
-                            onClick={() => handleIbkrFetch(false)}
-                            disabled={ibkrFetching || !ibkrToken || !ibkrQueryId}
-                            className="btn-primary text-xs px-4 py-2 w-full disabled:opacity-50"
-                          >
-                            {ibkrFetching ? t("ibkrFetching") : t("ibkrFetchPortfolio")}
-                          </button>
-
-                          {errorMsg && <p className="text-xs text-red-500" role="alert">{errorMsg}</p>}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </>
+                <div className="bg-blue-50 dark:bg-blue-500/10 rounded-xl p-3 mb-4">
+                  <p className="text-xs text-blue-700 dark:text-blue-300 font-medium mb-1">Interactive Brokers</p>
+                  <p className="text-[10px] text-blue-600 dark:text-blue-400">{t("ibkrCsvInstructions")}</p>
+                </div>
               )}
               {csvFormat === "trading_212" && (
                 <div className="bg-blue-50 dark:bg-blue-500/10 rounded-xl p-3 mb-4">
@@ -753,9 +523,7 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
                 </div>
               )}
 
-              {/* Hide CSV upload area when IBKR API tab is active */}
-              {!(csvFormat === "interactive_brokers" && ibkrTab === "api") && (
-                <div
+              <div
                   role="button"
                   tabIndex={0}
                   aria-label={t("importDragDrop")}
@@ -787,7 +555,6 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
                     className="hidden"
                   />
                 </div>
-              )}
             </>
           )}
 

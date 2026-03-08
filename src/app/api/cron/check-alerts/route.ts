@@ -60,7 +60,7 @@ export async function GET(req: NextRequest) {
     });
 
     if (
-      alert.plan === "pro" &&
+      (alert.plan === "pro" || alert.plan === "starter") &&
       alert.email &&
       alert.emailVerified
     ) {

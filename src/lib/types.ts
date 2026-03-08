@@ -1,5 +1,5 @@
 export type ApiProviderName = "yahoo" | "alphavantage";
-export type SubscriptionPlan = "free" | "pro";
+export type SubscriptionPlan = "free" | "starter" | "pro";
 export type BillingInterval = "monthly" | "annual";
 export type SubscriptionFeature =
   | "yahoo"
@@ -11,7 +11,11 @@ export type SubscriptionFeature =
   | "intelligence"
   | "economic-indicators"
   | "ai"
-  | "alerts-email";
+  | "alerts-email"
+  | "metrics"
+  | "portfolio-history-full"
+  | "portfolio-sharing"
+  | "csv-export";
 
 export type AlertCondition = "above" | "below";
 

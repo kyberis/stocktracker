@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n";
 import { useTrack } from "@/lib/use-track";
-import { getUpsellConfig, getUpsellReasonKey } from "@/lib/upsell";
+import { getUpsellConfig, getUpsellReasonKey, getUpgradeTarget } from "@/lib/upsell";
 import type { UpsellReason, UpsellSurface } from "@/lib/upsell";
 
 interface CapacityInfo {
@@ -36,13 +36,16 @@ export default function ProCompareCard({
   const { t } = useI18n();
   const track = useTrack();
   const [billingError, setBillingError] = useState("");
-  const [billingLoading, setBillingLoading] = useState<"" | "monthly" | "annual" | "portal">("");
+  const [billingLoading, setBillingLoading] = useState("");
   const [capacity, setCapacity] = useState<CapacityInfo | null>(null);
   const hasTrackedShown = useRef(false);
 
   const isPro = user?.plan === "pro";
+  const isStarter = user?.plan === "starter";
+  const isFree = !isPro && !isStarter;
   const config = getUpsellConfig(surface);
   const reasonLabel = t(getUpsellReasonKey(reason));
+  const upgradeTarget = user ? getUpgradeTarget(user.plan as "free" | "starter" | "pro") : "starter";
 
   const fetchCapacity = useCallback(async () => {
     if (cachedCapacity && Date.now() - cachedCapacity.fetchedAt < CAPACITY_CACHE_MS) {
@@ -75,20 +78,21 @@ export default function ProCompareCard({
     });
   }, [track, surface, config.feature, reason]);
 
-  const startCheckout = async (interval: "monthly" | "annual") => {
+  const startCheckout = async (plan: "starter" | "pro", interval: "monthly" | "annual") => {
     setBillingError("");
-    setBillingLoading(interval);
+    setBillingLoading(`${plan}_${interval}`);
     track("upgrade_compare_clicked", {
       surface,
+      plan,
       planInterval: interval,
       reason: reason || "upgrade_required",
     });
-    track("billing_checkout_started", { interval, source: "compare_card" });
+    track("billing_checkout_started", { interval, source: "compare_card", plan });
     try {
       const res = await fetch("/api/billing/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ interval }),
+        body: JSON.stringify({ plan, interval }),
       });
       const data = await res.json().catch(() => null);
       if (!res.ok || !data?.url) {
@@ -135,54 +139,42 @@ export default function ProCompareCard({
         </p>
       )}
 
-      <div className={`mt-3 grid gap-2 ${compact ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2"}`}>
-        <div className="rounded-lg border border-gray-200 dark:border-slate-600 bg-white/90 dark:bg-slate-800 p-3">
+      <div className={`mt-3 grid gap-2 ${compact ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-3"}`}>
+        {/* Free column */}
+        <div className={`rounded-lg border p-3 ${isFree ? "border-gray-400 dark:border-slate-500 bg-gray-50/80 dark:bg-slate-700/50" : "border-gray-200 dark:border-slate-600 bg-white/90 dark:bg-slate-800"}`}>
           <p className="text-xs font-semibold text-gray-700 dark:text-slate-200">{t("upsellFreeTitle")}</p>
           <ul className="mt-2 space-y-1">
             {config.freeItems.map((item) => (
-              <li key={item} className="text-xs text-gray-600 dark:text-slate-300">
-                - {t(item)}
-              </li>
+              <li key={item} className="text-xs text-gray-600 dark:text-slate-300">- {t(item)}</li>
             ))}
           </ul>
         </div>
-        <div className="rounded-lg border border-emerald-300 dark:border-emerald-500/40 bg-white dark:bg-slate-800 p-3">
-          <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">{t("upsellProTitle")}</p>
+
+        {/* Starter column */}
+        {(!isStarter || !isPro) && (
+          <div className={`rounded-lg border p-3 ${isStarter ? "border-blue-400 dark:border-blue-500/40 bg-blue-50/50 dark:bg-blue-900/20" : "border-blue-300 dark:border-blue-500/30 bg-white dark:bg-slate-800"}`}>
+            <p className="text-xs font-semibold text-blue-700 dark:text-blue-300">{t("upsellStarterTitle")} — €3.99/mo</p>
+            <ul className="mt-2 space-y-1">
+              {config.starterItems.map((item) => (
+                <li key={item} className="text-xs text-gray-700 dark:text-slate-200">- {t(item)}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Pro column */}
+        <div className={`rounded-lg border p-3 ${isPro ? "border-emerald-400 dark:border-emerald-500/40 bg-emerald-50/50 dark:bg-emerald-900/20" : "border-emerald-300 dark:border-emerald-500/40 bg-white dark:bg-slate-800"}`}>
+          <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">{t("upsellProTitle")} — €7.49/mo</p>
           <ul className="mt-2 space-y-1">
             {config.proItems.map((item) => (
-              <li key={item} className="text-xs text-gray-700 dark:text-slate-200">
-                - {t(item)}
-              </li>
+              <li key={item} className="text-xs text-gray-700 dark:text-slate-200">- {t(item)}</li>
             ))}
           </ul>
         </div>
       </div>
 
       <div className={`mt-3 ${compact ? "grid grid-cols-1 gap-2" : "grid grid-cols-1 sm:grid-cols-2 gap-2"}`}>
-        {!isPro ? (
-          atCapacity ? (
-            <p className="text-xs text-center text-red-600 dark:text-red-400 font-medium py-2 col-span-full">
-              {t("proAtCapacity")}
-            </p>
-          ) : (
-            <>
-              <button
-                onClick={() => startCheckout("monthly")}
-                disabled={billingLoading !== ""}
-                className="btn-primary text-sm disabled:opacity-60"
-              >
-                {billingLoading === "monthly" ? t("billingRedirecting") : t("upgradeMonthly")}
-              </button>
-              <button
-                onClick={() => startCheckout("annual")}
-                disabled={billingLoading !== ""}
-                className="btn-secondary text-sm disabled:opacity-60"
-              >
-                {billingLoading === "annual" ? t("billingRedirecting") : t("upgradeAnnual")}
-              </button>
-            </>
-          )
-        ) : (
+        {isPro ? (
           <button
             onClick={openPortal}
             disabled={billingLoading !== ""}
@@ -190,6 +182,49 @@ export default function ProCompareCard({
           >
             {billingLoading === "portal" ? t("billingRedirecting") : t("manageSubscription")}
           </button>
+        ) : atCapacity ? (
+          <p className="text-xs text-center text-red-600 dark:text-red-400 font-medium py-2 col-span-full">
+            {t("proAtCapacity")}
+          </p>
+        ) : (
+          <>
+            {isFree && (
+              <>
+                <button
+                  onClick={() => startCheckout("starter", "monthly")}
+                  disabled={billingLoading !== ""}
+                  className="btn-secondary text-sm disabled:opacity-60"
+                >
+                  {billingLoading === "starter_monthly" ? t("billingRedirecting") : t("upgradeStarterMonthly")}
+                </button>
+                <button
+                  onClick={() => startCheckout("starter", "annual")}
+                  disabled={billingLoading !== ""}
+                  className="btn-secondary text-sm disabled:opacity-60"
+                >
+                  {billingLoading === "starter_annual" ? t("billingRedirecting") : t("upgradeStarterAnnual")}
+                </button>
+              </>
+            )}
+            {upgradeTarget === "pro" || isFree ? (
+              <>
+                <button
+                  onClick={() => startCheckout("pro", "monthly")}
+                  disabled={billingLoading !== ""}
+                  className="btn-primary text-sm disabled:opacity-60"
+                >
+                  {billingLoading === "pro_monthly" ? t("billingRedirecting") : t("upgradeMonthly")}
+                </button>
+                <button
+                  onClick={() => startCheckout("pro", "annual")}
+                  disabled={billingLoading !== ""}
+                  className="btn-primary text-sm disabled:opacity-60"
+                >
+                  {billingLoading === "pro_annual" ? t("billingRedirecting") : t("upgradeAnnual")}
+                </button>
+              </>
+            ) : null}
+          </>
         )}
       </div>
 

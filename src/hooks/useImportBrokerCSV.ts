@@ -13,6 +13,15 @@ const FORMAT_LABELS: Record<BrokerFormat, string> = {
   interactive_brokers: "IBKR",
   trading_212: "Trading 212",
   revolut: "Revolut",
+  charles_schwab: "Charles Schwab",
+  fidelity: "Fidelity",
+  nordnet: "Nordnet",
+  tastytrade: "Tastytrade",
+  freetrade: "Freetrade",
+  etoro: "eToro",
+  wealthsimple: "Wealthsimple",
+  questrade: "Questrade",
+  firstrade: "Firstrade",
   simple: "CSV",
 };
 

@@ -1,9 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useI18n } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useTransactions } from "@/lib/hooks/use-api";
+import { useStealthMode } from "@/lib/stealth-context";
+import { useTrack } from "@/lib/use-track";
+import { calculateFifoRealizedPL } from "@/lib/performance";
+import { formatStealthCurrency } from "@/lib/utils";
 import type { Transaction, TransactionType } from "@/lib/types";
 
 interface Props {
@@ -20,8 +24,20 @@ const TYPE_COLORS: Record<TransactionType, string> = {
 
 export default function TransactionHistory({ holdingId, ticker }: Props) {
   const { t } = useI18n();
-  const { refreshHoldings } = usePortfolio();
+  const { refreshHoldings, exchangeRates } = usePortfolio();
   const { data: txs = [], mutate } = useTransactions(holdingId);
+  const { stealthMode } = useStealthMode();
+  const track = useTrack();
+
+  // Compute FIFO P&L keyed by sell transaction ID
+  const fifoMap = useMemo(() => calculateFifoRealizedPL(txs, exchangeRates), [txs, exchangeRates]);
+  const hasSells = txs.some((tx) => tx.type === "sell");
+
+  // Fire event once when sell rows with P&L are visible
+  useEffect(() => {
+    if (hasSells) track("transaction_pl_viewed");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasSells]);
   const [showForm, setShowForm] = useState(false);
   const [formType, setFormType] = useState<TransactionType>("buy");
   const [formDate, setFormDate] = useState(new Date().toISOString().slice(0, 10));
@@ -140,6 +156,7 @@ export default function TransactionHistory({ holdingId, ticker }: Props) {
                 <th scope="col" className="text-right p-2 font-medium">{t("transactionPrice")}</th>
                 <th scope="col" className="text-right p-2 font-medium">{t("transactionTotal")}</th>
                 <th scope="col" className="text-right p-2 font-medium">{t("transactionFees")}</th>
+                {hasSells && <th scope="col" className="text-right p-2 font-medium">{t("realizedPl")}</th>}
                 <th scope="col" className="p-2"></th>
               </tr>
             </thead>
@@ -157,6 +174,19 @@ export default function TransactionHistory({ holdingId, ticker }: Props) {
                   <td className="p-2 text-right font-mono">{tx.pricePerShare > 0 ? tx.pricePerShare.toFixed(2) : "—"}</td>
                   <td className="p-2 text-right font-mono font-medium text-gray-900 dark:text-white">{tx.totalAmount.toFixed(2)}</td>
                   <td className="p-2 text-right font-mono text-gray-400">{tx.fees > 0 ? tx.fees.toFixed(2) : "—"}</td>
+                  {hasSells && (
+                    <td className={`p-2 text-right font-mono font-medium ${
+                      tx.type === "sell"
+                        ? (fifoMap.get(tx.id)?.realizedGainEUR ?? 0) >= 0
+                          ? "text-emerald-600 dark:text-emerald-400"
+                          : "text-red-500 dark:text-red-400"
+                        : ""
+                    }`}>
+                      {tx.type === "sell" && fifoMap.has(tx.id)
+                        ? formatStealthCurrency(fifoMap.get(tx.id)!.realizedGainEUR, "EUR", stealthMode)
+                        : "—"}
+                    </td>
+                  )}
                   <td className="p-2">
                     <button onClick={() => handleDelete(tx.id)} className="text-red-400 hover:text-red-600 text-[10px]">
                       <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

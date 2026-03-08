@@ -19,6 +19,104 @@ interface PasskeyEntry {
   backedUp: boolean;
 }
 
+function PortfolioShareSection() {
+  const { t } = useI18n();
+  const [share, setShare] = useState<{ token: string; isActive: boolean; showValues: boolean } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/portfolio/share")
+      .then((r) => r.ok ? r.json() : { share: null })
+      .then((d) => { setShare(d.share); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const shareUrl = share?.token
+    ? `${typeof window !== "undefined" ? window.location.origin : ""}/p/${share.token}`
+    : "";
+
+  async function handleGenerate() {
+    setSaving(true);
+    const res = await fetch("/api/portfolio/share", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ showValues: false }) });
+    if (res.ok) {
+      const d = await res.json();
+      setShare({ token: d.token, isActive: true, showValues: false });
+    }
+    setSaving(false);
+  }
+
+  async function handleRevoke() {
+    setSaving(true);
+    await fetch("/api/portfolio/share", { method: "DELETE" });
+    setShare(null);
+    setSaving(false);
+  }
+
+  async function handleCopy() {
+    if (!shareUrl) return;
+    await navigator.clipboard.writeText(shareUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  if (loading) return <div className="text-sm text-gray-400 dark:text-slate-500">{t("loading")}</div>;
+
+  return (
+    <div className="space-y-3">
+      {share?.isActive ? (
+        <>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={shareUrl}
+              readOnly
+              className="flex-1 text-xs bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2 font-mono text-gray-700 dark:text-slate-300 select-all"
+              aria-label={t("shareUrl")}
+            />
+            <button
+              onClick={handleCopy}
+              className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors"
+              aria-label={t("copyLink")}
+            >
+              {copied ? (
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+              ) : (
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+              )}
+            </button>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={handleGenerate}
+              disabled={saving}
+              className="text-xs px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors disabled:opacity-40"
+            >
+              {t("regenerateLink")}
+            </button>
+            <button
+              onClick={handleRevoke}
+              disabled={saving}
+              className="text-xs px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors disabled:opacity-40"
+            >
+              {t("revokeLink")}
+            </button>
+          </div>
+        </>
+      ) : (
+        <button
+          onClick={handleGenerate}
+          disabled={saving}
+          className="px-4 py-2 text-sm rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-medium transition-colors disabled:opacity-40"
+        >
+          {t("generateShareLink")}
+        </button>
+      )}
+    </div>
+  );
+}
+
 export default function ProfilePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -83,7 +181,7 @@ export default function ProfilePage() {
   const emailJustVerified = searchParams.get("emailVerified") === "true";
   const googleJustLinked = searchParams.get("googleLinked") === "true";
   const linkError = searchParams.get("linkError");
-  const needsSync = user && user.plan !== "pro";
+  const needsSync = user && user.plan === "free";
 
   useEffect(() => {
     if (!needsSync) return;
@@ -115,7 +213,7 @@ export default function ProfilePage() {
         await refreshUser();
         const fresh = await fetch("/api/auth/me", { cache: "no-store" });
         const me = await fresh.json().catch(() => null);
-        if (me?.user?.plan === "pro") {
+        if (me?.user?.plan === "pro" || me?.user?.plan === "starter") {
           if (!cancelled) setBillingSync("done");
           return;
         }
@@ -444,6 +542,8 @@ export default function ProfilePage() {
     .toUpperCase()
     .slice(0, 2);
   const isPro = user?.plan === "pro";
+  const isStarter = user?.plan === "starter";
+  const isPaid = isPro || isStarter;
   const deviceProEligible = user?.deviceProEligible ?? false;
 
   const handleActivateDeviceGrant = useCallback(async () => {
@@ -767,22 +867,26 @@ export default function ProfilePage() {
           <div className="rounded-xl border border-gray-200 dark:border-slate-600 p-4 bg-gray-50 dark:bg-slate-800/40">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium text-gray-900 dark:text-white">
-                {isPro ? t("planPro") : t("planFree")}
+                {isPro ? t("planPro") : isStarter ? t("planStarter") : t("planFree")}
               </p>
               <span className={`text-xs px-2 py-1 rounded-full ${
                 isPro
                   ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"
-                  : "bg-gray-200 text-gray-700 dark:bg-slate-700 dark:text-slate-200"
+                  : isStarter
+                    ? "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300"
+                    : "bg-gray-200 text-gray-700 dark:bg-slate-700 dark:text-slate-200"
               }`}>
-                {isPro ? t("proBadge") : t("freeBadge")}
+                {isPro ? t("proBadge") : isStarter ? t("starterBadge") : t("freeBadge")}
               </span>
             </div>
           </div>
-          <ProCompareCard
-            surface="profile_always_on"
-            reason={isPro ? undefined : "upgrade_required"}
-            aiUsage={isPro ? undefined : { used: user?.aiCallsThisMonth ?? 0, limit: aiLimit }}
-          />
+          {!isPro && (
+            <ProCompareCard
+              surface="profile_always_on"
+              reason={isPaid ? undefined : "upgrade_required"}
+              aiUsage={isPro ? undefined : { used: user?.aiCallsThisMonth ?? 0, limit: aiLimit }}
+            />
+          )}
         </div>
 
         {/* Change Password -- hidden for Google-only accounts */}
@@ -1091,6 +1195,20 @@ export default function ProfilePage() {
             <p className="text-xs text-gray-500 dark:text-slate-400">
               Theme change takes effect on your device within 5 minutes.
             </p>
+          </div>
+        )}
+
+        {/* Portfolio Sharing */}
+        {isPaid ? (
+          <div className="card p-6 space-y-4">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t("portfolioSharing")}</h2>
+            <p className="text-sm text-gray-500 dark:text-slate-400">{t("portfolioSharingDesc")}</p>
+            <PortfolioShareSection />
+          </div>
+        ) : (
+          <div className="card p-6 space-y-2">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t("portfolioSharing")}</h2>
+            <ProCompareCard surface="portfolio_history_locked" reason="upgrade_required" compact />
           </div>
         )}
 

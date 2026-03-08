@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PM Analysis: Snowball Analytics Feature Parity</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --surface2: #263349;
+    --border: #334155;
+    --text: #f1f5f9;
+    --muted: #94a3b8;
+    --green: #10b981;
+    --green-dim: #064e3b;
+    --amber: #f59e0b;
+    --amber-dim: #451a03;
+    --red: #ef4444;
+    --red-dim: #450a0a;
+    --blue: #3b82f6;
+    --blue-dim: #1e3a5f;
+    --purple: #a855f7;
+    --purple-dim: #3b0764;
+    --mono: 'Space Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+  }
+
+  header {
+    background: linear-gradient(135deg, #0f172a 0%, #1a2744 50%, #0f172a 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 32px 48px;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 260px; height: 260px;
+    background: radial-gradient(circle, rgba(16,185,129,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header-badge {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--green);
+    background: var(--green-dim);
+    border: 1px solid rgba(16,185,129,0.3);
+    padding: 4px 12px;
+    border-radius: 99px;
+    display: inline-block;
+    margin-bottom: 12px;
+    letter-spacing: 0.08em;
+  }
+  h1 {
+    font-family: var(--mono);
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+  .header-sub {
+    color: var(--muted);
+    font-size: 15px;
+    max-width: 640px;
+  }
+
+  nav {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 48px;
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+  }
+  .nav-tab {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    padding: 14px 20px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .nav-tab:hover { color: var(--text); }
+  .nav-tab.active { color: var(--green); border-bottom-color: var(--green); }
+
+  main {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 40px 48px;
+  }
+
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* OVERVIEW */
+  .decision-box {
+    background: linear-gradient(135deg, #064e3b 0%, #065f46 100%);
+    border: 1px solid rgba(16,185,129,0.4);
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin-bottom: 32px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .decision-icon { font-size: 36px; }
+  .decision-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--green);
+    letter-spacing: 0.12em;
+    margin-bottom: 6px;
+  }
+  .decision-text { font-size: 22px; font-weight: 700; }
+  .decision-sub { color: #a7f3d0; font-size: 14px; margin-top: 4px; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+  }
+  .card-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 14px;
+    text-transform: uppercase;
+  }
+
+  ul.reasons { list-style: none; }
+  ul.reasons li {
+    padding: 7px 0;
+    font-size: 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    line-height: 1.5;
+  }
+  ul.reasons li:last-child { border: none; }
+  ul.reasons li .dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px;
+  }
+  .dot-green { background: var(--green); }
+  .dot-amber { background: var(--amber); }
+  .dot-blue { background: var(--blue); }
+  .dot-red { background: var(--red); }
+
+  /* FEATURE GAP TABLE */
+  .gap-table { width: 100%; border-collapse: collapse; margin-bottom: 32px; }
+  .gap-table th {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    padding: 10px 16px;
+    text-align: left;
+    border-bottom: 2px solid var(--border);
+    background: var(--surface2);
+  }
+  .gap-table td {
+    padding: 12px 16px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .gap-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .tag {
+    font-size: 11px; font-weight: 600;
+    padding: 3px 9px; border-radius: 99px;
+    font-family: var(--mono);
+    white-space: nowrap;
+  }
+  .tag-exists { background: var(--green-dim); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.3); }
+  .tag-partial { background: var(--amber-dim); color: #fcd34d; border: 1px solid rgba(245,158,11,0.3); }
+  .tag-missing { background: var(--red-dim); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); }
+  .tag-pro { background: var(--purple-dim); color: #d8b4fe; border: 1px solid rgba(168,85,247,0.3); }
+  .priority-high { color: var(--red); font-weight: 700; font-family: var(--mono); font-size: 12px; }
+  .priority-med { color: var(--amber); font-weight: 600; font-family: var(--mono); font-size: 12px; }
+  .priority-low { color: var(--muted); font-family: var(--mono); font-size: 12px; }
+  .priority-none { color: var(--border); font-family: var(--mono); font-size: 12px; }
+
+  /* METRICS */
+  .metric-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    text-align: center;
+  }
+  .metric-value { font-size: 36px; font-weight: 700; font-family: var(--mono); }
+  .metric-label { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .metric-change { font-size: 12px; margin-top: 4px; }
+
+  /* ROADMAP */
+  .phase {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .phase-header {
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    user-select: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .phase-header:hover { background: rgba(255,255,255,0.02); }
+  .phase-num {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 700;
+    background: var(--green-dim);
+    color: var(--green);
+    border: 1px solid rgba(16,185,129,0.3);
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .phase-num.amber { background: var(--amber-dim); color: var(--amber); border-color: rgba(245,158,11,0.3); }
+  .phase-num.blue { background: var(--blue-dim); color: var(--blue); border-color: rgba(59,130,246,0.3); }
+  .phase-title { font-size: 16px; font-weight: 600; flex: 1; }
+  .phase-timeline { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .phase-body { padding: 20px 24px; }
+  .feature-item {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .feature-item:last-child { border: none; }
+  .fi-icon { font-size: 18px; flex-shrink: 0; }
+  .fi-name { font-weight: 600; margin-bottom: 2px; }
+  .fi-desc { color: var(--muted); font-size: 12px; }
+  .fi-tags { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+
+  /* MOCKUP */
+  .mockup-frame {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .mockup-toolbar {
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .mock-tabs {
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px;
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+  }
+  .mock-tab {
+    font-size: 12px; font-weight: 500;
+    padding: 10px 16px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    color: var(--muted);
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .mock-tab:hover { color: var(--text); }
+  .mock-tab.active { color: var(--green); border-bottom-color: var(--green); }
+
+  .mockup-content { padding: 24px; }
+
+  /* inner mockup panels */
+  .mock-stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .mock-stat {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .mock-stat-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+  .mock-stat-value { font-size: 20px; font-weight: 700; font-family: var(--mono); }
+  .mock-stat-sub { font-size: 11px; margin-top: 2px; }
+
+  .mock-chart-area {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+  .mock-chart-title { font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 12px; }
+
+  /* animated chart bars */
+  .chart-bars { display: flex; align-items: flex-end; gap: 4px; height: 80px; }
+  .bar {
+    flex: 1;
+    background: var(--green);
+    border-radius: 3px 3px 0 0;
+    opacity: 0.7;
+    transition: opacity 0.15s;
+  }
+  .bar:hover { opacity: 1; }
+  .bar.neg { background: var(--red); }
+
+  /* sparkline */
+  .sparkline-row { display: flex; gap: 12px; }
+  .sparkline-card {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+  }
+  .sparkline-name { font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+  .sparkline-pct { font-family: var(--mono); font-size: 14px; font-weight: 700; }
+  .sparkline-pct.pos { color: var(--green); }
+  .sparkline-pct.neg { color: var(--red); }
+  canvas.sparkline { display: block; margin-top: 8px; }
+
+  /* donut */
+  .donut-wrapper { display: flex; align-items: center; gap: 20px; }
+  .donut-legend { flex: 1; }
+  .legend-item {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; padding: 4px 0;
+  }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+  /* table */
+  .mock-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .mock-table th {
+    font-size: 10px; font-family: var(--mono); letter-spacing: 0.08em; color: var(--muted);
+    padding: 6px 10px; text-align: left; border-bottom: 1px solid var(--border);
+  }
+  .mock-table td { padding: 8px 10px; border-bottom: 1px solid rgba(51,65,85,0.5); }
+  .mock-table tr:last-child td { border: none; }
+
+  /* Income mockup */
+  .income-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .income-month-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .imb-label { font-size: 11px; color: var(--muted); width: 28px; }
+  .imb-bar-wrap { flex: 1; background: rgba(51,65,85,0.5); border-radius: 3px; height: 14px; }
+  .imb-bar { background: var(--green); height: 14px; border-radius: 3px; transition: width 0.4s ease; }
+  .imb-val { font-size: 11px; font-family: var(--mono); color: var(--text); width: 48px; text-align: right; }
+
+  /* Section headers */
+  h2 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+  .section-desc { color: var(--muted); font-size: 14px; margin-bottom: 28px; line-height: 1.5; }
+
+  /* Score bar */
+  .score-row { margin-bottom: 14px; }
+  .score-label { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px; }
+  .score-pct { font-family: var(--mono); font-weight: 700; }
+  .score-track {
+    background: var(--border);
+    border-radius: 99px;
+    height: 8px;
+    overflow: hidden;
+  }
+  .score-fill { height: 8px; border-radius: 99px; transition: width 0.8s ease; }
+  .fill-green { background: var(--green); }
+  .fill-amber { background: var(--amber); }
+  .fill-blue { background: var(--blue); }
+  .fill-red { background: var(--red); }
+
+  /* Effort/value matrix */
+  .matrix-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 2px;
+    border-radius: 12px;
+    overflow: hidden;
+    height: 280px;
+  }
+  .quadrant {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    position: relative;
+    overflow: hidden;
+  }
+  .q1 { background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.15); }
+  .q2 { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.15); }
+  .q3 { background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.15); }
+  .q4 { background: rgba(100,116,139,0.08); border: 1px solid rgba(51,65,85,0.3); }
+  .q-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; margin-bottom: 6px; }
+  .q-item {
+    font-size: 11px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 6px;
+    padding: 4px 8px;
+    line-height: 1.4;
+  }
+  .matrix-axis-x {
+    text-align: center;
+    font-size: 11px; color: var(--muted); margin-top: 8px;
+    font-family: var(--mono); letter-spacing: 0.08em;
+  }
+  .matrix-axis-y-wrap { display: flex; align-items: center; gap: 16px; }
+  .matrix-axis-y {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+    font-size: 11px; color: var(--muted);
+    font-family: var(--mono); letter-spacing: 0.08em;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 768px) {
+    main { padding: 24px 16px; }
+    header { padding: 24px 16px; }
+    nav { padding: 0 16px; }
+    .grid2, .grid3, .mock-stats-row, .income-grid { grid-template-columns: 1fr; }
+    h1 { font-size: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-badge">PM ANALYSIS — Mar 8, 2026</div>
+  <h1>Snowball Analytics → trefolio<br>Feature Gap Analysis</h1>
+  <p class="header-sub">Evaluating which Snowball Analytics capabilities trefolio should adopt, prioritized by user value, implementation effort, and tier impact.</p>
+</header>
+
+<nav>
+  <div class="nav-tab active" onclick="switchTab('overview')">Overview</div>
+  <div class="nav-tab" onclick="switchTab('gaps')">Feature Gaps</div>
+  <div class="nav-tab" onclick="switchTab('roadmap')">Roadmap</div>
+  <div class="nav-tab" onclick="switchTab('mockup')">Mockup</div>
+  <div class="nav-tab" onclick="switchTab('metrics')">Success Metrics</div>
+</nav>
+
+<main>
+
+<!-- OVERVIEW -->
+<div class="section active" id="section-overview">
+  <div class="decision-box">
+    <div class="decision-icon">✅</div>
+    <div>
+      <div class="decision-label">RECOMMENDATION</div>
+      <div class="decision-text">Proceed — 6 high-value gaps, phased over 3 sprints</div>
+      <div class="decision-sub">Snowball's portfolio has strong analysis depth. trefolio matches most of it, but 6 gaps meaningfully impact retention and Pro conversion.</div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">Why Proceed</div>
+      <ul class="reasons">
+        <li><span class="dot dot-green"></span><strong>Diversification tab</strong> — Snowball's sector/region breakdown in a dedicated tab is richer than trefolio's tools-buried taxonomy view. Primary users (5–50 holdings) want this front-and-center.</li>
+        <li><span class="dot dot-green"></span><strong>Portfolio metrics tab</strong> — Snowball shows TTWROR, Max Drawdown, Sharpe Ratio, Volatility in one screen. trefolio has TTWROR/IRR but buries them in Tools.</li>
+        <li><span class="dot dot-green"></span><strong>Income tab</strong> — Snowball has a dedicated income view (monthly bars, dividend income vs. capital gains). trefolio's dividend summary is comparable but not surfaced as a first-class tab.</li>
+        <li><span class="dot dot-blue"></span><strong>Public portfolio sharing</strong> — Snowball's entire brand revolves around shareable portfolios. This is a viral growth lever trefolio doesn't have.</li>
+        <li><span class="dot dot-blue"></span><strong>Ex-dividend calendar</strong> — Missing in trefolio. Dividend investors rely on this heavily.</li>
+        <li><span class="dot dot-amber"></span><strong>Stealth mode</strong> — Snowball lets users hide money values for screenshots/screencasts. Low effort, high shareability.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">Out of Scope / De-prioritized</div>
+      <ul class="reasons">
+        <li><span class="dot dot-red"></span><strong>SnapTrade broker sync</strong> — Adds a third-party data processor (legal review required); trefolio already covers DEGIRO, IBKR, T212, Revolut. Not worth compliance overhead now.</li>
+        <li><span class="dot dot-red"></span><strong>Community / social feed</strong> — Snowball has a public portfolio list with social following. Building a social graph is a 6–12 month undertaking; defer to roadmap post-v2.</li>
+        <li><span class="dot dot-red"></span><strong>EODHD data integration</strong> — Snowball uses EODHD for fundamentals. trefolio uses Alpha Vantage (Pro). Adding another data provider creates maintenance cost without net-new user value.</li>
+        <li><span class="dot dot-amber"></span><strong>Growth tab (portfolio history chart)</strong> — trefolio has benchmark chart and projections. Full historical growth line requires storing daily NAV snapshots; non-trivial schema change. Phase 2.</li>
+        <li><span class="dot dot-amber"></span><strong>Transaction-level P&L per holding</strong> — Snowball's Transactions tab shows "total profit" per transaction row. trefolio shows aggregate P&L. Nice-to-have, Phase 3.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="grid3">
+    <div class="card">
+      <div class="card-title">Tier Fit</div>
+      <ul class="reasons">
+        <li><span class="dot dot-green"></span><strong>Free:</strong> Diversification tab, Metrics tab, Stealth mode, Ex-dividend calendar</li>
+        <li><span class="dot dot-purple" style="background:var(--purple)"></span><strong>Pro:</strong> Public portfolio sharing (viral + Pro paywall), Portfolio history (daily NAV), Transaction P&L detail</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">Primary Segment Fit</div>
+      <ul class="reasons">
+        <li><span class="dot dot-green"></span>Beginner–intermediate retail investor (5–50 holdings) ✓</li>
+        <li><span class="dot dot-green"></span>Dividend-focused European investors ✓</li>
+        <li><span class="dot dot-green"></span>Expats managing multi-currency portfolios ✓</li>
+        <li><span class="dot dot-blue"></span>Social/community investors — currently secondary</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">Coverage by Category</div>
+      <div style="margin-top:4px">
+        <div class="score-row">
+          <div class="score-label"><span>Portfolio Summary</span><span class="score-pct" style="color:var(--green)">95%</span></div>
+          <div class="score-track"><div class="score-fill fill-green" style="width:95%"></div></div>
+        </div>
+        <div class="score-row">
+          <div class="score-label"><span>Diversification</span><span class="score-pct" style="color:var(--amber)">55%</span></div>
+          <div class="score-track"><div class="score-fill fill-amber" style="width:55%"></div></div>
+        </div>
+        <div class="score-row">
+          <div class="score-label"><span>Dividends / Income</span><span class="score-pct" style="color:var(--amber)">70%</span></div>
+          <div class="score-track"><div class="score-fill fill-amber" style="width:70%"></div></div>
+        </div>
+        <div class="score-row">
+          <div class="score-label"><span>Metrics / Risk</span><span class="score-pct" style="color:var(--red)">45%</span></div>
+          <div class="score-track"><div class="score-fill fill-red" style="width:45%"></div></div>
+        </div>
+        <div class="score-row">
+          <div class="score-label"><span>Transactions</span><span class="score-pct" style="color:var(--green)">85%</span></div>
+          <div class="score-track"><div class="score-fill fill-green" style="width:85%"></div></div>
+        </div>
+        <div class="score-row">
+          <div class="score-label"><span>Growth History</span><span class="score-pct" style="color:var(--red)">30%</span></div>
+          <div class="score-track"><div class="score-fill fill-red" style="width:30%"></div></div>
+        </div>
+        <div class="score-row">
+          <div class="score-label"><span>Social / Sharing</span><span class="score-pct" style="color:var(--red)">0%</span></div>
+          <div class="score-track"><div class="score-fill fill-red" style="width:0%"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURE GAPS -->
+<div class="section" id="section-gaps">
+  <h2>Feature Gap Matrix</h2>
+  <p class="section-desc">Every Snowball Analytics feature vs. trefolio's current state, with priority and recommended tier assignment.</p>
+
+  <table class="gap-table">
+    <thead>
+      <tr>
+        <th>Snowball Feature</th>
+        <th>trefolio State</th>
+        <th>Status</th>
+        <th>Priority</th>
+        <th>Tier</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Common tab</strong> — portfolio summary, total value, total return %, day change</td>
+        <td>Dashboard → Portfolio tab</td>
+        <td><span class="tag tag-exists">EXISTS</span></td>
+        <td class="priority-none">—</td>
+        <td><span class="tag tag-exists">Free</span></td>
+        <td style="color:var(--muted)">Fully covered by PortfolioSummary component</td>
+      </tr>
+      <tr>
+        <td><strong>Diversification tab</strong> — sector, region, asset class donut charts</td>
+        <td>Tools → Taxonomy</td>
+        <td><span class="tag tag-partial">PARTIAL</span></td>
+        <td class="priority-high">HIGH</td>
+        <td><span class="tag tag-exists">Free</span></td>
+        <td style="color:var(--muted)">Feature exists but buried in Tools. Needs promotion to main dashboard tabs.</td>
+      </tr>
+      <tr>
+        <td><strong>Metrics tab</strong> — TTWROR, Max Drawdown, Sharpe Ratio, Volatility, Beta</td>
+        <td>Tools → Performance (TTWROR, IRR only)</td>
+        <td><span class="tag tag-partial">PARTIAL</span></td>
+        <td class="priority-high">HIGH</td>
+        <td><span class="tag tag-pro">Pro</span></td>
+        <td style="color:var(--muted)">Add Sharpe, Max Drawdown, Beta, Volatility. Surface in a dashboard Metrics tab.</td>
+      </tr>
+      <tr>
+        <td><strong>Dividends tab</strong> — income breakdown, yield, dividend calendar</td>
+        <td>Tools → Dividends</td>
+        <td><span class="tag tag-partial">PARTIAL</span></td>
+        <td class="priority-high">HIGH</td>
+        <td><span class="tag tag-exists">Free</span></td>
+        <td style="color:var(--muted)">Promote DividendSummary to a first-class dashboard tab; add ex-dividend calendar.</td>
+      </tr>
+      <tr>
+        <td><strong>Income tab</strong> — monthly income bars, dividends vs. capital gains split</td>
+        <td>Partial in DividendSummary</td>
+        <td><span class="tag tag-partial">PARTIAL</span></td>
+        <td class="priority-high">HIGH</td>
+        <td><span class="tag tag-exists">Free</span></td>
+        <td style="color:var(--muted)">Add capital gains breakdown. Monthly income bar chart already exists in DividendSummary.</td>
+      </tr>
+      <tr>
+        <td><strong>Growth tab</strong> — portfolio value history chart over time</td>
+        <td>PortfolioBenchmarkChart (vs index, not absolute value)</td>
+        <td><span class="tag tag-partial">PARTIAL</span></td>
+        <td class="priority-med">MED</td>
+        <td><span class="tag tag-pro">Pro</span></td>
+        <td style="color:var(--muted)">Requires daily NAV snapshot storage. Schema migration needed. Phase 2.</td>
+      </tr>
+      <tr>
+        <td><strong>Transactions tab</strong> — buy/sell/dividend history with profit per row</td>
+        <td>Tools → Transactions (no per-row profit)</td>
+        <td><span class="tag tag-partial">PARTIAL</span></td>
+        <td class="priority-med">MED</td>
+        <td><span class="tag tag-exists">Free</span></td>
+        <td style="color:var(--muted)">Add realized P&L column to transaction table. FIFO calculation needed.</td>
+      </tr>
+      <tr>
+        <td><strong>Ex-dividend calendar</strong> — upcoming ex-div dates for holdings</td>
+        <td>Not present</td>
+        <td><span class="tag tag-missing">MISSING</span></td>
+        <td class="priority-high">HIGH</td>
+        <td><span class="tag tag-exists">Free</span></td>
+        <td style="color:var(--muted)">High value for dividend investors. Requires ex-div date data from Alpha Vantage.</td>
+      </tr>
+      <tr>
+        <td><strong>Stealth mode</strong> — hide all monetary values toggle</td>
+        <td>Not present</td>
+        <td><span class="tag tag-missing">MISSING</span></td>
+        <td class="priority-high">HIGH</td>
+        <td><span class="tag tag-exists">Free</span></td>
+        <td style="color:var(--muted)">Very low effort (CSS + context). High shareability impact.</td>
+      </tr>
+      <tr>
+        <td><strong>Public portfolio sharing</strong> — shareable link with read-only view</td>
+        <td>Not present</td>
+        <td><span class="tag tag-missing">MISSING</span></td>
+        <td class="priority-med">MED</td>
+        <td><span class="tag tag-pro">Pro</span></td>
+        <td style="color:var(--muted)">Viral growth lever. Requires public read-only route + token-based access control.</td>
+      </tr>
+      <tr>
+        <td><strong>Community / public portfolio list</strong> — browse other portfolios</td>
+        <td>Not present</td>
+        <td><span class="tag tag-missing">MISSING</span></td>
+        <td class="priority-low">LOW</td>
+        <td><span class="tag tag-pro">Pro</span></td>
+        <td style="color:var(--muted)">Snowball's core community feature. Large scope. Defer post-v2.</td>
+      </tr>
+      <tr>
+        <td><strong>USD / multi-currency display toggle</strong> — switch display currency</td>
+        <td>Holdings shown in native + EUR; no user-toggled display currency</td>
+        <td><span class="tag tag-partial">PARTIAL</span></td>
+        <td class="priority-low">LOW</td>
+        <td><span class="tag tag-exists">Free</span></td>
+        <td style="color:var(--muted)">Multi-currency support exists. Global display currency toggle is a UX polish item.</td>
+      </tr>
+      <tr>
+        <td><strong>Broker sync via SnapTrade</strong> — direct broker API connections</td>
+        <td>IBKR Flex API (Pro); DEGIRO/T212/Revolut CSV</td>
+        <td><span class="tag tag-partial">PARTIAL</span></td>
+        <td class="priority-low">LOW</td>
+        <td><span class="tag tag-pro">Pro</span></td>
+        <td style="color:var(--muted)">SnapTrade adds 3rd-party data processor. Legal review required. Defer.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- effort/value matrix -->
+  <h2 style="margin-bottom:16px">Effort × Value Matrix</h2>
+  <div class="matrix-axis-y-wrap">
+    <div class="matrix-axis-y">↑ USER VALUE</div>
+    <div style="flex:1">
+      <div class="matrix-grid">
+        <div class="quadrant q1">
+          <div class="q-label" style="color:var(--green)">HIGH VALUE · LOW EFFORT — DO FIRST</div>
+          <div class="q-item">🎭 Stealth mode toggle</div>
+          <div class="q-item">📊 Diversification tab (promote from Tools)</div>
+          <div class="q-item">💰 Dividends tab (promote from Tools)</div>
+          <div class="q-item">📅 Ex-dividend calendar</div>
+        </div>
+        <div class="quadrant q2">
+          <div class="q-label" style="color:var(--amber)">HIGH VALUE · HIGH EFFORT — PLAN CAREFULLY</div>
+          <div class="q-item">📈 Portfolio history (Growth tab + daily NAV)</div>
+          <div class="q-item">📐 Metrics tab (Sharpe, Drawdown, Beta)</div>
+          <div class="q-item">🔗 Public portfolio sharing</div>
+        </div>
+        <div class="quadrant q3">
+          <div class="q-label" style="color:var(--blue)">LOW VALUE · LOW EFFORT — FILL IN GAPS</div>
+          <div class="q-item">💱 Display currency toggle</div>
+          <div class="q-item">🧾 Transaction P&L per row (FIFO)</div>
+        </div>
+        <div class="quadrant q4">
+          <div class="q-label" style="color:var(--muted)">LOW VALUE · HIGH EFFORT — DEFER</div>
+          <div class="q-item">👥 Community / social feed</div>
+          <div class="q-item">🔌 SnapTrade broker sync</div>
+        </div>
+      </div>
+      <div class="matrix-axis-x">EFFORT →</div>
+    </div>
+  </div>
+</div>
+
+<!-- ROADMAP -->
+<div class="section" id="section-roadmap">
+  <h2>Implementation Roadmap</h2>
+  <p class="section-desc">Three phases ordered by user impact and implementation dependency. Each phase is independently shippable.</p>
+
+  <div class="phase">
+    <div class="phase-header" onclick="togglePhase(this)">
+      <div class="phase-num">1</div>
+      <div>
+        <div class="phase-title">Dashboard Navigation Restructure + Stealth Mode</div>
+        <div style="color:var(--muted);font-size:13px">Promote hidden features to first-class tabs; add viral sharing hook</div>
+      </div>
+      <div class="phase-timeline">~1 SPRINT · FREE TIER</div>
+      <div style="color:var(--muted);font-size:18px;margin-left:auto">▾</div>
+    </div>
+    <div class="phase-body">
+      <div class="feature-item">
+        <div class="fi-icon">📊</div>
+        <div>
+          <div class="fi-name">Diversification tab in main dashboard nav</div>
+          <div class="fi-desc">Move TaxonomyView (sector/region/asset class donuts + rebalancing) from Tools into a prominent "Diversification" tab on the main dashboard. Tab should be first-class alongside Portfolio, News.</div>
+          <div class="fi-tags">
+            <span class="tag tag-exists">Free</span>
+            <span class="tag" style="background:var(--blue-dim);color:#93c5fd;border-color:rgba(59,130,246,0.3)">Low effort</span>
+          </div>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="fi-icon">💰</div>
+        <div>
+          <div class="fi-name">Dividends/Income tab in main dashboard nav</div>
+          <div class="fi-desc">Promote DividendSummary to a "Dividends" tab. Add Income sub-view: monthly income bar chart split by dividends received vs. net capital gains (realized P&L from sell transactions).</div>
+          <div class="fi-tags">
+            <span class="tag tag-exists">Free</span>
+            <span class="tag" style="background:var(--blue-dim);color:#93c5fd;border-color:rgba(59,130,246,0.3)">Low effort</span>
+          </div>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="fi-icon">📅</div>
+        <div>
+          <div class="fi-name">Ex-dividend calendar</div>
+          <div class="fi-desc">For each holding in the portfolio, fetch upcoming ex-dividend dates from Alpha Vantage. Display in a calendar/list view in the Dividends tab. Shows ticker, amount, ex-date, pay date. Replaces the current "upcoming" placeholder.</div>
+          <div class="fi-tags">
+            <span class="tag tag-exists">Free</span>
+            <span class="tag" style="background:var(--amber-dim);color:#fcd34d;border-color:rgba(245,158,11,0.3)">Med effort</span>
+          </div>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="fi-icon">🎭</div>
+        <div>
+          <div class="fi-name">Stealth mode toggle</div>
+          <div class="fi-desc">Global toggle (accessible from nav bar) that replaces all monetary values with "•••••" using a React context. Persisted to localStorage. Shows a banner while active. Highly shareable screenshots = organic growth.</div>
+          <div class="fi-tags">
+            <span class="tag tag-exists">Free</span>
+            <span class="tag" style="background:var(--blue-dim);color:#93c5fd;border-color:rgba(59,130,246,0.3)">Low effort</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="phase-header" onclick="togglePhase(this)">
+      <div class="phase-num amber">2</div>
+      <div>
+        <div class="phase-title">Advanced Metrics Tab + Portfolio History</div>
+        <div style="color:var(--muted);font-size:13px">Close the risk analytics gap; add daily NAV tracking for growth chart</div>
+      </div>
+      <div class="phase-timeline">~2 SPRINTS · PRO TIER</div>
+      <div style="color:var(--muted);font-size:18px;margin-left:auto">▾</div>
+    </div>
+    <div class="phase-body">
+      <div class="feature-item">
+        <div class="fi-icon">📐</div>
+        <div>
+          <div class="fi-name">Metrics tab — Sharpe Ratio, Max Drawdown, Volatility, Beta</div>
+          <div class="fi-desc">New "Metrics" dashboard tab. Expands on existing TTWROR/IRR (Tools → Performance) with: Sharpe Ratio (requires risk-free rate, e.g. ECB rate), Max Drawdown from peak, Annualized Volatility (std dev of daily returns), Beta vs benchmark. All calculated client-side from transaction + price history data. Gate behind Pro.</div>
+          <div class="fi-tags">
+            <span class="tag tag-pro">Pro</span>
+            <span class="tag" style="background:var(--amber-dim);color:#fcd34d;border-color:rgba(245,158,11,0.3)">Med effort</span>
+          </div>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="fi-icon">📈</div>
+        <div>
+          <div class="fi-name">Portfolio history / Growth chart (daily NAV snapshot)</div>
+          <div class="fi-desc">Store a daily snapshot of portfolio total value in a new portfolio_snapshots table. Display as an absolute value area chart in a "Growth" tab. Time range selector (1M, 3M, 6M, 1Y, All). Requires a cron job or on-login trigger to record NAV. Pro feature — longer history window (Free: 30 days, Pro: unlimited).</div>
+          <div class="fi-tags">
+            <span class="tag tag-pro">Pro</span>
+            <span class="tag" style="background:var(--red-dim);color:#fca5a5;border-color:rgba(239,68,68,0.3)">High effort</span>
+            <span class="tag" style="background:var(--blue-dim);color:#93c5fd;border-color:rgba(59,130,246,0.3)">Schema migration</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="phase-header" onclick="togglePhase(this)">
+      <div class="phase-num blue">3</div>
+      <div>
+        <div class="phase-title">Public Portfolio Sharing + Transaction P&L</div>
+        <div style="color:var(--muted);font-size:13px">Viral growth lever + transaction detail parity</div>
+      </div>
+      <div class="phase-timeline">~2 SPRINTS · PRO TIER</div>
+      <div style="color:var(--muted);font-size:18px;margin-left:auto">▾</div>
+    </div>
+    <div class="phase-body">
+      <div class="feature-item">
+        <div class="fi-icon">🔗</div>
+        <div>
+          <div class="fi-name">Public portfolio sharing</div>
+          <div class="fi-desc">Pro users can generate a public share link (/p/[token]) that renders a read-only version of their portfolio with configurable privacy (show/hide values, exclude specific holdings). Stealth mode defaults to on for shared portfolios. This is trefolio's equivalent of Snowball's entire public portfolio feature — a top Pro upgrade incentive.</div>
+          <div class="fi-tags">
+            <span class="tag tag-pro">Pro</span>
+            <span class="tag" style="background:var(--red-dim);color:#fca5a5;border-color:rgba(239,68,68,0.3)">High effort</span>
+          </div>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="fi-icon">🧾</div>
+        <div>
+          <div class="fi-name">Transaction-level realized P&L (FIFO)</div>
+          <div class="fi-desc">Add a "Total profit" column to the transaction table showing realized gain/loss per sell transaction using FIFO lot matching. Calculated on-the-fly from transaction history. Improves tax reporting use case.</div>
+          <div class="fi-tags">
+            <span class="tag tag-exists">Free</span>
+            <span class="tag" style="background:var(--amber-dim);color:#fcd34d;border-color:rgba(245,158,11,0.3)">Med effort</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MOCKUP -->
+<div class="section" id="section-mockup">
+  <h2>Redesigned Dashboard — Mockup</h2>
+  <p class="section-desc">How the main dashboard looks after Phase 1: new "Diversification" and "Dividends" tabs, plus stealth mode toggle in the nav. Click tabs to explore each view.</p>
+
+  <div class="mockup-frame">
+    <div class="mockup-toolbar">
+      <div style="display:flex;gap:6px">
+        <div style="width:12px;height:12px;border-radius:50%;background:#ef4444"></div>
+        <div style="width:12px;height:12px;border-radius:50%;background:#f59e0b"></div>
+        <div style="width:12px;height:12px;border-radius:50%;background:#10b981"></div>
+      </div>
+      <div style="flex:1;background:var(--surface2);border-radius:6px;padding:4px 12px;font-size:11px;color:var(--muted);font-family:var(--mono)">trefolio.app/dashboard</div>
+      <button onclick="toggleStealth()" id="stealth-btn" style="font-size:11px;padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-family:var(--mono);cursor:pointer">🎭 STEALTH: OFF</button>
+    </div>
+
+    <div class="mock-tabs">
+      <div class="mock-tab active" onclick="switchMockTab('portfolio')">Portfolio</div>
+      <div class="mock-tab" onclick="switchMockTab('diversification')">Diversification ✨</div>
+      <div class="mock-tab" onclick="switchMockTab('dividends')">Dividends ✨</div>
+      <div class="mock-tab" onclick="switchMockTab('metrics')">Metrics ✨</div>
+      <div class="mock-tab" onclick="switchMockTab('growth')">Growth</div>
+      <div class="mock-tab" onclick="switchMockTab('news')">News</div>
+    </div>
+
+    <div class="mockup-content">
+
+      <!-- Portfolio -->
+      <div class="mock-panel" id="mock-portfolio">
+        <div class="mock-stats-row">
+          <div class="mock-stat">
+            <div class="mock-stat-label">Portfolio Value</div>
+            <div class="mock-stat-value money">€24,831</div>
+            <div class="mock-stat-sub" style="color:var(--green)">money-pct">▲ €+312 today (+1.27%)</div>
+          </div>
+          <div class="mock-stat">
+            <div class="mock-stat-label">Total Gain</div>
+            <div class="mock-stat-value money" style="color:var(--green)">+€4,231</div>
+            <div class="mock-stat-sub money-pct" style="color:var(--green)">+20.5% all time</div>
+          </div>
+          <div class="mock-stat">
+            <div class="mock-stat-label">Invested</div>
+            <div class="mock-stat-value money">€20,600</div>
+            <div class="mock-stat-sub" style="color:var(--muted)">Cost basis</div>
+          </div>
+          <div class="mock-stat">
+            <div class="mock-stat-label">Annual Dividend</div>
+            <div class="mock-stat-value money">€842</div>
+            <div class="mock-stat-sub" style="color:var(--green)">money-pct">3.39% yield</div>
+          </div>
+        </div>
+        <table class="mock-table">
+          <thead>
+            <tr><th>TICKER</th><th>NAME</th><th>SHARES</th><th>PRICE</th><th>VALUE</th><th>GAIN %</th><th>WEIGHT</th></tr>
+          </thead>
+          <tbody>
+            <tr><td style="font-family:var(--mono);font-weight:700">MSFT</td><td>Microsoft</td><td>15</td><td class="money">$415.32</td><td class="money">€5,742</td><td style="color:var(--green)">+38.2%</td><td>23.1%</td></tr>
+            <tr><td style="font-family:var(--mono);font-weight:700">VWCE</td><td>Vanguard FTSE All-World</td><td>42</td><td class="money">€112.45</td><td class="money">€4,723</td><td style="color:var(--green)">+15.3%</td><td>19.0%</td></tr>
+            <tr><td style="font-family:var(--mono);font-weight:700">AAPL</td><td>Apple Inc.</td><td>20</td><td class="money">$228.18</td><td class="money">€4,101</td><td style="color:var(--green)">+22.1%</td><td>16.5%</td></tr>
+            <tr><td style="font-family:var(--mono);font-weight:700">NVDA</td><td>NVIDIA Corporation</td><td>8</td><td class="money">$921.00</td><td class="money">€6,624</td><td style="color:var(--green)">+112.4%</td><td>26.7%</td></tr>
+            <tr><td style="font-family:var(--mono);font-weight:700">ASML</td><td>ASML Holding</td><td>5</td><td class="money">€740.20</td><td class="money">€3,701</td><td style="color:var(--red)">-8.3%</td><td>14.9%</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Diversification -->
+      <div class="mock-panel" id="mock-diversification" style="display:none">
+        <div class="grid2" style="gap:16px">
+          <div class="mock-chart-area">
+            <div class="mock-chart-title">SECTOR ALLOCATION</div>
+            <div class="donut-wrapper">
+              <canvas id="donut-sector" width="120" height="120"></canvas>
+              <div class="donut-legend">
+                <div class="legend-item"><div class="legend-dot" style="background:#10b981"></div><span>Technology</span><span style="margin-left:auto;font-family:var(--mono);font-size:11px">62%</span></div>
+                <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div><span>ETF/Diversified</span><span style="margin-left:auto;font-family:var(--mono);font-size:11px">19%</span></div>
+                <div class="legend-item"><div class="legend-dot" style="background:#a855f7"></div><span>Semiconductors</span><span style="margin-left:auto;font-family:var(--mono);font-size:11px">15%</span></div>
+                <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div><span>Other</span><span style="margin-left:auto;font-family:var(--mono);font-size:11px">4%</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="mock-chart-area">
+            <div class="mock-chart-title">GEOGRAPHIC EXPOSURE</div>
+            <div class="donut-wrapper">
+              <canvas id="donut-geo" width="120" height="120"></canvas>
+              <div class="donut-legend">
+                <div class="legend-item"><div class="legend-dot" style="background:#10b981"></div><span>North America</span><span style="margin-left:auto;font-family:var(--mono);font-size:11px">67%</span></div>
+                <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div><span>Europe</span><span style="margin-left:auto;font-family:var(--mono);font-size:11px">21%</span></div>
+                <div class="legend-item"><div class="legend-dot" style="background:#a855f7"></div><span>Asia-Pacific</span><span style="margin-left:auto;font-family:var(--mono);font-size:11px">8%</span></div>
+                <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div><span>Other</span><span style="margin-left:auto;font-family:var(--mono);font-size:11px">4%</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="mock-chart-area">
+            <div class="mock-chart-title">ASSET CLASS</div>
+            <div class="donut-wrapper">
+              <canvas id="donut-asset" width="120" height="120"></canvas>
+              <div class="donut-legend">
+                <div class="legend-item"><div class="legend-dot" style="background:#10b981"></div><span>Stocks</span><span style="margin-left:auto;font-family:var(--mono);font-size:11px">81%</span></div>
+                <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div><span>ETF</span><span style="margin-left:auto;font-family:var(--mono);font-size:11px">19%</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="mock-chart-area">
+            <div class="mock-chart-title">REBALANCING ALERTS</div>
+            <div style="font-size:12px">
+              <div style="padding:8px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between">
+                <span>Technology <span style="color:var(--red);font-size:11px">↑ 12% over target</span></span>
+                <span style="color:var(--red);font-family:var(--mono)">62% / 50%</span>
+              </div>
+              <div style="padding:8px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between">
+                <span>ETF/Diversified <span style="color:var(--amber);font-size:11px">↓ 6% under target</span></span>
+                <span style="color:var(--amber);font-family:var(--mono)">19% / 25%</span>
+              </div>
+              <div style="padding:8px 0;display:flex;justify-content:space-between">
+                <span>Semiconductors <span style="color:var(--green);font-size:11px">✓ On target</span></span>
+                <span style="color:var(--green);font-family:var(--mono)">15% / 15%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dividends -->
+      <div class="mock-panel" id="mock-dividends" style="display:none">
+        <div class="mock-stats-row">
+          <div class="mock-stat">
+            <div class="mock-stat-label">Annual Income</div>
+            <div class="mock-stat-value money">€842</div>
+            <div class="mock-stat-sub" style="color:var(--green)">3.39% yield</div>
+          </div>
+          <div class="mock-stat">
+            <div class="mock-stat-label">Monthly Avg</div>
+            <div class="mock-stat-value money">€70</div>
+            <div class="mock-stat-sub" style="color:var(--muted)">Estimated</div>
+          </div>
+          <div class="mock-stat">
+            <div class="mock-stat-label">YTD Received</div>
+            <div class="mock-stat-value money">€142</div>
+            <div class="mock-stat-sub" style="color:var(--muted)">Q1 2026</div>
+          </div>
+          <div class="mock-stat">
+            <div class="mock-stat-label">Next Ex-Div</div>
+            <div class="mock-stat-value" style="font-size:14px;padding-top:4px">MSFT · Mar 14</div>
+            <div class="mock-stat-sub" style="color:var(--green)">$0.75 / share</div>
+          </div>
+        </div>
+
+        <div class="income-grid" style="margin-bottom:20px">
+          <div class="mock-chart-area">
+            <div class="mock-chart-title">MONTHLY INCOME 2025–2026</div>
+            <div id="income-bars">
+              <!-- generated by JS -->
+            </div>
+          </div>
+          <div class="mock-chart-area">
+            <div class="mock-chart-title">EX-DIVIDEND CALENDAR ✨</div>
+            <table class="mock-table">
+              <thead><tr><th>TICKER</th><th>EX-DATE</th><th>PAY DATE</th><th>AMOUNT</th></tr></thead>
+              <tbody>
+                <tr><td style="font-family:var(--mono);font-weight:700">MSFT</td><td>Mar 14</td><td>Mar 20</td><td class="money">$0.75</td></tr>
+                <tr><td style="font-family:var(--mono);font-weight:700">AAPL</td><td>Mar 21</td><td>Apr 3</td><td class="money">$0.25</td></tr>
+                <tr><td style="font-family:var(--mono);font-weight:700">VWCE</td><td>Apr 5</td><td>Apr 12</td><td class="money">€0.43</td></tr>
+                <tr><td style="font-family:var(--mono);font-weight:700">ASML</td><td>Apr 28</td><td>May 7</td><td class="money">€6.00</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Metrics -->
+      <div class="mock-panel" id="mock-metrics" style="display:none">
+        <div style="margin-bottom:12px;padding:10px 14px;background:var(--purple-dim);border:1px solid rgba(168,85,247,0.3);border-radius:8px;font-size:12px;color:#d8b4fe">
+          🔒 Advanced risk metrics are a <strong>Pro</strong> feature. Upgrade to see Sharpe Ratio, Max Drawdown, Beta, and Volatility.
+        </div>
+        <div class="mock-stats-row">
+          <div class="mock-stat">
+            <div class="mock-stat-label">TTWROR</div>
+            <div class="mock-stat-value" style="color:var(--green)">+20.5%</div>
+            <div class="mock-stat-sub" style="color:var(--muted)">Time-weighted return</div>
+          </div>
+          <div class="mock-stat">
+            <div class="mock-stat-label">IRR</div>
+            <div class="mock-stat-value" style="color:var(--green)">+18.2%</div>
+            <div class="mock-stat-sub" style="color:var(--muted)">Internal rate of return</div>
+          </div>
+          <div class="mock-stat" style="position:relative;overflow:hidden">
+            <div style="position:absolute;inset:0;background:rgba(15,23,42,0.7);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;border-radius:12px;font-size:18px">🔒</div>
+            <div class="mock-stat-label">Sharpe Ratio ✨</div>
+            <div class="mock-stat-value">1.42</div>
+            <div class="mock-stat-sub">Risk-adjusted return</div>
+          </div>
+          <div class="mock-stat" style="position:relative;overflow:hidden">
+            <div style="position:absolute;inset:0;background:rgba(15,23,42,0.7);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;border-radius:12px;font-size:18px">🔒</div>
+            <div class="mock-stat-label">Max Drawdown ✨</div>
+            <div class="mock-stat-value" style="color:var(--red)">-18.4%</div>
+            <div class="mock-stat-sub">Worst peak-to-trough</div>
+          </div>
+        </div>
+        <div class="grid2" style="gap:16px;margin-top:16px">
+          <div class="mock-stat" style="position:relative;overflow:hidden">
+            <div style="position:absolute;inset:0;background:rgba(15,23,42,0.7);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;border-radius:12px;font-size:18px">🔒</div>
+            <div class="mock-stat-label">Annualized Volatility ✨</div>
+            <div class="mock-stat-value">21.3%</div>
+            <div class="mock-stat-sub">Std dev of daily returns</div>
+          </div>
+          <div class="mock-stat" style="position:relative;overflow:hidden">
+            <div style="position:absolute;inset:0;background:rgba(15,23,42,0.7);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;border-radius:12px;font-size:18px">🔒</div>
+            <div class="mock-stat-label">Beta vs S&P 500 ✨</div>
+            <div class="mock-stat-value">1.28</div>
+            <div class="mock-stat-sub">Sensitivity to market</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Growth -->
+      <div class="mock-panel" id="mock-growth" style="display:none">
+        <div style="margin-bottom:16px;padding:10px 14px;background:var(--purple-dim);border:1px solid rgba(168,85,247,0.3);border-radius:8px;font-size:12px;color:#d8b4fe">
+          🔒 Portfolio history chart requires <strong>Pro</strong>. Free users see the last 30 days; Pro unlocks unlimited history.
+        </div>
+        <div class="mock-chart-area">
+          <div class="mock-chart-title">PORTFOLIO VALUE HISTORY — 1Y</div>
+          <canvas id="growth-chart" width="700" height="160" style="width:100%;height:160px"></canvas>
+        </div>
+      </div>
+
+      <!-- News -->
+      <div class="mock-panel" id="mock-news" style="display:none">
+        <div style="color:var(--muted);font-size:14px;padding:24px 0;text-align:center">Portfolio news feed shown here (existing feature)</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- METRICS -->
+<div class="section" id="section-metrics">
+  <h2>Success Metrics & Instrumentation</h2>
+  <p class="section-desc">How we measure whether these features are working. Track at launch and review at 30/60/90 days.</p>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">Phase 1 — Primary Metrics</div>
+      <ul class="reasons">
+        <li><span class="dot dot-green"></span><strong>Diversification tab CTR</strong> — % of DAU who click the new tab within first session. Target: ≥40%</li>
+        <li><span class="dot dot-green"></span><strong>Dividends tab CTR</strong> — same. Target: ≥35% for portfolios with dividend holdings</li>
+        <li><span class="dot dot-green"></span><strong>Stealth mode activation rate</strong> — % of users who toggle it on at least once. Target: ≥15%. High = users are screenshot-sharing.</li>
+        <li><span class="dot dot-blue"></span><strong>Ex-dividend calendar views</strong> — impressions per user per week. Target: ≥2/week for div portfolios</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">Phase 2–3 — Primary Metrics</div>
+      <ul class="reasons">
+        <li><span class="dot dot-purple" style="background:var(--purple)"></span><strong>Metrics tab → Pro upgrade CTR</strong> — clicks on locked metric → upgrade. Target: ≥8% of users who see the lock</li>
+        <li><span class="dot dot-purple" style="background:var(--purple)"></span><strong>Public portfolio shares created</strong> — count of share links generated per week. Target: ≥50/week at 90 days</li>
+        <li><span class="dot dot-amber"></span><strong>Inbound from shared links</strong> — new signups from /p/[token] referral links. This is the primary viral coefficient.</li>
+        <li><span class="dot dot-blue"></span><strong>Growth chart engagement</strong> — time on Growth tab, range selector interactions</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="grid3" style="margin-top:8px">
+    <div class="card">
+      <div class="card-title">Instrumentation Events (Phase 1)</div>
+      <ul class="reasons" style="font-family:var(--mono);font-size:11px;color:var(--text)">
+        <li><span class="dot dot-green"></span>diversification_tab_viewed</li>
+        <li><span class="dot dot-green"></span>dividends_tab_viewed</li>
+        <li><span class="dot dot-green"></span>stealth_mode_enabled</li>
+        <li><span class="dot dot-green"></span>stealth_mode_disabled</li>
+        <li><span class="dot dot-blue"></span>exdiv_calendar_viewed</li>
+        <li><span class="dot dot-blue"></span>exdiv_ticker_expanded</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">Instrumentation Events (Phase 2)</div>
+      <ul class="reasons" style="font-family:var(--mono);font-size:11px;color:var(--text)">
+        <li><span class="dot dot-purple" style="background:var(--purple)"></span>metrics_tab_viewed</li>
+        <li><span class="dot dot-purple" style="background:var(--purple)"></span>metric_lock_clicked → upgrade</li>
+        <li><span class="dot dot-blue"></span>growth_tab_viewed</li>
+        <li><span class="dot dot-blue"></span>growth_range_changed</li>
+        <li><span class="dot dot-amber"></span>nav_snapshot_recorded</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">Instrumentation Events (Phase 3)</div>
+      <ul class="reasons" style="font-family:var(--mono);font-size:11px;color:var(--text)">
+        <li><span class="dot dot-purple" style="background:var(--purple)"></span>portfolio_share_created</li>
+        <li><span class="dot dot-purple" style="background:var(--purple)"></span>portfolio_share_viewed</li>
+        <li><span class="dot dot-purple" style="background:var(--purple)"></span>share_signup_conversion</li>
+        <li><span class="dot dot-amber"></span>transaction_pl_calculated</li>
+        <li><span class="dot dot-amber"></span>transaction_pl_viewed</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">Legal Compliance Notes</div>
+    <ul class="reasons">
+      <li><span class="dot dot-amber"></span><strong>Public portfolio sharing</strong> — users sharing financial data publicly: review legal-advisor skill before implementation. Ensure disclaimer is displayed on all public portfolio pages (financial data ≠ investment advice).</li>
+      <li><span class="dot dot-amber"></span><strong>Ex-dividend calendar</strong> — displays financial data; existing disclaimer covers this under the current terms of service. No additional legal review needed.</li>
+      <li><span class="dot dot-green"></span><strong>Stealth mode / Metrics / Diversification tab</strong> — no new data collected, no new 3rd-party requests. No legal review required.</li>
+    </ul>
+  </div>
+</div>
+
+</main>
+
+<script>
+  function switchTab(name) {
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById('section-' + name).classList.add('active');
+    if (name === 'mockup') { setTimeout(initMockupCharts, 100); }
+  }
+
+  function togglePhase(header) {
+    const body = header.nextElementSibling;
+    body.style.display = body.style.display === 'none' ? 'block' : 'none';
+  }
+
+  function switchMockTab(name) {
+    document.querySelectorAll('.mock-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.mock-panel').forEach(p => p.style.display = 'none');
+    event.target.classList.add('active');
+    document.getElementById('mock-' + name).style.display = 'block';
+    if (name === 'diversification') setTimeout(drawDonuts, 50);
+    if (name === 'dividends') setTimeout(buildIncomeBars, 50);
+    if (name === 'growth') setTimeout(drawGrowthChart, 50);
+  }
+
+  let stealthOn = false;
+  function toggleStealth() {
+    stealthOn = !stealthOn;
+    document.getElementById('stealth-btn').textContent = '🎭 STEALTH: ' + (stealthOn ? 'ON' : 'OFF');
+    document.getElementById('stealth-btn').style.color = stealthOn ? 'var(--green)' : 'var(--muted)';
+    document.querySelectorAll('.money').forEach(el => {
+      el.dataset.real = el.dataset.real || el.textContent;
+      el.textContent = stealthOn ? '•••••' : el.dataset.real;
+    });
+    document.querySelectorAll('.money-pct').forEach(el => {
+      el.dataset.real = el.dataset.real || el.textContent;
+      el.textContent = stealthOn ? '•••••' : el.dataset.real;
+    });
+  }
+
+  function drawDonut(canvas, data, colors) {
+    const ctx = canvas.getContext('2d');
+    const cx = canvas.width / 2, cy = canvas.height / 2, r = 44, inner = 26;
+    let start = -Math.PI / 2;
+    data.forEach((val, i) => {
+      const angle = (val / 100) * 2 * Math.PI;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, r, start, start + angle);
+      ctx.closePath();
+      ctx.fillStyle = colors[i];
+      ctx.fill();
+      start += angle;
+    });
+    ctx.beginPath();
+    ctx.arc(cx, cy, inner, 0, 2 * Math.PI);
+    ctx.fillStyle = '#0f172a';
+    ctx.fill();
+  }
+
+  function drawDonuts() {
+    drawDonut(document.getElementById('donut-sector'), [62,19,15,4], ['#10b981','#3b82f6','#a855f7','#f59e0b']);
+    drawDonut(document.getElementById('donut-geo'), [67,21,8,4], ['#10b981','#3b82f6','#a855f7','#f59e0b']);
+    drawDonut(document.getElementById('donut-asset'), [81,19], ['#10b981','#3b82f6']);
+  }
+
+  function buildIncomeBars() {
+    const months = ['Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb'];
+    const values = [58, 72, 65, 91, 48, 84, 78, 102, 61, 95, 88, 70];
+    const max = Math.max(...values);
+    const container = document.getElementById('income-bars');
+    container.innerHTML = months.map((m, i) => `
+      <div class="income-month-bar">
+        <div class="imb-label">${m}</div>
+        <div class="imb-bar-wrap"><div class="imb-bar" style="width:${(values[i]/max*100).toFixed(0)}%"></div></div>
+        <div class="imb-val money">€${values[i]}</div>
+      </div>
+    `).join('');
+    if (stealthOn) {
+      document.querySelectorAll('.imb-val.money').forEach(el => { el.dataset.real = el.textContent; el.textContent = '•••••'; });
+    }
+  }
+
+  function drawGrowthChart() {
+    const canvas = document.getElementById('growth-chart');
+    const ctx = canvas.getContext('2d');
+    const W = canvas.offsetWidth || 700;
+    canvas.width = W * window.devicePixelRatio;
+    canvas.height = 160 * window.devicePixelRatio;
+    ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    const w = W, h = 160;
+
+    const points = [];
+    let v = 18000;
+    for (let i = 0; i < 52; i++) {
+      v += (Math.random() - 0.38) * 600;
+      points.push(Math.max(14000, v));
+    }
+    const mn = Math.min(...points), mx = Math.max(...points);
+    const px = (i) => (i / (points.length - 1)) * (w - 40) + 20;
+    const py = (v) => h - 30 - ((v - mn) / (mx - mn)) * (h - 50);
+
+    // gradient fill
+    const grad = ctx.createLinearGradient(0, 0, 0, h);
+    grad.addColorStop(0, 'rgba(16,185,129,0.25)');
+    grad.addColorStop(1, 'rgba(16,185,129,0)');
+    ctx.beginPath();
+    ctx.moveTo(px(0), py(points[0]));
+    points.forEach((p, i) => { if (i > 0) ctx.lineTo(px(i), py(p)); });
+    ctx.lineTo(px(points.length - 1), h - 30);
+    ctx.lineTo(px(0), h - 30);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // line
+    ctx.beginPath();
+    ctx.moveTo(px(0), py(points[0]));
+    points.forEach((p, i) => { if (i > 0) ctx.lineTo(px(i), py(p)); });
+    ctx.strokeStyle = '#10b981';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // axis labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '10px Space Mono, monospace';
+    ctx.textAlign = 'center';
+    ['Mar', 'Jun', 'Sep', 'Dec', 'Mar'].forEach((m, i) => {
+      ctx.fillText(m, px(Math.round(i * (points.length - 1) / 4)), h - 10);
+    });
+  }
+
+  function initMockupCharts() {
+    // called when mockup tab first opens
+  }
+</script>
+</body>
+</html>

@@ -11,13 +11,19 @@ import DashboardToolbar from "./DashboardToolbar";
 import { useI18n } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useAuth } from "@/lib/auth-context";
-import { PLATFORM_LIMITS } from "@/lib/platform-config";
+import { getHoldingsLimit } from "@/lib/subscription";
+import { useTrack } from "@/lib/use-track";
 import type { Account } from "@/lib/types";
 
 const PortfolioGrowthPeriods = dynamic(() => import("./PortfolioGrowthPeriods"), { ssr: false });
 const PerformanceMetrics = dynamic(() => import("./PerformanceMetrics"), { ssr: false });
 const PortfolioProjection = dynamic(() => import("./PortfolioProjection"), { ssr: false });
 const PortfolioNewsFeed = dynamic(() => import("./PortfolioNewsFeed"), { ssr: false });
+const TaxonomyView = dynamic(() => import("./TaxonomyView"), { ssr: false });
+const RebalancingView = dynamic(() => import("./RebalancingView"), { ssr: false });
+const DividendSummary = dynamic(() => import("./DividendSummary"), { ssr: false });
+const MetricsTab = dynamic(() => import("./MetricsTab"), { ssr: false });
+const GrowthTab = dynamic(() => import("./GrowthTab"), { ssr: false });
 const AddStockModal = dynamic(() => import("./AddStockModal"), { ssr: false });
 const SettingsModal = dynamic(() => import("./SettingsModal"), { ssr: false });
 const ImportPortfolioModal = dynamic(() => import("./ImportPortfolioModal"), { ssr: false });
@@ -27,7 +33,7 @@ const FeedbackModal = dynamic(() => import("./FeedbackModal"), { ssr: false });
 const ProCompareCard = dynamic(() => import("./ProCompareCard"), { ssr: false });
 const PortfolioReviewCard = dynamic(() => import("./PortfolioReviewCard"), { ssr: false });
 
-type DashboardTab = "portfolio" | "news";
+type DashboardTab = "portfolio" | "diversification" | "dividends" | "metrics" | "growth" | "news";
 
 export default function Dashboard() {
   const [showAddModal, setShowAddModal] = useState(false);
@@ -43,6 +49,7 @@ export default function Dashboard() {
   const { t } = useI18n();
   const { holdings, cashEntries, refreshHoldings } = usePortfolio();
   const { user } = useAuth();
+  const track = useTrack();
 
   useEffect(() => {
     fetch("/api/accounts")
@@ -75,14 +82,26 @@ export default function Dashboard() {
 
   const isPro = user?.plan === "pro";
   const holdingsCount = holdings.length;
-  const holdingsLimit = PLATFORM_LIMITS.FREE_HOLDINGS_LIMIT;
-  const showHoldingsBanner = !isPro && holdingsCount >= holdingsLimit - 2 && holdingsCount > 0;
-  const holdingsAtLimit = !isPro && holdingsCount >= holdingsLimit;
+  const holdingsLimit = getHoldingsLimit(user?.plan ?? "free");
+  const showHoldingsBanner = holdingsLimit !== Infinity && holdingsCount >= holdingsLimit - 2 && holdingsCount > 0;
+  const holdingsAtLimit = holdingsLimit !== Infinity && holdingsCount >= holdingsLimit;
 
   const dashboardTabs: { key: DashboardTab; label: string }[] = [
     { key: "portfolio", label: t("portfolioTab") },
+    { key: "diversification", label: t("diversificationTab") },
+    { key: "dividends", label: t("dividendsTab") },
+    { key: "metrics", label: t("metricsTab") },
+    { key: "growth", label: t("growthTab") },
     { key: "news", label: t("newsTab") },
   ];
+
+  function handleTabChange(tab: DashboardTab) {
+    setActiveTab(tab);
+    if (tab === "diversification") track("diversification_tab_viewed");
+    if (tab === "dividends") track("dividends_tab_viewed");
+    if (tab === "metrics") track("metrics_tab_viewed");
+    if (tab === "growth") track("growth_tab_viewed");
+  }
 
   return (
     <>
@@ -94,12 +113,16 @@ export default function Dashboard() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
         {/* Dashboard Tab Bar */}
-        <div className="flex gap-1.5">
+        <div role="tablist" aria-label={t("portfolioTab")} className="flex gap-1.5 flex-wrap">
           {dashboardTabs.map((tab) => (
             <button
               key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
+              role="tab"
+              id={`tab-${tab.key}`}
+              aria-selected={activeTab === tab.key}
+              aria-controls={`tabpanel-${tab.key}`}
+              onClick={() => handleTabChange(tab.key)}
+              className={`px-4 py-2 text-sm font-medium rounded-full transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none ${
                 activeTab === tab.key
                   ? "bg-emerald-500 text-white"
                   : "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-600"
@@ -111,7 +134,13 @@ export default function Dashboard() {
         </div>
 
         {activeTab === "portfolio" && (
-          <>
+          <div
+            role="tabpanel"
+            id="tabpanel-portfolio"
+            aria-labelledby="tab-portfolio"
+            tabIndex={0}
+            className="focus-visible:outline-none"
+          >
             {holdingsCount === 0 && (
               <a
                 href="/import"
@@ -161,17 +190,98 @@ export default function Dashboard() {
             <PerformanceMetrics holdings={filteredHoldings} cashEntries={filteredCashEntries} />
             <MarketAndCash holdings={filteredHoldings} cashEntries={filteredCashEntries} />
             <PortfolioProjection holdings={filteredHoldings} cashEntries={filteredCashEntries} />
-          </>
+          </div>
+        )}
+
+        {activeTab === "diversification" && (
+          <div
+            role="tabpanel"
+            id="tabpanel-diversification"
+            aria-labelledby="tab-diversification"
+            tabIndex={0}
+            className="focus-visible:outline-none space-y-6"
+          >
+            <Suspense fallback={
+              <div className="card px-6 py-10 flex items-center justify-center gap-3 text-gray-400 dark:text-slate-500 text-sm">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-500" />
+              </div>
+            }>
+              <TaxonomyView />
+              <RebalancingView />
+            </Suspense>
+          </div>
+        )}
+
+        {activeTab === "dividends" && (
+          <div
+            role="tabpanel"
+            id="tabpanel-dividends"
+            aria-labelledby="tab-dividends"
+            tabIndex={0}
+            className="focus-visible:outline-none"
+          >
+            <Suspense fallback={
+              <div className="card px-6 py-10 flex items-center justify-center gap-3 text-gray-400 dark:text-slate-500 text-sm">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-500" />
+              </div>
+            }>
+              <DividendSummary />
+            </Suspense>
+          </div>
+        )}
+
+        {activeTab === "metrics" && (
+          <div
+            role="tabpanel"
+            id="tabpanel-metrics"
+            aria-labelledby="tab-metrics"
+            tabIndex={0}
+            className="focus-visible:outline-none"
+          >
+            <Suspense fallback={
+              <div className="card px-6 py-10 flex items-center justify-center gap-3 text-gray-400 dark:text-slate-500 text-sm">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-500" />
+              </div>
+            }>
+              <MetricsTab holdings={filteredHoldings} cashEntries={filteredCashEntries} />
+            </Suspense>
+          </div>
+        )}
+
+        {activeTab === "growth" && (
+          <div
+            role="tabpanel"
+            id="tabpanel-growth"
+            aria-labelledby="tab-growth"
+            tabIndex={0}
+            className="focus-visible:outline-none"
+          >
+            <Suspense fallback={
+              <div className="card px-6 py-10 flex items-center justify-center gap-3 text-gray-400 dark:text-slate-500 text-sm">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-500" />
+              </div>
+            }>
+              <GrowthTab />
+            </Suspense>
+          </div>
         )}
 
         {activeTab === "news" && (
-          <Suspense fallback={
-            <div className="card px-6 py-10 flex items-center justify-center gap-3 text-gray-400 dark:text-slate-500 text-sm">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-500" />
-            </div>
-          }>
-            <PortfolioNewsFeed />
-          </Suspense>
+          <div
+            role="tabpanel"
+            id="tabpanel-news"
+            aria-labelledby="tab-news"
+            tabIndex={0}
+            className="focus-visible:outline-none"
+          >
+            <Suspense fallback={
+              <div className="card px-6 py-10 flex items-center justify-center gap-3 text-gray-400 dark:text-slate-500 text-sm">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-500" />
+              </div>
+            }>
+              <PortfolioNewsFeed />
+            </Suspense>
+          </div>
         )}
       </main>
 

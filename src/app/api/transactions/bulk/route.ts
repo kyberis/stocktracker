@@ -5,7 +5,7 @@ import { addTransactionsBulk, rebuildHoldings, listHoldings, findUserById } from
 import { withMetrics } from "@/lib/with-metrics";
 import { transactionsOpsTotal } from "@/lib/metrics";
 import { parseBody } from "@/lib/api-response";
-import { PLATFORM_LIMITS } from "@/lib/platform-config";
+import { getHoldingsLimit } from "@/lib/subscription";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { enrichHoldingClassifications } from "@/lib/enrich-classifications";
 
@@ -46,12 +46,13 @@ export const POST = withMetrics("/api/transactions/bulk", async (req: NextReques
   const { transactions, finalize } = result.data;
 
   const user = await findUserById(session.userId);
-  const isPro = (user?.plan || session.plan) === "pro";
+  const plan = (user?.plan || session.plan) ?? "free";
+  const holdingsLimit = getHoldingsLimit(plan);
 
   let holdingsCapped = 0;
   let allowedTickers: Set<string> | null = null;
 
-  if (!isPro) {
+  if (holdingsLimit < Infinity) {
     const currentHoldings = await listHoldings(session.userId);
     const existingTickers = new Set(
       currentHoldings.map((h) => `${h.ticker}|${h.exchange || ""}`)
@@ -63,7 +64,7 @@ export const POST = withMetrics("/api/transactions/bulk", async (req: NextReques
         if (!existingTickers.has(key)) newTickers.add(key);
       }
     }
-    const slotsAvailable = Math.max(0, PLATFORM_LIMITS.FREE_HOLDINGS_LIMIT - currentHoldings.length);
+    const slotsAvailable = Math.max(0, holdingsLimit - currentHoldings.length);
     if (newTickers.size > slotsAvailable) {
       const newArr = [...newTickers];
       const allowed = new Set(newArr.slice(0, slotsAvailable));

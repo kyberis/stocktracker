@@ -41,7 +41,7 @@ async function bootstrapSchema(client: Client): Promise<void> {
       role TEXT NOT NULL CHECK(role IN ('admin', 'user')),
       must_change_password INTEGER NOT NULL DEFAULT 0,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
-      plan TEXT NOT NULL DEFAULT 'free' CHECK(plan IN ('free', 'pro')),
+      plan TEXT NOT NULL DEFAULT 'free' CHECK(plan IN ('free', 'starter', 'pro')),
       stripe_customer_id TEXT NOT NULL DEFAULT '',
       stripe_subscription_id TEXT NOT NULL DEFAULT '',
       plan_expires_at TEXT NOT NULL DEFAULT '',
@@ -554,6 +554,147 @@ const MIGRATIONS: Migration[] = [
           UNIQUE(email)
         )
       `);
+    },
+  },
+  {
+    version: 13,
+    description: "Add portfolio_snapshots and portfolio_shares tables",
+    up: async (client: Client) => {
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS portfolio_snapshots (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          date TEXT NOT NULL,
+          total_value_eur REAL NOT NULL,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          UNIQUE(user_id, date)
+        );
+
+        CREATE TABLE IF NOT EXISTS portfolio_shares (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          is_active INTEGER NOT NULL DEFAULT 1,
+          show_values INTEGER NOT NULL DEFAULT 0,
+          excluded_tickers TEXT,
+          UNIQUE(user_id)
+        )
+      `);
+    },
+  },
+  {
+    version: 16,
+    description: "Allow 'starter' plan value in users table CHECK constraint",
+    up: async (client: Client) => {
+      const cols = await client.execute("PRAGMA table_info(users)");
+      const colDefs = cols.rows.map((r) => ({
+        name: str(r.name),
+        type: str(r.type),
+        notnull: Number(r.notnull),
+        dflt: r.dflt_value,
+        pk: Number(r.pk),
+      }));
+
+      const planCol = colDefs.find((c) => c.name === "plan");
+      if (!planCol) return;
+
+      const columnDefs = colDefs
+        .map((c) => {
+          let def = `${c.name} ${c.type}`;
+          if (c.pk) def += " PRIMARY KEY";
+          if (c.notnull && !c.pk) def += " NOT NULL";
+          if (c.dflt != null) {
+            const d = String(c.dflt);
+            if (d.startsWith("(") || d.startsWith("'") || /^-?\d/.test(d)) {
+              def += ` DEFAULT ${d}`;
+            } else if (/\(/.test(d)) {
+              def += ` DEFAULT (${d})`;
+            } else {
+              def += ` DEFAULT '${d}'`;
+            }
+          }
+          if (c.name === "plan") def += " CHECK(plan IN ('free', 'starter', 'pro'))";
+          if (c.name === "role") def += " CHECK(role IN ('admin', 'user'))";
+          return def;
+        })
+        .join(", ");
+
+      const colNames = colDefs.map((c) => c.name).join(", ");
+
+      await client.executeMultiple(`
+        CREATE TABLE users_new (${columnDefs});
+        INSERT INTO users_new (${colNames}) SELECT ${colNames} FROM users;
+        DROP TABLE users;
+        ALTER TABLE users_new RENAME TO users;
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_unique ON users(email) WHERE email != '';
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_users_google_id_unique ON users(google_id) WHERE google_id != '';
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_users_apple_id_unique ON users(apple_id) WHERE apple_id != '';
+      `);
+    },
+  },
+  {
+    version: 17,
+    description: "Create snaptrade_connections table for SnapTrade brokerage aggregator",
+    up: async (client: Client) => {
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS snaptrade_connections (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          snaptrade_user_id TEXT NOT NULL,
+          user_secret_encrypted TEXT NOT NULL,
+          label TEXT NOT NULL DEFAULT '',
+          last_synced_at TEXT NOT NULL DEFAULT '',
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_snaptrade_connections_user ON snaptrade_connections(user_id);
+      `);
+    },
+  },
+  {
+    version: 18,
+    description: "Fix SnapTrade MIC-suffixed tickers to Yahoo Finance format",
+    up: async (client: Client) => {
+      const micToYahoo: Record<string, string> = {
+        XGAT: ".DE", XETR: ".DE", XFRA: ".F",
+        XLON: ".L",  XAMS: ".AS", XBRU: ".BR", XPAR: ".PA",
+        XMAD: ".MC", XMIL: ".MI", XLIS: ".LS",
+        XCSE: ".CO", XHEL: ".HE", XSTO: ".ST", XOSL: ".OL", XICE: ".IC",
+        XSWX: ".SW", XWBO: ".VI",
+        XTSE: ".TO", XTSX: ".TO", XASX: ".AX",
+        XHKG: ".HK", XSES: ".SI", XTKS: ".T",
+        XNAS: "",    XNYS: "",    XASE: "",    BATS: "",    ARCX: "",
+      };
+
+      for (const [mic, suffix] of Object.entries(micToYahoo)) {
+        const pattern = `%.${mic}`;
+        for (const table of ["holdings", "transactions"] as const) {
+          if (suffix) {
+            await client.execute({
+              sql: `UPDATE ${table} SET ticker = SUBSTR(ticker, 1, LENGTH(ticker) - ${mic.length + 1}) || ? WHERE ticker LIKE ?`,
+              args: [suffix, pattern],
+            });
+          } else {
+            await client.execute({
+              sql: `UPDATE ${table} SET ticker = SUBSTR(ticker, 1, LENGTH(ticker) - ${mic.length + 1}) WHERE ticker LIKE ?`,
+              args: [pattern],
+            });
+          }
+        }
+      }
+
+      // Fix space-separated share classes imported as-is: "NOVO B" → "NOVO-B"
+      for (const table of ["holdings", "transactions"] as const) {
+        await client.execute({
+          sql: `UPDATE ${table} SET ticker = REPLACE(ticker, ' ', '-') WHERE ticker LIKE '% %'`,
+        });
+      }
+
+      // Fix BRK.B → BRK-B (US dot-separated share classes)
+      await client.execute({ sql: "UPDATE holdings SET ticker = 'BRK-B' WHERE ticker = 'BRK.B'" });
+      await client.execute({ sql: "UPDATE transactions SET ticker = 'BRK-B' WHERE ticker = 'BRK.B'" });
+      await client.execute({ sql: "UPDATE holdings SET ticker = 'BRK-A' WHERE ticker = 'BRK.A'" });
+      await client.execute({ sql: "UPDATE transactions SET ticker = 'BRK-A' WHERE ticker = 'BRK.A'" });
     },
   },
 ];

@@ -8,14 +8,14 @@ import { useSettings } from "@/lib/settings-context";
 import { useTrack } from "@/lib/use-track";
 import { useImportBrokerCSV } from "@/hooks/useImportBrokerCSV";
 import { useImportAI } from "@/hooks/useImportAI";
-import { useIbkrApi } from "@/hooks/useIbkrApi";
+import { useSnapTradeApi } from "@/hooks/useSnapTradeApi";
 import { IMPORT_GUIDES, type ImportGuide } from "@/lib/import-guides";
 import { downloadImportTemplate } from "@/lib/download-import-template";
 import ProCompareCard from "@/components/ProCompareCard";
 import type { BrokerFormat } from "@/hooks/import-types";
 import type { SearchResult } from "@/lib/types";
 
-type ImportMethod = "broker_csv" | "ibkr_api" | "ai_import" | "manual";
+type ImportMethod = "broker_csv" | "snaptrade_api" | "ai_import" | "manual";
 
 const TX_TYPE_COLORS: Record<string, string> = {
   buy: "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
@@ -26,7 +26,7 @@ const TX_TYPE_COLORS: Record<string, string> = {
 
 const METHOD_TABS: { key: ImportMethod; icon: string }[] = [
   { key: "broker_csv", icon: "M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" },
-  { key: "ibkr_api", icon: "M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m9.86-2.813a4.5 4.5 0 00-1.242-7.244l-4.5-4.5a4.5 4.5 0 00-6.364 6.364L4.34 8.374" },
+  { key: "snaptrade_api", icon: "M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75" },
   { key: "ai_import", icon: "M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" },
   { key: "manual", icon: "M12 4v16m8-8H4" },
 ];
@@ -36,6 +36,15 @@ const BROKER_OPTIONS: { id: BrokerFormat; label: string; guideId: string }[] = [
   { id: "interactive_brokers", label: "Interactive Brokers", guideId: "interactive_brokers_csv" },
   { id: "trading_212", label: "Trading 212", guideId: "trading_212" },
   { id: "revolut", label: "Revolut", guideId: "revolut" },
+  { id: "charles_schwab", label: "Charles Schwab", guideId: "charles_schwab" },
+  { id: "fidelity", label: "Fidelity", guideId: "fidelity" },
+  { id: "nordnet", label: "Nordnet", guideId: "nordnet" },
+  { id: "tastytrade", label: "Tastytrade", guideId: "tastytrade" },
+  { id: "freetrade", label: "Freetrade", guideId: "freetrade" },
+  { id: "etoro", label: "eToro", guideId: "etoro" },
+  { id: "wealthsimple", label: "Wealthsimple", guideId: "wealthsimple" },
+  { id: "questrade", label: "Questrade", guideId: "questrade" },
+  { id: "firstrade", label: "Firstrade", guideId: "firstrade" },
   { id: "simple", label: "Simple CSV", guideId: "simple_csv" },
 ];
 
@@ -77,7 +86,7 @@ export default function ImportPageContent() {
   // Hooks
   const brokerCSV = useImportBrokerCSV();
   const aiImport = useImportAI();
-  const ibkrApi = useIbkrApi();
+  const snapTradeApi = useSnapTradeApi();
 
   // Manual add stock state
   const [searchQuery, setSearchQuery] = useState("");
@@ -94,12 +103,7 @@ export default function ImportPageContent() {
   const [manualAdded, setManualAdded] = useState(false);
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // IBKR form state
-  const [ibkrToken, setIbkrToken] = useState("");
-  const [ibkrQueryId, setIbkrQueryId] = useState("");
-  const [ibkrSave, setIbkrSave] = useState(true);
-
-  // Smart defaults: load last method + IBKR connection on mount
+  // Smart defaults: load last method + broker sync connection on mount
   useEffect(() => {
     track("import_page_viewed");
     const lastMethod = localStorage.getItem("trefolio_last_import_method") as ImportMethod | null;
@@ -110,17 +114,9 @@ export default function ImportPageContent() {
     if (lastBroker && BROKER_OPTIONS.some((b) => b.id === lastBroker)) {
       setBroker(lastBroker);
     }
-    ibkrApi.loadConnection();
+    snapTradeApi.loadConnection();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Pre-select IBKR API if connected
-  useEffect(() => {
-    if (ibkrApi.connection?.connected && method === "broker_csv") {
-      setMethod("ibkr_api");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ibkrApi.connection]);
 
   const handleMethodChange = (m: ImportMethod) => {
     setMethod(m);
@@ -243,16 +239,16 @@ export default function ImportPageContent() {
     refreshHoldings();
   };
 
-  const handleIbkrImportAll = async () => {
-    await ibkrApi.importAll();
-    track("import_completed", { method: "ibkr_api", txCount: String(ibkrApi.transactions.length) });
+  const handleSnapTradeImportAll = async () => {
+    await snapTradeApi.importAll();
+    track("import_completed", { method: "snaptrade_api", txCount: String(snapTradeApi.transactions.length) });
     refreshHoldings();
   };
 
   const methodLabel = (key: ImportMethod): string => {
     const map: Record<ImportMethod, string> = {
       broker_csv: t("importSectionBrokerCsv"),
-      ibkr_api: t("importSectionBrokerApi"),
+      snaptrade_api: t("importSectionBrokerSync"),
       ai_import: t("importSectionAi"),
       manual: t("importSectionManual"),
     };
@@ -262,7 +258,7 @@ export default function ImportPageContent() {
   const currentGuide = BROKER_OPTIONS.find((b) => b.id === broker);
   const guide = currentGuide ? IMPORT_GUIDES.find((g) => g.id === currentGuide.guideId) : undefined;
   const aiGuide = IMPORT_GUIDES.find((g) => g.id === "ai_import");
-  const ibkrApiGuide = IMPORT_GUIDES.find((g) => g.id === "interactive_brokers_api");
+  const snapTradeGuide = IMPORT_GUIDES.find((g) => g.id === "snaptrade_api");
 
   return (
     <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 pb-24 sm:pb-6">
@@ -271,22 +267,6 @@ export default function ImportPageContent() {
         <h1 className="text-xl font-bold text-gray-900 dark:text-white">{t("importPageTitle")}</h1>
         <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">{t("importPageSubtitle")}</p>
       </div>
-
-      {/* IBKR re-sync banner for returning Pro users */}
-      {ibkrApi.connection?.connected && isPro && method !== "ibkr_api" && (
-        <button
-          onClick={() => { handleMethodChange("ibkr_api"); ibkrApi.resync(); }}
-          className="w-full mb-4 flex items-center gap-3 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 rounded-xl px-4 py-3 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors text-left"
-        >
-          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse flex-shrink-0" />
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">{t("ibkrConnected")} — {t("ibkrResync")}</p>
-            <p className="text-[10px] text-emerald-600 dark:text-emerald-400/70 truncate">
-              {t("ibkrLastSynced")}: {ibkrApi.connection.lastSyncedAt ? new Date(ibkrApi.connection.lastSyncedAt).toLocaleString() : t("ibkrNeverSynced")}
-            </p>
-          </div>
-        </button>
-      )}
 
       {/* Method tabs */}
       <div className="flex gap-1.5 mb-6 overflow-x-auto scrollbar-none -mx-1 px-1">
@@ -306,7 +286,7 @@ export default function ImportPageContent() {
                 <path strokeLinecap="round" strokeLinejoin="round" d={tab.icon} />
               </svg>
               {methodLabel(tab.key)}
-              {tab.key === "ibkr_api" && (
+              {tab.key === "snaptrade_api" && (
                 <span className="text-[9px] font-bold bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded-full">Pro</span>
               )}
             </button>
@@ -415,146 +395,96 @@ export default function ImportPageContent() {
         </div>
       )}
 
-      {/* ═══════════ IBKR API ═══════════ */}
-      {method === "ibkr_api" && (
+      {/* ═══════════ BROKER SYNC ═══════════ */}
+      {method === "snaptrade_api" && (
         <div className="space-y-4">
           {!isPro ? (
-            <ProCompareCard surface="ibkr_api_import" reason="upgrade_required" compact />
+            <ProCompareCard surface="broker_sync_import" reason="upgrade_required" compact />
           ) : (
             <>
-              {/* Guide */}
-              {ibkrApiGuide && ibkrApi.step === "idle" && <InlineGuide guide={ibkrApiGuide} locale={locale} />}
+              {snapTradeGuide && snapTradeApi.step === "idle" && <InlineGuide guide={snapTradeGuide} locale={locale} />}
 
-              {ibkrApi.connection?.connected ? (
+              {snapTradeApi.connection?.connected ? (
                 <>
-                  {ibkrApi.step === "idle" && (
+                  {snapTradeApi.step === "idle" && (
                     <div className="bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 rounded-xl p-4">
                       <div className="flex items-center gap-2 mb-2">
                         <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                        <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">{t("ibkrConnected")}</span>
+                        <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">{t("brokerSyncConnected")}</span>
                       </div>
                       <div className="text-[10px] text-emerald-600 dark:text-emerald-400/80 mb-3">
-                        <p>{t("ibkrQueryId")}: <span className="font-mono">{ibkrApi.connection.queryId}</span></p>
-                        <p>{t("ibkrLastSynced")}: {ibkrApi.connection.lastSyncedAt ? new Date(ibkrApi.connection.lastSyncedAt).toLocaleString() : t("ibkrNeverSynced")}</p>
+                        <p>{t("brokerSyncLastSynced")}: {snapTradeApi.connection.lastSyncedAt ? new Date(snapTradeApi.connection.lastSyncedAt).toLocaleString() : t("brokerSyncNeverSynced")}</p>
                       </div>
                       <div className="flex gap-2">
-                        <button onClick={() => ibkrApi.resync()} disabled={ibkrApi.isFetching} className="btn-primary text-xs px-3 py-1.5 min-h-[44px]">
-                          {ibkrApi.isFetching ? t("ibkrFetching") : t("ibkrResync")}
+                        <button onClick={() => snapTradeApi.fetchPortfolio()} disabled={snapTradeApi.isFetching} className="btn-primary text-xs px-3 py-1.5 min-h-[44px]">
+                          {snapTradeApi.isFetching ? t("brokerSyncFetching") : t("brokerSyncResync")}
+                        </button>
+                        <button onClick={() => snapTradeApi.connect()} disabled={snapTradeApi.step === "connecting"} className="btn-secondary text-xs px-3 py-1.5 min-h-[44px]">
+                          {t("brokerSyncAddBrokerage")}
                         </button>
                         <button
-                          onClick={() => { if (confirm(t("ibkrDisconnectConfirm"))) ibkrApi.disconnect(); }}
+                          onClick={() => { if (confirm(t("brokerSyncDisconnectConfirm"))) snapTradeApi.disconnect(); }}
                           className="btn-secondary text-xs px-3 py-1.5 text-red-600 dark:text-red-400 min-h-[44px]"
                         >
-                          {t("ibkrDisconnect")}
+                          {t("brokerSyncDisconnect")}
                         </button>
                       </div>
                     </div>
                   )}
                 </>
-              ) : ibkrApi.step === "idle" ? (
+              ) : snapTradeApi.step === "idle" ? (
                 <div className="space-y-3">
-                  {/* Step wizard */}
-                  <div className="space-y-2">
-                    {([
-                      { n: "1", titleKey: "ibkrSetupStep1Title" as const, descKey: "ibkrSetupStep1Desc" as const },
-                      { n: "2", titleKey: "ibkrSetupStep2Title" as const, descKey: "ibkrSetupStep2Desc" as const },
-                      { n: "3", titleKey: "ibkrSetupStep3Title" as const, descKey: "ibkrSetupStep3Desc" as const },
-                    ]).map((s) => (
-                      <div key={s.n} className="flex gap-2.5">
-                        <div className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center mt-0.5">
-                          <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400">{s.n}</span>
-                        </div>
-                        <div>
-                          <p className="text-[11px] font-semibold text-gray-900 dark:text-white">{t(s.titleKey)}</p>
-                          <p className="text-[10px] text-gray-500 dark:text-slate-400 leading-relaxed">{t(s.descKey)}</p>
-                        </div>
+                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-500/10 dark:to-indigo-500/10 border border-blue-200 dark:border-blue-500/30 rounded-xl p-5">
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center">
+                        <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75" />
+                        </svg>
                       </div>
-                    ))}
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white mb-1">{t("brokerSyncTitle")}</p>
+                        <p className="text-xs text-gray-600 dark:text-slate-400 leading-relaxed mb-3">{t("brokerSyncDesc")}</p>
+                        <p className="text-[10px] text-gray-500 dark:text-slate-500 mb-4">{t("brokerSyncBrokerages")}</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => snapTradeApi.connect()}
+                      disabled={snapTradeApi.step === "connecting"}
+                      className="btn-primary text-sm px-5 py-3 w-full min-h-[44px]"
+                    >
+                      {snapTradeApi.step === "connecting" ? t("brokerSyncConnecting") : t("brokerSyncConnect")}
+                    </button>
                   </div>
-
-                  <a
-                    href="https://www.interactivebrokers.com/portal"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-1.5 text-[11px] font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 rounded-lg px-3 py-2.5 min-h-[44px] hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors"
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-                    </svg>
-                    {t("ibkrOpenPortal")}
-                  </a>
-
-                  <div className="border-t border-gray-200 dark:border-slate-700" />
-
-                  <div>
-                    <label htmlFor="ibkr-token" className="text-[10px] text-gray-600 dark:text-slate-400 block mb-1">{t("ibkrToken")}</label>
-                    <input
-                      id="ibkr-token"
-                      type="password"
-                      value={ibkrToken}
-                      onChange={(e) => setIbkrToken(e.target.value)}
-                      placeholder={t("ibkrTokenPlaceholder")}
-                      className="w-full text-xs px-3 py-2.5 rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none min-h-[44px]"
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="ibkr-query-id" className="text-[10px] text-gray-600 dark:text-slate-400 block mb-1">{t("ibkrQueryId")}</label>
-                    <input
-                      id="ibkr-query-id"
-                      type="text"
-                      value={ibkrQueryId}
-                      onChange={(e) => setIbkrQueryId(e.target.value)}
-                      placeholder={t("ibkrQueryIdPlaceholder")}
-                      className="w-full text-xs px-3 py-2.5 rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none min-h-[44px]"
-                    />
-                  </div>
-
-                  <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
-                    <input
-                      type="checkbox"
-                      checked={ibkrSave}
-                      onChange={(e) => setIbkrSave(e.target.checked)}
-                      className="w-4 h-4 rounded border-gray-300 dark:border-slate-600 text-emerald-500 focus:ring-emerald-500"
-                    />
-                    <span className="text-[11px] text-gray-600 dark:text-slate-400">{t("ibkrSaveConnection")}</span>
-                  </label>
-
-                  <button
-                    onClick={() => ibkrApi.fetchPortfolio(ibkrToken, ibkrQueryId, ibkrSave)}
-                    disabled={ibkrApi.isFetching || !ibkrToken || !ibkrQueryId}
-                    className="btn-primary text-xs px-4 py-2.5 w-full disabled:opacity-50 min-h-[44px]"
-                  >
-                    {ibkrApi.isFetching ? t("ibkrFetching") : t("ibkrFetchPortfolio")}
-                  </button>
                 </div>
               ) : null}
 
-              {ibkrApi.step === "fetching" && <LoadingSpinner label={t("ibkrFetching")} />}
+              {snapTradeApi.step === "connecting" && <LoadingSpinner label={t("brokerSyncConnecting")} />}
 
-              {ibkrApi.step === "error" && (
-                <ErrorCard message={ibkrApi.errorMsg} onReset={ibkrApi.reset} t={t} />
+              {snapTradeApi.step === "fetching" && <LoadingSpinner label={t("brokerSyncFetching")} />}
+
+              {snapTradeApi.step === "error" && (
+                <ErrorCard message={snapTradeApi.errorMsg} onReset={snapTradeApi.reset} t={t} />
               )}
 
-              {ibkrApi.step === "preview" && (
+              {snapTradeApi.step === "preview" && (
                 <PreviewPanel
-                  transactions={ibkrApi.transactions}
+                  transactions={snapTradeApi.transactions}
                   holdings={[]}
                   cashBalances={[]}
                   duplicatesRemoved={0}
-                  onRemoveTx={ibkrApi.removeTransaction}
+                  onRemoveTx={snapTradeApi.removeTransaction}
                   onRemoveHolding={() => {}}
-                  onImport={handleIbkrImportAll}
-                  onReset={ibkrApi.reset}
+                  onImport={handleSnapTradeImportAll}
+                  onReset={snapTradeApi.reset}
                   t={t}
                   track={track}
                 />
               )}
 
-              {ibkrApi.step === "importing" && <ImportingProgress progress={ibkrApi.importProgress} t={t} />}
+              {snapTradeApi.step === "importing" && <ImportingProgress progress={snapTradeApi.importProgress} t={t} />}
 
-              {ibkrApi.step === "done" && (
-                <DoneCard txCount={ibkrApi.importedCount} holdingsCapped={ibkrApi.holdingsCapped} onReset={ibkrApi.reset} t={t} />
+              {snapTradeApi.step === "done" && (
+                <DoneCard txCount={snapTradeApi.importedCount} holdingsCapped={snapTradeApi.holdingsCapped} onReset={snapTradeApi.reset} t={t} />
               )}
             </>
           )}

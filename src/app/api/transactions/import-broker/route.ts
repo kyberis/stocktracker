@@ -9,7 +9,7 @@ import { getBrokerParser, type ParsedTransaction } from "@/lib/broker-parsers";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { enrichHoldingClassifications } from "@/lib/enrich-classifications";
 import { deferTask, submitJob, getJobStatus } from "@/lib/task-runner";
-import { PLATFORM_LIMITS } from "@/lib/platform-config";
+import { getHoldingsLimit } from "@/lib/subscription";
 
 const KNOWN_ISINS: Record<string, string> = {
   "CA0641491075": "BNS",
@@ -132,7 +132,7 @@ async function importTransactions(
   broker: string,
   csv: string,
   parseCashBalances?: (csv: string) => { currency: string; amount: number }[],
-  isPro?: boolean,
+  plan?: "free" | "starter" | "pro",
   brokerLabel?: string,
 ): Promise<{ imported: number; cashImported: number; holdingsCapped?: number }> {
   const existingRefs = await listTransactionSourceRefs(userId);
@@ -142,9 +142,10 @@ async function importTransactions(
 
   const account = await findOrCreateBrokerAccount(userId, broker, brokerLabel || broker.toUpperCase());
 
+  const holdingsLimit = getHoldingsLimit(plan ?? "free");
   let holdingsCapped = 0;
   let allowedTickers: Set<string> | null = null;
-  if (!isPro) {
+  if (holdingsLimit < Infinity) {
     const existing = await listHoldings(userId);
     const existingTickerSet = new Set(existing.map((h) => `${h.ticker}|${h.exchange || ""}`));
     const newTickers = new Set<string>();
@@ -152,7 +153,7 @@ async function importTransactions(
       const key = `${tx.ticker}|${inferExchangeFromTicker(tx.ticker)}`;
       if (!existingTickerSet.has(key)) newTickers.add(key);
     }
-    const slotsAvailable = Math.max(0, PLATFORM_LIMITS.FREE_HOLDINGS_LIMIT - existing.length);
+    const slotsAvailable = Math.max(0, holdingsLimit - existing.length);
     if (newTickers.size > slotsAvailable) {
       const newArr = [...newTickers];
       const allowed = new Set(newArr.slice(0, slotsAvailable));
@@ -276,7 +277,7 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
   }
 
   const user = await findUserById(session.userId);
-  const isPro = (user?.plan || session.plan) === "pro";
+  const plan = (user?.plan || session.plan) ?? "free";
 
   /* ── Simple CSV (legacy format) ── */
   if (broker === "simple") {
@@ -309,7 +310,7 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
           totalAmount: tx.totalAmount, fees: tx.fees, taxes: tx.taxes,
           currency: tx.currency, orderId: tx.orderId, sourceRef: tx.sourceRef,
         }));
-        return importTransactions(userId, asParsed, "simple", csv, undefined, isPro, "Simple CSV");
+        return importTransactions(userId, asParsed, "simple", csv, undefined, plan, "Simple CSV");
       });
 
       return NextResponse.json({ jobId }, { status: 202 });
@@ -367,7 +368,7 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
         broker,
         csv,
         parser.parseCashBalances?.bind(parser),
-        isPro,
+        plan,
         parser.label,
       );
     });

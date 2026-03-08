@@ -3,6 +3,15 @@ export type BrokerFormat =
   | "interactive_brokers"
   | "trading_212"
   | "revolut"
+  | "charles_schwab"
+  | "fidelity"
+  | "nordnet"
+  | "tastytrade"
+  | "freetrade"
+  | "etoro"
+  | "wealthsimple"
+  | "questrade"
+  | "firstrade"
   | "simple";
 
 export interface ExtractedTransaction {
@@ -34,9 +43,9 @@ export interface CashBalance {
   amount: number;
 }
 
-export interface IbkrConnectionInfo {
+export interface SnapTradeConnectionInfo {
   connected: boolean;
-  queryId?: string;
+  snapTradeUserId?: string;
   label?: string;
   lastSyncedAt?: string;
 }

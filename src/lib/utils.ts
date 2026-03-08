@@ -47,6 +47,16 @@ export function formatPercent(value: number): string {
   return `${sign}${value.toFixed(2)}%`;
 }
 
+/**
+ * Format a currency value, replacing it with "•••••" when stealth mode is on.
+ * The underlying calculation must be complete before calling this helper;
+ * stealth wraps display only, never the computation.
+ */
+export function formatStealthCurrency(value: number, currency: string, stealthMode: boolean): string {
+  if (stealthMode) return "•••••";
+  return formatCurrency(value, currency);
+}
+
 export function formatNumber(value: number): string {
   return new Intl.NumberFormat("en-US", {
     minimumFractionDigits: 0,

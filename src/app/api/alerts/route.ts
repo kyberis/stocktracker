@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
 import { findUserById, listAlerts, countActiveAlerts, createAlert, deleteAlert, toggleAlert, trackEvent, isFeatureEnabled } from "@/lib/db";
-import { PLATFORM_LIMITS } from "@/lib/platform-config";
+import { getAlertLimit } from "@/lib/subscription";
 import { withMetrics } from "@/lib/with-metrics";
 import { parseBody } from "@/lib/api-response";
 import { createAlertSchema, toggleAlertSchema } from "@/lib/schemas";
@@ -17,11 +17,12 @@ export const GET = withMetrics("/api/alerts", async (req: NextRequest) => {
 
   const alerts = await listAlerts(session.userId);
   const user = await findUserById(session.userId);
-  const isPro = user?.plan === "pro";
+  const plan = (user?.plan || session.plan) ?? "free";
+  const alertLimit = getAlertLimit(plan);
   const activeCount = await countActiveAlerts(session.userId);
-  const limit = isPro ? null : PLATFORM_LIMITS.FREE_ALERT_LIMIT;
+  const limit = alertLimit === Infinity ? null : alertLimit;
 
-  return NextResponse.json({ alerts, activeCount, limit, isPro });
+  return NextResponse.json({ alerts, activeCount, limit, isPro: alertLimit === Infinity });
 });
 
 export const POST = withMetrics("/api/alerts", async (req: NextRequest) => {
@@ -37,20 +38,21 @@ export const POST = withMetrics("/api/alerts", async (req: NextRequest) => {
   const { ticker, name, condition, threshold, currency } = result.data;
 
   const user = await findUserById(session.userId);
-  const isPro = user?.plan === "pro";
+  const plan = (user?.plan || session.plan) ?? "free";
+  const alertLimit = getAlertLimit(plan);
 
-  if (!isPro) {
+  if (alertLimit < Infinity) {
     const activeCount = await countActiveAlerts(session.userId);
-    if (activeCount >= PLATFORM_LIMITS.FREE_ALERT_LIMIT) {
+    if (activeCount >= alertLimit) {
       trackEvent(session.userId, "alert_limit_reached", {
         activeCount: String(activeCount),
-        limit: String(PLATFORM_LIMITS.FREE_ALERT_LIMIT),
+        limit: String(alertLimit),
       });
       return NextResponse.json(
         {
-          error: "Free alert limit reached",
+          error: "Alert limit reached",
           reason: "alert_limit_reached",
-          limit: PLATFORM_LIMITS.FREE_ALERT_LIMIT,
+          limit: alertLimit,
           used: activeCount,
         },
         { status: 403 }
@@ -103,12 +105,13 @@ export const PATCH = withMetrics("/api/alerts", async (req: NextRequest) => {
 
   if (active) {
     const user = await findUserById(session.userId);
-    const isPro = user?.plan === "pro";
-    if (!isPro) {
+    const plan = (user?.plan || session.plan) ?? "free";
+    const alertLimit = getAlertLimit(plan);
+    if (alertLimit < Infinity) {
       const activeCount = await countActiveAlerts(session.userId);
-      if (activeCount >= PLATFORM_LIMITS.FREE_ALERT_LIMIT) {
+      if (activeCount >= alertLimit) {
         return NextResponse.json(
-          { error: "Free alert limit reached", reason: "alert_limit_reached" },
+          { error: "Alert limit reached", reason: "alert_limit_reached", limit: alertLimit },
           { status: 403 }
         );
       }

@@ -55,13 +55,13 @@ const HERO_FEATURES = [
     tag: "Dividends",
     title: "Track & Project Your Dividend Income",
     description:
-      "Monitor estimated annual income, per-stock dividend yields, and yearly history. Project future growth and plan your passive income strategy.",
+      "Monitor estimated annual income, per-stock dividend yields, upcoming ex-dividend dates, and yearly history. View monthly income vs. realized gains — and plan your passive income strategy.",
     screenshot: "/screenshots/dividends.png",
     points: [
       "Estimated annual dividend income",
       "Per-stock yield breakdowns",
-      "5-year growth projections",
-      "Historical dividend calendar",
+      "Ex-dividend calendar (next 90 days)",
+      "Monthly income chart with realized gains",
     ],
   },
   {
@@ -82,13 +82,13 @@ const HERO_FEATURES = [
     tag: "Import",
     title: "Import Your Portfolio in Seconds",
     description:
-      "Visit the unified /import page — all 7 methods in one place: DEGIRO, IBKR CSV, IBKR API, Trading 212, Revolut, Simple CSV, and AI Import. Step-by-step guides are built in for each method. Buys, sells, dividends, and fees are parsed automatically.",
+      "Visit the unified /import page — multiple methods in one place: 13 broker CSV formats, automatic Broker Sync, AI Import, and manual entry. Step-by-step guides are built in for each method. Buys, sells, dividends, and fees are parsed automatically.",
     screenshot: "/screenshots/tools-page.png",
     points: [
-      "7 methods on one page: DEGIRO, IBKR CSV, IBKR API, Trading 212, Revolut, Simple CSV, AI Import",
+      "13 broker CSV formats: DEGIRO, IBKR, Trading 212, Revolut, Schwab, Fidelity, and more",
+      "Automatic Broker Sync — connect your brokerage directly (Pro)",
+      "AI Import for any screenshot or unsupported format",
       "Built-in step-by-step guides for each method",
-      "IBKR API with guided setup wizard (Pro)",
-      "Filter totals by broker",
     ],
   },
 ];
@@ -112,17 +112,17 @@ const FEATURE_CARDS = [
   {
     icon: "upload",
     title: "Broker Import",
-    desc: "Unified /import page with 7 methods: DEGIRO, IBKR CSV, IBKR API, Trading 212, Revolut, Simple CSV, AI Import. Step-by-step guides built in.",
+    desc: "13 broker CSV formats, automatic Broker Sync, AI Import, and manual entry. Step-by-step guides for every method.",
   },
   {
-    icon: "bell",
-    title: "Price Alerts",
-    desc: "Set targets and get notified when stocks cross your price",
+    icon: "pie",
+    title: "Diversification",
+    desc: "Sector, region, asset class breakdowns with donut charts and rebalancing targets",
   },
   {
-    icon: "shield",
-    title: "Privacy First",
-    desc: "Your data is encrypted at rest and never sold to third parties",
+    icon: "eye",
+    title: "Stealth Mode",
+    desc: "Hide all monetary values with one click — perfect for screen-sharing or public spaces",
   },
 ];
 
@@ -150,34 +150,52 @@ const PRICING: PricingTier[] = [
       "Historical price charts",
       "Cash balance tracking",
       "Benchmark comparison (S&P 500, etc.)",
-      "DEGIRO, IBKR, Trading 212 & Revolut import",
+      "14 broker imports (DEGIRO, IBKR, Trading 212, etc.)",
       "Dark & light mode",
-      "English + Spanish",
+      "35+ languages",
       "5 AI analysis calls/month",
       "2 price alerts (in-app)",
+      "30-day portfolio history",
     ],
     cta: "Get Started Free",
   },
   {
-    name: "Pro",
-    price: "€4.99",
+    name: "Starter",
+    price: "€3.99",
     period: "/month",
-    description: "Advanced insights at a fraction of the cost. Up to 2x cheaper than alternatives.",
+    description: "For growing investors who want more room and sharing.",
     features: [
       "Everything in Free, plus:",
+      "Up to 50 stocks & ETFs",
+      "20 AI analysis calls/month",
+      "10 price alerts + email delivery",
+      "1-year portfolio growth history",
+      "Portfolio sharing (public link)",
+      "CSV export of holdings & transactions",
+    ],
+    cta: "Start with Starter",
+    highlighted: false,
+  },
+  {
+    name: "Pro",
+    price: "€7.49",
+    period: "/month",
+    description: "Full power for serious investors. 40% cheaper than alternatives.",
+    features: [
+      "Everything in Starter, plus:",
       "Unlimited holdings",
       "Unlimited AI analysis",
       "Company fundamentals (income, balance, cash flow)",
       "Stock intelligence (news, insider trades)",
       "Portfolio news feed across all holdings",
-      "Institutional holdings data",
       "Economic indicators dashboard",
       "Alpha Vantage premium data",
       "AI Portfolio Review (5/month)",
       "Unlimited price alerts + email delivery",
-      "IBKR direct API import & sync",
+      "Advanced metrics (Sharpe, Drawdown, Volatility)",
+      "Full portfolio history (all time)",
+      "Automatic Broker Sync (20+ brokerages)",
       "Priority support",
-      "Export to CSV",
     ],
     cta: "Start Pro Trial",
     highlighted: true,
@@ -189,11 +207,11 @@ const PRICING: PricingTier[] = [
 const FAQ_ITEMS = [
   {
     q: "How do I import my portfolio?",
-    a: "Go to the unified /import page to access all 7 import methods in one place: DEGIRO, IBKR CSV, IBKR API, Trading 212, Revolut, Simple CSV, and AI Import. Each method has a built-in step-by-step guide. For CSV or AI import: choose your method, drag & drop your file (or paste for AI), review the parsed transactions, and click Import. Pro users can connect via IBKR API with a guided 3-step wizard that takes under 2 minutes.",
+    a: "Go to the /import page to access all import methods: 13 broker CSV formats (DEGIRO, IBKR, Trading 212, Revolut, Schwab, Fidelity, and more), AI Import for screenshots or unsupported formats, and manual entry. Each method has a built-in step-by-step guide. Pro users can also use Broker Sync to connect their brokerage directly and import automatically.",
   },
   {
     q: "What CSV formats are supported?",
-    a: "Six CSV formats plus AI Import: (1) DEGIRO Account.csv, (2) IBKR CSV (Activity Statement or Flex Query), (3) Trading 212 History CSV, (4) Revolut Account Statement (Excel/CSV), (5) Simple CSV with columns: ticker, type, price, amount, currency. For any other format, use AI Import — upload or paste your file and AI will parse it. Pro users get IBKR API for direct sync — connect once, re-sync anytime with one click.",
+    a: "13 broker CSV formats: DEGIRO, Interactive Brokers, Trading 212, Revolut, Charles Schwab, Fidelity, Nordnet, Tastytrade, Freetrade, eToro, Wealthsimple, Questrade, Firstrade, plus a Simple CSV format. For any other format, use AI Import — upload a screenshot or paste your file and AI will parse it. Pro users can also use Broker Sync for automatic one-click import from 20+ brokerages.",
   },
   {
     q: "Is my data secure?",
@@ -208,12 +226,12 @@ const FAQ_ITEMS = [
     a: "TTWROR uses the Modified Dietz method, which weights each cash flow by the fraction of the period remaining — so returns reflect market performance only, not deposit timing. IRR (XIRR) finds the annualized rate that makes the net present value of all dated cash flows equal zero.",
   },
   {
-    q: "What's the difference between Free and Pro?",
-    a: "Free includes up to 15 holdings, real-time quotes, charts, broker import, and 5 AI calls/month. Pro (€4.99/month) adds unlimited holdings, unlimited AI analysis, company fundamentals, stock intelligence, economic indicators, and Alpha Vantage premium data.",
+    q: "What's the difference between the plans?",
+    a: "Free includes 15 holdings, real-time quotes, charts, broker import, and 5 AI calls/month. Starter (€3.99/month) raises the limit to 50 holdings, 20 AI calls, portfolio sharing, and CSV export. Pro (€7.49/month) adds unlimited holdings, unlimited AI, fundamentals, intelligence, economic indicators, Alpha Vantage, and advanced metrics.",
   },
   {
-    q: "Can I cancel Pro anytime?",
-    a: "Yes. Pro is billed monthly (€4.99) or annually (€39.99/year, save 33%). You can cancel anytime from the billing portal — your Pro features remain active until the end of the billing period.",
+    q: "Can I cancel anytime?",
+    a: "Yes. Starter and Pro are billed monthly or annually (save ~37% with annual billing). Cancel anytime from the billing portal — your paid features remain active until the end of the billing period.",
   },
   {
     q: "How do dividends and fees get tracked?",
@@ -262,6 +280,14 @@ function FeatureIcon({ type }: { type: string }) {
     ),
     shield: (
       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+    ),
+    pie: (
+      <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6z M13.5 10.5H21A7.5 7.5 0 0013.5 3v7.5z" />
+    ),
+    eye: (
+      <>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+      </>
     ),
   };
 
@@ -1111,11 +1137,11 @@ function PricingSection() {
             <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">Pricing</span>
           </h2>
           <p className="text-lg text-slate-400 max-w-xl mx-auto">
-            Start free with up to 15 holdings. Pro at €4.99/month — up to 2x cheaper than alternatives. No hidden fees, cancel anytime.
+            Start free. Starter at €3.99/month, Pro at €7.49/month — up to 40% cheaper than alternatives. No hidden fees, cancel anytime.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
           {PRICING.map((tier) => (
             <div
               key={tier.name}
@@ -1167,7 +1193,7 @@ function PricingSection() {
         </div>
 
         <p className="text-center text-sm text-slate-500 mt-8">
-          Annual plan available: €39.99/year (save 33%). Cancel anytime.
+          Annual plans: Starter €29.99/year, Pro €59.99/year (save ~37%). Cancel anytime.
         </p>
 
         {/* Competitor price comparison */}
@@ -1177,9 +1203,9 @@ function PricingSection() {
           </h3>
           <div className="grid grid-cols-3 gap-4">
             {[
-              { name: "trefolio Pro", price: "€40", period: "/year", highlight: true },
-              { name: "Typical Starter Plan", price: "$80", period: "/year", highlight: false },
-              { name: "Typical Premium Plan", price: "€90", period: "/year", highlight: false },
+              { name: "trefolio Pro", price: "€60", period: "/year", highlight: true },
+              { name: "Snowball Starter", price: "$80", period: "/year", highlight: false },
+              { name: "Snowball Investor", price: "$150", period: "/year", highlight: false },
             ].map((plan) => (
               <div
                 key={plan.name}
@@ -1267,6 +1293,7 @@ function Footer() {
       { label: "Pricing", href: "#pricing" },
       { label: "FAQ", href: "#faq" },
       { label: "Blog", href: "/blog" },
+      { label: "Contact Us", href: "/contact" },
     ],
     account: [
       { label: "Sign Up", href: "/signup" },

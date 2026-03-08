@@ -268,7 +268,7 @@ export async function incrementDailyAiUsage(userId: string): Promise<number> {
 
 export async function countProSubscribers(): Promise<number> {
   const client = await ensureInitialized();
-  const result = await client.execute("SELECT COUNT(*) as cnt FROM users WHERE plan = 'pro'");
+  const result = await client.execute("SELECT COUNT(*) as cnt FROM users WHERE plan IN ('starter', 'pro')");
   return num(result.rows[0]?.cnt);
 }
 
