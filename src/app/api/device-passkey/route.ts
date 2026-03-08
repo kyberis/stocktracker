@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { generateDevicePasskey, revokeDevicePasskey, findUserById } from "@/lib/db";
+import { generateDevicePasskey, revokeDevicePasskey, findUserById, isFeatureEnabled } from "@/lib/db";
 import { withMetrics } from "@/lib/with-metrics";
 
+const DISABLED_RESPONSE = NextResponse.json({ error: "Device features are not enabled" }, { status: 404 });
+
 export const POST = withMetrics("/api/device-passkey", async (req: NextRequest) => {
+  if (!(await isFeatureEnabled("device_enabled"))) return DISABLED_RESPONSE;
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
 
@@ -12,6 +15,7 @@ export const POST = withMetrics("/api/device-passkey", async (req: NextRequest) 
 });
 
 export const DELETE = withMetrics("/api/device-passkey", async (req: NextRequest) => {
+  if (!(await isFeatureEnabled("device_enabled"))) return DISABLED_RESPONSE;
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
 
@@ -20,6 +24,9 @@ export const DELETE = withMetrics("/api/device-passkey", async (req: NextRequest
 });
 
 export const GET = withMetrics("/api/device-passkey", async (req: NextRequest) => {
+  if (!(await isFeatureEnabled("device_enabled"))) {
+    return NextResponse.json({ hasPasskey: false, deviceLinked: false, disabled: true });
+  }
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
 

@@ -5,7 +5,7 @@ import { parseBody } from "@/lib/api-response";
 import { featureFlagSchema } from "@/lib/schemas";
 import { withMetrics } from "@/lib/with-metrics";
 
-const ALLOWED_FLAGS: PlatformFeature[] = ["alerts_enabled", "csv_export_enabled", "apple_signin_enabled"];
+const ALLOWED_FLAGS: PlatformFeature[] = ["alerts_enabled", "csv_export_enabled", "apple_signin_enabled", "device_enabled"];
 
 export const GET = withMetrics("/api/admin/feature-flags", async (req: NextRequest) => {
   const { error } = await requireAdmin(req);

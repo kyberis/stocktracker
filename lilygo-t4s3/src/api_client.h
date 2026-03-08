@@ -19,3 +19,6 @@ bool api_fetch_device_config(DeviceConfig &out);
 
 // Check for firmware update. Returns true if an update is available.
 bool api_check_firmware_update(FirmwareInfo &out);
+
+// Fetch 1-month sparkline (20 daily close prices) for a single ticker.
+bool api_fetch_sparkline(const char *ticker, SparklineData &out);

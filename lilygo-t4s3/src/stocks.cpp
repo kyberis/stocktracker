@@ -7,11 +7,15 @@ void portfolio_clear(PortfolioData &d) {
     d.aiLoaded = false;
 }
 
+void sparkline_clear(SparklineData &s) {
+    memset(&s, 0, sizeof(s));
+}
+
 void device_config_clear(DeviceConfig &c) {
     memset(&c, 0, sizeof(c));
     strncpy(c.plan, "free", sizeof(c.plan) - 1);
     c.aiSummaryEnabled = false;
-    c.topHoldingsCount = MAX_TOP_HOLDINGS;
+    c.topHoldingsCount = MAX_DASH_HOLDINGS;
     c.refreshIntervalSec = 120;
     strncpy(c.templateId, "classic-dark", sizeof(c.templateId) - 1);
 }

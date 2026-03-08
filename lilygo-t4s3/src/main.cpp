@@ -25,12 +25,9 @@ static void fetch_and_show() {
     ui_set_status("Syncing...");
     bool ok = api_fetch_portfolio(portfolio);
     last_refresh = millis();
-    ui_update_countdown((int)(refresh_interval_ms / 1000));
+    ui_update_countdown(0);
     if (ok) {
         ui_update_portfolio(portfolio);
-        char status[64];
-        snprintf(status, sizeof(status), "%d holdings   Synced", portfolio.holdingsCount);
-        ui_set_status(status);
         ui_set_live_state(true);
         ota_mark_valid();
     } else {
@@ -69,6 +66,31 @@ static void on_ai_request() {
         ui_update_ai_summary("Unable to load AI summary.\nPlease try again later.");
     }
     ui_update_ai_usage(portfolio.aiUsed, portfolio.aiLimit);
+}
+
+static SparklineData sparkline_buf;
+
+static void on_view_all() {
+    ui_update_holdings_list(portfolio);
+    ui_show_holdings_list();
+}
+
+static void on_holding_tap(int idx) {
+    ui_show_stock_detail(idx);
+}
+
+static void on_sparkline_request(const char *ticker) {
+    Serial.printf("Fetching sparkline for %s...\n", ticker);
+    lv_task_handler();
+    if (api_fetch_sparkline(ticker, sparkline_buf)) {
+        ui_update_sparkline(sparkline_buf);
+        Serial.printf("Sparkline loaded: %d points\n", sparkline_buf.count);
+    } else {
+        SparklineData empty;
+        sparkline_clear(empty);
+        ui_update_sparkline(empty);
+        Serial.println("Sparkline fetch failed.");
+    }
 }
 
 static void on_token_submit(const char *entered_token);
@@ -119,6 +141,9 @@ void setup() {
     ui_set_ai_callback(on_ai_request);
     ui_set_retry_callback(on_retry);
     ui_set_refresh_callback(on_manual_refresh);
+    ui_set_view_all_callback(on_view_all);
+    ui_set_holding_tap_callback(on_holding_tap);
+    ui_set_sparkline_callback(on_sparkline_request);
 
     // WiFi provisioning: if no credentials stored, enter setup mode
     if (!wifi_provision_has_credentials()) {
@@ -193,8 +218,8 @@ void loop() {
         if (now - last_refresh >= refresh_interval_ms) {
             fetch_and_show();
         } else {
-            int remaining = (int)((refresh_interval_ms - (now - last_refresh)) / 1000);
-            ui_update_countdown(remaining);
+            int elapsed = (int)((now - last_refresh) / 1000);
+            ui_update_countdown(elapsed);
         }
 
         // Periodic OTA check (every 6 hours)

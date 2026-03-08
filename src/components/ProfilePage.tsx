@@ -23,7 +23,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, refreshUser } = useAuth();
-  const { provider, hasGlobalAvKey, setProvider } = useSettings();
+  const { provider, hasGlobalAvKey, setProvider, deviceEnabled } = useSettings();
   const { t } = useI18n();
 
   const [displayName, setDisplayName] = useState("");
@@ -968,8 +968,8 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* Device Passkey (T4-S3) */}
-        <div className="card p-6 space-y-4">
+        {/* Device Passkey (T4-S3) — gated by device_enabled feature flag */}
+        {deviceEnabled && <div className="card p-6 space-y-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-violet-100 dark:bg-violet-500/15 flex items-center justify-center">
               <Monitor className="w-5 h-5 text-violet-600 dark:text-violet-400" />
@@ -1031,10 +1031,10 @@ export default function ProfilePage() {
               </div>
             </div>
           )}
-        </div>
+        </div>}
 
         {/* Device Display Theme — only shown after a device has actually connected */}
-        {deviceLinked && (
+        {deviceEnabled && deviceLinked && (
           <div className="card p-6 space-y-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-500/15 flex items-center justify-center">

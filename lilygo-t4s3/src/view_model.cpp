@@ -31,8 +31,8 @@ void view_model_compute(const PortfolioData &data, const DeviceConfig &cfg, Port
     snprintf(vm.holdingsCountStr, sizeof(vm.holdingsCountStr), "%d holdings", data.holdingsCount);
 
     // Top holdings (respect config limit)
-    int maxHoldings = cfg.topHoldingsCount > 0 ? cfg.topHoldingsCount : MAX_TOP_HOLDINGS;
-    if (maxHoldings > MAX_TOP_HOLDINGS) maxHoldings = MAX_TOP_HOLDINGS;
+    int maxHoldings = cfg.topHoldingsCount > 0 ? cfg.topHoldingsCount : MAX_DASH_HOLDINGS;
+    if (maxHoldings > MAX_DASH_HOLDINGS) maxHoldings = MAX_DASH_HOLDINGS;
     vm.holdingCount = 0;
     for (int i = 0; i < data.topCount && i < maxHoldings; i++) {
         HoldingVM &h = vm.holdings[vm.holdingCount++];

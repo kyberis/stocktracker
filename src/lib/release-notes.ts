@@ -14,9 +14,27 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "0.45.0";
+export const CURRENT_VERSION = "0.46.0";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "0.46.0",
+    date: "2026-03-08",
+    title: "Device Feature Flag & Landing Page Promotion",
+    titleTranslations: { es: "Flag de Funcionalidad del Dispositivo y Promoción en Página Principal" },
+    changes: [
+      {
+        type: "feature",
+        text: "All T4-S3 device features (passkey, linking, display themes, firmware OTA, AI summary, landing page promotion) are now gated behind an admin-controlled feature flag — disabled by default until launch",
+        translations: { es: "Todas las funcionalidades del dispositivo T4-S3 (clave, vinculación, temas de pantalla, OTA de firmware, resumen IA, promoción en landing) están ahora controladas por un flag de admin — deshabilitadas por defecto hasta el lanzamiento" },
+      },
+      {
+        type: "feature",
+        text: "Landing page device promotion section showcasing the T4-S3 AMOLED hardware display with portfolio dashboard preview — only visible when device flag is enabled",
+        translations: { es: "Sección de promoción del dispositivo en la landing mostrando la pantalla AMOLED T4-S3 con vista previa del panel de cartera — solo visible cuando el flag del dispositivo está habilitado" },
+      },
+    ],
+  },
   {
     version: "0.45.0",
     date: "2026-03-08",

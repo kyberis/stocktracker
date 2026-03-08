@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest } from "next/server";
-import { findUserByWidgetToken, findUserByDevicePasskey } from "@/lib/db";
+import { findUserByWidgetToken, findUserByDevicePasskey, isFeatureEnabled } from "@/lib/db";
 import { withMetrics } from "@/lib/with-metrics";
 import { deviceHeartbeats, deviceErrors } from "@/lib/metrics";
 
@@ -13,6 +13,10 @@ async function resolveUser(req: NextRequest) {
 }
 
 export const POST = withMetrics("/api/device/heartbeat", async (req: NextRequest) => {
+  if (!(await isFeatureEnabled("device_enabled"))) {
+    return Response.json({ error: "Device features are not enabled" }, { status: 404 });
+  }
+
   const user = await resolveUser(req);
   if (!user) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });

@@ -33,6 +33,8 @@ static uint32_t refresh_ms = 60000;
 static uint32_t last_fetch_ms = 0;
 static bool mock_mode = false;
 
+static SparklineData sparkline_buf;
+
 static void fill_mock_portfolio() {
     portfolio_clear(portfolio);
     portfolio.totalValueEUR     = 42850.75;
@@ -43,26 +45,24 @@ static void fill_mock_portfolio() {
     portfolio.dayChangePercent  = 0.73;
     portfolio.holdingsCount     = 5;
     portfolio.topCount          = 5;
-    strncpy(portfolio.top[0].ticker, "AAPL", 11);
-    strncpy(portfolio.top[0].name,   "Apple Inc.", 39);
-    portfolio.top[0].weight    = 28.5;
-    portfolio.top[0].dayChange = 1.82;
-    strncpy(portfolio.top[1].ticker, "MSFT", 11);
-    strncpy(portfolio.top[1].name,   "Microsoft Corp", 39);
-    portfolio.top[1].weight    = 22.0;
-    portfolio.top[1].dayChange = -0.45;
-    strncpy(portfolio.top[2].ticker, "GOOGL", 11);
-    strncpy(portfolio.top[2].name,   "Alphabet Inc.", 39);
-    portfolio.top[2].weight    = 18.3;
-    portfolio.top[2].dayChange = 0.92;
-    strncpy(portfolio.top[3].ticker, "AMZN", 11);
-    strncpy(portfolio.top[3].name,   "Amazon.com", 39);
-    portfolio.top[3].weight    = 16.7;
-    portfolio.top[3].dayChange = -1.23;
-    strncpy(portfolio.top[4].ticker, "NVDA", 11);
-    strncpy(portfolio.top[4].name,   "NVIDIA Corp", 39);
-    portfolio.top[4].weight    = 14.5;
-    portfolio.top[4].dayChange = 3.15;
+
+    struct { const char *t; const char *n; float w; float d; float s; float p; const char *c; } mocks[] = {
+        {"AAPL",  "Apple Inc.",      28.5f,  1.82f, 45.0f,  227.50f, "USD"},
+        {"MSFT",  "Microsoft Corp",  22.0f, -0.45f, 30.0f,  415.20f, "USD"},
+        {"GOOGL", "Alphabet Inc.",   18.3f,  0.92f, 25.0f,  175.80f, "USD"},
+        {"AMZN",  "Amazon.com",      16.7f, -1.23f, 20.0f,  198.40f, "USD"},
+        {"NVDA",  "NVIDIA Corp",     14.5f,  3.15f, 15.0f,  880.00f, "USD"},
+    };
+    for (int i = 0; i < 5; i++) {
+        strncpy(portfolio.top[i].ticker, mocks[i].t, sizeof(portfolio.top[i].ticker) - 1);
+        strncpy(portfolio.top[i].name, mocks[i].n, sizeof(portfolio.top[i].name) - 1);
+        portfolio.top[i].weight    = mocks[i].w;
+        portfolio.top[i].dayChange = mocks[i].d;
+        portfolio.top[i].shares    = mocks[i].s;
+        portfolio.top[i].price     = mocks[i].p;
+        strncpy(portfolio.top[i].currency, mocks[i].c, sizeof(portfolio.top[i].currency) - 1);
+    }
+
     portfolio.aiLoaded = true;
     portfolio.aiUsed   = 2;
     portfolio.aiLimit  = 5;
@@ -106,14 +106,11 @@ static void fetch_and_show() {
     printf("[SIM] Fetching portfolio data...\n");
     bool ok = api_fetch_portfolio(portfolio);
     last_fetch_ms = SDL_GetTicks();
-    ui_update_countdown((int)(refresh_ms / 1000));
+    ui_update_countdown(0);
     if (ok) {
         printf("[SIM] Portfolio: %.2f EUR, %d holdings\n",
                portfolio.totalValueEUR, portfolio.holdingsCount);
         ui_update_portfolio(portfolio);
-        char status[64];
-        snprintf(status, sizeof(status), "%d holdings   Synced", portfolio.holdingsCount);
-        ui_set_status(status);
         ui_set_live_state(true);
     } else {
         printf("[SIM] Portfolio fetch FAILED.\n");
@@ -136,10 +133,9 @@ static void on_manual_refresh() {
     printf("[SIM] Manual refresh requested.\n");
     if (mock_mode) {
         last_fetch_ms = SDL_GetTicks();
-        ui_update_countdown((int)(refresh_ms / 1000));
+        ui_update_countdown(0);
         ui_update_portfolio(portfolio);
         ui_set_live_state(true);
-        ui_set_status("5 holdings   Synced (mock)");
     } else {
         fetch_and_show();
     }
@@ -161,6 +157,37 @@ static void on_ai_request() {
         }
     }
     ui_update_ai_usage(portfolio.aiUsed, portfolio.aiLimit);
+}
+
+static void on_view_all() {
+    ui_update_holdings_list(portfolio);
+    ui_show_holdings_list();
+}
+
+static void on_holding_tap(int idx) {
+    ui_show_stock_detail(idx);
+}
+
+static void on_sparkline_request(const char *ticker) {
+    printf("[SIM] Fetching sparkline for %s...\n", ticker);
+    lv_timer_handler();
+    if (mock_mode) {
+        sparkline_clear(sparkline_buf);
+        strncpy(sparkline_buf.ticker, ticker, sizeof(sparkline_buf.ticker) - 1);
+        sparkline_buf.count = MAX_SPARKLINE_PTS;
+        float base = 150.0f + (float)(rand() % 100);
+        for (int i = 0; i < MAX_SPARKLINE_PTS; i++)
+            sparkline_buf.close[i] = base + (float)(rand() % 20 - 10);
+        ui_update_sparkline(sparkline_buf);
+    } else if (api_fetch_sparkline(ticker, sparkline_buf)) {
+        printf("[SIM] Sparkline loaded: %d points\n", sparkline_buf.count);
+        ui_update_sparkline(sparkline_buf);
+    } else {
+        SparklineData empty;
+        sparkline_clear(empty);
+        ui_update_sparkline(empty);
+        printf("[SIM] Sparkline fetch failed.\n");
+    }
 }
 
 static void on_token_submit(const char *entered_token);
@@ -237,6 +264,9 @@ int main(int argc, char **argv) {
     ui_set_ai_callback(on_ai_request);
     ui_set_retry_callback(on_retry);
     ui_set_refresh_callback(on_manual_refresh);
+    ui_set_view_all_callback(on_view_all);
+    ui_set_holding_tap_callback(on_holding_tap);
+    ui_set_sparkline_callback(on_sparkline_request);
 
     if (mock_mode) {
         fill_mock_portfolio();
@@ -248,7 +278,7 @@ int main(int argc, char **argv) {
         ui_update_ai_usage(portfolio.aiUsed, portfolio.aiLimit);
         ui_set_ai_visible(true);
         ui_set_live_state(true);
-        ui_update_countdown((int)(refresh_ms / 1000));
+        ui_update_countdown(0);
     } else if (cli_token) {
         config_save_token(cli_token);
         api_init(API_BASE_URL, cli_token);
@@ -306,8 +336,8 @@ int main(int argc, char **argv) {
             if (elapsed >= refresh_ms) {
                 fetch_and_show();
             } else {
-                int remaining = (int)((refresh_ms - elapsed) / 1000);
-                ui_update_countdown(remaining);
+                int secs_ago = (int)(elapsed / 1000);
+                ui_update_countdown(secs_ago);
             }
         }
 

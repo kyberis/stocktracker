@@ -105,18 +105,33 @@ export const GET = withMetrics("/api/portfolio/summary", async (req: NextRequest
 
   const holdingValues = holdings.map((h) => {
     const q = quotes[h.ticker];
-    const value = q && q.regularMarketPrice > 0
-      ? h.shares * q.regularMarketPrice
-      : h.valueInEUR;
-    return { ticker: h.ticker, name: h.name, value, dayChange: q?.regularMarketChangePercent ?? 0 };
+    const price = q?.regularMarketPrice ?? 0;
+    const value = price > 0 ? h.shares * price : h.valueInEUR;
+    return {
+      ticker: h.ticker,
+      name: h.name,
+      value,
+      dayChange: q?.regularMarketChangePercent ?? 0,
+      shares: h.shares,
+      price,
+      currency: q?.currency ?? h.displayCurrency ?? "EUR",
+    };
   });
   holdingValues.sort((a, b) => b.value - a.value);
   const totalVal = holdingValues.reduce((s, h) => s + h.value, 0);
-  const topHoldings = holdingValues.slice(0, 5).map((h) => ({
+
+  const full = req.nextUrl.searchParams.get("full") === "true";
+  const sliced = full ? holdingValues.slice(0, 30) : holdingValues.slice(0, 5);
+  const topHoldings = sliced.map((h) => ({
     ticker: h.ticker,
     name: h.name,
     weight: totalVal > 0 ? Math.round((h.value / totalVal) * 1000) / 10 : 0,
     dayChange: Math.round(h.dayChange * 100) / 100,
+    ...(full ? {
+      shares: Math.round(h.shares * 1000) / 1000,
+      price: Math.round(h.price * 100) / 100,
+      currency: h.currency,
+    } : {}),
   }));
 
   const dayChangePercent = totals.totalCurrentEUR > 0

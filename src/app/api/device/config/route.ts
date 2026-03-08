@@ -6,6 +6,7 @@ import {
   findUserByDevicePasskey,
   markDeviceLinked,
   getDeviceTemplate,
+  isFeatureEnabled,
 } from "@/lib/db";
 import { withMetrics } from "@/lib/with-metrics";
 import { deviceApiCalls } from "@/lib/metrics";
@@ -27,6 +28,10 @@ async function resolveUser(req: NextRequest) {
 }
 
 export const GET = withMetrics("/api/device/config", async (req: NextRequest) => {
+  if (!(await isFeatureEnabled("device_enabled"))) {
+    return Response.json({ error: "Device features are not enabled" }, { status: 404 });
+  }
+
   const fwVersion = req.headers.get("x-firmware-version");
   if (fwVersion) deviceApiCalls.inc({ fw_version: fwVersion, route: "/api/device/config", status: "attempt" });
 

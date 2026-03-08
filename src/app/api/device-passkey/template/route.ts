@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { getDeviceTemplate, updateDeviceTemplate } from "@/lib/db";
+import { getDeviceTemplate, updateDeviceTemplate, isFeatureEnabled } from "@/lib/db";
 import { withMetrics } from "@/lib/with-metrics";
 
 const VALID_TEMPLATES = ["classic-dark", "wall-street", "minimal-light", "midnight-green"];
 const PRO_ONLY_TEMPLATES = ["wall-street", "minimal-light", "midnight-green"];
 
+const DISABLED_RESPONSE = NextResponse.json({ error: "Device features are not enabled" }, { status: 404 });
+
 export const GET = withMetrics("/api/device-passkey/template", async (req: NextRequest) => {
+  if (!(await isFeatureEnabled("device_enabled"))) return DISABLED_RESPONSE;
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
 
@@ -15,6 +18,7 @@ export const GET = withMetrics("/api/device-passkey/template", async (req: NextR
 });
 
 export const PUT = withMetrics("/api/device-passkey/template", async (req: NextRequest) => {
+  if (!(await isFeatureEnabled("device_enabled"))) return DISABLED_RESPONSE;
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
 

@@ -194,7 +194,7 @@ export const adminResetDataSchema = z.object({
 });
 
 export const featureFlagSchema = z.object({
-  flag: z.enum(["alerts_enabled", "csv_export_enabled", "apple_signin_enabled"]),
+  flag: z.enum(["alerts_enabled", "csv_export_enabled", "apple_signin_enabled", "device_enabled"]),
   enabled: z.boolean(),
 });
 

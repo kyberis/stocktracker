@@ -8,6 +8,8 @@
 #include <cstring>
 #include <cmath>
 #include <cstdlib>
+#include "icon_48.h"
+#include "icon_28.h"
 
 // European-style thousand separator: 90619 -> "90.619", 1234.56 -> "1.234,56"
 static void fmt_eur(char *out, size_t len, double val, int decimals) {
@@ -94,8 +96,6 @@ static lv_obj_t *dash_ai_text    = nullptr;
 static lv_obj_t *dash_ai_btn     = nullptr;
 static lv_obj_t *dash_ai_card    = nullptr;
 static lv_obj_t *dash_ai_usage   = nullptr;
-static lv_obj_t *dash_countdown  = nullptr;
-static lv_obj_t *dash_refresh_btn = nullptr;
 static lv_obj_t *dash_live_dot   = nullptr;
 static lv_obj_t *dash_live_lbl   = nullptr;
 static lv_anim_t live_pulse_anim;
@@ -111,7 +111,43 @@ struct HoldingRow {
     lv_obj_t *arrow;
     lv_obj_t *change;
 };
-static HoldingRow hold_rows[MAX_TOP_HOLDINGS];
+static HoldingRow hold_rows[MAX_DASH_HOLDINGS];
+
+// ── All Holdings screen widgets ──────────────────────────────────────
+static lv_obj_t *scr_holdings       = nullptr;
+static lv_obj_t *hl_list_container  = nullptr;
+static RefreshCb  s_view_all_cb     = nullptr;
+static HoldingTapCb s_holding_tap_cb = nullptr;
+static const PortfolioData *s_cached_portfolio = nullptr;
+
+struct HoldingListRow {
+    lv_obj_t *row;
+    lv_obj_t *ticker;
+    lv_obj_t *name;
+    lv_obj_t *shares_lbl;
+    lv_obj_t *price_lbl;
+    lv_obj_t *change;
+};
+static HoldingListRow hl_rows[MAX_ALL_HOLDINGS];
+static int hl_row_count = 0;
+
+// ── Stock Detail screen widgets ──────────────────────────────────────
+static lv_obj_t *scr_detail         = nullptr;
+static lv_obj_t *det_ticker_lbl     = nullptr;
+static lv_obj_t *det_name_lbl       = nullptr;
+static lv_obj_t *det_shares_lbl     = nullptr;
+static lv_obj_t *det_price_lbl      = nullptr;
+static lv_obj_t *det_value_lbl      = nullptr;
+static lv_obj_t *det_daychange_lbl  = nullptr;
+static lv_obj_t *det_weight_lbl     = nullptr;
+static lv_obj_t *det_chart          = nullptr;
+static lv_chart_series_t *det_series = nullptr;
+static lv_obj_t *det_chart_spinner  = nullptr;
+static lv_obj_t *det_chart_card     = nullptr;
+static lv_obj_t *det_min_lbl        = nullptr;
+static lv_obj_t *det_max_lbl        = nullptr;
+static SparklineRequestCb s_sparkline_cb = nullptr;
+static int s_detail_holding_idx     = -1;
 
 // ── Trefolio logo (four-petal clover mark) ──────────────────────────
 static lv_obj_t *make_logo(lv_obj_t *parent, lv_coord_t size) {
@@ -476,12 +512,12 @@ static void build_token() {
 }
 
 // ── Build: dashboard screen ─────────────────────────────────────────
+static void on_holding_row_click(lv_event_t *e);
+
 static void on_ai_click(lv_event_t *) {
     if (s_ai_cb) s_ai_cb();
 }
-static void on_refresh_click(lv_event_t *) {
-    if (s_refresh_cb) s_refresh_cb();
-}
+
 
 static void build_dashboard() {
     scr_dash = make_screen();
@@ -509,7 +545,7 @@ static void build_dashboard() {
     lv_obj_t *logo_text = lv_label_create(hdr);
     lv_label_set_text(logo_text, "trefolio");
     lv_obj_set_style_text_font(logo_text, &lv_font_montserrat_16, 0);
-    lv_obj_set_style_text_color(logo_text, COL_TEXT(), 0);
+    lv_obj_set_style_text_color(logo_text, COL_ACCENT(), 0);
     lv_obj_set_style_text_letter_space(logo_text, 0, 0);
     lv_obj_align_to(logo_text, logo_icon, LV_ALIGN_OUT_RIGHT_MID, 8, 0);
 
@@ -545,32 +581,11 @@ static void build_dashboard() {
     lv_obj_set_style_text_color(dash_status_lbl, COL_DIM(), 0);
     lv_obj_align(dash_status_lbl, LV_ALIGN_LEFT_MID, 0, 0);
 
-    // Countdown label (e.g., "1:34") — created first so refresh btn can sit right of it
-    dash_countdown = lv_label_create(ftr);
-    lv_label_set_text(dash_countdown, "--:--");
-    lv_obj_set_style_text_font(dash_countdown, &lv_font_montserrat_12, 0);
-    lv_obj_set_style_text_color(dash_countdown, COL_DIM(), 0);
-    lv_obj_set_style_min_width(dash_countdown, 36, 0);
-    lv_obj_set_style_text_align(dash_countdown, LV_TEXT_ALIGN_RIGHT, 0);
-    lv_obj_align(dash_countdown, LV_ALIGN_RIGHT_MID, -36, 0);
-
-    // Refresh button (small pill) — positioned to the right of countdown
-    dash_refresh_btn = lv_btn_create(ftr);
-    lv_obj_set_size(dash_refresh_btn, 24, 22);
-    lv_obj_align(dash_refresh_btn, LV_ALIGN_RIGHT_MID, -6, 0);
-    lv_obj_set_style_bg_color(dash_refresh_btn, COL_ACCENT(), 0);
-    lv_obj_set_style_bg_opa(dash_refresh_btn, 50, 0);
-    lv_obj_set_style_radius(dash_refresh_btn, 6, 0);
-    lv_obj_set_style_shadow_width(dash_refresh_btn, 0, 0);
-    lv_obj_set_style_pad_all(dash_refresh_btn, 0, 0);
-    lv_obj_set_style_border_width(dash_refresh_btn, 0, 0);
-    lv_obj_add_event_cb(dash_refresh_btn, on_refresh_click, LV_EVENT_CLICKED, nullptr);
-
-    lv_obj_t *ref_icon = lv_label_create(dash_refresh_btn);
-    lv_label_set_text(ref_icon, LV_SYMBOL_REFRESH);
-    lv_obj_set_style_text_font(ref_icon, &lv_font_montserrat_12, 0);
-    lv_obj_set_style_text_color(ref_icon, COL_ACCENT(), 0);
-    lv_obj_center(ref_icon);
+    lv_obj_t *ftr_brand = lv_label_create(ftr);
+    lv_label_set_text(ftr_brand, "trefolio.com");
+    lv_obj_set_style_text_font(ftr_brand, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(ftr_brand, COL_DIM(), 0);
+    lv_obj_align(ftr_brand, LV_ALIGN_RIGHT_MID, -16, 0);
 
     // ── Left panel: portfolio summary card ──────────────────────────
     lv_coord_t panel_h = sh - hdr_h - ftr_h;
@@ -584,23 +599,17 @@ static void build_dashboard() {
     lv_obj_set_style_pad_bottom(lcard, 12, 0);
 
     lv_obj_t *tv_lbl = lv_label_create(lcard);
-    lv_label_set_text(tv_lbl, "TOTAL VALUE");
+    lv_label_set_text(tv_lbl, "Total Value");
     lv_obj_set_style_text_font(tv_lbl, &lv_font_montserrat_12, 0);
     lv_obj_set_style_text_color(tv_lbl, COL_TEXT_SEC(), 0);
-    lv_obj_set_style_text_letter_space(tv_lbl, 1, 0);
+    lv_obj_set_style_text_letter_space(tv_lbl, 0, 0);
     lv_obj_align(tv_lbl, LV_ALIGN_TOP_LEFT, 0, 0);
-
-    lv_obj_t *eur_lbl = lv_label_create(lcard);
-    lv_label_set_text(eur_lbl, "EUR");
-    lv_obj_set_style_text_font(eur_lbl, &lv_font_montserrat_14, 0);
-    lv_obj_set_style_text_color(eur_lbl, COL_DIM(), 0);
-    lv_obj_align(eur_lbl, LV_ALIGN_TOP_LEFT, 0, 20);
 
     dash_total_val = lv_label_create(lcard);
     lv_label_set_text(dash_total_val, "---");
     lv_obj_set_style_text_font(dash_total_val, &lv_font_montserrat_30, 0);
     lv_obj_set_style_text_color(dash_total_val, COL_TEXT(), 0);
-    lv_obj_align(dash_total_val, LV_ALIGN_TOP_LEFT, 34, 16);
+    lv_obj_align(dash_total_val, LV_ALIGN_TOP_LEFT, 0, 16);
 
     // Day change pill badge
     dash_day_change = lv_label_create(lcard);
@@ -633,10 +642,10 @@ static void build_dashboard() {
     lv_obj_set_style_pad_all(sep1, 0, 0);
 
     lv_obj_t *pl_lbl = lv_label_create(lcard);
-    lv_label_set_text(pl_lbl, "GAIN / LOSS");
+    lv_label_set_text(pl_lbl, "Gain / Loss");
     lv_obj_set_style_text_font(pl_lbl, &lv_font_montserrat_12, 0);
     lv_obj_set_style_text_color(pl_lbl, COL_TEXT_SEC(), 0);
-    lv_obj_set_style_text_letter_space(pl_lbl, 1, 0);
+    lv_obj_set_style_text_letter_space(pl_lbl, 0, 0);
     lv_obj_align(pl_lbl, LV_ALIGN_TOP_LEFT, 0, 110);
 
     dash_pl_val = lv_label_create(lcard);
@@ -684,7 +693,7 @@ static void build_dashboard() {
     lv_coord_t rows_start = 30;
     lv_coord_t card_inner_w = right_w - card_m * 2;
 
-    for (int i = 0; i < MAX_TOP_HOLDINGS; i++) {
+    for (int i = 0; i < MAX_DASH_HOLDINGS; i++) {
         lv_coord_t y = rows_start + i * row_h;
         lv_obj_t *row = lv_obj_create(hcard);
         lv_obj_set_size(row, card_inner_w, row_h);
@@ -694,6 +703,12 @@ static void build_dashboard() {
         lv_obj_set_style_pad_left(row, 14, 0);
         lv_obj_set_style_pad_right(row, 14, 0);
         lv_obj_set_scrollbar_mode(row, LV_SCROLLBAR_MODE_OFF);
+        lv_obj_clear_flag(row, LV_OBJ_FLAG_SCROLLABLE);
+        lv_obj_add_flag(row, LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_set_style_bg_color(row, COL_SURFACE(), LV_STATE_PRESSED);
+        lv_obj_set_style_bg_opa(row, 80, LV_STATE_PRESSED);
+        lv_obj_add_event_cb(row, on_holding_row_click, LV_EVENT_CLICKED,
+                            (void *)(intptr_t)i);
 
         // Subtle separator between rows
         if (i > 0) {
@@ -728,9 +743,8 @@ static void build_dashboard() {
         lv_obj_set_style_text_color(hold_rows[i].weight, COL_TEXT_SEC(), 0);
         lv_obj_align(hold_rows[i].weight, LV_ALIGN_RIGHT_MID, -80, 0);
 
-        // Up/down arrow indicator
         hold_rows[i].arrow = lv_label_create(row);
-        lv_label_set_text(hold_rows[i].arrow, "");
+        lv_label_set_text(hold_rows[i].arrow, LV_SYMBOL_UP);
         lv_obj_set_style_text_font(hold_rows[i].arrow, &lv_font_montserrat_12, 0);
         lv_obj_set_style_text_color(hold_rows[i].arrow, COL_DIM(), 0);
         lv_obj_align(hold_rows[i].arrow, LV_ALIGN_RIGHT_MID, -62, 0);
@@ -767,8 +781,8 @@ static void build_dashboard() {
     lv_obj_set_scrollbar_mode(ai_icon_bg, LV_SCROLLBAR_MODE_OFF);
 
     lv_obj_t *ai_icon = lv_label_create(ai_icon_bg);
-    lv_label_set_text(ai_icon, LV_SYMBOL_REFRESH);
-    lv_obj_set_style_text_font(ai_icon, &lv_font_montserrat_12, 0);
+    lv_label_set_text(ai_icon, "*");
+    lv_obj_set_style_text_font(ai_icon, &lv_font_montserrat_16, 0);
     lv_obj_set_style_text_color(ai_icon, lv_color_white(), 0);
     lv_obj_center(ai_icon);
 
@@ -828,6 +842,262 @@ static void build_dashboard() {
     lv_obj_center(ai_btn_lbl);
 }
 
+// ── Build: All Holdings list screen ─────────────────────────────────
+static void on_hl_back_click(lv_event_t *) {
+    lv_scr_load_anim(scr_dash, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 250, 0, false);
+}
+
+static void on_holding_row_click(lv_event_t *e) {
+    int idx = (int)(intptr_t)lv_event_get_user_data(e);
+    if (s_holding_tap_cb) s_holding_tap_cb(idx);
+}
+
+static void build_holdings_list() {
+    scr_holdings = make_screen();
+    lv_coord_t sw = lv_disp_get_hor_res(nullptr);
+    lv_coord_t sh = lv_disp_get_ver_res(nullptr);
+    lv_coord_t hdr_h = 42;
+
+    // Header
+    lv_obj_t *hdr = lv_obj_create(scr_holdings);
+    lv_obj_set_size(hdr, sw, hdr_h);
+    lv_obj_align(hdr, LV_ALIGN_TOP_LEFT, 0, 0);
+    lv_obj_set_style_bg_color(hdr, COL_HEADER(), 0);
+    lv_obj_set_style_bg_opa(hdr, LV_OPA_COVER, 0);
+    lv_obj_set_style_border_color(hdr, COL_BORDER(), 0);
+    lv_obj_set_style_border_width(hdr, 1, 0);
+    lv_obj_set_style_border_side(hdr, LV_BORDER_SIDE_BOTTOM, 0);
+    lv_obj_set_style_pad_left(hdr, 8, 0);
+    lv_obj_set_scrollbar_mode(hdr, LV_SCROLLBAR_MODE_OFF);
+
+    lv_obj_t *back_btn = lv_btn_create(hdr);
+    lv_obj_set_size(back_btn, 32, 32);
+    lv_obj_align(back_btn, LV_ALIGN_LEFT_MID, 0, 0);
+    lv_obj_set_style_bg_opa(back_btn, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_shadow_width(back_btn, 0, 0);
+    lv_obj_set_style_border_width(back_btn, 0, 0);
+    lv_obj_add_event_cb(back_btn, on_hl_back_click, LV_EVENT_CLICKED, nullptr);
+
+    lv_obj_t *back_icon = lv_label_create(back_btn);
+    lv_label_set_text(back_icon, LV_SYMBOL_LEFT);
+    lv_obj_set_style_text_font(back_icon, &lv_font_montserrat_16, 0);
+    lv_obj_set_style_text_color(back_icon, COL_ACCENT(), 0);
+    lv_obj_center(back_icon);
+
+    lv_obj_t *title = lv_label_create(hdr);
+    lv_label_set_text(title, "All Holdings");
+    lv_obj_set_style_text_font(title, &lv_font_montserrat_16, 0);
+    lv_obj_set_style_text_color(title, COL_TEXT(), 0);
+    lv_obj_align(title, LV_ALIGN_LEFT_MID, 38, 0);
+
+    // Column headers
+    lv_coord_t col_hdr_y = hdr_h + 2;
+    lv_obj_t *col_bar = lv_obj_create(scr_holdings);
+    lv_obj_set_size(col_bar, sw, 22);
+    lv_obj_set_pos(col_bar, 0, col_hdr_y);
+    lv_obj_set_style_bg_color(col_bar, COL_BG(), 0);
+    lv_obj_set_style_bg_opa(col_bar, LV_OPA_COVER, 0);
+    lv_obj_set_style_border_width(col_bar, 0, 0);
+    lv_obj_set_style_pad_all(col_bar, 0, 0);
+    lv_obj_set_scrollbar_mode(col_bar, LV_SCROLLBAR_MODE_OFF);
+
+    lv_obj_t *ch1 = lv_label_create(col_bar);
+    lv_label_set_text(ch1, "Stock");
+    lv_obj_set_style_text_font(ch1, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(ch1, COL_DIM(), 0);
+    lv_obj_align(ch1, LV_ALIGN_LEFT_MID, 14, 0);
+
+    lv_obj_t *ch2 = lv_label_create(col_bar);
+    lv_label_set_text(ch2, "Shares");
+    lv_obj_set_style_text_font(ch2, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(ch2, COL_DIM(), 0);
+    lv_obj_align(ch2, LV_ALIGN_LEFT_MID, 220, 0);
+
+    lv_obj_t *ch3 = lv_label_create(col_bar);
+    lv_label_set_text(ch3, "Price");
+    lv_obj_set_style_text_font(ch3, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(ch3, COL_DIM(), 0);
+    lv_obj_align(ch3, LV_ALIGN_LEFT_MID, 360, 0);
+
+    lv_obj_t *ch4 = lv_label_create(col_bar);
+    lv_label_set_text(ch4, "Day");
+    lv_obj_set_style_text_font(ch4, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(ch4, COL_DIM(), 0);
+    lv_obj_align(ch4, LV_ALIGN_RIGHT_MID, -14, 0);
+
+    // Scrollable list container
+    lv_coord_t list_y = col_hdr_y + 22;
+    hl_list_container = lv_obj_create(scr_holdings);
+    lv_obj_set_size(hl_list_container, sw, sh - list_y);
+    lv_obj_set_pos(hl_list_container, 0, list_y);
+    lv_obj_set_style_bg_opa(hl_list_container, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_width(hl_list_container, 0, 0);
+    lv_obj_set_style_pad_all(hl_list_container, 0, 0);
+    lv_obj_set_flex_flow(hl_list_container, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_scrollbar_mode(hl_list_container, LV_SCROLLBAR_MODE_AUTO);
+    lv_obj_set_scroll_dir(hl_list_container, LV_DIR_VER);
+
+    hl_row_count = 0;
+}
+
+// ── Build: Stock Detail screen ──────────────────────────────────────
+static void on_det_back_click(lv_event_t *) {
+    lv_scr_load_anim(scr_holdings, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 250, 0, false);
+}
+
+static void build_stock_detail() {
+    scr_detail = make_screen();
+    lv_coord_t sw = lv_disp_get_hor_res(nullptr);
+    lv_coord_t sh = lv_disp_get_ver_res(nullptr);
+    lv_coord_t hdr_h = 42;
+
+    // Header
+    lv_obj_t *hdr = lv_obj_create(scr_detail);
+    lv_obj_set_size(hdr, sw, hdr_h);
+    lv_obj_align(hdr, LV_ALIGN_TOP_LEFT, 0, 0);
+    lv_obj_set_style_bg_color(hdr, COL_HEADER(), 0);
+    lv_obj_set_style_bg_opa(hdr, LV_OPA_COVER, 0);
+    lv_obj_set_style_border_color(hdr, COL_BORDER(), 0);
+    lv_obj_set_style_border_width(hdr, 1, 0);
+    lv_obj_set_style_border_side(hdr, LV_BORDER_SIDE_BOTTOM, 0);
+    lv_obj_set_style_pad_left(hdr, 8, 0);
+    lv_obj_set_scrollbar_mode(hdr, LV_SCROLLBAR_MODE_OFF);
+
+    lv_obj_t *back_btn = lv_btn_create(hdr);
+    lv_obj_set_size(back_btn, 32, 32);
+    lv_obj_align(back_btn, LV_ALIGN_LEFT_MID, 0, 0);
+    lv_obj_set_style_bg_opa(back_btn, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_shadow_width(back_btn, 0, 0);
+    lv_obj_set_style_border_width(back_btn, 0, 0);
+    lv_obj_add_event_cb(back_btn, on_det_back_click, LV_EVENT_CLICKED, nullptr);
+
+    lv_obj_t *back_icon = lv_label_create(back_btn);
+    lv_label_set_text(back_icon, LV_SYMBOL_LEFT);
+    lv_obj_set_style_text_font(back_icon, &lv_font_montserrat_16, 0);
+    lv_obj_set_style_text_color(back_icon, COL_ACCENT(), 0);
+    lv_obj_center(back_icon);
+
+    det_ticker_lbl = lv_label_create(hdr);
+    lv_label_set_text(det_ticker_lbl, "");
+    lv_obj_set_style_text_font(det_ticker_lbl, &lv_font_montserrat_16, 0);
+    lv_obj_set_style_text_color(det_ticker_lbl, COL_TEXT(), 0);
+    lv_obj_align(det_ticker_lbl, LV_ALIGN_LEFT_MID, 38, 0);
+
+    det_name_lbl = lv_label_create(hdr);
+    lv_label_set_text(det_name_lbl, "");
+    lv_obj_set_style_text_font(det_name_lbl, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(det_name_lbl, COL_DIM(), 0);
+    lv_obj_set_width(det_name_lbl, sw - 200);
+    lv_label_set_long_mode(det_name_lbl, LV_LABEL_LONG_DOT);
+    lv_obj_align(det_name_lbl, LV_ALIGN_LEFT_MID, 160, 0);
+
+    // Body area
+    lv_coord_t body_y = hdr_h + 10;
+    lv_coord_t card_m = 10;
+    lv_coord_t left_w = 280;
+
+    // Left: metrics card
+    lv_obj_t *metrics_card = make_card(scr_detail, left_w - card_m, sh - body_y - card_m);
+    lv_obj_set_pos(metrics_card, card_m, body_y);
+    lv_obj_set_style_pad_all(metrics_card, 16, 0);
+
+    auto make_metric_pair = [&](lv_obj_t *parent, const char *label_text, lv_coord_t y,
+                                const lv_font_t *val_font, lv_obj_t **val_out) {
+        lv_obj_t *lbl = lv_label_create(parent);
+        lv_label_set_text(lbl, label_text);
+        lv_obj_set_style_text_font(lbl, &lv_font_montserrat_12, 0);
+        lv_obj_set_style_text_color(lbl, COL_TEXT_SEC(), 0);
+        lv_obj_set_style_text_letter_space(lbl, 1, 0);
+        lv_obj_align(lbl, LV_ALIGN_TOP_LEFT, 0, y);
+
+        *val_out = lv_label_create(parent);
+        lv_label_set_text(*val_out, "---");
+        lv_obj_set_style_text_font(*val_out, val_font, 0);
+        lv_obj_set_style_text_color(*val_out, COL_TEXT(), 0);
+        lv_obj_align(*val_out, LV_ALIGN_TOP_LEFT, 0, y + 16);
+    };
+
+    make_metric_pair(metrics_card, "SHARES", 0, &lv_font_montserrat_24, &det_shares_lbl);
+    make_metric_pair(metrics_card, "CURRENT PRICE", 54, &lv_font_montserrat_20, &det_price_lbl);
+
+    // Separator
+    lv_obj_t *sep = lv_obj_create(metrics_card);
+    lv_obj_set_size(sep, left_w - card_m - 32, 1);
+    lv_obj_align(sep, LV_ALIGN_TOP_LEFT, 0, 102);
+    lv_obj_set_style_bg_color(sep, COL_SEP(), 0);
+    lv_obj_set_style_bg_opa(sep, LV_OPA_COVER, 0);
+    lv_obj_set_style_border_width(sep, 0, 0);
+    lv_obj_set_style_pad_all(sep, 0, 0);
+
+    make_metric_pair(metrics_card, "TOTAL VALUE", 112, &lv_font_montserrat_20, &det_value_lbl);
+    make_metric_pair(metrics_card, "DAY CHANGE", 168, &lv_font_montserrat_16, &det_daychange_lbl);
+
+    // Separator 2
+    lv_obj_t *sep2 = lv_obj_create(metrics_card);
+    lv_obj_set_size(sep2, left_w - card_m - 32, 1);
+    lv_obj_align(sep2, LV_ALIGN_TOP_LEFT, 0, 210);
+    lv_obj_set_style_bg_color(sep2, COL_SEP(), 0);
+    lv_obj_set_style_bg_opa(sep2, LV_OPA_COVER, 0);
+    lv_obj_set_style_border_width(sep2, 0, 0);
+    lv_obj_set_style_pad_all(sep2, 0, 0);
+
+    make_metric_pair(metrics_card, "WEIGHT", 220, &lv_font_montserrat_16, &det_weight_lbl);
+
+    // Right: sparkline chart card
+    lv_coord_t chart_x = card_m + left_w;
+    lv_coord_t chart_w = sw - chart_x - card_m;
+    lv_coord_t chart_card_h = sh - body_y - card_m;
+
+    det_chart_card = make_card(scr_detail, chart_w, chart_card_h);
+    lv_obj_set_pos(det_chart_card, chart_x, body_y);
+    lv_obj_set_style_pad_all(det_chart_card, 12, 0);
+
+    lv_obj_t *chart_title = lv_label_create(det_chart_card);
+    lv_label_set_text(chart_title, "1 MONTH TREND");
+    lv_obj_set_style_text_font(chart_title, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(chart_title, COL_TEXT_SEC(), 0);
+    lv_obj_set_style_text_letter_space(chart_title, 1, 0);
+    lv_obj_align(chart_title, LV_ALIGN_TOP_LEFT, 0, 0);
+
+    det_max_lbl = lv_label_create(det_chart_card);
+    lv_label_set_text(det_max_lbl, "");
+    lv_obj_set_style_text_font(det_max_lbl, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(det_max_lbl, COL_DIM(), 0);
+    lv_obj_align(det_max_lbl, LV_ALIGN_TOP_RIGHT, 0, 0);
+
+    // Chart widget
+    det_chart = lv_chart_create(det_chart_card);
+    lv_obj_set_size(det_chart, chart_w - 24, chart_card_h - 70);
+    lv_obj_align(det_chart, LV_ALIGN_TOP_LEFT, 0, 22);
+    lv_chart_set_type(det_chart, LV_CHART_TYPE_LINE);
+    lv_chart_set_point_count(det_chart, MAX_SPARKLINE_PTS);
+    lv_chart_set_div_line_count(det_chart, 3, 0);
+    lv_obj_set_style_bg_opa(det_chart, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_width(det_chart, 0, 0);
+    lv_obj_set_style_line_color(det_chart, COL_SEP(), LV_PART_MAIN);
+    lv_obj_set_style_line_opa(det_chart, 50, LV_PART_MAIN);
+
+    det_series = lv_chart_add_series(det_chart, COL_ACCENT(), LV_CHART_AXIS_PRIMARY_Y);
+    lv_obj_set_style_line_width(det_chart, 2, LV_PART_ITEMS);
+    lv_obj_set_style_size(det_chart, 0, LV_PART_INDICATOR);
+
+    det_min_lbl = lv_label_create(det_chart_card);
+    lv_label_set_text(det_min_lbl, "");
+    lv_obj_set_style_text_font(det_min_lbl, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(det_min_lbl, COL_DIM(), 0);
+    lv_obj_align(det_min_lbl, LV_ALIGN_BOTTOM_LEFT, 0, 0);
+
+    // Loading spinner (hidden by default)
+    det_chart_spinner = lv_spinner_create(det_chart_card, 1200, 60);
+    lv_obj_set_size(det_chart_spinner, 36, 36);
+    lv_obj_center(det_chart_spinner);
+    lv_obj_set_style_arc_color(det_chart_spinner, COL_ACCENT(), LV_PART_INDICATOR);
+    lv_obj_set_style_arc_color(det_chart_spinner, COL_SEP(), LV_PART_MAIN);
+    lv_obj_set_style_arc_width(det_chart_spinner, 3, LV_PART_INDICATOR);
+    lv_obj_set_style_arc_width(det_chart_spinner, 3, LV_PART_MAIN);
+    lv_obj_add_flag(det_chart_spinner, LV_OBJ_FLAG_HIDDEN);
+}
+
 // ── Public API ──────────────────────────────────────────────────────
 void ui_init() {
     // Load default template (can be overridden later via ui_apply_template)
@@ -844,6 +1114,8 @@ void ui_init() {
     build_error();
     build_token();
     build_dashboard();
+    build_holdings_list();
+    build_stock_detail();
 }
 
 void ui_apply_template(const char *template_id) {
@@ -884,8 +1156,11 @@ void ui_update_portfolio(const PortfolioData &d) {
     char buf[64];
     char num[48];
 
+    s_cached_portfolio = &d;
+
     fmt_eur(num, sizeof(num), d.totalValueEUR, 0);
-    lv_label_set_text(dash_total_val, num);
+    snprintf(buf, sizeof(buf), "%s EUR", num);
+    lv_label_set_text(dash_total_val, buf);
 
     bool dayPos = d.dayChangeEUR >= 0;
     lv_color_t dayCol = dayPos ? COL_GREEN() : COL_RED();
@@ -899,7 +1174,7 @@ void ui_update_portfolio(const PortfolioData &d) {
     lv_obj_set_style_bg_color(dash_day_change, dayCol, 0);
 
     fmt_eur(num, sizeof(num), d.costBasis, 0);
-    snprintf(buf, sizeof(buf), "Cost: %s EUR", num);
+    snprintf(buf, sizeof(buf), "Cost Basis %s EUR", num);
     lv_label_set_text(dash_day_pct, buf);
 
     // Gain / Loss
@@ -919,7 +1194,7 @@ void ui_update_portfolio(const PortfolioData &d) {
     snprintf(buf, sizeof(buf), "%d holdings", d.holdingsCount);
     lv_label_set_text(dash_count_lbl, buf);
 
-    for (int i = 0; i < MAX_TOP_HOLDINGS; i++) {
+    for (int i = 0; i < MAX_DASH_HOLDINGS; i++) {
         if (i < d.topCount) {
             lv_label_set_text(hold_rows[i].ticker, d.top[i].ticker);
             lv_label_set_text(hold_rows[i].name, d.top[i].name);
@@ -928,17 +1203,18 @@ void ui_update_portfolio(const PortfolioData &d) {
             snprintf(buf, sizeof(buf), "%s%.2f%%",
                      d.top[i].dayChange >= 0 ? "+" : "", d.top[i].dayChange);
             lv_label_set_text(hold_rows[i].change, buf);
-            lv_color_t chgCol = d.top[i].dayChange >= 0 ? COL_GREEN() : COL_RED();
+            bool rowPos = d.top[i].dayChange >= 0;
+            lv_color_t chgCol = rowPos ? COL_GREEN() : COL_RED();
             lv_obj_set_style_text_color(hold_rows[i].change, chgCol, 0);
-            lv_label_set_text(hold_rows[i].arrow,
-                d.top[i].dayChange >= 0 ? LV_SYMBOL_UP : LV_SYMBOL_DOWN);
+            lv_label_set_text(hold_rows[i].arrow, rowPos ? LV_SYMBOL_UP : LV_SYMBOL_DOWN);
             lv_obj_set_style_text_color(hold_rows[i].arrow, chgCol, 0);
+            lv_obj_clear_flag(hold_rows[i].arrow, LV_OBJ_FLAG_HIDDEN);
         } else {
             lv_label_set_text(hold_rows[i].ticker, "");
             lv_label_set_text(hold_rows[i].name, "");
             lv_label_set_text(hold_rows[i].weight, "");
             lv_label_set_text(hold_rows[i].change, "");
-            lv_label_set_text(hold_rows[i].arrow, "");
+            lv_obj_add_flag(hold_rows[i].arrow, LV_OBJ_FLAG_HIDDEN);
         }
     }
 }
@@ -980,17 +1256,16 @@ void ui_set_refresh_callback(RefreshCb cb) {
     s_refresh_cb = cb;
 }
 
-void ui_update_countdown(int seconds_remaining) {
-    if (!dash_countdown) return;
-    if (seconds_remaining <= 0) {
-        lv_label_set_text(dash_countdown, "0:00");
-        return;
+void ui_update_countdown(int seconds_elapsed) {
+    if (!dash_status_lbl) return;
+    char buf[48];
+    if (seconds_elapsed < 60) {
+        lv_label_set_text(dash_status_lbl, "Updated just now");
+    } else {
+        int m = seconds_elapsed / 60;
+        snprintf(buf, sizeof(buf), "Updated %d min ago", m);
+        lv_label_set_text(dash_status_lbl, buf);
     }
-    char buf[12];
-    int m = seconds_remaining / 60;
-    int s = seconds_remaining % 60;
-    snprintf(buf, sizeof(buf), "%d:%02d", m, s);
-    lv_label_set_text(dash_countdown, buf);
 }
 
 static void live_pulse_cb(void *obj, int32_t v) {
@@ -1023,4 +1298,217 @@ void ui_set_live_state(bool ok) {
         lv_obj_set_style_bg_opa(dash_live_dot, LV_OPA_COVER, 0);
         lv_obj_set_style_text_color(dash_live_lbl, COL_RED(), 0);
     }
+}
+
+// ── All Holdings list ───────────────────────────────────────────────
+void ui_set_view_all_callback(RefreshCb cb) {
+    s_view_all_cb = cb;
+}
+
+void ui_set_holding_tap_callback(HoldingTapCb cb) {
+    s_holding_tap_cb = cb;
+}
+
+void ui_show_holdings_list() {
+    lv_scr_load_anim(scr_holdings, LV_SCR_LOAD_ANIM_MOVE_LEFT, 250, 0, false);
+}
+
+void ui_update_holdings_list(const PortfolioData &d) {
+    s_cached_portfolio = &d;
+    lv_coord_t sw = lv_disp_get_hor_res(nullptr);
+    lv_coord_t row_h = 46;
+
+    // Remove existing dynamic rows
+    for (int i = 0; i < hl_row_count; i++) {
+        if (hl_rows[i].row) {
+            lv_obj_del(hl_rows[i].row);
+            hl_rows[i].row = nullptr;
+        }
+    }
+    hl_row_count = 0;
+
+    int count = d.topCount;
+    if (count > MAX_ALL_HOLDINGS) count = MAX_ALL_HOLDINGS;
+
+    char buf[64];
+
+    for (int i = 0; i < count; i++) {
+        lv_obj_t *row = lv_obj_create(hl_list_container);
+        lv_obj_set_size(row, sw, row_h);
+        lv_obj_set_style_bg_opa(row, LV_OPA_TRANSP, 0);
+        lv_obj_set_style_bg_color(row, COL_SURFACE(), LV_STATE_PRESSED);
+        lv_obj_set_style_bg_opa(row, 80, LV_STATE_PRESSED);
+        lv_obj_set_style_border_color(row, COL_SEP(), 0);
+        lv_obj_set_style_border_width(row, 1, 0);
+        lv_obj_set_style_border_side(row, LV_BORDER_SIDE_BOTTOM, 0);
+        lv_obj_set_style_pad_left(row, 14, 0);
+        lv_obj_set_style_pad_right(row, 14, 0);
+        lv_obj_set_scrollbar_mode(row, LV_SCROLLBAR_MODE_OFF);
+        lv_obj_clear_flag(row, LV_OBJ_FLAG_SCROLLABLE);
+        lv_obj_add_flag(row, LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_add_event_cb(row, on_holding_row_click, LV_EVENT_CLICKED,
+                            (void *)(intptr_t)i);
+
+        hl_rows[i].row = row;
+
+        // Ticker
+        hl_rows[i].ticker = lv_label_create(row);
+        lv_label_set_text(hl_rows[i].ticker, d.top[i].ticker);
+        lv_obj_set_style_text_font(hl_rows[i].ticker, &lv_font_montserrat_14, 0);
+        lv_obj_set_style_text_color(hl_rows[i].ticker, COL_TEXT(), 0);
+        lv_obj_align(hl_rows[i].ticker, LV_ALIGN_LEFT_MID, 0, -8);
+
+        // Name
+        hl_rows[i].name = lv_label_create(row);
+        lv_label_set_text(hl_rows[i].name, d.top[i].name);
+        lv_obj_set_style_text_font(hl_rows[i].name, &lv_font_montserrat_12, 0);
+        lv_obj_set_style_text_color(hl_rows[i].name, COL_DIM(), 0);
+        lv_obj_set_width(hl_rows[i].name, 190);
+        lv_label_set_long_mode(hl_rows[i].name, LV_LABEL_LONG_DOT);
+        lv_obj_align(hl_rows[i].name, LV_ALIGN_LEFT_MID, 0, 8);
+
+        // Shares
+        hl_rows[i].shares_lbl = lv_label_create(row);
+        if (d.top[i].shares >= 1.0f)
+            snprintf(buf, sizeof(buf), "%.0f", d.top[i].shares);
+        else if (d.top[i].shares > 0.0f)
+            snprintf(buf, sizeof(buf), "%.3f", d.top[i].shares);
+        else
+            snprintf(buf, sizeof(buf), "-");
+        lv_label_set_text(hl_rows[i].shares_lbl, buf);
+        lv_obj_set_style_text_font(hl_rows[i].shares_lbl, &lv_font_montserrat_12, 0);
+        lv_obj_set_style_text_color(hl_rows[i].shares_lbl, COL_TEXT_SEC(), 0);
+        lv_obj_align(hl_rows[i].shares_lbl, LV_ALIGN_LEFT_MID, 210, 0);
+
+        // Price
+        hl_rows[i].price_lbl = lv_label_create(row);
+        if (d.top[i].price > 0.0f) {
+            fmt_eur(buf, sizeof(buf), d.top[i].price, 2);
+        } else {
+            snprintf(buf, sizeof(buf), "-");
+        }
+        lv_label_set_text(hl_rows[i].price_lbl, buf);
+        lv_obj_set_style_text_font(hl_rows[i].price_lbl, &lv_font_montserrat_12, 0);
+        lv_obj_set_style_text_color(hl_rows[i].price_lbl, COL_TEXT_SEC(), 0);
+        lv_obj_align(hl_rows[i].price_lbl, LV_ALIGN_LEFT_MID, 350, 0);
+
+        // Day change
+        hl_rows[i].change = lv_label_create(row);
+        bool pos = d.top[i].dayChange >= 0;
+        snprintf(buf, sizeof(buf), "%s%.2f%%",
+                 pos ? "+" : "", d.top[i].dayChange);
+        lv_label_set_text(hl_rows[i].change, buf);
+        lv_obj_set_style_text_font(hl_rows[i].change, &lv_font_montserrat_12, 0);
+        lv_obj_set_style_text_color(hl_rows[i].change, pos ? COL_GREEN() : COL_RED(), 0);
+        lv_obj_align(hl_rows[i].change, LV_ALIGN_RIGHT_MID, 0, 0);
+
+        hl_row_count++;
+    }
+}
+
+// ── Stock Detail ────────────────────────────────────────────────────
+void ui_set_sparkline_callback(SparklineRequestCb cb) {
+    s_sparkline_cb = cb;
+}
+
+void ui_show_stock_detail(int holdingIndex) {
+    if (!s_cached_portfolio || holdingIndex < 0 || holdingIndex >= s_cached_portfolio->topCount)
+        return;
+
+    s_detail_holding_idx = holdingIndex;
+    const TopHolding &h = s_cached_portfolio->top[holdingIndex];
+
+    lv_label_set_text(det_ticker_lbl, h.ticker);
+    lv_label_set_text(det_name_lbl, h.name);
+
+    char buf[64];
+
+    // Shares
+    if (h.shares >= 1.0f)
+        snprintf(buf, sizeof(buf), "%.0f", h.shares);
+    else if (h.shares > 0.0f)
+        snprintf(buf, sizeof(buf), "%.3f", h.shares);
+    else
+        snprintf(buf, sizeof(buf), "-");
+    lv_label_set_text(det_shares_lbl, buf);
+
+    // Price
+    if (h.price > 0.0f) {
+        char num[32];
+        fmt_eur(num, sizeof(num), h.price, 2);
+        snprintf(buf, sizeof(buf), "%s %s", num, h.currency);
+    } else {
+        snprintf(buf, sizeof(buf), "-");
+    }
+    lv_label_set_text(det_price_lbl, buf);
+
+    // Total value (shares * price)
+    if (h.shares > 0 && h.price > 0) {
+        char num[32];
+        fmt_eur(num, sizeof(num), h.shares * h.price, 2);
+        snprintf(buf, sizeof(buf), "%s %s", num, h.currency);
+    } else {
+        snprintf(buf, sizeof(buf), "-");
+    }
+    lv_label_set_text(det_value_lbl, buf);
+
+    // Day change
+    bool pos = h.dayChange >= 0;
+    snprintf(buf, sizeof(buf), "%s%.2f%%", pos ? "+" : "", h.dayChange);
+    lv_label_set_text(det_daychange_lbl, buf);
+    lv_obj_set_style_text_color(det_daychange_lbl, pos ? COL_GREEN() : COL_RED(), 0);
+
+    // Weight
+    snprintf(buf, sizeof(buf), "%.1f%%", h.weight);
+    lv_label_set_text(det_weight_lbl, buf);
+
+    // Reset chart to loading state
+    lv_chart_set_all_value(det_chart, det_series, 0);
+    lv_label_set_text(det_min_lbl, "");
+    lv_label_set_text(det_max_lbl, "");
+    lv_obj_clear_flag(det_chart_spinner, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(det_chart, LV_OBJ_FLAG_HIDDEN);
+
+    lv_scr_load_anim(scr_detail, LV_SCR_LOAD_ANIM_MOVE_LEFT, 250, 0, false);
+
+    // Request sparkline data
+    if (s_sparkline_cb) s_sparkline_cb(h.ticker);
+}
+
+void ui_update_sparkline(const SparklineData &data) {
+    if (!det_chart || !det_series) return;
+
+    lv_obj_add_flag(det_chart_spinner, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_clear_flag(det_chart, LV_OBJ_FLAG_HIDDEN);
+
+    if (data.count == 0) {
+        lv_label_set_text(det_min_lbl, "No data");
+        return;
+    }
+
+    float mn = data.close[0], mx = data.close[0];
+    for (int i = 1; i < data.count; i++) {
+        if (data.close[i] < mn) mn = data.close[i];
+        if (data.close[i] > mx) mx = data.close[i];
+    }
+
+    float margin = (mx - mn) * 0.1f;
+    if (margin < 0.01f) margin = mx * 0.05f;
+    lv_coord_t y_min = (lv_coord_t)((mn - margin) * 100);
+    lv_coord_t y_max = (lv_coord_t)((mx + margin) * 100);
+    if (y_min == y_max) y_max = y_min + 100;
+    lv_chart_set_range(det_chart, LV_CHART_AXIS_PRIMARY_Y, y_min, y_max);
+
+    lv_chart_set_point_count(det_chart, data.count);
+    for (int i = 0; i < data.count; i++) {
+        lv_chart_set_value_by_id(det_chart, det_series, i,
+                                 (lv_coord_t)(data.close[i] * 100));
+    }
+    lv_chart_refresh(det_chart);
+
+    char buf[16];
+    fmt_eur(buf, sizeof(buf), mx, 2);
+    lv_label_set_text(det_max_lbl, buf);
+    fmt_eur(buf, sizeof(buf), mn, 2);
+    lv_label_set_text(det_min_lbl, buf);
 }

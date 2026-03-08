@@ -7,14 +7,25 @@
 #include <Arduino.h>
 #endif
 
-constexpr int MAX_TOP_HOLDINGS = 5;
-constexpr int AI_SUMMARY_MAX   = 512;
+constexpr int MAX_DASH_HOLDINGS = 5;   // rows shown on dashboard summary
+constexpr int MAX_ALL_HOLDINGS  = 30;  // max holdings device can store
+constexpr int AI_SUMMARY_MAX    = 512;
+constexpr int MAX_SPARKLINE_PTS = 20;  // 1-month daily close prices
 
 struct TopHolding {
-    char ticker[12];
-    char name[40];
+    char  ticker[12];
+    char  name[40];
     float weight;
     float dayChange;
+    float shares;
+    float price;
+    char  currency[8];
+};
+
+struct SparklineData {
+    char  ticker[12];
+    int   count;
+    float close[MAX_SPARKLINE_PTS];
 };
 
 struct PortfolioData {
@@ -26,7 +37,7 @@ struct PortfolioData {
     float totalGainLossPercent;
     int   holdingsCount;
     int   topCount;
-    TopHolding top[MAX_TOP_HOLDINGS];
+    TopHolding top[MAX_ALL_HOLDINGS];
     char  aiSummary[AI_SUMMARY_MAX];
     bool  aiLoaded;
     int   aiUsed;
@@ -34,6 +45,7 @@ struct PortfolioData {
 };
 
 void portfolio_clear(PortfolioData &d);
+void sparkline_clear(SparklineData &s);
 
 // Device capabilities returned by /api/device/config
 struct DeviceConfig {

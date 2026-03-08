@@ -806,5 +806,256 @@
   </div>
 </div>
 
+<!-- 5. All Holdings List -->
+<div class="section">
+  <div class="label-row">
+    <h2 style="margin:0">All Holdings</h2>
+    <span class="badge">List View</span>
+  </div>
+  <div class="screen-frame">
+    <style>
+      .hl-header {
+        height: 42px;
+        background: var(--bg);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        padding: 0 16px;
+        gap: 12px;
+      }
+      .hl-back { color: var(--accent); font-size: 18px; cursor: pointer; text-decoration: none; }
+      .hl-title { font-size: 15px; font-weight: 600; }
+      .hl-cols {
+        display: flex;
+        padding: 6px 14px;
+        font-size: 11px;
+        color: var(--dim);
+      }
+      .hl-cols span:nth-child(1) { flex: 1; }
+      .hl-cols span:nth-child(2) { width: 80px; text-align: right; }
+      .hl-cols span:nth-child(3) { width: 90px; text-align: right; }
+      .hl-cols span:nth-child(4) { width: 70px; text-align: right; }
+      .hl-row {
+        display: flex;
+        align-items: center;
+        padding: 8px 14px;
+        border-top: 1px solid var(--sep);
+        cursor: pointer;
+        transition: background 0.1s;
+      }
+      .hl-row:hover { background: rgba(255,255,255,0.03); }
+      .hl-stock { flex: 1; min-width: 0; }
+      .hl-stock-ticker { font-size: 13px; font-weight: 600; }
+      .hl-stock-name { font-size: 10px; color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .hl-shares { width: 80px; text-align: right; font-size: 12px; color: var(--text-sec); font-variant-numeric: tabular-nums; }
+      .hl-price { width: 90px; text-align: right; font-size: 12px; color: var(--text-sec); font-variant-numeric: tabular-nums; }
+      .hl-day { width: 70px; text-align: right; font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
+    </style>
+    <div class="hl-header">
+      <a class="hl-back">&#9664;</a>
+      <div class="hl-title">All Holdings</div>
+    </div>
+    <div class="hl-cols">
+      <span>Stock</span>
+      <span>Shares</span>
+      <span>Price</span>
+      <span>Day</span>
+    </div>
+    <div class="hl-row">
+      <div class="hl-stock"><div class="hl-stock-ticker">IB01.L</div><div class="hl-stock-name">ISHARES $ TREASURY BOND</div></div>
+      <div class="hl-shares">150</div>
+      <div class="hl-price">4.82</div>
+      <div class="hl-day" style="color:var(--red)">-0.02%</div>
+    </div>
+    <div class="hl-row">
+      <div class="hl-stock"><div class="hl-stock-ticker">SRB.L</div><div class="hl-stock-name">SERABI GOLD PLC</div></div>
+      <div class="hl-shares">1,275</div>
+      <div class="hl-price">0.41</div>
+      <div class="hl-day" style="color:var(--red)">-0.29%</div>
+    </div>
+    <div class="hl-row">
+      <div class="hl-stock"><div class="hl-stock-ticker">SILA</div><div class="hl-stock-name">SILA REALTY TRUST INC</div></div>
+      <div class="hl-shares">85</div>
+      <div class="hl-price">5.44</div>
+      <div class="hl-day" style="color:var(--red)">-0.64%</div>
+    </div>
+    <div class="hl-row">
+      <div class="hl-stock"><div class="hl-stock-ticker">GOOGL</div><div class="hl-stock-name">ALPHABET INC CLASS A</div></div>
+      <div class="hl-shares">25</div>
+      <div class="hl-price">175.80</div>
+      <div class="hl-day" style="color:var(--red)">-0.78%</div>
+    </div>
+    <div class="hl-row">
+      <div class="hl-stock"><div class="hl-stock-ticker">OXY</div><div class="hl-stock-name">OCCIDENTAL PETROLEUM</div></div>
+      <div class="hl-shares">60</div>
+      <div class="hl-price">48.30</div>
+      <div class="hl-day" style="color:var(--green)">+1.78%</div>
+    </div>
+    <div class="hl-row">
+      <div class="hl-stock"><div class="hl-stock-ticker">AAPL</div><div class="hl-stock-name">APPLE INC</div></div>
+      <div class="hl-shares">45</div>
+      <div class="hl-price">227.50</div>
+      <div class="hl-day" style="color:var(--green)">+1.82%</div>
+    </div>
+    <div class="hl-row">
+      <div class="hl-stock"><div class="hl-stock-ticker">MSFT</div><div class="hl-stock-name">MICROSOFT CORP</div></div>
+      <div class="hl-shares">30</div>
+      <div class="hl-price">415.20</div>
+      <div class="hl-day" style="color:var(--red)">-0.45%</div>
+    </div>
+    <div class="hl-row">
+      <div class="hl-stock"><div class="hl-stock-ticker">NVDA</div><div class="hl-stock-name">NVIDIA CORP</div></div>
+      <div class="hl-shares">15</div>
+      <div class="hl-price">880.00</div>
+      <div class="hl-day" style="color:var(--green)">+3.15%</div>
+    </div>
+  </div>
+</div>
+
+<!-- Design notes for All Holdings -->
+<div class="section">
+  <div class="annotation-list">
+    <div class="item"><div class="dot"></div><div>Back arrow navigates to dashboard; each row is tappable to open detail</div></div>
+    <div class="item"><div class="dot"></div><div>Scrollable list supports up to <strong>30 holdings</strong> on device</div></div>
+    <div class="item"><div class="dot"></div><div>Shows <strong>shares count</strong> and <strong>current price</strong> per holding</div></div>
+    <div class="item"><div class="dot"></div><div>Dashboard "View All &gt;" button navigates here</div></div>
+  </div>
+</div>
+
+<!-- 6. Stock Detail -->
+<div class="section">
+  <div class="label-row">
+    <h2 style="margin:0">Stock Detail</h2>
+    <span class="badge">Detail View</span>
+  </div>
+  <div class="screen-frame">
+    <style>
+      .det-header {
+        height: 42px;
+        background: var(--bg);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        padding: 0 16px;
+        gap: 12px;
+      }
+      .det-back { color: var(--accent); font-size: 18px; cursor: pointer; text-decoration: none; }
+      .det-ticker { font-size: 15px; font-weight: 600; }
+      .det-name { font-size: 11px; color: var(--dim); margin-left: auto; }
+      .det-body {
+        display: flex;
+        height: calc(100% - 42px);
+        padding: 10px;
+        gap: 10px;
+      }
+      .det-metrics {
+        width: 270px;
+        padding: 16px;
+      }
+      .det-metric-label {
+        font-size: 10px;
+        font-weight: 600;
+        color: var(--text-sec);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+      }
+      .det-metric-value {
+        font-size: 22px;
+        font-weight: 700;
+        margin-bottom: 16px;
+      }
+      .det-metric-value.small { font-size: 18px; }
+      .det-metric-value.xs { font-size: 15px; }
+      .det-sep { height: 1px; background: var(--sep); margin: 0 -16px 16px; width: calc(100% + 32px); }
+      .det-chart-card {
+        flex: 1;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+      }
+      .det-chart-header {
+        display: flex;
+        justify-content: space-between;
+        font-size: 10px;
+        font-weight: 600;
+        color: var(--text-sec);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+      }
+      .det-chart-area {
+        flex: 1;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .det-chart-area svg { width: 100%; height: 100%; }
+      .det-chart-footer {
+        display: flex;
+        justify-content: space-between;
+        font-size: 10px;
+        color: var(--dim);
+        margin-top: 8px;
+      }
+    </style>
+    <div class="det-header">
+      <a class="det-back">&#9664;</a>
+      <div class="det-ticker">GOOGL</div>
+      <div class="det-name">ALPHABET INC CLASS A</div>
+    </div>
+    <div class="det-body">
+      <div class="card det-metrics">
+        <div class="det-metric-label">Shares</div>
+        <div class="det-metric-value">25</div>
+        <div class="det-metric-label">Current Price</div>
+        <div class="det-metric-value small">175.80 USD</div>
+        <div class="det-sep"></div>
+        <div class="det-metric-label">Total Value</div>
+        <div class="det-metric-value small">4,395.00 USD</div>
+        <div class="det-metric-label">Day Change</div>
+        <div class="det-metric-value xs" style="color:var(--red)">-0.78%</div>
+        <div class="det-sep"></div>
+        <div class="det-metric-label">Weight</div>
+        <div class="det-metric-value xs">7.8%</div>
+      </div>
+      <div class="card det-chart-card">
+        <div class="det-chart-header">
+          <span>1 Month Trend</span>
+          <span style="color:var(--dim)">182.40</span>
+        </div>
+        <div class="det-chart-area">
+          <svg viewBox="0 0 260 200" preserveAspectRatio="none">
+            <line x1="0" y1="50" x2="260" y2="50" stroke="var(--sep)" stroke-width="0.5" opacity="0.5"/>
+            <line x1="0" y1="100" x2="260" y2="100" stroke="var(--sep)" stroke-width="0.5" opacity="0.5"/>
+            <line x1="0" y1="150" x2="260" y2="150" stroke="var(--sep)" stroke-width="0.5" opacity="0.5"/>
+            <polyline
+              fill="none"
+              stroke="var(--accent)"
+              stroke-width="2"
+              stroke-linejoin="round"
+              points="0,120 13,110 26,115 39,100 52,95 65,90 78,105 91,110 104,85 117,80 130,90 143,100 156,105 169,95 182,110 195,120 208,130 221,125 234,135 247,140 260,145"
+            />
+          </svg>
+        </div>
+        <div class="det-chart-footer">
+          <span>168.50</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Design notes for Stock Detail -->
+<div class="section">
+  <div class="annotation-list">
+    <div class="item"><div class="dot"></div><div>Left panel shows <strong>shares, price, total value, day change, weight</strong></div></div>
+    <div class="item"><div class="dot"></div><div>Right panel shows <strong>1-month sparkline chart</strong> using LVGL <code>lv_chart</code> (20 data points)</div></div>
+    <div class="item"><div class="dot"></div><div>Chart shows min/max labels; loading spinner shown while fetching data</div></div>
+    <div class="item"><div class="dot"></div><div>Back arrow returns to All Holdings list</div></div>
+  </div>
+</div>
+
 </body>
 </html>

@@ -10,6 +10,7 @@ import {
   getPortfolioReviewUsage,
   incrementPortfolioReviewUsage,
   trackEvent,
+  isFeatureEnabled,
 } from "@/lib/db";
 import { PLATFORM_LIMITS } from "@/lib/platform-config";
 import { checkGlobalAiCap, incrementGlobalAiCalls, checkDeviceAuthRateLimit, getClientIp } from "@/lib/rate-limit";
@@ -31,6 +32,10 @@ async function resolveProUser(req: NextRequest) {
 }
 
 export const POST = withMetrics("/api/device/ai-summary", async (request: NextRequest) => {
+  if (!(await isFeatureEnabled("device_enabled"))) {
+    return Response.json({ error: "Device features are not enabled" }, { status: 404 });
+  }
+
   const fwVersion = request.headers.get("x-firmware-version");
   if (fwVersion) deviceApiCalls.inc({ fw_version: fwVersion, route: "/api/device/ai-summary", status: "attempt" });
 

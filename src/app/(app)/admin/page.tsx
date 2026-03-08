@@ -1032,6 +1032,7 @@ function FeatureTogglesCard() {
   const alertsOn = flags.alerts_enabled ?? false;
   const csvOn = flags.csv_export_enabled ?? false;
   const appleOn = flags.apple_signin_enabled ?? false;
+  const deviceOn = flags.device_enabled ?? false;
 
   const alertsSteps: SetupStep[] = [
     { text: "Enable this toggle", done: alertsOn },
@@ -1082,6 +1083,13 @@ function FeatureTogglesCard() {
           saving={saving === "apple_signin_enabled"}
           onToggle={(v) => handleToggle("apple_signin_enabled", v)}
           steps={appleSteps}
+        />
+        <FeatureToggle
+          label="T4-S3 Device"
+          description="Enable LILYGO T4-S3 hardware device features: passkey generation, device linking, display themes, firmware OTA, and landing page promotion. Disable to hide all device features until launch."
+          enabled={deviceOn}
+          saving={saving === "device_enabled"}
+          onToggle={(v) => handleToggle("device_enabled", v)}
         />
       </div>
     </div>

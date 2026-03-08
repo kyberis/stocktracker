@@ -9,12 +9,13 @@ export const GET = withMetrics("/api/user-settings", async (req: NextRequest) =>
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
 
-  const [settings, globalAvKey, globalOpenAIKey, alertsEnabled, csvExportEnabled] = await Promise.all([
+  const [settings, globalAvKey, globalOpenAIKey, alertsEnabled, csvExportEnabled, deviceEnabled] = await Promise.all([
     getUserSettings(session.userId),
     getGlobalAlphaVantageApiKey(),
     getGlobalOpenAIApiKey(),
     isFeatureEnabled("alerts_enabled"),
     isFeatureEnabled("csv_export_enabled"),
+    isFeatureEnabled("device_enabled"),
   ]);
 
   return NextResponse.json({
@@ -25,6 +26,7 @@ export const GET = withMetrics("/api/user-settings", async (req: NextRequest) =>
     hasOpenAIKey: globalOpenAIKey.length > 0,
     alertsEnabled,
     csvExportEnabled,
+    deviceEnabled,
   });
 });
 

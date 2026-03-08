@@ -873,6 +873,138 @@ function InstallAppSection() {
   );
 }
 
+/* ─── device promotion section (gated by device_enabled flag) ─── */
+
+function DeviceSection() {
+  const [visible, setVisible] = useState(false);
+  const sectionCb = useCallback(() => trackLanding("landing_section_view", { section: "device" }), []);
+  const sectionRef = useInViewOnce(sectionCb);
+
+  useEffect(() => {
+    fetch("/api/feature-flags")
+      .then((r) => r.json())
+      .then((flags) => { if (flags.device_enabled) setVisible(true); })
+      .catch(() => {});
+  }, []);
+
+  if (!visible) return null;
+
+  const highlights = [
+    {
+      icon: (
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 12V5.25" />
+        </svg>
+      ),
+      title: "1.91\" AMOLED Display",
+      desc: "Vivid colors and deep blacks — your portfolio looks stunning on a dedicated screen.",
+    },
+    {
+      icon: (
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+        </svg>
+      ),
+      title: "Live Portfolio at a Glance",
+      desc: "Total value, daily P/L, and top holdings update automatically — no phone needed.",
+    },
+    {
+      icon: (
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
+        </svg>
+      ),
+      title: "AI Insights On-Device",
+      desc: "Get a condensed AI portfolio review directly on the hardware display — Pro feature.",
+    },
+    {
+      icon: (
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
+        </svg>
+      ),
+      title: "Over-the-Air Updates",
+      desc: "Firmware updates roll out automatically so your device keeps getting better.",
+    },
+  ];
+
+  return (
+    <section className="py-20 sm:py-28 border-t border-slate-800/50" ref={sectionRef as React.RefObject<HTMLElement>}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+          {/* Image side */}
+          <div className="relative flex justify-center">
+            <div className="absolute -inset-8 bg-gradient-to-br from-violet-500/15 via-emerald-500/10 to-cyan-500/15 rounded-3xl blur-3xl" />
+            <div className="relative">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/screenshots/device-t4s3.png"
+                alt="LILYGO T4-S3 AMOLED device showing the trefolio portfolio dashboard with live holdings and AI insights"
+                className="w-full max-w-md h-auto drop-shadow-2xl"
+                loading="lazy"
+              />
+            </div>
+          </div>
+
+          {/* Text side */}
+          <div className="space-y-8">
+            <div>
+              <div className="inline-flex items-center gap-2 mb-4">
+                <span className="text-xs font-bold uppercase tracking-wider text-violet-400 bg-violet-500/10 px-3 py-1 rounded-full border border-violet-500/20">
+                  Hardware
+                </span>
+                <span className="text-xs font-bold uppercase tracking-wider text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
+                  Coming Soon
+                </span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-bold text-white leading-tight mb-4">
+                Your Portfolio on a{" "}
+                <span className="bg-gradient-to-r from-violet-400 via-emerald-400 to-teal-400 bg-clip-text text-transparent">
+                  Dedicated Display
+                </span>
+              </h2>
+              <p className="text-lg text-slate-400 leading-relaxed">
+                The trefolio T4-S3 is a pocket-sized AMOLED device that keeps your portfolio visible on your desk. Connect over WiFi, pair with a passkey, and watch your investments update in real time.
+              </p>
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-4">
+              {highlights.map((item) => (
+                <div key={item.title} className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-violet-500/10 text-violet-400 flex items-center justify-center shrink-0">
+                    {item.icon}
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-semibold text-white mb-0.5">{item.title}</h4>
+                    <p className="text-xs text-slate-400 leading-relaxed">{item.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-4">
+              <Link
+                href="/signup"
+                onClick={() => trackLanding("landing_cta_click", { cta: "device_signup" })}
+                className="inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white font-semibold px-6 py-3 rounded-xl transition-all shadow-lg shadow-violet-600/25 hover:shadow-violet-500/30"
+              >
+                Sign Up to Get Notified
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </Link>
+            </div>
+
+            <p className="text-xs text-slate-500">
+              Buyers get a free year of trefolio Pro included with the device. Not financial advice.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /* ─── FAQ section ─── */
 
 function FAQSection() {
@@ -1203,6 +1335,7 @@ export default function LandingPage() {
       <WhySection />
       <VideoTutorialSection />
       <InstallAppSection />
+      <DeviceSection />
       <PricingSection />
       <FAQSection />
       <CTASection />

@@ -5,7 +5,7 @@ import type { ApiProviderName, Language } from "@/lib/types";
 import { isValidLanguage } from "@/lib/languages";
 import { encrypt, tryDecryptOrPlaintext } from "@/lib/crypto";
 
-export type PlatformFeature = "alerts_enabled" | "csv_export_enabled" | "apple_signin_enabled";
+export type PlatformFeature = "alerts_enabled" | "csv_export_enabled" | "apple_signin_enabled" | "device_enabled";
 
 export async function getUserSettings(userId: string): Promise<UserSettings> {
   const client = await ensureInitialized();

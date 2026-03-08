@@ -17,6 +17,7 @@ interface SettingsContextType {
   hasGlobalAvKey: boolean;
   alertsEnabled: boolean;
   csvExportEnabled: boolean;
+  deviceEnabled: boolean;
   setProvider: (provider: ApiProviderName) => void;
   setRefreshInterval: (interval: RefreshInterval) => void;
   isAlphaVantage: boolean;
@@ -61,6 +62,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [hasGlobalAvKey, setHasGlobalAvKey] = useState(false);
   const [alertsEnabled, setAlertsEnabled] = useState(false);
   const [csvExportEnabled, setCsvExportEnabled] = useState(false);
+  const [deviceEnabled, setDeviceEnabled] = useState(false);
   const [avCallsThisMinute, setAvCallsThisMinute] = useState(() => loadMinuteUsage().count);
 
   useEffect(() => {
@@ -83,6 +85,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
           }
           if (typeof settings.csvExportEnabled === "boolean") {
             setCsvExportEnabled(settings.csvExportEnabled);
+          }
+          if (typeof settings.deviceEnabled === "boolean") {
+            setDeviceEnabled(settings.deviceEnabled);
           }
         }
       } catch {
@@ -169,6 +174,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       hasGlobalAvKey,
       alertsEnabled,
       csvExportEnabled,
+      deviceEnabled,
       setProvider,
       setRefreshInterval,
       isAlphaVantage,
@@ -179,7 +185,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       trackAvCalls,
     }),
     [
-      provider, refreshInterval, hasGlobalAvKey, alertsEnabled, csvExportEnabled,
+      provider, refreshInterval, hasGlobalAvKey, alertsEnabled, csvExportEnabled, deviceEnabled,
       setProvider, setRefreshInterval, isAlphaVantage, getApiHeaders, getApiParams,
       avCallsThisMinute, trackAvCalls,
     ]

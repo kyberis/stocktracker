@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { findUserById, countPasskeysByUserId } from "@/lib/db";
+import { findUserById, countPasskeysByUserId, isFeatureEnabled } from "@/lib/db";
 import { withMetrics } from "@/lib/with-metrics";
 
 export const GET = withMetrics("/api/auth/me", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
 
-  const [user, passkeyCount] = await Promise.all([
+  const [user, passkeyCount, deviceOn] = await Promise.all([
     findUserById(session.userId),
     countPasskeysByUserId(session.userId),
+    isFeatureEnabled("device_enabled"),
   ]);
 
   return NextResponse.json({
@@ -33,7 +34,7 @@ export const GET = withMetrics("/api/auth/me", async (req: NextRequest) => {
       passkeyCount,
       portfolioReviewCount: user?.portfolio_review_count || 0,
       portfolioReviewResetAt: user?.portfolio_review_reset_at || "",
-      deviceProEligible: !!user?.device_linked_at && !user?.device_pro_redeemed_at && (user?.plan || session.plan || "free") === "free",
+      deviceProEligible: deviceOn && !!user?.device_linked_at && !user?.device_pro_redeemed_at && (user?.plan || session.plan || "free") === "free",
     },
   });
 });

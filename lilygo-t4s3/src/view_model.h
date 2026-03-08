@@ -23,7 +23,7 @@ struct PortfolioVM {
     char holdingsCountStr[24];
 
     int holdingCount;
-    HoldingVM holdings[MAX_TOP_HOLDINGS];
+    HoldingVM holdings[MAX_DASH_HOLDINGS];
 
     bool aiEnabled;
     char aiText[AI_SUMMARY_MAX];

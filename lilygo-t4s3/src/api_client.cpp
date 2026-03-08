@@ -130,7 +130,7 @@ bool api_fetch_portfolio(PortfolioData &out) {
     portfolio_clear(out);
 
     JsonDocument doc;
-    if (!sim_http_get("/api/portfolio/summary", doc)) return false;
+    if (!sim_http_get("/api/portfolio/summary?full=true", doc)) return false;
 
     out.totalValueEUR        = doc["totalValueEUR"]        | 0.0f;
     out.costBasis            = doc["costBasis"]             | 0.0f;
@@ -143,12 +143,15 @@ bool api_fetch_portfolio(PortfolioData &out) {
     JsonArray arr = doc["topHoldings"].as<JsonArray>();
     out.topCount = 0;
     for (JsonObject h : arr) {
-        if (out.topCount >= MAX_TOP_HOLDINGS) break;
+        if (out.topCount >= MAX_ALL_HOLDINGS) break;
         TopHolding &t = out.top[out.topCount++];
         strncpy(t.ticker, h["ticker"] | "", sizeof(t.ticker) - 1);
         strncpy(t.name,   h["name"]   | "", sizeof(t.name)   - 1);
         t.weight    = h["weight"]    | 0.0f;
         t.dayChange = h["dayChange"] | 0.0f;
+        t.shares    = h["shares"]    | 0.0f;
+        t.price     = h["price"]     | 0.0f;
+        strncpy(t.currency, h["currency"] | "EUR", sizeof(t.currency) - 1);
     }
     return true;
 }
@@ -194,7 +197,7 @@ bool api_fetch_device_config(DeviceConfig &out) {
 
     strncpy(out.plan, doc["plan"] | "free", sizeof(out.plan) - 1);
     out.aiSummaryEnabled  = doc["features"]["aiSummary"] | false;
-    out.topHoldingsCount  = doc["features"]["topHoldingsCount"] | MAX_TOP_HOLDINGS;
+    out.topHoldingsCount  = doc["features"]["topHoldingsCount"] | MAX_DASH_HOLDINGS;
     out.refreshIntervalSec = doc["features"]["refreshIntervalSec"] | 120;
     strncpy(out.templateId, doc["templateId"] | "classic-dark", sizeof(out.templateId) - 1);
     strncpy(out.latestFirmware, doc["firmwareVersion"] | "", sizeof(out.latestFirmware) - 1);
@@ -215,6 +218,25 @@ bool api_check_firmware_update(FirmwareInfo &out) {
     strncpy(out.url, doc["url"] | "", sizeof(out.url) - 1);
     strncpy(out.sha256, doc["sha256"] | "", sizeof(out.sha256) - 1);
     out.size = doc["size"] | 0;
+    return true;
+}
+
+bool api_fetch_sparkline(const char *ticker, SparklineData &out) {
+    sparkline_clear(out);
+    strncpy(out.ticker, ticker, sizeof(out.ticker) - 1);
+
+    char path[128];
+    snprintf(path, sizeof(path), "/api/device/sparkline?ticker=%s", ticker);
+
+    JsonDocument doc;
+    if (!sim_http_get(path, doc)) return false;
+
+    JsonArray pts = doc["points"].as<JsonArray>();
+    out.count = 0;
+    for (JsonObject p : pts) {
+        if (out.count >= MAX_SPARKLINE_PTS) break;
+        out.close[out.count++] = p["close"] | 0.0f;
+    }
     return true;
 }
 
@@ -301,7 +323,7 @@ bool api_fetch_portfolio(PortfolioData &out) {
     portfolio_clear(out);
 
     JsonDocument doc;
-    if (!http_get_json("/api/portfolio/summary", doc)) return false;
+    if (!http_get_json("/api/portfolio/summary?full=true", doc)) return false;
 
     out.totalValueEUR        = doc["totalValueEUR"]        | 0.0f;
     out.costBasis            = doc["costBasis"]             | 0.0f;
@@ -314,12 +336,15 @@ bool api_fetch_portfolio(PortfolioData &out) {
     JsonArray arr = doc["topHoldings"].as<JsonArray>();
     out.topCount = 0;
     for (JsonObject h : arr) {
-        if (out.topCount >= MAX_TOP_HOLDINGS) break;
+        if (out.topCount >= MAX_ALL_HOLDINGS) break;
         TopHolding &t = out.top[out.topCount++];
         strncpy(t.ticker, h["ticker"] | "", sizeof(t.ticker) - 1);
         strncpy(t.name,   h["name"]   | "", sizeof(t.name)   - 1);
         t.weight    = h["weight"]    | 0.0f;
         t.dayChange = h["dayChange"] | 0.0f;
+        t.shares    = h["shares"]    | 0.0f;
+        t.price     = h["price"]     | 0.0f;
+        strncpy(t.currency, h["currency"] | "EUR", sizeof(t.currency) - 1);
     }
     return true;
 }
@@ -365,7 +390,7 @@ bool api_fetch_device_config(DeviceConfig &out) {
 
     strncpy(out.plan, doc["plan"] | "free", sizeof(out.plan) - 1);
     out.aiSummaryEnabled  = doc["features"]["aiSummary"] | false;
-    out.topHoldingsCount  = doc["features"]["topHoldingsCount"] | MAX_TOP_HOLDINGS;
+    out.topHoldingsCount  = doc["features"]["topHoldingsCount"] | MAX_DASH_HOLDINGS;
     out.refreshIntervalSec = doc["features"]["refreshIntervalSec"] | 120;
     strncpy(out.templateId, doc["templateId"] | "classic-dark", sizeof(out.templateId) - 1);
     strncpy(out.latestFirmware, doc["firmwareVersion"] | "", sizeof(out.latestFirmware) - 1);
@@ -386,6 +411,25 @@ bool api_check_firmware_update(FirmwareInfo &out) {
     strncpy(out.url, doc["url"] | "", sizeof(out.url) - 1);
     strncpy(out.sha256, doc["sha256"] | "", sizeof(out.sha256) - 1);
     out.size = doc["size"] | 0;
+    return true;
+}
+
+bool api_fetch_sparkline(const char *ticker, SparklineData &out) {
+    sparkline_clear(out);
+    strncpy(out.ticker, ticker, sizeof(out.ticker) - 1);
+
+    char path[128];
+    snprintf(path, sizeof(path), "/api/device/sparkline?ticker=%s", ticker);
+
+    JsonDocument doc;
+    if (!http_get_json(path, doc)) return false;
+
+    JsonArray pts = doc["points"].as<JsonArray>();
+    out.count = 0;
+    for (JsonObject p : pts) {
+        if (out.count >= MAX_SPARKLINE_PTS) break;
+        out.close[out.count++] = p["close"] | 0.0f;
+    }
     return true;
 }
 
