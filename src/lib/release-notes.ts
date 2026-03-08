@@ -14,9 +14,27 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "0.47.0";
+export const CURRENT_VERSION = "0.48.0";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "0.48.0",
+    date: "2026-03-08",
+    title: "Device Waitlist & Notification Enrollment",
+    titleTranslations: { es: "Lista de Espera y Registro de Notificaciones del Dispositivo" },
+    changes: [
+      {
+        type: "feature",
+        text: "Landing page device section now has an email signup form — visitors can join the waitlist to be notified when the hardware is available",
+        translations: { es: "La sección del dispositivo en la landing ahora tiene un formulario de email — los visitantes pueden unirse a la lista de espera para ser notificados cuando el hardware esté disponible" },
+      },
+      {
+        type: "feature",
+        text: "New admin Waitlist tab shows all enrolled emails with signup dates and total count",
+        translations: { es: "Nueva pestaña de Lista de Espera en admin muestra todos los emails registrados con fechas y recuento total" },
+      },
+    ],
+  },
   {
     version: "0.47.0",
     date: "2026-03-08",

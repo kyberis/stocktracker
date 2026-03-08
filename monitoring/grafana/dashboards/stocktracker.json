@@ -416,6 +416,105 @@
     {
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 57 },
+      "id": 106,
+      "title": "Device & Firmware",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "hideFrom": { "legend": false, "tooltip": false, "viz": false } }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 58 },
+      "id": 60,
+      "options": {
+        "legend": { "displayMode": "table", "placement": "right", "values": ["value"] },
+        "pieType": "donut",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "tooltip": { "mode": "single" }
+      },
+      "title": "Firmware Version Distribution",
+      "type": "piechart",
+      "targets": [{ "expr": "sum by (current_version) (increase(trefolio_device_firmware_checks_total[24h]))", "legendFormat": "v{{current_version}}" }]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "axisBorderShow": false, "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2, "pointSize": 5, "stacking": { "mode": "none" } },
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 58 },
+      "id": 61,
+      "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "title": "Device API Calls by FW Version",
+      "type": "timeseries",
+      "targets": [{ "expr": "sum by (fw_version) (rate(trefolio_device_api_calls_total{status=\"attempt\"}[5m]))", "legendFormat": "v{{fw_version}}" }]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "axisBorderShow": false, "drawStyle": "line", "fillOpacity": 20, "lineWidth": 2, "pointSize": 5, "stacking": { "mode": "none" } },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 58 },
+      "id": 62,
+      "options": { "legend": { "calcs": ["sum"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "title": "Device Errors by FW Version",
+      "type": "timeseries",
+      "targets": [{ "expr": "sum by (fw_version) (increase(trefolio_device_errors_total[5m]))", "legendFormat": "v{{fw_version}}" }]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "axisBorderShow": false, "drawStyle": "bars", "fillOpacity": 80, "lineWidth": 1, "pointSize": 5, "stacking": { "mode": "normal" } },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 66 },
+      "id": 63,
+      "options": { "legend": { "calcs": [], "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "title": "Error Types by FW Version",
+      "type": "timeseries",
+      "targets": [{ "expr": "sum by (fw_version, error_type) (increase(trefolio_device_errors_total[1h]))", "legendFormat": "v{{fw_version}} {{error_type}}" }]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "axisBorderShow": false, "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2, "pointSize": 5, "stacking": { "mode": "none" } },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 66 },
+      "id": 64,
+      "options": { "legend": { "calcs": ["mean"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "title": "Device Heartbeats by FW Version",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "sum by (fw_version, status) (rate(trefolio_device_heartbeats_total[5m]))", "legendFormat": "v{{fw_version}} ({{status}})" }
+      ]
+    },
+
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 74 },
       "id": 105,
       "title": "Node.js Runtime",
       "type": "row"
@@ -430,7 +529,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 58 },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 75 },
       "id": 50,
       "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
       "title": "Heap Memory",
@@ -450,7 +549,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 58 },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 75 },
       "id": 51,
       "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
       "title": "Event Loop Lag",
@@ -470,7 +569,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 58 },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 75 },
       "id": 52,
       "options": { "legend": { "calcs": ["mean"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
       "title": "Active Handles & Requests",
