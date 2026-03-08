@@ -527,7 +527,7 @@ export default function ProfilePage() {
           </div>
 
           {profileError && (
-            <p className="text-xs text-red-500 dark:text-red-400">{profileError}</p>
+            <p className="text-xs text-red-500 dark:text-red-400" role="alert">{profileError}</p>
           )}
 
           <div className="flex justify-end">
@@ -576,8 +576,8 @@ export default function ProfilePage() {
             )}
           </div>
 
-          {googleMsg && <p className="text-xs text-emerald-600 dark:text-emerald-400">{googleMsg}</p>}
-          {googleError && <p className="text-xs text-red-500 dark:text-red-400">{googleError}</p>}
+          {googleMsg && <p className="text-xs text-emerald-600 dark:text-emerald-400" aria-live="polite">{googleMsg}</p>}
+          {googleError && <p className="text-xs text-red-500 dark:text-red-400" role="alert">{googleError}</p>}
         </div>
 
         {/* Passkeys */}
@@ -655,8 +655,8 @@ export default function ProfilePage() {
             </div>
           ))}
 
-          {passkeyMsg && <p className="text-xs text-emerald-600 dark:text-emerald-400">{passkeyMsg}</p>}
-          {passkeyError && <p className="text-xs text-red-500 dark:text-red-400">{passkeyError}</p>}
+          {passkeyMsg && <p className="text-xs text-emerald-600 dark:text-emerald-400" aria-live="polite">{passkeyMsg}</p>}
+          {passkeyError && <p className="text-xs text-red-500 dark:text-red-400" role="alert">{passkeyError}</p>}
         </div>
 
         {/* Data Provider & API Key */}
@@ -823,10 +823,10 @@ export default function ProfilePage() {
               </div>
 
               {passwordError && (
-                <p className="text-xs text-red-500 dark:text-red-400">{passwordError}</p>
+                <p className="text-xs text-red-500 dark:text-red-400" role="alert">{passwordError}</p>
               )}
               {passwordMsg && (
-                <p className="text-xs text-emerald-600 dark:text-emerald-400">{passwordMsg}</p>
+                <p className="text-xs text-emerald-600 dark:text-emerald-400" aria-live="polite">{passwordMsg}</p>
               )}
 
               <div className="flex justify-end">
@@ -890,8 +890,8 @@ export default function ProfilePage() {
               </button>
             </div>
           )}
-          {verifyMsg && <p className="text-xs text-emerald-600 dark:text-emerald-400">{verifyMsg}</p>}
-          {verifyError && <p className="text-xs text-red-500 dark:text-red-400">{verifyError}</p>}
+          {verifyMsg && <p className="text-xs text-emerald-600 dark:text-emerald-400" aria-live="polite">{verifyMsg}</p>}
+          {verifyError && <p className="text-xs text-red-500 dark:text-red-400" role="alert">{verifyError}</p>}
         </div>
 
         {/* Widget Access */}
@@ -968,7 +968,7 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* Device Passkey (T4-S3) — gated by device_enabled feature flag */}
+        {/* Device Passkey (trefolio Leaf) — gated by device_enabled feature flag */}
         {deviceEnabled && <div className="card p-6 space-y-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-violet-100 dark:bg-violet-500/15 flex items-center justify-center">
@@ -977,7 +977,7 @@ export default function ProfilePage() {
             <div>
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Device Passkey</h2>
               <p className="text-xs text-gray-500 dark:text-slate-400">
-                Connect your T4-S3 hardware display
+                Connect your trefolio Leaf display
               </p>
             </div>
           </div>
@@ -1043,7 +1043,7 @@ export default function ProfilePage() {
               <div>
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Device Display Theme</h2>
                 <p className="text-xs text-gray-500 dark:text-slate-400">
-                  Choose how your T4-S3 display looks
+                  Choose how your trefolio Leaf display looks
                 </p>
               </div>
             </div>
@@ -1122,7 +1122,7 @@ export default function ProfilePage() {
                   />
                 </div>
                 {deleteError && (
-                  <p className="text-xs text-red-500 dark:text-red-400">{deleteError}</p>
+                  <p className="text-xs text-red-500 dark:text-red-400" role="alert">{deleteError}</p>
                 )}
                 <div className="flex items-center gap-2">
                   <button

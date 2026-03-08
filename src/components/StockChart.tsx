@@ -173,6 +173,7 @@ export default function StockChart({ ticker, purchasePrice, displayCurrency }: S
           No data available
         </div>
       ) : (
+        <div role="img" aria-label="Stock price chart">
         <ResponsiveContainer width="100%" height={300}>
           <AreaChart data={data} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
             <defs>
@@ -221,6 +222,7 @@ export default function StockChart({ ticker, purchasePrice, displayCurrency }: S
             />
           </AreaChart>
         </ResponsiveContainer>
+        </div>
       )}
     </div>
   );

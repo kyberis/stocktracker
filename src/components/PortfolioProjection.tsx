@@ -184,11 +184,12 @@ export default function PortfolioProjection({ holdings: holdingsProp, cashEntrie
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Growth rate */}
         <div className="space-y-1.5">
-          <label className="text-[11px] font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wide">
+          <label htmlFor="proj-growth-rate" className="text-[11px] font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wide">
             {t("projGrowthRate")}
           </label>
           <div className="flex items-center gap-2">
             <input
+              id="proj-growth-rate"
               type="range"
               min={1}
               max={15}
@@ -231,7 +232,7 @@ export default function PortfolioProjection({ holdings: holdingsProp, cashEntrie
 
         {/* Yearly contribution */}
         <div className="space-y-1.5">
-          <label className="text-[11px] font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wide">
+          <label htmlFor="proj-yearly-contribution" className="text-[11px] font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wide">
             {t("projYearlyContribution")}
           </label>
           <div className="relative">
@@ -239,6 +240,7 @@ export default function PortfolioProjection({ holdings: holdingsProp, cashEntrie
               €
             </span>
             <input
+              id="proj-yearly-contribution"
               type="number"
               min={0}
               step={500}
@@ -274,6 +276,7 @@ export default function PortfolioProjection({ holdings: holdingsProp, cashEntrie
 
       {/* Chart */}
       {projectionData.length > 0 && (
+        <div role="img" aria-label="Portfolio projection chart">
         <ResponsiveContainer width="100%" height={320}>
           <AreaChart data={projectionData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
             <defs>
@@ -351,6 +354,7 @@ export default function PortfolioProjection({ holdings: holdingsProp, cashEntrie
             )}
           </AreaChart>
         </ResponsiveContainer>
+        </div>
       )}
 
       {/* Summary cards */}

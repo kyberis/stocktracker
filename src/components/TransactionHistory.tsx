@@ -102,21 +102,22 @@ export default function TransactionHistory({ holdingId, ticker }: Props) {
             ))}
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            <input type="date" value={formDate} onChange={(e) => setFormDate(e.target.value)} className="text-sm" />
+            <input type="date" value={formDate} onChange={(e) => setFormDate(e.target.value)} aria-label={t("transactionDate")} className="text-sm" />
             {(formType === "buy" || formType === "sell") && (
-              <input type="number" placeholder={t("transactionShares")} value={formShares} onChange={(e) => setFormShares(e.target.value)} className="text-sm" step="any" />
+              <input type="number" placeholder={t("transactionShares")} aria-label={t("transactionShares")} value={formShares} onChange={(e) => setFormShares(e.target.value)} className="text-sm" step="any" />
             )}
             <input
               type="number"
               placeholder={formType === "dividend" || formType === "fee" ? t("transactionTotal") : t("transactionPrice")}
+              aria-label={formType === "dividend" || formType === "fee" ? t("transactionTotal") : t("transactionPrice")}
               value={formPrice}
               onChange={(e) => setFormPrice(e.target.value)}
               className="text-sm"
               step="any"
             />
-            <input type="number" placeholder={t("transactionFees")} value={formFees} onChange={(e) => setFormFees(e.target.value)} className="text-sm" step="any" />
-            <input type="number" placeholder={t("transactionTaxes")} value={formTaxes} onChange={(e) => setFormTaxes(e.target.value)} className="text-sm" step="any" />
-            <input type="text" placeholder={t("transactionNotes")} value={formNotes} onChange={(e) => setFormNotes(e.target.value)} className="text-sm" />
+            <input type="number" placeholder={t("transactionFees")} aria-label={t("transactionFees")} value={formFees} onChange={(e) => setFormFees(e.target.value)} className="text-sm" step="any" />
+            <input type="number" placeholder={t("transactionTaxes")} aria-label={t("transactionTaxes")} value={formTaxes} onChange={(e) => setFormTaxes(e.target.value)} className="text-sm" step="any" />
+            <input type="text" placeholder={t("transactionNotes")} aria-label={t("transactionNotes")} value={formNotes} onChange={(e) => setFormNotes(e.target.value)} className="text-sm" />
           </div>
           <button onClick={handleAdd} disabled={mutationLoading} className="btn-primary text-xs px-4 py-1.5 disabled:opacity-50">
             {t("addTransaction")}
@@ -129,16 +130,17 @@ export default function TransactionHistory({ holdingId, ticker }: Props) {
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
+            <caption className="sr-only">Transaction history</caption>
             <thead className="text-gray-500 dark:text-slate-400">
               <tr>
-                <th className="text-left p-2 font-medium">{t("transactionDate")}</th>
-                <th className="text-left p-2 font-medium">{t("transactionType")}</th>
-                {!holdingId && <th className="text-left p-2 font-medium">{t("ticker")}</th>}
-                <th className="text-right p-2 font-medium">{t("transactionShares")}</th>
-                <th className="text-right p-2 font-medium">{t("transactionPrice")}</th>
-                <th className="text-right p-2 font-medium">{t("transactionTotal")}</th>
-                <th className="text-right p-2 font-medium">{t("transactionFees")}</th>
-                <th className="p-2"></th>
+                <th scope="col" className="text-left p-2 font-medium">{t("transactionDate")}</th>
+                <th scope="col" className="text-left p-2 font-medium">{t("transactionType")}</th>
+                {!holdingId && <th scope="col" className="text-left p-2 font-medium">{t("ticker")}</th>}
+                <th scope="col" className="text-right p-2 font-medium">{t("transactionShares")}</th>
+                <th scope="col" className="text-right p-2 font-medium">{t("transactionPrice")}</th>
+                <th scope="col" className="text-right p-2 font-medium">{t("transactionTotal")}</th>
+                <th scope="col" className="text-right p-2 font-medium">{t("transactionFees")}</th>
+                <th scope="col" className="p-2"></th>
               </tr>
             </thead>
             <tbody>

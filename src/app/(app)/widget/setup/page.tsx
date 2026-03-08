@@ -311,8 +311,11 @@ function WidgetSetupContent() {
         </div>
 
         {/* Tab Selector */}
-        <div className="flex gap-1 bg-gray-100 dark:bg-slate-800 rounded-xl p-1">
+        <div role="tablist" aria-label="Platform" className="flex gap-1 bg-gray-100 dark:bg-slate-800 rounded-xl p-1">
           <button
+            role="tab"
+            aria-selected={activeTab === "ios"}
+            aria-controls="widget-tabpanel-ios"
             onClick={() => setActiveTab("ios")}
             className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
               activeTab === "ios"
@@ -320,10 +323,13 @@ function WidgetSetupContent() {
                 : "text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300"
             }`}
           >
-            <Apple className="w-4 h-4" />
+            <Apple className="w-4 h-4" aria-hidden="true" />
             iOS
           </button>
           <button
+            role="tab"
+            aria-selected={activeTab === "android"}
+            aria-controls="widget-tabpanel-android"
             onClick={() => setActiveTab("android")}
             className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
               activeTab === "android"
@@ -331,11 +337,12 @@ function WidgetSetupContent() {
                 : "text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300"
             }`}
           >
-            <MonitorSmartphone className="w-4 h-4" />
+            <MonitorSmartphone className="w-4 h-4" aria-hidden="true" />
             Android
           </button>
         </div>
 
+        <div role="tabpanel" id={`widget-tabpanel-${activeTab}`}>
         {activeTab === "ios" ? (
           <>
             {/* iOS PWA */}
@@ -502,6 +509,7 @@ function WidgetSetupContent() {
             </div>
           </>
         )}
+        </div>
 
         {/* Disclaimer */}
         <p className="text-[10px] text-center text-gray-400 dark:text-slate-500 leading-relaxed px-4">

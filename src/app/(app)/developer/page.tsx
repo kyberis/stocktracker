@@ -537,10 +537,13 @@ function DeveloperContent() {
         </div>
 
         {/* Tab bar */}
-        <div className="flex gap-1 mb-6 border-b border-gray-200 dark:border-slate-700">
+        <div role="tablist" aria-label="Developer sections" className="flex gap-1 mb-6 border-b border-gray-200 dark:border-slate-700">
           {(Object.keys(TAB_LABELS) as Tab[]).map((t) => (
             <button
               key={t}
+              role="tab"
+              aria-selected={tab === t}
+              aria-controls={`dev-tabpanel-${t}`}
               onClick={() => setTab(t)}
               className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
                 tab === t
@@ -553,15 +556,17 @@ function DeveloperContent() {
           ))}
         </div>
 
-        {tab === "features" ? (
-          <FeaturesTab />
-        ) : tab === "architecture" ? (
-          <ArchitectureTab />
-        ) : tab === "api" ? (
-          <ApiRoutesTab />
-        ) : (
-          <PatternsTab />
-        )}
+        <div role="tabpanel" id={`dev-tabpanel-${tab}`}>
+          {tab === "features" ? (
+            <FeaturesTab />
+          ) : tab === "architecture" ? (
+            <ArchitectureTab />
+          ) : tab === "api" ? (
+            <ApiRoutesTab />
+          ) : (
+            <PatternsTab />
+          )}
+        </div>
       </div>
     </main>
   );

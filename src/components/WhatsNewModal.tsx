@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { releaseNotes, CURRENT_VERSION, type ChangeType } from "@/lib/release-notes";
 import { useI18n } from "@/lib/i18n";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 
 const SEEN_VERSION_KEY = "trefolio_seen_version";
 
@@ -100,22 +101,24 @@ export default function WhatsNewModal({ isOpen, onClose }: WhatsNewModalProps) {
     onClose();
   };
 
+  const focusTrapRef = useFocusTrap(isOpen, handleClose);
+
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm" onClick={handleClose} />
-      <div className="relative bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl w-full max-w-lg mx-4 shadow-xl max-h-[85vh] flex flex-col">
+      <div ref={focusTrapRef} role="dialog" aria-modal="true" aria-labelledby="whatsnew-modal-title" className="relative bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl w-full max-w-lg mx-4 shadow-xl max-h-[85vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100 dark:border-slate-700">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <svg className="w-5 h-5 text-white" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
               </svg>
             </div>
             <div>
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+              <h2 id="whatsnew-modal-title" className="text-lg font-bold text-gray-900 dark:text-white">
                 {lang !== "en" ? "Novedades" : "What's New"}
               </h2>
               <p className="text-xs text-gray-500 dark:text-slate-400">
@@ -125,9 +128,10 @@ export default function WhatsNewModal({ isOpen, onClose }: WhatsNewModalProps) {
           </div>
           <button
             onClick={handleClose}
+            aria-label="Close"
             className="p-1.5 rounded-lg text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>

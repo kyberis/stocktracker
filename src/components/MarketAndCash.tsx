@@ -132,8 +132,9 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
               onClick={fetchIndices}
               className="text-xs text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 transition-colors"
               title="Refresh"
+              aria-label="Refresh"
             >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
             </button>
@@ -141,12 +142,13 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
 
           <div className="overflow-x-auto -mx-4 sm:-mx-5">
             <table className="w-full text-sm">
+              <caption className="sr-only">Market indices</caption>
               <thead>
                 <tr className="border-b border-gray-100 dark:border-slate-700">
-                  <th className="text-left text-xs font-medium text-gray-400 dark:text-slate-500 pb-2 pl-4 sm:pl-5">{t("stock")}</th>
-                  <th className="text-right text-xs font-medium text-gray-400 dark:text-slate-500 pb-2">{t("currentPrice")}</th>
-                  <th className="text-right text-xs font-medium text-gray-400 dark:text-slate-500 pb-2">{t("dayChange")}</th>
-                  <th className="text-right text-xs font-medium text-gray-400 dark:text-slate-500 pb-2 pr-4 sm:pr-5">{t("change")}</th>
+                  <th scope="col" className="text-left text-xs font-medium text-gray-400 dark:text-slate-500 pb-2 pl-4 sm:pl-5">{t("stock")}</th>
+                  <th scope="col" className="text-right text-xs font-medium text-gray-400 dark:text-slate-500 pb-2">{t("currentPrice")}</th>
+                  <th scope="col" className="text-right text-xs font-medium text-gray-400 dark:text-slate-500 pb-2">{t("dayChange")}</th>
+                  <th scope="col" className="text-right text-xs font-medium text-gray-400 dark:text-slate-500 pb-2 pr-4 sm:pr-5">{t("change")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -256,6 +258,7 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
                     <input
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
+                      aria-label={t("cashName")}
                       className="w-full text-sm"
                       autoFocus
                     />
@@ -266,6 +269,7 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
                         step="any"
                         value={editAmount}
                         onChange={(e) => setEditAmount(e.target.value)}
+                        aria-label={t("cash") + " EUR"}
                         className="flex-1 text-sm"
                       />
                       <button className="btn-primary text-xs px-2 py-1" onClick={() => saveEdit(entry.id)}>
@@ -291,8 +295,9 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
                           onClick={() => startEdit(entry.id, entry.name, entry.amountEUR)}
                           className="p-0.5 rounded text-gray-400 hover:text-emerald-500 transition-colors"
                           title={t("editValues")}
+                          aria-label={t("editValues")}
                         >
-                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                           </svg>
                         </button>
@@ -300,8 +305,9 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
                           onClick={() => removeCashEntry(entry.id)}
                           className="p-0.5 rounded text-gray-400 hover:text-red-500 transition-colors"
                           title={t("removeStock")}
+                          aria-label={t("removeStock")}
                         >
-                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                           </svg>
                         </button>
@@ -318,6 +324,7 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
               value={cashName}
               onChange={(e) => setCashName(e.target.value)}
               placeholder={t("cashName")}
+              aria-label={t("cashName")}
               className="flex-1 text-xs min-w-0"
             />
             <input
@@ -327,12 +334,14 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
               value={cashAmount}
               onChange={(e) => setCashAmount(e.target.value)}
               placeholder="EUR"
+              aria-label={t("cash") + " EUR"}
               className="w-20 text-xs"
             />
             <button
               className="btn-primary text-xs px-2.5 py-1.5 disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
               disabled={!cashName.trim() || !cashAmount}
               onClick={handleAddCash}
+              aria-label="Add cash"
             >
               +
             </button>

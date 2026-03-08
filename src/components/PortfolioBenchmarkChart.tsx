@@ -280,6 +280,7 @@ export default function PortfolioBenchmarkChart() {
           {t("benchmarkUnavailable")}
         </div>
       ) : (
+        <div role="img" aria-label="Portfolio benchmark comparison chart">
         <ResponsiveContainer width="100%" height={320}>
           <LineChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
             <XAxis
@@ -344,6 +345,7 @@ export default function PortfolioBenchmarkChart() {
             )}
           </LineChart>
         </ResponsiveContainer>
+        </div>
       )}
     </div>
   );

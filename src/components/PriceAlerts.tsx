@@ -170,6 +170,7 @@ export default function PriceAlerts() {
               value={query}
               onChange={(e) => handleQueryChange(e.target.value)}
               placeholder={t("alertSearchPlaceholder")}
+              aria-label={t("alertSearchPlaceholder")}
               className="w-full text-sm"
             />
             {searching && (
@@ -217,6 +218,7 @@ export default function PriceAlerts() {
               <button
                 onClick={() => setSelectedStock(null)}
                 className="text-gray-400 hover:text-gray-600"
+                aria-label="Clear selection"
               >
                 <svg
                   className="w-4 h-4"
@@ -224,6 +226,7 @@ export default function PriceAlerts() {
                   viewBox="0 0 24 24"
                   stroke="currentColor"
                   strokeWidth={2}
+                  aria-hidden="true"
                 >
                   <path
                     strokeLinecap="round"
@@ -238,6 +241,7 @@ export default function PriceAlerts() {
               <select
                 value={condition}
                 onChange={(e) => setCondition(e.target.value as AlertCondition)}
+                aria-label={t("alertBelow") + " / " + t("alertAbove")}
                 className="text-sm bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-lg px-2 py-1.5"
               >
                 <option value="below">{t("alertBelow")}</option>
@@ -250,6 +254,7 @@ export default function PriceAlerts() {
                 value={threshold}
                 onChange={(e) => setThreshold(e.target.value)}
                 placeholder={t("alertThresholdPlaceholder")}
+                aria-label={t("alertThresholdPlaceholder")}
                 className="flex-1 text-sm"
               />
               <button
@@ -375,6 +380,11 @@ export default function PriceAlerts() {
                             ? t("alertPause")
                             : t("alertResume")
                         }
+                        aria-label={
+                          alert.active
+                            ? t("alertPause")
+                            : t("alertResume")
+                        }
                         className={`p-1 rounded ${
                           alert.active
                             ? "text-emerald-500 hover:text-emerald-700"
@@ -387,6 +397,7 @@ export default function PriceAlerts() {
                           viewBox="0 0 24 24"
                           stroke="currentColor"
                           strokeWidth={2}
+                          aria-hidden="true"
                         >
                           {alert.active ? (
                             <path
@@ -409,6 +420,7 @@ export default function PriceAlerts() {
                       <button
                         onClick={() => handleToggle(alert.id, true)}
                         title={t("alertReactivate")}
+                        aria-label={t("alertReactivate")}
                         className="text-amber-500 hover:text-amber-700 p-1 rounded"
                       >
                         <svg
@@ -417,6 +429,7 @@ export default function PriceAlerts() {
                           viewBox="0 0 24 24"
                           stroke="currentColor"
                           strokeWidth={2}
+                          aria-hidden="true"
                         >
                           <path
                             strokeLinecap="round"
@@ -430,6 +443,7 @@ export default function PriceAlerts() {
                     <button
                       onClick={() => handleDelete(alert.id)}
                       className="text-red-400 hover:text-red-600 p-1"
+                      aria-label="Delete alert"
                     >
                       <svg
                         className="w-4 h-4"
@@ -437,6 +451,7 @@ export default function PriceAlerts() {
                         viewBox="0 0 24 24"
                         stroke="currentColor"
                         strokeWidth={2}
+                        aria-hidden="true"
                       >
                         <path
                           strokeLinecap="round"

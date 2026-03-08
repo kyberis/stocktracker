@@ -1085,8 +1085,8 @@ function FeatureTogglesCard() {
           steps={appleSteps}
         />
         <FeatureToggle
-          label="T4-S3 Device"
-          description="Enable LILYGO T4-S3 hardware device features: passkey generation, device linking, display themes, firmware OTA, and landing page promotion. Disable to hide all device features until launch."
+          label="trefolio Leaf Device"
+          description="Enable trefolio Leaf hardware device features: passkey generation, device linking, display themes, firmware OTA, and landing page promotion. Disable to hide all device features until launch."
           enabled={deviceOn}
           saving={saving === "device_enabled"}
           onToggle={(v) => handleToggle("device_enabled", v)}
@@ -1590,12 +1590,15 @@ function AdminContent() {
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Admin</h1>
 
         {/* Tab bar */}
-        <div className="flex gap-1 mb-6 border-b border-gray-200 dark:border-slate-700 overflow-x-auto">
+        <div role="tablist" aria-label="Admin sections" className="flex gap-1 mb-6 border-b border-gray-200 dark:border-slate-700 overflow-x-auto">
           {(["users", "settings", "analytics", "feedback", "waitlist"] as const).map((t) => {
             const labels: Record<Tab, string> = { users: "Users", settings: "Settings", analytics: "Analytics", feedback: "Feedback", waitlist: "Waitlist" };
             return (
               <button
                 key={t}
+                role="tab"
+                aria-selected={tab === t}
+                aria-controls={`admin-tabpanel-${t}`}
                 onClick={() => setTab(t)}
                 className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap ${
                   tab === t
@@ -1609,11 +1612,13 @@ function AdminContent() {
           })}
         </div>
 
-        {tab === "users" && <UsersTab />}
-        {tab === "settings" && <SettingsTab />}
-        {tab === "analytics" && <AnalyticsTab />}
-        {tab === "feedback" && <FeedbackTab />}
-        {tab === "waitlist" && <WaitlistTab />}
+        <div role="tabpanel" id={`admin-tabpanel-${tab}`}>
+          {tab === "users" && <UsersTab />}
+          {tab === "settings" && <SettingsTab />}
+          {tab === "analytics" && <AnalyticsTab />}
+          {tab === "feedback" && <FeedbackTab />}
+          {tab === "waitlist" && <WaitlistTab />}
+        </div>
       </div>
     </main>
   );

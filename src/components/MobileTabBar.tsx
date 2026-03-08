@@ -49,7 +49,7 @@ export default function MobileTabBar() {
                   : "text-gray-500 dark:text-slate-500"
               }`}
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={active ? 2.5 : 2}>
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={active ? 2.5 : 2} aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" d={tab.icon} />
               </svg>
               {t(tab.labelKey)}

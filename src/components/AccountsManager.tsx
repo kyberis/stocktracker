@@ -41,9 +41,9 @@ export default function AccountsManager({ onAccountChange }: Props) {
       <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">{t("accounts")}</h3>
 
       <div className="flex gap-2 mb-4">
-        <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder={t("accountName")} className="flex-1 text-xs px-2 py-1.5" />
-        <input value={newBroker} onChange={(e) => setNewBroker(e.target.value)} placeholder={t("broker")} className="w-28 text-xs px-2 py-1.5" />
-        <select value={newCurrency} onChange={(e) => setNewCurrency(e.target.value)} className="w-20 text-xs px-2 py-1.5">
+        <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder={t("accountName")} aria-label={t("accountName")} className="flex-1 text-xs px-2 py-1.5" />
+        <input value={newBroker} onChange={(e) => setNewBroker(e.target.value)} placeholder={t("broker")} aria-label={t("broker")} className="w-28 text-xs px-2 py-1.5" />
+        <select value={newCurrency} onChange={(e) => setNewCurrency(e.target.value)} aria-label={t("currency")} className="w-20 text-xs px-2 py-1.5">
           <option>EUR</option><option>USD</option><option>GBP</option><option>CHF</option>
         </select>
         <button onClick={handleAdd} className="btn-primary text-xs px-3 py-1.5">{t("addAccount")}</button>
@@ -64,8 +64,8 @@ export default function AccountsManager({ onAccountChange }: Props) {
                   {acct.broker && <p className="text-[10px] text-gray-500 dark:text-slate-400">{acct.broker} · {acct.currency}</p>}
                 </div>
               </div>
-              <button onClick={() => handleDelete(acct.id)} className="text-red-400 hover:text-red-600 text-xs">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <button onClick={() => handleDelete(acct.id)} className="text-red-400 hover:text-red-600 text-xs" aria-label="Delete account">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>

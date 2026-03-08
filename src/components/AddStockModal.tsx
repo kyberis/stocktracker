@@ -4,6 +4,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useSettings } from "@/lib/settings-context";
 import { useI18n } from "@/lib/i18n";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 import type { SearchResult } from "@/lib/types";
 
 interface AddStockModalProps {
@@ -103,18 +104,21 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
     onClose();
   };
 
+  const focusTrapRef = useFocusTrap(isOpen, onClose);
+
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl p-6 w-full max-w-md mx-4 shadow-xl">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-5">{t("addStock")}</h2>
+      <div ref={focusTrapRef} role="dialog" aria-modal="true" aria-labelledby="addstock-modal-title" className="relative bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl p-6 w-full max-w-md mx-4 shadow-xl">
+        <h2 id="addstock-modal-title" className="text-xl font-bold text-gray-900 dark:text-white mb-5">{t("addStock")}</h2>
 
         <div className="space-y-4">
           <div className="relative">
-            <label className="block text-sm text-gray-500 dark:text-slate-400 mb-1.5">{t("search")}</label>
+            <label htmlFor="addstock-search" className="block text-sm text-gray-500 dark:text-slate-400 mb-1.5">{t("search")}</label>
             <input
+              id="addstock-search"
               ref={inputRef}
               type="text"
               value={query}
@@ -154,8 +158,9 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
           )}
 
           <div>
-            <label className="block text-sm text-gray-500 dark:text-slate-400 mb-1.5">{t("name")}</label>
+            <label htmlFor="addstock-name" className="block text-sm text-gray-500 dark:text-slate-400 mb-1.5">{t("name")}</label>
             <input
+              id="addstock-name"
               type="text"
               value={stockName}
               onChange={(e) => setStockName(e.target.value)}
@@ -165,8 +170,9 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
           </div>
 
           <div>
-            <label className="block text-sm text-gray-500 dark:text-slate-400 mb-1.5">{t("ticker")}</label>
+            <label htmlFor="addstock-ticker" className="block text-sm text-gray-500 dark:text-slate-400 mb-1.5">{t("ticker")}</label>
             <input
+              id="addstock-ticker"
               type="text"
               value={ticker}
               onChange={(e) => setTicker(e.target.value)}
@@ -176,8 +182,9 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
           </div>
 
           <div>
-            <label className="block text-sm text-gray-500 dark:text-slate-400 mb-1.5">{t("editExchange")}</label>
+            <label htmlFor="addstock-exchange" className="block text-sm text-gray-500 dark:text-slate-400 mb-1.5">{t("editExchange")}</label>
             <input
+              id="addstock-exchange"
               type="text"
               value={exchange}
               onChange={(e) => setExchange(e.target.value)}
@@ -187,8 +194,9 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
           </div>
 
           <div>
-            <label className="block text-sm text-gray-500 dark:text-slate-400 mb-1.5">{t("assetType")}</label>
+            <label htmlFor="addstock-assettype" className="block text-sm text-gray-500 dark:text-slate-400 mb-1.5">{t("assetType")}</label>
             <select
+              id="addstock-assettype"
               value={assetType}
               onChange={(e) => setAssetType((e.target.value as "stock" | "etf"))}
               className="w-full"
@@ -199,8 +207,9 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
           </div>
 
           <div>
-            <label className="block text-sm text-gray-500 dark:text-slate-400 mb-1.5">{t("shares")}</label>
+            <label htmlFor="addstock-shares" className="block text-sm text-gray-500 dark:text-slate-400 mb-1.5">{t("shares")}</label>
             <input
+              id="addstock-shares"
               type="number"
               value={shares}
               onChange={(e) => setShares(e.target.value)}
@@ -212,8 +221,9 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
           </div>
 
           <div>
-            <label className="block text-sm text-gray-500 dark:text-slate-400 mb-1.5">{t("purchasePrice")}</label>
+            <label htmlFor="addstock-price" className="block text-sm text-gray-500 dark:text-slate-400 mb-1.5">{t("purchasePrice")}</label>
             <input
+              id="addstock-price"
               type="number"
               value={price}
               onChange={(e) => setPrice(e.target.value)}
@@ -225,8 +235,9 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
           </div>
 
           <div>
-            <label className="block text-sm text-gray-500 dark:text-slate-400 mb-1.5">{t("currency")}</label>
+            <label htmlFor="addstock-currency" className="block text-sm text-gray-500 dark:text-slate-400 mb-1.5">{t("currency")}</label>
             <select
+              id="addstock-currency"
               value={currency}
               onChange={(e) => setCurrency(e.target.value)}
               className="w-full"

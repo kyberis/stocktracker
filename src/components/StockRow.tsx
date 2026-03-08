@@ -293,8 +293,12 @@ function StockRow({ holding }: StockRowProps) {
   return (
     <div className="border-b border-gray-100 dark:border-slate-700 last:border-b-0">
       <div
+        role="button"
+        tabIndex={0}
+        aria-expanded={expanded}
         className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors"
         onClick={() => setExpanded(!expanded)}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setExpanded(!expanded); } }}
       >
         <div className="min-w-0 flex-1 mr-4">
           <div className="flex items-center gap-1.5">

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/lib/auth-context";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 
 export default function DeviceInterestEnroller() {
   const { user } = useAuth();
@@ -35,19 +36,21 @@ export default function DeviceInterestEnroller() {
 
   const dismiss = useCallback(() => setShow(false), []);
 
+  const focusTrapRef = useFocusTrap(show, dismiss);
+
   if (!show) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={dismiss} />
-      <div className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full p-8 text-center animate-in fade-in zoom-in-95 duration-200">
+      <div ref={focusTrapRef} role="dialog" aria-modal="true" aria-labelledby="device-enroll-title" className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full p-8 text-center animate-in fade-in zoom-in-95 duration-200">
         <div className="mx-auto w-14 h-14 rounded-full bg-emerald-500/10 flex items-center justify-center mb-5">
           <svg className="w-7 h-7 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
 
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+        <h2 id="device-enroll-title" className="text-xl font-bold text-gray-900 dark:text-white mb-2">
           {alreadyEnrolled ? "You\u2019re already on the list!" : "You\u2019re on the waitlist!"}
         </h2>
         <p className="text-sm text-gray-500 dark:text-slate-400 leading-relaxed mb-6">

@@ -39,7 +39,7 @@ body {
   }
 
   input, select, textarea {
-    @apply bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors placeholder:text-gray-400
+    @apply bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900 outline-none focus-visible:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500 transition-colors placeholder:text-gray-400
       dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 dark:placeholder:text-slate-500;
   }
 
@@ -68,28 +68,30 @@ body {
   }
 }
 
-@keyframes slide-up {
-  from {
-    opacity: 0;
-    transform: translateY(1rem);
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(1rem);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+
+  .animate-slide-up {
+    animation: slide-up 0.35s ease-out;
   }
-}
 
-.animate-slide-up {
-  animation: slide-up 0.35s ease-out;
-}
+  @keyframes live-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
 
-@keyframes live-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.35; }
-}
-
-.animate-live-pulse {
-  animation: live-pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  .animate-live-pulse {
+    animation: live-pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
 }
 
 .recharts-tooltip-wrapper {
@@ -126,9 +128,11 @@ body {
   background: #64748b;
 }
 
-@keyframes ai-shimmer {
-  0% { background-position: 200% 50%; }
-  100% { background-position: -200% 50%; }
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes ai-shimmer {
+    0% { background-position: 200% 50%; }
+    100% { background-position: -200% 50%; }
+  }
 }
 
 .ai-cta-shimmer {
@@ -157,4 +161,16 @@ body {
   mask-composite: exclude;
   pointer-events: none;
   z-index: -1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-cta-shimmer::before {
+    animation: none;
+  }
+  .animate-spin {
+    animation: none;
+  }
+  .animate-pulse {
+    animation: none;
+  }
 }

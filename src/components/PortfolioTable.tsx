@@ -113,6 +113,7 @@ export default function PortfolioTable({ holdings: holdingsProp }: Props) {
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           placeholder={t("searchPlaceholder")}
+          aria-label={t("searchPlaceholder")}
           className="flex-1 min-w-[200px] text-sm"
         />
       </div>

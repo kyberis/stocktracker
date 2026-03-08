@@ -29,6 +29,8 @@ export default function UserDropdown() {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        aria-haspopup="menu"
         className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors text-sm"
       >
         {user.avatarUrl ? (

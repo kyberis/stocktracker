@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useI18n } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/portfolio-context";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 
 interface ResetPortfolioModalProps {
   isOpen: boolean;
@@ -42,12 +43,14 @@ export default function ResetPortfolioModal({ isOpen, onClose }: ResetPortfolioM
     }
   };
 
+  const focusTrapRef = useFocusTrap(isOpen, loading ? undefined : onClose);
+
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl p-6 w-full max-w-sm mx-4 shadow-xl">
+      <div className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm" onClick={loading ? undefined : onClose} />
+      <div ref={focusTrapRef} role="dialog" aria-modal="true" aria-labelledby="reset-modal-title" className="relative bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl p-6 w-full max-w-sm mx-4 shadow-xl">
         {done ? (
           <div className="text-center py-4 space-y-3">
             <div className="w-12 h-12 mx-auto rounded-full bg-emerald-100 dark:bg-emerald-500/15 flex items-center justify-center">
@@ -66,7 +69,7 @@ export default function ResetPortfolioModal({ isOpen, onClose }: ResetPortfolioM
                 </svg>
               </div>
               <div>
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white">{t("resetPortfolio")}</h2>
+                <h2 id="reset-modal-title" className="text-lg font-bold text-gray-900 dark:text-white">{t("resetPortfolio")}</h2>
                 <p className="text-xs text-gray-500 dark:text-slate-400">{t("resetPortfolioDesc")}</p>
               </div>
             </div>
@@ -89,7 +92,7 @@ export default function ResetPortfolioModal({ isOpen, onClose }: ResetPortfolioM
             </div>
 
             {error && (
-              <p className="text-xs text-red-500 text-center mb-3">{error}</p>
+              <p className="text-xs text-red-500 text-center mb-3" role="alert">{error}</p>
             )}
 
             <button onClick={onClose} disabled={loading} className="w-full btn-secondary text-sm">

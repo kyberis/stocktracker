@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useSettings } from "@/lib/settings-context";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth-context";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 import type { ApiProviderName, RefreshInterval } from "@/lib/types";
 import ProCompareCard from "@/components/ProCompareCard";
 
@@ -28,13 +29,15 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     onClose();
   };
 
+  const focusTrapRef = useFocusTrap(isOpen, onClose);
+
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl p-6 w-full max-w-md mx-4 shadow-xl">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-5">{t("settings")}</h2>
+      <div ref={focusTrapRef} role="dialog" aria-modal="true" aria-labelledby="settings-modal-title" className="relative bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl p-6 w-full max-w-md mx-4 shadow-xl">
+        <h2 id="settings-modal-title" className="text-xl font-bold text-gray-900 dark:text-white mb-5">{t("settings")}</h2>
 
         <div className="space-y-5">
           <div className="rounded-xl border border-gray-200 dark:border-slate-600 p-3 bg-gray-50 dark:bg-slate-800/40">

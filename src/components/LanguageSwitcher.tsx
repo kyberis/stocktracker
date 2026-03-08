@@ -48,6 +48,8 @@ export default function LanguageSwitcher() {
     <div ref={containerRef} className="relative">
       <button
         onClick={() => setOpen(!open)}
+        aria-expanded={open}
+        aria-haspopup="listbox"
         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 text-sm font-medium text-slate-200 hover:bg-slate-700 transition-colors"
       >
         <span className="uppercase text-xs font-bold text-emerald-400">{language}</span>
@@ -66,6 +68,7 @@ export default function LanguageSwitcher() {
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
               placeholder="Search language..."
+              aria-label="Search language"
               className="w-full px-2.5 py-1.5 text-sm bg-slate-900 border border-slate-600 rounded-md text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500"
             />
           </div>

@@ -4,9 +4,10 @@ import { useState, useRef, useCallback, useEffect, DragEvent } from "react";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth-context";
 import { downloadImportTemplate } from "@/lib/download-import-template";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 import ProCompareCard from "@/components/ProCompareCard";
 
-type CsvFormat = "degiro" | "interactive_brokers" | "trading_212" | "revolut" | "simple";
+type CsvFormat = "degiro" | "interactive_brokers" | "trading_212" | "revolut" | "simple" | "ai_import";
 
 interface ImportPortfolioModalProps {
   isOpen: boolean;
@@ -224,7 +225,7 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
     try {
       const isCsv = file.type === "text/csv" || file.name.endsWith(".csv") || file.type === "application/vnd.ms-excel";
 
-      if (isCsv) {
+      if (isCsv && csvFormat !== "ai_import") {
         const csv = await file.text();
         rawCsvRef.current = csv;
         const parseForm = new FormData();
@@ -398,7 +399,7 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
     let errorCount = 0;
     const formatLabels: Record<CsvFormat, string> = {
       degiro: "DEGIRO", interactive_brokers: "IBKR", trading_212: "Trading 212",
-      revolut: "Revolut", simple: "CSV",
+      revolut: "Revolut", simple: "CSV", ai_import: "AI",
     };
     const importSource = isImageImport ? "Image import" : `${formatLabels[csvFormat]} import`;
 
@@ -487,6 +488,8 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
     }
   };
 
+  const focusTrapRef = useFocusTrap(isOpen, isBusy ? undefined : handleClose);
+
   if (!isOpen) return null;
 
   const totalItems = holdings.length + transactions.length;
@@ -494,19 +497,20 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className={`absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm${isBusy ? " cursor-not-allowed" : ""}`} onClick={isBusy ? undefined : handleClose} />
-      <div className="relative bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl w-full max-w-2xl mx-4 shadow-xl max-h-[90vh] flex flex-col">
+      <div ref={focusTrapRef} role="dialog" aria-modal="true" aria-labelledby="import-modal-title" className="relative bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl w-full max-w-2xl mx-4 shadow-xl max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-slate-700">
           <div>
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">{t("importPortfolio")}</h2>
+            <h2 id="import-modal-title" className="text-lg font-bold text-gray-900 dark:text-white">{t("importPortfolio")}</h2>
             <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">{t("importDesc")}</p>
           </div>
           <button
             onClick={handleClose}
             disabled={isBusy}
+            aria-label="Close"
             className={`p-1.5 rounded-lg transition-colors ${isBusy ? "opacity-30 cursor-not-allowed text-gray-400 dark:text-slate-500" : "hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-400 dark:text-slate-500"}`}
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -524,6 +528,7 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
                   { id: "trading_212" as CsvFormat, label: "Trading 212", desc: "History CSV export" },
                   { id: "revolut" as CsvFormat, label: "Revolut", desc: "Account statement (Excel/CSV)" },
                   { id: "simple" as CsvFormat, label: t("simpleCSV"), desc: "ticker, type, price, amount, currency" },
+                  { id: "ai_import" as CsvFormat, label: t("aiImportLabel"), desc: t("aiImportDesc") },
                 ]).map((fmt) => (
                   <button
                     key={fmt.id}
@@ -578,7 +583,7 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
                   {ibkrTab === "csv" && (
                     <div className="bg-blue-50 dark:bg-blue-500/10 rounded-xl p-3 mb-4">
                       <p className="text-xs text-blue-700 dark:text-blue-300 font-medium mb-1">Interactive Brokers</p>
-                      <p className="text-[10px] text-blue-600 dark:text-blue-400">Performance &amp; Reports → Statements → CSV. Supports Activity Statement and Flex Query.</p>
+                      <p className="text-[10px] text-blue-600 dark:text-blue-400">{t("ibkrCsvInstructions")}</p>
                     </div>
                   )}
 
@@ -664,8 +669,9 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
 
                           {/* Token + Query ID form */}
                           <div>
-                            <label className="text-[10px] text-gray-600 dark:text-slate-400 block mb-1">{t("ibkrToken")}</label>
+                            <label htmlFor="ibkr-token" className="text-[10px] text-gray-600 dark:text-slate-400 block mb-1">{t("ibkrToken")}</label>
                             <input
+                              id="ibkr-token"
                               type="password"
                               value={ibkrToken}
                               onChange={(e) => setIbkrToken(e.target.value)}
@@ -675,8 +681,9 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
                           </div>
 
                           <div>
-                            <label className="text-[10px] text-gray-600 dark:text-slate-400 block mb-1">{t("ibkrQueryId")}</label>
+                            <label htmlFor="ibkr-query-id" className="text-[10px] text-gray-600 dark:text-slate-400 block mb-1">{t("ibkrQueryId")}</label>
                             <input
+                              id="ibkr-query-id"
                               type="text"
                               value={ibkrQueryId}
                               onChange={(e) => setIbkrQueryId(e.target.value)}
@@ -703,7 +710,7 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
                             {ibkrFetching ? t("ibkrFetching") : t("ibkrFetchPortfolio")}
                           </button>
 
-                          {errorMsg && <p className="text-xs text-red-500">{errorMsg}</p>}
+                          {errorMsg && <p className="text-xs text-red-500" role="alert">{errorMsg}</p>}
                         </div>
                       )}
                     </div>
@@ -713,13 +720,13 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
               {csvFormat === "trading_212" && (
                 <div className="bg-blue-50 dark:bg-blue-500/10 rounded-xl p-3 mb-4">
                   <p className="text-xs text-blue-700 dark:text-blue-300 font-medium mb-1">Trading 212</p>
-                  <p className="text-[10px] text-blue-600 dark:text-blue-400">Menu → History → Export as CSV.</p>
+                  <p className="text-[10px] text-blue-600 dark:text-blue-400">{t("trading212Instructions")}</p>
                 </div>
               )}
               {csvFormat === "revolut" && (
                 <div className="bg-blue-50 dark:bg-blue-500/10 rounded-xl p-3 mb-4">
                   <p className="text-xs text-blue-700 dark:text-blue-300 font-medium mb-1">Revolut</p>
-                  <p className="text-[10px] text-blue-600 dark:text-blue-400">Invest → More → Statements → Account statement → Excel.</p>
+                  <p className="text-[10px] text-blue-600 dark:text-blue-400">{t("revolutInstructions")}</p>
                 </div>
               )}
               {csvFormat === "simple" && (
@@ -739,11 +746,21 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
                   </button>
                 </div>
               )}
+              {csvFormat === "ai_import" && (
+                <div className="bg-violet-50 dark:bg-violet-500/10 rounded-xl p-3 mb-4">
+                  <p className="text-xs text-violet-700 dark:text-violet-300 font-medium mb-1">{t("aiImportGuideTitle")}</p>
+                  <p className="text-[10px] text-violet-600 dark:text-violet-400">{t("aiImportGuideDetail")}</p>
+                </div>
+              )}
 
               {/* Hide CSV upload area when IBKR API tab is active */}
               {!(csvFormat === "interactive_brokers" && ibkrTab === "api") && (
                 <div
+                  role="button"
+                  tabIndex={0}
+                  aria-label={t("importDragDrop")}
                   onClick={() => fileRef.current?.click()}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileRef.current?.click(); } }}
                   onDrop={handleDrop}
                   onDragOver={handleDragOver}
                   onDragLeave={() => setIsDragOver(false)}
@@ -759,11 +776,13 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
                     </svg>
                   </div>
                   <p className="text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">{t("importDragDrop")}</p>
-                  <p className="text-xs text-gray-400 dark:text-slate-500">{t("importAccepted")}</p>
+                  <p className="text-xs text-gray-400 dark:text-slate-500">
+                    {csvFormat === "ai_import" ? t("importAcceptedAi") : t("importAccepted")}
+                  </p>
                   <input
                     ref={fileRef}
                     type="file"
-                    accept=".csv,text/csv"
+                    accept={csvFormat === "ai_import" ? ".csv,text/csv,image/png,image/jpeg,image/webp" : ".csv,text/csv"}
                     onChange={handleFileSelect}
                     className="hidden"
                   />
@@ -791,10 +810,21 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
                 </svg>
               </div>
-              <p className="text-sm text-red-600 dark:text-red-400">{errorMsg || t("importError")}</p>
-              <button onClick={reset} className="btn-secondary text-sm">
-                {t("cancel")} & {t("importPortfolio")}
-              </button>
+              <p className="text-sm text-red-600 dark:text-red-400" role="alert">{errorMsg || t("importError")}</p>
+              <p className="text-xs text-gray-500 dark:text-slate-400">{t("importErrorHintFormat")}</p>
+              <div className="flex flex-col items-center gap-2">
+                <button onClick={reset} className="btn-secondary text-sm">
+                  {t("cancel")} & {t("importPortfolio")}
+                </button>
+                {csvFormat !== "ai_import" && (
+                  <button
+                    onClick={() => { setCsvFormat("ai_import"); setStep("upload"); setErrorMsg(""); }}
+                    className="text-xs text-violet-600 dark:text-violet-400 hover:text-violet-800 dark:hover:text-violet-300 underline underline-offset-2 transition-colors"
+                  >
+                    {t("aiImportLabel")}
+                  </button>
+                )}
+              </div>
             </div>
           )}
 
@@ -864,16 +894,17 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
                 <div className="border border-gray-200 dark:border-slate-700 rounded-xl overflow-hidden">
                   <div className="overflow-x-auto max-h-72 overflow-y-auto">
                     <table className="w-full text-xs">
+                      <caption className="sr-only">Imported holdings preview</caption>
                       <thead className="bg-gray-50 dark:bg-slate-800/50 sticky top-0">
                         <tr className="text-gray-500 dark:text-slate-400">
-                          <th className="text-left p-2 font-medium">{t("name")}</th>
-                          <th className="text-left p-2 font-medium">{t("ticker")}</th>
-                          <th className="text-right p-2 font-medium">{t("shares")}</th>
-                          <th className="text-right p-2 font-medium">{t("purchasePrice")}</th>
-                          <th className="text-left p-2 font-medium">{t("currency")}</th>
-                          <th className="text-left p-2 font-medium">{t("editExchange")}</th>
-                          <th className="text-left p-2 font-medium">{t("assetType")}</th>
-                          <th className="p-2"></th>
+                          <th scope="col" className="text-left p-2 font-medium">{t("name")}</th>
+                          <th scope="col" className="text-left p-2 font-medium">{t("ticker")}</th>
+                          <th scope="col" className="text-right p-2 font-medium">{t("shares")}</th>
+                          <th scope="col" className="text-right p-2 font-medium">{t("purchasePrice")}</th>
+                          <th scope="col" className="text-left p-2 font-medium">{t("currency")}</th>
+                          <th scope="col" className="text-left p-2 font-medium">{t("editExchange")}</th>
+                          <th scope="col" className="text-left p-2 font-medium">{t("assetType")}</th>
+                          <th scope="col" className="p-2"></th>
                         </tr>
                       </thead>
                       <tbody>
@@ -899,8 +930,9 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
                                 onClick={() => removeHolding(i)}
                                 className="text-red-400 hover:text-red-600 dark:hover:text-red-300 transition-colors"
                                 title={t("importRemoveRow")}
+                                aria-label="Remove holding"
                               >
-                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
                                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                                 </svg>
                               </button>
@@ -918,16 +950,17 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
                 <div className="border border-gray-200 dark:border-slate-700 rounded-xl overflow-hidden">
                   <div className="overflow-x-auto max-h-72 overflow-y-auto">
                     <table className="w-full text-xs">
+                      <caption className="sr-only">Imported transactions preview</caption>
                       <thead className="bg-gray-50 dark:bg-slate-800/50 sticky top-0">
                         <tr className="text-gray-500 dark:text-slate-400">
-                          <th className="text-left p-2 font-medium">{t("transactionDate")}</th>
-                          <th className="text-left p-2 font-medium">{t("transactionType")}</th>
-                          <th className="text-left p-2 font-medium">{t("ticker")}</th>
-                          <th className="text-right p-2 font-medium">{t("transactionShares")}</th>
-                          <th className="text-right p-2 font-medium">{t("transactionPrice")}</th>
-                          <th className="text-right p-2 font-medium">{t("transactionTotal")}</th>
-                          <th className="text-right p-2 font-medium">{t("transactionFees")}</th>
-                          <th className="p-2"></th>
+                          <th scope="col" className="text-left p-2 font-medium">{t("transactionDate")}</th>
+                          <th scope="col" className="text-left p-2 font-medium">{t("transactionType")}</th>
+                          <th scope="col" className="text-left p-2 font-medium">{t("ticker")}</th>
+                          <th scope="col" className="text-right p-2 font-medium">{t("transactionShares")}</th>
+                          <th scope="col" className="text-right p-2 font-medium">{t("transactionPrice")}</th>
+                          <th scope="col" className="text-right p-2 font-medium">{t("transactionTotal")}</th>
+                          <th scope="col" className="text-right p-2 font-medium">{t("transactionFees")}</th>
+                          <th scope="col" className="p-2"></th>
                         </tr>
                       </thead>
                       <tbody>
@@ -948,8 +981,9 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
                               <button
                                 onClick={() => removeTx(i)}
                                 className="text-red-400 hover:text-red-600 dark:hover:text-red-300 transition-colors"
+                                aria-label="Remove transaction"
                               >
-                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
                                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                                 </svg>
                               </button>
@@ -989,11 +1023,17 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                 </svg>
               </div>
-              <p className="text-sm font-medium text-gray-700 dark:text-slate-200">
+              <p className="text-sm font-medium text-gray-700 dark:text-slate-200" aria-live="polite">
                 {t("importImporting").replace("{current}", String(importProgress.current)).replace("{total}", String(importProgress.total))}
               </p>
               <div className="max-w-xs mx-auto">
-                <div className="h-2 bg-gray-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                <div
+                  className="h-2 bg-gray-200 dark:bg-slate-700 rounded-full overflow-hidden"
+                  role="progressbar"
+                  aria-valuenow={importProgress.total > 0 ? Math.round((importProgress.current / importProgress.total) * 100) : 0}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                >
                   <div
                     className="h-full bg-emerald-500 rounded-full transition-all duration-300 ease-out"
                     style={{ width: importProgress.total > 0 ? `${(importProgress.current / importProgress.total) * 100}%` : "0%" }}

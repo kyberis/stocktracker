@@ -483,7 +483,7 @@ export default function BrokerImport() {
                     </div>
                   )}
 
-                  {error && <p className="text-xs text-red-500 mt-2">{error}</p>}
+                  {error && <p className="text-xs text-red-500 mt-2" role="alert">{error}</p>}
                 </>
               )}
             </>
@@ -506,7 +506,11 @@ export default function BrokerImport() {
           {!(broker === "interactive_brokers" && ibkrTab === "api") && (
             <>
               <div
+                role="button"
+                tabIndex={0}
+                aria-label={t("clickToUpload")}
                 onClick={() => fileRef.current?.click()}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileRef.current?.click(); } }}
                 className="border-2 border-dashed border-gray-300 dark:border-slate-600 rounded-xl p-8 text-center cursor-pointer hover:border-emerald-400 dark:hover:border-emerald-500/50 transition-colors"
               >
                 <svg className="w-8 h-8 mx-auto mb-2 text-gray-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -516,7 +520,7 @@ export default function BrokerImport() {
                 <input ref={fileRef} type="file" accept=".csv,text/csv" onChange={handleFile} className="hidden" />
               </div>
 
-              {error && <p className="text-xs text-red-500 mt-2">{error}</p>}
+              {error && <p className="text-xs text-red-500 mt-2" role="alert">{error}</p>}
             </>
           )}
         </>
@@ -615,7 +619,7 @@ export default function BrokerImport() {
             </table>
           </div>
 
-          {error && <p className="text-xs text-red-500 mt-2">{error}</p>}
+          {error && <p className="text-xs text-red-500 mt-2" role="alert">{error}</p>}
         </>
       )}
 

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useI18n } from "@/lib/i18n";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 
 interface FeedbackItem {
   id: string;
@@ -81,6 +82,8 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
     }
   };
 
+  const focusTrapRef = useFocusTrap(isOpen, onClose);
+
   if (!isOpen) return null;
 
   const statusColor = (status: string) => {
@@ -101,16 +104,17 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
         className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="relative bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl p-6 w-full max-w-lg mx-4 shadow-xl max-h-[90vh] overflow-y-auto">
+      <div ref={focusTrapRef} role="dialog" aria-modal="true" aria-labelledby="feedback-modal-title" className="relative bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl p-6 w-full max-w-lg mx-4 shadow-xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+          <h2 id="feedback-modal-title" className="text-lg font-bold text-gray-900 dark:text-white">
             {t("feedbackTitle")}
           </h2>
           <button
             onClick={onClose}
+            aria-label="Close"
             className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-500 dark:text-slate-400 transition-colors"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -119,10 +123,11 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
         {/* Submit Form */}
         <form onSubmit={handleSubmit} className="space-y-3 mb-6">
           <div>
-            <label className="block text-sm text-gray-600 dark:text-slate-300 mb-1">
+            <label htmlFor="feedback-subject" className="block text-sm text-gray-600 dark:text-slate-300 mb-1">
               {t("feedbackSubject")}
             </label>
             <input
+              id="feedback-subject"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               placeholder={t("feedbackSubjectPlaceholder")}
@@ -131,10 +136,11 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
             />
           </div>
           <div>
-            <label className="block text-sm text-gray-600 dark:text-slate-300 mb-1">
+            <label htmlFor="feedback-message" className="block text-sm text-gray-600 dark:text-slate-300 mb-1">
               {t("feedbackMessage")}
             </label>
             <textarea
+              id="feedback-message"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder={t("feedbackPlaceholder")}
@@ -143,10 +149,10 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
             />
           </div>
           {error && (
-            <p className="text-sm text-red-500">{error}</p>
+            <p className="text-sm text-red-500" role="alert">{error}</p>
           )}
           {success && (
-            <p className="text-sm text-emerald-500">{t("feedbackSuccess")}</p>
+            <p className="text-sm text-emerald-500" aria-live="polite">{t("feedbackSuccess")}</p>
           )}
           <button
             type="submit"
