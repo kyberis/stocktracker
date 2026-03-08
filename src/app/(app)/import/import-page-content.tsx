@@ -419,7 +419,7 @@ export default function ImportPageContent() {
                         <button onClick={() => snapTradeApi.fetchPortfolio()} disabled={snapTradeApi.isFetching} className="btn-primary text-xs px-3 py-1.5 min-h-[44px]">
                           {snapTradeApi.isFetching ? t("brokerSyncFetching") : t("brokerSyncResync")}
                         </button>
-                        <button onClick={() => snapTradeApi.connect()} disabled={snapTradeApi.step === "connecting"} className="btn-secondary text-xs px-3 py-1.5 min-h-[44px]">
+                        <button onClick={() => snapTradeApi.connect()} className="btn-secondary text-xs px-3 py-1.5 min-h-[44px]">
                           {t("brokerSyncAddBrokerage")}
                         </button>
                         <button
