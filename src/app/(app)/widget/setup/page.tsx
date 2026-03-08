@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Copy, Check, Smartphone, Apple, MonitorSmartphone, RefreshCw, Trash2, KeyRound } from "lucide-react";
 import Link from "next/link";
@@ -235,6 +235,14 @@ function buildScript(token: string) {
 }
 
 export default function WidgetSetupPage() {
+  return (
+    <Suspense>
+      <WidgetSetupContent />
+    </Suspense>
+  );
+}
+
+function WidgetSetupContent() {
   const searchParams = useSearchParams();
   const [copiedScript, setCopiedScript] = useState(false);
   const [activeTab, setActiveTab] = useState<"ios" | "android">("ios");
