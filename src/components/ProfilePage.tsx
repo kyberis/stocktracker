@@ -926,7 +926,7 @@ export default function ProfilePage() {
                 </button>
               </div>
               <a
-                href="/widget/setup"
+                href={`/widget/setup?token=${encodeURIComponent(widgetToken)}`}
                 className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline"
               >
                 View setup instructions &rarr;

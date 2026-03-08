@@ -27,7 +27,7 @@
       "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
       "title": "Free Users",
       "type": "stat",
-      "targets": [{ "expr": "stocktracker_users_total{plan=\"free\"}", "legendFormat": "" }]
+      "targets": [{ "expr": "trefolio_users_total{plan=\"free\"}", "legendFormat": "" }]
     },
     {
       "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
@@ -43,7 +43,7 @@
       "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
       "title": "Pro Users",
       "type": "stat",
-      "targets": [{ "expr": "stocktracker_users_total{plan=\"pro\"}", "legendFormat": "" }]
+      "targets": [{ "expr": "trefolio_users_total{plan=\"pro\"}", "legendFormat": "" }]
     },
     {
       "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
@@ -59,7 +59,7 @@
       "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
       "title": "Active Users (7d)",
       "type": "stat",
-      "targets": [{ "expr": "stocktracker_users_active{window=\"7d\"}", "legendFormat": "" }]
+      "targets": [{ "expr": "trefolio_users_active{window=\"7d\"}", "legendFormat": "" }]
     },
     {
       "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
@@ -75,7 +75,7 @@
       "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
       "title": "Holdings",
       "type": "stat",
-      "targets": [{ "expr": "stocktracker_db_holdings_total", "legendFormat": "" }]
+      "targets": [{ "expr": "trefolio_db_holdings_total", "legendFormat": "" }]
     },
     {
       "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
@@ -91,7 +91,7 @@
       "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
       "title": "Transactions",
       "type": "stat",
-      "targets": [{ "expr": "stocktracker_db_transactions_total", "legendFormat": "" }]
+      "targets": [{ "expr": "trefolio_db_transactions_total", "legendFormat": "" }]
     },
     {
       "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
@@ -107,7 +107,7 @@
       "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
       "title": "App Version",
       "type": "stat",
-      "targets": [{ "expr": "stocktracker_app_info", "legendFormat": "{{version}}" }]
+      "targets": [{ "expr": "trefolio_app_info", "legendFormat": "{{version}}" }]
     },
 
     {
@@ -132,7 +132,7 @@
       "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
       "title": "Request Rate by Route",
       "type": "timeseries",
-      "targets": [{ "expr": "sum(rate(stocktracker_http_requests_total[5m])) by (route)", "legendFormat": "{{route}}" }]
+      "targets": [{ "expr": "sum(rate(trefolio_http_requests_total[5m])) by (route)", "legendFormat": "{{route}}" }]
     },
     {
       "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
@@ -149,7 +149,7 @@
       "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
       "title": "Error Rate by Route (4xx + 5xx)",
       "type": "timeseries",
-      "targets": [{ "expr": "sum(rate(stocktracker_http_requests_total{status_code=~\"4..|5..\"}[5m])) by (route) / sum(rate(stocktracker_http_requests_total[5m])) by (route)", "legendFormat": "{{route}}" }]
+      "targets": [{ "expr": "sum(rate(trefolio_http_requests_total{status_code=~\"4..|5..\"}[5m])) by (route) / sum(rate(trefolio_http_requests_total[5m])) by (route)", "legendFormat": "{{route}}" }]
     },
     {
       "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
@@ -166,7 +166,7 @@
       "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
       "title": "p95 Latency by Route",
       "type": "timeseries",
-      "targets": [{ "expr": "histogram_quantile(0.95, sum(rate(stocktracker_http_request_duration_seconds_bucket[5m])) by (le, route))", "legendFormat": "{{route}}" }]
+      "targets": [{ "expr": "histogram_quantile(0.95, sum(rate(trefolio_http_request_duration_seconds_bucket[5m])) by (le, route))", "legendFormat": "{{route}}" }]
     },
     {
       "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
@@ -183,7 +183,7 @@
       "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
       "title": "p50 Latency by Route",
       "type": "timeseries",
-      "targets": [{ "expr": "histogram_quantile(0.50, sum(rate(stocktracker_http_request_duration_seconds_bucket[5m])) by (le, route))", "legendFormat": "{{route}}" }]
+      "targets": [{ "expr": "histogram_quantile(0.50, sum(rate(trefolio_http_request_duration_seconds_bucket[5m])) by (le, route))", "legendFormat": "{{route}}" }]
     },
 
     {
@@ -208,7 +208,7 @@
       "options": { "legend": { "calcs": ["mean"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
       "title": "Provider Request Rate",
       "type": "timeseries",
-      "targets": [{ "expr": "sum(rate(stocktracker_provider_requests_total[5m])) by (provider, status)", "legendFormat": "{{provider}} ({{status}})" }]
+      "targets": [{ "expr": "sum(rate(trefolio_provider_requests_total[5m])) by (provider, status)", "legendFormat": "{{provider}} ({{status}})" }]
     },
     {
       "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
@@ -225,7 +225,7 @@
       "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
       "title": "Provider Error Rate",
       "type": "timeseries",
-      "targets": [{ "expr": "sum(rate(stocktracker_provider_requests_total{status=\"error\"}[5m])) by (provider) / sum(rate(stocktracker_provider_requests_total[5m])) by (provider)", "legendFormat": "{{provider}}" }]
+      "targets": [{ "expr": "sum(rate(trefolio_provider_requests_total{status=\"error\"}[5m])) by (provider) / sum(rate(trefolio_provider_requests_total[5m])) by (provider)", "legendFormat": "{{provider}}" }]
     },
     {
       "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
@@ -242,7 +242,7 @@
       "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
       "title": "Provider p95 Latency",
       "type": "timeseries",
-      "targets": [{ "expr": "histogram_quantile(0.95, sum(rate(stocktracker_provider_request_duration_seconds_bucket[5m])) by (le, provider))", "legendFormat": "{{provider}}" }]
+      "targets": [{ "expr": "histogram_quantile(0.95, sum(rate(trefolio_provider_request_duration_seconds_bucket[5m])) by (le, provider))", "legendFormat": "{{provider}}" }]
     },
 
     {
@@ -267,7 +267,7 @@
       "options": { "legend": { "calcs": [], "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
       "title": "Auth Events",
       "type": "timeseries",
-      "targets": [{ "expr": "sum(increase(stocktracker_auth_events_total[5m])) by (event)", "legendFormat": "{{event}}" }]
+      "targets": [{ "expr": "sum(increase(trefolio_auth_events_total[5m])) by (event)", "legendFormat": "{{event}}" }]
     },
     {
       "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
@@ -284,7 +284,7 @@
       "options": { "legend": { "calcs": [], "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
       "title": "Holdings Operations",
       "type": "timeseries",
-      "targets": [{ "expr": "sum(increase(stocktracker_holdings_operations_total[5m])) by (operation)", "legendFormat": "{{operation}}" }]
+      "targets": [{ "expr": "sum(increase(trefolio_holdings_operations_total[5m])) by (operation)", "legendFormat": "{{operation}}" }]
     },
     {
       "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
@@ -301,7 +301,7 @@
       "options": { "legend": { "calcs": [], "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
       "title": "Transaction Operations",
       "type": "timeseries",
-      "targets": [{ "expr": "sum(increase(stocktracker_transactions_operations_total[5m])) by (operation)", "legendFormat": "{{operation}}" }]
+      "targets": [{ "expr": "sum(increase(trefolio_transactions_operations_total[5m])) by (operation)", "legendFormat": "{{operation}}" }]
     },
     {
       "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
@@ -318,7 +318,7 @@
       "options": { "legend": { "calcs": [], "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
       "title": "Portfolio Imports",
       "type": "timeseries",
-      "targets": [{ "expr": "sum(increase(stocktracker_portfolio_imports_total[5m])) by (source, status)", "legendFormat": "{{source}} ({{status}})" }]
+      "targets": [{ "expr": "sum(increase(trefolio_portfolio_imports_total[5m])) by (source, status)", "legendFormat": "{{source}} ({{status}})" }]
     },
     {
       "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
@@ -335,7 +335,7 @@
       "options": { "legend": { "calcs": [], "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
       "title": "AI Calls",
       "type": "timeseries",
-      "targets": [{ "expr": "sum(increase(stocktracker_ai_calls_total[5m])) by (status, analysis_type)", "legendFormat": "{{analysis_type}} ({{status}})" }]
+      "targets": [{ "expr": "sum(increase(trefolio_ai_calls_total[5m])) by (status, analysis_type)", "legendFormat": "{{analysis_type}} ({{status}})" }]
     },
     {
       "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
@@ -352,7 +352,7 @@
       "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
       "title": "AI Response Time",
       "type": "timeseries",
-      "targets": [{ "expr": "histogram_quantile(0.95, sum(rate(stocktracker_ai_request_duration_seconds_bucket[5m])) by (le, analysis_type))", "legendFormat": "p95 {{analysis_type}}" }]
+      "targets": [{ "expr": "histogram_quantile(0.95, sum(rate(trefolio_ai_request_duration_seconds_bucket[5m])) by (le, analysis_type))", "legendFormat": "p95 {{analysis_type}}" }]
     },
 
     {
@@ -377,7 +377,7 @@
       "options": { "legend": { "calcs": [], "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
       "title": "Billing Events",
       "type": "timeseries",
-      "targets": [{ "expr": "sum(increase(stocktracker_billing_events_total[5m])) by (event)", "legendFormat": "{{event}}" }]
+      "targets": [{ "expr": "sum(increase(trefolio_billing_events_total[5m])) by (event)", "legendFormat": "{{event}}" }]
     },
     {
       "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
@@ -394,7 +394,7 @@
       "options": { "legend": { "calcs": [], "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
       "title": "Paywall Hits",
       "type": "timeseries",
-      "targets": [{ "expr": "sum(increase(stocktracker_paywall_hits_total[5m])) by (feature, reason)", "legendFormat": "{{feature}} ({{reason}})" }]
+      "targets": [{ "expr": "sum(increase(trefolio_paywall_hits_total[5m])) by (feature, reason)", "legendFormat": "{{feature}} ({{reason}})" }]
     },
     {
       "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
@@ -410,7 +410,7 @@
       "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
       "title": "Events (last 24h)",
       "type": "stat",
-      "targets": [{ "expr": "stocktracker_events_last_24h", "legendFormat": "{{event}}" }]
+      "targets": [{ "expr": "trefolio_events_last_24h", "legendFormat": "{{event}}" }]
     },
 
     {
@@ -535,8 +535,8 @@
       "title": "Heap Memory",
       "type": "timeseries",
       "targets": [
-        { "expr": "stocktracker_nodejs_heap_size_used_bytes", "legendFormat": "Used" },
-        { "expr": "stocktracker_nodejs_heap_size_total_bytes", "legendFormat": "Total" }
+        { "expr": "trefolio_nodejs_heap_size_used_bytes", "legendFormat": "Used" },
+        { "expr": "trefolio_nodejs_heap_size_total_bytes", "legendFormat": "Total" }
       ]
     },
     {
@@ -555,8 +555,8 @@
       "title": "Event Loop Lag",
       "type": "timeseries",
       "targets": [
-        { "expr": "stocktracker_nodejs_eventloop_lag_p50_seconds", "legendFormat": "p50" },
-        { "expr": "stocktracker_nodejs_eventloop_lag_p99_seconds", "legendFormat": "p99" }
+        { "expr": "trefolio_nodejs_eventloop_lag_p50_seconds", "legendFormat": "p50" },
+        { "expr": "trefolio_nodejs_eventloop_lag_p99_seconds", "legendFormat": "p99" }
       ]
     },
     {
@@ -575,14 +575,14 @@
       "title": "Active Handles & Requests",
       "type": "timeseries",
       "targets": [
-        { "expr": "stocktracker_nodejs_active_handles_total", "legendFormat": "Handles" },
-        { "expr": "stocktracker_nodejs_active_requests_total", "legendFormat": "Requests" }
+        { "expr": "trefolio_nodejs_active_handles_total", "legendFormat": "Handles" },
+        { "expr": "trefolio_nodejs_active_requests_total", "legendFormat": "Requests" }
       ]
     }
   ],
   "refresh": "15s",
   "schemaVersion": 39,
-  "tags": ["stocktracker", "prometheus"],
+  "tags": ["trefolio", "prometheus"],
   "templating": { "list": [] },
   "time": { "from": "now-1h", "to": "now" },
   "timepicker": {},

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import { Copy, Check, Smartphone, Apple, MonitorSmartphone, RefreshCw, Trash2, KeyRound } from "lucide-react";
 import Link from "next/link";
 
@@ -11,6 +12,8 @@ const SCRIPTABLE_TEMPLATE = `// trefolio — Portfolio Widget for Scriptable (iO
 
 const TOKEN = "__TOKEN__";
 const API_URL = "https://trefolio.com/api/portfolio/summary";
+const ICON_URL = "https://trefolio.com/favicon.png";
+const REFRESH_MINUTES = 30;
 
 const BG = new Color("#0f172a");
 const TEXT = new Color("#f1f5f9");
@@ -30,6 +33,16 @@ async function fetchData() {
   return JSON.parse(body);
 }
 
+async function fetchIcon() {
+  try {
+    const req = new Request(ICON_URL);
+    req.timeoutInterval = 10;
+    return await req.loadImage();
+  } catch {
+    return null;
+  }
+}
+
 function num(v) {
   return typeof v === "number" && isFinite(v) ? v : 0;
 }
@@ -42,12 +55,23 @@ function sign(n) {
   return num(n) >= 0 ? "+" : "";
 }
 
-function createSmallWidget(data) {
+function createSmallWidget(data, icon) {
   const w = new ListWidget();
   w.backgroundColor = BG;
   w.setPadding(12, 14, 12, 14);
 
-  const title = w.addText("trefolio");
+  const header = w.addStack();
+  header.layoutHorizontally();
+  header.centerAlignContent();
+  header.spacing = 4;
+
+  if (icon) {
+    const img = header.addImage(icon);
+    img.imageSize = new Size(12, 12);
+    img.cornerRadius = 3;
+  }
+
+  const title = header.addText("trefolio");
   title.font = Font.boldSystemFont(10);
   title.textColor = GREEN;
 
@@ -81,7 +105,7 @@ function createSmallWidget(data) {
   return w;
 }
 
-function createMediumWidget(data) {
+function createMediumWidget(data, icon) {
   const w = new ListWidget();
   w.backgroundColor = BG;
   w.setPadding(12, 14, 12, 14);
@@ -89,6 +113,14 @@ function createMediumWidget(data) {
   const header = w.addStack();
   header.layoutHorizontally();
   header.centerAlignContent();
+
+  if (icon) {
+    const img = header.addImage(icon);
+    img.imageSize = new Size(12, 12);
+    img.cornerRadius = 3;
+  }
+
+  header.addSpacer(4);
 
   const title = header.addText("trefolio");
   title.font = Font.boldSystemFont(10);
@@ -158,8 +190,9 @@ function createMediumWidget(data) {
 
 async function run() {
   let data;
+  let icon;
   try {
-    data = await fetchData();
+    [data, icon] = await Promise.all([fetchData(), fetchIcon()]);
     if (data.error) throw new Error(data.error);
   } catch (e) {
     const w = new ListWidget();
@@ -172,6 +205,7 @@ async function run() {
     const hint = w.addText(String(e.message || "Check token"));
     hint.font = Font.regularSystemFont(8);
     hint.textColor = MUTED;
+    w.refreshAfterDate = new Date(Date.now() + 5 * 60 * 1000);
     if (config.runsInWidget) {
       Script.setWidget(w);
     } else {
@@ -182,7 +216,9 @@ async function run() {
   }
 
   const family = config.widgetFamily || "small";
-  const widget = family === "medium" ? createMediumWidget(data) : createSmallWidget(data);
+  const widget = family === "medium" ? createMediumWidget(data, icon) : createSmallWidget(data, icon);
+
+  widget.refreshAfterDate = new Date(Date.now() + REFRESH_MINUTES * 60 * 1000);
 
   if (config.runsInWidget) {
     Script.setWidget(widget);
@@ -199,6 +235,7 @@ function buildScript(token: string) {
 }
 
 export default function WidgetSetupPage() {
+  const searchParams = useSearchParams();
   const [copiedScript, setCopiedScript] = useState(false);
   const [activeTab, setActiveTab] = useState<"ios" | "android">("ios");
   const [widgetToken, setWidgetToken] = useState("");
@@ -206,11 +243,17 @@ export default function WidgetSetupPage() {
   const [widgetLoading, setWidgetLoading] = useState(false);
 
   useEffect(() => {
-    fetch("/api/widget-token")
-      .then((r) => r.json())
-      .then((d) => setWidgetHasToken(!!d.hasToken))
-      .catch(() => {});
-  }, []);
+    const tokenFromUrl = searchParams.get("token");
+    if (tokenFromUrl) {
+      setWidgetToken(tokenFromUrl);
+      setWidgetHasToken(true);
+    } else {
+      fetch("/api/widget-token")
+        .then((r) => r.json())
+        .then((d) => setWidgetHasToken(!!d.hasToken))
+        .catch(() => {});
+    }
+  }, [searchParams]);
 
   const handleGenerateToken = useCallback(async () => {
     setWidgetLoading(true);
