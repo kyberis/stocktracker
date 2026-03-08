@@ -37,6 +37,10 @@ export {
   generateDevicePasskey,
   revokeDevicePasskey,
   findUserByDevicePasskey,
+  markDeviceLinked,
+  markDeviceProRedeemed,
+  updateDeviceTemplate,
+  getDeviceTemplate,
 } from "./users";
 
 export {

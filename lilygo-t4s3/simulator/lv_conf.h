@@ -14,7 +14,7 @@
 
 /* ── Memory ────────────────────────────────────────────────────────── */
 #define LV_MEM_CUSTOM      0
-#define LV_MEM_SIZE        (128U * 1024U)
+#define LV_MEM_SIZE        (256U * 1024U)
 #define LV_MEM_ADR         0
 #define LV_MEM_BUF_MAX_NUM 16
 

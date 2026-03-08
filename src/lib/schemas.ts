@@ -206,6 +206,7 @@ export const apiKeySchema = z.object({
 
 export const checkoutSchema = z.object({
   interval: z.enum(["monthly", "annual"]).optional().default("monthly"),
+  deviceGrant: z.boolean().optional(),
 });
 
 /* ── Reset Portfolio ───────────────────────────────────────── */

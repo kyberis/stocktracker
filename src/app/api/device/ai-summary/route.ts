@@ -12,13 +12,18 @@ import {
   trackEvent,
 } from "@/lib/db";
 import { PLATFORM_LIMITS } from "@/lib/platform-config";
-import { checkGlobalAiCap, incrementGlobalAiCalls } from "@/lib/rate-limit";
-import { aiCallsTotal, aiRequestDuration } from "@/lib/metrics";
+import { checkGlobalAiCap, incrementGlobalAiCalls, checkDeviceAuthRateLimit, getClientIp } from "@/lib/rate-limit";
+import { aiCallsTotal, aiRequestDuration, deviceApiCalls } from "@/lib/metrics";
 import { withMetrics } from "@/lib/with-metrics";
 
 async function resolveProUser(req: NextRequest) {
   const auth = req.headers.get("authorization");
   if (!auth?.startsWith("Bearer ")) return null;
+
+  const ip = getClientIp(req);
+  const rl = await checkDeviceAuthRateLimit(ip);
+  if (!rl.allowed) return null;
+
   const token = auth.slice(7);
   const user = await findUserByWidgetToken(token) ?? await findUserByDevicePasskey(token);
   if (!user || user.plan !== "pro") return null;
@@ -26,17 +31,22 @@ async function resolveProUser(req: NextRequest) {
 }
 
 export const POST = withMetrics("/api/device/ai-summary", async (request: NextRequest) => {
+  const fwVersion = request.headers.get("x-firmware-version");
+  if (fwVersion) deviceApiCalls.inc({ fw_version: fwVersion, route: "/api/device/ai-summary", status: "attempt" });
+
   const user = await resolveProUser(request);
   if (!user) {
+    if (fwVersion) deviceApiCalls.inc({ fw_version: fwVersion, route: "/api/device/ai-summary", status: "auth_failed" });
     return Response.json(
       { error: "Unauthorized or Pro subscription required" },
       { status: 401 },
     );
   }
 
+  const isDev = process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test";
   const usage = await getPortfolioReviewUsage(user.id);
   const limit = PLATFORM_LIMITS.PORTFOLIO_REVIEW_MONTHLY_LIMIT;
-  if (usage.count >= limit) {
+  if (!isDev && usage.count >= limit) {
     trackEvent(user.id, "device_ai_summary_limit_reached", {
       used: String(usage.count),
       limit: String(limit),
@@ -144,9 +154,10 @@ Rules:
 
     const result = await openaiRes.json();
     const summary = result.choices?.[0]?.message?.content ?? "Unable to generate summary.";
+    const updatedUsage = await getPortfolioReviewUsage(user.id);
 
     return Response.json(
-      { summary },
+      { summary, used: updatedUsage.count, limit },
       { headers: { "Cache-Control": "private, max-age=300" } },
     );
   } catch (err) {

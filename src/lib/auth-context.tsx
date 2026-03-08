@@ -27,6 +27,7 @@ interface AuthUser {
   passkeyCount: number;
   portfolioReviewCount: number;
   portfolioReviewResetAt: string;
+  deviceProEligible: boolean;
 }
 
 interface AuthContextType {

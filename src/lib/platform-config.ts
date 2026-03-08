@@ -36,6 +36,9 @@ export const PLATFORM_LIMITS = {
   /** Login attempts per IP per 15 minutes. */
   AUTH_LOGIN_PER_IP_PER_15MIN: 10,
 
+  /** Device bearer-token auth attempts per IP per 15 minutes. */
+  DEVICE_AUTH_PER_IP_PER_15MIN: 10,
+
   /**
    * Global cap on OpenAI API calls per calendar month (all endpoints combined).
    * Prevents runaway costs from ad-driven traffic spikes.

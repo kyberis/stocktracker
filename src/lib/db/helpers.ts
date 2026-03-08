@@ -38,6 +38,9 @@ export interface DbUser {
   portfolio_review_reset_at: string;
   widget_token_hash: string;
   device_passkey_hash: string;
+  device_template_id: string;
+  device_linked_at: string;
+  device_pro_redeemed_at: string;
 }
 
 export interface PublicUser {
@@ -61,6 +64,7 @@ export interface PublicUser {
   portfolioReviewResetAt: string;
   hasWidgetToken: boolean;
   hasDevicePasskey: boolean;
+  deviceProEligible: boolean;
 }
 
 export interface UserSettings {
@@ -171,6 +175,9 @@ export function rowToDbUser(row: Row): DbUser {
     portfolio_review_reset_at: str(row.portfolio_review_reset_at),
     widget_token_hash: str(row.widget_token_hash),
     device_passkey_hash: str(row.device_passkey_hash),
+    device_template_id: str(row.device_template_id) || "classic-dark",
+    device_linked_at: str(row.device_linked_at),
+    device_pro_redeemed_at: str(row.device_pro_redeemed_at),
   };
 }
 
@@ -196,6 +203,7 @@ export function mapUser(user: DbUser): PublicUser {
     portfolioReviewResetAt: user.portfolio_review_reset_at,
     hasWidgetToken: !!user.widget_token_hash,
     hasDevicePasskey: !!user.device_passkey_hash,
+    deviceProEligible: !!user.device_linked_at && !user.device_pro_redeemed_at && user.plan === "free",
   };
 }
 

@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromRequest } from "@/lib/auth/session";
-import { findUserByWidgetToken, findUserByDevicePasskey, listHoldings, listCashEntries } from "@/lib/db";
+import { findUserByWidgetToken, findUserByDevicePasskey, markDeviceLinked, listHoldings, listCashEntries } from "@/lib/db";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { withMetrics } from "@/lib/with-metrics";
+import { checkDeviceAuthRateLimit, getClientIp } from "@/lib/rate-limit";
+import { deviceApiCalls } from "@/lib/metrics";
 import type { ExchangeRates, QuoteData } from "@/lib/types";
 
 const FX_PAIRS = ["EURUSD", "EURGBP", "EURDKK", "EURCAD"];
@@ -14,16 +16,31 @@ async function resolveUserId(req: NextRequest): Promise<string | null> {
 
   const auth = req.headers.get("authorization");
   if (auth?.startsWith("Bearer ")) {
+    const ip = getClientIp(req);
+    const rl = await checkDeviceAuthRateLimit(ip);
+    if (!rl.allowed) return null;
+
     const token = auth.slice(7);
-    const user = await findUserByWidgetToken(token) ?? await findUserByDevicePasskey(token);
-    if (user) return user.id;
+    const widgetUser = await findUserByWidgetToken(token);
+    if (widgetUser) return widgetUser.id;
+    const deviceUser = await findUserByDevicePasskey(token);
+    if (deviceUser) {
+      markDeviceLinked(deviceUser.id).catch(() => {});
+      return deviceUser.id;
+    }
   }
   return null;
 }
 
 export const GET = withMetrics("/api/portfolio/summary", async (req: NextRequest) => {
+  const fwVersion = req.headers.get("x-firmware-version");
+  if (fwVersion) {
+    deviceApiCalls.inc({ fw_version: fwVersion, route: "/api/portfolio/summary", status: "attempt" });
+  }
+
   const userId = await resolveUserId(req);
   if (!userId) {
+    if (fwVersion) deviceApiCalls.inc({ fw_version: fwVersion, route: "/api/portfolio/summary", status: "auth_failed" });
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

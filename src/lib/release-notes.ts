@@ -14,9 +14,83 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "0.43.0";
+export const CURRENT_VERSION = "0.45.0";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "0.45.0",
+    date: "2026-03-08",
+    title: "Device-Linked Free Pro Year",
+    titleTranslations: { es: "Año Gratuito de Pro al Vincular Dispositivo" },
+    changes: [
+      {
+        type: "feature",
+        text: "Linking a T4-S3 device unlocks a free year of Pro — set up a payment method at no charge today, and billing starts automatically after 12 months",
+        translations: { es: "Vincular un dispositivo T4-S3 desbloquea un año gratuito de Pro — configura un método de pago sin cargo hoy, y la facturación comienza automáticamente tras 12 meses" },
+      },
+    ],
+  },
+  {
+    version: "0.44.1",
+    date: "2026-03-08",
+    title: "Device AI Usage Counter & Dev Bypass",
+    titleTranslations: { es: "Contador de uso de IA en dispositivo y bypass en desarrollo" },
+    changes: [
+      {
+        type: "improvement",
+        text: "Device display now shows remaining AI summary requests (e.g. 2/5) in the AI card, matching the web dashboard",
+        translations: { es: "La pantalla del dispositivo ahora muestra las solicitudes de resumen IA restantes (ej. 2/5) en la tarjeta de IA, igual que el panel web" },
+      },
+      {
+        type: "improvement",
+        text: "AI portfolio review limits are bypassed in development and test environments for easier testing",
+        translations: { es: "Los límites de revisión de portafolio con IA se omiten en entornos de desarrollo y pruebas para facilitar el testing" },
+      },
+    ],
+  },
+  {
+    version: "0.44.0",
+    date: "2026-03-07",
+    title: "Device Architecture Hardening",
+    titleTranslations: { es: "Refuerzo de Arquitectura del Dispositivo" },
+    changes: [
+      {
+        type: "feature",
+        text: "Over-the-air (OTA) firmware updates for T4-S3 devices with automatic rollback",
+        translations: { es: "Actualizaciones de firmware OTA para dispositivos T4-S3 con reversión automática" },
+      },
+      {
+        type: "feature",
+        text: "WiFi provisioning via SoftAP captive portal — configure WiFi and passkey from your phone",
+        translations: { es: "Aprovisionamiento WiFi mediante portal cautivo SoftAP — configura WiFi y clave desde tu teléfono" },
+      },
+      {
+        type: "feature",
+        text: "Device display themes — choose between Classic Dark, Minimal Light, and Midnight Green from your profile",
+        translations: { es: "Temas de pantalla del dispositivo — elige entre Classic Dark, Minimal Light y Midnight Green desde tu perfil" },
+      },
+      {
+        type: "improvement",
+        text: "Strengthened device passkey to 12 alphanumeric characters (XXXX-XXXX-XXXX) for enhanced security",
+        translations: { es: "Clave de dispositivo reforzada a 12 caracteres alfanuméricos (XXXX-XXXX-XXXX) para mayor seguridad" },
+      },
+      {
+        type: "improvement",
+        text: "TLS certificate verification and encrypted NVS storage for device authentication",
+        translations: { es: "Verificación de certificado TLS y almacenamiento NVS cifrado para autenticación del dispositivo" },
+      },
+      {
+        type: "improvement",
+        text: "Pro tier enforcement on device — AI features and premium themes gated by subscription",
+        translations: { es: "Control de suscripción Pro en el dispositivo — funciones de IA y temas premium según suscripción" },
+      },
+      {
+        type: "improvement",
+        text: "Rate limiting for device bearer token authentication to prevent brute-force attacks",
+        translations: { es: "Límite de velocidad para autenticación de token del dispositivo contra ataques de fuerza bruta" },
+      },
+    ],
+  },
   {
     version: "0.43.0",
     date: "2026-03-07",

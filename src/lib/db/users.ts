@@ -386,13 +386,9 @@ export async function findUserByWidgetToken(token: string): Promise<DbUser | nul
 
 export async function generateDevicePasskey(userId: string): Promise<string> {
   const client = await ensureInitialized();
-  const digits = Array.from(randomBytes(4))
-    .map((b) => (b % 10).toString())
-    .join("");
-  const digits2 = Array.from(randomBytes(4))
-    .map((b) => (b % 10).toString())
-    .join("");
-  const passkey = `${digits}-${digits2}`;
+  const bytes = randomBytes(12);
+  const digits = Array.from(bytes).map((b) => String(b % 10));
+  const passkey = `${digits.slice(0, 4).join("")}-${digits.slice(4, 8).join("")}-${digits.slice(8, 12).join("")}`;
   const hash = hashToken(passkey);
   await client.execute({
     sql: "UPDATE users SET device_passkey_hash = ? WHERE id = ?",
@@ -410,7 +406,10 @@ export async function revokeDevicePasskey(userId: string): Promise<void> {
 }
 
 export async function findUserByDevicePasskey(passkey: string): Promise<DbUser | null> {
-  if (!passkey || !/^\d{4}-\d{4}$/.test(passkey)) return null;
+  if (!passkey) return null;
+  const isLegacy = /^\d{4}-\d{4}$/.test(passkey);
+  const isNew = /^\d{4}-\d{4}-\d{4}$/.test(passkey);
+  if (!isLegacy && !isNew) return null;
   const client = await ensureInitialized();
   const hash = hashToken(passkey);
   const result = await client.execute({
@@ -419,4 +418,38 @@ export async function findUserByDevicePasskey(passkey: string): Promise<DbUser |
   });
   if (result.rows.length === 0) return null;
   return rowToDbUser(result.rows[0]);
+}
+
+export async function markDeviceLinked(userId: string): Promise<void> {
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: "UPDATE users SET device_linked_at = datetime('now') WHERE id = ? AND device_linked_at = ''",
+    args: [userId],
+  });
+}
+
+export async function markDeviceProRedeemed(userId: string): Promise<void> {
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: "UPDATE users SET device_pro_redeemed_at = datetime('now') WHERE id = ? AND device_pro_redeemed_at = ''",
+    args: [userId],
+  });
+}
+
+export async function updateDeviceTemplate(userId: string, templateId: string): Promise<void> {
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: "UPDATE users SET device_template_id = ? WHERE id = ?",
+    args: [templateId, userId],
+  });
+}
+
+export async function getDeviceTemplate(userId: string): Promise<string> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: "SELECT device_template_id FROM users WHERE id = ?",
+    args: [userId],
+  });
+  if (result.rows.length === 0) return "classic-dark";
+  return (result.rows[0].device_template_id as string) || "classic-dark";
 }

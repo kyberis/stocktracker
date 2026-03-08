@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import type Stripe from "stripe";
 import { requireSession } from "@/lib/auth/guards";
 import { findUserById, trackEvent, updateUserSubscription, countProSubscribers } from "@/lib/db";
 import { billingEventsTotal } from "@/lib/metrics";
@@ -14,7 +15,9 @@ export const POST = withMetrics("/api/billing/checkout", async (req: NextRequest
 
   const result = await parseBody(req, checkoutSchema);
   if (!result.success) return result.error;
-  const { interval } = result.data;
+  const { deviceGrant } = result.data;
+  const interval = deviceGrant ? "annual" : result.data.interval;
+
   const priceId =
     interval === "annual"
       ? process.env.STRIPE_PRICE_PRO_ANNUAL
@@ -26,6 +29,19 @@ export const POST = withMetrics("/api/billing/checkout", async (req: NextRequest
   const user = await findUserById(session.userId);
   if (!user) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
+  }
+
+  if (deviceGrant) {
+    if (!user.device_linked_at) {
+      return NextResponse.json({ error: "No device linked to this account" }, { status: 400 });
+    }
+    if (user.device_pro_redeemed_at) {
+      return NextResponse.json({ error: "Device free year has already been redeemed" }, { status: 400 });
+    }
+    const couponId = process.env.STRIPE_COUPON_DEVICE_FREE_YEAR;
+    if (!couponId) {
+      return NextResponse.json({ error: "Device coupon is not configured" }, { status: 501 });
+    }
   }
 
   if (user.plan !== "pro") {
@@ -56,7 +72,7 @@ export const POST = withMetrics("/api/billing/checkout", async (req: NextRequest
     }
 
     const baseUrl = getBillingBaseUrl(new URL(req.url).origin);
-    const checkout = await stripe.checkout.sessions.create({
+    const checkoutParams: Stripe.Checkout.SessionCreateParams = {
       mode: "subscription",
       customer: customerId,
       client_reference_id: user.id,
@@ -66,15 +82,22 @@ export const POST = withMetrics("/api/billing/checkout", async (req: NextRequest
       metadata: {
         userId: user.id,
         interval,
+        ...(deviceGrant ? { deviceGrant: "true" } : {}),
       },
-    });
+    };
+
+    if (deviceGrant) {
+      checkoutParams.discounts = [{ coupon: process.env.STRIPE_COUPON_DEVICE_FREE_YEAR! }];
+    }
+
+    const checkout = await stripe.checkout.sessions.create(checkoutParams);
 
     trackEvent(user.id, "billing_checkout_started", {
       interval,
-      source: "billing_api",
+      source: deviceGrant ? "device_grant" : "billing_api",
     });
 
-    billingEventsTotal.inc({ event: "checkout_started" });
+    billingEventsTotal.inc({ event: deviceGrant ? "device_grant_checkout_started" : "checkout_started" });
     return NextResponse.json({ url: checkout.url });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);

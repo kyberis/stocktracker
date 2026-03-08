@@ -80,3 +80,19 @@ export function loginRateLimiter(): Ratelimit | null {
   });
   return _loginLimiter;
 }
+
+let _deviceAuthLimiter: Ratelimit | null | undefined;
+export function deviceAuthRateLimiter(): Ratelimit | null {
+  if (_deviceAuthLimiter !== undefined) return _deviceAuthLimiter;
+  const redis = getRedis();
+  if (!redis) {
+    _deviceAuthLimiter = null;
+    return null;
+  }
+  _deviceAuthLimiter = new Ratelimit({
+    redis,
+    limiter: Ratelimit.fixedWindow(PLATFORM_LIMITS.DEVICE_AUTH_PER_IP_PER_15MIN, "15m"),
+    prefix: "rl:device-auth",
+  });
+  return _deviceAuthLimiter;
+}

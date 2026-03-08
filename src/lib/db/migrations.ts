@@ -500,6 +500,48 @@ const MIGRATIONS: Migration[] = [
       }
     },
   },
+  {
+    version: 12,
+    description: "Add device_template_id column for T4-S3 display themes",
+    up: async (client: Client) => {
+      try {
+        await client.execute({
+          sql: "ALTER TABLE users ADD COLUMN device_template_id TEXT NOT NULL DEFAULT 'classic-dark'",
+        });
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("duplicate column")) throw e;
+      }
+    },
+  },
+  {
+    version: 13,
+    description: "Add device_linked_at to track when a physical device first connects",
+    up: async (client: Client) => {
+      try {
+        await client.execute({
+          sql: "ALTER TABLE users ADD COLUMN device_linked_at TEXT NOT NULL DEFAULT ''",
+        });
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("duplicate column")) throw e;
+      }
+    },
+  },
+  {
+    version: 14,
+    description: "Add device_pro_redeemed_at to prevent duplicate device free-year grants",
+    up: async (client: Client) => {
+      try {
+        await client.execute({
+          sql: "ALTER TABLE users ADD COLUMN device_pro_redeemed_at TEXT NOT NULL DEFAULT ''",
+        });
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("duplicate column")) throw e;
+      }
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

@@ -1,0 +1,113 @@
+name: Firmware Release
+
+on:
+  push:
+    tags:
+      - 'fw-v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: lilygo-t4s3
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install PlatformIO
+        run: pip install platformio
+
+      - name: Extract version from tag
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#fw-v}" >> "$GITHUB_OUTPUT"
+
+      - name: Verify FW_VERSION matches tag
+        run: |
+          header_version=$(grep 'FW_VERSION' src/config.h | sed 's/.*"\(.*\)".*/\1/')
+          tag_version="${{ steps.version.outputs.version }}"
+          if [ "$header_version" != "$tag_version" ]; then
+            echo "ERROR: FW_VERSION in config.h ($header_version) does not match tag ($tag_version)"
+            exit 1
+          fi
+          echo "Version verified: $tag_version"
+
+      - name: Build firmware
+        run: pio run -e lilygo-t4-s3
+
+      - name: Prepare release artifacts
+        id: artifacts
+        run: |
+          BIN=".pio/build/lilygo-t4-s3/firmware.bin"
+          VERSION="${{ steps.version.outputs.version }}"
+          RELEASE_BIN="firmware-t4s3-${VERSION}.bin"
+
+          cp "$BIN" "$RELEASE_BIN"
+
+          SHA256=$(shasum -a 256 "$RELEASE_BIN" | cut -d' ' -f1)
+          SIZE=$(stat -c%s "$RELEASE_BIN" 2>/dev/null || stat -f%z "$RELEASE_BIN")
+
+          echo "sha256=$SHA256" >> "$GITHUB_OUTPUT"
+          echo "size=$SIZE" >> "$GITHUB_OUTPUT"
+          echo "bin=$RELEASE_BIN" >> "$GITHUB_OUTPUT"
+
+          echo "## Firmware Build Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Field | Value |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|-------|-------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Version | $VERSION |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| SHA-256 | \`$SHA256\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Size | $SIZE bytes |" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Vercel Environment Variables" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          echo "FIRMWARE_LATEST_VERSION=$VERSION" >> "$GITHUB_STEP_SUMMARY"
+          echo "FIRMWARE_LATEST_SHA256=$SHA256" >> "$GITHUB_STEP_SUMMARY"
+          echo "FIRMWARE_LATEST_SIZE=$SIZE" >> "$GITHUB_STEP_SUMMARY"
+          echo "FIRMWARE_LATEST_URL=<GitHub Release download URL — see below>" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          SHA256="${{ steps.artifacts.outputs.sha256 }}"
+          SIZE="${{ steps.artifacts.outputs.size }}"
+          BIN="${{ steps.artifacts.outputs.bin }}"
+
+          BODY="## Firmware v${VERSION}
+
+          | Field | Value |
+          |-------|-------|
+          | SHA-256 | \`${SHA256}\` |
+          | Size | ${SIZE} bytes |
+          | Board | LILYGO T4-S3 (ESP32-S3) |
+
+          ### Deploy to production
+
+          Set these environment variables on Vercel:
+
+          \`\`\`
+          FIRMWARE_LATEST_VERSION=${VERSION}
+          FIRMWARE_LATEST_URL=https://github.com/${{ github.repository }}/releases/download/fw-v${VERSION}/${BIN}
+          FIRMWARE_LATEST_SHA256=${SHA256}
+          FIRMWARE_LATEST_SIZE=${SIZE}
+          FIRMWARE_LATEST_NOTES=<your release notes>
+          \`\`\`
+
+          Devices will pick up the update within 6 hours (or on next reboot)."
+
+          gh release create "fw-v${VERSION}" \
+            "$BIN" \
+            --title "Firmware v${VERSION}" \
+            --notes "$BODY"
+
+          echo "Release created: https://github.com/${{ github.repository }}/releases/tag/fw-v${VERSION}"

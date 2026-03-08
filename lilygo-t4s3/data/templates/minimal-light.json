@@ -1,0 +1,33 @@
+{
+  "id": "minimal-light",
+  "name": "Minimal Light",
+  "version": 1,
+  "colors": {
+    "bg": "0xf8fafc",
+    "surface": "0xffffff",
+    "header": "0xf1f5f9",
+    "accent": "0x059669",
+    "accent2": "0x7c3aed",
+    "green": "0x059669",
+    "red": "0xdc2626",
+    "textPrimary": "0x0f172a",
+    "textSecondary": "0x475569",
+    "dim": "0x94a3b8",
+    "border": "0xe2e8f0"
+  },
+  "layout": {
+    "leftPanelWidth": 210,
+    "headerHeight": 42,
+    "footerHeight": 28,
+    "cardRadius": 12,
+    "cardPadding": 10,
+    "holdingsCardHeight": 210
+  },
+  "fonts": {
+    "totalValue": 30,
+    "sectionValue": 20,
+    "title": 16,
+    "body": 14,
+    "label": 12
+  }
+}

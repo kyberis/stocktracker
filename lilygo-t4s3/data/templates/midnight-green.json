@@ -1,0 +1,33 @@
+{
+  "id": "midnight-green",
+  "name": "Midnight Green",
+  "version": 1,
+  "colors": {
+    "bg": "0x042f2e",
+    "surface": "0x064e3b",
+    "header": "0x022c22",
+    "accent": "0x6ee7b7",
+    "accent2": "0xa78bfa",
+    "green": "0x6ee7b7",
+    "red": "0xfca5a5",
+    "textPrimary": "0xecfdf5",
+    "textSecondary": "0xa7f3d0",
+    "dim": "0x6ee7b7",
+    "border": "0x065f46"
+  },
+  "layout": {
+    "leftPanelWidth": 205,
+    "headerHeight": 42,
+    "footerHeight": 28,
+    "cardRadius": 16,
+    "cardPadding": 10,
+    "holdingsCardHeight": 210
+  },
+  "fonts": {
+    "totalValue": 30,
+    "sectionValue": 20,
+    "title": 16,
+    "body": 14,
+    "label": 12
+  }
+}

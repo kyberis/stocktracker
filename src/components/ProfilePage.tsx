@@ -52,6 +52,7 @@ export default function ProfilePage() {
 
   const [billingSync, setBillingSync] = useState<"idle" | "syncing" | "done" | "timeout">("idle");
   const billingSyncRan = useRef(false);
+  const [deviceGrantLoading, setDeviceGrantLoading] = useState(false);
 
   const [unlinking, setUnlinking] = useState(false);
   const [googleMsg, setGoogleMsg] = useState("");
@@ -63,9 +64,12 @@ export default function ProfilePage() {
   const [widgetLoading, setWidgetLoading] = useState(false);
 
   const [deviceHasPasskey, setDeviceHasPasskey] = useState(false);
+  const [deviceLinked, setDeviceLinked] = useState(false);
   const [devicePasskey, setDevicePasskey] = useState("");
   const [deviceCopied, setDeviceCopied] = useState(false);
   const [deviceLoading, setDeviceLoading] = useState(false);
+  const [deviceTemplate, setDeviceTemplate] = useState("classic-dark");
+  const [templateSaving, setTemplateSaving] = useState(false);
 
   const [passkeys, setPasskeys] = useState<PasskeyEntry[]>([]);
   const [passkeySupported, setPasskeySupported] = useState(false);
@@ -137,7 +141,14 @@ export default function ProfilePage() {
       .catch(() => {});
     fetch("/api/device-passkey")
       .then((r) => r.json())
-      .then((d) => setDeviceHasPasskey(!!d.hasPasskey))
+      .then((d) => {
+        setDeviceHasPasskey(!!d.hasPasskey);
+        setDeviceLinked(!!d.deviceLinked);
+      })
+      .catch(() => {});
+    fetch("/api/device-passkey/template")
+      .then((r) => r.json())
+      .then((d) => { if (d.templateId) setDeviceTemplate(d.templateId); })
       .catch(() => {});
   }, []);
 
@@ -281,6 +292,19 @@ export default function ProfilePage() {
     setTimeout(() => setDeviceCopied(false), 2000);
   }, [devicePasskey]);
 
+  const handleChangeTemplate = useCallback(async (newTemplate: string) => {
+    setTemplateSaving(true);
+    try {
+      const res = await fetch("/api/device-passkey/template", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ templateId: newTemplate }),
+      });
+      if (res.ok) setDeviceTemplate(newTemplate);
+    } catch { /* ignore */ }
+    setTemplateSaving(false);
+  }, []);
+
   useEffect(() => {
     if (emailJustVerified) {
       refreshUser();
@@ -420,6 +444,23 @@ export default function ProfilePage() {
     .toUpperCase()
     .slice(0, 2);
   const isPro = user?.plan === "pro";
+  const deviceProEligible = user?.deviceProEligible ?? false;
+
+  const handleActivateDeviceGrant = useCallback(async () => {
+    setDeviceGrantLoading(true);
+    try {
+      const res = await fetch("/api/billing/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ interval: "annual", deviceGrant: true }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch { /* ignore */ }
+    setDeviceGrantLoading(false);
+  }, []);
   const avProviderDisabled = !hasGlobalAvKey || !isPro;
   const aiLimit = 5;
 
@@ -698,6 +739,31 @@ export default function ProfilePage() {
             </div>
           )}
 
+          {deviceProEligible && (
+            <div className="rounded-xl border-2 border-emerald-300 dark:border-emerald-500/40 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-500/10 dark:to-teal-500/10 p-5 space-y-3">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Monitor className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                    Your device includes 1 year of Pro
+                  </p>
+                  <p className="text-xs text-gray-600 dark:text-slate-400 mt-1">
+                    Activate your free year now. A payment method is required but you won&apos;t be charged for 12 months.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={handleActivateDeviceGrant}
+                disabled={deviceGrantLoading}
+                className="btn-primary text-sm w-full disabled:opacity-40"
+              >
+                {deviceGrantLoading ? "Redirecting to checkout..." : "Activate Free Year"}
+              </button>
+            </div>
+          )}
+
           <div className="rounded-xl border border-gray-200 dark:border-slate-600 p-4 bg-gray-50 dark:bg-slate-800/40">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium text-gray-900 dark:text-white">
@@ -966,6 +1032,67 @@ export default function ProfilePage() {
             </div>
           )}
         </div>
+
+        {/* Device Display Theme — only shown after a device has actually connected */}
+        {deviceLinked && (
+          <div className="card p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-500/15 flex items-center justify-center">
+                <Monitor className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Device Display Theme</h2>
+                <p className="text-xs text-gray-500 dark:text-slate-400">
+                  Choose how your T4-S3 display looks
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { id: "classic-dark", name: "Classic Dark", colors: ["#0f172a", "#1e293b", "#10b981"], pro: false },
+                { id: "wall-street", name: "Wall Street", colors: ["#000000", "#111111", "#f59e0b"], pro: true },
+                { id: "minimal-light", name: "Minimal Light", colors: ["#f8fafc", "#ffffff", "#059669"], pro: true },
+                { id: "midnight-green", name: "Midnight Green", colors: ["#042f2e", "#064e3b", "#6ee7b7"], pro: true },
+              ].map((theme) => {
+                const isSelected = deviceTemplate === theme.id;
+                const isLocked = theme.pro && user?.plan !== "pro";
+                return (
+                  <button
+                    key={theme.id}
+                    onClick={() => !isLocked && handleChangeTemplate(theme.id)}
+                    disabled={templateSaving || isLocked}
+                    className={`relative p-3 rounded-xl border-2 transition-all text-left disabled:opacity-50 ${
+                      isSelected
+                        ? "border-emerald-500 dark:border-emerald-400 bg-emerald-50 dark:bg-emerald-500/10"
+                        : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600"
+                    }`}
+                  >
+                    <div className="flex gap-1 mb-2">
+                      {theme.colors.map((c, i) => (
+                        <div key={i} className="w-5 h-5 rounded-full border border-slate-300 dark:border-slate-600" style={{ backgroundColor: c }} />
+                      ))}
+                    </div>
+                    <p className="text-xs font-medium text-gray-900 dark:text-white">{theme.name}</p>
+                    {theme.pro && (
+                      <span className="absolute top-1.5 right-1.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-400">
+                        Pro
+                      </span>
+                    )}
+                    {isSelected && (
+                      <span className="absolute bottom-1.5 right-1.5 text-emerald-500">
+                        <Check className="w-4 h-4" />
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-xs text-gray-500 dark:text-slate-400">
+              Theme change takes effect on your device within 5 minutes.
+            </p>
+          </div>
+        )}
 
         {/* Delete Account */}
         {user?.role !== "admin" && (

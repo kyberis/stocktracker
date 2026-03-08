@@ -6,7 +6,7 @@ import {
   getPlatformSetting,
   setPlatformSetting,
 } from "@/lib/db";
-import { avRateLimiter, aiImportRateLimiter, signupRateLimiter, loginRateLimiter } from "@/lib/upstash";
+import { avRateLimiter, aiImportRateLimiter, signupRateLimiter, loginRateLimiter, deviceAuthRateLimiter } from "@/lib/upstash";
 import type { NextRequest } from "next/server";
 
 export interface RateLimitResult {
@@ -161,6 +161,22 @@ export async function checkLoginRateLimit(ip: string): Promise<RateLimitResult> 
   const now = new Date();
   const quarter = Math.floor(now.getMinutes() / 15);
   const windowKey = `login:${now.toISOString().slice(0, 13)}:${quarter}`;
+  const { allowed, remaining, resetAt } = await checkAndIncrementRateLimit(ip, "alphavantage", limit, windowKey);
+  return { allowed, remaining, limit, resetAt };
+}
+
+// ── Device bearer-token auth rate limiting ──────────────────
+
+export async function checkDeviceAuthRateLimit(ip: string): Promise<RateLimitResult> {
+  const limiter = deviceAuthRateLimiter();
+  if (limiter) {
+    const { success, limit, remaining, reset } = await limiter.limit(ip);
+    return { allowed: success, remaining, limit, resetAt: new Date(reset).toISOString() };
+  }
+  const limit = PLATFORM_LIMITS.DEVICE_AUTH_PER_IP_PER_15MIN;
+  const now = new Date();
+  const quarter = Math.floor(now.getMinutes() / 15);
+  const windowKey = `device-auth:${now.toISOString().slice(0, 13)}:${quarter}`;
   const { allowed, remaining, resetAt } = await checkAndIncrementRateLimit(ip, "alphavantage", limit, windowKey);
   return { allowed, remaining, limit, resetAt };
 }

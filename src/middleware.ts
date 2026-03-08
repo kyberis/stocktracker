@@ -18,6 +18,11 @@ const PUBLIC_API_ROUTES = new Set([
   "/api/analytics/landing",
   "/api/metrics",
   "/api/cron/push-gauges",
+  "/api/portfolio/summary",
+  "/api/device/ai-summary",
+  "/api/device/firmware",
+  "/api/device/config",
+  "/api/device/heartbeat",
 ]);
 
 function isPublicPath(pathname: string): boolean {

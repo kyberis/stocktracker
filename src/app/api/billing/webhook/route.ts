@@ -4,6 +4,7 @@ import {
   findUserById,
   findUserByStripeCustomerId,
   findUserByStripeSubscriptionId,
+  markDeviceProRedeemed,
   trackEvent,
   updateUserSubscription,
 } from "@/lib/db";
@@ -79,9 +80,12 @@ export const POST = withMetrics("/api/billing/webhook", async (req: NextRequest)
               stripeSubscriptionId: subscriptionId || user.stripe_subscription_id,
               planExpiresAt: "",
             });
+            if (session.metadata?.deviceGrant === "true") {
+              await markDeviceProRedeemed(user.id);
+            }
             trackEvent(user.id, "billing_checkout_completed", {
               source: "stripe_webhook",
-              mode: "subscription",
+              mode: session.metadata?.deviceGrant === "true" ? "device_grant" : "subscription",
             });
           }
         }

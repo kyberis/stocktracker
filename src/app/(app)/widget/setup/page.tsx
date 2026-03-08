@@ -22,15 +22,24 @@ async function fetchData() {
   const req = new Request(API_URL);
   req.headers = { Authorization: \`Bearer \${TOKEN}\` };
   req.timeoutInterval = 15;
-  return await req.loadJSON();
+  const body = await req.loadString();
+  const status = req.response.statusCode;
+  if (status < 200 || status >= 300) {
+    throw new Error(\`HTTP \${status}\`);
+  }
+  return JSON.parse(body);
+}
+
+function num(v) {
+  return typeof v === "number" && isFinite(v) ? v : 0;
 }
 
 function fmt(n) {
-  return n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return num(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function sign(n) {
-  return n >= 0 ? "+" : "";
+  return num(n) >= 0 ? "+" : "";
 }
 
 function createSmallWidget(data) {
@@ -51,14 +60,14 @@ function createSmallWidget(data) {
 
   w.addSpacer(2);
 
-  const isUp = data.dayChangeEUR >= 0;
-  const change = w.addText(\`\${sign(data.dayChangeEUR)}€\${fmt(data.dayChangeEUR)} (\${sign(data.dayChangePercent)}\${data.dayChangePercent.toFixed(2)}%)\`);
+  const isUp = num(data.dayChangeEUR) >= 0;
+  const change = w.addText(\`\${sign(data.dayChangeEUR)}€\${fmt(data.dayChangeEUR)} (\${sign(data.dayChangePercent)}\${num(data.dayChangePercent).toFixed(2)}%)\`);
   change.font = Font.mediumSystemFont(11);
   change.textColor = isUp ? GREEN : RED;
 
   w.addSpacer(4);
 
-  const gainUp = data.totalGainLoss >= 0;
+  const gainUp = num(data.totalGainLoss) >= 0;
   const pl = w.addText(\`P/L \${sign(data.totalGainLoss)}€\${fmt(data.totalGainLoss)}\`);
   pl.font = Font.regularSystemFont(10);
   pl.textColor = gainUp ? GREEN : RED;
@@ -98,7 +107,7 @@ function createMediumWidget(data) {
   value.textColor = TEXT;
   value.minimumScaleFactor = 0.6;
 
-  const isUp = data.dayChangeEUR >= 0;
+  const isUp = num(data.dayChangeEUR) >= 0;
   const changeLine = w.addStack();
   changeLine.layoutHorizontally();
   changeLine.centerAlignContent();
@@ -108,12 +117,12 @@ function createMediumWidget(data) {
   change.font = Font.semiboldSystemFont(12);
   change.textColor = isUp ? GREEN : RED;
 
-  const pct = changeLine.addText(\`(\${sign(data.dayChangePercent)}\${data.dayChangePercent.toFixed(2)}%)\`);
+  const pct = changeLine.addText(\`(\${sign(data.dayChangePercent)}\${num(data.dayChangePercent).toFixed(2)}%)\`);
   pct.font = Font.regularSystemFont(11);
   pct.textColor = isUp ? GREEN : RED;
 
-  const gainUp = data.totalGainLoss >= 0;
-  const plText = changeLine.addText(\`  P/L \${sign(data.totalGainLoss)}\${data.totalGainLossPercent.toFixed(1)}%\`);
+  const gainUp = num(data.totalGainLoss) >= 0;
+  const plText = changeLine.addText(\`  P/L \${sign(data.totalGainLoss)}\${num(data.totalGainLossPercent).toFixed(1)}%\`);
   plText.font = Font.regularSystemFont(10);
   plText.textColor = gainUp ? GREEN : RED;
 
@@ -135,8 +144,8 @@ function createMediumWidget(data) {
       ticker.textColor = TEXT;
       ticker.lineLimit = 1;
 
-      const hUp = h.dayChange >= 0;
-      const dc = col.addText(\`\${sign(h.dayChange)}\${h.dayChange.toFixed(1)}%\`);
+      const hUp = num(h.dayChange) >= 0;
+      const dc = col.addText(\`\${sign(h.dayChange)}\${num(h.dayChange).toFixed(1)}%\`);
       dc.font = Font.mediumSystemFont(9);
       dc.textColor = hUp ? GREEN : RED;
 
@@ -155,10 +164,20 @@ async function run() {
   } catch (e) {
     const w = new ListWidget();
     w.backgroundColor = BG;
+    w.setPadding(12, 14, 12, 14);
     const err = w.addText("Unable to load portfolio");
     err.font = Font.regularSystemFont(12);
     err.textColor = RED;
-    w.presentSmall();
+    w.addSpacer(4);
+    const hint = w.addText(String(e.message || "Check token"));
+    hint.font = Font.regularSystemFont(8);
+    hint.textColor = MUTED;
+    if (config.runsInWidget) {
+      Script.setWidget(w);
+    } else {
+      w.presentSmall();
+    }
+    Script.complete();
     return;
   }
 

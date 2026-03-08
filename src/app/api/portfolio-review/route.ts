@@ -20,9 +20,10 @@ export const POST = withMetrics("/api/portfolio-review", async (request: NextReq
   const { session, error } = await requirePro(request);
   if (error || !session) return error;
 
+  const isDev = process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test";
   const usage = await getPortfolioReviewUsage(session.userId);
   const limit = PLATFORM_LIMITS.PORTFOLIO_REVIEW_MONTHLY_LIMIT;
-  if (usage.count >= limit) {
+  if (!isDev && usage.count >= limit) {
     trackEvent(session.userId, "portfolio_review_limit_reached", { used: String(usage.count), limit: String(limit) });
     return Response.json(
       {

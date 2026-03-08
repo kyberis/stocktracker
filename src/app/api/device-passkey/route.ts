@@ -24,5 +24,8 @@ export const GET = withMetrics("/api/device-passkey", async (req: NextRequest) =
   if (error || !session) return error;
 
   const user = await findUserById(session.userId);
-  return NextResponse.json({ hasPasskey: !!user?.device_passkey_hash });
+  return NextResponse.json({
+    hasPasskey: !!user?.device_passkey_hash,
+    deviceLinked: !!user?.device_linked_at,
+  });
 });

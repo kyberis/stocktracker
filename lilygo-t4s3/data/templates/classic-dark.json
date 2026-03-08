@@ -1,0 +1,33 @@
+{
+  "id": "classic-dark",
+  "name": "Classic Dark",
+  "version": 1,
+  "colors": {
+    "bg": "0x0f172a",
+    "surface": "0x1e293b",
+    "header": "0x0f172a",
+    "accent": "0x10b981",
+    "accent2": "0x8b5cf6",
+    "green": "0x34d399",
+    "red": "0xf87171",
+    "textPrimary": "0xf1f5f9",
+    "textSecondary": "0x94a3b8",
+    "dim": "0x64748b",
+    "border": "0x334155"
+  },
+  "layout": {
+    "leftPanelWidth": 205,
+    "headerHeight": 42,
+    "footerHeight": 28,
+    "cardRadius": 16,
+    "cardPadding": 10,
+    "holdingsCardHeight": 210
+  },
+  "fonts": {
+    "totalValue": 30,
+    "sectionValue": 20,
+    "title": 16,
+    "body": 14,
+    "label": 12
+  }
+}

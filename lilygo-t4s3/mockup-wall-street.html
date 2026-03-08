@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>T4-S3 Wall Street Template — trefolio</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg: #000000;
+    --surface: #111111;
+    --header: #0a0a0a;
+    --accent: #f59e0b;
+    --accent2: #eab308;
+    --green: #22c55e;
+    --red: #ef4444;
+    --text: #fbbf24;
+    --text-sec: #a3a3a3;
+    --dim: #525252;
+    --border: #262626;
+    --gain-bg: rgba(34, 197, 94, 0.1);
+    --loss-bg: rgba(239, 68, 68, 0.1);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #080808;
+    font-family: 'Inter', sans-serif;
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 40px;
+    padding: 40px 20px 80px;
+  }
+
+  h1 { font-size: 24px; font-weight: 700; color: var(--accent); }
+  .subtitle { font-size: 14px; color: var(--dim); margin-top: 4px; }
+
+  .screen-frame {
+    width: 600px;
+    height: 450px;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    position: relative;
+    background: var(--bg);
+    font-family: 'JetBrains Mono', 'Inter', monospace;
+  }
+
+  .section { width: 100%; max-width: 660px; text-align: center; }
+
+  /* Header */
+  .dash-header {
+    height: 42px;
+    background: var(--header);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    justify-content: space-between;
+  }
+  .dash-logo {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Inter', sans-serif;
+  }
+  .dash-logo svg { width: 16px; height: 16px; }
+  .dash-live {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--green);
+    letter-spacing: 0.08em;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .dash-live-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* Body */
+  .dash-body {
+    display: flex;
+    height: calc(100% - 42px - 28px);
+    padding: 8px;
+    gap: 8px;
+  }
+
+  /* Footer */
+  .dash-footer {
+    height: 28px;
+    background: var(--header);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    font-size: 10px;
+    color: var(--dim);
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.03em;
+    border-top: 1px solid var(--border);
+  }
+  .footer-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .footer-countdown {
+    color: var(--text-sec);
+  }
+  .footer-refresh {
+    background: rgba(245, 158, 11, 0.15);
+    border: none;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 10px;
+    color: var(--accent);
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  /* Summary card */
+  .summary-card {
+    width: 195px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+  }
+  .summary-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--dim);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .summary-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  .summary-currency {
+    font-size: 13px;
+    color: var(--dim);
+    font-weight: 400;
+    margin-right: 2px;
+  }
+  .day-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 600;
+    width: fit-content;
+    margin-bottom: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  .day-badge.loss {
+    background: var(--loss-bg);
+    color: var(--red);
+  }
+  .day-badge.gain {
+    background: var(--gain-bg);
+    color: var(--green);
+  }
+  .arrow-icon {
+    font-size: 9px;
+    line-height: 1;
+  }
+  .cost-label {
+    font-size: 10px;
+    color: var(--dim);
+    margin-bottom: 12px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .summary-sep {
+    height: 1px;
+    background: var(--border);
+    margin: 0 -14px;
+    width: calc(100% + 28px);
+  }
+  .pl-section { margin-top: 12px; }
+  .pl-value {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 2px;
+    font-family: 'JetBrains Mono', monospace;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .pl-pct {
+    font-size: 11px;
+    font-weight: 500;
+    font-family: 'JetBrains Mono', monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  .holdings-count {
+    margin-top: auto;
+    font-size: 10px;
+    color: var(--dim);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* Right column */
+  .right-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* Holdings card */
+  .holdings-card { flex: 1; }
+  .holdings-header {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 12px 6px;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .holding-row {
+    display: flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-top: 1px solid var(--border);
+    gap: 6px;
+  }
+  .holding-left { flex: 1; min-width: 0; }
+  .holding-ticker {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .holding-name {
+    font-size: 9px;
+    color: var(--dim);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-family: 'Inter', sans-serif;
+  }
+  .holding-weight {
+    font-size: 11px;
+    color: var(--text-sec);
+    min-width: 36px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .holding-arrow {
+    font-size: 10px;
+    min-width: 14px;
+    text-align: center;
+  }
+  .holding-arrow.gain { color: var(--green); }
+  .holding-arrow.loss { color: var(--red); }
+  .holding-change {
+    font-size: 12px;
+    font-weight: 600;
+    min-width: 58px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .holding-change.gain { color: var(--green); }
+  .holding-change.loss { color: var(--red); }
+
+  /* AI card */
+  .ai-card {
+    padding: 10px 12px;
+    border-color: var(--accent2);
+    border-style: solid;
+    border-width: 1px;
+    position: relative;
+  }
+  .ai-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .ai-icon-circle {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .ai-icon-circle svg { width: 12px; height: 12px; color: #000; }
+  .ai-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.04em;
+  }
+  .ai-pro-badge {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 1px 5px;
+    border-radius: 3px;
+    background: rgba(245, 158, 11, 0.2);
+    color: var(--accent);
+    margin-left: auto;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .ai-text {
+    font-size: 10px;
+    color: var(--text-sec);
+    line-height: 1.4;
+  }
+  .ai-ask-btn {
+    position: absolute;
+    bottom: 8px;
+    right: 10px;
+    background: var(--accent);
+    border: none;
+    border-radius: 4px;
+    padding: 4px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #000;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.04em;
+  }
+</style>
+</head>
+<body>
+
+<div class="section">
+  <h1>WALL STREET</h1>
+  <p class="subtitle">Bloomberg-terminal inspired template for the T4-S3 AMOLED display</p>
+</div>
+
+<div class="screen-frame">
+  <!-- Header -->
+  <div class="dash-header">
+    <div class="dash-logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      trefolio
+    </div>
+    <div class="dash-live">
+      <div class="dash-live-dot"></div>
+      LIVE
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="dash-body">
+    <!-- Left: Summary -->
+    <div class="card summary-card">
+      <div class="summary-label">TOTAL VALUE</div>
+      <div class="summary-value"><span class="summary-currency">EUR</span>90.619</div>
+      <div class="day-badge loss">
+        <span class="arrow-icon">&#9660;</span>
+        -258,48 (-0.28%)
+      </div>
+      <div class="cost-label">COST: 78.200 EUR</div>
+      <div class="summary-sep"></div>
+      <div class="pl-section">
+        <div class="summary-label">GAIN / LOSS</div>
+        <div class="pl-value" style="color: var(--green)">
+          <span class="arrow-icon" style="font-size: 12px;">&#9650;</span>
+          +15.88%
+        </div>
+        <div class="pl-pct" style="color: var(--green)">+12.419 EUR</div>
+      </div>
+      <div class="holdings-count">28 HOLDINGS</div>
+    </div>
+
+    <!-- Right column -->
+    <div class="right-col">
+      <!-- Holdings -->
+      <div class="card holdings-card">
+        <div class="holdings-header">
+          <span>TOP HOLDINGS</span>
+          <span>DAY</span>
+        </div>
+        <div class="holding-row">
+          <div class="holding-left">
+            <div class="holding-ticker">SRB.L</div>
+            <div class="holding-name">SERABI GOLD PLC</div>
+          </div>
+          <div class="holding-weight">79.3%</div>
+          <div class="holding-arrow loss">&#9660;</div>
+          <div class="holding-change loss">-0.29%</div>
+        </div>
+        <div class="holding-row">
+          <div class="holding-left">
+            <div class="holding-ticker">NOVO-B.CO</div>
+            <div class="holding-name">NOVO NORDISK A/S CLASS B</div>
+          </div>
+          <div class="holding-weight">4.5%</div>
+          <div class="holding-arrow loss">&#9660;</div>
+          <div class="holding-change loss">-0.30%</div>
+        </div>
+        <div class="holding-row">
+          <div class="holding-left">
+            <div class="holding-ticker">AAPL</div>
+            <div class="holding-name">APPLE INC</div>
+          </div>
+          <div class="holding-weight">2.4%</div>
+          <div class="holding-arrow loss">&#9660;</div>
+          <div class="holding-change loss">-1.09%</div>
+        </div>
+        <div class="holding-row">
+          <div class="holding-left">
+            <div class="holding-ticker">MSFT</div>
+            <div class="holding-name">MICROSOFT CORP</div>
+          </div>
+          <div class="holding-weight">2.3%</div>
+          <div class="holding-arrow loss">&#9660;</div>
+          <div class="holding-change loss">-0.42%</div>
+        </div>
+        <div class="holding-row">
+          <div class="holding-left">
+            <div class="holding-ticker">SXR8.DE</div>
+            <div class="holding-name">ISHARES CORE S&amp;P 500</div>
+          </div>
+          <div class="holding-weight">2.2%</div>
+          <div class="holding-arrow gain">&#9650;</div>
+          <div class="holding-change gain">+0.21%</div>
+        </div>
+      </div>
+
+      <!-- AI Card -->
+      <div class="card ai-card">
+        <div class="ai-header">
+          <div class="ai-icon-circle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+          </div>
+          <div class="ai-title">AI PORTFOLIO REVIEW</div>
+          <div class="ai-pro-badge">PRO</div>
+        </div>
+        <div class="ai-text">Tap to request AI summary</div>
+        <button class="ai-ask-btn">ASK AI</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="dash-footer">
+    <span>28 holdings &middot; Synced</span>
+    <div class="footer-right">
+      <span class="footer-countdown">0:58</span>
+      <button class="footer-refresh">&#8635;</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

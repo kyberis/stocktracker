@@ -180,6 +180,52 @@ export const paywallHitsTotal = getOrCreate(
     })
 );
 
+/* ── Device / Firmware Metrics ─────────────────────────────── */
+
+export const deviceFirmwareChecks = getOrCreate(
+  "trefolio_device_firmware_checks_total",
+  () =>
+    new Counter({
+      name: "trefolio_device_firmware_checks_total",
+      help: "Firmware update checks by current device version and board",
+      labelNames: ["current_version", "board"] as const,
+      registers: [getRegistry()],
+    })
+);
+
+export const deviceApiCalls = getOrCreate(
+  "trefolio_device_api_calls_total",
+  () =>
+    new Counter({
+      name: "trefolio_device_api_calls_total",
+      help: "Device API calls by firmware version and route",
+      labelNames: ["fw_version", "route", "status"] as const,
+      registers: [getRegistry()],
+    })
+);
+
+export const deviceErrors = getOrCreate(
+  "trefolio_device_errors_total",
+  () =>
+    new Counter({
+      name: "trefolio_device_errors_total",
+      help: "Device-reported errors by firmware version and error type",
+      labelNames: ["fw_version", "error_type"] as const,
+      registers: [getRegistry()],
+    })
+);
+
+export const deviceHeartbeats = getOrCreate(
+  "trefolio_device_heartbeats_total",
+  () =>
+    new Counter({
+      name: "trefolio_device_heartbeats_total",
+      help: "Device heartbeats by firmware version and status",
+      labelNames: ["fw_version", "status"] as const,
+      registers: [getRegistry()],
+    })
+);
+
 /* ── Rate Limit Metrics ───────────────────────────────────── */
 
 export const rateLimitHitsTotal = getOrCreate(
