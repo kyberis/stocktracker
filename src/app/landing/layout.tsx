@@ -88,7 +88,7 @@ const FAQ_SCHEMA = {
       name: "How do I import my portfolio?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Go to your Dashboard and click the upload icon in the header. Choose your broker (DEGIRO, Interactive Brokers, Trading 212, Revolut, or Simple CSV), drag & drop your file, review the parsed transactions, and click Import All. Your holdings will appear on the dashboard immediately.",
+        text: "Go to the unified /import page to access all 7 import methods in one place: DEGIRO, IBKR CSV, IBKR API, Trading 212, Revolut, Simple CSV, and AI Import. Each method has a built-in step-by-step guide. For CSV or AI import: choose your method, drag & drop your file (or paste for AI), review the parsed transactions, and click Import. Pro users can connect via IBKR API with a guided 3-step wizard that takes under 2 minutes.",
       },
     },
     {
@@ -96,7 +96,7 @@ const FAQ_SCHEMA = {
       name: "What CSV formats are supported?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Five formats: (1) DEGIRO Account.csv, (2) Interactive Brokers Activity Statement or Flex Query CSV, (3) Trading 212 History CSV export, (4) Revolut Account Statement (Excel/CSV), and (5) Simple CSV with columns: ticker, type, price, amount, currency.",
+        text: "Six CSV formats plus AI Import: (1) DEGIRO Account.csv, (2) IBKR CSV (Activity Statement or Flex Query), (3) Trading 212 History CSV, (4) Revolut Account Statement (Excel/CSV), (5) Simple CSV with columns: ticker, type, price, amount, currency. For any other format, use AI Import — upload or paste your file and AI will parse it. Pro users get IBKR API for direct sync — connect once, re-sync anytime with one click.",
       },
     },
     {

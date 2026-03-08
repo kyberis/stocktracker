@@ -9,9 +9,6 @@ import type { UpsellReason, UpsellSurface } from "@/lib/upsell";
 
 interface CapacityInfo {
   available: boolean;
-  currentCount: number;
-  maxCount: number;
-  remaining: number;
 }
 
 let cachedCapacity: { data: CapacityInfo; fetchedAt: number } | null = null;
@@ -114,23 +111,6 @@ export default function ProCompareCard({
   };
 
   const atCapacity = capacity !== null && !capacity.available;
-  const spotsLow = capacity !== null && capacity.available && capacity.remaining <= 2;
-
-  function formatCapacityText(): string {
-    if (!capacity) return "";
-    if (atCapacity) return t("proAtCapacity");
-    if (spotsLow) {
-      return t("proSpotsLow")
-        .replace("{remaining}", String(capacity.remaining));
-    }
-    return t("proSpotsRemaining")
-      .replace("{remaining}", String(capacity.remaining))
-      .replace("{max}", String(capacity.maxCount));
-  }
-
-  const capacityPercent = capacity
-    ? Math.round((capacity.currentCount / capacity.maxCount) * 100)
-    : 0;
 
   return (
     <div className={`rounded-xl border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50/40 dark:bg-emerald-500/10 p-4 ${className}`}>
@@ -177,38 +157,6 @@ export default function ProCompareCard({
           </ul>
         </div>
       </div>
-
-      {/* Capacity counter */}
-      {!isPro && capacity && (
-        <div className="mt-3">
-          <div className="flex items-center justify-between mb-1">
-            <span className={`text-xs font-medium ${
-              atCapacity
-                ? "text-red-600 dark:text-red-400"
-                : spotsLow
-                  ? "text-amber-600 dark:text-amber-400"
-                  : "text-gray-600 dark:text-slate-300"
-            }`}>
-              {formatCapacityText()}
-            </span>
-            <span className="text-[10px] text-gray-500 dark:text-slate-400">
-              {capacity.currentCount}/{capacity.maxCount}
-            </span>
-          </div>
-          <div className="w-full h-1.5 bg-gray-200 dark:bg-slate-700 rounded-full overflow-hidden">
-            <div
-              className={`h-full rounded-full transition-all ${
-                atCapacity
-                  ? "bg-red-500"
-                  : spotsLow
-                    ? "bg-amber-500"
-                    : "bg-emerald-500"
-              }`}
-              style={{ width: `${Math.min(capacityPercent, 100)}%` }}
-            />
-          </div>
-        </div>
-      )}
 
       <div className={`mt-3 ${compact ? "grid grid-cols-1 gap-2" : "grid grid-cols-1 sm:grid-cols-2 gap-2"}`}>
         {!isPro ? (

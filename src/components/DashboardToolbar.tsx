@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useSettings } from "@/lib/settings-context";
 import { useI18n } from "@/lib/i18n";
@@ -14,9 +15,9 @@ interface DashboardToolbarProps {
 export default function DashboardToolbar({
   onAddStock,
   onOpenSettings,
-  onImportPortfolio,
   onResetPortfolio,
 }: DashboardToolbarProps) {
+  const router = useRouter();
   const { isLoading, refreshQuotes, lastUpdated } = usePortfolio();
   const { provider, isAlphaVantage, avCallsThisMinute, avMinuteLimit } = useSettings();
   const { t } = useI18n();
@@ -93,18 +94,16 @@ export default function DashboardToolbar({
             </svg>
           </button>
 
-          {onImportPortfolio && (
-            <button
-              onClick={onImportPortfolio}
-              className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-500 dark:text-slate-400 transition-colors"
-              title={t("importPortfolio")}
-              aria-label={t("importPortfolio")}
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-              </svg>
-            </button>
-          )}
+          <button
+            onClick={() => router.push("/import")}
+            className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-500 dark:text-slate-400 transition-colors"
+            title={t("importPortfolio")}
+            aria-label={t("importPortfolio")}
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+          </button>
 
           {onResetPortfolio && (
             <button

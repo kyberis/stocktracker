@@ -18,6 +18,11 @@ const NAV_LINKS = [
     match: (p: string) => p === "/",
   },
   {
+    href: "/import",
+    labelKey: "importNav" as const,
+    match: (p: string) => p === "/import",
+  },
+  {
     href: "/tools",
     labelKey: "toolsNav" as const,
     match: (p: string) => p === "/tools",

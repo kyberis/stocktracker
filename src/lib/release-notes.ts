@@ -14,9 +14,60 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "0.48.0";
+export const CURRENT_VERSION = "0.50.0";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "0.50.0",
+    date: "2026-03-08",
+    title: "trefolio Leaf — Battery Power Optimization",
+    titleTranslations: { es: "trefolio Leaf — Optimización de Batería" },
+    changes: [
+      {
+        type: "feature",
+        text: "Three-mode power management for trefolio Leaf: Active (full UI), Glance (low-power cached display), and Sleep (deep sleep with periodic headless data fetches) — extends battery life from ~3 hours to 12-48 hours",
+        translations: { es: "Gestión de energía en tres modos para trefolio Leaf: Activo (UI completa), Vistazo (pantalla en caché a baja potencia) y Suspensión (sueño profundo con actualizaciones periódicas sin pantalla) — extiende la batería de ~3 horas a 12-48 horas" },
+      },
+      {
+        type: "feature",
+        text: "Battery percentage indicator and charging status in the device dashboard header",
+        translations: { es: "Indicador de porcentaje de batería y estado de carga en la cabecera del panel del dispositivo" },
+      },
+      {
+        type: "improvement",
+        text: "Market hours awareness adjusts refresh frequency automatically — 2-min during trading, 30-min off-hours, touch-only overnight",
+        translations: { es: "Conciencia de horario de mercado ajusta la frecuencia de actualización automáticamente — 2 min durante trading, 30 min fuera de horario, solo táctil de noche" },
+      },
+      {
+        type: "improvement",
+        text: "Fast WiFi reconnect after deep sleep using saved BSSID and channel — reduces reconnection from ~2s to ~200ms",
+        translations: { es: "Reconexión WiFi rápida tras sueño profundo usando BSSID y canal guardados — reduce la reconexión de ~2s a ~200ms" },
+      },
+      {
+        type: "improvement",
+        text: "Import success screen now shows a full Pro upgrade comparison when holdings are skipped due to the free plan limit",
+        translations: { es: "La pantalla de importación exitosa ahora muestra una comparación completa de Pro cuando se omiten posiciones por el límite del plan gratuito" },
+      },
+    ],
+  },
+  {
+    version: "0.49.0",
+    date: "2026-03-08",
+    title: "trefolio Leaf — Device Rebrand & Firmware Performance",
+    titleTranslations: { es: "trefolio Leaf — Rebrand del Dispositivo y Rendimiento del Firmware" },
+    changes: [
+      {
+        type: "improvement",
+        text: "Device rebranded from 'T4-S3' to 'trefolio Leaf' — a consumer-friendly name aligned with the trefolio brand story",
+        translations: { es: "Dispositivo renombrado de 'T4-S3' a 'trefolio Leaf' — un nombre orientado al consumidor alineado con la marca trefolio" },
+      },
+      {
+        type: "improvement",
+        text: "Firmware performance: persistent TLS sessions, non-blocking HTTP via FreeRTOS, stream-based JSON parsing, AMOLED auto-dimming, WiFi modem sleep, heap monitoring, and burn-in prevention",
+        translations: { es: "Rendimiento del firmware: sesiones TLS persistentes, HTTP no bloqueante vía FreeRTOS, parseo JSON por stream, auto-atenuación AMOLED, suspensión del módem WiFi, monitoreo de memoria y prevención de burn-in" },
+      },
+    ],
+  },
   {
     version: "0.48.0",
     date: "2026-03-08",
@@ -61,13 +112,13 @@ export const releaseNotes: ReleaseEntry[] = [
     changes: [
       {
         type: "feature",
-        text: "All T4-S3 device features (passkey, linking, display themes, firmware OTA, AI summary, landing page promotion) are now gated behind an admin-controlled feature flag — disabled by default until launch",
-        translations: { es: "Todas las funcionalidades del dispositivo T4-S3 (clave, vinculación, temas de pantalla, OTA de firmware, resumen IA, promoción en landing) están ahora controladas por un flag de admin — deshabilitadas por defecto hasta el lanzamiento" },
+        text: "All trefolio Leaf device features (passkey, linking, display themes, firmware OTA, AI summary, landing page promotion) are now gated behind an admin-controlled feature flag — disabled by default until launch",
+        translations: { es: "Todas las funcionalidades del dispositivo trefolio Leaf (clave, vinculación, temas de pantalla, OTA de firmware, resumen IA, promoción en landing) están ahora controladas por un flag de admin — deshabilitadas por defecto hasta el lanzamiento" },
       },
       {
         type: "feature",
-        text: "Landing page device promotion section showcasing the T4-S3 AMOLED hardware display with portfolio dashboard preview — only visible when device flag is enabled",
-        translations: { es: "Sección de promoción del dispositivo en la landing mostrando la pantalla AMOLED T4-S3 con vista previa del panel de cartera — solo visible cuando el flag del dispositivo está habilitado" },
+        text: "Landing page device promotion section showcasing the trefolio Leaf AMOLED hardware display with portfolio dashboard preview — only visible when device flag is enabled",
+        translations: { es: "Sección de promoción del dispositivo en la landing mostrando la pantalla AMOLED trefolio Leaf con vista previa del panel de cartera — solo visible cuando el flag del dispositivo está habilitado" },
       },
     ],
   },
@@ -79,8 +130,8 @@ export const releaseNotes: ReleaseEntry[] = [
     changes: [
       {
         type: "feature",
-        text: "Linking a T4-S3 device unlocks a free year of Pro — set up a payment method at no charge today, and billing starts automatically after 12 months",
-        translations: { es: "Vincular un dispositivo T4-S3 desbloquea un año gratuito de Pro — configura un método de pago sin cargo hoy, y la facturación comienza automáticamente tras 12 meses" },
+        text: "Linking a trefolio Leaf device unlocks a free year of Pro — set up a payment method at no charge today, and billing starts automatically after 12 months",
+        translations: { es: "Vincular un dispositivo trefolio Leaf desbloquea un año gratuito de Pro — configura un método de pago sin cargo hoy, y la facturación comienza automáticamente tras 12 meses" },
       },
     ],
   },
@@ -110,8 +161,8 @@ export const releaseNotes: ReleaseEntry[] = [
     changes: [
       {
         type: "feature",
-        text: "Over-the-air (OTA) firmware updates for T4-S3 devices with automatic rollback",
-        translations: { es: "Actualizaciones de firmware OTA para dispositivos T4-S3 con reversión automática" },
+        text: "Over-the-air (OTA) firmware updates for trefolio Leaf devices with automatic rollback",
+        translations: { es: "Actualizaciones de firmware OTA para dispositivos trefolio Leaf con reversión automática" },
       },
       {
         type: "feature",
@@ -148,13 +199,13 @@ export const releaseNotes: ReleaseEntry[] = [
   {
     version: "0.43.0",
     date: "2026-03-07",
-    title: "T4-S3 Device Dashboard",
-    titleTranslations: { es: "Panel del Dispositivo T4-S3" },
+    title: "trefolio Leaf Device Dashboard",
+    titleTranslations: { es: "Panel del Dispositivo trefolio Leaf" },
     changes: [
       {
         type: "feature",
-        text: "LILYGO T4-S3 AMOLED device dashboard — view your portfolio, top holdings, and AI insights on a dedicated hardware display",
-        translations: { es: "Panel AMOLED para dispositivo LILYGO T4-S3 — consulta tu cartera, principales posiciones e insights de IA en una pantalla dedicada" },
+        text: "trefolio Leaf AMOLED device dashboard — view your portfolio, top holdings, and AI insights on a dedicated hardware display",
+        translations: { es: "Panel AMOLED del dispositivo trefolio Leaf — consulta tu cartera, principales posiciones e insights de IA en una pantalla dedicada" },
       },
       {
         type: "feature",

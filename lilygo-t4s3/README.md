@@ -1,6 +1,6 @@
-# LILYGO T4-S3 (ESP32-S3) Firmware
+# trefolio Leaf Firmware
 
-PlatformIO project targeting the LILYGO T4-S3 development board.
+PlatformIO project for the trefolio Leaf device (LILYGO T4-S3 board).
 
 ## Board
 

@@ -67,6 +67,19 @@ void config_load_template(char *buf, size_t len) {
     buf[len - 1] = '\0';
 }
 
+static uint8_t sim_brightness = 255;
+static uint16_t sim_idle_dim_sec = 60;
+static uint16_t sim_auto_sleep_sec = 600;
+
+void config_save_brightness(uint8_t val) { sim_brightness = val; }
+uint8_t config_load_brightness() { return sim_brightness; }
+
+void config_save_idle_dim_sec(uint16_t sec) { sim_idle_dim_sec = sec; }
+uint16_t config_load_idle_dim_sec() { return sim_idle_dim_sec; }
+
+void config_save_auto_sleep_sec(uint16_t sec) { sim_auto_sleep_sec = sec; }
+uint16_t config_load_auto_sleep_sec() { return sim_auto_sleep_sec; }
+
 #else // ── Device (ESP32) ────────────────────────────────────────────
 
 #include <Preferences.h>
@@ -208,5 +221,14 @@ void config_load_template(char *buf, size_t len) {
     strncpy(buf, val.c_str(), len);
     buf[len - 1] = '\0';
 }
+
+void config_save_brightness(uint8_t val) { prefs.putUChar("brightness", val); }
+uint8_t config_load_brightness() { return prefs.getUChar("brightness", 255); }
+
+void config_save_idle_dim_sec(uint16_t sec) { prefs.putUShort("idle_dim_s", sec); }
+uint16_t config_load_idle_dim_sec() { return prefs.getUShort("idle_dim_s", 60); }
+
+void config_save_auto_sleep_sec(uint16_t sec) { prefs.putUShort("sleep_s", sec); }
+uint16_t config_load_auto_sleep_sec() { return prefs.getUShort("sleep_s", 600); }
 
 #endif

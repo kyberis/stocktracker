@@ -14,9 +14,7 @@ const RebalancingView = dynamic(() => import("./RebalancingView"), { ssr: false 
 const AccountsManager = dynamic(() => import("./AccountsManager"), { ssr: false });
 const Watchlist = dynamic(() => import("./Watchlist"), { ssr: false });
 const PriceAlerts = dynamic(() => import("./PriceAlerts"), { ssr: false });
-const BrokerImport = dynamic(() => import("./BrokerImport"), { ssr: false });
-
-type Tab = "transactions" | "dividends" | "performance" | "taxonomy" | "rebalancing" | "accounts" | "watchlist" | "alerts" | "brokerImport";
+type Tab = "transactions" | "dividends" | "performance" | "taxonomy" | "rebalancing" | "accounts" | "watchlist" | "alerts";
 
 const ALL_TABS: { key: Tab; icon: string }[] = [
   { key: "transactions", icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" },
@@ -27,7 +25,6 @@ const ALL_TABS: { key: Tab; icon: string }[] = [
   { key: "accounts", icon: "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" },
   { key: "watchlist", icon: "M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" },
   { key: "alerts", icon: "M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" },
-  { key: "brokerImport", icon: "M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" },
 ];
 
 export default function PortfolioTools() {
@@ -58,7 +55,6 @@ export default function PortfolioTools() {
       accounts: t("accounts"),
       watchlist: t("watchlist"),
       alerts: t("priceAlerts"),
-      brokerImport: t("brokerImport"),
     };
     return map[key];
   };
@@ -81,6 +77,17 @@ export default function PortfolioTools() {
           </div>
         )}
       </div>
+
+      {/* Import redirect card */}
+      <a href="/import" className="flex items-center gap-3 mb-4 px-4 py-3 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors">
+        <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+        </svg>
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-medium text-emerald-700 dark:text-emerald-400">{t("importToolsRedirect")}</p>
+        </div>
+        <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 whitespace-nowrap">{t("importGoToPage")} →</span>
+      </a>
 
       {/* Tab navigation */}
       <div className="flex flex-wrap gap-1 mb-6 bg-white dark:bg-slate-800 rounded-2xl p-1.5 border border-gray-200 dark:border-slate-700 shadow-sm">
@@ -113,7 +120,6 @@ export default function PortfolioTools() {
             {activeTab === "accounts" && <AccountsManager />}
             {activeTab === "watchlist" && <Watchlist />}
             {activeTab === "alerts" && <PriceAlerts />}
-            {activeTab === "brokerImport" && <BrokerImport />}
           </div>
         </Suspense>
     </main>

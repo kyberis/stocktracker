@@ -134,6 +134,7 @@ static void load_device_config() {
     if (api_fetch_device_config(device_cfg)) {
         refresh_ms = (uint32_t)device_cfg.refreshIntervalSec * 1000;
         ui_set_ai_visible(device_cfg.aiSummaryEnabled);
+        ui_settings_set_plan(device_cfg.plan);
         printf("Config: plan=%s ai=%d refresh=%ds\n",
                device_cfg.plan, device_cfg.aiSummaryEnabled,
                device_cfg.refreshIntervalSec);
@@ -201,6 +202,29 @@ static void on_sparkline_request(const char *ticker) {
     }
 }
 
+static void on_brightness_change(uint8_t val) {
+    config_save_brightness(val);
+    printf("[SIM] Brightness: %d (no-op in simulator)\n", val);
+}
+
+static void on_timeout_change(uint16_t idle_dim_sec, uint16_t auto_sleep_sec) {
+    config_save_idle_dim_sec(idle_dim_sec);
+    config_save_auto_sleep_sec(auto_sleep_sec);
+    printf("[SIM] Timeouts: dim=%ds, sleep=%ds\n", idle_dim_sec, auto_sleep_sec);
+}
+
+static void on_theme_change(const char *template_id) {
+    ui_apply_template(template_id);
+    printf("[SIM] Theme: %s (takes effect on reboot)\n", template_id);
+}
+
+static void on_unlink() {
+    printf("[SIM] Unlinking device — returning to token entry.\n");
+    config_clear_token();
+    dashboard_active = false;
+    ui_show_token_entry(on_token_submit);
+}
+
 static void on_retry() {
     ui_show_token_entry(on_token_submit);
 }
@@ -242,7 +266,7 @@ int main(int argc, char **argv) {
     }
 
     SDL_Init(SDL_INIT_VIDEO);
-    window   = SDL_CreateWindow("trefolio T4-S3",
+    window   = SDL_CreateWindow("trefolio Leaf",
                                 SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                                 DISP_HOR_RES, DISP_VER_RES, 0);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
@@ -276,6 +300,14 @@ int main(int argc, char **argv) {
     ui_set_view_all_callback(on_view_all);
     ui_set_holding_tap_callback(on_holding_tap);
     ui_set_sparkline_callback(on_sparkline_request);
+    ui_set_settings_callbacks(on_brightness_change, on_timeout_change,
+                              on_theme_change, on_unlink);
+
+    // Restore saved settings
+    ui_settings_set_brightness(config_load_brightness());
+    ui_settings_set_timeouts(config_load_idle_dim_sec(), config_load_auto_sleep_sec());
+    // Simulator: show mock battery data
+    ui_update_settings_battery(75, false, 0.0f, false);
 
     if (mock_mode) {
         fill_mock_portfolio();
@@ -288,6 +320,7 @@ int main(int argc, char **argv) {
         ui_set_ai_visible(true);
         ui_set_live_state(true);
         ui_update_countdown(0);
+        ui_settings_set_plan("pro");
     } else if (cli_token) {
         config_save_token(cli_token);
         api_init(API_BASE_URL, cli_token);

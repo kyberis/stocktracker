@@ -2,6 +2,7 @@
 
 #ifdef SIMULATOR
 #include <cstddef>
+#include <cstdint>
 #include <cstring>
 #else
 #include <Arduino.h>
@@ -39,3 +40,13 @@ void config_load_fw_version(char *buf, size_t len);
 // Template ID
 void config_save_template(const char *id);
 void config_load_template(char *buf, size_t len);
+
+// Display brightness (10-255, default 255)
+void config_save_brightness(uint8_t val);
+uint8_t config_load_brightness();
+
+// Screen timeouts (seconds)
+void config_save_idle_dim_sec(uint16_t sec);
+uint16_t config_load_idle_dim_sec();
+void config_save_auto_sleep_sec(uint16_t sec);
+uint16_t config_load_auto_sleep_sec();

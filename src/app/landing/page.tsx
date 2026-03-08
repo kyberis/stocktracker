@@ -82,12 +82,12 @@ const HERO_FEATURES = [
     tag: "Import",
     title: "Import Your Portfolio in Seconds",
     description:
-      "Upload your broker CSV — DEGIRO, Interactive Brokers, Trading 212, or Revolut — and buys, sells, dividends, and fees are parsed automatically. Pro users can connect to IBKR via API with a guided 3-step setup that takes under 2 minutes.",
+      "Visit the unified /import page — all 7 methods in one place: DEGIRO, IBKR CSV, IBKR API, Trading 212, Revolut, Simple CSV, and AI Import. Step-by-step guides are built in for each method. Buys, sells, dividends, and fees are parsed automatically.",
     screenshot: "/screenshots/tools-page.png",
     points: [
-      "DEGIRO, IBKR, Trading 212 & Revolut",
+      "7 methods on one page: DEGIRO, IBKR CSV, IBKR API, Trading 212, Revolut, Simple CSV, AI Import",
+      "Built-in step-by-step guides for each method",
       "IBKR API with guided setup wizard (Pro)",
-      "AI-powered smart import",
       "Filter totals by broker",
     ],
   },
@@ -112,7 +112,7 @@ const FEATURE_CARDS = [
   {
     icon: "upload",
     title: "Broker Import",
-    desc: "CSV import + IBKR API with guided setup (Pro). DEGIRO, Trading 212, Revolut",
+    desc: "Unified /import page with 7 methods: DEGIRO, IBKR CSV, IBKR API, Trading 212, Revolut, Simple CSV, AI Import. Step-by-step guides built in.",
   },
   {
     icon: "bell",
@@ -189,11 +189,11 @@ const PRICING: PricingTier[] = [
 const FAQ_ITEMS = [
   {
     q: "How do I import my portfolio?",
-    a: "Go to your Dashboard and click the upload icon in the header. Choose your broker (DEGIRO, Interactive Brokers, Trading 212, Revolut, or Simple CSV), drag & drop your file, review the parsed transactions, and click Import All. Pro users can also connect to Interactive Brokers via API — a guided 3-step wizard walks you through creating a Flex Query and enabling API access in under 2 minutes.",
+    a: "Go to the unified /import page to access all 7 import methods in one place: DEGIRO, IBKR CSV, IBKR API, Trading 212, Revolut, Simple CSV, and AI Import. Each method has a built-in step-by-step guide. For CSV or AI import: choose your method, drag & drop your file (or paste for AI), review the parsed transactions, and click Import. Pro users can connect via IBKR API with a guided 3-step wizard that takes under 2 minutes.",
   },
   {
     q: "What CSV formats are supported?",
-    a: "Five formats: (1) DEGIRO Account.csv, (2) Interactive Brokers Activity Statement or Flex Query CSV, (3) Trading 212 History CSV export, (4) Revolut Account Statement (Excel/CSV), and (5) Simple CSV with columns: ticker, type, price, amount, currency. Pro users get a guided IBKR API setup wizard — connect once, then re-sync your portfolio anytime with one click.",
+    a: "Six CSV formats plus AI Import: (1) DEGIRO Account.csv, (2) IBKR CSV (Activity Statement or Flex Query), (3) Trading 212 History CSV, (4) Revolut Account Statement (Excel/CSV), (5) Simple CSV with columns: ticker, type, price, amount, currency. For any other format, use AI Import — upload or paste your file and AI will parse it. Pro users get IBKR API for direct sync — connect once, re-sync anytime with one click.",
   },
   {
     q: "Is my data secure?",
@@ -956,7 +956,7 @@ function DeviceSection() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/screenshots/device-t4s3.png"
-                alt="LILYGO T4-S3 AMOLED device showing the trefolio portfolio dashboard with live holdings and AI insights"
+                alt="trefolio Leaf AMOLED device showing the portfolio dashboard with live holdings and AI insights"
                 className="w-full max-w-md h-auto drop-shadow-2xl"
                 loading="lazy"
               />
@@ -981,7 +981,7 @@ function DeviceSection() {
                 </span>
               </h2>
               <p className="text-lg text-slate-400 leading-relaxed">
-                The trefolio T4-S3 is a pocket-sized AMOLED device that keeps your portfolio visible on your desk. Connect over WiFi, pair with a passkey, and watch your investments update in real time.
+                The trefolio Leaf is a pocket-sized AMOLED device that keeps your portfolio visible on your desk. Connect over WiFi, pair with a passkey, and watch your investments update in real time.
               </p>
             </div>
 

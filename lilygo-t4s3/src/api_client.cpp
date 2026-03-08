@@ -251,15 +251,44 @@ bool api_fetch_sparkline(const char *ticker, SparklineData &out) {
 #include <WiFiClientSecure.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
+#include <esp_heap_caps.h>
+
+// Persistent TLS client — reuses session across API calls (saves 1-3s per handshake)
+static WiFiClientSecure s_tls_client;
+static bool s_tls_ready = false;
+
+static WiFiClientSecure &get_tls_client() {
+    if (!s_tls_ready) {
+        s_tls_client.setCACert(ISRG_ROOT_X1_PEM);
+        s_tls_ready = true;
+    }
+    return s_tls_client;
+}
+
+// PSRAM-backed allocator for ArduinoJson (keeps large JSON off internal heap)
+struct PsramAllocator : ArduinoJson::Allocator {
+    void *allocate(size_t size) override {
+        void *p = heap_caps_malloc(size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+        return p ? p : malloc(size);
+    }
+    void deallocate(void *ptr) override { free(ptr); }
+    void *reallocate(void *ptr, size_t new_size) override {
+        void *p = heap_caps_realloc(ptr, new_size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+        return p ? p : realloc(ptr, new_size);
+    }
+};
+
+static PsramAllocator s_psram_alloc;
 
 static int http_get_json(const char *path, JsonDocument &doc) {
     char url[256];
     snprintf(url, sizeof(url), "%s%s", s_base_url, path);
 
-    WiFiClientSecure client;
-    client.setCACert(ISRG_ROOT_X1_PEM);
-
+    WiFiClientSecure &client = get_tls_client();
     HTTPClient http;
+    http.setTimeout(10000);
+    http.setReuse(true);
+
     if (!http.begin(client, url)) return -1;
 
     char auth[128];
@@ -273,16 +302,15 @@ static int http_get_json(const char *path, JsonDocument &doc) {
         http.end();
         return -1;
     }
-    if (code != 200) {
-        Serial.printf("HTTP GET %s -> %d\n", path, code);
-        http.end();
-        return code;
-    }
 
-    String body = http.getString();
+    WiFiClient *stream = http.getStreamPtr();
+    DeserializationError err = deserializeJson(doc, *stream);
     http.end();
 
-    DeserializationError err = deserializeJson(doc, body);
+    if (code != 200) {
+        Serial.printf("HTTP GET %s -> %d\n", path, code);
+        return code;
+    }
     if (err) {
         Serial.printf("JSON parse error: %s\n", err.c_str());
         return -1;
@@ -294,10 +322,11 @@ static int http_post_json(const char *path, JsonDocument &doc) {
     char url[256];
     snprintf(url, sizeof(url), "%s%s", s_base_url, path);
 
-    WiFiClientSecure client;
-    client.setCACert(ISRG_ROOT_X1_PEM);
-
+    WiFiClientSecure &client = get_tls_client();
     HTTPClient http;
+    http.setTimeout(30000);
+    http.setReuse(true);
+
     if (!http.begin(client, url)) return -1;
 
     char auth[128];
@@ -307,21 +336,20 @@ static int http_post_json(const char *path, JsonDocument &doc) {
     http.addHeader("Content-Type", "application/json");
 
     int code = http.POST("{}");
-    String body = http.getString();
-    http.end();
-
     if (code <= 0) {
         Serial.printf("HTTP POST %s -> %d\n", path, code);
+        http.end();
         return -1;
     }
 
+    WiFiClient *stream = http.getStreamPtr();
+    DeserializationError err = deserializeJson(doc, *stream);
+    http.end();
+
     if (code != 200) {
-        Serial.printf("HTTP POST %s -> %d body=%s\n", path, code, body.c_str());
-        deserializeJson(doc, body);
+        Serial.printf("HTTP POST %s -> %d\n", path, code);
         return code;
     }
-
-    DeserializationError err = deserializeJson(doc, body);
     if (err) {
         Serial.printf("JSON parse error: %s\n", err.c_str());
         return -1;
@@ -332,7 +360,7 @@ static int http_post_json(const char *path, JsonDocument &doc) {
 int api_fetch_portfolio(PortfolioData &out) {
     portfolio_clear(out);
 
-    JsonDocument doc;
+    JsonDocument doc(&s_psram_alloc);
     int status = http_get_json("/api/portfolio/summary?full=true", doc);
     if (status != 200) return status;
 
@@ -361,7 +389,7 @@ int api_fetch_portfolio(PortfolioData &out) {
 }
 
 bool api_fetch_ai_summary(PortfolioData &out) {
-    JsonDocument doc;
+    JsonDocument doc(&s_psram_alloc);
     int status = http_post_json("/api/device/ai-summary", doc);
 
     out.aiUsed  = doc["used"]  | out.aiUsed;
@@ -390,13 +418,13 @@ bool api_fetch_ai_summary(PortfolioData &out) {
 }
 
 bool api_validate_token() {
-    JsonDocument doc;
-    return http_get_json("/api/portfolio/summary", doc) == 200;
+    JsonDocument doc(&s_psram_alloc);
+    return http_get_json("/api/device/config", doc) == 200;
 }
 
 bool api_fetch_device_config(DeviceConfig &out) {
     device_config_clear(out);
-    JsonDocument doc;
+    JsonDocument doc(&s_psram_alloc);
     if (http_get_json("/api/device/config", doc) != 200) return false;
 
     strncpy(out.plan, doc["plan"] | "free", sizeof(out.plan) - 1);
@@ -413,7 +441,7 @@ bool api_check_firmware_update(FirmwareInfo &out) {
     char path[128];
     snprintf(path, sizeof(path), "/api/device/firmware?v=%s&board=t4s3", s_fw_version);
 
-    JsonDocument doc;
+    JsonDocument doc(&s_psram_alloc);
     if (http_get_json(path, doc) != 200) return false;
 
     out.available = doc["available"] | false;
@@ -432,7 +460,7 @@ bool api_fetch_sparkline(const char *ticker, SparklineData &out) {
     char path[128];
     snprintf(path, sizeof(path), "/api/device/sparkline?ticker=%s", ticker);
 
-    JsonDocument doc;
+    JsonDocument doc(&s_psram_alloc);
     if (http_get_json(path, doc) != 200) return false;
 
     JsonArray pts = doc["points"].as<JsonArray>();

@@ -89,7 +89,6 @@ export default function Dashboard() {
       <DashboardToolbar
         onAddStock={() => setShowAddModal(true)}
         onOpenSettings={() => setShowSettings(true)}
-        onImportPortfolio={() => setShowImport(true)}
         onResetPortfolio={() => setShowReset(true)}
       />
 
@@ -113,6 +112,24 @@ export default function Dashboard() {
 
         {activeTab === "portfolio" && (
           <>
+            {holdingsCount === 0 && (
+              <a
+                href="/import"
+                className="block rounded-2xl border-2 border-dashed border-emerald-300 dark:border-emerald-500/40 bg-emerald-50/50 dark:bg-emerald-500/5 p-8 text-center hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors"
+              >
+                <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-emerald-100 dark:bg-emerald-500/15 flex items-center justify-center">
+                  <svg className="w-7 h-7 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                  </svg>
+                </div>
+                <p className="text-sm font-semibold text-gray-900 dark:text-white mb-1">{t("importPageTitle")}</p>
+                <p className="text-xs text-gray-500 dark:text-slate-400">{t("importPageSubtitle")}</p>
+                <span className="inline-flex items-center gap-1.5 mt-4 px-4 py-2 rounded-xl bg-emerald-500 text-white text-xs font-medium">
+                  {t("importNav")} →
+                </span>
+              </a>
+            )}
+
             {showHoldingsBanner && !holdingsAtLimit && (
               <div className="rounded-lg border border-amber-300 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 p-3 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2 min-w-0">

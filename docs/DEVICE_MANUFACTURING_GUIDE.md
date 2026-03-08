@@ -1,8 +1,8 @@
-# trefolio Device — Manufacturing Guide
+# trefolio Leaf — Manufacturing Guide
 
 > **Version:** 1.0 — March 2026
 > **Initial batch:** 10–50 units
-> **Scope:** LILYGO T4-S3 + custom enclosure + firmware pre-flash + premium packaging
+> **Scope:** trefolio Leaf (LILYGO T4-S3) + custom enclosure + firmware pre-flash + premium packaging
 
 ---
 

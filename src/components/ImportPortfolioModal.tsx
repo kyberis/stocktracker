@@ -1073,14 +1073,12 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
                 )}
               </div>
               {holdingsCapped > 0 && (
-                <div className="flex items-start gap-2 rounded-lg bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 px-3 py-2 max-w-sm mx-auto">
-                  <svg className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
-                  </svg>
-                  <p className="text-xs text-amber-700 dark:text-amber-300">
-                    {(t("importHoldingsCapped") || "{count} holding(s) skipped — Free plan allows up to 15 holdings. Upgrade to Pro for unlimited.")
+                <div className="space-y-3 max-w-md mx-auto">
+                  <p className="text-xs text-amber-700 dark:text-amber-300 font-medium">
+                    {(t("importHoldingsCapped") || "{count} holding(s) skipped — Free plan allows up to 15 holdings.")
                       .replace("{count}", String(holdingsCapped))}
                   </p>
+                  <ProCompareCard surface="import_holdings_capped" reason="holdings_limit_reached" compact />
                 </div>
               )}
               <button onClick={handleClose} className="btn-primary text-sm">

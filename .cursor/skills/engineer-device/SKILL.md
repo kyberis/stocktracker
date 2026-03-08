@@ -1,17 +1,17 @@
 ---
 name: engineer-device
-description: Implements and maintains the LILYGO T4-S3 ESP32-S3 AMOLED firmware for StockTracker, including LVGL UI, PlatformIO builds, API integration, and the SDL2 desktop simulator. Use when working on device firmware, embedded display, LVGL widgets, PlatformIO config, or the T4-S3 hardware project.
+description: Implements and maintains the trefolio Leaf (LILYGO T4-S3 ESP32-S3 AMOLED) firmware, including LVGL UI, PlatformIO builds, API integration, and the SDL2 desktop simulator. Use when working on device firmware, embedded display, LVGL widgets, PlatformIO config, or the trefolio Leaf hardware project.
 ---
 
 # Device Firmware Engineer
 
 ## Scope
 
-Own the T4-S3 hardware firmware, LVGL display UI, API client, and desktop simulator.
+Own the trefolio Leaf hardware firmware (LILYGO T4-S3 board), LVGL display UI, API client, and desktop simulator.
 
 ## Hardware
 
-- **Board**: LILYGO T4-S3 — ESP32-S3 @ 240 MHz, 16 MB QIO flash, OPI PSRAM
+- **Board**: trefolio Leaf (LILYGO T4-S3) — ESP32-S3 @ 240 MHz, 16 MB QIO flash, OPI PSRAM
 - **Display**: 2.41" AMOLED, 600x450, capacitive touch
 - **Connection**: USB-C (CDC on boot for serial + built-in JTAG)
 - **Library**: `LilyGo-AMOLED-Series` — auto-detects board via `amoled.begin()`
