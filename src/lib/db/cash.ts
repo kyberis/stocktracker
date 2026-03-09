@@ -2,6 +2,7 @@ import { randomUUID } from "crypto";
 import { ensureInitialized } from "./client";
 import { str, num } from "./helpers";
 import type { CashEntry } from "@/lib/types";
+import { resolvePortfolioId } from "./portfolios";
 
 export async function listCashEntries(userId: string, portfolioId?: string): Promise<CashEntry[]> {
   const client = await ensureInitialized();
@@ -25,11 +26,12 @@ export async function addCashEntry(
   portfolioId?: string
 ): Promise<CashEntry> {
   const client = await ensureInitialized();
+  const resolved = await resolvePortfolioId(userId, portfolioId);
   const id = randomUUID();
   await client.execute({
     sql: `INSERT INTO cash_entries (id, user_id, name, amount_eur, portfolio_id)
           VALUES (?, ?, ?, ?, ?)`,
-    args: [id, userId, entry.name, entry.amountEUR, portfolioId || ""],
+    args: [id, userId, entry.name, entry.amountEUR, resolved],
   });
   return { ...entry, id };
 }

@@ -2,6 +2,7 @@ import { randomUUID } from "crypto";
 import { ensureInitialized } from "./client";
 import { str, num, holdingAssetType, txType, normalizeTickerForExchange } from "./helpers";
 import type { Transaction } from "@/lib/types";
+import { resolvePortfolioId } from "./portfolios";
 
 export async function listTransactions(userId: string, holdingId?: string, portfolioId?: string): Promise<Transaction[]> {
   const client = await ensureInitialized();
@@ -153,6 +154,7 @@ async function syncHoldingForTransaction(
 
 export async function addTransaction(userId: string, tx: Omit<Transaction, "id" | "createdAt">, portfolioId?: string): Promise<Transaction | null> {
   const client = await ensureInitialized();
+  const resolved = await resolvePortfolioId(userId, portfolioId);
   const id = randomUUID();
   const total = tx.totalAmount || tx.shares * tx.pricePerShare;
   const exchange = (tx.exchange || "").toUpperCase();
@@ -173,7 +175,7 @@ export async function addTransaction(userId: string, tx: Omit<Transaction, "id" 
         tx.fees || 0, tx.taxes || 0, tx.currency || "EUR",
         tx.displayCurrency || tx.currency || "EUR", tx.exchangeRateEur ?? null,
         tx.notes || "", sourceRef,
-        portfolioId || "",
+        resolved,
       ],
     });
   } catch (err: unknown) {
@@ -210,7 +212,7 @@ export async function addTransaction(userId: string, tx: Omit<Transaction, "id" 
     currency: tx.currency || "EUR",
     displayCurrency: tx.displayCurrency || tx.currency || "EUR",
     accountId: tx.accountId || "",
-  }, portfolioId);
+  }, resolved);
 
   return created;
 }
@@ -223,6 +225,7 @@ export async function addTransactionsBulk(
   if (txs.length === 0) return { inserted: 0, skipped: 0 };
 
   const client = await ensureInitialized();
+  const resolved = await resolvePortfolioId(userId, portfolioId);
   const BATCH_SIZE = 50;
   let inserted = 0;
   let skipped = 0;
@@ -249,7 +252,7 @@ export async function addTransactionsBulk(
           tx.fees || 0, tx.taxes || 0, tx.currency || "EUR",
           tx.displayCurrency || tx.currency || "EUR", tx.exchangeRateEur ?? null,
           tx.notes || "", sourceRef,
-          portfolioId || "",
+          resolved,
         ],
       };
     });

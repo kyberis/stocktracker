@@ -13,6 +13,7 @@ export {
   findPortfolioById,
   moveHoldingToPortfolio,
   ensureDefaultPortfolio,
+  resolvePortfolioId,
 } from "./portfolios";
 
 export {

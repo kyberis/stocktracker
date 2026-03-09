@@ -90,8 +90,14 @@ export default function BrokerImport() {
   useEffect(() => {
     fetch("/api/portfolios")
       .then((r) => r.ok ? r.json() : { portfolios: [] })
-      .then((d) => setPortfolios(d.portfolios || []))
+      .then((d) => {
+        const list = d.portfolios || [];
+        setPortfolios(list);
+        const def = list.find((p: { isDefault: boolean }) => p.isDefault);
+        if (def && !targetPortfolioId) setTargetPortfolioId(def.id);
+      })
       .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const brokerInfo = BROKERS.find((b) => b.id === broker)!;

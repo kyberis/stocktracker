@@ -159,6 +159,7 @@ export function PortfolioProvider({ children, initialHoldings, initialCash }: Po
   }, []);
 
   const mountedRef = useRef(false);
+  const switchVersionRef = useRef(0);
 
   // One-time init on mount: load portfolios, cached quotes/rates, and initial holdings if needed
   useEffect(() => {
@@ -198,17 +199,42 @@ export function PortfolioProvider({ children, initialHoldings, initialCash }: Po
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Refetch holdings & cash whenever activePortfolioId changes (after initial mount)
+  // Refetch holdings & cash whenever activePortfolioId changes (after initial mount).
+  // Fetches directly instead of through fetchHoldings/fetchCashEntries to avoid
+  // stale data from slow previous fetches overwriting current state.
   useEffect(() => {
     if (!mountedRef.current) return;
-    let cancelled = false;
+    const version = ++switchVersionRef.current;
     setIsLoading(true);
+    setError(null);
 
-    Promise.all([fetchHoldings(), fetchCashEntries()]).finally(() => {
-      if (!cancelled) setIsLoading(false);
-    });
+    (async () => {
+      try {
+        const qp = activePortfolioId ? `?portfolioId=${encodeURIComponent(activePortfolioId)}` : "";
+        const [holdingsRes, cashRes] = await Promise.all([
+          fetch(`/api/holdings${qp}`, { cache: "no-store" }),
+          fetch(`/api/cash${qp}`, { cache: "no-store" }),
+        ]);
 
-    return () => { cancelled = true; };
+        if (switchVersionRef.current !== version) return;
+
+        const holdingsData: Holding[] = holdingsRes.ok ? await holdingsRes.json() : [];
+        const cashData: CashEntry[] = cashRes.ok ? await cashRes.json() : [];
+
+        setHoldings(holdingsData);
+        setCashEntries(cashData);
+        setIsLoading(false);
+
+        const tickers = [...new Set(holdingsData.map((h) => h.ticker))];
+        if (tickers.length > 0) {
+          fetchQuotes(tickers);
+        }
+      } catch (err) {
+        if (switchVersionRef.current !== version) return;
+        setError(err instanceof Error ? err.message : "Failed to load portfolio");
+        setIsLoading(false);
+      }
+    })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activePortfolioId]);
 

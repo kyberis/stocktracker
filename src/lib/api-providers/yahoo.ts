@@ -5,6 +5,12 @@ import type {
   ProviderSearchResult,
   ProviderHistoricalPoint,
   TimePeriod,
+  CompanyOverview,
+  FundamentalData,
+  IncomeStatementReport,
+  BalanceSheetReport,
+  CashFlowReport,
+  EarningsReport,
 } from "./types";
 import { providerRequestsTotal, providerRequestDuration } from "@/lib/metrics";
 
@@ -170,4 +176,201 @@ export class YahooProvider implements StockDataProvider {
       providerRequestsTotal.inc({ provider: "yahoo", operation: "exchange_rate", status: ok ? "success" : "error" });
     }
   }
+
+  async getOverview(symbol: string): Promise<CompanyOverview | null> {
+    const end = providerRequestDuration.startTimer({ provider: "yahoo", operation: "overview" });
+    let ok = false;
+    try {
+      const result = await yahooFinance.quoteSummary(symbol, {
+        modules: ["summaryProfile", "summaryDetail", "financialData", "defaultKeyStatistics", "recommendationTrend"],
+      });
+      ok = true;
+
+      const profile = result.summaryProfile;
+      const detail = result.summaryDetail;
+      const fin = result.financialData;
+      const stats = result.defaultKeyStatistics;
+      const rec = result.recommendationTrend;
+
+      const trend = rec?.trend?.find((t) => t.period === "0m");
+
+      return {
+        symbol,
+        name: profile?.longBusinessSummary ? symbol : symbol,
+        description: profile?.longBusinessSummary ?? "",
+        exchange: "",
+        currency: fin?.financialCurrency ?? detail?.currency ?? "USD",
+        sector: profile?.sector ?? "",
+        industry: profile?.industry ?? "",
+        peRatio: detail?.trailingPE ?? null,
+        pegRatio: stats?.pegRatio ?? null,
+        eps: fin?.revenuePerShare ?? null,
+        dividendPerShare: detail?.dividendRate ?? null,
+        dividendYield: detail?.dividendYield ?? null,
+        beta: detail?.beta ?? null,
+        profitMargin: fin?.profitMargins ?? null,
+        returnOnEquity: fin?.returnOnEquity ?? null,
+        revenueTTM: fin?.totalRevenue ?? null,
+        analystTargetPrice: fin?.targetMeanPrice ?? null,
+        analystRatings: trend
+          ? { strongBuy: trend.strongBuy ?? 0, buy: trend.buy ?? 0, hold: trend.hold ?? 0, sell: trend.sell ?? 0, strongSell: trend.strongSell ?? 0 }
+          : null,
+        fiftyDayMA: detail?.fiftyDayAverage ?? null,
+        twoHundredDayMA: detail?.twoHundredDayAverage ?? null,
+        sharesOutstanding: stats?.sharesOutstanding ?? null,
+        forwardPE: stats?.forwardPE ?? null,
+      };
+    } catch {
+      return null;
+    } finally {
+      end();
+      providerRequestsTotal.inc({ provider: "yahoo", operation: "overview", status: ok ? "success" : "error" });
+    }
+  }
+
+  async getIncomeStatement(symbol: string): Promise<FundamentalData<IncomeStatementReport> | null> {
+    const end = providerRequestDuration.startTimer({ provider: "yahoo", operation: "income_statement" });
+    let ok = false;
+    try {
+      const result = await yahooFinance.quoteSummary(symbol, {
+        modules: ["incomeStatementHistory", "incomeStatementHistoryQuarterly"],
+      });
+      ok = true;
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const mapRow = (row: any): IncomeStatementReport => ({
+        fiscalDateEnding: row.endDate ? new Date(row.endDate).toISOString().slice(0, 10) : "",
+        reportedCurrency: "USD",
+        totalRevenue: numOrNull(row.totalRevenue),
+        costOfRevenue: numOrNull(row.costOfRevenue),
+        grossProfit: numOrNull(row.grossProfit),
+        operatingExpenses: numOrNull(row.totalOperatingExpenses),
+        operatingIncome: numOrNull(row.operatingIncome),
+        incomeBeforeTax: numOrNull(row.incomeBeforeTax),
+        incomeTaxExpense: numOrNull(row.incomeTaxExpense),
+        netIncome: numOrNull(row.netIncome),
+        ebitda: numOrNull(row.ebitda),
+        researchAndDevelopment: numOrNull(row.researchDevelopment),
+        sellingGeneralAndAdmin: numOrNull(row.sellingGeneralAdministrative),
+        interestExpense: numOrNull(row.interestExpense),
+      });
+
+      return {
+        annual: (result.incomeStatementHistory?.incomeStatementHistory ?? []).map(mapRow),
+        quarterly: (result.incomeStatementHistoryQuarterly?.incomeStatementHistory ?? []).map(mapRow),
+      };
+    } catch {
+      return null;
+    } finally {
+      end();
+      providerRequestsTotal.inc({ provider: "yahoo", operation: "income_statement", status: ok ? "success" : "error" });
+    }
+  }
+
+  async getBalanceSheet(symbol: string): Promise<FundamentalData<BalanceSheetReport> | null> {
+    const end = providerRequestDuration.startTimer({ provider: "yahoo", operation: "balance_sheet" });
+    let ok = false;
+    try {
+      const result = await yahooFinance.quoteSummary(symbol, {
+        modules: ["balanceSheetHistory", "balanceSheetHistoryQuarterly"],
+      });
+      ok = true;
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const mapRow = (row: any): BalanceSheetReport => ({
+        fiscalDateEnding: row.endDate ? new Date(row.endDate).toISOString().slice(0, 10) : "",
+        reportedCurrency: "USD",
+        totalAssets: numOrNull(row.totalAssets),
+        totalCurrentAssets: numOrNull(row.totalCurrentAssets),
+        cashAndEquivalents: numOrNull(row.cash),
+        totalNonCurrentAssets: null,
+        totalLiabilities: numOrNull(row.totalLiab),
+        totalCurrentLiabilities: numOrNull(row.totalCurrentLiabilities),
+        totalNonCurrentLiabilities: null,
+        totalShareholderEquity: numOrNull(row.totalStockholderEquity),
+        retainedEarnings: numOrNull(row.retainedEarnings),
+        longTermDebt: numOrNull(row.longTermDebt),
+        shortTermDebt: numOrNull(row.shortTermBorrowings),
+        commonStockSharesOutstanding: numOrNull(row.commonStock),
+      });
+
+      return {
+        annual: (result.balanceSheetHistory?.balanceSheetStatements ?? []).map(mapRow),
+        quarterly: (result.balanceSheetHistoryQuarterly?.balanceSheetStatements ?? []).map(mapRow),
+      };
+    } catch {
+      return null;
+    } finally {
+      end();
+      providerRequestsTotal.inc({ provider: "yahoo", operation: "balance_sheet", status: ok ? "success" : "error" });
+    }
+  }
+
+  async getCashFlow(symbol: string): Promise<FundamentalData<CashFlowReport> | null> {
+    const end = providerRequestDuration.startTimer({ provider: "yahoo", operation: "cash_flow" });
+    let ok = false;
+    try {
+      const result = await yahooFinance.quoteSummary(symbol, {
+        modules: ["cashflowStatementHistory", "cashflowStatementHistoryQuarterly"],
+      });
+      ok = true;
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const mapRow = (row: any): CashFlowReport => ({
+        fiscalDateEnding: row.endDate ? new Date(row.endDate).toISOString().slice(0, 10) : "",
+        reportedCurrency: "USD",
+        operatingCashflow: numOrNull(row.totalCashFromOperatingActivities),
+        capitalExpenditures: numOrNull(row.capitalExpenditures),
+        changeInCash: numOrNull(row.changeInCash),
+        freeCashFlow: numOrNull(row.freeCashFlow),
+        dividendPayout: numOrNull(row.dividendsPaid),
+        shareRepurchase: numOrNull(row.repurchaseOfStock),
+        proceedsFromIssuanceOfDebt: numOrNull(row.netBorrowings),
+        paymentsForRepurchaseOfEquity: numOrNull(row.repurchaseOfStock),
+      });
+
+      return {
+        annual: (result.cashflowStatementHistory?.cashflowStatements ?? []).map(mapRow),
+        quarterly: (result.cashflowStatementHistoryQuarterly?.cashflowStatements ?? []).map(mapRow),
+      };
+    } catch {
+      return null;
+    } finally {
+      end();
+      providerRequestsTotal.inc({ provider: "yahoo", operation: "cash_flow", status: ok ? "success" : "error" });
+    }
+  }
+
+  async getEarnings(symbol: string): Promise<FundamentalData<EarningsReport> | null> {
+    const end = providerRequestDuration.startTimer({ provider: "yahoo", operation: "earnings" });
+    let ok = false;
+    try {
+      const result = await yahooFinance.quoteSummary(symbol, {
+        modules: ["earningsHistory"],
+      });
+      ok = true;
+
+      const history = result.earningsHistory?.history ?? [];
+      const quarterly: EarningsReport[] = history.map((row) => ({
+        fiscalDateEnding: row.quarter ? new Date(row.quarter).toISOString().slice(0, 10) : "",
+        reportedEPS: numOrNull(row.epsActual),
+        estimatedEPS: numOrNull(row.epsEstimate),
+        surprise: numOrNull(row.epsDifference),
+        surprisePercentage: numOrNull(row.surprisePercent),
+      }));
+
+      return { annual: [], quarterly };
+    } catch {
+      return null;
+    } finally {
+      end();
+      providerRequestsTotal.inc({ provider: "yahoo", operation: "earnings", status: ok ? "success" : "error" });
+    }
+  }
+}
+
+function numOrNull(v: unknown): number | null {
+  if (v == null) return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
 }

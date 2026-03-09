@@ -6,6 +6,7 @@ import { deriveHoldingsFromTransactions } from "@/lib/derive-holdings";
 import { seedHoldingsForUser, seedCashForUser, seedTransactionsForUser } from "./seed";
 import { listTransactions } from "./transactions";
 import { findOrCreateBrokerAccount } from "./accounts";
+import { resolvePortfolioId } from "./portfolios";
 
 const SOURCE_REF_BROKER_MAP: Record<string, { id: string; label: string }> = {
   degiro: { id: "degiro", label: "DEGIRO" },
@@ -78,14 +79,13 @@ export async function addHolding(
   portfolioId?: string
 ): Promise<Holding> {
   const client = await ensureInitialized();
+  const resolved = await resolvePortfolioId(userId, portfolioId);
   const ticker = normalizeTickerForExchange(holding.ticker, holding.exchange);
-  const portfolioFilter = portfolioId ? " AND portfolio_id = ?" : "";
-  const portfolioArgs = portfolioId ? [portfolioId] : [];
 
   const existing = await client.execute({
     sql: `SELECT id, shares, purchase_price FROM holdings
-          WHERE user_id = ? AND UPPER(ticker) = UPPER(?) AND UPPER(exchange) = UPPER(?)${portfolioFilter}`,
-    args: [userId, ticker, holding.exchange, ...portfolioArgs],
+          WHERE user_id = ? AND UPPER(ticker) = UPPER(?) AND UPPER(exchange) = UPPER(?) AND portfolio_id = ?`,
+    args: [userId, ticker, holding.exchange, resolved],
   });
 
   if (existing.rows.length > 0) {
@@ -120,7 +120,7 @@ export async function addHolding(
       holding.assetType ?? "stock",
       holding.shares, holding.purchasePrice, holding.displayCurrency,
       holding.exchange, holding.valueInEUR,
-      portfolioId || "",
+      resolved,
     ],
   });
   return { ...holding, id, ticker };
@@ -207,8 +207,9 @@ export async function resetUserHoldings(
 
 export async function rebuildHoldings(userId: string, portfolioId?: string): Promise<Holding[]> {
   const client = await ensureInitialized();
-  const portfolioFilter = portfolioId ? " AND portfolio_id = ?" : "";
-  const portfolioArgs = portfolioId ? [portfolioId] : [];
+  const resolved = await resolvePortfolioId(userId, portfolioId);
+  const portfolioFilter = " AND portfolio_id = ?";
+  const portfolioArgs = [resolved];
 
   const metadataRows = await client.execute({
     sql: `SELECT id, name, ticker, isin, asset_type, display_currency, exchange, sector, region, asset_class, account_id
@@ -269,7 +270,7 @@ export async function rebuildHoldings(userId: string, portfolioId?: string): Pro
     await client.execute({
       sql: `INSERT INTO holdings (id, user_id, name, ticker, isin, asset_type, shares, purchase_price, display_currency, exchange, value_in_eur, sector, region, asset_class, account_id, portfolio_id)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      args: [id, userId, h.name, h.ticker, h.isin || "", h.assetType || "stock", h.shares, h.purchasePrice, h.displayCurrency, h.exchange, h.valueInEUR || 0, h.sector || "", h.region || "", h.assetClass || "", h.accountId || "", portfolioId || ""],
+      args: [id, userId, h.name, h.ticker, h.isin || "", h.assetType || "stock", h.shares, h.purchasePrice, h.displayCurrency, h.exchange, h.valueInEUR || 0, h.sector || "", h.region || "", h.assetClass || "", h.accountId || "", resolved],
     });
   }
 

@@ -222,7 +222,12 @@ export default function Dashboard() {
             tabIndex={0}
             className="focus-visible:outline-none space-y-6"
           >
-            {holdingsCount === 0 && !isLoading ? (
+            {isLoading && holdingsCount === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 gap-3">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" />
+                <span className="text-sm text-gray-500 dark:text-slate-400">{t("loading")}</span>
+              </div>
+            ) : holdingsCount === 0 ? (
               <EmptyPortfolio
                 onAddStock={() => setShowAddModal(true)}
                 onSeedData={async () => {

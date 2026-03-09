@@ -179,3 +179,14 @@ export async function ensureDefaultPortfolio(userId: string): Promise<string> {
   const p = await getDefaultPortfolio(userId);
   return p.id;
 }
+
+/**
+ * Returns the given portfolioId if non-empty, otherwise resolves to
+ * the user's default portfolio ID. Guarantees a valid portfolio UUID
+ * is always returned for insert operations.
+ */
+export async function resolvePortfolioId(userId: string, portfolioId?: string): Promise<string> {
+  if (portfolioId) return portfolioId;
+  const p = await getDefaultPortfolio(userId);
+  return p.id;
+}

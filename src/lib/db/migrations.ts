@@ -821,6 +821,21 @@ const MIGRATIONS: Migration[] = [
       });
     },
   },
+  {
+    version: 22,
+    description: "Backfill empty portfolio_id rows to default portfolio (post-import fix)",
+    up: async (client: Client) => {
+      for (const table of ["holdings", "transactions", "cash_entries", "portfolio_snapshots", "portfolio_shares"]) {
+        try {
+          await client.execute({
+            sql: `UPDATE ${table} SET portfolio_id = (
+              SELECT p.id FROM portfolios p WHERE p.user_id = ${table}.user_id AND p.is_default = 1
+            ) WHERE portfolio_id = '' OR portfolio_id IS NULL`,
+          });
+        } catch { /* table may not exist yet */ }
+      }
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

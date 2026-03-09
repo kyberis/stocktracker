@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { getProviderFromRequest } from "@/lib/api-providers";
+import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { jsonWithCallCount } from "@/lib/api-providers/response";
 import { requireFeatureAccess, requireRateLimit } from "@/lib/auth/guards";
 import { recordAvUsageAsync } from "@/lib/rate-limit";
@@ -9,6 +10,13 @@ import { deferTask } from "@/lib/task-runner";
 export const dynamic = "force-dynamic";
 
 const VALID_TYPES = new Set(["income", "balance", "cashflow", "earnings"]);
+
+const METHOD_MAP: Record<string, string> = {
+  income: "getIncomeStatement",
+  balance: "getBalanceSheet",
+  cashflow: "getCashFlow",
+  earnings: "getEarnings",
+};
 
 export const GET = withMetrics("/api/fundamentals", async (request: NextRequest) => {
   const { error } = await requireFeatureAccess(request, "fundamentals");
@@ -34,35 +42,31 @@ export const GET = withMetrics("/api/fundamentals", async (request: NextRequest)
     rateLimitUserId = rl.session?.userId ?? null;
   }
 
-  const methodMap: Record<string, string> = {
-    income: "getIncomeStatement",
-    balance: "getBalanceSheet",
-    cashflow: "getCashFlow",
-    earnings: "getEarnings",
-  };
-
-  const methodName = methodMap[type];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const method = (provider as any)[methodName];
-
-  if (typeof method !== "function") {
-    return Response.json(
-      { error: `${type} data not available for this provider` },
-      { status: 400 }
-    );
-  }
+  const methodName = METHOD_MAP[type];
 
   try {
-    const result = await (method as (s: string) => Promise<unknown>).call(provider, symbol);
-    if (!result) {
-      return jsonWithCallCount(provider, { error: "No data available" }, { status: 404 });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const method = (provider as any)[methodName];
+    if (typeof method === "function") {
+      const result = await (method as (s: string) => Promise<unknown>).call(provider, symbol);
+      if (result) return jsonWithCallCount(provider, result);
     }
-    return jsonWithCallCount(provider, result);
+    throw new Error("No data from primary provider");
   } catch (err) {
-    console.error(
-      `Failed to fetch ${type} for ${symbol}:`,
-      err instanceof Error ? err.message : err
-    );
+    if (provider.name === "alphavantage") {
+      console.warn(`[fundamentals] AV failed for ${symbol}/${type}, falling back to Yahoo:`, err instanceof Error ? err.message : err);
+      try {
+        const yahoo = new YahooProvider();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const yahooMethod = (yahoo as any)[methodName];
+        if (typeof yahooMethod === "function") {
+          const fallback = await (yahooMethod as (s: string) => Promise<unknown>).call(yahoo, symbol);
+          if (fallback) return Response.json(fallback);
+        }
+      } catch (yahooErr) {
+        console.error(`[fundamentals] Yahoo fallback also failed for ${symbol}/${type}:`, yahooErr instanceof Error ? yahooErr.message : yahooErr);
+      }
+    }
     return jsonWithCallCount(provider, { error: "Failed to fetch data" }, { status: 500 });
   } finally {
     if (rateLimitUserId && provider.callCount) {
