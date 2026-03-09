@@ -981,6 +981,9 @@ const en: TranslationStrings = {
   landingFaq8Q: "How do dividends and fees get tracked?",
   landingFaq8A: "When you import a broker CSV (DEGIRO, IBKR, Trading 212, or Revolut), dividends, withholding taxes, and broker fees are parsed automatically. For Simple CSV imports, use the type column with 'dividend' or 'fee' values. All transactions are stored in your ledger and reflected in performance metrics.",
 
+  landingMidCtaText: "Convinced? Start tracking in under 2 minutes.",
+  landingMidCtaButton: "Get Started Free",
+
   landingCtaHeading: "Start Tracking Your Portfolio Today",
   landingCtaParagraph: "Join investors across Europe who trust trefolio. Start with Folio, grow to Trefolio.",
   landingCtaSignup: "Create Free Account",

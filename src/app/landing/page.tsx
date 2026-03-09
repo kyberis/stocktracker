@@ -649,6 +649,29 @@ function TestimonialsSection() {
   );
 }
 
+/* ─── mid-funnel CTA (exit ramp for high-intent users) ─── */
+
+function MidFunnelCTA() {
+  const { t } = useI18n();
+  return (
+    <div className="py-12 border-t border-slate-800/50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <p className="text-lg text-slate-300 mb-6">{t("landingMidCtaText")}</p>
+        <Link
+          href="/signup"
+          onClick={() => trackLanding("landing_cta_click", { cta: "mid_funnel_signup" })}
+          className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-white font-semibold px-8 py-3.5 rounded-xl transition-all shadow-lg shadow-emerald-500/25 hover:shadow-emerald-400/30 hover:-translate-y-0.5"
+        >
+          {t("landingMidCtaButton")}
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 /* ─── why trefolio (positive comparison) ─── */
 
 function WhySection() {
@@ -1318,12 +1341,13 @@ export default function LandingPage() {
       <StatsBar />
       <FeaturesSection />
       <TestimonialsSection />
+      <MidFunnelCTA />
       <WhySection />
+      <PricingSection />
+      <FAQSection />
       <VideoTutorialSection />
       <InstallAppSection />
       <DeviceSection />
-      <PricingSection />
-      <FAQSection />
       <CTASection />
       <PublicFooter />
     </div>

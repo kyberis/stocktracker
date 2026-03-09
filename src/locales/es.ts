@@ -981,6 +981,9 @@ const es: TranslationStrings = {
   landingFaq8Q: "¿Cómo se registran dividendos y comisiones?",
   landingFaq8A: "Cuando importas un CSV de broker (DEGIRO, IBKR, Trading 212 o Revolut), dividendos, retenciones fiscales y comisiones del broker se analizan automáticamente. Para importaciones CSV Simple, usa la columna type con valores 'dividend' o 'fee'. Todas las transacciones se almacenan en tu libro mayor y se reflejan en las métricas de rendimiento.",
 
+  landingMidCtaText: "¿Convencido? Empieza a seguir tu cartera en menos de 2 minutos.",
+  landingMidCtaButton: "Empezar gratis",
+
   landingCtaHeading: "Empieza a seguir tu cartera hoy",
   landingCtaParagraph: "Únete a inversores en toda Europa que confían en trefolio. Empieza con Folio, crece hasta Trefolio.",
   landingCtaSignup: "Crear cuenta gratis",
