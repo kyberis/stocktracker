@@ -10,7 +10,7 @@ import type { QuoteData, SearchResult } from "@/lib/types";
 
 export default function Watchlist() {
   const { t } = useI18n();
-  const { provider, getApiHeaders, trackAvCalls } = useSettings();
+  const { getApiHeaders } = useSettings();
   const { data: items = [], mutate } = useWatchlist();
   const [quotes, setQuotes] = useState<Record<string, QuoteData>>({});
   const [query, setQuery] = useState("");
@@ -27,20 +27,19 @@ export default function Watchlist() {
     if (items.length === 0) return;
     const tickers = items.map((i) => i.ticker).join(",");
     const headers = getApiHeaders();
-    fetch(`/api/quote?symbols=${tickers}&provider=${provider}`, { headers })
-      .then((r) => { trackAvCalls(r); return r.ok ? r.json() : {}; })
+    fetch(`/api/quote?symbols=${tickers}`, { headers })
+      .then((r) => r.ok ? r.json() : {})
       .then(setQuotes);
-  }, [items, provider, getApiHeaders, trackAvCalls]);
+  }, [items, getApiHeaders]);
 
   const searchStocks = useCallback(async (q: string) => {
     if (q.length < 1) { setResults([]); return; }
     setSearching(true);
     try {
-      const res = await fetch(`/api/search?q=${encodeURIComponent(q)}&provider=${provider}`, { headers: getApiHeaders() });
-      trackAvCalls(res);
+      const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`, { headers: getApiHeaders() });
       if (res.ok) setResults(await res.json());
     } finally { setSearching(false); }
-  }, [provider, getApiHeaders, trackAvCalls]);
+  }, [getApiHeaders]);
 
   const handleAddItem = async (result: SearchResult) => {
     await fetch("/api/watchlist", {

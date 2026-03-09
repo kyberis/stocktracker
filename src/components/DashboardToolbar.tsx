@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { usePortfolio } from "@/lib/portfolio-context";
-import { useSettings } from "@/lib/settings-context";
 import { useI18n } from "@/lib/i18n";
 
 interface DashboardToolbarProps {
@@ -19,38 +18,12 @@ export default function DashboardToolbar({
 }: DashboardToolbarProps) {
   const router = useRouter();
   const { isLoading, refreshQuotes, lastUpdated } = usePortfolio();
-  const { provider, isAlphaVantage, avCallsThisMinute, avMinuteLimit } = useSettings();
   const { t } = useI18n();
-
-  const providerLabel = provider === "alphavantage" ? "Alpha Vantage" : "Yahoo";
-  const usageRatio = avCallsThisMinute / avMinuteLimit;
-  const usageColor =
-    usageRatio >= 0.9 ? "text-red-500" : usageRatio >= 0.6 ? "text-amber-500" : "text-emerald-500";
 
   return (
     <div className="bg-gray-50 dark:bg-slate-800/50 border-b border-gray-200 dark:border-slate-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0">
-          <span
-            className={`inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
-              isAlphaVantage
-                ? "bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20"
-                : "bg-blue-100 dark:bg-blue-500/15 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20"
-            }`}
-          >
-            {providerLabel}
-          </span>
-          {isAlphaVantage && (
-            <span
-              className={`inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 ${usageColor}`}
-              title={t("apiUsageTooltip")}
-            >
-              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              {avCallsThisMinute}/{avMinuteLimit}
-            </span>
-          )}
           {lastUpdated && (
             <span className="hidden sm:inline text-[11px] text-gray-500 dark:text-slate-500 truncate">
               {t("lastUpdated")}: {lastUpdated.toLocaleTimeString()}

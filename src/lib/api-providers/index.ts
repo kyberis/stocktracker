@@ -1,7 +1,9 @@
+import type { NextRequest } from "next/server";
 import type { StockDataProvider } from "./types";
 import { YahooProvider } from "./yahoo";
 import { AlphaVantageProvider } from "./alphavantage";
 import { getGlobalAlphaVantageApiKey } from "@/lib/db";
+import { getSessionFromRequest } from "@/lib/auth/session";
 
 export type ApiProviderName = "yahoo" | "alphavantage";
 
@@ -27,14 +29,15 @@ export function createProvider(
   }
 }
 
-export async function getProviderFromRequest(request: Request): Promise<StockDataProvider> {
-  const { searchParams } = new URL(request.url);
-  const rawProviderName = searchParams.get("provider");
-  const providerName: ApiProviderName =
-    rawProviderName === "alphavantage" ? "alphavantage" : "yahoo";
-  const apiKey =
-    providerName === "alphavantage" ? await getGlobalAlphaVantageApiKey() : "";
-  return createProvider(providerName, apiKey);
+/**
+ * Resolve provider based on user tier and AV key availability.
+ * Pro users get Alpha Vantage when a global key is configured; everyone else gets Yahoo.
+ */
+export async function getProviderFromRequest(request: NextRequest): Promise<StockDataProvider> {
+  const session = await getSessionFromRequest(request);
+  const avKey = await getGlobalAlphaVantageApiKey();
+  const usePremium = session?.plan === "pro" && avKey.length > 0;
+  return createProvider(usePremium ? "alphavantage" : "yahoo", avKey);
 }
 
 export type { StockDataProvider, CompanyOverview } from "./types";

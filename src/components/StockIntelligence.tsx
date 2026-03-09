@@ -26,7 +26,7 @@ interface StockIntelligenceProps {
 }
 
 export default function StockIntelligence({ ticker, exchange }: StockIntelligenceProps) {
-  const { isAlphaVantage, provider, getApiHeaders, trackAvCalls } = useSettings();
+  const { hasGlobalAvKey, getApiHeaders } = useSettings();
   const { holdings } = usePortfolio();
   const { user } = useAuth();
   const { t, language } = useI18n();
@@ -67,6 +67,7 @@ export default function StockIntelligence({ ticker, exchange }: StockIntelligenc
 
   const marketStatus = exchange ? getMarketStatus(exchange, now) : null;
   const isFree = user?.plan !== "pro";
+  const canAccessPremium = !isFree && hasGlobalAvKey;
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 60_000);
@@ -76,12 +77,11 @@ export default function StockIntelligence({ ticker, exchange }: StockIntelligenc
   const fetchIntelligence = useCallback(
     async (type: IntelTab, quarter?: string) => {
       const headers = getApiHeaders();
-      const params = new URLSearchParams({ symbol: ticker, type, provider });
+      const params = new URLSearchParams({ symbol: ticker, type });
       if (type === "transcript" && quarter) {
         params.set("quarter", quarter);
       }
       const res = await fetch(`/api/intelligence?${params}`, { headers });
-      trackAvCalls(res);
       if (res.status === 403) {
         const body = await res.json().catch(() => null);
         if (body?.reason === "upgrade_required") setLockedReason("upgrade_required");
@@ -90,11 +90,11 @@ export default function StockIntelligence({ ticker, exchange }: StockIntelligenc
       if (!res.ok) return null;
       return res.json();
     },
-    [getApiHeaders, ticker, provider, trackAvCalls]
+    [getApiHeaders, ticker]
   );
 
   useEffect(() => {
-    if (!isAlphaVantage) return;
+    if (!canAccessPremium) return;
 
     if (activeTab === "news" && !news && !newsLoading) {
       setNewsLoading(true);
@@ -129,7 +129,7 @@ export default function StockIntelligence({ ticker, exchange }: StockIntelligenc
         .finally(() => setInstitutionalLoading(false));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, isAlphaVantage]);
+  }, [activeTab, canAccessPremium]);
 
   const loadTranscript = useCallback(
     async (q: string) => {
@@ -152,17 +152,10 @@ export default function StockIntelligence({ ticker, exchange }: StockIntelligenc
   );
 
   useEffect(() => {
-    if (!isAlphaVantage || activeTab !== "transcript") return;
+    if (!canAccessPremium || activeTab !== "transcript") return;
     loadTranscript(transcriptQuarter);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, isAlphaVantage, transcriptQuarter]);
-
-  useEffect(() => {
-    setNews(null);
-    setInsiders(null);
-    setInstitutional(null);
-    setTranscript(null);
-  }, [provider]);
+  }, [activeTab, canAccessPremium, transcriptQuarter]);
 
   const requestAiAnalysis = useCallback(async () => {
     if (aiStatus === "loading") return;
@@ -312,8 +305,8 @@ export default function StockIntelligence({ ticker, exchange }: StockIntelligenc
           </div>
         </div>
 
-        {/* AV Required */}
-        {!isAlphaVantage && (
+        {/* Upgrade Required */}
+        {!canAccessPremium && (
           isFree ? (
             <ProCompareCard surface="intelligence_locked" reason="upgrade_required" />
           ) : (
@@ -333,12 +326,12 @@ export default function StockIntelligence({ ticker, exchange }: StockIntelligenc
           )
         )}
 
-        {isAlphaVantage && lockedReason && isFree && (
+        {canAccessPremium && lockedReason && isFree && (
           <ProCompareCard surface="intelligence_locked" reason={lockedReason} />
         )}
 
         {/* Intelligence Content */}
-        {isAlphaVantage && (
+        {canAccessPremium && (
           <>
             {/* Tab Pills */}
             <div className="flex flex-wrap gap-1.5">

@@ -81,11 +81,11 @@ export async function recordRateLimitUsage(
 }
 
 export async function getRateLimitStats(): Promise<{
-  perUser: { userId: string; username: string; provider: string; callCount: number; windowStart: string }[];
+  perUser: { userId: string; username: string; plan: string; provider: string; callCount: number; windowStart: string }[];
 }> {
   const client = await ensureInitialized();
   const result = await client.execute(
-    `SELECT rl.user_id, u.username, rl.provider, rl.call_count, rl.window_start
+    `SELECT rl.user_id, u.username, u.plan, rl.provider, rl.call_count, rl.window_start
      FROM rate_limits rl
      JOIN users u ON u.id = rl.user_id
      ORDER BY rl.call_count DESC`
@@ -94,6 +94,7 @@ export async function getRateLimitStats(): Promise<{
     perUser: result.rows.map((r) => ({
       userId: str(r.user_id),
       username: str(r.username),
+      plan: str(r.plan) || "free",
       provider: str(r.provider),
       callCount: num(r.call_count),
       windowStart: str(r.window_start),

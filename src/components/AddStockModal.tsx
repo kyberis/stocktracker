@@ -14,7 +14,7 @@ interface AddStockModalProps {
 
 export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
   const { addHolding } = usePortfolio();
-  const { provider, getApiHeaders, trackAvCalls } = useSettings();
+  const { getApiHeaders } = useSettings();
   const { t } = useI18n();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -55,10 +55,9 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
     }
     setSearching(true);
     try {
-      const params = new URLSearchParams({ q, provider });
+      const params = new URLSearchParams({ q });
       const headers = getApiHeaders();
       const res = await fetch(`/api/search?${params}`, { headers });
-      trackAvCalls(res);
       if (res.ok) {
         const data = await res.json();
         setResults(data);
@@ -68,7 +67,7 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
     } finally {
       setSearching(false);
     }
-  }, [provider, getApiHeaders, trackAvCalls]);
+  }, [getApiHeaders]);
 
   const handleQueryChange = (value: string) => {
     setQuery(value);

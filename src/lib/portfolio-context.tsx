@@ -85,7 +85,7 @@ export interface PortfolioProviderProps {
 }
 
 export function PortfolioProvider({ children, initialHoldings, initialCash }: PortfolioProviderProps) {
-  const { provider, getApiHeaders, trackAvCalls } = useSettings();
+  const { getApiHeaders } = useSettings();
   const hasServerData = !!(initialHoldings || initialCash);
   const [holdings, setHoldings] = useState<Holding[]>(initialHoldings ?? []);
   const [cashEntries, setCashEntries] = useState<CashEntry[]>(initialCash ?? []);
@@ -156,10 +156,10 @@ export function PortfolioProvider({ children, initialHoldings, initialCash }: Po
 
   const buildFetchUrl = useCallback(
     (base: string, extra: Record<string, string> = {}) => {
-      const params = new URLSearchParams({ provider, ...extra });
+      const params = new URLSearchParams(extra);
       return `${base}?${params}`;
     },
-    [provider]
+    []
   );
 
   const fetchExchangeRates = useCallback(async (): Promise<ExchangeRates> => {
@@ -192,7 +192,6 @@ export function PortfolioProvider({ children, initialHoldings, initialCash }: Po
           batches.map(async (batch) => {
             const url = buildFetchUrl("/api/quote", { symbols: batch.join(",") });
             const res = await fetch(url, { headers });
-            trackAvCalls(res);
             if (res.status === 429) throw new Error("rate_limited");
             if (!res.ok) throw new Error("Failed to fetch quotes");
             return res.json();
@@ -226,7 +225,7 @@ export function PortfolioProvider({ children, initialHoldings, initialCash }: Po
       setIsLoading(false);
       fetchingRef.current = false;
     }
-  }, [getApiHeaders, buildFetchUrl, trackAvCalls, fetchExchangeRates]);
+  }, [getApiHeaders, buildFetchUrl, fetchExchangeRates]);
 
   const refreshQuotes = useCallback(async () => {
     const tickers = [...new Set(holdings.map((h) => h.ticker))];
@@ -258,7 +257,6 @@ export function PortfolioProvider({ children, initialHoldings, initialCash }: Po
       const headers = getApiHeaders();
       const url = buildFetchUrl("/api/quote", { symbols: ticker });
       const res = await fetch(url, { headers });
-      trackAvCalls(res);
       if (!res.ok) throw new Error("Failed to fetch quote");
 
       const allQuotes = (await res.json()) as Record<string, QuoteData>;
@@ -290,7 +288,7 @@ export function PortfolioProvider({ children, initialHoldings, initialCash }: Po
         return next;
       });
     }
-  }, [buildFetchUrl, getApiHeaders, refreshingTickers, trackAvCalls, fetchExchangeRates]);
+  }, [buildFetchUrl, getApiHeaders, refreshingTickers, fetchExchangeRates]);
 
   const addHolding = useCallback(async (holding: Omit<Holding, "id">) => {
     const tempId = generateId();

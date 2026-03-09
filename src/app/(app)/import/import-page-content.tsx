@@ -73,7 +73,7 @@ export default function ImportPageContent() {
   const { t, language: locale } = useI18n();
   const { user } = useAuth();
   const { addHolding, refreshHoldings } = usePortfolio();
-  const { provider, getApiHeaders, trackAvCalls } = useSettings();
+  const { getApiHeaders } = useSettings();
   const track = useTrack();
   const isPro = user?.plan === "pro";
 
@@ -175,14 +175,13 @@ export default function ImportPageContent() {
     if (q.length < 1) { setSearchResults([]); return; }
     setSearching(true);
     try {
-      const params = new URLSearchParams({ q, provider });
+      const params = new URLSearchParams({ q });
       const headers = getApiHeaders();
       const res = await fetch(`/api/search?${params}`, { headers });
-      trackAvCalls(res);
       if (res.ok) setSearchResults(await res.json());
     } catch { setSearchResults([]); }
     finally { setSearching(false); }
-  }, [provider, getApiHeaders, trackAvCalls]);
+  }, [getApiHeaders]);
 
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);

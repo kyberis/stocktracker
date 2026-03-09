@@ -11,7 +11,7 @@ import type { NewsArticle } from "@/lib/types";
 type FeedStatus = "idle" | "loading" | "done" | "error";
 
 export default function PortfolioNewsFeed() {
-  const { getApiHeaders, trackAvCalls } = useSettings();
+  const { getApiHeaders } = useSettings();
   const { holdings } = usePortfolio();
   const { user } = useAuth();
   const { t } = useI18n();
@@ -29,7 +29,6 @@ export default function PortfolioNewsFeed() {
     const headers = getApiHeaders();
     fetch("/api/portfolio-news", { headers })
       .then((res) => {
-        trackAvCalls(res);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
       })
@@ -41,7 +40,7 @@ export default function PortfolioNewsFeed() {
         setArticles([]);
         setStatus("error");
       });
-  }, [isFree, holdings.length, articles, status, getApiHeaders, trackAvCalls]);
+  }, [isFree, holdings.length, articles, status, getApiHeaders]);
 
   if (isFree) {
     return (

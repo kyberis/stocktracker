@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, memo } from "react";
 import Link from "next/link";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useSettings } from "@/lib/settings-context";
+import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n";
 import {
   formatCurrency,
@@ -38,8 +39,10 @@ function StockRow({ holding }: StockRowProps) {
     refreshSingleQuote,
     refreshHoldings,
   } = usePortfolio();
-  const { isAlphaVantage, getApiHeaders, provider, trackAvCalls } = useSettings();
+  const { hasGlobalAvKey, getApiHeaders } = useSettings();
+  const { user } = useAuth();
   const { t } = useI18n();
+  const canAccessPremium = user?.plan === "pro" && hasGlobalAvKey;
   const [now, setNow] = useState(() => new Date());
   const [expanded, setExpanded] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -65,7 +68,7 @@ function StockRow({ holding }: StockRowProps) {
   const isCashHolding =
     holding.exchange.trim().toUpperCase() === "CASH" ||
     holding.ticker.trim().toUpperCase().startsWith("CASH-");
-  const isFallback = isAlphaVantage && quote?.providerUsed === "yahoo";
+  const isFallback = false;
   const isAvSource = quote?.providerUsed === "alphavantage";
   const isRefreshing = refreshingTickers.has(holding.ticker);
   const marketStatus = isCashHolding ? null : getMarketStatus(holding.exchange, now);
@@ -257,13 +260,12 @@ function StockRow({ holding }: StockRowProps) {
   }
 
   const fetchOverview = useCallback(async () => {
-    if (!isAlphaVantage || overviewLoading || overview) return;
+    if (overviewLoading || overview) return;
     setOverviewLoading(true);
     try {
       const headers = getApiHeaders();
-      const params = new URLSearchParams({ symbol: holding.ticker, provider });
+      const params = new URLSearchParams({ symbol: holding.ticker });
       const res = await fetch(`/api/overview?${params}`, { headers });
-      trackAvCalls(res);
       if (res.ok) {
         const data = await res.json();
         setOverview(data);
@@ -273,17 +275,13 @@ function StockRow({ holding }: StockRowProps) {
     } finally {
       setOverviewLoading(false);
     }
-  }, [isAlphaVantage, overviewLoading, overview, getApiHeaders, holding.ticker, provider, trackAvCalls]);
+  }, [overviewLoading, overview, getApiHeaders, holding.ticker]);
 
   useEffect(() => {
-    if (expanded && isAlphaVantage && !overview && !overviewLoading) {
+    if (expanded && !overview && !overviewLoading) {
       fetchOverview();
     }
-  }, [expanded, isAlphaVantage, overview, overviewLoading, fetchOverview]);
-
-  useEffect(() => {
-    setOverview(null);
-  }, [provider]);
+  }, [expanded, overview, overviewLoading, fetchOverview]);
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 60_000);
@@ -409,14 +407,14 @@ function StockRow({ holding }: StockRowProps) {
             displayCurrency={holding.displayCurrency}
           />
 
-          {isAlphaVantage && overviewLoading && (
+          {canAccessPremium && overviewLoading && (
             <div className="mt-3 flex items-center gap-2 text-xs text-gray-400 dark:text-slate-500">
               <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-emerald-500" />
               {t("loadingOverview")}
             </div>
           )}
 
-          {isAlphaVantage && overview && <OverviewSection overview={overview} />}
+          {canAccessPremium && overview && <OverviewSection overview={overview} />}
 
           <div className="mt-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -430,7 +428,7 @@ function StockRow({ holding }: StockRowProps) {
                 </svg>
                 {t("viewDetails")}
               </Link>
-              {isAlphaVantage && (
+              {canAccessPremium && (
                 <Link
                   href={`/stock/${encodeURIComponent(holding.ticker)}/intelligence?exchange=${encodeURIComponent(holding.exchange)}`}
                   onClick={(e) => e.stopPropagation()}

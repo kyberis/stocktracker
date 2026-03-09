@@ -32,7 +32,7 @@ interface StockDetailProps {
 }
 
 export default function StockDetail({ ticker, exchange }: StockDetailProps) {
-  const { isAlphaVantage, provider, getApiHeaders, trackAvCalls } = useSettings();
+  const { hasGlobalAvKey, getApiHeaders } = useSettings();
   const { holdings } = usePortfolio();
   const { user } = useAuth();
   const { t, language } = useI18n();
@@ -69,6 +69,7 @@ export default function StockDetail({ ticker, exchange }: StockDetailProps) {
   const track = useTrack();
   const marketStatus = exchange ? getMarketStatus(exchange, now) : null;
   const isFree = user?.plan !== "pro";
+  const canAccessPremium = !isFree && hasGlobalAvKey;
 
   useEffect(() => {
     track("stock_view", { ticker });
@@ -80,13 +81,12 @@ export default function StockDetail({ ticker, exchange }: StockDetailProps) {
   }, []);
 
   const fetchOverview = useCallback(async () => {
-    if (!isAlphaVantage || overviewLoading || overview) return;
+    if (!canAccessPremium || overviewLoading || overview) return;
     setOverviewLoading(true);
     try {
       const headers = getApiHeaders();
-      const params = new URLSearchParams({ symbol: ticker, provider });
+      const params = new URLSearchParams({ symbol: ticker });
       const res = await fetch(`/api/overview?${params}`, { headers });
-      trackAvCalls(res);
       if (res.status === 403) {
         const body = await res.json().catch(() => null);
         if (body?.reason === "upgrade_required") setLockedReason("upgrade_required");
@@ -96,14 +96,13 @@ export default function StockDetail({ ticker, exchange }: StockDetailProps) {
     } catch { /* supplementary */ } finally {
       setOverviewLoading(false);
     }
-  }, [isAlphaVantage, overviewLoading, overview, getApiHeaders, ticker, provider, trackAvCalls]);
+  }, [canAccessPremium, overviewLoading, overview, getApiHeaders, ticker]);
 
   const fetchFundamental = useCallback(
     async (type: string) => {
       const headers = getApiHeaders();
-      const params = new URLSearchParams({ symbol: ticker, type, provider });
+      const params = new URLSearchParams({ symbol: ticker, type });
       const res = await fetch(`/api/fundamentals?${params}`, { headers });
-      trackAvCalls(res);
       if (res.status === 403) {
         const body = await res.json().catch(() => null);
         if (body?.reason === "upgrade_required") setLockedReason("upgrade_required");
@@ -112,7 +111,7 @@ export default function StockDetail({ ticker, exchange }: StockDetailProps) {
       if (!res.ok) return null;
       return res.json();
     },
-    [getApiHeaders, ticker, provider, trackAvCalls]
+    [getApiHeaders, ticker]
   );
 
   const requestAiAnalysis = useCallback(async () => {
@@ -197,11 +196,11 @@ export default function StockDetail({ ticker, exchange }: StockDetailProps) {
   }, [aiStatus, holding?.name, ticker, exchange, language, overview, income, balance, cashflow, earnings]);
 
   useEffect(() => {
-    if (isAlphaVantage) fetchOverview();
-  }, [isAlphaVantage, fetchOverview]);
+    if (canAccessPremium) fetchOverview();
+  }, [canAccessPremium, fetchOverview]);
 
   useEffect(() => {
-    if (!isAlphaVantage) return;
+    if (!canAccessPremium) return;
     if (mainTab === "financials" && financialSub === "income" && !income && !incomeLoading) {
       setIncomeLoading(true);
       fetchFundamental("income").then(setIncome).finally(() => setIncomeLoading(false));
@@ -219,15 +218,7 @@ export default function StockDetail({ ticker, exchange }: StockDetailProps) {
       fetchFundamental("earnings").then(setEarnings).finally(() => setEarningsLoading(false));
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mainTab, financialSub, isAlphaVantage]);
-
-  useEffect(() => {
-    setOverview(null);
-    setIncome(null);
-    setBalance(null);
-    setCashflow(null);
-    setEarnings(null);
-  }, [provider]);
+  }, [mainTab, financialSub, canAccessPremium]);
 
   const mainTabs: { key: MainTab; label: string }[] = [
     { key: "overview", label: t("overview") },
@@ -284,7 +275,7 @@ export default function StockDetail({ ticker, exchange }: StockDetailProps) {
                   <p className="text-xs text-gray-500 dark:text-slate-400">{overview.industry}</p>
                 </div>
               )}
-              {isAlphaVantage && (
+              {canAccessPremium && (
                 <Link
                   href={`/stock/${encodeURIComponent(ticker)}/intelligence?exchange=${encodeURIComponent(exchange)}`}
                   className="inline-flex items-center gap-1.5 text-xs font-medium text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition-colors"
@@ -311,7 +302,7 @@ export default function StockDetail({ ticker, exchange }: StockDetailProps) {
         )}
 
         {/* AI Analysis CTA */}
-        {isAlphaVantage && (
+        {canAccessPremium && (
           <AiAnalysisSection
             status={aiStatus}
             text={aiText}
@@ -320,8 +311,8 @@ export default function StockDetail({ ticker, exchange }: StockDetailProps) {
           />
         )}
 
-        {/* AV Required Message */}
-        {!isAlphaVantage && (
+        {/* Upgrade Required Message */}
+        {!canAccessPremium && (
           isFree ? (
             <ProCompareCard surface="stock_detail_locked" reason="upgrade_required" />
           ) : (
@@ -341,12 +332,12 @@ export default function StockDetail({ ticker, exchange }: StockDetailProps) {
           )
         )}
 
-        {isAlphaVantage && lockedReason && isFree && (
+        {canAccessPremium && lockedReason && isFree && (
           <ProCompareCard surface="stock_detail_locked" reason={lockedReason} />
         )}
 
         {/* Fundamentals Tabs */}
-        {isAlphaVantage && (
+        {canAccessPremium && (
           <>
             {/* Main Tab Pills */}
             <div className="flex gap-1.5">

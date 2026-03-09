@@ -38,10 +38,9 @@ export default function StockChart({ ticker, purchasePrice, displayCurrency }: S
   const [rawData, setRawData] = useState<HistoricalDataPoint[]>([]);
   const [period, setPeriod] = useState<TimePeriod>("3m");
   const [loading, setLoading] = useState(true);
-  const [chartProviderUsed, setChartProviderUsed] = useState<string | null>(null);
   const { t } = useI18n();
   const { quotes, exchangeRates } = usePortfolio();
-  const { provider, getApiHeaders, trackAvCalls, isAlphaVantage } = useSettings();
+  const { getApiHeaders } = useSettings();
   const { isDark } = useTheme();
 
   const quote = quotes[ticker];
@@ -67,22 +66,15 @@ export default function StockChart({ ticker, purchasePrice, displayCurrency }: S
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({
-        symbol: ticker,
-        period,
-        provider,
-      });
+      const params = new URLSearchParams({ symbol: ticker, period });
       const headers = getApiHeaders();
       const res = await fetch(`/api/historical?${params}`, { headers });
-      trackAvCalls(res);
       if (res.ok) {
         const json = await res.json();
-        if (json.data && json.providerUsed) {
+        if (json.data) {
           setRawData(json.data);
-          setChartProviderUsed(json.providerUsed);
         } else {
           setRawData(json);
-          setChartProviderUsed(null);
         }
       }
     } catch {
@@ -90,7 +82,7 @@ export default function StockChart({ ticker, purchasePrice, displayCurrency }: S
     } finally {
       setLoading(false);
     }
-  }, [ticker, period, provider, getApiHeaders, trackAvCalls]);
+  }, [ticker, period, getApiHeaders]);
 
   useEffect(() => {
     fetchData();
@@ -144,22 +136,6 @@ export default function StockChart({ ticker, purchasePrice, displayCurrency }: S
         {needsConversion && (
           <span className="text-xs text-amber-600 dark:text-amber-400 ml-2">
             (converted to {displayCurrency})
-          </span>
-        )}
-        {isAlphaVantage && chartProviderUsed === "yahoo" && (
-          <span
-            className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20 ml-auto"
-            title={t("yahooFallback")}
-          >
-            Yahoo
-          </span>
-        )}
-        {isAlphaVantage && chartProviderUsed === "alphavantage" && (
-          <span
-            className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20 ml-auto"
-            title={t("avSource")}
-          >
-            AV
           </span>
         )}
       </div>

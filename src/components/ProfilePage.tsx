@@ -6,7 +6,6 @@ import { startRegistration, browserSupportsWebAuthn } from "@simplewebauthn/brow
 import { useAuth } from "@/lib/auth-context";
 import { useSettings } from "@/lib/settings-context";
 import { useI18n } from "@/lib/i18n";
-import type { ApiProviderName } from "@/lib/types";
 import ProCompareCard from "@/components/ProCompareCard";
 import TierIcon from "@/components/TierIcon";
 import { Smartphone, Monitor, Copy, Check, Trash2 } from "lucide-react";
@@ -122,7 +121,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, refreshUser } = useAuth();
-  const { provider, hasGlobalAvKey, setProvider, deviceEnabled } = useSettings();
+  const { deviceEnabled } = useSettings();
   const { t } = useI18n();
 
   const [displayName, setDisplayName] = useState("");
@@ -131,8 +130,8 @@ export default function ProfilePage() {
   const [profileSaved, setProfileSaved] = useState(false);
   const [profileError, setProfileError] = useState("");
 
-  const [localProvider, setLocalProvider] = useState<ApiProviderName>(provider);
-  const [dataSaved, setDataSaved] = useState(false);
+  
+  
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -422,10 +421,6 @@ export default function ProfilePage() {
     }
   }, [googleJustLinked, linkError, refreshUser, t]);
 
-  useEffect(() => {
-    setLocalProvider(provider);
-  }, [provider]);
-
   const handleSaveProfile = async () => {
     setProfileError("");
     setProfileSaved(false);
@@ -446,12 +441,6 @@ export default function ProfilePage() {
     } catch {
       setProfileError("Network error.");
     }
-  };
-
-  const handleSaveDataSettings = () => {
-    setProvider(localProvider);
-    setDataSaved(true);
-    setTimeout(() => setDataSaved(false), 2000);
   };
 
   const handleChangePassword = async (e: FormEvent) => {
@@ -562,7 +551,6 @@ export default function ProfilePage() {
     } catch { /* ignore */ }
     setDeviceGrantLoading(false);
   }, []);
-  const avProviderDisabled = !hasGlobalAvKey || !isPro;
   const aiLimit = 5;
 
   return (
@@ -758,56 +746,6 @@ export default function ProfilePage() {
 
           {passkeyMsg && <p className="text-xs text-emerald-600 dark:text-emerald-400" aria-live="polite">{passkeyMsg}</p>}
           {passkeyError && <p className="text-xs text-red-500 dark:text-red-400" role="alert">{passkeyError}</p>}
-        </div>
-
-        {/* Data Provider & API Key */}
-        <div className="card p-6 space-y-5">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t("dataSettings")}</h2>
-
-          <div>
-            <label className="block text-xs text-gray-500 dark:text-slate-400 mb-2">{t("dataProvider")}</label>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => setLocalProvider("yahoo")}
-                className={`px-4 py-3 rounded-xl border-2 transition-all text-left ${
-                  localProvider === "yahoo"
-                    ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10"
-                    : "border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 hover:border-gray-300 dark:hover:border-slate-500"
-                }`}
-              >
-                <p className="font-semibold text-gray-900 dark:text-white text-sm">Yahoo Finance</p>
-                <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">{t("yahooDesc")}</p>
-              </button>
-              <button
-                onClick={() => !avProviderDisabled && setLocalProvider("alphavantage")}
-                disabled={avProviderDisabled}
-                className={`px-4 py-3 rounded-xl border-2 transition-all text-left ${
-                  localProvider === "alphavantage"
-                    ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10"
-                    : avProviderDisabled
-                      ? "border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 opacity-50 cursor-not-allowed"
-                      : "border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 hover:border-gray-300 dark:hover:border-slate-500"
-                }`}
-              >
-                <p className="font-semibold text-gray-900 dark:text-white text-sm">Alpha Vantage</p>
-                <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">{t("alphaVantageDesc")}</p>
-              </button>
-            </div>
-            {avProviderDisabled && (
-              <p className="text-xs text-gray-400 dark:text-slate-500 mt-2">
-                {!isPro ? t("alphaVantageProOnly") : t("avKeyManagedByAdmin")}
-              </p>
-            )}
-          </div>
-
-          <div className="flex justify-end">
-            <button
-              onClick={handleSaveDataSettings}
-              className="btn-primary text-sm"
-            >
-              {dataSaved ? t("profileSaved") : t("saveSettings")}
-            </button>
-          </div>
         </div>
 
         {/* Subscription */}

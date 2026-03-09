@@ -647,6 +647,7 @@ interface CapacityData {
 interface RateLimitEntry {
   userId: string;
   username: string;
+  plan: string;
   provider: string;
   callCount: number;
   windowStart: string;
@@ -684,6 +685,9 @@ function CapacityCard() {
   const avEntries = rateLimits.filter((r) => r.provider === "alphavantage");
   const aiEntries = rateLimits.filter((r) => r.provider === "openai" || r.provider === "openai_import");
 
+  const totalAvCalls = avEntries.reduce((sum, e) => sum + e.callCount, 0);
+  const totalAiCalls = aiEntries.reduce((sum, e) => sum + e.callCount, 0);
+
   return (
     <div className="card p-6 space-y-4">
       <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Platform Capacity</h3>
@@ -719,6 +723,22 @@ function CapacityCard() {
         </div>
       )}
 
+      {/* Provider Usage Summary */}
+      {(avEntries.length > 0 || aiEntries.length > 0) && (
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-lg bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 p-3">
+            <p className="text-[10px] uppercase tracking-wide text-emerald-600 dark:text-emerald-400 font-medium">Alpha Vantage</p>
+            <p className="text-lg font-bold text-emerald-700 dark:text-emerald-300 mt-0.5">{totalAvCalls}</p>
+            <p className="text-[10px] text-emerald-600/70 dark:text-emerald-400/70">{avEntries.length} user{avEntries.length !== 1 ? "s" : ""}</p>
+          </div>
+          <div className="rounded-lg bg-violet-50 dark:bg-violet-500/10 border border-violet-200 dark:border-violet-500/20 p-3">
+            <p className="text-[10px] uppercase tracking-wide text-violet-600 dark:text-violet-400 font-medium">AI / Import</p>
+            <p className="text-lg font-bold text-violet-700 dark:text-violet-300 mt-0.5">{totalAiCalls}</p>
+            <p className="text-[10px] text-violet-600/70 dark:text-violet-400/70">{aiEntries.length} user{aiEntries.length !== 1 ? "s" : ""}</p>
+          </div>
+        </div>
+      )}
+
       {avEntries.length > 0 && (
         <div>
           <p className="text-xs font-medium text-gray-700 dark:text-slate-300 mb-2">Alpha Vantage Usage (current window)</p>
@@ -727,6 +747,8 @@ function CapacityCard() {
               <thead>
                 <tr className="text-left text-gray-500 dark:text-slate-400">
                   <th className="pb-1 pr-4">User</th>
+                  <th className="pb-1 pr-4">Plan</th>
+                  <th className="pb-1 pr-4">Resolved Provider</th>
                   <th className="pb-1 pr-4">Calls</th>
                   <th className="pb-1">Window</th>
                 </tr>
@@ -735,6 +757,24 @@ function CapacityCard() {
                 {avEntries.map((e) => (
                   <tr key={e.userId + e.provider} className="text-gray-700 dark:text-slate-300">
                     <td className="py-0.5 pr-4 font-mono">{e.username}</td>
+                    <td className="py-0.5 pr-4">
+                      <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                        e.plan === "pro"
+                          ? "bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
+                          : "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-400"
+                      }`}>
+                        {e.plan}
+                      </span>
+                    </td>
+                    <td className="py-0.5 pr-4">
+                      <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                        e.plan === "pro"
+                          ? "bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
+                          : "bg-blue-100 dark:bg-blue-500/15 text-blue-700 dark:text-blue-400"
+                      }`}>
+                        {e.plan === "pro" ? "Alpha Vantage" : "Yahoo"}
+                      </span>
+                    </td>
                     <td className="py-0.5 pr-4">{e.callCount}</td>
                     <td className="py-0.5 text-gray-500 dark:text-slate-400">{e.windowStart}</td>
                   </tr>

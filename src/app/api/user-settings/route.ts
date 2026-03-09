@@ -19,7 +19,6 @@ export const GET = withMetrics("/api/user-settings", async (req: NextRequest) =>
   ]);
 
   return NextResponse.json({
-    provider: settings.provider,
     language: settings.language,
     refreshInterval: settings.refreshInterval,
     hasGlobalAvKey: globalAvKey.length > 0,
@@ -40,7 +39,6 @@ export const PUT = withMetrics("/api/user-settings", async (req: NextRequest) =>
 
   const next = await updateUserSettings(session.userId, updates);
   return NextResponse.json({
-    provider: next.provider,
     language: next.language,
     refreshInterval: next.refreshInterval,
   });

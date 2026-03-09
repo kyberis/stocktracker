@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
 
   let quotes: Record<string, { regularMarketPrice: number; currency: string }> = {};
   try {
-    const params = new URLSearchParams({ symbols: tickers.join(","), provider: "yahoo" });
+    const params = new URLSearchParams({ symbols: tickers.join(",") });
     const baseUrl = process.env.APP_BASE_URL || "http://localhost:3000";
     const res = await fetch(`${baseUrl}/api/quote?${params.toString()}`);
     if (res.ok) {

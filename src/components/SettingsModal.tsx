@@ -5,7 +5,7 @@ import { useSettings } from "@/lib/settings-context";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth-context";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
-import type { ApiProviderName, RefreshInterval } from "@/lib/types";
+import type { RefreshInterval } from "@/lib/types";
 import ProCompareCard from "@/components/ProCompareCard";
 import TierIcon from "@/components/TierIcon";
 
@@ -15,17 +15,13 @@ interface SettingsModalProps {
 }
 
 export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
-  const { provider, refreshInterval, hasGlobalAvKey, setProvider, setRefreshInterval } = useSettings();
+  const { refreshInterval, setRefreshInterval } = useSettings();
   const { t } = useI18n();
   const { user } = useAuth();
 
-  const [localProvider, setLocalProvider] = useState<ApiProviderName>(provider);
   const [localRefreshInterval, setLocalRefreshInterval] = useState<RefreshInterval>(refreshInterval);
 
-  const avDisabled = !hasGlobalAvKey || user?.plan !== "pro";
-
   const handleSave = () => {
-    setProvider(localProvider);
     setRefreshInterval(localRefreshInterval);
     onClose();
   };
@@ -55,41 +51,6 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               aiUsage={{ used: user?.aiCallsThisMonth ?? 0, limit: 5 }}
             />
           )}
-          <div>
-            <label className="block text-sm text-gray-500 dark:text-slate-400 mb-2">{t("dataProvider")}</label>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => setLocalProvider("yahoo")}
-                className={`px-4 py-3 rounded-xl border-2 transition-all text-left ${
-                  localProvider === "yahoo"
-                    ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10"
-                    : "border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 hover:border-gray-300 dark:hover:border-slate-500"
-                }`}
-              >
-                <p className="font-semibold text-gray-900 dark:text-white text-sm">Yahoo Finance</p>
-                <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">{t("yahooDesc")}</p>
-              </button>
-              <button
-                onClick={() => !avDisabled && setLocalProvider("alphavantage")}
-                disabled={avDisabled}
-                className={`px-4 py-3 rounded-xl border-2 transition-all text-left ${
-                  localProvider === "alphavantage"
-                    ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10"
-                    : avDisabled
-                      ? "border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 opacity-50 cursor-not-allowed"
-                      : "border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 hover:border-gray-300 dark:hover:border-slate-500"
-                }`}
-              >
-                <p className="font-semibold text-gray-900 dark:text-white text-sm">Alpha Vantage</p>
-                <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">{t("alphaVantageDesc")}</p>
-              </button>
-            </div>
-            {avDisabled && (
-              <p className="text-xs text-gray-400 dark:text-slate-500 mt-2">
-                {user?.plan !== "pro" ? t("alphaVantageProOnly") : t("avKeyManagedByAdmin")}
-              </p>
-            )}
-          </div>
         </div>
 
         <div className="mt-5">

@@ -105,7 +105,6 @@ export const updateCashSchema = z.object({
 /* ── User Settings ─────────────────────────────────────────── */
 
 export const userSettingsSchema = z.object({
-  provider: z.enum(["yahoo", "alphavantage"]).optional(),
   language: z.enum([
     "en", "es", "fr", "de", "it", "pt", "nl", "pl",
     "cs", "sk", "hu", "ro", "bg", "hr", "sl", "el",

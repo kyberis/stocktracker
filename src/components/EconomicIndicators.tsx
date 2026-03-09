@@ -111,7 +111,7 @@ interface CachedResult {
 }
 
 export default function EconomicIndicators() {
-  const { isAlphaVantage, provider, getApiHeaders, trackAvCalls } = useSettings();
+  const { hasGlobalAvKey, getApiHeaders } = useSettings();
   const { user } = useAuth();
   const { t, language } = useI18n();
   const { isDark } = useTheme();
@@ -133,6 +133,8 @@ export default function EconomicIndicators() {
 
   const config = INDICATORS[activeIdx];
   const isFree = user?.plan !== "pro";
+  const isPro = user?.plan === "pro";
+  const canAccessEcon = isPro && hasGlobalAvKey;
 
   const fetchIndicator = useCallback(async () => {
     setLoading(true);
@@ -144,13 +146,12 @@ export default function EconomicIndicators() {
     setLockedReason(null);
 
     const headers = getApiHeaders();
-    const params = new URLSearchParams({ func: config.func, provider });
+    const params = new URLSearchParams({ func: config.func });
     if (interval) params.set("interval", interval);
     if (maturity) params.set("maturity", maturity);
 
     try {
       const res = await fetch(`/api/economic-indicators?${params}`, { headers });
-      trackAvCalls(res);
       if (!res.ok) {
         const err = await res.json().catch(() => null);
         if (res.status === 403 && err?.reason === "upgrade_required") {
@@ -172,12 +173,12 @@ export default function EconomicIndicators() {
     } finally {
       setLoading(false);
     }
-  }, [config.func, interval, maturity, provider, getApiHeaders, trackAvCalls]);
+  }, [config.func, interval, maturity, getApiHeaders, t]);
 
   useEffect(() => {
-    if (!isAlphaVantage) return;
+    if (!canAccessEcon) return;
     fetchIndicator();
-  }, [fetchIndicator, isAlphaVantage]);
+  }, [fetchIndicator, canAccessEcon]);
 
   const handleTabChange = (idx: number) => {
     setActiveIdx(idx);
@@ -290,7 +291,7 @@ export default function EconomicIndicators() {
           </div>
         </div>
 
-        {!isAlphaVantage ? (
+        {!canAccessEcon ? (
           isFree ? (
             <ProCompareCard surface="economic_locked" reason="upgrade_required" />
           ) : (

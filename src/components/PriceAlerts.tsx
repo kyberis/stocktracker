@@ -12,7 +12,7 @@ import ProCompareCard from "@/components/ProCompareCard";
 export default function PriceAlerts() {
   const { t } = useI18n();
   const { user } = useAuth();
-  const { provider, getApiHeaders, trackAvCalls } = useSettings();
+  const { getApiHeaders } = useSettings();
   const { data, mutate } = useAlerts();
 
   const alerts = data?.alerts ?? [];
@@ -36,13 +36,10 @@ export default function PriceAlerts() {
     if (alerts.length === 0) return;
     const tickers = [...new Set(alerts.map((a) => a.ticker))].join(",");
     const headers = getApiHeaders();
-    fetch(`/api/quote?symbols=${tickers}&provider=${provider}`, { headers })
-      .then((r) => {
-        trackAvCalls(r);
-        return r.ok ? r.json() : {};
-      })
+    fetch(`/api/quote?symbols=${tickers}`, { headers })
+      .then((r) => r.ok ? r.json() : {})
       .then(setQuotes);
-  }, [alerts, provider, getApiHeaders, trackAvCalls]);
+  }, [alerts, getApiHeaders]);
 
   const searchStocks = useCallback(
     async (q: string) => {
@@ -53,16 +50,15 @@ export default function PriceAlerts() {
       setSearching(true);
       try {
         const res = await fetch(
-          `/api/search?q=${encodeURIComponent(q)}&provider=${provider}`,
+          `/api/search?q=${encodeURIComponent(q)}`,
           { headers: getApiHeaders() }
         );
-        trackAvCalls(res);
         if (res.ok) setResults(await res.json());
       } finally {
         setSearching(false);
       }
     },
-    [provider, getApiHeaders, trackAvCalls]
+    [getApiHeaders]
   );
 
   let searchTimeout: ReturnType<typeof setTimeout>;
