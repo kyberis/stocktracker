@@ -24,6 +24,16 @@ export const releaseNotes: ReleaseEntry[] = [
     titleTranslations: { es: "Alertas en Todas Partes" },
     changes: [
       {
+        type: "improvement",
+        text: "Widget portfolio selector — choose which portfolio to display on the iOS Scriptable widget and Widget View, or show all portfolios combined",
+        translations: { es: "Selector de portafolio en el widget — elige qué portafolio mostrar en el widget Scriptable de iOS y la Vista Widget, o muestra todos los portafolios combinados" },
+      },
+      {
+        type: "fix",
+        text: "Widget now shows the correct amount for the selected portfolio and opens trefolio.com when tapped",
+        translations: { es: "El widget ahora muestra el monto correcto para el portafolio seleccionado y abre trefolio.com al tocarlo" },
+      },
+      {
         type: "feature",
         text: "Set price alerts directly from your watchlist — click the bell icon on any watched stock to create a threshold or percentage alert without leaving the page",
         translations: { es: "Crea alertas de precio directamente desde tu lista de seguimiento — haz clic en el icono de campana en cualquier acción para crear una alerta de umbral o porcentaje sin salir de la página" },
@@ -47,6 +57,11 @@ export const releaseNotes: ReleaseEntry[] = [
         type: "improvement",
         text: "Set Alert button moved next to the stock price in the detail drawer for quicker access",
         translations: { es: "El botón de alerta se movió junto al precio en el panel de detalle para un acceso más rápido" },
+      },
+      {
+        type: "improvement",
+        text: "SnapTrade imports now fetch real transaction history and remember the last sync date per broker, so re-syncs only pull new activity instead of the full history",
+        translations: { es: "Las importaciones de SnapTrade ahora obtienen el historial real de transacciones y recuerdan la última fecha de sincronización por bróker, para que las re-sincronizaciones solo obtengan actividad nueva" },
       },
     ],
   },

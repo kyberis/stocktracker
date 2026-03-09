@@ -72,8 +72,17 @@ One-click import from popular European brokers:
 - 5 AI analysis calls/month
 - 2 price alerts (in-app)
 
-### Pro Plan (€4.99/month or €39.99/year)
+### Bifolio Plan (€2.99/month or €23.99/year)
 Everything in Free, plus:
+- Up to 50 holdings
+- 20 AI analysis calls/month
+- 10 price alerts + email & push notifications
+- 1-year portfolio growth history
+- Portfolio sharing (public link)
+- CSV export of holdings & transactions
+
+### Trefolio Plan (€7.99/month or €59.99/year)
+Everything in Bifolio, plus:
 - Unlimited holdings
 - Unlimited AI analysis
 - Company fundamentals (income, balance, cash flow)
@@ -127,10 +136,10 @@ trefolio supports NYSE, NASDAQ, XETRA, LSE, Amsterdam (AMS), Madrid (MAD), Copen
 TTWROR uses the Modified Dietz method, which weights each cash flow by the fraction of the period remaining — so returns reflect market performance only, not deposit timing. IRR (XIRR) finds the annualized rate that makes the net present value of all dated cash flows equal zero.
 
 ### What's the difference between Free and Pro?
-Free includes up to 15 holdings, real-time quotes, charts, broker import, and 5 AI calls/month. Pro (€4.99/month) adds unlimited holdings, unlimited AI analysis, company fundamentals, stock intelligence, economic indicators, and Alpha Vantage premium data.
+Free includes up to 15 holdings, real-time quotes, charts, broker import, and 5 AI calls/month. Bifolio (€2.99/month) adds 50 holdings, 20 AI calls, portfolio sharing, and CSV export. Trefolio (€7.99/month) adds unlimited holdings, unlimited AI analysis, company fundamentals, stock intelligence, economic indicators, and Alpha Vantage premium data.
 
 ### Can I cancel Pro anytime?
-Yes. Pro is billed monthly (€4.99) or annually (€39.99/year, save 33%). You can cancel anytime from the billing portal — your Pro features remain active until the end of the billing period.
+Yes. Bifolio is billed monthly (€2.99) or annually (€23.99/year, save 33%). Trefolio is billed monthly (€7.99) or annually (€59.99/year, save 37%). You can cancel anytime from the billing portal — your features remain active until the end of the billing period.
 
 ### How do dividends and fees get tracked?
 When you import a broker CSV (DEGIRO, IBKR, Trading 212, or Revolut), dividends, withholding taxes, and broker fees are parsed automatically. For Simple CSV imports, use the type column with 'dividend' or 'fee' values. All transactions are stored in your ledger and reflected in performance metrics.

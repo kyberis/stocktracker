@@ -123,6 +123,7 @@ interface PricingTier {
   regularAnnual: string;
   annualPrice: string;
   annualSavePct: number;
+  launchDiscountPct: number;
   isFree?: boolean;
   description: string;
   features: string[];
@@ -130,7 +131,7 @@ interface PricingTier {
   highlighted?: boolean;
 }
 
-const LAUNCH_DISCOUNT_PCT = 30;
+const LAUNCH_DISCOUNT_PCT = 25;
 
 function getPricing(t: T): PricingTier[] {
   return [
@@ -140,7 +141,7 @@ function getPricing(t: T): PricingTier[] {
       regularMonthly: "€0", monthlyPrice: "€0",
       regularAnnualMonthly: "€0", annualMonthly: "€0",
       regularAnnual: "€0", annualPrice: "€0",
-      annualSavePct: 0, isFree: true,
+      annualSavePct: 0, launchDiscountPct: 0, isFree: true,
       description: t("landingPricingFolioDesc"),
       features: Array.from({ length: 12 }, (_, i) => t(`landingPricingFolioFeature${i + 1}` as TranslationKey)),
       cta: t("landingPricingFolioCta"),
@@ -148,10 +149,10 @@ function getPricing(t: T): PricingTier[] {
     {
       name: "Bifolio",
       plan: "starter" as SubscriptionPlan,
-      regularMonthly: "€5.99", monthlyPrice: "€3.99",
-      regularAnnualMonthly: "€3.75", annualMonthly: "€2.50",
-      regularAnnual: "€44.99", annualPrice: "€29.99",
-      annualSavePct: 37,
+      regularMonthly: "€3.99", monthlyPrice: "€2.99",
+      regularAnnualMonthly: "€2.67", annualMonthly: "€2.00",
+      regularAnnual: "€31.99", annualPrice: "€23.99",
+      annualSavePct: 33, launchDiscountPct: 25,
       description: t("landingPricingBifolioDesc"),
       features: Array.from({ length: 7 }, (_, i) => t(`landingPricingBifolioFeature${i + 1}` as TranslationKey)),
       cta: t("landingPricingBifolioCta"),
@@ -160,10 +161,10 @@ function getPricing(t: T): PricingTier[] {
     {
       name: "Trefolio",
       plan: "pro" as SubscriptionPlan,
-      regularMonthly: "€10.99", monthlyPrice: "€7.49",
-      regularAnnualMonthly: "€7.50", annualMonthly: "€5.00",
-      regularAnnual: "€89.99", annualPrice: "€59.99",
-      annualSavePct: 33,
+      regularMonthly: "€9.99", monthlyPrice: "€7.99",
+      regularAnnualMonthly: "€6.67", annualMonthly: "€5.00",
+      regularAnnual: "€79.99", annualPrice: "€59.99",
+      annualSavePct: 37, launchDiscountPct: 20,
       description: t("landingPricingTrefolioDesc"),
       features: Array.from({ length: 15 }, (_, i) => t(`landingPricingTrefolioFeature${i + 1}` as TranslationKey)),
       cta: t("landingPricingTrefolioCta"),
@@ -1175,7 +1176,7 @@ function PricingSection() {
             <svg className="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
             </svg>
-            <span className="text-sm font-semibold text-amber-400">{t("landingPricingLaunchBadge")} &mdash; {LAUNCH_DISCOUNT_PCT}% {t("landingPricingLaunchBadgeDetail")}</span>
+            <span className="text-sm font-semibold text-amber-400">{t("landingPricingLaunchBadge")} &mdash; {t("landingPricingLaunchBadgeUpTo")} {LAUNCH_DISCOUNT_PCT}% {t("landingPricingLaunchBadgeDetail")}</span>
           </div>
         </div>
 
@@ -1219,9 +1220,9 @@ function PricingSection() {
                   <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
                     <TierIcon plan={tier.plan} size={22} className="text-emerald-400" />
                     {tier.name}
-                    {!tier.isFree && (
+                    {!tier.isFree && tier.launchDiscountPct > 0 && (
                       <span className="text-xs font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
-                        -{LAUNCH_DISCOUNT_PCT}%
+                        -{tier.launchDiscountPct}%
                       </span>
                     )}
                   </h3>

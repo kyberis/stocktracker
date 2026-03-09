@@ -8,7 +8,7 @@ function getTwilioClient() {
 }
 
 function getWhatsAppFrom(): string {
-  return process.env.TWILIO_WHATSAPP_FROM || "whatsapp:+14155238886";
+  return process.env.TWILIO_WHATSAPP_FROM || "whatsapp:+18705213951";
 }
 
 function getVerifyChannel(): "sms" | "whatsapp" {

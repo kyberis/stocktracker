@@ -3,8 +3,10 @@
 // Set your widget token below (generate one at trefolio.com → Profile → Widget Access).
 
 const TOKEN = "YOUR_TOKEN_HERE";
+const PORTFOLIO_ID = ""; // Leave empty for all portfolios, or paste a portfolio ID
 const API_URL = "https://trefolio.com/api/portfolio/summary";
 const ICON_URL = "https://trefolio.com/favicon.png";
+const APP_URL = "https://trefolio.com";
 const REFRESH_MINUTES = 30;
 
 const BG = new Color("#0f172a");
@@ -14,7 +16,8 @@ const GREEN = new Color("#10b981");
 const RED = new Color("#ef4444");
 
 async function fetchData() {
-  const req = new Request(API_URL);
+  const url = PORTFOLIO_ID ? `${API_URL}?portfolio=${PORTFOLIO_ID}` : API_URL;
+  const req = new Request(url);
   req.headers = { Authorization: `Bearer ${TOKEN}` };
   req.timeoutInterval = 15;
   const body = await req.loadString();
@@ -40,17 +43,18 @@ function num(v) {
 }
 
 function fmt(n) {
-  return num(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return Math.abs(num(n)).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function sign(n) {
-  return num(n) >= 0 ? "+" : "";
+  return num(n) >= 0 ? "+" : "−";
 }
 
 function createSmallWidget(data, icon) {
   const w = new ListWidget();
   w.backgroundColor = BG;
   w.setPadding(12, 14, 12, 14);
+  w.url = APP_URL;
 
   const header = w.addStack();
   header.layoutHorizontally();
@@ -67,6 +71,14 @@ function createSmallWidget(data, icon) {
   title.font = Font.boldSystemFont(10);
   title.textColor = GREEN;
 
+  if (data.portfolioName) {
+    header.addSpacer(null);
+    const pName = header.addText(data.portfolioName);
+    pName.font = Font.regularSystemFont(8);
+    pName.textColor = MUTED;
+    pName.lineLimit = 1;
+  }
+
   w.addSpacer(4);
 
   const value = w.addText(`€${fmt(data.totalValueEUR)}`);
@@ -77,7 +89,7 @@ function createSmallWidget(data, icon) {
   w.addSpacer(2);
 
   const isUp = num(data.dayChangeEUR) >= 0;
-  const change = w.addText(`${sign(data.dayChangeEUR)}€${fmt(data.dayChangeEUR)} (${sign(data.dayChangePercent)}${num(data.dayChangePercent).toFixed(2)}%)`);
+  const change = w.addText(`${sign(data.dayChangeEUR)}€${fmt(data.dayChangeEUR)} (${sign(data.dayChangePercent)}${Math.abs(num(data.dayChangePercent)).toFixed(2)}%)`);
   change.font = Font.mediumSystemFont(11);
   change.textColor = isUp ? GREEN : RED;
 
@@ -101,6 +113,7 @@ function createMediumWidget(data, icon) {
   const w = new ListWidget();
   w.backgroundColor = BG;
   w.setPadding(12, 14, 12, 14);
+  w.url = APP_URL;
 
   const header = w.addStack();
   header.layoutHorizontally();
@@ -119,6 +132,14 @@ function createMediumWidget(data, icon) {
   title.textColor = GREEN;
 
   header.addSpacer();
+
+  if (data.portfolioName) {
+    const pName = header.addText(data.portfolioName);
+    pName.font = Font.regularSystemFont(9);
+    pName.textColor = MUTED;
+    pName.lineLimit = 1;
+    header.addSpacer(6);
+  }
 
   const count = header.addText(`${data.holdingsCount} holdings`);
   count.font = Font.regularSystemFont(9);
@@ -141,12 +162,12 @@ function createMediumWidget(data, icon) {
   change.font = Font.semiboldSystemFont(12);
   change.textColor = isUp ? GREEN : RED;
 
-  const pct = changeLine.addText(`(${sign(data.dayChangePercent)}${num(data.dayChangePercent).toFixed(2)}%)`);
+  const pct = changeLine.addText(`(${sign(data.dayChangePercent)}${Math.abs(num(data.dayChangePercent)).toFixed(2)}%)`);
   pct.font = Font.regularSystemFont(11);
   pct.textColor = isUp ? GREEN : RED;
 
   const gainUp = num(data.totalGainLoss) >= 0;
-  const plText = changeLine.addText(`  P/L ${sign(data.totalGainLoss)}${num(data.totalGainLossPercent).toFixed(1)}%`);
+  const plText = changeLine.addText(`  P/L ${sign(data.totalGainLoss)}${Math.abs(num(data.totalGainLossPercent)).toFixed(1)}%`);
   plText.font = Font.regularSystemFont(10);
   plText.textColor = gainUp ? GREEN : RED;
 
@@ -169,7 +190,7 @@ function createMediumWidget(data, icon) {
       ticker.lineLimit = 1;
 
       const hUp = num(h.dayChange) >= 0;
-      const dc = col.addText(`${sign(h.dayChange)}${num(h.dayChange).toFixed(1)}%`);
+      const dc = col.addText(`${sign(h.dayChange)}${Math.abs(num(h.dayChange)).toFixed(1)}%`);
       dc.font = Font.mediumSystemFont(9);
       dc.textColor = hUp ? GREEN : RED;
 
@@ -190,6 +211,7 @@ async function run() {
     const w = new ListWidget();
     w.backgroundColor = BG;
     w.setPadding(12, 14, 12, 14);
+    w.url = APP_URL;
     const err = w.addText("Unable to load portfolio");
     err.font = Font.regularSystemFont(12);
     err.textColor = RED;

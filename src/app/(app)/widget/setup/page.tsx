@@ -2,8 +2,13 @@
 
 import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { Copy, Check, Smartphone, Apple, MonitorSmartphone, RefreshCw, Trash2, KeyRound } from "lucide-react";
+import { Copy, Check, Smartphone, Apple, MonitorSmartphone, RefreshCw, Trash2, KeyRound, Briefcase } from "lucide-react";
 import Link from "next/link";
+
+interface PortfolioOption {
+  id: string;
+  name: string;
+}
 
 const SCRIPT_URL = "https://trefolio.com/widget/trefolio-scriptable.js";
 
@@ -11,8 +16,10 @@ const SCRIPTABLE_TEMPLATE = `// trefolio — Portfolio Widget for Scriptable (iO
 // Paste this script in the Scriptable app, then add a Scriptable widget to your home screen.
 
 const TOKEN = "__TOKEN__";
+const PORTFOLIO_ID = "__PORTFOLIO_ID__"; // Leave empty for all portfolios
 const API_URL = "https://trefolio.com/api/portfolio/summary";
 const ICON_URL = "https://trefolio.com/favicon.png";
+const APP_URL = "https://trefolio.com";
 const REFRESH_MINUTES = 30;
 
 const BG = new Color("#0f172a");
@@ -22,7 +29,8 @@ const GREEN = new Color("#10b981");
 const RED = new Color("#ef4444");
 
 async function fetchData() {
-  const req = new Request(API_URL);
+  const url = PORTFOLIO_ID ? \`\${API_URL}?portfolio=\${PORTFOLIO_ID}\` : API_URL;
+  const req = new Request(url);
   req.headers = { Authorization: \`Bearer \${TOKEN}\` };
   req.timeoutInterval = 15;
   const body = await req.loadString();
@@ -48,17 +56,18 @@ function num(v) {
 }
 
 function fmt(n) {
-  return num(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return Math.abs(num(n)).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function sign(n) {
-  return num(n) >= 0 ? "+" : "";
+  return num(n) >= 0 ? "+" : "−";
 }
 
 function createSmallWidget(data, icon) {
   const w = new ListWidget();
   w.backgroundColor = BG;
   w.setPadding(12, 14, 12, 14);
+  w.url = APP_URL;
 
   const header = w.addStack();
   header.layoutHorizontally();
@@ -75,6 +84,14 @@ function createSmallWidget(data, icon) {
   title.font = Font.boldSystemFont(10);
   title.textColor = GREEN;
 
+  if (data.portfolioName) {
+    header.addSpacer(null);
+    const pName = header.addText(data.portfolioName);
+    pName.font = Font.regularSystemFont(8);
+    pName.textColor = MUTED;
+    pName.lineLimit = 1;
+  }
+
   w.addSpacer(4);
 
   const value = w.addText(\`€\${fmt(data.totalValueEUR)}\`);
@@ -85,7 +102,7 @@ function createSmallWidget(data, icon) {
   w.addSpacer(2);
 
   const isUp = num(data.dayChangeEUR) >= 0;
-  const change = w.addText(\`\${sign(data.dayChangeEUR)}€\${fmt(data.dayChangeEUR)} (\${sign(data.dayChangePercent)}\${num(data.dayChangePercent).toFixed(2)}%)\`);
+  const change = w.addText(\`\${sign(data.dayChangeEUR)}€\${fmt(data.dayChangeEUR)} (\${sign(data.dayChangePercent)}\${Math.abs(num(data.dayChangePercent)).toFixed(2)}%)\`);
   change.font = Font.mediumSystemFont(11);
   change.textColor = isUp ? GREEN : RED;
 
@@ -109,6 +126,7 @@ function createMediumWidget(data, icon) {
   const w = new ListWidget();
   w.backgroundColor = BG;
   w.setPadding(12, 14, 12, 14);
+  w.url = APP_URL;
 
   const header = w.addStack();
   header.layoutHorizontally();
@@ -127,6 +145,14 @@ function createMediumWidget(data, icon) {
   title.textColor = GREEN;
 
   header.addSpacer();
+
+  if (data.portfolioName) {
+    const pName = header.addText(data.portfolioName);
+    pName.font = Font.regularSystemFont(9);
+    pName.textColor = MUTED;
+    pName.lineLimit = 1;
+    header.addSpacer(6);
+  }
 
   const count = header.addText(\`\${data.holdingsCount} holdings\`);
   count.font = Font.regularSystemFont(9);
@@ -149,12 +175,12 @@ function createMediumWidget(data, icon) {
   change.font = Font.semiboldSystemFont(12);
   change.textColor = isUp ? GREEN : RED;
 
-  const pct = changeLine.addText(\`(\${sign(data.dayChangePercent)}\${num(data.dayChangePercent).toFixed(2)}%)\`);
+  const pct = changeLine.addText(\`(\${sign(data.dayChangePercent)}\${Math.abs(num(data.dayChangePercent)).toFixed(2)}%)\`);
   pct.font = Font.regularSystemFont(11);
   pct.textColor = isUp ? GREEN : RED;
 
   const gainUp = num(data.totalGainLoss) >= 0;
-  const plText = changeLine.addText(\`  P/L \${sign(data.totalGainLoss)}\${num(data.totalGainLossPercent).toFixed(1)}%\`);
+  const plText = changeLine.addText(\`  P/L \${sign(data.totalGainLoss)}\${Math.abs(num(data.totalGainLossPercent)).toFixed(1)}%\`);
   plText.font = Font.regularSystemFont(10);
   plText.textColor = gainUp ? GREEN : RED;
 
@@ -177,7 +203,7 @@ function createMediumWidget(data, icon) {
       ticker.lineLimit = 1;
 
       const hUp = num(h.dayChange) >= 0;
-      const dc = col.addText(\`\${sign(h.dayChange)}\${num(h.dayChange).toFixed(1)}%\`);
+      const dc = col.addText(\`\${sign(h.dayChange)}\${Math.abs(num(h.dayChange)).toFixed(1)}%\`);
       dc.font = Font.mediumSystemFont(9);
       dc.textColor = hUp ? GREEN : RED;
 
@@ -198,6 +224,7 @@ async function run() {
     const w = new ListWidget();
     w.backgroundColor = BG;
     w.setPadding(12, 14, 12, 14);
+    w.url = APP_URL;
     const err = w.addText("Unable to load portfolio");
     err.font = Font.regularSystemFont(12);
     err.textColor = RED;
@@ -230,8 +257,10 @@ async function run() {
 
 await run();`;
 
-function buildScript(token: string) {
-  return SCRIPTABLE_TEMPLATE.replace("__TOKEN__", token || "YOUR_TOKEN_HERE");
+function buildScript(token: string, portfolioId: string) {
+  return SCRIPTABLE_TEMPLATE
+    .replace("__TOKEN__", token || "YOUR_TOKEN_HERE")
+    .replace("__PORTFOLIO_ID__", portfolioId);
 }
 
 export default function WidgetSetupPage() {
@@ -249,6 +278,8 @@ function WidgetSetupContent() {
   const [widgetToken, setWidgetToken] = useState("");
   const [widgetHasToken, setWidgetHasToken] = useState(false);
   const [widgetLoading, setWidgetLoading] = useState(false);
+  const [portfolios, setPortfolios] = useState<PortfolioOption[]>([]);
+  const [selectedPortfolio, setSelectedPortfolio] = useState("");
 
   useEffect(() => {
     const tokenFromUrl = searchParams.get("token");
@@ -261,6 +292,12 @@ function WidgetSetupContent() {
         .then((d) => setWidgetHasToken(!!d.hasToken))
         .catch(() => {});
     }
+    fetch("/api/portfolios")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.portfolios) setPortfolios(d.portfolios.map((p: { id: string; name: string }) => ({ id: p.id, name: p.name })));
+      })
+      .catch(() => {});
   }, [searchParams]);
 
   const handleGenerateToken = useCallback(async () => {
@@ -287,7 +324,7 @@ function WidgetSetupContent() {
   }, []);
 
   const handleCopyScript = () => {
-    const script = buildScript(widgetToken);
+    const script = buildScript(widgetToken, selectedPortfolio);
     navigator.clipboard.writeText(script).then(() => {
       setCopiedScript(true);
       setTimeout(() => setCopiedScript(false), 2000);
@@ -431,6 +468,28 @@ function WidgetSetupContent() {
                 </div>
               </div>
 
+              {portfolios.length > 1 && (
+                <div className="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-4 border border-slate-200 dark:border-slate-700 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Briefcase className="w-4 h-4 text-emerald-500" />
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">Portfolio</span>
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-slate-400">
+                    Choose which portfolio to display on the widget. &quot;All Portfolios&quot; shows the combined total.
+                  </p>
+                  <select
+                    value={selectedPortfolio}
+                    onChange={(e) => setSelectedPortfolio(e.target.value)}
+                    className="text-sm bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2 w-full focus:ring-1 focus:ring-emerald-500 focus:outline-none"
+                  >
+                    <option value="">All Portfolios</option>
+                    {portfolios.map((p) => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <ol className="space-y-3 text-sm text-gray-700 dark:text-slate-300">
                 <li className="flex gap-3">
                   <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 flex items-center justify-center text-xs font-bold">1</span>
@@ -462,7 +521,7 @@ function WidgetSetupContent() {
                   </button>
                 </div>
                 <pre className="text-[10px] leading-relaxed text-slate-600 dark:text-slate-400 font-mono overflow-x-auto max-h-40 scrollbar-thin">
-                  {buildScript(widgetToken).split("\n").slice(0, 8).join("\n")}
+                  {buildScript(widgetToken, selectedPortfolio).split("\n").slice(0, 9).join("\n")}
                   {"\n// ..."}
                 </pre>
               </div>

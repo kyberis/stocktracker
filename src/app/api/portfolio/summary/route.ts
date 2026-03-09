@@ -44,9 +44,10 @@ export const GET = withMetrics("/api/portfolio/summary", async (req: NextRequest
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Determine portfolio scope from user's device_portfolio_id setting
+  // Portfolio scope: ?portfolio= query param overrides device_portfolio_id
   const dbUser = await findUserById(userId);
-  const portfolioId = dbUser?.device_portfolio_id || undefined;
+  const portfolioParam = req.nextUrl.searchParams.get("portfolio");
+  const portfolioId = portfolioParam || dbUser?.device_portfolio_id || undefined;
 
   const [holdings, cashEntries] = await Promise.all([
     listHoldings(userId, portfolioId),

@@ -154,7 +154,7 @@ export default function ProCompareCard({
         {/* Bifolio column */}
         {(!isStarter || !isPro) && (
           <div className={`rounded-lg border p-3 ${isStarter ? "border-blue-400 dark:border-blue-500/40 bg-blue-50/50 dark:bg-blue-900/20" : "border-blue-300 dark:border-blue-500/30 bg-white dark:bg-slate-800"}`}>
-            <p className="text-xs font-semibold text-blue-700 dark:text-blue-300 flex items-center gap-1"><TierIcon plan="starter" size={14} />{t("upsellStarterTitle")} — €3.99/mo</p>
+            <p className="text-xs font-semibold text-blue-700 dark:text-blue-300 flex items-center gap-1"><TierIcon plan="starter" size={14} />{t("upsellStarterTitle")} — €2.99/mo</p>
             <ul className="mt-2 space-y-1">
               {config.starterItems.map((item) => (
                 <li key={item} className="text-xs text-gray-700 dark:text-slate-200">- {t(item)}</li>
@@ -165,7 +165,7 @@ export default function ProCompareCard({
 
         {/* Trefolio column */}
         <div className={`rounded-lg border p-3 ${isPro ? "border-emerald-400 dark:border-emerald-500/40 bg-emerald-50/50 dark:bg-emerald-900/20" : "border-emerald-300 dark:border-emerald-500/40 bg-white dark:bg-slate-800"}`}>
-          <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 flex items-center gap-1"><TierIcon plan="pro" size={14} />{t("upsellProTitle")} — €7.49/mo</p>
+          <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 flex items-center gap-1"><TierIcon plan="pro" size={14} />{t("upsellProTitle")} — €7.99/mo</p>
           <ul className="mt-2 space-y-1">
             {config.proItems.map((item) => (
               <li key={item} className="text-xs text-gray-700 dark:text-slate-200">- {t(item)}</li>

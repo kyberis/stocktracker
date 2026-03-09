@@ -43,7 +43,7 @@ trefolio by the numbers:
 - 4 broker imports (DEGIRO, IBKR, T212, Revolut)
 - 5+ exchanges (NYSE, NASDAQ, XETRA, LSE, AMS, MAD...)
 - 5 AI calls/month on free tier
-- €4.99/month Pro
+- From €2.99/month Bifolio, €7.99/month Trefolio
 - 0 data sold to third parties
 
 https://trefolio.com/signup
@@ -103,7 +103,7 @@ https://trefolio.com
 
 **7/** I added 35 languages because Europe deserves tools in local languages. The AI responds in the user's language too — portfolio analysis in Finnish, Portuguese, or Bulgarian.
 
-**8/** Current state: v0.50, free tier (15 holdings), Pro at €4.99/month. Still a solo project, still learning every day.
+**8/** Current state: v0.50, free tier (15 holdings), Bifolio at €2.99/month, Trefolio at €7.99/month. Still a solo project, still learning every day.
 
 Try it: https://trefolio.com
 
@@ -155,7 +155,7 @@ https://trefolio.com
 
 trefolio just got its first paying customer! 🎉
 
-From zero to €4.99 MRR. It's not much, but it means someone finds this valuable enough to pay for.
+From zero to first MRR. It's not much, but it means someone finds this valuable enough to pay for.
 
 Building a portfolio tracker for European investors with AI analysis in 35 languages.
 
@@ -197,7 +197,7 @@ trefolio solves this with:
 → Performance metrics (TTWROR, IRR) from your actual transactions
 → Dividend tracking with yield projections
 
-It's free to start (15 holdings) with a Pro tier at €4.99/month.
+It's free to start (15 holdings) with Bifolio at €2.99/month and Trefolio at €7.99/month.
 
 If you're a European investor — or know someone who is — I'd love your feedback.
 

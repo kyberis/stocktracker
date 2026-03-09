@@ -4,7 +4,7 @@ import { JsonLd } from "@/components/JsonLd";
 export const metadata: Metadata = {
   title: "trefolio — Simple Portfolio Tracking with AI Insights",
   description:
-    "trefolio is a portfolio tracker for European investors. Real-time quotes, broker imports (DEGIRO, IBKR, T212, Revolut), AI analysis, and dividend projections. Start with Folio for free, Trefolio for €7.49/month.",
+    "trefolio is a portfolio tracker for European investors. Real-time quotes, broker imports (DEGIRO, IBKR, T212, Revolut), AI analysis, and dividend projections. Start with Folio for free, Trefolio for €7.99/month.",
   alternates: {
     canonical: "https://trefolio.com",
     languages: {
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "trefolio — Simple Portfolio Tracking with AI Insights",
     description:
-      "The simplest way to manage your stock portfolio. Real-time quotes, dividend tracking, growth projections, and AI analysis — for just €4.99/month.",
+      "The simplest way to manage your stock portfolio. Real-time quotes, dividend tracking, growth projections, and AI analysis — plans from €2.99/month.",
     url: "https://trefolio.com",
     siteName: "trefolio",
     locale: "en_US",
@@ -67,7 +67,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "trefolio — Simple Portfolio Tracking with AI Insights",
     description:
-      "The simplest way to manage your stock portfolio. Real-time quotes, dividend tracking, growth projections, and AI analysis — for just €4.99/month.",
+      "The simplest way to manage your stock portfolio. Real-time quotes, dividend tracking, growth projections, and AI analysis — plans from €2.99/month.",
     images: ["/screenshots/dashboard-overview.png"],
   },
 };
@@ -130,7 +130,7 @@ const SOFTWARE_APP_SCHEMA = {
     },
     {
       "@type": "Offer",
-      price: "3.99",
+      price: "2.99",
       priceCurrency: "EUR",
       name: "Bifolio",
       description:
@@ -138,7 +138,7 @@ const SOFTWARE_APP_SCHEMA = {
     },
     {
       "@type": "Offer",
-      price: "7.49",
+      price: "7.99",
       priceCurrency: "EUR",
       name: "Trefolio",
       description:
@@ -196,7 +196,7 @@ const FAQ_SCHEMA = {
       name: "What's the difference between the plans?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Folio (free) includes up to 15 holdings, real-time quotes, charts, broker import, and 5 AI calls/month. Bifolio (€3.99/month) adds 50 holdings, 20 AI calls, portfolio sharing, and CSV export. Trefolio (€7.49/month) adds unlimited holdings, unlimited AI analysis, company fundamentals, stock intelligence, economic indicators, and Alpha Vantage premium data.",
+        text: "Folio (free) includes up to 15 holdings, real-time quotes, charts, broker import, and 5 AI calls/month. Bifolio (€2.99/month) adds 50 holdings, 20 AI calls, portfolio sharing, and CSV export. Trefolio (€7.99/month) adds unlimited holdings, unlimited AI analysis, company fundamentals, stock intelligence, economic indicators, and Alpha Vantage premium data.",
       },
     },
     {

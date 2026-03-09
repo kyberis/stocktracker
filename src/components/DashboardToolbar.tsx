@@ -28,6 +28,7 @@ export default function DashboardToolbar({
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState("");
   const [creating, setCreating] = useState(false);
+  const [settingDefault, setSettingDefault] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -73,6 +74,23 @@ export default function DashboardToolbar({
       }
     } catch { /* ignore */ }
     setCreating(false);
+  }
+
+  async function handleSetDefault(id: string) {
+    setSettingDefault(id);
+    try {
+      const res = await fetch(`/api/portfolios/${encodeURIComponent(id)}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isDefault: true }),
+      });
+      if (res.ok) {
+        await refreshPortfolios();
+        setActivePortfolio(id);
+        setDropdownOpen(false);
+      }
+    } catch { /* ignore */ }
+    setSettingDefault(null);
   }
 
   return (
@@ -124,25 +142,49 @@ export default function DashboardToolbar({
 
                   {/* Individual portfolios */}
                   {portfolios.map((p) => (
-                    <button
+                    <div
                       key={p.id}
-                      role="option"
-                      aria-selected={activePortfolioId === p.id}
-                      onClick={() => { setActivePortfolio(p.id); setDropdownOpen(false); }}
-                      className={`w-full text-left px-3 py-2 text-sm flex items-center gap-2 transition-colors ${
+                      className={`flex items-center transition-colors ${
                         activePortfolioId === p.id
-                          ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium"
-                          : "text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700"
+                          ? "bg-blue-50 dark:bg-blue-900/20"
+                          : "hover:bg-gray-100 dark:hover:bg-slate-700"
                       }`}
                     >
-                      <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
-                      </svg>
-                      <span className="truncate">{p.name}</span>
-                      {p.isDefault && (
-                        <span className="ml-auto text-[10px] font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wide">Default</span>
+                      <button
+                        role="option"
+                        aria-selected={activePortfolioId === p.id}
+                        onClick={() => { setActivePortfolio(p.id); setDropdownOpen(false); }}
+                        className={`flex-1 text-left px-3 py-2 text-sm flex items-center gap-2 min-w-0 ${
+                          activePortfolioId === p.id
+                            ? "text-blue-700 dark:text-blue-300 font-medium"
+                            : "text-gray-700 dark:text-slate-300"
+                        }`}
+                      >
+                        <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
+                        </svg>
+                        <span className="truncate">{p.name}</span>
+                      </button>
+                      {p.isDefault ? (
+                        <span className="pr-3 shrink-0" title={t("setAsDefault")} aria-label={t("setAsDefault")}>
+                          <svg className="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                          </svg>
+                        </span>
+                      ) : (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleSetDefault(p.id); }}
+                          disabled={settingDefault === p.id}
+                          className="pr-3 pl-1 shrink-0 text-gray-300 dark:text-slate-600 hover:text-amber-400 dark:hover:text-amber-400 transition-colors disabled:opacity-40"
+                          title={t("setAsDefault")}
+                          aria-label={`${t("setAsDefault")}: ${p.name}`}
+                        >
+                          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                          </svg>
+                        </button>
                       )}
-                    </button>
+                    </div>
                   ))}
 
                   {/* Create new portfolio */}

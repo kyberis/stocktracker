@@ -24,7 +24,7 @@ trefolio is a portfolio tracker built for European investors.
 
 **35 European languages** — From English to Bulgarian, Finnish to Portuguese. Every screen, every AI response, in your native language.
 
-**Free to start** — 15 holdings, real-time quotes, broker imports, 5 AI calls/month. Pro unlocks unlimited everything for €4.99/month.
+**Free to start** — 15 holdings, real-time quotes, broker imports, 5 AI calls/month. Bifolio adds 50 holdings and sharing for €2.99/month. Trefolio unlocks unlimited everything for €7.99/month.
 
 ### Screenshots (4)
 
@@ -41,7 +41,7 @@ I built this because I was tired of tracking my European portfolio in spreadshee
 
 trefolio supports 4 European brokers natively, handles multi-currency automatically, and works in 35 languages. The AI analysis is the part I'm most proud of — you can ask it about any stock in your portfolio and get a plain-language breakdown in your native language.
 
-The free tier is genuinely useful (15 holdings, real-time quotes, broker import, 5 AI calls/month). Pro is €4.99/month for unlimited everything.
+The free tier is genuinely useful (15 holdings, real-time quotes, broker import, 5 AI calls/month). Bifolio is €2.99/month for 50 holdings and sharing. Trefolio is €7.99/month for unlimited everything.
 
 Would love to hear what you think. Happy to answer any questions!
 
@@ -81,7 +81,8 @@ The main pain points I wanted to solve:
 Tech stack: Next.js 14, Turso (libSQL), Stripe, Vercel, Yahoo Finance + Alpha Vantage for data, OpenAI for AI analysis.
 
 Free tier: 15 holdings, real-time quotes, broker import, 5 AI calls/month.
-Pro: €4.99/month — unlimited holdings, AI, fundamentals, news sentiment, economic indicators.
+Bifolio: €2.99/month — 50 holdings, 20 AI calls, portfolio sharing, CSV export.
+Trefolio: €7.99/month — unlimited holdings, AI, fundamentals, news sentiment, economic indicators.
 
 https://trefolio.com
 
@@ -108,7 +109,7 @@ What makes it different:
 - **Performance metrics** — TTWROR (Modified Dietz), IRR (XIRR), dividend projections
 - **AI analysis** — ask about any stock, get a plain-language breakdown
 
-Free tier includes 15 holdings, real-time quotes, broker imports, and 5 AI calls/month. Pro is €4.99/month for unlimited everything.
+Free tier includes 15 holdings, real-time quotes, broker imports, and 5 AI calls/month. Bifolio starts at €2.99/month, Trefolio at €7.99/month for unlimited everything.
 
 https://trefolio.com
 
@@ -181,7 +182,7 @@ After a year of building, trefolio is at v0.50 and I'm starting to share it publ
 
 **Tech stack:** Next.js 14, Turso, Stripe, Vercel, Yahoo Finance, Alpha Vantage, OpenAI
 
-**Business model:** Free tier (15 holdings, 5 AI calls/month) + Pro at €4.99/month
+**Business model:** Free tier (15 holdings, 5 AI calls/month) + Bifolio at €2.99/month + Trefolio at €7.99/month
 
 https://trefolio.com
 
@@ -207,7 +208,7 @@ Other things it does:
 - AI-powered stock analysis (ask about any holding in plain language)
 - Available in 35 European languages
 
-Free tier covers 15 holdings with real-time quotes and broker imports. Pro is €4.99/month for unlimited holdings and AI analysis.
+Free tier covers 15 holdings with real-time quotes and broker imports. Bifolio starts at €2.99/month, Trefolio at €7.99/month for unlimited holdings and AI analysis.
 
 https://trefolio.com — would appreciate any feedback.
 
@@ -220,21 +221,21 @@ https://trefolio.com — would appreciate any feedback.
 **Name:** trefolio
 **Tagline:** AI portfolio tracker for European investors — 35 languages, 4 broker imports
 **URL:** https://trefolio.com
-**Description:** trefolio is a portfolio tracker built for European investors. Import from DEGIRO, IBKR, Trading 212, or Revolut in one click. Real-time quotes, AI stock analysis, dividend projections, and performance metrics — in 35 European languages. Free tier available, Pro for €4.99/month.
+**Description:** trefolio is a portfolio tracker built for European investors. Import from DEGIRO, IBKR, Trading 212, or Revolut in one click. Real-time quotes, AI stock analysis, dividend projections, and performance metrics — in 35 European languages. Free tier available, plans from €2.99/month.
 
 ### SaaSHub
 
 **Name:** trefolio
 **Category:** Finance / Portfolio Tracking
 **Alternative to:** Simply Wall St, Portfolio Performance, Seeking Alpha
-**Description:** Portfolio tracker for European investors with native broker imports (DEGIRO, IBKR, Trading 212, Revolut), AI-powered stock analysis, 35 languages, and multi-currency support. Free tier with 15 holdings, Pro at €4.99/month.
+**Description:** Portfolio tracker for European investors with native broker imports (DEGIRO, IBKR, Trading 212, Revolut), AI-powered stock analysis, 35 languages, and multi-currency support. Free tier with 15 holdings, plans from €2.99/month.
 
 ### AlternativeTo
 
 **Name:** trefolio
 **Category:** Portfolio Tracker
 **Alternative to:** Simply Wall St, Seeking Alpha, Portfolio Performance
-**Description:** A web-based portfolio tracker built for European investors. Key differentiators: native CSV import from DEGIRO, Interactive Brokers, Trading 212, and Revolut; AI-powered stock analysis and portfolio review; 35 European languages; automatic multi-currency conversion. Free to use with a Pro tier at €4.99/month.
+**Description:** A web-based portfolio tracker built for European investors. Key differentiators: native CSV import from DEGIRO, Interactive Brokers, Trading 212, and Revolut; AI-powered stock analysis and portfolio review; 35 European languages; automatic multi-currency conversion. Free to use with paid plans from €2.99/month.
 **Tags:** portfolio tracker, stock tracker, investment, European, AI, dividend tracking
 
 ### FinTech Weekly

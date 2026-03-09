@@ -5,11 +5,30 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { startRegistration, browserSupportsWebAuthn } from "@simplewebauthn/browser";
 import { useAuth } from "@/lib/auth-context";
 import { useSettings } from "@/lib/settings-context";
-import { useI18n } from "@/lib/i18n";
+import { useI18n, type TranslationKey } from "@/lib/i18n";
 import ProCompareCard from "@/components/ProCompareCard";
 import TierIcon from "@/components/TierIcon";
-import { Smartphone, Monitor, Copy, Check, Trash2 } from "lucide-react";
+import { Smartphone, Monitor, Copy, Check, Trash2, User, CreditCard, Bell, FolderOpen } from "lucide-react";
 import NotificationChannels from "@/components/NotificationChannels";
+
+const PROFILE_TABS = ["account", "subscription", "notifications", "portfolios", "devices"] as const;
+type ProfileTab = (typeof PROFILE_TABS)[number];
+
+const TAB_ICONS: Record<ProfileTab, typeof User> = {
+  account: User,
+  subscription: CreditCard,
+  notifications: Bell,
+  portfolios: FolderOpen,
+  devices: Monitor,
+};
+
+const TAB_LABEL_KEYS: Record<ProfileTab, string> = {
+  account: "profileTabAccount",
+  subscription: "profileTabSubscription",
+  notifications: "profileTabNotifications",
+  portfolios: "profileTabPortfolios",
+  devices: "profileTabDevices",
+};
 
 interface PasskeyEntry {
   id: string;
@@ -466,6 +485,16 @@ export default function ProfilePage() {
   const { deviceEnabled } = useSettings();
   const { t } = useI18n();
 
+  const sectionParam = searchParams.get("section") as ProfileTab | null;
+  const initialTab = sectionParam && PROFILE_TABS.includes(sectionParam) ? sectionParam : "account";
+  const [activeTab, setActiveTab] = useState<ProfileTab>(initialTab);
+  const effectiveTab = activeTab === "devices" && !deviceEnabled ? "account" : activeTab;
+
+  const handleTabChange = useCallback((tab: ProfileTab) => {
+    setActiveTab(tab);
+    router.replace(`/profile?section=${tab}`, { scroll: false });
+  }, [router]);
+
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
@@ -895,11 +924,43 @@ export default function ProfilePage() {
   }, []);
   const aiLimit = 5;
 
+  const visibleTabs = deviceEnabled
+    ? PROFILE_TABS
+    : PROFILE_TABS.filter((tab) => tab !== "devices");
+
   return (
     <main className="px-4 py-8">
       <div className="max-w-2xl mx-auto space-y-6">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t("profile")}</h1>
 
+        {/* Tab navigation */}
+        <div className="sticky top-0 z-10 -mx-4 px-4 py-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm">
+          <div role="tablist" aria-label={t("profile")} className="flex flex-wrap gap-1 bg-white dark:bg-slate-800 rounded-2xl p-1.5 border border-gray-200 dark:border-slate-700 shadow-sm">
+            {visibleTabs.map((tab) => {
+              const Icon = TAB_ICONS[tab];
+              return (
+                <button
+                  key={tab}
+                  role="tab"
+                  aria-selected={effectiveTab === tab}
+                  aria-controls={`profile-tabpanel-${tab}`}
+                  onClick={() => handleTabChange(tab)}
+                  className={`flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-xl transition-all ${
+                    effectiveTab === tab
+                      ? "bg-emerald-500 text-white shadow-sm"
+                      : "text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-slate-700"
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">{t(TAB_LABEL_KEYS[tab] as TranslationKey)}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* === Account Tab === */}
+        {effectiveTab === "account" && <>
         {/* Profile Card */}
         <div className="card p-6 space-y-5">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t("profileSettings")}</h2>
@@ -1090,7 +1151,113 @@ export default function ProfilePage() {
           {passkeyError && <p className="text-xs text-red-500 dark:text-red-400" role="alert">{passkeyError}</p>}
         </div>
 
-        {/* Subscription */}
+        {/* Change Password -- hidden for Google-only accounts */}
+        {user?.authProvider !== "google" && (
+          <div className="card p-6 space-y-5">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t("changePasswordSection")}</h2>
+
+            <form onSubmit={handleChangePassword} className="grid gap-4">
+              <div>
+                <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">{t("currentPassword")}</label>
+                <input
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  className="w-full text-sm"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">{t("newPassword")}</label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full text-sm"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">{t("confirmPassword")}</label>
+                <input
+                  type="password"
+                  value={confirmNewPassword}
+                  onChange={(e) => setConfirmNewPassword(e.target.value)}
+                  className="w-full text-sm"
+                  required
+                />
+              </div>
+
+              {passwordError && (
+                <p className="text-xs text-red-500 dark:text-red-400" role="alert">{passwordError}</p>
+              )}
+              {passwordMsg && (
+                <p className="text-xs text-emerald-600 dark:text-emerald-400" aria-live="polite">{passwordMsg}</p>
+              )}
+
+              <div className="flex justify-end">
+                <button type="submit" className="btn-primary text-sm">
+                  {t("updatePassword")}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* Delete Account */}
+        {user?.role !== "admin" && (
+          <div className="card p-6 space-y-4 border-red-200 dark:border-red-500/20">
+            <h2 className="text-lg font-semibold text-red-600 dark:text-red-400">{t("deleteAccount")}</h2>
+            <p className="text-sm text-gray-600 dark:text-slate-400">{t("deleteAccountWarning")}</p>
+
+            {!showDeleteConfirm ? (
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="btn-danger text-sm"
+              >
+                {t("deleteAccountButton")}
+              </button>
+            ) : (
+              <form onSubmit={handleDeleteAccount} className="space-y-3">
+                <p className="text-sm font-medium text-red-600 dark:text-red-400">{t("deleteAccountConfirm")}</p>
+                <div>
+                  <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">{t("deleteAccountEnterPassword")}</label>
+                  <input
+                    type="password"
+                    value={deletePassword}
+                    onChange={(e) => setDeletePassword(e.target.value)}
+                    className="w-full text-sm"
+                    autoFocus
+                    required
+                  />
+                </div>
+                {deleteError && (
+                  <p className="text-xs text-red-500 dark:text-red-400" role="alert">{deleteError}</p>
+                )}
+                <div className="flex items-center gap-2">
+                  <button
+                    type="submit"
+                    disabled={deleting || !deletePassword}
+                    className="btn-danger text-sm disabled:opacity-40"
+                  >
+                    {deleting ? t("deleteAccountDeleting") : t("deleteAccountConfirmButton")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setShowDeleteConfirm(false); setDeletePassword(""); setDeleteError(""); }}
+                    className="btn-secondary text-sm"
+                  >
+                    {t("cancel")}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        )}
+        </>}
+
+        {/* === Subscription Tab === */}
+        {effectiveTab === "subscription" && <>
         <div className="card p-6 space-y-4">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t("subscription")}</h2>
 
@@ -1180,60 +1347,10 @@ export default function ProfilePage() {
             />
           )}
         </div>
+        </>}
 
-        {/* Change Password -- hidden for Google-only accounts */}
-        {user?.authProvider !== "google" && (
-          <div className="card p-6 space-y-5">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t("changePasswordSection")}</h2>
-
-            <form onSubmit={handleChangePassword} className="grid gap-4">
-              <div>
-                <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">{t("currentPassword")}</label>
-                <input
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="w-full text-sm"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">{t("newPassword")}</label>
-                <input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full text-sm"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">{t("confirmPassword")}</label>
-                <input
-                  type="password"
-                  value={confirmNewPassword}
-                  onChange={(e) => setConfirmNewPassword(e.target.value)}
-                  className="w-full text-sm"
-                  required
-                />
-              </div>
-
-              {passwordError && (
-                <p className="text-xs text-red-500 dark:text-red-400" role="alert">{passwordError}</p>
-              )}
-              {passwordMsg && (
-                <p className="text-xs text-emerald-600 dark:text-emerald-400" aria-live="polite">{passwordMsg}</p>
-              )}
-
-              <div className="flex justify-end">
-                <button type="submit" className="btn-primary text-sm">
-                  {t("updatePassword")}
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
-
+        {/* === Notifications Tab === */}
+        {effectiveTab === "notifications" && <>
         {/* Email Verification */}
         <div className="card p-6 space-y-3">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t("notificationSettings")}</h2>
@@ -1295,7 +1412,35 @@ export default function ProfilePage() {
 
         {/* Portfolio-wide Alert */}
         <PortfolioAlertSection />
+        </>}
 
+        {/* === Portfolios Tab === */}
+        {effectiveTab === "portfolios" && <>
+        <div className="card p-6 space-y-4">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Portfolios</h2>
+          <p className="text-sm text-gray-500 dark:text-slate-400">
+            Manage your portfolios. Pro users can create up to 3 portfolios.
+          </p>
+          <PortfolioManagementSection />
+        </div>
+
+        {/* Portfolio Sharing */}
+        {isPaid ? (
+          <div className="card p-6 space-y-4">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t("portfolioSharing")}</h2>
+            <p className="text-sm text-gray-500 dark:text-slate-400">{t("portfolioSharingDesc")}</p>
+            <PortfolioShareSection />
+          </div>
+        ) : (
+          <div className="card p-6 space-y-2">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t("portfolioSharing")}</h2>
+            <ProCompareCard surface="portfolio_history_locked" reason="upgrade_required" compact />
+          </div>
+        )}
+        </>}
+
+        {/* === Devices Tab === */}
+        {effectiveTab === "devices" && <>
         {/* Widget Access */}
         <div className="card p-6 space-y-4">
           <div className="flex items-center gap-3">
@@ -1370,7 +1515,7 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* Device Passkey (trefolio Leaf) — gated by device_enabled feature flag */}
+        {/* Device Passkey (trefolio Leaf) */}
         {deviceEnabled && <div className="card p-6 space-y-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-violet-100 dark:bg-violet-500/15 flex items-center justify-center">
@@ -1435,7 +1580,7 @@ export default function ProfilePage() {
           )}
         </div>}
 
-        {/* Device Display Theme — only shown after a device has actually connected */}
+        {/* Device Display Theme */}
         {deviceEnabled && deviceLinked && (
           <div className="card p-6 space-y-4">
             <div className="flex items-center gap-3">
@@ -1495,80 +1640,8 @@ export default function ProfilePage() {
             </p>
           </div>
         )}
+        </>}
 
-        {/* Portfolio Management */}
-        <div className="card p-6 space-y-4">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Portfolios</h2>
-          <p className="text-sm text-gray-500 dark:text-slate-400">
-            Manage your portfolios. Pro users can create up to 3 portfolios.
-          </p>
-          <PortfolioManagementSection />
-        </div>
-
-        {/* Portfolio Sharing */}
-        {isPaid ? (
-          <div className="card p-6 space-y-4">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t("portfolioSharing")}</h2>
-            <p className="text-sm text-gray-500 dark:text-slate-400">{t("portfolioSharingDesc")}</p>
-            <PortfolioShareSection />
-          </div>
-        ) : (
-          <div className="card p-6 space-y-2">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t("portfolioSharing")}</h2>
-            <ProCompareCard surface="portfolio_history_locked" reason="upgrade_required" compact />
-          </div>
-        )}
-
-        {/* Delete Account */}
-        {user?.role !== "admin" && (
-          <div className="card p-6 space-y-4 border-red-200 dark:border-red-500/20">
-            <h2 className="text-lg font-semibold text-red-600 dark:text-red-400">{t("deleteAccount")}</h2>
-            <p className="text-sm text-gray-600 dark:text-slate-400">{t("deleteAccountWarning")}</p>
-
-            {!showDeleteConfirm ? (
-              <button
-                onClick={() => setShowDeleteConfirm(true)}
-                className="btn-danger text-sm"
-              >
-                {t("deleteAccountButton")}
-              </button>
-            ) : (
-              <form onSubmit={handleDeleteAccount} className="space-y-3">
-                <p className="text-sm font-medium text-red-600 dark:text-red-400">{t("deleteAccountConfirm")}</p>
-                <div>
-                  <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">{t("deleteAccountEnterPassword")}</label>
-                  <input
-                    type="password"
-                    value={deletePassword}
-                    onChange={(e) => setDeletePassword(e.target.value)}
-                    className="w-full text-sm"
-                    autoFocus
-                    required
-                  />
-                </div>
-                {deleteError && (
-                  <p className="text-xs text-red-500 dark:text-red-400" role="alert">{deleteError}</p>
-                )}
-                <div className="flex items-center gap-2">
-                  <button
-                    type="submit"
-                    disabled={deleting || !deletePassword}
-                    className="btn-danger text-sm disabled:opacity-40"
-                  >
-                    {deleting ? t("deleteAccountDeleting") : t("deleteAccountConfirmButton")}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setShowDeleteConfirm(false); setDeletePassword(""); setDeleteError(""); }}
-                    className="btn-secondary text-sm"
-                  >
-                    {t("cancel")}
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
-        )}
       </div>
     </main>
   );

@@ -1,5 +1,5 @@
 import { Snaptrade } from "snaptrade-typescript-sdk";
-import type { AccountHoldings, Position } from "snaptrade-typescript-sdk";
+import type { AccountHoldings, Position, UniversalActivity } from "snaptrade-typescript-sdk";
 import type { ExtractedTransaction, ExtractedHolding, CashBalance } from "@/hooks/import-types";
 
 let _client: Snaptrade | null = null;
@@ -307,4 +307,100 @@ export async function fetchAllHoldings(
   }
 
   return { holdings, transactions, cashBalances, accounts };
+}
+
+/* ── Activities (real transaction history) ── */
+
+const ACTIVITY_TYPE_MAP: Record<string, ExtractedTransaction["type"] | null> = {
+  BUY: "buy",
+  SELL: "sell",
+  DIVIDEND: "dividend",
+  REI: "dividend",
+  FEE: "fee",
+};
+
+function activityToTransaction(a: UniversalActivity): ExtractedTransaction | null {
+  const mappedType = ACTIVITY_TYPE_MAP[(a.type || "").toUpperCase()];
+  if (!mappedType) return null;
+
+  const rawTicker = a.symbol?.symbol || a.symbol?.raw_symbol || "";
+  let ticker = rawTicker;
+  if (!ticker && mappedType === "fee") ticker = "FEE";
+  if (!ticker) return null;
+
+  if (a.symbol?.raw_symbol && a.symbol?.exchange?.mic_code && !a.symbol?.symbol) {
+    const normalized = normalizeSnapTradeTicker(a.symbol.raw_symbol, a.symbol.exchange.mic_code);
+    ticker = normalized.ticker || ticker;
+  }
+
+  const units = Math.abs(a.units ?? 0);
+  const price = Math.abs(a.price ?? 0);
+  const amount = Math.abs(a.amount ?? units * price);
+  const fee = Math.abs(a.fee ?? 0);
+  const currency = a.currency?.code || a.symbol?.currency?.code || "USD";
+  const date = a.trade_date ? a.trade_date.split("T")[0] : "";
+
+  if (!date) return null;
+
+  return {
+    date,
+    type: mappedType,
+    ticker,
+    name: a.symbol?.description || ticker,
+    shares: units,
+    pricePerShare: price,
+    totalAmount: amount,
+    fees: fee,
+    currency,
+    sourceRef: a.id ? `snaptrade-activity:${a.id}` : undefined,
+  };
+}
+
+export interface FetchActivitiesOptions {
+  userId: string;
+  userSecret: string;
+  brokerageAuthorizationId?: string;
+  startDate?: string;
+}
+
+const SNAPTRADE_ACTIVITIES_LIMIT = 10_000;
+
+export interface FetchActivitiesResult {
+  transactions: ExtractedTransaction[];
+  rawCount: number;
+  /** True when SnapTrade returned exactly 10k activities, meaning older records were likely truncated. */
+  possiblyTruncated: boolean;
+}
+
+export async function fetchActivities(
+  opts: FetchActivitiesOptions,
+): Promise<FetchActivitiesResult> {
+  const client = getClient();
+
+  try {
+    const res = await client.transactionsAndReporting.getActivities({
+      userId: opts.userId,
+      userSecret: opts.userSecret,
+      ...(opts.startDate ? { startDate: opts.startDate } : {}),
+      ...(opts.brokerageAuthorizationId
+        ? { brokerageAuthorizations: opts.brokerageAuthorizationId }
+        : {}),
+      type: "BUY,SELL,DIVIDEND,REI,FEE",
+    });
+
+    const activities: UniversalActivity[] = res.data ?? [];
+    const transactions: ExtractedTransaction[] = [];
+    for (const a of activities) {
+      const tx = activityToTransaction(a);
+      if (tx) transactions.push(tx);
+    }
+    return {
+      transactions,
+      rawCount: activities.length,
+      possiblyTruncated: activities.length >= SNAPTRADE_ACTIVITIES_LIMIT,
+    };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    throw new SnapTradeClientError(`Failed to fetch activities from SnapTrade: ${msg}`);
+  }
 }

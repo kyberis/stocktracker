@@ -1137,11 +1137,11 @@ function FeatureTogglesCard() {
 }
 
 function StripePricesCard() {
-  const FIELDS: { key: string; label: string; placeholder: string }[] = [
-    { key: "stripe_price_starter_monthly", label: "Starter Monthly", placeholder: "price_..." },
-    { key: "stripe_price_starter_annual", label: "Starter Annual", placeholder: "price_..." },
-    { key: "stripe_price_pro_monthly", label: "Pro Monthly", placeholder: "price_..." },
-    { key: "stripe_price_pro_annual", label: "Pro Annual", placeholder: "price_..." },
+  const FIELDS: { key: string; label: string; placeholder: string; hint?: string }[] = [
+    { key: "stripe_price_starter_monthly", label: "Starter Monthly", placeholder: "price_...", hint: "€2.99/mo (launch) · €3.99 regular" },
+    { key: "stripe_price_starter_annual", label: "Starter Annual", placeholder: "price_...", hint: "€23.99/yr (launch) · €31.99 regular" },
+    { key: "stripe_price_pro_monthly", label: "Pro Monthly", placeholder: "price_...", hint: "€7.99/mo (launch) · €9.99 regular" },
+    { key: "stripe_price_pro_annual", label: "Pro Annual", placeholder: "price_...", hint: "€59.99/yr (launch) · €79.99 regular" },
     { key: "stripe_coupon_device_free_year", label: "Device Free Year Coupon", placeholder: "coupon ID" },
   ];
 
@@ -1185,17 +1185,22 @@ function StripePricesCard() {
       </p>
       <div className="space-y-3">
         {FIELDS.map((f) => (
-          <div key={f.key} className="flex items-center gap-3">
-            <label className="text-xs text-gray-600 dark:text-slate-300 w-44 shrink-0">{f.label}</label>
-            <input
-              type="text"
-              value={draft[f.key] ?? ""}
-              onChange={(e) => setDraft((prev) => ({ ...prev, [f.key]: e.target.value }))}
-              placeholder={f.placeholder}
-              className="text-sm flex-1 font-mono"
-            />
-            {(draft[f.key] ?? "") !== (values[f.key] ?? "") && (
-              <span className="text-[10px] text-amber-500 shrink-0">unsaved</span>
+          <div key={f.key}>
+            <div className="flex items-center gap-3">
+              <label className="text-xs text-gray-600 dark:text-slate-300 w-44 shrink-0">{f.label}</label>
+              <input
+                type="text"
+                value={draft[f.key] ?? ""}
+                onChange={(e) => setDraft((prev) => ({ ...prev, [f.key]: e.target.value }))}
+                placeholder={f.placeholder}
+                className="text-sm flex-1 font-mono"
+              />
+              {(draft[f.key] ?? "") !== (values[f.key] ?? "") && (
+                <span className="text-[10px] text-amber-500 shrink-0">unsaved</span>
+              )}
+            </div>
+            {f.hint && (
+              <p className="text-[10px] text-gray-400 dark:text-slate-500 ml-[11.75rem] mt-0.5">{f.hint}</p>
             )}
           </div>
         ))}

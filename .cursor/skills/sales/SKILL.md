@@ -64,14 +64,14 @@ trefolio is not a dev board with a screen. It is a **premium desk companion for 
 
 ### The SaaS (Pro Subscription)
 
-The device is a **hardware anchor** that drives Pro subscriptions. Customers who buy the device are high-intent users — they care about their portfolio and will pay 4.99 EUR/month for the full experience.
+The device is a **hardware anchor** that drives Pro subscriptions. Customers who buy the device are high-intent users — they care about their portfolio and will pay 7.99 EUR/month for the full Trefolio experience.
 
 #### Device → Pro Upsell Flow
 
 ```
 Device arrives → User sets up → Free tier works great →
 AI button on device shows "Pro" badge → User taps it →
-"Upgrade to Pro for AI insights" → 4.99 EUR/month →
+"Upgrade to Trefolio for AI insights" → 7.99 EUR/month →
 AI summary appears on device + full web features unlock
 ```
 
@@ -137,7 +137,7 @@ Use these responses when writing FAQ sections, support replies, or sales copy:
 |-----------|----------|
 | "I can just check my phone" | "You can — but trefolio is always there, no unlocking, no apps, no distractions. It's the difference between glancing at a clock on your wall and pulling out your phone to check the time." |
 | "149 EUR is expensive for a display" | "trefolio isn't just a display — it's a premium desk companion with a vivid AMOLED screen, AI-powered insights, and real-time portfolio data. Compare it to a high-end desk clock or smart frame — same price range, but trefolio actually helps you make better decisions." |
-| "What if I cancel my subscription?" | "The device works perfectly on the free tier — you see your portfolio value, top holdings, and daily changes. Pro adds AI insights, which you can unlock anytime for just 4.99 EUR/month." |
+| "What if I cancel my subscription?" | "The device works perfectly on the free tier — you see your portfolio value, top holdings, and daily changes. Trefolio adds AI insights, which you can unlock anytime for just 7.99 EUR/month." |
 | "Why not just use a Raspberry Pi?" | "You could — and spend a weekend setting it up. trefolio works in 60 seconds out of the box: plug in, connect WiFi, enter your passkey. Plus it looks like it belongs on an executive desk, not a maker bench." |
 | "Is my data safe?" | "Your portfolio data is encrypted at rest, transmitted over HTTPS, and stored on EU-compliant servers. The device only displays data — it stores nothing except your login passkey, locally on the chip." |
 | "Does it work with my broker?" | "trefolio imports from DEGIRO, Interactive Brokers, Trading 212, and Revolut. You can also add holdings manually or via CSV. Once your portfolio is on trefolio.app, the device shows it instantly." |

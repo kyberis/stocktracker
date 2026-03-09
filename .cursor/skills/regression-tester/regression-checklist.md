@@ -10,7 +10,7 @@ Full test matrix organized by feature area. Each test has a browser action and e
 |---|------|--------|----------|
 | 1.1 | Page loads | Navigate to `/` while logged out | Landing page renders with hero, features, pricing |
 | 1.2 | Feature cards | Scroll to features section | 6 feature cards visible with icons and descriptions |
-| 1.3 | Pricing section | Scroll to pricing | Free and Pro tiers shown with correct prices (€4.99/mo, €39.99/yr) |
+| 1.3 | Pricing section | Scroll to pricing | Free, Bifolio, and Trefolio tiers shown with correct prices (€2.99/mo, €7.99/mo) |
 | 1.4 | Navigation links | Click Features / Pricing / FAQ anchors | Smooth scroll to each section |
 | 1.5 | CTA buttons | Locate "Get Started" buttons | Buttons link to `/signup` |
 | 1.6 | Footer links | Check footer | Privacy Policy and Terms of Service links present and working |

@@ -2,8 +2,8 @@
 
 > **Plan version:** 2.0 — March 2026
 > **App version:** v0.29.0
-> **Price:** 4.99 EUR/month (Pro plan) | Free tier available
-> **Annual:** 39.99 EUR/year (save 33%)
+> **Price:** Bifolio 2.99 EUR/month | Trefolio 7.99 EUR/month | Free tier available
+> **Annual:** Bifolio 23.99 EUR/year | Trefolio 59.99 EUR/year (save up to 37%)
 > **Status:** Technical foundation ready — remaining items are legal entity, domain purchase, and production Stripe configuration
 
 ---
@@ -28,7 +28,7 @@
 
 ### One-liner
 
-**trefolio** — The simplest way to track your stock portfolio with AI-powered insights, in 35 European languages, for just 4.99 EUR/month.
+**trefolio** — The simplest way to track your stock portfolio with AI-powered insights, in 35 European languages, starting at 2.99 EUR/month.
 
 ### Why trefolio?
 
@@ -56,7 +56,7 @@
 | Simply Wall St | $10/mo | 2x more expensive, no broker import, limited languages |
 | Portfolio Performance | Free (desktop) | No web/mobile, no AI, steep learning curve, no broker CSV import |
 | Snowball Analytics | $8/mo | More expensive, no AI analysis, fewer languages |
-| **trefolio** | **4.99 EUR/mo** | Simple, AI-powered, 35 languages, 4 broker imports, cheapest paid option |
+| **trefolio** | **2.99-7.99 EUR/mo** | Simple, AI-powered, 35 languages, 14 broker imports, 3-tier model with free tier |
 
 ---
 
@@ -85,37 +85,58 @@
 | **Economic Indicators** | No |
 | **CSV Export** | No |
 
-### Pro Tier — 4.99 EUR/month (39.99 EUR/year)
+### Starter Tier (Bifolio) — 2.99 EUR/month (23.99 EUR/year)
 
 Everything in Free, plus:
 
 | Feature | Included |
 |---|---|
+| **Up to 50 holdings** | Yes |
+| AI analysis | **20 calls/month** |
+| **10 price alerts** + email & push notifications | Yes |
+| 1-year portfolio growth history | Yes |
+| Portfolio sharing (public link) | Yes |
+| CSV export (holdings, transactions, cash) | Yes |
+
+### Pro Tier (Trefolio) — 7.99 EUR/month (59.99 EUR/year)
+
+Everything in Bifolio, plus:
+
+| Feature | Included |
+|---|---|
 | **Unlimited holdings** | Yes |
 | Alpha Vantage premium data | Yes |
-| Company fundamentals | Yes |
-| Stock intelligence (news sentiment, insider trades, institutional holdings) | Yes |
+| Company fundamentals (income, balance, cash flow) | Yes |
+| Stock intelligence (news sentiment, insider trades) | Yes |
+| Portfolio news feed across all holdings | Yes |
 | Economic indicators dashboard | Yes |
 | AI analysis | **30 calls/day** |
-| Unlimited price alerts + email delivery | Yes |
-| CSV export (holdings, transactions, cash) | Yes |
-| Portfolio growth projection (full access) | Yes |
+| AI Portfolio Review | **5/month** |
+| Unlimited price alerts + WhatsApp, push & email | Yes |
+| Advanced metrics (Sharpe, Drawdown, Volatility) | Yes |
+| Full portfolio history (all time) | Yes |
+| Automatic Broker Sync (20+ brokerages via SnapTrade) | Yes |
 | Priority support | Yes |
+| Up to 3 portfolios with independent tracking | Yes |
 
-### Why 4.99 EUR/month?
+### Why this pricing?
 
-- Still below the "impulse buy" threshold for fintech
-- **Up to 2x cheaper than any paid alternative** (Simply Wall St at $10, Seeking Alpha at $19.99)
-- Covers Alpha Vantage API costs (~$50/month premium key shared across users)
+- **Bifolio at 2.99 EUR/month** is below the "impulse buy" threshold — high-margin entry point (88% margin) with no expensive API dependencies
+- **Trefolio at 7.99 EUR/month** undercuts Getquin Premium (7.50 EUR/mo) and is 2x cheaper than Simply Wall St ($10.95/mo)
+- Covers Alpha Vantage API costs (~$50/month premium key shared across Trefolio users)
+- Covers SnapTrade broker sync costs ($2/connected user/month)
 - Covers OpenAI API costs (~0.10-0.30 EUR/user/month at typical usage)
-- Net revenue per user after Stripe fees: ~4.22 EUR/month
-- At 500 paying users = **2,495 EUR/month** — covers all infrastructure with healthy profit
-- At 2,000 users = **~10,000 EUR/month** — sustainable SaaS business
+- Bifolio net revenue per user after Stripe fees: ~2.53 EUR/month
+- Trefolio net revenue per user after Stripe fees: ~7.10 EUR/month
+- At 50 paying users (mix of Bifolio + Trefolio) = **~250-350 EUR/month** — covers all infrastructure
+- At 500 paying users = **~2,500+ EUR/month** — sustainable SaaS business
 
 ### Pricing Options
 
-- **Monthly plan:** 4.99 EUR/month
-- **Annual plan:** 39.99 EUR/year (save 33%) — incentivizes commitment, increases LTV
+- **Bifolio Monthly:** 2.99 EUR/month (launch), 3.99 EUR/month (regular)
+- **Bifolio Annual:** 23.99 EUR/year (launch), 31.99 EUR/year (regular) — save 33%
+- **Trefolio Monthly:** 7.99 EUR/month (launch), 9.99 EUR/month (regular)
+- **Trefolio Annual:** 59.99 EUR/year (launch), 79.99 EUR/year (regular) — save 37%
 - **Family plan (future):** 12 EUR/month for up to 3 accounts
 - **Self-hosted license (future):** One-time 99 EUR for Docker image with all Pro features
 
@@ -125,14 +146,16 @@ Current rate limiting and capacity configuration:
 
 | Limit | Value | Notes |
 |---|---|---|
-| `MAX_PRO_SUBSCRIBERS` | 10 | Increase as infrastructure scales |
-| `FREE_HOLDINGS_LIMIT` | 15 | Pro users get unlimited |
-| `FREE_ALERT_LIMIT` | 2 | Pro users get unlimited + email |
+| `MAX_PRO_SUBSCRIBERS` | 500 | Increase as infrastructure scales |
+| `FREE_HOLDINGS_LIMIT` | 15 | Starter: 50, Pro: unlimited |
+| `FREE_ALERT_LIMIT` | 2 | Starter: 10, Pro: unlimited |
 | `AI_FREE_MONTHLY_LIMIT` | 5 calls/month | |
+| `AI_STARTER_MONTHLY_LIMIT` | 20 calls/month | |
 | `AI_PRO_DAILY_LIMIT` | 30 calls/day | |
 | `AI_IMPORT_DAILY_LIMIT` | 5/day | Any tier |
 | `AV_GLOBAL_PER_MINUTE` | 75 | Shared across all users |
 | `AV_PER_USER_PER_MINUTE` | 15 | Prevents a single user hogging the pool |
+| `FREE_PORTFOLIO_LIMIT` | 1 | Starter: 1, Pro: 3 |
 
 ---
 
@@ -161,7 +184,7 @@ All major technical milestones from the original plan are **implemented and depl
 | `POST /api/billing/sync` | Syncs plan status after checkout (before webhook arrives) |
 | `GET /api/billing/capacity` | Returns current Pro count vs `MAX_PRO_SUBSCRIBERS` |
 
-Stripe cost: ~1.5% + 0.25 EUR per transaction in Europe = ~0.32 EUR per 4.99 EUR payment = 6.4% fee. Net revenue per user: ~4.22 EUR/month.
+Stripe cost: ~1.5% + 0.25 EUR per transaction in Europe. Bifolio (2.99 EUR): ~0.29 EUR fee (9.8%), net ~2.70 EUR. Trefolio (7.99 EUR): ~0.37 EUR fee (4.6%), net ~7.62 EUR.
 
 ### 3.3 Subscription Management — COMPLETED
 
@@ -279,7 +302,7 @@ Graceful degradation: when a Pro subscription lapses, all user data is preserved
 - Admin panel with tabs: Users, Settings, Analytics, Feedback (v0.6.0+)
 - Admin-managed API keys: Alpha Vantage, OpenAI, Resend — all encrypted, no env vars needed (v0.9.2, v0.9.4, v0.21.0)
 - Admin feature flags for alerts and CSV export (v0.21.0)
-- Admin user tier management (Free/Pro) (v0.13.0)
+- Admin user tier management (Free/Starter/Pro) (v0.13.0)
 - Feedback system with admin replies and status tracking (v0.18.0)
 - Missing price reporting with admin notification (v0.18.1)
 - Developer architecture page (admin-only) (v0.24.0)
@@ -287,7 +310,7 @@ Graceful degradation: when a Pro subscription lapses, all user data is preserved
 
 ### Platform & Operations
 
-- Stripe subscriptions: monthly (4.99 EUR) and annual (39.99 EUR), checkout, webhooks, billing portal (v0.11.0, v0.27.0)
+- Stripe subscriptions: Bifolio (2.99/23.99 EUR) and Trefolio (7.99/59.99 EUR), checkout, webhooks, billing portal (v0.11.0, v0.27.0)
 - Pro subscriber capacity cap with visible counter and checkout blocking (v0.16.0)
 - Per-customer rate limiting via Upstash Redis for AV, AI analysis, and AI imports (v0.16.0)
 - Prometheus `/api/metrics` endpoint (v0.15.0)
@@ -432,12 +455,12 @@ The landing page has been built in Next.js (same repo) and is deployed at the ro
 ### Current Sections
 
 1. **Hero** — "Track Your Portfolio With Clarity" with gradient text, CTA buttons, dashboard screenshot
-2. **Stats bar** — 5+ exchanges, 35 languages, 4.99 EUR/mo Pro, 25+ features
+2. **Stats bar** — 5+ exchanges, 35 languages, from 2.99 EUR/mo, 25+ features
 3. **Feature showcase** — Tabbed interface with screenshots for Portfolio, Dividends, AI Insights, and Import
 4. **Feature grid** — 6 cards: Performance Metrics, Multi-Currency, AI Analysis, CSV Import, Price Alerts, Privacy First
 5. **Video tutorial** — "See It in Action" with how-to-upload video and step-by-step guide
 6. **FAQ** — 8 questions covering import, security, exchanges, pricing, performance metrics, dividends
-7. **Pricing** — Free vs Pro cards with feature lists, annual plan callout
+7. **Pricing** — Free / Bifolio / Trefolio cards with feature lists, annual plan callout
 8. **Competitor comparison** — Feature matrix: trefolio vs others (checkmarks for AI, multi-currency, CSV import, broker import, under $10/mo)
 9. **Price comparison** — trefolio Pro at 40 EUR/year vs typical plans at 80-90 EUR/year
 10. **Investor metrics** — 50M+ European investors, sub-EUR infrastructure cost, low user count to profitability
@@ -465,7 +488,7 @@ Anonymous tracking implemented with IntersectionObserver for section views and c
 
 | Platform | Tactic | Why |
 |---|---|---|
-| **Product Hunt** | Schedule Tue-Thu. Tagline: "trefolio — Track your portfolio in 35 languages for under 5 EUR/month". 4 dark-mode screenshots, maker comment, 60s GIF | Top portfolio trackers (Snowball, Wealthfolio) got early users here |
+| **Product Hunt** | Schedule Tue-Thu. Tagline: "trefolio — Track your portfolio in 35 languages from 2.99 EUR/month". 4 dark-mode screenshots, maker comment, 60s GIF | Top portfolio trackers (Snowball, Wealthfolio) got early users here |
 | **Hacker News** | "Show HN: trefolio — AI portfolio tracker for European investors in 35 languages" | HN loves simple tools with clear pricing and technical depth |
 | **Reddit** | Authentic posts in r/eupersonalfinance, r/investing, r/SideProject, r/selfhosted, r/degiro, r/interactivebrokers, r/trading212 | Lead with value; broker-specific subreddits are high-intent |
 | **BetaList** | Submit 2-4 weeks before launch for waitlist signups | Free, curated early adopter audience |
@@ -479,7 +502,7 @@ Anonymous tracking implemented with IntersectionObserver for section views and c
 | **SEO blog posts** | "Best portfolio trackers for European investors 2026", "How to import your DEGIRO/IBKR/T212 portfolio", "Understanding TTWROR vs IRR" | Blog on trefolio.app, cross-post to Medium |
 | **YouTube tutorials** | "Import your broker portfolio in 30 seconds" (one per broker), "AI stock analysis demo" | YouTube + embed on landing page |
 | **TikTok/Reels** | 15-30s clips: before/after import, AI analysis demo, "5 EUR vs 20 USD" competitor comparison | TikTok, Instagram Reels, YouTube Shorts |
-| **LinkedIn articles** | "Why I built a portfolio tracker for under 5 EUR/month", "35 languages for 50M+ European investors" | LinkedIn + European finance groups |
+| **LinkedIn articles** | "Why I built a portfolio tracker from 2.99 EUR/month", "35 languages for 50M+ European investors" | LinkedIn + European finance groups |
 | **Localized content** | Blog posts in German, French, Spanish, Dutch, Italian targeting local-language search | SEO in local-language results |
 
 ### Phase 3: Paid Advertising (Month 3+, 100-300 EUR/month budget)
@@ -503,7 +526,7 @@ Anonymous tracking implemented with IntersectionObserver for section views and c
 
 ### Creative Campaign Ideas
 
-1. **"The 5 EUR Challenge"** — Social campaign: "What do you get for 5 EUR/month? trefolio vs Seeking Alpha ($20) vs Simply Wall St ($10)". Visual comparison cards for Twitter/Instagram.
+1. **"The 3 EUR Challenge"** — Social campaign: "What do you get for 2.99 EUR/month? trefolio vs Seeking Alpha ($20) vs Simply Wall St ($10)". Visual comparison cards for Twitter/Instagram.
 2. **"My Portfolio in 30 Seconds"** — UGC campaign: screen-record your first import. Each supported broker gets its own challenge. Prize: 1 year Pro free.
 3. **"AI Explains Your Stocks"** — Short video series: AI analysis of popular European stocks (ASML, SAP, Inditex, Nestle, LVMH) in plain language. One per language market.
 4. **"Expat Investor Spotlight"** — Blog/video series: expats managing multi-currency portfolios with trefolio.
@@ -606,13 +629,13 @@ Anonymous tracking implemented with IntersectionObserver for section views and c
 | 5 | **Free tier AI limit** | DECIDED: **5/month** (implemented) |
 | 6 | **Shared AV key** | DECIDED: **Platform key** (admin-managed, encrypted) |
 | 7 | **Open source** | Still pending — recommend private for commercial, self-hosted license later |
-| 8 | **Annual plan** | DECIDED: **From day one** — 39.99 EUR/year (save 33%) |
+| 8 | **Annual plan** | DECIDED: **From day one** — Bifolio 23.99 EUR/year (save 33%), Trefolio 59.99 EUR/year (save 37%) |
 | 9 | **Landing page** | DECIDED: **Same repo** — root `/` route, professionally redesigned |
 | 10 | **Logo** | Partially done — rebranded in app, needs external-use assets |
 | 11 | **Country of operation** | Still pending — affects VAT, Imprint, legal entity |
 | 12 | **Contact email** | Still pending — need domain first (e.g., support@trefolio.app) |
 | 13 | **Analytics** | DECIDED: **Vercel Analytics + internal event tracking** (implemented) |
-| 14 | **Pricing** | DECIDED: **4.99 EUR/month, 39.99 EUR/year** (v0.27.0) |
+| 14 | **Pricing** | DECIDED: **3-tier: Bifolio 2.99-3.99 EUR/month, Trefolio 7.99-9.99 EUR/month** (v0.27.0, updated v1.9.0) |
 | 15 | **Free tier limits** | DECIDED: **15 holdings, 2 alerts, 5 AI/month** (v0.27.0) |
 | 16 | **Languages** | DECIDED: **35 European languages** (v0.29.0) |
 | 17 | **Legal documents** | DECIDED: **Privacy Policy + Terms of Service live** (v0.28.0) |
@@ -628,21 +651,21 @@ Anonymous tracking implemented with IntersectionObserver for section views and c
 
 ## 11. Revenue Projections
 
-Net revenue per user after Stripe fees: ~4.22 EUR/month (Stripe takes ~1.5% + 0.25 EUR = ~0.32 EUR per 4.99 EUR payment).
+Revenue per user after Stripe fees: Bifolio ~2.70 EUR/month, Trefolio ~7.62 EUR/month. Blended average depends on tier mix.
 
-| Month | Free Users | Pro Users | MRR (EUR) | Costs (EUR) | Profit (EUR) |
-|---|---|---|---|---|---|
-| 1 | 80 | 8 | 40 | 20 | 20 |
-| 3 | 200 | 25 | 125 | 30 | 95 |
-| 6 | 500 | 55 | 275 | 50 | 225 |
-| 12 | 1,200 | 140 | 699 | 80 | 619 |
-| 24 | 3,000 | 350 | 1,747 | 150 | 1,597 |
+| Month | Free Users | Bifolio | Trefolio | MRR (EUR) | Costs (EUR) | Profit (EUR) |
+|---|---|---|---|---|---|---|
+| 1 | 80 | 5 | 3 | 39 | 85 | -46 |
+| 3 | 200 | 15 | 10 | 125 | 100 | 25 |
+| 6 | 500 | 30 | 25 | 290 | 130 | 160 |
+| 12 | 1,200 | 80 | 60 | 718 | 180 | 538 |
+| 24 | 3,000 | 200 | 150 | 1,737 | 300 | 1,437 |
 
-*Assumes 8-12% free-to-pro conversion, 4% monthly churn, organic growth.*
-*Costs include: Vercel Pro (~20 EUR), Turso (~10 EUR), AV Premium ($50 ≈ 46 EUR), Upstash Redis (~5 EUR), Resend (~0 EUR on free tier), Stripe fees (~6.4% of revenue).*
+*Assumes 8-12% free-to-paid conversion (60% Bifolio / 40% Trefolio), 4% monthly churn, organic growth.*
+*Costs include: Vercel Pro (~20 EUR), Turso (~10 EUR), AV Premium ($50 ≈ 46 EUR), Upstash Redis (~5 EUR), SnapTrade ($2/Trefolio user), Resend (~0 EUR on free tier), Stripe fees (~5-10% of revenue).*
 
-**Breakeven point:** ~5 paying users (covers basic infrastructure at ~20 EUR/month).
-**Profitability target:** 50 paying users = ~250 EUR/month net profit.
+**Breakeven point:** ~18 paying users (covers fixed infrastructure at ~65 EUR/month).
+**Profitability target:** 50 paying users = ~160 EUR/month net profit.
 
 ---
 

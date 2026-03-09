@@ -23,7 +23,7 @@ registerPost({
 <h2>The Contenders</h2>
 
 <h3>1. trefolio</h3>
-<p><strong>Price:</strong> Folio (free, 15 holdings) / Bifolio at €3.99/month / Trefolio at €7.49/month</p>
+<p><strong>Price:</strong> Folio (free, 15 holdings) / Bifolio at €2.99/month / Trefolio at €7.99/month</p>
 <p><strong>Best for:</strong> European investors who want one-click broker imports and AI analysis</p>
 <p>trefolio is a web-based tracker built specifically for European investors. It supports direct CSV imports from DEGIRO, Interactive Brokers, Trading 212, and Revolut — the four most popular brokers in Europe. The Folio tier includes real-time quotes, charts, and basic AI analysis. Trefolio unlocks unlimited holdings, company fundamentals, news sentiment, and unlimited AI calls.</p>
 <p>Strengths: native European broker imports, 35 languages, multi-currency (EUR, USD, GBP, DKK, CAD), clean UI, AI-powered portfolio review. Available as a PWA with an iOS home screen widget.</p>
@@ -308,7 +308,7 @@ registerPost({
 </table>
 
 <h2>The Cost Question</h2>
-<p>At €7.49/month (or €59.99/year), a Trefolio subscription costs less than a single stock trade commission at most European brokers. If AI analysis helps you avoid one bad trade or discover one undervalued stock per year, it pays for itself many times over.</p>
+<p>At €7.99/month (or €59.99/year), a Trefolio subscription costs less than a single stock trade commission at most European brokers. If AI analysis helps you avoid one bad trade or discover one undervalued stock per year, it pays for itself many times over.</p>
 <p>That said, if you're a passive index investor with 3 ETFs — save your money. The Folio tier is built for you.</p>
 
 <h2>Our Recommendation</h2>

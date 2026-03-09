@@ -164,13 +164,18 @@ export {
 export type { MetricsSnapshot } from "./metrics-snapshot";
 export { getMetricsSnapshot } from "./metrics-snapshot";
 
-export type { SnapTradeConnection } from "./snaptrade-connections";
+export type { SnapTradeConnection, SnapTradeBrokerSync, PendingSnapTradeDeletion } from "./snaptrade-connections";
 export {
   getSnapTradeConnection,
   getSnapTradeConnectionSecret,
   saveSnapTradeConnection,
   updateSnapTradeLastSynced,
   deleteSnapTradeConnection,
+  scheduleSnapTradeDeletion,
+  clearSnapTradeDeletion,
+  getSnapTradeConnectionsPendingDeletion,
+  getSnapTradeBrokerSyncs,
+  upsertSnapTradeBrokerSync,
 } from "./snaptrade-connections";
 
 export type { DeviceInterestEntry } from "./device-interest";

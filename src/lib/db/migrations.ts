@@ -914,6 +914,34 @@ const MIGRATIONS: Migration[] = [
       }
     },
   },
+  {
+    version: 25,
+    description: "Per-broker sync tracking for incremental SnapTrade imports",
+    up: async (client: Client) => {
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS snaptrade_broker_syncs (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          brokerage_authorization_id TEXT NOT NULL,
+          brokerage_name TEXT NOT NULL DEFAULT '',
+          last_imported_at TEXT NOT NULL DEFAULT '',
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_snaptrade_broker_syncs_user_broker
+          ON snaptrade_broker_syncs(user_id, brokerage_authorization_id);
+      `);
+    },
+  },
+  {
+    version: 26,
+    description: "Add pending_delete_at to snaptrade_connections for deferred cleanup on downgrade",
+    up: async (client: Client) => {
+      await client.execute(
+        `ALTER TABLE snaptrade_connections ADD COLUMN pending_delete_at TEXT NOT NULL DEFAULT ''`
+      );
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

@@ -50,15 +50,20 @@ export const GET = withMetrics("/api/p/[token]", async (req: NextRequest) => {
     }));
 
   // Track server-side (no user association for public page)
-  await client.execute({
-    sql: "INSERT INTO analytics_events (id, user_id, event, metadata, created_at) VALUES (?, ?, ?, ?, datetime('now'))",
-    args: [
-      `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-      "public",
-      "portfolio_share_viewed",
-      JSON.stringify({ token: token.slice(0, 4) + "****" }),
-    ],
-  });
+  // Use the portfolio owner's userId so the FK constraint on analytics_events is satisfied.
+  try {
+    await client.execute({
+      sql: "INSERT INTO analytics_events (id, user_id, event, metadata, created_at) VALUES (?, ?, ?, ?, datetime('now'))",
+      args: [
+        `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        userId,
+        "portfolio_share_viewed",
+        JSON.stringify({ token: token.slice(0, 4) + "****" }),
+      ],
+    });
+  } catch {
+    // Analytics failure must never block the public page
+  }
 
   return NextResponse.json({
     displayName: owner?.display_name || owner?.username || "Investor",

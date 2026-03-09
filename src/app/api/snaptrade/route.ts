@@ -12,15 +12,19 @@ import {
   addCashEntry,
   removeCashEntry,
   trackEvent,
+  getSnapTradeBrokerSyncs,
+  upsertSnapTradeBrokerSync,
 } from "@/lib/db";
 import {
   registerUser,
   deleteUser,
   generateConnectionPortalUrl,
   fetchAllHoldings,
+  fetchActivities,
   listBrokerageConnections,
   SnapTradeClientError,
 } from "@/lib/snaptrade-client";
+import type { ExtractedTransaction } from "@/hooks/import-types";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { withMetrics } from "@/lib/with-metrics";
 import { portfolioImportsTotal } from "@/lib/metrics";
@@ -160,7 +164,7 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
     }
   }
 
-  /* ── Fetch holdings from all connected accounts ── */
+  /* ── Fetch transaction history + cash from all connected brokers ── */
   if (action === "fetch") {
     const conn = await getSnapTradeConnection(session.userId);
     const userSecret = conn ? await getSnapTradeConnectionSecret(session.userId) : null;
@@ -174,12 +178,44 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
     }
 
     try {
-      const result = await fetchAllHoldings(conn.snapTradeUserId, userSecret);
+      const brokerageConns = await listBrokerageConnections(conn.snapTradeUserId, userSecret);
+      const activeConns = brokerageConns.filter((c) => !c.disabled);
 
+      const brokerSyncs = await getSnapTradeBrokerSyncs(session.userId);
+      const syncMap = new Map(brokerSyncs.map((s) => [s.brokerageAuthorizationId, s.lastImportedAt]));
+
+      // Fetch real transaction history per broker, narrowing by startDate when available
+      const allTransactions: ExtractedTransaction[] = [];
+      const fetchedBrokers: { id: string; name: string }[] = [];
+      const truncatedBrokers: string[] = [];
+
+      for (const bc of activeConns) {
+        const lastImported = syncMap.get(bc.id);
+        const result = await fetchActivities({
+          userId: conn.snapTradeUserId,
+          userSecret,
+          brokerageAuthorizationId: bc.id,
+          startDate: lastImported || undefined,
+        });
+        allTransactions.push(...result.transactions);
+        fetchedBrokers.push({ id: bc.id, name: bc.brokerageName });
+
+        if (result.possiblyTruncated) {
+          truncatedBrokers.push(bc.brokerageName);
+          console.warn(
+            `[SnapTrade] Activities response hit 10k limit for broker "${bc.brokerageName}" (user=${session.userId}, startDate=${lastImported || "none"})`,
+          );
+        }
+      }
+
+      // Dedup against already-imported sourceRefs
       const existingRefs = await listTransactionSourceRefs(session.userId);
-      const deduped = result.transactions.filter(
+      const deduped = allTransactions.filter(
         (tx) => !tx.sourceRef || !existingRefs.has(tx.sourceRef),
       );
+
+      // Cash balances still come from the holdings snapshot
+      const holdingsResult = await fetchAllHoldings(conn.snapTradeUserId, userSecret);
 
       const summary = {
         total: deduped.length,
@@ -187,13 +223,14 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
         sells: deduped.filter((t) => t.type === "sell").length,
         dividends: deduped.filter((t) => t.type === "dividend").length,
         fees: deduped.filter((t) => t.type === "fee").length,
-        cashBalances: result.cashBalances,
-        accounts: result.accounts,
-        duplicatesRemoved: result.transactions.length - deduped.length,
+        cashBalances: holdingsResult.cashBalances,
+        accounts: holdingsResult.accounts,
+        duplicatesRemoved: allTransactions.length - deduped.length,
+        truncatedBrokers,
       };
 
       let cashImported = 0;
-      if (result.cashBalances.length > 0) {
+      if (holdingsResult.cashBalances.length > 0) {
         const existingCash = await listCashEntries(session.userId, portfolioId);
         for (const entry of existingCash) {
           if (entry.name.toUpperCase().startsWith("CASH ")) {
@@ -202,7 +239,7 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
         }
 
         const yahoo = new YahooProvider();
-        for (const balance of result.cashBalances) {
+        for (const balance of holdingsResult.cashBalances) {
           let amountEUR = balance.amount;
           if (balance.currency !== "EUR") {
             try {
@@ -220,13 +257,29 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
         }
       }
 
+      // Persist per-broker sync timestamps
+      for (const broker of fetchedBrokers) {
+        await upsertSnapTradeBrokerSync(session.userId, broker.id, broker.name);
+      }
+
       await updateSnapTradeLastSynced(session.userId);
-      trackEvent(session.userId, "snaptrade_fetch", { accounts: String(result.accounts.length), positions: String(deduped.length), cash: String(cashImported) });
+      if (truncatedBrokers.length > 0) {
+        trackEvent(session.userId, "snaptrade_activities_truncated", {
+          brokers: truncatedBrokers.join(","),
+        });
+      }
+      trackEvent(session.userId, "snaptrade_fetch", {
+        accounts: String(holdingsResult.accounts.length),
+        activities: String(deduped.length),
+        cash: String(cashImported),
+        incremental: String(brokerSyncs.length > 0),
+        truncated: String(truncatedBrokers.length > 0),
+      });
       portfolioImportsTotal.inc({ source: "snaptrade", status: "success" });
 
       return NextResponse.json({ transactions: deduped, summary, cashImported });
     } catch (err) {
-      const msg = err instanceof SnapTradeClientError ? err.message : "Failed to fetch holdings from SnapTrade.";
+      const msg = err instanceof SnapTradeClientError ? err.message : "Failed to fetch from SnapTrade.";
       portfolioImportsTotal.inc({ source: "snaptrade", status: "error" });
 
       let disabledConnections: { id: string; brokerageName: string; disabledDate: string | null }[] = [];

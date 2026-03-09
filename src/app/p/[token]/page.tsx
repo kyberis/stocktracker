@@ -115,9 +115,6 @@ export default async function PublicPortfolioPage(
           </div>
           <a
             href="/"
-            onClick={() => {
-              // track share_signup_cta_clicked is done client-side via beacon
-            }}
             className="text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:underline"
           >
             Track your portfolio free →

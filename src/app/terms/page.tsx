@@ -98,7 +98,7 @@ export default function TermsOfServicePage() {
             <h3>Bifolio Tier</h3>
             <p>
               The Bifolio tier is available for a monthly subscription fee
-              (currently €3.99/month, inclusive of applicable VAT). Bifolio
+              (currently €2.99/month, inclusive of applicable VAT). Bifolio
               includes everything in Folio, plus up to 50 holdings, 20 AI
               analysis calls per month, portfolio sharing, CSV export, and
               1-year portfolio growth history.
@@ -107,7 +107,7 @@ export default function TermsOfServicePage() {
             <h3>Trefolio Tier</h3>
             <p>
               The Trefolio tier is available for a monthly subscription fee (currently
-              €7.49/month, inclusive of applicable VAT). Trefolio includes everything
+              €7.99/month, inclusive of applicable VAT). Trefolio includes everything
               in Bifolio, plus:
             </p>
             <ul className="list-disc pl-6 space-y-2">

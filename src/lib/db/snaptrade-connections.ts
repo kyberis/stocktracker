@@ -81,3 +81,85 @@ export async function deleteSnapTradeConnection(userId: string): Promise<boolean
   });
   return (result.rowsAffected ?? 0) > 0;
 }
+
+/* ── Deferred deletion on downgrade ── */
+
+const SNAPTRADE_DELETION_DELAY_MS = 60 * 60 * 1000; // 1 hour
+
+export async function scheduleSnapTradeDeletion(userId: string): Promise<void> {
+  const client = await ensureInitialized();
+  const deleteAt = new Date(Date.now() + SNAPTRADE_DELETION_DELAY_MS).toISOString();
+  await client.execute({
+    sql: "UPDATE snaptrade_connections SET pending_delete_at = ? WHERE user_id = ? AND pending_delete_at = ''",
+    args: [deleteAt, userId],
+  });
+}
+
+export async function clearSnapTradeDeletion(userId: string): Promise<void> {
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: "UPDATE snaptrade_connections SET pending_delete_at = '' WHERE user_id = ?",
+    args: [userId],
+  });
+}
+
+export interface PendingSnapTradeDeletion {
+  userId: string;
+  snapTradeUserId: string;
+}
+
+export async function getSnapTradeConnectionsPendingDeletion(): Promise<PendingSnapTradeDeletion[]> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: "SELECT user_id, snaptrade_user_id FROM snaptrade_connections WHERE pending_delete_at != '' AND pending_delete_at <= datetime('now')",
+    args: [],
+  });
+  return result.rows.map((r) => ({
+    userId: str(r.user_id),
+    snapTradeUserId: str(r.snaptrade_user_id),
+  }));
+}
+
+/* ── Per-broker sync tracking ── */
+
+export interface SnapTradeBrokerSync {
+  brokerageAuthorizationId: string;
+  brokerageName: string;
+  lastImportedAt: string;
+}
+
+export async function getSnapTradeBrokerSyncs(userId: string): Promise<SnapTradeBrokerSync[]> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: "SELECT brokerage_authorization_id, brokerage_name, last_imported_at FROM snaptrade_broker_syncs WHERE user_id = ?",
+    args: [userId],
+  });
+  return result.rows.map((r) => ({
+    brokerageAuthorizationId: str(r.brokerage_authorization_id),
+    brokerageName: str(r.brokerage_name),
+    lastImportedAt: str(r.last_imported_at),
+  }));
+}
+
+export async function upsertSnapTradeBrokerSync(
+  userId: string,
+  brokerageAuthorizationId: string,
+  brokerageName: string,
+): Promise<void> {
+  const client = await ensureInitialized();
+  const existing = await client.execute({
+    sql: "SELECT id FROM snaptrade_broker_syncs WHERE user_id = ? AND brokerage_authorization_id = ?",
+    args: [userId, brokerageAuthorizationId],
+  });
+  if (existing.rows.length > 0) {
+    await client.execute({
+      sql: "UPDATE snaptrade_broker_syncs SET last_imported_at = datetime('now'), brokerage_name = ? WHERE user_id = ? AND brokerage_authorization_id = ?",
+      args: [brokerageName, userId, brokerageAuthorizationId],
+    });
+  } else {
+    await client.execute({
+      sql: "INSERT INTO snaptrade_broker_syncs (id, user_id, brokerage_authorization_id, brokerage_name, last_imported_at) VALUES (?, ?, ?, ?, datetime('now'))",
+      args: [randomUUID(), userId, brokerageAuthorizationId, brokerageName],
+    });
+  }
+}

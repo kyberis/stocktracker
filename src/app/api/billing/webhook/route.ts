@@ -8,6 +8,9 @@ import {
   trackEvent,
   updateUserSubscription,
   getStripePriceConfig,
+  getSnapTradeConnection,
+  scheduleSnapTradeDeletion,
+  clearSnapTradeDeletion,
 } from "@/lib/db";
 import { billingEventsTotal } from "@/lib/metrics";
 import { getStripeClient } from "@/lib/stripe";
@@ -129,6 +132,7 @@ export const POST = withMetrics("/api/billing/webhook", async (req: NextRequest)
           stripeSubscriptionId: subscription.id,
           planExpiresAt: nextExpiresAt,
         });
+        await reconcileSnapTrade(user.id, nextPlan);
         break;
       }
       case "customer.subscription.deleted": {
@@ -140,6 +144,7 @@ export const POST = withMetrics("/api/billing/webhook", async (req: NextRequest)
           stripeSubscriptionId: "",
           planExpiresAt: "",
         });
+        await reconcileSnapTrade(user.id, "free");
         break;
       }
       default:
@@ -152,3 +157,23 @@ export const POST = withMetrics("/api/billing/webhook", async (req: NextRequest)
 
   return NextResponse.json({ received: true });
 });
+
+/**
+ * Schedule or cancel SnapTrade user deletion based on plan change.
+ * When a user loses Pro: schedule deletion after 1 hour (stops $2/user/month).
+ * When a user gains Pro: cancel any pending deletion.
+ */
+async function reconcileSnapTrade(userId: string, newPlan: string): Promise<void> {
+  try {
+    const conn = await getSnapTradeConnection(userId);
+    if (!conn) return;
+
+    if (newPlan === "pro") {
+      await clearSnapTradeDeletion(userId);
+    } else {
+      await scheduleSnapTradeDeletion(userId);
+    }
+  } catch (err) {
+    console.error("[billing/webhook] SnapTrade reconcile error:", err instanceof Error ? err.message : err);
+  }
+}
