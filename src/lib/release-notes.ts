@@ -43,6 +43,11 @@ export const releaseNotes: ReleaseEntry[] = [
         text: "Quick portfolio-wide alert from your profile — enable a single toggle to get notified when your entire portfolio moves significantly in a day",
         translations: { es: "Alerta rápida para toda la cartera desde tu perfil — activa un solo interruptor para recibir notificaciones cuando toda tu cartera se mueva significativamente en un día" },
       },
+      {
+        type: "improvement",
+        text: "Set Alert button moved next to the stock price in the detail drawer for quicker access",
+        translations: { es: "El botón de alerta se movió junto al precio en el panel de detalle para un acceso más rápido" },
+      },
     ],
   },
   {

@@ -380,17 +380,53 @@ export default function StockDetailDrawer({ holding, onClose }: StockDetailDrawe
                 {hasQuote ? formatCurrency(currentPriceInDisplay, cur) : formatCurrency(holding.purchasePrice, cur)} × {holding.shares} {t("shares")}
               </p>
             </div>
-            {hasQuote && (
-              <div className="text-right">
-                <p className={`text-sm font-semibold ${dayColor}`}>
-                  {dayIsPositive ? "+" : ""}{formatCurrency(dayChangeAmountEUR, "EUR")}
-                </p>
-                <p className={`text-xs ${dayColor}`}>
-                  {dayIsPositive ? "+" : ""}{formatPercent(dayChangePercent)}
-                </p>
-              </div>
-            )}
+            <div className="flex items-end gap-3">
+              {hasQuote && (
+                <div className="text-right">
+                  <p className={`text-sm font-semibold ${dayColor}`}>
+                    {dayIsPositive ? "+" : ""}{formatCurrency(dayChangeAmountEUR, "EUR")}
+                  </p>
+                  <p className={`text-xs ${dayColor}`}>
+                    {dayIsPositive ? "+" : ""}{formatPercent(dayChangePercent)}
+                  </p>
+                </div>
+              )}
+              {!isCashHolding && !isEditing && (
+                <button
+                  onClick={() => setShowAlertForm((v) => !v)}
+                  className={`p-1.5 rounded-lg transition-colors ${
+                    hasAlert
+                      ? "text-amber-500 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10"
+                      : showAlertForm
+                        ? "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10"
+                        : "text-gray-400 dark:text-slate-500 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-600 dark:hover:text-slate-300"
+                  }`}
+                  title={hasAlert ? t("alertActive") : t("setAlert")}
+                  aria-label={hasAlert ? t("alertActive") : t("setAlert")}
+                >
+                  <svg className="w-5 h-5" fill={hasAlert ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                  </svg>
+                </button>
+              )}
+            </div>
           </div>
+
+          {/* Inline alert form */}
+          {showAlertForm && !isCashHolding && !isEditing && (
+            <div className="mt-3 pt-3 border-t border-gray-100 dark:border-slate-800">
+              <AlertForm
+                ticker={holding.ticker}
+                name={holding.name}
+                exchange={holding.exchange}
+                source="stock-drawer"
+                quote={quote}
+                compact
+                onCreated={() => setShowAlertForm(false)}
+                onCancel={() => setShowAlertForm(false)}
+              />
+            </div>
+          )}
         </div>
 
         {/* Content */}
@@ -483,43 +519,6 @@ export default function StockDetailDrawer({ holding, onClose }: StockDetailDrawe
               editPurchasePrice={editPurchasePrice} setEditPurchasePrice={setEditPurchasePrice}
               editDisplayCurrency={editDisplayCurrency} setEditDisplayCurrency={setEditDisplayCurrency}
             />
-          )}
-
-          {/* Alert section */}
-          {!isCashHolding && !isEditing && (
-            <div>
-              {showAlertForm ? (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{t("setAlert")}</h3>
-                    <button onClick={() => setShowAlertForm(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-slate-300" aria-label={t("cancel")}>
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                  <AlertForm
-                    ticker={holding.ticker}
-                    name={holding.name}
-                    exchange={holding.exchange}
-                    source="stock-drawer"
-                    quote={quote}
-                    onCreated={() => setShowAlertForm(false)}
-                    onCancel={() => setShowAlertForm(false)}
-                  />
-                </div>
-              ) : (
-                <button
-                  onClick={() => setShowAlertForm(true)}
-                  className={`flex items-center gap-1.5 text-sm transition-colors ${hasAlert ? "text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300" : "text-gray-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400"}`}
-                >
-                  <svg className="w-4 h-4" fill={hasAlert ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                  </svg>
-                  {hasAlert ? t("alertActive") : t("setAlert")}
-                </button>
-              )}
-            </div>
           )}
 
           {/* Last updated */}
