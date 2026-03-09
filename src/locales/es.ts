@@ -518,6 +518,7 @@ const es: TranslationStrings = {
   transactionsFound: "transacciones encontradas",
   transactionsImported: "transacciones importadas!",
   importMore: "Importar Más",
+  viewPortfolio: "Ver Portafolio",
   clickToUpload: "Haz clic para subir",
   degiroInstructions: "Cómo exportar desde DEGIRO",
   degiroInstructionsDetail: "En DEGIRO, ve a Órdenes → Historial. Selecciona el rango de fechas desde el día de apertura de la cuenta hasta hoy y exporta como CSV. Sube el archivo descargado aquí.",

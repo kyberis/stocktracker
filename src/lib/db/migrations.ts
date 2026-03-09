@@ -578,7 +578,7 @@ const MIGRATIONS: Migration[] = [
           show_values INTEGER NOT NULL DEFAULT 0,
           excluded_tickers TEXT,
           UNIQUE(user_id)
-        )
+        );
       `);
     },
   },
@@ -695,6 +695,23 @@ const MIGRATIONS: Migration[] = [
       await client.execute({ sql: "UPDATE transactions SET ticker = 'BRK-B' WHERE ticker = 'BRK.B'" });
       await client.execute({ sql: "UPDATE holdings SET ticker = 'BRK-A' WHERE ticker = 'BRK.A'" });
       await client.execute({ sql: "UPDATE transactions SET ticker = 'BRK-A' WHERE ticker = 'BRK.A'" });
+    },
+  },
+  {
+    version: 19,
+    description: "Ensure portfolio_shares table exists (v13 fix — missing semicolon)",
+    up: async (client: Client) => {
+      await client.execute({
+        sql: `CREATE TABLE IF NOT EXISTS portfolio_shares (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          is_active INTEGER NOT NULL DEFAULT 1,
+          show_values INTEGER NOT NULL DEFAULT 0,
+          excluded_tickers TEXT,
+          UNIQUE(user_id)
+        )`,
+      });
     },
   },
 ];

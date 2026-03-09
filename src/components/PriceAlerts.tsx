@@ -9,6 +9,36 @@ import { useAlerts } from "@/lib/hooks/use-api";
 import type { QuoteData, SearchResult, AlertCondition } from "@/lib/types";
 import ProCompareCard from "@/components/ProCompareCard";
 
+function AlertVerifyHint({ t }: { t: (key: string) => string }) {
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  async function handleResend() {
+    if (sending || sent) return;
+    setSending(true);
+    try {
+      const res = await fetch("/api/auth/verify-email", { method: "POST" });
+      if (res.ok) setSent(true);
+    } catch { /* ignore */ }
+    setSending(false);
+  }
+
+  return (
+    <div className="flex items-center gap-2 mt-3">
+      <p className="text-[10px] text-amber-500">
+        {t("alertEmailVerifyHint")}
+      </p>
+      <button
+        onClick={handleResend}
+        disabled={sending || sent}
+        className="text-[10px] font-medium text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 underline underline-offset-2 disabled:opacity-50 disabled:no-underline whitespace-nowrap"
+      >
+        {sent ? t("verificationEmailSent") : sending ? t("loading") : t("sendVerificationEmail")}
+      </button>
+    </div>
+  );
+}
+
 export default function PriceAlerts() {
   const { t } = useI18n();
   const { user } = useAuth();
@@ -470,9 +500,7 @@ export default function PriceAlerts() {
           </p>
         )}
         {isPro && user?.email && !user?.emailVerified && (
-          <p className="text-[10px] text-amber-500 mt-3">
-            {t("alertEmailVerifyHint")}
-          </p>
+          <AlertVerifyHint t={t} />
         )}
       </div>
     </div>

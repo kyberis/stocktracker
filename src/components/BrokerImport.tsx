@@ -380,9 +380,17 @@ export default function BrokerImport() {
             </svg>
           </div>
           <p className="text-sm font-medium text-gray-900 dark:text-white">{importedCount} {t("transactionsImported")}</p>
-          <button onClick={reset} className="btn-secondary text-xs px-3 py-1.5 mt-3">
-            {t("importMore")}
-          </button>
+          <div className="flex flex-col items-center gap-2 mt-3">
+            <a href="/" className="btn-primary text-xs px-4 py-1.5 inline-flex items-center gap-1.5">
+              {t("viewPortfolio") || "View Portfolio"}
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+              </svg>
+            </a>
+            <button onClick={reset} className="btn-secondary text-xs px-3 py-1.5">
+              {t("importMore")}
+            </button>
+          </div>
         </div>
       )}
     </div>
