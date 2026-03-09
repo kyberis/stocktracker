@@ -68,8 +68,6 @@ export interface PublicUser {
 }
 
 export interface UserSettings {
-  provider: "yahoo" | "alphavantage";
-  alphaVantageApiKey: string;
   language: Language;
   refreshInterval: RefreshInterval;
 }

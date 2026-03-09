@@ -40,7 +40,7 @@ export const POST = withMetrics("/api/ai-analysis", async (request: NextRequest)
     );
   }
 
-  const apiKey = await getGlobalOpenAIApiKey();
+  const apiKey = getGlobalOpenAIApiKey();
   if (!apiKey) {
     return Response.json(
       { error: "OpenAI API key not configured. Ask your admin to set it in the Admin panel." },

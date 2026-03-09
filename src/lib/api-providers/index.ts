@@ -35,7 +35,7 @@ export function createProvider(
  */
 export async function getProviderFromRequest(request: NextRequest): Promise<StockDataProvider> {
   const session = await getSessionFromRequest(request);
-  const avKey = await getGlobalAlphaVantageApiKey();
+  const avKey = getGlobalAlphaVantageApiKey();
   const usePremium = session?.plan === "pro" && avKey.length > 0;
   return createProvider(usePremium ? "alphavantage" : "yahoo", avKey);
 }

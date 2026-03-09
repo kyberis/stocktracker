@@ -24,7 +24,7 @@ export const GET = withMetrics("/api/ex-dividend", async (req: NextRequest) => {
     return NextResponse.json({ events: [] });
   }
 
-  const apiKey = await getGlobalAlphaVantageApiKey();
+  const apiKey = getGlobalAlphaVantageApiKey();
   if (!apiKey) {
     return NextResponse.json({ events: [], error: "no_provider" });
   }

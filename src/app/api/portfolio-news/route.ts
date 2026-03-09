@@ -44,7 +44,7 @@ export const GET = withMetrics("/api/portfolio-news", async (request: NextReques
     return Response.json([]);
   }
 
-  const avKey = await getGlobalAlphaVantageApiKey();
+  const avKey = getGlobalAlphaVantageApiKey();
 
   if (avKey) {
     const provider = createProvider("alphavantage", avKey);

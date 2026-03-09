@@ -37,7 +37,7 @@ export const GET = withMetrics("/api/exchange-rates", async (request: NextReques
     );
   }
 
-  const avApiKey = await getGlobalAlphaVantageApiKey();
+  const avApiKey = getGlobalAlphaVantageApiKey();
 
   let av: AlphaVantageProvider | null = null;
   let rateLimitUserId: string | null = null;

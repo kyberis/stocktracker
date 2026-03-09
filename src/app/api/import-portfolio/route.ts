@@ -77,7 +77,7 @@ export const POST = withMetrics("/api/import-portfolio", async (req: NextRequest
     );
   }
 
-  const apiKey = await getGlobalOpenAIApiKey();
+  const apiKey = getGlobalOpenAIApiKey();
   if (!apiKey) {
     return NextResponse.json(
       { error: "OpenAI API key not configured. Ask your admin to set it in the Admin panel." },

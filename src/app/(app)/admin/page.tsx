@@ -1144,18 +1144,6 @@ function SettingsTab() {
       <CapacityCard />
       <MetricsCard />
       <ApiKeyCard
-        title="Alpha Vantage API Key"
-        description="This key is stored encrypted and shared with all users. It enables the Alpha Vantage data provider for financial statements, company overviews, and economic indicators."
-        endpoint="/api/admin/api-key"
-        placeholder="Enter Alpha Vantage API key"
-      />
-      <ApiKeyCard
-        title="OpenAI API Key"
-        description="This key is stored encrypted and shared with all users. It enables AI-powered features such as financial analysis, stock intelligence, and portfolio import from screenshots."
-        endpoint="/api/admin/openai-key"
-        placeholder="Enter OpenAI API key (sk-...)"
-      />
-      <ApiKeyCard
         title="Resend API Key"
         description="This key is stored encrypted and enables email delivery for price alerts and email verification. Get a key at resend.com."
         endpoint="/api/admin/resend-key"

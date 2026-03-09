@@ -1,7 +1,7 @@
 import { ensureInitialized } from "./client";
-import { str, parseRefreshInterval, ADMIN_DEFAULT_USERNAME } from "./helpers";
+import { str, parseRefreshInterval } from "./helpers";
 import type { UserSettings } from "./helpers";
-import type { ApiProviderName, Language } from "@/lib/types";
+import type { Language } from "@/lib/types";
 import { isValidLanguage } from "@/lib/languages";
 import { encrypt, tryDecryptOrPlaintext } from "@/lib/crypto";
 
@@ -10,23 +10,21 @@ export type PlatformFeature = "alerts_enabled" | "csv_export_enabled" | "apple_s
 export async function getUserSettings(userId: string): Promise<UserSettings> {
   const client = await ensureInitialized();
   const result = await client.execute({
-    sql: "SELECT provider, alpha_vantage_api_key, language, refresh_interval FROM user_settings WHERE user_id = ?",
+    sql: "SELECT language, refresh_interval FROM user_settings WHERE user_id = ?",
     args: [userId],
   });
 
   if (result.rows.length === 0) {
     await client.execute({
-      sql: `INSERT INTO user_settings (user_id, provider, alpha_vantage_api_key, language, refresh_interval)
-            VALUES (?, 'yahoo', '', 'en', 15)`,
+      sql: `INSERT INTO user_settings (user_id, language, refresh_interval)
+            VALUES (?, 'en', 15)`,
       args: [userId],
     });
-    return { provider: "yahoo", alphaVantageApiKey: "", language: "en", refreshInterval: 15 };
+    return { language: "en", refreshInterval: 15 };
   }
 
   const row = result.rows[0];
   return {
-    provider: (row.provider === "alphavantage" ? "alphavantage" : "yahoo") as ApiProviderName,
-    alphaVantageApiKey: tryDecryptOrPlaintext(str(row.alpha_vantage_api_key)),
     language: (isValidLanguage(String(row.language)) ? String(row.language) : "en") as Language,
     refreshInterval: parseRefreshInterval(row.refresh_interval),
   };
@@ -38,71 +36,25 @@ export async function updateUserSettings(
 ): Promise<UserSettings> {
   const current = await getUserSettings(userId);
   const next: UserSettings = {
-    provider: updates.provider ?? current.provider,
-    alphaVantageApiKey: updates.alphaVantageApiKey ?? current.alphaVantageApiKey,
     language: updates.language ?? current.language,
     refreshInterval: updates.refreshInterval ?? current.refreshInterval,
   };
 
   const client = await ensureInitialized();
   await client.execute({
-    sql: "UPDATE user_settings SET provider = ?, alpha_vantage_api_key = ?, language = ?, refresh_interval = ? WHERE user_id = ?",
-    args: [next.provider, encrypt(next.alphaVantageApiKey), next.language, next.refreshInterval, userId],
+    sql: "UPDATE user_settings SET language = ?, refresh_interval = ? WHERE user_id = ?",
+    args: [next.language, next.refreshInterval, userId],
   });
 
   return next;
 }
 
-export async function getGlobalAlphaVantageApiKey(): Promise<string> {
-  const client = await ensureInitialized();
-  const result = await client.execute({
-    sql: `SELECT us.alpha_vantage_api_key FROM user_settings us
-          JOIN users u ON u.id = us.user_id
-          WHERE u.role = 'admin' AND us.alpha_vantage_api_key != ''
-          ORDER BY u.created_at ASC LIMIT 1`,
-  });
-  if (result.rows.length === 0) return "";
-  return tryDecryptOrPlaintext(str(result.rows[0].alpha_vantage_api_key));
+export function getGlobalAlphaVantageApiKey(): string {
+  return process.env.STOCKTRACKER_ALPHAVANTAGE_API_KEY || "";
 }
 
-export async function setGlobalAlphaVantageApiKey(key: string): Promise<void> {
-  const client = await ensureInitialized();
-  const admin = await client.execute({
-    sql: "SELECT id FROM users WHERE username = ?",
-    args: [ADMIN_DEFAULT_USERNAME],
-  });
-  if (admin.rows.length === 0) throw new Error("Admin user not found");
-  const adminId = str(admin.rows[0].id);
-  await client.execute({
-    sql: "UPDATE user_settings SET alpha_vantage_api_key = ? WHERE user_id = ?",
-    args: [encrypt(key), adminId],
-  });
-}
-
-export async function getGlobalOpenAIApiKey(): Promise<string> {
-  const client = await ensureInitialized();
-  const result = await client.execute({
-    sql: `SELECT us.openai_api_key FROM user_settings us
-          JOIN users u ON u.id = us.user_id
-          WHERE u.role = 'admin' AND us.openai_api_key != ''
-          ORDER BY u.created_at ASC LIMIT 1`,
-  });
-  if (result.rows.length === 0) return "";
-  return tryDecryptOrPlaintext(str(result.rows[0].openai_api_key));
-}
-
-export async function setGlobalOpenAIApiKey(key: string): Promise<void> {
-  const client = await ensureInitialized();
-  const admin = await client.execute({
-    sql: "SELECT id FROM users WHERE username = ?",
-    args: [ADMIN_DEFAULT_USERNAME],
-  });
-  if (admin.rows.length === 0) throw new Error("Admin user not found");
-  const adminId = str(admin.rows[0].id);
-  await client.execute({
-    sql: "UPDATE user_settings SET openai_api_key = ? WHERE user_id = ?",
-    args: [key ? encrypt(key) : "", adminId],
-  });
+export function getGlobalOpenAIApiKey(): string {
+  return process.env.STOCKTRACKER_OPENAI_API_KEY || "";
 }
 
 export async function getPlatformSetting(key: string): Promise<string> {

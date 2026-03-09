@@ -70,7 +70,7 @@ export const POST = withMetrics("/api/device/ai-summary", async (request: NextRe
     );
   }
 
-  const apiKey = await getGlobalOpenAIApiKey();
+  const apiKey = getGlobalOpenAIApiKey();
   if (!apiKey) {
     return Response.json(
       { error: "AI service not configured" },

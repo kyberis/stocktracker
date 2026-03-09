@@ -29,7 +29,7 @@ export const GET = withMetrics("/api/economic-indicators", async (request: NextR
     );
   }
 
-  const apiKey = await getGlobalAlphaVantageApiKey();
+  const apiKey = getGlobalAlphaVantageApiKey();
   if (!apiKey) {
     return Response.json(
       { error: "No Alpha Vantage API key configured. Please ask your administrator to add one." },
