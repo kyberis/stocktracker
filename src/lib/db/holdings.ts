@@ -1,12 +1,66 @@
 import { randomUUID } from "crypto";
 import { ensureInitialized } from "./client";
 import { str, num, holdingAssetType, normalizeTickerForExchange } from "./helpers";
-import type { Holding, HoldingAssetType } from "@/lib/types";
+import type { Holding, HoldingAssetType, ExchangeRates } from "@/lib/types";
 import { deriveHoldingsFromTransactions } from "@/lib/derive-holdings";
 import { seedHoldingsForUser, seedCashForUser, seedTransactionsForUser } from "./seed";
 import { listTransactions } from "./transactions";
 import { findOrCreateBrokerAccount } from "./accounts";
 import { resolvePortfolioId } from "./portfolios";
+import { YahooProvider } from "@/lib/api-providers/yahoo";
+import { convertToEUR, resolveQuoteCurrency } from "@/lib/utils";
+
+const FX_PAIRS = ["EURUSD", "EURGBP", "EURDKK", "EURCAD"];
+
+async function enrichValueInEUR(derived: Holding[]): Promise<void> {
+  if (derived.length === 0) return;
+
+  const yahoo = new YahooProvider();
+  const tickers = [...new Set(derived.map((h) => h.ticker))];
+
+  const quotes: Record<string, { price: number; currency: string }> = {};
+  const BATCH = 10;
+  for (let i = 0; i < tickers.length; i += BATCH) {
+    const chunk = tickers.slice(i, i + BATCH);
+    const results = await Promise.allSettled(
+      chunk.map(async (t) => {
+        const q = await yahoo.getQuote(t);
+        return { ticker: t, price: q.regularMarketPrice, currency: q.currency };
+      })
+    );
+    for (const r of results) {
+      if (r.status === "fulfilled" && r.value.price > 0) {
+        quotes[r.value.ticker] = { price: r.value.price, currency: r.value.currency };
+      }
+    }
+  }
+
+  const exchangeRates: ExchangeRates = {};
+  const rateResults = await Promise.allSettled(
+    FX_PAIRS.map(async (pair) => {
+      const from = pair.substring(0, 3);
+      const to = pair.substring(3);
+      const rate = await yahoo.getExchangeRate(from, to);
+      return { pair, rate };
+    })
+  );
+  for (const r of rateResults) {
+    if (r.status === "fulfilled" && r.value.rate > 0) {
+      exchangeRates[r.value.pair] = r.value.rate;
+    }
+  }
+
+  for (const h of derived) {
+    const q = quotes[h.ticker];
+    if (!q) continue;
+    const quoteCurrency = resolveQuoteCurrency(h.displayCurrency, q.currency);
+    const valueInQuoteCurrency = h.shares * q.price;
+    const valueEUR = convertToEUR(valueInQuoteCurrency, quoteCurrency, exchangeRates);
+    if (Number.isFinite(valueEUR) && valueEUR > 0) {
+      h.valueInEUR = valueEUR;
+    }
+  }
+}
 
 const SOURCE_REF_BROKER_MAP: Record<string, { id: string; label: string }> = {
   degiro: { id: "degiro", label: "DEGIRO" },
@@ -262,6 +316,10 @@ export async function rebuildHoldings(userId: string, portfolioId?: string): Pro
   }
 
   const derived = deriveHoldingsFromTransactions(transactions, metadataByKey);
+
+  await enrichValueInEUR(derived).catch((err) =>
+    console.warn("[rebuildHoldings] quote enrichment failed, using valueInEUR=0:", err)
+  );
 
   await client.execute({ sql: `DELETE FROM holdings WHERE user_id = ?${portfolioFilter}`, args: [userId, ...portfolioArgs] });
 

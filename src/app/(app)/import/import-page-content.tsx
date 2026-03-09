@@ -72,9 +72,13 @@ function InlineGuide({ guide, locale }: { guide: ImportGuide; locale: string }) 
 export default function ImportPageContent() {
   const { t, language: locale } = useI18n();
   const { user } = useAuth();
-  const { addHolding, refreshHoldings } = usePortfolio();
+  const { addHolding, refreshHoldings, activePortfolioId, portfolios } = usePortfolio();
   const { getApiHeaders } = useSettings();
   const track = useTrack();
+
+  const activePortfolioName = activePortfolioId
+    ? portfolios.find((p) => p.id === activePortfolioId)?.name
+    : undefined;
   const isPro = user?.plan === "pro";
 
   // Active import method
@@ -134,8 +138,8 @@ export default function ImportPageContent() {
   // Broker CSV file handling
   const handleBrokerFile = useCallback(async (file: File) => {
     track("import_file_uploaded", { method: "broker_csv", fileType: file.type, fileSize: String(file.size) });
-    await brokerCSV.parseFile(file, broker);
-  }, [broker, brokerCSV, track]);
+    await brokerCSV.parseFile(file, broker, activePortfolioId);
+  }, [broker, brokerCSV, track, activePortfolioId]);
 
   const handleBrokerFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -227,19 +231,19 @@ export default function ImportPageContent() {
 
   // Import complete handlers
   const handleBrokerImportAll = async () => {
-    await brokerCSV.importAll(broker);
+    await brokerCSV.importAll(broker, false, activePortfolioId);
     track("import_completed", { method: "broker_csv", broker, txCount: String(brokerCSV.transactions.length) });
     refreshHoldings();
   };
 
   const handleAiImportAll = async () => {
-    await aiImport.importAll();
+    await aiImport.importAll(activePortfolioId);
     track("import_completed", { method: "ai_import", holdingsCount: String(aiImport.holdings.length), txCount: String(aiImport.transactions.length) });
     refreshHoldings();
   };
 
   const handleSnapTradeImportAll = async () => {
-    await snapTradeApi.importAll();
+    await snapTradeApi.importAll(activePortfolioId);
     track("import_completed", { method: "snaptrade_api", txCount: String(snapTradeApi.transactions.length) });
     refreshHoldings();
   };
@@ -265,6 +269,16 @@ export default function ImportPageContent() {
       <div className="mb-6">
         <h1 className="text-xl font-bold text-gray-900 dark:text-white">{t("importPageTitle")}</h1>
         <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">{t("importPageSubtitle")}</p>
+        {activePortfolioName && (
+          <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
+            <svg className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
+            </svg>
+            <span className="text-xs font-medium text-emerald-700 dark:text-emerald-300">
+              {t("importingToPortfolio").replace("{name}", activePortfolioName)}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Method tabs */}

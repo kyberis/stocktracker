@@ -1,13 +1,8 @@
 import { NextRequest } from "next/server";
-import { getProviderFromRequest } from "@/lib/api-providers";
-import { jsonWithCallCount } from "@/lib/api-providers/response";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 import type { TimePeriod } from "@/lib/api-providers/types";
-import { isRateLimitError, DE_FALLBACK_SUFFIXES } from "@/lib/api-providers/market-data-helpers";
-import { requireRateLimit } from "@/lib/auth/guards";
-import { recordAvUsageAsync } from "@/lib/rate-limit";
+import { DE_FALLBACK_SUFFIXES } from "@/lib/api-providers/market-data-helpers";
 import { withMetrics } from "@/lib/with-metrics";
-import { deferTask } from "@/lib/task-runner";
 
 export const dynamic = "force-dynamic";
 
@@ -38,46 +33,21 @@ export const GET = withMetrics("/api/historical", async (request: NextRequest) =
     return Response.json({ error: "symbol parameter required" }, { status: 400 });
   }
 
-  const provider = await getProviderFromRequest(request);
   const yahoo = new YahooProvider();
 
-  let rateLimitUserId: string | null = null;
-  if (provider.name === "alphavantage") {
-    const rl = await requireRateLimit(request, "alphavantage");
-    if (rl.error) return rl.error;
-    rateLimitUserId = rl.session?.userId ?? null;
-  }
-
   try {
-    const data = await provider.getHistorical(symbol, period);
+    const data = await yahoo.getHistorical(symbol, period);
     if (data.length > 0) {
-      return jsonWithCallCount(provider, { data, providerUsed: provider.name });
+      return Response.json({ data, providerUsed: "yahoo" });
     }
     const fb = await tryGermanHistoricalFallback(yahoo, symbol, period);
-    if (fb) return jsonWithCallCount(provider, { data: fb, providerUsed: provider.name });
-    return jsonWithCallCount(provider, { data, providerUsed: provider.name });
+    if (fb) return Response.json({ data: fb, providerUsed: "yahoo" });
+    return Response.json({ data, providerUsed: "yahoo" });
   } catch (err) {
-    if (provider.name === "alphavantage" && isRateLimitError(err)) {
-      console.warn(`Alpha Vantage rate limit hit for historical ${symbol}, falling back to Yahoo`);
-    }
-
-    try {
-      const data = await yahoo.getHistorical(symbol, period);
-      if (data.length > 0) {
-        return jsonWithCallCount(provider, { data, providerUsed: "yahoo" });
-      }
-    } catch {
-      // primary Yahoo failed, try German fallback
-    }
-
     const fb = await tryGermanHistoricalFallback(yahoo, symbol, period);
-    if (fb) return jsonWithCallCount(provider, { data: fb, providerUsed: "yahoo" });
+    if (fb) return Response.json({ data: fb, providerUsed: "yahoo" });
 
     console.error(`Failed to fetch historical data for ${symbol}:`, err instanceof Error ? err.message : err);
-    return jsonWithCallCount(provider, { error: "Failed to fetch historical data" }, { status: 500 });
-  } finally {
-    if (rateLimitUserId && provider.callCount) {
-      deferTask(() => recordAvUsageAsync(rateLimitUserId, provider.callCount!));
-    }
+    return Response.json({ error: "Failed to fetch historical data" }, { status: 500 });
   }
 });

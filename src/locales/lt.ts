@@ -504,6 +504,7 @@ const lt: TranslationStrings = {
   importNav: "Import",
   importPageTitle: "Import Your Portfolio",
   importPageSubtitle: "All import methods in one place. Choose your broker, upload, review, and import.",
+  importingToPortfolio: "Importing to: {name}",
   importSectionBrokerCsv: "Broker CSV",
   importSectionBrokerSync: "Broker Sync",
   importSectionAi: "AI Import",

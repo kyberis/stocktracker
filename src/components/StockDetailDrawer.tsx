@@ -164,23 +164,25 @@ export default function StockDetailDrawer({ holding, onClose }: StockDetailDrawe
     return () => clearInterval(id);
   }, []);
 
-  // Fetch overview on mount
-  const fetchOverview = useCallback(async () => {
-    if (!canAccessPremium || overviewLoading || overview) return;
-    setOverviewLoading(true);
-    try {
-      const headers = getApiHeaders();
-      const params = new URLSearchParams({ symbol: holding.ticker });
-      const res = await fetch(`/api/overview?${params}`, { headers });
-      if (res.ok) setOverview(await res.json());
-    } catch { /* supplementary */ } finally {
-      setOverviewLoading(false);
-    }
-  }, [canAccessPremium, overviewLoading, overview, getApiHeaders, holding.ticker]);
+  const overviewFetchedRef = useRef(false);
 
   useEffect(() => {
-    fetchOverview();
-  }, [fetchOverview]);
+    if (!canAccessPremium || overviewFetchedRef.current) return;
+    overviewFetchedRef.current = true;
+    let cancelled = false;
+    setOverviewLoading(true);
+    (async () => {
+      try {
+        const headers = getApiHeaders();
+        const params = new URLSearchParams({ symbol: holding.ticker });
+        const res = await fetch(`/api/overview?${params}`, { headers });
+        if (!cancelled && res.ok) setOverview(await res.json());
+      } catch { /* supplementary */ } finally {
+        if (!cancelled) setOverviewLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [canAccessPremium, getApiHeaders, holding.ticker]);
 
   const handleDelete = () => {
     removeHolding(holding.id);

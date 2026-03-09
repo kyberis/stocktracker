@@ -128,7 +128,7 @@ export default function Dashboard() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const { showWhatsNew: autoShowWhatsNew, dismissWhatsNew } = useWhatsNewAutoShow();
   const { t } = useI18n();
-  const { holdings, cashEntries, isLoading, refreshHoldings } = usePortfolio();
+  const { holdings, cashEntries, isLoading, refreshHoldings, refreshQuotes } = usePortfolio();
   const { user } = useAuth();
   const track = useTrack();
 
@@ -155,9 +155,10 @@ export default function Dashboard() {
     return cashEntries.filter((c) => c.name.toUpperCase().startsWith(account.name.toUpperCase()));
   }, [cashEntries, brokerFilter, accounts]);
 
-  const handleImportComplete = useCallback(() => {
-    refreshHoldings();
-  }, [refreshHoldings]);
+  const handleImportComplete = useCallback(async () => {
+    await refreshHoldings();
+    await refreshQuotes();
+  }, [refreshHoldings, refreshQuotes]);
 
   const whatsNewOpen = showWhatsNew || autoShowWhatsNew;
 

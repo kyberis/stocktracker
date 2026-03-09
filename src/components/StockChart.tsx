@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   AreaChart,
   Area,
@@ -34,6 +34,19 @@ const PERIOD_LABELS: Record<TimePeriod, string> = {
 
 const PERIOD_KEYS: TimePeriod[] = ["1w", "1m", "3m", "6m", "1y", "all"];
 
+function ChartTooltip({ active, payload, displayCurrency }: { active?: boolean; payload?: Array<{ payload: HistoricalDataPoint }>; displayCurrency: string }) {
+  if (!active || !payload?.length) return null;
+  const point = payload[0].payload;
+  return (
+    <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2 shadow-lg">
+      <p className="text-xs text-gray-400 dark:text-slate-500">{point.date}</p>
+      <p className="text-sm font-semibold text-gray-900 dark:text-white">
+        {formatCurrency(point.close, displayCurrency)}
+      </p>
+    </div>
+  );
+}
+
 export default function StockChart({ ticker, purchasePrice, displayCurrency }: StockChartProps) {
   const [rawData, setRawData] = useState<HistoricalDataPoint[]>([]);
   const [period, setPeriod] = useState<TimePeriod>("3m");
@@ -55,13 +68,16 @@ export default function StockChart({ ticker, purchasePrice, displayCurrency }: S
     [needsConversion, quoteCurrency, displayCurrency, exchangeRates]
   );
 
-  const data = rawData.map((d) => ({
-    ...d,
-    close: convertPrice(d.close),
-    open: convertPrice(d.open),
-    high: convertPrice(d.high),
-    low: convertPrice(d.low),
-  }));
+  const data = useMemo(
+    () => rawData.map((d) => ({
+      ...d,
+      close: convertPrice(d.close),
+      open: convertPrice(d.open),
+      high: convertPrice(d.high),
+      low: convertPrice(d.low),
+    })),
+    [rawData, convertPrice]
+  );
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -95,26 +111,18 @@ export default function StockChart({ ticker, purchasePrice, displayCurrency }: S
   const tickFill = isDark ? "#94a3b8" : "#9ca3af";
   const axisStroke = isDark ? "#334155" : "#e5e7eb";
 
-  const formatDate = (date: string) => {
+  const formatDate = useCallback((date: string) => {
     const d = new Date(date);
     if (period === "all" || period === "1y") {
       return d.toLocaleDateString("en-US", { month: "short", year: "2-digit" });
     }
     return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  };
+  }, [period]);
 
-  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ payload: HistoricalDataPoint }> }) => {
-    if (!active || !payload?.length) return null;
-    const point = payload[0].payload;
-    return (
-      <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2 shadow-lg">
-        <p className="text-xs text-gray-400 dark:text-slate-500">{point.date}</p>
-        <p className="text-sm font-semibold text-gray-900 dark:text-white">
-          {formatCurrency(point.close, displayCurrency)}
-        </p>
-      </div>
-    );
-  };
+  const tooltipContent = useMemo(
+    () => <ChartTooltip displayCurrency={displayCurrency} />,
+    [displayCurrency]
+  );
 
   return (
     <div>
@@ -174,7 +182,7 @@ export default function StockChart({ ticker, purchasePrice, displayCurrency }: S
               width={60}
               tickFormatter={(v: number) => v.toFixed(0)}
             />
-            <Tooltip content={<CustomTooltip />} />
+            <Tooltip content={tooltipContent} />
             <ReferenceLine
               y={purchasePrice}
               stroke="#f59e0b"

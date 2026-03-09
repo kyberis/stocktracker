@@ -51,8 +51,8 @@ export interface UseImportBrokerCSVReturn {
   importProgress: { current: number; total: number; errors: number };
   importedTxCount: number;
   errorMsg: string;
-  parseFile: (file: File, broker: BrokerFormat) => Promise<void>;
-  importAll: (broker: BrokerFormat, isImageImport?: boolean) => Promise<void>;
+  parseFile: (file: File, broker: BrokerFormat, portfolioId?: string | null) => Promise<void>;
+  importAll: (broker: BrokerFormat, isImageImport?: boolean, portfolioId?: string | null) => Promise<void>;
   removeTransaction: (idx: number) => void;
   removeHolding: (idx: number) => void;
   reset: () => void;
@@ -87,7 +87,7 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
     rawCsvRef.current = "";
   }, []);
 
-  const parseFile = useCallback(async (file: File, broker: BrokerFormat) => {
+  const parseFile = useCallback(async (file: File, broker: BrokerFormat, portfolioId?: string | null) => {
     setStep("parsing");
     setErrorMsg("");
 
@@ -98,6 +98,7 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
       const parseForm = new FormData();
       parseForm.append("action", "parse");
       parseForm.append("broker", broker);
+      if (portfolioId) parseForm.append("portfolioId", portfolioId);
       parseForm.append("file", new Blob([csv], { type: "text/csv" }), "import.csv");
 
       const parseController = new AbortController();
@@ -183,7 +184,7 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
   }, []);
 
   const importAll = useCallback(
-    async (broker: BrokerFormat, isImageImport = false) => {
+    async (broker: BrokerFormat, isImageImport = false, portfolioId?: string | null) => {
       const unsorted: ExtractedTransaction[] =
         transactions.length > 0
           ? transactions
@@ -255,7 +256,10 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
         }));
 
         try {
-          const res = await fetch("/api/transactions/bulk", {
+          const bulkUrl = portfolioId
+            ? `/api/transactions/bulk?portfolioId=${encodeURIComponent(portfolioId)}`
+            : "/api/transactions/bulk";
+          const res = await fetch(bulkUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -292,6 +296,7 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
           const cashForm = new FormData();
           cashForm.append("action", "import-cash");
           cashForm.append("broker", "degiro");
+          if (portfolioId) cashForm.append("portfolioId", portfolioId);
           cashForm.append(
             "file",
             new Blob([rawCsvRef.current], { type: "text/csv" }),

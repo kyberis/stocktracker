@@ -14,9 +14,62 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "1.7.0";
+export const CURRENT_VERSION = "1.8.0";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "1.8.0",
+    date: "2026-03-09",
+    title: "Multi-Channel Price Alerts",
+    titleTranslations: { es: "Alertas de Precio Multi-Canal" },
+    changes: [
+      {
+        type: "feature",
+        text: "Percentage-based alerts — get notified when any stock moves by a custom percentage, measured against daily change or your purchase price",
+        translations: { es: "Alertas basadas en porcentaje — recibe notificaciones cuando una acción se mueva un porcentaje personalizado, medido contra el cambio diario o tu precio de compra" },
+      },
+      {
+        type: "feature",
+        text: "Portfolio-wide alerts — set a single percentage threshold that monitors every holding in your portfolio automatically",
+        translations: { es: "Alertas para todo el portafolio — establece un umbral de porcentaje que monitorea automáticamente todas las posiciones de tu portafolio" },
+      },
+      {
+        type: "feature",
+        text: "WhatsApp notifications — receive price alert messages directly on WhatsApp (Trefolio plan)",
+        translations: { es: "Notificaciones por WhatsApp — recibe alertas de precio directamente en WhatsApp (plan Trefolio)" },
+      },
+      {
+        type: "feature",
+        text: "Browser push notifications — get instant desktop/mobile alerts via Chrome, Firefox, or Edge push notifications (Bifolio plan and above)",
+        translations: { es: "Notificaciones push del navegador — recibe alertas instantáneas en escritorio/móvil vía notificaciones push de Chrome, Firefox o Edge (plan Bifolio y superior)" },
+      },
+      {
+        type: "feature",
+        text: "trefolio Leaf alert notifications — your device now shows price alert notifications alongside portfolio data",
+        translations: { es: "Notificaciones de alertas en trefolio Leaf — tu dispositivo ahora muestra notificaciones de alertas de precio junto con los datos del portafolio" },
+      },
+      {
+        type: "improvement",
+        text: "Enhanced stock detail page — now shows your position summary (total value, gain/loss, cost basis, 52-week range, market cap, dividends) and full transaction history when viewing any stock",
+        translations: { es: "Página de detalle de acción mejorada — ahora muestra el resumen de tu posición (valor total, ganancia/pérdida, coste medio, rango de 52 semanas, capitalización, dividendos) e historial completo de transacciones al ver cualquier acción" },
+      },
+      {
+        type: "improvement",
+        text: "Email alerts now available on Bifolio plan (previously Trefolio only)",
+        translations: { es: "Alertas por email ahora disponibles en el plan Bifolio (antes solo Trefolio)" },
+      },
+      {
+        type: "improvement",
+        text: "Notification channel preferences in Profile — choose which channels receive your alerts",
+        translations: { es: "Preferencias de canales de notificación en Perfil — elige qué canales reciben tus alertas" },
+      },
+      {
+        type: "improvement",
+        text: "WhatsApp message limits — 5/day and 30/month per user to manage costs; remaining quota shown in notification settings",
+        translations: { es: "Límites de mensajes WhatsApp — 5/día y 30/mes por usuario para gestionar costes; cuota restante visible en ajustes de notificaciones" },
+      },
+    ],
+  },
   {
     version: "1.7.0",
     date: "2026-03-09",

@@ -54,6 +54,14 @@ export const PLATFORM_LIMITS = {
    */
   OPENAI_MONTHLY_CALL_CAP: 10_000,
 
+  /**
+   * WhatsApp alert messaging caps.
+   * Budget target ≈ $65/month at $0.0221/msg ($0.0171 Meta + $0.005 Twilio).
+   */
+  WA_PER_USER_DAILY: 5,
+  WA_PER_USER_MONTHLY: 30,
+  WA_GLOBAL_MONTHLY: 3_000,
+
   /** Days to retain analytics_events rows before automatic purge. */
   ANALYTICS_RETENTION_DAYS: 90,
 

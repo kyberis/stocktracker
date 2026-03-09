@@ -35,7 +35,7 @@ export const POST = withMetrics("/api/alerts", async (req: NextRequest) => {
 
   const result = await parseBody(req, createAlertSchema);
   if (!result.success) return result.error;
-  const { ticker, name, condition, threshold, currency } = result.data;
+  const data = result.data;
 
   const user = await findUserById(session.userId);
   const plan = (user?.plan || session.plan) ?? "free";
@@ -60,18 +60,32 @@ export const POST = withMetrics("/api/alerts", async (req: NextRequest) => {
     }
   }
 
+  const ticker = data.isPortfolioWide ? "__PORTFOLIO__" : data.ticker.toUpperCase();
+
   const alert = await createAlert(session.userId, {
-    ticker: ticker.toUpperCase(),
-    name: name || ticker.toUpperCase(),
-    condition,
-    threshold,
-    currency,
+    ticker,
+    name: data.name || (data.isPortfolioWide ? "Portfolio-wide" : ticker),
+    condition: data.condition,
+    threshold: data.threshold,
+    currency: data.currency,
+    alertType: data.alertType,
+    percentBasis: data.percentBasis,
+    percentValue: data.percentValue,
+    isPortfolioWide: data.isPortfolioWide,
+    portfolioId: data.portfolioId,
   });
 
   trackEvent(session.userId, "alert_created", {
     ticker: alert.ticker,
-    condition: alert.condition,
-    threshold: String(alert.threshold),
+    alertType: alert.alertType,
+    ...(alert.alertType === "percent_change" ? {
+      percentBasis: alert.percentBasis,
+      percentValue: String(alert.percentValue),
+      portfolioWide: String(alert.isPortfolioWide),
+    } : {
+      condition: alert.condition,
+      threshold: String(alert.threshold),
+    }),
   });
 
   return NextResponse.json({ alert }, { status: 201 });

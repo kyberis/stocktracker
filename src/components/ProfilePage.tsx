@@ -9,6 +9,7 @@ import { useI18n } from "@/lib/i18n";
 import ProCompareCard from "@/components/ProCompareCard";
 import TierIcon from "@/components/TierIcon";
 import { Smartphone, Monitor, Copy, Check, Trash2 } from "lucide-react";
+import NotificationChannels from "@/components/NotificationChannels";
 
 interface PasskeyEntry {
   id: string;
@@ -1165,6 +1166,9 @@ export default function ProfilePage() {
           {verifyMsg && <p className="text-xs text-emerald-600 dark:text-emerald-400" aria-live="polite">{verifyMsg}</p>}
           {verifyError && <p className="text-xs text-red-500 dark:text-red-400" role="alert">{verifyError}</p>}
         </div>
+
+        {/* Notification Channels */}
+        <NotificationChannels />
 
         {/* Widget Access */}
         <div className="card p-6 space-y-4">

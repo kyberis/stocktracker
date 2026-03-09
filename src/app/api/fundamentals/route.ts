@@ -34,29 +34,33 @@ export const GET = withMetrics("/api/fundamentals", async (request: NextRequest)
   }
 
   const provider = await getProviderFromRequest(request);
+  const yahoo = new YahooProvider();
 
   let rateLimitUserId: string | null = null;
+  let useProvider = provider;
   if (provider.name === "alphavantage") {
     const rl = await requireRateLimit(request, "alphavantage");
-    if (rl.error) return rl.error;
-    rateLimitUserId = rl.session?.userId ?? null;
+    if (rl.error) {
+      useProvider = yahoo;
+    } else {
+      rateLimitUserId = rl.session?.userId ?? null;
+    }
   }
 
   const methodName = METHOD_MAP[type];
 
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const method = (provider as any)[methodName];
+    const method = (useProvider as any)[methodName];
     if (typeof method === "function") {
-      const result = await (method as (s: string) => Promise<unknown>).call(provider, symbol);
+      const result = await (method as (s: string) => Promise<unknown>).call(useProvider, symbol);
       if (result) return jsonWithCallCount(provider, result);
     }
     throw new Error("No data from primary provider");
   } catch (err) {
-    if (provider.name === "alphavantage") {
+    if (useProvider.name === "alphavantage") {
       console.warn(`[fundamentals] AV failed for ${symbol}/${type}, falling back to Yahoo:`, err instanceof Error ? err.message : err);
       try {
-        const yahoo = new YahooProvider();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const yahooMethod = (yahoo as any)[methodName];
         if (typeof yahooMethod === "function") {

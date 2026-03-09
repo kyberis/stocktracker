@@ -7,6 +7,7 @@ import {
   markDeviceProRedeemed,
   trackEvent,
   updateUserSubscription,
+  getStripePriceConfig,
 } from "@/lib/db";
 import { billingEventsTotal } from "@/lib/metrics";
 import { getStripeClient } from "@/lib/stripe";
@@ -36,16 +37,21 @@ function periodEndIso(subscription: Stripe.Subscription): string {
   return new Date(end * 1000).toISOString();
 }
 
-const STARTER_PRICE_IDS = new Set(
-  [process.env.STRIPE_PRICE_STARTER_MONTHLY, process.env.STRIPE_PRICE_STARTER_ANNUAL].filter(Boolean)
-);
+async function getStarterPriceIds(): Promise<Set<string>> {
+  const ids = [
+    await getStripePriceConfig("stripe_price_starter_monthly"),
+    await getStripePriceConfig("stripe_price_starter_annual"),
+  ].filter(Boolean);
+  return new Set(ids);
+}
 
-function planFromSubscription(subscription: Stripe.Subscription, metadataPlan?: string): "starter" | "pro" {
+async function planFromSubscription(subscription: Stripe.Subscription, metadataPlan?: string): Promise<"starter" | "pro"> {
   if (metadataPlan === "starter") return "starter";
   const items = subscription.items?.data;
   if (items?.length) {
     const priceId = typeof items[0].price === "string" ? items[0].price : items[0].price?.id;
-    if (priceId && STARTER_PRICE_IDS.has(priceId)) return "starter";
+    const starterIds = await getStarterPriceIds();
+    if (priceId && starterIds.has(priceId)) return "starter";
   }
   return "pro";
 }
@@ -115,7 +121,7 @@ export const POST = withMetrics("/api/billing/webhook", async (req: NextRequest)
         const status = subscription.status;
         const cancelAtPeriodEnd = subscription.cancel_at_period_end;
         const isActive = status === "active" || status === "trialing" || status === "past_due";
-        const nextPlan = isActive ? planFromSubscription(subscription, subscription.metadata?.plan) : "free";
+        const nextPlan = isActive ? await planFromSubscription(subscription, subscription.metadata?.plan) : "free";
         const nextExpiresAt = cancelAtPeriodEnd ? periodEndIso(subscription) : "";
         await updateUserSubscription(user.id, {
           plan: nextPlan,

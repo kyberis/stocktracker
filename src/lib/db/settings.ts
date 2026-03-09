@@ -1,16 +1,26 @@
 import { ensureInitialized } from "./client";
-import { str, parseRefreshInterval } from "./helpers";
+import { str, num, parseRefreshInterval, parseAlertChannels, monthWindowKey, shouldResetDailyAiWindow } from "./helpers";
 import type { UserSettings } from "./helpers";
-import type { Language } from "@/lib/types";
+import type { Language, NotificationChannel } from "@/lib/types";
 import { isValidLanguage } from "@/lib/languages";
 import { encrypt, tryDecryptOrPlaintext } from "@/lib/crypto";
+import { PLATFORM_LIMITS } from "@/lib/platform-config";
 
 export type PlatformFeature = "alerts_enabled" | "csv_export_enabled" | "apple_signin_enabled" | "device_enabled";
+
+const DEFAULT_SETTINGS: UserSettings = {
+  language: "en",
+  refreshInterval: 15,
+  alertChannels: ["email"],
+  whatsappPhone: "",
+  whatsappVerified: false,
+  alertDeviceEnabled: false,
+};
 
 export async function getUserSettings(userId: string): Promise<UserSettings> {
   const client = await ensureInitialized();
   const result = await client.execute({
-    sql: "SELECT language, refresh_interval FROM user_settings WHERE user_id = ?",
+    sql: "SELECT language, refresh_interval, alert_channels, whatsapp_phone, whatsapp_verified, alert_device_enabled FROM user_settings WHERE user_id = ?",
     args: [userId],
   });
 
@@ -20,13 +30,17 @@ export async function getUserSettings(userId: string): Promise<UserSettings> {
             VALUES (?, 'en', 15)`,
       args: [userId],
     });
-    return { language: "en", refreshInterval: 15 };
+    return { ...DEFAULT_SETTINGS };
   }
 
   const row = result.rows[0];
   return {
     language: (isValidLanguage(String(row.language)) ? String(row.language) : "en") as Language,
     refreshInterval: parseRefreshInterval(row.refresh_interval),
+    alertChannels: parseAlertChannels(row.alert_channels),
+    whatsappPhone: str(row.whatsapp_phone),
+    whatsappVerified: num(row.whatsapp_verified) === 1,
+    alertDeviceEnabled: num(row.alert_device_enabled) === 1,
   };
 }
 
@@ -38,15 +52,166 @@ export async function updateUserSettings(
   const next: UserSettings = {
     language: updates.language ?? current.language,
     refreshInterval: updates.refreshInterval ?? current.refreshInterval,
+    alertChannels: updates.alertChannels ?? current.alertChannels,
+    whatsappPhone: updates.whatsappPhone ?? current.whatsappPhone,
+    whatsappVerified: updates.whatsappVerified ?? current.whatsappVerified,
+    alertDeviceEnabled: updates.alertDeviceEnabled ?? current.alertDeviceEnabled,
   };
 
   const client = await ensureInitialized();
   await client.execute({
-    sql: "UPDATE user_settings SET language = ?, refresh_interval = ? WHERE user_id = ?",
-    args: [next.language, next.refreshInterval, userId],
+    sql: `UPDATE user_settings SET language = ?, refresh_interval = ?,
+          alert_channels = ?, whatsapp_phone = ?, whatsapp_verified = ?, alert_device_enabled = ?
+          WHERE user_id = ?`,
+    args: [
+      next.language, next.refreshInterval,
+      next.alertChannels.join(","), next.whatsappPhone, next.whatsappVerified ? 1 : 0,
+      next.alertDeviceEnabled ? 1 : 0, userId,
+    ],
   });
 
   return next;
+}
+
+export async function markWhatsAppVerified(userId: string, phone: string): Promise<void> {
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: "UPDATE user_settings SET whatsapp_phone = ?, whatsapp_verified = 1 WHERE user_id = ?",
+    args: [phone, userId],
+  });
+}
+
+export interface WhatsAppQuota {
+  allowed: boolean;
+  reason?: string;
+  userToday: number;
+  userMonth: number;
+  globalMonth: number;
+  userDailyLimit: number;
+  userMonthlyLimit: number;
+  globalMonthlyLimit: number;
+}
+
+function shouldResetMonth(resetAt: string): boolean {
+  if (!resetAt) return true;
+  const d = new Date(resetAt);
+  if (isNaN(d.getTime())) return true;
+  return monthWindowKey(d) !== monthWindowKey(new Date());
+}
+
+function shouldResetDay(resetAt: string): boolean {
+  return shouldResetDailyAiWindow(resetAt);
+}
+
+export async function getWhatsAppQuota(userId: string): Promise<WhatsAppQuota> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: "SELECT wa_msgs_today, wa_daily_reset_at, wa_msgs_month, wa_monthly_reset_at FROM user_settings WHERE user_id = ?",
+    args: [userId],
+  });
+
+  let userToday = 0;
+  let userMonth = 0;
+  if (result.rows.length > 0) {
+    const row = result.rows[0];
+    const dailyReset = str(row.wa_daily_reset_at);
+    const monthlyReset = str(row.wa_monthly_reset_at);
+    userToday = shouldResetDay(dailyReset) ? 0 : num(row.wa_msgs_today);
+    userMonth = shouldResetMonth(monthlyReset) ? 0 : num(row.wa_msgs_month);
+  }
+
+  const globalRaw = await client.execute({
+    sql: "SELECT value FROM platform_settings WHERE key = 'wa_global_msgs_month'",
+  });
+  const globalResetRaw = await client.execute({
+    sql: "SELECT value FROM platform_settings WHERE key = 'wa_global_monthly_reset_at'",
+  });
+  const globalResetAt = globalResetRaw.rows.length > 0 ? str(globalResetRaw.rows[0].value) : "";
+  let globalMonth = globalRaw.rows.length > 0 ? Number(str(globalRaw.rows[0].value)) || 0 : 0;
+  if (shouldResetMonth(globalResetAt)) globalMonth = 0;
+
+  const { WA_PER_USER_DAILY, WA_PER_USER_MONTHLY, WA_GLOBAL_MONTHLY } = PLATFORM_LIMITS;
+
+  let allowed = true;
+  let reason: string | undefined;
+  if (userToday >= WA_PER_USER_DAILY) {
+    allowed = false;
+    reason = "daily_limit";
+  } else if (userMonth >= WA_PER_USER_MONTHLY) {
+    allowed = false;
+    reason = "monthly_limit";
+  } else if (globalMonth >= WA_GLOBAL_MONTHLY) {
+    allowed = false;
+    reason = "global_limit";
+  }
+
+  return {
+    allowed,
+    reason,
+    userToday,
+    userMonth,
+    globalMonth,
+    userDailyLimit: WA_PER_USER_DAILY,
+    userMonthlyLimit: WA_PER_USER_MONTHLY,
+    globalMonthlyLimit: WA_GLOBAL_MONTHLY,
+  };
+}
+
+export async function incrementWhatsAppCounter(userId: string): Promise<void> {
+  const client = await ensureInitialized();
+  const now = new Date().toISOString();
+
+  const result = await client.execute({
+    sql: "SELECT wa_daily_reset_at, wa_monthly_reset_at FROM user_settings WHERE user_id = ?",
+    args: [userId],
+  });
+
+  if (result.rows.length === 0) return;
+
+  const row = result.rows[0];
+  const dailyReset = str(row.wa_daily_reset_at);
+  const monthlyReset = str(row.wa_monthly_reset_at);
+  const resetDaily = shouldResetDay(dailyReset);
+  const resetMonthly = shouldResetMonth(monthlyReset);
+
+  await client.execute({
+    sql: `UPDATE user_settings SET
+      wa_msgs_today = CASE WHEN ? THEN 1 ELSE wa_msgs_today + 1 END,
+      wa_daily_reset_at = CASE WHEN ? THEN ? ELSE wa_daily_reset_at END,
+      wa_msgs_month = CASE WHEN ? THEN 1 ELSE wa_msgs_month + 1 END,
+      wa_monthly_reset_at = CASE WHEN ? THEN ? ELSE wa_monthly_reset_at END
+      WHERE user_id = ?`,
+    args: [
+      resetDaily ? 1 : 0,
+      resetDaily ? 1 : 0, now,
+      resetMonthly ? 1 : 0,
+      resetMonthly ? 1 : 0, now,
+      userId,
+    ],
+  });
+
+  const globalResetRaw = await client.execute({
+    sql: "SELECT value FROM platform_settings WHERE key = 'wa_global_monthly_reset_at'",
+  });
+  const globalResetAt = globalResetRaw.rows.length > 0 ? str(globalResetRaw.rows[0].value) : "";
+  const resetGlobal = shouldResetMonth(globalResetAt);
+
+  if (resetGlobal) {
+    await client.execute({
+      sql: `INSERT INTO platform_settings (key, value) VALUES ('wa_global_msgs_month', '1')
+            ON CONFLICT(key) DO UPDATE SET value = '1'`,
+    });
+    await client.execute({
+      sql: `INSERT INTO platform_settings (key, value) VALUES ('wa_global_monthly_reset_at', ?)
+            ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+      args: [now],
+    });
+  } else {
+    await client.execute({
+      sql: `INSERT INTO platform_settings (key, value) VALUES ('wa_global_msgs_month', '1')
+            ON CONFLICT(key) DO UPDATE SET value = CAST(CAST(value AS INTEGER) + 1 AS TEXT)`,
+    });
+  }
 }
 
 export function getGlobalAlphaVantageApiKey(): string {
@@ -93,6 +258,39 @@ export async function getGlobalResendApiKey(): Promise<string> {
 
 export async function setGlobalResendApiKey(key: string): Promise<void> {
   await setPlatformSetting("resend_api_key", key ? encrypt(key) : "");
+}
+
+export type StripePriceKey =
+  | "stripe_price_starter_monthly"
+  | "stripe_price_starter_annual"
+  | "stripe_price_pro_monthly"
+  | "stripe_price_pro_annual"
+  | "stripe_coupon_device_free_year";
+
+const STRIPE_ENV_MAP: Record<StripePriceKey, string> = {
+  stripe_price_starter_monthly: "STRIPE_PRICE_STARTER_MONTHLY",
+  stripe_price_starter_annual: "STRIPE_PRICE_STARTER_ANNUAL",
+  stripe_price_pro_monthly: "STRIPE_PRICE_PRO_MONTHLY",
+  stripe_price_pro_annual: "STRIPE_PRICE_PRO_ANNUAL",
+  stripe_coupon_device_free_year: "STRIPE_COUPON_DEVICE_FREE_YEAR",
+};
+
+export async function getStripePriceConfig(key: StripePriceKey): Promise<string> {
+  const dbVal = await getPlatformSetting(key);
+  if (dbVal) return dbVal;
+  return process.env[STRIPE_ENV_MAP[key]] || "";
+}
+
+export async function getAllStripePriceConfig(): Promise<Record<StripePriceKey, string>> {
+  const result: Record<string, string> = {} as Record<StripePriceKey, string>;
+  for (const key of Object.keys(STRIPE_ENV_MAP) as StripePriceKey[]) {
+    result[key] = await getStripePriceConfig(key);
+  }
+  return result as Record<StripePriceKey, string>;
+}
+
+export async function setStripePriceConfig(key: StripePriceKey, value: string): Promise<void> {
+  await setPlatformSetting(key, value);
 }
 
 export async function getAllPlatformSettings(): Promise<Record<string, string>> {

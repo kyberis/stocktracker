@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { findUserById, updateUserSubscription } from "@/lib/db";
+import { findUserById, updateUserSubscription, getStripePriceConfig } from "@/lib/db";
 import { getStripeClient } from "@/lib/stripe";
 import { withMetrics } from "@/lib/with-metrics";
 
@@ -33,7 +33,7 @@ export const POST = withMetrics("/api/billing/sync", async (req: NextRequest) =>
     const activeSub = subs.data[0];
     if (activeSub && user.plan === "free") {
       const starterPriceIds = new Set(
-        [process.env.STRIPE_PRICE_STARTER_MONTHLY, process.env.STRIPE_PRICE_STARTER_ANNUAL].filter(Boolean)
+        [await getStripePriceConfig("stripe_price_starter_monthly"), await getStripePriceConfig("stripe_price_starter_annual")].filter(Boolean)
       );
       const items = activeSub.items?.data;
       const priceId = items?.[0]?.price?.id;

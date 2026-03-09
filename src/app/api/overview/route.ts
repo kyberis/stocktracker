@@ -18,25 +18,29 @@ export const GET = withMetrics("/api/overview", async (request: NextRequest) => 
   }
 
   const provider = await getProviderFromRequest(request);
+  const yahoo = new YahooProvider();
 
   let rateLimitUserId: string | null = null;
+  let useProvider = provider;
   if (provider.name === "alphavantage") {
     const rl = await requireRateLimit(request, "alphavantage");
-    if (rl.error) return rl.error;
-    rateLimitUserId = rl.session?.userId ?? null;
+    if (rl.error) {
+      useProvider = yahoo;
+    } else {
+      rateLimitUserId = rl.session?.userId ?? null;
+    }
   }
 
   try {
-    if (provider.getOverview) {
-      const overview = await provider.getOverview(symbol);
+    if (useProvider.getOverview) {
+      const overview = await useProvider.getOverview(symbol);
       if (overview) return jsonWithCallCount(provider, overview);
     }
     throw new Error("No data from primary provider");
   } catch (err) {
-    if (provider.name === "alphavantage") {
+    if (useProvider.name === "alphavantage") {
       console.warn(`[overview] AV failed for ${symbol}, falling back to Yahoo:`, err instanceof Error ? err.message : err);
       try {
-        const yahoo = new YahooProvider();
         const fallback = await yahoo.getOverview!(symbol);
         if (fallback) return Response.json({ ...fallback, providerUsed: "yahoo" });
       } catch (yahooErr) {

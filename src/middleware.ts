@@ -24,6 +24,8 @@ const PUBLIC_API_ROUTES = new Set([
   "/api/device/firmware",
   "/api/device/config",
   "/api/device/heartbeat",
+  "/api/device/notifications",
+  "/api/notifications/push/vapid-key",
 ]);
 
 function isPublicPath(pathname: string): boolean {

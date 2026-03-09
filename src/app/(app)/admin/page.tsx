@@ -1136,11 +1136,86 @@ function FeatureTogglesCard() {
   );
 }
 
+function StripePricesCard() {
+  const FIELDS: { key: string; label: string; placeholder: string }[] = [
+    { key: "stripe_price_starter_monthly", label: "Starter Monthly", placeholder: "price_..." },
+    { key: "stripe_price_starter_annual", label: "Starter Annual", placeholder: "price_..." },
+    { key: "stripe_price_pro_monthly", label: "Pro Monthly", placeholder: "price_..." },
+    { key: "stripe_price_pro_annual", label: "Pro Annual", placeholder: "price_..." },
+    { key: "stripe_coupon_device_free_year", label: "Device Free Year Coupon", placeholder: "coupon ID" },
+  ];
+
+  const [values, setValues] = useState<Record<string, string>>({});
+  const [draft, setDraft] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/admin/stripe-prices", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => { setValues(d); setDraft(d); setLoaded(true); })
+      .catch(() => {});
+  }, []);
+
+  const hasChanges = loaded && FIELDS.some((f) => (draft[f.key] ?? "") !== (values[f.key] ?? ""));
+
+  const handleSave = async () => {
+    setSaving(true);
+    const res = await fetch("/api/admin/stripe-prices", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(draft),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      setValues(data);
+      setDraft(data);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    }
+    setSaving(false);
+  };
+
+  return (
+    <div className="card p-6">
+      <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">Stripe Price IDs</h3>
+      <p className="text-xs text-gray-500 dark:text-slate-400 mb-4">
+        Configure Stripe price IDs and coupon for checkout. Values stored here override environment variables.
+      </p>
+      <div className="space-y-3">
+        {FIELDS.map((f) => (
+          <div key={f.key} className="flex items-center gap-3">
+            <label className="text-xs text-gray-600 dark:text-slate-300 w-44 shrink-0">{f.label}</label>
+            <input
+              type="text"
+              value={draft[f.key] ?? ""}
+              onChange={(e) => setDraft((prev) => ({ ...prev, [f.key]: e.target.value }))}
+              placeholder={f.placeholder}
+              className="text-sm flex-1 font-mono"
+            />
+            {(draft[f.key] ?? "") !== (values[f.key] ?? "") && (
+              <span className="text-[10px] text-amber-500 shrink-0">unsaved</span>
+            )}
+          </div>
+        ))}
+      </div>
+      <div className="flex items-center gap-3 mt-4">
+        <button onClick={handleSave} disabled={saving || !hasChanges} className="btn-primary text-xs px-4 py-2 disabled:opacity-40">
+          {saving ? "Saving..." : "Save"}
+        </button>
+        {saved && <span className="text-xs text-emerald-600 dark:text-emerald-400">Saved successfully.</span>}
+      </div>
+    </div>
+  );
+}
+
 function SettingsTab() {
   return (
     <div className="space-y-6">
       <ExternalServicesCard />
       <FeatureTogglesCard />
+      <StripePricesCard />
       <CapacityCard />
       <MetricsCard />
       <ApiKeyCard

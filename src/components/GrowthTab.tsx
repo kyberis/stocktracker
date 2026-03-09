@@ -44,8 +44,15 @@ export default function GrowthTab() {
 
   const STARTER_RANGES = new Set<Range>(["1m", "3m", "6m", "1y"]);
 
-  // Upsert today's snapshot when portfolio loads
+  // Upsert today's snapshot when portfolio loads — skip if any holding
+  // still lacks both a live quote and a meaningful stored value, to avoid
+  // persisting an incorrect total while quotes are still loading.
   useEffect(() => {
+    const allHoldingsHaveValue = holdings.every(
+      (h) => (quotes[h.ticker]?.regularMarketPrice ?? 0) > 0 || h.valueInEUR > 0
+    );
+    if (!allHoldingsHaveValue) return;
+
     const totals = calculatePortfolioTotals(holdings, cashEntries, quotes, exchangeRates);
     if (totals.totalCurrentEUR <= 0) return;
     fetch("/api/portfolio/snapshot", {

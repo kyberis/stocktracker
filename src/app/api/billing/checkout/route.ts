@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { requireSession } from "@/lib/auth/guards";
-import { findUserById, trackEvent, updateUserSubscription, countProSubscribers, isFeatureEnabled } from "@/lib/db";
+import { findUserById, trackEvent, updateUserSubscription, countProSubscribers, isFeatureEnabled, getStripePriceConfig } from "@/lib/db";
 import { billingEventsTotal } from "@/lib/metrics";
 import { PLATFORM_LIMITS } from "@/lib/platform-config";
 import { getBillingBaseUrl, getStripeClient } from "@/lib/stripe";
@@ -9,15 +9,15 @@ import { parseBody } from "@/lib/api-response";
 import { checkoutSchema } from "@/lib/schemas";
 import { withMetrics } from "@/lib/with-metrics";
 
-function getPriceId(plan: "starter" | "pro", interval: "monthly" | "annual"): string | undefined {
+async function getPriceId(plan: "starter" | "pro", interval: "monthly" | "annual"): Promise<string> {
   if (plan === "starter") {
     return interval === "annual"
-      ? process.env.STRIPE_PRICE_STARTER_ANNUAL
-      : process.env.STRIPE_PRICE_STARTER_MONTHLY;
+      ? getStripePriceConfig("stripe_price_starter_annual")
+      : getStripePriceConfig("stripe_price_starter_monthly");
   }
   return interval === "annual"
-    ? process.env.STRIPE_PRICE_PRO_ANNUAL
-    : process.env.STRIPE_PRICE_PRO_MONTHLY;
+    ? getStripePriceConfig("stripe_price_pro_annual")
+    : getStripePriceConfig("stripe_price_pro_monthly");
 }
 
 export const POST = withMetrics("/api/billing/checkout", async (req: NextRequest) => {
@@ -30,7 +30,7 @@ export const POST = withMetrics("/api/billing/checkout", async (req: NextRequest
   const targetPlan = deviceGrant ? "pro" as const : result.data.plan;
   const interval = deviceGrant ? "annual" : result.data.interval;
 
-  const priceId = getPriceId(targetPlan, interval);
+  const priceId = await getPriceId(targetPlan, interval);
   if (!priceId) {
     return NextResponse.json({ error: "Billing plan is not configured" }, { status: 501 });
   }
@@ -50,7 +50,7 @@ export const POST = withMetrics("/api/billing/checkout", async (req: NextRequest
     if (user.device_pro_redeemed_at) {
       return NextResponse.json({ error: "Device free year has already been redeemed" }, { status: 400 });
     }
-    const couponId = process.env.STRIPE_COUPON_DEVICE_FREE_YEAR;
+    const couponId = await getStripePriceConfig("stripe_coupon_device_free_year");
     if (!couponId) {
       return NextResponse.json({ error: "Device coupon is not configured" }, { status: 501 });
     }
@@ -100,7 +100,8 @@ export const POST = withMetrics("/api/billing/checkout", async (req: NextRequest
     };
 
     if (deviceGrant) {
-      checkoutParams.discounts = [{ coupon: process.env.STRIPE_COUPON_DEVICE_FREE_YEAR! }];
+      const coupon = await getStripePriceConfig("stripe_coupon_device_free_year");
+      checkoutParams.discounts = [{ coupon }];
     }
 
     const checkout = await stripe.checkout.sessions.create(checkoutParams);

@@ -175,3 +175,55 @@ export async function sendAlertEmail(
     return { success: false, error: msg };
   }
 }
+
+export async function sendPercentAlertEmail(
+  email: string,
+  alert: {
+    ticker: string;
+    name: string;
+    currentPrice: number;
+    currency: string;
+    percentChange: number;
+    percentBasis: "daily" | "purchase";
+    isPortfolioWide: boolean;
+  }
+): Promise<{ success: boolean; error?: string }> {
+  const resend = await getResendClient();
+  if (!resend) {
+    console.warn("Resend API key not configured; skipping percent alert email.");
+    return { success: true };
+  }
+
+  const direction = alert.percentChange >= 0 ? "up" : "down";
+  const absPercent = Math.abs(alert.percentChange).toFixed(2);
+  const basisLabel = alert.percentBasis === "daily" ? "today" : "since purchase";
+  const dashboardUrl = `${getBaseUrl()}/`;
+
+  const bgColor = alert.percentChange >= 0 ? "#f0fdf4" : "#fef2f2";
+  const textColor = alert.percentChange >= 0 ? "#16a34a" : "#dc2626";
+
+  try {
+    await resend.emails.send({
+      from: getFromAddress(),
+      to: email,
+      subject: `Price Alert: ${alert.ticker} ${direction} ${absPercent}% ${basisLabel}`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 0;">
+          <h2 style="color: #10b981;">trefolio — Price Alert</h2>
+          <p style="font-size: 16px;"><strong>${alert.name || alert.ticker}</strong> (${alert.ticker}) moved <span style="color: ${textColor}; font-weight: 700;">${direction} ${absPercent}%</span> ${basisLabel}.</p>
+          <p style="font-size: 18px; padding: 16px; background: ${bgColor}; border-radius: 8px; text-align: center;">
+            Current price: <strong>${alert.currency} ${alert.currentPrice.toFixed(2)}</strong>
+          </p>
+          ${alert.isPortfolioWide ? '<p style="font-size: 13px; color: #64748b;">This is a portfolio-wide alert.</p>' : ""}
+          <a href="${dashboardUrl}" style="display: inline-block; margin-top: 16px; padding: 12px 24px; background: #10b981; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600;">Open Dashboard</a>
+          <p style="margin-top: 24px; font-size: 13px; color: #64748b;">${alert.isPortfolioWide ? "This alert remains active and will continue monitoring your portfolio." : "This alert has been automatically deactivated."}</p>
+        </div>
+      `,
+    });
+    return { success: true };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("Failed to send percent alert email:", msg);
+    return { success: false, error: msg };
+  }
+}

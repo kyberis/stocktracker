@@ -1,8 +1,11 @@
 import type { Row } from "@libsql/client";
 import type {
   AlertCondition,
+  AlertType,
   HoldingAssetType,
   Language,
+  NotificationChannel,
+  PercentBasis,
   RefreshInterval,
   TransactionType,
 } from "@/lib/types";
@@ -90,6 +93,10 @@ export interface PublicUser {
 export interface UserSettings {
   language: Language;
   refreshInterval: RefreshInterval;
+  alertChannels: NotificationChannel[];
+  whatsappPhone: string;
+  whatsappVerified: boolean;
+  alertDeviceEnabled: boolean;
 }
 
 export const ADMIN_DEFAULT_USERNAME = "admin";
@@ -139,6 +146,23 @@ export function txType(val: unknown): TransactionType {
 
 export function alertCondition(val: unknown): AlertCondition {
   return val === "below" ? "below" : "above";
+}
+
+export function alertType(val: unknown): AlertType {
+  return val === "percent_change" ? "percent_change" : "threshold";
+}
+
+export function percentBasis(val: unknown): PercentBasis | "" {
+  const v = String(val);
+  if (v === "daily" || v === "purchase") return v;
+  return "";
+}
+
+export function parseAlertChannels(val: unknown): NotificationChannel[] {
+  const raw = String(val || "email");
+  return raw.split(",").filter((c): c is NotificationChannel =>
+    ["email", "push", "whatsapp", "device"].includes(c)
+  );
 }
 
 export function feedbackStatus(val: unknown): "open" | "answered" | "closed" {

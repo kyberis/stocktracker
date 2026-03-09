@@ -836,6 +836,84 @@ const MIGRATIONS: Migration[] = [
       }
     },
   },
+  {
+    version: 23,
+    description: "Multi-channel percentage-based price alerts: extend price_alerts, add notification prefs, push subscriptions, device notifications",
+    up: async (client: Client) => {
+      const alertCols = await client.execute("PRAGMA table_info(price_alerts)");
+      const alertColNames = new Set(alertCols.rows.map((r) => str(r.name)));
+      for (const [col, def] of [
+        ["alert_type", "ALTER TABLE price_alerts ADD COLUMN alert_type TEXT NOT NULL DEFAULT 'threshold'"],
+        ["percent_basis", "ALTER TABLE price_alerts ADD COLUMN percent_basis TEXT NOT NULL DEFAULT ''"],
+        ["percent_value", "ALTER TABLE price_alerts ADD COLUMN percent_value REAL NOT NULL DEFAULT 0"],
+        ["is_portfolio_wide", "ALTER TABLE price_alerts ADD COLUMN is_portfolio_wide INTEGER NOT NULL DEFAULT 0"],
+        ["portfolio_id", "ALTER TABLE price_alerts ADD COLUMN portfolio_id TEXT NOT NULL DEFAULT ''"],
+        ["last_notified_ticker", "ALTER TABLE price_alerts ADD COLUMN last_notified_ticker TEXT NOT NULL DEFAULT ''"],
+        ["last_notified_at", "ALTER TABLE price_alerts ADD COLUMN last_notified_at TEXT NOT NULL DEFAULT ''"],
+      ] as const) {
+        if (!alertColNames.has(col)) {
+          await client.execute({ sql: def });
+        }
+      }
+
+      const settingsCols = await client.execute("PRAGMA table_info(user_settings)");
+      const settingsColNames = new Set(settingsCols.rows.map((r) => str(r.name)));
+      for (const [col, def] of [
+        ["alert_channels", "ALTER TABLE user_settings ADD COLUMN alert_channels TEXT NOT NULL DEFAULT 'email'"],
+        ["whatsapp_phone", "ALTER TABLE user_settings ADD COLUMN whatsapp_phone TEXT NOT NULL DEFAULT ''"],
+        ["whatsapp_verified", "ALTER TABLE user_settings ADD COLUMN whatsapp_verified INTEGER NOT NULL DEFAULT 0"],
+        ["alert_device_enabled", "ALTER TABLE user_settings ADD COLUMN alert_device_enabled INTEGER NOT NULL DEFAULT 0"],
+      ] as const) {
+        if (!settingsColNames.has(col)) {
+          await client.execute({ sql: def });
+        }
+      }
+
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS push_subscriptions (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          endpoint TEXT NOT NULL,
+          p256dh TEXT NOT NULL,
+          auth TEXT NOT NULL,
+          user_agent TEXT NOT NULL DEFAULT '',
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_push_subs_user ON push_subscriptions(user_id);
+
+        CREATE TABLE IF NOT EXISTS device_notifications (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          title TEXT NOT NULL,
+          message TEXT NOT NULL,
+          ticker TEXT NOT NULL DEFAULT '',
+          read INTEGER NOT NULL DEFAULT 0,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_device_notif_user ON device_notifications(user_id, read);
+      `);
+    },
+  },
+  {
+    version: 24,
+    description: "WhatsApp message rate-limit counters on user_settings",
+    up: async (client: Client) => {
+      const cols = await client.execute("PRAGMA table_info(user_settings)");
+      const existing = new Set(cols.rows.map((r) => str(r.name)));
+      for (const [col, def] of [
+        ["wa_msgs_today", "ALTER TABLE user_settings ADD COLUMN wa_msgs_today INTEGER NOT NULL DEFAULT 0"],
+        ["wa_daily_reset_at", "ALTER TABLE user_settings ADD COLUMN wa_daily_reset_at TEXT NOT NULL DEFAULT ''"],
+        ["wa_msgs_month", "ALTER TABLE user_settings ADD COLUMN wa_msgs_month INTEGER NOT NULL DEFAULT 0"],
+        ["wa_monthly_reset_at", "ALTER TABLE user_settings ADD COLUMN wa_monthly_reset_at TEXT NOT NULL DEFAULT ''"],
+      ] as const) {
+        if (!existing.has(col)) {
+          await client.execute({ sql: def });
+        }
+      }
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

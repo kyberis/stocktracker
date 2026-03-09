@@ -119,16 +119,44 @@ export const userSettingsSchema = z.object({
 /* ── Alerts ────────────────────────────────────────────────── */
 
 export const createAlertSchema = z.object({
-  ticker: z.string().min(1, "Ticker is required"),
+  ticker: z.string().optional().default(""),
   name: z.string().optional().default(""),
   condition: z.enum(["above", "below"], { message: "Condition must be 'above' or 'below'" }),
-  threshold: z.number().positive("Threshold must be positive"),
+  threshold: z.number().nonnegative("Threshold must be non-negative").optional().default(0),
   currency: z.string().optional().default("USD"),
-});
+  alertType: z.enum(["threshold", "percent_change"]).optional().default("threshold"),
+  percentBasis: z.enum(["daily", "purchase", ""]).optional().default(""),
+  percentValue: z.number().nonnegative("Percent value must be non-negative").optional().default(0),
+  isPortfolioWide: z.boolean().optional().default(false),
+  portfolioId: z.string().optional().default(""),
+}).refine(
+  (data) => {
+    if (data.alertType === "threshold") return data.ticker.length > 0 && data.threshold > 0;
+    if (data.alertType === "percent_change") return data.percentValue > 0 && (data.percentBasis === "daily" || data.percentBasis === "purchase");
+    return true;
+  },
+  { message: "Invalid alert configuration" }
+);
 
 export const toggleAlertSchema = z.object({
   id: z.string().min(1, "Alert ID is required"),
   active: z.boolean(),
+});
+
+/* ── Notification Preferences ──────────────────────────────── */
+
+export const updateNotificationPrefsSchema = z.object({
+  alertChannels: z.string().optional(),
+  whatsappPhone: z.string().optional(),
+  alertDeviceEnabled: z.boolean().optional(),
+});
+
+export const whatsappVerifySchema = z.object({
+  phone: z.string().min(10, "Phone number must be at least 10 characters"),
+});
+
+export const whatsappConfirmSchema = z.object({
+  code: z.string().min(4, "Verification code required"),
 });
 
 /* ── Accounts ──────────────────────────────────────────────── */

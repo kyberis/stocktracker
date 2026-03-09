@@ -1,18 +1,31 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useSettings } from "@/lib/settings-context";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useI18n } from "@/lib/i18n";
-import { formatCompactNumber } from "@/lib/utils";
+import { useStealthMode } from "@/lib/stealth-context";
+import {
+  formatCompactNumber,
+  formatCurrency,
+  formatPercent,
+  formatStealthCurrency,
+  convertCurrency,
+  convertToEUR,
+  normalizeCurrency,
+  resolveQuoteCurrency,
+} from "@/lib/utils";
 import { getMarketStatus } from "@/lib/market-hours";
 import { useTrack } from "@/lib/use-track";
 import { useAuth } from "@/lib/auth-context";
 import ProCompareCard from "@/components/ProCompareCard";
+import TransactionHistory from "./TransactionHistory";
 import type { UpsellReason } from "@/lib/upsell";
 import StockChart from "./StockChart";
 import type {
+  Holding,
+  QuoteData,
   CompanyOverview,
   IncomeStatementReport,
   BalanceSheetReport,
@@ -33,15 +46,18 @@ interface StockDetailProps {
 
 export default function StockDetail({ ticker, exchange }: StockDetailProps) {
   const { hasGlobalAvKey, getApiHeaders } = useSettings();
-  const { holdings } = usePortfolio();
+  const { holdings, quotes, exchangeRates } = usePortfolio();
   const { user } = useAuth();
   const { t, language } = useI18n();
+  const { stealthMode } = useStealthMode();
 
   const holding = holdings.find(
     (h) =>
       h.ticker.toUpperCase() === ticker.toUpperCase() &&
       (!exchange || h.exchange.toUpperCase() === exchange.toUpperCase())
   ) || holdings.find((h) => h.ticker.toUpperCase() === ticker.toUpperCase());
+
+  const quote: QuoteData | undefined = quotes[ticker];
 
   const [mainTab, setMainTab] = useState<MainTab>("overview");
   const [financialSub, setFinancialSub] = useState<FinancialSub>("income");
@@ -80,8 +96,11 @@ export default function StockDetail({ ticker, exchange }: StockDetailProps) {
     return () => clearInterval(id);
   }, []);
 
+  const overviewFetchedRef = useRef(false);
+
   const fetchOverview = useCallback(async () => {
-    if (!canAccessPremium || overviewLoading || overview) return;
+    if (!canAccessPremium || overviewFetchedRef.current) return;
+    overviewFetchedRef.current = true;
     setOverviewLoading(true);
     try {
       const headers = getApiHeaders();
@@ -96,7 +115,7 @@ export default function StockDetail({ ticker, exchange }: StockDetailProps) {
     } catch { /* supplementary */ } finally {
       setOverviewLoading(false);
     }
-  }, [canAccessPremium, overviewLoading, overview, getApiHeaders, ticker]);
+  }, [canAccessPremium, getApiHeaders, ticker]);
 
   const fetchFundamental = useCallback(
     async (type: string) => {
@@ -290,6 +309,16 @@ export default function StockDetail({ ticker, exchange }: StockDetailProps) {
           </div>
         </div>
 
+        {/* Position Summary */}
+        {holding && (
+          <PositionSummary
+            holding={holding}
+            quote={quote}
+            exchangeRates={exchangeRates}
+            stealthMode={stealthMode}
+          />
+        )}
+
         {/* Chart */}
         {holding && (
           <div className="card px-6 py-5">
@@ -299,6 +328,11 @@ export default function StockDetail({ ticker, exchange }: StockDetailProps) {
               displayCurrency={holding.displayCurrency}
             />
           </div>
+        )}
+
+        {/* Transaction History */}
+        {holding && (
+          <TransactionHistory holdingId={holding.id} ticker={holding.ticker} />
         )}
 
         {/* AI Analysis CTA */}
@@ -416,6 +450,176 @@ export default function StockDetail({ ticker, exchange }: StockDetailProps) {
           </>
         )}
     </main>
+  );
+}
+
+/* ── Position Summary ────────────────────────────────────────── */
+
+function PositionSummary({
+  holding,
+  quote,
+  exchangeRates,
+  stealthMode,
+}: {
+  holding: Holding;
+  quote: QuoteData | undefined;
+  exchangeRates: Record<string, number>;
+  stealthMode: boolean;
+}) {
+  const { t } = useI18n();
+
+  const quoteCurrency = quote
+    ? resolveQuoteCurrency(holding.displayCurrency, quote.currency)
+    : holding.displayCurrency;
+
+  let currentPriceInDisplay = 0;
+  let hasQuote = false;
+
+  if (quote && quote.regularMarketPrice > 0) {
+    hasQuote = true;
+    if (normalizeCurrency(quoteCurrency) === normalizeCurrency(holding.displayCurrency)) {
+      currentPriceInDisplay = quote.regularMarketPrice;
+    } else {
+      currentPriceInDisplay = convertCurrency(
+        quote.regularMarketPrice,
+        quoteCurrency,
+        holding.displayCurrency,
+        exchangeRates
+      );
+    }
+  }
+
+  if (hasQuote && holding.displayCurrency === "GBX" && holding.valueInEUR > 0) {
+    const derivedValueEUR = convertToEUR(
+      holding.shares * currentPriceInDisplay,
+      holding.displayCurrency,
+      exchangeRates
+    );
+    if (derivedValueEUR > holding.valueInEUR * 10) {
+      hasQuote = false;
+      currentPriceInDisplay = 0;
+    }
+  }
+
+  const cur = holding.displayCurrency;
+  const totalCost = holding.shares * holding.purchasePrice;
+  const totalValue = hasQuote ? holding.shares * currentPriceInDisplay : totalCost;
+  const gainLoss = totalValue - totalCost;
+  const gainLossPercent = totalCost > 0 ? (gainLoss / totalCost) * 100 : 0;
+
+  const dayChangePercent = quote?.regularMarketChangePercent ?? 0;
+  const dayChangeAmount = hasQuote && quote
+    ? holding.shares * (quote.regularMarketChange ?? 0)
+    : 0;
+  const totalValueEUR = hasQuote
+    ? convertToEUR(totalValue, holding.displayCurrency, exchangeRates)
+    : holding.valueInEUR;
+
+  const isPositive = gainLoss >= 0;
+  const gainColor = isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400";
+  const gainBg = isPositive ? "bg-emerald-50 dark:bg-emerald-500/10" : "bg-red-50 dark:bg-red-500/10";
+  const dayIsPositive = dayChangeAmount >= 0;
+  const dayColor = dayIsPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400";
+
+  let display52High = 0;
+  let display52Low = 0;
+  if (hasQuote && quote) {
+    if (normalizeCurrency(quoteCurrency) === normalizeCurrency(holding.displayCurrency)) {
+      display52High = quote.fiftyTwoWeekHigh;
+      display52Low = quote.fiftyTwoWeekLow;
+    } else {
+      display52High = convertCurrency(quote.fiftyTwoWeekHigh, quoteCurrency, holding.displayCurrency, exchangeRates);
+      display52Low = convertCurrency(quote.fiftyTwoWeekLow, quoteCurrency, holding.displayCurrency, exchangeRates);
+    }
+  }
+
+  const fmt = (v: number, c: string) => formatStealthCurrency(v, c, stealthMode);
+
+  return (
+    <div className="card px-6 py-5 space-y-4">
+      <h3 className="text-sm font-semibold text-gray-700 dark:text-slate-200">{t("yourPosition")}</h3>
+
+      {/* Price hero */}
+      <div className="flex items-end justify-between gap-4">
+        <div>
+          <p className="text-3xl font-bold text-gray-900 dark:text-white tabular-nums">
+            {fmt(totalValueEUR, "EUR")}
+          </p>
+          <p className="text-sm text-gray-500 dark:text-slate-400 mt-0.5">
+            {hasQuote ? formatCurrency(currentPriceInDisplay, cur) : formatCurrency(holding.purchasePrice, cur)} × {holding.shares} {t("shares")}
+          </p>
+        </div>
+        {hasQuote && (
+          <div className="text-right">
+            <p className={`text-sm font-semibold ${dayColor}`}>
+              {dayIsPositive ? "+" : ""}{fmt(dayChangeAmount, cur)}
+            </p>
+            <p className={`text-xs ${dayColor}`}>
+              {dayIsPositive ? "+" : ""}{formatPercent(dayChangePercent)}
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Metric grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div className={`rounded-xl px-3.5 py-3 ${gainBg}`}>
+          <p className="text-[10px] font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">{t("gainLoss")}</p>
+          <p className={`text-sm font-bold mt-0.5 ${gainColor}`}>
+            {fmt(gainLoss, cur)}
+          </p>
+          <p className={`text-xs mt-0.5 ${gainColor}`}>
+            {isPositive ? "+" : ""}{formatPercent(gainLossPercent)}
+          </p>
+        </div>
+        <div className="bg-gray-50 dark:bg-slate-800 rounded-xl px-3.5 py-3">
+          <p className="text-[10px] font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">{t("avgCostBasis")}</p>
+          <p className="text-sm font-bold text-gray-900 dark:text-white mt-0.5">
+            {fmt(holding.purchasePrice, cur)}
+          </p>
+          <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5">
+            {t("totalCost")}: {fmt(totalCost, cur)}
+          </p>
+        </div>
+        {hasQuote && display52High > 0 && (
+          <div className="bg-gray-50 dark:bg-slate-800 rounded-xl px-3.5 py-3">
+            <p className="text-[10px] font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">{t("week52High")}</p>
+            <p className="text-sm font-bold text-gray-900 dark:text-white mt-0.5">
+              {formatCurrency(display52High, cur)}
+            </p>
+          </div>
+        )}
+        {hasQuote && display52Low > 0 && (
+          <div className="bg-gray-50 dark:bg-slate-800 rounded-xl px-3.5 py-3">
+            <p className="text-[10px] font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">{t("week52Low")}</p>
+            <p className="text-sm font-bold text-gray-900 dark:text-white mt-0.5">
+              {formatCurrency(display52Low, cur)}
+            </p>
+          </div>
+        )}
+        {hasQuote && quote?.marketCap && quote.marketCap > 0 && (
+          <div className="bg-gray-50 dark:bg-slate-800 rounded-xl px-3.5 py-3">
+            <p className="text-[10px] font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">{t("marketCap")}</p>
+            <p className="text-sm font-bold text-gray-900 dark:text-white mt-0.5">
+              {formatCompactNumber(quote.marketCap)}
+            </p>
+          </div>
+        )}
+        {quote?.trailingAnnualDividendRate != null && quote.trailingAnnualDividendRate > 0 && (
+          <div className="bg-gray-50 dark:bg-slate-800 rounded-xl px-3.5 py-3">
+            <p className="text-[10px] font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">{t("annualDividend")}</p>
+            <p className="text-sm font-bold text-gray-900 dark:text-white mt-0.5">
+              {formatCurrency(quote.trailingAnnualDividendRate, quote.currency)}
+            </p>
+            {quote.trailingAnnualDividendYield != null && quote.trailingAnnualDividendYield > 0 && (
+              <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5">
+                {formatPercent(quote.trailingAnnualDividendYield * 100)}
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 

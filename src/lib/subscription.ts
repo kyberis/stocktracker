@@ -17,6 +17,8 @@ const FREE_FEATURES = new Set<SubscriptionFeature>([
 const STARTER_FEATURES = new Set<SubscriptionFeature>([
   "portfolio-sharing",
   "csv-export",
+  "alerts-email",
+  "alerts-push",
 ]);
 
 /**
@@ -27,7 +29,8 @@ const PRO_FEATURES = new Set<SubscriptionFeature>([
   "fundamentals",
   "intelligence",
   "economic-indicators",
-  "alerts-email",
+  "alerts-whatsapp",
+  "alerts-device",
   "metrics",
   "portfolio-history-full",
 ]);

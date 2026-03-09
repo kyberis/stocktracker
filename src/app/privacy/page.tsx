@@ -133,6 +133,23 @@ export default function PrivacyPolicyPage() {
               </li>
             </ul>
 
+            <h3>Notification Data</h3>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>
+                <strong className="text-slate-200">WhatsApp phone number</strong> — 
+                if you opt in to WhatsApp alert notifications (Pro plan), we collect
+                your phone number in E.164 format and verify it via Twilio Verify.
+                The number is used solely for delivering price alert messages.
+              </li>
+              <li>
+                <strong className="text-slate-200">Push notification subscription</strong> — 
+                if you opt in to browser push notifications (Starter/Pro), we store
+                your browser push subscription endpoint and encryption keys. These
+                are used only to deliver price alert notifications and are deleted
+                when you unsubscribe.
+              </li>
+            </ul>
+
             <h3>Automatically Collected Data</h3>
             <ul className="list-disc pl-6 space-y-2">
               <li>
@@ -258,6 +275,11 @@ export default function PrivacyPolicyPage() {
                     <td className="py-3 pr-6">SnapTrade (Passiv Financial Inc.)</td>
                     <td className="py-3 pr-6">Brokerage aggregation (Trefolio)</td>
                     <td className="py-3">Brokerage account data (positions, balances) via OAuth; we store only SnapTrade userId and encrypted userSecret</td>
+                  </tr>
+                  <tr>
+                    <td className="py-3 pr-6">Twilio Inc.</td>
+                    <td className="py-3 pr-6">WhatsApp alert notifications (Trefolio)</td>
+                    <td className="py-3">Phone number (E.164 format) for WhatsApp message delivery and verification; messages contain stock ticker and price data only</td>
                   </tr>
                 </tbody>
               </table>
@@ -409,7 +431,7 @@ export default function PrivacyPolicyPage() {
             <h2>10. International Transfers</h2>
             <p>
               Your data may be processed outside the EEA by our third-party
-              service providers (Vercel, OpenAI, Stripe, Cloudflare, Finnhub, Interactive Brokers, SnapTrade, Resend). Where
+              service providers (Vercel, OpenAI, Stripe, Cloudflare, Finnhub, Interactive Brokers, SnapTrade, Resend, Twilio). Where
               this occurs, we ensure appropriate safeguards are in place,
               including Standard Contractual Clauses (SCCs) approved by the
               European Commission.

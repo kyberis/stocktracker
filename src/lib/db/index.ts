@@ -84,10 +84,13 @@ export {
   removeCashEntry,
 } from "./cash";
 
-export type { PlatformFeature } from "./settings";
+export type { PlatformFeature, WhatsAppQuota, StripePriceKey } from "./settings";
 export {
   getUserSettings,
   updateUserSettings,
+  markWhatsAppVerified,
+  getWhatsAppQuota,
+  incrementWhatsAppCounter,
   getGlobalAlphaVantageApiKey,
   getGlobalOpenAIApiKey,
   getPlatformSetting,
@@ -96,6 +99,9 @@ export {
   setFeatureEnabled,
   getGlobalResendApiKey,
   setGlobalResendApiKey,
+  getStripePriceConfig,
+  getAllStripePriceConfig,
+  setStripePriceConfig,
   getAllPlatformSettings,
 } from "./settings";
 
@@ -135,6 +141,7 @@ export {
   replyToFeedback,
 } from "./feedback";
 
+export type { CronAlert, HoldingForAlert } from "./alerts";
 export {
   listAlerts,
   countActiveAlerts,
@@ -142,7 +149,9 @@ export {
   deleteAlert,
   toggleAlert,
   markAlertTriggered,
+  updateLastNotified,
   listActiveAlertsForCron,
+  getUserHoldingsForAlerts,
 } from "./alerts";
 
 export {
@@ -169,6 +178,19 @@ export {
   listDeviceInterest,
   countDeviceInterest,
 } from "./device-interest";
+
+export {
+  savePushSubscription,
+  deletePushSubscription,
+  listPushSubscriptions,
+} from "./push-subscriptions";
+
+export {
+  createDeviceNotification,
+  listUnreadDeviceNotifications,
+  markDeviceNotificationsRead,
+  purgeOldDeviceNotifications,
+} from "./device-notifications";
 
 export type { DbPasskey, PublicPasskey } from "./passkeys";
 export {

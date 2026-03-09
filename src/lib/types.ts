@@ -12,12 +12,18 @@ export type SubscriptionFeature =
   | "economic-indicators"
   | "ai"
   | "alerts-email"
+  | "alerts-push"
+  | "alerts-whatsapp"
+  | "alerts-device"
   | "metrics"
   | "portfolio-history-full"
   | "portfolio-sharing"
   | "csv-export";
 
 export type AlertCondition = "above" | "below";
+export type AlertType = "threshold" | "percent_change";
+export type PercentBasis = "daily" | "purchase";
+export type NotificationChannel = "email" | "push" | "whatsapp" | "device";
 
 export interface PriceAlert {
   id: string;
@@ -29,6 +35,29 @@ export interface PriceAlert {
   active: boolean;
   triggered: boolean;
   triggeredAt: string;
+  createdAt: string;
+  alertType: AlertType;
+  percentBasis: PercentBasis | "";
+  percentValue: number;
+  isPortfolioWide: boolean;
+  portfolioId: string;
+}
+
+export interface PushSubscription {
+  id: string;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  userAgent: string;
+  createdAt: string;
+}
+
+export interface DeviceNotification {
+  id: string;
+  title: string;
+  message: string;
+  ticker: string;
+  read: boolean;
   createdAt: string;
 }
 export type HoldingAssetType = "stock" | "etf";

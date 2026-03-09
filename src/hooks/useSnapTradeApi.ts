@@ -24,9 +24,53 @@ export interface UseSnapTradeApiReturn {
   fetchPortfolio: () => Promise<void>;
   resync: () => Promise<void>;
   disconnect: () => Promise<void>;
-  importAll: () => Promise<void>;
+  importAll: (portfolioId?: string | null) => Promise<void>;
   removeTransaction: (idx: number) => void;
   reset: () => void;
+}
+
+function openPortalPopup(
+  url: string,
+  windowName: string,
+  onSuccess: () => void,
+  onError: (msg: string) => void,
+) {
+  const popup = window.open(url, windowName, "width=800,height=700");
+  let resolved = false;
+
+  const cleanup = () => {
+    resolved = true;
+    clearInterval(pollInterval);
+    window.removeEventListener("message", handleMessage);
+  };
+
+  const handleMessage = (e: MessageEvent) => {
+    if (resolved) return;
+    const data = e.data;
+    if (data?.status === "SUCCESS") {
+      cleanup();
+      popup?.close();
+      onSuccess();
+    } else if (data?.status === "ERROR") {
+      cleanup();
+      popup?.close();
+      onError(data.detail || "Connection failed.");
+    } else if (data === "ABANDONED") {
+      cleanup();
+      popup?.close();
+      onSuccess();
+    }
+  };
+
+  window.addEventListener("message", handleMessage);
+
+  const pollInterval = setInterval(() => {
+    if (resolved) return;
+    if (!popup || popup.closed) {
+      cleanup();
+      onSuccess();
+    }
+  }, 1000);
 }
 
 function normalizeTransaction(tx: Record<string, unknown>): ExtractedTransaction {
@@ -102,17 +146,13 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
         return;
       }
 
-      // Step 3: Open connection portal in new window
-      const popup = window.open(urlData.redirectUrl, "snaptrade-connect", "width=800,height=700");
-
-      // Poll for popup close, then reload connection
-      const pollInterval = setInterval(async () => {
-        if (!popup || popup.closed) {
-          clearInterval(pollInterval);
-          await loadConnection();
-          setStep("idle");
-        }
-      }, 1000);
+      // Step 3: Open connection portal and listen for postMessage events
+      openPortalPopup(
+        urlData.redirectUrl,
+        "snaptrade-connect",
+        async () => { await loadConnection(); setStep("idle"); },
+        (msg) => { setErrorMsg(msg); setStep("error"); },
+      );
     } catch {
       setErrorMsg("Failed to connect to SnapTrade.");
       setStep("error");
@@ -135,15 +175,12 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
         return;
       }
 
-      const popup = window.open(data.redirectUrl, "snaptrade-reconnect", "width=800,height=700");
-
-      const pollInterval = setInterval(async () => {
-        if (!popup || popup.closed) {
-          clearInterval(pollInterval);
-          await loadConnection();
-          setStep("idle");
-        }
-      }, 1000);
+      openPortalPopup(
+        data.redirectUrl,
+        "snaptrade-reconnect",
+        async () => { await loadConnection(); setStep("idle"); },
+        (msg) => { setErrorMsg(msg); setStep("error"); },
+      );
     } catch {
       setErrorMsg("Failed to reconnect to SnapTrade.");
       setStep("error");
@@ -215,7 +252,7 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
     setHoldingsCapped(0);
   }, []);
 
-  const importAll = useCallback(async () => {
+  const importAll = useCallback(async (portfolioId?: string | null) => {
     const validTransactions = transactions.filter((tx) => tx.date);
     const total = validTransactions.length;
 
@@ -258,7 +295,10 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
       }));
 
       try {
-        const res = await fetch("/api/transactions/bulk", {
+        const bulkUrl = portfolioId
+          ? `/api/transactions/bulk?portfolioId=${encodeURIComponent(portfolioId)}`
+          : "/api/transactions/bulk";
+        const res = await fetch(bulkUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ transactions: payload, finalize: isLastChunk }),

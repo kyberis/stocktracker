@@ -18,7 +18,7 @@ export interface UseImportAIReturn {
   holdingsCapped: number;
   errorMsg: string;
   processFile: (file: File) => Promise<void>;
-  importAll: () => Promise<void>;
+  importAll: (portfolioId?: string | null) => Promise<void>;
   removeHolding: (idx: number) => void;
   removeTransaction: (idx: number) => void;
   reset: () => void;
@@ -134,7 +134,7 @@ export function useImportAI(): UseImportAIReturn {
     setTransactions((prev) => prev.filter((_, i) => i !== idx));
   }, []);
 
-  const importAll = useCallback(async () => {
+  const importAll = useCallback(async (portfolioId?: string | null) => {
     const unsorted: ExtractedTransaction[] =
       transactions.length > 0
         ? transactions
@@ -204,7 +204,10 @@ export function useImportAI(): UseImportAIReturn {
       }));
 
       try {
-        const res = await fetch("/api/transactions/bulk", {
+        const bulkUrl = portfolioId
+          ? `/api/transactions/bulk?portfolioId=${encodeURIComponent(portfolioId)}`
+          : "/api/transactions/bulk";
+        const res = await fetch(bulkUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
