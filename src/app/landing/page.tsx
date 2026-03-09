@@ -787,62 +787,58 @@ function InstallAppSection() {
   const sectionCb = useCallback(() => trackLanding("landing_section_view", { section: "install_app" }), []);
   const sectionRef = useInViewOnce(sectionCb);
 
+  const points = useMemo(() => [
+    t("landingInstallPoint1" as TranslationKey),
+    t("landingInstallPoint2" as TranslationKey),
+    t("landingInstallPoint3" as TranslationKey),
+    t("landingInstallPoint4" as TranslationKey),
+  ], [t]);
+
   return (
     <section className="py-20 sm:py-28 border-t border-slate-800/50" ref={sectionRef as React.RefObject<HTMLElement>}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-            {t("landingInstallHeading")}{" "}
-            <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
-              {t("landingInstallHeadingAccent")}
-            </span>
-          </h2>
-          <p className="text-lg text-slate-400 max-w-2xl mx-auto">
-            {t("landingInstallSubtitle")}
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-          {[
-            {
-              icon: (
-                <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
-                </svg>
-              ),
-              title: t("landingInstallBrowserTitle"),
-              desc: t("landingInstallBrowserDesc"),
-            },
-            {
-              icon: (
-                <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
-                </svg>
-              ),
-              title: t("landingInstallWidgetTitle"),
-              desc: t("landingInstallWidgetDesc"),
-            },
-            {
-              icon: (
-                <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
-                </svg>
-              ),
-              title: t("landingInstallOfflineTitle"),
-              desc: t("landingInstallOfflineDesc"),
-            },
-          ].map((item) => (
-            <div
-              key={item.title}
-              className="rounded-2xl border border-slate-800 bg-slate-900/50 p-6 hover:border-emerald-500/30 hover:bg-slate-800/50 transition-all text-center"
-            >
-              <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mx-auto mb-4">
-                {item.icon}
-              </div>
-              <h4 className="text-lg font-semibold text-white mb-2">{item.title}</h4>
-              <p className="text-sm text-slate-400 leading-relaxed">{item.desc}</p>
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          {/* Screenshot side */}
+          <div className="relative flex justify-center">
+            <div className="absolute -inset-4 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-2xl blur-xl" />
+            <div className="relative w-[280px] sm:w-[320px]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/screenshots/pwa-homescreen.png"
+                alt={t("landingInstallScreenshotAlt" as TranslationKey)}
+                className="w-full h-auto drop-shadow-2xl rounded-[2rem]"
+                loading="lazy"
+              />
             </div>
-          ))}
+          </div>
+
+          {/* Text side */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+                PWA
+              </span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white leading-tight">
+              {t("landingInstallHeading")}{" "}
+              <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
+                {t("landingInstallHeadingAccent")}
+              </span>
+            </h2>
+            <p className="text-lg text-slate-400 leading-relaxed">
+              {t("landingInstallSubtitle")}
+            </p>
+            <ul className="space-y-3">
+              {points.map((point) => (
+                <li key={point} className="flex items-center gap-3 text-sm">
+                  <svg className="w-5 h-5 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className="text-slate-300">{point}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
     </section>

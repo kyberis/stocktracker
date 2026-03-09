@@ -1,3 +1,21 @@
+import { readFileSync, writeFileSync } from "fs";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
+
+/* ─── Stamp sw.js with a unique build ID so the browser detects new deploys ─── */
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const swPath = join(__dirname, "public", "sw.js");
+const buildId =
+  process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 8) || Date.now().toString(36);
+try {
+  const sw = readFileSync(swPath, "utf8");
+  if (sw.includes("__BUILD_ID__")) {
+    writeFileSync(swPath, sw.replace(/__BUILD_ID__/g, buildId));
+  }
+} catch {
+  // sw.js missing — skip (e.g. during tests)
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,

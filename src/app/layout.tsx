@@ -4,6 +4,7 @@ import { GeistMono } from "geist/font/mono";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import CookieConsent from "@/components/CookieConsent";
+import ServiceWorkerUpdater from "@/components/ServiceWorkerUpdater";
 import "./globals.css";
 
 export const viewport: Viewport = {
@@ -62,11 +63,7 @@ export default function RootLayout({
         <CookieConsent />
         <Analytics />
         <SpeedInsights />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `if("serviceWorker"in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("/sw.js").catch(()=>{})})}`,
-          }}
-        />
+        <ServiceWorkerUpdater />
       </body>
     </html>
   );

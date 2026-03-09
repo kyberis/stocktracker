@@ -68,6 +68,16 @@ export const releaseNotes: ReleaseEntry[] = [
         text: "WhatsApp message limits — 5/day and 30/month per user to manage costs; remaining quota shown in notification settings",
         translations: { es: "Límites de mensajes WhatsApp — 5/día y 30/mes por usuario para gestionar costes; cuota restante visible en ajustes de notificaciones" },
       },
+      {
+        type: "improvement",
+        text: "Landing page now highlights trefolio as a Progressive Web App (PWA) with a homescreen mockup screenshot",
+        translations: { es: "La página de inicio ahora destaca trefolio como Progressive Web App (PWA) con una captura del icono en la pantalla de inicio" },
+      },
+      {
+        type: "fix",
+        text: "PWA now properly updates after a new deploy — the service worker cache is busted on each build and an update banner prompts you to refresh",
+        translations: { es: "La PWA ahora se actualiza correctamente tras un nuevo despliegue — la caché del service worker se invalida en cada build y un banner te invita a refrescar" },
+      },
     ],
   },
   {
