@@ -12,7 +12,14 @@ interface CacheEntry<T> {
   timestamp: number;
 }
 
+interface PortfolioInfo {
+  id: string;
+  name: string;
+  isDefault: boolean;
+}
+
 const FX_PAIRS = ["EURUSD", "EURGBP", "EURDKK", "EURCAD"];
+const ACTIVE_PORTFOLIO_KEY = "trefolio-active-portfolio";
 
 interface PortfolioContextType {
   holdings: Holding[];
@@ -23,6 +30,10 @@ interface PortfolioContextType {
   exchangeRates: ExchangeRates;
   isLoading: boolean;
   error: string | null;
+  portfolios: PortfolioInfo[];
+  activePortfolioId: string | null;
+  setActivePortfolio: (id: string | null) => void;
+  refreshPortfolios: () => Promise<void>;
   addHolding: (holding: Omit<Holding, "id">) => Promise<void>;
   removeHolding: (id: string) => Promise<void>;
   updateHolding: (id: string, updates: Partial<Holding>) => Promise<void>;
@@ -89,6 +100,11 @@ export function PortfolioProvider({ children, initialHoldings, initialCash }: Po
   const hasServerData = !!(initialHoldings || initialCash);
   const [holdings, setHoldings] = useState<Holding[]>(initialHoldings ?? []);
   const [cashEntries, setCashEntries] = useState<CashEntry[]>(initialCash ?? []);
+  const [portfolios, setPortfolios] = useState<PortfolioInfo[]>([]);
+  const [activePortfolioId, setActivePortfolioId] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    return localStorage.getItem(ACTIVE_PORTFOLIO_KEY) || null;
+  });
   const [quotes, setQuotes] = useState<Record<string, QuoteData>>({});
   const [quoteUpdatedAt, setQuoteUpdatedAt] = useState<Record<string, number>>({});
   const [refreshingTickers, setRefreshingTickers] = useState<Set<string>>(new Set());
@@ -97,9 +113,19 @@ export function PortfolioProvider({ children, initialHoldings, initialCash }: Po
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const fetchingRef = useRef(false);
+  const fetchPortfolios = useCallback(async () => {
+    try {
+      const res = await fetch("/api/portfolios", { cache: "no-store" });
+      if (!res.ok) return;
+      const data = await res.json();
+      setPortfolios(data.portfolios ?? []);
+    } catch { /* ignore */ }
+  }, []);
+
   const fetchHoldings = useCallback(async () => {
     try {
-      const res = await fetch("/api/holdings", { cache: "no-store" });
+      const url = activePortfolioId ? `/api/holdings?portfolioId=${encodeURIComponent(activePortfolioId)}` : "/api/holdings";
+      const res = await fetch(url, { cache: "no-store" });
       if (!res.ok) throw new Error("Failed to fetch holdings");
       const loaded = (await res.json()) as Holding[];
       setHoldings(loaded);
@@ -108,11 +134,12 @@ export function PortfolioProvider({ children, initialHoldings, initialCash }: Po
       setError(err instanceof Error ? err.message : "Failed to fetch holdings");
       return [] as Holding[];
     }
-  }, []);
+  }, [activePortfolioId]);
 
   const fetchCashEntries = useCallback(async () => {
     try {
-      const res = await fetch("/api/cash", { cache: "no-store" });
+      const url = activePortfolioId ? `/api/cash?portfolioId=${encodeURIComponent(activePortfolioId)}` : "/api/cash";
+      const res = await fetch(url, { cache: "no-store" });
       if (!res.ok) throw new Error("Failed to fetch cash entries");
       const loaded = (await res.json()) as CashEntry[];
       setCashEntries(loaded);
@@ -121,17 +148,33 @@ export function PortfolioProvider({ children, initialHoldings, initialCash }: Po
       setError(err instanceof Error ? err.message : "Failed to fetch cash entries");
       return [] as CashEntry[];
     }
+  }, [activePortfolioId]);
+
+  const setActivePortfolio = useCallback((id: string | null) => {
+    setActivePortfolioId(id);
+    if (typeof window !== "undefined") {
+      if (id) localStorage.setItem(ACTIVE_PORTFOLIO_KEY, id);
+      else localStorage.removeItem(ACTIVE_PORTFOLIO_KEY);
+    }
   }, []);
 
+  const mountedRef = useRef(false);
+
+  // One-time init on mount: load portfolios, cached quotes/rates, and initial holdings if needed
   useEffect(() => {
     const init = async () => {
       setIsLoading(true);
       setError(null);
 
-      // Skip API fetch for holdings/cash if server-provided initial data exists
-      if (!hasServerData) {
+      await fetchPortfolios();
+
+      // Fetch holdings/cash if no server data OR if a specific portfolio is selected
+      // (server data is unscoped; we need scoped data for a saved portfolio selection)
+      const needsFetch = !hasServerData || activePortfolioId != null;
+      if (needsFetch) {
         await Promise.all([fetchHoldings(), fetchCashEntries()]);
       }
+
       const cachedQuotes = loadCacheEntry<Record<string, QuoteData>>(QUOTES_CACHE_KEY);
       if (cachedQuotes?.data) {
         setQuotes(cachedQuotes.data);
@@ -148,11 +191,26 @@ export function PortfolioProvider({ children, initialHoldings, initialCash }: Po
       const cachedRates = loadCacheEntry<ExchangeRates>(RATES_CACHE_KEY);
       if (cachedRates?.data) setExchangeRates(cachedRates.data);
       setIsLoading(false);
+      mountedRef.current = true;
     };
 
     init();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchHoldings, fetchCashEntries]);
+  }, []);
+
+  // Refetch holdings & cash whenever activePortfolioId changes (after initial mount)
+  useEffect(() => {
+    if (!mountedRef.current) return;
+    let cancelled = false;
+    setIsLoading(true);
+
+    Promise.all([fetchHoldings(), fetchCashEntries()]).finally(() => {
+      if (!cancelled) setIsLoading(false);
+    });
+
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activePortfolioId]);
 
   const buildFetchUrl = useCallback(
     (base: string, extra: Record<string, string> = {}) => {
@@ -296,7 +354,8 @@ export function PortfolioProvider({ children, initialHoldings, initialCash }: Po
     setHoldings((prev) => [...prev, optimistic]);
 
     try {
-      const res = await fetch("/api/holdings", {
+      const qp = activePortfolioId ? `?portfolioId=${encodeURIComponent(activePortfolioId)}` : "";
+      const res = await fetch(`/api/holdings${qp}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(holding),
@@ -321,14 +380,15 @@ export function PortfolioProvider({ children, initialHoldings, initialCash }: Po
       setHoldings((prev) => prev.filter((h) => h.id !== tempId));
       setError(err instanceof Error ? err.message : "Failed to add holding");
     }
-  }, []);
+  }, [activePortfolioId]);
 
   const removeHolding = useCallback(async (id: string) => {
     const previous = holdings;
     setHoldings((prev) => prev.filter((h) => h.id !== id));
 
     try {
-      const res = await fetch(`/api/holdings?id=${encodeURIComponent(id)}`, {
+      const qp = activePortfolioId ? `&portfolioId=${encodeURIComponent(activePortfolioId)}` : "";
+      const res = await fetch(`/api/holdings?id=${encodeURIComponent(id)}${qp}`, {
         method: "DELETE",
       });
       if (!res.ok) throw new Error("Failed to remove holding");
@@ -336,7 +396,7 @@ export function PortfolioProvider({ children, initialHoldings, initialCash }: Po
       setHoldings(previous);
       setError(err instanceof Error ? err.message : "Failed to remove holding");
     }
-  }, [holdings]);
+  }, [holdings, activePortfolioId]);
 
   const updateHolding = useCallback(async (id: string, updates: Partial<Holding>) => {
     const previous = holdings;
@@ -362,7 +422,8 @@ export function PortfolioProvider({ children, initialHoldings, initialCash }: Po
     const optimistic = { ...entry, id: tempId };
     setCashEntries((prev) => [...prev, optimistic]);
     try {
-      const res = await fetch("/api/cash", {
+      const qp = activePortfolioId ? `?portfolioId=${encodeURIComponent(activePortfolioId)}` : "";
+      const res = await fetch(`/api/cash${qp}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(entry),
@@ -374,19 +435,20 @@ export function PortfolioProvider({ children, initialHoldings, initialCash }: Po
       setCashEntries((prev) => prev.filter((c) => c.id !== tempId));
       setError(err instanceof Error ? err.message : "Failed to add cash entry");
     }
-  }, []);
+  }, [activePortfolioId]);
 
   const removeCashEntry = useCallback(async (id: string) => {
     const previous = cashEntries;
     setCashEntries((prev) => prev.filter((c) => c.id !== id));
     try {
-      const res = await fetch(`/api/cash?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      const qp = activePortfolioId ? `&portfolioId=${encodeURIComponent(activePortfolioId)}` : "";
+      const res = await fetch(`/api/cash?id=${encodeURIComponent(id)}${qp}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to remove cash entry");
     } catch (err) {
       setCashEntries(previous);
       setError(err instanceof Error ? err.message : "Failed to remove cash entry");
     }
-  }, [cashEntries]);
+  }, [cashEntries, activePortfolioId]);
 
   const updateCashEntry = useCallback(async (id: string, updates: Partial<CashEntry>) => {
     const previous = cashEntries;
@@ -438,6 +500,10 @@ export function PortfolioProvider({ children, initialHoldings, initialCash }: Po
       exchangeRates,
       isLoading,
       error,
+      portfolios,
+      activePortfolioId,
+      setActivePortfolio,
+      refreshPortfolios: fetchPortfolios,
       addHolding,
       removeHolding,
       updateHolding,
@@ -451,7 +517,8 @@ export function PortfolioProvider({ children, initialHoldings, initialCash }: Po
     }),
     [
       holdings, cashEntries, quotes, quoteUpdatedAt, refreshingTickers, exchangeRates,
-      isLoading, error, addHolding, removeHolding, updateHolding, addCashEntry,
+      isLoading, error, portfolios, activePortfolioId, setActivePortfolio, fetchPortfolios,
+      addHolding, removeHolding, updateHolding, addCashEntry,
       removeCashEntry, updateCashEntry, refreshHoldings, refreshQuotes, refreshSingleQuote, lastUpdated,
     ]
   );

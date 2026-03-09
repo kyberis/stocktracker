@@ -1,10 +1,13 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import dynamic from "next/dynamic";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useI18n } from "@/lib/i18n";
 import StockRow from "./StockRow";
 import type { Holding } from "@/lib/types";
+
+const StockDetailDrawer = dynamic(() => import("./StockDetailDrawer"), { ssr: false });
 
 type SortField = "name" | "gainLoss" | "value" | "shares";
 type SortDir = "asc" | "desc";
@@ -20,6 +23,7 @@ export default function PortfolioTable({ holdings: holdingsProp }: Props) {
   const [sortField, setSortField] = useState<SortField>("name");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [filter, setFilter] = useState("");
+  const [selectedHolding, setSelectedHolding] = useState<Holding | null>(null);
 
   const toggleSort = (field: SortField) => {
     if (sortField === field) {
@@ -141,7 +145,7 @@ export default function PortfolioTable({ holdings: holdingsProp }: Props) {
               </span>
             </div>
             {stocks.map((holding) => (
-              <StockRow key={holding.id} holding={holding} />
+              <StockRow key={holding.id} holding={holding} onSelect={setSelectedHolding} />
             ))}
           </>
         )}
@@ -156,11 +160,19 @@ export default function PortfolioTable({ holdings: holdingsProp }: Props) {
               </span>
             </div>
             {etfs.map((holding) => (
-              <StockRow key={holding.id} holding={holding} />
+              <StockRow key={holding.id} holding={holding} onSelect={setSelectedHolding} />
             ))}
           </>
         )}
       </div>
+
+      {selectedHolding && (
+        <StockDetailDrawer
+          key={selectedHolding.id}
+          holding={selectedHolding}
+          onClose={() => setSelectedHolding(null)}
+        />
+      )}
     </div>
   );
 }

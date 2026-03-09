@@ -9,9 +9,10 @@ export const POST = withMetrics("/api/reset-portfolio", async (req: NextRequest)
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
 
+  const portfolioId = req.nextUrl.searchParams.get("portfolioId") || undefined;
   const result = await parseBody(req, resetPortfolioSchema);
   if (!result.success) return result.error;
   const { mode } = result.data;
-  const inserted = await resetUserHoldings(session.userId, mode === "seed");
+  const inserted = await resetUserHoldings(session.userId, mode === "seed", portfolioId);
   return NextResponse.json({ ok: true, inserted });
 });

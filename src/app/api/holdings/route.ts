@@ -12,7 +12,8 @@ export const GET = withMetrics("/api/holdings", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
 
-  const holdings = await listHoldings(session.userId);
+  const portfolioId = req.nextUrl.searchParams.get("portfolioId") || undefined;
+  const holdings = await listHoldings(session.userId, portfolioId);
   holdingsOpsTotal.inc({ operation: "list" });
   return NextResponse.json(holdings);
 });
@@ -21,6 +22,7 @@ export const POST = withMetrics("/api/holdings", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
 
+  const portfolioId = req.nextUrl.searchParams.get("portfolioId") || undefined;
   const result = await parseBody(req, createHoldingSchema);
   if (!result.success) return result.error;
   const { ticker, name, shares, purchasePrice, displayCurrency, exchange, isin, assetType, accountId } = result.data;
@@ -29,7 +31,7 @@ export const POST = withMetrics("/api/holdings", async (req: NextRequest) => {
   const plan = (user?.plan || session.plan) ?? "free";
   const holdingsLimit = getHoldingsLimit(plan);
   if (holdingsLimit < Infinity) {
-    const currentHoldings = await listHoldings(session.userId);
+    const currentHoldings = await listHoldings(session.userId, portfolioId);
     const alreadyOwned = currentHoldings.some(
       (h) => h.ticker === ticker && h.exchange === (exchange || "")
     );
@@ -64,11 +66,11 @@ export const POST = withMetrics("/api/holdings", async (req: NextRequest) => {
     currency: displayCurrency,
     displayCurrency,
     notes: "Added from holdings flow",
-  });
+  }, portfolioId);
   if (!createdTx) {
     return NextResponse.json({ error: "Duplicate transaction." }, { status: 409 });
   }
-  const nextHoldings = await listHoldings(session.userId);
+  const nextHoldings = await listHoldings(session.userId, portfolioId);
   const created = nextHoldings.find((h) => h.ticker === createdTx.ticker && h.exchange === (createdTx.exchange || ""));
   const fallback = {
     id: createdTx.id,
@@ -119,12 +121,13 @@ export const DELETE = withMetrics("/api/holdings", async (req: NextRequest) => {
     return NextResponse.json({ error: "id query param is required." }, { status: 400 });
   }
 
-  const holdings = await listHoldings(session.userId);
+  const portfolioId = req.nextUrl.searchParams.get("portfolioId") || undefined;
+  const holdings = await listHoldings(session.userId, portfolioId);
   const target = holdings.find((h) => h.id === id);
   if (!target) {
     return NextResponse.json({ error: "Holding not found." }, { status: 404 });
   }
-  const deletedCount = await deleteTransactionsForPosition(session.userId, target.ticker, target.exchange);
+  const deletedCount = await deleteTransactionsForPosition(session.userId, target.ticker, target.exchange, portfolioId);
   await removeHolding(session.userId, id);
   if (deletedCount === 0) {
     return NextResponse.json({ error: "No transactions found for holding." }, { status: 404 });

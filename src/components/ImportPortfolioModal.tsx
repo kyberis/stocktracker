@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, DragEvent } from "react";
+import { useState, useRef, useCallback, useEffect, DragEvent } from "react";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth-context";
 import { downloadImportTemplate } from "@/lib/download-import-template";
@@ -75,8 +75,17 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
   const [duplicatesRemoved, setDuplicatesRemoved] = useState(0);
   const [importWarning, setImportWarning] = useState("");
   const [holdingsCapped, setHoldingsCapped] = useState(0);
+  const [portfolios, setPortfolios] = useState<{ id: string; name: string; isDefault: boolean }[]>([]);
+  const [targetPortfolioId, setTargetPortfolioId] = useState<string>("");
   const rawCsvRef = useRef<string>("");
   const fileRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    fetch("/api/portfolios")
+      .then((r) => r.ok ? r.json() : { portfolios: [] })
+      .then((d) => setPortfolios(d.portfolios || []))
+      .catch(() => {});
+  }, []);
 
   const reset = () => {
     setStep("upload");
@@ -95,6 +104,7 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
     setDuplicatesRemoved(0);
     setImportWarning("");
     setHoldingsCapped(0);
+    setTargetPortfolioId("");
     rawCsvRef.current = "";
   };
 
@@ -132,6 +142,7 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
         parseForm.append("action", "parse");
         parseForm.append("broker", csvFormat);
         parseForm.append("file", new Blob([csv], { type: "text/csv" }), "import.csv");
+        if (targetPortfolioId) parseForm.append("portfolioId", targetPortfolioId);
         const parseController = new AbortController();
         const parseTimer = setTimeout(() => parseController.abort(), 30_000);
         let parseRes: Response;
@@ -206,6 +217,7 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
 
       const formData = new FormData();
       formData.append("file", file);
+      if (targetPortfolioId) formData.append("portfolioId", targetPortfolioId);
       const res = await fetch("/api/import-portfolio", { method: "POST", body: formData });
 
       if (res.status === 501) {
@@ -244,7 +256,7 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
       }
       setStep("error");
     }
-  }, [t, csvFormat]);
+  }, [t, csvFormat, targetPortfolioId]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -335,7 +347,10 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
       }));
 
       try {
-        const res = await fetch("/api/transactions/bulk", {
+        const bulkUrl = targetPortfolioId
+          ? `/api/transactions/bulk?portfolioId=${encodeURIComponent(targetPortfolioId)}`
+          : "/api/transactions/bulk";
+        const res = await fetch(bulkUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ transactions: payload, finalize: isLastChunk }),
@@ -368,6 +383,7 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
         cashForm.append("action", "import-cash");
         cashForm.append("broker", "degiro");
         cashForm.append("file", new Blob([rawCsvRef.current], { type: "text/csv" }), "import.csv");
+        if (targetPortfolioId) cashForm.append("portfolioId", targetPortfolioId);
         const cashRes = await fetch("/api/transactions/import-broker", {
           method: "POST",
           body: cashForm,
@@ -520,6 +536,24 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
                 <div className="bg-violet-50 dark:bg-violet-500/10 rounded-xl p-3 mb-4">
                   <p className="text-xs text-violet-700 dark:text-violet-300 font-medium mb-1">{t("aiImportGuideTitle")}</p>
                   <p className="text-[10px] text-violet-600 dark:text-violet-400">{t("aiImportGuideDetail")}</p>
+                </div>
+              )}
+
+              {portfolios.length > 1 && (
+                <div className="space-y-1 mb-4">
+                  <label className="text-sm font-medium text-gray-700 dark:text-slate-300">
+                    Import to portfolio
+                  </label>
+                  <select
+                    value={targetPortfolioId}
+                    onChange={(e) => setTargetPortfolioId(e.target.value)}
+                    className="w-full text-sm bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2"
+                  >
+                    <option value="">Default Portfolio</option>
+                    {portfolios.map((p) => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
                 </div>
               )}
 

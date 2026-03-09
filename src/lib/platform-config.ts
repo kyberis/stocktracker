@@ -56,6 +56,15 @@ export const PLATFORM_LIMITS = {
 
   /** Days to retain analytics_events rows before automatic purge. */
   ANALYTICS_RETENTION_DAYS: 90,
+
+  /** Max portfolios for Free and Starter users. */
+  FREE_PORTFOLIO_LIMIT: 1,
+
+  /** Max portfolios for Starter users (same as Free). */
+  STARTER_PORTFOLIO_LIMIT: 1,
+
+  /** Max portfolios for Pro users. */
+  PRO_PORTFOLIO_LIMIT: 3,
 } as const;
 
 export type RateLimitProvider = "alphavantage" | "openai" | "openai_import";

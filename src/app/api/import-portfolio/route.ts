@@ -92,8 +92,10 @@ export const POST = withMetrics("/api/import-portfolio", async (req: NextRequest
 
   let messages: { role: string; content: unknown }[];
 
+  let portfolioId: string | undefined;
   if (contentType.includes("multipart/form-data")) {
     const formData = await req.formData();
+    portfolioId = (formData.get("portfolioId") as string) || undefined;
     const file = formData.get("file") as File | null;
     if (!file) {
       return NextResponse.json({ error: "No file provided." }, { status: 400 });
@@ -144,6 +146,7 @@ export const POST = withMetrics("/api/import-portfolio", async (req: NextRequest
   } else {
     try {
       const body = await req.json();
+      portfolioId = body.portfolioId || undefined;
       if (!body.csvText) {
         return NextResponse.json({ error: "csvText or file upload required." }, { status: 400 });
       }
@@ -267,7 +270,7 @@ export const POST = withMetrics("/api/import-portfolio", async (req: NextRequest
     const holdingsLimit = getHoldingsLimit(plan);
     let cappedHoldings = holdings;
     if (holdingsLimit < Infinity) {
-      const existing = await listHoldings(session.userId);
+      const existing = await listHoldings(session.userId, portfolioId);
       const existingTickers = new Set(existing.map((h) => `${h.ticker}|${h.exchange || ""}`));
       const newOnly = holdings.filter((h) => !existingTickers.has(`${h.ticker}|${h.exchange || ""}`));
       const slotsAvailable = Math.max(0, holdingsLimit - existing.length);

@@ -28,6 +28,7 @@ interface AuthUser {
   portfolioReviewCount: number;
   portfolioReviewResetAt: string;
   deviceProEligible: boolean;
+  devicePortfolioId: string;
 }
 
 interface AuthContextType {

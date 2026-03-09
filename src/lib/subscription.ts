@@ -112,6 +112,16 @@ export function getAlertLimit(plan: SubscriptionPlan): number {
   return PLATFORM_LIMITS.FREE_ALERT_LIMIT;
 }
 
+/**
+ * Returns the portfolio limit for a given plan.
+ * Free/Starter: 1 portfolio. Pro: up to 3.
+ */
+export function getPortfolioLimit(plan: SubscriptionPlan): number {
+  if (plan === "pro") return PLATFORM_LIMITS.PRO_PORTFOLIO_LIMIT;
+  if (plan === "starter") return PLATFORM_LIMITS.STARTER_PORTFOLIO_LIMIT;
+  return PLATFORM_LIMITS.FREE_PORTFOLIO_LIMIT;
+}
+
 /** Maps internal plan identifiers to user-facing tier names. */
 export function planDisplayName(plan: SubscriptionPlan): string {
   switch (plan) {

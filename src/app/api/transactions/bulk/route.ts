@@ -40,6 +40,7 @@ export const POST = withMetrics("/api/transactions/bulk", async (req: NextReques
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
 
+  const portfolioId = req.nextUrl.searchParams.get("portfolioId") || undefined;
   const result = await parseBody(req, bulkTransactionSchema);
   if (!result.success) return result.error;
 
@@ -53,7 +54,7 @@ export const POST = withMetrics("/api/transactions/bulk", async (req: NextReques
   let allowedTickers: Set<string> | null = null;
 
   if (holdingsLimit < Infinity) {
-    const currentHoldings = await listHoldings(session.userId);
+    const currentHoldings = await listHoldings(session.userId, portfolioId);
     const existingTickers = new Set(
       currentHoldings.map((h) => `${h.ticker}|${h.exchange || ""}`)
     );
@@ -107,10 +108,10 @@ export const POST = withMetrics("/api/transactions/bulk", async (req: NextReques
   });
 
   const skippedByLimit = transactions.length - filtered.length;
-  const { inserted, skipped } = await addTransactionsBulk(session.userId, enriched);
+  const { inserted, skipped } = await addTransactionsBulk(session.userId, enriched, portfolioId);
 
   if (finalize && inserted > 0) {
-    await rebuildHoldings(session.userId);
+    await rebuildHoldings(session.userId, portfolioId);
     enrichHoldingClassifications(session.userId).catch((err) =>
       console.warn("[bulk] auto-classification failed:", err)
     );

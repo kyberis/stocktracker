@@ -215,6 +215,7 @@ describe("rowToDbUser", () => {
       device_template_id: "classic-dark",
       device_linked_at: "",
       device_pro_redeemed_at: "",
+      device_portfolio_id: "",
     });
   });
 
@@ -312,6 +313,7 @@ describe("mapUser", () => {
       device_template_id: "classic-dark",
       device_linked_at: "",
       device_pro_redeemed_at: "",
+      device_portfolio_id: "",
     };
 
     const publicUser = mapUser(dbUser);
@@ -338,6 +340,7 @@ describe("mapUser", () => {
       hasWidgetToken: false,
       hasDevicePasskey: false,
       deviceProEligible: false,
+      devicePortfolioId: "",
     });
   });
 
@@ -371,6 +374,7 @@ describe("mapUser", () => {
       device_template_id: "classic-dark",
       device_linked_at: "",
       device_pro_redeemed_at: "",
+      device_portfolio_id: "",
     };
 
     const publicUser = mapUser(dbUser);
@@ -410,6 +414,7 @@ describe("mapUser", () => {
       device_template_id: "classic-dark",
       device_linked_at: "",
       device_pro_redeemed_at: "",
+      device_portfolio_id: "",
     };
 
     const publicUser = mapUser(dbUser);
@@ -447,6 +452,7 @@ describe("mapUser", () => {
       device_template_id: "classic-dark",
       device_linked_at: "",
       device_pro_redeemed_at: "",
+      device_portfolio_id: "",
     };
 
     const publicUser = mapUser(dbUser);

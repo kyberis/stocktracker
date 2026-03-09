@@ -7,6 +7,7 @@ import {
   trackEvent,
   toPublicUser,
   isFeatureEnabled,
+  ensureDefaultPortfolio,
 } from "@/lib/db";
 import type { DbUser } from "@/lib/db";
 import {
@@ -162,6 +163,7 @@ export async function POST(req: NextRequest) {
         emailVerified,
         seedWithData: false,
       });
+      await ensureDefaultPortfolio(publicUser.id);
       dbUser = {
         id: publicUser.id,
         username: publicUser.username,
@@ -191,6 +193,7 @@ export async function POST(req: NextRequest) {
         device_template_id: "classic-dark",
         device_linked_at: "",
         device_pro_redeemed_at: "",
+        device_portfolio_id: "",
       };
       trackEvent(publicUser.id, "signup");
       authEventsTotal.inc({ event: "signup" });

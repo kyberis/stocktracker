@@ -41,6 +41,25 @@ export interface DbUser {
   device_template_id: string;
   device_linked_at: string;
   device_pro_redeemed_at: string;
+  device_portfolio_id: string;
+}
+
+export interface DbPortfolio {
+  id: string;
+  user_id: string;
+  name: string;
+  is_default: number;
+  sort_order: number;
+  created_at: string;
+}
+
+export interface Portfolio {
+  id: string;
+  userId: string;
+  name: string;
+  isDefault: boolean;
+  sortOrder: number;
+  createdAt: string;
 }
 
 export interface PublicUser {
@@ -65,6 +84,7 @@ export interface PublicUser {
   hasWidgetToken: boolean;
   hasDevicePasskey: boolean;
   deviceProEligible: boolean;
+  devicePortfolioId: string;
 }
 
 export interface UserSettings {
@@ -176,6 +196,18 @@ export function rowToDbUser(row: Row): DbUser {
     device_template_id: str(row.device_template_id) || "classic-dark",
     device_linked_at: str(row.device_linked_at),
     device_pro_redeemed_at: str(row.device_pro_redeemed_at),
+    device_portfolio_id: str(row.device_portfolio_id),
+  };
+}
+
+export function rowToPortfolio(row: Row): Portfolio {
+  return {
+    id: str(row.id),
+    userId: str(row.user_id),
+    name: str(row.name),
+    isDefault: num(row.is_default) === 1,
+    sortOrder: num(row.sort_order),
+    createdAt: str(row.created_at),
   };
 }
 
@@ -202,6 +234,7 @@ export function mapUser(user: DbUser): PublicUser {
     hasWidgetToken: !!user.widget_token_hash,
     hasDevicePasskey: !!user.device_passkey_hash,
     deviceProEligible: !!user.device_linked_at && !user.device_pro_redeemed_at && (user.plan === "free" || user.plan === "starter"),
+    devicePortfolioId: user.device_portfolio_id,
   };
 }
 

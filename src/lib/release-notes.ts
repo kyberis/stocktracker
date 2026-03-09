@@ -14,9 +14,47 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "1.6.0";
+export const CURRENT_VERSION = "1.7.0";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "1.7.0",
+    date: "2026-03-09",
+    title: "Multiple Portfolios",
+    titleTranslations: { es: "Múltiples Portafolios" },
+    changes: [
+      {
+        type: "feature",
+        text: "Multiple portfolios — Trefolio users can create up to 3 separate portfolios with independent holdings, transactions, and performance tracking",
+        translations: { es: "Múltiples portafolios — los usuarios Trefolio pueden crear hasta 3 portafolios separados con posiciones, transacciones y seguimiento de rendimiento independientes" },
+      },
+      {
+        type: "feature",
+        text: "Portfolio switcher in the dashboard toolbar — quickly switch between portfolios or view the combined total",
+        translations: { es: "Selector de portafolios en la barra de herramientas — cambia rápidamente entre portafolios o consulta el total combinado" },
+      },
+      {
+        type: "feature",
+        text: "Device & widget portfolio selector — choose which portfolio your trefolio Leaf and mobile widget display",
+        translations: { es: "Selector de portafolio para dispositivo y widget — elige qué portafolio muestra tu trefolio Leaf y widget móvil" },
+      },
+      {
+        type: "feature",
+        text: "Move holdings between portfolios — Pro users can relocate positions and their transaction history to a different portfolio",
+        translations: { es: "Mover posiciones entre portafolios — los usuarios Pro pueden reubicar posiciones y su historial de transacciones a un portafolio diferente" },
+      },
+      {
+        type: "improvement",
+        text: "Import flow now lets you choose a target portfolio when you have multiple portfolios",
+        translations: { es: "El flujo de importación ahora permite elegir un portafolio destino cuando tienes múltiples portafolios" },
+      },
+      {
+        type: "improvement",
+        text: "Downgrade protection — extra portfolios become read-only instead of being deleted when switching to a lower plan",
+        translations: { es: "Protección ante cambio de plan — los portafolios extra se convierten en solo lectura en lugar de eliminarse al cambiar a un plan inferior" },
+      },
+    ],
+  },
   {
     version: "1.6.0",
     date: "2026-03-08",

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromRequest } from "@/lib/auth/session";
-import { findUserByWidgetToken, findUserByDevicePasskey, markDeviceLinked, listHoldings, listCashEntries } from "@/lib/db";
+import { findUserByWidgetToken, findUserByDevicePasskey, markDeviceLinked, findUserById, listHoldings, listCashEntries } from "@/lib/db";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { withMetrics } from "@/lib/with-metrics";
@@ -44,12 +44,22 @@ export const GET = withMetrics("/api/portfolio/summary", async (req: NextRequest
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // Determine portfolio scope from user's device_portfolio_id setting
+  const dbUser = await findUserById(userId);
+  const portfolioId = dbUser?.device_portfolio_id || undefined;
+
   const [holdings, cashEntries] = await Promise.all([
-    listHoldings(userId),
-    listCashEntries(userId),
+    listHoldings(userId, portfolioId),
+    listCashEntries(userId, portfolioId),
   ]);
 
   if (holdings.length === 0 && cashEntries.length === 0) {
+    let portfolioName = "All Portfolios";
+    if (portfolioId) {
+      const { findPortfolioById } = await import("@/lib/db");
+      const portfolio = await findPortfolioById(userId, portfolioId);
+      if (portfolio) portfolioName = portfolio.name;
+    }
     return NextResponse.json({
       totalValueEUR: 0,
       costBasis: 0,
@@ -59,6 +69,7 @@ export const GET = withMetrics("/api/portfolio/summary", async (req: NextRequest
       totalGainLossPercent: 0,
       holdingsCount: 0,
       topHoldings: [],
+      portfolioName,
       updatedAt: new Date().toISOString(),
     });
   }
@@ -102,6 +113,14 @@ export const GET = withMetrics("/api/portfolio/summary", async (req: NextRequest
   }
 
   const totals = calculatePortfolioTotals(holdings, cashEntries, quotes, exchangeRates);
+
+  // Determine portfolio name for device display
+  let portfolioName = "All Portfolios";
+  if (portfolioId) {
+    const { findPortfolioById } = await import("@/lib/db");
+    const portfolio = await findPortfolioById(userId, portfolioId);
+    if (portfolio) portfolioName = portfolio.name;
+  }
 
   const holdingValues = holdings.map((h) => {
     const q = quotes[h.ticker];
@@ -147,6 +166,7 @@ export const GET = withMetrics("/api/portfolio/summary", async (req: NextRequest
     totalGainLossPercent: Math.round(totals.totalGainLossPercent * 100) / 100,
     holdingsCount: holdings.length,
     topHoldings,
+    portfolioName,
     updatedAt: new Date().toISOString(),
   }, {
     headers: { "Cache-Control": "private, max-age=60" },

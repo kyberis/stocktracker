@@ -111,8 +111,9 @@ async function buildIsinMapForBroker(
   userId: string,
   extractIsins?: (csv: string) => string[],
   skipYahoo = false,
+  portfolioId?: string,
 ): Promise<Record<string, string>> {
-  const holdings = await listHoldings(userId);
+  const holdings = await listHoldings(userId, portfolioId);
   let isinMap = { ...KNOWN_ISINS, ...buildIsinMap(holdings) };
 
   if (extractIsins) {
@@ -134,8 +135,9 @@ async function importTransactions(
   parseCashBalances?: (csv: string) => { currency: string; amount: number }[],
   plan?: "free" | "starter" | "pro",
   brokerLabel?: string,
+  portfolioId?: string,
 ): Promise<{ imported: number; cashImported: number; holdingsCapped?: number }> {
-  const existingRefs = await listTransactionSourceRefs(userId);
+  const existingRefs = await listTransactionSourceRefs(userId, portfolioId);
   const toImport = parsed.filter((tx) => !existingRefs.has(tx.sourceRef));
 
   const sorted = [...toImport].sort((a, b) => a.date.localeCompare(b.date));
@@ -146,7 +148,7 @@ async function importTransactions(
   let holdingsCapped = 0;
   let allowedTickers: Set<string> | null = null;
   if (holdingsLimit < Infinity) {
-    const existing = await listHoldings(userId);
+    const existing = await listHoldings(userId, portfolioId);
     const existingTickerSet = new Set(existing.map((h) => `${h.ticker}|${h.exchange || ""}`));
     const newTickers = new Set<string>();
     for (const tx of sorted) {
@@ -190,19 +192,19 @@ async function importTransactions(
       exchangeRateEur: tx.exchangeRateEur,
       notes: tx.name || `${broker} import`,
       sourceRef: tx.sourceRef,
-    });
+    }, portfolioId);
     if (created) imported++;
   }
 
   if (imported > 0) {
-    await rebuildHoldings(userId);
+    await rebuildHoldings(userId, portfolioId);
   }
 
   let cashImported = 0;
   if (parseCashBalances) {
     const cashBalances = parseCashBalances(csv);
     if (cashBalances.length > 0) {
-      const existingCash = await listCashEntries(userId);
+      const existingCash = await listCashEntries(userId, portfolioId);
       const brokerUpper = broker.toUpperCase();
       for (const entry of existingCash) {
         if (entry.name.toUpperCase().startsWith(brokerUpper)) {
@@ -224,7 +226,7 @@ async function importTransactions(
         await addCashEntry(userId, {
           name: `${broker.toUpperCase()} – ${balance.currency}`,
           amountEUR,
-        });
+        }, portfolioId);
         cashImported++;
       }
     }
@@ -251,6 +253,7 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
   const formData = await req.formData();
   const action = formData.get("action") as string;
   const broker = formData.get("broker") as string;
+  const portfolioId = (formData.get("portfolioId") as string) || undefined;
 
   /* ── Poll job status ── */
   if (action === "status") {
@@ -284,7 +287,7 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
     const parsed = parseSimpleCSV(csv);
 
     if (action === "parse") {
-      const existingRefs = await listTransactionSourceRefs(session.userId);
+      const existingRefs = await listTransactionSourceRefs(session.userId, portfolioId);
       const deduped = parsed.filter((tx) => !tx.sourceRef || !existingRefs.has(tx.sourceRef));
       const duplicatesRemoved = parsed.length - deduped.length;
       const summary = {
@@ -310,7 +313,7 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
           totalAmount: tx.totalAmount, fees: tx.fees, taxes: tx.taxes,
           currency: tx.currency, orderId: tx.orderId, sourceRef: tx.sourceRef,
         }));
-        return importTransactions(userId, asParsed, "simple", csv, undefined, plan, "Simple CSV");
+        return importTransactions(userId, asParsed, "simple", csv, undefined, plan, "Simple CSV", portfolioId);
       });
 
       return NextResponse.json({ jobId }, { status: 202 });
@@ -327,7 +330,7 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
   let parsed: ParsedTransaction[];
   const skipYahoo = action === "parse";
   try {
-    isinMap = await buildIsinMapForBroker(csv, session.userId, parser.extractIsins?.bind(parser), skipYahoo);
+    isinMap = await buildIsinMapForBroker(csv, session.userId, parser.extractIsins?.bind(parser), skipYahoo, portfolioId);
     parsed = parser.parse(csv, isinMap);
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
@@ -337,7 +340,7 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
   }
 
   if (action === "parse") {
-    const existingRefs = await listTransactionSourceRefs(session.userId);
+    const existingRefs = await listTransactionSourceRefs(session.userId, portfolioId);
     const deduped = parsed.filter((tx) => !tx.sourceRef || !existingRefs.has(tx.sourceRef));
     const duplicatesRemoved = parsed.length - deduped.length;
     const cashBalances = parser.parseCashBalances?.(csv) || [];
@@ -370,6 +373,7 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
         parser.parseCashBalances?.bind(parser),
         plan,
         parser.label,
+        portfolioId,
       );
     });
 
@@ -386,7 +390,7 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
       return NextResponse.json({ cashImported: 0 });
     }
 
-    const existingCash = await listCashEntries(session.userId);
+    const existingCash = await listCashEntries(session.userId, portfolioId);
     const brokerUpper = parser.label.toUpperCase();
     for (const entry of existingCash) {
       if (entry.name.toUpperCase().startsWith(brokerUpper)) {
@@ -409,7 +413,7 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
       await addCashEntry(session.userId, {
         name: `${parser.label.toUpperCase()} – ${balance.currency}`,
         amountEUR,
-      });
+      }, portfolioId);
       cashImported++;
     }
     return NextResponse.json({ cashImported });

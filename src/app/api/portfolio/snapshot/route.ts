@@ -16,9 +16,11 @@ export const POST = withMetrics("/api/portfolio/snapshot", async (req: NextReque
   if (error || !session) return error!;
 
   let totalValueEUR: number;
+  let portfolioId: string;
   try {
     const body = await req.json();
     totalValueEUR = Number(body.totalValueEUR);
+    portfolioId = body.portfolioId || "";
     if (!Number.isFinite(totalValueEUR) || totalValueEUR < 0) {
       return NextResponse.json({ error: "Invalid totalValueEUR" }, { status: 400 });
     }
@@ -30,10 +32,10 @@ export const POST = withMetrics("/api/portfolio/snapshot", async (req: NextReque
   const client = await ensureInitialized();
 
   await client.execute({
-    sql: `INSERT INTO portfolio_snapshots (id, user_id, date, total_value_eur)
-          VALUES (?, ?, ?, ?)
+    sql: `INSERT INTO portfolio_snapshots (id, user_id, portfolio_id, date, total_value_eur)
+          VALUES (?, ?, ?, ?, ?)
           ON CONFLICT(user_id, date) DO UPDATE SET total_value_eur = excluded.total_value_eur`,
-    args: [generateId(), session.userId, today, totalValueEUR],
+    args: [generateId(), session.userId, portfolioId, today, totalValueEUR],
   });
 
   return NextResponse.json({ ok: true, date: today, totalValueEUR });

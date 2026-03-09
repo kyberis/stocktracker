@@ -84,6 +84,25 @@ async function bootstrapSchema(client: Client): Promise<void> {
       FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
     );
 
+    CREATE TABLE IF NOT EXISTS portfolio_snapshots (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      date TEXT NOT NULL,
+      total_value_eur REAL NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(user_id, date)
+    );
+
+    CREATE TABLE IF NOT EXISTS portfolio_shares (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      is_active INTEGER NOT NULL DEFAULT 1,
+      show_values INTEGER NOT NULL DEFAULT 0,
+      excluded_tickers TEXT,
+      UNIQUE(user_id)
+    );
+
     PRAGMA foreign_keys = ON;
   `);
 
@@ -556,32 +575,9 @@ const MIGRATIONS: Migration[] = [
       `);
     },
   },
-  {
-    version: 13,
-    description: "Add portfolio_snapshots and portfolio_shares tables",
-    up: async (client: Client) => {
-      await client.executeMultiple(`
-        CREATE TABLE IF NOT EXISTS portfolio_snapshots (
-          id TEXT PRIMARY KEY,
-          user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-          date TEXT NOT NULL,
-          total_value_eur REAL NOT NULL,
-          created_at TEXT NOT NULL DEFAULT (datetime('now')),
-          UNIQUE(user_id, date)
-        );
-
-        CREATE TABLE IF NOT EXISTS portfolio_shares (
-          id TEXT PRIMARY KEY,
-          user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-          created_at TEXT NOT NULL DEFAULT (datetime('now')),
-          is_active INTEGER NOT NULL DEFAULT 1,
-          show_values INTEGER NOT NULL DEFAULT 0,
-          excluded_tickers TEXT,
-          UNIQUE(user_id)
-        );
-      `);
-    },
-  },
+  // NOTE: Original v13 for portfolio_snapshots/portfolio_shares was placed here
+  // (after v14/v15 in the array) with a duplicate version number, so it never ran.
+  // Fixed by v19 (portfolio_shares) and v20 (portfolio_snapshots).
   {
     version: 16,
     description: "Allow 'starter' plan value in users table CHECK constraint",
@@ -711,6 +707,117 @@ const MIGRATIONS: Migration[] = [
           excluded_tickers TEXT,
           UNIQUE(user_id)
         )`,
+      });
+    },
+  },
+  {
+    version: 20,
+    description: "Create portfolios table and add portfolio_id to data tables for multi-portfolio support",
+    up: async (client: Client) => {
+      // 1. Create portfolios table
+      await client.execute({
+        sql: `CREATE TABLE IF NOT EXISTS portfolios (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        name TEXT NOT NULL DEFAULT 'My Portfolio',
+        is_default INTEGER NOT NULL DEFAULT 0,
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        UNIQUE(user_id, name)
+      )`,
+      });
+      await client.execute({
+        sql: "CREATE INDEX IF NOT EXISTS idx_portfolios_user ON portfolios(user_id)",
+      });
+
+      // 2. Create a default portfolio for every existing user
+      const users = await client.execute("SELECT id FROM users");
+      for (const row of users.rows) {
+        const userId = str(row.id);
+        const existing = await client.execute({
+          sql: "SELECT id FROM portfolios WHERE user_id = ? AND is_default = 1",
+          args: [userId],
+        });
+        if (existing.rows.length === 0) {
+          const { randomUUID } = await import("crypto");
+          const portfolioId = randomUUID();
+          await client.execute({
+            sql: "INSERT INTO portfolios (id, user_id, name, is_default, sort_order) VALUES (?, ?, 'My Portfolio', 1, 0)",
+            args: [portfolioId, userId],
+          });
+        }
+      }
+
+      // 3a. Ensure portfolio_snapshots exists (original v13 entry was a duplicate and never ran)
+      await client.execute({
+        sql: `CREATE TABLE IF NOT EXISTS portfolio_snapshots (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          date TEXT NOT NULL,
+          total_value_eur REAL NOT NULL,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          UNIQUE(user_id, date)
+        )`,
+      });
+
+      // 3b. Add portfolio_id column to data tables
+      for (const table of ["holdings", "transactions", "cash_entries", "portfolio_snapshots", "portfolio_shares"]) {
+        try {
+          await client.execute({ sql: `ALTER TABLE ${table} ADD COLUMN portfolio_id TEXT NOT NULL DEFAULT ''` });
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : String(e);
+          if (!msg.includes("duplicate column")) throw e;
+        }
+      }
+
+      // 4. Backfill portfolio_id for all existing rows
+      for (const table of ["holdings", "transactions", "cash_entries", "portfolio_snapshots", "portfolio_shares"]) {
+        await client.execute({
+          sql: `UPDATE ${table} SET portfolio_id = (
+          SELECT p.id FROM portfolios p WHERE p.user_id = ${table}.user_id AND p.is_default = 1
+        ) WHERE portfolio_id = ''`,
+        });
+      }
+
+      // 5. Add device_portfolio_id to users table
+      try {
+        await client.execute({ sql: "ALTER TABLE users ADD COLUMN device_portfolio_id TEXT NOT NULL DEFAULT ''" });
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("duplicate column")) throw e;
+      }
+    },
+  },
+  {
+    version: 21,
+    description: "Ensure portfolio_snapshots table exists (v13 ordering fix)",
+    up: async (client: Client) => {
+      await client.execute({
+        sql: `CREATE TABLE IF NOT EXISTS portfolio_snapshots (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          date TEXT NOT NULL,
+          total_value_eur REAL NOT NULL,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          UNIQUE(user_id, date)
+        )`,
+      });
+
+      // Also ensure portfolio_id column exists on the table
+      try {
+        await client.execute({
+          sql: "ALTER TABLE portfolio_snapshots ADD COLUMN portfolio_id TEXT NOT NULL DEFAULT ''",
+        });
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("duplicate column")) throw e;
+      }
+
+      // Backfill portfolio_id if any rows have it empty
+      await client.execute({
+        sql: `UPDATE portfolio_snapshots SET portfolio_id = (
+          SELECT p.id FROM portfolios p WHERE p.user_id = portfolio_snapshots.user_id AND p.is_default = 1
+        ) WHERE portfolio_id = ''`,
       });
     },
   },

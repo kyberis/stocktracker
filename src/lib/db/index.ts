@@ -1,6 +1,19 @@
 // Barrel re-export — all consumers import from "@/lib/db" unchanged.
 
-export type { UserRole, UserPlan, AuthProvider, DbUser, PublicUser, UserSettings } from "./helpers";
+export type { UserRole, UserPlan, AuthProvider, DbUser, PublicUser, UserSettings, Portfolio } from "./helpers";
+
+export {
+  listPortfolios,
+  getDefaultPortfolio,
+  createPortfolio,
+  renamePortfolio,
+  deletePortfolio,
+  setDefaultPortfolio,
+  countPortfolios,
+  findPortfolioById,
+  moveHoldingToPortfolio,
+  ensureDefaultPortfolio,
+} from "./portfolios";
 
 export {
   findUserByUsername,

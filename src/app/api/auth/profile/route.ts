@@ -32,12 +32,13 @@ export const PUT = withMetrics("/api/auth/profile", async (req: NextRequest) => 
 
   const result = await parseBody(req, profileUpdateSchema);
   if (!result.success) return result.error;
-  const { email, displayName, avatarUrl } = result.data;
+  const { email, displayName, avatarUrl, devicePortfolioId } = result.data;
 
-  const updates: Partial<{ email: string; displayName: string; avatarUrl: string }> = {};
+  const updates: Partial<{ email: string; displayName: string; avatarUrl: string; devicePortfolioId: string }> = {};
   if (email !== undefined) updates.email = email;
   if (displayName !== undefined) updates.displayName = displayName;
   if (avatarUrl !== undefined) updates.avatarUrl = avatarUrl;
+  if (devicePortfolioId !== undefined) updates.devicePortfolioId = devicePortfolioId;
 
   const user = await findUserById(session.userId);
   if (updates.email && user && updates.email !== user.email) {

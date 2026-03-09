@@ -128,7 +128,7 @@ export default function Dashboard() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const { showWhatsNew: autoShowWhatsNew, dismissWhatsNew } = useWhatsNewAutoShow();
   const { t } = useI18n();
-  const { holdings, cashEntries, refreshHoldings } = usePortfolio();
+  const { holdings, cashEntries, isLoading, refreshHoldings } = usePortfolio();
   const { user } = useAuth();
   const track = useTrack();
 
@@ -222,7 +222,7 @@ export default function Dashboard() {
             tabIndex={0}
             className="focus-visible:outline-none space-y-6"
           >
-            {holdingsCount === 0 ? (
+            {holdingsCount === 0 && !isLoading ? (
               <EmptyPortfolio
                 onAddStock={() => setShowAddModal(true)}
                 onSeedData={async () => {

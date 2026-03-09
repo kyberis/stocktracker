@@ -7,6 +7,7 @@ import {
   markDeviceLinked,
   getDeviceTemplate,
   isFeatureEnabled,
+  findPortfolioById,
 } from "@/lib/db";
 import { withMetrics } from "@/lib/with-metrics";
 import { deviceApiCalls } from "@/lib/metrics";
@@ -40,6 +41,13 @@ export const GET = withMetrics("/api/device/config", async (req: NextRequest) =>
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // Portfolio info for device display
+  let portfolioName = "All Portfolios";
+  if (user.device_portfolio_id) {
+    const portfolio = await findPortfolioById(user.id, user.device_portfolio_id);
+    if (portfolio) portfolioName = portfolio.name;
+  }
+
   const isPro = user.plan === "pro";
   const templateId = user.device_template_id || "classic-dark";
 
@@ -48,6 +56,7 @@ export const GET = withMetrics("/api/device/config", async (req: NextRequest) =>
 
   return Response.json({
     plan: user.plan,
+    portfolioName,
     features: {
       aiSummary: isPro,
       topHoldingsCount: isPro ? 10 : 5,

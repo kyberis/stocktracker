@@ -3,12 +3,14 @@ import { ensureInitialized } from "./client";
 import { str, num } from "./helpers";
 import type { CashEntry } from "@/lib/types";
 
-export async function listCashEntries(userId: string): Promise<CashEntry[]> {
+export async function listCashEntries(userId: string, portfolioId?: string): Promise<CashEntry[]> {
   const client = await ensureInitialized();
+  const portfolioFilter = portfolioId ? " AND portfolio_id = ?" : "";
+  const portfolioArgs = portfolioId ? [portfolioId] : [];
   const result = await client.execute({
     sql: `SELECT id, name, amount_eur
-          FROM cash_entries WHERE user_id = ? ORDER BY created_at ASC`,
-    args: [userId],
+          FROM cash_entries WHERE user_id = ?${portfolioFilter} ORDER BY created_at ASC`,
+    args: [userId, ...portfolioArgs],
   });
   return result.rows.map((row) => ({
     id: str(row.id),
@@ -19,14 +21,15 @@ export async function listCashEntries(userId: string): Promise<CashEntry[]> {
 
 export async function addCashEntry(
   userId: string,
-  entry: Omit<CashEntry, "id">
+  entry: Omit<CashEntry, "id">,
+  portfolioId?: string
 ): Promise<CashEntry> {
   const client = await ensureInitialized();
   const id = randomUUID();
   await client.execute({
-    sql: `INSERT INTO cash_entries (id, user_id, name, amount_eur)
-          VALUES (?, ?, ?, ?)`,
-    args: [id, userId, entry.name, entry.amountEUR],
+    sql: `INSERT INTO cash_entries (id, user_id, name, amount_eur, portfolio_id)
+          VALUES (?, ?, ?, ?, ?)`,
+    args: [id, userId, entry.name, entry.amountEUR, portfolioId || ""],
   });
   return { ...entry, id };
 }

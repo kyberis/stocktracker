@@ -117,6 +117,224 @@ function PortfolioShareSection() {
   );
 }
 
+function PortfolioManagementSection() {
+  const { t } = useI18n();
+  const { user, refreshUser } = useAuth();
+  const [portfolios, setPortfolios] = useState<{ id: string; name: string; isDefault: boolean }[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+  const [error, setError] = useState("");
+  const [devicePortfolioId, setDevicePortfolioId] = useState(user?.devicePortfolioId || "");
+
+  const isPro = user?.plan === "pro";
+  const limit = isPro ? 3 : 1;
+  const isOverLimit = portfolios.length > limit;
+
+  const fetchPortfolios = useCallback(async () => {
+    try {
+      const res = await fetch("/api/portfolios");
+      if (res.ok) {
+        const data = await res.json();
+        setPortfolios(data.portfolios || []);
+      }
+    } catch { /* ignore */ }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { fetchPortfolios(); }, [fetchPortfolios]);
+
+  async function handleCreate() {
+    if (!newName.trim()) return;
+    setCreating(true);
+    setError("");
+    try {
+      const res = await fetch("/api/portfolios", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newName.trim() }),
+      });
+      if (res.ok) {
+        setNewName("");
+        await fetchPortfolios();
+      } else {
+        const data = await res.json().catch(() => null);
+        setError(data?.error || "Failed to create portfolio");
+      }
+    } catch { setError("Failed to create portfolio"); }
+    setCreating(false);
+  }
+
+  async function handleRename(id: string) {
+    if (!editName.trim()) return;
+    try {
+      const res = await fetch(`/api/portfolios/${encodeURIComponent(id)}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: editName.trim() }),
+      });
+      if (res.ok) {
+        setEditingId(null);
+        setEditName("");
+        await fetchPortfolios();
+      }
+    } catch { /* ignore */ }
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm("Delete this portfolio? All its holdings and transactions will be moved to your default portfolio.")) return;
+    try {
+      const res = await fetch(`/api/portfolios/${encodeURIComponent(id)}`, { method: "DELETE" });
+      if (res.ok) await fetchPortfolios();
+    } catch { /* ignore */ }
+  }
+
+  async function handleSetDefault(id: string) {
+    try {
+      const res = await fetch(`/api/portfolios/${encodeURIComponent(id)}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isDefault: true }),
+      });
+      if (res.ok) await fetchPortfolios();
+    } catch { /* ignore */ }
+  }
+
+  async function handleDevicePortfolioChange(portfolioId: string) {
+    setDevicePortfolioId(portfolioId);
+    try {
+      await fetch("/api/auth/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ devicePortfolioId: portfolioId }),
+      });
+      await refreshUser();
+    } catch { /* ignore */ }
+  }
+
+  if (loading) return <div className="text-sm text-gray-400 dark:text-slate-500">{t("loading")}</div>;
+
+  return (
+    <div className="space-y-4">
+      {/* Portfolio list */}
+      <div className="space-y-2">
+        {portfolios.map((p) => (
+          <div key={p.id} className="flex items-center justify-between gap-3 py-2 px-3 rounded-lg bg-gray-50 dark:bg-slate-700/50">
+            {editingId === p.id ? (
+              <div className="flex items-center gap-2 flex-1">
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") handleRename(p.id); if (e.key === "Escape") setEditingId(null); }}
+                  className="text-sm flex-1"
+                  autoFocus
+                />
+                <button onClick={() => handleRename(p.id)} className="btn-primary text-xs px-2 py-1">{t("save")}</button>
+                <button onClick={() => setEditingId(null)} className="btn-secondary text-xs px-2 py-1">{t("cancel")}</button>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-sm font-medium text-gray-900 dark:text-white truncate">{p.name}</span>
+                  {p.isDefault && (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 font-medium">
+                      Default
+                    </span>
+                  )}
+                  {isOverLimit && !p.isDefault && (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400 font-medium">
+                      Read-only
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {!(isOverLimit && !p.isDefault) && (
+                    <button
+                      onClick={() => { setEditingId(p.id); setEditName(p.name); }}
+                      className="text-xs text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200"
+                    >
+                      Rename
+                    </button>
+                  )}
+                  {!p.isDefault && (
+                    <>
+                      {!(isOverLimit && !p.isDefault) && (
+                        <button
+                          onClick={() => handleSetDefault(p.id)}
+                          className="text-xs text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200"
+                        >
+                          Set Default
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleDelete(p.id)}
+                        className="text-xs text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300"
+                      >
+                        Delete
+                      </button>
+                    </>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Create new portfolio */}
+      {isPro && portfolios.length < limit && (
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") handleCreate(); }}
+            placeholder="New portfolio name"
+            className="text-sm flex-1"
+            maxLength={50}
+          />
+          <button onClick={handleCreate} disabled={creating || !newName.trim()} className="btn-primary text-sm disabled:opacity-40">
+            {creating ? "Creating..." : "Create"}
+          </button>
+        </div>
+      )}
+
+      {!isPro && portfolios.length >= limit && (
+        <p className="text-xs text-gray-500 dark:text-slate-400">
+          Upgrade to Trefolio to create up to 3 portfolios.
+        </p>
+      )}
+
+      {error && <p className="text-xs text-red-500 dark:text-red-400">{error}</p>}
+
+      {/* Device & Widget portfolio selector */}
+      {portfolios.length > 1 && (
+        <div className="pt-3 border-t border-gray-200 dark:border-slate-700 space-y-2">
+          <label className="text-sm font-medium text-gray-700 dark:text-slate-300">
+            Device & Widget Portfolio
+          </label>
+          <p className="text-xs text-gray-500 dark:text-slate-400">
+            Choose which portfolio your widget and trefolio Leaf show. Leave on &quot;All Portfolios&quot; for a combined view.
+          </p>
+          <select
+            value={devicePortfolioId}
+            onChange={(e) => handleDevicePortfolioChange(e.target.value)}
+            className="text-sm bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2 w-full focus:ring-1 focus:ring-emerald-500 focus:outline-none"
+          >
+            <option value="">All Portfolios</option>
+            {portfolios.map((p) => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </select>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ProfilePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -1147,6 +1365,15 @@ export default function ProfilePage() {
             </p>
           </div>
         )}
+
+        {/* Portfolio Management */}
+        <div className="card p-6 space-y-4">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Portfolios</h2>
+          <p className="text-sm text-gray-500 dark:text-slate-400">
+            Manage your portfolios. Pro users can create up to 3 portfolios.
+          </p>
+          <PortfolioManagementSection />
+        </div>
 
         {/* Portfolio Sharing */}
         {isPaid ? (

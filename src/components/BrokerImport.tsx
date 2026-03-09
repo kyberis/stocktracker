@@ -83,8 +83,16 @@ export default function BrokerImport() {
   const [importedCount, setImportedCount] = useState(0);
   const [error, setError] = useState("");
   const [csvText, setCsvText] = useState("");
+  const [portfolios, setPortfolios] = useState<{ id: string; name: string; isDefault: boolean }[]>([]);
+  const [targetPortfolioId, setTargetPortfolioId] = useState<string>("");
   const fileRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    fetch("/api/portfolios")
+      .then((r) => r.ok ? r.json() : { portfolios: [] })
+      .then((d) => setPortfolios(d.portfolios || []))
+      .catch(() => {});
+  }, []);
 
   const brokerInfo = BROKERS.find((b) => b.id === broker)!;
 
@@ -95,6 +103,7 @@ export default function BrokerImport() {
     setError("");
     setCsvText("");
     setImportedCount(0);
+    setTargetPortfolioId("");
     if (fileRef.current) fileRef.current.value = "";
   };
 
@@ -111,6 +120,7 @@ export default function BrokerImport() {
     form.append("action", "parse");
     form.append("broker", broker);
     form.append("csv", text);
+    if (targetPortfolioId) form.append("portfolioId", targetPortfolioId);
     try {
       const res = await fetch("/api/transactions/import-broker", { method: "POST", body: form });
       if (!res.ok) { setError("Failed to parse CSV."); return; }
@@ -163,6 +173,7 @@ export default function BrokerImport() {
     form.append("action", "import");
     form.append("broker", broker);
     form.append("csv", csvText);
+    if (targetPortfolioId) form.append("portfolioId", targetPortfolioId);
     try {
       const res = await fetch("/api/transactions/import-broker", { method: "POST", body: form });
       if (!res.ok) { setError("Import failed."); setStep("preview"); return; }
@@ -248,6 +259,24 @@ export default function BrokerImport() {
             <div className="bg-blue-50 dark:bg-blue-500/10 rounded-xl p-3 mb-4">
               <p className="text-xs text-blue-700 dark:text-blue-300 font-medium mb-1">Revolut</p>
               <p className="text-[10px] text-blue-600 dark:text-blue-400">Invest → More → Statements → Account statement → Excel format.</p>
+            </div>
+          )}
+
+          {portfolios.length > 1 && (
+            <div className="space-y-1 mb-4">
+              <label className="text-sm font-medium text-gray-700 dark:text-slate-300">
+                Import to portfolio
+              </label>
+              <select
+                value={targetPortfolioId}
+                onChange={(e) => setTargetPortfolioId(e.target.value)}
+                className="w-full text-sm bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2"
+              >
+                <option value="">Default Portfolio</option>
+                {portfolios.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
             </div>
           )}
 

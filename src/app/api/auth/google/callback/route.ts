@@ -7,6 +7,7 @@ import {
   linkGoogleAccount,
   trackEvent,
   toPublicUser,
+  ensureDefaultPortfolio,
 } from "@/lib/db";
 import type { DbUser } from "@/lib/db";
 import {
@@ -231,6 +232,7 @@ async function handleLoginFlow(
         emailVerified: googleUser.email_verified,
         seedWithData: false,
       });
+      await ensureDefaultPortfolio(publicUser.id);
       dbUser = {
         id: publicUser.id,
         username: publicUser.username,
@@ -260,6 +262,7 @@ async function handleLoginFlow(
         device_template_id: "classic-dark",
         device_linked_at: "",
         device_pro_redeemed_at: "",
+        device_portfolio_id: "",
       };
       trackEvent(publicUser.id, "signup");
       authEventsTotal.inc({ event: "signup" });

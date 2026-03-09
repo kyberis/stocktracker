@@ -142,7 +142,7 @@ function getPricing(t: T): PricingTier[] {
       regularAnnual: "€0", annualPrice: "€0",
       annualSavePct: 0, isFree: true,
       description: t("landingPricingFolioDesc"),
-      features: Array.from({ length: 11 }, (_, i) => t(`landingPricingFolioFeature${i + 1}` as TranslationKey)),
+      features: Array.from({ length: 12 }, (_, i) => t(`landingPricingFolioFeature${i + 1}` as TranslationKey)),
       cta: t("landingPricingFolioCta"),
     },
     {
@@ -165,7 +165,7 @@ function getPricing(t: T): PricingTier[] {
       regularAnnual: "€89.99", annualPrice: "€59.99",
       annualSavePct: 33,
       description: t("landingPricingTrefolioDesc"),
-      features: Array.from({ length: 14 }, (_, i) => t(`landingPricingTrefolioFeature${i + 1}` as TranslationKey)),
+      features: Array.from({ length: 15 }, (_, i) => t(`landingPricingTrefolioFeature${i + 1}` as TranslationKey)),
       cta: t("landingPricingTrefolioCta"),
       highlighted: true,
     },

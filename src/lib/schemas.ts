@@ -29,6 +29,7 @@ export const profileUpdateSchema = z.object({
   email: z.string().email("Invalid email address").optional(),
   displayName: z.string().max(100).optional(),
   avatarUrl: z.string().max(500).optional(),
+  devicePortfolioId: z.string().optional(),
 });
 
 /* ── Holdings ──────────────────────────────────────────────── */

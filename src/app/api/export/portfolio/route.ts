@@ -20,9 +20,10 @@ export const GET = withMetrics("/api/export/portfolio", async (req: NextRequest)
 
   const url = new URL(req.url);
   const type = url.searchParams.get("type") || "holdings";
+  const portfolioId = url.searchParams.get("portfolioId") || undefined;
 
   if (type === "transactions") {
-    const txs = await listTransactions(session.userId);
+    const txs = await listTransactions(session.userId, undefined, portfolioId);
     const headers = ["Date", "Ticker", "Name", "Type", "Shares", "Price/Share", "Total", "Fees", "Taxes", "Currency", "Notes"];
     const rows = txs.map((tx) => [
       tx.date,
@@ -52,7 +53,7 @@ export const GET = withMetrics("/api/export/portfolio", async (req: NextRequest)
   }
 
   if (type === "cash") {
-    const entries = await listCashEntries(session.userId);
+    const entries = await listCashEntries(session.userId, portfolioId);
     const headers = ["Name", "Amount (EUR)"];
     const rows = entries.map((e) => [e.name, String(e.amountEUR)]);
     const csv = [headers.join(","), ...rows.map((r) => r.map(escapeCsv).join(","))].join("\n");
@@ -69,7 +70,7 @@ export const GET = withMetrics("/api/export/portfolio", async (req: NextRequest)
   }
 
   // Default: holdings
-  const holdings = await listHoldings(session.userId);
+  const holdings = await listHoldings(session.userId, portfolioId);
   const headers = ["Ticker", "Name", "Shares", "Purchase Price", "Currency", "Exchange", "Type", "Sector", "Region"];
   const rows = holdings.map((h) => [
     h.ticker,

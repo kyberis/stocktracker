@@ -15,12 +15,14 @@ const SOURCE_REF_BROKER_MAP: Record<string, { id: string; label: string }> = {
   simple: { id: "simple", label: "Simple CSV" },
 };
 
-export async function listHoldings(userId: string): Promise<Holding[]> {
+export async function listHoldings(userId: string, portfolioId?: string): Promise<Holding[]> {
   const client = await ensureInitialized();
+  const portfolioFilter = portfolioId ? " AND portfolio_id = ?" : "";
+  const portfolioArgs = portfolioId ? [portfolioId] : [];
   const holdingsResult = await client.execute({
     sql: `SELECT id, name, ticker, isin, asset_type, shares, purchase_price, display_currency, exchange, value_in_eur, sector, region, asset_class, account_id
-          FROM holdings WHERE user_id = ? ORDER BY name ASC`,
-    args: [userId],
+          FROM holdings WHERE user_id = ?${portfolioFilter} ORDER BY name ASC`,
+    args: [userId, ...portfolioArgs],
   });
 
   if (holdingsResult.rows.length > 0) {
@@ -60,11 +62,11 @@ export async function listHoldings(userId: string): Promise<Holding[]> {
   }
 
   const txCount = await client.execute({
-    sql: "SELECT COUNT(*) as cnt FROM transactions WHERE user_id = ?",
-    args: [userId],
+    sql: `SELECT COUNT(*) as cnt FROM transactions WHERE user_id = ?${portfolioFilter}`,
+    args: [userId, ...portfolioArgs],
   });
   if (num(txCount.rows[0]?.cnt) > 0) {
-    return rebuildHoldings(userId);
+    return rebuildHoldings(userId, portfolioId);
   }
 
   return [];
@@ -72,15 +74,18 @@ export async function listHoldings(userId: string): Promise<Holding[]> {
 
 export async function addHolding(
   userId: string,
-  holding: Omit<Holding, "id">
+  holding: Omit<Holding, "id">,
+  portfolioId?: string
 ): Promise<Holding> {
   const client = await ensureInitialized();
   const ticker = normalizeTickerForExchange(holding.ticker, holding.exchange);
+  const portfolioFilter = portfolioId ? " AND portfolio_id = ?" : "";
+  const portfolioArgs = portfolioId ? [portfolioId] : [];
 
   const existing = await client.execute({
     sql: `SELECT id, shares, purchase_price FROM holdings
-          WHERE user_id = ? AND UPPER(ticker) = UPPER(?) AND UPPER(exchange) = UPPER(?)`,
-    args: [userId, ticker, holding.exchange],
+          WHERE user_id = ? AND UPPER(ticker) = UPPER(?) AND UPPER(exchange) = UPPER(?)${portfolioFilter}`,
+    args: [userId, ticker, holding.exchange, ...portfolioArgs],
   });
 
   if (existing.rows.length > 0) {
@@ -108,13 +113,14 @@ export async function addHolding(
   const id = randomUUID();
   await client.execute({
     sql: `INSERT INTO holdings (
-            id, user_id, name, ticker, isin, asset_type, shares, purchase_price, display_currency, exchange, value_in_eur
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            id, user_id, name, ticker, isin, asset_type, shares, purchase_price, display_currency, exchange, value_in_eur, portfolio_id
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       id, userId, holding.name, ticker, holding.isin,
       holding.assetType ?? "stock",
       holding.shares, holding.purchasePrice, holding.displayCurrency,
       holding.exchange, holding.valueInEUR,
+      portfolioId || "",
     ],
   });
   return { ...holding, id, ticker };
@@ -181,12 +187,15 @@ export async function removeHolding(userId: string, holdingId: string): Promise<
 
 export async function resetUserHoldings(
   userId: string,
-  useSeedData: boolean
+  useSeedData: boolean,
+  portfolioId?: string
 ): Promise<number> {
   const client = await ensureInitialized();
-  await client.execute({ sql: "DELETE FROM holdings WHERE user_id = ?", args: [userId] });
-  await client.execute({ sql: "DELETE FROM cash_entries WHERE user_id = ?", args: [userId] });
-  await client.execute({ sql: "DELETE FROM transactions WHERE user_id = ?", args: [userId] });
+  const portfolioFilter = portfolioId ? " AND portfolio_id = ?" : "";
+  const portfolioArgs = portfolioId ? [portfolioId] : [];
+  await client.execute({ sql: `DELETE FROM holdings WHERE user_id = ?${portfolioFilter}`, args: [userId, ...portfolioArgs] });
+  await client.execute({ sql: `DELETE FROM cash_entries WHERE user_id = ?${portfolioFilter}`, args: [userId, ...portfolioArgs] });
+  await client.execute({ sql: `DELETE FROM transactions WHERE user_id = ?${portfolioFilter}`, args: [userId, ...portfolioArgs] });
   if (useSeedData) {
     const holdingsCount = await seedHoldingsForUser(client, userId);
     const cashCount = await seedCashForUser(client, userId);
@@ -196,13 +205,15 @@ export async function resetUserHoldings(
   return 0;
 }
 
-export async function rebuildHoldings(userId: string): Promise<Holding[]> {
+export async function rebuildHoldings(userId: string, portfolioId?: string): Promise<Holding[]> {
   const client = await ensureInitialized();
+  const portfolioFilter = portfolioId ? " AND portfolio_id = ?" : "";
+  const portfolioArgs = portfolioId ? [portfolioId] : [];
 
   const metadataRows = await client.execute({
     sql: `SELECT id, name, ticker, isin, asset_type, display_currency, exchange, sector, region, asset_class, account_id
-          FROM holdings WHERE user_id = ?`,
-    args: [userId],
+          FROM holdings WHERE user_id = ?${portfolioFilter}`,
+    args: [userId, ...portfolioArgs],
   });
 
   const metadataByKey = new Map<string, {
@@ -221,7 +232,7 @@ export async function rebuildHoldings(userId: string): Promise<Holding[]> {
     }
   }
 
-  const transactions = await listTransactions(userId);
+  const transactions = await listTransactions(userId, undefined, portfolioId);
 
   const unlinked = transactions.filter((tx) => !tx.accountId && tx.sourceRef);
   if (unlinked.length > 0) {
@@ -251,25 +262,27 @@ export async function rebuildHoldings(userId: string): Promise<Holding[]> {
 
   const derived = deriveHoldingsFromTransactions(transactions, metadataByKey);
 
-  await client.execute({ sql: "DELETE FROM holdings WHERE user_id = ?", args: [userId] });
+  await client.execute({ sql: `DELETE FROM holdings WHERE user_id = ?${portfolioFilter}`, args: [userId, ...portfolioArgs] });
 
   for (const h of derived) {
     const id = randomUUID();
     await client.execute({
-      sql: `INSERT INTO holdings (id, user_id, name, ticker, isin, asset_type, shares, purchase_price, display_currency, exchange, value_in_eur, sector, region, asset_class, account_id)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      args: [id, userId, h.name, h.ticker, h.isin || "", h.assetType || "stock", h.shares, h.purchasePrice, h.displayCurrency, h.exchange, h.valueInEUR || 0, h.sector || "", h.region || "", h.assetClass || "", h.accountId || ""],
+      sql: `INSERT INTO holdings (id, user_id, name, ticker, isin, asset_type, shares, purchase_price, display_currency, exchange, value_in_eur, sector, region, asset_class, account_id, portfolio_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [id, userId, h.name, h.ticker, h.isin || "", h.assetType || "stock", h.shares, h.purchasePrice, h.displayCurrency, h.exchange, h.valueInEUR || 0, h.sector || "", h.region || "", h.assetClass || "", h.accountId || "", portfolioId || ""],
     });
   }
 
   return derived;
 }
 
-export async function deleteAllHoldings(userId: string): Promise<number> {
+export async function deleteAllHoldings(userId: string, portfolioId?: string): Promise<number> {
   const client = await ensureInitialized();
+  const portfolioFilter = portfolioId ? " AND portfolio_id = ?" : "";
+  const portfolioArgs = portfolioId ? [portfolioId] : [];
   const result = await client.execute({
-    sql: "DELETE FROM holdings WHERE user_id = ?",
-    args: [userId],
+    sql: `DELETE FROM holdings WHERE user_id = ?${portfolioFilter}`,
+    args: [userId, ...portfolioArgs],
   });
   return Number(result.rowsAffected ?? 0);
 }

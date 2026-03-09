@@ -12,6 +12,7 @@ export const GET = withMetrics("/api/portfolio/history", async (req: NextRequest
 
   const url = new URL(req.url);
   const range = url.searchParams.get("range") || "1m";
+  const portfolioId = url.searchParams.get("portfolioId") || "";
 
   const plan = (session.plan ?? "free") as "free" | "starter" | "pro";
   const isPro = plan === "pro";
@@ -30,9 +31,9 @@ export const GET = withMetrics("/api/portfolio/history", async (req: NextRequest
       // Free users: max 30 days regardless of requested range
       sql = `SELECT date, total_value_eur as value
              FROM portfolio_snapshots
-             WHERE user_id = ? AND date >= date('now', '-30 days')
+             WHERE user_id = ? AND (? = '' OR portfolio_id = ?) AND date >= date('now', '-30 days')
              ORDER BY date ASC`;
-      args = [session.userId];
+      args = [session.userId, portfolioId, portfolioId];
     } else {
       const dayMap: Record<string, string> = {
         all: "-100 years",
@@ -42,17 +43,17 @@ export const GET = withMetrics("/api/portfolio/history", async (req: NextRequest
       };
       sql = `SELECT date, total_value_eur as value
              FROM portfolio_snapshots
-             WHERE user_id = ? AND date >= date('now', ?)
+             WHERE user_id = ? AND (? = '' OR portfolio_id = ?) AND date >= date('now', ?)
              ORDER BY date ASC`;
-      args = [session.userId, dayMap[range]];
+      args = [session.userId, portfolioId, portfolioId, dayMap[range]];
     }
   } else {
     // Default: 1m
     sql = `SELECT date, total_value_eur as value
            FROM portfolio_snapshots
-           WHERE user_id = ? AND date >= date('now', '-30 days')
+           WHERE user_id = ? AND (? = '' OR portfolio_id = ?) AND date >= date('now', '-30 days')
            ORDER BY date ASC`;
-    args = [session.userId];
+    args = [session.userId, portfolioId, portfolioId];
   }
 
   const result = await client.execute({ sql, args });

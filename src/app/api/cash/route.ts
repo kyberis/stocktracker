@@ -9,7 +9,8 @@ export const GET = withMetrics("/api/cash", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
 
-  const cash = await listCashEntries(session.userId);
+  const portfolioId = req.nextUrl.searchParams.get("portfolioId") || undefined;
+  const cash = await listCashEntries(session.userId, portfolioId);
   return NextResponse.json(cash);
 });
 
@@ -17,10 +18,11 @@ export const POST = withMetrics("/api/cash", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
 
+  const portfolioId = req.nextUrl.searchParams.get("portfolioId") || undefined;
   const result = await parseBody(req, createCashSchema);
   if (!result.success) return result.error;
   const { name, amountEUR } = result.data;
-  const created = await addCashEntry(session.userId, { name, amountEUR });
+  const created = await addCashEntry(session.userId, { name, amountEUR }, portfolioId);
   return NextResponse.json(created, { status: 201 });
 });
 

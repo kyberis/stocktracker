@@ -131,7 +131,7 @@ export async function updateUserPassword(
 
 export async function updateUserProfile(
   userId: string,
-  updates: Partial<{ email: string; displayName: string; avatarUrl: string }>
+  updates: Partial<{ email: string; displayName: string; avatarUrl: string; devicePortfolioId: string }>
 ): Promise<PublicUser | null> {
   const client = await ensureInitialized();
   const user = await findUserById(userId);
@@ -140,10 +140,11 @@ export async function updateUserProfile(
   const email = updates.email ?? user.email;
   const displayName = updates.displayName ?? user.display_name;
   const avatarUrl = updates.avatarUrl ?? user.avatar_url;
+  const devicePortfolioId = updates.devicePortfolioId !== undefined ? updates.devicePortfolioId : (user.device_portfolio_id ?? "");
 
   await client.execute({
-    sql: "UPDATE users SET email = ?, display_name = ?, avatar_url = ? WHERE id = ?",
-    args: [email, displayName, avatarUrl, userId],
+    sql: "UPDATE users SET email = ?, display_name = ?, avatar_url = ?, device_portfolio_id = ? WHERE id = ?",
+    args: [email, displayName, avatarUrl, devicePortfolioId, userId],
   });
 
   const updated = await findUserById(userId);

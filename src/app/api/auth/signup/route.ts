@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createUser, findUserByEmail, trackEvent } from "@/lib/db";
+import { createUser, findUserByEmail, trackEvent, ensureDefaultPortfolio } from "@/lib/db";
 import { hashPassword } from "@/lib/auth/password";
 import {
   createSessionToken,
@@ -65,6 +65,8 @@ export const POST = withMetrics("/api/auth/signup", async (req: NextRequest) => 
       authProvider: "credentials",
       seedWithData: Boolean(seedWithData),
     });
+
+    await ensureDefaultPortfolio(user.id);
 
     const token = await createSessionToken({
       userId: user.id,
