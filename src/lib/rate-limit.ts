@@ -69,7 +69,12 @@ export async function recordAvUsageAsync(userId: string, callCount: number): Pro
 export async function checkAiRateLimit(
   userId: string,
   plan: string,
+  role?: string,
 ): Promise<RateLimitResult> {
+  if (role === "admin") {
+    return { allowed: true, remaining: Infinity, limit: Infinity, resetAt: "" };
+  }
+
   if (plan !== "pro") {
     return { allowed: true, remaining: Infinity, limit: Infinity, resetAt: "" };
   }
@@ -185,7 +190,9 @@ export async function checkDeviceAuthRateLimit(ip: string): Promise<RateLimitRes
 
 const OPENAI_CALLS_KEY = "openai_monthly_calls";
 
-export async function checkGlobalAiCap(): Promise<{ allowed: boolean; used: number; cap: number }> {
+export async function checkGlobalAiCap(role?: string): Promise<{ allowed: boolean; used: number; cap: number }> {
+  if (role === "admin") return { allowed: true, used: 0, cap: Infinity };
+
   const cap = PLATFORM_LIMITS.OPENAI_MONTHLY_CALL_CAP;
   const monthKey = new Date().toISOString().slice(0, 7);
   const raw = await getPlatformSetting(OPENAI_CALLS_KEY);

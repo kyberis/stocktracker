@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifySessionToken } from "@/lib/auth/session";
 
-const PUBLIC_ROUTES = new Set(["/login", "/signup", "/landing", "/privacy", "/terms", "/verify-email", "/blog"]);
+const PUBLIC_ROUTES = new Set(["/login", "/signup", "/landing", "/privacy", "/terms", "/verify-email", "/blog", "/contact"]);
 const PUBLIC_API_ROUTES = new Set([
   "/api/auth/login",
   "/api/auth/signup",
@@ -16,6 +16,7 @@ const PUBLIC_API_ROUTES = new Set([
   "/api/feature-flags",
   "/api/billing/webhook",
   "/api/analytics/landing",
+  "/api/contact",
   "/api/metrics",
   "/api/cron/push-gauges",
   "/api/portfolio/summary",

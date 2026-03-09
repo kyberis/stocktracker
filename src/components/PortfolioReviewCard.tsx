@@ -76,115 +76,75 @@ export default function PortfolioReviewCard() {
     }
   }, [status, language, refreshUser]);
 
-  if (!isPro) {
-    return (
-      <a
-        href="/billing"
-        className="ai-cta-shimmer group block rounded-2xl bg-white dark:bg-slate-800 px-5 py-4 transition-shadow hover:shadow-md"
-      >
-        <div className="flex items-center gap-4">
-          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-violet-500/20 to-emerald-500/20 flex items-center justify-center">
-            <SparkleIcon className="w-5 h-5 text-violet-400 dark:text-violet-300" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-gray-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-              {t("portfolioReviewButton")}
-            </p>
-            <div className="flex items-center gap-2 mt-0.5">
-              <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-300">
-                Pro
-              </span>
-              <span className="text-xs text-emerald-600 dark:text-emerald-400 group-hover:underline">
-                {t("upgradeToPro")}
-              </span>
-            </div>
-          </div>
-          <svg className="w-5 h-5 text-gray-300 dark:text-slate-600 group-hover:text-emerald-500 transition-colors flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
-        </div>
-      </a>
-    );
-  }
+  if (!isPro) return null;
 
   const hasHoldings = holdings.length > 0;
   const isRunning = status === "loading" || status === "streaming";
-  const showCta = (status === "idle" || status === "error" || status === "done" || status === "limit-reached") && hasHoldings && remaining > 0;
-
-  if (showCta && !text) {
-    return (
-      <button
-        onClick={runReview}
-        className="ai-cta-shimmer group w-full rounded-2xl bg-white dark:bg-slate-800 px-5 py-4 flex items-center gap-4 text-left transition-shadow hover:shadow-md"
-      >
-        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-violet-500 to-emerald-500 flex items-center justify-center">
-          <SparkleIcon className="w-5 h-5 text-white" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-gray-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-            {t("portfolioReviewButton")}
-          </p>
-        </div>
-        <span className="text-[11px] text-gray-400 dark:text-slate-500 whitespace-nowrap tabular-nums">
-          {used}/{limit}
-        </span>
-        <svg className="w-5 h-5 text-gray-300 dark:text-slate-600 group-hover:text-emerald-500 transition-colors flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-        </svg>
-      </button>
-    );
-  }
 
   return (
-    <div className="card px-5 py-4">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-violet-500 to-emerald-500 flex items-center justify-center">
+    <div>
+      {status === "idle" && hasHoldings && remaining > 0 && (
+        <button
+          onClick={runReview}
+          className="group w-full flex items-center gap-3 text-left py-2 px-3 -mx-3 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
+        >
+          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-violet-500 to-emerald-500 flex items-center justify-center flex-shrink-0">
             <SparkleIcon className="w-3.5 h-3.5 text-white" />
           </div>
-          <h3 className="text-sm font-semibold text-gray-700 dark:text-slate-200">
-            {t("portfolioReview")}
-          </h3>
-          {isRunning && (
-            <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-emerald-500" />
-          )}
-        </div>
-        <div className="flex items-center gap-3">
-          {status === "done" && (
-            <button
-              onClick={runReview}
-              className="text-xs text-gray-400 dark:text-slate-500 hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
-              </svg>
-            </button>
-          )}
-          <span className="text-[11px] text-gray-400 dark:text-slate-500 tabular-nums">{used}/{limit}</span>
-        </div>
-      </div>
-
-      {!hasHoldings && status === "idle" && (
-        <p className="text-xs text-gray-400 dark:text-slate-500 mt-2">{t("portfolioReviewEmpty")}</p>
+          <span className="text-sm font-medium text-gray-700 dark:text-slate-200 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+            {t("portfolioReviewButton")}
+          </span>
+          <svg className="w-4 h-4 text-gray-300 dark:text-slate-600 group-hover:text-emerald-500 transition-colors flex-shrink-0 ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+        </button>
       )}
 
       {status === "limit-reached" && (
-        <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">{t("portfolioReviewLimitReached")}</p>
+        <p className="text-xs text-amber-600 dark:text-amber-400">{t("portfolioReviewLimitReached")}</p>
       )}
 
       {status === "error" && (
-        <p className="text-xs text-red-500 dark:text-red-400 mt-2">{t("portfolioReviewError")}</p>
+        <p className="text-xs text-red-500 dark:text-red-400">{t("portfolioReviewError")}</p>
       )}
 
       {isRunning && !text && (
-        <div className="mt-3 flex items-center justify-center gap-2 py-4 text-sm text-gray-400 dark:text-slate-500">
+        <div className="flex items-center justify-center gap-2 py-4 text-sm text-gray-400 dark:text-slate-500">
           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-500" />
           {t("portfolioReviewRunning")}
         </div>
       )}
 
       {text && (
-        <div className="mt-3 pt-3 border-t border-gray-100 dark:border-slate-700">
+        <div>
+          <div className="flex items-center justify-between gap-3 mb-3">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-violet-500 to-emerald-500 flex items-center justify-center">
+                <SparkleIcon className="w-3 h-3 text-white" />
+              </div>
+              <h3 className="text-sm font-semibold text-gray-700 dark:text-slate-200">
+                {t("portfolioReview")}
+              </h3>
+              {isRunning && (
+                <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-emerald-500" />
+              )}
+            </div>
+            <div className="flex items-center gap-3">
+              {status === "done" && (
+                <button
+                  onClick={runReview}
+                  className="text-xs text-gray-400 dark:text-slate-500 hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors"
+                  aria-label="Re-run review"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
+                  </svg>
+                </button>
+              )}
+              <span className="text-[11px] text-gray-400 dark:text-slate-500 tabular-nums">{used}/{limit}</span>
+            </div>
+          </div>
+
           <div className="prose prose-sm dark:prose-invert max-w-none text-gray-600 dark:text-slate-300 leading-relaxed ai-markdown">
             <ReviewMarkdown text={text} />
           </div>

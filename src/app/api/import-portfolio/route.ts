@@ -53,23 +53,26 @@ export const POST = withMetrics("/api/import-portfolio", async (req: NextRequest
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
 
-  const importLimit = await checkAiImportRateLimit(session.userId);
-  if (!importLimit.allowed) {
-    rateLimitHitsTotal.inc({ provider: "openai_import" });
-    return NextResponse.json(
-      {
-        error: "Daily import limit reached. Try again tomorrow.",
-        reason: "rate_limited",
-        provider: "openai_import",
-        limit: importLimit.limit,
-        remaining: 0,
-        retryAfter: 86400,
-      },
-      { status: 429, headers: { "Retry-After": "86400" } }
-    );
+  const isAdmin = session.role === "admin";
+  if (!isAdmin) {
+    const importLimit = await checkAiImportRateLimit(session.userId);
+    if (!importLimit.allowed) {
+      rateLimitHitsTotal.inc({ provider: "openai_import" });
+      return NextResponse.json(
+        {
+          error: "Daily import limit reached. Try again tomorrow.",
+          reason: "rate_limited",
+          provider: "openai_import",
+          limit: importLimit.limit,
+          remaining: 0,
+          retryAfter: 86400,
+        },
+        { status: 429, headers: { "Retry-After": "86400" } }
+      );
+    }
   }
 
-  const globalCap = await checkGlobalAiCap();
+  const globalCap = await checkGlobalAiCap(session.role);
   if (!globalCap.allowed) {
     return NextResponse.json(
       { error: "Platform AI usage limit reached for this month. Please try again next month." },

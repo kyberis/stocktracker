@@ -90,7 +90,7 @@ function SignupForm() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-50 dark:bg-slate-900 flex items-center justify-center px-4">
+    <main className="flex-1 flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-sm">
         {/* Logo + branding */}
         <div className="text-center mb-8">
@@ -253,9 +253,20 @@ function SignupForm() {
 export default function SignupPage() {
   return (
     <ThemeProvider>
-      <Suspense>
-        <SignupForm />
-      </Suspense>
+      <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-slate-900">
+        <Suspense>
+          <SignupForm />
+        </Suspense>
+        <footer className="py-6 text-center text-xs text-gray-400 dark:text-slate-500 flex items-center justify-center gap-3 flex-wrap">
+          <span>&copy; {new Date().getFullYear()} trefolio</span>
+          <span className="text-gray-300 dark:text-slate-700">·</span>
+          <Link href="/privacy" className="hover:text-gray-600 dark:hover:text-slate-300 transition-colors">Privacy</Link>
+          <span className="text-gray-300 dark:text-slate-700">·</span>
+          <Link href="/terms" className="hover:text-gray-600 dark:hover:text-slate-300 transition-colors">Terms</Link>
+          <span className="text-gray-300 dark:text-slate-700">·</span>
+          <Link href="/contact" className="hover:text-gray-600 dark:hover:text-slate-300 transition-colors">Contact</Link>
+        </footer>
+      </div>
     </ThemeProvider>
   );
 }

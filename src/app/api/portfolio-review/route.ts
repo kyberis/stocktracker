@@ -20,10 +20,11 @@ export const POST = withMetrics("/api/portfolio-review", async (request: NextReq
   const { session, error } = await requirePro(request);
   if (error || !session) return error;
 
+  const isAdmin = session.role === "admin";
   const isDev = process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test";
   const usage = await getPortfolioReviewUsage(session.userId);
   const limit = PLATFORM_LIMITS.PORTFOLIO_REVIEW_MONTHLY_LIMIT;
-  if (!isDev && usage.count >= limit) {
+  if (!isAdmin && !isDev && usage.count >= limit) {
     trackEvent(session.userId, "portfolio_review_limit_reached", { used: String(usage.count), limit: String(limit) });
     return Response.json(
       {
@@ -36,7 +37,7 @@ export const POST = withMetrics("/api/portfolio-review", async (request: NextReq
     );
   }
 
-  const globalCap = await checkGlobalAiCap();
+  const globalCap = await checkGlobalAiCap(session.role);
   if (!globalCap.allowed) {
     return Response.json(
       { error: "Platform AI usage limit reached for this month. Please try again next month." },

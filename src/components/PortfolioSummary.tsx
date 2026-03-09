@@ -1,11 +1,15 @@
 "use client";
 
+import { useState, useCallback, useRef } from "react";
 import { usePortfolio } from "@/lib/portfolio-context";
+import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n";
 import { formatCurrency, formatPercent, formatStealthCurrency } from "@/lib/utils";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
 import { useStealthMode } from "@/lib/stealth-context";
+import { PLATFORM_LIMITS } from "@/lib/platform-config";
 import type { Holding, CashEntry } from "@/lib/types";
+import PortfolioReviewCard from "./PortfolioReviewCard";
 
 interface Props {
   holdings?: Holding[];
@@ -18,6 +22,7 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
   const cashEntries = cashEntriesProp ?? ctxCashEntries;
   const { t } = useI18n();
   const { stealthMode } = useStealthMode();
+  const { user } = useAuth();
   const {
     totalCurrentEUR,
     totalCostEUR,
@@ -33,6 +38,14 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
 
   const totalIsPositive = totalGainLoss >= 0;
   const holdingsCount = holdings.length + cashEntries.length;
+
+  const isPro = user?.plan === "pro";
+  const limit = PLATFORM_LIMITS.PORTFOLIO_REVIEW_MONTHLY_LIMIT;
+  const used = user?.portfolioReviewCount ?? 0;
+  const remaining = Math.max(0, limit - used);
+  const hasHoldings = holdings.length > 0;
+
+  const [reviewOpen, setReviewOpen] = useState(false);
 
   return (
     <div className="card px-5 py-4">
@@ -61,14 +74,47 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
           </span>
         </div>
 
-        <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-slate-400">
+        <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-slate-400">
           <span className={`font-medium ${totalIsPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
             {formatPercent(totalGainLossPercent)} {t("totalGainLoss").toLowerCase()}
           </span>
           <span className="text-gray-300 dark:text-slate-600">·</span>
           <span>{holdingsCount} {t("holdings").toLowerCase()}</span>
+          <span className="text-gray-300 dark:text-slate-600">·</span>
+          {isPro ? (
+            <button
+              onClick={() => setReviewOpen(!reviewOpen)}
+              disabled={!hasHoldings || remaining <= 0}
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
+              </svg>
+              AI Review
+              <span className="tabular-nums text-gray-400 dark:text-slate-500">{used}/{limit}</span>
+            </button>
+          ) : (
+            <a
+              href="/billing"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition-colors"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
+              </svg>
+              AI Review
+              <span className="text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded-full bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-300">
+                Pro
+              </span>
+            </a>
+          )}
         </div>
       </div>
+
+      {reviewOpen && (
+        <div className="mt-4 pt-4 border-t border-gray-100 dark:border-slate-700">
+          <PortfolioReviewCard />
+        </div>
+      )}
     </div>
   );
 }

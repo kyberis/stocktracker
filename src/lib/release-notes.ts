@@ -28,6 +28,11 @@ export const releaseNotes: ReleaseEntry[] = [
         text: "Subscription tiers renamed to Folio (free), Bifolio (mid), and Trefolio (top) — with growing clover icons reflecting the trefolio brand",
         translations: { es: "Los niveles de suscripción se renombraron a Folio (gratis), Bifolio (intermedio) y Trefolio (completo) — con iconos de trébol creciente que reflejan la marca trefolio" },
       },
+      {
+        type: "improvement",
+        text: "Pricing section now has a Monthly/Annual toggle — see per-month equivalent and savings at a glance",
+        translations: { es: "La sección de precios ahora tiene un selector Mensual/Anual — consulta el equivalente mensual y los ahorros de un vistazo" },
+      },
     ],
   },
   {

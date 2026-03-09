@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import PublicFooter from "@/components/PublicFooter";
 
 export const metadata: Metadata = {
   title: "Privacy Policy — trefolio",
@@ -443,26 +444,8 @@ export default function PrivacyPolicyPage() {
           </section>
         </div>
 
-        <footer className="mt-16 pt-8 border-t border-slate-800/50 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-slate-500">
-            &copy; {new Date().getFullYear()} trefolio. Made in Europe.
-          </p>
-          <div className="flex gap-6">
-            <Link
-              href="/terms"
-              className="text-sm text-slate-400 hover:text-white transition-colors"
-            >
-              Terms of Service
-            </Link>
-            <Link
-              href="/landing"
-              className="text-sm text-slate-400 hover:text-white transition-colors"
-            >
-              Back to Home
-            </Link>
-          </div>
-        </footer>
       </main>
+      <PublicFooter />
     </div>
   );
 }

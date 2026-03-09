@@ -133,3 +133,49 @@ export function useI18n() {
   if (!context) throw new Error("useI18n must be used within I18nProvider");
   return context;
 }
+
+/**
+ * Lightweight provider for public pages (landing, pricing).
+ * Detects language from browser settings / localStorage instead of the user API.
+ */
+export function LandingI18nProvider({ children }: { children: React.ReactNode }) {
+  const [language, setLanguageState] = useState<Language>("en");
+  const [strings, setStrings] = useState<TranslationStrings>(en);
+  const loadingRef = useRef(false);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("trefolio_lang");
+    const browserLang = navigator.language.split("-")[0];
+    const detected = stored || browserLang;
+    if (detected && isValidLanguage(detected) && detected !== "en") {
+      setLanguageState(detected);
+      loadLocale(detected).then(setStrings);
+    }
+  }, []);
+
+  const setLanguage = useCallback(async (lang: Language) => {
+    if (loadingRef.current) return;
+    loadingRef.current = true;
+    setLanguageState(lang);
+    localStorage.setItem("trefolio_lang", lang);
+    try {
+      const strs = await loadLocale(lang);
+      setStrings(strs);
+    } finally {
+      loadingRef.current = false;
+    }
+  }, []);
+
+  const t = useCallback(
+    (key: TranslationKey): string => {
+      return strings[key] || en[key] || key;
+    },
+    [strings]
+  );
+
+  return (
+    <I18nContext.Provider value={{ language, setLanguage, t }}>
+      {children}
+    </I18nContext.Provider>
+  );
+}

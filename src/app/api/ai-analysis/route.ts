@@ -15,7 +15,7 @@ export const POST = withMetrics("/api/ai-analysis", async (request: NextRequest)
   const user = await findUserById(session.userId);
   const plan = (user?.plan || session?.plan || "free") as "free" | "starter" | "pro";
   if (plan === "pro") {
-    const rl = await checkAiRateLimit(session.userId, plan);
+    const rl = await checkAiRateLimit(session.userId, plan, session.role);
     if (!rl.allowed) {
       rateLimitHitsTotal.inc({ provider: "openai" });
       return Response.json(
@@ -32,7 +32,7 @@ export const POST = withMetrics("/api/ai-analysis", async (request: NextRequest)
     }
   }
 
-  const globalCap = await checkGlobalAiCap();
+  const globalCap = await checkGlobalAiCap(session.role);
   if (!globalCap.allowed) {
     return Response.json(
       { error: "Platform AI usage limit reached for this month. Please try again next month.", used: globalCap.used, cap: globalCap.cap },

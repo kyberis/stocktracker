@@ -3,6 +3,7 @@
 import { useState, FormEvent } from "react";
 import Link from "next/link";
 import TurnstileWidget from "@/components/TurnstileWidget";
+import PublicFooter from "@/components/PublicFooter";
 
 export default function ContactPage() {
   const [name, setName] = useState("");
@@ -55,20 +56,39 @@ export default function ContactPage() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-300">
       {/* Nav */}
-      <nav className="border-b border-slate-800/60 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Link
-            href="/landing"
-            className="text-lg font-bold text-white hover:text-emerald-400 transition-colors"
-          >
-            trefolio
+      <nav className="bg-slate-950/95 backdrop-blur-xl border-b border-slate-800/60 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          <Link href="/landing" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
+            <svg className="w-9 h-9 rounded-xl shadow-lg shadow-emerald-500/25" viewBox="0 0 32 32">
+              <defs>
+                <linearGradient id="logo-a" x1=".5" y1="0" x2=".5" y2="1"><stop offset="0%" stopColor="#6ee7b7"/><stop offset="100%" stopColor="#10b981"/></linearGradient>
+                <linearGradient id="logo-b" x1="0" y1=".3" x2="1" y2=".7"><stop offset="0%" stopColor="#34d399"/><stop offset="100%" stopColor="#059669"/></linearGradient>
+                <linearGradient id="logo-c" x1=".5" y1="1" x2=".5" y2="0"><stop offset="0%" stopColor="#10b981"/><stop offset="100%" stopColor="#047857"/></linearGradient>
+                <linearGradient id="logo-d" x1="1" y1=".3" x2="0" y2=".7"><stop offset="0%" stopColor="#a7f3d0"/><stop offset="100%" stopColor="#34d399"/></linearGradient>
+              </defs>
+              <rect width="32" height="32" rx="7" fill="#0f172a"/>
+              <g transform="translate(16,16) rotate(45)">
+                <ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="url(#logo-a)"/>
+                <ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="url(#logo-b)" transform="rotate(90)"/>
+                <ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="url(#logo-c)" transform="rotate(180)"/>
+                <ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="url(#logo-d)" transform="rotate(270)"/>
+                <circle cx="0" cy="0" r="1.2" fill="#0f172a" opacity=".35"/>
+              </g>
+            </svg>
+            <span className="text-xl font-bold text-white tracking-tight">trefolio</span>
           </Link>
-          <div className="flex items-center gap-4">
-            <Link href="/login" className="text-sm text-slate-400 hover:text-white transition-colors">
-              Log In
+          <div className="flex items-center gap-3">
+            <Link
+              href="/login"
+              className="text-sm font-medium text-slate-300 hover:text-white transition-colors px-4 py-2"
+            >
+              Log in
             </Link>
-            <Link href="/signup" className="text-sm font-medium text-emerald-400 hover:text-emerald-300 transition-colors">
-              Sign Up
+            <Link
+              href="/signup"
+              className="text-sm font-semibold bg-emerald-500 hover:bg-emerald-400 text-white px-5 py-2.5 rounded-lg transition-all shadow-lg shadow-emerald-500/25 hover:shadow-emerald-400/30"
+            >
+              Sign Up Free
             </Link>
           </div>
         </div>
@@ -225,18 +245,7 @@ export default function ContactPage() {
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-slate-800/50 mt-8">
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-slate-500">
-            &copy; {new Date().getFullYear()} trefolio. Made in Europe.
-          </p>
-          <div className="flex items-center gap-4">
-            <Link href="/privacy" className="text-xs text-slate-500 hover:text-white transition-colors">Privacy Policy</Link>
-            <Link href="/terms" className="text-xs text-slate-500 hover:text-white transition-colors">Terms of Service</Link>
-          </div>
-        </div>
-      </footer>
+      <PublicFooter />
     </div>
   );
 }

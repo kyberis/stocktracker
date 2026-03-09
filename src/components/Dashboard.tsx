@@ -31,7 +31,7 @@ const ResetPortfolioModal = dynamic(() => import("./ResetPortfolioModal"), { ssr
 const WhatsNewModal = dynamic(() => import("./WhatsNewModal"), { ssr: false });
 const FeedbackModal = dynamic(() => import("./FeedbackModal"), { ssr: false });
 const ProCompareCard = dynamic(() => import("./ProCompareCard"), { ssr: false });
-const PortfolioReviewCard = dynamic(() => import("./PortfolioReviewCard"), { ssr: false });
+
 
 type DashboardTab = "portfolio" | "diversification" | "dividends" | "metrics" | "growth" | "news";
 
@@ -220,7 +220,7 @@ export default function Dashboard() {
             id="tabpanel-portfolio"
             aria-labelledby="tab-portfolio"
             tabIndex={0}
-            className="focus-visible:outline-none"
+            className="focus-visible:outline-none space-y-6"
           >
             {holdingsCount === 0 ? (
               <EmptyPortfolio
@@ -263,7 +263,6 @@ export default function Dashboard() {
                 />
 
                 <PortfolioSummary holdings={filteredHoldings} cashEntries={filteredCashEntries} />
-                <PortfolioReviewCard />
                 <PortfolioTable holdings={filteredHoldings} />
                 <PortfolioGrowthPeriods holdings={filteredHoldings} />
                 <PerformanceMetrics holdings={filteredHoldings} cashEntries={filteredCashEntries} />

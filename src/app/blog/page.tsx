@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getAllPosts } from "@/lib/blog";
+import PublicFooter from "@/components/PublicFooter";
 import "@/lib/blog-posts";
 
 export default function BlogPage() {
@@ -47,16 +48,7 @@ export default function BlogPage() {
         )}
       </main>
 
-      <footer className="border-t border-gray-800 mt-20">
-        <div className="max-w-3xl mx-auto px-6 py-8 flex items-center justify-between text-sm text-gray-500">
-          <span>&copy; {new Date().getFullYear()} trefolio</span>
-          <div className="flex gap-6">
-            <Link href="/" className="hover:text-gray-300 transition-colors">Home</Link>
-            <Link href="/privacy" className="hover:text-gray-300 transition-colors">Privacy</Link>
-            <Link href="/terms" className="hover:text-gray-300 transition-colors">Terms</Link>
-          </div>
-        </div>
-      </footer>
+      <PublicFooter />
     </div>
   );
 }
