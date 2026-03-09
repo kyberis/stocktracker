@@ -13,7 +13,7 @@
 | 1   | Makerfabs        | Assembly  | [sales@makerfabs.com](mailto:sales@makerfabs.com)     | DONE |         |             |               |           |       |
 | 2   | LILYGO / Xinyuan | Assembly  | [orders@lilygo.cc](mailto:orders@lilygo.cc)           | DONE |         |             |               |           |       |
 | 3   | ESP32s.com       | Assembly  | [info@esp32s.com](mailto:info@esp32s.com)             | DONE |         |             |               |           |       |
-| 4   | BrillPack        | Packaging | [info@brillpack.com](mailto:info@brillpack.com)       | DONE |         |             |               |           |       |
+| 4   | BrillPack        | Packaging | [info@brillpack.com](mailto:info@brillpack.com)       | DONE | YES     |             |               | Sample 7-10d, Production 15-20d | Confirmed magnetic box style, offers structural + EVA design, semi-manual at low MOQ |
 | 5   | Epackfactory     | Packaging | [info@epackfactory.com](mailto:info@epackfactory.com) | DONE |         |             |               |           |       |
 
 
