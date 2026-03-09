@@ -14,6 +14,7 @@ import {
 } from "@/lib/utils";
 import { getMarketStatus } from "@/lib/market-hours";
 import type { Holding, QuoteData } from "@/lib/types";
+import AlertBadge from "./AlertBadge";
 
 const MOBILE_BREAKPOINT = 768;
 
@@ -114,6 +115,7 @@ function StockRow({ holding, onSelect }: StockRowProps) {
         <div className="min-w-0 flex-1 mr-4">
           <div className="flex items-center gap-1.5">
             <p className="font-medium text-gray-900 dark:text-white text-sm truncate">{holding.name}</p>
+            <AlertBadge ticker={holding.ticker} />
             {isRefreshing && (
               <svg
                 className="w-3.5 h-3.5 animate-spin flex-shrink-0 text-gray-400 dark:text-slate-500"

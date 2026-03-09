@@ -20,6 +20,8 @@ import type { Holding, QuoteData, CompanyOverview } from "@/lib/types";
 import OverviewSection from "./stock-row/OverviewSection";
 import EditForm from "./stock-row/EditForm";
 import TradePanel from "./stock-row/TradePanel";
+import AlertForm from "./AlertForm";
+import AlertBadge from "./AlertBadge";
 import dynamic from "next/dynamic";
 
 const StockChart = dynamic(() => import("./StockChart"), { ssr: false });
@@ -39,6 +41,7 @@ export default function StockDetailDrawer({ holding, onClose }: StockDetailDrawe
     updateHolding,
     refreshSingleQuote,
     refreshHoldings,
+    alertedTickers,
   } = usePortfolio();
   const { hasGlobalAvKey, getApiHeaders } = useSettings();
   const { user } = useAuth();
@@ -66,6 +69,8 @@ export default function StockDetailDrawer({ holding, onClose }: StockDetailDrawe
   const [tradeError, setTradeError] = useState<string | null>(null);
   const [reportSent, setReportSent] = useState(false);
   const [reportSending, setReportSending] = useState(false);
+  const [showAlertForm, setShowAlertForm] = useState(false);
+  const hasAlert = alertedTickers.has(holding.ticker);
 
   const quote: QuoteData | undefined = quotes[holding.ticker];
   const isCashHolding =
@@ -307,6 +312,7 @@ export default function StockDetailDrawer({ holding, onClose }: StockDetailDrawe
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <h2 className="text-lg font-bold text-gray-900 dark:text-white truncate">{holding.name}</h2>
+              <AlertBadge ticker={holding.ticker} />
               {isRefreshing && (
                 <svg className="w-4 h-4 animate-spin text-gray-400 dark:text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -477,6 +483,43 @@ export default function StockDetailDrawer({ holding, onClose }: StockDetailDrawe
               editPurchasePrice={editPurchasePrice} setEditPurchasePrice={setEditPurchasePrice}
               editDisplayCurrency={editDisplayCurrency} setEditDisplayCurrency={setEditDisplayCurrency}
             />
+          )}
+
+          {/* Alert section */}
+          {!isCashHolding && !isEditing && (
+            <div>
+              {showAlertForm ? (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{t("setAlert")}</h3>
+                    <button onClick={() => setShowAlertForm(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-slate-300" aria-label={t("cancel")}>
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                  <AlertForm
+                    ticker={holding.ticker}
+                    name={holding.name}
+                    exchange={holding.exchange}
+                    source="stock-drawer"
+                    quote={quote}
+                    onCreated={() => setShowAlertForm(false)}
+                    onCancel={() => setShowAlertForm(false)}
+                  />
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowAlertForm(true)}
+                  className={`flex items-center gap-1.5 text-sm transition-colors ${hasAlert ? "text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300" : "text-gray-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400"}`}
+                >
+                  <svg className="w-4 h-4" fill={hasAlert ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                  </svg>
+                  {hasAlert ? t("alertActive") : t("setAlert")}
+                </button>
+              )}
+            </div>
           )}
 
           {/* Last updated */}

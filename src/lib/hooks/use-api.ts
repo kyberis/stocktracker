@@ -56,6 +56,17 @@ export function useAlerts(options?: SWROptions<AlertsResponse>) {
   });
 }
 
+export type AlertedTickersResponse = {
+  tickers: string[];
+};
+
+export function useAlertedTickers(options?: SWROptions<AlertedTickersResponse>) {
+  return useSWR<AlertedTickersResponse>("/api/alerts/tickers", fetcher, {
+    revalidateOnFocus: false,
+    ...options,
+  });
+}
+
 export function useFeedback(options?: SWROptions<unknown[]>) {
   return useSWR<unknown[]>("/api/feedback", fetcher, {
     revalidateOnFocus: false,

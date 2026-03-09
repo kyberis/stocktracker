@@ -118,6 +118,129 @@ function PortfolioShareSection() {
   );
 }
 
+function PortfolioAlertSection() {
+  const { t } = useI18n();
+  const { alertsEnabled } = useSettings();
+  const [portfolioAlert, setPortfolioAlert] = useState<{ id: string; percentValue: number; active: boolean } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [threshold, setThreshold] = useState("5");
+
+  useEffect(() => {
+    if (!alertsEnabled) { setLoading(false); return; }
+    fetch("/api/alerts")
+      .then((r) => r.ok ? r.json() : { alerts: [] })
+      .then((data) => {
+        const existing = (data.alerts ?? []).find(
+          (a: { isPortfolioWide: boolean; alertType: string; active: boolean }) =>
+            a.isPortfolioWide && a.alertType === "percent_change" && a.active
+        );
+        if (existing) {
+          setPortfolioAlert({ id: existing.id, percentValue: existing.percentValue, active: existing.active });
+          setThreshold(String(existing.percentValue));
+        }
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, [alertsEnabled]);
+
+  if (!alertsEnabled) return null;
+
+  const handleEnable = async () => {
+    const pct = parseFloat(threshold);
+    if (isNaN(pct) || pct <= 0) return;
+    setSaving(true);
+    try {
+      const res = await fetch("/api/alerts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ticker: "",
+          name: "",
+          condition: "above",
+          alertType: "percent_change",
+          percentBasis: "daily",
+          percentValue: pct,
+          isPortfolioWide: true,
+          source: "profile",
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPortfolioAlert({ id: data.alert.id, percentValue: pct, active: true });
+      }
+    } catch { /* ignore */ }
+    setSaving(false);
+  };
+
+  const handleDisable = async () => {
+    if (!portfolioAlert) return;
+    setSaving(true);
+    try {
+      await fetch(`/api/alerts?id=${portfolioAlert.id}`, { method: "DELETE" });
+      setPortfolioAlert(null);
+    } catch { /* ignore */ }
+    setSaving(false);
+  };
+
+  return (
+    <div className="card p-6 space-y-4">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-500/15 flex items-center justify-center">
+          <svg className="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+          </svg>
+        </div>
+        <div>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t("portfolioAlert")}</h2>
+          <p className="text-xs text-gray-500 dark:text-slate-400">{t("portfolioAlertDesc")}</p>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="text-sm text-gray-400 dark:text-slate-500">{t("loading")}</div>
+      ) : portfolioAlert ? (
+        <div className="flex items-center justify-between bg-amber-50 dark:bg-amber-500/10 rounded-xl px-4 py-3">
+          <div>
+            <p className="text-sm font-medium text-amber-700 dark:text-amber-400">{t("portfolioAlertEnabled")}</p>
+            <p className="text-xs text-amber-600/80 dark:text-amber-400/70">
+              {t("portfolioAlertThreshold")} ±{portfolioAlert.percentValue}%
+            </p>
+          </div>
+          <button
+            onClick={handleDisable}
+            disabled={saving}
+            className="text-xs px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors disabled:opacity-40"
+          >
+            {t("disablePortfolioAlert")}
+          </button>
+        </div>
+      ) : (
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-gray-500 dark:text-slate-400">±</span>
+          <input
+            type="number"
+            step="0.5"
+            min="0.1"
+            value={threshold}
+            onChange={(e) => setThreshold(e.target.value)}
+            className="w-20 text-sm"
+            aria-label={t("portfolioAlertThreshold")}
+          />
+          <span className="text-sm text-gray-500 dark:text-slate-400">%</span>
+          <button
+            onClick={handleEnable}
+            disabled={saving || !threshold}
+            className="btn-primary text-xs whitespace-nowrap disabled:opacity-40"
+          >
+            {saving ? t("loading") : t("enablePortfolioAlert")}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function PortfolioManagementSection() {
   const { t } = useI18n();
   const { user, refreshUser } = useAuth();
@@ -1169,6 +1292,9 @@ export default function ProfilePage() {
 
         {/* Notification Channels */}
         <NotificationChannels />
+
+        {/* Portfolio-wide Alert */}
+        <PortfolioAlertSection />
 
         {/* Widget Access */}
         <div className="card p-6 space-y-4">

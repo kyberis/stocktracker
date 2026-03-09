@@ -32,6 +32,7 @@ interface PortfolioContextType {
   error: string | null;
   portfolios: PortfolioInfo[];
   activePortfolioId: string | null;
+  alertedTickers: Set<string>;
   setActivePortfolio: (id: string | null) => void;
   refreshPortfolios: () => Promise<void>;
   addHolding: (holding: Omit<Holding, "id">) => Promise<void>;
@@ -43,6 +44,7 @@ interface PortfolioContextType {
   refreshHoldings: () => Promise<void>;
   refreshQuotes: () => Promise<void>;
   refreshSingleQuote: (ticker: string) => Promise<void>;
+  refreshAlertedTickers: () => Promise<void>;
   lastUpdated: Date | null;
 }
 
@@ -112,6 +114,7 @@ export function PortfolioProvider({ children, initialHoldings, initialCash }: Po
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [alertedTickers, setAlertedTickers] = useState<Set<string>>(new Set());
   const fetchingRef = useRef(false);
   const fetchPortfolios = useCallback(async () => {
     try {
@@ -191,6 +194,12 @@ export function PortfolioProvider({ children, initialHoldings, initialCash }: Po
 
       const cachedRates = loadCacheEntry<ExchangeRates>(RATES_CACHE_KEY);
       if (cachedRates?.data) setExchangeRates(cachedRates.data);
+
+      fetch("/api/alerts/tickers", { cache: "no-store" })
+        .then((r) => r.ok ? r.json() : { tickers: [] })
+        .then((d) => setAlertedTickers(new Set(d.tickers ?? [])))
+        .catch(() => {});
+
       setIsLoading(false);
       mountedRef.current = true;
     };
@@ -512,6 +521,15 @@ export function PortfolioProvider({ children, initialHoldings, initialCash }: Po
     }
   }, [quotes, holdings, updateHolding]);
 
+  const refreshAlertedTickers = useCallback(async () => {
+    try {
+      const res = await fetch("/api/alerts/tickers", { cache: "no-store" });
+      if (!res.ok) return;
+      const data = await res.json();
+      setAlertedTickers(new Set(data.tickers ?? []));
+    } catch { /* non-critical */ }
+  }, []);
+
   const refreshHoldings = useCallback(async () => {
     await Promise.all([fetchHoldings(), fetchCashEntries()]);
   }, [fetchHoldings, fetchCashEntries]);
@@ -528,6 +546,7 @@ export function PortfolioProvider({ children, initialHoldings, initialCash }: Po
       error,
       portfolios,
       activePortfolioId,
+      alertedTickers,
       setActivePortfolio,
       refreshPortfolios: fetchPortfolios,
       addHolding,
@@ -539,13 +558,15 @@ export function PortfolioProvider({ children, initialHoldings, initialCash }: Po
       refreshHoldings,
       refreshQuotes,
       refreshSingleQuote,
+      refreshAlertedTickers,
       lastUpdated,
     }),
     [
       holdings, cashEntries, quotes, quoteUpdatedAt, refreshingTickers, exchangeRates,
-      isLoading, error, portfolios, activePortfolioId, setActivePortfolio, fetchPortfolios,
+      isLoading, error, portfolios, activePortfolioId, alertedTickers, setActivePortfolio, fetchPortfolios,
       addHolding, removeHolding, updateHolding, addCashEntry,
-      removeCashEntry, updateCashEntry, refreshHoldings, refreshQuotes, refreshSingleQuote, lastUpdated,
+      removeCashEntry, updateCashEntry, refreshHoldings, refreshQuotes, refreshSingleQuote,
+      refreshAlertedTickers, lastUpdated,
     ]
   );
 

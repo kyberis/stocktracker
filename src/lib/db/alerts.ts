@@ -32,6 +32,15 @@ export async function listAlerts(userId: string): Promise<PriceAlert[]> {
   return result.rows.map((r) => rowToAlert(r as unknown as Record<string, unknown>));
 }
 
+export async function listAlertedTickers(userId: string): Promise<string[]> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: "SELECT DISTINCT ticker FROM price_alerts WHERE user_id = ? AND active = 1",
+    args: [userId],
+  });
+  return result.rows.map((r) => str(r.ticker));
+}
+
 export async function countActiveAlerts(userId: string): Promise<number> {
   const client = await ensureInitialized();
   const result = await client.execute({

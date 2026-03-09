@@ -78,6 +78,7 @@ export const POST = withMetrics("/api/alerts", async (req: NextRequest) => {
   trackEvent(session.userId, "alert_created", {
     ticker: alert.ticker,
     alertType: alert.alertType,
+    source: data.source,
     ...(alert.alertType === "percent_change" ? {
       percentBasis: alert.percentBasis,
       percentValue: String(alert.percentValue),

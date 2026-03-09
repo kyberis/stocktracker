@@ -129,6 +129,7 @@ export const createAlertSchema = z.object({
   percentValue: z.number().nonnegative("Percent value must be non-negative").optional().default(0),
   isPortfolioWide: z.boolean().optional().default(false),
   portfolioId: z.string().optional().default(""),
+  source: z.enum(["alerts-tab", "watchlist", "stock-row", "stock-drawer", "profile"]).optional().default("alerts-tab"),
 }).refine(
   (data) => {
     if (data.alertType === "threshold") return data.ticker.length > 0 && data.threshold > 0;

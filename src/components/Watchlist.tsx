@@ -5,18 +5,22 @@ import { useI18n } from "@/lib/i18n";
 import { useSettings } from "@/lib/settings-context";
 import { formatCurrency } from "@/lib/utils";
 import { useWatchlist } from "@/lib/hooks/use-api";
+import { usePortfolio } from "@/lib/portfolio-context";
 import { getMarketStatus } from "@/lib/market-hours";
 import type { QuoteData, SearchResult } from "@/lib/types";
+import AlertForm from "./AlertForm";
 
 export default function Watchlist() {
   const { t } = useI18n();
   const { getApiHeaders } = useSettings();
   const { data: items = [], mutate } = useWatchlist();
+  const { alertedTickers } = usePortfolio();
   const [quotes, setQuotes] = useState<Record<string, QuoteData>>({});
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [now, setNow] = useState(() => new Date());
+  const [alertFormTicker, setAlertFormTicker] = useState<string | null>(null);
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 60_000);
@@ -104,36 +108,76 @@ export default function Watchlist() {
           {items.map((item) => {
             const q = quotes[item.ticker];
             const mktStatus = item.exchange ? getMarketStatus(item.exchange, now) : null;
+            const hasAlert = alertedTickers.has(item.ticker);
+            const showAlertForm = alertFormTicker === item.ticker;
+
             return (
-              <div key={item.id} className="flex items-center justify-between bg-gray-50 dark:bg-slate-700/30 rounded-lg px-3 py-2">
-                <div className="flex items-center gap-3">
-                  <div>
-                    <p className="text-xs font-medium text-gray-900 dark:text-white">{item.name || item.ticker}</p>
-                    <p className="text-[10px] text-gray-500 dark:text-slate-400">{item.ticker} · {item.exchange}</p>
+              <div key={item.id}>
+                <div className="flex items-center justify-between bg-gray-50 dark:bg-slate-700/30 rounded-lg px-3 py-2">
+                  <div className="flex items-center gap-3">
+                    <div>
+                      <div className="flex items-center gap-1">
+                        <p className="text-xs font-medium text-gray-900 dark:text-white">{item.name || item.ticker}</p>
+                        {hasAlert && (
+                          <span title={t("alertActive")} aria-label={t("alertActive")}>
+                            <svg className="w-3 h-3 text-amber-500 dark:text-amber-400" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                              <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                            </svg>
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-gray-500 dark:text-slate-400">{item.ticker} · {item.exchange}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {q && (
+                      <div className="text-right">
+                        <p className="text-xs font-mono font-medium text-gray-900 dark:text-white">
+                          {formatCurrency(q.regularMarketPrice, q.currency)}
+                        </p>
+                        <p className={`text-[10px] font-mono flex items-center gap-1 ${
+                          q.regularMarketChangePercent >= 0 ? "text-emerald-500" : "text-red-500"
+                        }`}>
+                          {mktStatus?.isOpen && (
+                            <span className="inline-block w-1 h-1 rounded-full bg-emerald-500 animate-pulse flex-shrink-0" />
+                          )}
+                          {q.regularMarketChangePercent >= 0 ? "+" : ""}{q.regularMarketChangePercent.toFixed(2)}%
+                        </p>
+                      </div>
+                    )}
+                    {/* Set alert button */}
+                    <button
+                      onClick={() => setAlertFormTicker(showAlertForm ? null : item.ticker)}
+                      className={`p-1 rounded transition-colors ${hasAlert ? "text-amber-500 hover:text-amber-600" : "text-gray-400 hover:text-emerald-500"}`}
+                      title={hasAlert ? t("alertActive") : t("setAlert")}
+                      aria-label={hasAlert ? t("alertActive") : t("setAlert")}
+                    >
+                      <svg className="w-4 h-4" fill={hasAlert ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                      </svg>
+                    </button>
+                    <button onClick={() => handleRemove(item.id)} className="text-red-400 hover:text-red-600" title={t("removeFromWatchlist")} aria-label="Remove from watchlist">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  {q && (
-                    <div className="text-right">
-                      <p className="text-xs font-mono font-medium text-gray-900 dark:text-white">
-                        {formatCurrency(q.regularMarketPrice, q.currency)}
-                      </p>
-                      <p className={`text-[10px] font-mono flex items-center gap-1 ${
-                        q.regularMarketChangePercent >= 0 ? "text-emerald-500" : "text-red-500"
-                      }`}>
-                        {mktStatus?.isOpen && (
-                          <span className="inline-block w-1 h-1 rounded-full bg-emerald-500 animate-pulse flex-shrink-0" />
-                        )}
-                        {q.regularMarketChangePercent >= 0 ? "+" : ""}{q.regularMarketChangePercent.toFixed(2)}%
-                      </p>
-                    </div>
-                  )}
-                  <button onClick={() => handleRemove(item.id)} className="text-red-400 hover:text-red-600" title={t("removeFromWatchlist")} aria-label="Remove from watchlist">
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
+                {/* Inline alert form */}
+                {showAlertForm && (
+                  <div className="ml-3 mr-3 mt-1 mb-2">
+                    <AlertForm
+                      ticker={item.ticker}
+                      name={item.name || item.ticker}
+                      exchange={item.exchange}
+                      source="watchlist"
+                      quote={q}
+                      compact
+                      onCreated={() => setAlertFormTicker(null)}
+                      onCancel={() => setAlertFormTicker(null)}
+                    />
+                  </div>
+                )}
               </div>
             );
           })}

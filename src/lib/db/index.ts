@@ -144,6 +144,7 @@ export {
 export type { CronAlert, HoldingForAlert } from "./alerts";
 export {
   listAlerts,
+  listAlertedTickers,
   countActiveAlerts,
   createAlert,
   deleteAlert,

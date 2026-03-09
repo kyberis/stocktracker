@@ -14,9 +14,37 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "1.8.0";
+export const CURRENT_VERSION = "1.9.0";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "1.9.0",
+    date: "2026-03-09",
+    title: "Alerts Everywhere",
+    titleTranslations: { es: "Alertas en Todas Partes" },
+    changes: [
+      {
+        type: "feature",
+        text: "Set price alerts directly from your watchlist — click the bell icon on any watched stock to create a threshold or percentage alert without leaving the page",
+        translations: { es: "Crea alertas de precio directamente desde tu lista de seguimiento — haz clic en el icono de campana en cualquier acción para crear una alerta de umbral o porcentaje sin salir de la página" },
+      },
+      {
+        type: "feature",
+        text: "Set alerts from the stock detail drawer — open any portfolio stock and create an alert right from the slide-out panel",
+        translations: { es: "Crea alertas desde el panel de detalle — abre cualquier acción del portafolio y crea una alerta directamente desde el panel lateral" },
+      },
+      {
+        type: "feature",
+        text: "Alert indicators on portfolio stocks — a bell icon now appears next to any stock that has an active price alert",
+        translations: { es: "Indicadores de alerta en acciones del portafolio — un icono de campana aparece junto a cualquier acción que tenga una alerta de precio activa" },
+      },
+      {
+        type: "feature",
+        text: "Quick portfolio-wide alert from your profile — enable a single toggle to get notified when your entire portfolio moves significantly in a day",
+        translations: { es: "Alerta rápida para toda la cartera desde tu perfil — activa un solo interruptor para recibir notificaciones cuando toda tu cartera se mueva significativamente en un día" },
+      },
+    ],
+  },
   {
     version: "1.8.0",
     date: "2026-03-09",
