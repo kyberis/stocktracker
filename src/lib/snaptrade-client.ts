@@ -40,17 +40,45 @@ export async function deleteUser(userId: string): Promise<void> {
 export async function generateConnectionPortalUrl(
   userId: string,
   userSecret: string,
+  reconnectConnectionId?: string,
 ): Promise<{ redirectUrl: string; sessionId?: string }> {
   const client = getClient();
   const res = await client.authentication.loginSnapTradeUser({
     userId,
     userSecret,
+    ...(reconnectConnectionId ? { reconnect: reconnectConnectionId } : {}),
   });
   const data = res.data as { redirectURI?: string; sessionId?: string };
   if (!data.redirectURI) {
     throw new SnapTradeClientError("SnapTrade did not return a redirect URL.");
   }
   return { redirectUrl: data.redirectURI, sessionId: data.sessionId };
+}
+
+export interface BrokerageConnectionStatus {
+  id: string;
+  brokerageName: string;
+  disabled: boolean;
+  disabledDate: string | null;
+}
+
+export async function listBrokerageConnections(
+  userId: string,
+  userSecret: string,
+): Promise<BrokerageConnectionStatus[]> {
+  const client = getClient();
+  try {
+    const res = await client.connections.listBrokerageAuthorizations({ userId, userSecret });
+    return res.data.map((c) => ({
+      id: c.id || "",
+      brokerageName: c.brokerage?.name || c.name || "",
+      disabled: c.disabled ?? false,
+      disabledDate: c.disabled_date || null,
+    }));
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    throw new SnapTradeClientError(`Failed to list brokerage connections: ${msg}`);
+  }
 }
 
 /**

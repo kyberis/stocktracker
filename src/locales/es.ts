@@ -719,6 +719,10 @@ const es: TranslationStrings = {
   brokerSyncDisconnectConfirm: "¿Estás seguro de que quieres desconectar tu conexión de bróker? Se eliminarán las credenciales guardadas.",
   brokerSyncFetching: "Obteniendo posiciones...",
   brokerSyncFetchError: "Error al obtener posiciones",
+  brokerSyncExpired: "Tu conexión de bróker ha expirado",
+  brokerSyncReconnect: "Reconectar",
+  brokerSyncReconnectDesc: "Vuelve a autorizar tu bróker para continuar sincronizando tu portafolio.",
+  brokerSyncReconnecting: "Reconectando...",
   upsellAttemptBrokerSync: "Conecta tu bróker automáticamente — compatible con más de 20 brókers.",
   upsellProItemBrokerSync: "Auto-sincronización de bróker (20+ brókers)",
 

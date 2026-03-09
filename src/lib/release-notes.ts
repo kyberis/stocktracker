@@ -53,6 +53,11 @@ export const releaseNotes: ReleaseEntry[] = [
         text: "Downgrade protection — extra portfolios become read-only instead of being deleted when switching to a lower plan",
         translations: { es: "Protección ante cambio de plan — los portafolios extra se convierten en solo lectura en lugar de eliminarse al cambiar a un plan inferior" },
       },
+      {
+        type: "improvement",
+        text: "Broker sync reconnection — expired brokerage connections are detected automatically and can be re-authorized with one click, reusing the same account",
+        translations: { es: "Reconexión de sincronización de bróker — las conexiones expiradas se detectan automáticamente y se pueden reautorizar con un clic, reutilizando la misma cuenta" },
+      },
     ],
   },
   {

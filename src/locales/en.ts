@@ -719,6 +719,10 @@ const en: TranslationStrings = {
   brokerSyncDisconnectConfirm: "Are you sure you want to disconnect your brokerage connection? This will remove the saved credentials.",
   brokerSyncFetching: "Fetching holdings...",
   brokerSyncFetchError: "Failed to fetch holdings",
+  brokerSyncExpired: "Your brokerage connection has expired",
+  brokerSyncReconnect: "Reconnect",
+  brokerSyncReconnectDesc: "Re-authorize your brokerage to continue syncing your portfolio.",
+  brokerSyncReconnecting: "Reconnecting...",
   upsellAttemptBrokerSync: "Connect your brokerage automatically — supports 20+ brokerages.",
   upsellProItemBrokerSync: "Broker auto-sync (20+ brokers)",
 

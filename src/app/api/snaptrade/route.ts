@@ -18,6 +18,7 @@ import {
   deleteUser,
   generateConnectionPortalUrl,
   fetchAllHoldings,
+  listBrokerageConnections,
   SnapTradeClientError,
 } from "@/lib/snaptrade-client";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
@@ -28,10 +29,10 @@ import { portfolioImportsTotal } from "@/lib/metrics";
  * POST /api/snaptrade
  *
  * Actions:
- *   get-connection    — Check if a SnapTrade connection exists (no Pro check)
+ *   get-connection    — Check if a SnapTrade connection exists + live brokerage status
  *   register-user     — Register SnapTrade user and store credentials
  *   connect-url       — Generate Connection Portal redirect URL
- *   save-connection   — Store SnapTrade connection after OAuth flow
+ *   reconnect-url     — Generate reconnect portal URL for a disabled connection
  *   fetch             — Pull holdings from all connected accounts
  *   disconnect        — Remove saved SnapTrade connection
  */
@@ -42,16 +43,31 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
   const formData = await req.formData();
   const action = formData.get("action") as string;
 
-  /* ── Get connection (no Pro check — just metadata) ── */
+  /* ── Get connection (no Pro check — just metadata + live brokerage status) ── */
   if (action === "get-connection") {
     const conn = await getSnapTradeConnection(session.userId);
     if (!conn) return NextResponse.json({ connected: false });
+
+    let disabledConnections: { id: string; brokerageName: string; disabledDate: string | null }[] = [];
+    try {
+      const userSecret = await getSnapTradeConnectionSecret(session.userId);
+      if (userSecret) {
+        const brokerageConns = await listBrokerageConnections(conn.snapTradeUserId, userSecret);
+        disabledConnections = brokerageConns
+          .filter((c) => c.disabled)
+          .map(({ id, brokerageName, disabledDate }) => ({ id, brokerageName, disabledDate }));
+      }
+    } catch {
+      // If we can't reach SnapTrade API, still return local connection info
+    }
+
     return NextResponse.json({
       connected: true,
       snapTradeUserId: conn.snapTradeUserId,
       label: conn.label,
       lastSyncedAt: conn.lastSyncedAt,
       createdAt: conn.createdAt,
+      disabledConnections,
     });
   }
 
@@ -106,6 +122,40 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
       return NextResponse.json({ redirectUrl, sessionId });
     } catch (err) {
       const msg = err instanceof SnapTradeClientError ? err.message : "Failed to generate connection URL.";
+      return NextResponse.json({ error: msg }, { status: 502 });
+    }
+  }
+
+  /* ── Generate Reconnect Portal URL for a disabled connection ── */
+  if (action === "reconnect-url") {
+    const conn = await getSnapTradeConnection(session.userId);
+    const userSecret = conn ? await getSnapTradeConnectionSecret(session.userId) : null;
+
+    if (!conn || !userSecret) {
+      return NextResponse.json(
+        { error: "No SnapTrade user found. Please register first." },
+        { status: 400 },
+      );
+    }
+
+    const connectionId = formData.get("connectionId") as string;
+    if (!connectionId) {
+      return NextResponse.json(
+        { error: "Missing connectionId for reconnection." },
+        { status: 400 },
+      );
+    }
+
+    try {
+      const { redirectUrl, sessionId } = await generateConnectionPortalUrl(
+        conn.snapTradeUserId,
+        userSecret,
+        connectionId,
+      );
+      trackEvent(session.userId, "snaptrade_reconnect", { connectionId });
+      return NextResponse.json({ redirectUrl, sessionId });
+    } catch (err) {
+      const msg = err instanceof SnapTradeClientError ? err.message : "Failed to generate reconnect URL.";
       return NextResponse.json({ error: msg }, { status: 502 });
     }
   }
@@ -177,7 +227,21 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
     } catch (err) {
       const msg = err instanceof SnapTradeClientError ? err.message : "Failed to fetch holdings from SnapTrade.";
       portfolioImportsTotal.inc({ source: "snaptrade", status: "error" });
-      return NextResponse.json({ error: msg }, { status: 502 });
+
+      let disabledConnections: { id: string; brokerageName: string; disabledDate: string | null }[] = [];
+      try {
+        const brokerageConns = await listBrokerageConnections(conn.snapTradeUserId, userSecret);
+        disabledConnections = brokerageConns
+          .filter((c) => c.disabled)
+          .map(({ id, brokerageName, disabledDate }) => ({ id, brokerageName, disabledDate }));
+      } catch {
+        // best-effort check
+      }
+
+      return NextResponse.json(
+        { error: msg, needsReconnect: disabledConnections.length > 0, disabledConnections },
+        { status: 502 },
+      );
     }
   }
 

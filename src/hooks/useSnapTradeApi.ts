@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import type {
   SnapTradeConnectionInfo,
+  DisabledBrokerageConnection,
   ExtractedTransaction,
 } from "./import-types";
 
@@ -10,13 +11,16 @@ export interface UseSnapTradeApiReturn {
   connection: SnapTradeConnectionInfo | null;
   isFetching: boolean;
   transactions: ExtractedTransaction[];
-  step: "idle" | "connecting" | "fetching" | "preview" | "importing" | "done" | "error";
+  step: "idle" | "connecting" | "reconnecting" | "fetching" | "preview" | "importing" | "done" | "error";
   importedCount: number;
   errorMsg: string;
+  needsReconnect: boolean;
+  disabledConnections: DisabledBrokerageConnection[];
   importProgress: { current: number; total: number; errors: number };
   holdingsCapped: number;
   loadConnection: () => Promise<void>;
   connect: () => Promise<void>;
+  reconnect: (connectionId: string) => Promise<void>;
   fetchPortfolio: () => Promise<void>;
   resync: () => Promise<void>;
   disconnect: () => Promise<void>;
@@ -48,6 +52,8 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
   const [step, setStep] = useState<UseSnapTradeApiReturn["step"]>("idle");
   const [importedCount, setImportedCount] = useState(0);
   const [errorMsg, setErrorMsg] = useState("");
+  const [needsReconnect, setNeedsReconnect] = useState(false);
+  const [disabledConnections, setDisabledConnections] = useState<DisabledBrokerageConnection[]>([]);
   const [importProgress, setImportProgress] = useState({ current: 0, total: 0, errors: 0 });
   const [holdingsCapped, setHoldingsCapped] = useState(0);
 
@@ -59,6 +65,9 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
       if (res.ok) {
         const data = await res.json();
         setConnection(data);
+        const disabled: DisabledBrokerageConnection[] = data.disabledConnections || [];
+        setDisabledConnections(disabled);
+        setNeedsReconnect(disabled.length > 0);
       }
     } catch {
       // ignore
@@ -110,6 +119,37 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
     }
   }, [loadConnection]);
 
+  const reconnect = useCallback(async (connectionId: string) => {
+    setErrorMsg("");
+    setStep("reconnecting");
+    try {
+      const form = new FormData();
+      form.append("action", "reconnect-url");
+      form.append("connectionId", connectionId);
+      const res = await fetch("/api/snaptrade", { method: "POST", body: form });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setErrorMsg(data.error || "Failed to get reconnect URL.");
+        setStep("error");
+        return;
+      }
+
+      const popup = window.open(data.redirectUrl, "snaptrade-reconnect", "width=800,height=700");
+
+      const pollInterval = setInterval(async () => {
+        if (!popup || popup.closed) {
+          clearInterval(pollInterval);
+          await loadConnection();
+          setStep("idle");
+        }
+      }, 1000);
+    } catch {
+      setErrorMsg("Failed to reconnect to SnapTrade.");
+      setStep("error");
+    }
+  }, [loadConnection]);
+
   const fetchPortfolio = useCallback(async () => {
     setErrorMsg("");
     setIsFetching(true);
@@ -122,6 +162,10 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
 
       if (!res.ok) {
         setErrorMsg(data.error || "Failed to fetch portfolio.");
+        if (data.needsReconnect && data.disabledConnections?.length > 0) {
+          setNeedsReconnect(true);
+          setDisabledConnections(data.disabledConnections);
+        }
         setStep("error");
         return;
       }
@@ -166,6 +210,7 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
     setTransactions([]);
     setImportedCount(0);
     setErrorMsg("");
+    setNeedsReconnect(false);
     setImportProgress({ current: 0, total: 0, errors: 0 });
     setHoldingsCapped(0);
   }, []);
@@ -254,10 +299,13 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
     step,
     importedCount,
     errorMsg,
+    needsReconnect,
+    disabledConnections,
     importProgress,
     holdingsCapped,
     loadConnection,
     connect,
+    reconnect,
     fetchPortfolio,
     resync,
     disconnect,

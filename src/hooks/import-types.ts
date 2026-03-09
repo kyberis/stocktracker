@@ -43,9 +43,16 @@ export interface CashBalance {
   amount: number;
 }
 
+export interface DisabledBrokerageConnection {
+  id: string;
+  brokerageName: string;
+  disabledDate: string | null;
+}
+
 export interface SnapTradeConnectionInfo {
   connected: boolean;
   snapTradeUserId?: string;
   label?: string;
   lastSyncedAt?: string;
+  disabledConnections?: DisabledBrokerageConnection[];
 }
