@@ -164,6 +164,7 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
   if (action === "fetch") {
     const conn = await getSnapTradeConnection(session.userId);
     const userSecret = conn ? await getSnapTradeConnectionSecret(session.userId) : null;
+    const portfolioId = (formData.get("portfolioId") as string) || undefined;
 
     if (!conn || !userSecret) {
       return NextResponse.json(
@@ -193,7 +194,7 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
 
       let cashImported = 0;
       if (result.cashBalances.length > 0) {
-        const existingCash = await listCashEntries(session.userId);
+        const existingCash = await listCashEntries(session.userId, portfolioId);
         for (const entry of existingCash) {
           if (entry.name.toUpperCase().startsWith("CASH ")) {
             await removeCashEntry(session.userId, entry.id);
@@ -214,7 +215,7 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
           await addCashEntry(session.userId, {
             name: `Cash ${balance.currency}`,
             amountEUR,
-          });
+          }, portfolioId);
           cashImported++;
         }
       }

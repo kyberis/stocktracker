@@ -78,6 +78,11 @@ export const releaseNotes: ReleaseEntry[] = [
         text: "PWA now properly updates after a new deploy — the service worker cache is busted on each build and an update banner prompts you to refresh",
         translations: { es: "La PWA ahora se actualiza correctamente tras un nuevo despliegue — la caché del service worker se invalida en cada build y un banner te invita a refrescar" },
       },
+      {
+        type: "fix",
+        text: "Broker API (SnapTrade) import now correctly imports cash balances into the selected portfolio and refreshes them in the dashboard",
+        translations: { es: "La importación por API de broker (SnapTrade) ahora importa correctamente los saldos de efectivo en el portafolio seleccionado y los actualiza en el panel" },
+      },
     ],
   },
   {

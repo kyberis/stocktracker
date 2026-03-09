@@ -513,8 +513,8 @@ export function PortfolioProvider({ children, initialHoldings, initialCash }: Po
   }, [quotes, holdings, updateHolding]);
 
   const refreshHoldings = useCallback(async () => {
-    await fetchHoldings();
-  }, [fetchHoldings]);
+    await Promise.all([fetchHoldings(), fetchCashEntries()]);
+  }, [fetchHoldings, fetchCashEntries]);
 
   const value = useMemo(
     () => ({

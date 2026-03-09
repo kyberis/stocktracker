@@ -21,7 +21,7 @@ export interface UseSnapTradeApiReturn {
   loadConnection: () => Promise<void>;
   connect: () => Promise<void>;
   reconnect: (connectionId: string) => Promise<void>;
-  fetchPortfolio: () => Promise<void>;
+  fetchPortfolio: (portfolioId?: string | null) => Promise<void>;
   resync: () => Promise<void>;
   disconnect: () => Promise<void>;
   importAll: (portfolioId?: string | null) => Promise<void>;
@@ -187,13 +187,14 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
     }
   }, [loadConnection]);
 
-  const fetchPortfolio = useCallback(async () => {
+  const fetchPortfolio = useCallback(async (portfolioId?: string | null) => {
     setErrorMsg("");
     setIsFetching(true);
     setStep("fetching");
     try {
       const form = new FormData();
       form.append("action", "fetch");
+      if (portfolioId) form.append("portfolioId", portfolioId);
       const res = await fetch("/api/snaptrade", { method: "POST", body: form });
       const data = await res.json();
 
