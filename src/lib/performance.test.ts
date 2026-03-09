@@ -114,9 +114,21 @@ describe("buildXIRRCashFlows", () => {
     expect(flows).toHaveLength(5);
     expect(flows[0].amount).toBeCloseTo(-2000, 2); // buy
     expect(flows[1].amount).toBeCloseTo(500, 2);   // sell
-    expect(flows[2].amount).toBeCloseTo(100, 2);   // dividend
+    expect(flows[2].amount).toBeCloseTo(100, 2);   // dividend (no taxes)
     expect(flows[3].amount).toBeCloseTo(-10, 2);   // fee
     expect(flows[4].amount).toBe(1500);             // current value
+  });
+
+  it("subtracts taxes from dividend cash flows", () => {
+    const txs = [
+      makeTx({
+        id: "tx-div", type: "dividend", totalAmount: 110, taxes: 22,
+        currency: "USD", exchangeRateEur: 1.10, date: "2025-09-15",
+      }),
+    ];
+    const flows = buildXIRRCashFlows(txs, 0, RATES);
+    // gross 110 USD / 1.10 = 100 EUR, taxes 22 USD / 1.10 = 20 EUR → net 80 EUR
+    expect(flows[0].amount).toBeCloseTo(80, 2);
   });
 });
 
@@ -145,5 +157,37 @@ describe("calculateXIRR", () => {
     expect(irr).not.toBeNull();
     expect(irr!).toBeGreaterThan(0);
     expect(irr!).toBeCloseTo(10, 0);
+  });
+
+  it("returns null when solver cannot converge", () => {
+    const start = new Date("2024-01-01");
+    const mid = new Date("2024-06-01");
+    const end = new Date("2025-01-01");
+    const irr = calculateXIRR([
+      { date: start, amount: -1 },
+      { date: mid, amount: -100000 },
+      { date: end, amount: 50 },
+    ]);
+    expect(irr).toBeNull();
+  });
+});
+
+describe("calculateTTWROR fallback", () => {
+  it("falls back to simple return when Modified Dietz produces extreme values", () => {
+    const firstDate = new Date();
+    firstDate.setFullYear(firstDate.getFullYear() - 1);
+    const recentDate = new Date();
+    recentDate.setDate(recentDate.getDate() - 2);
+
+    const txs = [
+      makeTx({ totalAmount: 1000, date: firstDate.toISOString().slice(0, 10), type: "buy" }),
+      makeTx({ id: "tx-2", totalAmount: 900, date: firstDate.toISOString().slice(0, 10), type: "sell" }),
+      makeTx({ id: "tx-3", totalAmount: 100000, date: recentDate.toISOString().slice(0, 10), type: "buy" }),
+    ];
+    const currentValue = 50000;
+    const totalInvested = 100100;
+    const result = calculateTTWROR(txs, currentValue, totalInvested, RATES);
+    const simpleReturn = ((currentValue - totalInvested) / totalInvested) * 100;
+    expect(result).toBeCloseTo(simpleReturn, 2);
   });
 });

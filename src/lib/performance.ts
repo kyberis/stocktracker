@@ -75,8 +75,15 @@ export function calculateTTWROR(
       : 0;
   }
 
-  const modifiedDietz = (currentValueEUR - netCashFlow) / denominator;
-  return modifiedDietz * 100;
+  const result = ((currentValueEUR - netCashFlow) / denominator) * 100;
+
+  if (!Number.isFinite(result) || Math.abs(result) > 1000) {
+    return totalInvestedEUR > 0
+      ? ((currentValueEUR - totalInvestedEUR) / totalInvestedEUR) * 100
+      : 0;
+  }
+
+  return result;
 }
 
 /**
@@ -119,13 +126,19 @@ export function calculateXIRR(
   }
 
   let rate = 0.1;
+  let converged = false;
   for (let i = 0; i < 100; i++) {
     const val = npv(rate);
+    if (Math.abs(val) < 1e-6) {
+      converged = true;
+      break;
+    }
     const deriv = dnpv(rate);
     if (Math.abs(deriv) < 1e-12) break;
     const newRate = rate - val / deriv;
     if (Math.abs(newRate - rate) < 1e-8) {
       rate = newRate;
+      converged = true;
       break;
     }
     rate = newRate;
@@ -133,6 +146,7 @@ export function calculateXIRR(
     if (rate > 10) rate = 10;
   }
 
+  if (!converged) return null;
   return rate * 100;
 }
 
@@ -162,7 +176,7 @@ export function buildXIRRCashFlows(
         flows.push({ date: d, amount: amount - fees - taxes });
         break;
       case "dividend":
-        flows.push({ date: d, amount });
+        flows.push({ date: d, amount: amount - taxes });
         break;
       case "fee":
         flows.push({ date: d, amount: -amount });
