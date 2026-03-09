@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>trefolio — Cost vs Revenue</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0f1a;
+    --surface: #111827;
+    --surface2: #1a2332;
+    --border: #1e2d3d;
+    --emerald: #10b981;
+    --rose: #f43f5e;
+    --amber: #f59e0b;
+    --violet: #8b5cf6;
+    --sky: #38bdf8;
+    --text: #e2e8f0;
+    --text-dim: #94a3b8;
+    --text-muted: #64748b;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Source Sans 3', sans-serif;
+    min-height: 100vh;
+    padding: 2rem;
+    background-image:
+      radial-gradient(ellipse 80% 60% at 20% 10%, rgba(16,185,129,0.06), transparent),
+      radial-gradient(ellipse 60% 50% at 80% 80%, rgba(139,92,246,0.04), transparent);
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-size: 2rem;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.25rem;
+    background: linear-gradient(135deg, var(--emerald) 0%, var(--sky) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .subtitle {
+    color: var(--text-dim);
+    font-size: 0.95rem;
+    font-weight: 300;
+    margin-bottom: 2rem;
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .controls {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .control-group {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem;
+  }
+
+  .control-group h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    margin-bottom: 1rem;
+  }
+
+  .slider-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-bottom: 0.85rem;
+  }
+  .slider-row:last-child { margin-bottom: 0; }
+
+  .slider-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.82rem;
+    font-weight: 600;
+  }
+
+  .slider-label .name {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .slider-label .value {
+    font-variant-numeric: tabular-nums;
+    color: var(--text-muted);
+    font-weight: 400;
+  }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--surface2);
+    outline: none;
+    cursor: pointer;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--emerald);
+    border: 2px solid var(--bg);
+    box-shadow: 0 0 8px rgba(16,185,129,0.4);
+    cursor: pointer;
+  }
+
+  .metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+
+  .metric {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 0.85rem;
+    text-align: center;
+  }
+
+  .metric .label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 0.3rem;
+  }
+
+  .metric .val {
+    font-size: 1.15rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .metric.positive .val { color: var(--emerald); }
+  .metric.negative .val { color: var(--rose); }
+  .metric.neutral .val { color: var(--amber); }
+  .metric.info .val { color: var(--sky); }
+
+  .chart-wrapper {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    position: relative;
+    height: 480px;
+  }
+
+  .breakdown {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+  }
+
+  .breakdown-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.15rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .breakdown-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+  }
+
+  .breakdown-card.free::before { background: var(--text-muted); }
+  .breakdown-card.bifolio::before { background: var(--amber); }
+  .breakdown-card.trefolio::before { background: var(--violet); }
+
+  .breakdown-card h4 {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin-bottom: 0.6rem;
+    font-weight: 600;
+  }
+
+  .breakdown-card .big {
+    font-size: 1.4rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .breakdown-card .detail {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    margin-top: 0.3rem;
+    line-height: 1.4;
+  }
+
+  .breakdown-card.free .big { color: var(--text-dim); }
+  .breakdown-card.bifolio .big { color: var(--amber); }
+  .breakdown-card.trefolio .big { color: var(--violet); }
+
+  .assumptions {
+    margin-top: 1.25rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  .assumptions strong {
+    color: var(--text-dim);
+  }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .breakdown { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Cost vs Revenue</h1>
+<p class="subtitle">Interactive model — adjust customer count and tier mix to explore profitability at any scale</p>
+
+<div class="layout">
+  <div class="controls">
+    <div class="control-group">
+      <h3>Customer Scale</h3>
+      <div class="slider-row">
+        <div class="slider-label">
+          <span class="name">Total Customers</span>
+          <span class="value" id="val-total">500</span>
+        </div>
+        <input type="range" id="slider-total" min="0" max="5000" value="500" step="10">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Tier Distribution</h3>
+      <div class="slider-row">
+        <div class="slider-label">
+          <span class="name"><span class="dot" style="background:var(--text-muted)"></span> Free</span>
+          <span class="value" id="val-free">70%</span>
+        </div>
+        <input type="range" id="slider-free" min="30" max="95" value="70" step="1">
+      </div>
+      <div class="slider-row">
+        <div class="slider-label">
+          <span class="name"><span class="dot" style="background:var(--amber)"></span> Bifolio (2.99 EUR)</span>
+          <span class="value" id="val-bifolio">18%</span>
+        </div>
+        <input type="range" id="slider-bifolio" min="2" max="50" value="18" step="1">
+      </div>
+      <div class="slider-row">
+        <div class="slider-label">
+          <span class="name"><span class="dot" style="background:var(--violet)"></span> Trefolio (7.99 EUR)</span>
+          <span class="value" id="val-trefolio">12%</span>
+        </div>
+        <input type="range" id="slider-trefolio" min="2" max="40" value="12" step="1">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>At Current Scale</h3>
+      <div class="metrics">
+        <div class="metric positive" id="metric-mrr">
+          <div class="label">MRR</div>
+          <div class="val">—</div>
+        </div>
+        <div class="metric negative" id="metric-cost">
+          <div class="label">Total Cost</div>
+          <div class="val">—</div>
+        </div>
+        <div class="metric neutral" id="metric-breakeven">
+          <div class="label">Breakeven</div>
+          <div class="val">—</div>
+        </div>
+        <div class="metric info" id="metric-margin">
+          <div class="label">Profit Margin</div>
+          <div class="val">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="chart-wrapper">
+      <canvas id="mainChart"></canvas>
+    </div>
+
+    <div class="breakdown" style="grid-template-columns:1fr 1fr 1fr 1fr">
+      <div class="breakdown-card free">
+        <h4>Free Tier</h4>
+        <div class="big" id="bd-free-count">—</div>
+        <div class="detail" id="bd-free-detail">—</div>
+      </div>
+      <div class="breakdown-card bifolio">
+        <h4>Bifolio — 2.99 EUR/mo</h4>
+        <div class="big" id="bd-bifolio-count">—</div>
+        <div class="detail" id="bd-bifolio-detail">—</div>
+      </div>
+      <div class="breakdown-card trefolio">
+        <h4>Trefolio — 7.99 EUR/mo</h4>
+        <div class="big" id="bd-trefolio-count">—</div>
+        <div class="detail" id="bd-trefolio-detail">—</div>
+      </div>
+      <div class="breakdown-card" style="border-top: 3px solid var(--sky);">
+        <h4>Alpha Vantage Plan</h4>
+        <div class="big" id="bd-av-plan" style="color:var(--sky)">—</div>
+        <div class="detail" id="bd-av-detail">—</div>
+      </div>
+    </div>
+
+    <div class="assumptions">
+      <strong>Model Assumptions:</strong>
+      Bifolio net revenue: 2.70 EUR/user/mo (after Stripe ~9.8%).
+      Trefolio net revenue: 7.62 EUR/user/mo (after Stripe ~4.6%).
+      Infrastructure tiers: 20 EUR (&lt;500 users) → 50 EUR (500–2K) → 100 EUR (2K–10K) → 300 EUR (10K+).
+      <br><br>
+      <strong>Alpha Vantage Pricing (<a href="https://www.alphavantage.co/premium/" target="_blank" style="color:var(--sky)">alphavantage.co/premium</a>):</strong>
+      75 req/min $49.99 (~46 €) → 150 req/min $99.99 (~92 €) → 300 req/min $149.99 (~138 €) → 600 req/min $199.99 (~184 €) → 1200 req/min $249.99 (~230 €).
+      Tier upgrades triggered by Trefolio user count: ≤100 → 75 rpm, ≤250 → 150 rpm, ≤500 → 300 rpm, ≤1000 → 600 rpm, 1000+ → 1200 rpm.
+      <br><br>
+      <strong>Per-user variable:</strong> Trefolio ~2.05 EUR (SnapTrade 1.85 + OpenAI 0.20), Bifolio ~0.15 EUR (OpenAI), Free ~0 EUR.
+    </div>
+  </div>
+</div>
+
+<script>
+  const BIFOLIO_NET = 2.70;
+  const TREFOLIO_NET = 7.62;
+  const VAR_FREE = 0;
+  const VAR_BIFOLIO = 0.15;
+  const VAR_TREFOLIO = 2.05;
+
+  // Alpha Vantage real pricing (alphavantage.co/premium, USD → EUR at ~0.92)
+  // Each tier supports a range of concurrent Trefolio users based on
+  // ~2-3 req/min per active session, clustered during EU market hours
+  const AV_TIERS = [
+    { maxUsers:   0, cost:   0, plan: 'None',           reqMin: 0    },
+    { maxUsers: 100, cost:  46, plan: '75 req/min',     reqMin: 75   },
+    { maxUsers: 250, cost:  92, plan: '150 req/min',    reqMin: 150  },
+    { maxUsers: 500, cost: 138, plan: '300 req/min',    reqMin: 300  },
+    { maxUsers:1000, cost: 184, plan: '600 req/min',    reqMin: 600  },
+    { maxUsers:9999, cost: 230, plan: '1200 req/min',   reqMin: 1200 },
+  ];
+
+  function avTier(nTrefolio) {
+    if (nTrefolio === 0) return AV_TIERS[0];
+    for (const tier of AV_TIERS) {
+      if (tier.maxUsers === 0) continue;
+      if (nTrefolio <= tier.maxUsers) return tier;
+    }
+    return AV_TIERS[AV_TIERS.length - 1];
+  }
+
+  function infraCost(total) {
+    if (total < 500) return 20;
+    if (total < 2000) return 50;
+    if (total < 10000) return 100;
+    return 300;
+  }
+
+  function calc(total, pF, pB, pT) {
+    const nF = Math.round(total * pF / 100);
+    const nB = Math.round(total * pB / 100);
+    const nT = Math.max(0, total - nF - nB);
+    const revenue = nB * BIFOLIO_NET + nT * TREFOLIO_NET;
+    const av = avTier(nT);
+    let cost = infraCost(total) + av.cost;
+    cost += nF * VAR_FREE + nB * VAR_BIFOLIO + nT * VAR_TREFOLIO;
+    return { revenue, cost, nF, nB, nT, av };
+  }
+
+  function findBreakeven(pF, pB, pT) {
+    for (let t = 1; t <= 5000; t += 1) {
+      const p = calc(t, pF, pB, pT);
+      if (p.revenue >= p.cost) return t;
+    }
+    return null;
+  }
+
+  const ctx = document.getElementById('mainChart').getContext('2d');
+
+  const breakEvenPlugin = {
+    id: 'breakEvenLine',
+    afterDraw(chart) {
+      const meta = chart._breakEvenX;
+      if (meta == null) return;
+      const xScale = chart.scales.x;
+      const yScale = chart.scales.y;
+      const labels = chart.data.labels;
+      let xIdx = labels.findIndex(l => l >= meta);
+      if (xIdx < 0) return;
+      const frac = xIdx > 0
+        ? (meta - labels[xIdx - 1]) / (labels[xIdx] - labels[xIdx - 1])
+        : 0;
+      const x1 = xIdx > 0
+        ? xScale.getPixelForValue(xIdx - 1) + frac * (xScale.getPixelForValue(xIdx) - xScale.getPixelForValue(xIdx - 1))
+        : xScale.getPixelForValue(xIdx);
+      const ctxC = chart.ctx;
+      ctxC.save();
+      ctxC.setLineDash([4, 4]);
+      ctxC.strokeStyle = 'rgba(245, 158, 11, 0.6)';
+      ctxC.lineWidth = 1.5;
+      ctxC.beginPath();
+      ctxC.moveTo(x1, yScale.top);
+      ctxC.lineTo(x1, yScale.bottom);
+      ctxC.stroke();
+      ctxC.setLineDash([]);
+      ctxC.fillStyle = '#f59e0b';
+      ctxC.font = '600 11px Source Sans 3';
+      ctxC.textAlign = 'center';
+      ctxC.fillText('Breakeven: ' + meta + ' users', x1, yScale.top - 8);
+      ctxC.restore();
+    }
+  };
+
+  const chart = new Chart(ctx, {
+    type: 'line',
+    plugins: [breakEvenPlugin],
+    data: {
+      labels: [],
+      datasets: [
+        {
+          label: 'Monthly Revenue',
+          data: [],
+          borderColor: '#10b981',
+          backgroundColor: 'rgba(16,185,129,0.08)',
+          borderWidth: 2.5,
+          fill: false,
+          tension: 0.2,
+          pointRadius: 0,
+          pointHoverRadius: 5,
+          pointHoverBackgroundColor: '#10b981',
+        },
+        {
+          label: 'Monthly Cost',
+          data: [],
+          borderColor: '#f43f5e',
+          backgroundColor: 'rgba(244,63,94,0.08)',
+          borderWidth: 2.5,
+          fill: false,
+          tension: 0.2,
+          pointRadius: 0,
+          pointHoverRadius: 5,
+          pointHoverBackgroundColor: '#f43f5e',
+        },
+        {
+          label: 'Net Profit / Loss',
+          data: [],
+          borderColor: '#38bdf8',
+          backgroundColor: (ctx) => {
+            const chart = ctx.chart;
+            const { ctx: c, chartArea } = chart;
+            if (!chartArea) return 'rgba(56,189,248,0.06)';
+            const g = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+            g.addColorStop(0, 'rgba(16,185,129,0.12)');
+            g.addColorStop(0.5, 'rgba(56,189,248,0.04)');
+            g.addColorStop(1, 'rgba(244,63,94,0.08)');
+            return g;
+          },
+          borderWidth: 2,
+          borderDash: [6, 4],
+          fill: true,
+          tension: 0.2,
+          pointRadius: 0,
+          pointHoverRadius: 5,
+          pointHoverBackgroundColor: '#38bdf8',
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          position: 'top',
+          labels: {
+            color: '#94a3b8',
+            font: { family: 'Source Sans 3', size: 12, weight: '600' },
+            usePointStyle: true,
+            pointStyle: 'circle',
+            padding: 20,
+          },
+        },
+        tooltip: {
+          backgroundColor: '#1a2332',
+          titleColor: '#e2e8f0',
+          bodyColor: '#94a3b8',
+          borderColor: '#1e2d3d',
+          borderWidth: 1,
+          padding: 12,
+          titleFont: { family: 'Source Sans 3', size: 13, weight: '700' },
+          bodyFont: { family: 'Source Sans 3', size: 12 },
+          callbacks: {
+            title: (items) => items[0].label + ' customers',
+            label: (item) => ` ${item.dataset.label}: ${item.parsed.y.toLocaleString()} EUR/mo`,
+          },
+        },
+      },
+      scales: {
+        x: {
+          title: {
+            display: true,
+            text: 'Total Customers',
+            color: '#64748b',
+            font: { family: 'Source Sans 3', size: 12, weight: '600' },
+          },
+          ticks: {
+            color: '#64748b',
+            font: { family: 'Source Sans 3', size: 11 },
+            maxTicksLimit: 15,
+          },
+          grid: { color: 'rgba(30,45,61,0.5)', drawBorder: false },
+        },
+        y: {
+          title: {
+            display: true,
+            text: 'EUR / month',
+            color: '#64748b',
+            font: { family: 'Source Sans 3', size: 12, weight: '600' },
+          },
+          ticks: {
+            color: '#64748b',
+            font: { family: 'Source Sans 3', size: 11 },
+            callback: (v) => v.toLocaleString() + ' €',
+          },
+          grid: { color: 'rgba(30,45,61,0.5)', drawBorder: false },
+        },
+      },
+    },
+  });
+
+  function normalize(pF, pB, pT) {
+    const s = pF + pB + pT;
+    const nF = Math.round(pF / s * 100);
+    const nB = Math.round(pB / s * 100);
+    return [nF, nB, 100 - nF - nB];
+  }
+
+  function update() {
+    const total = +document.getElementById('slider-total').value;
+    const rawF = +document.getElementById('slider-free').value;
+    const rawB = +document.getElementById('slider-bifolio').value;
+    const rawT = +document.getElementById('slider-trefolio').value;
+    const [pF, pB, pT] = normalize(rawF, rawB, rawT);
+
+    document.getElementById('val-total').textContent = total.toLocaleString();
+    document.getElementById('val-free').textContent = pF + '%';
+    document.getElementById('val-bifolio').textContent = pB + '%';
+    document.getElementById('val-trefolio').textContent = pT + '%';
+
+    const maxX = Math.max(total + 200, 400);
+    const step = Math.max(Math.round(maxX / 100), 5);
+    const labels = [];
+    const revArr = [];
+    const costArr = [];
+    const profitArr = [];
+
+    for (let t = 0; t <= maxX; t += step) {
+      labels.push(t);
+      const p = calc(t, pF, pB, pT);
+      revArr.push(Math.round(p.revenue));
+      costArr.push(Math.round(p.cost));
+      profitArr.push(Math.round(p.revenue - p.cost));
+    }
+
+    chart.data.labels = labels;
+    chart.data.datasets[0].data = revArr;
+    chart.data.datasets[1].data = costArr;
+    chart.data.datasets[2].data = profitArr;
+
+    const be = findBreakeven(pF, pB, pT);
+    chart._breakEvenX = be;
+    chart.update('none');
+
+    const cur = calc(total, pF, pB, pT);
+    const profit = cur.revenue - cur.cost;
+
+    document.querySelector('#metric-mrr .val').textContent = Math.round(cur.revenue).toLocaleString() + ' €';
+    document.querySelector('#metric-cost .val').textContent = Math.round(cur.cost).toLocaleString() + ' €';
+    document.querySelector('#metric-breakeven .val').textContent = be != null ? be + ' users' : '—';
+
+    const margin = cur.revenue > 0 ? Math.round((profit / cur.revenue) * 100) : 0;
+    const metricMargin = document.querySelector('#metric-margin');
+    metricMargin.querySelector('.val').textContent = (profit >= 0 ? '+' : '') + margin + '%';
+    metricMargin.className = 'metric ' + (profit >= 0 ? 'positive' : 'negative');
+
+    const metricMRR = document.getElementById('metric-mrr');
+    metricMRR.className = 'metric ' + (profit >= 0 ? 'positive' : 'neutral');
+
+    const metricCost = document.getElementById('metric-cost');
+    metricCost.querySelector('.val').textContent = Math.round(cur.cost).toLocaleString() + ' €';
+
+    document.getElementById('bd-free-count').textContent = cur.nF.toLocaleString() + ' users';
+    document.getElementById('bd-free-detail').textContent =
+      'Revenue: 0 € · Variable cost: ~0 €';
+
+    document.getElementById('bd-bifolio-count').textContent = cur.nB.toLocaleString() + ' users';
+    document.getElementById('bd-bifolio-detail').textContent =
+      'Revenue: ' + Math.round(cur.nB * BIFOLIO_NET).toLocaleString() + ' € · Var. cost: ~' + Math.round(cur.nB * VAR_BIFOLIO) + ' €';
+
+    document.getElementById('bd-trefolio-count').textContent = cur.nT.toLocaleString() + ' users';
+    const tVarCost = Math.round(cur.nT * VAR_TREFOLIO);
+    document.getElementById('bd-trefolio-detail').textContent =
+      'Revenue: ' + Math.round(cur.nT * TREFOLIO_NET).toLocaleString() + ' € · Var. cost: ~' + tVarCost.toLocaleString() + ' € (SnapTrade + AI)';
+
+    document.getElementById('bd-av-plan').textContent = cur.av.plan;
+    const avNext = AV_TIERS.find(t => t.maxUsers > cur.av.maxUsers && t.maxUsers > 0);
+    let avDetail = cur.av.cost + ' €/mo ($' + Math.round(cur.av.cost / 0.92) + ')';
+    if (cur.nT === 0) {
+      avDetail = 'No Trefolio users yet';
+    } else if (avNext) {
+      avDetail += ' · Upgrade at ' + (cur.av.maxUsers + 1) + '+ users → ' + avNext.plan + ' (' + avNext.cost + ' €)';
+    } else {
+      avDetail += ' · Max tier (1200 req/min)';
+    }
+    document.getElementById('bd-av-detail').textContent = avDetail;
+  }
+
+  ['slider-total', 'slider-free', 'slider-bifolio', 'slider-trefolio'].forEach(id => {
+    document.getElementById(id).addEventListener('input', update);
+  });
+
+  update();
+</script>
+</body>
+</html>
