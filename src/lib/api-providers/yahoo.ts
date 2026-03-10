@@ -50,7 +50,7 @@ export class YahooProvider implements StockDataProvider {
     const end = providerRequestDuration.startTimer({ provider: "yahoo", operation: "search" });
     let ok = false;
     try {
-      const result = await yahooFinance.search(query, { quotesCount: 8 }, { validateResult: false });
+      const result = await yahooFinance.search(query, { quotesCount: 8 }, { validateResult: false }) as { quotes?: Array<Record<string, unknown>> };
       ok = true;
       const allowedTypes = new Set(["EQUITY", "ETF"]);
       if (options?.includeCrypto) allowedTypes.add("CRYPTOCURRENCY");
