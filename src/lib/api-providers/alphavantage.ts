@@ -79,6 +79,16 @@ function parseFloatOrNull(val: unknown): number | null {
   return isNaN(n) ? null : n;
 }
 
+const AV_TYPE_MAP: Record<string, string> = {
+  Equity: "EQUITY",
+  ETF: "ETF",
+  Cryptocurrency: "CRYPTOCURRENCY",
+};
+
+function avTypeToQuoteType(raw: string | undefined): string {
+  return (raw && AV_TYPE_MAP[raw]) || raw || "EQUITY";
+}
+
 export class AlphaVantageProvider implements StockDataProvider {
   readonly name = "alphavantage";
   private apiKey: string;
@@ -186,7 +196,7 @@ export class AlphaVantageProvider implements StockDataProvider {
         symbol: m["1. symbol"],
         shortname: m["2. name"] || m["1. symbol"],
         exchange: m["4. region"] || "",
-        quoteType: m["3. type"] || "Equity",
+        quoteType: avTypeToQuoteType(m["3. type"]),
       }));
   }
 

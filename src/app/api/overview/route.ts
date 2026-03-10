@@ -1,13 +1,10 @@
 import { NextRequest } from "next/server";
-import { getProviderFromRequest } from "@/lib/api-providers";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
-import { jsonWithCallCount } from "@/lib/api-providers/response";
-import { requireRateLimit } from "@/lib/auth/guards";
-import { recordAvUsageAsync } from "@/lib/rate-limit";
 import { withMetrics } from "@/lib/with-metrics";
-import { deferTask } from "@/lib/task-runner";
 
 export const dynamic = "force-dynamic";
+
+const yahoo = new YahooProvider();
 
 export const GET = withMetrics("/api/overview", async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
@@ -17,40 +14,12 @@ export const GET = withMetrics("/api/overview", async (request: NextRequest) => 
     return Response.json({ error: "symbol parameter required" }, { status: 400 });
   }
 
-  const provider = await getProviderFromRequest(request);
-  const yahoo = new YahooProvider();
-
-  let rateLimitUserId: string | null = null;
-  let useProvider = provider;
-  if (provider.name === "alphavantage") {
-    const rl = await requireRateLimit(request, "alphavantage");
-    if (rl.error) {
-      useProvider = yahoo;
-    } else {
-      rateLimitUserId = rl.session?.userId ?? null;
-    }
-  }
-
   try {
-    if (useProvider.getOverview) {
-      const overview = await useProvider.getOverview(symbol);
-      if (overview) return jsonWithCallCount(provider, overview);
-    }
-    throw new Error("No data from primary provider");
+    const overview = await yahoo.getOverview!(symbol);
+    if (overview) return Response.json(overview);
+    return Response.json({ error: "No overview data available" }, { status: 404 });
   } catch (err) {
-    if (useProvider.name === "alphavantage") {
-      console.warn(`[overview] AV failed for ${symbol}, falling back to Yahoo:`, err instanceof Error ? err.message : err);
-      try {
-        const fallback = await yahoo.getOverview!(symbol);
-        if (fallback) return Response.json({ ...fallback, providerUsed: "yahoo" });
-      } catch (yahooErr) {
-        console.error(`[overview] Yahoo fallback also failed for ${symbol}:`, yahooErr instanceof Error ? yahooErr.message : yahooErr);
-      }
-    }
-    return jsonWithCallCount(provider, { error: "Failed to fetch overview data" }, { status: 500 });
-  } finally {
-    if (rateLimitUserId && provider.callCount) {
-      deferTask(() => recordAvUsageAsync(rateLimitUserId, provider.callCount!));
-    }
+    console.error(`[overview] Failed for ${symbol}:`, err instanceof Error ? err.message : err);
+    return Response.json({ error: "Failed to fetch overview data" }, { status: 500 });
   }
 });

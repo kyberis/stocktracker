@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { getProviderFromRequest } from "@/lib/api-providers";
+import { getAlphaVantageFromRequest } from "@/lib/api-providers";
 import { jsonWithCallCount } from "@/lib/api-providers/response";
 import { requireFeatureAccess, requireRateLimit } from "@/lib/auth/guards";
 import { recordAvUsageAsync } from "@/lib/rate-limit";
@@ -25,11 +25,11 @@ export const GET = withMetrics("/api/intelligence", async (request: NextRequest)
     );
   }
 
-  const provider = await getProviderFromRequest(request);
+  const provider = await getAlphaVantageFromRequest(request);
 
-  if (provider.name !== "alphavantage") {
+  if (!provider) {
     return Response.json(
-      { error: "Alpha Intelligence data requires Alpha Vantage provider" },
+      { error: "Alpha Intelligence data requires a Pro subscription with Alpha Vantage configured" },
       { status: 400 }
     );
   }
@@ -51,7 +51,7 @@ export const GET = withMetrics("/api/intelligence", async (request: NextRequest)
 
   if (typeof method !== "function") {
     return Response.json(
-      { error: `${type} data not available for this provider` },
+      { error: `${type} data not available` },
       { status: 400 }
     );
   }

@@ -65,29 +65,28 @@ export const GET = withMetrics("/api/ex-dividend", async (req: NextRequest) => {
     return NextResponse.json({ events: [] });
   }
 
-  const apiKey = getGlobalAlphaVantageApiKey();
   let events: DividendEvent[] = [];
 
-  if (apiKey) {
-    try {
-      const provider = new AlphaVantageProvider(apiKey);
-      const results = await Promise.allSettled(
-        tickers.map((ticker) => provider.getDividendSchedule(ticker))
-      );
-      results.forEach((r) => {
-        if (r.status === "fulfilled") events.push(...r.value);
-      });
-    } catch (err) {
-      console.warn("[ex-dividend] AV failed, falling back to Yahoo:", err instanceof Error ? err.message : err);
-      events = await fetchDividendsFromYahoo(tickers);
-    }
+  try {
+    events = await fetchDividendsFromYahoo(tickers);
+  } catch (err) {
+    console.warn("[ex-dividend] Yahoo failed:", err instanceof Error ? err.message : err);
   }
 
   if (events.length === 0) {
-    try {
-      events = await fetchDividendsFromYahoo(tickers);
-    } catch (err) {
-      console.error("[ex-dividend] Yahoo fallback failed:", err instanceof Error ? err.message : err);
+    const apiKey = getGlobalAlphaVantageApiKey();
+    if (apiKey) {
+      try {
+        const provider = new AlphaVantageProvider(apiKey);
+        const results = await Promise.allSettled(
+          tickers.map((ticker) => provider.getDividendSchedule(ticker))
+        );
+        results.forEach((r) => {
+          if (r.status === "fulfilled") events.push(...r.value);
+        });
+      } catch (err) {
+        console.error("[ex-dividend] AV fallback also failed:", err instanceof Error ? err.message : err);
+      }
     }
   }
 
