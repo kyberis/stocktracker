@@ -48,12 +48,17 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
   const [reviewOpen, setReviewOpen] = useState(false);
 
   return (
-    <div className="card px-5 py-4">
+    <div className="card px-5 py-4 relative overflow-hidden">
+      {isLoading && (
+        <div className="absolute top-0 left-0 right-0 h-0.5 overflow-hidden rounded-t-2xl">
+          <div className="h-full w-1/3 bg-emerald-500/70 dark:bg-emerald-400/50 animate-progress-bar" />
+        </div>
+      )}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex items-center gap-4 flex-wrap">
           <div>
             <p
-              className={`text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white ${isLoading ? "animate-pulse" : ""}`}
+              className={`text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white ${isLoading ? "animate-value-shimmer" : ""}`}
               aria-label={stealthMode ? formatCurrency(totalCurrentEUR, "EUR") : undefined}
             >
               {formatStealthCurrency(totalCurrentEUR, "EUR", stealthMode)}

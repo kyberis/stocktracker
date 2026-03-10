@@ -161,21 +161,21 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
                     </td>
                     <td className="py-2.5 text-right text-gray-700 dark:text-slate-200 tabular-nums font-medium">
                       {isLoading ? (
-                        <span className="inline-block w-16 h-4 bg-gray-100 dark:bg-slate-700 rounded animate-pulse" />
+                        <span className="inline-block w-16 h-4 bg-gray-100 dark:bg-slate-700 rounded animate-value-shimmer" />
                       ) : (
                         formatCurrency(totalCurrentEUR, "EUR")
                       )}
                     </td>
                     <td className={`py-2.5 text-right tabular-nums font-medium ${changeColor(dayGainLossEUR)}`}>
                       {isLoading ? (
-                        <span className="inline-block w-12 h-4 bg-gray-100 dark:bg-slate-700 rounded animate-pulse" />
+                        <span className="inline-block w-12 h-4 bg-gray-100 dark:bg-slate-700 rounded animate-value-shimmer" />
                       ) : (
                         formatCurrency(dayGainLossEUR, "EUR")
                       )}
                     </td>
                     <td className="py-2.5 text-right pr-4 sm:pr-5">
                       {isLoading ? (
-                        <span className="inline-block w-14 h-5 bg-gray-100 dark:bg-slate-700 rounded animate-pulse" />
+                        <span className="inline-block w-14 h-5 bg-gray-100 dark:bg-slate-700 rounded animate-value-shimmer" />
                       ) : (
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold tabular-nums ${changeColor(dayGainLossPercent)} ${changeBg(dayGainLossPercent)}`}>
                           {formatPercent(dayGainLossPercent)}

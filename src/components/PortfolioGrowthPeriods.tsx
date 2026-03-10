@@ -172,7 +172,7 @@ export default function PortfolioGrowthPeriods({ holdings: holdingsProp }: Props
               <p className="text-[10px] text-gray-500 dark:text-slate-400 font-medium uppercase mb-1">
                 {p.label}
               </p>
-              <p className={`text-xl font-bold ${color} ${loading ? "animate-pulse" : ""}`}>
+              <p className={`text-xl font-bold ${color} ${loading ? "animate-value-shimmer" : ""}`}>
                 {loading ? "—" : hasValue ? formatPercent(p.value!) : "—"}
               </p>
             </div>

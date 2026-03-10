@@ -92,6 +92,47 @@ body {
   .animate-live-pulse {
     animation: live-pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
+
+  @keyframes value-shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  .animate-value-shimmer {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(16, 185, 129, 0.08) 40%,
+      rgba(16, 185, 129, 0.13) 50%,
+      rgba(16, 185, 129, 0.08) 60%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: value-shimmer 1.5s ease-in-out infinite;
+  }
+
+  .dark .animate-value-shimmer {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(16, 185, 129, 0.06) 40%,
+      rgba(16, 185, 129, 0.12) 50%,
+      rgba(16, 185, 129, 0.06) 60%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: value-shimmer 1.5s ease-in-out infinite;
+  }
+
+  @keyframes progress-slide {
+    0% { transform: translateX(-100%); }
+    50% { transform: translateX(200%); }
+    100% { transform: translateX(200%); }
+  }
+
+  .animate-progress-bar {
+    animation: progress-slide 1.2s ease-in-out infinite;
+  }
 }
 
 .recharts-tooltip-wrapper {
@@ -171,6 +212,13 @@ body {
     animation: none;
   }
   .animate-pulse {
+    animation: none;
+  }
+  .animate-value-shimmer {
+    animation: none;
+    background: none;
+  }
+  .animate-progress-bar {
     animation: none;
   }
 }
