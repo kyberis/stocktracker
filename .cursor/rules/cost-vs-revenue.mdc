@@ -1,0 +1,39 @@
+---
+description: How to open and update the interactive cost vs revenue financial model
+globs: docs/cost-vs-revenue.html
+alwaysApply: false
+---
+
+# Cost vs Revenue Model
+
+An interactive HTML chart lives at `docs/cost-vs-revenue.html`. It models trefolio's monthly revenue, cost, and profit as customers scale across Free / Bifolio / Trefolio tiers.
+
+## Opening It
+
+The file needs an HTTP server (no `file://` URLs in the browser tool). Start one and open:
+
+```bash
+cd docs && python3 -m http.server 8847 &
+open http://localhost:8847/cost-vs-revenue.html
+```
+
+If port 8847 is busy, pick another (8848, 8850, etc.).
+
+## What It Contains
+
+- **Sliders**: Total customers (0–5K) and tier distribution (% Free / Bifolio / Trefolio)
+- **Chart**: Revenue (green), Cost (red), Net Profit (blue dashed), breakeven line (amber)
+- **Metrics**: MRR, total cost, breakeven point, profit margin
+- **Breakdown cards**: Per-tier user count, revenue, variable cost, and current Alpha Vantage plan
+- **Alpha Vantage tiered pricing**: Automatically steps through real AV plans ($49.99–$249.99/mo) based on Trefolio user count
+
+## Updating the Model
+
+Key constants are in the `<script>` block:
+
+- `BIFOLIO_NET` / `TREFOLIO_NET` — net revenue per user after Stripe fees
+- `VAR_BIFOLIO` / `VAR_TREFOLIO` — per-user variable costs (SnapTrade, OpenAI)
+- `AV_TIERS` — Alpha Vantage plan tiers with `maxUsers`, `cost`, `plan`, `reqMin`
+- `infraCost()` — infrastructure cost tiers based on total user count
+
+When pricing, API costs, or infrastructure costs change, update these constants and the assumptions text at the bottom of the page.

@@ -1,0 +1,1490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Device Lab Review — trefolio</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg: #06090f;
+  --surface: #0f172a;
+  --card: #1e293b;
+  --card2: #162032;
+  --border: #1e2d3d;
+  --border2: #334155;
+  --emerald: #10b981;
+  --emerald-light: #34d399;
+  --emerald-dim: rgba(16,185,129,0.12);
+  --rose: #f43f5e;
+  --rose-dim: rgba(244,63,94,0.10);
+  --amber: #f59e0b;
+  --amber-dim: rgba(245,158,11,0.10);
+  --violet: #8b5cf6;
+  --violet-dim: rgba(139,92,246,0.12);
+  --sky: #38bdf8;
+  --sky-dim: rgba(56,189,248,0.10);
+  --text: #e2e8f0;
+  --text-dim: #94a3b8;
+  --text-muted: #64748b;
+  --eink-bg: #e8e4d9;
+  --eink-text: #1a1a1a;
+  --eink-red: #c0392b;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Source Sans 3', sans-serif;
+  min-height: 100vh;
+}
+.page-header {
+  padding: 2.5rem 2rem 0;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.page-header h1 {
+  font-family: 'Playfair Display', serif;
+  font-weight: 900;
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, var(--emerald) 0%, var(--sky) 50%, var(--violet) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.page-header .subtitle {
+  color: var(--text-dim);
+  font-size: 0.95rem;
+  font-weight: 300;
+  margin-top: 0.3rem;
+}
+
+/* ── Tabs ── */
+.tab-bar {
+  display: flex;
+  gap: 0;
+  max-width: 1400px;
+  margin: 1.5rem auto 0;
+  padding: 0 2rem;
+  border-bottom: 1px solid var(--border);
+}
+.tab-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-family: 'Source Sans 3', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  letter-spacing: 0.02em;
+}
+.tab-btn:hover { color: var(--text-dim); }
+.tab-btn.active {
+  color: var(--emerald);
+  border-bottom-color: var(--emerald);
+}
+.tab-panel {
+  display: none;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+  animation: fadeIn 0.3s ease;
+}
+.tab-panel.active { display: block; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+/* ── Review Cards ── */
+.review-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+.review-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.75rem;
+  position: relative;
+  overflow: hidden;
+}
+.review-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+.review-card.pm::before { background: linear-gradient(90deg, var(--amber), var(--amber)); }
+.review-card.hw::before { background: linear-gradient(90deg, var(--sky), var(--sky)); }
+.review-card.design::before { background: linear-gradient(90deg, var(--violet), var(--violet)); }
+.review-card .role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.3rem 0.7rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+}
+.review-card.pm .role-badge { background: var(--amber-dim); color: var(--amber); }
+.review-card.hw .role-badge { background: var(--sky-dim); color: var(--sky); }
+.review-card.design .role-badge { background: var(--violet-dim); color: var(--violet); }
+.review-card h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+.review-section { margin-bottom: 1rem; }
+.review-section h4 {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.5rem;
+}
+.review-card.pm .review-section h4 { color: var(--amber); }
+.review-card.hw .review-section h4 { color: var(--sky); }
+.review-card.design .review-section h4 { color: var(--violet); }
+.review-section ul {
+  list-style: none;
+  padding: 0;
+}
+.review-section li {
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  line-height: 1.55;
+  padding: 0.25rem 0;
+  padding-left: 1rem;
+  position: relative;
+}
+.review-section li::before {
+  content: '›';
+  position: absolute;
+  left: 0;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+.verdict-box {
+  background: var(--card);
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  margin-top: 0.75rem;
+}
+.verdict-box .verdict-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--emerald);
+  margin-bottom: 0.3rem;
+}
+.verdict-box p {
+  font-size: 0.82rem;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+/* ── Score Matrix ── */
+.score-matrix {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.75rem;
+}
+.score-matrix h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+.score-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+.score-table th {
+  text-align: left;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+.score-table td {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-dim);
+}
+.score-table tr:last-child td { border-bottom: none; }
+.score-bar {
+  width: 100%;
+  height: 6px;
+  background: var(--card);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.score-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--emerald);
+}
+.score-val {
+  font-weight: 700;
+  color: var(--emerald);
+  font-variant-numeric: tabular-nums;
+}
+.weighted-total {
+  font-weight: 700;
+  color: var(--emerald);
+  font-size: 1.1rem;
+}
+
+/* ── Device Renders ── */
+.devices-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+.device-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.device-card.flagship {
+  grid-column: 1 / -1;
+}
+.device-frame-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  background: radial-gradient(ellipse at center, rgba(16,185,129,0.03), transparent);
+}
+.device-enclosure {
+  background: #1a1a1a;
+  border-radius: 16px;
+  padding: 8px;
+  box-shadow:
+    0 20px 60px rgba(0,0,0,0.5),
+    0 0 0 1px rgba(255,255,255,0.05),
+    inset 0 1px 0 rgba(255,255,255,0.05);
+  position: relative;
+}
+.device-enclosure.eink {
+  background: #2a2a2a;
+  border-radius: 12px;
+  padding: 10px;
+}
+.device-enclosure.badge {
+  border-radius: 24px;
+  padding: 12px 16px;
+}
+.device-screen {
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+}
+.device-screen.eink-screen {
+  border-radius: 4px;
+}
+
+/* Leaf screen */
+.leaf-screen {
+  width: 360px;
+  height: 270px;
+  background: #0f172a;
+  font-family: 'Source Sans 3', sans-serif;
+  color: #f1f5f9;
+  display: flex;
+  flex-direction: column;
+}
+.leaf-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  font-size: 10px;
+  border-bottom: 1px solid #334155;
+}
+.leaf-brand { color: #10b981; font-weight: 700; font-size: 11px; }
+.leaf-live { color: #10b981; font-size: 9px; display: flex; align-items: center; gap: 3px; }
+.leaf-live-dot { width: 5px; height: 5px; border-radius: 50%; background: #10b981; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+.leaf-body {
+  display: flex;
+  flex: 1;
+  padding: 8px;
+  gap: 8px;
+}
+.leaf-summary {
+  flex: 1;
+  background: #1e293b;
+  border-radius: 10px;
+  border: 1px solid #334155;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.leaf-total-label { font-size: 8px; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
+.leaf-total-val { font-size: 22px; font-weight: 700; margin: 2px 0; }
+.leaf-change {
+  display: inline-flex;
+  padding: 2px 6px;
+  border-radius: 8px;
+  font-size: 9px;
+  font-weight: 600;
+  background: rgba(16,185,129,0.15);
+  color: #34d399;
+}
+.leaf-cost { font-size: 8px; color: #64748b; margin-top: 4px; }
+.leaf-right {
+  flex: 1.2;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.leaf-holding {
+  background: #1e293b;
+  border-radius: 8px;
+  border: 1px solid #334155;
+  padding: 5px 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 9px;
+}
+.leaf-holding .ticker { font-weight: 600; color: #f1f5f9; }
+.leaf-holding .weight { color: #64748b; }
+.leaf-holding .change-pos { color: #34d399; font-weight: 600; }
+.leaf-holding .change-neg { color: #f87171; font-weight: 600; }
+.leaf-ai {
+  background: #1e293b;
+  border-radius: 8px;
+  border: 1px solid #8b5cf6;
+  padding: 6px 8px;
+  flex: 1;
+}
+.leaf-ai-label { font-size: 7px; color: #8b5cf6; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
+.leaf-ai-text { font-size: 8px; color: #94a3b8; line-height: 1.4; margin-top: 3px; }
+.leaf-footer {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  padding: 6px;
+  border-top: 1px solid #334155;
+  font-size: 8px;
+  color: #64748b;
+}
+
+/* Slate screen (e-ink 4.2") */
+.slate-screen {
+  width: 280px;
+  height: 210px;
+  background: var(--eink-bg);
+  font-family: 'Source Sans 3', sans-serif;
+  color: var(--eink-text);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+}
+.slate-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid #1a1a1a;
+}
+.slate-brand { font-weight: 700; font-size: 12px; }
+.slate-time { font-size: 8px; color: #666; }
+.slate-value {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.slate-change-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+  font-size: 10px;
+}
+.slate-pos { font-weight: 700; }
+.slate-neg { font-weight: 700; }
+.slate-divider {
+  height: 1px;
+  background: #1a1a1a;
+  margin: 8px 0;
+}
+.slate-movers {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.slate-mover {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  padding: 2px 0;
+}
+.slate-mover .sticker { font-weight: 600; }
+
+/* Tile screen (e-ink 7.5" 3-color) */
+.tile-screen {
+  width: 400px;
+  height: 240px;
+  background: var(--eink-bg);
+  font-family: 'Source Sans 3', sans-serif;
+  color: var(--eink-text);
+  padding: 16px;
+  display: flex;
+  gap: 16px;
+}
+.tile-left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.tile-brand { font-weight: 700; font-size: 11px; margin-bottom: 8px; }
+.tile-value { font-size: 26px; font-weight: 700; }
+.tile-change { font-size: 11px; font-weight: 600; margin-top: 2px; }
+.tile-cost-label { font-size: 8px; color: #666; margin-top: 6px; }
+.tile-cost-val { font-size: 12px; font-weight: 600; }
+.tile-metrics {
+  margin-top: auto;
+  display: flex;
+  gap: 12px;
+  font-size: 8px;
+}
+.tile-metric-label { color: #666; }
+.tile-metric-val { font-weight: 700; font-size: 10px; }
+.tile-right {
+  flex: 1.3;
+  border-left: 1px solid #1a1a1a;
+  padding-left: 16px;
+  display: flex;
+  flex-direction: column;
+}
+.tile-holdings-title { font-size: 8px; color: #666; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; margin-bottom: 6px; }
+.tile-holding {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  padding: 3px 0;
+  border-bottom: 1px solid #d5d0c4;
+}
+.tile-holding:last-child { border-bottom: none; }
+.tile-holding .t-ticker { font-weight: 600; width: 50px; }
+.tile-holding .t-name { flex: 1; color: #666; font-size: 8px; }
+.tile-holding .t-change { font-weight: 600; text-align: right; width: 45px; }
+.tile-red { color: var(--eink-red); }
+.tile-black { color: #1a1a1a; }
+
+/* Badge screen (e-ink 2.9") */
+.badge-screen {
+  width: 222px;
+  height: 96px;
+  background: var(--eink-bg);
+  font-family: 'Source Sans 3', sans-serif;
+  color: var(--eink-text);
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.badge-left { flex: 1; }
+.badge-brand { font-size: 8px; font-weight: 700; margin-bottom: 4px; }
+.badge-val { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
+.badge-change { font-size: 10px; font-weight: 600; margin-top: 1px; }
+.badge-right {
+  text-align: right;
+  font-size: 8px;
+  color: #666;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.badge-stat-val { font-size: 10px; font-weight: 600; color: #1a1a1a; }
+
+/* Device specs */
+.device-info {
+  padding: 1.25rem 1.5rem;
+  border-top: 1px solid var(--border);
+}
+.device-info h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.1rem;
+  margin-bottom: 0.2rem;
+}
+.device-info .device-tagline {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-bottom: 0.85rem;
+}
+.specs-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.spec-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+  padding: 0.3rem 0.65rem;
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+}
+.spec-chip .spec-val { color: var(--text); font-weight: 600; }
+.price-chip {
+  background: var(--emerald-dim);
+  color: var(--emerald);
+  border-color: rgba(16,185,129,0.2);
+}
+.price-chip .spec-val { color: var(--emerald-light); }
+.status-chip {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.25rem 0.6rem;
+  border-radius: 20px;
+}
+.status-shipping { background: var(--emerald-dim); color: var(--emerald); }
+.status-concept { background: var(--violet-dim); color: var(--violet); }
+.status-planned { background: var(--amber-dim); color: var(--amber); }
+
+/* ── Pricing ── */
+.pricing-wrap {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+.pricing-table-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.5rem;
+}
+.pricing-table-wrap h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+.p-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+.p-table th {
+  text-align: left;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+}
+.p-table td {
+  padding: 0.55rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+.p-table tr:last-child td { border-bottom: none; }
+.p-table .device-name { color: var(--text); font-weight: 600; }
+.p-table .margin-good { color: var(--emerald); font-weight: 600; }
+.p-table .margin-ok { color: var(--amber); font-weight: 600; }
+.p-table .margin-tight { color: var(--rose); font-weight: 600; }
+.chart-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.5rem;
+  height: 420px;
+}
+.chart-panel h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+.bundle-section {
+  margin-top: 2rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.5rem;
+}
+.bundle-section h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+.bundles-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1rem;
+}
+.bundle-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.1rem;
+  text-align: center;
+}
+.bundle-card h4 { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.3rem; }
+.bundle-price { font-size: 1.5rem; font-weight: 700; color: var(--emerald); }
+.bundle-detail { font-size: 0.78rem; color: var(--text-dim); margin-top: 0.4rem; line-height: 1.5; }
+.bundle-card.featured {
+  border-color: var(--emerald);
+  box-shadow: 0 0 20px rgba(16,185,129,0.08);
+}
+.bundle-tag {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  background: var(--emerald-dim);
+  color: var(--emerald);
+  margin-bottom: 0.5rem;
+}
+
+/* ── Roadmap ── */
+.roadmap-track {
+  position: relative;
+  padding: 2rem 0 3rem 0;
+}
+.roadmap-line {
+  position: absolute;
+  top: 50%;
+  left: 2rem;
+  right: 2rem;
+  height: 2px;
+  background: var(--border);
+  transform: translateY(-50%);
+}
+.roadmap-items {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+  padding: 0 2rem;
+}
+.roadmap-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 140px;
+  position: relative;
+}
+.roadmap-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 3px solid var(--emerald);
+  background: var(--bg);
+  z-index: 1;
+  position: relative;
+}
+.roadmap-dot.active { background: var(--emerald); }
+.roadmap-dot.concept { border-color: var(--violet); }
+.roadmap-dot.concept.active { background: var(--violet); }
+.roadmap-dot.planned { border-color: var(--amber); }
+.roadmap-quarter {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.roadmap-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text);
+  text-align: center;
+  margin-top: 0.6rem;
+  line-height: 1.3;
+}
+.roadmap-desc {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: 0.25rem;
+  line-height: 1.4;
+}
+
+/* Roadmap detail cards below timeline */
+.roadmap-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-top: 2.5rem;
+}
+.roadmap-detail-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.5rem;
+}
+.roadmap-detail-card h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1rem;
+  margin-bottom: 0.3rem;
+}
+.roadmap-detail-card .rd-quarter {
+  font-size: 0.72rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+}
+.rd-quarter.q-green { color: var(--emerald); }
+.rd-quarter.q-violet { color: var(--violet); }
+.rd-quarter.q-amber { color: var(--amber); }
+.roadmap-detail-card ul {
+  list-style: none;
+  padding: 0;
+}
+.roadmap-detail-card li {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  line-height: 1.5;
+  padding: 0.2rem 0 0.2rem 1rem;
+  position: relative;
+}
+.roadmap-detail-card li::before {
+  content: '—';
+  position: absolute;
+  left: 0;
+  color: var(--text-muted);
+}
+
+@media (max-width: 1000px) {
+  .review-grid { grid-template-columns: 1fr; }
+  .devices-grid { grid-template-columns: 1fr; }
+  .pricing-wrap { grid-template-columns: 1fr; }
+  .roadmap-details { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Device Lab Review</h1>
+  <p class="subtitle">trefolio Leaf product assessment + hardware roadmap from the Device Lab team</p>
+</div>
+
+<div class="tab-bar">
+  <button class="tab-btn active" data-tab="review">Product Review</button>
+  <button class="tab-btn" data-tab="devices">Device Concepts</button>
+  <button class="tab-btn" data-tab="pricing">Pricing</button>
+  <button class="tab-btn" data-tab="roadmap">Roadmap</button>
+</div>
+
+<!-- ════════════ TAB 1: REVIEW ════════════ -->
+<div class="tab-panel active" id="tab-review">
+
+  <div class="review-grid">
+
+    <!-- PM Review -->
+    <div class="review-card pm">
+      <div class="role-badge">Product Manager</div>
+      <h3>Market & Strategy</h3>
+
+      <div class="review-section">
+        <h4>Strengths</h4>
+        <ul>
+          <li>Only sub-$100 dedicated portfolio display on the market</li>
+          <li>Drives Pro subscriptions — device requires Pro tier</li>
+          <li>OTA firmware updates with staged rollouts already built</li>
+          <li>7 polished UI screens, 4 themes, European number formatting</li>
+          <li>API surface is comprehensive: summary, AI, sparklines, config, notifications</li>
+        </ul>
+      </div>
+
+      <div class="review-section">
+        <h4>Risks</h4>
+        <ul>
+          <li>BOM at $88 landed (50 units) = tight margin at $99 retail</li>
+          <li>LILYGO T4-S3 board at $52 is single-vendor dependency</li>
+          <li>No battery = desk-only; limits use cases</li>
+          <li>Target buyer is niche: Pro subscriber who wants a desk gadget</li>
+          <li>No retail channel yet — direct online sales only</li>
+        </ul>
+      </div>
+
+      <div class="verdict-box">
+        <div class="verdict-label">Recommendation</div>
+        <p>Launch at <strong>79 EUR bundled with 1-year Pro</strong> (total bundle 139 EUR). Unbundled: 99 EUR device-only (Pro required). First batch: 25 units to validate demand before scaling.</p>
+      </div>
+    </div>
+
+    <!-- Hardware Architect Review -->
+    <div class="review-card hw">
+      <div class="role-badge">Hardware Architect</div>
+      <h3>Platform & Components</h3>
+
+      <div class="review-section">
+        <h4>Current Platform</h4>
+        <ul>
+          <li>ESP32-S3 is the right SoC — PSRAM needed for LVGL framebuffer</li>
+          <li>WiFi built-in, Arduino ecosystem mature, PlatformIO toolchain solid</li>
+          <li>2.41" AMOLED is premium: vibrant colors, excellent in dark rooms</li>
+          <li>16 MB flash supports dual OTA partitions for safe updates</li>
+          <li>USB-C power is correct for a desk device — simple, universal</li>
+        </ul>
+      </div>
+
+      <div class="review-section">
+        <h4>Risks & Gaps</h4>
+        <ul>
+          <li>Board at $52/unit — custom PCB ($20-30) essential at 1000+ units</li>
+          <li>AMOLED is power-hungry — rules out battery-powered variants</li>
+          <li>2.41" display is premium but small — hard to show >5 holdings</li>
+          <li>No Bluetooth — can't do phone-relay or proximity features</li>
+        </ul>
+      </div>
+
+      <div class="verdict-box">
+        <div class="verdict-label">Next Device Recommendation</div>
+        <p>E-ink variant (LILYGO T5 or Waveshare) for ambient desk/wall display. B&W + red for loss/gain. Battery-powered, weeks of battery life, refreshing every 15-60 min.</p>
+      </div>
+    </div>
+
+    <!-- Designer Review -->
+    <div class="review-card design">
+      <div class="role-badge">Product Designer</div>
+      <h3>Physical Design & UX</h3>
+
+      <div class="review-section">
+        <h4>Strengths</h4>
+        <ul>
+          <li>Matte black soft-touch ABS is on-brand and premium-feeling</li>
+          <li>Debossed logo is elegant — no stickers or printed logos</li>
+          <li>Premium packaging (magnetic box, EVA foam, foil stamp) matches price point</li>
+          <li>4 UI themes give personalization without fragmenting the brand</li>
+          <li>Apple-like unboxing: device centered, accessories nested below</li>
+        </ul>
+      </div>
+
+      <div class="review-section">
+        <h4>Improvements Needed</h4>
+        <ul>
+          <li>Define a proper desk stand angle (10-15°) — "flat or upright" is vague</li>
+          <li>Magnetic detachable stand would feel premium and add versatility</li>
+          <li>Display bezel needs precise tolerance — flush window is critical</li>
+          <li>Consider a status LED (breathing emerald) for "connected" state</li>
+        </ul>
+      </div>
+
+      <div class="verdict-box">
+        <div class="verdict-label">Design Verdict</div>
+        <p>Physical design is strong for v1. Priority improvement: <strong>custom-angled magnetic stand</strong> that docks the device at 12° for optimal desk viewing. Second priority: front-facing status LED.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Score Matrix -->
+  <div class="score-matrix">
+    <h3>Concept Evaluation Matrix — trefolio Leaf</h3>
+    <table class="score-table">
+      <thead>
+        <tr>
+          <th>Criterion</th>
+          <th style="width:80px">Weight</th>
+          <th style="width:80px">Score</th>
+          <th style="width:200px">Bar</th>
+          <th style="width:80px">Weighted</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Subscription driver (requires/incentivizes Pro)</td>
+          <td>30%</td>
+          <td class="score-val">5.0</td>
+          <td><div class="score-bar"><div class="score-fill" style="width:100%"></div></div></td>
+          <td class="score-val">1.50</td>
+        </tr>
+        <tr>
+          <td>Differentiation (no competitor offers this)</td>
+          <td>20%</td>
+          <td class="score-val">4.5</td>
+          <td><div class="score-bar"><div class="score-fill" style="width:90%"></div></div></td>
+          <td class="score-val">0.90</td>
+        </tr>
+        <tr>
+          <td>Technical feasibility (build in &lt;8 weeks)</td>
+          <td>15%</td>
+          <td class="score-val">5.0</td>
+          <td><div class="score-bar"><div class="score-fill" style="width:100%"></div></div></td>
+          <td class="score-val">0.75</td>
+        </tr>
+        <tr>
+          <td>Unit economics (BOM &lt; 40% of sale price)</td>
+          <td>15%</td>
+          <td class="score-val">2.5</td>
+          <td><div class="score-bar"><div class="score-fill" style="width:50%;background:var(--amber)"></div></div></td>
+          <td style="color:var(--amber);font-weight:700">0.38</td>
+        </tr>
+        <tr>
+          <td>Market size (potential buyers)</td>
+          <td>10%</td>
+          <td class="score-val">3.0</td>
+          <td><div class="score-bar"><div class="score-fill" style="width:60%"></div></div></td>
+          <td class="score-val">0.30</td>
+        </tr>
+        <tr>
+          <td>Brand halo (makes trefolio look innovative)</td>
+          <td>10%</td>
+          <td class="score-val">4.5</td>
+          <td><div class="score-bar"><div class="score-fill" style="width:90%"></div></div></td>
+          <td class="score-val">0.45</td>
+        </tr>
+        <tr style="border-top:2px solid var(--border2)">
+          <td colspan="3"></td>
+          <td style="text-align:right;font-weight:700;color:var(--text-muted);font-size:0.75rem">WEIGHTED TOTAL</td>
+          <td class="weighted-total">4.28 / 5</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ════════════ TAB 2: DEVICE CONCEPTS ════════════ -->
+<div class="tab-panel" id="tab-devices">
+
+  <div class="devices-grid">
+
+    <!-- Leaf (flagship, full-width) -->
+    <div class="device-card flagship">
+      <div class="device-frame-wrap">
+        <div class="device-enclosure">
+          <div class="device-screen">
+            <div class="leaf-screen">
+              <div class="leaf-header">
+                <span class="leaf-brand">trefolio</span>
+                <span class="leaf-live"><span class="leaf-live-dot"></span> LIVE</span>
+              </div>
+              <div class="leaf-body">
+                <div class="leaf-summary">
+                  <div class="leaf-total-label">Portfolio Value</div>
+                  <div class="leaf-total-val">€24.831,47</div>
+                  <div class="leaf-change">+€312,85 (+1,28%)</div>
+                  <div class="leaf-cost">Cost basis: €21.450,00</div>
+                </div>
+                <div class="leaf-right">
+                  <div class="leaf-holding"><span class="ticker">ASML</span><span class="weight">32,1%</span><span class="change-pos">+2,4%</span></div>
+                  <div class="leaf-holding"><span class="ticker">MSFT</span><span class="weight">18,7%</span><span class="change-pos">+0,8%</span></div>
+                  <div class="leaf-holding"><span class="ticker">SAP</span><span class="weight">12,3%</span><span class="change-neg">-0,3%</span></div>
+                  <div class="leaf-holding"><span class="ticker">NOVO</span><span class="weight">9,8%</span><span class="change-pos">+1,1%</span></div>
+                  <div class="leaf-ai">
+                    <div class="leaf-ai-label">AI Insight</div>
+                    <div class="leaf-ai-text">Portfolio up 1.3% today, led by ASML earnings beat. Semiconductor exposure is 44% — consider diversifying into defensives.</div>
+                  </div>
+                </div>
+              </div>
+              <div class="leaf-footer">
+                <span>Dashboard</span>
+                <span>Holdings</span>
+                <span>Settings</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="device-info">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <h3>trefolio Leaf</h3>
+            <div class="device-tagline">Your portfolio, always visible — premium AMOLED desk display</div>
+          </div>
+          <span class="status-chip status-shipping">Shipping</span>
+        </div>
+        <div class="specs-row">
+          <span class="spec-chip">Display <span class="spec-val">2.41" AMOLED</span></span>
+          <span class="spec-chip">Resolution <span class="spec-val">600x450</span></span>
+          <span class="spec-chip">SoC <span class="spec-val">ESP32-S3</span></span>
+          <span class="spec-chip">Connectivity <span class="spec-val">WiFi</span></span>
+          <span class="spec-chip">Power <span class="spec-val">USB-C</span></span>
+          <span class="spec-chip">Touch <span class="spec-val">Capacitive</span></span>
+          <span class="spec-chip price-chip">Price <span class="spec-val">79–99 EUR</span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slate -->
+    <div class="device-card">
+      <div class="device-frame-wrap">
+        <div class="device-enclosure eink">
+          <div class="device-screen eink-screen">
+            <div class="slate-screen">
+              <div class="slate-header">
+                <span class="slate-brand">trefolio</span>
+                <span class="slate-time">Updated 14:32</span>
+              </div>
+              <div class="slate-value">€24.831</div>
+              <div class="slate-change-row">
+                <span class="slate-pos">+€312,85</span>
+                <span class="slate-pos">(+1,28%)</span>
+              </div>
+              <div class="slate-divider"></div>
+              <div class="slate-movers">
+                <div class="slate-mover"><span class="sticker">ASML</span><span>32,1%</span><span class="slate-pos">+2,4%</span></div>
+                <div class="slate-mover"><span class="sticker">MSFT</span><span>18,7%</span><span class="slate-pos">+0,8%</span></div>
+                <div class="slate-mover"><span class="sticker">SAP</span><span>12,3%</span><span class="slate-neg">-0,3%</span></div>
+                <div class="slate-mover"><span class="sticker">NOVO</span><span>9,8%</span><span class="slate-pos">+1,1%</span></div>
+                <div class="slate-mover"><span class="sticker">INGA</span><span>8,2%</span><span class="slate-neg">-0,5%</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="device-info">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <h3>trefolio Slate</h3>
+            <div class="device-tagline">Always-on e-ink desk display — weeks of battery life</div>
+          </div>
+          <span class="status-chip status-concept">Concept</span>
+        </div>
+        <div class="specs-row">
+          <span class="spec-chip">Display <span class="spec-val">4.2" e-ink B&W</span></span>
+          <span class="spec-chip">Resolution <span class="spec-val">400x300</span></span>
+          <span class="spec-chip">SoC <span class="spec-val">ESP32-S3</span></span>
+          <span class="spec-chip">Power <span class="spec-val">Battery + USB-C</span></span>
+          <span class="spec-chip">Refresh <span class="spec-val">Every 15-60 min</span></span>
+          <span class="spec-chip price-chip">Est. Price <span class="spec-val">49–69 EUR</span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tile -->
+    <div class="device-card">
+      <div class="device-frame-wrap">
+        <div class="device-enclosure eink">
+          <div class="device-screen eink-screen">
+            <div class="tile-screen">
+              <div class="tile-left">
+                <div class="tile-brand">trefolio</div>
+                <div class="tile-value">€24.831,47</div>
+                <div class="tile-change" style="color:#1a1a1a">+€312,85 (+1,28%)</div>
+                <div class="tile-cost-label">Cost Basis</div>
+                <div class="tile-cost-val">€21.450,00</div>
+                <div class="tile-metrics">
+                  <div><div class="tile-metric-label">Gain</div><div class="tile-metric-val">+15,8%</div></div>
+                  <div><div class="tile-metric-label">Holdings</div><div class="tile-metric-val">12</div></div>
+                  <div><div class="tile-metric-label">Div Yield</div><div class="tile-metric-val">2,3%</div></div>
+                </div>
+              </div>
+              <div class="tile-right">
+                <div class="tile-holdings-title">Top Holdings</div>
+                <div class="tile-holding"><span class="t-ticker">ASML</span><span class="t-name">ASML Holding</span><span class="t-change tile-black">+2,4%</span></div>
+                <div class="tile-holding"><span class="t-ticker">MSFT</span><span class="t-name">Microsoft</span><span class="t-change tile-black">+0,8%</span></div>
+                <div class="tile-holding"><span class="t-ticker">SAP</span><span class="t-name">SAP SE</span><span class="t-change tile-red">-0,3%</span></div>
+                <div class="tile-holding"><span class="t-ticker">NOVO</span><span class="t-name">Novo Nordisk</span><span class="t-change tile-black">+1,1%</span></div>
+                <div class="tile-holding"><span class="t-ticker">INGA</span><span class="t-name">ING Group</span><span class="t-change tile-red">-0,5%</span></div>
+                <div class="tile-holding"><span class="t-ticker">ADS</span><span class="t-name">Adidas</span><span class="t-change tile-black">+0,6%</span></div>
+                <div class="tile-holding"><span class="t-ticker">SIE</span><span class="t-name">Siemens</span><span class="t-change tile-red">-0,2%</span></div>
+                <div class="tile-holding"><span class="t-ticker">AAPL</span><span class="t-name">Apple</span><span class="t-change tile-black">+1,5%</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="device-info">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <h3>trefolio Tile</h3>
+            <div class="device-tagline">Large e-ink wall display — full dashboard at a glance, 3-color</div>
+          </div>
+          <span class="status-chip status-planned">Planned</span>
+        </div>
+        <div class="specs-row">
+          <span class="spec-chip">Display <span class="spec-val">7.5" e-ink 3-color</span></span>
+          <span class="spec-chip">Resolution <span class="spec-val">800x480</span></span>
+          <span class="spec-chip">SoC <span class="spec-val">ESP32-S3</span></span>
+          <span class="spec-chip">Power <span class="spec-val">Battery + USB-C</span></span>
+          <span class="spec-chip">Mount <span class="spec-val">Wall / Desk frame</span></span>
+          <span class="spec-chip price-chip">Est. Price <span class="spec-val">69–89 EUR</span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Badge -->
+    <div class="device-card">
+      <div class="device-frame-wrap" style="padding:2.5rem">
+        <div class="device-enclosure badge">
+          <div class="device-screen eink-screen">
+            <div class="badge-screen">
+              <div class="badge-left">
+                <div class="badge-brand">trefolio</div>
+                <div class="badge-val">€24.831</div>
+                <div class="badge-change">+1,28% today</div>
+              </div>
+              <div class="badge-right">
+                <div><span>Holdings</span><br><span class="badge-stat-val">12</span></div>
+                <div><span>Div Yield</span><br><span class="badge-stat-val">2,3%</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="device-info">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <h3>trefolio Badge</h3>
+            <div class="device-tagline">Compact e-ink tag — conference badge, clip-on, or gift</div>
+          </div>
+          <span class="status-chip status-concept">Concept</span>
+        </div>
+        <div class="specs-row">
+          <span class="spec-chip">Display <span class="spec-val">2.9" e-ink B&W</span></span>
+          <span class="spec-chip">Resolution <span class="spec-val">296x128</span></span>
+          <span class="spec-chip">SoC <span class="spec-val">ESP32-C3</span></span>
+          <span class="spec-chip">Power <span class="spec-val">Battery (months)</span></span>
+          <span class="spec-chip">Form <span class="spec-val">Lanyard / Clip</span></span>
+          <span class="spec-chip price-chip">Est. Price <span class="spec-val">29–39 EUR</span></span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════ TAB 3: PRICING ════════════ -->
+<div class="tab-panel" id="tab-pricing">
+
+  <div class="pricing-wrap">
+    <div class="pricing-table-wrap">
+      <h3>BOM & Margin by Volume</h3>
+      <table class="p-table">
+        <thead>
+          <tr>
+            <th>Device</th>
+            <th>BOM 50u</th>
+            <th>BOM 200u</th>
+            <th>BOM 1Ku</th>
+            <th>Retail</th>
+            <th>Margin (200u)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="device-name">Leaf (AMOLED)</td>
+            <td>$88</td>
+            <td>$70</td>
+            <td>$45*</td>
+            <td>79–99 EUR</td>
+            <td class="margin-ok">~18–38%</td>
+          </tr>
+          <tr>
+            <td class="device-name">Slate (e-ink 4.2")</td>
+            <td>~$45</td>
+            <td>~$35</td>
+            <td>~$22</td>
+            <td>49–69 EUR</td>
+            <td class="margin-good">~45–55%</td>
+          </tr>
+          <tr>
+            <td class="device-name">Tile (e-ink 7.5")</td>
+            <td>~$55</td>
+            <td>~$42</td>
+            <td>~$28</td>
+            <td>69–89 EUR</td>
+            <td class="margin-good">~48–58%</td>
+          </tr>
+          <tr>
+            <td class="device-name">Badge (e-ink 2.9")</td>
+            <td>~$20</td>
+            <td>~$15</td>
+            <td>~$10</td>
+            <td>29–39 EUR</td>
+            <td class="margin-good">~55–65%</td>
+          </tr>
+        </tbody>
+      </table>
+      <p style="font-size:0.72rem;color:var(--text-muted);margin-top:0.75rem">
+        *Leaf at 1000u assumes custom PCB transition ($5-15K NRE). BOM includes board, enclosure, packaging, cable, assembly, and amortized shipping. EUR retail assumes ~0.92 USD/EUR.
+      </p>
+    </div>
+    <div class="chart-panel">
+      <h3>BOM vs Retail Price</h3>
+      <canvas id="pricingChart" style="height:340px"></canvas>
+    </div>
+  </div>
+
+  <!-- Bundle pricing -->
+  <div class="bundle-section">
+    <h3>Recommended Bundle Pricing</h3>
+    <div class="bundles-grid">
+      <div class="bundle-card">
+        <h4>Leaf Only</h4>
+        <div class="bundle-price">99 EUR</div>
+        <div class="bundle-detail">Device only<br>Pro subscription required separately<br>(7.99 EUR/mo or 59.99 EUR/yr)</div>
+      </div>
+      <div class="bundle-card featured">
+        <div class="bundle-tag">Best Value</div>
+        <h4>Leaf + 1 Year Pro</h4>
+        <div class="bundle-price">139 EUR</div>
+        <div class="bundle-detail">Save 19.99 EUR vs buying separately<br>Device (79 EUR) + Annual Pro (59.99 EUR)<br>Effective device discount: 20%</div>
+      </div>
+      <div class="bundle-card">
+        <h4>Badge Gift</h4>
+        <div class="bundle-price">39 EUR</div>
+        <div class="bundle-detail">Badge device + 3-month Pro gift code<br>Perfect for conferences and gifts<br>Low barrier to ecosystem entry</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ TAB 4: ROADMAP ════════════ -->
+<div class="tab-panel" id="tab-roadmap">
+
+  <div class="roadmap-track">
+    <div class="roadmap-line"></div>
+    <div class="roadmap-items">
+      <div class="roadmap-item">
+        <div class="roadmap-quarter">Q2 2026</div>
+        <div class="roadmap-dot active"></div>
+        <div class="roadmap-title">Leaf Launch</div>
+        <div class="roadmap-desc">25-50 units<br>3D printed enclosure</div>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-quarter">Q3 2026</div>
+        <div class="roadmap-dot"></div>
+        <div class="roadmap-title">Leaf v2</div>
+        <div class="roadmap-desc">Injection mold<br>Magnetic stand</div>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-quarter">Q4 2026</div>
+        <div class="roadmap-dot concept"></div>
+        <div class="roadmap-title">Slate Prototype</div>
+        <div class="roadmap-desc">E-ink 4.2" B&W<br>Battery-powered</div>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-quarter">Q1 2027</div>
+        <div class="roadmap-dot concept active"></div>
+        <div class="roadmap-title">Slate Launch</div>
+        <div class="roadmap-desc">50-200 units<br>Desk + wall mount</div>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-quarter">Q2 2027</div>
+        <div class="roadmap-dot planned"></div>
+        <div class="roadmap-title">Badge + PCB Eval</div>
+        <div class="roadmap-desc">Badge prototype<br>Custom Leaf PCB study</div>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-quarter">Q3 2027</div>
+        <div class="roadmap-dot planned"></div>
+        <div class="roadmap-title">Tile Prototype</div>
+        <div class="roadmap-desc">7.5" e-ink 3-color<br>Wall display</div>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-quarter">Q4 2027</div>
+        <div class="roadmap-dot planned"></div>
+        <div class="roadmap-title">Full Line</div>
+        <div class="roadmap-desc">4 devices<br>Product catalog</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="roadmap-details">
+
+    <div class="roadmap-detail-card">
+      <h3>Q2 2026 — Leaf Launch</h3>
+      <div class="rd-quarter q-green">NOW — READY TO SHIP</div>
+      <ul>
+        <li>First batch: 25 units via Makerfabs or LILYGO OEM</li>
+        <li>SLA/MJF 3D printed enclosures (production-grade finish)</li>
+        <li>BrillPack premium packaging (sample approved)</li>
+        <li>Firmware v1.0.0 — 7 screens, 4 themes, OTA ready</li>
+        <li>Sell via trefolio.app product page, direct shipping</li>
+        <li>Launch alongside "Leaf + Pro Annual" bundle at 139 EUR</li>
+      </ul>
+    </div>
+
+    <div class="roadmap-detail-card">
+      <h3>Q3 2026 — Leaf v2 Refinement</h3>
+      <div class="rd-quarter q-green">ITERATION</div>
+      <ul>
+        <li>Incorporate v1 customer feedback on enclosure and UX</li>
+        <li>Injection mold tooling (2-5K EUR) for 200+ unit batches</li>
+        <li>Redesigned magnetic desk stand (12° viewing angle)</li>
+        <li>Front-facing status LED (breathing emerald = connected)</li>
+        <li>Target BOM reduction: $88 to $70 at 200-unit volume</li>
+        <li>Firmware v1.x — add notification display, widget templates</li>
+      </ul>
+    </div>
+
+    <div class="roadmap-detail-card">
+      <h3>Q4 2026 — Slate Prototype</h3>
+      <div class="rd-quarter q-violet">NEW DEVICE</div>
+      <ul>
+        <li>4.2" e-ink B&W display (Waveshare or LILYGO T5)</li>
+        <li>ESP32-S3 with deep sleep — target 4-6 weeks battery life</li>
+        <li>Refresh every 15-60 min (configurable via web app)</li>
+        <li>Static card layout: portfolio value, top 5 movers, day change</li>
+        <li>Desk frame + wall mount bracket (magnetic or adhesive)</li>
+        <li>Firmware shares API client code with Leaf (shared library)</li>
+      </ul>
+    </div>
+
+    <div class="roadmap-detail-card">
+      <h3>Q1 2027 — Slate Launch</h3>
+      <div class="rd-quarter q-violet">SECOND PRODUCT</div>
+      <ul>
+        <li>50-200 unit batch, MJF nylon or injection mold enclosure</li>
+        <li>Retail price: 49-69 EUR (best margin in the lineup)</li>
+        <li>Positioned as "set and forget" ambient portfolio display</li>
+        <li>Pro required — reinforces subscription value</li>
+        <li>Launch "Slate + Pro Annual" bundle at 99 EUR</li>
+      </ul>
+    </div>
+
+    <div class="roadmap-detail-card">
+      <h3>Q2 2027 — Badge + Custom PCB</h3>
+      <div class="rd-quarter q-amber">EXPLORATION</div>
+      <ul>
+        <li>Badge prototype: 2.9" e-ink, ESP32-C3, months of battery</li>
+        <li>Target price: 29-39 EUR — impulse buy, conference swag, gifts</li>
+        <li>Only device that works with Free tier (single value display)</li>
+        <li>Parallel track: evaluate custom PCB for Leaf (ESP32-S3 WROOM + AMOLED)</li>
+        <li>Custom PCB break-even at ~300 units, saves $20+/unit at 1000+</li>
+      </ul>
+    </div>
+
+    <div class="roadmap-detail-card">
+      <h3>Q3-Q4 2027 — Tile + Full Line</h3>
+      <div class="rd-quarter q-amber">VISION</div>
+      <ul>
+        <li>Tile: 7.5" e-ink 3-color (black/white/red) wall display</li>
+        <li>Full dashboard snapshot with red for losses — data-rich at a glance</li>
+        <li>Premium desk frame or wall mount — "digital art + portfolio"</li>
+        <li>Retail: 69-89 EUR</li>
+        <li>Q4: Full product catalog on trefolio.app — 4 devices, 3 price points</li>
+        <li>Total addressable: every Pro subscriber is a potential device buyer</li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // Tab switching
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  // Pricing Chart
+  const pCtx = document.getElementById('pricingChart').getContext('2d');
+  new Chart(pCtx, {
+    type: 'bar',
+    data: {
+      labels: ['Leaf\n(AMOLED)', 'Slate\n(e-ink 4.2")', 'Tile\n(e-ink 7.5")', 'Badge\n(e-ink 2.9")'],
+      datasets: [
+        {
+          label: 'BOM @ 50 units ($)',
+          data: [88, 45, 55, 20],
+          backgroundColor: 'rgba(244,63,94,0.7)',
+          borderColor: '#f43f5e',
+          borderWidth: 1,
+          borderRadius: 4,
+        },
+        {
+          label: 'BOM @ 200 units ($)',
+          data: [70, 35, 42, 15],
+          backgroundColor: 'rgba(245,158,11,0.7)',
+          borderColor: '#f59e0b',
+          borderWidth: 1,
+          borderRadius: 4,
+        },
+        {
+          label: 'BOM @ 1000 units ($)',
+          data: [45, 22, 28, 10],
+          backgroundColor: 'rgba(56,189,248,0.7)',
+          borderColor: '#38bdf8',
+          borderWidth: 1,
+          borderRadius: 4,
+        },
+        {
+          label: 'Retail Price (EUR mid)',
+          data: [89, 59, 79, 34],
+          backgroundColor: 'rgba(16,185,129,0.7)',
+          borderColor: '#10b981',
+          borderWidth: 1,
+          borderRadius: 4,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            color: '#94a3b8',
+            font: { family: 'Source Sans 3', size: 11, weight: '600' },
+            usePointStyle: true,
+            pointStyle: 'rect',
+            padding: 16,
+          },
+        },
+        tooltip: {
+          backgroundColor: '#1a2332',
+          titleColor: '#e2e8f0',
+          bodyColor: '#94a3b8',
+          borderColor: '#1e2d3d',
+          borderWidth: 1,
+          padding: 10,
+          titleFont: { family: 'Source Sans 3', size: 12, weight: '700' },
+          bodyFont: { family: 'Source Sans 3', size: 11 },
+        },
+      },
+      scales: {
+        x: {
+          ticks: { color: '#64748b', font: { family: 'Source Sans 3', size: 11 } },
+          grid: { display: false },
+        },
+        y: {
+          ticks: {
+            color: '#64748b',
+            font: { family: 'Source Sans 3', size: 11 },
+            callback: v => '$' + v,
+          },
+          grid: { color: 'rgba(30,45,61,0.5)' },
+          title: {
+            display: true,
+            text: 'USD / EUR',
+            color: '#64748b',
+            font: { family: 'Source Sans 3', size: 11, weight: '600' },
+          },
+        },
+      },
+    },
+  });
+</script>
+
+</body>
+</html>
