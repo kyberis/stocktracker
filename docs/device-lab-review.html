@@ -265,36 +265,206 @@ body {
 .device-frame-wrap {
   display: flex;
   justify-content: center;
-  align-items: center;
-  padding: 2rem;
-  background: radial-gradient(ellipse at center, rgba(16,185,129,0.03), transparent);
+  align-items: flex-end;
+  padding: 3rem 2rem 2rem;
+  background: radial-gradient(ellipse 70% 60% at 50% 70%, rgba(16,185,129,0.04), transparent);
+  min-height: 360px;
+  perspective: 800px;
 }
-.device-enclosure {
-  background: #1a1a1a;
-  border-radius: 16px;
-  padding: 8px;
+.device-frame-wrap.flagship-wrap {
+  min-height: 380px;
+}
+
+/* Leaf: premium desk device with angled stand */
+.device-enclosure-leaf {
+  position: relative;
+  transform: rotateX(6deg);
+  transform-origin: bottom center;
+}
+.device-enclosure-leaf .device-body {
+  background: linear-gradient(145deg, #2a2a2a 0%, #1a1a1a 50%, #111 100%);
+  border-radius: 14px;
+  padding: 10px;
+  position: relative;
   box-shadow:
-    0 20px 60px rgba(0,0,0,0.5),
-    0 0 0 1px rgba(255,255,255,0.05),
-    inset 0 1px 0 rgba(255,255,255,0.05);
+    0 30px 60px -10px rgba(0,0,0,0.7),
+    0 0 0 1px rgba(255,255,255,0.06),
+    inset 0 1px 0 rgba(255,255,255,0.08),
+    inset 0 -1px 0 rgba(0,0,0,0.3);
+}
+.device-enclosure-leaf .device-body::after {
+  content: 'trefolio';
+  position: absolute;
+  bottom: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Source Sans 3', sans-serif;
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: rgba(255,255,255,0.12);
+}
+.device-enclosure-leaf .stand {
+  width: 80px;
+  height: 14px;
+  background: linear-gradient(180deg, #222 0%, #1a1a1a 100%);
+  border-radius: 0 0 8px 8px;
+  margin: 0 auto;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
   position: relative;
 }
-.device-enclosure.eink {
-  background: #2a2a2a;
-  border-radius: 12px;
-  padding: 10px;
+.device-enclosure-leaf .stand::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 3px;
+  background: rgba(16,185,129,0.3);
+  border-radius: 0 0 2px 2px;
 }
-.device-enclosure.badge {
-  border-radius: 24px;
-  padding: 12px 16px;
+.device-enclosure-leaf .usb-port {
+  width: 14px;
+  height: 5px;
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 2px;
+  margin: 4px auto 0;
 }
-.device-screen {
+
+/* Slate: thin e-ink desk frame with wooden accent */
+.device-enclosure-slate {
+  position: relative;
+  transform: rotateX(4deg) rotateY(-2deg);
+  transform-origin: bottom center;
+}
+.device-enclosure-slate .device-body {
+  background: linear-gradient(160deg, #333 0%, #222 50%, #1a1a1a 100%);
+  border-radius: 10px;
+  padding: 14px;
+  position: relative;
+  box-shadow:
+    0 25px 50px -8px rgba(0,0,0,0.6),
+    0 0 0 1px rgba(255,255,255,0.04),
+    inset 0 1px 0 rgba(255,255,255,0.06);
+}
+.device-enclosure-slate .device-body::before {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 10%;
+  right: 10%;
+  height: 4px;
+  background: linear-gradient(90deg, #5c4a32, #8b7355, #5c4a32);
+  border-radius: 0 0 4px 4px;
+}
+.device-enclosure-slate .device-body::after {
+  content: 'trefolio';
+  position: absolute;
+  bottom: 4px;
+  right: 14px;
+  font-family: 'Source Sans 3', sans-serif;
+  font-size: 7px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.1);
+}
+.device-enclosure-slate .kickstand {
+  width: 40px;
+  height: 20px;
+  margin: 0 auto;
+  border-left: 2px solid #333;
+  border-right: 2px solid #333;
+  border-bottom: 2px solid #333;
+  border-radius: 0 0 4px 4px;
+  opacity: 0.4;
+}
+
+/* Tile: large wall-mount frame */
+.device-enclosure-tile {
+  position: relative;
+}
+.device-enclosure-tile .device-body {
+  background: linear-gradient(145deg, #2d2d2d 0%, #1e1e1e 50%, #151515 100%);
   border-radius: 8px;
+  padding: 16px;
+  position: relative;
+  box-shadow:
+    0 20px 50px -5px rgba(0,0,0,0.6),
+    0 0 0 1px rgba(255,255,255,0.04),
+    inset 0 1px 0 rgba(255,255,255,0.05);
+}
+.device-enclosure-tile .device-body::after {
+  content: 'trefolio';
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Source Sans 3', sans-serif;
+  font-size: 7px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: rgba(255,255,255,0.08);
+}
+.device-enclosure-tile .wall-hook {
+  width: 16px;
+  height: 8px;
+  background: #333;
+  border-radius: 3px 3px 0 0;
+  margin: 0 auto 2px;
+}
+
+/* Badge: rounded pill with lanyard hole */
+.device-enclosure-badge {
+  position: relative;
+}
+.device-enclosure-badge .device-body {
+  background: linear-gradient(160deg, #2a2a2a 0%, #1a1a1a 60%, #111 100%);
+  border-radius: 22px;
+  padding: 10px 14px;
+  position: relative;
+  box-shadow:
+    0 15px 35px -5px rgba(0,0,0,0.5),
+    0 0 0 1px rgba(255,255,255,0.05),
+    inset 0 1px 0 rgba(255,255,255,0.07);
+}
+.device-enclosure-badge .lanyard-hole {
+  width: 10px;
+  height: 10px;
+  border: 2px solid #444;
+  border-radius: 50%;
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.device-enclosure-badge .lanyard-loop {
+  width: 2px;
+  height: 12px;
+  background: linear-gradient(180deg, #666, #444);
+  margin: 0 auto;
+  border-radius: 1px;
+}
+.device-enclosure-badge .device-body::after {
+  content: 'trefolio';
+  position: absolute;
+  bottom: 3px;
+  left: 14px;
+  font-family: 'Source Sans 3', sans-serif;
+  font-size: 6px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.1);
+}
+
+.device-screen {
+  border-radius: 6px;
   overflow: hidden;
   position: relative;
 }
 .device-screen.eink-screen {
-  border-radius: 4px;
+  border-radius: 3px;
 }
 
 /* Leaf screen */
@@ -973,10 +1143,11 @@ body {
 
     <!-- Leaf (flagship, full-width) -->
     <div class="device-card flagship">
-      <div class="device-frame-wrap">
-        <div class="device-enclosure">
-          <div class="device-screen">
-            <div class="leaf-screen">
+      <div class="device-frame-wrap flagship-wrap">
+        <div class="device-enclosure-leaf">
+          <div class="device-body">
+            <div class="device-screen">
+              <div class="leaf-screen">
               <div class="leaf-header">
                 <span class="leaf-brand">trefolio</span>
                 <span class="leaf-live"><span class="leaf-live-dot"></span> LIVE</span>
@@ -1006,6 +1177,9 @@ body {
               </div>
             </div>
           </div>
+          </div>
+          <div class="stand"></div>
+          <div class="usb-port"></div>
         </div>
       </div>
       <div class="device-info">
@@ -1031,9 +1205,10 @@ body {
     <!-- Slate -->
     <div class="device-card">
       <div class="device-frame-wrap">
-        <div class="device-enclosure eink">
-          <div class="device-screen eink-screen">
-            <div class="slate-screen">
+        <div class="device-enclosure-slate">
+          <div class="device-body">
+            <div class="device-screen eink-screen">
+              <div class="slate-screen">
               <div class="slate-header">
                 <span class="slate-brand">trefolio</span>
                 <span class="slate-time">Updated 14:32</span>
@@ -1053,6 +1228,8 @@ body {
               </div>
             </div>
           </div>
+          </div>
+          <div class="kickstand"></div>
         </div>
       </div>
       <div class="device-info">
@@ -1077,9 +1254,11 @@ body {
     <!-- Tile -->
     <div class="device-card">
       <div class="device-frame-wrap">
-        <div class="device-enclosure eink">
-          <div class="device-screen eink-screen">
-            <div class="tile-screen">
+        <div class="device-enclosure-tile">
+          <div class="wall-hook"></div>
+          <div class="device-body">
+            <div class="device-screen eink-screen">
+              <div class="tile-screen">
               <div class="tile-left">
                 <div class="tile-brand">trefolio</div>
                 <div class="tile-value">€24.831,47</div>
@@ -1105,6 +1284,7 @@ body {
               </div>
             </div>
           </div>
+          </div>
         </div>
       </div>
       <div class="device-info">
@@ -1128,10 +1308,13 @@ body {
 
     <!-- Badge -->
     <div class="device-card">
-      <div class="device-frame-wrap" style="padding:2.5rem">
-        <div class="device-enclosure badge">
-          <div class="device-screen eink-screen">
-            <div class="badge-screen">
+      <div class="device-frame-wrap" style="padding:2.5rem 2rem 2rem">
+        <div class="device-enclosure-badge">
+          <div class="lanyard-loop"></div>
+          <div class="lanyard-hole"></div>
+          <div class="device-body">
+            <div class="device-screen eink-screen">
+              <div class="badge-screen">
               <div class="badge-left">
                 <div class="badge-brand">trefolio</div>
                 <div class="badge-val">€24.831</div>
@@ -1142,6 +1325,7 @@ body {
                 <div><span>Div Yield</span><br><span class="badge-stat-val">2,3%</span></div>
               </div>
             </div>
+          </div>
           </div>
         </div>
       </div>
