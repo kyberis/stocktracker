@@ -1,0 +1,49 @@
+---
+description: Keep the interactive demo page in sync with dashboard UI changes
+globs: src/components/Dashboard.tsx,src/lib/portfolio-context.tsx,src/app/(app)/dashboard-shell.tsx,src/app/demo/**
+alwaysApply: true
+---
+
+# Demo Page Maintenance
+
+The interactive demo at `/demo` renders the real `Dashboard` component with static data and no API calls. It must stay in sync with the production dashboard.
+
+## When to Update
+
+Update the demo when any change:
+
+- Adds, removes, or renames props on `DashboardShell` or `PortfolioProvider`
+- Adds new data requirements to the Dashboard (new context fields, new API data the dashboard expects)
+- Changes the `Holding`, `CashEntry`, `QuoteData`, or `ExchangeRates` types in `src/lib/types.ts`
+- Adds a new provider wrapper in `src/app/(app)/layout.tsx` that the dashboard depends on (must be mirrored in `src/app/demo/demo-shell.tsx`)
+- Changes the seed data format in `data/seed-holdings.json` or `data/seed-cash.json`
+
+## Key Files
+
+- `src/app/demo/page.tsx` — server component that loads static JSON and renders DemoShell
+- `src/app/demo/demo-shell.tsx` — client component with all providers, demo banner, and `demoMode` flag
+- `src/app/demo/layout.tsx` — SEO metadata
+- `src/lib/portfolio-context.tsx` — `demoMode` prop skips all API fetches and makes mutations no-ops
+- `src/app/(app)/dashboard-shell.tsx` — passes `demoMode`, `initialQuotes`, `initialExchangeRates` through
+- `data/demo-quotes.json` — static quotes for all seed tickers (22 entries)
+- `data/demo-exchange-rates.json` — static FX rates
+
+## How demoMode Works
+
+When `demoMode={true}` on `PortfolioProvider`:
+
+- All API fetches are skipped (holdings, cash, quotes, exchange rates, portfolios, alerts)
+- State is initialized from `initialHoldings`, `initialCash`, `initialQuotes`, `initialExchangeRates`
+- All mutation callbacks (`addHolding`, `removeHolding`, etc.) are no-ops
+- Auto-refresh intervals and name enrichment effects are disabled
+- `localStorage` reads/writes are skipped
+
+## What to Check
+
+When modifying the dashboard or its data layer:
+
+1. **New provider added to `(app)/layout.tsx`?** — Add it to `demo-shell.tsx` too
+2. **New context field consumed by Dashboard?** — Ensure it has a sensible default in demo mode
+3. **New data type on holdings/quotes?** — Update `data/demo-quotes.json` or `data/seed-holdings.json` to include the new fields
+4. **New effect in PortfolioProvider?** — Gate it with `if (demoMode) return;` if it makes API calls or writes to localStorage
+5. **Verify the demo still renders** — visit `/demo` after UI changes to confirm no blank screens or errors
