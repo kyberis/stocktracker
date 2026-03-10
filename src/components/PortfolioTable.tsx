@@ -77,7 +77,7 @@ export default function PortfolioTable({ holdings: holdingsProp }: Props) {
   }, [holdings, quotes, sortField, sortDir, filter]);
 
   const stocks = useMemo(
-    () => sortedHoldings.filter((h) => (h.assetType ?? "stock") !== "etf"),
+    () => sortedHoldings.filter((h) => (h.assetType ?? "stock") !== "etf" && h.assetType !== "crypto"),
     [sortedHoldings]
   );
   const etfs = useMemo(

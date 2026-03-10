@@ -14,9 +14,22 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "1.11.0";
+export const CURRENT_VERSION = "1.12.0";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "1.12.0",
+    date: "2026-03-10",
+    title: "Crypto Portfolio",
+    titleTranslations: { es: "Cartera Cripto" },
+    changes: [
+      {
+        type: "feature",
+        text: "Crypto portfolio tracking — add Bitcoin, Ethereum, and other cryptocurrencies to your portfolio with a dedicated Crypto dashboard tab (Pro)",
+        translations: { es: "Seguimiento de cartera cripto — añade Bitcoin, Ethereum y otras criptomonedas a tu cartera con una pestaña dedicada de Cripto en el dashboard (Pro)" },
+      },
+    ],
+  },
   {
     version: "1.11.0",
     date: "2026-03-10",

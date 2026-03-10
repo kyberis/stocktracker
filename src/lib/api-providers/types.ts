@@ -178,9 +178,13 @@ export interface EconIndicatorResult {
   data: EconDataPoint[];
 }
 
+export interface SearchOptions {
+  includeCrypto?: boolean;
+}
+
 export interface StockDataProvider {
   getQuote(symbol: string): Promise<ProviderQuoteResult>;
-  search(query: string): Promise<ProviderSearchResult[]>;
+  search(query: string, options?: SearchOptions): Promise<ProviderSearchResult[]>;
   getHistorical(symbol: string, period: TimePeriod): Promise<ProviderHistoricalPoint[]>;
   getExchangeRate(from: string, to: string): Promise<number>;
   getOverview?(symbol: string): Promise<CompanyOverview | null>;

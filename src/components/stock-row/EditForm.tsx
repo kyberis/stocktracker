@@ -12,8 +12,8 @@ interface EditFormProps {
   setEditIsin: (v: string) => void;
   editExchange: string;
   setEditExchange: (v: string) => void;
-  editAssetType: "stock" | "etf";
-  setEditAssetType: (v: "stock" | "etf") => void;
+  editAssetType: "stock" | "etf" | "crypto";
+  setEditAssetType: (v: "stock" | "etf" | "crypto") => void;
   editShares: string;
   setEditShares: (v: string) => void;
   editPurchasePrice: string;
@@ -52,9 +52,10 @@ export default function EditForm(props: EditFormProps) {
       </div>
       <div>
         <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">{t("assetType")}</label>
-        <select value={editAssetType} onChange={(e) => setEditAssetType(e.target.value as "stock" | "etf")} className="w-full" onClick={(e) => e.stopPropagation()}>
+        <select value={editAssetType} onChange={(e) => setEditAssetType(e.target.value as "stock" | "etf" | "crypto")} className="w-full" onClick={(e) => e.stopPropagation()}>
           <option value="stock">{t("stockType")}</option>
           <option value="etf">{t("etfType")}</option>
+          <option value="crypto">{t("cryptoType")}</option>
         </select>
       </div>
       {!isCashHolding && (

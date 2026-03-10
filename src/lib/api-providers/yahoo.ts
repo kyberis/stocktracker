@@ -4,6 +4,7 @@ import type {
   ProviderQuoteResult,
   ProviderSearchResult,
   ProviderHistoricalPoint,
+  SearchOptions,
   TimePeriod,
   CompanyOverview,
   FundamentalData,
@@ -45,18 +46,20 @@ export class YahooProvider implements StockDataProvider {
     }
   }
 
-  async search(query: string): Promise<ProviderSearchResult[]> {
+  async search(query: string, options?: SearchOptions): Promise<ProviderSearchResult[]> {
     const end = providerRequestDuration.startTimer({ provider: "yahoo", operation: "search" });
     let ok = false;
     try {
       const result = await yahooFinance.search(query, { quotesCount: 8 });
       ok = true;
+      const allowedTypes = new Set(["EQUITY", "ETF"]);
+      if (options?.includeCrypto) allowedTypes.add("CRYPTOCURRENCY");
       return (result.quotes || [])
         .filter(
           (q): q is typeof q & { symbol: string; quoteType: string } =>
             "symbol" in q &&
             "quoteType" in q &&
-            (q.quoteType === "EQUITY" || q.quoteType === "ETF")
+            allowedTypes.has(String(q.quoteType))
         )
         .map((q) => ({
           symbol: q.symbol,
@@ -149,6 +152,7 @@ export class YahooProvider implements StockDataProvider {
       let assetClass = "Equity";
       if (quoteType === "ETF") assetClass = "ETF";
       else if (quoteType === "MUTUALFUND") assetClass = "Fund";
+      else if (quoteType === "CRYPTOCURRENCY") assetClass = "Cryptocurrency";
 
       return {
         sector: profile?.sector ?? "",

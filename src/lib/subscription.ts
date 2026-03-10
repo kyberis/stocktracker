@@ -35,6 +35,7 @@ const PRO_FEATURES = new Set<SubscriptionFeature>([
   "metrics",
   "portfolio-history-full",
   "crypto-pro",
+  "crypto-portfolio",
 ]);
 
 export interface EntitlementInput {

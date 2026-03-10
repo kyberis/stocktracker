@@ -170,15 +170,17 @@ export class AlphaVantageProvider implements StockDataProvider {
     return "USD";
   }
 
-  async search(query: string): Promise<ProviderSearchResult[]> {
+  async search(query: string, options?: import("./types").SearchOptions): Promise<ProviderSearchResult[]> {
     const data = await this.avFetch({
       function: "SYMBOL_SEARCH",
       keywords: query,
     });
 
+    const allowedTypes = new Set(["Equity", "ETF"]);
+    if (options?.includeCrypto) allowedTypes.add("Cryptocurrency");
     const matches = (data["bestMatches"] || []) as Array<Record<string, string>>;
     return matches
-      .filter((m) => m["3. type"] === "Equity" || m["3. type"] === "ETF")
+      .filter((m) => allowedTypes.has(m["3. type"]))
       .slice(0, 8)
       .map((m) => ({
         symbol: m["1. symbol"],

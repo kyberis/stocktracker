@@ -135,7 +135,9 @@ export function num(val: unknown): number {
 }
 
 export function holdingAssetType(val: unknown): HoldingAssetType {
-  return val === "etf" ? "etf" : "stock";
+  if (val === "etf") return "etf";
+  if (val === "crypto") return "crypto";
+  return "stock";
 }
 
 export function txType(val: unknown): TransactionType {

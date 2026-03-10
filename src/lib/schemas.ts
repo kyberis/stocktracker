@@ -42,7 +42,7 @@ export const createHoldingSchema = z.object({
   displayCurrency: z.string().optional().default("EUR"),
   exchange: z.string().optional().default(""),
   isin: z.string().optional().default(""),
-  assetType: z.enum(["stock", "etf"]).optional().default("stock"),
+  assetType: z.enum(["stock", "etf", "crypto"]).optional().default("stock"),
   accountId: z.string().optional().default(""),
 });
 
@@ -52,7 +52,7 @@ export const updateHoldingSchema = z.object({
     ticker: z.string().optional(),
     name: z.string().optional(),
     isin: z.string().optional(),
-    assetType: z.enum(["stock", "etf"]).optional(),
+    assetType: z.enum(["stock", "etf", "crypto"]).optional(),
     shares: z.number().optional(),
     purchasePrice: z.number().optional(),
     displayCurrency: z.string().optional(),
@@ -74,7 +74,7 @@ export const createTransactionSchema = z.object({
   name: z.string().optional().default(""),
   exchange: z.string().optional().default(""),
   isin: z.string().optional().default(""),
-  assetType: z.enum(["stock", "etf"]).optional().default("stock"),
+  assetType: z.enum(["stock", "etf", "crypto"]).optional().default("stock"),
   accountId: z.string().optional().default(""),
   shares: z.number().optional().default(0),
   pricePerShare: z.number().optional().default(0),

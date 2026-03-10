@@ -32,9 +32,10 @@ const WhatsNewModal = dynamic(() => import("./WhatsNewModal"), { ssr: false });
 const FeedbackModal = dynamic(() => import("./FeedbackModal"), { ssr: false });
 const ProCompareCard = dynamic(() => import("./ProCompareCard"), { ssr: false });
 const LeafPromoBanner = dynamic(() => import("./LeafPromoBanner"), { ssr: false });
+const CryptoPortfolioTab = dynamic(() => import("./CryptoPortfolioTab"), { ssr: false });
 
 
-type DashboardTab = "portfolio" | "diversification" | "dividends" | "metrics" | "growth" | "news";
+type DashboardTab = "portfolio" | "crypto" | "diversification" | "dividends" | "metrics" | "growth" | "news";
 
 function EmptyPortfolio({ onAddStock, onSeedData }: { onAddStock: () => void; onSeedData: () => void }) {
   const { t } = useI18n();
@@ -169,8 +170,12 @@ export default function Dashboard() {
   const showHoldingsBanner = holdingsLimit !== Infinity && holdingsCount >= holdingsLimit - 2 && holdingsCount > 0;
   const holdingsAtLimit = holdingsLimit !== Infinity && holdingsCount >= holdingsLimit;
 
-  const dashboardTabs: { key: DashboardTab; label: string }[] = [
+  const hasCryptoHoldings = filteredHoldings.some((h) => h.assetType === "crypto");
+  const dashboardTabs: { key: DashboardTab; label: string; badge?: string }[] = [
     { key: "portfolio", label: t("portfolioTab") },
+    ...(isPro || hasCryptoHoldings
+      ? [{ key: "crypto" as const, label: t("cryptoTab"), badge: isPro ? undefined : "Pro" }]
+      : []),
     { key: "diversification", label: t("diversificationTab") },
     { key: "dividends", label: t("dividendsTab") },
     { key: "metrics", label: t("metricsTab") },
@@ -180,6 +185,7 @@ export default function Dashboard() {
 
   function handleTabChange(tab: DashboardTab) {
     setActiveTab(tab);
+    if (tab === "crypto") track("crypto_tab_viewed");
     if (tab === "diversification") track("diversification_tab_viewed");
     if (tab === "dividends") track("dividends_tab_viewed");
     if (tab === "metrics") track("metrics_tab_viewed");
@@ -212,6 +218,11 @@ export default function Dashboard() {
               }`}
             >
               {tab.label}
+              {tab.badge && (
+                <span className="ml-1 text-[10px] font-semibold bg-amber-400/20 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded-full">
+                  {tab.badge}
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -279,6 +290,24 @@ export default function Dashboard() {
                 <PortfolioProjection holdings={filteredHoldings} cashEntries={filteredCashEntries} />
               </>
             )}
+          </div>
+        )}
+
+        {activeTab === "crypto" && (
+          <div
+            role="tabpanel"
+            id="tabpanel-crypto"
+            aria-labelledby="tab-crypto"
+            tabIndex={0}
+            className="focus-visible:outline-none"
+          >
+            <Suspense fallback={
+              <div className="card px-6 py-10 flex items-center justify-center gap-3 text-gray-400 dark:text-slate-500 text-sm">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-amber-500" />
+              </div>
+            }>
+              <CryptoPortfolioTab holdings={filteredHoldings} />
+            </Suspense>
           </div>
         )}
 

@@ -18,7 +18,8 @@ export type UpsellSurface =
   | "import_holdings_capped"
   | "metrics_locked"
   | "portfolio_history_locked"
-  | "crypto_pro_locked";
+  | "crypto_pro_locked"
+  | "crypto_portfolio";
 
 export interface UpsellConfig {
   subtitleKey: TranslationKey;
@@ -214,6 +215,22 @@ const UPSELL_BY_SURFACE: Record<UpsellSurface, UpsellConfig> = {
       "upsellProItemCryptoFull",
       "upsellProItemAlphaVantage",
       "upsellProItemAiUnlimited",
+    ],
+  },
+  crypto_portfolio: {
+    subtitleKey: "upsellCompareSubtitleLocked",
+    attemptedActionKey: "upsellAttemptCryptoPortfolio",
+    feature: "crypto-portfolio",
+    freeItems: [
+      "upsellFreeItemCryptoBasic",
+      "upsellFreeItemYahoo",
+      "upsellFreeItemAiLimited",
+    ],
+    starterItems: DEFAULT_STARTER_ITEMS,
+    proItems: [
+      "upsellProItemCryptoPortfolio",
+      "upsellProItemCryptoFull",
+      "upsellProItemAlphaVantage",
     ],
   },
 };

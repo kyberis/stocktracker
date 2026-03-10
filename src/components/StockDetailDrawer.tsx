@@ -62,7 +62,7 @@ export default function StockDetailDrawer({ holding, onClose }: StockDetailDrawe
   const [editPurchasePrice, setEditPurchasePrice] = useState(String(holding.purchasePrice));
   const [editDisplayCurrency, setEditDisplayCurrency] = useState(holding.displayCurrency);
   const [editExchange, setEditExchange] = useState(holding.exchange);
-  const [editAssetType, setEditAssetType] = useState<"stock" | "etf">(holding.assetType ?? "stock");
+  const [editAssetType, setEditAssetType] = useState<"stock" | "etf" | "crypto">(holding.assetType ?? "stock");
   const [tradeAction, setTradeAction] = useState<"buy" | "sell">("buy");
   const [tradeQuantity, setTradeQuantity] = useState("");
   const [tradePrice, setTradePrice] = useState("");

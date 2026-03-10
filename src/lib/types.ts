@@ -20,7 +20,8 @@ export type SubscriptionFeature =
   | "portfolio-sharing"
   | "csv-export"
   | "crypto"
-  | "crypto-pro";
+  | "crypto-pro"
+  | "crypto-portfolio";
 
 export type AlertCondition = "above" | "below";
 export type AlertType = "threshold" | "percent_change";
@@ -62,7 +63,7 @@ export interface DeviceNotification {
   read: boolean;
   createdAt: string;
 }
-export type HoldingAssetType = "stock" | "etf";
+export type HoldingAssetType = "stock" | "etf" | "crypto";
 
 export interface Holding {
   id: string;
