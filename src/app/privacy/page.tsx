@@ -5,7 +5,7 @@ import PublicFooter from "@/components/PublicFooter";
 export const metadata: Metadata = {
   title: "Privacy Policy — trefolio",
   description:
-    "trefolio is a GDPR-compliant portfolio tracker. Learn how we collect, process, and protect your personal data. No tracking cookies, no data selling.",
+    "trefolio is a GDPR-compliant portfolio tracker. Learn how we collect, process, and protect your personal data. Optional analytics with consent, no data selling.",
   alternates: { canonical: "https://trefolio.com/privacy" },
 };
 
@@ -407,10 +407,7 @@ export default function PrivacyPolicyPage() {
 
           <section id="cookies">
             <h2>9. Cookies</h2>
-            <p>
-              trefolio uses only <strong className="text-white">essential cookies</strong>{" "}
-              required for the service to function:
-            </p>
+            <h3>Essential Cookies (always active)</h3>
             <ul className="list-disc pl-6 space-y-2">
               <li>
                 <strong className="text-slate-200">Session cookie</strong> — an
@@ -425,10 +422,40 @@ export default function PrivacyPolicyPage() {
                 and contains no personal identifiers.
               </li>
             </ul>
+
+            <h3>Analytics Cookies (optional, consent required)</h3>
             <p>
-              We do not use advertising, tracking, or third-party cookies. Because
-              we only use strictly necessary cookies, no cookie consent banner is
-              required under EU ePrivacy regulations.
+              If you choose &quot;Accept All&quot; in the cookie banner, we use{" "}
+              <strong className="text-white">Google Analytics 4</strong> to understand
+              how visitors use trefolio. Google Analytics sets the following cookies:
+            </p>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>
+                <strong className="text-slate-200"><code className="text-xs text-slate-300 bg-slate-800 px-1 py-0.5 rounded">_ga</code></strong> — 
+                distinguishes unique visitors. Expires after 2 years.
+              </li>
+              <li>
+                <strong className="text-slate-200"><code className="text-xs text-slate-300 bg-slate-800 px-1 py-0.5 rounded">_ga_*</code></strong> — 
+                maintains session state. Expires after 2 years.
+              </li>
+            </ul>
+            <p>
+              These cookies are only set after you give explicit consent.
+              You can withdraw consent at any time by clearing your browser cookies
+              and revisiting the site. We use Google Analytics with IP anonymization
+              enabled and no advertising features. Data collected by Google Analytics
+              is processed by Google LLC under their{" "}
+              <a
+                href="https://privacy.google.com/businesses/processorterms/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-emerald-400 hover:text-emerald-300 underline underline-offset-2"
+              >
+                Data Processing Terms
+              </a>.
+            </p>
+            <p>
+              We do not use advertising or marketing cookies.
             </p>
           </section>
 
@@ -436,7 +463,7 @@ export default function PrivacyPolicyPage() {
             <h2>10. International Transfers</h2>
             <p>
               Your data may be processed outside the EEA by our third-party
-              service providers (Vercel, OpenAI, Stripe, Cloudflare, Finnhub, Interactive Brokers, SnapTrade, Resend, Twilio). Where
+              service providers (Vercel, OpenAI, Stripe, Cloudflare, Google, Finnhub, Interactive Brokers, SnapTrade, Resend, Twilio). Where
               this occurs, we ensure appropriate safeguards are in place,
               including Standard Contractual Clauses (SCCs) approved by the
               European Commission.

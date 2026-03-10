@@ -1826,12 +1826,7 @@ function DocsTab() {
               >
                 <div className="flex items-center justify-between">
                   <div className="min-w-0 flex items-center gap-2">
-                    <span className={`shrink-0 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded ${
-                      doc.type === "html" ? "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400" :
-                      doc.type === "md" ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" :
-                      doc.type === "csv" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" :
-                      "bg-gray-100 text-gray-600 dark:bg-slate-700 dark:text-slate-300"
-                    }`}>{doc.type}</span>
+                    <span className="shrink-0 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400">html</span>
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-gray-900 dark:text-white group-hover:text-indigo-500 dark:group-hover:text-indigo-400 transition-colors truncate">
                         {doc.name.split(/[-_]/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")}

@@ -4,6 +4,7 @@ import { GeistMono } from "geist/font/mono";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import CookieConsent from "@/components/CookieConsent";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
 import ServiceWorkerUpdater from "@/components/ServiceWorkerUpdater";
 import "./globals.css";
 
@@ -61,6 +62,7 @@ export default function RootLayout({
         </a>
         {children}
         <CookieConsent />
+        <GoogleAnalytics />
         <Analytics />
         <SpeedInsights />
         <ServiceWorkerUpdater />

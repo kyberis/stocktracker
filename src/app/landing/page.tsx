@@ -7,6 +7,7 @@ import PublicFooter from "@/components/PublicFooter";
 import type { SubscriptionPlan } from "@/lib/types";
 import { LandingI18nProvider, useI18n, type TranslationKey } from "@/lib/i18n";
 import { SUPPORTED_LANGUAGES } from "@/lib/languages";
+import { event as gtagEvent } from "@/lib/gtag";
 
 /* ─── anonymous analytics helper ─── */
 
@@ -16,6 +17,8 @@ function trackLanding(event: string, metadata?: Record<string, string>) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ event, metadata }),
   }).catch(() => {});
+
+  gtagEvent(event, metadata);
 }
 
 function useInViewOnce(callback: () => void) {

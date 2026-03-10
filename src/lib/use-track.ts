@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
+import { event as gtagEvent } from "@/lib/gtag";
 
 type TrackFn = (event: string, metadata?: Record<string, string>) => void;
 
@@ -11,5 +12,7 @@ export function useTrack(): TrackFn {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ event, metadata }),
     }).catch(() => {});
+
+    gtagEvent(event, metadata);
   }, []);
 }

@@ -43,6 +43,11 @@ export const releaseNotes: ReleaseEntry[] = [
         text: "Admin Docs viewer — browse and preview all HTML planning documents (device lab review, cost analysis, mockups) directly in the admin panel",
         translations: { es: "Visor de Docs en admin — navega y previsualiza todos los documentos HTML de planificación directamente en el panel de admin" },
       },
+      {
+        type: "improvement",
+        text: "Google Analytics 4 integration — consent-gated analytics forwarding for all tracked user actions, with GDPR-compliant Consent Mode v2",
+        translations: { es: "Integración de Google Analytics 4 — reenvío de analíticas con consentimiento para todas las acciones rastreadas, con Consent Mode v2 compatible con GDPR" },
+      },
     ],
   },
   {

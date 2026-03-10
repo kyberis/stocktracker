@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-
-const CONSENT_KEY = "trefolio_cookie_consent";
+import { CONSENT_KEY } from "@/lib/gtag";
 
 export default function CookieConsent() {
   const [visible, setVisible] = useState(false);
@@ -13,13 +12,11 @@ export default function CookieConsent() {
     if (!consent) setVisible(true);
   }, []);
 
-  function accept() {
-    localStorage.setItem(CONSENT_KEY, "accepted");
-    setVisible(false);
-  }
-
-  function reject() {
-    localStorage.setItem(CONSENT_KEY, "rejected");
+  function setConsent(level: "all" | "essential") {
+    localStorage.setItem(CONSENT_KEY, level);
+    window.dispatchEvent(
+      new CustomEvent("trefolio-consent", { detail: level }),
+    );
     setVisible(false);
   }
 
@@ -31,8 +28,10 @@ export default function CookieConsent() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <div className="flex-1 min-w-0">
             <p className="text-sm text-slate-200 leading-relaxed">
-              We use <strong className="text-white">essential cookies only</strong> to
-              keep you logged in. No tracking or advertising cookies.{" "}
+              We use <strong className="text-white">essential cookies</strong> to
+              keep you logged in and optional{" "}
+              <strong className="text-white">analytics cookies</strong> to
+              understand how you use trefolio.{" "}
               <Link
                 href="/privacy#cookies"
                 className="text-emerald-400 hover:text-emerald-300 underline underline-offset-2"
@@ -43,16 +42,16 @@ export default function CookieConsent() {
           </div>
           <div className="flex items-center gap-3 shrink-0">
             <button
-              onClick={reject}
+              onClick={() => setConsent("essential")}
               className="text-sm text-slate-400 hover:text-white px-3 py-2 rounded-lg transition-colors"
             >
-              Reject
+              Essential Only
             </button>
             <button
-              onClick={accept}
+              onClick={() => setConsent("all")}
               className="text-sm font-medium bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2 rounded-lg transition-colors shadow-sm"
             >
-              Accept
+              Accept All
             </button>
           </div>
         </div>
