@@ -20,6 +20,7 @@ const es: TranslationStrings = {
   gainLoss: "Gan./Pérd.",
   change: "Cambio",
   addStock: "Agregar Acción",
+  addAsset: "Agregar",
   removeStock: "Eliminar",
   search: "Buscar",
   searchPlaceholder: "Buscar por símbolo o nombre...",
