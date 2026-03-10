@@ -20,6 +20,7 @@ import { getMarketStatus } from "@/lib/market-hours";
 import { useTrack } from "@/lib/use-track";
 import { useAuth } from "@/lib/auth-context";
 import ProCompareCard from "@/components/ProCompareCard";
+import AdSlot from "@/components/AdSlot";
 import TransactionHistory from "./TransactionHistory";
 import type { UpsellReason } from "@/lib/upsell";
 import StockChart from "./StockChart";
@@ -329,6 +330,8 @@ export default function StockDetail({ ticker, exchange }: StockDetailProps) {
             />
           </div>
         )}
+
+        <AdSlot slot="stock-detail" format="auto" />
 
         {/* Transaction History */}
         {holding && (

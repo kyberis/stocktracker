@@ -1,4 +1,12 @@
-export const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ?? "";
+let _gaId = "";
+
+export function getGaId(): string {
+  return _gaId;
+}
+
+export function setGaId(id: string) {
+  _gaId = id;
+}
 
 export const CONSENT_KEY = "trefolio_cookie_consent";
 
@@ -8,20 +16,23 @@ export function hasAnalyticsConsent(): boolean {
 }
 
 export function pageview(url: string) {
-  if (!GA_MEASUREMENT_ID || !hasAnalyticsConsent()) return;
-  window.gtag?.("config", GA_MEASUREMENT_ID, { page_path: url });
+  if (!_gaId || !hasAnalyticsConsent()) return;
+  window.gtag?.("config", _gaId, { page_path: url });
 }
 
 export function event(
   action: string,
   params?: Record<string, string>,
 ) {
-  if (!GA_MEASUREMENT_ID || !hasAnalyticsConsent()) return;
+  if (!_gaId || !hasAnalyticsConsent()) return;
   window.gtag?.("event", action, params);
 }
 
 export function consentUpdate(granted: boolean) {
   window.gtag?.("consent", "update", {
     analytics_storage: granted ? "granted" : "denied",
+    ad_storage: granted ? "granted" : "denied",
+    ad_user_data: granted ? "granted" : "denied",
+    ad_personalization: granted ? "granted" : "denied",
   });
 }

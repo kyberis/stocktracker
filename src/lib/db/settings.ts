@@ -309,6 +309,56 @@ export async function setStripePriceConfig(key: StripePriceKey, value: string): 
   await setPlatformSetting(key, value);
 }
 
+export interface PromoBannerConfig {
+  enabled: boolean;
+  title: string;
+  badge: string;
+  description: string;
+  ctaText: string;
+  ctaLink: string;
+}
+
+const DEFAULT_PROMO_BANNER: PromoBannerConfig = {
+  enabled: false,
+  title: "trefolio Leaf — Limited Edition",
+  badge: "Only 10 units",
+  description: "Your portfolio on a vivid AMOLED desk display. Join the waitlist before they're gone.",
+  ctaText: "Learn more",
+  ctaLink: "/leaf",
+};
+
+const PROMO_BANNER_KEY = "promo_banner_config";
+
+export async function getPromoBannerConfig(): Promise<PromoBannerConfig> {
+  const raw = await getPlatformSetting(PROMO_BANNER_KEY);
+  if (!raw) return { ...DEFAULT_PROMO_BANNER };
+  try {
+    const parsed = JSON.parse(raw);
+    return { ...DEFAULT_PROMO_BANNER, ...parsed };
+  } catch {
+    return { ...DEFAULT_PROMO_BANNER };
+  }
+}
+
+export async function setPromoBannerConfig(config: Partial<PromoBannerConfig>): Promise<PromoBannerConfig> {
+  const current = await getPromoBannerConfig();
+  const next = { ...current, ...config };
+  await setPlatformSetting(PROMO_BANNER_KEY, JSON.stringify(next));
+  return next;
+}
+
+const GA_SETTING_KEY = "ga_measurement_id";
+
+export async function getGaMeasurementId(): Promise<string> {
+  const dbVal = await getPlatformSetting(GA_SETTING_KEY);
+  if (dbVal) return dbVal;
+  return process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || "";
+}
+
+export async function setGaMeasurementId(id: string): Promise<void> {
+  await setPlatformSetting(GA_SETTING_KEY, id.trim());
+}
+
 export async function getAllPlatformSettings(): Promise<Record<string, string>> {
   const client = await ensureInitialized();
   const result = await client.execute("SELECT key, value FROM platform_settings");

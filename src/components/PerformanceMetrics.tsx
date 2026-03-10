@@ -1,11 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 import { useI18n } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
 import { calculateTTWROR, calculateXIRR, buildXIRRCashFlows } from "@/lib/performance";
 import type { Transaction, Holding, CashEntry } from "@/lib/types";
+
+const PerformanceExplainerModal = dynamic(() => import("./PerformanceExplainerModal"), { ssr: false });
 
 interface Props {
   holdings?: Holding[];
@@ -18,6 +21,7 @@ export default function PerformanceMetrics({ holdings: holdingsProp, cashEntries
   const holdings = holdingsProp ?? ctxHoldings;
   const cashEntries = cashEntriesProp ?? ctxCashEntries;
   const [txs, setTxs] = useState<Transaction[]>([]);
+  const [showExplainer, setShowExplainer] = useState(false);
 
   useEffect(() => {
     fetch("/api/transactions").then((r) => r.ok ? r.json() : []).then(setTxs);
@@ -83,13 +87,29 @@ export default function PerformanceMetrics({ holdings: holdingsProp, cashEntries
           );
         })}
       </div>
-      <div className="mt-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/50 p-3">
-        <p className="text-[11px] font-semibold text-gray-700 dark:text-slate-200 mb-1">
-          {t("performanceMethodologyTitle")}
-        </p>
-        <p className="text-[11px] text-gray-600 dark:text-slate-300">{t("ttwrorExplanation")}</p>
-        <p className="text-[11px] text-gray-600 dark:text-slate-300 mt-1">{t("irrExplanation")}</p>
-      </div>
+      <button
+        onClick={() => setShowExplainer(true)}
+        className="mt-3 w-full flex items-center justify-center gap-1.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/50 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors p-3 group"
+      >
+        <svg className="w-3.5 h-3.5 text-gray-400 dark:text-slate-500 group-hover:text-emerald-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span className="text-[11px] font-medium text-gray-600 dark:text-slate-300 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+          {t("perfExplHowCalculated")}
+        </span>
+      </button>
+      {showExplainer && (
+        <PerformanceExplainerModal
+          isOpen={showExplainer}
+          onClose={() => setShowExplainer(false)}
+          transactions={txs}
+          currentValueEUR={totalCurrentEUR}
+          totalInvestedEUR={totalCostEUR}
+          exchangeRates={exchangeRates}
+          ttwror={hasTxData ? ttwror : simpleReturn}
+          irr={hasTxData ? irr : null}
+        />
+      )}
     </div>
   );
 }

@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>trefolio — Google Ads Placement Mock</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f1117;
+  --surface: #1a1d27;
+  --surface2: #22252f;
+  --border: #2a2d3a;
+  --text: #e4e6ed;
+  --text2: #8b8fa3;
+  --emerald: #10b981;
+  --emerald-dim: rgba(16,185,129,0.12);
+  --ad-orange: #f59e0b;
+  --ad-orange-dim: rgba(245,158,11,0.08);
+  --ad-border: rgba(245,158,11,0.35);
+  --ad-glow: rgba(245,158,11,0.06);
+  --purple: #8b5cf6;
+  --red: #ef4444;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+}
+
+.page-header {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(15,17,23,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 32px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.page-header h1 {
+  font-family: 'Space Mono', monospace;
+  font-size: 14px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--ad-orange);
+}
+.page-header .badge {
+  font-size: 11px; font-weight: 600;
+  background: var(--ad-orange-dim); color: var(--ad-orange);
+  border: 1px solid var(--ad-border);
+  padding: 4px 12px; border-radius: 20px;
+}
+
+.view-switcher {
+  display: flex; gap: 4px;
+  background: var(--surface); border-radius: 10px; padding: 4px;
+  border: 1px solid var(--border);
+}
+.view-switcher button {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px; font-weight: 600;
+  padding: 8px 20px; border-radius: 8px;
+  border: none; cursor: pointer;
+  background: transparent; color: var(--text2);
+  transition: all 0.2s;
+}
+.view-switcher button.active {
+  background: var(--emerald); color: #fff;
+}
+.view-switcher button:hover:not(.active) {
+  color: var(--text); background: var(--surface2);
+}
+
+.legend {
+  display: flex; gap: 24px; padding: 16px 32px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.legend-item {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; color: var(--text2);
+}
+.legend-dot {
+  width: 10px; height: 10px; border-radius: 3px;
+}
+.legend-dot.ad { background: var(--ad-orange); }
+.legend-dot.content { background: var(--emerald); }
+.legend-dot.nav { background: var(--purple); }
+
+.mock-container {
+  max-width: 1100px; margin: 0 auto;
+  padding: 32px;
+}
+
+.view { display: none; }
+.view.active { display: block; }
+
+/* ---- Dashboard Mock ---- */
+.dashboard-mock {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.mock-nav {
+  display: flex; align-items: center; gap: 24px;
+  padding: 14px 24px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+}
+.mock-nav .logo {
+  font-family: 'Space Mono', monospace;
+  font-weight: 700; font-size: 15px;
+  color: var(--emerald);
+}
+.mock-nav .nav-links { display: flex; gap: 16px; }
+.mock-nav .nav-links span {
+  font-size: 13px; color: var(--text2); cursor: default;
+}
+.mock-nav .nav-links span.active-link { color: var(--emerald); font-weight: 600; }
+
+.mock-body { padding: 20px 24px; }
+
+.mock-tabs {
+  display: flex; gap: 6px; padding: 6px;
+  background: var(--surface2); border-radius: 14px;
+  margin-bottom: 20px;
+}
+.mock-tabs span {
+  font-size: 12px; font-weight: 600;
+  padding: 8px 16px; border-radius: 10px;
+  color: var(--text2); cursor: default;
+}
+.mock-tabs span.active-tab {
+  background: var(--emerald); color: #fff;
+}
+
+.content-block {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+  position: relative;
+}
+.content-block .label {
+  font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--emerald); margin-bottom: 8px;
+}
+.content-block .placeholder-text {
+  font-size: 13px; color: var(--text2); line-height: 1.6;
+}
+.content-block .value-big {
+  font-family: 'Space Mono', monospace;
+  font-size: 28px; font-weight: 700; color: var(--text);
+}
+.content-block .value-sub {
+  font-size: 12px; color: var(--text2); margin-top: 4px;
+}
+
+/* ---- Ad blocks ---- */
+.ad-block {
+  border: 2px dashed var(--ad-border);
+  background: var(--ad-glow);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+  animation: adPulse 3s ease-in-out infinite;
+}
+@keyframes adPulse {
+  0%, 100% { border-color: var(--ad-border); }
+  50% { border-color: var(--ad-orange); }
+}
+.ad-block::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 20px,
+    rgba(245,158,11,0.02) 20px,
+    rgba(245,158,11,0.02) 40px
+  );
+  pointer-events: none;
+}
+.ad-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 8px;
+  position: relative;
+}
+.ad-tag {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--ad-orange);
+  background: rgba(245,158,11,0.12);
+  padding: 3px 10px; border-radius: 6px;
+  border: 1px solid var(--ad-border);
+}
+.ad-number {
+  width: 24px; height: 24px;
+  background: var(--ad-orange);
+  color: var(--bg); font-weight: 700; font-size: 12px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+.ad-body {
+  position: relative;
+}
+.ad-format {
+  font-size: 12px; font-weight: 600;
+  color: var(--text); margin-bottom: 4px;
+}
+.ad-desc {
+  font-size: 11px; color: var(--text2); line-height: 1.5;
+}
+.ad-size {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px; color: var(--ad-orange);
+  margin-top: 6px;
+}
+.ad-visual {
+  margin-top: 10px;
+  background: rgba(245,158,11,0.05);
+  border: 1px solid rgba(245,158,11,0.15);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text2); font-size: 11px;
+  overflow: hidden;
+  position: relative;
+}
+.ad-visual .shimmer {
+  position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(245,158,11,0.06), transparent);
+  animation: shimmer 2.5s infinite;
+}
+@keyframes shimmer {
+  100% { left: 100%; }
+}
+
+/* Stock table mock */
+.stock-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(42,45,58,0.6);
+}
+.stock-row:last-child { border-bottom: none; }
+.stock-name {
+  font-size: 13px; font-weight: 600; color: var(--text);
+}
+.stock-ticker {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px; color: var(--text2);
+}
+.stock-value {
+  font-family: 'Space Mono', monospace;
+  font-size: 13px; color: var(--text); text-align: right;
+}
+
+/* Tools mock */
+.tools-tabs {
+  display: flex; gap: 8px; margin-bottom: 16px;
+}
+.tools-tabs span {
+  font-size: 11px; font-weight: 600;
+  padding: 6px 14px; border-radius: 8px;
+  background: var(--surface2); color: var(--text2);
+  border: 1px solid var(--border);
+}
+.tools-tabs span.active-tab {
+  background: var(--emerald-dim); color: var(--emerald);
+  border-color: rgba(16,185,129,0.3);
+}
+
+/* Mobile mock */
+.mobile-frame {
+  width: 375px; margin: 0 auto;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 32px;
+  overflow: hidden;
+  position: relative;
+}
+.mobile-notch {
+  width: 120px; height: 28px;
+  background: var(--bg);
+  border-radius: 0 0 16px 16px;
+  margin: 0 auto;
+}
+.mobile-body { padding: 12px 16px; max-height: 700px; overflow-y: auto; }
+.mobile-tab-bar {
+  display: flex; justify-content: space-around;
+  padding: 10px 0;
+  background: var(--surface2);
+  border-top: 1px solid var(--border);
+}
+.mobile-tab-bar span {
+  font-size: 10px; color: var(--text2); text-align: center;
+}
+.mobile-tab-bar span.active-link { color: var(--emerald); }
+
+.ad-block.horizontal .ad-visual { height: 60px; }
+.ad-block.rectangle .ad-visual { height: 200px; }
+.ad-block.mobile .ad-visual { height: 80px; }
+
+/* Info panel */
+.info-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  margin-top: 24px;
+}
+.info-panel h3 {
+  font-family: 'Space Mono', monospace;
+  font-size: 13px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--ad-orange); margin-bottom: 16px;
+}
+.info-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+.info-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+}
+.info-card .num {
+  width: 22px; height: 22px;
+  background: var(--ad-orange);
+  color: var(--bg); font-weight: 700; font-size: 11px;
+  border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  margin-bottom: 8px;
+}
+.info-card h4 {
+  font-size: 13px; font-weight: 600; color: var(--text);
+  margin-bottom: 4px;
+}
+.info-card p {
+  font-size: 11px; color: var(--text2); line-height: 1.5;
+}
+.info-card .format-tag {
+  display: inline-block; margin-top: 6px;
+  font-family: 'Space Mono', monospace;
+  font-size: 10px; color: var(--purple);
+  background: rgba(139,92,246,0.1);
+  padding: 2px 8px; border-radius: 4px;
+}
+
+.free-badge {
+  font-size: 10px; font-weight: 700;
+  background: var(--ad-orange-dim); color: var(--ad-orange);
+  border: 1px solid var(--ad-border);
+  padding: 2px 8px; border-radius: 10px;
+  margin-left: 8px;
+}
+.pro-badge {
+  font-size: 10px; font-weight: 700;
+  background: var(--emerald-dim); color: var(--emerald);
+  border: 1px solid rgba(16,185,129,0.3);
+  padding: 2px 8px; border-radius: 10px;
+  margin-left: 8px;
+}
+
+/* Two column for stock detail */
+.two-col {
+  display: grid; grid-template-columns: 1fr 300px; gap: 16px;
+}
+@media (max-width: 800px) {
+  .two-col { grid-template-columns: 1fr; }
+}
+
+.section-divider {
+  text-align: center; padding: 32px 0 16px;
+  font-family: 'Space Mono', monospace;
+  font-size: 12px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--text2);
+}
+.section-divider::before, .section-divider::after {
+  content: ''; display: inline-block;
+  width: 40px; height: 1px;
+  background: var(--border); vertical-align: middle;
+  margin: 0 12px;
+}
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div style="display:flex;align-items:center;gap:16px;">
+    <h1>Ad Placements Mock</h1>
+    <span class="badge">Free Tier Only</span>
+  </div>
+  <div class="view-switcher">
+    <button class="active" onclick="showView('dashboard')">Dashboard</button>
+    <button onclick="showView('tools')">Tools</button>
+    <button onclick="showView('stock')">Stock Detail</button>
+    <button onclick="showView('mobile')">Mobile</button>
+  </div>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot ad"></div> Ad placement (free tier only)</div>
+  <div class="legend-item"><div class="legend-dot content"></div> App content block</div>
+  <div class="legend-item"><div class="legend-dot nav"></div> Navigation</div>
+</div>
+
+<!-- ========== DASHBOARD VIEW ========== -->
+<div class="mock-container">
+<div id="view-dashboard" class="view active">
+  <div class="dashboard-mock">
+    <div class="mock-nav">
+      <span class="logo">trefolio</span>
+      <div class="nav-links">
+        <span class="active-link">Portfolio</span>
+        <span>Import</span>
+        <span>Tools</span>
+        <span>Crypto</span>
+        <span>Indicators</span>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
+        <span style="font-size:12px;color:var(--text2);">user@email.com</span>
+        <span class="free-badge">FREE</span>
+      </div>
+    </div>
+
+    <div class="mock-body">
+      <div class="mock-tabs">
+        <span class="active-tab">Portfolio</span>
+        <span>Diversification</span>
+        <span>Dividends</span>
+        <span>Metrics</span>
+        <span>Growth</span>
+        <span>News</span>
+      </div>
+
+      <!-- Portfolio Summary -->
+      <div class="content-block">
+        <div class="label">Portfolio Summary</div>
+        <div class="value-big">€55,914.27</div>
+        <div class="value-sub">Cost: €68,574.55 &nbsp;&middot;&nbsp; -18.46% gain/loss &nbsp;&middot;&nbsp; 30 holdings</div>
+      </div>
+
+      <!-- === AD SLOT 1 === -->
+      <div class="ad-block horizontal">
+        <div class="ad-header">
+          <div class="ad-tag">Advertisement</div>
+          <div class="ad-number">1</div>
+        </div>
+        <div class="ad-body">
+          <div class="ad-format">Leaderboard Banner — Below Portfolio Summary</div>
+          <div class="ad-desc">Highest-visibility slot. Appears between the portfolio value and the holdings table. Every free user sees this on every session.</div>
+          <div class="ad-size">728 &times; 90 (responsive)</div>
+          <div class="ad-visual horizontal">
+            <div class="shimmer"></div>
+            Google AdSense — Responsive Leaderboard
+          </div>
+        </div>
+      </div>
+
+      <!-- Portfolio Table -->
+      <div class="content-block">
+        <div class="label">Holdings Table</div>
+        <div class="stock-row"><div><div class="stock-name">ALPHABET INC CLASS A</div><div class="stock-ticker">GOOGL | $162.05 &times; 34</div></div><div class="stock-value">€4,397.38</div></div>
+        <div class="stock-row"><div><div class="stock-name">SERABI GOLD PLC</div><div class="stock-ticker">SRB.L | £78.70 &times; 2550</div></div><div class="stock-value">€4,675.47</div></div>
+        <div class="stock-row"><div><div class="stock-name">SILA REALTY TRUST INC</div><div class="stock-ticker">SILA | $25.86 &times; 434</div></div><div class="stock-value">€4,493.46</div></div>
+        <div class="stock-row"><div><div class="stock-name">OCCIDENTAL PETROLEUM</div><div class="stock-ticker">OXY | $43.07 &times; 160</div></div><div class="stock-value">€3,860.39</div></div>
+        <div style="text-align:center;padding:8px;font-size:11px;color:var(--text2);">... 26 more holdings ...</div>
+      </div>
+
+      <!-- Growth Periods + Performance Metrics -->
+      <div class="content-block">
+        <div class="label">Portfolio Growth Periods</div>
+        <div class="placeholder-text">1W / 1M / 3M / 6M / YTD / 1Y growth chart</div>
+      </div>
+
+      <div class="content-block">
+        <div class="label">Performance Metrics</div>
+        <div class="placeholder-text">TTWROR, XIRR, Sharpe ratio, volatility metrics</div>
+      </div>
+
+      <!-- Markets + Cash -->
+      <div class="content-block">
+        <div class="label">Markets Today & Cash</div>
+        <div class="placeholder-text">S&P 500, Nasdaq, Dow Jones + Cash balances</div>
+      </div>
+
+      <!-- Projection -->
+      <div class="content-block">
+        <div class="label">Portfolio Growth Projection</div>
+        <div class="placeholder-text">10/20/30 year compound growth chart with dividends</div>
+      </div>
+
+      <!-- === AD SLOT 2 === -->
+      <div class="ad-block rectangle">
+        <div class="ad-header">
+          <div class="ad-tag">Advertisement</div>
+          <div class="ad-number">2</div>
+        </div>
+        <div class="ad-body">
+          <div class="ad-format">Medium Rectangle — End of Tab Content</div>
+          <div class="ad-desc">Appears below the last content section in each tab. Users who scroll this far are highly engaged — excellent ad viewability.</div>
+          <div class="ad-size">336 &times; 280 (responsive)</div>
+          <div class="ad-visual rectangle" style="height:180px;">
+            <div class="shimmer"></div>
+            Google AdSense — Medium Rectangle
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== TOOLS VIEW ========== -->
+<div id="view-tools" class="view">
+  <div class="dashboard-mock">
+    <div class="mock-nav">
+      <span class="logo">trefolio</span>
+      <div class="nav-links">
+        <span>Portfolio</span>
+        <span>Import</span>
+        <span class="active-link">Tools</span>
+        <span>Crypto</span>
+        <span>Indicators</span>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
+        <span style="font-size:12px;color:var(--text2);">user@email.com</span>
+        <span class="free-badge">FREE</span>
+      </div>
+    </div>
+
+    <div class="mock-body">
+      <div style="font-size:18px;font-weight:700;margin-bottom:16px;">Portfolio Tools</div>
+
+      <div class="tools-tabs">
+        <span class="active-tab">Transactions</span>
+        <span>Dividends</span>
+        <span>Performance</span>
+        <span>Taxonomy</span>
+        <span>Rebalancing</span>
+        <span>Watchlist</span>
+        <span>Alerts</span>
+      </div>
+
+      <div class="content-block">
+        <div class="label">Transaction History</div>
+        <div class="placeholder-text">Date, ticker, type, shares, price, total, broker — filterable table with CSV export</div>
+        <div style="margin-top:12px;">
+          <div class="stock-row"><div><div class="stock-name">BUY GOOGL</div><div class="stock-ticker">2024-11-15 &middot; 10 shares @ $138.21</div></div><div class="stock-value">$1,382.10</div></div>
+          <div class="stock-row"><div><div class="stock-name">BUY AMZN</div><div class="stock-ticker">2024-10-02 &middot; 22 shares @ $186.50</div></div><div class="stock-value">$4,103.00</div></div>
+          <div class="stock-row"><div><div class="stock-name">BUY NVO</div><div class="stock-ticker">2024-09-18 &middot; 18 shares @ $125.30</div></div><div class="stock-value">$2,255.40</div></div>
+          <div style="text-align:center;padding:8px;font-size:11px;color:var(--text2);">... more transactions ...</div>
+        </div>
+      </div>
+
+      <!-- === AD SLOT 3 === -->
+      <div class="ad-block horizontal">
+        <div class="ad-header">
+          <div class="ad-tag">Advertisement</div>
+          <div class="ad-number">3</div>
+        </div>
+        <div class="ad-body">
+          <div class="ad-format">Leaderboard Banner — Below Tool Content</div>
+          <div class="ad-desc">Secondary high-traffic page with long dwell times. Users actively managing their portfolio see this after reviewing their data.</div>
+          <div class="ad-size">728 &times; 90 (responsive)</div>
+          <div class="ad-visual horizontal">
+            <div class="shimmer"></div>
+            Google AdSense — Responsive Leaderboard
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== STOCK DETAIL VIEW ========== -->
+<div id="view-stock" class="view">
+  <div class="dashboard-mock">
+    <div class="mock-nav">
+      <span class="logo">trefolio</span>
+      <div class="nav-links">
+        <span class="active-link">Portfolio</span>
+        <span>Import</span>
+        <span>Tools</span>
+        <span>Crypto</span>
+        <span>Indicators</span>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
+        <span style="font-size:12px;color:var(--text2);">user@email.com</span>
+        <span class="free-badge">FREE</span>
+      </div>
+    </div>
+
+    <div class="mock-body">
+      <div style="font-size:18px;font-weight:700;margin-bottom:4px;">ALPHABET INC CLASS A</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:20px;">GOOGL &middot; NASDAQ &middot; Technology</div>
+
+      <div class="two-col">
+        <div>
+          <div class="content-block">
+            <div class="label">Price Chart</div>
+            <div class="value-big">$162.05</div>
+            <div class="value-sub">+$1.23 (+0.77%) today</div>
+            <div style="margin-top:16px;height:180px;background:linear-gradient(180deg,rgba(16,185,129,0.08),transparent);border-radius:8px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:12px;">
+              <svg width="90%" height="80%" viewBox="0 0 400 120" fill="none">
+                <path d="M0 100 Q50 90 100 70 T200 40 T300 55 T400 20" stroke="var(--emerald)" stroke-width="2" fill="none"/>
+                <path d="M0 100 Q50 90 100 70 T200 40 T300 55 T400 20 V120 H0Z" fill="url(#chartGrad)" opacity="0.3"/>
+                <defs><linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--emerald)"/><stop offset="100%" stop-color="transparent"/></linearGradient></defs>
+              </svg>
+            </div>
+          </div>
+
+          <div class="content-block">
+            <div class="label">Your Position</div>
+            <div class="placeholder-text">34 shares &middot; Avg cost $129.34 &middot; P/L +€1,112.14 (+25.3%)</div>
+          </div>
+
+          <div class="content-block">
+            <div class="label">Fundamentals</div>
+            <div class="placeholder-text">P/E, Market Cap, Revenue, EPS, Dividend Yield</div>
+          </div>
+        </div>
+
+        <div>
+          <!-- === AD SLOT 4 === -->
+          <div class="ad-block rectangle">
+            <div class="ad-header">
+              <div class="ad-tag">Advertisement</div>
+              <div class="ad-number">4</div>
+            </div>
+            <div class="ad-body">
+              <div class="ad-format">Sidebar Rectangle — Stock Detail</div>
+              <div class="ad-desc">High relevance: financial context ads next to individual stock analysis. Excellent CPM for finance vertical.</div>
+              <div class="ad-size">300 &times; 250</div>
+              <div class="ad-visual rectangle" style="height:160px;">
+                <div class="shimmer"></div>
+                Google AdSense — Rectangle
+              </div>
+            </div>
+          </div>
+
+          <div class="content-block" style="margin-top:0;">
+            <div class="label">Related Holdings</div>
+            <div class="stock-row"><div><div class="stock-name">AMZN</div><div class="stock-ticker">Amazon</div></div><div class="stock-value">€1,995</div></div>
+            <div class="stock-row"><div><div class="stock-name">TSM</div><div class="stock-ticker">TSMC</div></div><div class="stock-value">€1,160</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== MOBILE VIEW ========== -->
+<div id="view-mobile" class="view">
+  <div style="text-align:center;margin-bottom:16px;">
+    <span style="font-size:13px;color:var(--text2);">iPhone 14 Pro — 375px viewport</span>
+  </div>
+  <div class="mobile-frame">
+    <div class="mobile-notch"></div>
+    <div class="mobile-body">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <span class="logo" style="font-family:'Space Mono',monospace;font-weight:700;font-size:14px;color:var(--emerald);">trefolio</span>
+        <span class="free-badge">FREE</span>
+      </div>
+
+      <div class="mock-tabs" style="gap:3px;padding:4px;">
+        <span class="active-tab" style="font-size:10px;padding:6px 10px;">Portfolio</span>
+        <span style="font-size:10px;padding:6px 10px;">Diversif.</span>
+        <span style="font-size:10px;padding:6px 10px;">Dividends</span>
+        <span style="font-size:10px;padding:6px 10px;">Growth</span>
+      </div>
+
+      <div class="content-block" style="padding:14px;">
+        <div class="label">Portfolio Summary</div>
+        <div class="value-big" style="font-size:22px;">€55,914.27</div>
+        <div class="value-sub">30 holdings &middot; -18.46%</div>
+      </div>
+
+      <!-- === AD SLOT (mobile) === -->
+      <div class="ad-block mobile">
+        <div class="ad-header">
+          <div class="ad-tag" style="font-size:9px;">Ad</div>
+          <div class="ad-number" style="width:20px;height:20px;font-size:10px;">1</div>
+        </div>
+        <div class="ad-body">
+          <div class="ad-format" style="font-size:11px;">Mobile Banner — Below Summary</div>
+          <div class="ad-desc" style="font-size:10px;">Responsive: collapses from 728&times;90 to 320&times;100 on mobile</div>
+          <div class="ad-visual mobile">
+            <div class="shimmer"></div>
+            <span style="font-size:10px;">320 &times; 100 Responsive</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="content-block" style="padding:14px;">
+        <div class="label">Holdings</div>
+        <div class="stock-row"><div><div class="stock-name" style="font-size:12px;">GOOGL</div><div class="stock-ticker" style="font-size:10px;">$162.05 &times; 34</div></div><div class="stock-value" style="font-size:12px;">€4,397</div></div>
+        <div class="stock-row"><div><div class="stock-name" style="font-size:12px;">SRB.L</div><div class="stock-ticker" style="font-size:10px;">£78.70 &times; 2550</div></div><div class="stock-value" style="font-size:12px;">€4,675</div></div>
+        <div class="stock-row"><div><div class="stock-name" style="font-size:12px;">SILA</div><div class="stock-ticker" style="font-size:10px;">$25.86 &times; 434</div></div><div class="stock-value" style="font-size:12px;">€4,493</div></div>
+        <div class="stock-row"><div><div class="stock-name" style="font-size:12px;">OXY</div><div class="stock-ticker" style="font-size:10px;">$43.07 &times; 160</div></div><div class="stock-value" style="font-size:12px;">€3,860</div></div>
+      </div>
+
+      <div class="content-block" style="padding:14px;">
+        <div class="label">Growth + Markets</div>
+        <div class="placeholder-text" style="font-size:11px;">Chart, market indices, cash balances</div>
+      </div>
+
+      <!-- === AD SLOT 2 (mobile) === -->
+      <div class="ad-block mobile">
+        <div class="ad-header">
+          <div class="ad-tag" style="font-size:9px;">Ad</div>
+          <div class="ad-number" style="width:20px;height:20px;font-size:10px;">2</div>
+        </div>
+        <div class="ad-body">
+          <div class="ad-format" style="font-size:11px;">Medium Rectangle — End of Content</div>
+          <div class="ad-visual mobile" style="height:120px;">
+            <div class="shimmer"></div>
+            <span style="font-size:10px;">336 &times; 280 Responsive</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="height:16px;"></div>
+    </div>
+    <div class="mobile-tab-bar">
+      <span class="active-link">Portfolio</span>
+      <span>Import</span>
+      <span>Tools</span>
+      <span>Crypto</span>
+      <span>Profile</span>
+    </div>
+  </div>
+</div>
+
+<!-- ========== INFO PANEL ========== -->
+<div class="info-panel">
+  <h3>Placement Summary</h3>
+  <div class="info-grid">
+    <div class="info-card">
+      <div class="num">1</div>
+      <h4>Below Portfolio Summary</h4>
+      <p>Highest traffic. Every free user sees this on every session. Between summary and holdings table.</p>
+      <div class="format-tag">728&times;90 responsive</div>
+    </div>
+    <div class="info-card">
+      <div class="num">2</div>
+      <h4>End of Tab Content</h4>
+      <p>Below the last section in each dashboard tab. Engaged scrollers = high viewability.</p>
+      <div class="format-tag">336&times;280 rectangle</div>
+    </div>
+    <div class="info-card">
+      <div class="num">3</div>
+      <h4>Tools Page — Below Content</h4>
+      <p>Secondary high-traffic page. Long dwell time while users review transactions, dividends, alerts.</p>
+      <div class="format-tag">728&times;90 responsive</div>
+    </div>
+    <div class="info-card">
+      <div class="num">4</div>
+      <h4>Stock Detail — Sidebar</h4>
+      <p>Financial-context ads alongside stock analysis. Premium CPM in the finance vertical.</p>
+      <div class="format-tag">300&times;250 rectangle</div>
+    </div>
+    <div class="info-card">
+      <div class="num">5</div>
+      <h4>Post-Import Success</h4>
+      <p>Shown after completing an import. Users are satisfied — low friction, good moment for an ad.</p>
+      <div class="format-tag">in-feed native</div>
+    </div>
+    <div class="info-card" style="border-color:rgba(16,185,129,0.3);">
+      <div class="num" style="background:var(--emerald);">&#10003;</div>
+      <h4>Pro / Starter Users</h4>
+      <p>See <strong>zero ads</strong>. All ad slots render nothing. Clean, premium experience as upgrade incentive.</p>
+      <div class="format-tag" style="color:var(--emerald);background:var(--emerald-dim);">ad-free</div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  document.querySelectorAll('.view-switcher button').forEach(b => {
+    b.classList.toggle('active', b.textContent.toLowerCase().includes(name));
+  });
+}
+</script>
+</body>
+</html>

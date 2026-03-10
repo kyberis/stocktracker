@@ -84,7 +84,7 @@ function BlurredProSection({ children, blurb }: { children: React.ReactNode; blu
           {blurb}
         </p>
         <a
-          href="/profile?tab=subscription"
+          href="/profile?section=subscription"
           className="px-4 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-semibold hover:brightness-110 transition-all"
         >
           Upgrade to Pro

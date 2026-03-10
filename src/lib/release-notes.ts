@@ -14,9 +14,27 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "1.12.0";
+export const CURRENT_VERSION = "1.13.0";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "1.13.0",
+    date: "2026-03-10",
+    title: "Ad-Supported Free Tier",
+    titleTranslations: { es: "Plan gratuito con publicidad" },
+    changes: [
+      {
+        type: "feature",
+        text: "Ad-supported free tier — Google AdSense ads are shown to free plan users (with cookie consent); Starter and Pro users enjoy a completely ad-free experience",
+        translations: { es: "Plan gratuito con publicidad — se muestran anuncios de Google AdSense a usuarios del plan gratuito (con consentimiento de cookies); los usuarios de Starter y Pro disfrutan de una experiencia sin anuncios" },
+      },
+      {
+        type: "feature",
+        text: "Performance explainer — see exactly how TTWROR and IRR are calculated using your real transactions, with a step-by-step breakdown and formula verification",
+        translations: { es: "Explicación del rendimiento — ve exactamente cómo se calculan TTWROR e IRR usando tus transacciones reales, con un desglose paso a paso y verificación de fórmula" },
+      },
+    ],
+  },
   {
     version: "1.12.0",
     date: "2026-03-10",
@@ -32,6 +50,11 @@ export const releaseNotes: ReleaseEntry[] = [
         type: "feature",
         text: "Admin feature flags for each tool on the Tools page and WhatsApp notifications — enable or disable Transactions, Dividends, Performance, Taxonomy, Rebalancing, Accounts, Watchlist, and WhatsApp from the admin panel",
         translations: { es: "Flags de características de administrador para cada herramienta en la página de Herramientas y notificaciones de WhatsApp — activa o desactiva Transacciones, Dividendos, Rendimiento, Taxonomía, Rebalanceo, Cuentas, Lista de seguimiento y WhatsApp desde el panel de administración" },
+      },
+      {
+        type: "feature",
+        text: "Asset allocation breakdown — tap the pie-chart icon in the portfolio summary bar to see a donut chart with your Stocks, ETFs, Crypto, and Cash split by value and percentage",
+        translations: { es: "Distribución de activos — pulsa el icono de gráfico circular en la barra de resumen del portafolio para ver un gráfico de dona con la distribución de Acciones, ETFs, Cripto y Efectivo por valor y porcentaje" },
       },
     ],
   },

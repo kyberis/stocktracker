@@ -1344,11 +1344,426 @@ function StripePricesCard() {
   );
 }
 
+function PromoBannerCard() {
+  const [config, setConfig] = useState({
+    enabled: false,
+    title: "",
+    badge: "",
+    description: "",
+    ctaText: "",
+    ctaLink: "",
+  });
+  const [draft, setDraft] = useState(config);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/admin/promo-banner", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.config) {
+          setConfig(data.config);
+          setDraft(data.config);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const hasChanges = JSON.stringify(draft) !== JSON.stringify(config);
+
+  async function handleSave() {
+    setSaving(true);
+    setSaved(false);
+    try {
+      const res = await fetch("/api/admin/promo-banner", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(draft),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setConfig(data.config);
+        setDraft(data.config);
+        setSaved(true);
+        setTimeout(() => setSaved(false), 3000);
+      }
+    } catch { /* ignore */ }
+    setSaving(false);
+  }
+
+  if (loading) {
+    return (
+      <div className="card p-6">
+        <div className="h-4 w-40 bg-gray-200 dark:bg-slate-700 rounded animate-pulse" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="card p-6">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Promo Banner</h3>
+          <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
+            Configure the promotional banner shown on the dashboard. Changes take effect immediately.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setDraft((prev) => ({ ...prev, enabled: !prev.enabled }))}
+          className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+            draft.enabled ? "bg-emerald-500" : "bg-gray-300 dark:bg-slate-600"
+          }`}
+          role="switch"
+          aria-checked={draft.enabled}
+        >
+          <span
+            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+              draft.enabled ? "translate-x-5" : "translate-x-0"
+            }`}
+          />
+        </button>
+      </div>
+
+      <div className="space-y-3">
+        <div>
+          <label className="block text-xs font-medium text-gray-600 dark:text-slate-400 mb-1">Title</label>
+          <input
+            type="text"
+            value={draft.title}
+            onChange={(e) => setDraft((prev) => ({ ...prev, title: e.target.value }))}
+            placeholder="trefolio Leaf — Limited Edition"
+            maxLength={120}
+            className="w-full text-sm px-3 py-2 rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs font-medium text-gray-600 dark:text-slate-400 mb-1">Badge</label>
+            <input
+              type="text"
+              value={draft.badge}
+              onChange={(e) => setDraft((prev) => ({ ...prev, badge: e.target.value }))}
+              placeholder="Only 10 units"
+              maxLength={40}
+              className="w-full text-sm px-3 py-2 rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 dark:text-slate-400 mb-1">CTA Button Text</label>
+            <input
+              type="text"
+              value={draft.ctaText}
+              onChange={(e) => setDraft((prev) => ({ ...prev, ctaText: e.target.value }))}
+              placeholder="Learn more"
+              maxLength={40}
+              className="w-full text-sm px-3 py-2 rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            />
+          </div>
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-600 dark:text-slate-400 mb-1">Description</label>
+          <input
+            type="text"
+            value={draft.description}
+            onChange={(e) => setDraft((prev) => ({ ...prev, description: e.target.value }))}
+            placeholder="Your portfolio on a vivid AMOLED desk display."
+            maxLength={200}
+            className="w-full text-sm px-3 py-2 rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-600 dark:text-slate-400 mb-1">CTA Link</label>
+          <input
+            type="text"
+            value={draft.ctaLink}
+            onChange={(e) => setDraft((prev) => ({ ...prev, ctaLink: e.target.value }))}
+            placeholder="/leaf"
+            maxLength={200}
+            className="w-full text-sm px-3 py-2 rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          />
+        </div>
+      </div>
+
+      <div className="flex items-center gap-3 mt-4">
+        <button onClick={handleSave} disabled={saving || !hasChanges} className="btn-primary text-xs px-4 py-2 disabled:opacity-40">
+          {saving ? "Saving..." : "Save Banner"}
+        </button>
+        {saved && <span className="text-xs text-emerald-600 dark:text-emerald-400">Saved successfully.</span>}
+        {hasChanges && !saved && <span className="text-[10px] text-amber-500">Unsaved changes</span>}
+      </div>
+    </div>
+  );
+}
+
+function GaConfigCard() {
+  const [gaId, setGaId] = useState("");
+  const [draft, setDraft] = useState("");
+  const [source, setSource] = useState<"env" | "database">("env");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    fetch("/api/admin/ga-config", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => {
+        setGaId(d.gaId || "");
+        setDraft(d.gaId || "");
+        setSource(d.source || "env");
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const hasChanges = draft !== gaId;
+
+  const handleSave = async () => {
+    setSaving(true);
+    setError("");
+    setSaved(false);
+    try {
+      const res = await fetch("/api/admin/ga-config", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ gaId: draft.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Failed to save.");
+        setSaving(false);
+        return;
+      }
+      setGaId(data.gaId);
+      setDraft(data.gaId);
+      setSource(data.gaId ? "database" : "env");
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch {
+      setError("Failed to save.");
+    }
+    setSaving(false);
+  };
+
+  const handleRemove = async () => {
+    setSaving(true);
+    setError("");
+    const res = await fetch("/api/admin/ga-config", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ gaId: "" }),
+    });
+    if (res.ok) {
+      setGaId("");
+      setDraft("");
+      setSource("env");
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    }
+    setSaving(false);
+  };
+
+  if (loading) {
+    return (
+      <div className="card p-6">
+        <div className="h-4 w-40 bg-gray-200 dark:bg-slate-700 rounded animate-pulse" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="card p-6">
+      <div className="flex items-start justify-between mb-1">
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Google Analytics</h3>
+        {gaId && (
+          <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
+            source === "database"
+              ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+              : "bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-slate-400"
+          }`}>
+            {source === "database" ? "From database" : "From env var"}
+          </span>
+        )}
+      </div>
+      <p className="text-xs text-gray-500 dark:text-slate-400 mb-4">
+        Configure the Google Analytics Measurement ID (e.g. <code className="px-1 py-0.5 rounded bg-gray-100 dark:bg-slate-800 font-mono text-xs">G-XXXXXXXXXX</code>).
+        A value saved here overrides the <code className="px-1 py-0.5 rounded bg-gray-100 dark:bg-slate-800 font-mono text-xs">NEXT_PUBLIC_GA_MEASUREMENT_ID</code> environment variable.
+        Leave empty to use the env var or to disable GA entirely.
+      </p>
+
+      <div className="flex items-center gap-2">
+        <input
+          type="text"
+          value={draft}
+          onChange={(e) => { setDraft(e.target.value); setError(""); }}
+          placeholder="G-XXXXXXXXXX"
+          className="text-sm flex-1 font-mono"
+        />
+        <button
+          onClick={handleSave}
+          disabled={saving || !hasChanges}
+          className="btn-primary text-xs px-4 py-2 disabled:opacity-40"
+        >
+          {saving ? "Saving..." : "Save"}
+        </button>
+        {gaId && source === "database" && (
+          <button onClick={handleRemove} disabled={saving} className="btn-danger text-xs px-3 py-2">
+            Remove
+          </button>
+        )}
+      </div>
+
+      {error && <p className="text-xs text-red-500 dark:text-red-400 mt-2">{error}</p>}
+      {saved && <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-2">Saved successfully. Reload the page to apply.</p>}
+
+      {/* HTML preview */}
+      {gaId && (
+        <details className="mt-4">
+          <summary className="text-xs font-medium text-gray-700 dark:text-slate-300 cursor-pointer hover:text-gray-900 dark:hover:text-white">
+            Preview injected HTML &amp; placement
+          </summary>
+          <div className="mt-3 space-y-4">
+            {/* Visual DOM tree */}
+            <div className="rounded-lg bg-gray-50 dark:bg-slate-800/50 p-4">
+              <p className="text-[10px] uppercase tracking-wider text-gray-400 dark:text-slate-500 font-semibold mb-3">Placement in DOM</p>
+              <div className="font-mono text-xs leading-relaxed">
+                <span className="text-gray-400 dark:text-slate-500">&lt;html&gt;</span>
+                <div className="ml-4">
+                  <span className="text-gray-400 dark:text-slate-500">&lt;head&gt;</span>
+                  <div className="ml-4 my-1 px-2 py-1 rounded bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20">
+                    <span className="text-amber-700 dark:text-amber-400">&lt;script id=&quot;ga-consent-default&quot;&gt;</span>
+                    <span className="text-gray-500 dark:text-slate-400 text-[10px] ml-1">← beforeInteractive</span>
+                  </div>
+                  <span className="text-gray-400 dark:text-slate-500">&lt;/head&gt;</span>
+                </div>
+                <div className="ml-4">
+                  <span className="text-gray-400 dark:text-slate-500">&lt;body&gt;</span>
+                  <div className="ml-4 text-gray-400 dark:text-slate-600">...app content...</div>
+                  <div className="ml-4 text-gray-400 dark:text-slate-600">&lt;CookieConsent /&gt;</div>
+                  <div className="ml-4 my-1 px-2 py-1 rounded bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
+                    <span className="text-emerald-700 dark:text-emerald-400">&lt;GoogleAnalytics gaId=&quot;{gaId}&quot; /&gt;</span>
+                    <span className="text-gray-500 dark:text-slate-400 text-[10px] ml-1">← src/components/GoogleAnalytics.tsx</span>
+                  </div>
+                  <div className="ml-4 text-gray-400 dark:text-slate-600">&lt;AdSenseScript /&gt;</div>
+                  <div className="ml-4 text-gray-400 dark:text-slate-600">&lt;Analytics /&gt; &lt;SpeedInsights /&gt;</div>
+
+                  <div className="ml-4 mt-2 space-y-1">
+                    <div className="px-2 py-1 rounded bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20">
+                      <span className="text-blue-700 dark:text-blue-400">&lt;script src=&quot;googletagmanager.com/gtag/js?id={gaId}&quot;&gt;</span>
+                      <span className="text-gray-500 dark:text-slate-400 text-[10px] ml-1">← afterInteractive</span>
+                    </div>
+                    <div className="px-2 py-1 rounded bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20">
+                      <span className="text-blue-700 dark:text-blue-400">&lt;script id=&quot;ga-init&quot;&gt;</span>
+                      <span className="text-gray-500 dark:text-slate-400 text-[10px] ml-1">← afterInteractive</span>
+                    </div>
+                  </div>
+                  <span className="text-gray-400 dark:text-slate-500">&lt;/body&gt;</span>
+                </div>
+                <span className="text-gray-400 dark:text-slate-500">&lt;/html&gt;</span>
+              </div>
+            </div>
+
+            {/* Script 1: consent default */}
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[10px] uppercase tracking-wider text-amber-600 dark:text-amber-400 font-semibold">Script 1</span>
+                <span className="text-[10px] text-gray-400 dark:text-slate-500">Consent defaults (head, beforeInteractive)</span>
+              </div>
+              <pre className="text-xs bg-gray-900 dark:bg-slate-950 text-green-400 rounded-lg p-3 overflow-x-auto font-mono leading-relaxed">{`<script id="ga-consent-default">
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('consent', 'default', {
+    analytics_storage: 'denied',
+    ad_storage: 'denied',
+    ad_user_data: 'denied',
+    ad_personalization: 'denied',
+  });
+</script>`}</pre>
+            </div>
+
+            {/* Script 2: gtag.js loader */}
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[10px] uppercase tracking-wider text-blue-600 dark:text-blue-400 font-semibold">Script 2</span>
+                <span className="text-[10px] text-gray-400 dark:text-slate-500">Google Tag Manager loader (body, afterInteractive)</span>
+              </div>
+              <pre className="text-xs bg-gray-900 dark:bg-slate-950 text-green-400 rounded-lg p-3 overflow-x-auto font-mono leading-relaxed">{`<script async src="https://www.googletagmanager.com/gtag/js?id=${gaId}"></script>`}</pre>
+            </div>
+
+            {/* Script 3: ga init */}
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[10px] uppercase tracking-wider text-blue-600 dark:text-blue-400 font-semibold">Script 3</span>
+                <span className="text-[10px] text-gray-400 dark:text-slate-500">GA4 config &amp; page view (body, afterInteractive)</span>
+              </div>
+              <pre className="text-xs bg-gray-900 dark:bg-slate-950 text-green-400 rounded-lg p-3 overflow-x-auto font-mono leading-relaxed">{`<script id="ga-init">
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', '${gaId}', {
+    page_path: window.location.pathname,
+    send_page_view: true,
+  });
+</script>`}</pre>
+            </div>
+
+            {/* Consent update on user action */}
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[10px] uppercase tracking-wider text-violet-600 dark:text-violet-400 font-semibold">Runtime</span>
+                <span className="text-[10px] text-gray-400 dark:text-slate-500">Consent update (fired when user accepts cookies)</span>
+              </div>
+              <pre className="text-xs bg-gray-900 dark:bg-slate-950 text-green-400 rounded-lg p-3 overflow-x-auto font-mono leading-relaxed">{`gtag('consent', 'update', {
+  analytics_storage: 'granted',
+  ad_storage: 'granted',
+  ad_user_data: 'granted',
+  ad_personalization: 'granted',
+});`}</pre>
+            </div>
+
+            {/* File references */}
+            <div className="rounded-lg bg-gray-50 dark:bg-slate-800/50 p-3">
+              <p className="text-[10px] uppercase tracking-wider text-gray-400 dark:text-slate-500 font-semibold mb-2">Source files</p>
+              <div className="space-y-1 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                  <code className="text-gray-600 dark:text-slate-300 font-mono">src/components/GoogleAnalytics.tsx</code>
+                  <span className="text-gray-400 dark:text-slate-500">— renders all 3 script tags</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
+                  <code className="text-gray-600 dark:text-slate-300 font-mono">src/lib/gtag.ts</code>
+                  <span className="text-gray-400 dark:text-slate-500">— pageview(), event(), consent helpers</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+                  <code className="text-gray-600 dark:text-slate-300 font-mono">src/app/layout.tsx</code>
+                  <span className="text-gray-400 dark:text-slate-500">— fetches GA ID from DB, passes to component</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-violet-500 shrink-0" />
+                  <code className="text-gray-600 dark:text-slate-300 font-mono">src/components/CookieConsent.tsx</code>
+                  <span className="text-gray-400 dark:text-slate-500">— triggers consent update on user action</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </details>
+      )}
+    </div>
+  );
+}
+
 function SettingsTab() {
   return (
     <div className="space-y-6">
       <ExternalServicesCard />
+      <PromoBannerCard />
       <FeatureTogglesCard />
+      <GaConfigCard />
       <StripePricesCard />
       <CapacityCard />
       <MetricsCard />

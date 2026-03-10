@@ -29,9 +29,11 @@ export default function CookieConsent() {
           <div className="flex-1 min-w-0">
             <p className="text-sm text-slate-200 leading-relaxed">
               We use <strong className="text-white">essential cookies</strong> to
-              keep you logged in and optional{" "}
+              keep you logged in, optional{" "}
               <strong className="text-white">analytics cookies</strong> to
-              understand how you use trefolio.{" "}
+              understand how you use trefolio, and{" "}
+              <strong className="text-white">advertising cookies</strong> to
+              show relevant ads on the free plan.{" "}
               <Link
                 href="/privacy#cookies"
                 className="text-emerald-400 hover:text-emerald-300 underline underline-offset-2"

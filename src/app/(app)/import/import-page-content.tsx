@@ -12,6 +12,7 @@ import { useSnapTradeApi } from "@/hooks/useSnapTradeApi";
 import { IMPORT_GUIDES, type ImportGuide } from "@/lib/import-guides";
 import { downloadImportTemplate } from "@/lib/download-import-template";
 import ProCompareCard from "@/components/ProCompareCard";
+import AdSlot from "@/components/AdSlot";
 import type { BrokerFormat } from "@/hooks/import-types";
 import type { SearchResult } from "@/lib/types";
 
@@ -1034,6 +1035,7 @@ function DoneCard({ txCount, holdingsCapped, onReset, t }: { txCount: number; ho
           <ProCompareCard surface="import_holdings_capped" reason="holdings_limit_reached" compact />
         </div>
       )}
+      <AdSlot slot="import-done" format="auto" className="max-w-md mx-auto" />
       <div className="flex flex-col items-center gap-2">
         <a href="/" className="btn-primary text-sm min-h-[44px] inline-flex items-center gap-2">
           {t("viewPortfolio") || "View Portfolio"}

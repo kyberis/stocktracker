@@ -5,7 +5,9 @@ import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import CookieConsent from "@/components/CookieConsent";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
+import AdSenseScript from "@/components/AdSenseScript";
 import ServiceWorkerUpdater from "@/components/ServiceWorkerUpdater";
+import { getGaMeasurementId } from "@/lib/db";
 import "./globals.css";
 
 export const viewport: Viewport = {
@@ -46,11 +48,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const gaId = await getGaMeasurementId();
+
   return (
     <html lang="en">
       <body className={`${GeistSans.variable} ${GeistMono.variable} font-sans antialiased`}>
@@ -62,7 +66,8 @@ export default function RootLayout({
         </a>
         {children}
         <CookieConsent />
-        <GoogleAnalytics />
+        <GoogleAnalytics gaId={gaId} />
+        <AdSenseScript />
         <Analytics />
         <SpeedInsights />
         <ServiceWorkerUpdater />

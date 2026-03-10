@@ -92,7 +92,10 @@ export default function TermsOfServicePage() {
               The Folio tier provides core portfolio tracking functionality,
               including Yahoo Finance market data, historical charts, cash
               balance tracking, benchmark comparisons, and limited AI analysis
-              (5 requests per month).
+              (5 requests per month). The free tier is ad-supported: Google
+              AdSense advertisements may be displayed if you have consented to
+              advertising cookies. Paid tiers (Bifolio and Trefolio) are
+              completely ad-free.
             </p>
 
             <h3>Bifolio Tier</h3>

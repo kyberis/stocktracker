@@ -5,7 +5,7 @@ import { convertToEUR } from "./utils";
  * Convert a transaction amount to EUR using the stored historical rate when
  * available, falling back to current exchange rates.
  */
-function txAmountToEUR(amount: number, tx: Transaction, exchangeRates: ExchangeRates): number {
+export function txAmountToEUR(amount: number, tx: Transaction, exchangeRates: ExchangeRates): number {
   const cur = tx.currency || "EUR";
   if (cur === "EUR") return amount;
   if (tx.exchangeRateEur && tx.exchangeRateEur > 0) return amount / tx.exchangeRateEur;

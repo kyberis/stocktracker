@@ -3,14 +3,18 @@
 import Script from "next/script";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
-import { GA_MEASUREMENT_ID, CONSENT_KEY, pageview, consentUpdate } from "@/lib/gtag";
+import { getGaId, setGaId, CONSENT_KEY, pageview, consentUpdate } from "@/lib/gtag";
 
-export default function GoogleAnalytics() {
+export default function GoogleAnalytics({ gaId = "" }: { gaId?: string }) {
   const pathname = usePathname();
   const prevPathname = useRef(pathname);
 
   useEffect(() => {
-    if (!GA_MEASUREMENT_ID) return;
+    if (gaId) setGaId(gaId);
+  }, [gaId]);
+
+  useEffect(() => {
+    if (!getGaId()) return;
     if (prevPathname.current !== pathname) {
       prevPathname.current = pathname;
       pageview(pathname);
@@ -18,7 +22,7 @@ export default function GoogleAnalytics() {
   }, [pathname]);
 
   useEffect(() => {
-    if (!GA_MEASUREMENT_ID) return;
+    if (!getGaId()) return;
 
     if (localStorage.getItem(CONSENT_KEY) === "all") {
       consentUpdate(true);
@@ -41,9 +45,9 @@ export default function GoogleAnalytics() {
       window.removeEventListener("storage", onStorage);
       window.removeEventListener("trefolio-consent", onConsentChange);
     };
-  }, []);
+  }, [gaId]);
 
-  if (!GA_MEASUREMENT_ID) return null;
+  if (!gaId) return null;
 
   return (
     <>
@@ -65,7 +69,7 @@ export default function GoogleAnalytics() {
       />
 
       <Script
-        src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+        src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
         strategy="afterInteractive"
       />
 
@@ -77,7 +81,7 @@ export default function GoogleAnalytics() {
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            gtag('config', '${GA_MEASUREMENT_ID}', {
+            gtag('config', '${gaId}', {
               page_path: window.location.pathname,
               send_page_view: true,
             });

@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth-context";
 import { useSettings } from "@/lib/settings-context";
+import AdSlot from "@/components/AdSlot";
 
 const TransactionHistory = dynamic(() => import("./TransactionHistory"), { ssr: false });
 const DividendSummary = dynamic(() => import("./DividendSummary"), { ssr: false });
@@ -144,6 +145,8 @@ export default function PortfolioTools() {
             {activeTab === "alerts" && <PriceAlerts />}
           </div>
         </Suspense>
+
+        <AdSlot slot="tools-bottom" format="horizontal" className="mt-6" />
     </main>
   );
 }

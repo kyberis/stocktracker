@@ -6,6 +6,7 @@ import { useI18n } from "@/lib/i18n";
 import { useTrack } from "@/lib/use-track";
 import { getUpsellConfig, getUpsellReasonKey, getUpgradeTarget } from "@/lib/upsell";
 import type { UpsellReason, UpsellSurface } from "@/lib/upsell";
+import type { TranslationKey } from "@/lib/i18n";
 import TierIcon from "@/components/TierIcon";
 
 interface CapacityInfo {
@@ -14,6 +15,59 @@ interface CapacityInfo {
 
 let cachedCapacity: { data: CapacityInfo; fetchedAt: number } | null = null;
 const CAPACITY_CACHE_MS = 60_000;
+
+type BillingPeriod = "monthly" | "annual";
+
+interface TierInfo {
+  name: string;
+  plan: "free" | "starter" | "pro";
+  regularMonthly: string;
+  monthlyPrice: string;
+  regularAnnualMonthly: string;
+  annualMonthly: string;
+  regularAnnual: string;
+  annualPrice: string;
+  annualSavePct: number;
+  launchDiscountPct: number;
+  isFree?: boolean;
+  descriptionKey: TranslationKey;
+  featureKeys: TranslationKey[];
+  highlighted?: boolean;
+}
+
+const TIERS: TierInfo[] = [
+  {
+    name: "Folio",
+    plan: "free",
+    regularMonthly: "€0", monthlyPrice: "€0",
+    regularAnnualMonthly: "€0", annualMonthly: "€0",
+    regularAnnual: "€0", annualPrice: "€0",
+    annualSavePct: 0, launchDiscountPct: 0, isFree: true,
+    descriptionKey: "landingPricingFolioDesc",
+    featureKeys: Array.from({ length: 13 }, (_, i) => `landingPricingFolioFeature${i + 1}` as TranslationKey),
+  },
+  {
+    name: "Bifolio",
+    plan: "starter",
+    regularMonthly: "€3.99", monthlyPrice: "€2.99",
+    regularAnnualMonthly: "€2.67", annualMonthly: "€2.00",
+    regularAnnual: "€31.99", annualPrice: "€23.99",
+    annualSavePct: 33, launchDiscountPct: 25,
+    descriptionKey: "landingPricingBifolioDesc",
+    featureKeys: Array.from({ length: 8 }, (_, i) => `landingPricingBifolioFeature${i + 1}` as TranslationKey),
+  },
+  {
+    name: "Trefolio",
+    plan: "pro",
+    regularMonthly: "€9.99", monthlyPrice: "€7.99",
+    regularAnnualMonthly: "€6.67", annualMonthly: "€5.00",
+    regularAnnual: "€79.99", annualPrice: "€59.99",
+    annualSavePct: 37, launchDiscountPct: 20,
+    descriptionKey: "landingPricingTrefolioDesc",
+    featureKeys: Array.from({ length: 16 }, (_, i) => `landingPricingTrefolioFeature${i + 1}` as TranslationKey),
+    highlighted: true,
+  },
+];
 
 interface ProCompareCardProps {
   surface: UpsellSurface;
@@ -39,6 +93,7 @@ export default function ProCompareCard({
   const [billingError, setBillingError] = useState("");
   const [billingLoading, setBillingLoading] = useState("");
   const [capacity, setCapacity] = useState<CapacityInfo | null>(null);
+  const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>("monthly");
   const hasTrackedShown = useRef(false);
 
   const isPro = user?.plan === "pro";
@@ -47,6 +102,7 @@ export default function ProCompareCard({
   const config = getUpsellConfig(surface);
   const reasonLabel = t(getUpsellReasonKey(reason));
   const upgradeTarget = user ? getUpgradeTarget(user.plan as "free" | "starter" | "pro") : "starter";
+  const isAnnual = billingPeriod === "annual";
 
   const fetchCapacity = useCallback(async () => {
     if (cachedCapacity && Date.now() - cachedCapacity.fetchedAt < CAPACITY_CACHE_MS) {
@@ -79,7 +135,7 @@ export default function ProCompareCard({
     });
   }, [track, surface, config.feature, reason]);
 
-  const startCheckout = async (plan: "starter" | "pro", interval: "monthly" | "annual") => {
+  const startCheckout = async (plan: "starter" | "pro", interval: BillingPeriod) => {
     setBillingError("");
     setBillingLoading(`${plan}_${interval}`);
     track("upgrade_compare_clicked", {
@@ -116,121 +172,232 @@ export default function ProCompareCard({
   };
 
   const atCapacity = capacity !== null && !capacity.available;
+  const currentPlan = isPro ? "pro" : isStarter ? "starter" : "free";
+
+  const visibleTiers = TIERS;
 
   return (
-    <div className={`rounded-xl border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50/40 dark:bg-emerald-500/10 p-4 ${className}`}>
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-sm font-semibold text-gray-900 dark:text-white">{t("upsellCompareTitle")}</p>
-          <p className="text-xs text-gray-600 dark:text-slate-300 mt-1">{t(config.subtitleKey)}</p>
+    <div className={`rounded-2xl border border-gray-200 dark:border-slate-700/60 bg-white dark:bg-slate-900/80 p-5 sm:p-6 ${className}`}>
+      {/* Header */}
+      <div className="text-center mb-5">
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
+            {t("upsellCompareTitle")}
+          </h3>
+          <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-amber-700 dark:text-amber-400">
+            {reasonLabel}
+          </span>
         </div>
-        <span className="text-[10px] px-2 py-1 rounded-full bg-white dark:bg-slate-800 border border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-300">
-          {reasonLabel}
-        </span>
+        <p className="text-sm text-gray-500 dark:text-slate-400">
+          {t(config.subtitleKey)}
+        </p>
+
+        {/* Context: what was attempted */}
+        <p className="text-xs text-gray-500 dark:text-slate-400 mt-2">
+          <span className="font-medium text-gray-700 dark:text-slate-300">{t("upsellTriedTo")} </span>
+          {t(config.attemptedActionKey)}
+        </p>
+
+        {aiUsage && (
+          <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">
+            {t("aiUsageThisMonth")}: {aiUsage.used}/{aiUsage.limit}
+          </p>
+        )}
       </div>
 
-      <p className="text-xs text-gray-600 dark:text-slate-300 mt-3">
-        <span className="font-medium">{t("upsellTriedTo")} </span>
-        {t(config.attemptedActionKey)}
-      </p>
+      {/* Billing toggle */}
+      {!isPro && (
+        <div className="flex items-center justify-center gap-3 mb-5">
+          <span
+            className={`text-xs font-medium cursor-pointer transition-colors ${
+              !isAnnual ? "text-gray-900 dark:text-white" : "text-gray-400 dark:text-slate-500"
+            }`}
+            onClick={() => setBillingPeriod("monthly")}
+          >
+            {t("landingPricingToggleMonthly")}
+          </span>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={isAnnual}
+            aria-label="Toggle annual billing"
+            onClick={() => setBillingPeriod(isAnnual ? "monthly" : "annual")}
+            className={`relative inline-flex h-6 w-10 shrink-0 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${
+              isAnnual ? "bg-emerald-500" : "bg-gray-300 dark:bg-slate-600"
+            }`}
+          >
+            <span
+              className={`inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${
+                isAnnual ? "translate-x-5" : "translate-x-1"
+              }`}
+            />
+          </button>
+          <span
+            className={`flex items-center gap-1.5 cursor-pointer transition-colors ${
+              isAnnual ? "text-gray-900 dark:text-white" : "text-gray-400 dark:text-slate-500"
+            }`}
+            onClick={() => setBillingPeriod("annual")}
+          >
+            <span className="text-xs font-medium">{t("landingPricingToggleAnnually")}</span>
+            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full border transition-colors ${
+              isAnnual
+                ? "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20"
+                : "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20 animate-pulse"
+            }`}>
+              {t("landingPricingSavePct")}
+            </span>
+          </span>
+        </div>
+      )}
 
-      {aiUsage && (
-        <p className="text-xs text-gray-600 dark:text-slate-300 mt-1">
-          {t("aiUsageThisMonth")}: {aiUsage.used}/{aiUsage.limit}
+      {/* At capacity warning */}
+      {atCapacity && (
+        <p className="text-xs text-center text-red-600 dark:text-red-400 font-medium py-2 mb-4 rounded-lg bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20">
+          {t("proAtCapacity")}
         </p>
       )}
 
-      <div className={`mt-3 grid gap-2 ${compact ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-3"}`}>
-        {/* Folio column */}
-        <div className={`rounded-lg border p-3 ${isFree ? "border-gray-400 dark:border-slate-500 bg-gray-50/80 dark:bg-slate-700/50" : "border-gray-200 dark:border-slate-600 bg-white/90 dark:bg-slate-800"}`}>
-          <p className="text-xs font-semibold text-gray-700 dark:text-slate-200 flex items-center gap-1"><TierIcon plan="free" size={14} />{t("upsellFreeTitle")}</p>
-          <ul className="mt-2 space-y-1">
-            {config.freeItems.map((item) => (
-              <li key={item} className="text-xs text-gray-600 dark:text-slate-300">- {t(item)}</li>
-            ))}
-          </ul>
-        </div>
+      {/* Pricing cards */}
+      <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
+        {visibleTiers.map((tier) => {
+          const isCurrent = tier.plan === currentPlan;
+          const isHighlighted = tier.highlighted && !isCurrent;
+          const canUpgradeTo = !isCurrent && (
+            (isFree && (tier.plan === "starter" || tier.plan === "pro")) ||
+            (isStarter && tier.plan === "pro")
+          );
 
-        {/* Bifolio column */}
-        {(!isStarter || !isPro) && (
-          <div className={`rounded-lg border p-3 ${isStarter ? "border-blue-400 dark:border-blue-500/40 bg-blue-50/50 dark:bg-blue-900/20" : "border-blue-300 dark:border-blue-500/30 bg-white dark:bg-slate-800"}`}>
-            <p className="text-xs font-semibold text-blue-700 dark:text-blue-300 flex items-center gap-1"><TierIcon plan="starter" size={14} />{t("upsellStarterTitle")} — €2.99/mo</p>
-            <ul className="mt-2 space-y-1">
-              {config.starterItems.map((item) => (
-                <li key={item} className="text-xs text-gray-700 dark:text-slate-200">- {t(item)}</li>
-              ))}
-            </ul>
-          </div>
-        )}
+          const displayPrice = tier.isFree
+            ? "€0"
+            : isAnnual ? tier.annualMonthly : tier.monthlyPrice;
+          const regularPrice = isAnnual ? tier.regularAnnualMonthly : tier.regularMonthly;
 
-        {/* Trefolio column */}
-        <div className={`rounded-lg border p-3 ${isPro ? "border-emerald-400 dark:border-emerald-500/40 bg-emerald-50/50 dark:bg-emerald-900/20" : "border-emerald-300 dark:border-emerald-500/40 bg-white dark:bg-slate-800"}`}>
-          <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 flex items-center gap-1"><TierIcon plan="pro" size={14} />{t("upsellProTitle")} — €7.99/mo</p>
-          <ul className="mt-2 space-y-1">
-            {config.proItems.map((item) => (
-              <li key={item} className="text-xs text-gray-700 dark:text-slate-200">- {t(item)}</li>
-            ))}
-          </ul>
-        </div>
+          return (
+            <div
+              key={tier.plan}
+              className={`relative rounded-xl p-4 flex flex-col transition-all ${
+                isHighlighted
+                  ? "bg-emerald-50/50 dark:bg-emerald-500/5 border-2 border-emerald-400 dark:border-emerald-500/40 shadow-lg shadow-emerald-500/5 dark:shadow-emerald-500/10"
+                  : isCurrent
+                    ? "bg-gray-50 dark:bg-slate-800/60 border-2 border-gray-300 dark:border-slate-500"
+                    : "bg-white dark:bg-slate-800/40 border border-gray-200 dark:border-slate-700"
+              }`}
+            >
+              {/* "Most Popular" badge */}
+              {isHighlighted && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-500 text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-md shadow-emerald-500/25 whitespace-nowrap">
+                  {t("landingPricingMostPopular")}
+                </div>
+              )}
+
+              {/* Current plan badge */}
+              {isCurrent && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gray-600 dark:bg-slate-500 text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-md whitespace-nowrap">
+                  {t("upsellCurrentPlan")}
+                </div>
+              )}
+
+              {/* Tier name + icon */}
+              <div className="flex items-center gap-1.5 mb-2 mt-1">
+                <TierIcon
+                  plan={tier.plan}
+                  size={18}
+                  className={
+                    tier.plan === "pro" ? "text-emerald-500" :
+                    tier.plan === "starter" ? "text-blue-500" :
+                    "text-gray-500 dark:text-slate-400"
+                  }
+                />
+                <h4 className="text-sm font-bold text-gray-900 dark:text-white">{tier.name}</h4>
+                {!tier.isFree && tier.launchDiscountPct > 0 && (
+                  <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 rounded-full border border-amber-200 dark:border-amber-500/20">
+                    -{tier.launchDiscountPct}%
+                  </span>
+                )}
+              </div>
+
+              {/* Price */}
+              <div className="flex items-baseline gap-1.5 mb-1">
+                {!tier.isFree && (
+                  <span className="text-sm text-gray-400 dark:text-slate-500 line-through">{regularPrice}</span>
+                )}
+                <span className="text-2xl font-extrabold text-gray-900 dark:text-white">{displayPrice}</span>
+                <span className="text-xs text-gray-400 dark:text-slate-500">
+                  {tier.isFree ? "forever" : "/mo"}
+                </span>
+              </div>
+
+              {/* Annual savings */}
+              {!tier.isFree && isAnnual && (
+                <div className="flex items-center gap-1.5 mb-2">
+                  <span className="text-[11px] text-gray-400 dark:text-slate-500 line-through">{tier.regularAnnual}/yr</span>
+                  <span className="text-[11px] text-gray-600 dark:text-slate-400">{tier.annualPrice}/yr</span>
+                  <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
+                    Save {tier.annualSavePct}%
+                  </span>
+                </div>
+              )}
+
+              {/* Description */}
+              <p className="text-[11px] text-gray-500 dark:text-slate-400 mb-3">
+                {t(tier.descriptionKey)}
+              </p>
+
+              {/* Features */}
+              <ul className="space-y-1.5 mb-4 flex-1">
+                {tier.featureKeys.map((key) => (
+                  <li key={key} className="flex items-start gap-2 text-[11px]">
+                    <svg className="w-3.5 h-3.5 text-emerald-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className="text-gray-600 dark:text-slate-300">{t(key)}</span>
+                  </li>
+                ))}
+              </ul>
+
+              {/* CTA button */}
+              {isCurrent ? (
+                isPro ? (
+                  <button
+                    onClick={openPortal}
+                    disabled={billingLoading !== ""}
+                    className="w-full text-xs font-semibold py-2.5 rounded-lg bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors disabled:opacity-60"
+                  >
+                    {billingLoading === "portal" ? t("billingRedirecting") : t("manageSubscription")}
+                  </button>
+                ) : (
+                  <div className="w-full text-xs font-semibold py-2.5 rounded-lg bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-slate-400 text-center">
+                    {t("upsellCurrentPlan")}
+                  </div>
+                )
+              ) : canUpgradeTo && !atCapacity ? (
+                <button
+                  onClick={() => startCheckout(tier.plan as "starter" | "pro", billingPeriod)}
+                  disabled={billingLoading !== ""}
+                  className={`w-full text-xs font-semibold py-2.5 rounded-lg transition-all disabled:opacity-60 ${
+                    tier.highlighted
+                      ? "bg-emerald-500 hover:bg-emerald-600 text-white shadow-md shadow-emerald-500/20"
+                      : tier.plan === "starter"
+                        ? "bg-blue-500 hover:bg-blue-600 text-white shadow-md shadow-blue-500/20"
+                        : "bg-gray-800 dark:bg-slate-600 hover:bg-gray-700 dark:hover:bg-slate-500 text-white"
+                  }`}
+                >
+                  {billingLoading === `${tier.plan}_${billingPeriod}`
+                    ? t("billingRedirecting")
+                    : isAnnual
+                      ? `${tier.name} — ${tier.annualPrice}/yr`
+                      : `${tier.name} — ${tier.monthlyPrice}/mo`
+                  }
+                </button>
+              ) : null}
+            </div>
+          );
+        })}
       </div>
 
-      <div className={`mt-3 ${compact ? "grid grid-cols-1 gap-2" : "grid grid-cols-1 sm:grid-cols-2 gap-2"}`}>
-        {isPro ? (
-          <button
-            onClick={openPortal}
-            disabled={billingLoading !== ""}
-            className="btn-secondary text-sm disabled:opacity-60"
-          >
-            {billingLoading === "portal" ? t("billingRedirecting") : t("manageSubscription")}
-          </button>
-        ) : atCapacity ? (
-          <p className="text-xs text-center text-red-600 dark:text-red-400 font-medium py-2 col-span-full">
-            {t("proAtCapacity")}
-          </p>
-        ) : (
-          <>
-            {isFree && (
-              <>
-                <button
-                  onClick={() => startCheckout("starter", "monthly")}
-                  disabled={billingLoading !== ""}
-                  className="btn-secondary text-sm disabled:opacity-60"
-                >
-                  {billingLoading === "starter_monthly" ? t("billingRedirecting") : t("upgradeStarterMonthly")}
-                </button>
-                <button
-                  onClick={() => startCheckout("starter", "annual")}
-                  disabled={billingLoading !== ""}
-                  className="btn-secondary text-sm disabled:opacity-60"
-                >
-                  {billingLoading === "starter_annual" ? t("billingRedirecting") : t("upgradeStarterAnnual")}
-                </button>
-              </>
-            )}
-            {upgradeTarget === "pro" || isFree ? (
-              <>
-                <button
-                  onClick={() => startCheckout("pro", "monthly")}
-                  disabled={billingLoading !== ""}
-                  className="btn-primary text-sm disabled:opacity-60"
-                >
-                  {billingLoading === "pro_monthly" ? t("billingRedirecting") : t("upgradeMonthly")}
-                </button>
-                <button
-                  onClick={() => startCheckout("pro", "annual")}
-                  disabled={billingLoading !== ""}
-                  className="btn-primary text-sm disabled:opacity-60"
-                >
-                  {billingLoading === "pro_annual" ? t("billingRedirecting") : t("upgradeAnnual")}
-                </button>
-              </>
-            ) : null}
-          </>
-        )}
-      </div>
-
+      {/* Billing error */}
       {billingError && (
-        <p className="text-xs text-red-500 dark:text-red-400 mt-2">{billingError}</p>
+        <p className="text-xs text-red-500 dark:text-red-400 mt-3 text-center">{billingError}</p>
       )}
     </div>
   );

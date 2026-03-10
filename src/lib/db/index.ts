@@ -84,7 +84,7 @@ export {
   removeCashEntry,
 } from "./cash";
 
-export type { PlatformFeature, WhatsAppQuota, StripePriceKey } from "./settings";
+export type { PlatformFeature, WhatsAppQuota, StripePriceKey, PromoBannerConfig } from "./settings";
 export {
   getUserSettings,
   updateUserSettings,
@@ -103,6 +103,10 @@ export {
   getAllStripePriceConfig,
   setStripePriceConfig,
   getAllPlatformSettings,
+  getPromoBannerConfig,
+  setPromoBannerConfig,
+  getGaMeasurementId,
+  setGaMeasurementId,
 } from "./settings";
 
 export {

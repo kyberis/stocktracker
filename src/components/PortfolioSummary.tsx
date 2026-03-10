@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n";
 import { formatCurrency, formatPercent, formatStealthCurrency } from "@/lib/utils";
-import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
+import { calculatePortfolioTotals, computeAllocationByType, type AllocationSlice } from "@/lib/portfolio-summary";
 import { useStealthMode } from "@/lib/stealth-context";
 import { PLATFORM_LIMITS } from "@/lib/platform-config";
 import type { Holding, CashEntry } from "@/lib/types";
@@ -46,9 +46,34 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
   const hasHoldings = holdings.length > 0;
 
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [allocationOpen, setAllocationOpen] = useState(false);
+  const allocationRef = useRef<HTMLDivElement>(null);
+
+  const allocationSlices = useMemo(
+    () => computeAllocationByType(holdings, cashEntries, quotes, exchangeRates),
+    [holdings, cashEntries, quotes, exchangeRates],
+  );
+
+  useEffect(() => {
+    if (!allocationOpen) return;
+    function handleClick(e: MouseEvent) {
+      if (allocationRef.current && !allocationRef.current.contains(e.target as Node)) {
+        setAllocationOpen(false);
+      }
+    }
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setAllocationOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [allocationOpen]);
 
   return (
-    <div className="card px-5 py-4 relative overflow-hidden">
+    <div className="card px-5 py-4 relative">
       {isLoading && (
         <div className="absolute top-0 left-0 right-0 h-0.5 overflow-hidden rounded-t-2xl">
           <div className="h-full w-1/3 bg-emerald-500/70 dark:bg-emerald-400/50 animate-progress-bar" />
@@ -85,6 +110,31 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
           </span>
           <span className="text-gray-300 dark:text-slate-600">·</span>
           <span>{holdingsCount} {t("holdings").toLowerCase()}</span>
+          {allocationSlices.length > 0 && (
+            <>
+              <span className="text-gray-300 dark:text-slate-600">·</span>
+              <div className="relative" ref={allocationRef}>
+                <button
+                  onClick={() => setAllocationOpen((v) => !v)}
+                  className="inline-flex items-center gap-1 text-xs font-medium text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 transition-colors"
+                  aria-label={t("assetAllocation")}
+                  title={t("assetAllocation")}
+                >
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
+                    <path d="M22 12A10 10 0 0 0 12 2v10z" />
+                  </svg>
+                </button>
+                {allocationOpen && (
+                  <AllocationPopover
+                    slices={allocationSlices}
+                    title={t("assetAllocation")}
+                    stealthMode={stealthMode}
+                  />
+                )}
+              </div>
+            </>
+          )}
           <span className="text-gray-300 dark:text-slate-600">·</span>
           {isPro ? (
             <button
@@ -120,6 +170,76 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
           <PortfolioReviewCard />
         </div>
       )}
+    </div>
+  );
+}
+
+function getArc(startPct: number, endPct: number): string {
+  const startAngle = (startPct / 100) * 2 * Math.PI - Math.PI / 2;
+  const endAngle = (endPct / 100) * 2 * Math.PI - Math.PI / 2;
+  const r = 40;
+  const cx = 50, cy = 50;
+  const x1 = cx + r * Math.cos(startAngle);
+  const y1 = cy + r * Math.sin(startAngle);
+  const x2 = cx + r * Math.cos(endAngle);
+  const y2 = cy + r * Math.sin(endAngle);
+  const largeArc = endPct - startPct > 50 ? 1 : 0;
+  return `M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2}`;
+}
+
+function AllocationPopover({
+  slices,
+  title,
+  stealthMode,
+}: {
+  slices: AllocationSlice[];
+  title: string;
+  stealthMode: boolean;
+}) {
+  let cumulative = 0;
+  const segments = slices.map((s) => {
+    const start = cumulative;
+    cumulative += s.percent;
+    return { ...s, start, end: cumulative };
+  });
+
+  return (
+    <div className="absolute right-0 top-full mt-2 z-50 w-64 rounded-xl bg-white dark:bg-slate-800 shadow-xl ring-1 ring-gray-200 dark:ring-slate-700 p-4">
+      <p className="text-xs font-semibold text-gray-700 dark:text-slate-200 mb-3">{title}</p>
+      <div className="flex justify-center mb-3">
+        <svg viewBox="0 0 100 100" className="w-28 h-28">
+          {segments.map((seg, i) =>
+            seg.percent > 0.1 ? (
+              <path
+                key={i}
+                d={getArc(seg.start, seg.end)}
+                fill="none"
+                stroke={seg.color}
+                strokeWidth="16"
+                strokeLinecap="butt"
+              />
+            ) : null,
+          )}
+        </svg>
+      </div>
+      <div className="space-y-1.5">
+        {slices.map((s) => (
+          <div key={s.key} className="flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: s.color }} />
+              <span className="text-gray-600 dark:text-slate-300">{s.label}</span>
+            </div>
+            <div className="flex items-center gap-2 tabular-nums">
+              <span className="text-gray-500 dark:text-slate-400">
+                {stealthMode ? "•••••" : formatCurrency(s.valueEUR, "EUR")}
+              </span>
+              <span className="font-medium text-gray-700 dark:text-slate-200 w-12 text-right">
+                {formatPercent(s.percent)}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

@@ -34,6 +34,7 @@ const ProCompareCard = dynamic(() => import("./ProCompareCard"), { ssr: false })
 const LeafPromoBanner = dynamic(() => import("./LeafPromoBanner"), { ssr: false });
 const CryptoPortfolioTab = dynamic(() => import("./CryptoPortfolioTab"), { ssr: false });
 const AddCryptoModal = dynamic(() => import("./AddCryptoModal"), { ssr: false });
+const AdSlot = dynamic(() => import("./AdSlot"), { ssr: false });
 
 
 type DashboardTab = "portfolio" | "crypto" | "diversification" | "dividends" | "metrics" | "growth" | "news";
@@ -292,11 +293,13 @@ export default function Dashboard() {
                 />
 
                 <PortfolioSummary holdings={filteredHoldings} cashEntries={filteredCashEntries} />
+                <AdSlot slot="dashboard-summary" format="horizontal" />
                 <PortfolioTable holdings={filteredHoldings} />
                 <PortfolioGrowthPeriods holdings={filteredHoldings} />
                 <PerformanceMetrics holdings={filteredHoldings} cashEntries={filteredCashEntries} />
                 <MarketAndCash holdings={filteredHoldings} cashEntries={filteredCashEntries} />
                 <PortfolioProjection holdings={filteredHoldings} cashEntries={filteredCashEntries} />
+                <AdSlot slot="dashboard-bottom" format="auto" />
               </>
             )}
           </div>

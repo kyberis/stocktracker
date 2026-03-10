@@ -154,8 +154,7 @@ export default function PrivacyPolicyPage() {
             <ul className="list-disc pl-6 space-y-2">
               <li>
                 <strong className="text-slate-200">Session cookies</strong> — 
-                essential httpOnly cookies for authentication. No tracking or
-                advertising cookies.
+                essential httpOnly cookies for authentication.
               </li>
               <li>
                 <strong className="text-slate-200">Basic analytics</strong> — 
@@ -285,6 +284,11 @@ export default function PrivacyPolicyPage() {
                     <td className="py-3 pr-6">Twilio Inc.</td>
                     <td className="py-3 pr-6">WhatsApp alert notifications (Trefolio)</td>
                     <td className="py-3">Phone number (E.164 format) for WhatsApp message delivery and verification; messages contain stock ticker and price data only</td>
+                  </tr>
+                  <tr>
+                    <td className="py-3 pr-6">Google AdSense (Google LLC)</td>
+                    <td className="py-3 pr-6">Display advertising (free plan only)</td>
+                    <td className="py-3">Advertising cookies and browser signals for ad personalization (only with user consent); paid plan users are never shown ads</td>
                   </tr>
                 </tbody>
               </table>
@@ -443,7 +447,7 @@ export default function PrivacyPolicyPage() {
               These cookies are only set after you give explicit consent.
               You can withdraw consent at any time by clearing your browser cookies
               and revisiting the site. We use Google Analytics with IP anonymization
-              enabled and no advertising features. Data collected by Google Analytics
+              enabled. Data collected by Google Analytics
               is processed by Google LLC under their{" "}
               <a
                 href="https://privacy.google.com/businesses/processorterms/"
@@ -454,8 +458,25 @@ export default function PrivacyPolicyPage() {
                 Data Processing Terms
               </a>.
             </p>
+            <h3>Advertising Cookies (optional, consent required)</h3>
             <p>
-              We do not use advertising or marketing cookies.
+              If you choose &quot;Accept All&quot; in the cookie banner and are on
+              the free plan, we use{" "}
+              <strong className="text-white">Google AdSense</strong> to display
+              relevant advertisements. Google AdSense may set cookies to serve
+              ads based on your browsing history. Paid plan users (Starter and Pro)
+              are never shown ads and no advertising cookies are set.
+            </p>
+            <p>
+              You can opt out of personalized advertising at{" "}
+              <a
+                href="https://adssettings.google.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-emerald-400 hover:text-emerald-300 underline"
+              >
+                Google Ads Settings
+              </a>.
             </p>
           </section>
 
@@ -463,7 +484,7 @@ export default function PrivacyPolicyPage() {
             <h2>10. International Transfers</h2>
             <p>
               Your data may be processed outside the EEA by our third-party
-              service providers (Vercel, OpenAI, Stripe, Cloudflare, Google, Finnhub, Interactive Brokers, SnapTrade, Resend, Twilio). Where
+              service providers (Vercel, OpenAI, Stripe, Cloudflare, Google Analytics, Google AdSense, Finnhub, Interactive Brokers, SnapTrade, Resend, Twilio). Where
               this occurs, we ensure appropriate safeguards are in place,
               including Standard Contractual Clauses (SCCs) approved by the
               European Commission.
