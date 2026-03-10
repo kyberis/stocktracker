@@ -7,6 +7,7 @@ import {
   createDeviceNotification,
   getWhatsAppQuota,
   incrementWhatsAppCounter,
+  trackEvent,
 } from "@/lib/db";
 import { canAccessFeature } from "@/lib/subscription";
 import type { NotificationChannel, SubscriptionPlan, PercentBasis } from "@/lib/types";
@@ -108,6 +109,7 @@ export async function dispatchAlert(
           });
         }
         sent.push("email");
+        trackEvent(ctx.userId, "alert_email_sent", { ticker: payload.ticker });
       }
 
       if (channel === "push") {
@@ -121,7 +123,10 @@ export async function dispatchAlert(
             await deletePushSubscription(ctx.userId, sub.endpoint);
           }
         }
-        if (subs.length > 0) sent.push("push");
+        if (subs.length > 0) {
+          sent.push("push");
+          trackEvent(ctx.userId, "alert_push_sent", { ticker: payload.ticker });
+        }
       }
 
       if (channel === "whatsapp" && ctx.whatsappPhone && ctx.whatsappVerified) {
@@ -140,6 +145,7 @@ export async function dispatchAlert(
         if (result.success) {
           await incrementWhatsAppCounter(ctx.userId);
           sent.push("whatsapp");
+          trackEvent(ctx.userId, "alert_whatsapp_sent", { ticker: payload.ticker });
         }
       }
 
@@ -148,6 +154,7 @@ export async function dispatchAlert(
         const message = buildPushBody(payload);
         await createDeviceNotification(ctx.userId, { title, message, ticker: payload.ticker });
         sent.push("device");
+        trackEvent(ctx.userId, "alert_device_sent", { ticker: payload.ticker });
       }
     } catch (err) {
       console.error(`Alert dispatch failed for channel ${channel}:`, err);

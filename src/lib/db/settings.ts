@@ -6,7 +6,22 @@ import { isValidLanguage } from "@/lib/languages";
 import { encrypt, tryDecryptOrPlaintext } from "@/lib/crypto";
 import { PLATFORM_LIMITS } from "@/lib/platform-config";
 
-export type PlatformFeature = "alerts_enabled" | "csv_export_enabled" | "apple_signin_enabled" | "device_enabled";
+export type PlatformFeature =
+  | "alerts_enabled" | "csv_export_enabled" | "apple_signin_enabled" | "device_enabled"
+  | "whatsapp_enabled"
+  | "tool_transactions_enabled" | "tool_dividends_enabled" | "tool_performance_enabled"
+  | "tool_taxonomy_enabled" | "tool_rebalancing_enabled" | "tool_accounts_enabled"
+  | "tool_watchlist_enabled";
+
+const DEFAULT_ENABLED_FLAGS: Set<PlatformFeature> = new Set([
+  "whatsapp_enabled",
+  "tool_transactions_enabled",
+  "tool_dividends_enabled",
+  "tool_performance_enabled",
+  "tool_taxonomy_enabled",
+  "tool_accounts_enabled",
+  "tool_watchlist_enabled",
+]);
 
 const DEFAULT_SETTINGS: UserSettings = {
   language: "en",
@@ -243,6 +258,7 @@ export async function setPlatformSetting(key: string, value: string): Promise<vo
 
 export async function isFeatureEnabled(feature: PlatformFeature): Promise<boolean> {
   const val = await getPlatformSetting(feature);
+  if (!val) return DEFAULT_ENABLED_FLAGS.has(feature);
   return val === "true";
 }
 

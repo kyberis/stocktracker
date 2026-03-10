@@ -223,7 +223,13 @@ export const adminResetDataSchema = z.object({
 });
 
 export const featureFlagSchema = z.object({
-  flag: z.enum(["alerts_enabled", "csv_export_enabled", "apple_signin_enabled", "device_enabled"]),
+  flag: z.enum([
+    "alerts_enabled", "csv_export_enabled", "apple_signin_enabled", "device_enabled",
+    "whatsapp_enabled",
+    "tool_transactions_enabled", "tool_dividends_enabled", "tool_performance_enabled",
+    "tool_taxonomy_enabled", "tool_rebalancing_enabled", "tool_accounts_enabled",
+    "tool_watchlist_enabled",
+  ]),
   enabled: z.boolean(),
 });
 

@@ -31,6 +31,18 @@ interface FunnelStage {
   count: number;
 }
 
+interface NotificationUserStats {
+  userId: string;
+  username: string;
+  email: string;
+  plan: string;
+  emailSent: number;
+  whatsappSent: number;
+  pushSent: number;
+  deviceSent: number;
+  total: number;
+}
+
 interface AnalyticsSummary {
   totalUsers: number;
   activeUsers7d: number;
@@ -42,6 +54,7 @@ interface AnalyticsSummary {
   signupsByDay: { date: string; count: number }[];
   landing: LandingAnalytics;
   funnel: FunnelStage[];
+  notificationStats?: NotificationUserStats[];
 }
 
 type Tab = "users" | "settings" | "analytics" | "feedback" | "waitlist" | "docs";
@@ -353,6 +366,51 @@ function AnalyticsTab() {
                 </div>
               </div>
             )}
+          </div>
+        </>
+      )}
+
+      {/* ── Notifications per Customer ── */}
+      {data.notificationStats && data.notificationStats.length > 0 && (
+        <>
+          <h3 className="text-base font-bold text-gray-900 dark:text-white mt-8 mb-4">Notifications per Customer</h3>
+          <div className="card overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-gray-500 dark:text-slate-400 border-b border-gray-100 dark:border-slate-700">
+                  <th className="px-4 py-2.5 font-medium">User</th>
+                  <th className="px-4 py-2.5 font-medium">Email</th>
+                  <th className="px-4 py-2.5 font-medium">Plan</th>
+                  <th className="px-4 py-2.5 font-medium text-right">Email</th>
+                  <th className="px-4 py-2.5 font-medium text-right">WhatsApp</th>
+                  <th className="px-4 py-2.5 font-medium text-right">Push</th>
+                  <th className="px-4 py-2.5 font-medium text-right">Device</th>
+                  <th className="px-4 py-2.5 font-medium text-right">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.notificationStats.map((row) => (
+                  <tr key={row.userId} className="border-b border-gray-50 dark:border-slate-700/50">
+                    <td className="px-4 py-2.5 font-medium text-gray-900 dark:text-white">{row.username}</td>
+                    <td className="px-4 py-2.5 text-gray-600 dark:text-slate-300 truncate max-w-[200px]">{row.email}</td>
+                    <td className="px-4 py-2.5">
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                        row.plan === "pro" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400"
+                          : row.plan === "starter" ? "bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-400"
+                          : "bg-gray-100 text-gray-600 dark:bg-slate-700 dark:text-slate-300"
+                      }`}>
+                        {row.plan}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2.5 text-right tabular-nums text-gray-700 dark:text-slate-300">{row.emailSent || "—"}</td>
+                    <td className="px-4 py-2.5 text-right tabular-nums text-gray-700 dark:text-slate-300">{row.whatsappSent || "—"}</td>
+                    <td className="px-4 py-2.5 text-right tabular-nums text-gray-700 dark:text-slate-300">{row.pushSent || "—"}</td>
+                    <td className="px-4 py-2.5 text-right tabular-nums text-gray-700 dark:text-slate-300">{row.deviceSent || "—"}</td>
+                    <td className="px-4 py-2.5 text-right tabular-nums font-semibold text-gray-900 dark:text-white">{row.total}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </>
       )}
