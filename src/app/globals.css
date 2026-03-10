@@ -169,6 +169,9 @@ body {
   background: #64748b;
 }
 
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
 @media (prefers-reduced-motion: no-preference) {
   @keyframes ai-shimmer {
     0% { background-position: 200% 50%; }

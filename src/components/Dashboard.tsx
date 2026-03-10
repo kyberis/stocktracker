@@ -40,7 +40,7 @@ type DashboardTab = "portfolio" | "crypto" | "diversification" | "dividends" | "
 
 function EmptyPortfolio({ onAddStock, onSeedData }: { onAddStock: () => void; onSeedData: () => void }) {
   const { t } = useI18n();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const [seeding, setSeeding] = useState(false);
   const isPro = user?.plan === "pro";
 
@@ -112,7 +112,7 @@ function EmptyPortfolio({ onAddStock, onSeedData }: { onAddStock: () => void; on
       </div>
 
       {/* Broker API sync upsell for non-Pro users */}
-      {!isPro && (
+      {!authLoading && !isPro && (
         <ProCompareCard surface="broker_sync_import" reason="upgrade_required" compact className="mt-2" />
       )}
     </div>
@@ -133,7 +133,7 @@ export default function Dashboard() {
   const { showWhatsNew: autoShowWhatsNew, dismissWhatsNew } = useWhatsNewAutoShow();
   const { t } = useI18n();
   const { holdings, cashEntries, isLoading, refreshHoldings, refreshQuotes } = usePortfolio();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const track = useTrack();
 
   useEffect(() => {
@@ -169,8 +169,8 @@ export default function Dashboard() {
   const isPro = user?.plan === "pro";
   const holdingsCount = holdings.length;
   const holdingsLimit = getHoldingsLimit(user?.plan ?? "free");
-  const showHoldingsBanner = holdingsLimit !== Infinity && holdingsCount >= holdingsLimit - 2 && holdingsCount > 0;
-  const holdingsAtLimit = holdingsLimit !== Infinity && holdingsCount >= holdingsLimit;
+  const showHoldingsBanner = !authLoading && holdingsLimit !== Infinity && holdingsCount >= holdingsLimit - 2 && holdingsCount > 0;
+  const holdingsAtLimit = !authLoading && holdingsLimit !== Infinity && holdingsCount >= holdingsLimit;
 
   const hasCryptoHoldings = filteredHoldings.some((h) => h.assetType === "crypto");
   const dashboardTabs: { key: DashboardTab; label: string; badge?: string }[] = [
@@ -209,9 +209,9 @@ export default function Dashboard() {
         onResetPortfolio={() => setShowReset(true)}
       />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-6 space-y-4 sm:space-y-8">
         {/* Dashboard Tab Bar */}
-        <div role="tablist" aria-label={t("portfolioTab")} className="flex gap-1.5 flex-wrap">
+        <div role="tablist" aria-label={t("portfolioTab")} className="flex gap-1 overflow-x-auto sm:flex-wrap sm:overflow-visible scrollbar-hide bg-white dark:bg-slate-800 rounded-2xl p-1.5 border border-gray-200 dark:border-slate-700 shadow-sm">
           {dashboardTabs.map((tab) => (
             <button
               key={tab.key}
@@ -220,10 +220,10 @@ export default function Dashboard() {
               aria-selected={activeTab === tab.key}
               aria-controls={`tabpanel-${tab.key}`}
               onClick={() => handleTabChange(tab.key)}
-              className={`px-4 py-2 text-sm font-medium rounded-full transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none ${
+              className={`shrink-0 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium rounded-xl transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none ${
                 activeTab === tab.key
-                  ? "bg-emerald-500 text-white"
-                  : "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-600"
+                  ? "bg-emerald-500 text-white shadow-sm"
+                  : "text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-700"
               }`}
             >
               {tab.label}

@@ -55,10 +55,15 @@ export default function DemoShell({
 function DemoBanner() {
   return (
     <div className="sticky top-0 z-50 bg-emerald-600 text-white text-center py-2.5 px-4 text-sm font-medium shadow-md">
-      <span className="mr-2">You&apos;re viewing a demo portfolio with sample data.</span>
+      <span className="inline-flex items-center gap-2">
+        <span className="bg-white text-emerald-700 font-bold text-[10px] tracking-widest uppercase px-2 py-0.5 rounded">
+          Demo
+        </span>
+        <span>You&apos;re viewing a demo portfolio with sample data.</span>
+      </span>
       <Link
         href="/signup"
-        className="inline-flex items-center gap-1 bg-white text-emerald-700 font-semibold px-3 py-1 rounded-md text-xs hover:bg-emerald-50 transition-colors"
+        className="inline-flex items-center gap-1 ml-2 bg-white text-emerald-700 font-semibold px-3 py-1 rounded-md text-xs hover:bg-emerald-50 transition-colors"
       >
         Sign Up Free to track your own
         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
