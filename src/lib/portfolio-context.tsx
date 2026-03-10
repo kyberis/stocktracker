@@ -95,25 +95,31 @@ export interface PortfolioProviderProps {
   children: React.ReactNode;
   initialHoldings?: Holding[];
   initialCash?: CashEntry[];
+  demoMode?: boolean;
+  initialQuotes?: Record<string, QuoteData>;
+  initialExchangeRates?: ExchangeRates;
 }
 
-export function PortfolioProvider({ children, initialHoldings, initialCash }: PortfolioProviderProps) {
+export function PortfolioProvider({
+  children, initialHoldings, initialCash,
+  demoMode, initialQuotes, initialExchangeRates,
+}: PortfolioProviderProps) {
   const { getApiHeaders } = useSettings();
   const hasServerData = !!(initialHoldings || initialCash);
   const [holdings, setHoldings] = useState<Holding[]>(initialHoldings ?? []);
   const [cashEntries, setCashEntries] = useState<CashEntry[]>(initialCash ?? []);
   const [portfolios, setPortfolios] = useState<PortfolioInfo[]>([]);
   const [activePortfolioId, setActivePortfolioId] = useState<string | null>(() => {
-    if (typeof window === "undefined") return null;
+    if (demoMode || typeof window === "undefined") return null;
     return localStorage.getItem(ACTIVE_PORTFOLIO_KEY) || null;
   });
-  const [quotes, setQuotes] = useState<Record<string, QuoteData>>({});
+  const [quotes, setQuotes] = useState<Record<string, QuoteData>>(initialQuotes ?? {});
   const [quoteUpdatedAt, setQuoteUpdatedAt] = useState<Record<string, number>>({});
   const [refreshingTickers, setRefreshingTickers] = useState<Set<string>>(new Set());
-  const [exchangeRates, setExchangeRates] = useState<ExchangeRates>({});
+  const [exchangeRates, setExchangeRates] = useState<ExchangeRates>(initialExchangeRates ?? {});
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(demoMode ? new Date() : null);
   const [alertedTickers, setAlertedTickers] = useState<Set<string>>(new Set());
   const fetchingRef = useRef(false);
   const fetchPortfolios = useCallback(async () => {
@@ -166,6 +172,11 @@ export function PortfolioProvider({ children, initialHoldings, initialCash }: Po
 
   // One-time init on mount: load portfolios, cached quotes/rates, and initial holdings if needed
   useEffect(() => {
+    if (demoMode) {
+      mountedRef.current = true;
+      return;
+    }
+
     const init = async () => {
       setIsLoading(true);
       setError(null);
@@ -212,7 +223,7 @@ export function PortfolioProvider({ children, initialHoldings, initialCash }: Po
   // Fetches directly instead of through fetchHoldings/fetchCashEntries to avoid
   // stale data from slow previous fetches overwriting current state.
   useEffect(() => {
-    if (!mountedRef.current) return;
+    if (demoMode || !mountedRef.current) return;
     const version = ++switchVersionRef.current;
     setIsLoading(true);
     setError(null);
@@ -328,7 +339,7 @@ export function PortfolioProvider({ children, initialHoldings, initialCash }: Po
   const { refreshInterval } = useSettings();
 
   useEffect(() => {
-    if (holdings.length === 0) return;
+    if (demoMode || holdings.length === 0) return;
     const ms = refreshInterval * 60 * 1000;
     const id = window.setInterval(() => {
       const tickers = [...new Set(holdings.map((h) => h.ticker))];
@@ -506,6 +517,7 @@ export function PortfolioProvider({ children, initialHoldings, initialCash }: Po
   const enrichedNamesRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
+    if (demoMode) return;
     const enrichable = holdings.filter(
       (h) =>
         !enrichedNamesRef.current.has(h.id) &&
@@ -534,6 +546,7 @@ export function PortfolioProvider({ children, initialHoldings, initialCash }: Po
     await Promise.all([fetchHoldings(), fetchCashEntries()]);
   }, [fetchHoldings, fetchCashEntries]);
 
+  const noop = useCallback(async () => {}, []);
   const value = useMemo(
     () => ({
       holdings,
@@ -547,18 +560,18 @@ export function PortfolioProvider({ children, initialHoldings, initialCash }: Po
       portfolios,
       activePortfolioId,
       alertedTickers,
-      setActivePortfolio,
-      refreshPortfolios: fetchPortfolios,
-      addHolding,
-      removeHolding,
-      updateHolding,
-      addCashEntry,
-      removeCashEntry,
-      updateCashEntry,
-      refreshHoldings,
-      refreshQuotes,
-      refreshSingleQuote,
-      refreshAlertedTickers,
+      setActivePortfolio: demoMode ? () => {} : setActivePortfolio,
+      refreshPortfolios: demoMode ? noop : fetchPortfolios,
+      addHolding: demoMode ? noop : addHolding,
+      removeHolding: demoMode ? noop : removeHolding,
+      updateHolding: demoMode ? noop : updateHolding,
+      addCashEntry: demoMode ? noop : addCashEntry,
+      removeCashEntry: demoMode ? noop : removeCashEntry,
+      updateCashEntry: demoMode ? noop : updateCashEntry,
+      refreshHoldings: demoMode ? noop : refreshHoldings,
+      refreshQuotes: demoMode ? noop : refreshQuotes,
+      refreshSingleQuote: demoMode ? noop : refreshSingleQuote,
+      refreshAlertedTickers: demoMode ? noop : refreshAlertedTickers,
       lastUpdated,
     }),
     [
@@ -566,7 +579,7 @@ export function PortfolioProvider({ children, initialHoldings, initialCash }: Po
       isLoading, error, portfolios, activePortfolioId, alertedTickers, setActivePortfolio, fetchPortfolios,
       addHolding, removeHolding, updateHolding, addCashEntry,
       removeCashEntry, updateCashEntry, refreshHoldings, refreshQuotes, refreshSingleQuote,
-      refreshAlertedTickers, lastUpdated,
+      refreshAlertedTickers, lastUpdated, demoMode, noop,
     ]
   );
 

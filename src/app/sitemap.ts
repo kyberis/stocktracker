@@ -25,6 +25,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     ...blogEntries,
     {
+      url: "https://trefolio.com/demo",
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
+    {
       url: "https://trefolio.com/signup",
       lastModified: new Date(),
       changeFrequency: "monthly",

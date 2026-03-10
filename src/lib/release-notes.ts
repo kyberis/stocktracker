@@ -25,6 +25,11 @@ export const releaseNotes: ReleaseEntry[] = [
     changes: [
       {
         type: "feature",
+        text: "Interactive demo at /demo — try the full dashboard with a sample portfolio, no signup required",
+        translations: { es: "Demo interactiva en /demo — prueba el dashboard completo con una cartera de ejemplo, sin necesidad de registro" },
+      },
+      {
+        type: "feature",
         text: "Dedicated trefolio Leaf waitlist page at /leaf — join the waitlist for the limited-edition AMOLED desk display",
         translations: { es: "Página dedicada de lista de espera trefolio Leaf en /leaf — únete a la lista de espera del display AMOLED de edición limitada" },
       },

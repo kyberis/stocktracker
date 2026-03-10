@@ -16,6 +16,7 @@ trefolio is a web-based portfolio tracker that supports real-time quotes from NY
 
 - Landing: https://trefolio.com/landing
 - Blog: https://trefolio.com/blog
+- Interactive Demo: https://trefolio.com/demo
 - Sign Up: https://trefolio.com/signup
 - Privacy Policy: https://trefolio.com/privacy
 - Terms of Service: https://trefolio.com/terms
