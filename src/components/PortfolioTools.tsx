@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, Suspense } from "react";
+import { useState, useMemo, useEffect, Suspense } from "react";
 import dynamic from "next/dynamic";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth-context";
@@ -30,16 +30,38 @@ const ALL_TABS: { key: Tab; icon: string }[] = [
 export default function PortfolioTools() {
   const { t } = useI18n();
   const { user } = useAuth();
-  const { alertsEnabled, csvExportEnabled } = useSettings();
+  const {
+    alertsEnabled, csvExportEnabled,
+    toolTransactionsEnabled, toolDividendsEnabled, toolPerformanceEnabled,
+    toolTaxonomyEnabled, toolRebalancingEnabled, toolAccountsEnabled, toolWatchlistEnabled,
+  } = useSettings();
   const [activeTab, setActiveTab] = useState<Tab>("transactions");
   const isPaid = user?.plan === "starter" || user?.plan === "pro";
 
+  const toolFlagMap: Record<Tab, boolean> = {
+    transactions: toolTransactionsEnabled,
+    dividends: toolDividendsEnabled,
+    performance: toolPerformanceEnabled,
+    taxonomy: toolTaxonomyEnabled,
+    rebalancing: toolRebalancingEnabled,
+    accounts: toolAccountsEnabled,
+    watchlist: toolWatchlistEnabled,
+    alerts: alertsEnabled,
+  };
+
   const visibleTabs = useMemo(() => {
-    return ALL_TABS.filter((tab) => {
-      if (tab.key === "alerts" && !alertsEnabled) return false;
-      return true;
-    });
-  }, [alertsEnabled]);
+    return ALL_TABS.filter((tab) => toolFlagMap[tab.key]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    alertsEnabled, toolTransactionsEnabled, toolDividendsEnabled, toolPerformanceEnabled,
+    toolTaxonomyEnabled, toolRebalancingEnabled, toolAccountsEnabled, toolWatchlistEnabled,
+  ]);
+
+  useEffect(() => {
+    if (visibleTabs.length > 0 && !visibleTabs.some((t) => t.key === activeTab)) {
+      setActiveTab(visibleTabs[0].key);
+    }
+  }, [visibleTabs, activeTab]);
 
   const handleExport = (type: string) => {
     window.open(`/api/export/portfolio?type=${type}`, "_blank");

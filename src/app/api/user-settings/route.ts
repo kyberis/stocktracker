@@ -9,11 +9,23 @@ export const GET = withMetrics("/api/user-settings", async (req: NextRequest) =>
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
 
-  const [settings, alertsEnabled, csvExportEnabled, deviceEnabled] = await Promise.all([
+  const [
+    settings, alertsEnabled, csvExportEnabled, deviceEnabled, whatsappEnabled,
+    toolTransactions, toolDividends, toolPerformance,
+    toolTaxonomy, toolRebalancing, toolAccounts, toolWatchlist,
+  ] = await Promise.all([
     getUserSettings(session.userId),
     isFeatureEnabled("alerts_enabled"),
     isFeatureEnabled("csv_export_enabled"),
     isFeatureEnabled("device_enabled"),
+    isFeatureEnabled("whatsapp_enabled"),
+    isFeatureEnabled("tool_transactions_enabled"),
+    isFeatureEnabled("tool_dividends_enabled"),
+    isFeatureEnabled("tool_performance_enabled"),
+    isFeatureEnabled("tool_taxonomy_enabled"),
+    isFeatureEnabled("tool_rebalancing_enabled"),
+    isFeatureEnabled("tool_accounts_enabled"),
+    isFeatureEnabled("tool_watchlist_enabled"),
   ]);
 
   return NextResponse.json({
@@ -24,6 +36,14 @@ export const GET = withMetrics("/api/user-settings", async (req: NextRequest) =>
     alertsEnabled,
     csvExportEnabled,
     deviceEnabled,
+    whatsappEnabled,
+    toolTransactionsEnabled: toolTransactions,
+    toolDividendsEnabled: toolDividends,
+    toolPerformanceEnabled: toolPerformance,
+    toolTaxonomyEnabled: toolTaxonomy,
+    toolRebalancingEnabled: toolRebalancing,
+    toolAccountsEnabled: toolAccounts,
+    toolWatchlistEnabled: toolWatchlist,
   });
 });
 

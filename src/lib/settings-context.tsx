@@ -9,6 +9,14 @@ interface SettingsContextType {
   alertsEnabled: boolean;
   csvExportEnabled: boolean;
   deviceEnabled: boolean;
+  whatsappEnabled: boolean;
+  toolTransactionsEnabled: boolean;
+  toolDividendsEnabled: boolean;
+  toolPerformanceEnabled: boolean;
+  toolTaxonomyEnabled: boolean;
+  toolRebalancingEnabled: boolean;
+  toolAccountsEnabled: boolean;
+  toolWatchlistEnabled: boolean;
   setRefreshInterval: (interval: RefreshInterval) => void;
   getApiHeaders: () => Record<string, string>;
   getApiParams: () => URLSearchParams;
@@ -22,6 +30,14 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [alertsEnabled, setAlertsEnabled] = useState(false);
   const [csvExportEnabled, setCsvExportEnabled] = useState(false);
   const [deviceEnabled, setDeviceEnabled] = useState(false);
+  const [whatsappEnabled, setWhatsappEnabled] = useState(true);
+  const [toolTransactionsEnabled, setToolTransactionsEnabled] = useState(true);
+  const [toolDividendsEnabled, setToolDividendsEnabled] = useState(true);
+  const [toolPerformanceEnabled, setToolPerformanceEnabled] = useState(true);
+  const [toolTaxonomyEnabled, setToolTaxonomyEnabled] = useState(true);
+  const [toolRebalancingEnabled, setToolRebalancingEnabled] = useState(false);
+  const [toolAccountsEnabled, setToolAccountsEnabled] = useState(true);
+  const [toolWatchlistEnabled, setToolWatchlistEnabled] = useState(true);
 
   useEffect(() => {
     const load = async () => {
@@ -43,6 +59,30 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
           }
           if (typeof settings.deviceEnabled === "boolean") {
             setDeviceEnabled(settings.deviceEnabled);
+          }
+          if (typeof settings.whatsappEnabled === "boolean") {
+            setWhatsappEnabled(settings.whatsappEnabled);
+          }
+          if (typeof settings.toolTransactionsEnabled === "boolean") {
+            setToolTransactionsEnabled(settings.toolTransactionsEnabled);
+          }
+          if (typeof settings.toolDividendsEnabled === "boolean") {
+            setToolDividendsEnabled(settings.toolDividendsEnabled);
+          }
+          if (typeof settings.toolPerformanceEnabled === "boolean") {
+            setToolPerformanceEnabled(settings.toolPerformanceEnabled);
+          }
+          if (typeof settings.toolTaxonomyEnabled === "boolean") {
+            setToolTaxonomyEnabled(settings.toolTaxonomyEnabled);
+          }
+          if (typeof settings.toolRebalancingEnabled === "boolean") {
+            setToolRebalancingEnabled(settings.toolRebalancingEnabled);
+          }
+          if (typeof settings.toolAccountsEnabled === "boolean") {
+            setToolAccountsEnabled(settings.toolAccountsEnabled);
+          }
+          if (typeof settings.toolWatchlistEnabled === "boolean") {
+            setToolWatchlistEnabled(settings.toolWatchlistEnabled);
           }
         }
       } catch {
@@ -81,12 +121,22 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       alertsEnabled,
       csvExportEnabled,
       deviceEnabled,
+      whatsappEnabled,
+      toolTransactionsEnabled,
+      toolDividendsEnabled,
+      toolPerformanceEnabled,
+      toolTaxonomyEnabled,
+      toolRebalancingEnabled,
+      toolAccountsEnabled,
+      toolWatchlistEnabled,
       setRefreshInterval,
       getApiHeaders,
       getApiParams,
     }),
     [
       refreshInterval, hasGlobalAvKey, alertsEnabled, csvExportEnabled, deviceEnabled,
+      whatsappEnabled, toolTransactionsEnabled, toolDividendsEnabled, toolPerformanceEnabled,
+      toolTaxonomyEnabled, toolRebalancingEnabled, toolAccountsEnabled, toolWatchlistEnabled,
       setRefreshInterval, getApiHeaders, getApiParams,
     ]
   );

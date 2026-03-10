@@ -7,6 +7,7 @@ import {
   createDeviceNotification,
   getWhatsAppQuota,
   incrementWhatsAppCounter,
+  isFeatureEnabled,
   trackEvent,
 } from "@/lib/db";
 import { canAccessFeature } from "@/lib/subscription";
@@ -129,7 +130,7 @@ export async function dispatchAlert(
         }
       }
 
-      if (channel === "whatsapp" && ctx.whatsappPhone && ctx.whatsappVerified) {
+      if (channel === "whatsapp" && ctx.whatsappPhone && ctx.whatsappVerified && await isFeatureEnabled("whatsapp_enabled")) {
         const quota = await getWhatsAppQuota(ctx.userId);
         if (!quota.allowed) {
           console.warn(`WhatsApp quota exceeded for user ${ctx.userId}: ${quota.reason}`);

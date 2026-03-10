@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth-context";
+import { useSettings } from "@/lib/settings-context";
 import type { NotificationChannel } from "@/lib/types";
 
 interface WhatsAppQuotaInfo {
@@ -23,6 +24,7 @@ interface NotificationPrefs {
 export default function NotificationChannels() {
   const { t } = useI18n();
   const { user } = useAuth();
+  const { whatsappEnabled } = useSettings();
   const plan = user?.plan || "free";
   const isStarter = plan === "starter" || plan === "pro";
   const isPro = plan === "pro";
@@ -223,7 +225,7 @@ export default function NotificationChannels() {
       </div>
 
       {/* WhatsApp */}
-      <div className="py-2 space-y-2">
+      {whatsappEnabled && <div className="py-2 space-y-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-green-100 dark:bg-green-500/15 flex items-center justify-center">
@@ -294,7 +296,7 @@ export default function NotificationChannels() {
             )}
           </>
         )}
-      </div>
+      </div>}
 
       {/* Device */}
       {hasDevice && (

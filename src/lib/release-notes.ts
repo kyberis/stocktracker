@@ -28,6 +28,11 @@ export const releaseNotes: ReleaseEntry[] = [
         text: "Crypto portfolio tracking — add Bitcoin, Ethereum, and other cryptocurrencies to your portfolio with a dedicated Crypto dashboard tab (Pro)",
         translations: { es: "Seguimiento de cartera cripto — añade Bitcoin, Ethereum y otras criptomonedas a tu cartera con una pestaña dedicada de Cripto en el dashboard (Pro)" },
       },
+      {
+        type: "feature",
+        text: "Admin feature flags for each tool on the Tools page and WhatsApp notifications — enable or disable Transactions, Dividends, Performance, Taxonomy, Rebalancing, Accounts, Watchlist, and WhatsApp from the admin panel",
+        translations: { es: "Flags de características de administrador para cada herramienta en la página de Herramientas y notificaciones de WhatsApp — activa o desactiva Transacciones, Dividendos, Rendimiento, Taxonomía, Rebalanceo, Cuentas, Lista de seguimiento y WhatsApp desde el panel de administración" },
+      },
     ],
   },
   {

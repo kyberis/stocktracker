@@ -1131,6 +1131,14 @@ function FeatureTogglesCard() {
   const csvOn = flags.csv_export_enabled ?? false;
   const appleOn = flags.apple_signin_enabled ?? false;
   const deviceOn = flags.device_enabled ?? false;
+  const whatsappOn = flags.whatsapp_enabled ?? true;
+  const toolTransactionsOn = flags.tool_transactions_enabled ?? true;
+  const toolDividendsOn = flags.tool_dividends_enabled ?? true;
+  const toolPerformanceOn = flags.tool_performance_enabled ?? true;
+  const toolTaxonomyOn = flags.tool_taxonomy_enabled ?? true;
+  const toolRebalancingOn = flags.tool_rebalancing_enabled ?? false;
+  const toolAccountsOn = flags.tool_accounts_enabled ?? true;
+  const toolWatchlistOn = flags.tool_watchlist_enabled ?? true;
 
   const alertsSteps: SetupStep[] = [
     { text: "Enable this toggle", done: alertsOn },
@@ -1188,6 +1196,69 @@ function FeatureTogglesCard() {
           enabled={deviceOn}
           saving={saving === "device_enabled"}
           onToggle={(v) => handleToggle("device_enabled", v)}
+        />
+        <FeatureToggle
+          label="WhatsApp Notifications"
+          description="Allow Pro users to receive price alert notifications via WhatsApp. Requires Twilio credentials (TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_WHATSAPP_FROM)."
+          enabled={whatsappOn}
+          saving={saving === "whatsapp_enabled"}
+          onToggle={(v) => handleToggle("whatsapp_enabled", v)}
+        />
+      </div>
+
+      <h3 className="text-sm font-semibold text-gray-900 dark:text-white mt-6 mb-1">Tools</h3>
+      <p className="text-xs text-gray-500 dark:text-slate-400 mb-4">
+        Show or hide individual tools on the Tools page. Disabled tools are hidden from all users.
+      </p>
+      <div className="divide-y divide-gray-200 dark:divide-slate-700">
+        <FeatureToggle
+          label="Transactions"
+          description="Transaction history tool — view and manage buy/sell/dividend transaction records."
+          enabled={toolTransactionsOn}
+          saving={saving === "tool_transactions_enabled"}
+          onToggle={(v) => handleToggle("tool_transactions_enabled", v)}
+        />
+        <FeatureToggle
+          label="Dividends"
+          description="Dividend summary tool — projected income, yield calculations, and ex-dividend calendar."
+          enabled={toolDividendsOn}
+          saving={saving === "tool_dividends_enabled"}
+          onToggle={(v) => handleToggle("tool_dividends_enabled", v)}
+        />
+        <FeatureToggle
+          label="Performance"
+          description="Performance metrics tool — TTWROR, XIRR, and historical portfolio performance charts."
+          enabled={toolPerformanceOn}
+          saving={saving === "tool_performance_enabled"}
+          onToggle={(v) => handleToggle("tool_performance_enabled", v)}
+        />
+        <FeatureToggle
+          label="Taxonomy"
+          description="Taxonomy tool — sector, region, and asset class breakdown of portfolio holdings."
+          enabled={toolTaxonomyOn}
+          saving={saving === "tool_taxonomy_enabled"}
+          onToggle={(v) => handleToggle("tool_taxonomy_enabled", v)}
+        />
+        <FeatureToggle
+          label="Rebalancing"
+          description="Rebalancing tool — define allocation targets and view drift suggestions."
+          enabled={toolRebalancingOn}
+          saving={saving === "tool_rebalancing_enabled"}
+          onToggle={(v) => handleToggle("tool_rebalancing_enabled", v)}
+        />
+        <FeatureToggle
+          label="Accounts"
+          description="Accounts manager tool — create and manage brokerage accounts for organizing holdings."
+          enabled={toolAccountsOn}
+          saving={saving === "tool_accounts_enabled"}
+          onToggle={(v) => handleToggle("tool_accounts_enabled", v)}
+        />
+        <FeatureToggle
+          label="Watchlist"
+          description="Watchlist tool — track stocks and ETFs without adding them to the portfolio."
+          enabled={toolWatchlistOn}
+          saving={saving === "tool_watchlist_enabled"}
+          onToggle={(v) => handleToggle("tool_watchlist_enabled", v)}
         />
       </div>
     </div>

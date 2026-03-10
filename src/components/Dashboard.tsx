@@ -33,6 +33,7 @@ const FeedbackModal = dynamic(() => import("./FeedbackModal"), { ssr: false });
 const ProCompareCard = dynamic(() => import("./ProCompareCard"), { ssr: false });
 const LeafPromoBanner = dynamic(() => import("./LeafPromoBanner"), { ssr: false });
 const CryptoPortfolioTab = dynamic(() => import("./CryptoPortfolioTab"), { ssr: false });
+const AddCryptoModal = dynamic(() => import("./AddCryptoModal"), { ssr: false });
 
 
 type DashboardTab = "portfolio" | "crypto" | "diversification" | "dividends" | "metrics" | "growth" | "news";
@@ -120,6 +121,7 @@ function EmptyPortfolio({ onAddStock, onSeedData }: { onAddStock: () => void; on
 
 export default function Dashboard() {
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showAddCrypto, setShowAddCrypto] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [showReset, setShowReset] = useState(false);
@@ -196,6 +198,13 @@ export default function Dashboard() {
     <>
       <DashboardToolbar
         onAddStock={() => setShowAddModal(true)}
+        onAddCrypto={() => {
+          if (isPro) {
+            setShowAddCrypto(true);
+          } else {
+            setActiveTab("crypto");
+          }
+        }}
         onOpenSettings={() => setShowSettings(true)}
         onResetPortfolio={() => setShowReset(true)}
       />
@@ -407,6 +416,13 @@ export default function Dashboard() {
         <AddStockModal
           isOpen={showAddModal}
           onClose={() => setShowAddModal(false)}
+        />
+      )}
+
+      {showAddCrypto && (
+        <AddCryptoModal
+          isOpen={showAddCrypto}
+          onClose={() => setShowAddCrypto(false)}
         />
       )}
 

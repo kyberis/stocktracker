@@ -60,7 +60,25 @@ export async function GET(req: NextRequest) {
   const cronSecret = process.env.CRON_SECRET;
 
   if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const mask = (s: string | null) =>
+      s ? `${s.slice(0, 8)}…${s.slice(-4)} (len=${s.length})` : "(empty)";
+    console.error("[push-gauges] 401 auth mismatch", {
+      secretSet: !!cronSecret,
+      secretPreview: mask(cronSecret),
+      headerPresent: !!authHeader,
+      headerPreview: mask(authHeader),
+    });
+    return NextResponse.json(
+      {
+        error: "Unauthorized",
+        reason: !authHeader
+          ? "missing_authorization_header"
+          : "secret_mismatch",
+        secretConfigured: !!cronSecret,
+        headerPresent: !!authHeader,
+      },
+      { status: 401 },
+    );
   }
 
   const [snapshot, redisSynced, purged] = await Promise.all([
