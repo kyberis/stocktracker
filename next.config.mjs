@@ -29,6 +29,13 @@ const nextConfig = {
   },
   experimental: {
     serverComponentsExternalPackages: ["@libsql/client"],
+    outputFileTracingIncludes: {
+      "/api/admin/docs": [
+        "./docs/**/*.html",
+        "./public/**/*.html",
+        "./lilygo-t4s3/**/*.html",
+      ],
+    },
   },
   async headers() {
     return [
