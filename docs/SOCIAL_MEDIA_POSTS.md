@@ -23,11 +23,11 @@ https://trefolio.com
 
 ### Tweet 2 — The Problem
 
-European investors deserve better portfolio tools.
+I tried many portfolio trackers. The pattern is always the same:
 
-Most trackers are US-only. No DEGIRO import. No XETRA support. Everything in English.
+Some have unreliable imports that drop transactions. Others pile on features but miss what matters — clear portfolio evolution.
 
-So I built trefolio — 4 broker imports, 35 languages, multi-currency, AI analysis.
+So I built trefolio — reliable broker imports, real performance metrics, 35 languages, AI analysis.
 
 Free tier included.
 
@@ -91,7 +91,7 @@ https://trefolio.com
 
 **1/** I started building trefolio because I was tracking my stocks in Google Sheets. It worked until I had 20+ positions across DEGIRO and IBKR, in EUR and USD. The spreadsheet became unmaintainable.
 
-**2/** I looked at existing trackers: Simply Wall St ($10/mo, no DEGIRO import), Seeking Alpha ($20/mo, US-focused), Portfolio Performance (free but desktop-only with a steep learning curve). None fit.
+**2/** I tried many trackers: some had unreliable imports that dropped transactions, others piled on screeners and social feeds but missed what matters — clear portfolio evolution and accurate performance metrics. Portfolio Performance was free but desktop-only with a steep learning curve. None fit.
 
 **3/** So I built my own. Tech stack: Next.js 14, Turso (libSQL), Stripe, Vercel. Market data from Yahoo Finance (free tier) and Alpha Vantage (Pro). AI analysis via OpenAI.
 
@@ -188,7 +188,7 @@ https://trefolio.com
 
 I spent the last year building trefolio — a portfolio tracker for European investors.
 
-The problem: most tools are built for Americans. Try importing your DEGIRO CSV into Simply Wall St. Try getting AI analysis in Finnish. Try tracking positions in EUR and GBP simultaneously.
+The problem: most portfolio trackers pile on features but miss what matters. Unreliable broker imports that drop transactions. No clear view of portfolio evolution. Multi-currency as an afterthought. Everything in English only.
 
 trefolio solves this with:
 → Native import from DEGIRO, IBKR, Trading 212, and Revolut

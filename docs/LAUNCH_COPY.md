@@ -8,7 +8,7 @@ Ready-to-post copy for all launch channels. Edit as needed, then publish.
 
 ### Tagline
 
-trefolio — Track your portfolio in 35 languages for under €5/month
+trefolio — Track your portfolio in 35 languages, starting free
 
 ### Description
 
@@ -37,9 +37,9 @@ trefolio is a portfolio tracker built for European investors.
 
 Hey Product Hunt! I'm the maker of trefolio.
 
-I built this because I was tired of tracking my European portfolio in spreadsheets. Every tracker I tried was built for US investors — no DEGIRO import, no XETRA support, and everything in English only.
+I built this because I was tired of tracking my European portfolio in spreadsheets. I tried many providers — some support broker imports but the parsing is unreliable, others pile on features (screeners, social feeds, news firehoses) while missing what actually matters: clear portfolio evolution, accurate performance metrics, and reliable multi-currency tracking.
 
-trefolio supports 4 European brokers natively, handles multi-currency automatically, and works in 35 languages. The AI analysis is the part I'm most proud of — you can ask it about any stock in your portfolio and get a plain-language breakdown in your native language.
+trefolio focuses on what investors actually check every day: how is my portfolio doing, what changed, and where am I headed. It supports 4 European brokers natively, handles multi-currency automatically, and works in 35 languages. The AI analysis is the part I'm most proud of — you can ask it about any stock and get a plain-language breakdown in your native language.
 
 The free tier is genuinely useful (15 holdings, real-time quotes, broker import, 5 AI calls/month). Bifolio is €2.99/month for 50 holdings and sharing. Trefolio is €7.99/month for unlimited everything.
 
@@ -64,11 +64,13 @@ Show HN: trefolio – AI portfolio tracker for European investors (35 languages,
 
 ### Text
 
-I built a portfolio tracker for European investors because the existing tools didn't work well for me.
+I built a portfolio tracker for European investors because I tried many providers and none focused on what actually matters.
+
+Some support broker imports but parsing is unreliable — transactions get dropped or miscategorized. Others pile on features (screeners, social feeds, news walls) but the core portfolio evolution view is an afterthought. I wanted something that answers the question investors actually ask every day: how is my portfolio doing, and where is it headed?
 
 The main pain points I wanted to solve:
 
-1. **Broker import** — I use DEGIRO and wanted to import my CSV without mapping columns manually. trefolio parses DEGIRO, IBKR, Trading 212, and Revolut CSVs natively. IBKR also has direct API sync.
+1. **Reliable broker import** — I use DEGIRO and wanted imports that just work — no dropped transactions, no manual fixes. trefolio parses DEGIRO, IBKR, Trading 212, and Revolut CSVs natively. IBKR also has direct API sync.
 
 2. **Multi-currency** — My portfolio spans EUR and USD. trefolio converts automatically between EUR, USD, GBP, DKK, and CAD.
 
@@ -98,7 +100,7 @@ Happy to answer questions about the architecture, AI implementation, or anything
 
 **Body:**
 
-After struggling with US-centric portfolio trackers, I built trefolio — a portfolio tracker designed for European investors.
+After trying multiple portfolio trackers and finding they either had unreliable imports or buried what matters under feature bloat, I built trefolio — a portfolio tracker focused on what European investors actually need: clear portfolio evolution and accurate performance metrics.
 
 What makes it different:
 
@@ -169,7 +171,7 @@ After a year of building, trefolio is at v0.50 and I'm starting to share it publ
 
 **What it is:** A portfolio tracker for European retail investors with broker imports, AI analysis, and 35 language support.
 
-**The problem:** Most portfolio trackers are built for US investors. European brokers like DEGIRO, Trading 212, and Revolut aren't supported. Multi-currency is an afterthought. Everything is English-only.
+**The problem:** Most portfolio trackers either have unreliable broker imports or pile on features (screeners, social feeds, news walls) while missing what matters — clear portfolio evolution, accurate performance metrics, and reliable multi-currency tracking. And almost none work in local European languages.
 
 **Key features:**
 - One-click import from DEGIRO, IBKR (CSV + API), Trading 212, Revolut

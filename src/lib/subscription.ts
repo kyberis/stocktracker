@@ -9,6 +9,7 @@ const FREE_FEATURES = new Set<SubscriptionFeature>([
   "charts",
   "cash",
   "benchmarks",
+  "crypto",
 ]);
 
 /**
@@ -33,6 +34,7 @@ const PRO_FEATURES = new Set<SubscriptionFeature>([
   "alerts-device",
   "metrics",
   "portfolio-history-full",
+  "crypto-pro",
 ]);
 
 export interface EntitlementInput {

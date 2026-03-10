@@ -574,6 +574,111 @@ export class AlphaVantageProvider implements StockDataProvider {
       }));
   }
 
+  /* ── Cryptocurrency ─────────────────────────────────────── */
+
+  async getCryptoDaily(
+    symbol: string,
+    market = "EUR"
+  ): Promise<{ meta: Record<string, string>; timeSeries: Array<{ date: string; open: number; high: number; low: number; close: number; volume: number; marketCap: number }> }> {
+    const data = await this.avFetch({
+      function: "DIGITAL_CURRENCY_DAILY",
+      symbol,
+      market,
+    });
+
+    const meta = (data["Meta Data"] || {}) as Record<string, string>;
+    const tsKey = "Time Series (Digital Currency Daily)";
+    const timeSeries = data[tsKey] as Record<string, Record<string, string>> | undefined;
+    if (!timeSeries) return { meta, timeSeries: [] };
+
+    const entries = Object.entries(timeSeries)
+      .sort(([a], [b]) => b.localeCompare(a))
+      .map(([dateStr, vals]) => ({
+        date: dateStr,
+        open: parseFloat0(vals["1. open"] || vals[`1a. open (${market})`]),
+        high: parseFloat0(vals["2. high"] || vals[`2a. high (${market})`]),
+        low: parseFloat0(vals["3. low"] || vals[`3a. low (${market})`]),
+        close: parseFloat0(vals["4. close"] || vals[`4a. close (${market})`]),
+        volume: parseFloat0(vals["5. volume"]),
+        marketCap: parseFloat0(vals["6. market cap (USD)"]),
+      }));
+
+    return { meta, timeSeries: entries };
+  }
+
+  async getCryptoWeekly(
+    symbol: string,
+    market = "EUR"
+  ): Promise<Array<{ date: string; open: number; high: number; low: number; close: number; volume: number }>> {
+    const data = await this.avFetch({
+      function: "DIGITAL_CURRENCY_WEEKLY",
+      symbol,
+      market,
+    });
+
+    const tsKey = "Time Series (Digital Currency Weekly)";
+    const timeSeries = data[tsKey] as Record<string, Record<string, string>> | undefined;
+    if (!timeSeries) return [];
+
+    return Object.entries(timeSeries)
+      .sort(([a], [b]) => b.localeCompare(a))
+      .map(([dateStr, vals]) => ({
+        date: dateStr,
+        open: parseFloat0(vals["1. open"] || vals[`1a. open (${market})`]),
+        high: parseFloat0(vals["2. high"] || vals[`2a. high (${market})`]),
+        low: parseFloat0(vals["3. low"] || vals[`3a. low (${market})`]),
+        close: parseFloat0(vals["4. close"] || vals[`4a. close (${market})`]),
+        volume: parseFloat0(vals["5. volume"]),
+      }));
+  }
+
+  async getCryptoMonthly(
+    symbol: string,
+    market = "EUR"
+  ): Promise<Array<{ date: string; open: number; high: number; low: number; close: number; volume: number }>> {
+    const data = await this.avFetch({
+      function: "DIGITAL_CURRENCY_MONTHLY",
+      symbol,
+      market,
+    });
+
+    const tsKey = "Time Series (Digital Currency Monthly)";
+    const timeSeries = data[tsKey] as Record<string, Record<string, string>> | undefined;
+    if (!timeSeries) return [];
+
+    return Object.entries(timeSeries)
+      .sort(([a], [b]) => b.localeCompare(a))
+      .map(([dateStr, vals]) => ({
+        date: dateStr,
+        open: parseFloat0(vals["1. open"] || vals[`1a. open (${market})`]),
+        high: parseFloat0(vals["2. high"] || vals[`2a. high (${market})`]),
+        low: parseFloat0(vals["3. low"] || vals[`3a. low (${market})`]),
+        close: parseFloat0(vals["4. close"] || vals[`4a. close (${market})`]),
+        volume: parseFloat0(vals["5. volume"]),
+      }));
+  }
+
+  async getCryptoExchangeRate(
+    fromCurrency: string,
+    toCurrency: string
+  ): Promise<{ rate: number; bid: number; ask: number; lastRefreshed: string }> {
+    const data = await this.avFetch({
+      function: "CURRENCY_EXCHANGE_RATE",
+      from_currency: fromCurrency,
+      to_currency: toCurrency,
+    });
+
+    const r = data["Realtime Currency Exchange Rate"] as Record<string, string> | undefined;
+    if (!r) return { rate: 0, bid: 0, ask: 0, lastRefreshed: "" };
+
+    return {
+      rate: parseFloat0(r["5. Exchange Rate"]),
+      bid: parseFloat0(r["8. Bid Price"]),
+      ask: parseFloat0(r["9. Ask Price"]),
+      lastRefreshed: r["6. Last Refreshed"] || "",
+    };
+  }
+
   /* ── Economic Indicators ─────────────────────────────────── */
 
   async getEconomicIndicator(

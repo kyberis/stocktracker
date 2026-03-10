@@ -30,6 +30,11 @@ const NAV_LINKS = [
     match: (p: string) => p === "/tools",
   },
   {
+    href: "/crypto",
+    labelKey: "cryptoNav" as const,
+    match: (p: string) => p === "/crypto",
+  },
+  {
     href: "/economic-indicators",
     labelKey: "indicatorsNav" as const,
     match: (p: string) => p === "/economic-indicators",

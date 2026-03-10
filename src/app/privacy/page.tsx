@@ -252,6 +252,11 @@ export default function PrivacyPolicyPage() {
                     <td className="py-3">Stock ticker symbols requested</td>
                   </tr>
                   <tr>
+                    <td className="py-3 pr-6">CoinLore</td>
+                    <td className="py-3 pr-6">Cryptocurrency market data</td>
+                    <td className="py-3">No user data sent — only public market data retrieved</td>
+                  </tr>
+                  <tr>
                     <td className="py-3 pr-6">Finnhub</td>
                     <td className="py-3 pr-6">Market news (fallback)</td>
                     <td className="py-3">Stock ticker symbols requested</td>

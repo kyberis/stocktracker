@@ -18,7 +18,9 @@ export type SubscriptionFeature =
   | "metrics"
   | "portfolio-history-full"
   | "portfolio-sharing"
-  | "csv-export";
+  | "csv-export"
+  | "crypto"
+  | "crypto-pro";
 
 export type AlertCondition = "above" | "below";
 export type AlertType = "threshold" | "percent_change";

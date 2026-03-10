@@ -17,7 +17,7 @@ registerPost({
   content: /* html */ `
 <h2>Why European Investors Need a Dedicated Tracker</h2>
 <p>If you hold stocks or ETFs across multiple European exchanges, you already know the pain: your broker shows your positions, but not your total portfolio. You check one app for XETRA holdings, another for NYSE, and a spreadsheet for everything else. Dividends? Good luck tracking those across currencies.</p>
-<p>Portfolio trackers solve this by pulling everything into one view. But most popular tools are built for US investors. Exchange support, currency handling, and broker imports often feel like afterthoughts for European users.</p>
+<p>Portfolio trackers solve this by pulling everything into one view. But many popular tools pile on features — screeners, social feeds, news firehoses — while missing what actually matters: clear portfolio evolution, accurate performance metrics, and reliable broker imports that don't drop transactions.</p>
 <p>We compared the most relevant options for EU-based investors in 2026, focusing on what actually matters: multi-exchange support, broker imports, currency handling, and cost.</p>
 
 <h2>The Contenders</h2>
@@ -32,9 +32,9 @@ registerPost({
 <h3>2. Simply Wall St</h3>
 <p><strong>Price:</strong> Free (limited) / $10/month</p>
 <p><strong>Best for:</strong> Visual analysis of individual stocks</p>
-<p>Simply Wall St focuses on stock analysis with its signature snowflake visualization. It shows valuation, growth, health, dividends, and management scores for individual companies. The portfolio tracking is secondary — it works, but the import experience is basic (manual entry or generic CSV).</p>
-<p>Strengths: beautiful stock visualizations, global coverage, strong fundamental data.</p>
-<p>Weaknesses: twice the price, no native DEGIRO/T212/Revolut import, US-centric interface, portfolio view is minimal.</p>
+<p>Simply Wall St focuses on stock analysis with its signature snowflake visualization. It shows valuation, growth, health, dividends, and management scores for individual companies. It does support some broker imports (including DEGIRO), but the portfolio tracking is secondary to the analysis tools — the focus is on individual stock scores, not on your portfolio's evolution over time.</p>
+<p>Strengths: beautiful stock visualizations, global coverage, strong fundamental data, DEGIRO import available.</p>
+<p>Weaknesses: twice the price, portfolio evolution and performance metrics are not the focus, lots of features that can feel overwhelming when you just want to see how your portfolio is doing.</p>
 
 <h3>3. Portfolio Performance</h3>
 <p><strong>Price:</strong> Free (open source)</p>
@@ -46,9 +46,9 @@ registerPost({
 <h3>4. Seeking Alpha</h3>
 <p><strong>Price:</strong> Free (limited) / $19.99/month</p>
 <p><strong>Best for:</strong> US-focused research and analysis</p>
-<p>Seeking Alpha is primarily a research platform. The portfolio tracker is a secondary feature. It excels at earnings analysis, dividend grades, and community research — but it's built around the US market.</p>
+<p>Seeking Alpha is primarily a research platform. The portfolio tracker is a secondary feature. It excels at earnings analysis, dividend grades, and community research — but the focus is stock research, not portfolio performance tracking. For European investors, the content and analysis skew heavily toward US markets.</p>
 <p>Strengths: deep research, strong community, dividend grades.</p>
-<p>Weaknesses: expensive, US-centric, no European broker imports, portfolio tracking is basic.</p>
+<p>Weaknesses: expensive, US market focus, no European broker imports, portfolio tracking and evolution are not the priority.</p>
 
 <h3>5. Google Sheets / Excel</h3>
 <p><strong>Price:</strong> Free</p>
@@ -64,8 +64,8 @@ registerPost({
 <tr><th>Feature</th><th>trefolio</th><th>Simply Wall St</th><th>Portfolio Performance</th><th>Seeking Alpha</th></tr>
 </thead>
 <tbody>
-<tr><td>Monthly cost</td><td>€0–4.99</td><td>$0–10</td><td>Free</td><td>$0–19.99</td></tr>
-<tr><td>DEGIRO import</td><td>Yes (CSV)</td><td>No</td><td>Manual</td><td>No</td></tr>
+<tr><td>Monthly cost</td><td>€0–7.99</td><td>$0–10</td><td>Free</td><td>$0–19.99</td></tr>
+<tr><td>DEGIRO import</td><td>Yes (CSV)</td><td>Yes</td><td>Manual</td><td>No</td></tr>
 <tr><td>IBKR import</td><td>Yes (CSV + API)</td><td>No</td><td>Yes (CSV)</td><td>No</td></tr>
 <tr><td>Trading 212 import</td><td>Yes (CSV)</td><td>No</td><td>Manual</td><td>No</td></tr>
 <tr><td>Revolut import</td><td>Yes (CSV)</td><td>No</td><td>Manual</td><td>No</td></tr>
@@ -79,9 +79,9 @@ registerPost({
 
 <h2>Which Should You Pick?</h2>
 <p><strong>If you use DEGIRO, IBKR, Trading 212, or Revolut</strong> and want a clean, modern tracker that just works: <a href="https://trefolio.com/signup">trefolio</a>. The one-click import alone saves hours compared to manual entry.</p>
-<p><strong>If you want deep stock analysis</strong> and don't mind paying more: Simply Wall St gives you the best visual breakdown of individual companies.</p>
+<p><strong>If you want deep individual stock analysis</strong> and don't mind paying more: Simply Wall St gives you the best visual breakdown of individual companies, though portfolio evolution isn't its focus.</p>
 <p><strong>If you want full control and don't mind complexity:</strong> Portfolio Performance is free and endlessly flexible — if you're comfortable with desktop software.</p>
-<p><strong>If you're US-focused and want research:</strong> Seeking Alpha is unmatched for community-driven stock analysis, but the price is steep for non-US investors.</p>
+<p><strong>If you're US-focused and want research:</strong> Seeking Alpha is unmatched for community-driven stock analysis, but it's not built for tracking your portfolio's evolution over time.</p>
 
 <h2>Getting Started</h2>
 <p>The fastest way to test any tracker is to import your actual portfolio. With trefolio, you can go from zero to a fully imported portfolio in under 2 minutes — just export your CSV from your broker, upload it, and you're done.</p>

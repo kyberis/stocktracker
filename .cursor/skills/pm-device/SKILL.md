@@ -11,18 +11,35 @@ Own the product strategy for trefolio's hardware device line. Evaluate market op
 
 ## Current Product Line
 
-### trefolio Leaf (shipping)
+### trefolio Leaf (shipping — limited edition)
 
 | Attribute | Detail |
 |---|---|
-| **Category** | Desktop portfolio display |
+| **Category** | Desktop portfolio display (brand builder) |
 | **Display** | 2.41" AMOLED, 600x450, touch |
 | **Data shown** | Portfolio value, day change, top holdings, AI summary |
 | **Connectivity** | WiFi → trefolio API |
 | **Requires** | trefolio Pro subscription + WiFi |
-| **Target price** | 49–79 EUR (TBD based on BOM + margin) |
+| **Retail price** | 99 EUR standalone / 139 EUR bundled with 1-year Pro |
+| **Batch size** | 10-15 units (limited edition) |
 | **Target buyer** | trefolio Pro subscriber who wants a glanceable desk widget |
 | **Value prop** | "Your portfolio, always visible" |
+| **Strategy** | Brand builder — hero photos, press, social proof. Not a volume product. |
+
+### trefolio Slate (next — volume product)
+
+| Attribute | Detail |
+|---|---|
+| **Category** | Ambient e-ink desk/wall display |
+| **Display** | 4.2" e-ink B&W, 400x300 |
+| **Data shown** | Portfolio value, day change, top 5 movers |
+| **Connectivity** | WiFi → trefolio API |
+| **Power** | Battery (4-6 weeks) + USB-C charging |
+| **Requires** | trefolio Pro subscription + WiFi |
+| **Target price** | 49-59 EUR (45-55% margin, best in lineup) |
+| **Target buyer** | "Set and forget" investor who wants an ambient display |
+| **Value prop** | "Always-on, zero distraction, weeks of battery" |
+| **Strategy** | Volume play — better margins, lower BOM, wider appeal. Fast-track after Leaf launch. |
 
 ## Device Concept Pipeline
 
@@ -142,6 +159,7 @@ Markup targets by volume:
 - Review and approve enclosure + packaging designs from `designer-device`.
 - Scope firmware features with `engineer-device`.
 - Coordinate device launch copy with `sales`.
+- Coordinate launch campaigns with `marketing-device`.
 - Pricing and subscription bundling decisions with `engineer-payments-subscriptions`.
 - Legal review (warranty, CE marking, compliance) with `legal-advisor`.
 - Manufacturing decisions reference `docs/DEVICE_MANUFACTURING_GUIDE.md`.

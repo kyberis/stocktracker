@@ -68,6 +68,10 @@ export const POST = withMetrics("/api/ai-analysis", async (request: NextRequest)
     indicatorData?: { date: string; value: number | null }[];
     indicatorUnit?: string;
     indicatorInterval?: string;
+    cryptoSymbol?: string;
+    cryptoName?: string;
+    cryptoData?: Record<string, unknown>;
+    historyData?: Array<Record<string, unknown>>;
   };
 
   try {
@@ -84,8 +88,22 @@ export const POST = withMetrics("/api/ai-analysis", async (request: NextRequest)
   const dataSections: string[] = [];
   const isIntelligence = body.analysisType === "intelligence";
   const isEconomic = body.analysisType === "economic_indicator";
+  const isCrypto = body.analysisType === "crypto_market";
 
-  if (isEconomic) {
+  if (isCrypto) {
+    if (body.cryptoData) {
+      dataSections.push(
+        `## ${body.cryptoName || body.cryptoSymbol || "Cryptocurrency"} (${body.cryptoSymbol || ""})\n` +
+        `Current data:\n${JSON.stringify(body.cryptoData, null, 2)}`
+      );
+    }
+    if (body.historyData && body.historyData.length > 0) {
+      dataSections.push(
+        `### Recent Price History (most recent first)\n` +
+        body.historyData.map((d) => `${d.date}: close=${d.close}, high=${d.high}, low=${d.low}, vol=${d.volume}`).join("\n")
+      );
+    }
+  } else if (isEconomic) {
     if (body.indicatorData && body.indicatorData.length > 0) {
       const recent = body.indicatorData.slice(0, 40);
       dataSections.push(
@@ -136,12 +154,38 @@ export const POST = withMetrics("/api/ai-analysis", async (request: NextRequest)
       ? "intelligence"
       : body.analysisType === "economic_indicator"
         ? "economic"
-        : "fundamental";
+        : body.analysisType === "crypto_market"
+          ? "crypto"
+          : "fundamental";
 
   let systemPrompt: string;
   let userPrompt: string;
 
-  if (isEconomic) {
+  if (isCrypto) {
+    const cryptoLabel = body.cryptoName
+      ? `${body.cryptoName} (${body.cryptoSymbol})`
+      : body.cryptoSymbol || "this cryptocurrency";
+
+    systemPrompt = `You are a friendly cryptocurrency analyst who explains crypto market data to beginners.
+Your audience has NO crypto or financial background.
+
+Rules:
+- Write in ${lang}.
+- ONLY use facts and numbers explicitly present in the data provided below. Do NOT invent price targets, predictions, or historical comparisons not in the input.
+- If the data is insufficient to draw a conclusion, say so clearly instead of speculating.
+- Use simple, everyday language. When you must mention a crypto term, explain it briefly in parentheses.
+- Structure your response with clear headings using markdown ##.
+- Start with a one-sentence "Quick Take" — is the trend bullish, bearish, or sideways?
+- Analyze the price trend, volume patterns, and volatility from the data.
+- Mention any notable support/resistance levels visible in the data.
+- Keep the total response under 500 words.
+- Include a disclaimer that this is not financial advice.`;
+
+    userPrompt = `Here is market data for ${cryptoLabel}.
+Please analyze the trends and explain what they mean in simple terms.
+
+${dataSections.join("\n\n")}`;
+  } else if (isEconomic) {
     systemPrompt = `You are a friendly economist who explains macroeconomic data to beginners.
 Your audience has NO economics or finance background.
 

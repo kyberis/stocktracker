@@ -14,9 +14,55 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "1.9.0";
+export const CURRENT_VERSION = "1.11.0";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "1.11.0",
+    date: "2026-03-10",
+    title: "trefolio Leaf Waitlist",
+    titleTranslations: { es: "Lista de espera trefolio Leaf" },
+    changes: [
+      {
+        type: "feature",
+        text: "Dedicated trefolio Leaf waitlist page at /leaf — join the waitlist for the limited-edition AMOLED desk display",
+        translations: { es: "Página dedicada de lista de espera trefolio Leaf en /leaf — únete a la lista de espera del display AMOLED de edición limitada" },
+      },
+      {
+        type: "feature",
+        text: "Leaf promotion banner on the dashboard — dismissible banner for logged-in users when device is enabled",
+        translations: { es: "Banner promocional Leaf en el dashboard — banner descartable para usuarios conectados cuando el dispositivo está habilitado" },
+      },
+      {
+        type: "feature",
+        text: "Admin Docs viewer — browse and preview all HTML planning documents (device lab review, cost analysis, mockups) directly in the admin panel",
+        translations: { es: "Visor de Docs en admin — navega y previsualiza todos los documentos HTML de planificación directamente en el panel de admin" },
+      },
+    ],
+  },
+  {
+    version: "1.10.0",
+    date: "2026-03-09",
+    title: "Crypto Market",
+    titleTranslations: { es: "Mercado Cripto" },
+    changes: [
+      {
+        type: "feature",
+        text: "Cryptocurrency Market section — real-time prices, market cap, and volume for top cryptocurrencies powered by CoinLore, available to all users",
+        translations: { es: "Sección de Mercado de Criptomonedas — precios en tiempo real, capitalización y volumen de las principales criptomonedas con CoinLore, disponible para todos los usuarios" },
+      },
+      {
+        type: "feature",
+        text: "Pro crypto upgrade — historical price charts, OHLCV market details, live exchange rates with bid/ask, and AI-powered market analysis via Alpha Vantage",
+        translations: { es: "Actualización cripto Pro — gráficos históricos de precios, datos OHLCV, tasas de cambio en vivo con compra/venta, y análisis de mercado con IA vía Alpha Vantage" },
+      },
+      {
+        type: "improvement",
+        text: "Server-side API cache for crypto data — reduces Alpha Vantage calls with intelligent TTL-based caching (30min daily, 2hr weekly/monthly, 5min exchange rates)",
+        translations: { es: "Caché de API del servidor para datos cripto — reduce llamadas a Alpha Vantage con caché inteligente basada en TTL (30min diario, 2h semanal/mensual, 5min tasas de cambio)" },
+      },
+    ],
+  },
   {
     version: "1.9.0",
     date: "2026-03-09",

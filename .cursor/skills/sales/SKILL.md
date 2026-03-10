@@ -246,3 +246,4 @@ Sales Copy Checklist
 - For legal review of sales claims, involve `legal-advisor`.
 - For analytics on sales funnels, involve `analytics-instrumentation`.
 - For design mockups of sales pages, involve `product-manager`.
+- For campaign execution and content calendars, involve `marketing-device`.

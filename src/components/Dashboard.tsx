@@ -31,6 +31,7 @@ const ResetPortfolioModal = dynamic(() => import("./ResetPortfolioModal"), { ssr
 const WhatsNewModal = dynamic(() => import("./WhatsNewModal"), { ssr: false });
 const FeedbackModal = dynamic(() => import("./FeedbackModal"), { ssr: false });
 const ProCompareCard = dynamic(() => import("./ProCompareCard"), { ssr: false });
+const LeafPromoBanner = dynamic(() => import("./LeafPromoBanner"), { ssr: false });
 
 
 type DashboardTab = "portfolio" | "diversification" | "dividends" | "metrics" | "growth" | "news";
@@ -214,6 +215,8 @@ export default function Dashboard() {
             </button>
           ))}
         </div>
+
+        <LeafPromoBanner />
 
         {activeTab === "portfolio" && (
           <div

@@ -149,3 +149,4 @@ Design Review: [Device Name]
 - Coordinate with `pm-device` on target price point and tier positioning.
 - Coordinate with `engineer-device` on display cutout tolerances and button placement.
 - Involve `sales` for packaging copy and premium tier justification.
+- Provide product photography guidance and creative assets to `marketing-device`.

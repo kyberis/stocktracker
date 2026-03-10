@@ -944,11 +944,264 @@ body {
   color: var(--text-muted);
 }
 
+/* ═══════ CAMPAIGN TAB ═══════ */
+.campaign-hero {
+  background: linear-gradient(135deg, var(--surface) 0%, #0c1929 50%, var(--surface) 100%);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 2.5rem;
+  margin-bottom: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+.campaign-hero::before {
+  content: '';
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 200px; height: 200px;
+  background: radial-gradient(circle, var(--emerald-dim), transparent 70%);
+  pointer-events: none;
+}
+.campaign-hero h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.6rem;
+  margin-bottom: 0.3rem;
+}
+.campaign-hero .campaign-sub {
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  max-width: 600px;
+  line-height: 1.6;
+}
+.campaign-tagline {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.2rem;
+  color: var(--emerald-light);
+  margin: 1rem 0 0.5rem;
+  font-style: italic;
+}
+
+.campaign-phases {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+.phase-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.5rem;
+  position: relative;
+}
+.phase-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  border-radius: 14px 14px 0 0;
+}
+.phase-card.phase-pre::before { background: var(--violet); }
+.phase-card.phase-launch::before { background: var(--emerald); }
+.phase-card.phase-sustain::before { background: var(--amber); }
+.phase-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.5rem;
+}
+.phase-pre .phase-num { color: var(--violet); }
+.phase-launch .phase-num { color: var(--emerald); }
+.phase-sustain .phase-num { color: var(--amber); }
+.phase-card h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1rem;
+  margin-bottom: 0.2rem;
+}
+.phase-card .phase-when {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+}
+.phase-card ul {
+  list-style: none;
+  padding: 0;
+}
+.phase-card li {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  line-height: 1.5;
+  padding: 0.2rem 0 0.2rem 1rem;
+  position: relative;
+}
+.phase-card li::before {
+  content: '—';
+  position: absolute;
+  left: 0;
+  color: var(--text-muted);
+}
+
+.channel-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.2rem;
+  margin-bottom: 2rem;
+}
+.channel-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.2rem;
+}
+.channel-icon {
+  font-size: 1.6rem;
+  margin-bottom: 0.4rem;
+}
+.channel-card h4 {
+  font-size: 0.85rem;
+  margin-bottom: 0.15rem;
+}
+.channel-card .channel-cost {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+.channel-card p {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.campaign-kpis {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+.kpi-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem;
+  text-align: center;
+}
+.kpi-val {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.3rem;
+  color: var(--emerald);
+}
+.kpi-label {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.content-calendar {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+.content-calendar h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+}
+.cal-week {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 0.5rem;
+  align-items: start;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.cal-week:last-child { border-bottom: none; }
+.cal-week-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--violet);
+  padding-top: 0.15rem;
+}
+.cal-week-label.wk-launch { color: var(--emerald); }
+.cal-week-label.wk-post { color: var(--amber); }
+.cal-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.cal-item {
+  font-size: 0.72rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 6px;
+  background: var(--card2);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+}
+.cal-item.social { background: var(--violet-dim); color: var(--violet); border-color: rgba(139,92,246,0.25); }
+.cal-item.email { background: var(--emerald-dim); color: var(--emerald); border-color: rgba(16,185,129,0.25); }
+.cal-item.pr { background: var(--sky-dim); color: var(--sky); border-color: rgba(56,189,248,0.25); }
+.cal-item.content { background: var(--amber-dim); color: var(--amber); border-color: rgba(245,158,11,0.25); }
+.cal-item.community { background: var(--rose-dim); color: var(--rose); border-color: rgba(244,63,94,0.25); }
+
+.copy-bank {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.5rem;
+}
+.copy-bank h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+}
+.copy-variants {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+.copy-card {
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem;
+}
+.copy-card .copy-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.5rem;
+}
+.copy-card .copy-headline {
+  font-family: 'Playfair Display', serif;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  margin-bottom: 0.4rem;
+}
+.copy-card .copy-body {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+
 @media (max-width: 1000px) {
   .review-grid { grid-template-columns: 1fr; }
   .devices-grid { grid-template-columns: 1fr; }
   .pricing-wrap { grid-template-columns: 1fr; }
   .roadmap-details { grid-template-columns: 1fr; }
+  .campaign-phases { grid-template-columns: 1fr; }
+  .channel-grid { grid-template-columns: 1fr 1fr; }
+  .campaign-kpis { grid-template-columns: repeat(3, 1fr); }
+  .copy-variants { grid-template-columns: 1fr; }
 }
 </style>
 </head>
@@ -964,6 +1217,7 @@ body {
   <button class="tab-btn" data-tab="devices">Device Concepts</button>
   <button class="tab-btn" data-tab="pricing">Pricing</button>
   <button class="tab-btn" data-tab="roadmap">Roadmap</button>
+  <button class="tab-btn" data-tab="campaign">Launch Campaign</button>
 </div>
 
 <!-- ════════════ TAB 1: REVIEW ════════════ -->
@@ -999,8 +1253,8 @@ body {
       </div>
 
       <div class="verdict-box">
-        <div class="verdict-label">Recommendation</div>
-        <p>Launch at <strong>79 EUR bundled with 1-year Pro</strong> (total bundle 139 EUR). Unbundled: 99 EUR device-only (Pro required). First batch: 25 units to validate demand before scaling.</p>
+        <div class="verdict-label">Revised Strategy</div>
+        <p><strong>Leaf = brand builder, Slate = money maker.</strong> Launch Leaf with only <strong>10-15 units</strong> (~$1,200 risk) to validate demand and generate press/photos. Sell at 99 EUR standalone or <strong>139 EUR bundled with 1-year Pro</strong>. Then fast-track Slate (4-6 weeks firmware) as the volume product at 49-59 EUR with 45-55% margins.</p>
       </div>
     </div>
 
@@ -1446,26 +1700,26 @@ body {
       <div class="roadmap-item">
         <div class="roadmap-quarter">Q2 2026</div>
         <div class="roadmap-dot active"></div>
-        <div class="roadmap-title">Leaf Launch</div>
-        <div class="roadmap-desc">25-50 units<br>3D printed enclosure</div>
+        <div class="roadmap-title">Leaf Limited</div>
+        <div class="roadmap-desc">10-15 units<br>Brand builder batch</div>
       </div>
       <div class="roadmap-item">
         <div class="roadmap-quarter">Q3 2026</div>
-        <div class="roadmap-dot"></div>
-        <div class="roadmap-title">Leaf v2</div>
-        <div class="roadmap-desc">Injection mold<br>Magnetic stand</div>
+        <div class="roadmap-dot concept active"></div>
+        <div class="roadmap-title">Slate Firmware</div>
+        <div class="roadmap-desc">E-ink firmware<br>4-6 weeks build</div>
       </div>
       <div class="roadmap-item">
         <div class="roadmap-quarter">Q4 2026</div>
-        <div class="roadmap-dot concept"></div>
-        <div class="roadmap-title">Slate Prototype</div>
-        <div class="roadmap-desc">E-ink 4.2" B&W<br>Battery-powered</div>
+        <div class="roadmap-dot concept active"></div>
+        <div class="roadmap-title">Slate Launch</div>
+        <div class="roadmap-desc">25-50 units<br>Volume product</div>
       </div>
       <div class="roadmap-item">
         <div class="roadmap-quarter">Q1 2027</div>
-        <div class="roadmap-dot concept active"></div>
-        <div class="roadmap-title">Slate Launch</div>
-        <div class="roadmap-desc">50-200 units<br>Desk + wall mount</div>
+        <div class="roadmap-dot"></div>
+        <div class="roadmap-title">Leaf v2 + Scale</div>
+        <div class="roadmap-desc">Injection mold<br>Magnetic stand</div>
       </div>
       <div class="roadmap-item">
         <div class="roadmap-quarter">Q2 2027</div>
@@ -1491,53 +1745,57 @@ body {
   <div class="roadmap-details">
 
     <div class="roadmap-detail-card">
-      <h3>Q2 2026 — Leaf Launch</h3>
-      <div class="rd-quarter q-green">NOW — READY TO SHIP</div>
+      <h3>Q2 2026 — Leaf Limited Edition</h3>
+      <div class="rd-quarter q-green">NOW — BRAND BUILDER</div>
       <ul>
-        <li>First batch: 25 units via Makerfabs or LILYGO OEM</li>
+        <li>Limited batch: <strong>10-15 units</strong> (~$1,200 total risk)</li>
         <li>SLA/MJF 3D printed enclosures (production-grade finish)</li>
         <li>BrillPack premium packaging (sample approved)</li>
         <li>Firmware v1.0.0 — 7 screens, 4 themes, OTA ready</li>
-        <li>Sell via trefolio.app product page, direct shipping</li>
+        <li>Direct sales via trefolio.app — "Limited Edition" framing</li>
+        <li>Primary goal: hero photos, press, YouTube reviews, brand credibility</li>
         <li>Launch alongside "Leaf + Pro Annual" bundle at 139 EUR</li>
+        <li>Marketing campaign runs parallel (see Campaign tab)</li>
       </ul>
     </div>
 
     <div class="roadmap-detail-card">
-      <h3>Q3 2026 — Leaf v2 Refinement</h3>
+      <h3>Q3 2026 — Slate Firmware Development</h3>
+      <div class="rd-quarter q-violet">FAST-TRACK — THE VOLUME PLAY</div>
+      <ul>
+        <li>4.2" e-ink B&W display (Waveshare or LILYGO T5)</li>
+        <li>ESP32-S3 with deep sleep — target 4-6 weeks battery life</li>
+        <li>Firmware shares API client code with Leaf (shared library)</li>
+        <li>Refresh every 15-60 min (configurable via web app)</li>
+        <li>Static card layout: portfolio value, top 5 movers, day change</li>
+        <li>Desk frame + wall mount bracket (magnetic or adhesive)</li>
+        <li>Target: 4-6 weeks from Leaf firmware fork to working prototype</li>
+      </ul>
+    </div>
+
+    <div class="roadmap-detail-card">
+      <h3>Q4 2026 — Slate Launch</h3>
+      <div class="rd-quarter q-violet">VOLUME PRODUCT</div>
+      <ul>
+        <li>25-50 initial batch, MJF nylon enclosure</li>
+        <li>Retail price: 49-59 EUR (45-55% margin, best in lineup)</li>
+        <li>Positioned as "set and forget" ambient portfolio display</li>
+        <li>Pro required — reinforces subscription value</li>
+        <li>Launch "Slate + Pro Annual" bundle at 99 EUR</li>
+        <li>Scale to 200+ units in Q1 2027 based on demand</li>
+      </ul>
+    </div>
+
+    <div class="roadmap-detail-card">
+      <h3>Q1 2027 — Leaf v2 + Scaling</h3>
       <div class="rd-quarter q-green">ITERATION</div>
       <ul>
-        <li>Incorporate v1 customer feedback on enclosure and UX</li>
+        <li>Incorporate Leaf v1 feedback on enclosure and UX</li>
         <li>Injection mold tooling (2-5K EUR) for 200+ unit batches</li>
         <li>Redesigned magnetic desk stand (12° viewing angle)</li>
         <li>Front-facing status LED (breathing emerald = connected)</li>
         <li>Target BOM reduction: $88 to $70 at 200-unit volume</li>
-        <li>Firmware v1.x — add notification display, widget templates</li>
-      </ul>
-    </div>
-
-    <div class="roadmap-detail-card">
-      <h3>Q4 2026 — Slate Prototype</h3>
-      <div class="rd-quarter q-violet">NEW DEVICE</div>
-      <ul>
-        <li>4.2" e-ink B&W display (Waveshare or LILYGO T5)</li>
-        <li>ESP32-S3 with deep sleep — target 4-6 weeks battery life</li>
-        <li>Refresh every 15-60 min (configurable via web app)</li>
-        <li>Static card layout: portfolio value, top 5 movers, day change</li>
-        <li>Desk frame + wall mount bracket (magnetic or adhesive)</li>
-        <li>Firmware shares API client code with Leaf (shared library)</li>
-      </ul>
-    </div>
-
-    <div class="roadmap-detail-card">
-      <h3>Q1 2027 — Slate Launch</h3>
-      <div class="rd-quarter q-violet">SECOND PRODUCT</div>
-      <ul>
-        <li>50-200 unit batch, MJF nylon or injection mold enclosure</li>
-        <li>Retail price: 49-69 EUR (best margin in the lineup)</li>
-        <li>Positioned as "set and forget" ambient portfolio display</li>
-        <li>Pro required — reinforces subscription value</li>
-        <li>Launch "Slate + Pro Annual" bundle at 99 EUR</li>
+        <li>Firmware v1.x — notification display, widget templates</li>
       </ul>
     </div>
 
@@ -1567,6 +1825,300 @@ body {
     </div>
 
   </div>
+</div>
+
+<!-- ════════════ TAB 5: CAMPAIGN ════════════ -->
+<div class="tab-panel" id="tab-campaign">
+
+  <div class="campaign-hero">
+    <h2>trefolio Leaf — Launch Campaign</h2>
+    <div class="campaign-tagline">"Your portfolio, always visible."</div>
+    <p class="campaign-sub">
+      A limited-edition hardware launch for trefolio's flagship AMOLED desk display.
+      10-15 units, hand-assembled. The goal isn't volume — it's brand gravity:
+      photos, reviews, social proof, and the perception that trefolio builds
+      beautiful things.
+    </p>
+  </div>
+
+  <!-- Campaign Phases -->
+  <h3 style="font-family:'Playfair Display',serif;margin-bottom:1rem">Campaign Phases</h3>
+  <div class="campaign-phases">
+
+    <div class="phase-card phase-pre">
+      <div class="phase-num">Phase 1 — Pre-Launch</div>
+      <h3>Build Anticipation</h3>
+      <div class="phase-when">4 weeks before launch (May 2026)</div>
+      <ul>
+        <li>Teaser photos: close-up of AMOLED display, desk lifestyle shots</li>
+        <li>"Something is coming to your desk" social posts (no product reveal)</li>
+        <li>Email waitlist signup on trefolio.app/leaf with countdown</li>
+        <li>Seed 2-3 units to micro-influencers in the European fintech/investing community</li>
+        <li>Behind-the-scenes build story: 3D printing, firmware flashing, packaging</li>
+        <li>Target: 200+ waitlist signups before launch day</li>
+      </ul>
+    </div>
+
+    <div class="phase-card phase-launch">
+      <div class="phase-num">Phase 2 — Launch Week</div>
+      <h3>Drop & Sell Out</h3>
+      <div class="phase-when">1 week (June 2026)</div>
+      <ul>
+        <li>Product page goes live: trefolio.app/leaf — hero video, specs, buy button</li>
+        <li>"Limited Edition — Only 10 units" scarcity framing</li>
+        <li>Launch email to waitlist + all existing Pro subscribers</li>
+        <li>Social blitz: unboxing GIF, animated portfolio display, lifestyle desk photo</li>
+        <li>Post on Hacker News (Show HN), Reddit r/investing, r/ESP32, r/AMOLED</li>
+        <li>Press release to TechCrunch Hardware, The Verge, Hackster.io</li>
+        <li>Goal: sell out 10 units in &lt;48 hours to create urgency for next batch</li>
+      </ul>
+    </div>
+
+    <div class="phase-card phase-sustain">
+      <div class="phase-num">Phase 3 — Post-Launch</div>
+      <h3>Sustain & Convert</h3>
+      <div class="phase-when">Ongoing (July 2026+)</div>
+      <ul>
+        <li>Customer unboxing videos and desk setup photos → repost on social</li>
+        <li>"Sold out" badge on product page → "Join the waitlist for Batch 2"</li>
+        <li>Collect reviews: "What investors are saying about Leaf"</li>
+        <li>Cross-sell: every Leaf buyer gets a personal onboarding email</li>
+        <li>Teaser: "Slate is coming" — announce the e-ink volume product</li>
+        <li>Retarget waitlist with Pro subscription offers (30-day free trial)</li>
+        <li>Monthly "build log" newsletter for hardware enthusiasts</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- Channels -->
+  <h3 style="font-family:'Playfair Display',serif;margin-bottom:1rem">Marketing Channels</h3>
+  <div class="channel-grid">
+
+    <div class="channel-card">
+      <div class="channel-icon">𝕏</div>
+      <h4>X / Twitter</h4>
+      <div class="channel-cost">$0 — Organic</div>
+      <p>Build-in-public thread documenting the journey from firmware to first shipment. Target #FinTwit, #ESP32, #buildinpublic communities. 3-5 posts/week during launch.</p>
+    </div>
+
+    <div class="channel-card">
+      <div class="channel-icon">📸</div>
+      <h4>Instagram</h4>
+      <div class="channel-cost">$0 — Organic</div>
+      <p>High-quality desk photography. Reels: 15s clips of the AMOLED screen cycling through themes. Stories: behind-the-scenes packaging. Target #desksetup #investing.</p>
+    </div>
+
+    <div class="channel-card">
+      <div class="channel-icon">📹</div>
+      <h4>YouTube</h4>
+      <div class="channel-cost">$0-200 — Seed units</div>
+      <p>Send 2 units to micro-YouTubers (5K-50K subs) in the desk-setup or investing gadget niche. Provide talking points but let them review honestly.</p>
+    </div>
+
+    <div class="channel-card">
+      <div class="channel-icon">📧</div>
+      <h4>Email</h4>
+      <div class="channel-cost">$0 — Resend (existing)</div>
+      <p>3-email launch sequence: teaser → launch → "almost gone". Segment: Pro subscribers first, then Free users as Pro upsell opportunity.</p>
+    </div>
+
+    <div class="channel-card">
+      <div class="channel-icon">💬</div>
+      <h4>Reddit / HN</h4>
+      <div class="channel-cost">$0 — Organic</div>
+      <p>"Show HN: I built a desk display for my stock portfolio" — authentic maker story. Reddit: r/investing, r/europeaninvesting, r/ESP32, r/homelab.</p>
+    </div>
+
+    <div class="channel-card">
+      <div class="channel-icon">🎪</div>
+      <h4>Hackster.io / Product Hunt</h4>
+      <div class="channel-cost">$0 — Organic</div>
+      <p>Submit to Hackster.io Projects for maker community reach. Product Hunt launch with the "Limited Edition" angle. Target #hardware and #fintech categories.</p>
+    </div>
+
+  </div>
+
+  <!-- KPIs -->
+  <h3 style="font-family:'Playfair Display',serif;margin-bottom:1rem">Campaign KPIs</h3>
+  <div class="campaign-kpis">
+    <div class="kpi-card">
+      <div class="kpi-val">10</div>
+      <div class="kpi-label">Units Sold</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-val">48h</div>
+      <div class="kpi-label">Sell-Out Target</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-val">200+</div>
+      <div class="kpi-label">Waitlist Signups</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-val">5+</div>
+      <div class="kpi-label">Press Mentions</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-val">15%</div>
+      <div class="kpi-label">Waitlist → Pro Conv.</div>
+    </div>
+  </div>
+
+  <!-- Content Calendar -->
+  <div class="content-calendar">
+    <h3>Launch Week Content Calendar</h3>
+
+    <div class="cal-week">
+      <div class="cal-week-label">Week -4</div>
+      <div class="cal-items">
+        <span class="cal-item social">Teaser: "Something is brewing"</span>
+        <span class="cal-item email">Waitlist page live</span>
+        <span class="cal-item content">Build log #1: enclosure design</span>
+      </div>
+    </div>
+    <div class="cal-week">
+      <div class="cal-week-label">Week -3</div>
+      <div class="cal-items">
+        <span class="cal-item social">Close-up AMOLED photo</span>
+        <span class="cal-item social">Instagram Reel: screen themes</span>
+        <span class="cal-item content">Build log #2: firmware + OTA</span>
+      </div>
+    </div>
+    <div class="cal-week">
+      <div class="cal-week-label">Week -2</div>
+      <div class="cal-items">
+        <span class="cal-item social">Packaging reveal teaser</span>
+        <span class="cal-item pr">Influencer seed units ship</span>
+        <span class="cal-item content">Build log #3: packaging + QC</span>
+      </div>
+    </div>
+    <div class="cal-week">
+      <div class="cal-week-label">Week -1</div>
+      <div class="cal-items">
+        <span class="cal-item social">"Only 10 made" countdown</span>
+        <span class="cal-item email">48hr launch reminder to waitlist</span>
+        <span class="cal-item pr">Press embargo lifts — reviews go live</span>
+      </div>
+    </div>
+    <div class="cal-week">
+      <div class="cal-week-label wk-launch">Launch</div>
+      <div class="cal-items">
+        <span class="cal-item social">Product page + buy link live</span>
+        <span class="cal-item email">Launch email blast</span>
+        <span class="cal-item community">HN: "Show HN" post</span>
+        <span class="cal-item community">Reddit cross-post (3 subs)</span>
+        <span class="cal-item pr">Product Hunt submission</span>
+      </div>
+    </div>
+    <div class="cal-week">
+      <div class="cal-week-label wk-launch">Day 2-3</div>
+      <div class="cal-items">
+        <span class="cal-item social">Real-time sales update: "7/10 sold"</span>
+        <span class="cal-item social">Customer desk photos (if received)</span>
+        <span class="cal-item email">"Last units" urgency email</span>
+      </div>
+    </div>
+    <div class="cal-week">
+      <div class="cal-week-label wk-post">Week +1</div>
+      <div class="cal-items">
+        <span class="cal-item social">"Sold out" announcement + waitlist</span>
+        <span class="cal-item email">Thank-you + onboarding for buyers</span>
+        <span class="cal-item content">Customer unboxing reposts</span>
+        <span class="cal-item social">"Slate is coming" teaser</span>
+      </div>
+    </div>
+    <div class="cal-week">
+      <div class="cal-week-label wk-post">Week +2-4</div>
+      <div class="cal-items">
+        <span class="cal-item content">Build log #4: what we learned</span>
+        <span class="cal-item email">Waitlist: 30-day free Pro trial</span>
+        <span class="cal-item social">Customer review roundup</span>
+        <span class="cal-item community">Hackster.io project writeup</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Copy Bank -->
+  <div class="copy-bank">
+    <h3>Ad Copy & Messaging Bank</h3>
+    <div class="copy-variants">
+
+      <div class="copy-card">
+        <div class="copy-label">Hero Headline — Product Page</div>
+        <div class="copy-headline">Your portfolio, always visible.</div>
+        <div class="copy-body">trefolio Leaf is a premium AMOLED desk display that shows your investment portfolio in real time. AI-powered insights, 4 beautiful themes, and updates every 60 seconds — all on a vibrant 2.41" screen. No phone. No laptop. Just clarity.</div>
+      </div>
+
+      <div class="copy-card">
+        <div class="copy-label">Scarcity — Social Post</div>
+        <div class="copy-headline">Only 10 ever made. Seriously.</div>
+        <div class="copy-body">We hand-built 10 trefolio Leaf displays. Each one has a premium AMOLED screen, 3D-printed enclosure, and AI-powered portfolio insights. When they're gone, they're gone. First come, first served. Link in bio.</div>
+      </div>
+
+      <div class="copy-card">
+        <div class="copy-label">Build-in-Public — Twitter Thread</div>
+        <div class="copy-headline">I spent 6 months building a desk gadget for investors. Here's what I learned.</div>
+        <div class="copy-body">Thread: (1) The idea — checking your phone 50x/day is broken. (2) The hardware — ESP32, AMOLED, firmware from scratch. (3) The AI — GPT-powered daily summaries on a 2.41" screen. (4) The launch — 10 units, hand-assembled. (5) What's next — e-ink, battery, and a full product line.</div>
+      </div>
+
+      <div class="copy-card">
+        <div class="copy-label">Email — Launch Announcement</div>
+        <div class="copy-headline">trefolio Leaf is here. Your desk just got smarter.</div>
+        <div class="copy-body">We built a dedicated display for your portfolio. It sits on your desk, shows your holdings in real time, and whispers AI insights you'd otherwise miss. Only 10 exist. They're 99 EUR standalone, or 139 EUR bundled with a year of Pro. This will sell out fast.</div>
+      </div>
+
+      <div class="copy-card">
+        <div class="copy-label">Hacker News — Show HN</div>
+        <div class="copy-headline">Show HN: I built a real-time portfolio display with ESP32 + AMOLED</div>
+        <div class="copy-body">ESP32-S3 running LVGL, 2.41" AMOLED, WiFi, OTA updates, and an AI summary endpoint. Firmware is ~4K lines of C++. Enclosure is MJF nylon. It pulls your portfolio from our API every 60s. Open to questions about the hardware and firmware journey.</div>
+      </div>
+
+      <div class="copy-card">
+        <div class="copy-label">Investor / Press — Elevator Pitch</div>
+        <div class="copy-headline">trefolio: the Bloomberg Terminal for your desk, starting at 99 EUR.</div>
+        <div class="copy-body">Retail investors check their phones 50 times a day. We built a dedicated AMOLED display that shows their portfolio, AI insights, and market movers — always on, always visible. The Leaf is our flagship; the Slate (e-ink, 49 EUR) is the volume play. Each device drives a Pro subscription at 7.99 EUR/month. Hardware + SaaS, European-made.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Budget Summary -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.5rem;margin-top:2rem">
+    <h3 style="font-family:'Playfair Display',serif;font-size:1rem;margin-bottom:1rem">Campaign Budget</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem">
+      <div>
+        <div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em">Hardware (10 units)</div>
+        <div style="font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--rose)">~$880</div>
+        <div style="font-size:0.72rem;color:var(--text-dim)">BOM at $88/unit pre-assembly</div>
+      </div>
+      <div>
+        <div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em">Influencer Seeding</div>
+        <div style="font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--rose)">~$176</div>
+        <div style="font-size:0.72rem;color:var(--text-dim)">2 free units to micro-reviewers</div>
+      </div>
+      <div>
+        <div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em">Marketing Spend</div>
+        <div style="font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--emerald)">$0</div>
+        <div style="font-size:0.72rem;color:var(--text-dim)">100% organic — no paid ads</div>
+      </div>
+    </div>
+    <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem">
+      <div>
+        <div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em">Total Investment</div>
+        <div style="font-family:'Playfair Display',serif;font-size:1.1rem">~$1,056</div>
+      </div>
+      <div>
+        <div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em">Revenue (8 sold @ 99 EUR)</div>
+        <div style="font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--emerald)">~$870</div>
+      </div>
+      <div>
+        <div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em">True Cost of Brand Building</div>
+        <div style="font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--amber)">~$186</div>
+        <div style="font-size:0.72rem;color:var(--text-dim)">+ press, photos, social proof, and Pro conversions</div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script>

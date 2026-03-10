@@ -143,7 +143,7 @@ function getPricing(t: T): PricingTier[] {
       regularAnnual: "€0", annualPrice: "€0",
       annualSavePct: 0, launchDiscountPct: 0, isFree: true,
       description: t("landingPricingFolioDesc"),
-      features: Array.from({ length: 12 }, (_, i) => t(`landingPricingFolioFeature${i + 1}` as TranslationKey)),
+      features: Array.from({ length: 13 }, (_, i) => t(`landingPricingFolioFeature${i + 1}` as TranslationKey)),
       cta: t("landingPricingFolioCta"),
     },
     {
@@ -166,7 +166,7 @@ function getPricing(t: T): PricingTier[] {
       regularAnnual: "€79.99", annualPrice: "€59.99",
       annualSavePct: 37, launchDiscountPct: 20,
       description: t("landingPricingTrefolioDesc"),
-      features: Array.from({ length: 15 }, (_, i) => t(`landingPricingTrefolioFeature${i + 1}` as TranslationKey)),
+      features: Array.from({ length: 16 }, (_, i) => t(`landingPricingTrefolioFeature${i + 1}` as TranslationKey)),
       cta: t("landingPricingTrefolioCta"),
       highlighted: true,
     },
@@ -255,12 +255,12 @@ function Logo({ className = "w-10 h-10" }: { className?: string }) {
 function LangPicker({ className = "" }: { className?: string }) {
   const { language, setLanguage } = useI18n();
   return (
-    <div className={`relative ${className}`}>
+    <div className={`relative group ${className}`}>
       <select
         value={language}
         onChange={(e) => setLanguage(e.target.value as Parameters<typeof setLanguage>[0])}
         aria-label="Select language"
-        className="appearance-none bg-transparent text-slate-300 hover:text-white text-sm font-medium pl-6 pr-2 py-1 cursor-pointer focus:outline-none"
+        className="appearance-none bg-slate-800/60 hover:bg-slate-700/70 border border-slate-700/50 hover:border-slate-600/60 text-slate-300 hover:text-white text-sm font-medium pl-8 pr-7 py-1.5 rounded-lg cursor-pointer transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/50"
       >
         {SUPPORTED_LANGUAGES.map((lang) => (
           <option key={lang.code} value={lang.code} className="bg-slate-900 text-white">
@@ -268,8 +268,11 @@ function LangPicker({ className = "" }: { className?: string }) {
           </option>
         ))}
       </select>
-      <svg className="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 group-hover:text-slate-300 pointer-events-none transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" />
+      </svg>
+      <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-500 group-hover:text-slate-400 pointer-events-none transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
       </svg>
     </div>
   );
