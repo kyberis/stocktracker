@@ -16,24 +16,24 @@ interface AdSlotProps {
 }
 
 export default function AdSlot({ slot, format = "auto", className = "" }: AdSlotProps) {
-  const { showAds } = useAds();
+  const { slotEnabled, slotId, clientId } = useAds();
   const pushed = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  const enabled = slotEnabled(slot);
+  const resolvedSlotId = slotId(slot);
+
   useEffect(() => {
-    if (!showAds || pushed.current) return;
+    if (!enabled || pushed.current) return;
     try {
       (window.adsbygoogle = window.adsbygoogle || []).push({});
       pushed.current = true;
     } catch {
       // adsbygoogle not loaded yet
     }
-  }, [showAds]);
+  }, [enabled]);
 
-  if (!showAds) return null;
-
-  const clientId = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID;
-  if (!clientId) return null;
+  if (!enabled || !clientId || !resolvedSlotId) return null;
 
   return (
     <div
@@ -48,7 +48,7 @@ export default function AdSlot({ slot, format = "auto", className = "" }: AdSlot
         className="adsbygoogle"
         style={{ display: "block" }}
         data-ad-client={clientId}
-        data-ad-slot={slot}
+        data-ad-slot={resolvedSlotId}
         data-ad-format={format === "auto" ? "auto" : format === "horizontal" ? "horizontal" : "rectangle"}
         data-full-width-responsive={format === "auto" || format === "horizontal" ? "true" : "false"}
       />

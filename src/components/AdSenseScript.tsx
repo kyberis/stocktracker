@@ -4,7 +4,7 @@ import Script from "next/script";
 import { useEffect, useState } from "react";
 import { CONSENT_KEY } from "@/lib/gtag";
 
-export default function AdSenseScript() {
+export default function AdSenseScript({ clientId = "" }: { clientId?: string }) {
   const [hasConsent, setHasConsent] = useState(false);
 
   useEffect(() => {
@@ -24,7 +24,6 @@ export default function AdSenseScript() {
     };
   }, []);
 
-  const clientId = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID;
   if (!clientId || !hasConsent) return null;
 
   return (

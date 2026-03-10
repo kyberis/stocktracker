@@ -1757,6 +1757,482 @@ function GaConfigCard() {
   );
 }
 
+const AD_SLOT_META: Record<string, { label: string; page: string; format: string; size: string; desc: string; color: string }> = {
+  "dashboard-summary": {
+    label: "Below Portfolio Summary",
+    page: "Dashboard",
+    format: "horizontal",
+    size: "728×90 responsive",
+    desc: "Highest-visibility slot. Between portfolio value and holdings table.",
+    color: "emerald",
+  },
+  "dashboard-bottom": {
+    label: "End of Tab Content",
+    page: "Dashboard",
+    format: "rectangle",
+    size: "336×280 responsive",
+    desc: "Below the last section in each dashboard tab. Engaged scrollers.",
+    color: "blue",
+  },
+  "tools-bottom": {
+    label: "Below Tool Content",
+    page: "Tools",
+    format: "horizontal",
+    size: "728×90 responsive",
+    desc: "Secondary high-traffic page with long dwell times.",
+    color: "violet",
+  },
+  "stock-detail": {
+    label: "Sidebar Rectangle",
+    page: "Stock Detail",
+    format: "rectangle",
+    size: "300×250",
+    desc: "Financial context ads alongside individual stock analysis.",
+    color: "amber",
+  },
+  "import-done": {
+    label: "Post-Import Success",
+    page: "Import",
+    format: "in-feed",
+    size: "auto responsive",
+    desc: "Shown after completing an import. Low friction moment.",
+    color: "rose",
+  },
+};
+
+function AdConfigCard() {
+  const [config, setConfig] = useState<{
+    clientId: string;
+    globalEnabled: boolean;
+    slots: Record<string, { enabled: boolean; slotId: string }>;
+  } | null>(null);
+  const [draft, setDraft] = useState<{
+    clientId: string;
+    globalEnabled: boolean;
+    slots: Record<string, { enabled: boolean; slotId: string }>;
+  } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
+  const [showMockup, setShowMockup] = useState(false);
+  const [mockupView, setMockupView] = useState<"dashboard" | "tools" | "stock" | "import">("dashboard");
+
+  useEffect(() => {
+    fetch("/api/admin/ad-config", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => {
+        setConfig(d);
+        setDraft(JSON.parse(JSON.stringify(d)));
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const hasChanges = JSON.stringify(draft) !== JSON.stringify(config);
+
+  const handleSave = async () => {
+    if (!draft) return;
+    setSaving(true);
+    setError("");
+    setSaved(false);
+    try {
+      const res = await fetch("/api/admin/ad-config", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(draft),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Failed to save.");
+        setSaving(false);
+        return;
+      }
+      setConfig(data.config);
+      setDraft(JSON.parse(JSON.stringify(data.config)));
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch {
+      setError("Failed to save.");
+    }
+    setSaving(false);
+  };
+
+  const updateSlot = (key: string, field: "enabled" | "slotId", value: boolean | string) => {
+    if (!draft) return;
+    setDraft({
+      ...draft,
+      slots: {
+        ...draft.slots,
+        [key]: { ...draft.slots[key], [field]: value },
+      },
+    });
+    setError("");
+  };
+
+  if (loading || !draft) {
+    return (
+      <div className="card p-6">
+        <div className="h-4 w-40 bg-gray-200 dark:bg-slate-700 rounded animate-pulse" />
+      </div>
+    );
+  }
+
+  const colorMap: Record<string, string> = {
+    emerald: "bg-emerald-500",
+    blue: "bg-blue-500",
+    violet: "bg-violet-500",
+    amber: "bg-amber-500",
+    rose: "bg-rose-500",
+  };
+  const colorBorder: Record<string, string> = {
+    emerald: "border-emerald-200 dark:border-emerald-500/30",
+    blue: "border-blue-200 dark:border-blue-500/30",
+    violet: "border-violet-200 dark:border-violet-500/30",
+    amber: "border-amber-200 dark:border-amber-500/30",
+    rose: "border-rose-200 dark:border-rose-500/30",
+  };
+  const colorBg: Record<string, string> = {
+    emerald: "bg-emerald-50 dark:bg-emerald-500/5",
+    blue: "bg-blue-50 dark:bg-blue-500/5",
+    violet: "bg-violet-50 dark:bg-violet-500/5",
+    amber: "bg-amber-50 dark:bg-amber-500/5",
+    rose: "bg-rose-50 dark:bg-rose-500/5",
+  };
+
+  const enabledCount = Object.values(draft.slots).filter((s) => s.enabled && s.slotId).length;
+
+  const mockupSlots: Record<string, string[]> = {
+    dashboard: ["dashboard-summary", "dashboard-bottom"],
+    tools: ["tools-bottom"],
+    stock: ["stock-detail"],
+    import: ["import-done"],
+  };
+
+  return (
+    <div className="card p-6">
+      <div className="flex items-start justify-between mb-1">
+        <div className="flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Google AdSense</h3>
+          {draft.globalEnabled && (
+            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400">
+              {enabledCount} slot{enabledCount !== 1 ? "s" : ""} active
+            </span>
+          )}
+        </div>
+        <label className="flex items-center gap-2 cursor-pointer">
+          <span className="text-xs text-gray-500 dark:text-slate-400">{draft.globalEnabled ? "Enabled" : "Disabled"}</span>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={draft.globalEnabled}
+            onClick={() => { setDraft({ ...draft, globalEnabled: !draft.globalEnabled }); setError(""); }}
+            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+              draft.globalEnabled ? "bg-emerald-500" : "bg-gray-300 dark:bg-slate-600"
+            }`}
+          >
+            <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+              draft.globalEnabled ? "translate-x-4" : "translate-x-0.5"
+            }`} />
+          </button>
+        </label>
+      </div>
+
+      <p className="text-xs text-gray-500 dark:text-slate-400 mb-4">
+        Configure AdSense ads for free-tier users. Set the publisher ID and enable/disable individual ad slots.
+        Ads only appear for free users who have accepted cookies.
+      </p>
+
+      {/* Publisher ID */}
+      <div className="mb-4">
+        <label className="block text-xs font-medium text-gray-700 dark:text-slate-300 mb-1">Publisher ID</label>
+        <input
+          type="text"
+          value={draft.clientId}
+          onChange={(e) => { setDraft({ ...draft, clientId: e.target.value }); setError(""); }}
+          placeholder="ca-pub-XXXXXXXXXX"
+          className="text-sm w-full font-mono"
+        />
+        <p className="text-[10px] text-gray-400 dark:text-slate-500 mt-1">
+          Falls back to <code className="px-1 py-0.5 rounded bg-gray-100 dark:bg-slate-800 font-mono">NEXT_PUBLIC_ADSENSE_CLIENT_ID</code> if empty.
+        </p>
+      </div>
+
+      {/* Slot configs */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <label className="block text-xs font-medium text-gray-700 dark:text-slate-300">Ad Slots</label>
+          <button
+            type="button"
+            onClick={() => setShowMockup(!showMockup)}
+            className="text-[10px] font-medium text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 flex items-center gap-1"
+          >
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+            {showMockup ? "Hide placement preview" : "Show placement preview"}
+          </button>
+        </div>
+
+        {/* Visual mockup */}
+        {showMockup && (
+          <div className="rounded-lg border border-amber-200 dark:border-amber-500/20 bg-amber-50/50 dark:bg-amber-500/5 p-4">
+            <div className="flex items-center gap-2 mb-3">
+              {(["dashboard", "tools", "stock", "import"] as const).map((v) => (
+                <button
+                  key={v}
+                  onClick={() => setMockupView(v)}
+                  className={`text-[10px] font-semibold px-3 py-1 rounded-full transition-colors ${
+                    mockupView === v
+                      ? "bg-amber-500 text-white"
+                      : "bg-white dark:bg-slate-800 text-gray-500 dark:text-slate-400 hover:text-gray-700"
+                  }`}
+                >
+                  {v.charAt(0).toUpperCase() + v.slice(1)}
+                </button>
+              ))}
+            </div>
+
+            {/* Mock layouts */}
+            <div className="rounded-lg bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 overflow-hidden">
+              {/* Nav bar */}
+              <div className="flex items-center gap-3 px-3 py-2 bg-gray-50 dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700">
+                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 font-mono">trefolio</span>
+                <div className="flex gap-2">
+                  {["Portfolio", "Import", "Tools", "Stock"].map((n) => (
+                    <span
+                      key={n}
+                      className={`text-[9px] ${
+                        (mockupView === "dashboard" && n === "Portfolio") ||
+                        (mockupView === "tools" && n === "Tools") ||
+                        (mockupView === "stock" && n === "Stock") ||
+                        (mockupView === "import" && n === "Import")
+                          ? "text-emerald-600 dark:text-emerald-400 font-semibold"
+                          : "text-gray-400 dark:text-slate-500"
+                      }`}
+                    >
+                      {n}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="p-3 space-y-2">
+                {mockupView === "dashboard" && (
+                  <>
+                    <MockContentBlock label="Portfolio Summary" />
+                    <MockAdBlock slotKey="dashboard-summary" slots={draft.slots} />
+                    <MockContentBlock label="Holdings Table" />
+                    <MockContentBlock label="Growth Chart + Markets" />
+                    <MockContentBlock label="Portfolio Projection" />
+                    <MockAdBlock slotKey="dashboard-bottom" slots={draft.slots} />
+                  </>
+                )}
+                {mockupView === "tools" && (
+                  <>
+                    <MockContentBlock label="Portfolio Tools — Transactions / Dividends / Alerts" />
+                    <MockContentBlock label="Tool Content" />
+                    <MockAdBlock slotKey="tools-bottom" slots={draft.slots} />
+                  </>
+                )}
+                {mockupView === "stock" && (
+                  <>
+                    <div className="flex gap-2">
+                      <div className="flex-1 space-y-2">
+                        <MockContentBlock label="Price Chart + Position" />
+                        <MockContentBlock label="Fundamentals" />
+                      </div>
+                      <div className="w-32">
+                        <MockAdBlock slotKey="stock-detail" slots={draft.slots} />
+                      </div>
+                    </div>
+                  </>
+                )}
+                {mockupView === "import" && (
+                  <>
+                    <MockContentBlock label="Import Wizard — Step Complete" />
+                    <MockAdBlock slotKey="import-done" slots={draft.slots} />
+                    <MockContentBlock label="Continue / View Portfolio" />
+                  </>
+                )}
+              </div>
+            </div>
+
+            <p className="text-[9px] text-gray-400 dark:text-slate-500 mt-2 text-center">
+              Orange dashed blocks = ad placements &middot; Shown to free-tier users only
+            </p>
+          </div>
+        )}
+
+        {/* Slot rows */}
+        {Object.entries(AD_SLOT_META).map(([key, meta]) => {
+          const slot = draft.slots[key];
+          if (!slot) return null;
+          return (
+            <div
+              key={key}
+              className={`rounded-lg border p-3 transition-colors ${
+                slot.enabled
+                  ? `${colorBorder[meta.color]} ${colorBg[meta.color]}`
+                  : "border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/50"
+              }`}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-2.5 min-w-0">
+                  <span className={`mt-0.5 w-2 h-2 rounded-full shrink-0 ${colorMap[meta.color]}`} />
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs font-semibold text-gray-900 dark:text-white">{meta.label}</span>
+                      <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-slate-400">
+                        {meta.page}
+                      </span>
+                      <span className="text-[9px] font-mono text-gray-400 dark:text-slate-500">{meta.size}</span>
+                    </div>
+                    <p className="text-[10px] text-gray-500 dark:text-slate-400 mt-0.5">{meta.desc}</p>
+                    <div className="mt-2">
+                      <input
+                        type="text"
+                        value={slot.slotId}
+                        onChange={(e) => updateSlot(key, "slotId", e.target.value)}
+                        placeholder="AdSense slot ID (e.g. 1234567890)"
+                        className="text-xs font-mono w-full max-w-xs py-1 px-2"
+                        disabled={!slot.enabled}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={slot.enabled}
+                  onClick={() => updateSlot(key, "enabled", !slot.enabled)}
+                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors shrink-0 ${
+                    slot.enabled ? "bg-emerald-500" : "bg-gray-300 dark:bg-slate-600"
+                  }`}
+                >
+                  <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+                    slot.enabled ? "translate-x-4" : "translate-x-0.5"
+                  }`} />
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Save bar */}
+      <div className="flex items-center gap-2 mt-4">
+        <button
+          onClick={handleSave}
+          disabled={saving || !hasChanges}
+          className="btn-primary text-xs px-4 py-2 disabled:opacity-40"
+        >
+          {saving ? "Saving..." : "Save Ad Config"}
+        </button>
+        {hasChanges && (
+          <button
+            onClick={() => { setDraft(JSON.parse(JSON.stringify(config))); setError(""); }}
+            className="btn-secondary text-xs px-3 py-2"
+          >
+            Discard
+          </button>
+        )}
+        {error && <p className="text-xs text-red-500 dark:text-red-400">{error}</p>}
+        {saved && <p className="text-xs text-emerald-600 dark:text-emerald-400">Saved. Reload to apply.</p>}
+      </div>
+
+      {/* AdSense DOM preview */}
+      {draft.clientId && (
+        <details className="mt-4">
+          <summary className="text-xs font-medium text-gray-700 dark:text-slate-300 cursor-pointer hover:text-gray-900 dark:hover:text-white">
+            Preview injected HTML
+          </summary>
+          <div className="mt-3 space-y-3">
+            <div className="rounded-lg bg-gray-50 dark:bg-slate-800/50 p-4">
+              <p className="text-[10px] uppercase tracking-wider text-gray-400 dark:text-slate-500 font-semibold mb-3">AdSense Script in DOM</p>
+              <div className="font-mono text-xs leading-relaxed">
+                <span className="text-gray-400 dark:text-slate-500">&lt;body&gt;</span>
+                <div className="ml-4 text-gray-400 dark:text-slate-600">...app content...</div>
+                <div className="ml-4 my-1 px-2 py-1 rounded bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20">
+                  <span className="text-amber-700 dark:text-amber-400">&lt;script src=&quot;pagead2.googlesyndication.com/...?client={draft.clientId}&quot;&gt;</span>
+                  <span className="text-gray-500 dark:text-slate-400 text-[10px] ml-1">&larr; lazyOnload</span>
+                </div>
+                <span className="text-gray-400 dark:text-slate-500">&lt;/body&gt;</span>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[10px] uppercase tracking-wider text-amber-600 dark:text-amber-400 font-semibold">Each &lt;AdSlot&gt;</span>
+              </div>
+              <pre className="text-xs bg-gray-900 dark:bg-slate-950 text-green-400 rounded-lg p-3 overflow-x-auto font-mono leading-relaxed">{`<ins class="adsbygoogle"
+  style="display:block"
+  data-ad-client="${draft.clientId}"
+  data-ad-slot="{slotId}"
+  data-ad-format="{format}"
+  data-full-width-responsive="true"
+/>`}</pre>
+            </div>
+
+            <div className="rounded-lg bg-gray-50 dark:bg-slate-800/50 p-3">
+              <p className="text-[10px] uppercase tracking-wider text-gray-400 dark:text-slate-500 font-semibold mb-2">Source files</p>
+              <div className="space-y-1 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+                  <code className="text-gray-600 dark:text-slate-300 font-mono">src/components/AdSenseScript.tsx</code>
+                  <span className="text-gray-400 dark:text-slate-500">&mdash; loads the adsbygoogle SDK</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                  <code className="text-gray-600 dark:text-slate-300 font-mono">src/components/AdSlot.tsx</code>
+                  <span className="text-gray-400 dark:text-slate-500">&mdash; renders each &lt;ins&gt; ad unit</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
+                  <code className="text-gray-600 dark:text-slate-300 font-mono">src/hooks/useAds.ts</code>
+                  <span className="text-gray-400 dark:text-slate-500">&mdash; fetches config, gates display by plan/consent</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </details>
+      )}
+    </div>
+  );
+}
+
+function MockContentBlock({ label }: { label: string }) {
+  return (
+    <div className="rounded bg-gray-100 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 px-2 py-1.5">
+      <span className="text-[9px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">{label}</span>
+    </div>
+  );
+}
+
+function MockAdBlock({ slotKey, slots }: { slotKey: string; slots: Record<string, { enabled: boolean; slotId: string }> }) {
+  const meta = AD_SLOT_META[slotKey];
+  const slot = slots[slotKey];
+  if (!meta) return null;
+  const active = slot?.enabled && !!slot.slotId;
+
+  return (
+    <div
+      className={`rounded border-2 border-dashed px-2 py-1.5 transition-colors ${
+        active
+          ? "border-amber-400 dark:border-amber-500/50 bg-amber-50 dark:bg-amber-500/5"
+          : "border-gray-300 dark:border-slate-600 bg-gray-50 dark:bg-slate-800/50 opacity-40"
+      }`}
+    >
+      <div className="flex items-center justify-between">
+        <span className={`text-[9px] font-bold uppercase tracking-wider ${active ? "text-amber-600 dark:text-amber-400" : "text-gray-400 dark:text-slate-500"}`}>
+          Ad: {meta.label}
+        </span>
+        <span className={`text-[8px] font-mono ${active ? "text-amber-500" : "text-gray-400 dark:text-slate-500"}`}>
+          {active ? slot.slotId : "disabled"}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 function SettingsTab() {
   return (
     <div className="space-y-6">
@@ -1764,6 +2240,7 @@ function SettingsTab() {
       <PromoBannerCard />
       <FeatureTogglesCard />
       <GaConfigCard />
+      <AdConfigCard />
       <StripePricesCard />
       <CapacityCard />
       <MetricsCard />

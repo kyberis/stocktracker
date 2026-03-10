@@ -7,7 +7,7 @@ import CookieConsent from "@/components/CookieConsent";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import AdSenseScript from "@/components/AdSenseScript";
 import ServiceWorkerUpdater from "@/components/ServiceWorkerUpdater";
-import { getGaMeasurementId } from "@/lib/db";
+import { getGaMeasurementId, getAdConfig } from "@/lib/db";
 import "./globals.css";
 
 export const viewport: Viewport = {
@@ -53,7 +53,8 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const gaId = await getGaMeasurementId();
+  const [gaId, adConfig] = await Promise.all([getGaMeasurementId(), getAdConfig()]);
+  const adsClientId = adConfig.globalEnabled ? adConfig.clientId : "";
 
   return (
     <html lang="en">
@@ -67,7 +68,7 @@ export default async function RootLayout({
         {children}
         <CookieConsent />
         <GoogleAnalytics gaId={gaId} />
-        <AdSenseScript />
+        <AdSenseScript clientId={adsClientId} />
         <Analytics />
         <SpeedInsights />
         <ServiceWorkerUpdater />

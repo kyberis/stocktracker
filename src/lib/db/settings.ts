@@ -359,6 +359,80 @@ export async function setGaMeasurementId(id: string): Promise<void> {
   await setPlatformSetting(GA_SETTING_KEY, id.trim());
 }
 
+/* ─── Ad Config ─── */
+
+export interface AdSlotConfig {
+  enabled: boolean;
+  slotId: string;
+}
+
+export interface AdConfig {
+  clientId: string;
+  globalEnabled: boolean;
+  slots: Record<string, AdSlotConfig>;
+}
+
+const AD_CONFIG_KEY = "ad_config";
+
+const AD_SLOT_DEFAULTS: Record<string, AdSlotConfig> = {
+  "dashboard-summary": { enabled: true, slotId: "" },
+  "dashboard-bottom":  { enabled: true, slotId: "" },
+  "tools-bottom":      { enabled: true, slotId: "" },
+  "stock-detail":      { enabled: true, slotId: "" },
+  "import-done":       { enabled: true, slotId: "" },
+};
+
+const DEFAULT_AD_CONFIG: AdConfig = {
+  clientId: "",
+  globalEnabled: false,
+  slots: { ...AD_SLOT_DEFAULTS },
+};
+
+export async function getAdConfig(): Promise<AdConfig> {
+  const raw = await getPlatformSetting(AD_CONFIG_KEY);
+  const envClientId = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID || "";
+
+  if (!raw) {
+    return { ...DEFAULT_AD_CONFIG, clientId: envClientId };
+  }
+  try {
+    const parsed = JSON.parse(raw);
+    const slots = { ...AD_SLOT_DEFAULTS };
+    if (parsed.slots) {
+      for (const [key, val] of Object.entries(parsed.slots)) {
+        if (key in slots) {
+          slots[key] = { ...slots[key], ...(val as Partial<AdSlotConfig>) };
+        }
+      }
+    }
+    return {
+      clientId: parsed.clientId || envClientId,
+      globalEnabled: parsed.globalEnabled ?? false,
+      slots,
+    };
+  } catch {
+    return { ...DEFAULT_AD_CONFIG, clientId: envClientId };
+  }
+}
+
+export async function setAdConfig(config: Partial<AdConfig>): Promise<AdConfig> {
+  const current = await getAdConfig();
+  const next: AdConfig = {
+    clientId: config.clientId ?? current.clientId,
+    globalEnabled: config.globalEnabled ?? current.globalEnabled,
+    slots: current.slots,
+  };
+  if (config.slots) {
+    for (const [key, val] of Object.entries(config.slots)) {
+      if (key in next.slots) {
+        next.slots[key] = { ...next.slots[key], ...val };
+      }
+    }
+  }
+  await setPlatformSetting(AD_CONFIG_KEY, JSON.stringify(next));
+  return next;
+}
+
 export async function getAllPlatformSettings(): Promise<Record<string, string>> {
   const client = await ensureInitialized();
   const result = await client.execute("SELECT key, value FROM platform_settings");
