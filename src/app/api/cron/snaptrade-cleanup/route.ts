@@ -10,8 +10,10 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 30;
 
 /**
- * Cron: deregister SnapTrade users whose paid subscription lapsed 1+ hour ago.
- * Removes the $2/connected-user/month cost from SnapTrade.
+ * Cron (daily 23:30 UTC): deregister SnapTrade users scheduled for end-of-month
+ * deletion after a downgrade. Runs daily; only deletes connections whose
+ * pending_delete_at has passed. Prevents the $2/connected-user/month SnapTrade
+ * charge from rolling into the next billing cycle.
  */
 export async function GET() {
   const pending = await getSnapTradeConnectionsPendingDeletion();

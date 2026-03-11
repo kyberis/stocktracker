@@ -84,11 +84,21 @@ export async function deleteSnapTradeConnection(userId: string): Promise<boolean
 
 /* ── Deferred deletion on downgrade ── */
 
-const SNAPTRADE_DELETION_DELAY_MS = 60 * 60 * 1000; // 1 hour
+/**
+ * Returns the last day of the current UTC month at 23:00 UTC.
+ * SnapTrade bills per-connected-user per month, so we keep the connection
+ * alive until end-of-month to get value from the month already paid for,
+ * then disconnect before the next billing cycle.
+ */
+function endOfMonthUTC(): Date {
+  const now = new Date();
+  const lastDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 0, 0));
+  return lastDay.getTime() <= now.getTime() ? now : lastDay;
+}
 
 export async function scheduleSnapTradeDeletion(userId: string): Promise<void> {
   const client = await ensureInitialized();
-  const deleteAt = new Date(Date.now() + SNAPTRADE_DELETION_DELAY_MS).toISOString();
+  const deleteAt = endOfMonthUTC().toISOString();
   await client.execute({
     sql: "UPDATE snaptrade_connections SET pending_delete_at = ? WHERE user_id = ? AND pending_delete_at = ''",
     args: [deleteAt, userId],
@@ -148,7 +158,7 @@ export interface ActiveSnapTradeUser {
 export async function listActiveSnapTradeConnections(): Promise<ActiveSnapTradeUser[]> {
   const client = await ensureInitialized();
   const result = await client.execute({
-    sql: "SELECT user_id, snaptrade_user_id FROM snaptrade_connections WHERE pending_delete_at = ''",
+    sql: "SELECT user_id, snaptrade_user_id FROM snaptrade_connections WHERE pending_delete_at = '' OR pending_delete_at > datetime('now')",
     args: [],
   });
   return result.rows.map((r) => ({
