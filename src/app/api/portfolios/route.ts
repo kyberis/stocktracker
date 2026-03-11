@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
 import { listPortfolios, createPortfolio, countPortfolios } from "@/lib/db";
+import type { PortfolioCurrency } from "@/lib/db";
 import { getPortfolioLimit } from "@/lib/subscription";
 import { withMetrics } from "@/lib/with-metrics";
+
+const VALID_CURRENCIES: PortfolioCurrency[] = ["EUR", "USD"];
 
 export const dynamic = "force-dynamic";
 
@@ -36,10 +39,17 @@ export const POST = withMetrics("/api/portfolios POST", async (req: NextRequest)
   }
 
   let name = "My Portfolio";
+  let currency: PortfolioCurrency = "EUR";
   try {
     const body = await req.json();
     if (body.name && typeof body.name === "string") {
       name = body.name.trim().slice(0, 50);
+    }
+    if (body.currency && typeof body.currency === "string") {
+      const upper = body.currency.toUpperCase() as PortfolioCurrency;
+      if (VALID_CURRENCIES.includes(upper)) {
+        currency = upper;
+      }
     }
   } catch {
     // use default name
@@ -50,7 +60,7 @@ export const POST = withMetrics("/api/portfolios POST", async (req: NextRequest)
   }
 
   try {
-    const portfolio = await createPortfolio(session.userId, name);
+    const portfolio = await createPortfolio(session.userId, name, currency);
     return NextResponse.json({ portfolio }, { status: 201 });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);

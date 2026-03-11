@@ -17,9 +17,10 @@ interface Props {
 
 export default function PerformanceMetrics({ holdings: holdingsProp, cashEntries: cashEntriesProp }: Props) {
   const { t } = useI18n();
-  const { holdings: ctxHoldings, cashEntries: ctxCashEntries, quotes, exchangeRates } = usePortfolio();
+  const { holdings: ctxHoldings, cashEntries: ctxCashEntries, quotes, exchangeRates, activePortfolioCurrency } = usePortfolio();
   const holdings = holdingsProp ?? ctxHoldings;
   const cashEntries = cashEntriesProp ?? ctxCashEntries;
+  const baseCurrency = activePortfolioCurrency;
   const [txs, setTxs] = useState<Transaction[]>([]);
   const [showExplainer, setShowExplainer] = useState(false);
 
@@ -27,10 +28,10 @@ export default function PerformanceMetrics({ holdings: holdingsProp, cashEntries
     fetch("/api/transactions").then((r) => r.ok ? r.json() : []).then(setTxs);
   }, []);
 
-  const { totalCurrentEUR, totalCostEUR } = calculatePortfolioTotals(holdings, cashEntries, quotes, exchangeRates);
+  const { totalCurrentEUR, totalCostEUR } = calculatePortfolioTotals(holdings, cashEntries, quotes, exchangeRates, baseCurrency);
 
-  const ttwror = calculateTTWROR(txs, totalCurrentEUR, totalCostEUR, exchangeRates);
-  const cashFlows = buildXIRRCashFlows(txs, totalCurrentEUR, exchangeRates);
+  const ttwror = calculateTTWROR(txs, totalCurrentEUR, totalCostEUR, exchangeRates, baseCurrency);
+  const cashFlows = buildXIRRCashFlows(txs, totalCurrentEUR, exchangeRates, baseCurrency);
   const irr = cashFlows.length >= 2 ? calculateXIRR(cashFlows) : null;
 
   const simpleReturn = totalCostEUR > 0 ? ((totalCurrentEUR - totalCostEUR) / totalCostEUR) * 100 : 0;

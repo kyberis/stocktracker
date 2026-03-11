@@ -137,7 +137,7 @@ async function importTransactions(
   brokerLabel?: string,
   portfolioId?: string,
 ): Promise<{ imported: number; cashImported: number; holdingsCapped?: number }> {
-  const existingRefs = await listTransactionSourceRefs(userId, portfolioId);
+  const existingRefs = await listTransactionSourceRefs(userId);
   const toImport = parsed.filter((tx) => !existingRefs.has(tx.sourceRef));
 
   const sorted = [...toImport].sort((a, b) => a.date.localeCompare(b.date));
@@ -287,7 +287,7 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
     const parsed = parseSimpleCSV(csv);
 
     if (action === "parse") {
-      const existingRefs = await listTransactionSourceRefs(session.userId, portfolioId);
+      const existingRefs = await listTransactionSourceRefs(session.userId);
       const deduped = parsed.filter((tx) => !tx.sourceRef || !existingRefs.has(tx.sourceRef));
       const duplicatesRemoved = parsed.length - deduped.length;
       const summary = {
@@ -340,7 +340,7 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
   }
 
   if (action === "parse") {
-    const existingRefs = await listTransactionSourceRefs(session.userId, portfolioId);
+    const existingRefs = await listTransactionSourceRefs(session.userId);
     const deduped = parsed.filter((tx) => !tx.sourceRef || !existingRefs.has(tx.sourceRef));
     const duplicatesRemoved = parsed.length - deduped.length;
     const cashBalances = parser.parseCashBalances?.(csv) || [];

@@ -324,7 +324,9 @@ export async function rebuildHoldings(userId: string, portfolioId?: string): Pro
   await client.execute({ sql: `DELETE FROM holdings WHERE user_id = ?${portfolioFilter}`, args: [userId, ...portfolioArgs] });
 
   for (const h of derived) {
-    const id = randomUUID();
+    const key = `${h.ticker.toUpperCase()}|${h.exchange.toUpperCase()}`;
+    const existingId = metadataByKey.get(key)?.id;
+    const id = existingId || randomUUID();
     await client.execute({
       sql: `INSERT INTO holdings (id, user_id, name, ticker, isin, asset_type, shares, purchase_price, display_currency, exchange, value_in_eur, sector, region, asset_class, account_id, portfolio_id)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,

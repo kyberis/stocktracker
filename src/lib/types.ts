@@ -286,6 +286,8 @@ export interface PortfolioSummary {
   totalGainLossEUR: number;
   totalGainLossPercent: number;
   holdingsCount: number;
+  /** Base currency of the portfolio (defaults to EUR for backward compat) */
+  currency?: string;
 }
 
 export interface SearchResult {

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useI18n } from "@/lib/i18n";
 import { useTrack } from "@/lib/use-track";
-import { convertToEUR, formatPercent } from "@/lib/utils";
+import { convertCurrency, formatPercent } from "@/lib/utils";
 import {
   calculatePortfolioValueOnDate,
   calculatePeriodReturn,
@@ -36,7 +36,8 @@ interface Props {
 }
 
 export default function PortfolioGrowthPeriods({ holdings: holdingsProp }: Props) {
-  const { holdings: ctxHoldings, exchangeRates, quotes } = usePortfolio();
+  const { holdings: ctxHoldings, exchangeRates, quotes, activePortfolioCurrency } = usePortfolio();
+  const baseCurrency = activePortfolioCurrency;
   const holdings = holdingsProp ?? ctxHoldings;
   const { t } = useI18n();
   const track = useTrack();
@@ -59,17 +60,18 @@ export default function PortfolioGrowthPeriods({ holdings: holdingsProp }: Props
     for (const h of holdings) {
       const q = quotes[h.ticker];
       if (q && q.regularMarketPrice > 0) {
-        sum += convertToEUR(
+        sum += convertCurrency(
           h.shares * q.regularMarketPrice,
           h.displayCurrency,
+          baseCurrency,
           exchangeRates
         );
       } else {
-        sum += h.valueInEUR;
+        sum += convertCurrency(h.valueInEUR, "EUR", baseCurrency, exchangeRates);
       }
     }
     return sum;
-  }, [holdings, quotes, exchangeRates]);
+  }, [holdings, quotes, exchangeRates, baseCurrency]);
 
   const fetchHistorical = useCallback(
     async (symbol: string): Promise<HistoricalDataPoint[]> => {
@@ -104,9 +106,9 @@ export default function PortfolioGrowthPeriods({ holdings: holdingsProp }: Props
         if (cancelled) return;
 
         const dates = getTargetDates();
-        const valueYTD = calculatePortfolioValueOnDate(entries, dates.ytd, exchangeRates);
-        const value1M = calculatePortfolioValueOnDate(entries, dates.oneMonth, exchangeRates);
-        const value1Y = calculatePortfolioValueOnDate(entries, dates.oneYear, exchangeRates);
+        const valueYTD = calculatePortfolioValueOnDate(entries, dates.ytd, exchangeRates, baseCurrency);
+        const value1M = calculatePortfolioValueOnDate(entries, dates.oneMonth, exchangeRates, baseCurrency);
+        const value1Y = calculatePortfolioValueOnDate(entries, dates.oneYear, exchangeRates, baseCurrency);
 
         setResults({
           ytd: calculatePeriodReturn(currentEquityEUR, valueYTD),
@@ -122,7 +124,7 @@ export default function PortfolioGrowthPeriods({ holdings: holdingsProp }: Props
 
     load();
     return () => { cancelled = true; };
-  }, [tickers, holdings, exchangeRates, currentEquityEUR, fetchHistorical]);
+  }, [tickers, holdings, exchangeRates, currentEquityEUR, fetchHistorical, baseCurrency]);
 
   useEffect(() => {
     if (!tracked.current && !loading && (results.ytd !== null || results.oneMonth !== null || results.oneYear !== null)) {

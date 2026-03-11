@@ -28,12 +28,17 @@ export async function addCashEntry(
   const client = await ensureInitialized();
   const resolved = await resolvePortfolioId(userId, portfolioId);
   const id = randomUUID();
-  await client.execute({
+  const result = await client.execute({
     sql: `INSERT INTO cash_entries (id, user_id, name, amount_eur, portfolio_id)
-          VALUES (?, ?, ?, ?, ?)`,
+          VALUES (?, ?, ?, ?, ?)
+          ON CONFLICT(user_id, name, portfolio_id) DO UPDATE SET
+            amount_eur = excluded.amount_eur,
+            updated_at = datetime('now')
+          RETURNING id`,
     args: [id, userId, entry.name, entry.amountEUR, resolved],
   });
-  return { ...entry, id };
+  const returnedId = result.rows.length > 0 ? str(result.rows[0].id) : id;
+  return { ...entry, id: returnedId };
 }
 
 export async function updateCashEntry(

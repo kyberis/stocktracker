@@ -56,10 +56,14 @@ export const GET = withMetrics("/api/portfolio/summary", async (req: NextRequest
 
   if (holdings.length === 0 && cashEntries.length === 0) {
     let portfolioName = "All Portfolios";
+    let emptyCurrency = "EUR";
     if (portfolioId) {
       const { findPortfolioById } = await import("@/lib/db");
       const portfolio = await findPortfolioById(userId, portfolioId);
-      if (portfolio) portfolioName = portfolio.name;
+      if (portfolio) {
+        portfolioName = portfolio.name;
+        emptyCurrency = portfolio.currency;
+      }
     }
     return NextResponse.json({
       totalValueEUR: 0,
@@ -71,6 +75,7 @@ export const GET = withMetrics("/api/portfolio/summary", async (req: NextRequest
       holdingsCount: 0,
       topHoldings: [],
       portfolioName,
+      currency: emptyCurrency,
       updatedAt: new Date().toISOString(),
     });
   }
@@ -113,15 +118,19 @@ export const GET = withMetrics("/api/portfolio/summary", async (req: NextRequest
     }
   }
 
-  const totals = calculatePortfolioTotals(holdings, cashEntries, quotes, exchangeRates);
-
-  // Determine portfolio name for device display
+  // Resolve portfolio currency for base-currency conversion
+  let portfolioCurrency = "EUR";
   let portfolioName = "All Portfolios";
   if (portfolioId) {
     const { findPortfolioById } = await import("@/lib/db");
     const portfolio = await findPortfolioById(userId, portfolioId);
-    if (portfolio) portfolioName = portfolio.name;
+    if (portfolio) {
+      portfolioName = portfolio.name;
+      portfolioCurrency = portfolio.currency;
+    }
   }
+
+  const totals = calculatePortfolioTotals(holdings, cashEntries, quotes, exchangeRates, portfolioCurrency);
 
   const holdingValues = holdings.map((h) => {
     const q = quotes[h.ticker];
@@ -168,6 +177,7 @@ export const GET = withMetrics("/api/portfolio/summary", async (req: NextRequest
     holdingsCount: holdings.length,
     topHoldings,
     portfolioName,
+    currency: portfolioCurrency,
     updatedAt: new Date().toISOString(),
   }, {
     headers: { "Cache-Control": "private, max-age=60" },

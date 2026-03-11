@@ -33,7 +33,7 @@ const {
   __mockSearch: mockSearch,
   __mockHistorical: mockHistorical,
   __mockQuoteSummary: mockQuoteSummary,
-} = await import("yahoo-finance2") as Record<string, ReturnType<typeof vi.fn>>;
+} = await import("yahoo-finance2") as unknown as Record<string, ReturnType<typeof vi.fn>>;
 
 describe("Yahoo Finance chaos", () => {
   let provider: YahooProvider;

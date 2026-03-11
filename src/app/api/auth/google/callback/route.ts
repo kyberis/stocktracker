@@ -15,6 +15,7 @@ import {
   getSessionCookieConfig,
   verifySessionToken,
 } from "@/lib/auth/session";
+import { sendWelcomeEmail } from "@/lib/email";
 import { ensureSessionSecret } from "@/lib/auth/session-secret";
 import { authEventsTotal } from "@/lib/metrics";
 
@@ -266,6 +267,9 @@ async function handleLoginFlow(
       };
       trackEvent(publicUser.id, "signup");
       authEventsTotal.inc({ event: "signup" });
+      sendWelcomeEmail(googleUser.email.toLowerCase(), googleUser.name || "").catch((err) =>
+        console.error("Welcome email failed:", err),
+      );
     }
 
     if (!dbUser) {

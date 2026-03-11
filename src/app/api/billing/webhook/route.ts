@@ -12,6 +12,7 @@ import {
   scheduleSnapTradeDeletion,
   clearSnapTradeDeletion,
 } from "@/lib/db";
+import { sendBifolioUpgradeEmail, sendTrefolioUpgradeEmail } from "@/lib/email";
 import { billingEventsTotal } from "@/lib/metrics";
 import { getStripeClient } from "@/lib/stripe";
 import { withMetrics } from "@/lib/with-metrics";
@@ -112,6 +113,11 @@ export const POST = withMetrics("/api/billing/webhook", async (req: NextRequest)
               plan: checkoutPlan,
               mode: session.metadata?.deviceGrant === "true" ? "device_grant" : "subscription",
             });
+            const sendUpgradeEmail =
+              checkoutPlan === "starter" ? sendBifolioUpgradeEmail : sendTrefolioUpgradeEmail;
+            sendUpgradeEmail(user.email, user.display_name || "").catch((err) =>
+              console.error("Upgrade email failed:", err),
+            );
           }
         }
         break;

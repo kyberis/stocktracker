@@ -4,16 +4,20 @@ import { useState, useEffect, useCallback } from "react";
 import { useI18n } from "@/lib/i18n";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 
+type FeedbackType = "feedback" | "bug";
+
 interface FeedbackItem {
   id: string;
   userId: string;
   username: string;
   subject: string;
   message: string;
+  type: FeedbackType;
   status: "open" | "answered" | "closed";
   adminReply: string;
   createdAt: string;
   repliedAt: string;
+  userContext: string;
 }
 
 interface FeedbackModalProps {
@@ -21,8 +25,19 @@ interface FeedbackModalProps {
   onClose: () => void;
 }
 
+function buildClientContext(locale: string): string {
+  return JSON.stringify({
+    page: window.location.href,
+    userAgent: navigator.userAgent,
+    viewport: `${window.innerWidth}x${window.innerHeight}`,
+    locale,
+    timestamp: new Date().toISOString(),
+  });
+}
+
 export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
+  const [feedbackType, setFeedbackType] = useState<FeedbackType>("feedback");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
@@ -61,10 +76,19 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
     setSending(true);
     setError("");
     try {
+      const payload: Record<string, string> = {
+        subject: subject.trim(),
+        message: message.trim(),
+        type: feedbackType,
+      };
+      if (feedbackType === "bug") {
+        payload.userContext = buildClientContext(language);
+      }
+
       const res = await fetch("/api/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ subject: subject.trim(), message: message.trim() }),
+        body: JSON.stringify(payload),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -85,6 +109,8 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
   const focusTrapRef = useFocusTrap(isOpen, onClose);
 
   if (!isOpen) return null;
+
+  const isBug = feedbackType === "bug";
 
   const statusColor = (status: string) => {
     if (status === "answered") return "bg-emerald-500/15 text-emerald-400 border-emerald-500/20";
@@ -122,6 +148,36 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
 
         {/* Submit Form */}
         <form onSubmit={handleSubmit} className="space-y-3 mb-6">
+          {/* Type toggle */}
+          <div className="flex rounded-lg border border-gray-200 dark:border-slate-700 overflow-hidden" role="radiogroup" aria-label="Feedback type">
+            <button
+              type="button"
+              role="radio"
+              aria-checked={!isBug}
+              onClick={() => setFeedbackType("feedback")}
+              className={`flex-1 py-1.5 text-sm font-medium transition-colors ${
+                !isBug
+                  ? "bg-blue-500 text-white"
+                  : "bg-white dark:bg-slate-800 text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700"
+              }`}
+            >
+              {t("feedbackTypeFeedback")}
+            </button>
+            <button
+              type="button"
+              role="radio"
+              aria-checked={isBug}
+              onClick={() => setFeedbackType("bug")}
+              className={`flex-1 py-1.5 text-sm font-medium transition-colors ${
+                isBug
+                  ? "bg-red-500 text-white"
+                  : "bg-white dark:bg-slate-800 text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700"
+              }`}
+            >
+              {t("feedbackTypeBug")}
+            </button>
+          </div>
+
           <div>
             <label htmlFor="feedback-subject" className="block text-sm text-gray-600 dark:text-slate-300 mb-1">
               {t("feedbackSubject")}
@@ -130,7 +186,7 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
               id="feedback-subject"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
-              placeholder={t("feedbackSubjectPlaceholder")}
+              placeholder={isBug ? t("feedbackBugSubjectPlaceholder") : t("feedbackSubjectPlaceholder")}
               className="w-full"
               maxLength={200}
             />
@@ -143,11 +199,16 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
               id="feedback-message"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder={t("feedbackPlaceholder")}
+              placeholder={isBug ? t("feedbackBugPlaceholder") : t("feedbackPlaceholder")}
               className="w-full min-h-[100px] resize-y"
               maxLength={2000}
             />
           </div>
+          {isBug && (
+            <p className="text-[11px] text-gray-400 dark:text-slate-500">
+              {t("feedbackContextPage")}: {typeof window !== "undefined" ? window.location.pathname : ""}
+            </p>
+          )}
           {error && (
             <p className="text-sm text-red-500" role="alert">{error}</p>
           )}
@@ -180,9 +241,16 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                   className="border border-gray-200 dark:border-slate-700 rounded-xl p-3 space-y-2"
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <h4 className="text-sm font-medium text-gray-900 dark:text-white">
-                      {item.subject}
-                    </h4>
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      {item.type === "bug" && (
+                        <span className="shrink-0 text-[10px] font-medium px-1.5 py-0.5 rounded-full border bg-red-500/15 text-red-400 border-red-500/20">
+                          {t("feedbackTypeBug")}
+                        </span>
+                      )}
+                      <h4 className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                        {item.subject}
+                      </h4>
+                    </div>
                     <span
                       className={`shrink-0 text-[10px] font-medium px-1.5 py-0.5 rounded-full border ${statusColor(item.status)}`}
                     >

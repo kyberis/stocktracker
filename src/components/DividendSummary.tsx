@@ -27,7 +27,8 @@ interface EstimatedDividend {
 
 export default function DividendSummary() {
   const { t } = useI18n();
-  const { holdings, quotes, exchangeRates } = usePortfolio();
+  const { holdings, quotes, exchangeRates, activePortfolioCurrency } = usePortfolio();
+  const baseCurrency = activePortfolioCurrency;
   const [txs, setTxs] = useState<Transaction[]>([]);
   const track = useTrack();
   const { stealthMode } = useStealthMode();
@@ -260,14 +261,14 @@ export default function DividendSummary() {
               <div className="bg-violet-50 dark:bg-violet-500/10 rounded-xl p-3 text-center">
                 <p className="text-[10px] text-violet-600 dark:text-violet-400 font-medium uppercase">{t("estAnnualIncome")}</p>
                 <p className="text-lg font-bold text-violet-700 dark:text-violet-300"
-                  aria-label={stealthMode ? formatCurrency(totalEstimatedEUR, "EUR") : undefined}>
-                  {formatStealthCurrency(totalEstimatedEUR, "EUR", stealthMode)}</p>
+                  aria-label={stealthMode ? formatCurrency(totalEstimatedEUR, baseCurrency) : undefined}>
+                  {formatStealthCurrency(totalEstimatedEUR, baseCurrency, stealthMode)}</p>
               </div>
               <div className="bg-emerald-50 dark:bg-emerald-500/10 rounded-xl p-3 text-center">
                 <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium uppercase">{t("estMonthlyIncome")}</p>
                 <p className="text-lg font-bold text-emerald-700 dark:text-emerald-300"
-                  aria-label={stealthMode ? formatCurrency(totalEstimatedEUR / 12, "EUR") : undefined}>
-                  {formatStealthCurrency(totalEstimatedEUR / 12, "EUR", stealthMode)}</p>
+                  aria-label={stealthMode ? formatCurrency(totalEstimatedEUR / 12, baseCurrency) : undefined}>
+                  {formatStealthCurrency(totalEstimatedEUR / 12, baseCurrency, stealthMode)}</p>
               </div>
               <div className="bg-blue-50 dark:bg-blue-500/10 rounded-xl p-3 text-center">
                 <p className="text-[10px] text-blue-600 dark:text-blue-400 font-medium uppercase">{t("dividendYield")}</p>
@@ -297,8 +298,8 @@ export default function DividendSummary() {
                       />
                     </div>
                     <span className="font-mono text-gray-900 dark:text-white w-20 text-right"
-                      aria-label={stealthMode ? formatCurrency(e.annualIncomeEUR, "EUR") : undefined}>
-                      {formatStealthCurrency(e.annualIncomeEUR, "EUR", stealthMode)}</span>
+                      aria-label={stealthMode ? formatCurrency(e.annualIncomeEUR, baseCurrency) : undefined}>
+                      {formatStealthCurrency(e.annualIncomeEUR, baseCurrency, stealthMode)}</span>
                   </div>
                 </div>
               ))}
@@ -329,7 +330,7 @@ export default function DividendSummary() {
                       </div>
                     </div>
                     <span className={`font-mono w-20 text-right ${isProjection ? "text-indigo-600 dark:text-indigo-300" : "text-gray-900 dark:text-white"}`}>
-                      {formatCurrency(amount, "EUR")}
+                      {formatCurrency(amount, baseCurrency)}
                     </span>
                   </div>
                 ))}
@@ -349,11 +350,11 @@ export default function DividendSummary() {
             <div className="grid grid-cols-3 gap-3">
               <div className="bg-violet-50 dark:bg-violet-500/10 rounded-xl p-3 text-center">
                 <p className="text-[10px] text-violet-600 dark:text-violet-400 font-medium uppercase">{t("totalDividends")}</p>
-                <p className="text-lg font-bold text-violet-700 dark:text-violet-300">{formatCurrency(totalDividends, "EUR")}</p>
+                <p className="text-lg font-bold text-violet-700 dark:text-violet-300">{formatCurrency(totalDividends, baseCurrency)}</p>
               </div>
               <div className="bg-emerald-50 dark:bg-emerald-500/10 rounded-xl p-3 text-center">
                 <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium uppercase">{t("annualDividendIncome")}</p>
-                <p className="text-lg font-bold text-emerald-700 dark:text-emerald-300">{formatCurrency(annualDividends, "EUR")}</p>
+                <p className="text-lg font-bold text-emerald-700 dark:text-emerald-300">{formatCurrency(annualDividends, baseCurrency)}</p>
               </div>
               <div className="bg-blue-50 dark:bg-blue-500/10 rounded-xl p-3 text-center">
                 <p className="text-[10px] text-blue-600 dark:text-blue-400 font-medium uppercase">{t("dividendYield")}</p>
@@ -380,7 +381,7 @@ export default function DividendSummary() {
                         />
                       </div>
                     </div>
-                    <span className="font-mono text-gray-900 dark:text-white w-20 text-right">{formatCurrency(amount, "EUR")}</span>
+                    <span className="font-mono text-gray-900 dark:text-white w-20 text-right">{formatCurrency(amount, baseCurrency)}</span>
                   </div>
                 ))}
               </div>
@@ -395,7 +396,7 @@ export default function DividendSummary() {
                       <span className="text-gray-400 dark:text-slate-500 mr-1.5">{i + 1}.</span>
                       <span className="font-mono font-medium">{ticker}</span>
                     </span>
-                    <span className="font-mono text-gray-900 dark:text-white">{formatCurrency(amount, "EUR")}</span>
+                    <span className="font-mono text-gray-900 dark:text-white">{formatCurrency(amount, baseCurrency)}</span>
                   </div>
                 ))}
               </div>
@@ -426,7 +427,7 @@ export default function DividendSummary() {
                       </div>
                     </div>
                     <span className={`font-mono w-20 text-right ${isProjection ? "text-indigo-600 dark:text-indigo-300" : "text-gray-900 dark:text-white"}`}>
-                      {formatCurrency(amount, "EUR")}
+                      {formatCurrency(amount, baseCurrency)}
                     </span>
                   </div>
                 ))}
@@ -449,7 +450,7 @@ export default function DividendSummary() {
                           style={{ width: `${Math.min(100, (amount / Math.max(...byMonth.map((m) => m[1]))) * 100)}%` }}
                         />
                       </div>
-                      <span className="font-mono text-gray-900 dark:text-white w-16 text-right">{formatCurrency(amount, "EUR")}</span>
+                      <span className="font-mono text-gray-900 dark:text-white w-16 text-right">{formatCurrency(amount, baseCurrency)}</span>
                     </div>
                   </div>
                 ))}
@@ -496,7 +497,7 @@ export default function DividendSummary() {
                     )}
                   </div>
                   <span className="font-mono text-gray-900 dark:text-white w-20 text-right shrink-0">
-                    {formatCurrency(dividends + gains, "EUR")}
+                    {formatCurrency(dividends + gains, baseCurrency)}
                   </span>
                 </div>
               );

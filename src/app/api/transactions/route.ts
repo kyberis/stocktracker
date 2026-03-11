@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { listTransactions, addTransaction, deleteTransaction, rebuildHoldings, listHoldings, findUserById } from "@/lib/db";
+import { listTransactions, addTransaction, updateTransaction, deleteTransaction, rebuildHoldings, listHoldings, findUserById } from "@/lib/db";
 import { withMetrics } from "@/lib/with-metrics";
 import { transactionsOpsTotal } from "@/lib/metrics";
 import { parseBody } from "@/lib/api-response";
-import { createTransactionSchema } from "@/lib/schemas";
+import { createTransactionSchema, updateTransactionSchema } from "@/lib/schemas";
 import { getHoldingsLimit } from "@/lib/subscription";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 
@@ -62,6 +62,23 @@ export const POST = withMetrics("/api/transactions", async (req: NextRequest) =>
   }
   transactionsOpsTotal.inc({ operation: "add" });
   return NextResponse.json(created, { status: 201 });
+});
+
+export const PATCH = withMetrics("/api/transactions", async (req: NextRequest) => {
+  const { session, error } = await requireSession(req);
+  if (error || !session) return error;
+
+  const result = await parseBody(req, updateTransactionSchema);
+  if (!result.success) return result.error;
+
+  const { id, updates } = result.data;
+  const updated = await updateTransaction(session.userId, id, updates);
+  if (!updated) return NextResponse.json({ error: "Not found." }, { status: 404 });
+
+  const portfolioId = req.nextUrl.searchParams.get("portfolioId") || undefined;
+  await rebuildHoldings(session.userId, portfolioId);
+  transactionsOpsTotal.inc({ operation: "update" });
+  return NextResponse.json({ ok: true });
 });
 
 export const DELETE = withMetrics("/api/transactions", async (req: NextRequest) => {

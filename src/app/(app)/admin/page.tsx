@@ -2505,10 +2505,54 @@ interface FeedbackItem {
   username: string;
   subject: string;
   message: string;
+  type: "feedback" | "bug";
   status: "open" | "answered" | "closed";
   adminReply: string;
   createdAt: string;
   repliedAt: string;
+  userContext: string;
+}
+
+function FeedbackContextPanel({ raw }: { raw: string }) {
+  const [open, setOpen] = useState(false);
+  if (!raw) return null;
+  let ctx: Record<string, string> = {};
+  try { ctx = JSON.parse(raw); } catch { return null; }
+
+  const rows = [
+    ["Page", ctx.page],
+    ["Email", ctx.email],
+    ["Plan", ctx.plan],
+    ["Browser", ctx.userAgent],
+    ["Viewport", ctx.viewport],
+    ["Locale", ctx.locale],
+    ["User ID", ctx.userId],
+  ].filter(([, v]) => v) as [string, string][];
+
+  if (rows.length === 0) return null;
+
+  return (
+    <div className="border border-gray-200 dark:border-slate-700 rounded-lg overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
+      >
+        <span>User Context</span>
+        <svg className={`w-3.5 h-3.5 transition-transform ${open ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+      </button>
+      {open && (
+        <div className="px-3 pb-2 space-y-1">
+          {rows.map(([label, value]) => (
+            <div key={label} className="flex gap-2 text-xs">
+              <span className="shrink-0 font-medium text-gray-500 dark:text-slate-500 w-16">{label}</span>
+              <span className="text-gray-700 dark:text-slate-300 break-all">{value}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function FeedbackTab() {
@@ -2580,15 +2624,25 @@ function FeedbackTab() {
     return "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400";
   };
 
+  const typeColor = (type: string) => {
+    if (type === "bug") return "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-400";
+    return "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400";
+  };
+
   return (
     <div className="space-y-4">
       {items.map((item) => (
         <div key={item.id} className="card p-4 space-y-3">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <h3 className="font-medium text-gray-900 dark:text-white truncate">
-                {item.subject}
-              </h3>
+              <div className="flex items-center gap-2">
+                <span className={`shrink-0 text-[10px] font-medium px-1.5 py-0.5 rounded-full ${typeColor(item.type)}`}>
+                  {item.type === "bug" ? "Bug" : "Feedback"}
+                </span>
+                <h3 className="font-medium text-gray-900 dark:text-white truncate">
+                  {item.subject}
+                </h3>
+              </div>
               <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
                 From <span className="font-medium">{item.username}</span> &middot;{" "}
                 {new Date(item.createdAt).toLocaleDateString()}
@@ -2604,6 +2658,10 @@ function FeedbackTab() {
           <p className="text-sm text-gray-700 dark:text-slate-300 whitespace-pre-wrap">
             {item.message}
           </p>
+
+          {item.type === "bug" && item.userContext && (
+            <FeedbackContextPanel raw={item.userContext} />
+          )}
 
           {/* Reply form */}
           <div className="border-t border-gray-200 dark:border-slate-700 pt-3 space-y-2">

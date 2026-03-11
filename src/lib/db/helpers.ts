@@ -47,12 +47,15 @@ export interface DbUser {
   device_portfolio_id: string;
 }
 
+export type PortfolioCurrency = "EUR" | "USD";
+
 export interface DbPortfolio {
   id: string;
   user_id: string;
   name: string;
   is_default: number;
   sort_order: number;
+  currency: string;
   created_at: string;
 }
 
@@ -62,6 +65,7 @@ export interface Portfolio {
   name: string;
   isDefault: boolean;
   sortOrder: number;
+  currency: PortfolioCurrency;
   createdAt: string;
 }
 
@@ -173,6 +177,12 @@ export function feedbackStatus(val: unknown): "open" | "answered" | "closed" {
   return "open";
 }
 
+export function feedbackType(val: unknown): "feedback" | "bug" {
+  const v = String(val);
+  if (v === "bug") return "bug";
+  return "feedback";
+}
+
 export function parseRefreshInterval(val: unknown): RefreshInterval {
   const n = Number(val);
   if (n === 30 || n === 60) return n;
@@ -227,12 +237,15 @@ export function rowToDbUser(row: Row): DbUser {
 }
 
 export function rowToPortfolio(row: Row): Portfolio {
+  const raw = str(row.currency).toUpperCase();
+  const currency: PortfolioCurrency = raw === "USD" ? "USD" : "EUR";
   return {
     id: str(row.id),
     userId: str(row.user_id),
     name: str(row.name),
     isDefault: num(row.is_default) === 1,
     sortOrder: num(row.sort_order),
+    currency,
     createdAt: str(row.created_at),
   };
 }

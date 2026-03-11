@@ -8,12 +8,38 @@ export async function listTransactions(userId: string, holdingId?: string, portf
   const client = await ensureInitialized();
   let sql: string;
   let args: string[];
-  if (holdingId && portfolioId) {
+
+  // When filtering by holdingId, also match unlinked transactions by ticker+exchange
+  // so transactions created before the holding_id backfill still appear.
+  let holdingTicker: string | null = null;
+  let holdingExchange: string | null = null;
+  if (holdingId) {
+    const hRes = await client.execute({
+      sql: "SELECT ticker, exchange FROM holdings WHERE id = ? AND user_id = ?",
+      args: [holdingId, userId],
+    });
+    if (hRes.rows.length > 0) {
+      holdingTicker = str(hRes.rows[0].ticker);
+      holdingExchange = str(hRes.rows[0].exchange);
+    }
+  }
+
+  if (holdingId && portfolioId && holdingTicker) {
+    sql = `SELECT * FROM transactions WHERE user_id = ? AND portfolio_id = ?
+           AND (holding_id = ? OR (holding_id = '' AND ticker = ? AND UPPER(COALESCE(exchange,'')) = ?))
+           ORDER BY date DESC, created_at DESC`;
+    args = [userId, portfolioId, holdingId, holdingTicker, (holdingExchange || "").toUpperCase()];
+  } else if (holdingId && portfolioId) {
     sql = "SELECT * FROM transactions WHERE user_id = ? AND holding_id = ? AND portfolio_id = ? ORDER BY date DESC, created_at DESC";
     args = [userId, holdingId, portfolioId];
   } else if (portfolioId) {
     sql = "SELECT * FROM transactions WHERE user_id = ? AND portfolio_id = ? ORDER BY date DESC, created_at DESC";
     args = [userId, portfolioId];
+  } else if (holdingId && holdingTicker) {
+    sql = `SELECT * FROM transactions WHERE user_id = ?
+           AND (holding_id = ? OR (holding_id = '' AND ticker = ? AND UPPER(COALESCE(exchange,'')) = ?))
+           ORDER BY date DESC, created_at DESC`;
+    args = [userId, holdingId, holdingTicker, (holdingExchange || "").toUpperCase()];
   } else if (holdingId) {
     sql = "SELECT * FROM transactions WHERE user_id = ? AND holding_id = ? ORDER BY date DESC, created_at DESC";
     args = [userId, holdingId];
@@ -22,6 +48,19 @@ export async function listTransactions(userId: string, holdingId?: string, portf
     args = [userId];
   }
   const result = await client.execute({ sql, args });
+
+  // Self-heal: backfill holding_id on unlinked transactions
+  if (holdingId && holdingTicker) {
+    const unlinked = result.rows.filter((r) => str(r.holding_id) === "");
+    if (unlinked.length > 0) {
+      const ids = unlinked.map((r) => str(r.id));
+      const placeholders = ids.map(() => "?").join(",");
+      await client.execute({
+        sql: `UPDATE transactions SET holding_id = ? WHERE id IN (${placeholders}) AND user_id = ?`,
+        args: [holdingId, ...ids, userId],
+      });
+    }
+  }
   return result.rows.map((r) => ({
     id: str(r.id),
     holdingId: str(r.holding_id),
@@ -102,8 +141,8 @@ async function syncHoldingForTransaction(
   userId: string,
   tx: { ticker: string; exchange: string; name: string; isin: string; assetType: string; type: string; shares: number; totalAmount: number; fees: number; taxes: number; currency: string; displayCurrency?: string; accountId?: string },
   portfolioId?: string,
-): Promise<void> {
-  if (tx.type !== "buy" && tx.type !== "sell") return;
+): Promise<string | undefined> {
+  if (tx.type !== "buy" && tx.type !== "sell") return undefined;
 
   const client = await ensureInitialized();
   const ticker = tx.ticker.toUpperCase();
@@ -120,6 +159,7 @@ async function syncHoldingForTransaction(
         sql: "UPDATE holdings SET shares = ?, purchase_price = ? WHERE id = ? AND user_id = ?",
         args: [newShares, newPrice, existing.id, userId],
       });
+      return existing.id;
     } else {
       const id = randomUUID();
       const price = tx.shares > 0 ? (tx.totalAmount + (tx.fees || 0) + (tx.taxes || 0)) / tx.shares : 0;
@@ -128,6 +168,7 @@ async function syncHoldingForTransaction(
               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)`,
         args: [id, userId, tx.name || ticker, ticker, tx.isin || "", tx.assetType || "stock", tx.shares, price, tx.displayCurrency || tx.currency || "EUR", exchange, tx.accountId || "", portfolioId || ""],
       });
+      return id;
     }
   } else if (tx.type === "sell") {
     if (existing) {
@@ -148,8 +189,10 @@ async function syncHoldingForTransaction(
           args: [newShares, newPrice, existing.id, userId],
         });
       }
+      return existing.id;
     }
   }
+  return undefined;
 }
 
 export async function addTransaction(userId: string, tx: Omit<Transaction, "id" | "createdAt">, portfolioId?: string): Promise<Transaction | null> {
@@ -198,7 +241,7 @@ export async function addTransaction(userId: string, tx: Omit<Transaction, "id" 
     createdAt: new Date().toISOString(),
   };
 
-  await syncHoldingForTransaction(userId, {
+  const holdingIdFromSync = await syncHoldingForTransaction(userId, {
     ticker,
     exchange,
     name: tx.name || "",
@@ -213,6 +256,14 @@ export async function addTransaction(userId: string, tx: Omit<Transaction, "id" 
     displayCurrency: tx.displayCurrency || tx.currency || "EUR",
     accountId: tx.accountId || "",
   }, resolved);
+
+  if (holdingIdFromSync && !tx.holdingId) {
+    await client.execute({
+      sql: "UPDATE transactions SET holding_id = ? WHERE id = ? AND user_id = ?",
+      args: [holdingIdFromSync, id, userId],
+    });
+    created.holdingId = holdingIdFromSync;
+  }
 
   return created;
 }
@@ -265,6 +316,34 @@ export async function addTransactionsBulk(
   }
 
   return { inserted, skipped };
+}
+
+export async function updateTransaction(
+  userId: string,
+  txId: string,
+  updates: Partial<Pick<Transaction, "type" | "date" | "shares" | "pricePerShare" | "totalAmount" | "fees" | "taxes" | "notes">>,
+): Promise<boolean> {
+  const client = await ensureInitialized();
+  const sets: string[] = [];
+  const args: (string | number | null)[] = [];
+
+  if (updates.type !== undefined) { sets.push("type = ?"); args.push(updates.type); }
+  if (updates.date !== undefined) { sets.push("date = ?"); args.push(updates.date); }
+  if (updates.shares !== undefined) { sets.push("shares = ?"); args.push(updates.shares); }
+  if (updates.pricePerShare !== undefined) { sets.push("price_per_share = ?"); args.push(updates.pricePerShare); }
+  if (updates.totalAmount !== undefined) { sets.push("total_amount = ?"); args.push(updates.totalAmount); }
+  if (updates.fees !== undefined) { sets.push("fees = ?"); args.push(updates.fees); }
+  if (updates.taxes !== undefined) { sets.push("taxes = ?"); args.push(updates.taxes); }
+  if (updates.notes !== undefined) { sets.push("notes = ?"); args.push(updates.notes); }
+
+  if (sets.length === 0) return false;
+  args.push(txId, userId);
+
+  const result = await client.execute({
+    sql: `UPDATE transactions SET ${sets.join(", ")} WHERE id = ? AND user_id = ?`,
+    args,
+  });
+  return (result.rowsAffected ?? 0) > 0;
 }
 
 export async function deleteTransaction(userId: string, txId: string): Promise<boolean> {

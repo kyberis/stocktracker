@@ -8,7 +8,8 @@ import type { RebalanceTarget, RebalanceDrift } from "@/lib/types";
 
 export default function RebalancingView() {
   const { t } = useI18n();
-  const { holdings, quotes, exchangeRates } = usePortfolio();
+  const { holdings, quotes, exchangeRates, activePortfolioCurrency } = usePortfolio();
+  const baseCurrency = activePortfolioCurrency;
   const [targets, setTargets] = useState<RebalanceTarget[]>([]);
   const [category, setCategory] = useState<"assetClass" | "sector" | "region">("assetClass");
   const [newLabel, setNewLabel] = useState("");
@@ -136,7 +137,7 @@ export default function RebalancingView() {
                         {d.driftPercent > 0 ? "+" : ""}{d.driftPercent.toFixed(1)}%
                       </td>
                       <td className={`p-2 text-right font-mono ${actionColor}`}>
-                        {d.actionEUR > 0 ? "Buy " : "Sell "}{formatCurrency(Math.abs(d.actionEUR), "EUR")}
+                        {d.actionEUR > 0 ? "Buy " : "Sell "}{formatCurrency(Math.abs(d.actionEUR), baseCurrency)}
                       </td>
                       <td className="p-2">
                         <button onClick={() => {

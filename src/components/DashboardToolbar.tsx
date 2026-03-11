@@ -98,6 +98,7 @@ export default function DashboardToolbar({
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState("");
+  const [newCurrency, setNewCurrency] = useState<"EUR" | "USD">("EUR");
   const [creating, setCreating] = useState(false);
   const [settingDefault, setSettingDefault] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -134,11 +135,12 @@ export default function DashboardToolbar({
       const res = await fetch("/api/portfolios", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newName.trim() }),
+        body: JSON.stringify({ name: newName.trim(), currency: newCurrency }),
       });
       if (res.ok) {
         const data = await res.json();
         setNewName("");
+        setNewCurrency("EUR");
         setShowCreate(false);
         await refreshPortfolios();
         if (data.portfolio?.id) setActivePortfolio(data.portfolio.id);
@@ -235,6 +237,7 @@ export default function DashboardToolbar({
                           <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
                         </svg>
                         <span className="truncate">{p.name}</span>
+                        <span className="shrink-0 text-[10px] font-medium text-gray-400 dark:text-slate-500">{p.currency ?? "EUR"}</span>
                       </button>
                       {p.isDefault ? (
                         <span className="pr-3 shrink-0" title={t("setAsDefault")} aria-label={t("setAsDefault")}>
@@ -262,27 +265,47 @@ export default function DashboardToolbar({
                   <div className="border-t border-gray-100 dark:border-slate-700 my-1" />
                   {canCreate ? (
                     showCreate ? (
-                      <div className="px-3 py-2 flex items-center gap-2">
-                        <input
-                          ref={inputRef}
-                          type="text"
-                          value={newName}
-                          onChange={(e) => setNewName(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") handleCreate();
-                            if (e.key === "Escape") { setShowCreate(false); setNewName(""); }
-                          }}
-                          placeholder={t("newPortfolio")}
-                          className="text-sm flex-1 min-w-0 px-2 py-1 rounded-md border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                          maxLength={50}
-                        />
-                        <button
-                          onClick={handleCreate}
-                          disabled={creating || !newName.trim()}
-                          className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 disabled:opacity-40 whitespace-nowrap"
-                        >
-                          {creating ? t("creatingPortfolio") : t("createPortfolio")}
-                        </button>
+                      <div className="px-3 py-2 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <input
+                            ref={inputRef}
+                            type="text"
+                            value={newName}
+                            onChange={(e) => setNewName(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") handleCreate();
+                              if (e.key === "Escape") { setShowCreate(false); setNewName(""); }
+                            }}
+                            placeholder={t("newPortfolio")}
+                            className="text-sm flex-1 min-w-0 px-2 py-1 rounded-md border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            maxLength={50}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1 rounded-lg border border-gray-200 dark:border-slate-600 overflow-hidden">
+                            {(["EUR", "USD"] as const).map((cur) => (
+                              <button
+                                key={cur}
+                                type="button"
+                                onClick={() => setNewCurrency(cur)}
+                                className={`px-2.5 py-0.5 text-xs font-medium transition-colors ${
+                                  newCurrency === cur
+                                    ? "bg-blue-600 text-white"
+                                    : "text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700"
+                                }`}
+                              >
+                                {cur === "EUR" ? "\u20AC EUR" : "$ USD"}
+                              </button>
+                            ))}
+                          </div>
+                          <button
+                            onClick={handleCreate}
+                            disabled={creating || !newName.trim()}
+                            className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 disabled:opacity-40 whitespace-nowrap"
+                          >
+                            {creating ? t("creatingPortfolio") : t("createPortfolio")}
+                          </button>
+                        </div>
                       </div>
                     ) : (
                       <button

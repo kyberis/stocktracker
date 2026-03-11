@@ -6,7 +6,8 @@ import { useI18n } from "@/lib/i18n";
 import { formatCurrency } from "@/lib/utils";
 
 export default function CashBalances() {
-  const { cashEntries, addCashEntry, updateCashEntry, removeCashEntry } = usePortfolio();
+  const { cashEntries, addCashEntry, updateCashEntry, removeCashEntry, activePortfolioCurrency } = usePortfolio();
+  const baseCurrency = activePortfolioCurrency;
   const { t } = useI18n();
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
@@ -78,7 +79,7 @@ export default function CashBalances() {
                 <>
                   <p className="text-sm text-gray-700 dark:text-slate-200 flex-1">{entry.name}</p>
                   <p className="text-sm font-medium text-gray-900 dark:text-white w-36 text-right">
-                    {formatCurrency(entry.amountEUR, "EUR")}
+                    {formatCurrency(entry.amountEUR, baseCurrency)}
                   </p>
                   <button
                     className="text-sm text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 px-2"

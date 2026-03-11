@@ -31,7 +31,8 @@ interface Props {
 }
 
 export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cashEntriesProp }: Props) {
-  const { holdings: ctxHoldings, cashEntries: ctxCashEntries, quotes, exchangeRates, isLoading, addCashEntry, updateCashEntry, removeCashEntry } = usePortfolio();
+  const { holdings: ctxHoldings, cashEntries: ctxCashEntries, quotes, exchangeRates, isLoading, addCashEntry, updateCashEntry, removeCashEntry, activePortfolioCurrency } = usePortfolio();
+  const baseCurrency = activePortfolioCurrency;
   const holdings = holdingsProp ?? ctxHoldings;
   const cashEntries = cashEntriesProp ?? ctxCashEntries;
   const { t } = useI18n();
@@ -82,7 +83,7 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
     fetchIndices();
   }, [fetchIndices]);
 
-  const { totalCurrentEUR, dayGainLossEUR } = calculatePortfolioTotals(holdings, cashEntries, quotes, exchangeRates);
+  const { totalCurrentEUR, dayGainLossEUR } = calculatePortfolioTotals(holdings, cashEntries, quotes, exchangeRates, baseCurrency);
   const prevPortfolioValue = totalCurrentEUR - dayGainLossEUR;
   const dayGainLossPercent = prevPortfolioValue > 0 ? (dayGainLossEUR / prevPortfolioValue) * 100 : 0;
 
@@ -163,14 +164,14 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
                       {isLoading ? (
                         <span className="inline-block w-16 h-4 bg-gray-100 dark:bg-slate-700 rounded animate-value-shimmer" />
                       ) : (
-                        formatCurrency(totalCurrentEUR, "EUR")
+                        formatCurrency(totalCurrentEUR, baseCurrency)
                       )}
                     </td>
                     <td className={`py-2.5 text-right tabular-nums font-medium ${changeColor(dayGainLossEUR)}`}>
                       {isLoading ? (
                         <span className="inline-block w-12 h-4 bg-gray-100 dark:bg-slate-700 rounded animate-value-shimmer" />
                       ) : (
-                        formatCurrency(dayGainLossEUR, "EUR")
+                        formatCurrency(dayGainLossEUR, baseCurrency)
                       )}
                     </td>
                     <td className="py-2.5 text-right pr-4 sm:pr-5">
@@ -242,7 +243,7 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
             <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{t("cash")}</h3>
             {cashEntries.length > 0 && (
               <span className="text-sm font-bold text-gray-900 dark:text-white tabular-nums">
-                {formatCurrency(cashTotal, "EUR")}
+                {formatCurrency(cashTotal, baseCurrency)}
               </span>
             )}
           </div>
@@ -288,7 +289,7 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
                     <span className="text-sm text-gray-600 dark:text-slate-300 truncate mr-2">{entry.name}</span>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <span className="text-sm font-medium text-gray-900 dark:text-white tabular-nums">
-                        {formatCurrency(entry.amountEUR, "EUR")}
+                        {formatCurrency(entry.amountEUR, baseCurrency)}
                       </span>
                       <div className="hidden group-hover:flex items-center gap-1">
                         <button

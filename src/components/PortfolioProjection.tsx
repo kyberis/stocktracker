@@ -40,7 +40,8 @@ export default function PortfolioProjection({ holdings: holdingsProp, cashEntrie
   const { t } = useI18n();
   const { isDark } = useTheme();
   const { user } = useAuth();
-  const { holdings: ctxHoldings, cashEntries: ctxCashEntries, quotes, exchangeRates } = usePortfolio();
+  const { holdings: ctxHoldings, cashEntries: ctxCashEntries, quotes, exchangeRates, activePortfolioCurrency } = usePortfolio();
+  const baseCurrency = activePortfolioCurrency;
   const holdings = holdingsProp ?? ctxHoldings;
   const cashEntries = cashEntriesProp ?? ctxCashEntries;
 
@@ -51,8 +52,8 @@ export default function PortfolioProjection({ holdings: holdingsProp, cashEntrie
   const [isMinimized, setIsMinimized] = useState(false);
 
   const totals = useMemo(
-    () => calculatePortfolioTotals(holdings, cashEntries, quotes, exchangeRates),
-    [holdings, cashEntries, quotes, exchangeRates]
+    () => calculatePortfolioTotals(holdings, cashEntries, quotes, exchangeRates, baseCurrency),
+    [holdings, cashEntries, quotes, exchangeRates, baseCurrency]
   );
 
   const weightedDividendYield = useMemo(() => {
@@ -309,7 +310,7 @@ export default function PortfolioProjection({ holdings: holdingsProp, cashEntrie
             />
             <Tooltip
               formatter={(value: number | string | undefined, name: string | undefined) => [
-                formatCurrency(typeof value === "number" ? value : Number(value), "EUR"),
+                formatCurrency(typeof value === "number" ? value : Number(value), baseCurrency),
                 name || t("value"),
               ]}
               labelFormatter={(label) => `${t("projYear")} ${label}`}
@@ -365,7 +366,7 @@ export default function PortfolioProjection({ holdings: holdingsProp, cashEntrie
               {t("projCurrentValue")}
             </p>
             <p className="text-lg font-bold text-gray-900 dark:text-white">
-              {formatCurrency(totals.totalCurrentEUR, "EUR")}
+              {formatCurrency(totals.totalCurrentEUR, baseCurrency)}
             </p>
           </div>
           <div className="bg-emerald-50 dark:bg-emerald-500/10 rounded-xl p-3 text-center">
@@ -379,7 +380,7 @@ export default function PortfolioProjection({ holdings: holdingsProp, cashEntrie
                   : showDividendLine
                     ? finalPoint.withDividends
                     : finalPoint.base,
-                "EUR"
+                baseCurrency
               )}
             </p>
           </div>
@@ -388,7 +389,7 @@ export default function PortfolioProjection({ holdings: holdingsProp, cashEntrie
               {t("projTotalContributed")}
             </p>
             <p className="text-lg font-bold text-violet-700 dark:text-violet-300">
-              {formatCurrency(totalContributed, "EUR")}
+              {formatCurrency(totalContributed, baseCurrency)}
             </p>
           </div>
           <div className="bg-blue-50 dark:bg-blue-500/10 rounded-xl p-3 text-center">

@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
 import { ensureInitialized } from "./client";
-import { str, num, rowToPortfolio, type Portfolio } from "./helpers";
+import { str, num, rowToPortfolio, type Portfolio, type PortfolioCurrency } from "./helpers";
 
 export async function listPortfolios(userId: string): Promise<Portfolio[]> {
   const client = await ensureInitialized();
@@ -34,7 +34,7 @@ export async function getDefaultPortfolio(userId: string): Promise<Portfolio> {
   return rowToPortfolio(result.rows[0]);
 }
 
-export async function createPortfolio(userId: string, name: string): Promise<Portfolio> {
+export async function createPortfolio(userId: string, name: string, currency: PortfolioCurrency = "EUR"): Promise<Portfolio> {
   const client = await ensureInitialized();
   const id = randomUUID();
   const sortResult = await client.execute({
@@ -44,11 +44,11 @@ export async function createPortfolio(userId: string, name: string): Promise<Por
   const nextSort = num(sortResult.rows[0]?.mx) + 1;
 
   await client.execute({
-    sql: "INSERT INTO portfolios (id, user_id, name, is_default, sort_order) VALUES (?, ?, ?, 0, ?)",
-    args: [id, userId, name, nextSort],
+    sql: "INSERT INTO portfolios (id, user_id, name, is_default, sort_order, currency) VALUES (?, ?, ?, 0, ?, ?)",
+    args: [id, userId, name, nextSort, currency],
   });
 
-  return { id, userId, name, isDefault: false, sortOrder: nextSort, createdAt: new Date().toISOString() };
+  return { id, userId, name, isDefault: false, sortOrder: nextSort, currency, createdAt: new Date().toISOString() };
 }
 
 export async function renamePortfolio(userId: string, portfolioId: string, name: string): Promise<boolean> {

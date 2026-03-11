@@ -88,6 +88,20 @@ export const createTransactionSchema = z.object({
   sourceRef: z.string().optional().default(""),
 });
 
+export const updateTransactionSchema = z.object({
+  id: z.string().min(1, "Transaction ID is required"),
+  updates: z.object({
+    type: z.enum(["buy", "sell", "dividend", "fee"]).optional(),
+    date: z.string().min(1).optional(),
+    shares: z.number().optional(),
+    pricePerShare: z.number().optional(),
+    totalAmount: z.number().optional(),
+    fees: z.number().optional(),
+    taxes: z.number().optional(),
+    notes: z.string().optional(),
+  }),
+});
+
 /* ── Cash ──────────────────────────────────────────────────── */
 
 export const createCashSchema = z.object({
@@ -189,6 +203,8 @@ export const rebalanceTargetSchema = z.object({
 export const createFeedbackSchema = z.object({
   subject: z.string().min(1, "Subject is required"),
   message: z.string().min(1, "Message is required"),
+  type: z.enum(["feedback", "bug"]).optional().default("feedback"),
+  userContext: z.string().optional().default(""),
 });
 
 export const replyFeedbackSchema = z.object({

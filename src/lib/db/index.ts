@@ -1,6 +1,6 @@
 // Barrel re-export — all consumers import from "@/lib/db" unchanged.
 
-export type { UserRole, UserPlan, AuthProvider, DbUser, PublicUser, UserSettings, Portfolio } from "./helpers";
+export type { UserRole, UserPlan, AuthProvider, DbUser, PublicUser, UserSettings, Portfolio, PortfolioCurrency } from "./helpers";
 
 export {
   listPortfolios,
@@ -71,6 +71,7 @@ export {
   listTransactions,
   addTransaction,
   addTransactionsBulk,
+  updateTransaction,
   deleteTransaction,
   deleteTransactionsForPosition,
   deleteAllTransactions,
@@ -139,7 +140,7 @@ export {
   purgeOldAnalyticsEvents,
 } from "./analytics";
 
-export type { FeedbackEntry } from "./feedback";
+export type { FeedbackEntry, FeedbackType } from "./feedback";
 export {
   createFeedback,
   getFeedbackByUser,

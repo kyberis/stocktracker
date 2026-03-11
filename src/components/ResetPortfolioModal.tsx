@@ -12,7 +12,7 @@ interface ResetPortfolioModalProps {
 
 export default function ResetPortfolioModal({ isOpen, onClose }: ResetPortfolioModalProps) {
   const { t } = useI18n();
-  const { refreshHoldings } = usePortfolio();
+  const { refreshHoldings, activePortfolioId } = usePortfolio();
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -21,7 +21,8 @@ export default function ResetPortfolioModal({ isOpen, onClose }: ResetPortfolioM
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/reset-portfolio", {
+      const qp = activePortfolioId ? `?portfolioId=${encodeURIComponent(activePortfolioId)}` : "";
+      const res = await fetch(`/api/reset-portfolio${qp}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mode }),

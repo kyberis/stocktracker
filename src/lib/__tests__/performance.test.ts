@@ -170,9 +170,9 @@ describe("calculateFifoRealizedPL", () => {
     const result = calculateFifoRealizedPL(txs, {});
     expect(result.has("s1")).toBe(true);
     const pl = result.get("s1")!;
-    expect(pl.realizedGainEUR).toBeCloseTo(200, 2);
-    expect(pl.proceedsEUR).toBeCloseTo(1200, 2);
-    expect(pl.costBasisEUR).toBeCloseTo(1000, 2);
+    expect(pl.realizedGainBase).toBeCloseTo(200, 2);
+    expect(pl.proceedsBase).toBeCloseTo(1200, 2);
+    expect(pl.costBasisBase).toBeCloseTo(1000, 2);
   });
 
   it("calculates simple FIFO loss", () => {
@@ -182,7 +182,7 @@ describe("calculateFifoRealizedPL", () => {
     ];
     const result = calculateFifoRealizedPL(txs, {});
     const pl = result.get("s1")!;
-    expect(pl.realizedGainEUR).toBeCloseTo(-200, 2);
+    expect(pl.realizedGainBase).toBeCloseTo(-200, 2);
   });
 
   it("includes fees in cost basis (buy fees increase cost)", () => {
@@ -193,8 +193,8 @@ describe("calculateFifoRealizedPL", () => {
     const result = calculateFifoRealizedPL(txs, {});
     const pl = result.get("s1")!;
     // Cost basis = 1000 + 10 (fees) = 1010; proceeds = 1200; gain = 190
-    expect(pl.costBasisEUR).toBeCloseTo(1010, 2);
-    expect(pl.realizedGainEUR).toBeCloseTo(190, 2);
+    expect(pl.costBasisBase).toBeCloseTo(1010, 2);
+    expect(pl.realizedGainBase).toBeCloseTo(190, 2);
   });
 
   it("handles partial sell across two lots (FIFO order)", () => {
@@ -206,8 +206,8 @@ describe("calculateFifoRealizedPL", () => {
     const result = calculateFifoRealizedPL(txs, {});
     const pl = result.get("s1")!;
     // FIFO: use lot1 (5 × 100 = 500) + lot2 (3 × 120 = 360) = 860 cost
-    expect(pl.costBasisEUR).toBeCloseTo(860, 2);
-    expect(pl.realizedGainEUR).toBeCloseTo(960 - 860, 2);
+    expect(pl.costBasisBase).toBeCloseTo(860, 2);
+    expect(pl.realizedGainBase).toBeCloseTo(960 - 860, 2);
   });
 
   it("handles GBX currency (pence→pounds before EUR conversion)", () => {
@@ -231,9 +231,9 @@ describe("calculateFifoRealizedPL", () => {
     const pl = result.get("s1")!;
     // Cost: 1000 GBX / 100 = 10 GBP / 0.85 ≈ 11.76 EUR
     // Proceeds: 1200 GBX / 100 = 12 GBP / 0.85 ≈ 14.12 EUR
-    expect(pl.costBasisEUR).toBeCloseTo(10 / 0.85, 1);
-    expect(pl.proceedsEUR).toBeCloseTo(12 / 0.85, 1);
-    expect(pl.realizedGainEUR).toBeCloseTo((12 - 10) / 0.85, 1);
+    expect(pl.costBasisBase).toBeCloseTo(10 / 0.85, 1);
+    expect(pl.proceedsBase).toBeCloseTo(12 / 0.85, 1);
+    expect(pl.realizedGainBase).toBeCloseTo((12 - 10) / 0.85, 1);
   });
 
   it("skips lots with missing exchange rate when no fallback available", () => {
@@ -277,7 +277,7 @@ describe("calculateFifoRealizedPL", () => {
     const result = calculateFifoRealizedPL(txs, rates);
     expect(result.has("s1")).toBe(true);
     const pl = result.get("s1")!;
-    expect(pl.costBasisEUR).toBeCloseTo(1000 / 1.1, 1);
-    expect(pl.proceedsEUR).toBeCloseTo(1200 / 1.1, 1);
+    expect(pl.costBasisBase).toBeCloseTo(1000 / 1.1, 1);
+    expect(pl.proceedsBase).toBeCloseTo(1200 / 1.1, 1);
   });
 });

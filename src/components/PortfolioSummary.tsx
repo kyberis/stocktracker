@@ -17,9 +17,10 @@ interface Props {
 }
 
 export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: cashEntriesProp }: Props) {
-  const { holdings: ctxHoldings, cashEntries: ctxCashEntries, quotes, exchangeRates, isLoading } = usePortfolio();
+  const { holdings: ctxHoldings, cashEntries: ctxCashEntries, quotes, exchangeRates, isLoading, activePortfolioCurrency } = usePortfolio();
   const holdings = holdingsProp ?? ctxHoldings;
   const cashEntries = cashEntriesProp ?? ctxCashEntries;
+  const baseCurrency = activePortfolioCurrency;
   const { t } = useI18n();
   const { stealthMode } = useStealthMode();
   const { user } = useAuth();
@@ -29,7 +30,7 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
     dayGainLossEUR,
     totalGainLoss,
     totalGainLossPercent,
-  } = calculatePortfolioTotals(holdings, cashEntries, quotes, exchangeRates);
+  } = calculatePortfolioTotals(holdings, cashEntries, quotes, exchangeRates, baseCurrency);
 
   const dayIsPositive = dayGainLossEUR >= 0;
   const dayPercent = totalCurrentEUR > 0
@@ -50,8 +51,8 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
   const allocationRef = useRef<HTMLDivElement>(null);
 
   const allocationSlices = useMemo(
-    () => computeAllocationByType(holdings, cashEntries, quotes, exchangeRates),
-    [holdings, cashEntries, quotes, exchangeRates],
+    () => computeAllocationByType(holdings, cashEntries, quotes, exchangeRates, baseCurrency),
+    [holdings, cashEntries, quotes, exchangeRates, baseCurrency],
   );
 
   useEffect(() => {
@@ -84,12 +85,12 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
           <div>
             <p
               className={`text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white ${isLoading ? "animate-value-shimmer" : ""}`}
-              aria-label={stealthMode ? formatCurrency(totalCurrentEUR, "EUR") : undefined}
+              aria-label={stealthMode ? formatCurrency(totalCurrentEUR, baseCurrency) : undefined}
             >
-              {formatStealthCurrency(totalCurrentEUR, "EUR", stealthMode)}
+              {formatStealthCurrency(totalCurrentEUR, baseCurrency, stealthMode)}
             </p>
             <p className="text-xs text-gray-400 dark:text-slate-500">
-              {t("cost")}: <span aria-label={stealthMode ? formatCurrency(totalCostEUR, "EUR") : undefined}>{formatStealthCurrency(totalCostEUR, "EUR", stealthMode)}</span>
+              {t("cost")}: <span aria-label={stealthMode ? formatCurrency(totalCostEUR, baseCurrency) : undefined}>{formatStealthCurrency(totalCostEUR, baseCurrency, stealthMode)}</span>
             </p>
           </div>
           <span
@@ -98,9 +99,9 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
                 ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                 : "bg-red-50 dark:bg-red-500/10 text-red-500 dark:text-red-400"
             }`}
-            aria-label={stealthMode ? `${formatCurrency(dayGainLossEUR, "EUR")} (${formatPercent(dayPercent)})` : undefined}
+            aria-label={stealthMode ? `${formatCurrency(dayGainLossEUR, baseCurrency)} (${formatPercent(dayPercent)})` : undefined}
           >
-            {stealthMode ? "•••••" : `${dayIsPositive ? "+" : ""}${formatCurrency(dayGainLossEUR, "EUR")} (${formatPercent(dayPercent)})`}
+            {stealthMode ? "•••••" : `${dayIsPositive ? "+" : ""}${formatCurrency(dayGainLossEUR, baseCurrency)} (${formatPercent(dayPercent)})`}
           </span>
         </div>
 
@@ -130,6 +131,7 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
                     slices={allocationSlices}
                     title={t("assetAllocation")}
                     stealthMode={stealthMode}
+                    baseCurrency={baseCurrency}
                   />
                 )}
               </div>
@@ -191,10 +193,12 @@ function AllocationPopover({
   slices,
   title,
   stealthMode,
+  baseCurrency,
 }: {
   slices: AllocationSlice[];
   title: string;
   stealthMode: boolean;
+  baseCurrency: string;
 }) {
   let cumulative = 0;
   const segments = slices.map((s) => {
@@ -231,7 +235,7 @@ function AllocationPopover({
             </div>
             <div className="flex items-center gap-2 tabular-nums">
               <span className="text-gray-500 dark:text-slate-400">
-                {stealthMode ? "•••••" : formatCurrency(s.valueEUR, "EUR")}
+                {stealthMode ? "•••••" : formatCurrency(s.valueEUR, baseCurrency)}
               </span>
               <span className="font-medium text-gray-700 dark:text-slate-200 w-12 text-right">
                 {formatPercent(s.percent)}

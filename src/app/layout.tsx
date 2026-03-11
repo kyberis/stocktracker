@@ -14,39 +14,46 @@ export const viewport: Viewport = {
   themeColor: "#10b981",
 };
 
-export const metadata: Metadata = {
-  metadataBase: new URL("https://trefolio.com"),
-  title: "trefolio - Portfolio Manager",
-  description:
-    "trefolio is a portfolio tracker for European investors. Real-time quotes, broker imports (DEGIRO, IBKR, T212, Revolut), AI analysis, and dividend projections. Free to start.",
-  verification: {
-    google: process.env.GOOGLE_SITE_VERIFICATION,
-    other: {
-      ...(process.env.BING_SITE_VERIFICATION
-        ? { "msvalidate.01": process.env.BING_SITE_VERIFICATION }
-        : {}),
+export async function generateMetadata(): Promise<Metadata> {
+  const adConfig = await getAdConfig();
+
+  return {
+    metadataBase: new URL("https://trefolio.com"),
+    title: "trefolio - Portfolio Manager",
+    description:
+      "trefolio is a portfolio tracker for European investors. Real-time quotes, broker imports (DEGIRO, IBKR, T212, Revolut), AI analysis, and dividend projections. Free to start.",
+    verification: {
+      google: process.env.GOOGLE_SITE_VERIFICATION,
+      other: {
+        ...(process.env.BING_SITE_VERIFICATION
+          ? { "msvalidate.01": process.env.BING_SITE_VERIFICATION }
+          : {}),
+        ...(adConfig.clientId
+          ? { "google-adsense-account": adConfig.clientId }
+          : {}),
+      },
     },
-  },
-  icons: {
-    icon: [
-      { url: "/favicon.ico", sizes: "48x48", type: "image/x-icon" },
-      { url: "/favicon.png", sizes: "48x48", type: "image/png" },
-      { url: "/icon.svg", type: "image/svg+xml" },
-    ],
-    apple: "/icons/apple-touch-icon.png",
-  },
-  manifest: "/manifest.json",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "black-translucent",
-    title: "trefolio",
-  },
-  openGraph: {
-    siteName: "trefolio",
-    locale: "en_US",
-    type: "website",
-  },
-};
+    icons: {
+      icon: [
+        { url: "/favicon.ico", sizes: "48x48", type: "image/x-icon" },
+        { url: "/favicon.png", sizes: "48x48", type: "image/png" },
+        { url: "/icon.svg", type: "image/svg+xml" },
+      ],
+      apple: "/icons/apple-touch-icon.png",
+    },
+    manifest: "/manifest.json",
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: "black-translucent",
+      title: "trefolio",
+    },
+    openGraph: {
+      siteName: "trefolio",
+      locale: "en_US",
+      type: "website",
+    },
+  };
+}
 
 export default async function RootLayout({
   children,

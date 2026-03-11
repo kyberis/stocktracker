@@ -41,7 +41,8 @@ interface MetricCard {
 
 export default function MetricsTab({ holdings: holdingsProp, cashEntries: cashEntriesProp }: Props) {
   const { t } = useI18n();
-  const { holdings: ctxHoldings, cashEntries: ctxCashEntries, quotes, exchangeRates } = usePortfolio();
+  const { holdings: ctxHoldings, cashEntries: ctxCashEntries, quotes, exchangeRates, activePortfolioCurrency } = usePortfolio();
+  const baseCurrency = activePortfolioCurrency;
   const holdings = holdingsProp ?? ctxHoldings;
   const cashEntries = cashEntriesProp ?? ctxCashEntries;
   const { user } = useAuth();
@@ -76,11 +77,11 @@ export default function MetricsTab({ holdings: holdingsProp, cashEntries: cashEn
   }, [holdings, isPro]);
 
   const { totalCurrentEUR, totalCostEUR } = calculatePortfolioTotals(
-    holdings, cashEntries, quotes, exchangeRates
+    holdings, cashEntries, quotes, exchangeRates, baseCurrency
   );
 
-  const ttwror = calculateTTWROR(txs, totalCurrentEUR, totalCostEUR, exchangeRates);
-  const cashFlows = buildXIRRCashFlows(txs, totalCurrentEUR, exchangeRates);
+  const ttwror = calculateTTWROR(txs, totalCurrentEUR, totalCostEUR, exchangeRates, baseCurrency);
+  const cashFlows = buildXIRRCashFlows(txs, totalCurrentEUR, exchangeRates, baseCurrency);
   const irr = cashFlows.length >= 2 ? calculateXIRR(cashFlows) : null;
   const simpleReturn = totalCostEUR > 0
     ? ((totalCurrentEUR - totalCostEUR) / totalCostEUR) * 100
@@ -103,7 +104,7 @@ export default function MetricsTab({ holdings: holdingsProp, cashEntries: cashEn
       .map((h) => ({ holding: h, series: historySeries[h.ticker] }));
 
     const values = sortedDates
-      .map((date) => calculatePortfolioValueOnDate(entries, date, exchangeRates))
+      .map((date) => calculatePortfolioValueOnDate(entries, date, exchangeRates, baseCurrency))
       .filter((v) => v > 0);
 
     if (values.length < 2) return { sharpe: null, maxDrawdown: null, volatility: null };
@@ -114,7 +115,7 @@ export default function MetricsTab({ holdings: holdingsProp, cashEntries: cashEn
       maxDrawdown: calculateMaxDrawdown(values),
       volatility: calculateAnnualizedVolatility(dailyReturns),
     };
-  }, [isPro, historySeries, holdings, exchangeRates]);
+  }, [isPro, historySeries, holdings, exchangeRates, baseCurrency]);
 
   const proMetrics: MetricCard[] = [
     {

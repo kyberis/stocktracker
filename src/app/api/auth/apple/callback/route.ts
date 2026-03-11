@@ -14,6 +14,7 @@ import {
   createSessionToken,
   getSessionCookieConfig,
 } from "@/lib/auth/session";
+import { sendWelcomeEmail } from "@/lib/email";
 import { ensureSessionSecret } from "@/lib/auth/session-secret";
 import { authEventsTotal } from "@/lib/metrics";
 
@@ -197,6 +198,11 @@ export async function POST(req: NextRequest) {
       };
       trackEvent(publicUser.id, "signup");
       authEventsTotal.inc({ event: "signup" });
+      if (appleEmail) {
+        sendWelcomeEmail(appleEmail.toLowerCase(), appleUserName || "").catch((err) =>
+          console.error("Welcome email failed:", err),
+        );
+      }
     }
 
     const token = await createSessionToken({

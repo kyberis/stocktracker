@@ -16,7 +16,8 @@ type Category = "sector" | "region" | "assetClass" | "assetType";
 
 export default function TaxonomyView() {
   const { t } = useI18n();
-  const { holdings, quotes, exchangeRates, refreshHoldings } = usePortfolio();
+  const { holdings, quotes, exchangeRates, refreshHoldings, activePortfolioCurrency } = usePortfolio();
+  const baseCurrency = activePortfolioCurrency;
   const [category, setCategory] = useState<Category>("sector");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editVal, setEditVal] = useState("");
@@ -163,7 +164,7 @@ export default function TaxonomyView() {
               <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: a.color }} />
               <span className="text-gray-700 dark:text-slate-300 flex-1 truncate">{a.label}</span>
               <span className="font-mono text-gray-500 dark:text-slate-400">{a.percent.toFixed(1)}%</span>
-              <span className="font-mono text-gray-900 dark:text-white w-20 text-right">{formatCurrency(a.valueEUR, "EUR")}</span>
+              <span className="font-mono text-gray-900 dark:text-white w-20 text-right">{formatCurrency(a.valueEUR, baseCurrency)}</span>
             </div>
           ))}
         </div>

@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
+import { useSWRConfig } from "swr";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useSettings } from "@/lib/settings-context";
 import { useI18n } from "@/lib/i18n";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
-import type { SearchResult } from "@/lib/types";
+import type { SearchResult, TransactionType } from "@/lib/types";
 
 const COIN_ICONS: Record<string, { bg: string; label: string }> = {
   BTC: { bg: "bg-[#f7931a]", label: "₿" },
@@ -31,7 +32,8 @@ interface AddCryptoModalProps {
 }
 
 export default function AddCryptoModal({ isOpen, onClose }: AddCryptoModalProps) {
-  const { addHolding } = usePortfolio();
+  const { refreshHoldings, refreshSingleQuote, activePortfolioId } = usePortfolio();
+  const { mutate: globalMutate } = useSWRConfig();
   const { getApiHeaders } = useSettings();
   const { t } = useI18n();
   const [query, setQuery] = useState("");
@@ -40,6 +42,7 @@ export default function AddCryptoModal({ isOpen, onClose }: AddCryptoModalProps)
   const [selected, setSelected] = useState<SearchResult | null>(null);
   const [coinName, setCoinName] = useState("");
   const [ticker, setTicker] = useState("");
+  const [txDate, setTxDate] = useState(new Date().toISOString().slice(0, 10));
   const [quantity, setQuantity] = useState("");
   const [price, setPrice] = useState("");
   const searchTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -55,8 +58,10 @@ export default function AddCryptoModal({ isOpen, onClose }: AddCryptoModalProps)
       setSelected(null);
       setCoinName("");
       setTicker("");
+      setTxDate(new Date().toISOString().slice(0, 10));
       setQuantity("");
       setPrice("");
+      setSubmitting(false);
     }
   }, [isOpen]);
 
@@ -96,22 +101,51 @@ export default function AddCryptoModal({ isOpen, onClose }: AddCryptoModalProps)
     setResults([]);
   };
 
-  const handleSubmit = () => {
-    if (!coinName.trim() || !ticker.trim() || !quantity || !price) return;
+  const [submitting, setSubmitting] = useState(false);
 
-    addHolding({
-      name: coinName.trim(),
-      ticker: ticker.trim().toUpperCase(),
-      isin: "",
-      assetType: "crypto",
-      shares: parseFloat(quantity),
-      purchasePrice: parseFloat(price),
-      displayCurrency: "USD",
-      exchange: "CRYPTO",
-      valueInEUR: 0,
-    });
+  const handleSubmit = async () => {
+    if (!coinName.trim() || !ticker.trim() || !quantity || !price || submitting) return;
+    setSubmitting(true);
 
-    onClose();
+    const shares = parseFloat(quantity);
+    const pricePerShare = parseFloat(price);
+    const totalAmount = shares * pricePerShare;
+    const tickerNorm = ticker.trim().toUpperCase();
+
+    try {
+      const qp = activePortfolioId ? `?portfolioId=${encodeURIComponent(activePortfolioId)}` : "";
+      const res = await fetch(`/api/transactions${qp}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ticker: tickerNorm,
+          name: coinName.trim(),
+          type: "buy" as TransactionType,
+          date: txDate,
+          shares,
+          pricePerShare,
+          totalAmount,
+          fees: 0,
+          taxes: 0,
+          currency: "USD",
+          displayCurrency: "USD",
+          exchange: "CRYPTO",
+          assetType: "crypto",
+        }),
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error || "Failed to add crypto");
+      }
+
+      await refreshHoldings();
+      refreshSingleQuote(tickerNorm);
+      globalMutate((key) => typeof key === "string" && key.startsWith("/api/transactions"));
+      onClose();
+    } catch {
+      setSubmitting(false);
+    }
   };
 
   const focusTrapRef = useFocusTrap(isOpen, onClose);
@@ -207,6 +241,18 @@ export default function AddCryptoModal({ isOpen, onClose }: AddCryptoModalProps)
           </div>
 
           <div>
+            <label htmlFor="addcrypto-date" className="block text-sm text-gray-500 dark:text-slate-400 mb-1.5">{t("transactionDate")}</label>
+            <input
+              id="addcrypto-date"
+              type="date"
+              value={txDate}
+              onChange={(e) => setTxDate(e.target.value)}
+              max={new Date().toISOString().slice(0, 10)}
+              className="w-full"
+            />
+          </div>
+
+          <div>
             <label htmlFor="addcrypto-quantity" className="block text-sm text-gray-500 dark:text-slate-400 mb-1.5">{t("cryptoQuantity")}</label>
             <input
               id="addcrypto-quantity"
@@ -245,10 +291,10 @@ export default function AddCryptoModal({ isOpen, onClose }: AddCryptoModalProps)
           </button>
           <button
             onClick={handleSubmit}
-            disabled={!coinName.trim() || !ticker.trim() || !quantity || !price}
+            disabled={!coinName.trim() || !ticker.trim() || !quantity || !price || submitting}
             className="btn-primary disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {t("addToPortfolio")}
+            {submitting ? t("adding") : t("addToPortfolio")}
           </button>
         </div>
       </div>

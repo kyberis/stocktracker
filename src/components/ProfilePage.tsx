@@ -263,10 +263,11 @@ function PortfolioAlertSection() {
 function PortfolioManagementSection() {
   const { t } = useI18n();
   const { user, refreshUser } = useAuth();
-  const [portfolios, setPortfolios] = useState<{ id: string; name: string; isDefault: boolean }[]>([]);
+  const [portfolios, setPortfolios] = useState<{ id: string; name: string; isDefault: boolean; currency?: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState("");
+  const [newCurrency, setNewCurrency] = useState<"EUR" | "USD">("EUR");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [error, setError] = useState("");
@@ -297,10 +298,11 @@ function PortfolioManagementSection() {
       const res = await fetch("/api/portfolios", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newName.trim() }),
+        body: JSON.stringify({ name: newName.trim(), currency: newCurrency }),
       });
       if (res.ok) {
         setNewName("");
+        setNewCurrency("EUR");
         await fetchPortfolios();
       } else {
         const data = await res.json().catch(() => null);
@@ -382,6 +384,9 @@ function PortfolioManagementSection() {
               <>
                 <div className="flex items-center gap-2 min-w-0">
                   <span className="text-sm font-medium text-gray-900 dark:text-white truncate">{p.name}</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 dark:bg-slate-600 text-gray-500 dark:text-slate-400 font-medium">
+                    {p.currency ?? "EUR"}
+                  </span>
                   {p.isDefault && (
                     <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 font-medium">
                       Default
@@ -429,19 +434,37 @@ function PortfolioManagementSection() {
 
       {/* Create new portfolio */}
       {isPro && portfolios.length < limit && (
-        <div className="flex items-center gap-2">
-          <input
-            type="text"
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") handleCreate(); }}
-            placeholder="New portfolio name"
-            className="text-sm flex-1"
-            maxLength={50}
-          />
-          <button onClick={handleCreate} disabled={creating || !newName.trim()} className="btn-primary text-sm disabled:opacity-40">
-            {creating ? "Creating..." : "Create"}
-          </button>
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") handleCreate(); }}
+              placeholder="New portfolio name"
+              className="text-sm flex-1"
+              maxLength={50}
+            />
+            <div className="flex items-center gap-0 rounded-lg border border-gray-200 dark:border-slate-600 overflow-hidden shrink-0">
+              {(["EUR", "USD"] as const).map((cur) => (
+                <button
+                  key={cur}
+                  type="button"
+                  onClick={() => setNewCurrency(cur)}
+                  className={`px-2.5 py-1 text-xs font-medium transition-colors ${
+                    newCurrency === cur
+                      ? "bg-blue-600 text-white"
+                      : "text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700"
+                  }`}
+                >
+                  {cur === "EUR" ? "\u20AC EUR" : "$ USD"}
+                </button>
+              ))}
+            </div>
+            <button onClick={handleCreate} disabled={creating || !newName.trim()} className="btn-primary text-sm disabled:opacity-40">
+              {creating ? "Creating..." : "Create"}
+            </button>
+          </div>
         </div>
       )}
 

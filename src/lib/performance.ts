@@ -1,5 +1,5 @@
 import type { ExchangeRates, HistoricalDataPoint, Holding, Transaction } from "./types";
-import { convertToEUR } from "./utils";
+import { convertToEUR, convertCurrency } from "./utils";
 
 /**
  * Convert a transaction amount to EUR using the stored historical rate when
@@ -10,6 +10,25 @@ export function txAmountToEUR(amount: number, tx: Transaction, exchangeRates: Ex
   if (cur === "EUR") return amount;
   if (tx.exchangeRateEur && tx.exchangeRateEur > 0) return amount / tx.exchangeRateEur;
   return convertToEUR(amount, cur, exchangeRates);
+}
+
+/**
+ * Convert a transaction amount to the portfolio's base currency.
+ * Uses the stored EUR historical rate as a fast-path when the base is EUR,
+ * otherwise converts via the EUR pivot through convertCurrency.
+ */
+export function txAmountToBase(
+  amount: number,
+  tx: Transaction,
+  baseCurrency: string,
+  exchangeRates: ExchangeRates
+): number {
+  const cur = tx.currency || "EUR";
+  if (cur === baseCurrency) return amount;
+  if (baseCurrency === "EUR") return txAmountToEUR(amount, tx, exchangeRates);
+  // For non-EUR base: convert to EUR first (using historical rate if available), then to base
+  const inEUR = txAmountToEUR(amount, tx, exchangeRates);
+  return convertCurrency(inEUR, "EUR", baseCurrency, exchangeRates);
 }
 
 /**
@@ -27,19 +46,20 @@ export function txAmountToEUR(amount: number, tx: Transaction, exchangeRates: Ex
  */
 export function calculateTTWROR(
   transactions: Transaction[],
-  currentValueEUR: number,
-  totalInvestedEUR: number,
-  exchangeRates: ExchangeRates
+  currentValue: number,
+  totalInvested: number,
+  exchangeRates: ExchangeRates,
+  baseCurrency: string = "EUR"
 ): number {
-  if (totalInvestedEUR <= 0 || transactions.length === 0) return 0;
+  if (totalInvested <= 0 || transactions.length === 0) return 0;
 
   const sorted = [...transactions]
     .filter((t) => t.type === "buy" || t.type === "sell")
     .sort((a, b) => a.date.localeCompare(b.date));
 
   if (sorted.length === 0) {
-    return totalInvestedEUR > 0
-      ? ((currentValueEUR - totalInvestedEUR) / totalInvestedEUR) * 100
+    return totalInvested > 0
+      ? ((currentValue - totalInvested) / totalInvested) * 100
       : 0;
   }
 
@@ -51,9 +71,9 @@ export function calculateTTWROR(
   let weightedCashFlow = 0;
 
   for (const tx of sorted) {
-    const amount = txAmountToEUR(tx.totalAmount, tx, exchangeRates);
-    const fees = txAmountToEUR(tx.fees || 0, tx, exchangeRates);
-    const taxes = txAmountToEUR(tx.taxes || 0, tx, exchangeRates);
+    const amount = txAmountToBase(tx.totalAmount, tx, baseCurrency, exchangeRates);
+    const fees = txAmountToBase(tx.fees || 0, tx, baseCurrency, exchangeRates);
+    const taxes = txAmountToBase(tx.taxes || 0, tx, baseCurrency, exchangeRates);
 
     const flow =
       tx.type === "buy"
@@ -70,16 +90,16 @@ export function calculateTTWROR(
 
   const denominator = weightedCashFlow;
   if (Math.abs(denominator) < 0.01) {
-    return totalInvestedEUR > 0
-      ? ((currentValueEUR - totalInvestedEUR) / totalInvestedEUR) * 100
+    return totalInvested > 0
+      ? ((currentValue - totalInvested) / totalInvested) * 100
       : 0;
   }
 
-  const result = ((currentValueEUR - netCashFlow) / denominator) * 100;
+  const result = ((currentValue - netCashFlow) / denominator) * 100;
 
   if (!Number.isFinite(result) || Math.abs(result) > 1000) {
-    return totalInvestedEUR > 0
-      ? ((currentValueEUR - totalInvestedEUR) / totalInvestedEUR) * 100
+    return totalInvested > 0
+      ? ((currentValue - totalInvested) / totalInvested) * 100
       : 0;
   }
 
@@ -155,8 +175,9 @@ export function calculateXIRR(
  */
 export function buildXIRRCashFlows(
   transactions: Transaction[],
-  currentValueEUR: number,
-  exchangeRates: ExchangeRates
+  currentValue: number,
+  exchangeRates: ExchangeRates,
+  baseCurrency: string = "EUR"
 ): { date: Date; amount: number }[] {
   const flows: { date: Date; amount: number }[] = [];
 
@@ -164,9 +185,9 @@ export function buildXIRRCashFlows(
     const d = new Date(tx.date);
     if (isNaN(d.getTime())) continue;
 
-    const amount = txAmountToEUR(tx.totalAmount, tx, exchangeRates);
-    const fees = txAmountToEUR(tx.fees || 0, tx, exchangeRates);
-    const taxes = txAmountToEUR(tx.taxes || 0, tx, exchangeRates);
+    const amount = txAmountToBase(tx.totalAmount, tx, baseCurrency, exchangeRates);
+    const fees = txAmountToBase(tx.fees || 0, tx, baseCurrency, exchangeRates);
+    const taxes = txAmountToBase(tx.taxes || 0, tx, baseCurrency, exchangeRates);
 
     switch (tx.type) {
       case "buy":
@@ -184,8 +205,8 @@ export function buildXIRRCashFlows(
     }
   }
 
-  if (currentValueEUR > 0) {
-    flows.push({ date: new Date(), amount: currentValueEUR });
+  if (currentValue > 0) {
+    flows.push({ date: new Date(), amount: currentValue });
   }
 
   return flows;
@@ -217,23 +238,24 @@ export interface HoldingSeriesEntry {
 }
 
 /**
- * Compute portfolio value in EUR on a given date using historical close prices.
+ * Compute portfolio value in the base currency on a given date using historical close prices.
  * Projects current holdings backward — does not account for sold positions.
  * Cash is excluded (no historical cash balance available).
  */
 export function calculatePortfolioValueOnDate(
   entries: HoldingSeriesEntry[],
   date: string,
-  exchangeRates: ExchangeRates
+  exchangeRates: ExchangeRates,
+  baseCurrency: string = "EUR"
 ): number {
-  let sumEUR = 0;
+  let sum = 0;
   for (const item of entries) {
     const close = closeOnOrBeforeDate(item.series, date);
     if (close == null || close <= 0) continue;
     const value = item.holding.shares * close;
-    sumEUR += convertToEUR(value, item.holding.displayCurrency, exchangeRates);
+    sum += convertCurrency(value, item.holding.displayCurrency, baseCurrency, exchangeRates);
   }
-  return sumEUR;
+  return sum;
 }
 
 /**
@@ -346,7 +368,7 @@ export function computeDailyReturns(values: number[]): number[] {
 export interface FifoLot {
   date: string;
   shares: number;
-  costPerShareEUR: number;
+  costPerShareBase: number;
 }
 
 export interface RealizedPL {
@@ -354,24 +376,25 @@ export interface RealizedPL {
   transactionId: string;
   sellDate: string;
   sharesSold: number;
-  proceedsEUR: number;
-  costBasisEUR: number;
-  realizedGainEUR: number;
+  proceedsBase: number;
+  costBasisBase: number;
+  realizedGainBase: number;
 }
 
 /**
  * Calculate FIFO realized P&L for all sell transactions.
  *
  * Rules (financial-calculations skill):
- * - Cost per lot = (shares × purchasePrice + fees + taxes) converted to EUR.
+ * - Cost per lot = (shares × purchasePrice + fees + taxes) converted to baseCurrency.
  * - Use tx.exchangeRateEur when available (historical rate), fall back to exchangeRates.
- * - GBX: divide price by 100 before GBP/EUR conversion.
+ * - GBX: divide price by 100 before GBP conversion.
  * - Missing rate guard: if rate cannot be determined, skip the lot/sell and return null for that tx.
  * - Raw gain/loss only — no tax fabrication.
  */
 export function calculateFifoRealizedPL(
   transactions: Transaction[],
-  exchangeRates: ExchangeRates
+  exchangeRates: ExchangeRates,
+  baseCurrency: string = "EUR"
 ): Map<string, RealizedPL> {
   const result = new Map<string, RealizedPL>();
 
@@ -382,12 +405,11 @@ export function calculateFifoRealizedPL(
       return a.createdAt.localeCompare(b.createdAt);
     });
 
-  // Per-ticker FIFO lot queue
   const lots = new Map<string, FifoLot[]>();
 
-  function resolveEURAmount(amount: number, tx: Transaction): number | null {
+  function resolveBaseAmount(amount: number, tx: Transaction): number | null {
     const cur = (tx.displayCurrency || tx.currency || "EUR").toUpperCase();
-    if (cur === "EUR") return amount;
+    if (cur === baseCurrency) return amount;
 
     // GBX: divide by 100 first (pence → pounds)
     const normalizedAmount = (cur === "GBX" || cur === "GBP")
@@ -395,18 +417,19 @@ export function calculateFifoRealizedPL(
       : amount;
     const normalizedCur = cur === "GBX" ? "GBP" : cur;
 
-    if (normalizedCur === "EUR") return normalizedAmount;
+    if (normalizedCur === baseCurrency) return normalizedAmount;
 
-    // Prefer historical stored rate
-    if (tx.exchangeRateEur && tx.exchangeRateEur > 0) {
+    // Prefer historical stored rate for EUR path
+    if (baseCurrency === "EUR" && tx.exchangeRateEur && tx.exchangeRateEur > 0) {
       return normalizedAmount / tx.exchangeRateEur;
     }
 
-    // Fall back to live exchange rates
+    // Fall back to live exchange rates via EUR pivot
     const rateKey = `EUR${normalizedCur}`;
-    if (!exchangeRates[rateKey]) return null; // missing rate guard
-    const convertedAmount = convertToEUR(normalizedAmount, normalizedCur, exchangeRates);
-    return convertedAmount;
+    if (normalizedCur !== "EUR" && !exchangeRates[rateKey]) return null;
+    const inEUR = normalizedCur === "EUR" ? normalizedAmount : convertToEUR(normalizedAmount, normalizedCur, exchangeRates);
+    if (baseCurrency === "EUR") return inEUR;
+    return convertCurrency(inEUR, "EUR", baseCurrency, exchangeRates);
   }
 
   for (const tx of sorted) {
@@ -414,31 +437,29 @@ export function calculateFifoRealizedPL(
     if (!ticker) continue;
 
     if (tx.type === "buy" && tx.shares > 0) {
-      // Cost per lot: totalAmount + fees + taxes, all converted to EUR
       const totalCost = tx.totalAmount + (tx.fees || 0) + (tx.taxes || 0);
-      const totalCostEUR = resolveEURAmount(totalCost, tx);
-      if (totalCostEUR == null) continue; // missing rate — skip lot
+      const totalCostBase = resolveBaseAmount(totalCost, tx);
+      if (totalCostBase == null) continue;
 
-      const costPerShareEUR = totalCostEUR / tx.shares;
+      const costPerShareBase = totalCostBase / tx.shares;
       const tickerLots = lots.get(ticker) || [];
-      tickerLots.push({ date: tx.date, shares: tx.shares, costPerShareEUR });
+      tickerLots.push({ date: tx.date, shares: tx.shares, costPerShareBase });
       lots.set(ticker, tickerLots);
     } else if (tx.type === "sell" && tx.shares > 0) {
       const tickerLots = lots.get(ticker);
       if (!tickerLots || tickerLots.length === 0) continue;
 
-      // Sell proceeds = (totalAmount - fees - taxes) in EUR
       const proceeds = tx.totalAmount - (tx.fees || 0) - (tx.taxes || 0);
-      const proceedsEUR = resolveEURAmount(proceeds, tx);
-      if (proceedsEUR == null) continue; // missing rate — skip
+      const proceedsBase = resolveBaseAmount(proceeds, tx);
+      if (proceedsBase == null) continue;
 
       let remainingToSell = tx.shares;
-      let costBasisEUR = 0;
+      let costBasisBase = 0;
 
       while (remainingToSell > 0 && tickerLots.length > 0) {
         const lot = tickerLots[0];
         const soldFromLot = Math.min(remainingToSell, lot.shares);
-        costBasisEUR += soldFromLot * lot.costPerShareEUR;
+        costBasisBase += soldFromLot * lot.costPerShareBase;
         lot.shares -= soldFromLot;
         remainingToSell -= soldFromLot;
         if (lot.shares <= 0) tickerLots.shift();
@@ -451,9 +472,9 @@ export function calculateFifoRealizedPL(
         transactionId: tx.id,
         sellDate: tx.date,
         sharesSold: tx.shares - remainingToSell,
-        proceedsEUR,
-        costBasisEUR,
-        realizedGainEUR: proceedsEUR - costBasisEUR,
+        proceedsBase,
+        costBasisBase,
+        realizedGainBase: proceedsBase - costBasisBase,
       });
     }
   }

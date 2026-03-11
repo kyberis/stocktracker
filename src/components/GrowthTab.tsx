@@ -31,7 +31,8 @@ interface SnapshotPoint {
 
 export default function GrowthTab() {
   const { t } = useI18n();
-  const { holdings, cashEntries, quotes, exchangeRates } = usePortfolio();
+  const { holdings, cashEntries, quotes, exchangeRates, activePortfolioCurrency } = usePortfolio();
+  const baseCurrency = activePortfolioCurrency;
   const { user } = useAuth();
   const track = useTrack();
   const [range, setRange] = useState<Range>("1m");
@@ -53,7 +54,7 @@ export default function GrowthTab() {
     );
     if (!allHoldingsHaveValue) return;
 
-    const totals = calculatePortfolioTotals(holdings, cashEntries, quotes, exchangeRates);
+    const totals = calculatePortfolioTotals(holdings, cashEntries, quotes, exchangeRates, baseCurrency);
     if (totals.totalCurrentEUR <= 0) return;
     fetch("/api/portfolio/snapshot", {
       method: "POST",
@@ -146,7 +147,7 @@ export default function GrowthTab() {
                 {formatPercent(periodReturn)}
               </span>
               <span className="text-xs text-gray-400 dark:text-slate-500">
-                {formatCurrency(firstValue, "EUR")} → {formatCurrency(lastValue, "EUR")}
+                {formatCurrency(firstValue, baseCurrency)} → {formatCurrency(lastValue, baseCurrency)}
               </span>
             </div>
           )}
@@ -172,11 +173,11 @@ export default function GrowthTab() {
                 />
                 <YAxis
                   tick={{ fontSize: 10, fill: "#94a3b8" }}
-                  tickFormatter={(v: number) => formatCurrency(v, "EUR")}
+                  tickFormatter={(v: number) => formatCurrency(v, baseCurrency)}
                   width={70}
                 />
                 <Tooltip
-                  formatter={(v) => [formatCurrency(Number(v ?? 0), "EUR"), t("growthTab")]}
+                  formatter={(v) => [formatCurrency(Number(v ?? 0), baseCurrency), t("growthTab")]}
                   labelFormatter={(l) => String(l)}
                   contentStyle={{ background: "#1e293b", border: "1px solid #334155", borderRadius: "8px", fontSize: "12px" }}
                 />

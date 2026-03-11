@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useMemo, Suspense } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef, Suspense } from "react";
 import dynamic from "next/dynamic";
 import PortfolioSummary from "./PortfolioSummary";
 import MarketAndCash from "./MarketAndCash";
@@ -193,6 +193,39 @@ export default function Dashboard() {
     if (tab === "dividends") track("dividends_tab_viewed");
     if (tab === "metrics") track("metrics_tab_viewed");
     if (tab === "growth") track("growth_tab_viewed");
+  }
+
+  const hasLoadedOnce = useRef(false);
+  if (!isLoading && (holdingsCount > 0 || cashEntries.length > 0)) {
+    hasLoadedOnce.current = true;
+  }
+
+  if (isLoading && !hasLoadedOnce.current) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-5" role="status" aria-label={t("loading")}>
+        <svg className="animate-logo-breathe" width="72" height="72" viewBox="0 0 32 32" aria-hidden="true">
+          <rect width="32" height="32" rx="7" fill="#0f172a"/>
+          <g transform="translate(16,16) rotate(45)">
+            <ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="url(#lb-a)"/>
+            <ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="url(#lb-b)" transform="rotate(90)"/>
+            <ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="url(#lb-c)" transform="rotate(180)"/>
+            <ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="url(#lb-d)" transform="rotate(270)"/>
+            <circle cx="0" cy="0" r="1.2" fill="#0f172a" opacity=".35"/>
+          </g>
+          <defs>
+            <linearGradient id="lb-a" x1=".5" y1="0" x2=".5" y2="1"><stop offset="0%" stopColor="#6ee7b7"/><stop offset="100%" stopColor="#10b981"/></linearGradient>
+            <linearGradient id="lb-b" x1="0" y1=".3" x2="1" y2=".7"><stop offset="0%" stopColor="#34d399"/><stop offset="100%" stopColor="#059669"/></linearGradient>
+            <linearGradient id="lb-c" x1=".5" y1="1" x2=".5" y2="0"><stop offset="0%" stopColor="#10b981"/><stop offset="100%" stopColor="#047857"/></linearGradient>
+            <linearGradient id="lb-d" x1="1" y1=".3" x2="0" y2=".7"><stop offset="0%" stopColor="#a7f3d0"/><stop offset="100%" stopColor="#34d399"/></linearGradient>
+          </defs>
+        </svg>
+        <div className="flex gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-dot-bounce" />
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-dot-bounce" style={{ animationDelay: "0.16s" }} />
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-dot-bounce" style={{ animationDelay: "0.32s" }} />
+        </div>
+      </div>
+    );
   }
 
   return (

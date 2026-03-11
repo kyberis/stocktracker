@@ -335,7 +335,7 @@ export default function StockDetail({ ticker, exchange }: StockDetailProps) {
 
         {/* Transaction History */}
         {holding && (
-          <TransactionHistory holdingId={holding.id} ticker={holding.ticker} />
+          <TransactionHistory holdingId={holding.id} ticker={holding.ticker} exchange={holding.exchange} assetType={holding.assetType} currency={holding.displayCurrency} name={holding.name} />
         )}
 
         {/* AI Analysis CTA */}

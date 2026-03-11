@@ -56,7 +56,7 @@ export default function AppNav({ onWhatsNew, hasNewRelease }: AppNavProps) {
 
   return (
     <>
-    <header className="border-b border-gray-200 dark:border-slate-800 bg-white dark:bg-nav-bg sticky top-0 z-40">
+    <header className="border-b border-gray-200 dark:border-slate-800 bg-white dark:bg-nav-bg sticky top-7 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between gap-4">
         {/* Left: Logo + Nav */}
         <div className="flex items-center gap-1 sm:gap-6">

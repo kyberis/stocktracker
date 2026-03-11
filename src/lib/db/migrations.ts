@@ -942,6 +942,60 @@ const MIGRATIONS: Migration[] = [
       );
     },
   },
+  {
+    version: 27,
+    description: "Add currency column to portfolios for per-portfolio base currency (EUR or USD)",
+    up: async (client: Client) => {
+      const cols = await client.execute("PRAGMA table_info(portfolios)");
+      const colNames = new Set(cols.rows.map((r) => str(r.name)));
+      if (!colNames.has("currency")) {
+        await client.execute(
+          `ALTER TABLE portfolios ADD COLUMN currency TEXT NOT NULL DEFAULT 'EUR'`
+        );
+      }
+    },
+  },
+  {
+    version: 28,
+    description: "Widen cash_entries unique constraint to include portfolio_id",
+    up: async (client: Client) => {
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS cash_entries_new (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          name TEXT NOT NULL,
+          amount_eur REAL NOT NULL DEFAULT 0,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+          portfolio_id TEXT NOT NULL DEFAULT '',
+          FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
+          UNIQUE(user_id, name, portfolio_id)
+        );
+        INSERT OR IGNORE INTO cash_entries_new (id, user_id, name, amount_eur, created_at, updated_at, portfolio_id)
+          SELECT id, user_id, name, amount_eur, created_at, updated_at, COALESCE(portfolio_id, '') FROM cash_entries;
+        DROP TABLE cash_entries;
+        ALTER TABLE cash_entries_new RENAME TO cash_entries;
+      `);
+    },
+  },
+  {
+    version: 29,
+    description: "Add type and user_context columns to feedback table",
+    up: async (client: Client) => {
+      const cols = await client.execute("PRAGMA table_info(feedback)");
+      const colNames = new Set(cols.rows.map((r) => str(r.name)));
+      if (!colNames.has("type")) {
+        await client.execute(
+          `ALTER TABLE feedback ADD COLUMN type TEXT NOT NULL DEFAULT 'feedback'`
+        );
+      }
+      if (!colNames.has("user_context")) {
+        await client.execute(
+          `ALTER TABLE feedback ADD COLUMN user_context TEXT NOT NULL DEFAULT ''`
+        );
+      }
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

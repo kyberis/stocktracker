@@ -9,6 +9,7 @@ import { StealthProvider } from "@/lib/stealth-context";
 import { PortfolioProvider } from "@/lib/portfolio-context";
 import Dashboard from "@/components/Dashboard";
 import AppNav from "@/components/AppNav";
+import MarketTickerBar from "@/components/MarketTickerBar";
 import MobileTabBar from "@/components/MobileTabBar";
 import type { Holding, CashEntry, QuoteData, ExchangeRates } from "@/lib/types";
 
@@ -30,6 +31,7 @@ export default function DemoShell({
             <StealthProvider>
               <div className="min-h-screen bg-gray-50 dark:bg-slate-900 pb-14 sm:pb-0">
                 <DemoBanner />
+                <MarketTickerBar demoMode />
                 <AppNav />
                 <main id="main-content">
                   <PortfolioProvider

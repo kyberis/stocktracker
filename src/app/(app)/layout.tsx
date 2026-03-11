@@ -6,6 +6,7 @@ import { I18nProvider } from "@/lib/i18n";
 import { SettingsProvider } from "@/lib/settings-context";
 import { StealthProvider } from "@/lib/stealth-context";
 import AppNav from "@/components/AppNav";
+import MarketTickerBar from "@/components/MarketTickerBar";
 import MobileTabBar from "@/components/MobileTabBar";
 import InstallPrompt from "@/components/InstallPrompt";
 import DeviceInterestEnroller from "@/components/DeviceInterestEnroller";
@@ -18,6 +19,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <SettingsProvider>
             <StealthProvider>
               <div className="min-h-screen bg-gray-50 dark:bg-slate-900 pb-14 sm:pb-0">
+                <MarketTickerBar />
                 <AppNav />
                 <main id="main-content">
                   {children}

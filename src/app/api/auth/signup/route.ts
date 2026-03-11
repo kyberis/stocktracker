@@ -10,7 +10,7 @@ import { withMetrics } from "@/lib/with-metrics";
 import { authEventsTotal } from "@/lib/metrics";
 import { parseBody } from "@/lib/api-response";
 import { signupSchema } from "@/lib/schemas";
-import { createVerificationToken, sendVerificationEmail } from "@/lib/email";
+import { createVerificationToken, sendVerificationEmail, sendWelcomeEmail } from "@/lib/email";
 import { checkSignupRateLimit, getClientIp } from "@/lib/rate-limit";
 import { verifyTurnstileToken } from "@/lib/turnstile";
 
@@ -85,6 +85,9 @@ export const POST = withMetrics("/api/auth/signup", async (req: NextRequest) => 
     sendVerificationEmail(normalizedEmail, verificationToken).then((result) => {
       if (result.success) trackEvent(user.id, "email_verification_sent");
     });
+    sendWelcomeEmail(normalizedEmail, displayName || "").catch((err) =>
+      console.error("Welcome email failed:", err),
+    );
 
     const response = NextResponse.json({ user }, { status: 201 });
     response.cookies.set(getSessionCookieConfig(token));

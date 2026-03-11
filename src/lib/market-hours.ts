@@ -121,3 +121,30 @@ export function getMarketStatus(exchange: string, now?: Date): MarketStatus {
 
   return { isOpen, nextEvent };
 }
+
+/* ── Ticker-bar market overview ──────────────────────────────────────── */
+
+export interface TickerMarketStatus {
+  id: string;
+  name: string;
+  shortName: string;
+  isOpen: boolean;
+}
+
+const TICKER_MARKETS: Array<{ id: string; name: string; shortName: string; exchangeKey: string }> = [
+  { id: "nyse", name: "NYSE", shortName: "NYSE", exchangeKey: "NYSE" },
+  { id: "nasdaq", name: "NASDAQ", shortName: "NASDAQ", exchangeKey: "NMS" },
+  { id: "xetra", name: "XETRA", shortName: "XETRA", exchangeKey: "XET" },
+  { id: "lse", name: "LSE", shortName: "LSE", exchangeKey: "LSE" },
+  { id: "euronext", name: "Euronext", shortName: "ENX", exchangeKey: "AMS" },
+  { id: "tse", name: "Tokyo SE", shortName: "TSE", exchangeKey: "JPX" },
+];
+
+export function getTickerMarketStatuses(now: Date = new Date()): TickerMarketStatus[] {
+  return TICKER_MARKETS.map((m) => ({
+    id: m.id,
+    name: m.name,
+    shortName: m.shortName,
+    isOpen: getMarketStatus(m.exchangeKey, now).isOpen,
+  }));
+}

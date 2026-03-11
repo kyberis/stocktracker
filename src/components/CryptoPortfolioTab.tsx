@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, Fragment } from "react";
 import dynamic from "next/dynamic";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useAuth } from "@/lib/auth-context";
@@ -11,6 +11,7 @@ import type { Holding, QuoteData, ExchangeRates } from "@/lib/types";
 
 const AddCryptoModal = dynamic(() => import("./AddCryptoModal"), { ssr: false });
 const ProCompareCard = dynamic(() => import("./ProCompareCard"), { ssr: false });
+const TransactionHistory = dynamic(() => import("./TransactionHistory"), { ssr: false });
 
 const COIN_ICONS: Record<string, { bg: string; label: string }> = {
   BTC: { bg: "bg-[#f7931a]", label: "₿" },
@@ -53,13 +54,15 @@ interface Props {
 }
 
 export default function CryptoPortfolioTab({ holdings: allHoldings }: Props) {
-  const { quotes, exchangeRates } = usePortfolio();
+  const { quotes, exchangeRates, activePortfolioCurrency } = usePortfolio();
+  const baseCurrency = activePortfolioCurrency;
   const { user } = useAuth();
   const { t } = useI18n();
   const { stealthMode } = useStealthMode();
   const [showAddModal, setShowAddModal] = useState(false);
   const [sortKey, setSortKey] = useState<"name" | "value" | "change" | "gainLoss">("value");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const isPro = user?.plan === "pro";
   const cryptoHoldings = useMemo(
@@ -122,6 +125,8 @@ export default function CryptoPortfolioTab({ holdings: allHoldings }: Props) {
     return sortDir === "desc" ? " ↓" : " ↑";
   };
 
+  const COL_COUNT = 7;
+
   if (!isPro) {
     return (
       <div className="space-y-4">
@@ -154,13 +159,13 @@ export default function CryptoPortfolioTab({ holdings: allHoldings }: Props) {
         <div className="card px-4 py-3">
           <p className="text-xs text-gray-500 dark:text-slate-400 mb-1">{t("cryptoTotalValue")}</p>
           <p className="text-lg font-bold text-gray-900 dark:text-white">
-            {formatStealthCurrency(totalValueEUR, "EUR", stealthMode)}
+            {formatStealthCurrency(totalValueEUR, baseCurrency, stealthMode)}
           </p>
         </div>
         <div className="card px-4 py-3">
           <p className="text-xs text-gray-500 dark:text-slate-400 mb-1">{t("cryptoTotalGainLoss")}</p>
           <p className={`text-lg font-bold ${totalGainLossEUR >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}>
-            {formatStealthCurrency(totalGainLossEUR, "EUR", stealthMode)}
+            {formatStealthCurrency(totalGainLossEUR, baseCurrency, stealthMode)}
             <span className="text-sm font-medium ml-1">({formatPercent(totalGainLossPct)})</span>
           </p>
         </div>
@@ -199,43 +204,64 @@ export default function CryptoPortfolioTab({ holdings: allHoldings }: Props) {
               <th className="px-3 py-2.5 font-medium text-right cursor-pointer hover:text-gray-700 dark:hover:text-slate-200" onClick={() => handleSort("gainLoss")}>
                 {t("gainLoss")}{sortIcon("gainLoss")}
               </th>
+              <th className="px-3 py-2.5 w-10"></th>
             </tr>
           </thead>
           <tbody>
             {rows.map((row) => {
               const icon = getCoinIcon(row.holding.ticker);
+              const isExpanded = expandedId === row.holding.id;
               return (
-                <tr key={row.holding.id} className="border-b border-gray-50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-700/30 transition-colors">
-                  <td className="px-5 py-3">
-                    <div className="flex items-center gap-2.5">
-                      {icon ? (
-                        <span className={`w-7 h-7 rounded-full ${icon.bg} flex items-center justify-center text-white text-xs font-bold shrink-0`}>{icon.label}</span>
-                      ) : (
-                        <span className="w-7 h-7 rounded-full bg-slate-500 flex items-center justify-center text-white text-xs font-bold shrink-0">?</span>
-                      )}
-                      <div className="min-w-0">
-                        <p className="font-medium text-gray-900 dark:text-white truncate">{row.holding.name}</p>
-                        <p className="text-xs text-gray-400 dark:text-slate-500">{row.holding.ticker}</p>
+                <Fragment key={row.holding.id}>
+                  <tr
+                    className={`border-b border-gray-50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-700/30 transition-colors cursor-pointer ${isExpanded ? "bg-gray-50 dark:bg-slate-700/30" : ""}`}
+                    onClick={() => setExpandedId(isExpanded ? null : row.holding.id)}
+                  >
+                    <td className="px-5 py-3">
+                      <div className="flex items-center gap-2.5">
+                        {icon ? (
+                          <span className={`w-7 h-7 rounded-full ${icon.bg} flex items-center justify-center text-white text-xs font-bold shrink-0`}>{icon.label}</span>
+                        ) : (
+                          <span className="w-7 h-7 rounded-full bg-slate-500 flex items-center justify-center text-white text-xs font-bold shrink-0">?</span>
+                        )}
+                        <div className="min-w-0">
+                          <p className="font-medium text-gray-900 dark:text-white truncate">{row.holding.name}</p>
+                          <p className="text-xs text-gray-400 dark:text-slate-500">{row.holding.ticker}</p>
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-3 py-3 text-right text-gray-700 dark:text-slate-300 font-mono">
-                    {stealthMode ? "***" : row.holding.shares.toLocaleString(undefined, { maximumFractionDigits: 8 })}
-                  </td>
-                  <td className="px-3 py-3 text-right text-gray-700 dark:text-slate-300">
-                    {row.price > 0 ? formatCurrency(row.price, row.currency) : "—"}
-                  </td>
-                  <td className={`px-3 py-3 text-right font-medium ${row.changePct > 0 ? "text-emerald-600 dark:text-emerald-400" : row.changePct < 0 ? "text-red-600 dark:text-red-400" : "text-gray-400 dark:text-slate-500"}`}>
-                    {row.changePct > 0 ? "+" : ""}{row.changePct.toFixed(2)}%
-                  </td>
-                  <td className="px-3 py-3 text-right font-medium text-gray-900 dark:text-white">
-                    {formatStealthCurrency(row.valueEUR, "EUR", stealthMode)}
-                  </td>
-                  <td className={`px-3 py-3 text-right font-medium ${row.gainLossEUR >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}>
-                    {formatStealthCurrency(row.gainLossEUR, "EUR", stealthMode)}
-                    <span className="text-xs ml-1 opacity-75">({formatPercent(row.gainLossPct)})</span>
-                  </td>
-                </tr>
+                    </td>
+                    <td className="px-3 py-3 text-right text-gray-700 dark:text-slate-300 font-mono">
+                      {stealthMode ? "***" : row.holding.shares.toLocaleString(undefined, { maximumFractionDigits: 8 })}
+                    </td>
+                    <td className="px-3 py-3 text-right text-gray-700 dark:text-slate-300">
+                      {row.price > 0 ? formatCurrency(row.price, row.currency) : "—"}
+                    </td>
+                    <td className={`px-3 py-3 text-right font-medium ${row.changePct > 0 ? "text-emerald-600 dark:text-emerald-400" : row.changePct < 0 ? "text-red-600 dark:text-red-400" : "text-gray-400 dark:text-slate-500"}`}>
+                      {row.changePct > 0 ? "+" : ""}{row.changePct.toFixed(2)}%
+                    </td>
+                    <td className="px-3 py-3 text-right font-medium text-gray-900 dark:text-white">
+                      {formatStealthCurrency(row.valueEUR, baseCurrency, stealthMode)}
+                    </td>
+                    <td className={`px-3 py-3 text-right font-medium ${row.gainLossEUR >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}>
+                      {formatStealthCurrency(row.gainLossEUR, baseCurrency, stealthMode)}
+                      <span className="text-xs ml-1 opacity-75">({formatPercent(row.gainLossPct)})</span>
+                    </td>
+                    <td className="px-3 py-3 text-center">
+                      <svg className={`w-4 h-4 text-gray-400 transition-transform inline-block ${isExpanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </td>
+                  </tr>
+                  {isExpanded && (
+                    <tr>
+                      <td colSpan={COL_COUNT} className="p-0">
+                        <div className="px-4 py-3 bg-gray-50/50 dark:bg-slate-800/30 border-b border-gray-100 dark:border-slate-700">
+                          <TransactionHistory holdingId={row.holding.id} ticker={row.holding.ticker} exchange={row.holding.exchange} assetType={row.holding.assetType} currency={row.holding.displayCurrency} name={row.holding.name} />
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
               );
             })}
           </tbody>

@@ -1,5 +1,5 @@
 import type { CashEntry, ExchangeRates, Holding, HoldingAssetType, QuoteData } from "./types";
-import { convertToEUR, resolveQuoteCurrency } from "./utils";
+import { convertCurrency, convertToEUR, resolveQuoteCurrency } from "./utils";
 
 export interface AllocationSlice {
   key: string;
@@ -28,38 +28,40 @@ export function computeAllocationByType(
   cashEntries: CashEntry[],
   quotes: Record<string, QuoteData>,
   exchangeRates: ExchangeRates,
+  baseCurrency: string = "EUR",
 ): AllocationSlice[] {
   const buckets: Record<string, number> = {};
 
   for (const h of holdings) {
     const type: HoldingAssetType = h.assetType ?? "stock";
     const quote = quotes[h.ticker];
-    let valueEUR = 0;
+    let valueBase = 0;
 
     if (quote && quote.regularMarketPrice > 0) {
       const quoteCurrency = resolveQuoteCurrency(h.displayCurrency, quote.currency);
       const valueInQuoteCurrency = h.shares * quote.regularMarketPrice;
-      const currentEUR = convertToEUR(valueInQuoteCurrency, quoteCurrency, exchangeRates);
+      const currentBase = convertCurrency(valueInQuoteCurrency, quoteCurrency, baseCurrency, exchangeRates);
+      const referenceEUR = convertToEUR(valueInQuoteCurrency, quoteCurrency, exchangeRates);
       const isSuspiciousGBXOutlier =
-        h.displayCurrency === "GBX" && h.valueInEUR > 0 && currentEUR > h.valueInEUR * 10;
+        h.displayCurrency === "GBX" && h.valueInEUR > 0 && referenceEUR > h.valueInEUR * 10;
 
       if (isSuspiciousGBXOutlier) {
-        valueEUR = h.valueInEUR;
-      } else if (currentEUR !== valueInQuoteCurrency || quoteCurrency === "EUR") {
-        valueEUR = currentEUR;
+        valueBase = convertCurrency(h.valueInEUR, "EUR", baseCurrency, exchangeRates);
+      } else if (currentBase !== valueInQuoteCurrency || quoteCurrency === baseCurrency) {
+        valueBase = currentBase;
       } else {
-        valueEUR = h.valueInEUR;
+        valueBase = convertCurrency(h.valueInEUR, "EUR", baseCurrency, exchangeRates);
       }
     } else {
-      valueEUR = h.valueInEUR;
+      valueBase = convertCurrency(h.valueInEUR, "EUR", baseCurrency, exchangeRates);
     }
 
-    buckets[type] = (buckets[type] || 0) + valueEUR;
+    buckets[type] = (buckets[type] || 0) + valueBase;
   }
 
   let cashTotal = 0;
   for (const c of cashEntries) {
-    cashTotal += c.amountEUR;
+    cashTotal += convertCurrency(c.amountEUR, "EUR", baseCurrency, exchangeRates);
   }
   if (cashTotal > 0) {
     buckets["cash"] = cashTotal;
@@ -91,61 +93,65 @@ export function calculatePortfolioTotals(
   holdings: Holding[],
   cashEntries: CashEntry[],
   quotes: Record<string, QuoteData>,
-  exchangeRates: ExchangeRates
+  exchangeRates: ExchangeRates,
+  baseCurrency: string = "EUR"
 ): PortfolioTotals {
-  let totalCurrentEUR = 0;
-  let totalCostEUR = 0;
-  let dayGainLossEUR = 0;
+  let totalCurrentBase = 0;
+  let totalCostBase = 0;
+  let dayGainLossBase = 0;
 
   holdings.forEach((h) => {
     const quote = quotes[h.ticker];
 
     const costInDisplayCurrency = h.shares * h.purchasePrice;
-    const costEUR = convertToEUR(costInDisplayCurrency, h.displayCurrency, exchangeRates);
+    const costBase = convertCurrency(costInDisplayCurrency, h.displayCurrency, baseCurrency, exchangeRates);
 
     if (quote && quote.regularMarketPrice > 0) {
       const quoteCurrency = resolveQuoteCurrency(h.displayCurrency, quote.currency);
       const valueInQuoteCurrency = h.shares * quote.regularMarketPrice;
-      const currentEUR = convertToEUR(valueInQuoteCurrency, quoteCurrency, exchangeRates);
+      const currentBase = convertCurrency(valueInQuoteCurrency, quoteCurrency, baseCurrency, exchangeRates);
       const dayDeltaQuoteCurrency = h.shares * (quote.regularMarketChange ?? 0);
-      const dayDeltaEUR = convertToEUR(dayDeltaQuoteCurrency, quoteCurrency, exchangeRates);
+      const dayDeltaBase = convertCurrency(dayDeltaQuoteCurrency, quoteCurrency, baseCurrency, exchangeRates);
+
+      const referenceEUR = convertToEUR(valueInQuoteCurrency, quoteCurrency, exchangeRates);
       const isSuspiciousGBXOutlier =
         h.displayCurrency === "GBX" &&
         h.valueInEUR > 0 &&
-        currentEUR > h.valueInEUR * 10;
+        referenceEUR > h.valueInEUR * 10;
 
       if (isSuspiciousGBXOutlier) {
-        totalCurrentEUR += h.valueInEUR;
-      } else if (currentEUR !== valueInQuoteCurrency || quoteCurrency === "EUR") {
-        totalCurrentEUR += currentEUR;
+        totalCurrentBase += convertCurrency(h.valueInEUR, "EUR", baseCurrency, exchangeRates);
+      } else if (currentBase !== valueInQuoteCurrency || quoteCurrency === baseCurrency) {
+        totalCurrentBase += currentBase;
       } else {
-        totalCurrentEUR += h.valueInEUR;
+        totalCurrentBase += convertCurrency(h.valueInEUR, "EUR", baseCurrency, exchangeRates);
       }
-      dayGainLossEUR += dayDeltaEUR;
+      dayGainLossBase += dayDeltaBase;
     } else {
-      totalCurrentEUR += h.valueInEUR;
+      totalCurrentBase += convertCurrency(h.valueInEUR, "EUR", baseCurrency, exchangeRates);
     }
 
-    if (costEUR !== costInDisplayCurrency || h.displayCurrency === "EUR") {
-      totalCostEUR += costEUR;
+    if (costBase !== costInDisplayCurrency || h.displayCurrency === baseCurrency) {
+      totalCostBase += costBase;
     } else {
-      totalCostEUR += h.valueInEUR;
+      totalCostBase += convertCurrency(h.valueInEUR, "EUR", baseCurrency, exchangeRates);
     }
   });
 
   for (const cash of cashEntries) {
-    totalCurrentEUR += cash.amountEUR;
-    totalCostEUR += cash.amountEUR;
+    const cashBase = convertCurrency(cash.amountEUR, "EUR", baseCurrency, exchangeRates);
+    totalCurrentBase += cashBase;
+    totalCostBase += cashBase;
   }
 
-  const totalGainLoss = totalCurrentEUR - totalCostEUR;
-  const totalGainLossPercent = totalCostEUR > 0 ? (totalGainLoss / totalCostEUR) * 100 : 0;
+  const totalGainLoss = totalCurrentBase - totalCostBase;
+  const totalGainLossPercent = totalCostBase > 0 ? (totalGainLoss / totalCostBase) * 100 : 0;
 
   return {
-    totalCurrentEUR,
-    totalCostEUR,
+    totalCurrentEUR: totalCurrentBase,
+    totalCostEUR: totalCostBase,
     totalGainLoss,
     totalGainLossPercent,
-    dayGainLossEUR,
+    dayGainLossEUR: dayGainLossBase,
   };
 }

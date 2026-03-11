@@ -14,9 +14,68 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "1.13.0";
+export const CURRENT_VERSION = "1.16.0";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "1.16.0",
+    date: "2026-03-10",
+    title: "Transactional Email Templates",
+    titleTranslations: { es: "Plantillas de emails transaccionales" },
+    changes: [
+      {
+        type: "feature",
+        text: "Welcome email sent on signup with feature highlights, import CTA, and upgrade nudge — bilingual (EN/ES) with UTM tracking",
+        translations: { es: "Email de bienvenida al registrarse con funciones destacadas, CTA de importación y sugerencia de mejora — bilingüe (EN/ES) con seguimiento UTM" },
+      },
+      {
+        type: "feature",
+        text: "Bifolio upgrade email congratulating new subscribers and showcasing unlocked features: portfolio sharing, CSV export, alerts, and expanded limits",
+        translations: { es: "Email de mejora a Bifolio felicitando a nuevos suscriptores y mostrando funciones desbloqueadas: compartir cartera, exportar CSV, alertas y límites ampliados" },
+      },
+      {
+        type: "feature",
+        text: "Trefolio Pro upgrade email welcoming Pro members with a full feature breakdown: fundamentals, intelligence, advanced metrics, crypto pro, and unlimited alerts",
+        translations: { es: "Email de mejora a Trefolio Pro dando la bienvenida a miembros Pro con desglose completo de funciones: fundamentales, inteligencia, métricas avanzadas, crypto pro y alertas ilimitadas" },
+      },
+      {
+        type: "feature",
+        text: "Bug report option in feedback modal — automatically captures page URL, browser, viewport, and user context for faster debugging",
+        translations: { es: "Opción de reporte de error en el modal de feedback — captura automáticamente la URL de la página, navegador, ventana y contexto del usuario para depuración más rápida" },
+      },
+    ],
+  },
+  {
+    version: "1.15.0",
+    date: "2026-03-10",
+    title: "Market Ticker Bar",
+    titleTranslations: { es: "Barra indicadora de mercados" },
+    changes: [
+      {
+        type: "feature",
+        text: "Live market ticker bar — a scrolling marquee above the navigation shows EUR/USD, Bitcoin, Gold, Silver, S&P 500, and Oil prices with daily changes, plus open/closed status for NYSE, NASDAQ, XETRA, LSE, Euronext, and Tokyo SE",
+        translations: { es: "Barra de mercados en vivo — un indicador deslizante sobre la navegación muestra EUR/USD, Bitcoin, Oro, Plata, S&P 500 y Petróleo con variaciones diarias, más el estado abierto/cerrado de NYSE, NASDAQ, XETRA, LSE, Euronext y Tokyo SE" },
+      },
+      {
+        type: "improvement",
+        text: "Transaction exchange rate tooltip — hover over the total amount on non-EUR transactions to see the historical or current exchange rate used for conversion",
+        translations: { es: "Tooltip de tipo de cambio en transacciones — pasa el ratón sobre el importe total en transacciones no-EUR para ver el tipo de cambio histórico o actual usado en la conversión" },
+      },
+    ],
+  },
+  {
+    version: "1.14.0",
+    date: "2026-03-10",
+    title: "Portfolio Base Currency",
+    titleTranslations: { es: "Moneda base del portafolio" },
+    changes: [
+      {
+        type: "feature",
+        text: "Portfolio base currency — choose EUR or USD when creating a portfolio; all calculations, totals, and performance metrics are unified in the selected currency while transactions remain recorded in their original currency",
+        translations: { es: "Moneda base del portafolio — elige EUR o USD al crear un portafolio; todos los cálculos, totales y métricas de rendimiento se unifican en la moneda seleccionada mientras las transacciones se registran en su moneda original" },
+      },
+    ],
+  },
   {
     version: "1.13.0",
     date: "2026-03-10",
@@ -32,6 +91,11 @@ export const releaseNotes: ReleaseEntry[] = [
         type: "feature",
         text: "Performance explainer — see exactly how TTWROR and IRR are calculated using your real transactions, with a step-by-step breakdown and formula verification",
         translations: { es: "Explicación del rendimiento — ve exactamente cómo se calculan TTWROR e IRR usando tus transacciones reales, con un desglose paso a paso y verificación de fórmula" },
+      },
+      {
+        type: "feature",
+        text: "Crypto transaction management — edit and delete individual crypto transactions; click any crypto holding row to expand inline transaction history with full add/edit/delete controls",
+        translations: { es: "Gestión de transacciones cripto — edita y elimina transacciones cripto individuales; haz clic en cualquier fila de criptomoneda para expandir el historial de transacciones con controles completos de añadir/editar/eliminar" },
       },
     ],
   },

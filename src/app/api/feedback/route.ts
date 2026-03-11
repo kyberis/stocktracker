@@ -23,9 +23,23 @@ export const POST = withMetrics("/api/feedback", async (req: NextRequest) => {
 
   const result = await parseBody(req, createFeedbackSchema);
   if (!result.success) return result.error;
-  const { subject, message } = result.data;
+  const { subject, message, type, userContext } = result.data;
 
-  const entry = await createFeedback(session.userId, subject, message);
+  let enrichedContext = userContext;
+  if (type === "bug" && userContext) {
+    try {
+      const parsed = JSON.parse(userContext);
+      parsed.email = session.email;
+      parsed.plan = session.plan;
+      parsed.userId = session.userId;
+      parsed.username = session.username;
+      enrichedContext = JSON.stringify(parsed);
+    } catch {
+      enrichedContext = userContext;
+    }
+  }
+
+  const entry = await createFeedback(session.userId, subject, message, type, enrichedContext);
   return NextResponse.json(entry, { status: 201 });
 });
 

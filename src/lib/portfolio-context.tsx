@@ -16,6 +16,7 @@ interface PortfolioInfo {
   id: string;
   name: string;
   isDefault: boolean;
+  currency: string;
 }
 
 const FX_PAIRS = ["EURUSD", "EURGBP", "EURDKK", "EURCAD"];
@@ -32,9 +33,10 @@ interface PortfolioContextType {
   error: string | null;
   portfolios: PortfolioInfo[];
   activePortfolioId: string | null;
+  activePortfolioCurrency: string;
   alertedTickers: Set<string>;
   setActivePortfolio: (id: string | null) => void;
-  refreshPortfolios: () => Promise<void>;
+  refreshPortfolios: () => Promise<void | PortfolioInfo[]>;
   addHolding: (holding: Omit<Holding, "id">) => Promise<void>;
   removeHolding: (id: string) => Promise<void>;
   updateHolding: (id: string, updates: Partial<Holding>) => Promise<void>;
@@ -117,18 +119,20 @@ export function PortfolioProvider({
   const [quoteUpdatedAt, setQuoteUpdatedAt] = useState<Record<string, number>>({});
   const [refreshingTickers, setRefreshingTickers] = useState<Set<string>>(new Set());
   const [exchangeRates, setExchangeRates] = useState<ExchangeRates>(initialExchangeRates ?? {});
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(!demoMode);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(demoMode ? new Date() : null);
   const [alertedTickers, setAlertedTickers] = useState<Set<string>>(new Set());
   const fetchingRef = useRef(false);
-  const fetchPortfolios = useCallback(async () => {
+  const fetchPortfolios = useCallback(async (): Promise<PortfolioInfo[]> => {
     try {
       const res = await fetch("/api/portfolios", { cache: "no-store" });
-      if (!res.ok) return;
+      if (!res.ok) return [];
       const data = await res.json();
-      setPortfolios(data.portfolios ?? []);
-    } catch { /* ignore */ }
+      const list: PortfolioInfo[] = data.portfolios ?? [];
+      setPortfolios(list);
+      return list;
+    } catch { return []; }
   }, []);
 
   const fetchHoldings = useCallback(async () => {
@@ -181,13 +185,32 @@ export function PortfolioProvider({
       setIsLoading(true);
       setError(null);
 
-      await fetchPortfolios();
+      const loadedPortfolios = await fetchPortfolios();
+
+      // Auto-select the default portfolio when no selection is stored
+      let resolvedPortfolioId = activePortfolioId;
+      if (!resolvedPortfolioId && loadedPortfolios.length > 0) {
+        const defaultP = loadedPortfolios.find((p) => p.isDefault) ?? loadedPortfolios[0];
+        resolvedPortfolioId = defaultP.id;
+        setActivePortfolioId(resolvedPortfolioId);
+        if (typeof window !== "undefined") {
+          localStorage.setItem(ACTIVE_PORTFOLIO_KEY, resolvedPortfolioId);
+        }
+      }
 
       // Fetch holdings/cash if no server data OR if a specific portfolio is selected
       // (server data is unscoped; we need scoped data for a saved portfolio selection)
-      const needsFetch = !hasServerData || activePortfolioId != null;
+      const needsFetch = !hasServerData || resolvedPortfolioId != null;
       if (needsFetch) {
-        await Promise.all([fetchHoldings(), fetchCashEntries()]);
+        const qp = resolvedPortfolioId ? `?portfolioId=${encodeURIComponent(resolvedPortfolioId)}` : "";
+        const [holdingsRes, cashRes] = await Promise.all([
+          fetch(`/api/holdings${qp}`, { cache: "no-store" }),
+          fetch(`/api/cash${qp}`, { cache: "no-store" }),
+        ]);
+        const holdingsData: Holding[] = holdingsRes.ok ? await holdingsRes.json() : [];
+        const cashData: CashEntry[] = cashRes.ok ? await cashRes.json() : [];
+        setHoldings(holdingsData);
+        setCashEntries(cashData);
       }
 
       const cachedQuotes = loadCacheEntry<Record<string, QuoteData>>(QUOTES_CACHE_KEY);
@@ -546,6 +569,12 @@ export function PortfolioProvider({
     await Promise.all([fetchHoldings(), fetchCashEntries()]);
   }, [fetchHoldings, fetchCashEntries]);
 
+  const activePortfolioCurrency = useMemo(() => {
+    if (!activePortfolioId) return "EUR";
+    const found = portfolios.find((p) => p.id === activePortfolioId);
+    return found?.currency ?? "EUR";
+  }, [activePortfolioId, portfolios]);
+
   const noop = useCallback(async () => {}, []);
   const value = useMemo(
     () => ({
@@ -559,6 +588,7 @@ export function PortfolioProvider({
       error,
       portfolios,
       activePortfolioId,
+      activePortfolioCurrency,
       alertedTickers,
       setActivePortfolio: demoMode ? () => {} : setActivePortfolio,
       refreshPortfolios: demoMode ? noop : fetchPortfolios,
@@ -576,7 +606,7 @@ export function PortfolioProvider({
     }),
     [
       holdings, cashEntries, quotes, quoteUpdatedAt, refreshingTickers, exchangeRates,
-      isLoading, error, portfolios, activePortfolioId, alertedTickers, setActivePortfolio, fetchPortfolios,
+      isLoading, error, portfolios, activePortfolioId, activePortfolioCurrency, alertedTickers, setActivePortfolio, fetchPortfolios,
       addHolding, removeHolding, updateHolding, addCashEntry,
       removeCashEntry, updateCashEntry, refreshHoldings, refreshQuotes, refreshSingleQuote,
       refreshAlertedTickers, lastUpdated, demoMode, noop,

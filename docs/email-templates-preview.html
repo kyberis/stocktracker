@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>trefolio Email Templates Preview</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #1a1a2e;
+  --surface: #16213e;
+  --border: #0f3460;
+  --emerald: #10b981;
+  --slate-950: #0f172a;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg);
+  font-family: 'DM Sans', sans-serif;
+  color: var(--text);
+  padding: 32px 24px;
+  min-height: 100vh;
+}
+.header { text-align: center; margin-bottom: 40px; }
+.header h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; color: #fff; margin-bottom: 8px; }
+.header p { font-size: 15px; color: var(--text-muted); }
+.tabs { display: flex; gap: 8px; justify-content: center; margin-bottom: 32px; flex-wrap: wrap; }
+.tab {
+  padding: 10px 24px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--surface); color: #94a3b8; font-family: 'DM Sans', sans-serif;
+  font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+}
+.tab:hover { border-color: var(--emerald); color: var(--emerald); }
+.tab.active { background: var(--emerald); border-color: var(--emerald); color: #fff; }
+.lang-toggle { display: flex; gap: 6px; justify-content: center; margin-bottom: 24px; }
+.lang-btn {
+  padding: 6px 16px; border-radius: 6px; border: 1px solid var(--border);
+  background: transparent; color: var(--text-muted); font-family: 'JetBrains Mono', monospace;
+  font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s;
+}
+.lang-btn.active { background: var(--slate-950); border-color: var(--emerald); color: var(--emerald); }
+.email-frame {
+  max-width: 560px; margin: 0 auto; background: #f1f5f9;
+  border-radius: 12px; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+}
+.email-chrome {
+  background: var(--surface); padding: 12px 16px;
+  display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border);
+}
+.dots { display: flex; gap: 6px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; }
+.dot.r { background: #ef4444; } .dot.y { background: #eab308; } .dot.g { background: #22c55e; }
+.subject {
+  flex: 1; font-size: 12px; color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.email-content { display: none; }
+.email-content.active { display: block; }
+.meta-bar {
+  padding: 16px; font-size: 12px; color: #64748b;
+  border-bottom: 1px solid #e2e8f0; background: #fff;
+}
+.meta-bar .from { font-weight: 600; color: #0f172a; }
+.meta-bar .subj { font-weight: 700; color: #0f172a; font-size: 14px; display: block; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>trefolio Email Templates</h1>
+  <p>Reference preview of all 3 transactional email templates. Toggle language to see EN/ES versions.</p>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="showEmail('welcome')">1. Welcome</button>
+  <button class="tab" onclick="showEmail('bifolio')">2. Bifolio Upgrade</button>
+  <button class="tab" onclick="showEmail('trefolio')">3. Trefolio Pro</button>
+</div>
+
+<div class="lang-toggle">
+  <button class="lang-btn active" onclick="setLang('en')">EN</button>
+  <button class="lang-btn" onclick="setLang('es')">ES</button>
+</div>
+
+<div class="email-frame">
+  <div class="email-chrome">
+    <div class="dots"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
+    <div class="subject" id="subject-line">Subject: Welcome to trefolio!</div>
+  </div>
+
+  <!-- ========== WELCOME EN ========== -->
+  <div class="email-content active" id="welcome-en">
+    <div class="meta-bar">
+      <span class="subj">Welcome to trefolio!</span>
+      <span class="from">trefolio</span> &lt;noreply@trefolio.com&gt; &middot; just now
+    </div>
+    <div style="background:#f1f5f9;padding:24px 12px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+        <tr><td align="center">
+          <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="max-width:480px;width:100%;background-color:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+            <tr><td style="background:linear-gradient(135deg,#059669 0%,#10b981 100%);padding:32px 32px 28px;text-align:center;">
+              <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;">
+                <tr>
+                  <td style="width:36px;height:36px;background:#0f172a;border-radius:8px;text-align:center;vertical-align:middle;">
+                    <span style="color:#10b981;font-size:18px;font-weight:800;line-height:36px;">t</span>
+                  </td>
+                  <td style="padding-left:10px;color:#ffffff;font-size:20px;font-weight:700;letter-spacing:-0.3px;">trefolio</td>
+                </tr>
+              </table>
+            </td></tr>
+            <tr><td style="padding:36px 32px 16px;">
+              <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#0f172a;text-align:center;">Welcome aboard!</h1>
+              <p style="margin:0 0 24px;font-size:15px;color:#475569;text-align:center;line-height:1.6;">
+                Hi <strong>Marc</strong>, thanks for joining trefolio! Your free Folio account is ready. Here's what you can do right away:
+              </p>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+                <tr><td style="padding:12px 16px;background:#f0fdf4;border-radius:10px;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+                    <td style="width:36px;font-size:20px;vertical-align:top;padding-top:2px;">&#x1F4C8;</td>
+                    <td style="padding-left:8px;">
+                      <strong style="color:#0f172a;font-size:14px;">Real-time Quotes</strong>
+                      <p style="margin:2px 0 0;font-size:13px;color:#475569;line-height:1.4;">Live prices from Yahoo Finance across 5+ exchanges worldwide.</p>
+                    </td>
+                  </tr></table>
+                </td></tr>
+                <tr><td style="height:8px;"></td></tr>
+                <tr><td style="padding:12px 16px;background:#f0fdf4;border-radius:10px;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+                    <td style="width:36px;font-size:20px;vertical-align:top;padding-top:2px;">&#x1F4B0;</td>
+                    <td style="padding-left:8px;">
+                      <strong style="color:#0f172a;font-size:14px;">Dividend Tracking</strong>
+                      <p style="margin:2px 0 0;font-size:13px;color:#475569;line-height:1.4;">See annual income, per-stock yields, and monthly dividend projections.</p>
+                    </td>
+                  </tr></table>
+                </td></tr>
+                <tr><td style="height:8px;"></td></tr>
+                <tr><td style="padding:12px 16px;background:#f0fdf4;border-radius:10px;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+                    <td style="width:36px;font-size:20px;vertical-align:top;padding-top:2px;">&#x1F916;</td>
+                    <td style="padding-left:8px;">
+                      <strong style="color:#0f172a;font-size:14px;">AI-Powered Insights</strong>
+                      <p style="margin:2px 0 0;font-size:13px;color:#475569;line-height:1.4;">Get 5 free AI analysis calls per month to understand your holdings.</p>
+                    </td>
+                  </tr></table>
+                </td></tr>
+                <tr><td style="height:8px;"></td></tr>
+                <tr><td style="padding:12px 16px;background:#f0fdf4;border-radius:10px;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+                    <td style="width:36px;font-size:20px;vertical-align:top;padding-top:2px;">&#x1F4E5;</td>
+                    <td style="padding-left:8px;">
+                      <strong style="color:#0f172a;font-size:14px;">Import in Seconds</strong>
+                      <p style="margin:2px 0 0;font-size:13px;color:#475569;line-height:1.4;">Bring your portfolio from 13+ brokers via CSV, Broker Sync, or AI Import.</p>
+                    </td>
+                  </tr></table>
+                </td></tr>
+              </table>
+              <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+                <tr><td align="center">
+                  <a href="#" style="display:inline-block;padding:14px 36px;background-color:#10b981;color:#ffffff;font-size:16px;font-weight:600;text-decoration:none;border-radius:10px;letter-spacing:0.2px;">
+                    Import Your Portfolio
+                  </a>
+                </td></tr>
+              </table>
+              <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin-top:12px;">
+                <tr><td align="center">
+                  <a href="#" style="display:inline-block;padding:10px 24px;background-color:transparent;color:#10b981;font-size:14px;font-weight:600;text-decoration:none;border:1.5px solid #10b981;border-radius:10px;">
+                    Explore the Dashboard
+                  </a>
+                </td></tr>
+              </table>
+            </td></tr>
+            <tr><td style="padding:0 32px;"><div style="border-top:1px solid #e2e8f0;margin:24px 0;"></div></td></tr>
+            <tr><td style="padding:0 32px 12px;">
+              <p style="margin:0;font-size:13px;color:#64748b;text-align:center;line-height:1.5;">
+                <strong style="color:#475569;">Tip:</strong> Your Folio plan includes up to 15 holdings and 1 portfolio. Need more? <a href="#" style="color:#10b981;text-decoration:underline;">Explore Bifolio &amp; Trefolio</a>.
+              </p>
+            </td></tr>
+            <tr><td style="padding:0 32px 32px;">
+              <p style="margin:0;font-size:12px;color:#94a3b8;text-align:center;line-height:1.5;">
+                You received this email because you signed up for trefolio. <a href="#" style="color:#94a3b8;text-decoration:underline;">Manage email preferences</a>
+              </p>
+            </td></tr>
+          </table>
+          <p style="margin:24px 0 0;font-size:11px;color:#94a3b8;text-align:center;">&copy; 2026 trefolio &mdash; Portfolio tracking with clear insights</p>
+        </td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ========== WELCOME ES ========== -->
+  <div class="email-content" id="welcome-es">
+    <div class="meta-bar">
+      <span class="subj">&iexcl;Bienvenido a trefolio!</span>
+      <span class="from">trefolio</span> &lt;noreply@trefolio.com&gt; &middot; ahora
+    </div>
+    <div style="background:#f1f5f9;padding:24px 12px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+        <tr><td align="center">
+          <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="max-width:480px;width:100%;background-color:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+            <tr><td style="background:linear-gradient(135deg,#059669 0%,#10b981 100%);padding:32px 32px 28px;text-align:center;">
+              <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;"><tr>
+                <td style="width:36px;height:36px;background:#0f172a;border-radius:8px;text-align:center;vertical-align:middle;"><span style="color:#10b981;font-size:18px;font-weight:800;line-height:36px;">t</span></td>
+                <td style="padding-left:10px;color:#ffffff;font-size:20px;font-weight:700;letter-spacing:-0.3px;">trefolio</td>
+              </tr></table>
+            </td></tr>
+            <tr><td style="padding:36px 32px 16px;">
+              <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#0f172a;text-align:center;">&iexcl;Bienvenido!</h1>
+              <p style="margin:0 0 24px;font-size:15px;color:#475569;text-align:center;line-height:1.6;">
+                Hola <strong>Marc</strong>, gracias por unirte a trefolio. Tu cuenta Folio gratuita est&aacute; lista. Esto es lo que puedes hacer:
+              </p>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+                <tr><td style="padding:12px 16px;background:#f0fdf4;border-radius:10px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+                  <td style="width:36px;font-size:20px;vertical-align:top;padding-top:2px;">&#x1F4C8;</td>
+                  <td style="padding-left:8px;"><strong style="color:#0f172a;font-size:14px;">Cotizaciones en Tiempo Real</strong><p style="margin:2px 0 0;font-size:13px;color:#475569;line-height:1.4;">Precios en vivo de Yahoo Finance en m&aacute;s de 5 bolsas mundiales.</p></td>
+                </tr></table></td></tr>
+                <tr><td style="height:8px;"></td></tr>
+                <tr><td style="padding:12px 16px;background:#f0fdf4;border-radius:10px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+                  <td style="width:36px;font-size:20px;vertical-align:top;padding-top:2px;">&#x1F4B0;</td>
+                  <td style="padding-left:8px;"><strong style="color:#0f172a;font-size:14px;">Seguimiento de Dividendos</strong><p style="margin:2px 0 0;font-size:13px;color:#475569;line-height:1.4;">Ingresos anuales, rendimientos por acci&oacute;n y proyecciones mensuales.</p></td>
+                </tr></table></td></tr>
+                <tr><td style="height:8px;"></td></tr>
+                <tr><td style="padding:12px 16px;background:#f0fdf4;border-radius:10px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+                  <td style="width:36px;font-size:20px;vertical-align:top;padding-top:2px;">&#x1F916;</td>
+                  <td style="padding-left:8px;"><strong style="color:#0f172a;font-size:14px;">An&aacute;lisis con IA</strong><p style="margin:2px 0 0;font-size:13px;color:#475569;line-height:1.4;">5 consultas de IA gratuitas al mes para entender tus inversiones.</p></td>
+                </tr></table></td></tr>
+                <tr><td style="height:8px;"></td></tr>
+                <tr><td style="padding:12px 16px;background:#f0fdf4;border-radius:10px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+                  <td style="width:36px;font-size:20px;vertical-align:top;padding-top:2px;">&#x1F4E5;</td>
+                  <td style="padding-left:8px;"><strong style="color:#0f172a;font-size:14px;">Importa en Segundos</strong><p style="margin:2px 0 0;font-size:13px;color:#475569;line-height:1.4;">Trae tu cartera desde 13+ br&oacute;kers v&iacute;a CSV, Broker Sync o IA.</p></td>
+                </tr></table></td></tr>
+              </table>
+              <table role="presentation" cellpadding="0" cellspacing="0" width="100%"><tr><td align="center">
+                <a href="#" style="display:inline-block;padding:14px 36px;background-color:#10b981;color:#ffffff;font-size:16px;font-weight:600;text-decoration:none;border-radius:10px;">Importar Cartera</a>
+              </td></tr></table>
+              <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin-top:12px;"><tr><td align="center">
+                <a href="#" style="display:inline-block;padding:10px 24px;background-color:transparent;color:#10b981;font-size:14px;font-weight:600;text-decoration:none;border:1.5px solid #10b981;border-radius:10px;">Explorar el Dashboard</a>
+              </td></tr></table>
+            </td></tr>
+            <tr><td style="padding:0 32px;"><div style="border-top:1px solid #e2e8f0;margin:24px 0;"></div></td></tr>
+            <tr><td style="padding:0 32px 12px;"><p style="margin:0;font-size:13px;color:#64748b;text-align:center;line-height:1.5;"><strong style="color:#475569;">Consejo:</strong> Tu plan Folio incluye hasta 15 posiciones y 1 cartera. &iquest;Necesitas m&aacute;s? <a href="#" style="color:#10b981;text-decoration:underline;">Explora Bifolio y Trefolio</a>.</p></td></tr>
+            <tr><td style="padding:0 32px 32px;"><p style="margin:0;font-size:12px;color:#94a3b8;text-align:center;line-height:1.5;">Recibiste este email porque te registraste en trefolio. <a href="#" style="color:#94a3b8;text-decoration:underline;">Gestionar preferencias</a></p></td></tr>
+          </table>
+          <p style="margin:24px 0 0;font-size:11px;color:#94a3b8;text-align:center;">&copy; 2026 trefolio &mdash; Seguimiento de cartera con insights claros</p>
+        </td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ========== BIFOLIO EN ========== -->
+  <div class="email-content" id="bifolio-en">
+    <div class="meta-bar">
+      <span class="subj">Welcome to Bifolio!</span>
+      <span class="from">trefolio</span> &lt;noreply@trefolio.com&gt; &middot; just now
+    </div>
+    <div style="background:#f1f5f9;padding:24px 12px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+        <tr><td align="center">
+          <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="max-width:480px;width:100%;background-color:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+            <tr><td style="background:linear-gradient(135deg,#059669 0%,#10b981 100%);padding:32px 32px 28px;text-align:center;">
+              <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;"><tr>
+                <td style="width:36px;height:36px;background:#0f172a;border-radius:8px;text-align:center;vertical-align:middle;"><span style="color:#10b981;font-size:18px;font-weight:800;line-height:36px;">t</span></td>
+                <td style="padding-left:10px;color:#ffffff;font-size:20px;font-weight:700;letter-spacing:-0.3px;">trefolio</td>
+              </tr></table>
+              <p style="margin:12px 0 0;color:rgba(255,255,255,0.85);font-size:13px;font-weight:500;letter-spacing:1px;text-transform:uppercase;">Bifolio</p>
+            </td></tr>
+            <tr><td style="padding:36px 32px 16px;">
+              <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#0f172a;text-align:center;">You've upgraded!</h1>
+              <p style="margin:0 0 28px;font-size:15px;color:#475569;text-align:center;line-height:1.6;">
+                Congrats, <strong>Marc</strong>! Your Bifolio plan is now active. Here's everything you just unlocked:
+              </p>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+                <tr><td style="padding:14px 16px;background:#f0fdf4;border-radius:10px;border-left:4px solid #10b981;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+                    <td style="width:28px;font-size:18px;vertical-align:top;padding-top:1px;">&#x1F517;</td>
+                    <td style="padding-left:8px;"><strong style="color:#0f172a;font-size:14px;">Portfolio Sharing</strong><p style="margin:2px 0 0;font-size:13px;color:#475569;line-height:1.4;">Generate a public link to share your portfolio with anyone.</p></td>
+                  </tr></table>
+                </td></tr>
+                <tr><td style="height:8px;"></td></tr>
+                <tr><td style="padding:14px 16px;background:#f0fdf4;border-radius:10px;border-left:4px solid #10b981;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+                    <td style="width:28px;font-size:18px;vertical-align:top;padding-top:1px;">&#x1F4CA;</td>
+                    <td style="padding-left:8px;"><strong style="color:#0f172a;font-size:14px;">CSV Export</strong><p style="margin:2px 0 0;font-size:13px;color:#475569;line-height:1.4;">Download your holdings and transactions as CSV files.</p></td>
+                  </tr></table>
+                </td></tr>
+                <tr><td style="height:8px;"></td></tr>
+                <tr><td style="padding:14px 16px;background:#f0fdf4;border-radius:10px;border-left:4px solid #10b981;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+                    <td style="width:28px;font-size:18px;vertical-align:top;padding-top:1px;">&#x1F514;</td>
+                    <td style="padding-left:8px;"><strong style="color:#0f172a;font-size:14px;">Email &amp; Push Alerts</strong><p style="margin:2px 0 0;font-size:13px;color:#475569;line-height:1.4;">Set up to 10 price alerts with email and push notifications.</p></td>
+                  </tr></table>
+                </td></tr>
+                <tr><td style="height:8px;"></td></tr>
+                <tr><td style="padding:14px 16px;background:#f0fdf4;border-radius:10px;border-left:4px solid #10b981;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+                    <td style="width:28px;font-size:18px;vertical-align:top;padding-top:1px;">&#x1F4C8;</td>
+                    <td style="padding-left:8px;"><strong style="color:#0f172a;font-size:14px;">Expanded Limits</strong><p style="margin:2px 0 0;font-size:13px;color:#475569;line-height:1.4;">Track up to 50 holdings (up from 15) and 20 AI calls/month (up from 5).</p></td>
+                  </tr></table>
+                </td></tr>
+              </table>
+              <table role="presentation" cellpadding="0" cellspacing="0" width="100%"><tr><td align="center">
+                <a href="#" style="display:inline-block;padding:14px 36px;background-color:#10b981;color:#ffffff;font-size:16px;font-weight:600;text-decoration:none;border-radius:10px;">Set Up Your First Alert</a>
+              </td></tr></table>
+              <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin-top:12px;"><tr><td align="center">
+                <a href="#" style="display:inline-block;padding:10px 24px;background-color:transparent;color:#10b981;font-size:14px;font-weight:600;text-decoration:none;border:1.5px solid #10b981;border-radius:10px;">Share Your Portfolio</a>
+              </td></tr></table>
+            </td></tr>
+            <tr><td style="padding:0 32px;"><div style="border-top:1px solid #e2e8f0;margin:24px 0;"></div></td></tr>
+            <tr><td style="padding:0 32px 12px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="padding:14px 16px;background:#fefce8;border-radius:10px;border:1px solid #fde68a;">
+                <p style="margin:0;font-size:13px;color:#92400e;text-align:center;line-height:1.5;">
+                  <strong>Want even more?</strong> Trefolio unlocks fundamentals, advanced metrics, WhatsApp alerts, and unlimited holdings. <a href="#" style="color:#b45309;text-decoration:underline;font-weight:600;">Learn more</a>
+                </p>
+              </td></tr></table>
+            </td></tr>
+            <tr><td style="padding:0 32px 32px;"><p style="margin:0;font-size:12px;color:#94a3b8;text-align:center;line-height:1.5;">You received this email because you upgraded your trefolio account. <a href="#" style="color:#94a3b8;text-decoration:underline;">Manage email preferences</a></p></td></tr>
+          </table>
+          <p style="margin:24px 0 0;font-size:11px;color:#94a3b8;text-align:center;">&copy; 2026 trefolio &mdash; Portfolio tracking with clear insights</p>
+        </td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ========== BIFOLIO ES ========== -->
+  <div class="email-content" id="bifolio-es">
+    <div class="meta-bar">
+      <span class="subj">&iexcl;Bienvenido a Bifolio!</span>
+      <span class="from">trefolio</span> &lt;noreply@trefolio.com&gt; &middot; ahora
+    </div>
+    <div style="background:#f1f5f9;padding:24px 12px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+        <tr><td align="center">
+          <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="max-width:480px;width:100%;background-color:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+            <tr><td style="background:linear-gradient(135deg,#059669 0%,#10b981 100%);padding:32px 32px 28px;text-align:center;">
+              <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;"><tr>
+                <td style="width:36px;height:36px;background:#0f172a;border-radius:8px;text-align:center;vertical-align:middle;"><span style="color:#10b981;font-size:18px;font-weight:800;line-height:36px;">t</span></td>
+                <td style="padding-left:10px;color:#ffffff;font-size:20px;font-weight:700;letter-spacing:-0.3px;">trefolio</td>
+              </tr></table>
+              <p style="margin:12px 0 0;color:rgba(255,255,255,0.85);font-size:13px;font-weight:500;letter-spacing:1px;text-transform:uppercase;">Bifolio</p>
+            </td></tr>
+            <tr><td style="padding:36px 32px 16px;">
+              <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#0f172a;text-align:center;">&iexcl;Has mejorado tu plan!</h1>
+              <p style="margin:0 0 28px;font-size:15px;color:#475569;text-align:center;line-height:1.6;">Felicidades, <strong>Marc</strong>. Tu plan Bifolio ya est&aacute; activo. Esto es lo que has desbloqueado:</p>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+                <tr><td style="padding:14px 16px;background:#f0fdf4;border-radius:10px;border-left:4px solid #10b981;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+                  <td style="width:28px;font-size:18px;vertical-align:top;padding-top:1px;">&#x1F517;</td>
+                  <td style="padding-left:8px;"><strong style="color:#0f172a;font-size:14px;">Compartir Cartera</strong><p style="margin:2px 0 0;font-size:13px;color:#475569;line-height:1.4;">Genera un enlace p&uacute;blico para compartir tu cartera con cualquiera.</p></td>
+                </tr></table></td></tr>
+                <tr><td style="height:8px;"></td></tr>
+                <tr><td style="padding:14px 16px;background:#f0fdf4;border-radius:10px;border-left:4px solid #10b981;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+                  <td style="width:28px;font-size:18px;vertical-align:top;padding-top:1px;">&#x1F4CA;</td>
+                  <td style="padding-left:8px;"><strong style="color:#0f172a;font-size:14px;">Exportar CSV</strong><p style="margin:2px 0 0;font-size:13px;color:#475569;line-height:1.4;">Descarga tus posiciones y transacciones en archivos CSV.</p></td>
+                </tr></table></td></tr>
+                <tr><td style="height:8px;"></td></tr>
+                <tr><td style="padding:14px 16px;background:#f0fdf4;border-radius:10px;border-left:4px solid #10b981;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+                  <td style="width:28px;font-size:18px;vertical-align:top;padding-top:1px;">&#x1F514;</td>
+                  <td style="padding-left:8px;"><strong style="color:#0f172a;font-size:14px;">Alertas Email y Push</strong><p style="margin:2px 0 0;font-size:13px;color:#475569;line-height:1.4;">Configura hasta 10 alertas de precio con notificaciones por email y push.</p></td>
+                </tr></table></td></tr>
+                <tr><td style="height:8px;"></td></tr>
+                <tr><td style="padding:14px 16px;background:#f0fdf4;border-radius:10px;border-left:4px solid #10b981;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+                  <td style="width:28px;font-size:18px;vertical-align:top;padding-top:1px;">&#x1F4C8;</td>
+                  <td style="padding-left:8px;"><strong style="color:#0f172a;font-size:14px;">L&iacute;mites Ampliados</strong><p style="margin:2px 0 0;font-size:13px;color:#475569;line-height:1.4;">Hasta 50 posiciones (antes 15) y 20 consultas IA/mes (antes 5).</p></td>
+                </tr></table></td></tr>
+              </table>
+              <table role="presentation" cellpadding="0" cellspacing="0" width="100%"><tr><td align="center">
+                <a href="#" style="display:inline-block;padding:14px 36px;background-color:#10b981;color:#ffffff;font-size:16px;font-weight:600;text-decoration:none;border-radius:10px;">Configura Tu Primera Alerta</a>
+              </td></tr></table>
+              <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin-top:12px;"><tr><td align="center">
+                <a href="#" style="display:inline-block;padding:10px 24px;background-color:transparent;color:#10b981;font-size:14px;font-weight:600;text-decoration:none;border:1.5px solid #10b981;border-radius:10px;">Compartir Cartera</a>
+              </td></tr></table>
+            </td></tr>
+            <tr><td style="padding:0 32px;"><div style="border-top:1px solid #e2e8f0;margin:24px 0;"></div></td></tr>
+            <tr><td style="padding:0 32px 12px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="padding:14px 16px;background:#fefce8;border-radius:10px;border:1px solid #fde68a;"><p style="margin:0;font-size:13px;color:#92400e;text-align:center;line-height:1.5;"><strong>&iquest;Quieres a&uacute;n m&aacute;s?</strong> Trefolio desbloquea fundamentales, m&eacute;tricas avanzadas, alertas WhatsApp y posiciones ilimitadas. <a href="#" style="color:#b45309;text-decoration:underline;font-weight:600;">Saber m&aacute;s</a></p></td></tr></table></td></tr>
+            <tr><td style="padding:0 32px 32px;"><p style="margin:0;font-size:12px;color:#94a3b8;text-align:center;line-height:1.5;">Recibiste este email porque mejoraste tu cuenta de trefolio. <a href="#" style="color:#94a3b8;text-decoration:underline;">Gestionar preferencias</a></p></td></tr>
+          </table>
+          <p style="margin:24px 0 0;font-size:11px;color:#94a3b8;text-align:center;">&copy; 2026 trefolio &mdash; Seguimiento de cartera con insights claros</p>
+        </td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ========== TREFOLIO EN ========== -->
+  <div class="email-content" id="trefolio-en">
+    <div class="meta-bar">
+      <span class="subj">Welcome to Trefolio Pro!</span>
+      <span class="from">trefolio</span> &lt;noreply@trefolio.com&gt; &middot; just now
+    </div>
+    <div style="background:#f1f5f9;padding:24px 12px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+        <tr><td align="center">
+          <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="max-width:480px;width:100%;background-color:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+            <tr><td style="background:linear-gradient(135deg,#047857 0%,#059669 50%,#10b981 100%);padding:32px 32px 28px;text-align:center;">
+              <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;"><tr>
+                <td style="width:36px;height:36px;background:#0f172a;border-radius:8px;text-align:center;vertical-align:middle;"><span style="color:#10b981;font-size:18px;font-weight:800;line-height:36px;">t</span></td>
+                <td style="padding-left:10px;color:#ffffff;font-size:20px;font-weight:700;letter-spacing:-0.3px;">trefolio</td>
+              </tr></table>
+              <p style="margin:12px 0 0;color:rgba(255,255,255,0.9);font-size:13px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;">&#x2B50; Trefolio Pro &#x2B50;</p>
+            </td></tr>
+            <tr><td style="padding:36px 32px 16px;">
+              <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#0f172a;text-align:center;">Welcome to Pro!</h1>
+              <p style="margin:0 0 28px;font-size:15px;color:#475569;text-align:center;line-height:1.6;">
+                <strong>Marc</strong>, you now have full access to every feature trefolio offers. Here's your complete toolkit:
+              </p>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:8px;">
+                <tr><td style="padding:4px 0 6px;"><p style="margin:0;font-size:11px;font-weight:700;color:#10b981;text-transform:uppercase;letter-spacing:1px;">Data &amp; Analysis</p></td></tr>
+                <tr><td style="padding:10px 16px;background:#f0fdf4;border-radius:10px;border-left:4px solid #10b981;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="font-size:13px;color:#0f172a;line-height:1.7;">&#x2705; Alpha Vantage premium data<br>&#x2705; Fundamentals: income, balance sheet, cash flow<br>&#x2705; Economic indicators dashboard</td></tr></table>
+                </td></tr>
+                <tr><td style="height:12px;"></td></tr>
+                <tr><td style="padding:4px 0 6px;"><p style="margin:0;font-size:11px;font-weight:700;color:#10b981;text-transform:uppercase;letter-spacing:1px;">Intelligence</p></td></tr>
+                <tr><td style="padding:10px 16px;background:#f0fdf4;border-radius:10px;border-left:4px solid #10b981;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="font-size:13px;color:#0f172a;line-height:1.7;">&#x2705; News feed with sentiment analysis<br>&#x2705; Insider trades &amp; institutional holdings<br>&#x2705; AI analysis: 30 calls/day (unlimited monthly)</td></tr></table>
+                </td></tr>
+                <tr><td style="height:12px;"></td></tr>
+                <tr><td style="padding:4px 0 6px;"><p style="margin:0;font-size:11px;font-weight:700;color:#10b981;text-transform:uppercase;letter-spacing:1px;">Advanced Metrics</p></td></tr>
+                <tr><td style="padding:10px 16px;background:#f0fdf4;border-radius:10px;border-left:4px solid #10b981;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="font-size:13px;color:#0f172a;line-height:1.7;">&#x2705; Sharpe ratio, max drawdown, volatility<br>&#x2705; Full portfolio performance history</td></tr></table>
+                </td></tr>
+                <tr><td style="height:12px;"></td></tr>
+                <tr><td style="padding:4px 0 6px;"><p style="margin:0;font-size:11px;font-weight:700;color:#10b981;text-transform:uppercase;letter-spacing:1px;">Crypto Pro</p></td></tr>
+                <tr><td style="padding:10px 16px;background:#f0fdf4;border-radius:10px;border-left:4px solid #10b981;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="font-size:13px;color:#0f172a;line-height:1.7;">&#x2705; Crypto charts, exchange rates, AI analysis<br>&#x2705; Dedicated crypto portfolio tab</td></tr></table>
+                </td></tr>
+                <tr><td style="height:12px;"></td></tr>
+                <tr><td style="padding:4px 0 6px;"><p style="margin:0;font-size:11px;font-weight:700;color:#10b981;text-transform:uppercase;letter-spacing:1px;">Alerts &amp; Limits</p></td></tr>
+                <tr><td style="padding:10px 16px;background:#f0fdf4;border-radius:10px;border-left:4px solid #10b981;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="font-size:13px;color:#0f172a;line-height:1.7;">&#x2705; WhatsApp &amp; device notifications<br>&#x2705; Unlimited price alerts &amp; holdings<br>&#x2705; Up to 3 portfolios</td></tr></table>
+                </td></tr>
+              </table>
+              <div style="height:20px;"></div>
+              <table role="presentation" cellpadding="0" cellspacing="0" width="100%"><tr><td align="center">
+                <a href="#" style="display:inline-block;padding:14px 36px;background-color:#10b981;color:#ffffff;font-size:16px;font-weight:600;text-decoration:none;border-radius:10px;">Explore AI Insights</a>
+              </td></tr></table>
+              <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin-top:12px;"><tr><td align="center">
+                <a href="#" style="display:inline-block;padding:10px 24px;background-color:transparent;color:#10b981;font-size:14px;font-weight:600;text-decoration:none;border:1.5px solid #10b981;border-radius:10px;">View Fundamentals</a>
+              </td></tr></table>
+            </td></tr>
+            <tr><td style="padding:0 32px;"><div style="border-top:1px solid #e2e8f0;margin:24px 0;"></div></td></tr>
+            <tr><td style="padding:0 32px 12px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="padding:14px 16px;background:#eff6ff;border-radius:10px;border:1px solid #bfdbfe;"><p style="margin:0;font-size:13px;color:#1e40af;text-align:center;line-height:1.5;">&#x1F31F; <strong>You're one of our first 500 Pro members.</strong> Thank you for believing in trefolio early on. Your feedback shapes what we build next.</p></td></tr></table>
+            </td></tr>
+            <tr><td style="padding:0 32px 32px;"><p style="margin:0;font-size:12px;color:#94a3b8;text-align:center;line-height:1.5;">You received this email because you upgraded to Trefolio Pro. <a href="#" style="color:#94a3b8;text-decoration:underline;">Manage email preferences</a></p></td></tr>
+          </table>
+          <p style="margin:24px 0 0;font-size:11px;color:#94a3b8;text-align:center;">&copy; 2026 trefolio &mdash; Portfolio tracking with clear insights</p>
+        </td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ========== TREFOLIO ES ========== -->
+  <div class="email-content" id="trefolio-es">
+    <div class="meta-bar">
+      <span class="subj">&iexcl;Bienvenido a Trefolio Pro!</span>
+      <span class="from">trefolio</span> &lt;noreply@trefolio.com&gt; &middot; ahora
+    </div>
+    <div style="background:#f1f5f9;padding:24px 12px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+        <tr><td align="center">
+          <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="max-width:480px;width:100%;background-color:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+            <tr><td style="background:linear-gradient(135deg,#047857 0%,#059669 50%,#10b981 100%);padding:32px 32px 28px;text-align:center;">
+              <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;"><tr>
+                <td style="width:36px;height:36px;background:#0f172a;border-radius:8px;text-align:center;vertical-align:middle;"><span style="color:#10b981;font-size:18px;font-weight:800;line-height:36px;">t</span></td>
+                <td style="padding-left:10px;color:#ffffff;font-size:20px;font-weight:700;letter-spacing:-0.3px;">trefolio</td>
+              </tr></table>
+              <p style="margin:12px 0 0;color:rgba(255,255,255,0.9);font-size:13px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;">&#x2B50; Trefolio Pro &#x2B50;</p>
+            </td></tr>
+            <tr><td style="padding:36px 32px 16px;">
+              <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#0f172a;text-align:center;">&iexcl;Bienvenido a Pro!</h1>
+              <p style="margin:0 0 28px;font-size:15px;color:#475569;text-align:center;line-height:1.6;"><strong>Marc</strong>, ahora tienes acceso completo a todas las funciones de trefolio. Aqu&iacute; tienes tu kit completo:</p>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:8px;">
+                <tr><td style="padding:4px 0 6px;"><p style="margin:0;font-size:11px;font-weight:700;color:#10b981;text-transform:uppercase;letter-spacing:1px;">Datos y An&aacute;lisis</p></td></tr>
+                <tr><td style="padding:10px 16px;background:#f0fdf4;border-radius:10px;border-left:4px solid #10b981;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="font-size:13px;color:#0f172a;line-height:1.7;">&#x2705; Datos premium de Alpha Vantage<br>&#x2705; Fundamentales: ingresos, balance, flujo de caja<br>&#x2705; Panel de indicadores econ&oacute;micos</td></tr></table></td></tr>
+                <tr><td style="height:12px;"></td></tr>
+                <tr><td style="padding:4px 0 6px;"><p style="margin:0;font-size:11px;font-weight:700;color:#10b981;text-transform:uppercase;letter-spacing:1px;">Inteligencia</p></td></tr>
+                <tr><td style="padding:10px 16px;background:#f0fdf4;border-radius:10px;border-left:4px solid #10b981;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="font-size:13px;color:#0f172a;line-height:1.7;">&#x2705; Noticias con an&aacute;lisis de sentimiento<br>&#x2705; Operaciones de insiders y posiciones institucionales<br>&#x2705; An&aacute;lisis IA: 30 consultas/d&iacute;a (ilimitado mensual)</td></tr></table></td></tr>
+                <tr><td style="height:12px;"></td></tr>
+                <tr><td style="padding:4px 0 6px;"><p style="margin:0;font-size:11px;font-weight:700;color:#10b981;text-transform:uppercase;letter-spacing:1px;">M&eacute;tricas Avanzadas</p></td></tr>
+                <tr><td style="padding:10px 16px;background:#f0fdf4;border-radius:10px;border-left:4px solid #10b981;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="font-size:13px;color:#0f172a;line-height:1.7;">&#x2705; Ratio Sharpe, drawdown m&aacute;ximo, volatilidad<br>&#x2705; Historial completo de rendimiento</td></tr></table></td></tr>
+                <tr><td style="height:12px;"></td></tr>
+                <tr><td style="padding:4px 0 6px;"><p style="margin:0;font-size:11px;font-weight:700;color:#10b981;text-transform:uppercase;letter-spacing:1px;">Crypto Pro</p></td></tr>
+                <tr><td style="padding:10px 16px;background:#f0fdf4;border-radius:10px;border-left:4px solid #10b981;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="font-size:13px;color:#0f172a;line-height:1.7;">&#x2705; Gr&aacute;ficos crypto, tipos de cambio, an&aacute;lisis IA<br>&#x2705; Pesta&ntilde;a dedicada de cartera crypto</td></tr></table></td></tr>
+                <tr><td style="height:12px;"></td></tr>
+                <tr><td style="padding:4px 0 6px;"><p style="margin:0;font-size:11px;font-weight:700;color:#10b981;text-transform:uppercase;letter-spacing:1px;">Alertas y L&iacute;mites</p></td></tr>
+                <tr><td style="padding:10px 16px;background:#f0fdf4;border-radius:10px;border-left:4px solid #10b981;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="font-size:13px;color:#0f172a;line-height:1.7;">&#x2705; Notificaciones WhatsApp y dispositivo<br>&#x2705; Alertas y posiciones ilimitadas<br>&#x2705; Hasta 3 carteras</td></tr></table></td></tr>
+              </table>
+              <div style="height:20px;"></div>
+              <table role="presentation" cellpadding="0" cellspacing="0" width="100%"><tr><td align="center">
+                <a href="#" style="display:inline-block;padding:14px 36px;background-color:#10b981;color:#ffffff;font-size:16px;font-weight:600;text-decoration:none;border-radius:10px;">Explorar IA Insights</a>
+              </td></tr></table>
+              <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin-top:12px;"><tr><td align="center">
+                <a href="#" style="display:inline-block;padding:10px 24px;background-color:transparent;color:#10b981;font-size:14px;font-weight:600;text-decoration:none;border:1.5px solid #10b981;border-radius:10px;">Ver Fundamentales</a>
+              </td></tr></table>
+            </td></tr>
+            <tr><td style="padding:0 32px;"><div style="border-top:1px solid #e2e8f0;margin:24px 0;"></div></td></tr>
+            <tr><td style="padding:0 32px 12px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="padding:14px 16px;background:#eff6ff;border-radius:10px;border:1px solid #bfdbfe;"><p style="margin:0;font-size:13px;color:#1e40af;text-align:center;line-height:1.5;">&#x1F31F; <strong>Eres uno de nuestros primeros 500 miembros Pro.</strong> Gracias por creer en trefolio desde el principio. Tu feedback da forma a lo que construimos.</p></td></tr></table></td></tr>
+            <tr><td style="padding:0 32px 32px;"><p style="margin:0;font-size:12px;color:#94a3b8;text-align:center;line-height:1.5;">Recibiste este email porque mejoraste a Trefolio Pro. <a href="#" style="color:#94a3b8;text-decoration:underline;">Gestionar preferencias</a></p></td></tr>
+          </table>
+          <p style="margin:24px 0 0;font-size:11px;color:#94a3b8;text-align:center;">&copy; 2026 trefolio &mdash; Seguimiento de cartera con insights claros</p>
+        </td></tr>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let currentEmail = 'welcome';
+let currentLang = 'en';
+const subjects = {
+  'welcome-en': 'Subject: Welcome to trefolio!',
+  'welcome-es': 'Subject: \u00A1Bienvenido a trefolio!',
+  'bifolio-en': 'Subject: Welcome to Bifolio!',
+  'bifolio-es': 'Subject: \u00A1Bienvenido a Bifolio!',
+  'trefolio-en': 'Subject: Welcome to Trefolio Pro!',
+  'trefolio-es': 'Subject: \u00A1Bienvenido a Trefolio Pro!',
+};
+function showEmail(name) { currentEmail = name; update(); }
+function setLang(lang) { currentLang = lang; update(); }
+function update() {
+  document.querySelectorAll('.email-content').forEach(el => el.classList.remove('active'));
+  const target = document.getElementById(currentEmail + '-' + currentLang);
+  if (target) target.classList.add('active');
+  document.querySelectorAll('.tab').forEach((btn, i) => {
+    btn.classList.toggle('active', ['welcome','bifolio','trefolio'][i] === currentEmail);
+  });
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.textContent.toLowerCase() === currentLang);
+  });
+  document.getElementById('subject-line').textContent = subjects[currentEmail + '-' + currentLang] || '';
+}
+</script>
+
+</body>
+</html>
