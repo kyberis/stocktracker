@@ -19,7 +19,8 @@ export type UpsellSurface =
   | "metrics_locked"
   | "portfolio_history_locked"
   | "crypto_pro_locked"
-  | "crypto_portfolio";
+  | "crypto_portfolio"
+  | "ai_import";
 
 export interface UpsellConfig {
   subtitleKey: TranslationKey;
@@ -232,6 +233,14 @@ const UPSELL_BY_SURFACE: Record<UpsellSurface, UpsellConfig> = {
       "upsellProItemCryptoFull",
       "upsellProItemAlphaVantage",
     ],
+  },
+  ai_import: {
+    subtitleKey: "upsellCompareSubtitleAI",
+    attemptedActionKey: "upsellAttemptAiAnalysis",
+    feature: "ai-import",
+    freeItems: DEFAULT_FREE_ITEMS,
+    starterItems: DEFAULT_STARTER_ITEMS,
+    proItems: DEFAULT_PRO_ITEMS,
   },
 };
 
