@@ -315,10 +315,6 @@ export default function Dashboard() {
                   </div>
                 )}
 
-                {holdingsAtLimit && (
-                  <ProCompareCard surface="holdings_limit" reason="holdings_limit_reached" />
-                )}
-
                 <BrokerFilter
                   accounts={accounts}
                   holdings={holdings}
@@ -334,6 +330,10 @@ export default function Dashboard() {
                 <MarketAndCash holdings={filteredHoldings} cashEntries={filteredCashEntries} />
                 <PortfolioProjection holdings={filteredHoldings} cashEntries={filteredCashEntries} />
                 <AdSlot slot="dashboard-bottom" format="auto" />
+
+                {holdingsAtLimit && (
+                  <ProCompareCard surface="holdings_limit" reason="holdings_limit_reached" />
+                )}
               </>
             )}
           </div>
