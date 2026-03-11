@@ -1,0 +1,122 @@
+[
+  {
+    "id": "earnings:AAPL:2026-04-24",
+    "type": "earnings",
+    "symbol": "AAPL",
+    "name": "Apple Inc",
+    "date": "2026-04-24",
+    "time": "amc",
+    "details": { "epsEstimated": 2.35, "fiscalDateEnding": "Q2 FY2026" },
+    "inPortfolio": true
+  },
+  {
+    "id": "earnings:MSFT:2026-04-22",
+    "type": "earnings",
+    "symbol": "MSFT",
+    "name": "Microsoft Corp",
+    "date": "2026-04-22",
+    "time": "amc",
+    "details": { "epsEstimated": 3.22, "fiscalDateEnding": "Q3 FY2026" },
+    "inPortfolio": true
+  },
+  {
+    "id": "earnings:GOOGL:2026-04-22",
+    "type": "earnings",
+    "symbol": "GOOGL",
+    "name": "Alphabet Inc",
+    "date": "2026-04-22",
+    "time": "amc",
+    "details": { "epsEstimated": 2.01, "fiscalDateEnding": "Q1 FY2026" },
+    "inPortfolio": false
+  },
+  {
+    "id": "earnings:AMZN:2026-04-24",
+    "type": "earnings",
+    "symbol": "AMZN",
+    "name": "Amazon.com Inc",
+    "date": "2026-04-24",
+    "time": "amc",
+    "details": { "epsEstimated": 1.36, "fiscalDateEnding": "Q1 FY2026" },
+    "inPortfolio": true
+  },
+  {
+    "id": "earnings:NVDA:2026-05-21",
+    "type": "earnings",
+    "symbol": "NVDA",
+    "name": "NVIDIA Corp",
+    "date": "2026-05-21",
+    "time": "amc",
+    "details": { "epsEstimated": 0.92, "fiscalDateEnding": "Q1 FY2027" },
+    "inPortfolio": true
+  },
+  {
+    "id": "earnings:META:2026-04-23",
+    "type": "earnings",
+    "symbol": "META",
+    "name": "Meta Platforms",
+    "date": "2026-04-23",
+    "time": "amc",
+    "details": { "epsEstimated": 5.28, "fiscalDateEnding": "Q1 FY2026" },
+    "inPortfolio": false
+  },
+  {
+    "id": "economic:cpi-consumer-price-index:2026-04-10",
+    "type": "economic",
+    "symbol": null,
+    "name": "CPI (Consumer Price Index)",
+    "date": "2026-04-10",
+    "time": "08:30",
+    "details": { "country": "US", "previous": 2.8, "estimate": 2.6, "actual": null, "impact": "High" },
+    "inPortfolio": false
+  },
+  {
+    "id": "economic:fomc-interest-rate-decision:2026-05-06",
+    "type": "economic",
+    "symbol": null,
+    "name": "FOMC Interest Rate Decision",
+    "date": "2026-05-06",
+    "time": "14:00",
+    "details": { "country": "US", "previous": 4.25, "estimate": 4.25, "actual": null, "impact": "High" },
+    "inPortfolio": false
+  },
+  {
+    "id": "economic:gdp-growth-rate-qoq:2026-04-30",
+    "type": "economic",
+    "symbol": null,
+    "name": "GDP Growth Rate (QoQ)",
+    "date": "2026-04-30",
+    "time": "08:30",
+    "details": { "country": "US", "previous": 2.4, "estimate": 2.1, "actual": null, "impact": "High" },
+    "inPortfolio": false
+  },
+  {
+    "id": "economic:michigan-consumer-sentiment:2026-04-11",
+    "type": "economic",
+    "symbol": null,
+    "name": "Michigan Consumer Sentiment",
+    "date": "2026-04-11",
+    "time": "10:00",
+    "details": { "country": "US", "previous": 57.9, "estimate": 60.0, "actual": null, "impact": "Medium" },
+    "inPortfolio": false
+  },
+  {
+    "id": "ipo:CRWV:2026-04-15",
+    "type": "ipo",
+    "symbol": "CRWV",
+    "name": "CoreWeave Inc",
+    "date": "2026-04-15",
+    "time": null,
+    "details": { "exchange": "NASDAQ", "priceRange": "$47–$55", "shares": 49000000, "marketCap": null },
+    "inPortfolio": false
+  },
+  {
+    "id": "ipo:MDLN:2026-04-22",
+    "type": "ipo",
+    "symbol": "MDLN",
+    "name": "Medline Industries",
+    "date": "2026-04-22",
+    "time": null,
+    "details": { "exchange": "NYSE", "priceRange": "$22–$25", "shares": 75000000, "marketCap": null },
+    "inPortfolio": false
+  }
+]

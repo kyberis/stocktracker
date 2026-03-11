@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Download, X, Share } from "lucide-react";
+import { isNativePlatform } from "@/lib/capacitor";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -29,7 +30,7 @@ export default function InstallPrompt() {
   const [dismissed, setDismissed] = useState(true);
 
   useEffect(() => {
-    if (isStandalone()) return;
+    if (isStandalone() || isNativePlatform()) return;
     const prev = localStorage.getItem(DISMISS_KEY);
     if (prev) {
       const ts = parseInt(prev, 10);

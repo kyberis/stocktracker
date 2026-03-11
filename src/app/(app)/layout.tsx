@@ -9,6 +9,8 @@ import AppNav from "@/components/AppNav";
 import MarketTickerBar from "@/components/MarketTickerBar";
 import MobileTabBar from "@/components/MobileTabBar";
 import InstallPrompt from "@/components/InstallPrompt";
+import CapacitorBridge from "@/components/CapacitorBridge";
+import NativePushBridge from "@/components/NativePushBridge";
 import DeviceInterestEnroller from "@/components/DeviceInterestEnroller";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -26,6 +28,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 </main>
                 <MobileTabBar />
                 <InstallPrompt />
+                <CapacitorBridge />
+                <NativePushBridge />
                 <DeviceInterestEnroller />
               </div>
             </StealthProvider>

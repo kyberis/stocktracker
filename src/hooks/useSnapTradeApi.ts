@@ -2,13 +2,16 @@ import { useState, useCallback } from "react";
 import type {
   SnapTradeConnectionInfo,
   DisabledBrokerageConnection,
+  BrokerSyncInfo,
   ExtractedTransaction,
 } from "./import-types";
 
-export type { SnapTradeConnectionInfo, ExtractedTransaction };
+export type { SnapTradeConnectionInfo, ExtractedTransaction, BrokerSyncInfo };
 
 export interface UseSnapTradeApiReturn {
   connection: SnapTradeConnectionInfo | null;
+  brokerSyncs: BrokerSyncInfo[];
+  connectionLimit: number;
   isFetching: boolean;
   transactions: ExtractedTransaction[];
   step: "idle" | "connecting" | "reconnecting" | "fetching" | "preview" | "importing" | "done" | "error";
@@ -18,10 +21,11 @@ export interface UseSnapTradeApiReturn {
   disabledConnections: DisabledBrokerageConnection[];
   importProgress: { current: number; total: number; errors: number };
   holdingsCapped: number;
+  lastFetchHadDateFilter: boolean;
   loadConnection: () => Promise<void>;
   connect: () => Promise<void>;
   reconnect: (connectionId: string) => Promise<void>;
-  fetchPortfolio: (portfolioId?: string | null) => Promise<void>;
+  fetchPortfolio: (portfolioId?: string | null, startDate?: string | null, brokerStartDates?: Record<string, string> | null) => Promise<void>;
   resync: () => Promise<void>;
   disconnect: () => Promise<void>;
   importAll: (portfolioId?: string | null) => Promise<void>;
@@ -91,6 +95,8 @@ function normalizeTransaction(tx: Record<string, unknown>): ExtractedTransaction
 
 export function useSnapTradeApi(): UseSnapTradeApiReturn {
   const [connection, setConnection] = useState<SnapTradeConnectionInfo | null>(null);
+  const [brokerSyncs, setBrokerSyncs] = useState<BrokerSyncInfo[]>([]);
+  const [connectionLimit, setConnectionLimit] = useState(0);
   const [isFetching, setIsFetching] = useState(false);
   const [transactions, setTransactions] = useState<ExtractedTransaction[]>([]);
   const [step, setStep] = useState<UseSnapTradeApiReturn["step"]>("idle");
@@ -100,6 +106,7 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
   const [disabledConnections, setDisabledConnections] = useState<DisabledBrokerageConnection[]>([]);
   const [importProgress, setImportProgress] = useState({ current: 0, total: 0, errors: 0 });
   const [holdingsCapped, setHoldingsCapped] = useState(0);
+  const [lastFetchHadDateFilter, setLastFetchHadDateFilter] = useState(false);
 
   const loadConnection = useCallback(async () => {
     try {
@@ -112,6 +119,8 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
         const disabled: DisabledBrokerageConnection[] = data.disabledConnections || [];
         setDisabledConnections(disabled);
         setNeedsReconnect(disabled.length > 0);
+        setBrokerSyncs(data.brokerSyncs || []);
+        if (typeof data.connectionLimit === "number") setConnectionLimit(data.connectionLimit);
       }
     } catch {
       // ignore
@@ -187,14 +196,24 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
     }
   }, [loadConnection]);
 
-  const fetchPortfolio = useCallback(async (portfolioId?: string | null) => {
+  const fetchPortfolio = useCallback(async (portfolioId?: string | null, startDate?: string | null, brokerStartDates?: Record<string, string> | null) => {
     setErrorMsg("");
     setIsFetching(true);
     setStep("fetching");
+
+    const hasExplicitDateFilter = !!startDate ||
+      (brokerStartDates ? Object.values(brokerStartDates).some((v) => v !== "") : false);
+    const hasSyncMapDefaults = !startDate && !brokerStartDates && brokerSyncs.some((bs) => bs.lastImportedAt);
+    setLastFetchHadDateFilter(hasExplicitDateFilter || hasSyncMapDefaults);
+
     try {
       const form = new FormData();
       form.append("action", "fetch");
       if (portfolioId) form.append("portfolioId", portfolioId);
+      if (startDate) form.append("startDate", startDate);
+      if (brokerStartDates && Object.keys(brokerStartDates).length > 0) {
+        form.append("brokerStartDates", JSON.stringify(brokerStartDates));
+      }
       const res = await fetch("/api/snaptrade", { method: "POST", body: form });
       const data = await res.json();
 
@@ -220,7 +239,7 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
     } finally {
       setIsFetching(false);
     }
-  }, []);
+  }, [brokerSyncs]);
 
   const resync = useCallback(async () => {
     await fetchPortfolio();
@@ -232,6 +251,7 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
       form.append("action", "disconnect");
       await fetch("/api/snaptrade", { method: "POST", body: form });
       setConnection({ connected: false });
+      setBrokerSyncs([]);
       setTransactions([]);
       setStep("idle");
     } catch {
@@ -335,6 +355,8 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
 
   return {
     connection,
+    brokerSyncs,
+    connectionLimit,
     isFetching,
     transactions,
     step,
@@ -344,6 +366,7 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
     disabledConnections,
     importProgress,
     holdingsCapped,
+    lastFetchHadDateFilter,
     loadConnection,
     connect,
     reconnect,

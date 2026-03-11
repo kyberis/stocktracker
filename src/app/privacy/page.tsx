@@ -109,9 +109,10 @@ export default function PrivacyPolicyPage() {
                 if you connect your Interactive Brokers account via the Flex Web
                 Service API, your access token and query ID are encrypted with
                 AES-256-GCM and stored so you can re-sync your portfolio on demand.
-                If you connect brokerage accounts via SnapTrade (Trefolio), we store your
+                If you connect brokerage accounts via SnapTrade (Bifolio and Trefolio plans), we store your
                 SnapTrade userId and encrypted userSecret; your brokerage credentials
-                are handled by SnapTrade via OAuth, not by us. You can disconnect at
+                are handled by SnapTrade via OAuth, not by us. We only request read-only access
+                to your brokerage data. You can disconnect at
                 any time, which permanently deletes these credentials.
               </li>
               <li>
@@ -277,8 +278,8 @@ export default function PrivacyPolicyPage() {
                   </tr>
                   <tr>
                     <td className="py-3 pr-6">SnapTrade (Passiv Financial Inc.)</td>
-                    <td className="py-3 pr-6">Brokerage aggregation (Trefolio)</td>
-                    <td className="py-3">Brokerage account data (positions, balances) via OAuth; we store only SnapTrade userId and encrypted userSecret</td>
+                    <td className="py-3 pr-6">Brokerage aggregation (Bifolio &amp; Trefolio)</td>
+                    <td className="py-3">Brokerage account data (positions, balances) via OAuth read-only; we store only SnapTrade userId and encrypted userSecret</td>
                   </tr>
                   <tr>
                     <td className="py-3 pr-6">Twilio Inc.</td>

@@ -166,15 +166,15 @@ export const POST = withMetrics("/api/billing/webhook", async (req: NextRequest)
 
 /**
  * Schedule or cancel SnapTrade user deletion based on plan change.
- * When a user loses Pro: schedule deletion after 1 hour (stops $2/user/month).
- * When a user gains Pro: cancel any pending deletion.
+ * When a user drops to Free: schedule deletion after 1 hour (stops $2/user/month).
+ * When a user gains Starter or Pro: cancel any pending deletion.
  */
 async function reconcileSnapTrade(userId: string, newPlan: string): Promise<void> {
   try {
     const conn = await getSnapTradeConnection(userId);
     if (!conn) return;
 
-    if (newPlan === "pro") {
+    if (newPlan === "pro" || newPlan === "starter") {
       await clearSnapTradeDeletion(userId);
     } else {
       await scheduleSnapTradeDeletion(userId);

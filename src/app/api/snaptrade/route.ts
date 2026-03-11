@@ -14,6 +14,8 @@ import {
   trackEvent,
   getSnapTradeBrokerSyncs,
   upsertSnapTradeBrokerSync,
+  setSnapTradeNeedsAttention,
+  getSnapTradeNeedsAttention,
 } from "@/lib/db";
 import {
   registerUser,
@@ -22,12 +24,15 @@ import {
   fetchAllHoldings,
   fetchActivities,
   listBrokerageConnections,
+  listAccounts,
   SnapTradeClientError,
 } from "@/lib/snaptrade-client";
 import type { ExtractedTransaction } from "@/hooks/import-types";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { withMetrics } from "@/lib/with-metrics";
 import { portfolioImportsTotal } from "@/lib/metrics";
+import { getSnapTradeConnectionLimit } from "@/lib/subscription";
+import type { SubscriptionPlan } from "@/lib/types";
 
 /**
  * POST /api/snaptrade
@@ -61,9 +66,18 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
           .filter((c) => c.disabled)
           .map(({ id, brokerageName, disabledDate }) => ({ id, brokerageName, disabledDate }));
       }
-    } catch {
-      // If we can't reach SnapTrade API, still return local connection info
+    } catch (err) {
+      console.warn("[SnapTrade] Failed to check brokerage status during get-connection:", err instanceof Error ? err.message : err);
     }
+
+    const brokerSyncs = await getSnapTradeBrokerSyncs(session.userId);
+
+    // Sync the needs_attention flag based on live brokerage status
+    const hasDisabled = disabledConnections.length > 0;
+    await setSnapTradeNeedsAttention(session.userId, hasDisabled);
+
+    const userForPlan = await findUserById(session.userId);
+    const userPlan = (userForPlan?.plan || session.plan) as SubscriptionPlan;
 
     return NextResponse.json({
       connected: true,
@@ -72,15 +86,19 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
       lastSyncedAt: conn.lastSyncedAt,
       createdAt: conn.createdAt,
       disabledConnections,
+      brokerSyncs,
+      connectionLimit: getSnapTradeConnectionLimit(userPlan),
+      needsAttention: hasDisabled,
     });
   }
 
-  /* ── Pro check for all remaining actions ── */
+  /* ── Tier check: Free users cannot access broker sync ── */
   const user = await findUserById(session.userId);
-  const isPro = (user?.plan || session.plan) === "pro";
-  if (!isPro) {
+  const plan = (user?.plan || session.plan) as SubscriptionPlan;
+  const connectionLimit = getSnapTradeConnectionLimit(plan);
+  if (connectionLimit === 0) {
     return NextResponse.json(
-      { error: "SnapTrade import requires a Pro subscription.", upgrade: true },
+      { error: "Broker sync requires a Bifolio or Trefolio subscription.", upgrade: true },
       { status: 403 },
     );
   }
@@ -116,6 +134,20 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
         { error: "No SnapTrade user found. Please register first." },
         { status: 400 },
       );
+    }
+
+    // Enforce tier-based connection limit
+    try {
+      const brokerageConns = await listBrokerageConnections(conn.snapTradeUserId, userSecret);
+      const activeConns = brokerageConns.filter((c) => !c.disabled);
+      if (activeConns.length >= connectionLimit) {
+        return NextResponse.json(
+          { error: `Your plan allows up to ${connectionLimit} broker connection${connectionLimit === 1 ? "" : "s"}. Upgrade to Trefolio for unlimited connections.`, connectionLimitReached: true },
+          { status: 403 },
+        );
+      }
+    } catch {
+      // If we can't check, allow the connection attempt
     }
 
     try {
@@ -169,6 +201,12 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
     const conn = await getSnapTradeConnection(session.userId);
     const userSecret = conn ? await getSnapTradeConnectionSecret(session.userId) : null;
     const portfolioId = (formData.get("portfolioId") as string) || undefined;
+    const customStartDate = (formData.get("startDate") as string) || undefined;
+    let brokerDateOverrides: Record<string, string> = {};
+    try {
+      const raw = formData.get("brokerStartDates") as string;
+      if (raw) brokerDateOverrides = JSON.parse(raw);
+    } catch { /* ignore parse errors */ }
 
     if (!conn || !userSecret) {
       return NextResponse.json(
@@ -179,42 +217,69 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
 
     try {
       const brokerageConns = await listBrokerageConnections(conn.snapTradeUserId, userSecret);
-      const activeConns = brokerageConns.filter((c) => !c.disabled);
+      const disabledConns = brokerageConns
+        .filter((c) => c.disabled)
+        .map(({ id, brokerageName, disabledDate }) => ({ id, brokerageName, disabledDate }));
+
+      if (brokerageConns.every((c) => c.disabled) && disabledConns.length > 0) {
+        return NextResponse.json(
+          {
+            error: "All brokerage connections have expired. Please reconnect to continue syncing.",
+            needsReconnect: true,
+            disabledConnections: disabledConns,
+          },
+          { status: 502 },
+        );
+      }
+
+      const accounts = await listAccounts(conn.snapTradeUserId, userSecret);
+      const activeBrokerIds = new Set(brokerageConns.filter((c) => !c.disabled).map((c) => c.id));
+      const activeAccounts = accounts.filter((a) => activeBrokerIds.has(a.brokerageAuthorizationId));
 
       const brokerSyncs = await getSnapTradeBrokerSyncs(session.userId);
       const syncMap = new Map(brokerSyncs.map((s) => [s.brokerageAuthorizationId, s.lastImportedAt]));
 
-      // Fetch real transaction history per broker, narrowing by startDate when available
       const allTransactions: ExtractedTransaction[] = [];
       const fetchedBrokers: { id: string; name: string }[] = [];
       const truncatedBrokers: string[] = [];
+      const seenBrokerIds = new Set<string>();
 
-      for (const bc of activeConns) {
-        const lastImported = syncMap.get(bc.id);
+      for (const acct of activeAccounts) {
+        const brokerId = acct.brokerageAuthorizationId;
+        let startDate: string | undefined;
+        if (customStartDate) {
+          startDate = customStartDate;
+        } else if (brokerId in brokerDateOverrides) {
+          startDate = brokerDateOverrides[brokerId] || undefined;
+        } else {
+          startDate = syncMap.get(brokerId) || undefined;
+        }
         const result = await fetchActivities({
           userId: conn.snapTradeUserId,
           userSecret,
-          brokerageAuthorizationId: bc.id,
-          startDate: lastImported || undefined,
+          accountId: acct.id,
+          startDate,
         });
         allTransactions.push(...result.transactions);
-        fetchedBrokers.push({ id: bc.id, name: bc.brokerageName });
+
+        if (!seenBrokerIds.has(acct.brokerageAuthorizationId)) {
+          seenBrokerIds.add(acct.brokerageAuthorizationId);
+          fetchedBrokers.push({ id: acct.brokerageAuthorizationId, name: acct.institution });
+        }
 
         if (result.possiblyTruncated) {
-          truncatedBrokers.push(bc.brokerageName);
+          truncatedBrokers.push(`${acct.institution} (${acct.name})`);
           console.warn(
-            `[SnapTrade] Activities response hit 10k limit for broker "${bc.brokerageName}" (user=${session.userId}, startDate=${lastImported || "none"})`,
+            `[SnapTrade] Activities hit 10k limit for account "${acct.name}" (user=${session.userId}, startDate=${startDate || "none"})`,
           );
         }
       }
 
-      // Dedup against already-imported sourceRefs
       const existingRefs = await listTransactionSourceRefs(session.userId);
       const deduped = allTransactions.filter(
         (tx) => !tx.sourceRef || !existingRefs.has(tx.sourceRef),
       );
 
-      // Cash balances still come from the holdings snapshot
       const holdingsResult = await fetchAllHoldings(conn.snapTradeUserId, userSecret);
 
       const summary = {
@@ -257,7 +322,6 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
         }
       }
 
-      // Persist per-broker sync timestamps
       for (const broker of fetchedBrokers) {
         await upsertSnapTradeBrokerSync(session.userId, broker.id, broker.name);
       }
@@ -269,13 +333,18 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
         });
       }
       trackEvent(session.userId, "snaptrade_fetch", {
-        accounts: String(holdingsResult.accounts.length),
+        accounts: String(activeAccounts.length),
         activities: String(deduped.length),
         cash: String(cashImported),
         incremental: String(brokerSyncs.length > 0),
         truncated: String(truncatedBrokers.length > 0),
       });
       portfolioImportsTotal.inc({ source: "snaptrade", status: "success" });
+
+      // Clear needs_attention if no disabled connections remain
+      if (disabledConns.length === 0) {
+        await setSnapTradeNeedsAttention(session.userId, false);
+      }
 
       return NextResponse.json({ transactions: deduped, summary, cashImported });
     } catch (err) {
@@ -288,8 +357,12 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
         disabledConnections = brokerageConns
           .filter((c) => c.disabled)
           .map(({ id, brokerageName, disabledDate }) => ({ id, brokerageName, disabledDate }));
-      } catch {
-        // best-effort check
+      } catch (checkErr) {
+        console.warn("[SnapTrade] Failed to check disabled status after fetch error:", checkErr instanceof Error ? checkErr.message : checkErr);
+      }
+
+      if (disabledConnections.length > 0) {
+        await setSnapTradeNeedsAttention(session.userId, true);
       }
 
       return NextResponse.json(

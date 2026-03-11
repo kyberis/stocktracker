@@ -21,7 +21,10 @@ export type SubscriptionFeature =
   | "csv-export"
   | "crypto"
   | "crypto-pro"
-  | "crypto-portfolio";
+  | "crypto-portfolio"
+  | "event-calendar-earnings"
+  | "event-calendar-economic"
+  | "event-calendar-ipo";
 
 export type AlertCondition = "above" | "below";
 export type AlertType = "threshold" | "percent_change";

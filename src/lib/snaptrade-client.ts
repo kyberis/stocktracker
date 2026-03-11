@@ -323,13 +323,14 @@ function activityToTransaction(a: UniversalActivity): ExtractedTransaction | nul
   const mappedType = ACTIVITY_TYPE_MAP[(a.type || "").toUpperCase()];
   if (!mappedType) return null;
 
-  const rawTicker = a.symbol?.symbol || a.symbol?.raw_symbol || "";
-  let ticker = rawTicker;
+  const rawSymbol = a.symbol?.raw_symbol || a.symbol?.symbol || "";
+  let ticker = rawSymbol;
   if (!ticker && mappedType === "fee") ticker = "FEE";
   if (!ticker) return null;
 
-  if (a.symbol?.raw_symbol && a.symbol?.exchange?.mic_code && !a.symbol?.symbol) {
-    const normalized = normalizeSnapTradeTicker(a.symbol.raw_symbol, a.symbol.exchange.mic_code);
+  if (ticker !== "FEE") {
+    const exchangeMic = a.symbol?.exchange?.mic_code || "";
+    const normalized = normalizeSnapTradeTicker(ticker, exchangeMic);
     ticker = normalized.ticker || ticker;
   }
 
@@ -356,19 +357,44 @@ function activityToTransaction(a: UniversalActivity): ExtractedTransaction | nul
   };
 }
 
+export interface SnapTradeAccount {
+  id: string;
+  name: string;
+  institution: string;
+  brokerageAuthorizationId: string;
+}
+
+export async function listAccounts(
+  userId: string,
+  userSecret: string,
+): Promise<SnapTradeAccount[]> {
+  const client = getClient();
+  try {
+    const res = await client.accountInformation.listUserAccounts({ userId, userSecret });
+    return (res.data ?? []).map((a) => ({
+      id: String(a.id || ""),
+      name: String(a.name || "Unknown Account"),
+      institution: String(a.institution_name || ""),
+      brokerageAuthorizationId: String(a.brokerage_authorization || ""),
+    }));
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    throw new SnapTradeClientError(`Failed to list accounts: ${msg}`);
+  }
+}
+
 export interface FetchActivitiesOptions {
   userId: string;
   userSecret: string;
-  brokerageAuthorizationId?: string;
+  accountId: string;
   startDate?: string;
 }
 
-const SNAPTRADE_ACTIVITIES_LIMIT = 10_000;
+const SNAPTRADE_PAGE_LIMIT = 1000;
 
 export interface FetchActivitiesResult {
   transactions: ExtractedTransaction[];
   rawCount: number;
-  /** True when SnapTrade returned exactly 10k activities, meaning older records were likely truncated. */
   possiblyTruncated: boolean;
 }
 
@@ -378,26 +404,42 @@ export async function fetchActivities(
   const client = getClient();
 
   try {
-    const res = await client.transactionsAndReporting.getActivities({
-      userId: opts.userId,
-      userSecret: opts.userSecret,
-      ...(opts.startDate ? { startDate: opts.startDate } : {}),
-      ...(opts.brokerageAuthorizationId
-        ? { brokerageAuthorizations: opts.brokerageAuthorizationId }
-        : {}),
-      type: "BUY,SELL,DIVIDEND,REI,FEE",
-    });
+    const allActivities: UniversalActivity[] = [];
+    let offset = 0;
 
-    const activities: UniversalActivity[] = res.data ?? [];
+    // Paginate through all activities for this account
+    while (true) {
+      const normalizedStartDate = opts.startDate ? opts.startDate.slice(0, 10) : undefined;
+      const res = await client.accountInformation.getAccountActivities({
+        accountId: opts.accountId,
+        userId: opts.userId,
+        userSecret: opts.userSecret,
+        ...(normalizedStartDate ? { startDate: normalizedStartDate } : {}),
+        type: "BUY,SELL,DIVIDEND,REI,FEE",
+        offset,
+        limit: SNAPTRADE_PAGE_LIMIT,
+      });
+
+      const resBody = res.data as { data?: UniversalActivity[]; pagination?: { total?: number } } | UniversalActivity[];
+      const page: UniversalActivity[] = Array.isArray(resBody) ? resBody : (resBody?.data ?? []);
+
+      allActivities.push(...page);
+
+      if (page.length < SNAPTRADE_PAGE_LIMIT) break;
+      offset += SNAPTRADE_PAGE_LIMIT;
+
+      if (allActivities.length >= 10_000) break;
+    }
+
     const transactions: ExtractedTransaction[] = [];
-    for (const a of activities) {
+    for (const a of allActivities) {
       const tx = activityToTransaction(a);
       if (tx) transactions.push(tx);
     }
     return {
       transactions,
-      rawCount: activities.length,
-      possiblyTruncated: activities.length >= SNAPTRADE_ACTIVITIES_LIMIT,
+      rawCount: allActivities.length,
+      possiblyTruncated: allActivities.length >= 10_000,
     };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);

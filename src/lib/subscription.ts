@@ -10,6 +10,7 @@ const FREE_FEATURES = new Set<SubscriptionFeature>([
   "cash",
   "benchmarks",
   "crypto",
+  "event-calendar-earnings",
 ]);
 
 /**
@@ -22,6 +23,7 @@ const STARTER_FEATURES = new Set<SubscriptionFeature>([
   "alerts-push",
   "metrics",
   "portfolio-history-full",
+  "event-calendar-economic",
 ]);
 
 /**
@@ -36,6 +38,7 @@ const PRO_FEATURES = new Set<SubscriptionFeature>([
   "alerts-device",
   "crypto-pro",
   "crypto-portfolio",
+  "event-calendar-ipo",
 ]);
 
 export interface EntitlementInput {
@@ -126,6 +129,16 @@ export function getPortfolioLimit(plan: SubscriptionPlan): number {
   if (plan === "pro") return PLATFORM_LIMITS.PRO_PORTFOLIO_LIMIT;
   if (plan === "starter") return PLATFORM_LIMITS.STARTER_PORTFOLIO_LIMIT;
   return PLATFORM_LIMITS.FREE_PORTFOLIO_LIMIT;
+}
+
+/**
+ * Returns the SnapTrade broker connection limit for a given plan.
+ * Free: 0 (no access). Starter: 1. Pro: unlimited.
+ */
+export function getSnapTradeConnectionLimit(plan: SubscriptionPlan): number {
+  if (plan === "pro") return PLATFORM_LIMITS.PRO_SNAPTRADE_LIMIT;
+  if (plan === "starter") return PLATFORM_LIMITS.STARTER_SNAPTRADE_LIMIT;
+  return PLATFORM_LIMITS.FREE_SNAPTRADE_LIMIT;
 }
 
 /** Maps internal plan identifiers to user-facing tier names. */

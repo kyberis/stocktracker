@@ -26,7 +26,7 @@ Use this checklist in order and report the result:
 PM Decision Checklist
 - [ ] Problem and target user are explicit
 - [ ] Feature helps a primary segment from reference.md
-- [ ] Tier fit is clear (Free vs Pro)
+- [ ] Tier fit is clear (Folio vs Bifolio vs Trefolio)
 - [ ] Existing analytics/release signals were checked
 - [ ] Success metric and instrumentation were defined
 - [ ] Scope is right-sized for current release
@@ -54,8 +54,9 @@ PM Decision Checklist
 - Delivery scope (MVP vs follow-up)
 
 ### 5) Enforce product quality constraints
-- User-facing changes must support English and Spanish.
-- Scope must remain consistent with current pricing tiers.
+- User-facing changes must go through the i18n system (all 35 supported languages, English and Spanish at minimum).
+- Copy must follow the voice and language rules in [design-system.md](design-system.md) Section B.
+- Scope must remain consistent with the 3-tier pricing model (Folio / Bifolio / Trefolio).
 - Recommend instrumentation for the feature before launch.
 
 ## Output Format
@@ -117,11 +118,12 @@ Skip the mockup only for trivial cosmetic tweaks (e.g., changing a single color 
 
 ### Mockup quality standards
 
-- Match the existing app's visual language — do not invent a new design system.
+- Follow the trefolio design system defined in [design-system.md](design-system.md) — use exact color tokens, component patterns, typography, and spacing documented there. Do not invent new patterns.
 - Use dark theme by default (consistent with the app).
-- Show realistic content, not "Lorem ipsum."
+- Show realistic content, not "Lorem ipsum." Use stock tickers, portfolio values, and dates that match the domain.
 - Label sections clearly so the user understands what each part represents.
 - Include annotations or callouts for non-obvious interactions.
+- Verify gain/loss indicators include both color and a directional symbol (arrow, +/-) per accessibility baseline.
 
 ### Design review output
 
@@ -140,4 +142,5 @@ When reviewing a design change, add this section to the PM output:
 ## Extra Resources
 
 - Product context and segments: [reference.md](reference.md)
+- Design system (tokens, components, voice, personas): [design-system.md](design-system.md)
 - Feature history: `src/lib/release-notes.ts`

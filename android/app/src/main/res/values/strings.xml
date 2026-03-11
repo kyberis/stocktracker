@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">trefolio</string>
+    <string name="title_activity_main">trefolio</string>
+    <string name="package_name">app.trefolio.portfolio</string>
+    <string name="custom_url_scheme">app.trefolio.portfolio</string>
+</resources>

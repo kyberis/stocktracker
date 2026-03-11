@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 30;
 
 /**
- * Cron: deregister SnapTrade users whose Pro subscription lapsed 1+ hour ago.
+ * Cron: deregister SnapTrade users whose paid subscription lapsed 1+ hour ago.
  * Removes the $2/connected-user/month cost from SnapTrade.
  */
 export async function GET() {

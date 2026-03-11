@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>trefolio — Event Calendar Design Mockup</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --surface2: #334155;
+    --border: #334155;
+    --border-soft: #1e293b;
+    --emerald: #10b981;
+    --emerald-dim: rgba(16,185,129,0.12);
+    --emerald-text: #34d399;
+    --red: #ef4444;
+    --red-dim: rgba(239,68,68,0.12);
+    --amber: #f59e0b;
+    --amber-dim: rgba(245,158,11,0.12);
+    --amber-text: #fbbf24;
+    --violet: #8b5cf6;
+    --violet-dim: rgba(139,92,246,0.12);
+    --violet-text: #a78bfa;
+    --sky: #38bdf8;
+    --sky-dim: rgba(56,189,248,0.12);
+    --text: #f1f5f9;
+    --text-dim: #94a3b8;
+    --text-muted: #64748b;
+    --radius: 16px;
+    --radius-sm: 12px;
+    --radius-pill: 9999px;
+    --max-w: 1280px;
+    --nav-bg: #0f172a;
+    --shadow: 0 1px 3px rgba(0,0,0,0.3);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Source Sans 3', system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+    line-height: 1.5;
+  }
+
+  /* ── Watermark ── */
+  .design-banner {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: linear-gradient(135deg, var(--emerald) 0%, #059669 100%);
+    color: #fff;
+    text-align: center;
+    padding: 10px 16px;
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: 0.02em;
+  }
+  .design-banner span { opacity: 0.8; font-weight: 400; margin-left: 8px; }
+
+  /* ── Page shell ── */
+  .page-shell {
+    max-width: var(--max-w);
+    margin: 0 auto;
+    padding: 24px 16px 80px;
+  }
+  @media (min-width: 640px) { .page-shell { padding: 32px 24px 80px; } }
+
+  /* ── Card ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+
+  /* ── Tab bar ── */
+  .tab-bar {
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+    padding: 4px;
+    background: var(--surface);
+    border-radius: var(--radius);
+    margin-bottom: 24px;
+    scrollbar-width: none;
+  }
+  .tab-bar::-webkit-scrollbar { display: none; }
+  .tab {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.15s;
+    border: none;
+    background: none;
+    white-space: nowrap;
+  }
+  .tab:hover { color: var(--text); background: var(--surface2); }
+  .tab.active {
+    color: #fff;
+    background: var(--emerald);
+    font-weight: 600;
+  }
+  .tab svg { width: 16px; height: 16px; }
+
+  /* ── Toolbar row ── */
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .toolbar-title {
+    font-size: 20px;
+    font-weight: 700;
+    flex: 1;
+    min-width: 0;
+  }
+  .view-toggle {
+    display: flex;
+    gap: 2px;
+    background: var(--surface2);
+    border-radius: var(--radius-pill);
+    padding: 3px;
+  }
+  .view-btn {
+    padding: 6px 14px;
+    border-radius: var(--radius-pill);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-dim);
+    cursor: pointer;
+    border: none;
+    background: none;
+    transition: all 0.15s;
+  }
+  .view-btn:hover { color: var(--text); }
+  .view-btn.active { color: #fff; background: var(--emerald); }
+
+  /* ── Event type pills ── */
+  .pill-bar {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+  .pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: var(--radius-pill);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+  }
+  .pill-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .pill.earnings { background: var(--emerald-dim); color: var(--emerald-text); }
+  .pill.earnings .pill-dot { background: var(--emerald); }
+  .pill.earnings.active { background: var(--emerald); color: #fff; }
+  .pill.earnings.active .pill-dot { background: #fff; }
+
+  .pill.economic { background: var(--violet-dim); color: var(--violet-text); }
+  .pill.economic .pill-dot { background: var(--violet); }
+  .pill.economic.active { background: var(--violet); color: #fff; }
+  .pill.economic.active .pill-dot { background: #fff; }
+
+  .pill.ipo { background: var(--amber-dim); color: var(--amber-text); }
+  .pill.ipo .pill-dot { background: var(--amber); }
+  .pill.ipo.active { background: var(--amber); color: #fff; }
+  .pill.ipo.active .pill-dot { background: #fff; }
+
+  /* ── Calendar grid ── */
+  .cal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px 12px;
+  }
+  .cal-month {
+    font-size: 18px;
+    font-weight: 700;
+  }
+  .cal-nav {
+    display: flex;
+    gap: 4px;
+  }
+  .cal-nav-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .cal-nav-btn:hover { background: var(--surface2); color: var(--text); }
+  .cal-nav-btn svg { width: 16px; height: 16px; }
+
+  .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    padding: 0 12px 12px;
+  }
+  .cal-dow {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    padding: 4px 0 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .cal-day {
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    border-radius: 10px;
+    font-size: 14px;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: background 0.15s;
+    position: relative;
+  }
+  .cal-day:hover { background: var(--surface2); }
+  .cal-day.today {
+    color: #fff;
+    font-weight: 700;
+  }
+  .cal-day.today::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -55%);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--emerald);
+    opacity: 0.2;
+  }
+  .cal-day.empty { cursor: default; }
+  .cal-day.empty:hover { background: none; }
+  .cal-day.selected { background: var(--surface2); }
+
+  .cal-dots {
+    display: flex;
+    gap: 3px;
+    height: 6px;
+    align-items: center;
+  }
+  .cal-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+  }
+  .cal-dot.earnings { background: var(--emerald); }
+  .cal-dot.economic { background: var(--violet); }
+  .cal-dot.ipo { background: var(--amber); }
+
+  /* ── Events list ── */
+  .events-section {
+    display: grid;
+    gap: 20px;
+  }
+  @media (min-width: 768px) {
+    .events-section {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  @media (min-width: 1024px) {
+    .events-section {
+      grid-template-columns: 380px 1fr;
+    }
+  }
+
+  .event-list { padding: 0; }
+  .event-date-group {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .event-date-group:last-child { border-bottom: none; }
+  .event-date-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 10px;
+  }
+  .event-date-label .today-badge {
+    background: var(--emerald);
+    color: #fff;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
+    margin-left: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+  }
+
+  .event-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 0;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .event-item:hover { opacity: 0.85; }
+  .event-item + .event-item {
+    border-top: 1px solid rgba(255,255,255,0.04);
+  }
+
+  .event-type-indicator {
+    width: 4px;
+    min-height: 36px;
+    border-radius: 2px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .event-type-indicator.earnings { background: var(--emerald); }
+  .event-type-indicator.economic { background: var(--violet); }
+  .event-type-indicator.ipo { background: var(--amber); }
+
+  .event-content { flex: 1; min-width: 0; }
+  .event-title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .event-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .event-ticker {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
+    background: var(--emerald-dim);
+    color: var(--emerald-text);
+  }
+  .event-portfolio-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
+    background: rgba(56,189,248,0.12);
+    color: #7dd3fc;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .event-portfolio-badge svg { width: 10px; height: 10px; }
+
+  .event-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 3px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .event-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .event-meta strong { color: var(--text-dim); font-weight: 600; }
+
+  .event-eps {
+    font-size: 13px;
+    font-family: 'Source Sans 3', monospace;
+    font-weight: 600;
+    text-align: right;
+    flex-shrink: 0;
+    color: var(--text-dim);
+  }
+  .event-eps .label {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-weight: 400;
+    display: block;
+  }
+
+  /* ── Economic event specific ── */
+  .econ-values {
+    display: flex;
+    gap: 16px;
+    margin-top: 6px;
+  }
+  .econ-val {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .econ-val strong {
+    color: var(--text-dim);
+    font-weight: 600;
+  }
+  .impact-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 4px;
+    vertical-align: middle;
+  }
+  .impact-high { background: var(--red); }
+  .impact-medium { background: var(--amber); }
+  .impact-low { background: var(--emerald); }
+
+  /* ── IPO specific ── */
+  .ipo-price-range {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--amber-text);
+    font-family: 'Source Sans 3', monospace;
+  }
+
+  /* ── Tier gating overlay ── */
+  .tier-gated {
+    position: relative;
+    overflow: hidden;
+  }
+  .tier-gated .gated-content {
+    filter: blur(4px);
+    pointer-events: none;
+    user-select: none;
+  }
+  .tier-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(15,23,42,0.75);
+    backdrop-filter: blur(2px);
+    border-radius: var(--radius);
+    z-index: 5;
+    padding: 32px;
+    text-align: center;
+  }
+  .tier-overlay-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+  }
+  .tier-overlay-icon.starter { background: var(--violet-dim); color: var(--violet-text); }
+  .tier-overlay-icon.pro { background: var(--amber-dim); color: var(--amber-text); }
+  .tier-overlay-icon svg { width: 24px; height: 24px; }
+  .tier-overlay h3 {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .tier-overlay p {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+    max-width: 260px;
+  }
+  .upgrade-btn {
+    background: var(--emerald);
+    color: #fff;
+    font-weight: 600;
+    padding: 10px 24px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.15s;
+    box-shadow: 0 2px 8px rgba(16,185,129,0.3);
+  }
+  .upgrade-btn:hover { background: #059669; }
+
+  /* ── Tier badge ── */
+  .tier-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .tier-badge.starter { background: var(--violet-dim); color: var(--violet-text); }
+  .tier-badge.pro { background: var(--amber-dim); color: var(--amber-text); }
+
+  /* ── Stats row ── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .stat-card {
+    padding: 14px 16px;
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
+  }
+  .stat-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .stat-value {
+    font-size: 22px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-value.emerald { color: var(--emerald-text); }
+  .stat-value.violet { color: var(--violet-text); }
+  .stat-value.amber { color: var(--amber-text); }
+
+  /* ── List view ── */
+  .list-view-section { display: none; }
+  .list-view-section.visible { display: block; }
+  .calendar-view-section { display: block; }
+  .calendar-view-section.hidden { display: none; }
+
+  /* ── Section label ── */
+  .section-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+    padding: 0 4px;
+  }
+  .section-label .count {
+    font-size: 11px;
+    font-weight: 700;
+    background: var(--surface2);
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
+    color: var(--text-muted);
+  }
+
+  /* ── Responsive tweaks ── */
+  @media (max-width: 640px) {
+    .cal-grid { padding: 0 4px 8px; }
+    .cal-day { font-size: 13px; }
+    .cal-dot { width: 4px; height: 4px; }
+    .stats-row { grid-template-columns: repeat(3, 1fr); }
+    .stat-value { font-size: 18px; }
+    .event-date-group { padding: 12px 14px; }
+    .toolbar-title { font-size: 18px; }
+  }
+
+  /* ── Annotations ── */
+  .annotation {
+    margin-top: 32px;
+    padding: 20px;
+    background: rgba(56,189,248,0.06);
+    border: 1px dashed rgba(56,189,248,0.25);
+    border-radius: var(--radius);
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.7;
+  }
+  .annotation h4 {
+    color: var(--sky);
+    font-size: 14px;
+    margin-bottom: 8px;
+    font-weight: 700;
+  }
+  .annotation ul { padding-left: 20px; margin-top: 8px; }
+  .annotation li { margin-bottom: 4px; }
+  .annotation code {
+    background: var(--surface2);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--emerald-text);
+  }
+</style>
+</head>
+<body>
+
+<div class="design-banner">
+  DESIGN MOCKUP — Event Calendar<span>trefolio dashboard tab · for review</span>
+</div>
+
+<div class="page-shell">
+
+  <!-- ── Dashboard tab bar context ── -->
+  <nav class="tab-bar" aria-label="Dashboard tabs">
+    <button class="tab">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+      Portfolio
+    </button>
+    <button class="tab">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+      Crypto
+    </button>
+    <button class="tab">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12V7H5a2 2 0 010-4h14v4"/><path d="M3 5v14a2 2 0 002 2h16v-5"/><path d="M18 12a2 2 0 000 4h4v-4z"/></svg>
+      Dividends
+    </button>
+    <button class="tab">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+      Metrics
+    </button>
+    <button class="tab active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      Events
+    </button>
+    <button class="tab">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2v-9c0-1.1.9-2 2-2h2"/></svg>
+      News
+    </button>
+  </nav>
+
+  <!-- ── Toolbar ── -->
+  <div class="toolbar">
+    <h1 class="toolbar-title">Event Calendar</h1>
+    <div class="view-toggle">
+      <button class="view-btn active" onclick="toggleView('calendar')">
+        <svg style="width:14px;height:14px;vertical-align:-2px;margin-right:4px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/></svg>
+        Calendar
+      </button>
+      <button class="view-btn" onclick="toggleView('list')">
+        <svg style="width:14px;height:14px;vertical-align:-2px;margin-right:4px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        List
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Event type pill filters ── -->
+  <div class="pill-bar">
+    <button class="pill earnings active">
+      <span class="pill-dot"></span>
+      Earnings <span class="count" style="font-size:11px;opacity:0.8;margin-left:2px">(12)</span>
+    </button>
+    <button class="pill economic active">
+      <span class="pill-dot"></span>
+      Economic
+      <span class="tier-badge starter">Bifolio</span>
+      <span class="count" style="font-size:11px;opacity:0.8;margin-left:2px">(8)</span>
+    </button>
+    <button class="pill ipo active">
+      <span class="pill-dot"></span>
+      IPOs
+      <span class="tier-badge pro">Trefolio</span>
+      <span class="count" style="font-size:11px;opacity:0.8;margin-left:2px">(3)</span>
+    </button>
+  </div>
+
+  <!-- ── Stats summary ── -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-label">
+        <span class="cal-dot earnings" style="width:8px;height:8px"></span>
+        This Week
+      </div>
+      <div class="stat-value emerald">4</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">
+        <svg style="width:12px;height:12px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        Your Holdings
+      </div>
+      <div class="stat-value" style="color:var(--sky)">3</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">
+        <span class="cal-dot economic" style="width:8px;height:8px"></span>
+        High Impact
+      </div>
+      <div class="stat-value violet">2</div>
+    </div>
+  </div>
+
+  <!-- ── CALENDAR VIEW ── -->
+  <div class="calendar-view-section events-section" id="calendarView">
+
+    <!-- Calendar grid card -->
+    <div class="card">
+      <div class="cal-header">
+        <span class="cal-month">March 2026</span>
+        <div class="cal-nav">
+          <button class="cal-nav-btn" aria-label="Previous month">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <button class="cal-nav-btn" aria-label="Next month">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="cal-grid">
+        <div class="cal-dow">Mon</div>
+        <div class="cal-dow">Tue</div>
+        <div class="cal-dow">Wed</div>
+        <div class="cal-dow">Thu</div>
+        <div class="cal-dow">Fri</div>
+        <div class="cal-dow">Sat</div>
+        <div class="cal-dow">Sun</div>
+
+        <!-- Week 1: Mar starts on Sunday -->
+        <div class="cal-day empty"></div>
+        <div class="cal-day empty"></div>
+        <div class="cal-day empty"></div>
+        <div class="cal-day empty"></div>
+        <div class="cal-day empty"></div>
+        <div class="cal-day empty"></div>
+        <div class="cal-day">1<div class="cal-dots"></div></div>
+
+        <!-- Week 2 -->
+        <div class="cal-day">2<div class="cal-dots"></div></div>
+        <div class="cal-day">3
+          <div class="cal-dots"><span class="cal-dot earnings"></span></div>
+        </div>
+        <div class="cal-day">4
+          <div class="cal-dots"><span class="cal-dot economic"></span></div>
+        </div>
+        <div class="cal-day">5<div class="cal-dots"></div></div>
+        <div class="cal-day">6
+          <div class="cal-dots"><span class="cal-dot earnings"></span><span class="cal-dot economic"></span></div>
+        </div>
+        <div class="cal-day">7<div class="cal-dots"></div></div>
+        <div class="cal-day">8<div class="cal-dots"></div></div>
+
+        <!-- Week 3 -->
+        <div class="cal-day">9
+          <div class="cal-dots"><span class="cal-dot ipo"></span></div>
+        </div>
+        <div class="cal-day">10
+          <div class="cal-dots"><span class="cal-dot earnings"></span></div>
+        </div>
+        <div class="cal-day selected today">11
+          <div class="cal-dots"><span class="cal-dot earnings"></span><span class="cal-dot economic"></span></div>
+        </div>
+        <div class="cal-day">12
+          <div class="cal-dots"><span class="cal-dot earnings"></span></div>
+        </div>
+        <div class="cal-day">13
+          <div class="cal-dots"><span class="cal-dot economic"></span></div>
+        </div>
+        <div class="cal-day">14<div class="cal-dots"></div></div>
+        <div class="cal-day">15<div class="cal-dots"></div></div>
+
+        <!-- Week 4 -->
+        <div class="cal-day">16
+          <div class="cal-dots"><span class="cal-dot ipo"></span></div>
+        </div>
+        <div class="cal-day">17
+          <div class="cal-dots"><span class="cal-dot earnings"></span><span class="cal-dot earnings"></span></div>
+        </div>
+        <div class="cal-day">18
+          <div class="cal-dots"><span class="cal-dot economic"></span></div>
+        </div>
+        <div class="cal-day">19
+          <div class="cal-dots"><span class="cal-dot earnings"></span></div>
+        </div>
+        <div class="cal-day">20<div class="cal-dots"></div></div>
+        <div class="cal-day">21<div class="cal-dots"></div></div>
+        <div class="cal-day">22<div class="cal-dots"></div></div>
+
+        <!-- Week 5 -->
+        <div class="cal-day">23<div class="cal-dots"></div></div>
+        <div class="cal-day">24
+          <div class="cal-dots"><span class="cal-dot earnings"></span></div>
+        </div>
+        <div class="cal-day">25
+          <div class="cal-dots"><span class="cal-dot economic"></span><span class="cal-dot ipo"></span></div>
+        </div>
+        <div class="cal-day">26
+          <div class="cal-dots"><span class="cal-dot earnings"></span></div>
+        </div>
+        <div class="cal-day">27<div class="cal-dots"></div></div>
+        <div class="cal-day">28<div class="cal-dots"></div></div>
+        <div class="cal-day">29<div class="cal-dots"></div></div>
+
+        <!-- Week 6 -->
+        <div class="cal-day">30<div class="cal-dots"></div></div>
+        <div class="cal-day">31<div class="cal-dots"></div></div>
+        <div class="cal-day empty"></div>
+        <div class="cal-day empty"></div>
+        <div class="cal-day empty"></div>
+        <div class="cal-day empty"></div>
+        <div class="cal-day empty"></div>
+      </div>
+    </div>
+
+    <!-- Events list panel -->
+    <div>
+      <!-- Earnings — Free tier -->
+      <div class="section-label">
+        <span class="cal-dot earnings" style="width:10px;height:10px"></span>
+        Earnings Reports
+        <span class="count">12 upcoming</span>
+      </div>
+      <div class="card event-list" style="margin-bottom:20px">
+        <div class="event-date-group">
+          <div class="event-date-label">
+            Wednesday, March 11
+            <span class="today-badge">Today</span>
+          </div>
+
+          <div class="event-item">
+            <div class="event-type-indicator earnings"></div>
+            <div class="event-content">
+              <div class="event-title-row">
+                <span class="event-title">Oracle Corp</span>
+                <span class="event-ticker">ORCL</span>
+                <span class="event-portfolio-badge">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  In Portfolio
+                </span>
+              </div>
+              <div class="event-meta">
+                <span class="event-meta-item">After market close</span>
+                <span class="event-meta-item">Q3 FY2026</span>
+              </div>
+            </div>
+            <div class="event-eps">
+              $1.47
+              <span class="label">Est. EPS</span>
+            </div>
+          </div>
+
+          <div class="event-item">
+            <div class="event-type-indicator earnings"></div>
+            <div class="event-content">
+              <div class="event-title-row">
+                <span class="event-title">Adobe Inc</span>
+                <span class="event-ticker">ADBE</span>
+              </div>
+              <div class="event-meta">
+                <span class="event-meta-item">After market close</span>
+                <span class="event-meta-item">Q1 FY2026</span>
+              </div>
+            </div>
+            <div class="event-eps">
+              $4.97
+              <span class="label">Est. EPS</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="event-date-group">
+          <div class="event-date-label">Thursday, March 12</div>
+
+          <div class="event-item">
+            <div class="event-type-indicator earnings"></div>
+            <div class="event-content">
+              <div class="event-title-row">
+                <span class="event-title">Broadcom Inc</span>
+                <span class="event-ticker">AVGO</span>
+                <span class="event-portfolio-badge">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  In Portfolio
+                </span>
+              </div>
+              <div class="event-meta">
+                <span class="event-meta-item">After market close</span>
+                <span class="event-meta-item">Q1 FY2026</span>
+              </div>
+            </div>
+            <div class="event-eps">
+              $1.51
+              <span class="label">Est. EPS</span>
+            </div>
+          </div>
+
+          <div class="event-item">
+            <div class="event-type-indicator earnings"></div>
+            <div class="event-content">
+              <div class="event-title-row">
+                <span class="event-title">Dollar General</span>
+                <span class="event-ticker">DG</span>
+              </div>
+              <div class="event-meta">
+                <span class="event-meta-item">Before market open</span>
+                <span class="event-meta-item">Q4 FY2025</span>
+              </div>
+            </div>
+            <div class="event-eps">
+              $1.50
+              <span class="label">Est. EPS</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="event-date-group">
+          <div class="event-date-label">Next week · March 17</div>
+          <div class="event-item">
+            <div class="event-type-indicator earnings"></div>
+            <div class="event-content">
+              <div class="event-title-row">
+                <span class="event-title">NVIDIA Corp</span>
+                <span class="event-ticker">NVDA</span>
+                <span class="event-portfolio-badge">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  In Portfolio
+                </span>
+              </div>
+              <div class="event-meta">
+                <span class="event-meta-item">After market close</span>
+                <span class="event-meta-item">Q4 FY2026</span>
+              </div>
+            </div>
+            <div class="event-eps">
+              $0.89
+              <span class="label">Est. EPS</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Economic events — Starter tier (gated) -->
+      <div class="section-label">
+        <span class="cal-dot economic" style="width:10px;height:10px"></span>
+        Economic Events
+        <span class="tier-badge starter">Bifolio</span>
+        <span class="count">8 upcoming</span>
+      </div>
+      <div class="card tier-gated" style="margin-bottom:20px">
+        <div class="tier-overlay">
+          <div class="tier-overlay-icon starter">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          </div>
+          <h3>Unlock Economic Events</h3>
+          <p>Track Fed decisions, CPI releases, GDP reports and more with Bifolio.</p>
+          <button class="upgrade-btn">Upgrade to Bifolio</button>
+        </div>
+        <div class="gated-content event-list">
+          <div class="event-date-group">
+            <div class="event-date-label">Wednesday, March 11</div>
+            <div class="event-item">
+              <div class="event-type-indicator economic"></div>
+              <div class="event-content">
+                <div class="event-title-row">
+                  <span class="event-title">CPI (Consumer Price Index)</span>
+                  <span style="font-size:11px;color:var(--text-muted)"><span class="impact-dot impact-high"></span>High Impact</span>
+                </div>
+                <div class="econ-values">
+                  <span class="econ-val">Prev: <strong>3.0%</strong></span>
+                  <span class="econ-val">Forecast: <strong>2.9%</strong></span>
+                  <span class="econ-val">Actual: <strong>—</strong></span>
+                </div>
+              </div>
+            </div>
+            <div class="event-item">
+              <div class="event-type-indicator economic"></div>
+              <div class="event-content">
+                <div class="event-title-row">
+                  <span class="event-title">Core CPI (MoM)</span>
+                  <span style="font-size:11px;color:var(--text-muted)"><span class="impact-dot impact-medium"></span>Medium Impact</span>
+                </div>
+                <div class="econ-values">
+                  <span class="econ-val">Prev: <strong>0.4%</strong></span>
+                  <span class="econ-val">Forecast: <strong>0.3%</strong></span>
+                  <span class="econ-val">Actual: <strong>—</strong></span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="event-date-group">
+            <div class="event-date-label">Friday, March 13</div>
+            <div class="event-item">
+              <div class="event-type-indicator economic"></div>
+              <div class="event-content">
+                <div class="event-title-row">
+                  <span class="event-title">Michigan Consumer Sentiment</span>
+                  <span style="font-size:11px;color:var(--text-muted)"><span class="impact-dot impact-medium"></span>Medium Impact</span>
+                </div>
+                <div class="econ-values">
+                  <span class="econ-val">Prev: <strong>64.7</strong></span>
+                  <span class="econ-val">Forecast: <strong>63.1</strong></span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="event-date-group">
+            <div class="event-date-label">Wednesday, March 18</div>
+            <div class="event-item">
+              <div class="event-type-indicator economic"></div>
+              <div class="event-content">
+                <div class="event-title-row">
+                  <span class="event-title">FOMC Interest Rate Decision</span>
+                  <span style="font-size:11px;color:var(--text-muted)"><span class="impact-dot impact-high"></span>High Impact</span>
+                </div>
+                <div class="econ-values">
+                  <span class="econ-val">Prev: <strong>4.50%</strong></span>
+                  <span class="econ-val">Forecast: <strong>4.50%</strong></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- IPO calendar — Pro tier (gated) -->
+      <div class="section-label">
+        <span class="cal-dot ipo" style="width:10px;height:10px"></span>
+        IPO Calendar
+        <span class="tier-badge pro">Trefolio</span>
+        <span class="count">3 upcoming</span>
+      </div>
+      <div class="card tier-gated">
+        <div class="tier-overlay">
+          <div class="tier-overlay-icon pro">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          </div>
+          <h3>Unlock IPO Calendar</h3>
+          <p>Track upcoming IPOs with price ranges, exchanges, and filing details.</p>
+          <button class="upgrade-btn">Upgrade to Trefolio</button>
+        </div>
+        <div class="gated-content event-list">
+          <div class="event-date-group">
+            <div class="event-date-label">Monday, March 16</div>
+            <div class="event-item">
+              <div class="event-type-indicator ipo"></div>
+              <div class="event-content">
+                <div class="event-title-row">
+                  <span class="event-title">CoreWeave Inc</span>
+                  <span style="font-size:12px;font-weight:600;padding:2px 8px;border-radius:9999px;background:var(--amber-dim);color:var(--amber-text);">CRWV</span>
+                </div>
+                <div class="event-meta">
+                  <span class="event-meta-item">NASDAQ</span>
+                  <span class="event-meta-item">Cloud / AI Infrastructure</span>
+                </div>
+              </div>
+              <div class="ipo-price-range">
+                $47–$55
+                <span style="font-size:10px;color:var(--text-muted);font-weight:400;display:block">Price Range</span>
+              </div>
+            </div>
+          </div>
+          <div class="event-date-group">
+            <div class="event-date-label">Wednesday, March 25</div>
+            <div class="event-item">
+              <div class="event-type-indicator ipo"></div>
+              <div class="event-content">
+                <div class="event-title-row">
+                  <span class="event-title">Medline Industries</span>
+                  <span style="font-size:12px;font-weight:600;padding:2px 8px;border-radius:9999px;background:var(--amber-dim);color:var(--amber-text);">MDLN</span>
+                </div>
+                <div class="event-meta">
+                  <span class="event-meta-item">NYSE</span>
+                  <span class="event-meta-item">Healthcare / Med Devices</span>
+                </div>
+              </div>
+              <div class="ipo-price-range">
+                $22–$25
+                <span style="font-size:10px;color:var(--text-muted);font-weight:400;display:block">Price Range</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── LIST VIEW (hidden by default) ── -->
+  <div class="list-view-section" id="listView">
+    <div class="section-label">All Upcoming Events <span class="count">23 total</span></div>
+    <div class="card event-list">
+      <div class="event-date-group">
+        <div class="event-date-label">
+          Wednesday, March 11
+          <span class="today-badge">Today</span>
+        </div>
+        <div class="event-item">
+          <div class="event-type-indicator earnings"></div>
+          <div class="event-content">
+            <div class="event-title-row">
+              <span class="event-title">Oracle Corp</span>
+              <span class="event-ticker">ORCL</span>
+              <span class="event-portfolio-badge">
+                <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                In Portfolio
+              </span>
+            </div>
+            <div class="event-meta"><span class="event-meta-item">Earnings · After market close · Est. EPS $1.47</span></div>
+          </div>
+        </div>
+        <div class="event-item">
+          <div class="event-type-indicator economic"></div>
+          <div class="event-content">
+            <div class="event-title-row">
+              <span class="event-title">CPI (Consumer Price Index)</span>
+              <span style="font-size:11px;color:var(--text-muted)"><span class="impact-dot impact-high"></span>High</span>
+            </div>
+            <div class="event-meta"><span class="event-meta-item">Economic · Prev: 3.0% · Forecast: 2.9%</span></div>
+          </div>
+        </div>
+        <div class="event-item">
+          <div class="event-type-indicator earnings"></div>
+          <div class="event-content">
+            <div class="event-title-row">
+              <span class="event-title">Adobe Inc</span>
+              <span class="event-ticker">ADBE</span>
+            </div>
+            <div class="event-meta"><span class="event-meta-item">Earnings · After market close · Est. EPS $4.97</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="event-date-group">
+        <div class="event-date-label">Thursday, March 12</div>
+        <div class="event-item">
+          <div class="event-type-indicator earnings"></div>
+          <div class="event-content">
+            <div class="event-title-row">
+              <span class="event-title">Broadcom Inc</span>
+              <span class="event-ticker">AVGO</span>
+              <span class="event-portfolio-badge">
+                <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                In Portfolio
+              </span>
+            </div>
+            <div class="event-meta"><span class="event-meta-item">Earnings · After market close · Est. EPS $1.51</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="event-date-group">
+        <div class="event-date-label">Monday, March 16</div>
+        <div class="event-item">
+          <div class="event-type-indicator ipo"></div>
+          <div class="event-content">
+            <div class="event-title-row">
+              <span class="event-title">CoreWeave Inc</span>
+              <span style="font-size:12px;font-weight:600;padding:2px 8px;border-radius:9999px;background:var(--amber-dim);color:var(--amber-text);">CRWV</span>
+            </div>
+            <div class="event-meta"><span class="event-meta-item">IPO · NASDAQ · $47–$55</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Design annotations ── -->
+  <div class="annotation">
+    <h4>Design Notes</h4>
+    <ul>
+      <li><strong>Color coding:</strong> <code>emerald</code> = Earnings, <code>violet</code> = Economic, <code>amber</code> = IPO — consistent across dots, indicators, and badges</li>
+      <li><strong>Portfolio highlight:</strong> Sky-blue "In Portfolio" badge with star icon on earnings for user's own holdings</li>
+      <li><strong>Tier gating:</strong> Blurred content + centered overlay with upgrade CTA. Economic = Bifolio gate, IPO = Trefolio gate</li>
+      <li><strong>Free tier:</strong> Earnings list always visible (only portfolio holdings for free users; all earnings for Bifolio+)</li>
+      <li><strong>Views:</strong> Calendar (month grid) as default, List view as toggle. Both share the same data</li>
+      <li><strong>Mobile:</strong> Calendar grid compresses; events list stacks below (single column). Stats row wraps to 3 cols</li>
+      <li><strong>Impact levels:</strong> Red dot = High, Amber = Medium, Emerald = Low — for economic events</li>
+      <li><strong>Data layout:</strong> Earnings show ticker + company + Est. EPS + timing (BMO/AMC). Economic show prev/forecast/actual. IPO show price range + exchange</li>
+      <li><strong>Design system compliance:</strong> Uses <code>--surface</code> (#1e293b) for cards, <code>rounded-2xl</code> (16px), pill selectors, and the standard dashboard tab bar pattern</li>
+    </ul>
+  </div>
+
+</div>
+
+<script>
+function toggleView(view) {
+  const calView = document.getElementById('calendarView');
+  const listView = document.getElementById('listView');
+  const btns = document.querySelectorAll('.view-btn');
+
+  if (view === 'list') {
+    calView.classList.add('hidden');
+    listView.classList.add('visible');
+    btns[0].classList.remove('active');
+    btns[1].classList.add('active');
+  } else {
+    calView.classList.remove('hidden');
+    listView.classList.remove('visible');
+    btns[0].classList.add('active');
+    btns[1].classList.remove('active');
+  }
+}
+
+document.querySelectorAll('.pill').forEach(pill => {
+  pill.addEventListener('click', () => pill.classList.toggle('active'));
+});
+</script>
+
+</body>
+</html>

@@ -32,13 +32,16 @@ const WhatsNewModal = dynamic(() => import("./WhatsNewModal"), { ssr: false });
 const FeedbackModal = dynamic(() => import("./FeedbackModal"), { ssr: false });
 const ProCompareCard = dynamic(() => import("./ProCompareCard"), { ssr: false });
 const LeafPromoBanner = dynamic(() => import("./LeafPromoBanner"), { ssr: false });
+const SnapTradeReconnectBanner = dynamic(() => import("./SnapTradeReconnectBanner"), { ssr: false });
 const CryptoPortfolioTab = dynamic(() => import("./CryptoPortfolioTab"), { ssr: false });
 const AddCryptoModal = dynamic(() => import("./AddCryptoModal"), { ssr: false });
 const AdSlot = dynamic(() => import("./AdSlot"), { ssr: false });
+const EventCalendar = dynamic(() => import("./EventCalendar"), { ssr: false });
+const UpcomingEarnings = dynamic(() => import("./UpcomingEarnings"), { ssr: false });
 import TierFeatureBadge from "./TierFeatureBadge";
 
 
-type DashboardTab = "portfolio" | "crypto" | "diversification" | "dividends" | "metrics" | "growth" | "news";
+type DashboardTab = "portfolio" | "crypto" | "diversification" | "dividends" | "metrics" | "growth" | "events" | "news";
 
 function EmptyPortfolio({ onAddStock, onSeedData }: { onAddStock: () => void; onSeedData: () => void }) {
   const { t } = useI18n();
@@ -184,6 +187,7 @@ export default function Dashboard() {
     { key: "dividends", label: t("dividendsTab") },
     { key: "metrics", label: t("metricsTab"), tierBadge: "starter" as const },
     { key: "growth", label: t("growthTab"), tierBadge: "starter" as const },
+    { key: "events", label: t("eventsTab") },
     { key: "news", label: t("newsTab") },
   ];
 
@@ -194,6 +198,7 @@ export default function Dashboard() {
     if (tab === "dividends") track("dividends_tab_viewed");
     if (tab === "metrics") track("metrics_tab_viewed");
     if (tab === "growth") track("growth_tab_viewed");
+    if (tab === "events") track("events_tab_viewed");
   }
 
   const hasLoadedOnce = useRef(false);
@@ -269,6 +274,7 @@ export default function Dashboard() {
           ))}
         </div>
 
+        <SnapTradeReconnectBanner />
         <LeafPromoBanner />
 
         {activeTab === "portfolio" && (
@@ -324,6 +330,7 @@ export default function Dashboard() {
                 <PortfolioSummary holdings={filteredHoldings} cashEntries={filteredCashEntries} />
                 <AdSlot slot="dashboard-summary" format="horizontal" />
                 <PortfolioTable holdings={filteredHoldings} onAddStock={() => setShowAddModal(true)} />
+                <UpcomingEarnings onNavigateToEvents={() => handleTabChange("events")} />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                   <PortfolioGrowthPeriods holdings={filteredHoldings} />
                   <PerformanceMetrics holdings={filteredHoldings} cashEntries={filteredCashEntries} />
@@ -427,6 +434,24 @@ export default function Dashboard() {
               </div>
             }>
               <GrowthTab />
+            </Suspense>
+          </div>
+        )}
+
+        {activeTab === "events" && (
+          <div
+            role="tabpanel"
+            id="tabpanel-events"
+            aria-labelledby="tab-events"
+            tabIndex={0}
+            className="focus-visible:outline-none"
+          >
+            <Suspense fallback={
+              <div className="card px-6 py-10 flex items-center justify-center gap-3 text-gray-400 dark:text-slate-500 text-sm">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-500" />
+              </div>
+            }>
+              <EventCalendar />
             </Suspense>
           </div>
         )}

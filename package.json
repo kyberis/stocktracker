@@ -17,9 +17,22 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "pre-deploy": "bash scripts/pre-deploy.sh"
+    "pre-deploy": "bash scripts/pre-deploy.sh",
+    "cap:dev": "CAPACITOR_SERVER_URL=http://localhost:3000 npx cap copy",
+    "cap:ios": "CAPACITOR_SERVER_URL=http://localhost:3000 npx cap copy ios && npx cap open ios",
+    "cap:android": "CAPACITOR_SERVER_URL=http://10.0.2.2:3000 npx cap copy android && npx cap open android",
+    "cap:prod": "npx cap copy",
+    "cap:run:ios": "CAPACITOR_SERVER_URL=http://localhost:3000 npx cap copy ios && npx cap run ios",
+    "cap:run:android": "CAPACITOR_SERVER_URL=http://10.0.2.2:3000 npx cap copy android && npx cap run android"
   },
   "dependencies": {
+    "@capacitor/android": "^8.2.0",
+    "@capacitor/app": "^8.0.1",
+    "@capacitor/core": "^8.2.0",
+    "@capacitor/ios": "^8.2.0",
+    "@capacitor/push-notifications": "^8.0.2",
+    "@capacitor/splash-screen": "^8.0.1",
+    "@capacitor/status-bar": "^8.0.1",
     "@libsql/client": "^0.17.0",
     "@simplewebauthn/browser": "^13.2.2",
     "@simplewebauthn/server": "^9.0.3",
@@ -49,6 +62,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@capacitor/cli": "^6.2.1",
     "@playwright/test": "^1.58.2",
     "@tailwindcss/typography": "^0.5.19",
     "@types/node": "^20.19.35",

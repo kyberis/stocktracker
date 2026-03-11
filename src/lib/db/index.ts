@@ -171,7 +171,7 @@ export {
 export type { MetricsSnapshot } from "./metrics-snapshot";
 export { getMetricsSnapshot } from "./metrics-snapshot";
 
-export type { SnapTradeConnection, SnapTradeBrokerSync, PendingSnapTradeDeletion } from "./snaptrade-connections";
+export type { SnapTradeConnection, SnapTradeBrokerSync, PendingSnapTradeDeletion, ActiveSnapTradeUser } from "./snaptrade-connections";
 export {
   getSnapTradeConnection,
   getSnapTradeConnectionSecret,
@@ -183,6 +183,9 @@ export {
   getSnapTradeConnectionsPendingDeletion,
   getSnapTradeBrokerSyncs,
   upsertSnapTradeBrokerSync,
+  setSnapTradeNeedsAttention,
+  getSnapTradeNeedsAttention,
+  listActiveSnapTradeConnections,
 } from "./snaptrade-connections";
 
 export type { DeviceInterestEntry } from "./device-interest";
@@ -216,3 +219,12 @@ export {
   countPasskeysByUserId,
   mapPasskey,
 } from "./passkeys";
+
+export type { CalendarEvent } from "./calendar-events";
+export {
+  upsertCalendarEvent,
+  upsertCalendarEventsBatch,
+  deleteStaleEvents,
+  listCalendarEvents,
+  listCalendarEventsByType,
+} from "./calendar-events";

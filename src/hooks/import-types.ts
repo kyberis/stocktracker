@@ -49,10 +49,20 @@ export interface DisabledBrokerageConnection {
   disabledDate: string | null;
 }
 
+export interface BrokerSyncInfo {
+  brokerageAuthorizationId: string;
+  brokerageName: string;
+  lastImportedAt: string;
+  connectedAt?: string;
+  transactionCount?: number;
+}
+
 export interface SnapTradeConnectionInfo {
   connected: boolean;
   snapTradeUserId?: string;
   label?: string;
   lastSyncedAt?: string;
   disabledConnections?: DisabledBrokerageConnection[];
+  brokerSyncs?: BrokerSyncInfo[];
+  connectionLimit?: number;
 }

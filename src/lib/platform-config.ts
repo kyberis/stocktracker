@@ -73,6 +73,11 @@ export const PLATFORM_LIMITS = {
 
   /** Max portfolios for Pro users. */
   PRO_PORTFOLIO_LIMIT: 3,
+
+  /** Max SnapTrade broker connections per tier. Free: 0 (no access). */
+  FREE_SNAPTRADE_LIMIT: 0,
+  STARTER_SNAPTRADE_LIMIT: 1,
+  PRO_SNAPTRADE_LIMIT: 999,
 } as const;
 
 export type RateLimitProvider = "alphavantage" | "openai" | "openai_import";

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useMemo } from "react";
+import Link from "next/link";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n";
@@ -10,6 +11,75 @@ import { useStealthMode } from "@/lib/stealth-context";
 import { PLATFORM_LIMITS } from "@/lib/platform-config";
 import type { Holding, CashEntry } from "@/lib/types";
 import PortfolioReviewCard from "./PortfolioReviewCard";
+
+function formatTimeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const minutes = Math.floor(diff / 60000);
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
+
+function BrokerSyncDot() {
+  const { t } = useI18n();
+  const { user } = useAuth();
+  const [syncInfo, setSyncInfo] = useState<{
+    connected: boolean;
+    needsAttention: boolean;
+    lastSyncedAt: string | null;
+    brokerNames: string[];
+  } | null>(null);
+
+  useEffect(() => {
+    const plan = user?.plan;
+    if (!plan || plan === "free") return;
+
+    const form = new FormData();
+    form.append("action", "get-connection");
+    fetch("/api/snaptrade", { method: "POST", body: form })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!data?.connected) return;
+        const names = (data.brokerSyncs || []).map((b: { brokerageName: string }) => b.brokerageName).filter(Boolean);
+        setSyncInfo({
+          connected: true,
+          needsAttention: !!data.needsAttention,
+          lastSyncedAt: data.lastSyncedAt || null,
+          brokerNames: names,
+        });
+      })
+      .catch(() => {});
+  }, [user?.plan]);
+
+  if (!syncInfo?.connected || syncInfo.needsAttention) return null;
+
+  const timeAgo = syncInfo.lastSyncedAt ? formatTimeAgo(syncInfo.lastSyncedAt) : null;
+  const brokerLabel = syncInfo.brokerNames.length > 0 ? `via ${syncInfo.brokerNames.join(", ")}` : null;
+
+  return (
+    <Link
+      href="/import?method=snaptrade_api"
+      className="inline-flex items-center gap-1.5 text-xs text-gray-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+      title={`${t("brokerSyncAutoSyncActive")}${timeAgo ? ` · ${t("brokerSyncLastSynced")}: ${timeAgo}` : ""}${brokerLabel ? ` · ${brokerLabel}` : ""}`}
+    >
+      <span className="relative flex h-2 w-2">
+        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+      </span>
+      {timeAgo && (
+        <span className="hidden sm:inline tabular-nums">
+          {t("brokerSyncLastSynced")} {timeAgo}
+        </span>
+      )}
+      {brokerLabel && (
+        <span className="hidden lg:inline text-gray-400 dark:text-slate-500">{brokerLabel}</span>
+      )}
+    </Link>
+  );
+}
 
 interface Props {
   holdings?: Holding[];
@@ -164,6 +234,7 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
               </span>
             </a>
           )}
+          <BrokerSyncDot />
         </div>
       </div>
 

@@ -82,6 +82,7 @@ export default function ImportPageContent() {
     ? portfolios.find((p) => p.id === activePortfolioId)?.name
     : undefined;
   const isPro = user?.plan === "pro";
+  const canUseBrokerSync = user?.plan === "pro" || user?.plan === "starter";
 
   // Active import method
   const [method, setMethod] = useState<ImportMethod>("broker_csv");
@@ -302,7 +303,10 @@ export default function ImportPageContent() {
                 <path strokeLinecap="round" strokeLinejoin="round" d={tab.icon} />
               </svg>
               {methodLabel(tab.key)}
-              {(tab.key === "snaptrade_api" || tab.key === "ai_import") && (
+              {tab.key === "snaptrade_api" && (
+                <TierFeatureBadge requiredPlan="starter" size="xs" />
+              )}
+              {tab.key === "ai_import" && (
                 <TierFeatureBadge requiredPlan="pro" size="xs" />
               )}
             </button>
@@ -416,8 +420,48 @@ export default function ImportPageContent() {
         <div className="space-y-4">
           {authLoading ? (
             <div className="py-12"><div className="w-8 h-8 mx-auto border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" /></div>
-          ) : !isPro ? (
-            <ProCompareCard surface="broker_sync_import" reason="upgrade_required" compact />
+          ) : !canUseBrokerSync ? (
+            <div className="bg-white dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 rounded-xl overflow-hidden">
+              <div className="text-center px-5 py-8">
+                <div className="w-12 h-12 rounded-[14px] bg-violet-100 dark:bg-violet-500/15 inline-flex items-center justify-center mb-4">
+                  <svg className="w-6 h-6 text-violet-600 dark:text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" />
+                    <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
+                  {t("brokerSyncGateTitle") || "Automatic Broker Sync"}
+                </h3>
+                <p className="text-sm text-gray-500 dark:text-slate-400 max-w-md mx-auto mb-5">
+                  {t("brokerSyncGateDesc") || "Connect your broker and your portfolio syncs automatically every 6 hours. No more manual CSV uploads."}
+                </p>
+
+                <div className="flex gap-3 justify-center flex-wrap mb-5">
+                  {[
+                    t("brokerSyncGateBenefit1") || "Auto-import holdings",
+                    t("brokerSyncGateBenefit2") || "Syncs every 6 hours",
+                    t("brokerSyncGateBenefit3") || "20+ brokers",
+                  ].map((label) => (
+                    <div key={label} className="flex items-center gap-1.5">
+                      <svg className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><polyline points="20 6 9 17 4 12" /></svg>
+                      <span className="text-xs text-gray-500 dark:text-slate-400">{label}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <a
+                  href="/billing"
+                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold transition-colors shadow-sm min-h-[44px]"
+                >
+                  {t("brokerSyncGateCta") || "Upgrade to Bifolio — €2.99/mo"}
+                </a>
+                <p className="text-xs text-gray-400 dark:text-slate-500 mt-3">
+                  {t("brokerSyncGateAlt") || "or"}{" "}
+                  <a href="/billing" className="underline hover:text-violet-600 dark:hover:text-violet-400">Trefolio</a>{" "}
+                  {t("brokerSyncGateAltSuffix") || "for unlimited connections"}
+                </p>
+              </div>
+            </div>
           ) : (
             <>
               {snapTradeGuide && snapTradeApi.step === "idle" && <InlineGuide guide={snapTradeGuide} locale={locale} />}
@@ -427,73 +471,136 @@ export default function ImportPageContent() {
                   {snapTradeApi.step === "idle" && (
                     <>
                       {snapTradeApi.needsReconnect && snapTradeApi.disabledConnections.length > 0 && (
-                        <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-xl p-4">
-                          <div className="flex items-center gap-2 mb-2">
-                            <svg className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
-                            </svg>
-                            <span className="text-xs font-semibold text-amber-700 dark:text-amber-400">{t("brokerSyncExpired")}</span>
-                          </div>
-                          <p className="text-[11px] text-amber-600 dark:text-amber-400/80 mb-3">{t("brokerSyncReconnectDesc")}</p>
-                          <div className="space-y-2">
-                            {snapTradeApi.disabledConnections.map((dc) => (
-                              <button
-                                key={dc.id}
-                                onClick={() => snapTradeApi.reconnect(dc.id)}
-                                className="btn-primary text-xs px-3 py-1.5 min-h-[44px] w-full"
-                              >
-                                {t("brokerSyncReconnect")}{dc.brokerageName ? ` — ${dc.brokerageName}` : ""}
-                              </button>
-                            ))}
-                          </div>
+                        <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-amber-200/60 dark:border-amber-500/25 bg-amber-50 dark:bg-amber-500/[0.06]">
+                          <svg className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
+                          </svg>
+                          <span className="text-xs font-semibold text-amber-700 dark:text-amber-400">{t("brokerSyncAutoPaused") || "Auto-sync paused"}</span>
+                          <span className="text-xs text-gray-400 dark:text-slate-500">·</span>
+                          <span className="text-xs text-gray-600 dark:text-slate-400">
+                            {snapTradeApi.disabledConnections.length} {snapTradeApi.disabledConnections.length === 1 ? (t("brokerSyncNeedsAttention1") || "connection needs attention") : (t("brokerSyncNeedsAttentionN") || "connections need attention")}
+                          </span>
                         </div>
                       )}
 
                       {/* Per-brokerage cards */}
                       {snapTradeApi.brokerSyncs.length > 0 ? (
-                        <div className="space-y-3">
+                        <div className={`grid gap-3 ${snapTradeApi.brokerSyncs.length > 1 ? "sm:grid-cols-2" : "grid-cols-1"}`}>
                           {snapTradeApi.brokerSyncs.map((bs) => {
                             const isDisabled = snapTradeApi.disabledConnections.some((dc) => dc.id === bs.brokerageAuthorizationId);
                             const dateKey = bs.brokerageAuthorizationId;
                             const userTouched = dateKey in snapTradeStartDate;
                             const displayDate = userTouched ? snapTradeStartDate[dateKey] : (bs.lastImportedAt ? bs.lastImportedAt.slice(0, 10) : "");
+                            const initials = bs.brokerageName.replace(/[^A-Z]/g, "").slice(0, 2) || bs.brokerageName.slice(0, 2).toUpperCase();
+                            const connectedDate = bs.connectedAt ? new Date(bs.connectedAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : null;
+                            const lastImportDate = bs.lastImportedAt ? new Date(bs.lastImportedAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) + " at " + new Date(bs.lastImportedAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }) : null;
+                            const txCount = bs.transactionCount ?? 0;
+
+                            const disabledInfo = snapTradeApi.disabledConnections.find((dc) => dc.id === bs.brokerageAuthorizationId);
+                            const expiredDate = disabledInfo?.disabledDate ? new Date(disabledInfo.disabledDate).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : null;
+
                             return (
-                              <div key={dateKey} className={`${isDisabled ? "bg-gray-50 dark:bg-slate-800/50 border-gray-200 dark:border-slate-700" : "bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30"} border rounded-xl p-4`}>
-                                <div className="flex items-center gap-2 mb-1">
-                                  <div className={`w-2 h-2 rounded-full ${isDisabled ? "bg-amber-500" : "bg-emerald-500 animate-pulse"}`} />
-                                  <span className={`text-xs font-semibold ${isDisabled ? "text-amber-700 dark:text-amber-400" : "text-emerald-700 dark:text-emerald-400"}`}>{bs.brokerageName}</span>
-                                </div>
-                                <p className="text-[10px] text-gray-500 dark:text-slate-400 mb-2">
-                                  {bs.lastImportedAt
-                                    ? `${t("brokerSyncLastImported")}: ${new Date(bs.lastImportedAt).toLocaleDateString()}`
-                                    : t("brokerSyncNeverImported")}
-                                </p>
-                                {!isDisabled && !snapTradeApi.needsReconnect && (
-                                  <div className="flex items-center gap-2">
-                                    <label className="text-[10px] text-gray-500 dark:text-slate-400 whitespace-nowrap">{t("brokerSyncStartDate")}:</label>
-                                    <input
-                                      type="date"
-                                      value={displayDate}
-                                      onChange={(e) => setSnapTradeStartDate((prev) => ({ ...prev, [dateKey]: e.target.value }))}
-                                      className="text-xs px-2 py-1 border border-gray-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                                    />
-                                    {displayDate && (
-                                      <button
-                                        onClick={() => setSnapTradeStartDate((prev) => ({ ...prev, [dateKey]: "" }))}
-                                        className="text-[10px] text-gray-400 hover:text-gray-600 dark:hover:text-slate-300"
-                                        aria-label="Clear date"
-                                      >
-                                        ✕
-                                      </button>
-                                    )}
+                              <div key={dateKey} className={`border rounded-xl p-4 ${isDisabled ? "bg-white dark:bg-slate-800/50 border-amber-300/60 dark:border-amber-500/30" : "bg-white dark:bg-slate-800/60 border-gray-200 dark:border-slate-700"}`}>
+                                {/* Header: logo + name + status badge */}
+                                <div className="flex items-center justify-between mb-2">
+                                  <div className="flex items-center gap-3">
+                                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-xs font-bold text-white ${isDisabled ? "bg-amber-500" : "bg-emerald-600"}`}>
+                                      {initials}
+                                    </div>
+                                    <div>
+                                      <p className="text-sm font-semibold text-gray-900 dark:text-white">{bs.brokerageName}</p>
+                                      <p className="text-[10px] text-gray-400 dark:text-slate-500">
+                                        {isDisabled && expiredDate
+                                          ? `${t("brokerSyncStatusExpired") || "Expired"} ${expiredDate}`
+                                          : connectedDate
+                                            ? `${t("brokerSyncConnectedSince") || "Connected"} ${connectedDate}`
+                                            : null}
+                                      </p>
+                                    </div>
                                   </div>
+                                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                                    isDisabled
+                                      ? "bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400"
+                                      : "bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
+                                  }`}>
+                                    {isDisabled ? (
+                                      <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                                    ) : (
+                                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                    )}
+                                    {isDisabled ? t("brokerSyncStatusExpired") || "Expired" : t("brokerSyncStatusActive") || "Active"}
+                                  </span>
+                                </div>
+
+                                {/* Separator */}
+                                <div className={`border-t my-2.5 ${isDisabled ? "border-amber-100 dark:border-amber-500/15" : "border-gray-100 dark:border-slate-700"}`} />
+
+                                {isDisabled ? (
+                                  <>
+                                    {/* Expired card: last sync + reconnect */}
+                                    <div className="flex items-end justify-between">
+                                      <div>
+                                        <p className="text-[10px] text-gray-400 dark:text-slate-500">{t("brokerSyncLastSuccessSync") || "Last successful sync"}</p>
+                                        <p className="text-xs font-medium text-gray-700 dark:text-slate-300">
+                                          {lastImportDate || t("brokerSyncNeverImported")}
+                                        </p>
+                                        <p className="text-[11px] text-amber-600 dark:text-amber-400/80 mt-1.5">
+                                          {t("brokerSyncExpiredExplanation") || "Access token expired. Re-authorize to resume syncing."}
+                                        </p>
+                                      </div>
+                                      <button
+                                        onClick={() => snapTradeApi.reconnect(bs.brokerageAuthorizationId)}
+                                        className="shrink-0 ml-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-white text-xs font-semibold transition-colors min-h-[36px]"
+                                      >
+                                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><polyline points="23 4 23 10 17 10" /><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10" /></svg>
+                                        {t("brokerSyncReconnect")}
+                                      </button>
+                                    </div>
+                                  </>
+                                ) : (
+                                  <>
+                                    {/* Active card: stats + start date */}
+                                    <div className="flex items-center justify-between">
+                                      <div>
+                                        <p className="text-[10px] text-gray-400 dark:text-slate-500">{t("brokerSyncLastImported")}</p>
+                                        <p className="text-xs font-medium text-gray-700 dark:text-slate-300">
+                                          {lastImportDate || t("brokerSyncNeverImported")}
+                                        </p>
+                                      </div>
+                                      <div className="text-right">
+                                        <p className="text-[10px] text-gray-400 dark:text-slate-500">{t("brokerSyncTransactions") || "Transactions"}</p>
+                                        <p className="text-xs font-medium text-gray-700 dark:text-slate-300">{txCount > 0 ? `${txCount} synced` : "—"}</p>
+                                      </div>
+                                    </div>
+
+                                    {!snapTradeApi.needsReconnect && (
+                                      <div className="flex items-center gap-2 mt-3 pt-2.5 border-t border-gray-100 dark:border-slate-700/50">
+                                        <label className="text-[10px] text-gray-400 dark:text-slate-500 whitespace-nowrap">{t("brokerSyncStartDate")}:</label>
+                                        <input
+                                          type="date"
+                                          value={displayDate}
+                                          onChange={(e) => setSnapTradeStartDate((prev) => ({ ...prev, [dateKey]: e.target.value }))}
+                                          className="text-xs px-2 py-1 border border-gray-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white min-h-[32px]"
+                                        />
+                                        {displayDate && (
+                                          <button
+                                            onClick={() => setSnapTradeStartDate((prev) => ({ ...prev, [dateKey]: "" }))}
+                                            className="text-[10px] text-gray-400 hover:text-gray-600 dark:hover:text-slate-300"
+                                            aria-label="Clear date"
+                                          >
+                                            ✕
+                                          </button>
+                                        )}
+                                      </div>
+                                    )}
+                                  </>
                                 )}
                               </div>
                             );
                           })}
                         </div>
                       ) : (
-                        <div className="bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 rounded-xl p-4">
+                        <div className="bg-white dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 rounded-xl p-4">
                           <div className="flex items-center gap-2 mb-1">
                             <div className={`w-2 h-2 rounded-full ${snapTradeApi.needsReconnect ? "bg-amber-500" : "bg-emerald-500 animate-pulse"}`} />
                             <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">{t("brokerSyncConnected")}</span>
@@ -504,61 +611,173 @@ export default function ImportPageContent() {
                         </div>
                       )}
 
+                      {/* Auto-sync status bar */}
+                      {!snapTradeApi.needsReconnect && snapTradeApi.connection?.lastSyncedAt && (
+                        <div className="bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700/50 rounded-lg px-3 py-2 flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                            <span className="text-[10px] font-medium text-gray-600 dark:text-slate-400">{t("brokerSyncAutoSyncActive") || "Auto-sync active"}</span>
+                          </div>
+                          <div className="text-[10px] text-gray-400 dark:text-slate-500 flex items-center gap-3">
+                            <span>{t("brokerSyncLastSynced") || "Last synced"}: {new Date(snapTradeApi.connection.lastSyncedAt).toLocaleString()}</span>
+                            <span>•</span>
+                            <span>{t("brokerSyncAutoSyncDesc") || "Syncs every 6h"}</span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* At-limit upgrade card (Bifolio: 1/1 used) */}
+                      {snapTradeApi.connectionLimit < 999 && snapTradeApi.brokerSyncs.length >= snapTradeApi.connectionLimit && (
+                        <div className="rounded-xl border border-violet-300/25 dark:border-violet-500/25 bg-gradient-to-br from-violet-500/[0.06] to-violet-500/[0.02] dark:from-violet-500/10 dark:to-violet-500/[0.03] p-3.5 flex items-center justify-between gap-4">
+                          <div>
+                            <div className="flex items-center gap-2 mb-0.5">
+                              <TierFeatureBadge requiredPlan="starter" size="xs" />
+                              <span className="text-xs font-semibold text-gray-700 dark:text-slate-300">
+                                {snapTradeApi.brokerSyncs.length} / {snapTradeApi.connectionLimit} {t("brokerSyncConnectionUsed") || "connection used"}
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-gray-500 dark:text-slate-400">
+                              {t("brokerSyncUpgradeForUnlimited") || "Upgrade to Trefolio for unlimited broker connections"}
+                            </p>
+                          </div>
+                          <a href="/billing" className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold transition-colors shadow-sm min-h-[44px]">
+                            {t("upgrade") || "Upgrade"}
+                          </a>
+                        </div>
+                      )}
+
                       {/* Action buttons */}
-                      <div className="flex gap-2">
-                        {!snapTradeApi.needsReconnect && (
-                          <button
-                            onClick={() => {
-                              const overrides: Record<string, string> = {};
-                              for (const bs of snapTradeApi.brokerSyncs) {
-                                const key = bs.brokerageAuthorizationId;
-                                if (key in snapTradeStartDate) {
-                                  overrides[key] = snapTradeStartDate[key];
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div className="flex gap-2">
+                          {!snapTradeApi.needsReconnect && (
+                            <button
+                              onClick={() => {
+                                const overrides: Record<string, string> = {};
+                                for (const bs of snapTradeApi.brokerSyncs) {
+                                  const key = bs.brokerageAuthorizationId;
+                                  if (key in snapTradeStartDate) {
+                                    overrides[key] = snapTradeStartDate[key];
+                                  }
                                 }
-                              }
-                              const hasOverrides = Object.keys(overrides).length > 0;
-                              snapTradeApi.fetchPortfolio(activePortfolioId, null, hasOverrides ? overrides : null);
-                            }}
-                            disabled={snapTradeApi.isFetching}
-                            className="btn-primary text-xs px-3 py-1.5 min-h-[44px]"
+                                const hasOverrides = Object.keys(overrides).length > 0;
+                                snapTradeApi.fetchPortfolio(activePortfolioId, null, hasOverrides ? overrides : null);
+                              }}
+                              disabled={snapTradeApi.isFetching}
+                              className="btn-primary text-xs px-4 py-2 min-h-[44px] inline-flex items-center gap-1.5"
+                            >
+                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                <polyline points="23 4 23 10 17 10" />
+                                <path d="M20.49 15a9 9 0 11-2.12-9.36L23 10" />
+                              </svg>
+                              {snapTradeApi.isFetching ? t("brokerSyncFetching") : t("brokerSyncResync")}
+                            </button>
+                          )}
+                          {snapTradeApi.brokerSyncs.length < snapTradeApi.connectionLimit && (
+                            <button onClick={() => snapTradeApi.connect()} className="btn-secondary text-xs px-4 py-2 min-h-[44px] inline-flex items-center gap-1.5">
+                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                <line x1="12" y1="5" x2="12" y2="19" />
+                                <line x1="5" y1="12" x2="19" y2="12" />
+                              </svg>
+                              {t("brokerSyncAddBrokerage")}
+                            </button>
+                          )}
+                          <button
+                            onClick={() => { if (confirm(t("brokerSyncDisconnectConfirm"))) snapTradeApi.disconnect(); }}
+                            className="btn-secondary text-xs px-3 py-2 text-red-600 dark:text-red-400 min-h-[44px]"
                           >
-                            {snapTradeApi.isFetching ? t("brokerSyncFetching") : t("brokerSyncResync")}
+                            {t("brokerSyncDisconnect")}
                           </button>
+                        </div>
+                        {snapTradeApi.connectionLimit >= 999 && (
+                          <div className="flex items-center gap-2">
+                            <TierFeatureBadge requiredPlan="pro" size="xs" />
+                            <span className="text-[10px] text-gray-400 dark:text-slate-500">
+                              {t("brokerSyncUnlimitedConnections") || "Unlimited connections"}
+                            </span>
+                          </div>
                         )}
-                        <button onClick={() => snapTradeApi.connect()} className="btn-secondary text-xs px-3 py-1.5 min-h-[44px]">
-                          {t("brokerSyncAddBrokerage")}
-                        </button>
-                        <button
-                          onClick={() => { if (confirm(t("brokerSyncDisconnectConfirm"))) snapTradeApi.disconnect(); }}
-                          className="btn-secondary text-xs px-3 py-1.5 text-red-600 dark:text-red-400 min-h-[44px]"
-                        >
-                          {t("brokerSyncDisconnect")}
-                        </button>
                       </div>
                     </>
                   )}
                 </>
               ) : snapTradeApi.step === "idle" ? (
-                <div className="space-y-3">
-                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-500/10 dark:to-indigo-500/10 border border-blue-200 dark:border-blue-500/30 rounded-xl p-5">
-                    <div className="flex items-start gap-3">
-                      <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center">
-                        <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75" />
-                        </svg>
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-semibold text-gray-900 dark:text-white mb-1">{t("brokerSyncTitle")}</p>
-                        <p className="text-xs text-gray-600 dark:text-slate-400 leading-relaxed mb-3">{t("brokerSyncDesc")}</p>
-                        <p className="text-[10px] text-gray-500 dark:text-slate-500 mb-4">{t("brokerSyncBrokerages")}</p>
-                      </div>
+                <div className="bg-white dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 rounded-xl overflow-hidden">
+                  {/* Hero / onboarding area */}
+                  <div className="text-center px-5 py-8">
+                    <div className="w-14 h-14 rounded-2xl bg-emerald-100 dark:bg-emerald-500/15 inline-flex items-center justify-center mb-4">
+                      <svg className="w-7 h-7 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" />
+                        <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" />
+                      </svg>
                     </div>
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
+                      {t("brokerSyncEmptyTitle") || "Connect your broker"}
+                    </h3>
+                    <p className="text-sm text-gray-500 dark:text-slate-400 max-w-md mx-auto mb-6">
+                      {t("brokerSyncEmptyDesc") || "Automatically import your holdings, transactions, and dividends. Your portfolio syncs every 6 hours — no manual uploads needed."}
+                    </p>
+
+                    {/* 3-step "How it works" */}
+                    <div className="flex gap-4 justify-center flex-wrap mb-6">
+                      {[
+                        { step: "1", title: t("brokerSyncStep1") || "Select your broker", sub: t("brokerSyncStep1Sub") || "from 20+ supported" },
+                        { step: "2", title: t("brokerSyncStep2") || "Log in securely", sub: t("brokerSyncStep2Sub") || "via SnapTrade portal" },
+                        { step: "3", title: t("brokerSyncStep3") || "Auto-sync starts", sub: t("brokerSyncStep3Sub") || "every 6 hours" },
+                      ].map((s) => (
+                        <div key={s.step} className="text-center max-w-[140px]">
+                          <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 inline-flex items-center justify-center mb-1.5">
+                            <span className="text-sm font-bold text-gray-700 dark:text-slate-300">{s.step}</span>
+                          </div>
+                          <p className="text-xs font-semibold text-gray-800 dark:text-slate-200">{s.title}</p>
+                          <p className="text-[10px] text-gray-400 dark:text-slate-500">{s.sub}</p>
+                        </div>
+                      ))}
+                    </div>
+
                     <button
                       onClick={() => snapTradeApi.connect()}
-                      className="btn-primary text-sm px-5 py-3 w-full min-h-[44px]"
+                      className="btn-primary text-sm px-6 py-3 min-h-[44px] inline-flex items-center gap-2"
                     >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" />
+                        <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" />
+                      </svg>
                       {t("brokerSyncConnect")}
                     </button>
+                  </div>
+
+                  {/* Compact trust row */}
+                  <div className="border-t border-gray-100 dark:border-slate-700 px-5 py-3 flex flex-wrap gap-x-6 gap-y-2 justify-center">
+                    <div className="flex items-center gap-1.5">
+                      <svg className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                      </svg>
+                      <span className="text-xs text-gray-500 dark:text-slate-400">
+                        <strong className="text-gray-700 dark:text-slate-200">{t("brokerSyncTrustCompact1Bold") || "trefolio never sees"}</strong>{" "}
+                        {t("brokerSyncTrustCompact1") || "your broker credentials"}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <svg className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                        <path d="M7 11V7a5 5 0 0110 0v4" />
+                      </svg>
+                      <span className="text-xs text-gray-500 dark:text-slate-400">
+                        {t("brokerSyncTrustCompact2Pre") || "Encrypted via"}{" "}
+                        <strong className="text-gray-700 dark:text-slate-200">SnapTrade</strong>{" & "}
+                        <strong className="text-gray-700 dark:text-slate-200">Plaid</strong>
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <svg className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+                      </svg>
+                      <span className="text-xs text-gray-500 dark:text-slate-400">
+                        <strong className="text-gray-700 dark:text-slate-200">{t("brokerSyncTrustCompact3Bold") || "Read-only"}</strong>{" — "}
+                        {t("brokerSyncTrustCompact3") || "we cannot trade or move funds"}
+                      </span>
+                    </div>
                   </div>
                 </div>
               ) : null}
@@ -893,44 +1112,72 @@ function ErrorCard({
   onReconnect?: (connectionId: string) => void;
   t: (key: string) => string;
 }) {
+  if (needsReconnect) {
+    return (
+      <div className="py-8 text-center space-y-4">
+        <div className="w-12 h-12 mx-auto rounded-full bg-amber-100 dark:bg-amber-500/15 flex items-center justify-center">
+          <svg className="w-6 h-6 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+          </svg>
+        </div>
+        <p className="text-sm font-medium text-amber-700 dark:text-amber-400" role="alert">{t("brokerSyncExpired")}</p>
+        <p className="text-xs text-gray-500 dark:text-slate-400">{t("brokerSyncReconnectDesc")}</p>
+        <div className="flex flex-col items-center gap-2">
+          {disabledConnections?.map((dc) => (
+            <button
+              key={dc.id}
+              onClick={() => onReconnect?.(dc.id)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-white text-sm font-semibold transition-colors min-h-[44px]"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><polyline points="23 4 23 10 17 10" /><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10" /></svg>
+              {t("brokerSyncReconnect")}{dc.brokerageName ? ` — ${dc.brokerageName}` : ""}
+            </button>
+          ))}
+          <button onClick={onReset} className="btn-secondary text-xs min-h-[44px]">{t("cancel")}</button>
+        </div>
+      </div>
+    );
+  }
+
+  const brokerName = disabledConnections?.[0]?.brokerageName;
+
   return (
-    <div className="py-8 text-center space-y-4">
-      <div className={`w-12 h-12 mx-auto rounded-full ${needsReconnect ? "bg-amber-100 dark:bg-amber-500/15" : "bg-red-100 dark:bg-red-500/15"} flex items-center justify-center`}>
-        <svg className={`w-6 h-6 ${needsReconnect ? "text-amber-500" : "text-red-500"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+    <div className="border border-rose-200 dark:border-rose-500/25 bg-rose-50 dark:bg-rose-500/[0.06] rounded-xl p-4 flex items-start gap-3">
+      <div className="w-9 h-9 rounded-lg bg-rose-100 dark:bg-rose-500/15 flex items-center justify-center flex-shrink-0 mt-0.5">
+        <svg className="w-[18px] h-[18px] text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
         </svg>
       </div>
-      {needsReconnect ? (
-        <>
-          <p className="text-sm font-medium text-amber-700 dark:text-amber-400" role="alert">{t("brokerSyncExpired")}</p>
-          <p className="text-xs text-gray-500 dark:text-slate-400">{t("brokerSyncReconnectDesc")}</p>
-          <div className="flex flex-col items-center gap-2">
-            {disabledConnections?.map((dc) => (
-              <button
-                key={dc.id}
-                onClick={() => onReconnect?.(dc.id)}
-                className="btn-primary text-sm min-h-[44px]"
-              >
-                {t("brokerSyncReconnect")}{dc.brokerageName ? ` — ${dc.brokerageName}` : ""}
-              </button>
-            ))}
-            <button onClick={onReset} className="btn-secondary text-xs min-h-[44px]">{t("cancel")}</button>
-          </div>
-        </>
-      ) : (
-        <>
-          <p className="text-sm text-red-600 dark:text-red-400" role="alert">{message || t("importError")}</p>
-          <p className="text-xs text-gray-500 dark:text-slate-400">{t("importErrorHintFormat")}</p>
-          <div className="flex flex-col items-center gap-2">
-            <button onClick={onReset} className="btn-secondary text-sm min-h-[44px]">{t("cancel")}</button>
-            {onTryAi && (
-              <button onClick={onTryAi} className="text-xs text-violet-600 dark:text-violet-400 hover:text-violet-800 dark:hover:text-violet-300 underline underline-offset-2 transition-colors min-h-[44px]">
-                {t("aiImportLabel")}
-              </button>
-            )}
-          </div>
-        </>
-      )}
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-bold text-rose-600 dark:text-rose-400" role="alert">
+          {brokerName
+            ? `${t("brokerSyncFailedFor") || "Sync failed for"} ${brokerName}`
+            : (message || t("importError"))}
+        </p>
+        <p className="text-xs text-gray-600 dark:text-slate-400 mt-0.5 leading-relaxed">
+          {t("brokerSyncTempErrorDesc") || "A temporary error occurred while fetching your latest transactions. This usually resolves on its own. The next automatic sync will retry in ~4 hours."}
+        </p>
+        <div className="flex gap-2 mt-2.5">
+          <button
+            onClick={onReset}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-xs font-medium text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors min-h-[32px]"
+          >
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><polyline points="23 4 23 10 17 10" /><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10" /></svg>
+            {t("brokerSyncRetryNow") || "Retry Now"}
+          </button>
+          <a
+            href="mailto:support@trefolio.app"
+            className="inline-flex items-center px-3 py-1.5 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-xs font-medium text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors min-h-[32px]"
+          >
+            {t("brokerSyncContactSupport") || "Contact Support"}
+          </a>
+          {onTryAi && (
+            <button onClick={onTryAi} className="text-xs text-violet-600 dark:text-violet-400 hover:text-violet-800 dark:hover:text-violet-300 underline underline-offset-2 transition-colors ml-1 min-h-[32px]">
+              {t("aiImportLabel")}
+            </button>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

@@ -364,7 +364,8 @@
       75 req/min $49.99 (~46 €) → 150 req/min $99.99 (~92 €) → 300 req/min $149.99 (~138 €) → 600 req/min $199.99 (~184 €) → 1200 req/min $249.99 (~230 €).
       Tier upgrades triggered by Trefolio user count: ≤100 → 75 rpm, ≤250 → 150 rpm, ≤500 → 300 rpm, ≤1000 → 600 rpm, 1000+ → 1200 rpm.
       <br><br>
-      <strong>Per-user variable:</strong> Trefolio ~2.05 EUR (SnapTrade 1.85 + OpenAI 0.20), Bifolio ~0.15 EUR (OpenAI), Free ~0 EUR.
+      <strong>Per-user variable:</strong> Trefolio ~2.05 EUR (SnapTrade 1.85 + OpenAI 0.20), Bifolio ~0.71 EUR (SnapTrade 1.85 × 30% adoption + OpenAI 0.15), Free ~0 EUR.
+      SnapTrade costs ($2/connected user/mo ≈ 1.85 €) now apply to both Bifolio (1 connection) and Trefolio (unlimited). Estimated 30% Bifolio broker sync adoption rate.
     </div>
   </div>
 </div>
@@ -373,7 +374,9 @@
   const BIFOLIO_NET = 2.70;
   const TREFOLIO_NET = 7.62;
   const VAR_FREE = 0;
-  const VAR_BIFOLIO = 0.15;
+  const SNAPTRADE_COST_EUR = 1.85; // $2/connected-user/mo ≈ 1.85 EUR
+  const BIFOLIO_SNAPTRADE_ADOPTION = 0.30; // ~30% of Bifolio users connect a broker
+  const VAR_BIFOLIO = 0.15 + SNAPTRADE_COST_EUR * BIFOLIO_SNAPTRADE_ADOPTION; // OpenAI + SnapTrade (weighted)
   const VAR_TREFOLIO = 2.05;
 
   // Alpha Vantage real pricing (alphavantage.co/premium, USD → EUR at ~0.92)
@@ -642,8 +645,9 @@
       'Revenue: 0 € · Variable cost: ~0 €';
 
     document.getElementById('bd-bifolio-count').textContent = cur.nB.toLocaleString() + ' users';
+    const bSnapUsers = Math.round(cur.nB * BIFOLIO_SNAPTRADE_ADOPTION);
     document.getElementById('bd-bifolio-detail').textContent =
-      'Revenue: ' + Math.round(cur.nB * BIFOLIO_NET).toLocaleString() + ' € · Var. cost: ~' + Math.round(cur.nB * VAR_BIFOLIO) + ' €';
+      'Revenue: ' + Math.round(cur.nB * BIFOLIO_NET).toLocaleString() + ' € · Var. cost: ~' + Math.round(cur.nB * VAR_BIFOLIO) + ' € (SnapTrade: ~' + bSnapUsers + ' connected)';
 
     document.getElementById('bd-trefolio-count').textContent = cur.nT.toLocaleString() + ' users';
     const tVarCost = Math.round(cur.nT * VAR_TREFOLIO);

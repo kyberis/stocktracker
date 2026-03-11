@@ -46,6 +46,13 @@ data/*.db-*
 promo-screenshots/
 promo-video.mp4
 
+# capacitor native build artifacts
+ios/App/Pods/
+android/.gradle/
+android/app/build/
+android/build/
+android/capacitor-cordova-android-plugins/build/
+
 # vercel
 .vercel
 

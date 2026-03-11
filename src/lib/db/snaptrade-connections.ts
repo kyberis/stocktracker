@@ -120,24 +120,71 @@ export async function getSnapTradeConnectionsPendingDeletion(): Promise<PendingS
   }));
 }
 
+/* ── Needs-attention flag for surfacing credential issues on dashboard ── */
+
+export async function setSnapTradeNeedsAttention(userId: string, needsAttention: boolean): Promise<void> {
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: "UPDATE snaptrade_connections SET needs_attention = ? WHERE user_id = ?",
+    args: [needsAttention ? 1 : 0, userId],
+  });
+}
+
+export async function getSnapTradeNeedsAttention(userId: string): Promise<boolean> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: "SELECT needs_attention FROM snaptrade_connections WHERE user_id = ? LIMIT 1",
+    args: [userId],
+  });
+  if (result.rows.length === 0) return false;
+  return Number(result.rows[0].needs_attention) === 1;
+}
+
+export interface ActiveSnapTradeUser {
+  userId: string;
+  snapTradeUserId: string;
+}
+
+export async function listActiveSnapTradeConnections(): Promise<ActiveSnapTradeUser[]> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: "SELECT user_id, snaptrade_user_id FROM snaptrade_connections WHERE pending_delete_at = ''",
+    args: [],
+  });
+  return result.rows.map((r) => ({
+    userId: str(r.user_id),
+    snapTradeUserId: str(r.snaptrade_user_id),
+  }));
+}
+
 /* ── Per-broker sync tracking ── */
 
 export interface SnapTradeBrokerSync {
   brokerageAuthorizationId: string;
   brokerageName: string;
   lastImportedAt: string;
+  connectedAt: string;
+  transactionCount: number;
 }
 
 export async function getSnapTradeBrokerSyncs(userId: string): Promise<SnapTradeBrokerSync[]> {
   const client = await ensureInitialized();
   const result = await client.execute({
-    sql: "SELECT brokerage_authorization_id, brokerage_name, last_imported_at FROM snaptrade_broker_syncs WHERE user_id = ?",
+    sql: "SELECT brokerage_authorization_id, brokerage_name, last_imported_at, created_at FROM snaptrade_broker_syncs WHERE user_id = ?",
     args: [userId],
   });
+  const txCountRes = await client.execute({
+    sql: "SELECT COUNT(*) as cnt FROM transactions WHERE user_id = ?",
+    args: [userId],
+  });
+  const totalTxCount = Number(txCountRes.rows[0]?.cnt) || 0;
+  const brokerCount = result.rows.length || 1;
   return result.rows.map((r) => ({
     brokerageAuthorizationId: str(r.brokerage_authorization_id),
     brokerageName: str(r.brokerage_name),
     lastImportedAt: str(r.last_imported_at),
+    connectedAt: str(r.created_at),
+    transactionCount: Math.round(totalTxCount / brokerCount),
   }));
 }
 

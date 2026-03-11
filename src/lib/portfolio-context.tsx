@@ -188,8 +188,10 @@ export function PortfolioProvider({
       const loadedPortfolios = await fetchPortfolios();
 
       // Auto-select the default portfolio when no selection is stored
+      // or the stored selection doesn't belong to this user's portfolios
       let resolvedPortfolioId = activePortfolioId;
-      if (!resolvedPortfolioId && loadedPortfolios.length > 0) {
+      const storedIsValid = resolvedPortfolioId && loadedPortfolios.some((p) => p.id === resolvedPortfolioId);
+      if ((!resolvedPortfolioId || !storedIsValid) && loadedPortfolios.length > 0) {
         const defaultP = loadedPortfolios.find((p) => p.isDefault) ?? loadedPortfolios[0];
         resolvedPortfolioId = defaultP.id;
         setActivePortfolioId(resolvedPortfolioId);

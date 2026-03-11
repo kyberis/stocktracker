@@ -14,9 +14,70 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "1.18.0";
+export const CURRENT_VERSION = "1.20.0";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "1.20.0",
+    date: "2026-03-11",
+    title: "Event Calendar — Earnings, Economic Events & IPOs",
+    titleTranslations: { es: "Calendario de Eventos — Resultados, Eventos Económicos y OPVs" },
+    changes: [
+      {
+        type: "feature",
+        text: "New Event Calendar dashboard tab with earnings reports, economic events, and IPO tracking",
+        translations: { es: "Nuevo Calendario de Eventos con informes de resultados, eventos económicos y seguimiento de OPVs" },
+      },
+      {
+        type: "feature",
+        text: "Interactive month grid view with color-coded event dots and a chronological list view",
+        translations: { es: "Vista de cuadrícula mensual interactiva con puntos de colores por tipo de evento y vista de lista cronológica" },
+      },
+      {
+        type: "feature",
+        text: "Portfolio-aware earnings highlights — see which upcoming reports affect your holdings",
+        translations: { es: "Resultados destacados según tu cartera — mira qué informes próximos afectan tus posiciones" },
+      },
+      {
+        type: "improvement",
+        text: "Free users see earnings for their holdings; Bifolio adds full market earnings + economic events; Trefolio unlocks IPO calendar",
+        translations: { es: "Usuarios gratuitos ven resultados de sus posiciones; Bifolio añade todos los resultados + eventos económicos; Trefolio desbloquea calendario de OPVs" },
+      },
+    ],
+  },
+  {
+    version: "1.19.0",
+    date: "2026-03-11",
+    title: "Broker Sync for Everyone — Auto-Sync & Privacy First",
+    titleTranslations: { es: "Broker Sync para todos — Sincronización automática y privacidad ante todo" },
+    changes: [
+      {
+        type: "feature",
+        text: "Broker Sync now available on Bifolio (1 connection) and Trefolio (unlimited) — no longer Pro-only",
+        translations: { es: "Broker Sync ahora disponible en Bifolio (1 conexión) y Trefolio (ilimitado) — ya no solo Pro" },
+      },
+      {
+        type: "feature",
+        text: "Automatic portfolio sync every 6 hours — your holdings stay up-to-date without manual imports",
+        translations: { es: "Sincronización automática de cartera cada 6 horas — tus posiciones se mantienen actualizadas sin importaciones manuales" },
+      },
+      {
+        type: "feature",
+        text: "Dashboard reconnect banner — expired broker credentials are surfaced immediately with a one-tap fix",
+        translations: { es: "Banner de reconexión en el dashboard — las credenciales expiradas del bróker se muestran inmediatamente con solución en un toque" },
+      },
+      {
+        type: "improvement",
+        text: "Privacy-first trust messaging on import page: read-only access, no credential storage, powered by SnapTrade & Plaid",
+        translations: { es: "Mensajes de confianza y privacidad en la página de importación: acceso de solo lectura, sin almacenamiento de credenciales, con SnapTrade y Plaid" },
+      },
+      {
+        type: "improvement",
+        text: "Auto-sync status bar shows last sync time and next sync estimate on broker connection cards",
+        translations: { es: "La barra de estado de auto-sincronización muestra la última sincronización y la próxima estimación en las tarjetas de conexión del bróker" },
+      },
+    ],
+  },
   {
     version: "1.18.0",
     date: "2026-03-11",

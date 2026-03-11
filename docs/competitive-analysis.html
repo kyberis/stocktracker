@@ -1,0 +1,1700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>trefolio — Competitive Analysis &amp; Market Opportunity</title>
+<meta name="description" content="Deep competitive analysis of trefolio against 10+ portfolio trackers, covering features, UI/UX, pricing, and market strategy.">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0f1a;
+    --surface: #111827;
+    --surface2: #1a2332;
+    --border: #1e2d3d;
+    --emerald: #10b981;
+    --emerald-dim: rgba(16,185,129,0.15);
+    --rose: #f43f5e;
+    --rose-dim: rgba(244,63,94,0.12);
+    --amber: #f59e0b;
+    --amber-dim: rgba(245,158,11,0.12);
+    --violet: #8b5cf6;
+    --violet-dim: rgba(139,92,246,0.12);
+    --sky: #38bdf8;
+    --sky-dim: rgba(56,189,248,0.12);
+    --teal: #14b8a6;
+    --pink: #ec4899;
+    --text: #e2e8f0;
+    --text-dim: #94a3b8;
+    --text-muted: #64748b;
+    --radius: 12px;
+    --max-w: 1200px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Source Sans 3', system-ui, sans-serif;
+    min-height: 100vh;
+    line-height: 1.6;
+    background-image:
+      radial-gradient(ellipse 80% 60% at 20% 10%, rgba(16,185,129,0.05), transparent),
+      radial-gradient(ellipse 60% 50% at 80% 80%, rgba(139,92,246,0.03), transparent);
+  }
+
+  a { color: var(--sky); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  a:focus-visible {
+    outline: 2px solid var(--sky);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  .skip-link {
+    position: absolute;
+    top: -100%;
+    left: 1rem;
+    background: var(--emerald);
+    color: var(--bg);
+    padding: 0.5rem 1rem;
+    border-radius: 0 0 8px 8px;
+    font-weight: 700;
+    z-index: 100;
+    transition: top 0.2s;
+  }
+  .skip-link:focus { top: 0; }
+
+  header {
+    max-width: var(--max-w);
+    margin: 0 auto;
+    padding: 3rem 2rem 2rem;
+  }
+
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    letter-spacing: -0.02em;
+    margin-bottom: 0.35rem;
+    background: linear-gradient(135deg, var(--emerald) 0%, var(--sky) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  header .subtitle {
+    color: var(--text-dim);
+    font-size: 1rem;
+    font-weight: 300;
+    max-width: 680px;
+  }
+
+  .date-badge {
+    display: inline-block;
+    margin-top: 0.75rem;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+
+  main { max-width: var(--max-w); margin: 0 auto; padding: 0 2rem 4rem; }
+
+  /* --- NAV --- */
+  nav[aria-label="Report sections"] {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(10,15,26,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 2.5rem;
+  }
+
+  nav ul {
+    max-width: var(--max-w);
+    margin: 0 auto;
+    padding: 0 2rem;
+    display: flex;
+    gap: 0;
+    list-style: none;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  nav a {
+    display: block;
+    padding: 0.85rem 1rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    white-space: nowrap;
+    border-bottom: 2px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
+  }
+
+  nav a:hover, nav a:focus-visible {
+    color: var(--text);
+    text-decoration: none;
+    border-bottom-color: var(--emerald);
+  }
+
+  /* --- SECTIONS --- */
+  section { margin-bottom: 3rem; scroll-margin-top: 4rem; }
+
+  h2 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-size: 1.5rem;
+    letter-spacing: -0.01em;
+    margin-bottom: 0.3rem;
+    color: var(--text);
+  }
+
+  h2 .number {
+    color: var(--emerald);
+    margin-right: 0.35rem;
+  }
+
+  .section-desc {
+    color: var(--text-dim);
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+    max-width: 700px;
+  }
+
+  h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 1.5rem 0 0.75rem;
+    color: var(--text);
+  }
+
+  /* --- CARDS --- */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .card-grid {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .card-grid-2 { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+  .card-grid-3 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+  .card-grid-4 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+
+  .card-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+  }
+
+  .card-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+  }
+
+  .card-body { font-size: 0.88rem; color: var(--text-dim); line-height: 1.55; }
+
+  /* --- TABLES --- */
+  .table-wrapper {
+    overflow-x: auto;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    margin-bottom: 1rem;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.84rem;
+  }
+
+  thead { background: var(--surface2); }
+
+  th {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  tbody tr:hover { background: rgba(16,185,129,0.03); }
+
+  .highlight-row { background: rgba(16,185,129,0.06) !important; }
+  .highlight-row td { color: var(--emerald); font-weight: 600; }
+
+  /* --- BADGES --- */
+  .badge {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .badge-lead { background: var(--emerald-dim); color: var(--emerald); }
+  .badge-parity { background: var(--sky-dim); color: var(--sky); }
+  .badge-gap { background: var(--rose-dim); color: var(--rose); }
+  .badge-opp { background: var(--amber-dim); color: var(--amber); }
+  .badge-high { background: var(--rose-dim); color: var(--rose); }
+  .badge-med { background: var(--amber-dim); color: var(--amber); }
+  .badge-low { background: var(--surface2); color: var(--text-muted); }
+
+  .check { color: var(--emerald); }
+  .cross { color: var(--rose); opacity: 0.6; }
+  .partial { color: var(--amber); }
+
+  /* --- RATING DOTS --- */
+  .rating {
+    display: inline-flex;
+    gap: 3px;
+    align-items: center;
+  }
+
+  .rating-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+  }
+
+  .rating-dot.filled { background: var(--emerald); border-color: var(--emerald); }
+  .rating-dot.half { background: linear-gradient(90deg, var(--emerald) 50%, var(--surface2) 50%); border-color: var(--emerald); }
+
+  /* --- POSITIONING MAP --- */
+  .positioning-map {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 2rem;
+    position: relative;
+    height: 480px;
+    margin-bottom: 1rem;
+  }
+
+  .map-axis-x, .map-axis-y {
+    position: absolute;
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .map-axis-x { bottom: 0.75rem; left: 50%; transform: translateX(-50%); }
+  .map-axis-y { left: 0.75rem; top: 50%; transform: rotate(-90deg) translateX(-50%); transform-origin: left center; }
+
+  .map-label {
+    position: absolute;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+
+  .map-dot {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    cursor: default;
+    z-index: 2;
+  }
+
+  .map-dot-label {
+    position: absolute;
+    font-size: 0.7rem;
+    font-weight: 600;
+    white-space: nowrap;
+    transform: translateX(-50%);
+    top: 18px;
+    left: 50%;
+  }
+
+  .map-crosshair {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: calc(100% - 4rem);
+    height: calc(100% - 4rem);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  .map-crosshair::before,
+  .map-crosshair::after {
+    content: '';
+    position: absolute;
+    background: var(--border);
+  }
+
+  .map-crosshair::before {
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+  }
+
+  .map-crosshair::after {
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+  }
+
+  /* --- TIMELINE --- */
+  .timeline {
+    position: relative;
+    padding-left: 2rem;
+  }
+
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 7px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--emerald), var(--violet), var(--sky));
+    border-radius: 1px;
+  }
+
+  .timeline-item {
+    position: relative;
+    margin-bottom: 1.5rem;
+  }
+
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -2rem;
+    top: 0.5rem;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 3px solid var(--bg);
+    z-index: 1;
+  }
+
+  .timeline-item.short::before { background: var(--emerald); box-shadow: 0 0 10px rgba(16,185,129,0.4); }
+  .timeline-item.mid::before { background: var(--violet); box-shadow: 0 0 10px rgba(139,92,246,0.4); }
+  .timeline-item.long::before { background: var(--sky); box-shadow: 0 0 10px rgba(56,189,248,0.4); }
+
+  .timeline-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .timeline-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+
+  .timeline-desc {
+    font-size: 0.84rem;
+    color: var(--text-dim);
+    line-height: 1.55;
+  }
+
+  .timeline-impact {
+    display: inline-block;
+    margin-top: 0.35rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+  }
+
+  .impact-high { background: var(--emerald-dim); color: var(--emerald); }
+  .impact-med { background: var(--amber-dim); color: var(--amber); }
+
+  /* --- UX SCORE BARS --- */
+  .ux-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .ux-bar-label {
+    width: 100px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-dim);
+    flex-shrink: 0;
+    text-align: right;
+  }
+
+  .ux-bar-track {
+    flex: 1;
+    height: 8px;
+    background: var(--surface2);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .ux-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.6s ease-out;
+  }
+
+  .ux-bar-value {
+    width: 36px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-dim);
+    flex-shrink: 0;
+  }
+
+  /* --- PROSE --- */
+  .prose { font-size: 0.88rem; color: var(--text-dim); line-height: 1.65; max-width: 700px; }
+  .prose p { margin-bottom: 0.75rem; }
+  .prose strong { color: var(--text); }
+  .prose ul, .prose ol { margin: 0.5rem 0 0.75rem 1.25rem; }
+  .prose li { margin-bottom: 0.3rem; }
+
+  /* --- CALLOUT --- */
+  .callout {
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    margin: 1rem 0;
+    font-size: 0.88rem;
+    line-height: 1.55;
+  }
+
+  .callout-emerald { background: var(--emerald-dim); border-left: 3px solid var(--emerald); }
+  .callout-amber { background: var(--amber-dim); border-left: 3px solid var(--amber); }
+  .callout-rose { background: var(--rose-dim); border-left: 3px solid var(--rose); }
+  .callout-violet { background: var(--violet-dim); border-left: 3px solid var(--violet); }
+
+  .callout-title {
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+  }
+
+  /* --- FOOTER --- */
+  footer {
+    max-width: var(--max-w);
+    margin: 0 auto;
+    padding: 2rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    text-align: center;
+  }
+
+  /* --- RESPONSIVE --- */
+  @media (max-width: 768px) {
+    header, main { padding-left: 1.25rem; padding-right: 1.25rem; }
+    nav ul { padding: 0 1rem; }
+    .positioning-map { height: 400px; padding: 1.5rem; }
+    .card { padding: 1.15rem; }
+    td, th { padding: 0.5rem 0.65rem; }
+  }
+
+  @media (max-width: 480px) {
+    .card-grid-2, .card-grid-3, .card-grid-4 { grid-template-columns: 1fr; }
+  }
+
+  /* --- PRINT --- */
+  @media print {
+    body { background: #fff; color: #111; }
+    nav, .skip-link { display: none; }
+    .card, .table-wrapper { break-inside: avoid; }
+    header h1 { -webkit-text-fill-color: #111; background: none; }
+  }
+</style>
+</head>
+
+<body>
+<a class="skip-link" href="#main-content">Skip to main content</a>
+
+<header>
+  <h1>Competitive Analysis &amp; Market Opportunity</h1>
+  <p class="subtitle">Deep analysis of trefolio against 10+ portfolio trackers worldwide &mdash; features, UI/UX, pricing, investor priorities, and strategic opportunities.</p>
+  <span class="date-badge" aria-label="Report date">March 2026</span>
+</header>
+
+<nav aria-label="Report sections">
+  <ul role="list">
+    <li><a href="#landscape">Landscape</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#uiux">UI &amp; UX</a></li>
+    <li><a href="#investor-priorities">Investor Priorities</a></li>
+    <li><a href="#gaps">Gaps</a></li>
+    <li><a href="#differentiators">Differentiators</a></li>
+    <li><a href="#positioning">Positioning</a></li>
+    <li><a href="#strategy">Strategy</a></li>
+    <li><a href="#takeaways">Takeaways</a></li>
+  </ul>
+</nav>
+
+<main id="main-content">
+
+<!-- ============================================================ -->
+<!-- SECTION 1: COMPETITIVE LANDSCAPE -->
+<!-- ============================================================ -->
+<section id="landscape" aria-labelledby="landscape-heading">
+  <h2 id="landscape-heading"><span class="number">01</span> Competitive Landscape</h2>
+  <p class="section-desc">10+ portfolio trackers spanning Europe, North America, Australia, and global markets. The market is valued at $2.5B (2023), projected to reach $6.8B by 2032 at 11.5% CAGR.</p>
+
+  <div class="table-wrapper" role="region" aria-label="Competitor overview table" tabindex="0">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Product</th>
+          <th scope="col">HQ</th>
+          <th scope="col">Users</th>
+          <th scope="col">Price Range</th>
+          <th scope="col">Primary Market</th>
+          <th scope="col">Key Strength</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="highlight-row">
+          <td><strong>trefolio</strong></td>
+          <td>EU</td>
+          <td>Pre-launch</td>
+          <td>Free &ndash; &euro;60/yr</td>
+          <td>Europe</td>
+          <td>35 languages, AI analysis, hardware device</td>
+        </tr>
+        <tr>
+          <td><strong>Getquin</strong></td>
+          <td>Germany</td>
+          <td>500K+</td>
+          <td>Free &ndash; &euro;150/yr</td>
+          <td>Europe</td>
+          <td>Social community, 30K bank connections, retirement planning</td>
+        </tr>
+        <tr>
+          <td><strong>Snowball Analytics</strong></td>
+          <td>UK</td>
+          <td>&mdash;</td>
+          <td>Free &ndash; $250/yr</td>
+          <td>Global</td>
+          <td>1000+ brokers, 30yr backtesting, real estate &amp; bonds</td>
+        </tr>
+        <tr>
+          <td><strong>Simply Wall St</strong></td>
+          <td>Australia</td>
+          <td>3M+</td>
+          <td>Free &ndash; $258/yr</td>
+          <td>Global</td>
+          <td>Snowflake visual analysis, 2000+ broker links, screener</td>
+        </tr>
+        <tr>
+          <td><strong>Delta (eToro)</strong></td>
+          <td>Belgium</td>
+          <td>5M+</td>
+          <td>Free &ndash; $168/yr</td>
+          <td>Global</td>
+          <td>Cross-platform native apps, crypto-first, eToro backing</td>
+        </tr>
+        <tr>
+          <td><strong>Sharesight</strong></td>
+          <td>NZ/AU</td>
+          <td>500K+</td>
+          <td>Free &ndash; $372/yr</td>
+          <td>AU/NZ/US</td>
+          <td>Best-in-class tax reporting, advisor tools, 20yr history</td>
+        </tr>
+        <tr>
+          <td><strong>Stock Events</strong></td>
+          <td>Germany</td>
+          <td>&mdash;</td>
+          <td>Free + IAP</td>
+          <td>Global</td>
+          <td>4.8-star mobile UX, event calendars, beautiful design</td>
+        </tr>
+        <tr>
+          <td><strong>Ziggma</strong></td>
+          <td>US</td>
+          <td>&mdash;</td>
+          <td>Free &ndash; $240/yr</td>
+          <td>US</td>
+          <td>Stock scoring, trade simulator, ESG metrics</td>
+        </tr>
+        <tr>
+          <td><strong>Kubera</strong></td>
+          <td>US</td>
+          <td>&mdash;</td>
+          <td>$249 &ndash; $2,499/yr</td>
+          <td>HNW Global</td>
+          <td>Broadest asset classes (real estate, art, cars), estate planning</td>
+        </tr>
+        <tr>
+          <td><strong>Wealthica</strong></td>
+          <td>Canada</td>
+          <td>100K+</td>
+          <td>Free &ndash; $250/yr</td>
+          <td>Canada</td>
+          <td>200+ Canadian institutions, capital gains ACB</td>
+        </tr>
+        <tr>
+          <td><strong>Portfolio Performance</strong></td>
+          <td>Germany</td>
+          <td>&mdash;</td>
+          <td>Free (OSS)</td>
+          <td>Europe (DE)</td>
+          <td>Fully offline/private, advanced TWRR/IRR, no account</td>
+        </tr>
+        <tr>
+          <td><strong>Ghostfolio</strong></td>
+          <td>Switzerland</td>
+          <td>&mdash;</td>
+          <td>Free (OSS)</td>
+          <td>Global</td>
+          <td>Self-hosted Docker, privacy-first, no vendor lock-in</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECTION 2: PRICING COMPARISON -->
+<!-- ============================================================ -->
+<section id="pricing" aria-labelledby="pricing-heading">
+  <h2 id="pricing-heading"><span class="number">02</span> Pricing Comparison</h2>
+  <p class="section-desc">trefolio&rsquo;s Pro tier at &euro;60/year undercuts every paid competitor with comparable features by 30&ndash;80%. Price is a strategic weapon.</p>
+
+  <div class="table-wrapper" role="region" aria-label="Pricing comparison table" tabindex="0">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Product</th>
+          <th scope="col">Free Tier Limits</th>
+          <th scope="col">Entry Paid</th>
+          <th scope="col">Top Paid (Annual)</th>
+          <th scope="col">vs trefolio Pro</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="highlight-row">
+          <td><strong>trefolio</strong></td>
+          <td>15 holdings, 1 portfolio</td>
+          <td>&euro;2.99/mo (&euro;24/yr)</td>
+          <td>&euro;60/yr</td>
+          <td>&mdash;</td>
+        </tr>
+        <tr>
+          <td>Getquin</td>
+          <td>Unlimited basic</td>
+          <td>&euro;90/yr</td>
+          <td>&euro;150/yr</td>
+          <td><strong style="color:var(--emerald)">2.5&times; more expensive</strong></td>
+        </tr>
+        <tr>
+          <td>Snowball Analytics</td>
+          <td>10 holdings, 1 portfolio</td>
+          <td>$80/yr</td>
+          <td>$250/yr</td>
+          <td><strong style="color:var(--emerald)">4&times; more expensive</strong></td>
+        </tr>
+        <tr>
+          <td>Simply Wall St</td>
+          <td>5 reports/mo, 10 holdings</td>
+          <td>$131/yr</td>
+          <td>$258/yr</td>
+          <td><strong style="color:var(--emerald)">4&times; more expensive</strong></td>
+        </tr>
+        <tr>
+          <td>Delta</td>
+          <td>10 assets, 2 connections</td>
+          <td>$54/yr</td>
+          <td>$168/yr</td>
+          <td><strong style="color:var(--emerald)">2.8&times; more expensive</strong></td>
+        </tr>
+        <tr>
+          <td>Sharesight</td>
+          <td>10 holdings, 1 portfolio</td>
+          <td>$84/yr</td>
+          <td>$372/yr</td>
+          <td><strong style="color:var(--emerald)">6&times; more expensive</strong></td>
+        </tr>
+        <tr>
+          <td>Ziggma</td>
+          <td>Core features</td>
+          <td>$84/yr</td>
+          <td>$240/yr</td>
+          <td><strong style="color:var(--emerald)">4&times; more expensive</strong></td>
+        </tr>
+        <tr>
+          <td>Kubera</td>
+          <td>None (14-day trial)</td>
+          <td>$249/yr</td>
+          <td>$2,499/yr</td>
+          <td><strong style="color:var(--emerald)">4&ndash;42&times; more expensive</strong></td>
+        </tr>
+        <tr>
+          <td>Wealthica</td>
+          <td>Basic only</td>
+          <td>$50/yr</td>
+          <td>$250/yr</td>
+          <td><strong style="color:var(--emerald)">4&times; more expensive</strong></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout callout-emerald">
+    <div class="callout-title">Pricing Advantage</div>
+    trefolio&rsquo;s Bifolio at &euro;2.99/mo sits below the impulse-buy threshold with ~88% margin. Trefolio Pro at &euro;7.99/mo delivers AI analysis, broker sync, and fundamentals at half the price of Getquin Premium and a quarter of Simply Wall St.
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECTION 3: FEATURE PARITY MATRIX -->
+<!-- ============================================================ -->
+<section id="features" aria-labelledby="features-heading">
+  <h2 id="features-heading"><span class="number">03</span> Feature Parity Matrix</h2>
+  <p class="section-desc">Comprehensive comparison across 20 critical features. <span class="check" aria-hidden="true">&#10003;</span> = has feature, <span class="partial" aria-hidden="true">&#9679;</span> = partial, <span class="cross" aria-hidden="true">&#10007;</span> = missing.</p>
+
+  <div class="table-wrapper" role="region" aria-label="Feature parity comparison" tabindex="0">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Feature</th>
+          <th scope="col">trefolio</th>
+          <th scope="col">Getquin</th>
+          <th scope="col">Snowball</th>
+          <th scope="col">Simply WS</th>
+          <th scope="col">Delta</th>
+          <th scope="col">Sharesight</th>
+          <th scope="col">Stock Ev.</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Portfolio tracking</td>
+          <td><span class="check" aria-label="Yes">&#10003;</span></td>
+          <td><span class="check" aria-label="Yes">&#10003;</span></td>
+          <td><span class="check" aria-label="Yes">&#10003;</span></td>
+          <td><span class="check" aria-label="Yes">&#10003;</span></td>
+          <td><span class="check" aria-label="Yes">&#10003;</span></td>
+          <td><span class="check" aria-label="Yes">&#10003;</span></td>
+          <td><span class="check" aria-label="Yes">&#10003;</span></td>
+        </tr>
+        <tr>
+          <td>Multi-currency</td>
+          <td><span class="check" aria-label="Yes">&#10003;</span> 5</td>
+          <td><span class="check" aria-label="Yes">&#10003;</span> 30+</td>
+          <td><span class="check" aria-label="Yes">&#10003;</span> 25+</td>
+          <td><span class="check" aria-label="Yes">&#10003;</span></td>
+          <td><span class="check" aria-label="Yes">&#10003;</span></td>
+          <td><span class="check" aria-label="Yes">&#10003;</span></td>
+          <td><span class="check" aria-label="Yes">&#10003;</span></td>
+        </tr>
+        <tr>
+          <td>AI-powered analysis</td>
+          <td><span class="check" aria-label="Yes">&#10003;</span></td>
+          <td><span class="check" aria-label="Yes">&#10003;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+          <td><span class="partial" aria-label="Partial">&#9679;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+        </tr>
+        <tr>
+          <td>AI portfolio review</td>
+          <td><span class="check" aria-label="Yes">&#10003;</span></td>
+          <td><span class="check" aria-label="Yes">&#10003;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+        </tr>
+        <tr>
+          <td>Multi-language (10+)</td>
+          <td><span class="check" aria-label="Yes">&#10003;</span> <strong>35</strong></td>
+          <td><span class="partial" aria-label="Partial">&#9679;</span> ~10</td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+          <td><span class="partial" aria-label="Partial">&#9679;</span> ~8</td>
+          <td><span class="partial" aria-label="Partial">&#9679;</span> ~12</td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+          <td><span class="partial" aria-label="Partial">&#9679;</span> ~6</td>
+        </tr>
+        <tr>
+          <td>Broker auto-sync</td>
+          <td><span class="partial" aria-label="Partial">&#9679;</span> 20+</td>
+          <td><span class="check" aria-label="Yes">&#10003;</span> 30K+</td>
+          <td><span class="check" aria-label="Yes">&#10003;</span> 1K+</td>
+          <td><span class="check" aria-label="Yes">&#10003;</span> 2K+</td>
+          <td><span class="check" aria-label="Yes">&#10003;</span></td>
+          <td><span class="check" aria-label="Yes">&#10003;</span> 200+</td>
+          <td><span class="partial" aria-label="Partial">&#9679;</span></td>
+        </tr>
+        <tr>
+          <td>Broker CSV import</td>
+          <td><span class="check" aria-label="Yes">&#10003;</span> 14</td>
+          <td><span class="check" aria-label="Yes">&#10003;</span></td>
+          <td><span class="check" aria-label="Yes">&#10003;</span></td>
+          <td><span class="check" aria-label="Yes">&#10003;</span></td>
+          <td><span class="partial" aria-label="Partial">&#9679;</span></td>
+          <td><span class="check" aria-label="Yes">&#10003;</span></td>
+          <td><span class="check" aria-label="Yes">&#10003;</span></td>
+        </tr>
+        <tr>
+          <td>AI-powered import</td>
+          <td><span class="check" aria-label="Yes">&#10003;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+          <td><span class="partial" aria-label="Partial">&#9679;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+        </tr>
+        <tr>
+          <td>Dividend tracking</td>
+          <td><span class="check" aria-label="Yes">&#10003;</span></td>
+          <td><span class="check" aria-label="Yes">&#10003;</span></td>
+          <td><span class="check" aria-label="Yes">&#10003;</span></td>
+          <td><span class="check" aria-label="Yes">&#10003;</span></td>
+          <td><span class="partial" aria-label="Partial">&#9679;</span></td>
+          <td><span class="check" aria-label="Yes">&#10003;</span></td>
+          <td><span class="check" aria-label="Yes">&#10003;</span></td>
+        </tr>
+        <tr>
+          <td>TTWROR / XIRR</td>
+          <td><span class="check" aria-label="Yes">&#10003;</span></td>
+          <td><span class="check" aria-label="Yes">&#10003;</span></td>
+          <td><span class="check" aria-label="Yes">&#10003;</span></td>
+          <td><span class="check" aria-label="Yes">&#10003;</span></td>
+          <td><span class="partial" aria-label="Partial">&#9679;</span></td>
+          <td><span class="check" aria-label="Yes">&#10003;</span></td>
+          <td><span class="partial" aria-label="Partial">&#9679;</span></td>
+        </tr>
+        <tr>
+          <td>Sharpe / Drawdown / Beta</td>
+          <td><span class="check" aria-label="Yes">&#10003;</span></td>
+          <td><span class="partial" aria-label="Partial">&#9679;</span></td>
+          <td><span class="check" aria-label="Yes">&#10003;</span></td>
+          <td><span class="partial" aria-label="Partial">&#9679;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+          <td><span class="partial" aria-label="Partial">&#9679;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+        </tr>
+        <tr>
+          <td>Tax reports</td>
+          <td><span class="partial" aria-label="Partial">&#9679;</span> FIFO</td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+          <td><span class="partial" aria-label="Partial">&#9679;</span></td>
+          <td><span class="partial" aria-label="Partial">&#9679;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+          <td><span class="check" aria-label="Yes">&#10003;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+        </tr>
+        <tr>
+          <td>Social / community</td>
+          <td><span class="partial" aria-label="Partial">&#9679;</span> share</td>
+          <td><span class="check" aria-label="Yes">&#10003;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+          <td><span class="partial" aria-label="Partial">&#9679;</span></td>
+          <td><span class="partial" aria-label="Partial">&#9679;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+          <td><span class="partial" aria-label="Partial">&#9679;</span></td>
+        </tr>
+        <tr>
+          <td>Retirement planning</td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+          <td><span class="check" aria-label="Yes">&#10003;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+        </tr>
+        <tr>
+          <td>Stock screener</td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+          <td><span class="check" aria-label="Yes">&#10003;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+        </tr>
+        <tr>
+          <td>Backtesting</td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+          <td><span class="check" aria-label="Yes">&#10003;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+        </tr>
+        <tr>
+          <td>Real estate / alts</td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+          <td><span class="partial" aria-label="Partial">&#9679;</span></td>
+          <td><span class="check" aria-label="Yes">&#10003;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+          <td><span class="partial" aria-label="Partial">&#9679;</span></td>
+          <td><span class="partial" aria-label="Partial">&#9679;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+        </tr>
+        <tr>
+          <td>Hardware device</td>
+          <td><span class="check" aria-label="Yes">&#10003;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+        </tr>
+        <tr>
+          <td>Privacy-first / GDPR</td>
+          <td><span class="check" aria-label="Yes">&#10003;</span></td>
+          <td><span class="partial" aria-label="Partial">&#9679;</span></td>
+          <td><span class="partial" aria-label="Partial">&#9679;</span></td>
+          <td><span class="partial" aria-label="Partial">&#9679;</span></td>
+          <td><span class="partial" aria-label="Partial">&#9679;</span></td>
+          <td><span class="check" aria-label="Yes">&#10003;</span></td>
+          <td><span class="partial" aria-label="Partial">&#9679;</span></td>
+        </tr>
+        <tr>
+          <td>Stealth mode</td>
+          <td><span class="check" aria-label="Yes">&#10003;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+          <td><span class="check" aria-label="Yes">&#10003;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+          <td><span class="cross" aria-label="No">&#10007;</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECTION 4: UI & UX ANALYSIS -->
+<!-- ============================================================ -->
+<section id="uiux" aria-labelledby="uiux-heading">
+  <h2 id="uiux-heading"><span class="number">04</span> UI &amp; UX Analysis</h2>
+  <p class="section-desc">How each competitor approaches design, and where trefolio can learn or differentiate.</p>
+
+  <h3>UX Scoring Across Key Dimensions</h3>
+  <p class="prose" style="margin-bottom:1.25rem;">Scores are based on public reviews, app store ratings, design audits, and user feedback (1&ndash;10 scale).</p>
+
+  <div class="card" style="margin-bottom:1.5rem;">
+    <div class="card-label">Visual Clarity &mdash; How easy to understand at a glance</div>
+    <div class="ux-bar-row"><span class="ux-bar-label">trefolio</span><div class="ux-bar-track"><div class="ux-bar-fill" style="width:80%;background:var(--emerald)"></div></div><span class="ux-bar-value">8.0</span></div>
+    <div class="ux-bar-row"><span class="ux-bar-label">Simply Wall St</span><div class="ux-bar-track"><div class="ux-bar-fill" style="width:95%;background:var(--sky)"></div></div><span class="ux-bar-value">9.5</span></div>
+    <div class="ux-bar-row"><span class="ux-bar-label">Stock Events</span><div class="ux-bar-track"><div class="ux-bar-fill" style="width:92%;background:var(--sky)"></div></div><span class="ux-bar-value">9.2</span></div>
+    <div class="ux-bar-row"><span class="ux-bar-label">Delta</span><div class="ux-bar-track"><div class="ux-bar-fill" style="width:88%;background:var(--sky)"></div></div><span class="ux-bar-value">8.8</span></div>
+    <div class="ux-bar-row"><span class="ux-bar-label">Getquin</span><div class="ux-bar-track"><div class="ux-bar-fill" style="width:82%;background:var(--sky)"></div></div><span class="ux-bar-value">8.2</span></div>
+    <div class="ux-bar-row"><span class="ux-bar-label">Snowball</span><div class="ux-bar-track"><div class="ux-bar-fill" style="width:78%;background:var(--sky)"></div></div><span class="ux-bar-value">7.8</span></div>
+    <div class="ux-bar-row"><span class="ux-bar-label">Sharesight</span><div class="ux-bar-track"><div class="ux-bar-fill" style="width:70%;background:var(--sky)"></div></div><span class="ux-bar-value">7.0</span></div>
+    <div class="ux-bar-row"><span class="ux-bar-label">Portfolio Perf.</span><div class="ux-bar-track"><div class="ux-bar-fill" style="width:50%;background:var(--sky)"></div></div><span class="ux-bar-value">5.0</span></div>
+  </div>
+
+  <div class="card" style="margin-bottom:1.5rem;">
+    <div class="card-label">Onboarding Friction &mdash; Time to first meaningful view (lower = more friction)</div>
+    <div class="ux-bar-row"><span class="ux-bar-label">Getquin</span><div class="ux-bar-track"><div class="ux-bar-fill" style="width:92%;background:var(--emerald)"></div></div><span class="ux-bar-value">9.2</span></div>
+    <div class="ux-bar-row"><span class="ux-bar-label">Delta</span><div class="ux-bar-track"><div class="ux-bar-fill" style="width:88%;background:var(--sky)"></div></div><span class="ux-bar-value">8.8</span></div>
+    <div class="ux-bar-row"><span class="ux-bar-label">Stock Events</span><div class="ux-bar-track"><div class="ux-bar-fill" style="width:85%;background:var(--sky)"></div></div><span class="ux-bar-value">8.5</span></div>
+    <div class="ux-bar-row"><span class="ux-bar-label">trefolio</span><div class="ux-bar-track"><div class="ux-bar-fill" style="width:75%;background:var(--amber)"></div></div><span class="ux-bar-value">7.5</span></div>
+    <div class="ux-bar-row"><span class="ux-bar-label">Simply Wall St</span><div class="ux-bar-track"><div class="ux-bar-fill" style="width:72%;background:var(--sky)"></div></div><span class="ux-bar-value">7.2</span></div>
+    <div class="ux-bar-row"><span class="ux-bar-label">Snowball</span><div class="ux-bar-track"><div class="ux-bar-fill" style="width:68%;background:var(--sky)"></div></div><span class="ux-bar-value">6.8</span></div>
+    <div class="ux-bar-row"><span class="ux-bar-label">Sharesight</span><div class="ux-bar-track"><div class="ux-bar-fill" style="width:65%;background:var(--sky)"></div></div><span class="ux-bar-value">6.5</span></div>
+    <div class="ux-bar-row"><span class="ux-bar-label">Portfolio Perf.</span><div class="ux-bar-track"><div class="ux-bar-fill" style="width:35%;background:var(--rose)"></div></div><span class="ux-bar-value">3.5</span></div>
+  </div>
+
+  <div class="card" style="margin-bottom:1.5rem;">
+    <div class="card-label">Mobile Experience &mdash; Native feel, responsiveness, widgets</div>
+    <div class="ux-bar-row"><span class="ux-bar-label">Stock Events</span><div class="ux-bar-track"><div class="ux-bar-fill" style="width:96%;background:var(--emerald)"></div></div><span class="ux-bar-value">9.6</span></div>
+    <div class="ux-bar-row"><span class="ux-bar-label">Delta</span><div class="ux-bar-track"><div class="ux-bar-fill" style="width:92%;background:var(--sky)"></div></div><span class="ux-bar-value">9.2</span></div>
+    <div class="ux-bar-row"><span class="ux-bar-label">Getquin</span><div class="ux-bar-track"><div class="ux-bar-fill" style="width:85%;background:var(--sky)"></div></div><span class="ux-bar-value">8.5</span></div>
+    <div class="ux-bar-row"><span class="ux-bar-label">Snowball</span><div class="ux-bar-track"><div class="ux-bar-fill" style="width:80%;background:var(--sky)"></div></div><span class="ux-bar-value">8.0</span></div>
+    <div class="ux-bar-row"><span class="ux-bar-label">trefolio</span><div class="ux-bar-track"><div class="ux-bar-fill" style="width:68%;background:var(--amber)"></div></div><span class="ux-bar-value">6.8</span></div>
+    <div class="ux-bar-row"><span class="ux-bar-label">Simply Wall St</span><div class="ux-bar-track"><div class="ux-bar-fill" style="width:72%;background:var(--sky)"></div></div><span class="ux-bar-value">7.2</span></div>
+    <div class="ux-bar-row"><span class="ux-bar-label">Sharesight</span><div class="ux-bar-track"><div class="ux-bar-fill" style="width:55%;background:var(--sky)"></div></div><span class="ux-bar-value">5.5</span></div>
+    <div class="ux-bar-row"><span class="ux-bar-label">Portfolio Perf.</span><div class="ux-bar-track"><div class="ux-bar-fill" style="width:10%;background:var(--rose)"></div></div><span class="ux-bar-value">1.0</span></div>
+  </div>
+
+  <h3>Competitor UI/UX Deep Dives</h3>
+
+  <div class="card-grid card-grid-2">
+    <div class="card">
+      <div class="card-label">Simply Wall St &mdash; The Visual Pioneer</div>
+      <div class="card-title">Snowflake Infographic Model</div>
+      <div class="card-body">
+        <p>Simply Wall St's defining innovation is the <strong>&ldquo;Snowflake&rdquo;</strong> &mdash; a radial chart scoring companies on 5 axes (valuation, growth, past performance, health, dividends) with 6 checks each. Color shifts from red to green based on score.</p>
+        <p style="margin-top:0.5rem;"><strong>Strengths:</strong> Transforms intimidating financial data into instant visual comprehension. One-page company reports enable sub-60-second stock evaluation. Pre-set screener categories ("trending", "undervalued") lower the discovery barrier.</p>
+        <p style="margin-top:0.5rem;"><strong>Weaknesses:</strong> Desktop-heavy design feels dated on mobile. Information density can overwhelm beginners despite the visual approach. Freemium gates are aggressive (5 reports/month).</p>
+        <p style="margin-top:0.5rem;"><strong>Lesson for trefolio:</strong> Visual summarization of complex data is powerful. Consider a visual health score for holdings.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Stock Events &mdash; The Mobile Benchmark</div>
+      <div class="card-title">Calendar-Centric, Beautiful Mobile UX</div>
+      <div class="card-body">
+        <p>4.8 stars on both stores. The UI is <strong>calendar-first</strong> &mdash; dividends, earnings, IPOs, and economic events are the primary navigation paradigm. Every screen feels purpose-built for mobile.</p>
+        <p style="margin-top:0.5rem;"><strong>Strengths:</strong> Best-in-class mobile design. Home screen widgets that actually work well. Clean typography, generous whitespace, no visual clutter. The calendar model creates daily engagement hooks.</p>
+        <p style="margin-top:0.5rem;"><strong>Weaknesses:</strong> Lighter on analytics depth. No AI features. Limited broker auto-sync. Web version is secondary.</p>
+        <p style="margin-top:0.5rem;"><strong>Lesson for trefolio:</strong> Event calendars drive daily opens. Mobile widget polish is worth significant investment. Simplicity wins ratings.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Delta (eToro) &mdash; The Cross-Platform Standard</div>
+      <div class="card-title">Sleek, Consistent Multi-Device Experience</div>
+      <div class="card-body">
+        <p>Described as <strong>&ldquo;the most aesthetically pleasing&rdquo;</strong> tracker app. Charts below price displays add visual character. Seamless sync across iOS, Android, Windows, Mac, and web via QR code.</p>
+        <p style="margin-top:0.5rem;"><strong>Strengths:</strong> Professional, modern UI. Deep customization (sorting, display, multi-portfolio). Recent AI additions ("What's going on?", "Delta Direct") show smart integration of contextual AI.</p>
+        <p style="margin-top:0.5rem;"><strong>Weaknesses:</strong> Users report functional bugs &mdash; fee miscalculations, duplicate transactions, notification failures. Beautiful design undermined by data accuracy issues. Crypto-first heritage can feel off for stock-only investors.</p>
+        <p style="margin-top:0.5rem;"><strong>Lesson for trefolio:</strong> Design consistency across platforms matters. Data accuracy > visual polish. Delta's contextual AI ("explain my portfolio movement") is a pattern worth adopting.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Getquin &mdash; The Social Incumbent</div>
+      <div class="card-title">Community-Driven Portfolio Sharing</div>
+      <div class="card-body">
+        <p>4.7 stars. UI is <strong>clean and information-dense</strong> without feeling cluttered. The social layer (forums, anonymous portfolio sharing, community benchmarks) is the primary differentiator and engagement driver.</p>
+        <p style="margin-top:0.5rem;"><strong>Strengths:</strong> 30K+ bank connections make onboarding nearly frictionless. DeepDive AI analysis. Retirement planning module justifies the premium Wealth tier (&euro;150/yr). Net worth tracking goes beyond investments.</p>
+        <p style="margin-top:0.5rem;"><strong>Weaknesses:</strong> Users frustrated by feature lock-ins across too many tiers. Credential storage raises privacy concerns. Social features can feel noisy for users who just want tracking. Not available in as many languages.</p>
+        <p style="margin-top:0.5rem;"><strong>Lesson for trefolio:</strong> Social proof and community are powerful retention tools. But social should be opt-in, not forced. Bank connection breadth is the #1 onboarding advantage.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Snowball Analytics &mdash; The Power User&rsquo;s Choice</div>
+      <div class="card-title">Feature-Rich Analytics Platform</div>
+      <div class="card-body">
+        <p>4.8&ndash;4.9 stars. Described as <strong>&ldquo;beautiful and powerful&rdquo;</strong>. Home page dashboard shows IRR, passive income, total profit, and portfolio value at a glance. Supports widgets.</p>
+        <p style="margin-top:0.5rem;"><strong>Strengths:</strong> 30-year backtesting is unique. Broad asset coverage (real estate, bonds, custom). Dividend analytics with visual graphs and calendar. Goal tracking with progress charts.</p>
+        <p style="margin-top:0.5rem;"><strong>Weaknesses:</strong> Steep learning curve for new users. Real-time pricing can lag. Expensive ($80&ndash;$250/yr). Feature density means the UI can feel overwhelming.</p>
+        <p style="margin-top:0.5rem;"><strong>Lesson for trefolio:</strong> Power features must be progressively disclosed, not dumped on the user. Backtesting is a high-value feature that few competitors offer.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Sharesight &mdash; The Tax Specialist</div>
+      <div class="card-title">Tax Reporting as the Primary Value Prop</div>
+      <div class="card-body">
+        <p>Functional rather than flashy. The UI is <strong>report-driven</strong> &mdash; tables, PDFs, and export-ready tax documents. Designed for the investor who needs numbers to be correct above all else.</p>
+        <p style="margin-top:0.5rem;"><strong>Strengths:</strong> Country-specific tax reports (AU, NZ, US, UK, CA). 20-year automatic history. SOC 2 compliant. Advisor dashboard for professionals. 200+ broker connections. Most trusted for accuracy.</p>
+        <p style="margin-top:0.5rem;"><strong>Weaknesses:</strong> Dated visual design. No mobile-first experience. No AI. Premium pricing ($84&ndash;$372/yr). Not available in multiple languages.</p>
+        <p style="margin-top:0.5rem;"><strong>Lesson for trefolio:</strong> Tax reporting is the #1 upgrade driver for serious investors. Country-specific EU tax reports are an unoccupied niche that could be trefolio's Sharesight-equivalent moat in Europe.</p>
+      </div>
+    </div>
+  </div>
+
+  <h3>trefolio UI/UX Self-Assessment</h3>
+
+  <div class="card">
+    <div class="card-grid card-grid-2" style="gap:1.5rem;">
+      <div>
+        <div class="card-label" style="color:var(--emerald);">Strengths</div>
+        <ul class="prose" style="margin-top:0.5rem;">
+          <li><strong>Dark theme consistency</strong> &mdash; Cohesive design language across all views</li>
+          <li><strong>WCAG 2.1 AA compliance</strong> &mdash; Keyboard nav, screen reader support, contrast ratios</li>
+          <li><strong>35-language support</strong> &mdash; UI fully localized, including RTL consideration</li>
+          <li><strong>Interactive demo</strong> &mdash; Try before signup reduces friction</li>
+          <li><strong>Stealth mode</strong> &mdash; Unique privacy UX for public environments</li>
+          <li><strong>Progressive disclosure</strong> &mdash; Tab-based dashboard keeps complexity manageable</li>
+          <li><strong>AI in native language</strong> &mdash; Unique: analysis delivered in the user's selected language</li>
+        </ul>
+      </div>
+      <div>
+        <div class="card-label" style="color:var(--rose);">Areas to Improve</div>
+        <ul class="prose" style="margin-top:0.5rem;">
+          <li><strong>Mobile native feel</strong> &mdash; Capacitor hosted mode can feel like a web wrapper vs Stock Events/Delta native polish</li>
+          <li><strong>Onboarding flow</strong> &mdash; No guided setup wizard; users land on empty dashboard</li>
+          <li><strong>Data visualization variety</strong> &mdash; Recharts is solid but lacks the visual impact of Simply Wall St's Snowflake or Stock Events' calendars</li>
+          <li><strong>Home screen widgets</strong> &mdash; Not yet implemented; competitors show this drives engagement</li>
+          <li><strong>Empty states</strong> &mdash; Empty portfolio views could better guide users toward import/add actions</li>
+          <li><strong>Micro-interactions</strong> &mdash; Animations and transitions could be more polished to compete with Delta's premium feel</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout-violet">
+    <div class="callout-title">UX Priority Recommendations</div>
+    <strong>1.</strong> Onboarding wizard with broker detection (reduces time-to-value from minutes to seconds).
+    <strong>2.</strong> Home screen widget for iOS/Android (proven daily engagement driver).
+    <strong>3.</strong> Visual portfolio health score (inspired by Snowflake, adapted for trefolio's aesthetic).
+    <strong>4.</strong> Calendar view for dividends and earnings (Stock Events proves this drives daily opens).
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECTION 5: WHAT INVESTORS VALUE -->
+<!-- ============================================================ -->
+<section id="investor-priorities" aria-labelledby="investor-heading">
+  <h2 id="investor-heading"><span class="number">05</span> What Investors Value Most</h2>
+  <p class="section-desc">Ranked by impact on adoption, retention, and willingness to pay &mdash; based on user surveys, app reviews, and market research.</p>
+
+  <div class="table-wrapper" role="region" aria-label="Investor priority ranking" tabindex="0">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">#</th>
+          <th scope="col">Priority</th>
+          <th scope="col">Why It Matters</th>
+          <th scope="col">trefolio Status</th>
+          <th scope="col">Impact</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td><strong>Accuracy &amp; reliability</strong></td>
+          <td>Trust is everything. One wrong P&amp;L number and users leave forever.</td>
+          <td><span class="badge badge-lead">Strong</span></td>
+          <td><span class="badge badge-high">Critical</span></td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td><strong>Simplicity &amp; clarity</strong></td>
+          <td>&ldquo;Just show me my numbers.&rdquo; Not a trading terminal.</td>
+          <td><span class="badge badge-lead">Strong</span></td>
+          <td><span class="badge badge-high">Critical</span></td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td><strong>Easy import / broker sync</strong></td>
+          <td>Frictionless onboarding is the #1 adoption driver. Manual entry kills retention.</td>
+          <td><span class="badge badge-opp">Growing</span></td>
+          <td><span class="badge badge-high">Critical</span></td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td><strong>Dividend tracking</strong></td>
+          <td>Income investors are the most loyal paying segment. Calendars and projections drive upgrades.</td>
+          <td><span class="badge badge-lead">Strong</span></td>
+          <td><span class="badge badge-high">High</span></td>
+        </tr>
+        <tr>
+          <td>5</td>
+          <td><strong>Performance analytics</strong></td>
+          <td>TWRR, IRR, benchmark comparison. &ldquo;Am I beating the market?&rdquo;</td>
+          <td><span class="badge badge-lead">Strong</span></td>
+          <td><span class="badge badge-high">High</span></td>
+        </tr>
+        <tr>
+          <td>6</td>
+          <td><strong>Multi-currency support</strong></td>
+          <td>Critical for European and expat investors with cross-border portfolios.</td>
+          <td><span class="badge badge-parity">Good</span></td>
+          <td><span class="badge badge-med">Medium</span></td>
+        </tr>
+        <tr>
+          <td>7</td>
+          <td><strong>Tax awareness</strong></td>
+          <td>Grows in importance as portfolios grow. Country-specific reports drive premium upgrades.</td>
+          <td><span class="badge badge-gap">Gap</span></td>
+          <td><span class="badge badge-high">High</span></td>
+        </tr>
+        <tr>
+          <td>8</td>
+          <td><strong>Privacy &amp; data control</strong></td>
+          <td>Growing EU concern. &ldquo;I don't want to share my broker credentials.&rdquo;</td>
+          <td><span class="badge badge-lead">Strong</span></td>
+          <td><span class="badge badge-med">Medium</span></td>
+        </tr>
+        <tr>
+          <td>9</td>
+          <td><strong>Mobile access</strong></td>
+          <td>Must-have, table stakes. App store ratings influence discovery.</td>
+          <td><span class="badge badge-opp">Growing</span></td>
+          <td><span class="badge badge-med">Medium</span></td>
+        </tr>
+        <tr>
+          <td>10</td>
+          <td><strong>AI insights</strong></td>
+          <td>Emerging value driver. Early adopters love it; mainstream still cautious but warming.</td>
+          <td><span class="badge badge-lead">Leading</span></td>
+          <td><span class="badge badge-med">Medium+</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECTION 6: FEATURE GAPS -->
+<!-- ============================================================ -->
+<section id="gaps" aria-labelledby="gaps-heading">
+  <h2 id="gaps-heading"><span class="number">06</span> Feature Gaps &amp; Missing Capabilities</h2>
+  <p class="section-desc">Where trefolio lags competitors, ranked by business impact and development effort.</p>
+
+  <div class="table-wrapper" role="region" aria-label="Feature gaps analysis" tabindex="0">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Gap</th>
+          <th scope="col">Who Leads</th>
+          <th scope="col">Impact</th>
+          <th scope="col">Effort</th>
+          <th scope="col">Why It Matters</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Broker auto-sync breadth</strong></td>
+          <td>Getquin (30K+), SWS (2K+), Snowball (1K+)</td>
+          <td><span class="badge badge-high">High</span></td>
+          <td><span class="badge badge-med">Medium</span></td>
+          <td>Frictionless import is the #1 onboarding factor. SnapTrade (20+ brokers, Pro-only) is too narrow.</td>
+        </tr>
+        <tr>
+          <td><strong>European tax reports</strong></td>
+          <td>Sharesight (AU/NZ/US)</td>
+          <td><span class="badge badge-high">High</span></td>
+          <td><span class="badge badge-high">High</span></td>
+          <td>No one owns EU-specific tax reports (DE, FR, ES, NL, IT). Massive Pro upgrade driver.</td>
+        </tr>
+        <tr>
+          <td><strong>Social / community</strong></td>
+          <td>Getquin (forums, portfolio sharing, benchmarks)</td>
+          <td><span class="badge badge-high">High</span></td>
+          <td><span class="badge badge-high">High</span></td>
+          <td>Getquin&rsquo;s social layer is their #1 moat. Creates network effects and organic growth.</td>
+        </tr>
+        <tr>
+          <td><strong>Net worth / alternative assets</strong></td>
+          <td>Kubera, Snowball, Getquin</td>
+          <td><span class="badge badge-med">Medium</span></td>
+          <td><span class="badge badge-low">Low</span></td>
+          <td>Manual real estate, savings, pensions. Low effort, high perceived value.</td>
+        </tr>
+        <tr>
+          <td><strong>Event calendars (earnings, IPO, economic)</strong></td>
+          <td>Stock Events (best), Delta</td>
+          <td><span class="badge badge-med">Medium</span></td>
+          <td><span class="badge badge-med">Medium</span></td>
+          <td>Drives daily engagement. trefolio only has ex-dividend calendar.</td>
+        </tr>
+        <tr>
+          <td><strong>Retirement / goal planning</strong></td>
+          <td>Getquin (Wealth tier)</td>
+          <td><span class="badge badge-med">Medium</span></td>
+          <td><span class="badge badge-med">Medium</span></td>
+          <td>Getquin charges &euro;150/yr for this. trefolio has projection tool but no goal tracking.</td>
+        </tr>
+        <tr>
+          <td><strong>Stock screener / discovery</strong></td>
+          <td>Simply Wall St, Ziggma</td>
+          <td><span class="badge badge-med">Medium</span></td>
+          <td><span class="badge badge-med">Medium</span></td>
+          <td>Discovery drives engagement and time-in-app.</td>
+        </tr>
+        <tr>
+          <td><strong>Backtesting / &ldquo;what-if&rdquo;</strong></td>
+          <td>Snowball (30yr), Ziggma (simulator)</td>
+          <td><span class="badge badge-med">Medium</span></td>
+          <td><span class="badge badge-high">High</span></td>
+          <td>Power-user feature. Snowball charges $250/yr partly for this.</td>
+        </tr>
+        <tr>
+          <td><strong>Home screen widgets</strong></td>
+          <td>Stock Events, Delta, Snowball</td>
+          <td><span class="badge badge-med">Medium</span></td>
+          <td><span class="badge badge-med">Medium</span></td>
+          <td>Proven daily engagement driver. trefolio has Scriptable but no native widgets.</td>
+        </tr>
+        <tr>
+          <td><strong>Advisor / family tools</strong></td>
+          <td>Sharesight, Kubera, Wealthica</td>
+          <td><span class="badge badge-low">Low (now)</span></td>
+          <td><span class="badge badge-high">High</span></td>
+          <td>B2B revenue is 10&ndash;100&times; consumer pricing. Long-term opportunity.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout callout-amber">
+    <div class="callout-title">Highest ROI Gaps to Close</div>
+    <strong>Net worth tracking</strong> (low effort, high perceived value) and <strong>expanded broker sync</strong> (high impact on onboarding) should be prioritized. European tax reports are the most defensible moat opportunity.
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECTION 7: DIFFERENTIATORS -->
+<!-- ============================================================ -->
+<section id="differentiators" aria-labelledby="diff-heading">
+  <h2 id="diff-heading"><span class="number">07</span> trefolio Differentiators</h2>
+  <p class="section-desc">Current moats and moats to build &mdash; what makes trefolio defensible.</p>
+
+  <div class="card-grid card-grid-3">
+    <div class="card" style="border-top: 3px solid var(--emerald);">
+      <div class="card-label">Current Moat</div>
+      <div class="card-title">35 European Languages</div>
+      <div class="card-body">No competitor comes close. Getquin has ~10, Simply Wall St ~8, most are English-only. This is a defensible moat for the EU market and especially powerful for SEO in non-English markets where competition is near zero.</div>
+    </div>
+
+    <div class="card" style="border-top: 3px solid var(--emerald);">
+      <div class="card-label">Current Moat</div>
+      <div class="card-title">AI Analysis in Native Language</div>
+      <div class="card-body">The intersection of AI-powered analysis + delivery in the user&rsquo;s selected language is unique. A Finnish investor gets AI insights in Finnish. No competitor does this. AI import from screenshots is also exclusive.</div>
+    </div>
+
+    <div class="card" style="border-top: 3px solid var(--emerald);">
+      <div class="card-label">Current Moat</div>
+      <div class="card-title">trefolio Leaf Hardware</div>
+      <div class="card-body">An AMOLED desk display showing portfolio data, AI insights, and alerts. Entirely novel in the market. Creates emotional attachment, physical-digital loop, drives Pro subscriptions, and is impossible for software competitors to replicate quickly.</div>
+    </div>
+
+    <div class="card" style="border-top: 3px solid var(--emerald);">
+      <div class="card-label">Current Moat</div>
+      <div class="card-title">Aggressive Pricing</div>
+      <div class="card-body">Pro at &euro;60/year undercuts comparable products by 2&ndash;5&times;. Combined with AI features that others charge 4&times; more for, pricing becomes a powerful acquisition tool. The &euro;2.99/mo entry tier is below the impulse-buy threshold.</div>
+    </div>
+
+    <div class="card" style="border-top: 3px solid var(--emerald);">
+      <div class="card-label">Current Moat</div>
+      <div class="card-title">Privacy-First European DNA</div>
+      <div class="card-body">GDPR-compliant, no data selling, encrypted at rest, cookie consent, account deletion, data export. While competitors claim privacy, trefolio&rsquo;s EU origin and explicit positioning resonates with the growing European data sovereignty movement.</div>
+    </div>
+
+    <div class="card" style="border-top: 3px solid var(--violet);">
+      <div class="card-label">Moat to Build</div>
+      <div class="card-title">European Tax Intelligence</div>
+      <div class="card-body">Country-specific tax reports for DE (Kapitalertragsteuer), FR (PFU), ES (Modelo 720/100), NL (Box 3), IT (Quadro RW). This is Sharesight&rsquo;s moat in AU/NZ &mdash; no one owns it in Europe. Massive Pro upgrade driver.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECTION 8: COMPETITIVE POSITIONING MAP -->
+<!-- ============================================================ -->
+<section id="positioning" aria-labelledby="pos-heading">
+  <h2 id="pos-heading"><span class="number">08</span> Competitive Positioning</h2>
+  <p class="section-desc">Where each product sits on the simplicity vs. price spectrum. trefolio occupies the high-value quadrant: simple + affordable + AI-powered.</p>
+
+  <div class="positioning-map" role="img" aria-label="Competitive positioning map showing trefolio in the simple and affordable quadrant, with competitors plotted across simplicity and price axes.">
+    <div class="map-crosshair"></div>
+
+    <div class="map-label" style="top:0.75rem;left:50%;transform:translateX(-50%);">Higher Price</div>
+    <div class="map-label" style="bottom:0.75rem;left:50%;transform:translateX(-50%);">Lower Price</div>
+    <div class="map-label" style="left:1rem;top:50%;transform:translateY(-50%);">Simpler</div>
+    <div class="map-label" style="right:1rem;top:50%;transform:translateY(-50%);">More Complex</div>
+
+    <!-- trefolio -->
+    <div class="map-dot" style="left:32%;top:68%;background:var(--emerald);width:18px;height:18px;box-shadow:0 0 16px rgba(16,185,129,0.5);z-index:3;" aria-label="trefolio: simple and affordable">
+      <span class="map-dot-label" style="color:var(--emerald);font-size:0.82rem;font-weight:700;">trefolio</span>
+    </div>
+
+    <!-- Getquin -->
+    <div class="map-dot" style="left:42%;top:48%;background:var(--sky);" aria-label="Getquin: moderate complexity and price">
+      <span class="map-dot-label" style="color:var(--sky);">Getquin</span>
+    </div>
+
+    <!-- Stock Events -->
+    <div class="map-dot" style="left:25%;top:72%;background:var(--amber);" aria-label="Stock Events: very simple and affordable">
+      <span class="map-dot-label" style="color:var(--amber);">Stock Events</span>
+    </div>
+
+    <!-- Delta -->
+    <div class="map-dot" style="left:48%;top:52%;background:var(--pink);" aria-label="Delta: moderate complexity and moderate price">
+      <span class="map-dot-label" style="color:var(--pink);">Delta</span>
+    </div>
+
+    <!-- Simply Wall St -->
+    <div class="map-dot" style="left:55%;top:32%;background:#a78bfa;" aria-label="Simply Wall St: complex and expensive">
+      <span class="map-dot-label" style="color:#a78bfa;">Simply Wall St</span>
+    </div>
+
+    <!-- Snowball -->
+    <div class="map-dot" style="left:62%;top:28%;background:#fb923c;" aria-label="Snowball: complex and expensive">
+      <span class="map-dot-label" style="color:#fb923c;">Snowball</span>
+    </div>
+
+    <!-- Sharesight -->
+    <div class="map-dot" style="left:68%;top:20%;background:#f472b6;" aria-label="Sharesight: complex and most expensive">
+      <span class="map-dot-label" style="color:#f472b6;">Sharesight</span>
+    </div>
+
+    <!-- Kubera -->
+    <div class="map-dot" style="left:72%;top:8%;background:var(--text-muted);" aria-label="Kubera: very complex and very expensive">
+      <span class="map-dot-label" style="color:var(--text-muted);">Kubera</span>
+    </div>
+
+    <!-- Portfolio Performance -->
+    <div class="map-dot" style="left:78%;top:85%;background:#94a3b8;" aria-label="Portfolio Performance: very complex but free">
+      <span class="map-dot-label" style="color:#94a3b8;">Portfolio Perf.</span>
+    </div>
+
+    <!-- Ghostfolio -->
+    <div class="map-dot" style="left:58%;top:82%;background:#6b7280;" aria-label="Ghostfolio: moderate complexity and free">
+      <span class="map-dot-label" style="color:#6b7280;">Ghostfolio</span>
+    </div>
+  </div>
+
+  <div class="callout callout-emerald">
+    <div class="callout-title">Sweet Spot</div>
+    trefolio is the only product in the <strong>simple + affordable quadrant</strong> that also offers AI capabilities and 35-language support. Stock Events shares the simplicity but lacks depth. Getquin is nearby but 2.5&times; more expensive at the top tier. Portfolio Performance is free but desktop-only with a steep learning curve.
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECTION 9: STRATEGY & OPPORTUNITIES -->
+<!-- ============================================================ -->
+<section id="strategy" aria-labelledby="strategy-heading">
+  <h2 id="strategy-heading"><span class="number">09</span> Strategy &amp; Opportunities</h2>
+  <p class="section-desc">Short, mid, and long-term initiatives to win market share, organized by timeline and impact.</p>
+
+  <h3 style="margin-top:0;">Short-Term <span style="color:var(--emerald);font-size:0.85rem;">(0&ndash;6 months)</span></h3>
+  <p class="prose" style="margin-bottom:1rem;">Win on onboarding and European niches. Low-effort, high-impact moves.</p>
+
+  <div class="timeline">
+    <div class="timeline-item short">
+      <div class="timeline-header">
+        <span class="timeline-title">Multi-language SEO blitz</span>
+      </div>
+      <div class="timeline-desc">Write localized blog posts in 5&ndash;10 languages targeting broker-specific queries: &ldquo;Mejor tracker de inversiones para DEGIRO&rdquo; (ES), &ldquo;Meilleur suivi de portefeuille DEGIRO&rdquo; (FR), &ldquo;Beste Portfolio-Tracker f&uuml;r DEGIRO&rdquo; (DE). No competitor does multi-language SEO at scale. Near-zero competition for long-tail European queries.</div>
+      <span class="timeline-impact impact-high">High Impact &middot; Low Effort</span>
+    </div>
+
+    <div class="timeline-item short">
+      <div class="timeline-header">
+        <span class="timeline-title">Expand broker sync to Bifolio tier</span>
+      </div>
+      <div class="timeline-desc">Offer 1&ndash;2 broker connections on Bifolio (currently Pro-only). Target top 5 EU brokers: DEGIRO, IBKR, Trading 212, Revolut, Scalable Capital. Reduces onboarding friction and drives the upgrade path from Free to Bifolio.</div>
+      <span class="timeline-impact impact-high">High Impact &middot; Medium Effort</span>
+    </div>
+
+    <div class="timeline-item short">
+      <div class="timeline-header">
+        <span class="timeline-title">Target Portfolio Performance refugees</span>
+      </div>
+      <div class="timeline-desc">Many PP users want a web/mobile version with the same accuracy. Position trefolio as &ldquo;Portfolio Performance, but in the cloud&rdquo; with PP CSV import. Write comparison blog posts in German (PP's primary market).</div>
+      <span class="timeline-impact impact-med">Medium Impact &middot; Low Effort</span>
+    </div>
+
+    <div class="timeline-item short">
+      <div class="timeline-header">
+        <span class="timeline-title">Onboarding wizard</span>
+      </div>
+      <div class="timeline-desc">Guided first-run experience: detect user's language and country, suggest relevant brokers, offer demo data preview. Reduces empty-state abandonment. Getquin's onboarding is the benchmark to beat.</div>
+      <span class="timeline-impact impact-high">High Impact &middot; Medium Effort</span>
+    </div>
+
+    <div class="timeline-item short">
+      <div class="timeline-header">
+        <span class="timeline-title">Net worth tracking (manual)</span>
+      </div>
+      <div class="timeline-desc">Add manual entries for real estate, savings accounts, and pensions. Low development cost (extend existing cash model), high perceived value. Getquin and Kubera prove this drives engagement.</div>
+      <span class="timeline-impact impact-med">Medium Impact &middot; Low Effort</span>
+    </div>
+  </div>
+
+  <h3>Mid-Term <span style="color:var(--violet);font-size:0.85rem;">(6&ndash;18 months)</span></h3>
+  <p class="prose" style="margin-bottom:1rem;">Win on depth and trust. Build defensible moats.</p>
+
+  <div class="timeline">
+    <div class="timeline-item mid">
+      <div class="timeline-header">
+        <span class="timeline-title">European tax reports</span>
+      </div>
+      <div class="timeline-desc">Build country-specific tax summaries: DE (Kapitalertragsteuer), FR (PFU/flat tax), ES (Modelo 720/100), NL (Box 3), IT (Quadro RW). This is Sharesight's moat in AU/NZ &mdash; <strong>no one owns it in Europe</strong>. Biggest Pro upgrade driver possible.</div>
+      <span class="timeline-impact impact-high">Highest Impact &middot; High Effort</span>
+    </div>
+
+    <div class="timeline-item mid">
+      <div class="timeline-header">
+        <span class="timeline-title">Event calendars (earnings, IPO, economic)</span>
+      </div>
+      <div class="timeline-desc">Stock Events proves calendar views drive daily engagement. Combine earnings, ex-dividend, IPO, and economic events into a unified calendar. Integrate with alerts infrastructure for notifications.</div>
+      <span class="timeline-impact impact-med">Medium Impact &middot; Medium Effort</span>
+    </div>
+
+    <div class="timeline-item mid">
+      <div class="timeline-header">
+        <span class="timeline-title">Social features (light)</span>
+      </div>
+      <div class="timeline-desc">Anonymous portfolio sharing with performance comparison, community benchmarks (&ldquo;How does my portfolio compare to similar investors?&rdquo;). Avoid building a full social network; focus on data-driven social proof. Opt-in only.</div>
+      <span class="timeline-impact impact-med">Medium Impact &middot; High Effort</span>
+    </div>
+
+    <div class="timeline-item mid">
+      <div class="timeline-header">
+        <span class="timeline-title">Expand broker sync to 100+ institutions</span>
+      </div>
+      <div class="timeline-desc">Negotiate SnapTrade volume pricing or add Plaid/Salt Edge for broader European coverage. Target Scalable Capital, Trade Republic, Saxo, Hargreaves Lansdown, Swissquote.</div>
+      <span class="timeline-impact impact-high">High Impact &middot; Medium Effort</span>
+    </div>
+
+    <div class="timeline-item mid">
+      <div class="timeline-header">
+        <span class="timeline-title">Native mobile widgets</span>
+      </div>
+      <div class="timeline-desc">Portfolio value, daily P&amp;L, and next dividend on iOS/Android home screens. Capacitor plugin or native Swift/Kotlin widget. Snowball and Stock Events prove this drives daily engagement without opening the app.</div>
+      <span class="timeline-impact impact-med">Medium Impact &middot; Medium Effort</span>
+    </div>
+
+    <div class="timeline-item mid">
+      <div class="timeline-header">
+        <span class="timeline-title">Basic stock screener</span>
+      </div>
+      <div class="timeline-desc">Simple filters: dividend yield &gt; X%, P/E &lt; Y, sector = Z, country = W. Drives discovery, time-in-app, and engagement. Gate behind Pro tier. Simply Wall St's visual screener is the quality benchmark.</div>
+      <span class="timeline-impact impact-med">Medium Impact &middot; Medium Effort</span>
+    </div>
+  </div>
+
+  <h3>Long-Term <span style="color:var(--sky);font-size:0.85rem;">(18&ndash;36 months)</span></h3>
+  <p class="prose" style="margin-bottom:1rem;">Win on ecosystem and platform. Create lock-in and expand TAM.</p>
+
+  <div class="timeline">
+    <div class="timeline-item long">
+      <div class="timeline-header">
+        <span class="timeline-title">Financial planning module</span>
+      </div>
+      <div class="timeline-desc">FIRE calculator, retirement projections, goal-based tracking with milestones. Getquin charges &euro;150/yr for this in their Wealth tier. trefolio could offer it in Pro or as an add-on at &euro;3&ndash;5/mo, undercutting Getquin while expanding ARPU.</div>
+      <span class="timeline-impact impact-high">High Impact &middot; High Effort</span>
+    </div>
+
+    <div class="timeline-item long">
+      <div class="timeline-header">
+        <span class="timeline-title">trefolio Leaf ecosystem expansion</span>
+      </div>
+      <div class="timeline-desc">New devices: e-ink ticker display, wall-mounted dashboard, integration with smart home platforms. Hardware creates lock-in no software competitor can replicate. Each device drives a Pro subscription.</div>
+      <span class="timeline-impact impact-high">High Impact &middot; Very High Effort</span>
+    </div>
+
+    <div class="timeline-item long">
+      <div class="timeline-header">
+        <span class="timeline-title">Advisor &amp; family tier</span>
+      </div>
+      <div class="timeline-desc">Multi-user access, managed portfolios, white-label option. Sharesight and Kubera monetize B2B at 10&ndash;100&times; consumer pricing. Family plan at &euro;12/mo for 3 accounts (from commercialization plan).</div>
+      <span class="timeline-impact impact-high">High Impact &middot; High Effort</span>
+    </div>
+
+    <div class="timeline-item long">
+      <div class="timeline-header">
+        <span class="timeline-title">Public API &amp; integrations</span>
+      </div>
+      <div class="timeline-desc">Developer API, Zapier/Make connectors, Google Sheets add-on. Creates ecosystem stickiness and third-party development. Kubera charges $249/yr for API access.</div>
+      <span class="timeline-impact impact-med">Medium Impact &middot; Medium Effort</span>
+    </div>
+
+    <div class="timeline-item long">
+      <div class="timeline-header">
+        <span class="timeline-title">Regional expansion beyond Europe</span>
+      </div>
+      <div class="timeline-desc">Localize for LATAM (Portuguese/Spanish already done), Southeast Asia (English base), Middle East. Underserved markets with growing retail investor bases and minimal portfolio tracker competition.</div>
+      <span class="timeline-impact impact-high">High Impact &middot; High Effort</span>
+    </div>
+
+    <div class="timeline-item long">
+      <div class="timeline-header">
+        <span class="timeline-title">Backtesting &amp; &ldquo;what-if&rdquo; analysis</span>
+      </div>
+      <div class="timeline-desc">&ldquo;What if I had invested &euro;10K in MSCI World 5 years ago?&rdquo; and portfolio stress testing. Snowball charges $250/yr partly for this. Power-user feature with strong Pro upgrade potential.</div>
+      <span class="timeline-impact impact-med">Medium Impact &middot; High Effort</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECTION 10: KEY TAKEAWAYS -->
+<!-- ============================================================ -->
+<section id="takeaways" aria-labelledby="takeaways-heading">
+  <h2 id="takeaways-heading"><span class="number">10</span> Key Takeaways</h2>
+
+  <div class="card-grid card-grid-2">
+    <div class="card" style="border-left: 3px solid var(--rose);">
+      <div class="card-label" style="color:var(--rose);">Biggest Threat</div>
+      <div class="card-title">Getquin</div>
+      <div class="card-body">Similar market (Europe), overlapping price range, but with 500K+ users, social community moat, 30K+ bank connections, and retirement planning. They are the incumbent to beat. Their weaknesses: fewer languages, privacy concerns, tier fatigue.</div>
+    </div>
+
+    <div class="card" style="border-left: 3px solid var(--emerald);">
+      <div class="card-label" style="color:var(--emerald);">Biggest Opportunity</div>
+      <div class="card-title">European Tax Reports + Multi-Language SEO</div>
+      <div class="card-body">No one serves non-English European investors well. No one offers EU-specific tax reports. trefolio's 35-language support + localized SEO + country-specific tax tools could create an unassailable position in European markets.</div>
+    </div>
+
+    <div class="card" style="border-left: 3px solid var(--amber);">
+      <div class="card-label" style="color:var(--amber);">Underserved Segments</div>
+      <div class="card-title">Three Unowned Markets</div>
+      <div class="card-body">
+        <strong>1.</strong> European long-term holders who find Portfolio Performance too complex but want accuracy.<br>
+        <strong>2.</strong> Non-English-speaking investors ignored by US/UK-centric products.<br>
+        <strong>3.</strong> Dividend-focused European investors with no Sharesight-like tax tool.
+      </div>
+    </div>
+
+    <div class="card" style="border-left: 3px solid var(--sky);">
+      <div class="card-label" style="color:var(--sky);">Timing Advantage</div>
+      <div class="card-title">AI Leadership Window</div>
+      <div class="card-body">Most competitors are just adding AI (or haven't). trefolio's AI analysis + native language delivery + AI import is 12&ndash;18 months ahead. This window won't last forever &mdash; competitors will catch up. Move fast to establish AI as core brand identity.</div>
+    </div>
+
+    <div class="card" style="border-left: 3px solid var(--violet);">
+      <div class="card-label" style="color:var(--violet);">Pricing as a Weapon</div>
+      <div class="card-title">2&ndash;5&times; Cheaper Than Comparable Products</div>
+      <div class="card-body">At &euro;60/yr for Pro with AI, broker sync, and fundamentals, trefolio is radically cheaper than Getquin (&euro;150/yr), Snowball ($250/yr), Simply Wall St ($258/yr), and Sharesight ($372/yr). Price should be front and center in all marketing.</div>
+    </div>
+
+    <div class="card" style="border-left: 3px solid var(--teal);">
+      <div class="card-label" style="color:var(--teal);">Hardware Wildcard</div>
+      <div class="card-title">trefolio Leaf Has No Comparable Product</div>
+      <div class="card-body">A physical AMOLED desk display for your portfolio. Creates emotional attachment, drives Pro conversions, and is impossible for software-only competitors to replicate quickly. The physical-digital loop is a category-defining differentiator.</div>
+    </div>
+  </div>
+
+  <div class="callout callout-emerald" style="margin-top:1.5rem;">
+    <div class="callout-title">Executive Summary</div>
+    trefolio enters a $2.5B+ market with clear differentiation: <strong>35 languages</strong> (3&times; more than any competitor), <strong>AI analysis in native language</strong> (unique), <strong>trefolio Leaf hardware</strong> (category-first), and <strong>aggressive pricing</strong> (2&ndash;5&times; cheaper). The primary challenges are broker sync breadth (Getquin: 30K+ vs trefolio: 20+) and the social community moat (Getquin: 500K+ users). The highest-ROI strategic moves are: <strong>(1)</strong> multi-language SEO blitz to capture uncontested European long-tail queries, <strong>(2)</strong> European tax reports to fill the Sharesight gap in EU markets, and <strong>(3)</strong> rapid expansion of broker connections to reduce onboarding friction. The AI leadership window is 12&ndash;18 months &mdash; speed is essential.
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p>trefolio Competitive Analysis &mdash; March 2026 &mdash; Internal Document</p>
+  <p style="margin-top:0.35rem;">Data sourced from public pricing pages, app store reviews, product documentation, and market research reports.</p>
+</footer>
+
+</body>
+</html>

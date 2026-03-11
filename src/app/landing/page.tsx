@@ -109,6 +109,7 @@ function getFeatureCards(t: T) {
     { icon: "upload", title: t("landingCardImportTitle"), desc: t("landingCardImportDesc") },
     { icon: "pie", title: t("landingCardDiversTitle"), desc: t("landingCardDiversDesc") },
     { icon: "eye", title: t("landingCardStealthTitle"), desc: t("landingCardStealthDesc") },
+    { icon: "calendar", title: t("landingCardEventsTitle"), desc: t("landingCardEventsDesc") },
   ];
 }
 
@@ -146,7 +147,7 @@ function getPricing(t: T): PricingTier[] {
       regularAnnual: "€0", annualPrice: "€0",
       annualSavePct: 0, launchDiscountPct: 0, isFree: true,
       description: t("landingPricingFolioDesc"),
-      features: Array.from({ length: 14 }, (_, i) => t(`landingPricingFolioFeature${i + 1}` as TranslationKey)),
+      features: Array.from({ length: 15 }, (_, i) => t(`landingPricingFolioFeature${i + 1}` as TranslationKey)),
       cta: t("landingPricingFolioCta"),
     },
     {
@@ -157,7 +158,7 @@ function getPricing(t: T): PricingTier[] {
       regularAnnual: "€31.99", annualPrice: "€23.99",
       annualSavePct: 33, launchDiscountPct: 25,
       description: t("landingPricingBifolioDesc"),
-      features: Array.from({ length: 9 }, (_, i) => t(`landingPricingBifolioFeature${i + 1}` as TranslationKey)),
+      features: Array.from({ length: 11 }, (_, i) => t(`landingPricingBifolioFeature${i + 1}` as TranslationKey)),
       cta: t("landingPricingBifolioCta"),
       highlighted: false,
     },
@@ -169,7 +170,7 @@ function getPricing(t: T): PricingTier[] {
       regularAnnual: "€79.99", annualPrice: "€59.99",
       annualSavePct: 37, launchDiscountPct: 20,
       description: t("landingPricingTrefolioDesc"),
-      features: Array.from({ length: 14 }, (_, i) => t(`landingPricingTrefolioFeature${i + 1}` as TranslationKey)),
+      features: Array.from({ length: 16 }, (_, i) => t(`landingPricingTrefolioFeature${i + 1}` as TranslationKey)),
       cta: t("landingPricingTrefolioCta"),
       highlighted: true,
     },
@@ -219,6 +220,12 @@ function FeatureIcon({ type }: { type: string }) {
     eye: (
       <>
         <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+      </>
+    ),
+    calendar: (
+      <>
+        <rect x="3" y="4" width="18" height="18" rx="2" strokeLinecap="round" strokeLinejoin="round" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M16 2v4M8 2v4M3 10h18" />
       </>
     ),
   };

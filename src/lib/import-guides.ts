@@ -322,8 +322,8 @@ export const IMPORT_GUIDES: ImportGuide[] = [
   },
   {
     id: "snaptrade_api",
-    titleEn: "Broker Sync — Automatic Import (Pro)",
-    titleEs: "Sincronización de Bróker — Importación Automática (Pro)",
+    titleEn: "Broker Sync — Automatic Import",
+    titleEs: "Sincronización de Bróker — Importación Automática",
     stepsEn: [
       "Click \"Connect Brokerage\" below.",
       "Select your brokerage from the list (supports 20+ brokerages).",

@@ -997,6 +997,45 @@ const MIGRATIONS: Migration[] = [
       }
     },
   },
+  {
+    version: 30,
+    description: "Add needs_attention flag to snaptrade_connections for surfacing credential issues",
+    up: async (client: Client) => {
+      try {
+        const cols = await client.execute("PRAGMA table_info(snaptrade_connections)");
+        const colNames = new Set(cols.rows.map((r) => str(r.name)));
+        if (!colNames.has("needs_attention")) {
+          await client.execute(
+            `ALTER TABLE snaptrade_connections ADD COLUMN needs_attention INTEGER NOT NULL DEFAULT 0`
+          );
+        }
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("duplicate column")) throw e;
+      }
+    },
+  },
+  {
+    version: 31,
+    description: "Create calendar_events table for earnings, economic, and IPO event calendar",
+    up: async (client: Client) => {
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS calendar_events (
+          id TEXT PRIMARY KEY,
+          event_type TEXT NOT NULL,
+          symbol TEXT,
+          name TEXT NOT NULL,
+          event_date TEXT NOT NULL,
+          event_time TEXT,
+          details TEXT,
+          created_at TEXT DEFAULT (datetime('now')),
+          updated_at TEXT DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_calendar_events_type_date ON calendar_events(event_type, event_date);
+        CREATE INDEX IF NOT EXISTS idx_calendar_events_symbol ON calendar_events(symbol);
+      `);
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

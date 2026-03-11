@@ -1,12 +1,14 @@
 ---
-description: StockTracker UI design system - light/dark fintech theme with emerald accent
+description: trefolio UI design system - light/dark fintech theme with emerald accent
 globs: "**/*.tsx"
 alwaysApply: false
 ---
 
-# StockTracker Design System
+# trefolio Design System
 
 Light/dark fintech dashboard with emerald accent. Dark navy header, adaptive content area, themed cards. Toggle via `useTheme()` from `@/lib/theme-context`.
+
+> Full design system (personas, voice, tokens, components, accessibility): `.cursor/skills/product-manager/design-system.md`
 
 ## Color Palette (light / dark)
 

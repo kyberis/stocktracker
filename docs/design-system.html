@@ -1,0 +1,1547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>trefolio — Design System</title>
+<meta name="description" content="trefolio visual design system: color tokens, components, typography, personas, voice guidelines, and accessibility baseline.">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0f1a;
+    --surface: #111827;
+    --surface2: #1a2332;
+    --border: #1e2d3d;
+    --emerald: #10b981;
+    --emerald-dim: rgba(16,185,129,0.15);
+    --red: #ef4444;
+    --red-dim: rgba(239,68,68,0.12);
+    --amber: #f59e0b;
+    --amber-dim: rgba(245,158,11,0.12);
+    --violet: #8b5cf6;
+    --violet-dim: rgba(139,92,246,0.12);
+    --sky: #38bdf8;
+    --sky-dim: rgba(56,189,248,0.12);
+    --text: #e2e8f0;
+    --text-dim: #94a3b8;
+    --text-muted: #64748b;
+    --radius: 12px;
+    --max-w: 1200px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Source Sans 3', system-ui, sans-serif;
+    min-height: 100vh;
+    line-height: 1.6;
+    background-image:
+      radial-gradient(ellipse 80% 60% at 20% 10%, rgba(16,185,129,0.05), transparent),
+      radial-gradient(ellipse 60% 50% at 80% 80%, rgba(139,92,246,0.03), transparent);
+  }
+
+  a { color: var(--sky); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  a:focus-visible {
+    outline: 2px solid var(--sky);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  .skip-link {
+    position: absolute;
+    top: -100%;
+    left: 1rem;
+    background: var(--emerald);
+    color: var(--bg);
+    padding: 0.5rem 1rem;
+    border-radius: 0 0 8px 8px;
+    font-weight: 700;
+    z-index: 100;
+    transition: top 0.2s;
+  }
+  .skip-link:focus { top: 0; }
+
+  header {
+    max-width: var(--max-w);
+    margin: 0 auto;
+    padding: 3rem 2rem 1.5rem;
+  }
+
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    letter-spacing: -0.02em;
+    margin-bottom: 0.35rem;
+    background: linear-gradient(135deg, var(--emerald) 0%, var(--sky) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .subtitle {
+    color: var(--text-dim);
+    font-size: 0.95rem;
+    font-weight: 300;
+    margin-bottom: 0.5rem;
+  }
+
+  main {
+    max-width: var(--max-w);
+    margin: 0 auto;
+    padding: 0 2rem 4rem;
+  }
+
+  /* --- Navigation --- */
+  .toc {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .toc a {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.35rem 0.85rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-dim);
+    transition: all 0.2s;
+  }
+  .toc a:hover {
+    color: var(--emerald);
+    border-color: var(--emerald);
+    text-decoration: none;
+    background: var(--emerald-dim);
+  }
+
+  /* --- Sections --- */
+  section {
+    margin-bottom: 3rem;
+  }
+
+  section > h2 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-size: 1.6rem;
+    letter-spacing: -0.01em;
+    margin-bottom: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  section > h2 .num {
+    background: var(--emerald);
+    color: var(--bg);
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .section-desc {
+    color: var(--text-dim);
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+  }
+
+  h3 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin: 1.5rem 0 0.75rem;
+    color: var(--text);
+  }
+
+  /* --- Cards --- */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+  }
+
+  /* --- Persona Cards --- */
+  .persona-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1rem;
+  }
+
+  .persona-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .persona-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+  }
+  .persona-card.primary::before { background: var(--emerald); }
+  .persona-card.secondary::before { background: var(--sky); }
+  .persona-card.tertiary::before { background: var(--violet); }
+
+  .persona-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  .persona-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: white;
+    flex-shrink: 0;
+  }
+  .persona-card.primary .persona-avatar { background: var(--emerald); }
+  .persona-card.secondary .persona-avatar { background: var(--sky); }
+  .persona-card.tertiary .persona-avatar { background: var(--violet); }
+
+  .persona-name {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: 1.15rem;
+  }
+  .persona-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+  }
+
+  .persona-detail {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    margin-bottom: 0.5rem;
+    line-height: 1.5;
+  }
+  .persona-detail strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .tag {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    margin-right: 0.3rem;
+    margin-top: 0.4rem;
+  }
+  .tag.emerald { background: var(--emerald-dim); color: var(--emerald); }
+  .tag.sky { background: var(--sky-dim); color: var(--sky); }
+  .tag.violet { background: var(--violet-dim); color: var(--violet); }
+  .tag.amber { background: var(--amber-dim); color: var(--amber); }
+
+  /* --- Tier Table --- */
+  .tier-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    margin-top: 1rem;
+  }
+  .tier-table th {
+    text-align: left;
+    font-weight: 700;
+    padding: 0.6rem 0.75rem;
+    border-bottom: 2px solid var(--border);
+    color: var(--text-dim);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .tier-table td {
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+  .tier-table tr:last-child td { border-bottom: none; }
+  .tier-name {
+    font-weight: 700;
+  }
+  .tier-name.folio { color: var(--text-dim); }
+  .tier-name.bifolio { color: var(--sky); }
+  .tier-name.trefolio { color: var(--emerald); }
+
+  /* --- Voice Section --- */
+  .voice-rules {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+  }
+  .voice-rule {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+  }
+  .voice-rule .rule-title {
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--emerald);
+    margin-bottom: 0.35rem;
+  }
+  .voice-rule p {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  .copy-example {
+    display: grid;
+    grid-template-columns: 140px 1fr 1fr;
+    gap: 0;
+    font-size: 0.82rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-top: 1rem;
+  }
+  .copy-example .ce-head {
+    background: var(--surface2);
+    padding: 0.55rem 0.75rem;
+    font-weight: 700;
+    color: var(--text-dim);
+    border-bottom: 1px solid var(--border);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .copy-example .ce-cell {
+    padding: 0.55rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-dim);
+  }
+  .copy-example .ce-cell:last-child { border-bottom: none; }
+  .copy-example .ce-cell.good { color: var(--emerald); }
+  .copy-example .ce-cell.context { color: var(--text); font-weight: 600; }
+
+  /* --- Color System --- */
+  .color-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 0.75rem;
+  }
+  .color-swatch {
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .color-swatch .swatch-block {
+    height: 64px;
+    display: flex;
+    align-items: flex-end;
+    padding: 0.4rem 0.6rem;
+  }
+  .color-swatch .swatch-hex {
+    font-size: 0.7rem;
+    font-weight: 600;
+    font-family: 'SFMono-Regular', monospace;
+    background: rgba(0,0,0,0.4);
+    color: white;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+  }
+  .color-swatch .swatch-info {
+    background: var(--surface);
+    padding: 0.5rem 0.6rem;
+  }
+  .color-swatch .swatch-name {
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: var(--text);
+  }
+  .color-swatch .swatch-var {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-family: 'SFMono-Regular', monospace;
+  }
+
+  .token-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+    margin-top: 0.75rem;
+  }
+  .token-table th {
+    text-align: left;
+    font-weight: 700;
+    padding: 0.5rem 0.6rem;
+    border-bottom: 2px solid var(--border);
+    color: var(--text-dim);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .token-table td {
+    padding: 0.5rem 0.6rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .token-table tr:last-child td { border-bottom: none; }
+  .token-table code {
+    font-family: 'SFMono-Regular', monospace;
+    font-size: 0.75rem;
+    background: var(--surface2);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    color: var(--sky);
+  }
+  .color-dot {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    vertical-align: middle;
+    margin-right: 0.4rem;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  /* --- Theme Preview --- */
+  .theme-toggle-bar {
+    display: flex;
+    gap: 0;
+    margin-bottom: 1rem;
+    border-radius: 999px;
+    overflow: hidden;
+    width: fit-content;
+    border: 1px solid var(--border);
+  }
+  .theme-toggle-bar button {
+    background: var(--surface);
+    border: none;
+    color: var(--text-dim);
+    padding: 0.45rem 1.1rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .theme-toggle-bar button.active {
+    background: var(--emerald);
+    color: var(--bg);
+  }
+  .theme-toggle-bar button:hover:not(.active) {
+    color: var(--text);
+  }
+
+  .preview-frame {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    transition: all 0.3s;
+  }
+  .preview-frame.light {
+    background: #f8fafc;
+    color: #0f172a;
+  }
+  .preview-frame.dark {
+    background: #0f172a;
+    color: #f1f5f9;
+  }
+
+  /* --- Component Previews --- */
+  .component-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
+  .preview-btn {
+    font-family: 'Source Sans 3', sans-serif;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+  }
+  .preview-btn.primary { background: #10b981; color: white; }
+  .preview-btn.primary:hover { background: #059669; }
+  .preview-btn.secondary-light { background: #f1f5f9; color: #374151; }
+  .preview-btn.secondary-dark { background: #334155; color: #e2e8f0; }
+  .preview-btn.danger { background: #ef4444; color: white; }
+  .preview-btn.danger:hover { background: #dc2626; }
+
+  .preview-card-light {
+    background: white;
+    border: 1px solid #f1f5f9;
+    border-radius: 16px;
+    padding: 1.25rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    max-width: 320px;
+  }
+  .preview-card-dark {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 16px;
+    padding: 1.25rem;
+    max-width: 320px;
+  }
+
+  .preview-input-light {
+    background: white;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+    color: #111827;
+    font-family: inherit;
+    outline: none;
+    width: 200px;
+  }
+  .preview-input-light:focus {
+    border-color: #10b981;
+    box-shadow: 0 0 0 2px rgba(16,185,129,0.3);
+  }
+  .preview-input-dark {
+    background: #1e293b;
+    border: 1px solid #475569;
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+    color: #f1f5f9;
+    font-family: inherit;
+    outline: none;
+    width: 200px;
+  }
+  .preview-input-dark:focus {
+    border-color: #10b981;
+    box-shadow: 0 0 0 2px rgba(16,185,129,0.3);
+  }
+
+  .preview-badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+  }
+
+  .preview-pill {
+    display: inline-block;
+    font-size: 0.78rem;
+    font-weight: 500;
+    padding: 0.3rem 0.85rem;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+
+  .preview-card-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 0.3rem;
+  }
+  .preview-card-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.2rem;
+  }
+  .preview-card-sub {
+    font-size: 0.78rem;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  /* --- Typography --- */
+  .type-scale {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .type-row {
+    display: grid;
+    grid-template-columns: 100px 120px 1fr;
+    border-bottom: 1px solid var(--border);
+    align-items: baseline;
+  }
+  .type-row:last-child { border-bottom: none; }
+  .type-row .type-class {
+    font-family: 'SFMono-Regular', monospace;
+    font-size: 0.72rem;
+    color: var(--sky);
+    padding: 0.75rem;
+    background: var(--surface);
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+  }
+  .type-row .type-use {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    padding: 0.75rem;
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+  }
+  .type-row .type-sample {
+    padding: 0.75rem;
+    color: var(--text);
+  }
+
+  /* --- Spacing --- */
+  .spacing-visual {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-top: 0.75rem;
+  }
+  .spacing-item {
+    text-align: center;
+  }
+  .spacing-box {
+    background: var(--emerald-dim);
+    border: 1px dashed var(--emerald);
+    border-radius: 6px;
+    margin-bottom: 0.35rem;
+  }
+  .spacing-label {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-family: 'SFMono-Regular', monospace;
+  }
+  .spacing-value {
+    font-size: 0.68rem;
+    color: var(--text-dim);
+  }
+
+  .radius-visual {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-top: 0.75rem;
+    align-items: end;
+  }
+  .radius-item {
+    text-align: center;
+  }
+  .radius-box {
+    background: var(--emerald-dim);
+    border: 2px solid var(--emerald);
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 0.35rem;
+  }
+
+  /* --- Animations --- */
+  .anim-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.75rem;
+  }
+  .anim-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+    text-align: center;
+  }
+  .anim-preview {
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.75rem;
+  }
+  .anim-name {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text);
+    font-family: 'SFMono-Regular', monospace;
+    margin-bottom: 0.2rem;
+  }
+  .anim-desc {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+  }
+
+  @keyframes slide-up-demo {
+    0% { opacity: 0; transform: translateY(12px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes live-pulse-demo {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
+  @keyframes shimmer-demo {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  @keyframes progress-demo {
+    0% { transform: translateX(-100%); }
+    50% { transform: translateX(200%); }
+    100% { transform: translateX(200%); }
+  }
+  @keyframes breathe-demo {
+    0%, 100% { transform: scale(1); filter: drop-shadow(0 0 6px rgba(16,185,129,0.15)); }
+    50% { transform: scale(1.15); filter: drop-shadow(0 0 18px rgba(16,185,129,0.45)); }
+  }
+  @keyframes dot-bounce-demo {
+    0%, 80%, 100% { opacity: 0.25; transform: scale(0.7); }
+    40% { opacity: 1; transform: scale(1.3); }
+  }
+  @keyframes ai-border-demo {
+    0% { background-position: 200% 50%; }
+    100% { background-position: -200% 50%; }
+  }
+
+  .demo-slide-up {
+    animation: slide-up-demo 0.6s ease-out infinite alternate;
+  }
+  .demo-pulse {
+    width: 10px; height: 10px; border-radius: 50%; background: var(--emerald);
+    animation: live-pulse-demo 1.5s ease-in-out infinite;
+  }
+  .demo-shimmer {
+    width: 120px; height: 18px; border-radius: 6px;
+    background: linear-gradient(90deg, transparent 0%, rgba(16,185,129,0.12) 40%, rgba(16,185,129,0.2) 50%, rgba(16,185,129,0.12) 60%, transparent 100%);
+    background-size: 200% 100%;
+    animation: shimmer-demo 1.5s ease-in-out infinite;
+  }
+  .demo-progress-track {
+    width: 120px; height: 4px; border-radius: 2px; background: var(--surface2); overflow: hidden; position: relative;
+  }
+  .demo-progress-bar {
+    position: absolute; width: 40%; height: 100%; background: var(--emerald); border-radius: 2px;
+    animation: progress-demo 1.2s ease-in-out infinite;
+  }
+  .demo-breathe {
+    width: 28px; height: 28px; border-radius: 8px; background: var(--emerald);
+    animation: breathe-demo 2s ease-in-out infinite;
+  }
+  .demo-dots {
+    display: flex; gap: 4px;
+  }
+  .demo-dot {
+    width: 8px; height: 8px; border-radius: 50%; background: var(--violet);
+    animation: dot-bounce-demo 1.4s ease-in-out infinite;
+  }
+  .demo-dot:nth-child(2) { animation-delay: 0.2s; }
+  .demo-dot:nth-child(3) { animation-delay: 0.4s; }
+  .demo-ai-cta {
+    position: relative; padding: 0.45rem 1rem; border-radius: 8px; font-size: 0.8rem; font-weight: 600;
+    background: var(--surface); color: var(--violet); isolation: isolate;
+  }
+  .demo-ai-cta::before {
+    content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1.5px;
+    background: linear-gradient(90deg, #8b5cf6 0%, #10b981 25%, #8b5cf6 50%, #10b981 75%, #8b5cf6 100%);
+    background-size: 400% 100%;
+    animation: ai-border-demo 4s linear infinite;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    pointer-events: none; z-index: -1;
+  }
+
+  /* --- Accessibility --- */
+  .a11y-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 0.75rem;
+  }
+  .a11y-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+  }
+  .a11y-card .a11y-title {
+    font-weight: 700;
+    font-size: 0.85rem;
+    margin-bottom: 0.35rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .a11y-card .a11y-icon {
+    font-size: 1rem;
+  }
+  .a11y-card p {
+    font-size: 0.82rem;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+  .a11y-card code {
+    font-family: 'SFMono-Regular', monospace;
+    font-size: 0.72rem;
+    background: var(--surface2);
+    padding: 0.1rem 0.35rem;
+    border-radius: 3px;
+    color: var(--sky);
+  }
+
+  /* --- Icons --- */
+  .icon-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 0.75rem;
+  }
+  .icon-item {
+    text-align: center;
+    width: 80px;
+  }
+  .icon-item svg {
+    display: block;
+    margin: 0 auto 0.35rem;
+  }
+  .icon-item .icon-label {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+  }
+
+  /* --- Footer --- */
+  footer {
+    max-width: var(--max-w);
+    margin: 0 auto;
+    padding: 2rem;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+  }
+
+  /* --- Responsive --- */
+  @media (max-width: 640px) {
+    .copy-example {
+      grid-template-columns: 1fr;
+    }
+    .type-row {
+      grid-template-columns: 1fr;
+    }
+    .type-row .type-class,
+    .type-row .type-use {
+      padding: 0.4rem 0.75rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .demo-slide-up, .demo-pulse, .demo-shimmer, .demo-progress-bar,
+    .demo-breathe, .demo-dot, .demo-ai-cta::before {
+      animation: none !important;
+    }
+  }
+</style>
+</head>
+<body>
+<a href="#main" class="skip-link">Skip to content</a>
+
+<header>
+  <h1>trefolio Design System</h1>
+  <p class="subtitle">Visual tokens, component patterns, voice guidelines, personas, and accessibility baseline. The single reference for product and design decisions.</p>
+</header>
+
+<main id="main">
+  <nav class="toc" aria-label="Sections">
+    <a href="#personas">Personas</a>
+    <a href="#voice">Voice &amp; Language</a>
+    <a href="#colors">Colors</a>
+    <a href="#typography">Typography</a>
+    <a href="#spacing">Spacing &amp; Layout</a>
+    <a href="#components">Components</a>
+    <a href="#animations">Animations</a>
+    <a href="#icons">Iconography</a>
+    <a href="#a11y">Accessibility</a>
+    <a href="#theme">Theme Management</a>
+  </nav>
+
+  <!-- ========== 1. PERSONAS ========== -->
+  <section id="personas">
+    <h2><span class="num">A</span> Customers &amp; Personas</h2>
+    <p class="section-desc">Three target personas mapped to the three-tier pricing model. Every feature decision should be validated against at least one of these.</p>
+
+    <div class="persona-grid">
+      <div class="persona-card primary">
+        <div class="persona-header">
+          <div class="persona-avatar">M</div>
+          <div>
+            <div class="persona-name">"Marta"</div>
+            <div class="persona-label">Primary</div>
+          </div>
+        </div>
+        <div class="persona-detail"><strong>Profile:</strong> Beginner-to-intermediate European retail investor, 25-45 years old</div>
+        <div class="persona-detail"><strong>Portfolio:</strong> 5-50 stocks/ETFs across 1-2 exchanges</div>
+        <div class="persona-detail"><strong>Devices:</strong> Phone (primary), desktop (secondary)</div>
+        <div class="persona-detail"><strong>Goals:</strong> Understand portfolio performance, feel confident, spend minimal time managing it</div>
+        <div class="persona-detail"><strong>Frustrations:</strong> Complex tools, English-only UIs, spreadsheets that break, broker apps showing only one account</div>
+        <div class="persona-detail"><strong>Jobs:</strong> Check value, see gains/losses at a glance, import from broker, compare against benchmark</div>
+        <div>
+          <span class="tag emerald">Folio</span>
+          <span class="tag sky">Bifolio</span>
+          <span class="tag violet">Trefolio</span>
+        </div>
+      </div>
+
+      <div class="persona-card secondary">
+        <div class="persona-header">
+          <div class="persona-avatar">J</div>
+          <div>
+            <div class="persona-name">"Jens"</div>
+            <div class="persona-label">Secondary</div>
+          </div>
+        </div>
+        <div class="persona-detail"><strong>Profile:</strong> European expat, 30-50, intermediate investor</div>
+        <div class="persona-detail"><strong>Portfolio:</strong> Multi-currency holdings across 2-3 exchanges (XETRA + NYSE + AMS)</div>
+        <div class="persona-detail"><strong>Devices:</strong> Desktop (primary), phone (secondary)</div>
+        <div class="persona-detail"><strong>Goals:</strong> See everything in EUR, track FX impact, understand real performance after conversion</div>
+        <div class="persona-detail"><strong>Frustrations:</strong> Poor multi-currency support, manual FX tracking, no consolidated view</div>
+        <div class="persona-detail"><strong>Jobs:</strong> Add multi-currency holdings, see consolidated EUR value, export tax-ready data</div>
+        <div>
+          <span class="tag sky">Bifolio</span>
+          <span class="tag violet">Trefolio</span>
+        </div>
+      </div>
+
+      <div class="persona-card tertiary">
+        <div class="persona-header">
+          <div class="persona-avatar">L</div>
+          <div>
+            <div class="persona-name">"Lucia"</div>
+            <div class="persona-label">Tertiary</div>
+          </div>
+        </div>
+        <div class="persona-detail"><strong>Profile:</strong> Non-English-speaking European investor relying on localized UI</div>
+        <div class="persona-detail"><strong>Portfolio:</strong> Similar to Marta, but language barrier is the key differentiator</div>
+        <div class="persona-detail"><strong>Devices:</strong> Phone-first</div>
+        <div class="persona-detail"><strong>Goals:</strong> Use a portfolio tracker that speaks her language and explains things simply</div>
+        <div class="persona-detail"><strong>Frustrations:</strong> English-only tools are unusable; machine-translated UIs feel broken</div>
+        <div class="persona-detail"><strong>Jobs:</strong> Same as Marta, but entirely in her native language (one of 35 supported)</div>
+        <div>
+          <span class="tag emerald">Folio</span>
+          <span class="tag sky">Bifolio</span>
+          <span class="tag violet">Trefolio</span>
+        </div>
+      </div>
+    </div>
+
+    <h3>Segment-to-Tier Mapping</h3>
+    <div class="card" style="overflow-x:auto">
+      <table class="tier-table">
+        <thead>
+          <tr><th>Tier</th><th>Name</th><th>Price</th><th>Holdings</th><th>AI Calls</th><th>Alerts</th><th>Target</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Free</td><td class="tier-name folio">Folio</td><td>0 EUR</td><td>15</td><td>5/month</td><td>2 (in-app)</td><td>Marta getting started</td></tr>
+          <tr><td>Starter</td><td class="tier-name bifolio">Bifolio</td><td>2.99 EUR/mo</td><td>50</td><td>20/month</td><td>10 + email/push</td><td>Marta or Jens who want more</td></tr>
+          <tr><td>Pro</td><td class="tier-name trefolio">Trefolio</td><td>7.99 EUR/mo</td><td>Unlimited</td><td>Unlimited</td><td>Unlimited</td><td>Jens, power users, fundamentals</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ========== 2. VOICE ========== -->
+  <section id="voice">
+    <h2><span class="num">B</span> Voice &amp; Language</h2>
+    <p class="section-desc">Friendly, approachable, jargon-free &mdash; like explaining stocks to a friend. Tagline: <strong>"Your portfolio. Understood."</strong></p>
+
+    <div class="voice-rules">
+      <div class="voice-rule">
+        <div class="rule-title">Short &amp; benefit-first</div>
+        <p>Lead with what the user gets, not what the system does. Use short sentences.</p>
+      </div>
+      <div class="voice-rule">
+        <div class="rule-title">No jargon in primary UI</div>
+        <p>Avoid "CAGR", "alpha", "Sharpe ratio", "P/E" in headlines. OK in Pro tools with tooltips.</p>
+      </div>
+      <div class="voice-rule">
+        <div class="rule-title">Active voice, second person</div>
+        <p>"Your portfolio gained 4.2%" &mdash; not "A gain of 4.2% was recorded."</p>
+      </div>
+      <div class="voice-rule">
+        <div class="rule-title">No hardcoded strings</div>
+        <p>Every user-facing string through i18n. 35 languages supported. English + Spanish minimum.</p>
+      </div>
+      <div class="voice-rule">
+        <div class="rule-title">Locale-aware numbers</div>
+        <p>Always use <code style="font-family:monospace;font-size:0.78rem;background:var(--surface2);padding:0.1rem 0.3rem;border-radius:3px;color:var(--sky)">formatCurrency</code> and <code style="font-family:monospace;font-size:0.78rem;background:var(--surface2);padding:0.1rem 0.3rem;border-radius:3px;color:var(--sky)">formatPercent</code>. Never hardcode currency symbols.</p>
+      </div>
+      <div class="voice-rule">
+        <div class="rule-title">Emoji policy</div>
+        <p>Never in data cells, tables, or financial figures. Sparingly in onboarding and empty states.</p>
+      </div>
+    </div>
+
+    <h3>Naming Conventions</h3>
+    <div class="card" style="margin-bottom:1rem">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1rem; font-size:0.85rem;">
+        <div><strong style="color:var(--emerald)">Tier names</strong><br><span style="color:var(--text-dim)">Folio, Bifolio, Trefolio &mdash; always capitalized</span></div>
+        <div><strong style="color:var(--emerald)">Product name</strong><br><span style="color:var(--text-dim)">trefolio &mdash; always lowercase in running text</span></div>
+        <div><strong style="color:var(--emerald)">Hardware</strong><br><span style="color:var(--text-dim)">trefolio Leaf &mdash; "Leaf" capitalized</span></div>
+      </div>
+    </div>
+
+    <h3>Copy Patterns</h3>
+    <div class="copy-example">
+      <div class="ce-head">Context</div><div class="ce-head">Pattern</div><div class="ce-head">Example</div>
+      <div class="ce-cell context">Error messages</div><div class="ce-cell">Plain, actionable, no blame</div><div class="ce-cell good">"We couldn't load your portfolio. Try refreshing."</div>
+      <div class="ce-cell context">Empty states</div><div class="ce-cell">Encouraging, guide to action</div><div class="ce-cell good">"No holdings yet. Add your first stock to get started."</div>
+      <div class="ce-cell context">Upgrade prompts</div><div class="ce-cell">Benefit-first, low pressure</div><div class="ce-cell good">"Unlock unlimited AI analysis with Trefolio."</div>
+      <div class="ce-cell context">Confirmations</div><div class="ce-cell">Brief, positive</div><div class="ce-cell good">"Holding added successfully."</div>
+      <div class="ce-cell context">Tooltips</div><div class="ce-cell">Explain why, not just what</div><div class="ce-cell good">"Withholding tax reduces your net dividend based on the stock's country."</div>
+      <div class="ce-cell context">Loading</div><div class="ce-cell">Descriptive when possible</div><div class="ce-cell good">"Loading your portfolio..."</div>
+    </div>
+  </section>
+
+  <!-- ========== 3. COLORS ========== -->
+  <section id="colors">
+    <h2><span class="num">C</span> Color System</h2>
+    <p class="section-desc">Semantic tokens defined as CSS variables in <code style="font-family:monospace;font-size:0.82rem;background:var(--surface2);padding:0.1rem 0.3rem;border-radius:3px;color:var(--sky)">globals.css</code>. The nav bar stays dark navy in both themes.</p>
+
+    <h3>Brand &amp; Functional Colors</h3>
+    <div class="color-grid">
+      <div class="color-swatch">
+        <div class="swatch-block" style="background:#10b981"><span class="swatch-hex">#10b981</span></div>
+        <div class="swatch-info"><div class="swatch-name">Emerald / Accent</div><div class="swatch-var">--accent, --gain</div></div>
+      </div>
+      <div class="color-swatch">
+        <div class="swatch-block" style="background:#ef4444"><span class="swatch-hex">#ef4444</span></div>
+        <div class="swatch-info"><div class="swatch-name">Red / Loss</div><div class="swatch-var">--loss</div></div>
+      </div>
+      <div class="color-swatch">
+        <div class="swatch-block" style="background:#f59e0b"><span class="swatch-hex">#f59e0b</span></div>
+        <div class="swatch-info"><div class="swatch-name">Amber / Warning</div><div class="swatch-var">amber-500</div></div>
+      </div>
+      <div class="color-swatch">
+        <div class="swatch-block" style="background:#8b5cf6"><span class="swatch-hex">#8b5cf6</span></div>
+        <div class="swatch-info"><div class="swatch-name">Violet / AI &amp; Pro</div><div class="swatch-var">violet-500</div></div>
+      </div>
+      <div class="color-swatch">
+        <div class="swatch-block" style="background:#0f172a"><span class="swatch-hex">#0f172a</span></div>
+        <div class="swatch-info"><div class="swatch-name">Navy / Nav</div><div class="swatch-var">--nav-bg</div></div>
+      </div>
+      <div class="color-swatch">
+        <div class="swatch-block" style="background:#d1fae5"><span class="swatch-hex">#d1fae5</span></div>
+        <div class="swatch-info"><div class="swatch-name">Emerald Light</div><div class="swatch-var">--accent-light</div></div>
+      </div>
+    </div>
+
+    <h3>Semantic Tokens &mdash; Light vs Dark</h3>
+    <div class="card" style="overflow-x:auto">
+      <table class="token-table">
+        <thead>
+          <tr><th>Token</th><th>Light</th><th>Dark</th><th>Usage</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>--background</code></td><td><span class="color-dot" style="background:#f8fafc"></span>#f8fafc</td><td><span class="color-dot" style="background:#0f172a"></span>#0f172a</td><td>Page background</td></tr>
+          <tr><td><code>--foreground</code></td><td><span class="color-dot" style="background:#0f172a"></span>#0f172a</td><td><span class="color-dot" style="background:#f1f5f9"></span>#f1f5f9</td><td>Primary text</td></tr>
+          <tr><td><code>--card</code></td><td><span class="color-dot" style="background:#ffffff;border-color:rgba(0,0,0,0.15)"></span>#ffffff</td><td><span class="color-dot" style="background:#1e293b"></span>#1e293b</td><td>Card surfaces</td></tr>
+          <tr><td><code>--card-hover</code></td><td><span class="color-dot" style="background:#f1f5f9"></span>#f1f5f9</td><td><span class="color-dot" style="background:#334155"></span>#334155</td><td>Card hover state</td></tr>
+          <tr><td><code>--border</code></td><td><span class="color-dot" style="background:#e2e8f0"></span>#e2e8f0</td><td><span class="color-dot" style="background:#334155"></span>#334155</td><td>Default borders</td></tr>
+          <tr><td><code>--muted</code></td><td><span class="color-dot" style="background:#64748b"></span>#64748b</td><td><span class="color-dot" style="background:#94a3b8"></span>#94a3b8</td><td>Muted text</td></tr>
+          <tr><td><code>--gain</code></td><td colspan="2" style="text-align:center"><span class="color-dot" style="background:#10b981"></span>#10b981</td><td>Positive values</td></tr>
+          <tr><td><code>--loss</code></td><td colspan="2" style="text-align:center"><span class="color-dot" style="background:#ef4444"></span>#ef4444</td><td>Negative values</td></tr>
+          <tr><td><code>--nav-bg</code></td><td colspan="2" style="text-align:center"><span class="color-dot" style="background:#0f172a"></span>#0f172a</td><td>Nav (constant)</td></tr>
+          <tr><td><code>--nav-text</code></td><td colspan="2" style="text-align:center"><span class="color-dot" style="background:#f1f5f9"></span>#f1f5f9</td><td>Nav text (constant)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Color Rules</h3>
+    <div class="voice-rules">
+      <div class="voice-rule">
+        <div class="rule-title">Always pair dark variants</div>
+        <p>Every <code style="font-family:monospace;font-size:0.75rem;background:var(--surface2);padding:0.1rem 0.3rem;border-radius:3px;color:var(--sky)">text-X</code> needs a <code style="font-family:monospace;font-size:0.75rem;background:var(--surface2);padding:0.1rem 0.3rem;border-radius:3px;color:var(--sky)">dark:text-Y</code> pair for backgrounds, text, and borders.</p>
+      </div>
+      <div class="voice-rule">
+        <div class="rule-title">Never color alone</div>
+        <p>Gain/loss must include an arrow, +/&minus; sign, or icon alongside the color.</p>
+      </div>
+      <div class="voice-rule">
+        <div class="rule-title">Soft dark backgrounds</div>
+        <p>Use <code style="font-family:monospace;font-size:0.75rem;background:var(--surface2);padding:0.1rem 0.3rem;border-radius:3px;color:var(--sky)">dark:bg-{color}-500/10</code> not <code style="font-family:monospace;font-size:0.75rem;background:var(--surface2);padding:0.1rem 0.3rem;border-radius:3px;color:var(--sky)">dark:bg-{color}-900</code>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 4. TYPOGRAPHY ========== -->
+  <section id="typography">
+    <h2><span class="num">D</span> Typography</h2>
+    <p class="section-desc">Geist Sans for body and headings; Geist Mono for numbers and code. Loaded via <code style="font-family:monospace;font-size:0.82rem;background:var(--surface2);padding:0.1rem 0.3rem;border-radius:3px;color:var(--sky)">next/font</code>.</p>
+
+    <h3>Type Scale</h3>
+    <div class="type-scale">
+      <div class="type-row">
+        <div class="type-class">text-3xl</div>
+        <div class="type-use">Hero headings</div>
+        <div class="type-sample" style="font-size:1.875rem;font-weight:700;line-height:1.2">Portfolio Overview</div>
+      </div>
+      <div class="type-row">
+        <div class="type-class">text-2xl</div>
+        <div class="type-use">Page titles</div>
+        <div class="type-sample" style="font-size:1.5rem;font-weight:700;line-height:1.3">Your Holdings</div>
+      </div>
+      <div class="type-row">
+        <div class="type-class">text-xl</div>
+        <div class="type-use">Section headings</div>
+        <div class="type-sample" style="font-size:1.25rem;font-weight:600;line-height:1.4">Market Summary</div>
+      </div>
+      <div class="type-row">
+        <div class="type-class">text-lg</div>
+        <div class="type-use">Subheadings</div>
+        <div class="type-sample" style="font-size:1.125rem;font-weight:600;line-height:1.4">Dividend Income</div>
+      </div>
+      <div class="type-row">
+        <div class="type-class">text-base</div>
+        <div class="type-use">Body text</div>
+        <div class="type-sample" style="font-size:1rem;line-height:1.6">Your portfolio gained 4.2% this month, outperforming the S&amp;P 500 by 1.1%.</div>
+      </div>
+      <div class="type-row">
+        <div class="type-class">text-sm</div>
+        <div class="type-use">Labels, table cells</div>
+        <div class="type-sample" style="font-size:0.875rem;color:var(--text-dim)">Last updated 2 minutes ago</div>
+      </div>
+      <div class="type-row">
+        <div class="type-class">text-xs</div>
+        <div class="type-use">Badges, fine print</div>
+        <div class="type-sample" style="font-size:0.75rem;color:var(--text-muted)">PRO &bull; Updated Mar 11</div>
+      </div>
+    </div>
+
+    <h3>Font Weights</h3>
+    <div class="card" style="overflow-x:auto">
+      <table class="token-table">
+        <thead><tr><th>Weight</th><th>Class</th><th>Use</th><th>Sample</th></tr></thead>
+        <tbody>
+          <tr><td>400</td><td><code>&mdash;</code></td><td>Body text</td><td style="font-weight:400">Your portfolio. Understood.</td></tr>
+          <tr><td>500</td><td><code>font-medium</code></td><td>Buttons, labels</td><td style="font-weight:500">Add Holding</td></tr>
+          <tr><td>600</td><td><code>font-semibold</code></td><td>Card titles</td><td style="font-weight:600">Performance Metrics</td></tr>
+          <tr><td>700</td><td><code>font-bold</code></td><td>Emphasis, totals</td><td style="font-weight:700">&euro;12,450.00</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Notes</h3>
+    <div class="voice-rules">
+      <div class="voice-rule">
+        <div class="rule-title">Antialiased rendering</div>
+        <p>Body uses <code style="font-family:monospace;font-size:0.75rem;background:var(--surface2);padding:0.1rem 0.3rem;border-radius:3px;color:var(--sky)">antialiased</code> (set in layout.tsx).</p>
+      </div>
+      <div class="voice-rule">
+        <div class="rule-title">Tabular numbers</div>
+        <p>Use <code style="font-family:monospace;font-size:0.75rem;background:var(--surface2);padding:0.1rem 0.3rem;border-radius:3px;color:var(--sky)">tabular-nums</code> on financial figures for aligned decimal points.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 5. SPACING ========== -->
+  <section id="spacing">
+    <h2><span class="num">E</span> Spacing &amp; Layout</h2>
+    <p class="section-desc">Consistent spacing scale with Tailwind utilities. Max content width <code style="font-family:monospace;font-size:0.82rem;background:var(--surface2);padding:0.1rem 0.3rem;border-radius:3px;color:var(--sky)">max-w-7xl</code> (80rem).</p>
+
+    <h3>Spacing Scale</h3>
+    <div class="spacing-visual">
+      <div class="spacing-item">
+        <div class="spacing-box" style="width:32px;height:32px"></div>
+        <div class="spacing-label">gap-2</div>
+        <div class="spacing-value">8px &bull; Tight</div>
+      </div>
+      <div class="spacing-item">
+        <div class="spacing-box" style="width:48px;height:48px"></div>
+        <div class="spacing-label">gap-3</div>
+        <div class="spacing-value">12px &bull; Standard</div>
+      </div>
+      <div class="spacing-item">
+        <div class="spacing-box" style="width:64px;height:64px"></div>
+        <div class="spacing-label">gap-4</div>
+        <div class="spacing-value">16px &bull; Standard</div>
+      </div>
+      <div class="spacing-item">
+        <div class="spacing-box" style="width:96px;height:96px"></div>
+        <div class="spacing-label">gap-6</div>
+        <div class="spacing-value">24px &bull; Section</div>
+      </div>
+      <div class="spacing-item">
+        <div class="spacing-box" style="width:128px;height:128px"></div>
+        <div class="spacing-label">gap-8</div>
+        <div class="spacing-value">32px &bull; Page</div>
+      </div>
+    </div>
+
+    <h3>Border Radius</h3>
+    <div class="radius-visual">
+      <div class="radius-item">
+        <div class="radius-box" style="border-radius:16px"></div>
+        <div class="spacing-label">rounded-2xl</div>
+        <div class="spacing-value">Cards, modals</div>
+      </div>
+      <div class="radius-item">
+        <div class="radius-box" style="border-radius:8px"></div>
+        <div class="spacing-label">rounded-lg</div>
+        <div class="spacing-value">Buttons, inputs</div>
+      </div>
+      <div class="radius-item">
+        <div class="radius-box" style="border-radius:9999px"></div>
+        <div class="spacing-label">rounded-full</div>
+        <div class="spacing-value">Pills, badges</div>
+      </div>
+    </div>
+
+    <h3>Responsive Breakpoints</h3>
+    <div class="card" style="overflow-x:auto">
+      <table class="token-table">
+        <thead><tr><th>Breakpoint</th><th>Prefix</th><th>Behavior</th></tr></thead>
+        <tbody>
+          <tr><td>&lt; 640px</td><td><code>(default)</code></td><td>Mobile &mdash; single column, bottom tab bar visible</td></tr>
+          <tr><td>&ge; 640px</td><td><code>sm:</code></td><td>Tablet &mdash; sidebar appears, tab bar hidden</td></tr>
+          <tr><td>&ge; 768px</td><td><code>md:</code></td><td>Small desktop &mdash; multi-column grids</td></tr>
+          <tr><td>&ge; 1024px</td><td><code>lg:</code></td><td>Desktop &mdash; full layout</td></tr>
+          <tr><td>&ge; 1280px</td><td><code>xl:</code></td><td>Wide desktop &mdash; max-w-7xl content area</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ========== 6. COMPONENTS ========== -->
+  <section id="components">
+    <h2><span class="num">F</span> Component Catalog</h2>
+    <p class="section-desc">Live previews of core components in both themes. Toggle between light and dark to compare.</p>
+
+    <div class="theme-toggle-bar" role="radiogroup" aria-label="Preview theme">
+      <button class="active" onclick="setPreviewTheme('dark')" role="radio" aria-checked="true">Dark</button>
+      <button onclick="setPreviewTheme('light')" role="radio" aria-checked="false">Light</button>
+    </div>
+
+    <div id="preview-area" class="preview-frame dark">
+
+      <!-- Buttons -->
+      <h3 style="margin-top:0;margin-bottom:0.75rem;font-family:'Playfair Display',serif;font-size:1rem">Buttons</h3>
+      <div class="component-row">
+        <button class="preview-btn primary">Add Holding</button>
+        <button class="preview-btn" id="btn-secondary">Import CSV</button>
+        <button class="preview-btn danger">Delete</button>
+      </div>
+
+      <!-- Pills -->
+      <h3 style="margin-bottom:0.75rem;font-family:'Playfair Display',serif;font-size:1rem">Pill Selectors</h3>
+      <div class="component-row">
+        <span class="preview-pill" style="background:#10b981;color:white">1M</span>
+        <span class="preview-pill" id="pill-inactive">3M</span>
+        <span class="preview-pill" id="pill-inactive2">1Y</span>
+        <span class="preview-pill" id="pill-inactive3">All</span>
+      </div>
+
+      <!-- Badges -->
+      <h3 style="margin-bottom:0.75rem;font-family:'Playfair Display',serif;font-size:1rem">Badges</h3>
+      <div class="component-row">
+        <span class="preview-badge" id="badge-gain">+4.2%</span>
+        <span class="preview-badge" id="badge-loss">&minus;1.8%</span>
+        <span class="preview-badge" id="badge-warn">Pending</span>
+        <span class="preview-badge" id="badge-pro">Pro</span>
+      </div>
+
+      <!-- Input -->
+      <h3 style="margin-bottom:0.75rem;font-family:'Playfair Display',serif;font-size:1rem">Input</h3>
+      <div class="component-row">
+        <input id="preview-input" type="text" placeholder="Search holdings..." class="preview-input-dark">
+      </div>
+
+      <!-- Card -->
+      <h3 style="margin-bottom:0.75rem;font-family:'Playfair Display',serif;font-size:1rem">Card</h3>
+      <div id="preview-card" class="preview-card-dark">
+        <div class="preview-card-title" id="card-title">Total Portfolio Value</div>
+        <div class="preview-card-value" id="card-value">&euro;24,831.50</div>
+        <div class="preview-card-sub" id="card-sub">
+          <span id="card-arrow" style="color:#10b981">&#9650;</span>
+          <span id="card-gain" style="color:#10b981">+&euro;1,042.30 (4.38%)</span>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <h3 style="margin-top:1.25rem;margin-bottom:0.75rem;font-family:'Playfair Display',serif;font-size:1rem">Empty State</h3>
+      <div style="text-align:center;padding:2rem 1rem">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto 0.75rem;display:block;opacity:0.4">
+          <path d="M12 6v6l4 2"/>
+          <circle cx="12" cy="12" r="10"/>
+        </svg>
+        <div id="empty-heading" style="font-weight:600;font-size:1rem;margin-bottom:0.25rem">No holdings yet</div>
+        <div id="empty-desc" style="font-size:0.85rem;opacity:0.6;margin-bottom:0.75rem">Add your first stock to get started.</div>
+        <button class="preview-btn primary" style="font-size:0.82rem">Add First Holding</button>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ========== 7. ANIMATIONS ========== -->
+  <section id="animations">
+    <h2><span class="num">G</span> Animations</h2>
+    <p class="section-desc">All animations respect <code style="font-family:monospace;font-size:0.82rem;background:var(--surface2);padding:0.1rem 0.3rem;border-radius:3px;color:var(--sky)">prefers-reduced-motion</code>. No content flashes more than 3 times/second.</p>
+
+    <div class="anim-grid">
+      <div class="anim-card">
+        <div class="anim-preview"><div class="demo-slide-up" style="width:60px;height:24px;border-radius:6px;background:var(--emerald-dim);border:1px solid var(--emerald)"></div></div>
+        <div class="anim-name">slide-up</div>
+        <div class="anim-desc">Card entrance &bull; 0.35s ease-out</div>
+      </div>
+      <div class="anim-card">
+        <div class="anim-preview"><div class="demo-pulse"></div></div>
+        <div class="anim-name">live-pulse</div>
+        <div class="anim-desc">Live indicators &bull; 1.5s infinite</div>
+      </div>
+      <div class="anim-card">
+        <div class="anim-preview"><div class="demo-shimmer"></div></div>
+        <div class="anim-name">value-shimmer</div>
+        <div class="anim-desc">Skeleton loading &bull; 1.5s infinite</div>
+      </div>
+      <div class="anim-card">
+        <div class="anim-preview"><div class="demo-progress-track"><div class="demo-progress-bar"></div></div></div>
+        <div class="anim-name">progress-bar</div>
+        <div class="anim-desc">Progress indicator &bull; 1.2s infinite</div>
+      </div>
+      <div class="anim-card">
+        <div class="anim-preview"><div class="demo-breathe"></div></div>
+        <div class="anim-name">logo-breathe</div>
+        <div class="anim-desc">Logo loading &bull; 2s infinite</div>
+      </div>
+      <div class="anim-card">
+        <div class="anim-preview"><div class="demo-dots"><div class="demo-dot"></div><div class="demo-dot"></div><div class="demo-dot"></div></div></div>
+        <div class="anim-name">dot-bounce</div>
+        <div class="anim-desc">AI thinking &bull; 1.4s staggered</div>
+      </div>
+      <div class="anim-card">
+        <div class="anim-preview"><div class="demo-ai-cta">AI Insights</div></div>
+        <div class="anim-name">ai-cta-shimmer</div>
+        <div class="anim-desc">Premium CTA border &bull; 4s linear</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 8. ICONS ========== -->
+  <section id="icons">
+    <h2><span class="num">H</span> Iconography</h2>
+    <p class="section-desc">Primary: inline SVGs (24&times;24, <code style="font-family:monospace;font-size:0.82rem;background:var(--surface2);padding:0.1rem 0.3rem;border-radius:3px;color:var(--sky)">stroke="currentColor"</code>). Secondary: <code style="font-family:monospace;font-size:0.82rem;background:var(--surface2);padding:0.1rem 0.3rem;border-radius:3px;color:var(--sky)">lucide-react</code>.</p>
+
+    <div class="icon-grid">
+      <div class="icon-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <div class="icon-label">Home</div>
+      </div>
+      <div class="icon-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <div class="icon-label">Search</div>
+      </div>
+      <div class="icon-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14M5 12h14"/></svg>
+        <div class="icon-label">Add</div>
+      </div>
+      <div class="icon-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <div class="icon-label">Chart</div>
+      </div>
+      <div class="icon-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        <div class="icon-label">Alert</div>
+      </div>
+      <div class="icon-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <div class="icon-label">Profile</div>
+      </div>
+      <div class="icon-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        <div class="icon-label">Settings</div>
+      </div>
+      <div class="icon-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <div class="icon-label">Download</div>
+      </div>
+    </div>
+
+    <h3 style="margin-top:1.5rem">Icon Rules</h3>
+    <div class="voice-rules">
+      <div class="voice-rule">
+        <div class="rule-title">Icon-only buttons</div>
+        <p>Must always include <code style="font-family:monospace;font-size:0.75rem;background:var(--surface2);padding:0.1rem 0.3rem;border-radius:3px;color:var(--sky)">aria-label</code> for screen readers.</p>
+      </div>
+      <div class="voice-rule">
+        <div class="rule-title">Decorative icons</div>
+        <p>Use <code style="font-family:monospace;font-size:0.75rem;background:var(--surface2);padding:0.1rem 0.3rem;border-radius:3px;color:var(--sky)">aria-hidden="true"</code> so screen readers skip them.</p>
+      </div>
+      <div class="voice-rule">
+        <div class="rule-title">Use currentColor</div>
+        <p>Prefer <code style="font-family:monospace;font-size:0.75rem;background:var(--surface2);padding:0.1rem 0.3rem;border-radius:3px;color:var(--sky)">stroke="currentColor"</code> so icons inherit text color and respect themes.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 9. ACCESSIBILITY ========== -->
+  <section id="a11y">
+    <h2><span class="num">I</span> Accessibility Baseline</h2>
+    <p class="section-desc">WCAG 2.1 AA minimum on all user-facing surfaces. Full review process in the <code style="font-family:monospace;font-size:0.82rem;background:var(--surface2);padding:0.1rem 0.3rem;border-radius:3px;color:var(--sky)">accessibility-reviewer</code> skill.</p>
+
+    <div class="a11y-grid">
+      <div class="a11y-card">
+        <div class="a11y-title"><span class="a11y-icon">&#x1f50d;</span> Text Contrast</div>
+        <p>4.5:1 minimum for normal text. 3:1 for large text (&ge;18px bold or &ge;24px). Test both themes independently.</p>
+      </div>
+      <div class="a11y-card">
+        <div class="a11y-title"><span class="a11y-icon">&#x2328;</span> Focus Indicators</div>
+        <p>Visible on all interactive elements. Use <code>focus-visible:ring-2 focus-visible:ring-emerald-500</code>. Never <code>outline-none</code> without replacement.</p>
+      </div>
+      <div class="a11y-card">
+        <div class="a11y-title"><span class="a11y-icon">&#x21b9;</span> Keyboard Navigation</div>
+        <p>All interactive elements via Tab/Shift+Tab/Enter/Space/Escape. Modals trap focus. Return focus to trigger on dismiss.</p>
+      </div>
+      <div class="a11y-card">
+        <div class="a11y-title"><span class="a11y-icon">&#x1f4ac;</span> Screen Readers</div>
+        <p>All images have <code>alt</code> text. Dynamic content uses <code>aria-live</code> regions. Route changes announce page title.</p>
+      </div>
+      <div class="a11y-card">
+        <div class="a11y-title"><span class="a11y-icon">&#x1f3a8;</span> Color Independence</div>
+        <p>Never use color as sole indicator. Gain/loss always includes +/&minus; or arrow icons alongside color.</p>
+      </div>
+      <div class="a11y-card">
+        <div class="a11y-title"><span class="a11y-icon">&#x1f4f1;</span> Touch Targets</div>
+        <p>Minimum 44&times;44px on mobile. Content usable at 200% zoom without horizontal scroll. Never disable pinch-to-zoom.</p>
+      </div>
+      <div class="a11y-card">
+        <div class="a11y-title"><span class="a11y-icon">&#x23ef;</span> Motion</div>
+        <p>Respect <code>prefers-reduced-motion</code>. All animations disabled when user opts out. No flashing &gt;3 times/second.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 10. THEME ========== -->
+  <section id="theme">
+    <h2><span class="num">J</span> Theme Management</h2>
+    <p class="section-desc">Dark/light toggle via <code style="font-family:monospace;font-size:0.82rem;background:var(--surface2);padding:0.1rem 0.3rem;border-radius:3px;color:var(--sky)">useTheme()</code> hook from <code style="font-family:monospace;font-size:0.82rem;background:var(--surface2);padding:0.1rem 0.3rem;border-radius:3px;color:var(--sky)">src/lib/theme-context.tsx</code>.</p>
+
+    <div class="card" style="overflow-x:auto">
+      <table class="token-table">
+        <thead><tr><th>Aspect</th><th>Detail</th></tr></thead>
+        <tbody>
+          <tr><td>Hook</td><td><code>useTheme()</code> from <code>@/lib/theme-context</code></td></tr>
+          <tr><td>Storage</td><td><code>localStorage</code> key <code>trefolio-theme</code></td></tr>
+          <tr><td>Default</td><td>Follows <code>prefers-color-scheme: dark</code> if no stored preference</td></tr>
+          <tr><td>Implementation</td><td><code>.dark</code> class on <code>document.documentElement</code></td></tr>
+          <tr><td>Meta theme color</td><td><span class="color-dot" style="background:#10b981"></span><code>#10b981</code> (emerald)</td></tr>
+          <tr><td>Auth pages</td><td>Must wrap with <code>&lt;ThemeProvider&gt;</code> &mdash; outside main layout</td></tr>
+          <tr><td>Charts</td><td>Use <code>useTheme()</code> for dynamic axis/tooltip colors</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <p>&copy; 2026 trefolio &mdash; Design System Reference</p>
+  <p style="margin-top:0.25rem">Source of truth: <code style="font-family:monospace;font-size:0.75rem;color:var(--sky)">.cursor/skills/product-manager/design-system.md</code></p>
+</footer>
+
+<script>
+function setPreviewTheme(theme) {
+  const area = document.getElementById('preview-area');
+  const btns = document.querySelectorAll('.theme-toggle-bar button');
+  btns.forEach(b => {
+    b.classList.remove('active');
+    b.setAttribute('aria-checked', 'false');
+  });
+  if (theme === 'light') {
+    btns[1].classList.add('active');
+    btns[1].setAttribute('aria-checked', 'true');
+    area.className = 'preview-frame light';
+  } else {
+    btns[0].classList.add('active');
+    btns[0].setAttribute('aria-checked', 'true');
+    area.className = 'preview-frame dark';
+  }
+  updatePreviewColors(theme);
+}
+
+function updatePreviewColors(theme) {
+  const isDark = theme === 'dark';
+
+  // Secondary button
+  const secBtn = document.getElementById('btn-secondary');
+  secBtn.className = 'preview-btn ' + (isDark ? 'secondary-dark' : 'secondary-light');
+
+  // Pill inactives
+  ['pill-inactive', 'pill-inactive2', 'pill-inactive3'].forEach(id => {
+    const el = document.getElementById(id);
+    el.style.background = isDark ? '#334155' : '#f1f5f9';
+    el.style.color = isDark ? '#cbd5e1' : '#4b5563';
+  });
+
+  // Badges
+  const bg = document.getElementById('badge-gain');
+  bg.style.background = isDark ? 'rgba(16,185,129,0.1)' : '#ecfdf5';
+  bg.style.color = isDark ? '#34d399' : '#059669';
+
+  const bl = document.getElementById('badge-loss');
+  bl.style.background = isDark ? 'rgba(239,68,68,0.1)' : '#fef2f2';
+  bl.style.color = isDark ? '#f87171' : '#ef4444';
+
+  const bw = document.getElementById('badge-warn');
+  bw.style.background = isDark ? 'rgba(245,158,11,0.1)' : '#fffbeb';
+  bw.style.color = isDark ? '#fbbf24' : '#d97706';
+
+  const bp = document.getElementById('badge-pro');
+  bp.style.background = isDark ? 'rgba(139,92,246,0.1)' : '#f5f3ff';
+  bp.style.color = isDark ? '#a78bfa' : '#7c3aed';
+
+  // Input
+  const input = document.getElementById('preview-input');
+  input.className = isDark ? 'preview-input-dark' : 'preview-input-light';
+
+  // Card
+  const card = document.getElementById('preview-card');
+  card.className = isDark ? 'preview-card-dark' : 'preview-card-light';
+
+  const cardTitle = document.getElementById('card-title');
+  cardTitle.style.color = isDark ? '#f1f5f9' : '#111827';
+
+  const cardValue = document.getElementById('card-value');
+  cardValue.style.color = isDark ? '#ffffff' : '#0f172a';
+
+  const cardSub = document.getElementById('card-sub');
+  cardSub.style.color = isDark ? '#94a3b8' : '#6b7280';
+
+  // Empty state
+  const eh = document.getElementById('empty-heading');
+  eh.style.color = isDark ? '#f1f5f9' : '#111827';
+
+  const ed = document.getElementById('empty-desc');
+  ed.style.color = isDark ? '#94a3b8' : '#6b7280';
+
+  // Heading text colors inside preview
+  const previewH3s = document.querySelectorAll('#preview-area h3');
+  previewH3s.forEach(h => h.style.color = isDark ? '#f1f5f9' : '#111827');
+}
+
+// Initialize
+updatePreviewColors('dark');
+</script>
+</body>
+</html>
