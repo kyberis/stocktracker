@@ -16,6 +16,7 @@ interface AdminUser {
   displayName: string;
   mustChangePassword: boolean;
   createdAt: string;
+  lastActiveAt: string;
 }
 
 interface LandingAnalytics {
@@ -2233,6 +2234,146 @@ function MockAdBlock({ slotKey, slots }: { slotKey: string; slots: Record<string
   );
 }
 
+function CronJobsCard() {
+  const [stats, setStats] = useState<{
+    jobName: string;
+    totalRuns: number;
+    successCount: number;
+    errorCount: number;
+    successRate: number;
+    avgDurationMs: number;
+    lastRunAt: string;
+    lastStatus: string;
+  }[]>([]);
+  const [recent, setRecent] = useState<{
+    id: string;
+    jobName: string;
+    startedAt: string;
+    finishedAt: string;
+    status: string;
+    result: string;
+    errorMessage: string;
+    durationMs: number;
+  }[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showRecent, setShowRecent] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/admin/cron-stats")
+      .then((r) => r.json())
+      .then((data) => {
+        setStats(data.stats || []);
+        setRecent(data.recent || []);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  return (
+    <div className="card p-6 space-y-4">
+      <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Cron Jobs</h3>
+      {loading ? (
+        <p className="text-xs text-gray-500 dark:text-slate-400">Loading...</p>
+      ) : stats.length === 0 ? (
+        <p className="text-xs text-gray-500 dark:text-slate-400">No cron executions recorded yet.</p>
+      ) : (
+        <>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead className="bg-gray-50 dark:bg-slate-800/50">
+                <tr className="text-gray-500 dark:text-slate-400">
+                  <th className="text-left p-2 font-medium">Job</th>
+                  <th className="text-right p-2 font-medium">Runs</th>
+                  <th className="text-right p-2 font-medium">Success</th>
+                  <th className="text-right p-2 font-medium">Errors</th>
+                  <th className="text-right p-2 font-medium">Rate</th>
+                  <th className="text-right p-2 font-medium">Avg (ms)</th>
+                  <th className="text-left p-2 font-medium">Last Run</th>
+                  <th className="text-left p-2 font-medium">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stats.map((s) => (
+                  <tr key={s.jobName} className="border-t border-gray-100 dark:border-slate-700">
+                    <td className="p-2 font-medium text-gray-900 dark:text-white">{s.jobName}</td>
+                    <td className="p-2 text-right text-gray-600 dark:text-slate-300">{s.totalRuns}</td>
+                    <td className="p-2 text-right text-emerald-600 dark:text-emerald-400">{s.successCount}</td>
+                    <td className="p-2 text-right text-red-600 dark:text-red-400">{s.errorCount}</td>
+                    <td className="p-2 text-right text-gray-600 dark:text-slate-300">{s.successRate}%</td>
+                    <td className="p-2 text-right text-gray-600 dark:text-slate-300">{s.avgDurationMs}</td>
+                    <td className="p-2 text-gray-500 dark:text-slate-400">
+                      {s.lastRunAt ? new Date(s.lastRunAt + "Z").toLocaleString() : "—"}
+                    </td>
+                    <td className="p-2">
+                      <span className={`inline-flex px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
+                        s.lastStatus === "success"
+                          ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+                          : s.lastStatus === "error"
+                            ? "bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400"
+                            : "bg-yellow-50 dark:bg-yellow-500/10 text-yellow-700 dark:text-yellow-400"
+                      }`}>
+                        {s.lastStatus || "—"}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <button
+            onClick={() => setShowRecent(!showRecent)}
+            className="btn-secondary text-xs px-3 py-1"
+          >
+            {showRecent ? "Hide" : "Show"} recent executions ({recent.length})
+          </button>
+
+          {showRecent && recent.length > 0 && (
+            <div className="overflow-x-auto max-h-80 overflow-y-auto">
+              <table className="w-full text-xs">
+                <thead className="bg-gray-50 dark:bg-slate-800/50 sticky top-0">
+                  <tr className="text-gray-500 dark:text-slate-400">
+                    <th className="text-left p-2 font-medium">Job</th>
+                    <th className="text-left p-2 font-medium">Started</th>
+                    <th className="text-left p-2 font-medium">Status</th>
+                    <th className="text-right p-2 font-medium">Duration</th>
+                    <th className="text-left p-2 font-medium">Details</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recent.map((r) => (
+                    <tr key={r.id} className="border-t border-gray-100 dark:border-slate-700">
+                      <td className="p-2 font-medium text-gray-900 dark:text-white">{r.jobName}</td>
+                      <td className="p-2 text-gray-500 dark:text-slate-400">
+                        {new Date(r.startedAt + "Z").toLocaleString()}
+                      </td>
+                      <td className="p-2">
+                        <span className={`inline-flex px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
+                          r.status === "success"
+                            ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+                            : r.status === "error"
+                              ? "bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400"
+                              : "bg-yellow-50 dark:bg-yellow-500/10 text-yellow-700 dark:text-yellow-400"
+                        }`}>
+                          {r.status}
+                        </span>
+                      </td>
+                      <td className="p-2 text-right text-gray-600 dark:text-slate-300">{r.durationMs}ms</td>
+                      <td className="p-2 text-gray-500 dark:text-slate-400 max-w-48 truncate">
+                        {r.errorMessage || (r.result && r.result !== "{}" ? r.result : "—")}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
 function SettingsTab() {
   return (
     <div className="space-y-6">
@@ -2243,6 +2384,7 @@ function SettingsTab() {
       <AdConfigCard />
       <StripePricesCard />
       <CapacityCard />
+      <CronJobsCard />
       <MetricsCard />
       <ApiKeyCard
         title="Resend API Key"
@@ -2389,6 +2531,7 @@ function UsersTab() {
               <th className="text-left p-3 font-medium">Role</th>
               <th className="text-left p-3 font-medium">Plan</th>
               <th className="text-left p-3 font-medium">Created</th>
+              <th className="text-left p-3 font-medium">Last Active</th>
               <th className="text-left p-3 font-medium">Actions</th>
             </tr>
           </thead>
@@ -2446,6 +2589,9 @@ function UsersTab() {
                 </td>
                 <td className="p-3 text-gray-500 dark:text-slate-400 text-xs">
                   {new Date(user.createdAt).toLocaleDateString()}
+                </td>
+                <td className="p-3 text-gray-500 dark:text-slate-400 text-xs">
+                  {user.lastActiveAt ? new Date(user.lastActiveAt).toLocaleString() : "—"}
                 </td>
                 <td className="p-3 space-y-2">
                   <form

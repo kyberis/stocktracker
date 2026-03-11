@@ -45,6 +45,7 @@ export interface DbUser {
   device_linked_at: string;
   device_pro_redeemed_at: string;
   device_portfolio_id: string;
+  last_active_at: string;
 }
 
 export type PortfolioCurrency = "EUR" | "USD";
@@ -92,6 +93,7 @@ export interface PublicUser {
   hasDevicePasskey: boolean;
   deviceProEligible: boolean;
   devicePortfolioId: string;
+  lastActiveAt: string;
 }
 
 export interface UserSettings {
@@ -233,6 +235,7 @@ export function rowToDbUser(row: Row): DbUser {
     device_linked_at: str(row.device_linked_at),
     device_pro_redeemed_at: str(row.device_pro_redeemed_at),
     device_portfolio_id: str(row.device_portfolio_id),
+    last_active_at: str(row.last_active_at),
   };
 }
 
@@ -274,6 +277,7 @@ export function mapUser(user: DbUser): PublicUser {
     hasDevicePasskey: !!user.device_passkey_hash,
     deviceProEligible: !!user.device_linked_at && !user.device_pro_redeemed_at && (user.plan === "free" || user.plan === "starter"),
     devicePortfolioId: user.device_portfolio_id,
+    lastActiveAt: user.last_active_at,
   };
 }
 

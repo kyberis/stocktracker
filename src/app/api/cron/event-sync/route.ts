@@ -8,6 +8,7 @@ import {
   type FmpEconomicEvent,
   type FmpIpoEvent,
 } from "@/lib/api-providers/fmp";
+import { withCronLogging } from "@/lib/cron-logging";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -68,17 +69,7 @@ async function fetchAvEarningsCalendar(apiKey: string, horizon: string = "3month
   return events;
 }
 
-/**
- * Cron: sync event calendar data from Alpha Vantage (earnings) and FMP (economic + IPO).
- * Runs daily at 6 AM UTC. Stores 30 days of future events, removes stale entries.
- */
-export async function GET(req: NextRequest) {
-  const authHeader = req.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+const runEventSync = withCronLogging("event-sync", async () => {
   const from = today();
   const to = addDays(from, 30);
   const fromStr = toISODate(from);
@@ -215,12 +206,25 @@ export async function GET(req: NextRequest) {
   const staleDate = toISODate(addDays(from, -7));
   stats.deleted = await deleteStaleEvents(staleDate);
 
-  return NextResponse.json({
+  return {
     ok: true,
     synced: { earnings: stats.earnings, economic: stats.economic, ipo: stats.ipo },
     deleted: stats.deleted,
     errors: stats.errors.length > 0 ? stats.errors : undefined,
-  });
+  };
+});
+
+/**
+ * Cron: sync event calendar data from Alpha Vantage (earnings) and FMP (economic + IPO).
+ * Runs daily at 6 AM UTC. Stores 30 days of future events, removes stale entries.
+ */
+export async function GET(req: NextRequest) {
+  const authHeader = req.headers.get("authorization");
+  const cronSecret = process.env.CRON_SECRET;
+  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  return runEventSync();
 }
 
 function slugify(s: string): string {

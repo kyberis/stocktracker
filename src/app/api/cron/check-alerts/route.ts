@@ -11,6 +11,7 @@ import type { CronAlert } from "@/lib/db";
 import { dispatchAlert } from "@/lib/alert-dispatcher";
 import type { AlertDispatchContext, AlertPayload } from "@/lib/alert-dispatcher";
 import type { SubscriptionPlan } from "@/lib/types";
+import { withCronLogging } from "@/lib/cron-logging";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
@@ -42,38 +43,14 @@ function buildContext(alert: CronAlert): AlertDispatchContext {
   };
 }
 
-export async function GET(req: NextRequest) {
-  const authHeader = req.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    const mask = (s: string | null) =>
-      s ? `${s.slice(0, 8)}…${s.slice(-4)} (len=${s.length})` : "(empty)";
-    console.error("[check-alerts] 401 auth mismatch", {
-      secretSet: !!cronSecret,
-      secretPreview: mask(cronSecret),
-      headerPresent: !!authHeader,
-      headerPreview: mask(authHeader),
-    });
-    return NextResponse.json(
-      {
-        error: "Unauthorized",
-        reason: !authHeader
-          ? "missing_authorization_header"
-          : "secret_mismatch",
-        secretConfigured: !!cronSecret,
-        headerPresent: !!authHeader,
-      },
-      { status: 401 },
-    );
-  }
-
+const runCheckAlerts = withCronLogging("check-alerts", async () => {
   if (!(await isFeatureEnabled("alerts_enabled"))) {
-    return NextResponse.json({ checked: 0, triggered: 0, disabled: true });
+    return { checked: 0, triggered: 0, disabled: true };
   }
 
   const alerts = await listActiveAlertsForCron();
   if (alerts.length === 0) {
-    return NextResponse.json({ checked: 0, triggered: 0 });
+    return { checked: 0, triggered: 0 };
   }
 
   const perStockAlerts = alerts.filter((a) => !a.isPortfolioWide);
@@ -107,8 +84,7 @@ export async function GET(req: NextRequest) {
       const res = await fetch(`${baseUrl}/api/quote?${params.toString()}`);
       if (res.ok) quotes = await res.json();
     } catch (err) {
-      console.error("Failed to fetch quotes for alert check:", err);
-      return NextResponse.json({ error: "Quote fetch failed" }, { status: 500 });
+      throw new Error(`Quote fetch failed: ${err instanceof Error ? err.message : String(err)}`);
     }
   }
 
@@ -222,9 +198,36 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  return NextResponse.json({
+  return {
     checked: alerts.length,
     triggered,
     tickers: allTickers.size,
-  });
+  };
+});
+
+export async function GET(req: NextRequest) {
+  const authHeader = req.headers.get("authorization");
+  const cronSecret = process.env.CRON_SECRET;
+  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    const mask = (s: string | null) =>
+      s ? `${s.slice(0, 8)}…${s.slice(-4)} (len=${s.length})` : "(empty)";
+    console.error("[check-alerts] 401 auth mismatch", {
+      secretSet: !!cronSecret,
+      secretPreview: mask(cronSecret),
+      headerPresent: !!authHeader,
+      headerPreview: mask(authHeader),
+    });
+    return NextResponse.json(
+      {
+        error: "Unauthorized",
+        reason: !authHeader
+          ? "missing_authorization_header"
+          : "secret_mismatch",
+        secretConfigured: !!cronSecret,
+        headerPresent: !!authHeader,
+      },
+      { status: 401 },
+    );
+  }
+  return runCheckAlerts();
 }

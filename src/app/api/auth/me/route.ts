@@ -36,6 +36,7 @@ export const GET = withMetrics("/api/auth/me", async (req: NextRequest) => {
       portfolioReviewResetAt: user?.portfolio_review_reset_at || "",
       deviceProEligible: deviceOn && !!user?.device_linked_at && !user?.device_pro_redeemed_at && (user?.plan || session.plan || "free") === "free",
       devicePortfolioId: user?.device_portfolio_id || "",
+      lastActiveAt: user?.last_active_at || "",
     },
   });
 });

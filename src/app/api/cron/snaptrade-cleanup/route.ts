@@ -1,40 +1,64 @@
-import { NextResponse } from "next/server";
 import {
   getSnapTradeConnectionsPendingDeletion,
+  getConnectionsAllDisabledOver24h,
   deleteSnapTradeConnection,
   trackEvent,
 } from "@/lib/db";
 import { deleteUser } from "@/lib/snaptrade-client";
+import { withCronLogging } from "@/lib/cron-logging";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
 
 /**
- * Cron (daily 23:30 UTC): deregister SnapTrade users scheduled for end-of-month
- * deletion after a downgrade. Runs daily; only deletes connections whose
- * pending_delete_at has passed. Prevents the $2/connected-user/month SnapTrade
- * charge from rolling into the next billing cycle.
+ * Cron (daily 23:30 UTC) — two cleanup paths:
+ *
+ * Path 1: Downgraded to Folio (free) — delete connections whose
+ *         pending_delete_at has passed (end-of-month scheduling).
+ *
+ * Path 2: Paid users (Bifolio / Trefolio) with ALL broker connections
+ *         disabled for >24 h — the credentials are stale and will keep
+ *         incurring the $2/connected-user/month SnapTrade charge.
  */
-export async function GET() {
-  const pending = await getSnapTradeConnectionsPendingDeletion();
-  if (pending.length === 0) {
-    return NextResponse.json({ deleted: 0 });
-  }
+export const GET = withCronLogging("snaptrade-cleanup", async () => {
+  let deletedDowngrade = 0;
+  let deletedStale = 0;
 
-  let deleted = 0;
+  // Path 1: scheduled end-of-month deletions (downgrade to free)
+  const pending = await getSnapTradeConnectionsPendingDeletion();
   for (const conn of pending) {
     try {
       await deleteUser(conn.snapTradeUserId);
     } catch (err) {
       console.error(
-        `[snaptrade-cleanup] Failed to deregister SnapTrade user ${conn.snapTradeUserId}:`,
+        `[snaptrade-cleanup] Path 1 — failed to deregister ${conn.snapTradeUserId}:`,
         err instanceof Error ? err.message : err,
       );
     }
     await deleteSnapTradeConnection(conn.userId);
     trackEvent(conn.userId, "snaptrade_auto_disconnected", { reason: "downgrade" });
-    deleted++;
+    deletedDowngrade++;
   }
 
-  return NextResponse.json({ deleted });
-}
+  // Path 2: paid users with all brokers disabled for >24 h
+  const stale = await getConnectionsAllDisabledOver24h();
+  for (const conn of stale) {
+    try {
+      await deleteUser(conn.snapTradeUserId);
+    } catch (err) {
+      console.error(
+        `[snaptrade-cleanup] Path 2 — failed to deregister ${conn.snapTradeUserId}:`,
+        err instanceof Error ? err.message : err,
+      );
+    }
+    await deleteSnapTradeConnection(conn.userId);
+    trackEvent(conn.userId, "snaptrade_auto_disconnected", { reason: "all_disabled_24h" });
+    deletedStale++;
+  }
+
+  return {
+    deletedDowngrade,
+    deletedStale,
+    deleted: deletedDowngrade + deletedStale,
+  };
+});

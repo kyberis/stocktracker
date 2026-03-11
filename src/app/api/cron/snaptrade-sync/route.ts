@@ -6,6 +6,8 @@ import {
   upsertSnapTradeBrokerSync,
   updateSnapTradeLastSynced,
   setSnapTradeNeedsAttention,
+  setAllDisabledSince,
+  clearAllDisabledSince,
   listTransactionSourceRefs,
   listCashEntries,
   addCashEntry,
@@ -19,26 +21,15 @@ import {
   fetchAllHoldings,
 } from "@/lib/snaptrade-client";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
+import { withCronLogging } from "@/lib/cron-logging";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
-/**
- * Cron: auto-sync all active SnapTrade connections every 6 hours.
- * For each user with an active connection, fetches new activities
- * since their last sync, imports transactions, updates cash balances,
- * and flags connections that need attention (expired credentials).
- */
-export async function GET(req: NextRequest) {
-  const authHeader = req.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+const runSync = withCronLogging("snaptrade-sync", async () => {
   const connections = await listActiveSnapTradeConnections();
   if (connections.length === 0) {
-    return NextResponse.json({ synced: 0, errors: 0 });
+    return { synced: 0, errors: 0 };
   }
 
   let synced = 0;
@@ -54,15 +45,19 @@ export async function GET(req: NextRequest) {
 
       const brokerageConns = await listBrokerageConnections(conn.snapTradeUserId, userSecret);
       const disabledConns = brokerageConns.filter((c) => c.disabled);
+      const allDisabled = brokerageConns.length > 0 && brokerageConns.every((c) => c.disabled);
 
       if (disabledConns.length > 0) {
         await setSnapTradeNeedsAttention(conn.userId, true);
       }
 
-      if (brokerageConns.every((c) => c.disabled)) {
+      if (allDisabled) {
+        await setAllDisabledSince(conn.userId);
         trackEvent(conn.userId, "snaptrade_auto_sync_skipped", { reason: "all_disabled" });
         errors++;
         continue;
+      } else {
+        await clearAllDisabledSince(conn.userId);
       }
 
       const accounts = await listAccounts(conn.snapTradeUserId, userSecret);
@@ -190,5 +185,20 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  return NextResponse.json({ synced, errors, total: connections.length });
+  return { synced, errors, total: connections.length };
+});
+
+/**
+ * Cron: auto-sync all active SnapTrade connections every 6 hours.
+ * For each user with an active connection, fetches new activities
+ * since their last sync, imports transactions, updates cash balances,
+ * and flags connections that need attention (expired credentials).
+ */
+export async function GET(req: NextRequest) {
+  const authHeader = req.headers.get("authorization");
+  const cronSecret = process.env.CRON_SECRET;
+  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  return runSync();
 }

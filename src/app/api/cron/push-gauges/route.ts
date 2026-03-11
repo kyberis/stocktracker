@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getMetricsSnapshot, purgeOldAnalyticsEvents, recordRateLimitUsage } from "@/lib/db";
 import { pushGauges } from "@/lib/grafana-push";
 import { getRedisClient } from "@/lib/upstash";
+import { withCronLogging } from "@/lib/cron-logging";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
@@ -55,32 +56,7 @@ async function syncRedisCountersToTurso(): Promise<number> {
   return synced;
 }
 
-export async function GET(req: NextRequest) {
-  const authHeader = req.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
-
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    const mask = (s: string | null) =>
-      s ? `${s.slice(0, 8)}…${s.slice(-4)} (len=${s.length})` : "(empty)";
-    console.error("[push-gauges] 401 auth mismatch", {
-      secretSet: !!cronSecret,
-      secretPreview: mask(cronSecret),
-      headerPresent: !!authHeader,
-      headerPreview: mask(authHeader),
-    });
-    return NextResponse.json(
-      {
-        error: "Unauthorized",
-        reason: !authHeader
-          ? "missing_authorization_header"
-          : "secret_mismatch",
-        secretConfigured: !!cronSecret,
-        headerPresent: !!authHeader,
-      },
-      { status: 401 },
-    );
-  }
-
+const runPushGauges = withCronLogging("push-gauges", async () => {
   const [snapshot, redisSynced, purged] = await Promise.all([
     getMetricsSnapshot(),
     syncRedisCountersToTurso().catch((err) => {
@@ -112,5 +88,33 @@ export async function GET(req: NextRequest) {
 
   await pushGauges(points);
 
-  return NextResponse.json({ ok: true, pushed: points.length, redisSynced, purged });
+  return { ok: true, pushed: points.length, redisSynced, purged };
+});
+
+export async function GET(req: NextRequest) {
+  const authHeader = req.headers.get("authorization");
+  const cronSecret = process.env.CRON_SECRET;
+
+  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    const mask = (s: string | null) =>
+      s ? `${s.slice(0, 8)}…${s.slice(-4)} (len=${s.length})` : "(empty)";
+    console.error("[push-gauges] 401 auth mismatch", {
+      secretSet: !!cronSecret,
+      secretPreview: mask(cronSecret),
+      headerPresent: !!authHeader,
+      headerPreview: mask(authHeader),
+    });
+    return NextResponse.json(
+      {
+        error: "Unauthorized",
+        reason: !authHeader
+          ? "missing_authorization_header"
+          : "secret_mismatch",
+        secretConfigured: !!cronSecret,
+        headerPresent: !!authHeader,
+      },
+      { status: 401 },
+    );
+  }
+  return runPushGauges();
 }

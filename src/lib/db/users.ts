@@ -456,3 +456,23 @@ export async function getDeviceTemplate(userId: string): Promise<string> {
   if (result.rows.length === 0) return "classic-dark";
   return (result.rows[0].device_template_id as string) || "classic-dark";
 }
+
+/* ── Last-activity tracking ── */
+
+export async function updateLastActive(userId: string): Promise<void> {
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: "UPDATE users SET last_active_at = datetime('now') WHERE id = ?",
+    args: [userId],
+  });
+}
+
+export async function getLastActive(userId: string): Promise<string> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: "SELECT last_active_at FROM users WHERE id = ?",
+    args: [userId],
+  });
+  if (result.rows.length === 0) return "";
+  return str(result.rows[0].last_active_at);
+}

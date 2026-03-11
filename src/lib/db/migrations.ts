@@ -1036,6 +1036,37 @@ const MIGRATIONS: Migration[] = [
       `);
     },
   },
+  {
+    version: 32,
+    description: "Add all_disabled_since to snaptrade_connections, last_active_at to users, create cron_executions table",
+    up: async (client: Client) => {
+      try {
+        await client.execute({ sql: "ALTER TABLE snaptrade_connections ADD COLUMN all_disabled_since TEXT NOT NULL DEFAULT ''", args: [] });
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("duplicate column")) throw e;
+      }
+      try {
+        await client.execute({ sql: "ALTER TABLE users ADD COLUMN last_active_at TEXT NOT NULL DEFAULT ''", args: [] });
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("duplicate column")) throw e;
+      }
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS cron_executions (
+          id TEXT PRIMARY KEY,
+          job_name TEXT NOT NULL,
+          started_at TEXT NOT NULL DEFAULT (datetime('now')),
+          finished_at TEXT NOT NULL DEFAULT '',
+          status TEXT NOT NULL DEFAULT 'running',
+          result TEXT NOT NULL DEFAULT '',
+          error_message TEXT NOT NULL DEFAULT '',
+          duration_ms INTEGER NOT NULL DEFAULT 0
+        );
+        CREATE INDEX IF NOT EXISTS idx_cron_executions_job ON cron_executions(job_name, started_at);
+      `);
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

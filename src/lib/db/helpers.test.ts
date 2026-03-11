@@ -216,6 +216,7 @@ describe("rowToDbUser", () => {
       device_linked_at: "",
       device_pro_redeemed_at: "",
       device_portfolio_id: "",
+      last_active_at: "",
     });
   });
 
@@ -314,6 +315,7 @@ describe("mapUser", () => {
       device_linked_at: "",
       device_pro_redeemed_at: "",
       device_portfolio_id: "",
+      last_active_at: "",
     };
 
     const publicUser = mapUser(dbUser);
@@ -341,6 +343,7 @@ describe("mapUser", () => {
       hasDevicePasskey: false,
       deviceProEligible: false,
       devicePortfolioId: "",
+      lastActiveAt: "",
     });
   });
 
@@ -375,6 +378,7 @@ describe("mapUser", () => {
       device_linked_at: "",
       device_pro_redeemed_at: "",
       device_portfolio_id: "",
+      last_active_at: "",
     };
 
     const publicUser = mapUser(dbUser);
@@ -415,6 +419,7 @@ describe("mapUser", () => {
       device_linked_at: "",
       device_pro_redeemed_at: "",
       device_portfolio_id: "",
+      last_active_at: "",
     };
 
     const publicUser = mapUser(dbUser);
@@ -453,6 +458,7 @@ describe("mapUser", () => {
       device_linked_at: "",
       device_pro_redeemed_at: "",
       device_portfolio_id: "",
+      last_active_at: "",
     };
 
     const publicUser = mapUser(dbUser);

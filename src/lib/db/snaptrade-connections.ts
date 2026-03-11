@@ -130,6 +130,36 @@ export async function getSnapTradeConnectionsPendingDeletion(): Promise<PendingS
   }));
 }
 
+/* ── All-disabled tracking for stale connection cleanup ── */
+
+export async function setAllDisabledSince(userId: string): Promise<void> {
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: "UPDATE snaptrade_connections SET all_disabled_since = datetime('now') WHERE user_id = ? AND all_disabled_since = ''",
+    args: [userId],
+  });
+}
+
+export async function clearAllDisabledSince(userId: string): Promise<void> {
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: "UPDATE snaptrade_connections SET all_disabled_since = '' WHERE user_id = ?",
+    args: [userId],
+  });
+}
+
+export async function getConnectionsAllDisabledOver24h(): Promise<PendingSnapTradeDeletion[]> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: "SELECT user_id, snaptrade_user_id FROM snaptrade_connections WHERE all_disabled_since != '' AND all_disabled_since <= datetime('now', '-1 day') AND pending_delete_at = ''",
+    args: [],
+  });
+  return result.rows.map((r) => ({
+    userId: str(r.user_id),
+    snapTradeUserId: str(r.snaptrade_user_id),
+  }));
+}
+
 /* ── Needs-attention flag for surfacing credential issues on dashboard ── */
 
 export async function setSnapTradeNeedsAttention(userId: string, needsAttention: boolean): Promise<void> {

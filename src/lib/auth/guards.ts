@@ -1,12 +1,15 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getSessionFromRequest } from "./session";
-import { findUserById, getAiUsage, trackEvent } from "@/lib/db";
+import { findUserById, getAiUsage, trackEvent, updateLastActive } from "@/lib/db";
 import { canAccessFeature } from "@/lib/subscription";
 import type { SubscriptionFeature } from "@/lib/types";
 import { paywallHitsTotal, rateLimitHitsTotal } from "@/lib/metrics";
 import { checkAvRateLimit, checkAiRateLimit, checkAiImportRateLimit } from "@/lib/rate-limit";
 import type { RateLimitProvider } from "@/lib/platform-config";
+
+const lastActiveCache = new Map<string, number>();
+const LAST_ACTIVE_THROTTLE_MS = 5 * 60_000;
 
 export async function requireSession(req: NextRequest) {
   const session = await getSessionFromRequest(req);
@@ -16,6 +19,14 @@ export async function requireSession(req: NextRequest) {
       error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
     };
   }
+
+  const now = Date.now();
+  const lastWrite = lastActiveCache.get(session.userId) ?? 0;
+  if (now - lastWrite > LAST_ACTIVE_THROTTLE_MS) {
+    lastActiveCache.set(session.userId, now);
+    updateLastActive(session.userId).catch(() => {});
+  }
+
   return { session, error: null };
 }
 

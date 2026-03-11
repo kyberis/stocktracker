@@ -55,6 +55,8 @@ export {
   markDeviceProRedeemed,
   updateDeviceTemplate,
   getDeviceTemplate,
+  updateLastActive,
+  getLastActive,
 } from "./users";
 
 export {
@@ -186,6 +188,9 @@ export {
   setSnapTradeNeedsAttention,
   getSnapTradeNeedsAttention,
   listActiveSnapTradeConnections,
+  setAllDisabledSince,
+  clearAllDisabledSince,
+  getConnectionsAllDisabledOver24h,
 } from "./snaptrade-connections";
 
 export type { DeviceInterestEntry } from "./device-interest";

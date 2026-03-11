@@ -1229,6 +1229,21 @@ export default function ProfilePage() {
         )}
 
         {/* Delete Account */}
+        {/* Security — last activity */}
+        <div className="card p-6 space-y-3">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t("profileSecurityTitle") || "Security"}</h2>
+          <div className="flex items-center gap-3 text-sm">
+            <svg className="w-4 h-4 text-gray-400 dark:text-slate-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+            <div>
+              <span className="text-gray-500 dark:text-slate-400">{t("profileLastActive") || "Last active"}:</span>{" "}
+              <span className="font-medium text-gray-900 dark:text-white">
+                {user?.lastActiveAt ? new Date(user.lastActiveAt).toLocaleString() : "—"}
+              </span>
+            </div>
+          </div>
+          <p className="text-xs text-gray-400 dark:text-slate-500">{t("profileLastActiveHint") || "If you don't recognize this activity, change your password immediately."}</p>
+        </div>
+
         {user?.role !== "admin" && (
           <div className="card p-6 space-y-4 border-red-200 dark:border-red-500/20">
             <h2 className="text-lg font-semibold text-red-600 dark:text-red-400">{t("deleteAccount")}</h2>

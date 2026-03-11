@@ -48,6 +48,21 @@ export const releaseNotes: ReleaseEntry[] = [
         text: "Broker connect and reconnect now work correctly in PWA standalone mode (popup replaced with same-window redirect)",
         translations: { es: "La conexión y reconexión del bróker ahora funciona correctamente en modo PWA (popup reemplazado por redirección en la misma ventana)" },
       },
+      {
+        type: "improvement",
+        text: "Stale broker connections with all credentials expired for over 24 hours are now automatically cleaned up to avoid unnecessary charges",
+        translations: { es: "Las conexiones de bróker inactivas con credenciales expiradas durante más de 24 horas se eliminan automáticamente para evitar cargos innecesarios" },
+      },
+      {
+        type: "feature",
+        text: "Last activity timestamp shown on your profile for security awareness",
+        translations: { es: "Marca de tiempo de última actividad visible en tu perfil para mayor seguridad" },
+      },
+      {
+        type: "improvement",
+        text: "Cron job execution tracking with admin visibility — see run history, success rates, and errors at a glance",
+        translations: { es: "Seguimiento de ejecución de tareas cron con visibilidad para administradores — historial de ejecuciones, tasas de éxito y errores de un vistazo" },
+      },
     ],
   },
   {

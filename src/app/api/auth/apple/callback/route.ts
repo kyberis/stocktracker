@@ -195,6 +195,7 @@ export async function POST(req: NextRequest) {
         device_linked_at: "",
         device_pro_redeemed_at: "",
         device_portfolio_id: "",
+        last_active_at: "",
       };
       trackEvent(publicUser.id, "signup");
       authEventsTotal.inc({ event: "signup" });
