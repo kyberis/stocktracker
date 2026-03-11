@@ -982,17 +982,18 @@ const MIGRATIONS: Migration[] = [
     version: 29,
     description: "Add type and user_context columns to feedback table",
     up: async (client: Client) => {
-      const cols = await client.execute("PRAGMA table_info(feedback)");
-      const colNames = new Set(cols.rows.map((r) => str(r.name)));
-      if (!colNames.has("type")) {
-        await client.execute(
-          `ALTER TABLE feedback ADD COLUMN type TEXT NOT NULL DEFAULT 'feedback'`
-        );
-      }
-      if (!colNames.has("user_context")) {
-        await client.execute(
-          `ALTER TABLE feedback ADD COLUMN user_context TEXT NOT NULL DEFAULT ''`
-        );
+      for (const [col, sql] of [
+        ["type", `ALTER TABLE feedback ADD COLUMN type TEXT NOT NULL DEFAULT 'feedback'`],
+        ["user_context", `ALTER TABLE feedback ADD COLUMN user_context TEXT NOT NULL DEFAULT ''`],
+      ] as const) {
+        try {
+          const cols = await client.execute("PRAGMA table_info(feedback)");
+          const colNames = new Set(cols.rows.map((r) => str(r.name)));
+          if (!colNames.has(col)) await client.execute(sql);
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : String(e);
+          if (!msg.includes("duplicate column")) throw e;
+        }
       }
     },
   },
