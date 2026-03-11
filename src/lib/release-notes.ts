@@ -43,6 +43,11 @@ export const releaseNotes: ReleaseEntry[] = [
         text: "Free users see earnings for their holdings; Bifolio adds full market earnings + economic events; Trefolio unlocks IPO calendar",
         translations: { es: "Usuarios gratuitos ven resultados de sus posiciones; Bifolio añade todos los resultados + eventos económicos; Trefolio desbloquea calendario de OPVs" },
       },
+      {
+        type: "fix",
+        text: "Broker connect and reconnect now work correctly in PWA standalone mode (popup replaced with same-window redirect)",
+        translations: { es: "La conexión y reconexión del bróker ahora funciona correctamente en modo PWA (popup reemplazado por redirección en la misma ventana)" },
+      },
     ],
   },
   {

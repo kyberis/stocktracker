@@ -33,6 +33,14 @@ export interface UseSnapTradeApiReturn {
   reset: () => void;
 }
 
+function isStandalone(): boolean {
+  if (typeof window === "undefined") return false;
+  return (
+    window.matchMedia("(display-mode: standalone)").matches ||
+    ("standalone" in navigator && (navigator as Record<string, unknown>).standalone === true)
+  );
+}
+
 function openPortalPopup(
   url: string,
   windowName: string,
@@ -131,7 +139,6 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
     setErrorMsg("");
     setStep("connecting");
     try {
-      // Step 1: Register SnapTrade user if needed
       const regForm = new FormData();
       regForm.append("action", "register-user");
       const regRes = await fetch("/api/snaptrade", { method: "POST", body: regForm });
@@ -143,9 +150,12 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
         return;
       }
 
-      // Step 2: Get Connection Portal URL
+      const pwa = isStandalone();
       const urlForm = new FormData();
       urlForm.append("action", "connect-url");
+      if (pwa) {
+        urlForm.append("customRedirect", `${window.location.origin}/snaptrade/callback`);
+      }
       const urlRes = await fetch("/api/snaptrade", { method: "POST", body: urlForm });
       const urlData = await urlRes.json();
 
@@ -155,7 +165,11 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
         return;
       }
 
-      // Step 3: Open connection portal and listen for postMessage events
+      if (pwa) {
+        window.location.href = urlData.redirectUrl;
+        return;
+      }
+
       openPortalPopup(
         urlData.redirectUrl,
         "snaptrade-connect",
@@ -172,15 +186,24 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
     setErrorMsg("");
     setStep("reconnecting");
     try {
+      const pwa = isStandalone();
       const form = new FormData();
       form.append("action", "reconnect-url");
       form.append("connectionId", connectionId);
+      if (pwa) {
+        form.append("customRedirect", `${window.location.origin}/snaptrade/callback`);
+      }
       const res = await fetch("/api/snaptrade", { method: "POST", body: form });
       const data = await res.json();
 
       if (!res.ok) {
         setErrorMsg(data.error || "Failed to get reconnect URL.");
         setStep("error");
+        return;
+      }
+
+      if (pwa) {
+        window.location.href = data.redirectUrl;
         return;
       }
 

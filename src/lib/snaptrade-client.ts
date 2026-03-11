@@ -41,12 +41,14 @@ export async function generateConnectionPortalUrl(
   userId: string,
   userSecret: string,
   reconnectConnectionId?: string,
+  customRedirect?: string,
 ): Promise<{ redirectUrl: string; sessionId?: string }> {
   const client = getClient();
   const res = await client.authentication.loginSnapTradeUser({
     userId,
     userSecret,
     ...(reconnectConnectionId ? { reconnect: reconnectConnectionId } : {}),
+    ...(customRedirect ? { customRedirect } : {}),
   });
   const data = res.data as { redirectURI?: string; sessionId?: string };
   if (!data.redirectURI) {

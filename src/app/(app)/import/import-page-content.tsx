@@ -114,10 +114,20 @@ export default function ImportPageContent() {
   // Smart defaults: load last method + broker sync connection on mount
   useEffect(() => {
     track("import_page_viewed");
-    const lastMethod = localStorage.getItem("trefolio_last_import_method") as ImportMethod | null;
-    if (lastMethod && METHOD_TABS.some((m) => m.key === lastMethod)) {
-      setMethod(lastMethod);
+
+    // URL param takes precedence (e.g. reconnect banner, PWA redirect callback)
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlMethod = urlParams.get("method") as ImportMethod | null;
+    if (urlMethod && METHOD_TABS.some((m) => m.key === urlMethod)) {
+      setMethod(urlMethod);
+      localStorage.setItem("trefolio_last_import_method", urlMethod);
+    } else {
+      const lastMethod = localStorage.getItem("trefolio_last_import_method") as ImportMethod | null;
+      if (lastMethod && METHOD_TABS.some((m) => m.key === lastMethod)) {
+        setMethod(lastMethod);
+      }
     }
+
     const lastBroker = localStorage.getItem("trefolio_last_import_broker") as BrokerFormat | null;
     if (lastBroker && BROKER_OPTIONS.some((b) => b.id === lastBroker)) {
       setBroker(lastBroker);

@@ -151,9 +151,12 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
     }
 
     try {
+      const customRedirect = (formData.get("customRedirect") as string) || undefined;
       const { redirectUrl, sessionId } = await generateConnectionPortalUrl(
         conn.snapTradeUserId,
         userSecret,
+        undefined,
+        customRedirect,
       );
       return NextResponse.json({ redirectUrl, sessionId });
     } catch (err) {
@@ -183,10 +186,12 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
     }
 
     try {
+      const customRedirect = (formData.get("customRedirect") as string) || undefined;
       const { redirectUrl, sessionId } = await generateConnectionPortalUrl(
         conn.snapTradeUserId,
         userSecret,
         connectionId,
+        customRedirect,
       );
       trackEvent(session.userId, "snaptrade_reconnect", { connectionId });
       return NextResponse.json({ redirectUrl, sessionId });
