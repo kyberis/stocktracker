@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>trefolio — Broker Sync Design Mockup</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0f1a;
+    --surface: #111827;
+    --surface2: #1a2332;
+    --border: #1e2d3d;
+    --emerald: #10b981;
+    --emerald-dim: rgba(16,185,129,0.15);
+    --rose: #f43f5e;
+    --rose-dim: rgba(244,63,94,0.12);
+    --amber: #f59e0b;
+    --amber-dim: rgba(245,158,11,0.12);
+    --violet: #8b5cf6;
+    --violet-dim: rgba(139,92,246,0.12);
+    --sky: #38bdf8;
+    --sky-dim: rgba(56,189,248,0.12);
+    --teal: #14b8a6;
+    --text: #e2e8f0;
+    --text-dim: #94a3b8;
+    --text-muted: #64748b;
+    --radius: 12px;
+    --max-w: 960px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', 'Source Sans 3', system-ui, sans-serif;
+    min-height: 100vh;
+    line-height: 1.6;
+    background-image:
+      radial-gradient(ellipse 80% 60% at 20% 10%, rgba(16,185,129,0.05), transparent),
+      radial-gradient(ellipse 60% 50% at 80% 80%, rgba(139,92,246,0.03), transparent);
+  }
+
+  a { color: var(--sky); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  a:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; border-radius: 2px; }
+
+  .skip-link {
+    position: absolute; top: -100%; left: 1rem;
+    background: var(--emerald); color: var(--bg);
+    padding: 0.5rem 1rem; border-radius: 0 0 8px 8px;
+    font-weight: 700; z-index: 100; transition: top 0.2s;
+  }
+  .skip-link:focus { top: 0; }
+
+  header {
+    max-width: var(--max-w); margin: 0 auto; padding: 3rem 2rem 1.5rem;
+  }
+
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900; font-size: clamp(1.6rem, 4vw, 2.2rem);
+    letter-spacing: -0.02em; margin-bottom: 0.35rem;
+    background: linear-gradient(135deg, var(--emerald) 0%, var(--sky) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+
+  header .subtitle { color: var(--text-dim); font-size: 0.92rem; font-weight: 300; max-width: 600px; }
+
+  .date-badge {
+    display: inline-block; margin-top: 0.65rem;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 0.2rem 0.65rem;
+    font-size: 0.75rem; color: var(--text-muted); font-weight: 600;
+  }
+
+  main { max-width: var(--max-w); margin: 0 auto; padding: 0 2rem 4rem; }
+
+  /* --- NAV --- */
+  nav[aria-label="Mockup sections"] {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(10,15,26,0.92); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border); margin-bottom: 2rem;
+  }
+  nav ul {
+    max-width: var(--max-w); margin: 0 auto; padding: 0 2rem;
+    display: flex; gap: 0; list-style: none; overflow-x: auto;
+    scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+  }
+  nav a {
+    display: block; padding: 0.75rem 0.85rem; font-size: 0.78rem;
+    font-weight: 600; color: var(--text-muted); white-space: nowrap;
+    border-bottom: 2px solid transparent; transition: color 0.15s, border-color 0.15s;
+  }
+  nav a:hover, nav a:focus-visible { color: var(--text); text-decoration: none; border-bottom-color: var(--emerald); }
+
+  /* --- SECTIONS --- */
+  section { margin-bottom: 3rem; scroll-margin-top: 3.5rem; }
+
+  h2 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900; font-size: 1.35rem;
+    letter-spacing: -0.01em; margin-bottom: 0.25rem; color: var(--text);
+  }
+  h2 .num { color: var(--emerald); margin-right: 0.3rem; }
+
+  .section-desc {
+    color: var(--text-dim); font-size: 0.85rem;
+    margin-bottom: 1.25rem; max-width: 600px;
+  }
+
+  h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem; font-weight: 700;
+    margin: 1.5rem 0 0.75rem; color: var(--text);
+  }
+
+  /* --- MOCKUP FRAME --- */
+  .mockup-frame {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 1rem;
+  }
+
+  .mockup-bar {
+    display: flex; align-items: center; gap: 0.5rem;
+    padding: 0.65rem 1rem;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .mockup-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+  }
+  .mockup-dot.r { background: #ef4444; }
+  .mockup-dot.y { background: #eab308; }
+  .mockup-dot.g { background: #22c55e; }
+
+  .mockup-title {
+    font-size: 0.72rem; font-weight: 600;
+    color: var(--text-muted); margin-left: 0.5rem;
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+
+  .mockup-body { padding: 1.25rem; }
+
+  /* --- APP-LIKE COMPONENTS --- */
+  .app-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.15rem;
+  }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    padding: 0.45rem 1rem; border-radius: 8px;
+    font-size: 0.78rem; font-weight: 600;
+    border: none; cursor: pointer; transition: all 0.15s;
+    text-decoration: none;
+  }
+  .btn:hover { text-decoration: none; }
+
+  .btn-primary { background: var(--emerald); color: #fff; }
+  .btn-primary:hover { background: #059669; }
+
+  .btn-amber { background: var(--amber); color: #000; }
+  .btn-amber:hover { background: #d97706; }
+
+  .btn-violet { background: var(--violet); color: #fff; }
+  .btn-violet:hover { background: #7c3aed; }
+
+  .btn-outline {
+    background: transparent; color: var(--text-dim);
+    border: 1px solid var(--border);
+  }
+  .btn-outline:hover { border-color: var(--text-muted); color: var(--text); }
+
+  .btn-sm { padding: 0.3rem 0.7rem; font-size: 0.72rem; }
+  .btn-xs { padding: 0.2rem 0.5rem; font-size: 0.68rem; border-radius: 6px; }
+
+  .badge-pill {
+    display: inline-flex; align-items: center; gap: 0.25rem;
+    padding: 0.15rem 0.55rem; border-radius: 100px;
+    font-size: 0.68rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+
+  .badge-active { background: var(--emerald-dim); color: var(--emerald); }
+  .badge-expired { background: var(--rose-dim); color: var(--rose); }
+  .badge-syncing { background: var(--sky-dim); color: var(--sky); }
+  .badge-bifolio { background: var(--amber-dim); color: var(--amber); }
+  .badge-trefolio { background: var(--violet-dim); color: var(--violet); }
+  .badge-free { background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border); }
+
+  .icon-sm {
+    width: 16px; height: 16px; flex-shrink: 0;
+  }
+
+  .trust-badge {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    padding: 0.2rem 0.6rem; border-radius: 6px;
+    font-size: 0.68rem; font-weight: 600;
+    background: var(--emerald-dim); color: var(--emerald);
+    border: 1px solid rgba(16,185,129,0.2);
+  }
+
+  /* --- ANNOTATIONS --- */
+  .annotation {
+    background: var(--violet-dim);
+    border-left: 3px solid var(--violet);
+    border-radius: 0 8px 8px 0;
+    padding: 0.75rem 1rem;
+    margin-top: 0.75rem;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+  .annotation strong { color: var(--violet); }
+
+  .annotation-amber {
+    background: var(--amber-dim);
+    border-left-color: var(--amber);
+  }
+  .annotation-amber strong { color: var(--amber); }
+
+  /* --- GRID --- */
+  .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; }
+  .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0.75rem; }
+
+  .flex-between { display: flex; justify-content: space-between; align-items: center; }
+  .flex-center { display: flex; align-items: center; }
+  .gap-2 { gap: 0.5rem; }
+  .gap-3 { gap: 0.75rem; }
+  .gap-4 { gap: 1rem; }
+  .mt-2 { margin-top: 0.5rem; }
+  .mt-3 { margin-top: 0.75rem; }
+  .mb-2 { margin-bottom: 0.5rem; }
+  .mb-3 { margin-bottom: 0.75rem; }
+
+  .text-xs { font-size: 0.72rem; }
+  .text-sm { font-size: 0.82rem; }
+  .text-muted { color: var(--text-muted); }
+  .text-dim { color: var(--text-dim); }
+  .text-emerald { color: var(--emerald); }
+  .text-amber { color: var(--amber); }
+  .text-rose { color: var(--rose); }
+  .fw-600 { font-weight: 600; }
+  .fw-700 { font-weight: 700; }
+
+  /* --- SEPARATOR --- */
+  hr.sep {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 1.25rem 0;
+  }
+
+  /* --- BANNER COMPONENTS --- */
+  .reconnect-banner {
+    display: flex; align-items: flex-start; gap: 0.75rem;
+    padding: 0.85rem 1rem;
+    border-radius: 10px;
+    border: 1px solid rgba(245,158,11,0.3);
+    background: linear-gradient(135deg, rgba(245,158,11,0.08) 0%, rgba(245,158,11,0.03) 100%);
+  }
+
+  .reconnect-banner .icon-wrap {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: rgba(245,158,11,0.15);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .error-banner {
+    display: flex; align-items: flex-start; gap: 0.75rem;
+    padding: 0.85rem 1rem;
+    border-radius: 10px;
+    border: 1px solid rgba(244,63,94,0.3);
+    background: linear-gradient(135deg, rgba(244,63,94,0.08) 0%, rgba(244,63,94,0.03) 100%);
+  }
+
+  .error-banner .icon-wrap {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: rgba(244,63,94,0.15);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  /* --- TRUST SECTION --- */
+  .trust-section {
+    border-radius: var(--radius);
+    border: 1px solid rgba(16,185,129,0.2);
+    background: linear-gradient(135deg, rgba(16,185,129,0.06) 0%, rgba(56,189,248,0.03) 100%);
+    padding: 1.25rem 1.5rem;
+  }
+
+  .trust-point {
+    display: flex; align-items: flex-start; gap: 0.65rem;
+    margin-bottom: 0.65rem;
+  }
+  .trust-point:last-child { margin-bottom: 0; }
+
+  .trust-icon {
+    width: 28px; height: 28px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-size: 0.82rem;
+  }
+
+  /* --- UPGRADE CARD --- */
+  .upgrade-card {
+    border-radius: var(--radius);
+    border: 1px solid rgba(139,92,246,0.25);
+    background: linear-gradient(135deg, rgba(139,92,246,0.08) 0%, rgba(139,92,246,0.02) 100%);
+    padding: 1.5rem;
+    text-align: center;
+  }
+
+  /* --- BROKER CARD --- */
+  .broker-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem;
+    transition: border-color 0.15s;
+  }
+  .broker-card:hover { border-color: var(--text-muted); }
+
+  .broker-logo {
+    width: 36px; height: 36px; border-radius: 8px;
+    background: var(--surface); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem; font-weight: 800; color: var(--text-dim);
+    flex-shrink: 0;
+  }
+
+  /* --- SYNC INDICATOR --- */
+  .sync-bar {
+    display: flex; align-items: center; gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    font-size: 0.75rem;
+  }
+
+  .pulse-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--emerald);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* --- FOOTER --- */
+  footer {
+    max-width: var(--max-w); margin: 0 auto; padding: 2rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.75rem; color: var(--text-muted); text-align: center;
+  }
+
+  /* --- RESPONSIVE --- */
+  @media (max-width: 768px) {
+    header, main { padding-left: 1.25rem; padding-right: 1.25rem; }
+    nav ul { padding: 0 1rem; }
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+
+<body>
+<a class="skip-link" href="#main-content">Skip to main content</a>
+
+<header>
+  <h1>Broker Sync &mdash; Design Mockup</h1>
+  <p class="subtitle">Interactive mockups for the enhanced broker sync feature &mdash; dashboard banners, connection management, privacy messaging, and auto-sync status.</p>
+  <span class="date-badge">March 2026 &middot; For Approval</span>
+</header>
+
+<nav aria-label="Mockup sections">
+  <ul role="list">
+    <li><a href="#dashboard-banner">Dashboard Banner</a></li>
+    <li><a href="#connection-page">Connection Page</a></li>
+    <li><a href="#privacy">Privacy &amp; Trust</a></li>
+    <li><a href="#auto-sync">Auto-Sync Status</a></li>
+    <li><a href="#empty-state">Empty State</a></li>
+    <li><a href="#free-gate">Free Tier Gate</a></li>
+    <li><a href="#errors">Error States</a></li>
+    <li><a href="#tier-limits">Tier Limits</a></li>
+  </ul>
+</nav>
+
+<main id="main-content">
+
+<!-- ============================================================ -->
+<!-- 1. DASHBOARD RECONNECT BANNER -->
+<!-- ============================================================ -->
+<section id="dashboard-banner" aria-labelledby="banner-heading">
+  <h2 id="banner-heading"><span class="num">01</span> Dashboard Reconnect Banner</h2>
+  <p class="section-desc">Appears at the top of the dashboard when any broker connection has expired credentials. Dismissible per session but returns on next visit.</p>
+
+  <h3>Single Broker Expired</h3>
+  <div class="mockup-frame">
+    <div class="mockup-bar">
+      <div class="mockup-dot r"></div>
+      <div class="mockup-dot y"></div>
+      <div class="mockup-dot g"></div>
+      <span class="mockup-title">Dashboard &mdash; Portfolio Tab</span>
+    </div>
+    <div class="mockup-body">
+      <div class="reconnect-banner">
+        <div class="icon-wrap">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div class="flex-between">
+            <div>
+              <span class="text-sm fw-700" style="color:var(--amber);">DEGIRO connection expired</span>
+              <p class="text-xs text-dim mt-2" style="margin-top:0.2rem;">Your broker credentials need to be renewed to continue automatic syncing. Re-authorize to resume.</p>
+            </div>
+            <div class="flex-center gap-2" style="flex-shrink:0;margin-left:1rem;">
+              <button class="btn btn-amber btn-sm">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+                Reconnect
+              </button>
+              <button class="btn btn-outline btn-sm" aria-label="Dismiss" style="padding:0.3rem;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+          </div>
+          <div style="margin-top:0.45rem;">
+            <span class="trust-badge">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+              Read-only via SnapTrade
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:1rem;opacity:0.35;pointer-events:none;">
+        <div style="display:flex;gap:0.5rem;margin-bottom:0.75rem;">
+          <div style="padding:0.4rem 1rem;background:var(--surface2);border-radius:8px;font-size:0.78rem;font-weight:600;color:var(--emerald);border-bottom:2px solid var(--emerald);">Portfolio</div>
+          <div style="padding:0.4rem 1rem;border-radius:8px;font-size:0.78rem;font-weight:600;color:var(--text-muted);">Dividends</div>
+          <div style="padding:0.4rem 1rem;border-radius:8px;font-size:0.78rem;font-weight:600;color:var(--text-muted);">Growth</div>
+        </div>
+        <div class="app-card" style="height:80px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:0.8rem;">Portfolio content below...</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="annotation">
+    <strong>Placement:</strong> Above the tab bar, below <code>LeafPromoBanner</code>. Uses session state (not localStorage) so it reappears on next visit. The "Reconnect" button opens the SnapTrade Connection Portal in reconnect mode (existing <code>reconnect(connectionId)</code> function). The trust badge reinforces read-only access at every touchpoint.
+  </div>
+
+  <h3>Multiple Brokers Expired</h3>
+  <div class="mockup-frame">
+    <div class="mockup-bar">
+      <div class="mockup-dot r"></div>
+      <div class="mockup-dot y"></div>
+      <div class="mockup-dot g"></div>
+      <span class="mockup-title">Dashboard &mdash; Multiple Expired</span>
+    </div>
+    <div class="mockup-body">
+      <div class="reconnect-banner">
+        <div class="icon-wrap">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+        <div style="flex:1;min-width:0;">
+          <span class="text-sm fw-700" style="color:var(--amber);">2 broker connections need attention</span>
+          <p class="text-xs text-dim" style="margin-top:0.2rem;">Credentials have expired. Re-authorize each broker to resume automatic syncing.</p>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.6rem;">
+            <button class="btn btn-amber btn-xs">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+              DEGIRO
+            </button>
+            <button class="btn btn-amber btn-xs">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+              Interactive Brokers
+            </button>
+          </div>
+          <div style="margin-top:0.45rem;">
+            <span class="trust-badge">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+              Read-only via SnapTrade
+            </span>
+          </div>
+        </div>
+        <button class="btn btn-outline btn-sm" aria-label="Dismiss" style="padding:0.3rem;align-self:flex-start;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- 2. CONNECTION PAGE (IMPORT > BROKER SYNC TAB) -->
+<!-- ============================================================ -->
+<section id="connection-page" aria-labelledby="conn-heading">
+  <h2 id="conn-heading"><span class="num">02</span> Connection Page</h2>
+  <p class="section-desc">The Broker Sync tab on the Import page. Shows connected brokers with status, last sync, and sync controls. Bifolio: 1 connection. Trefolio: unlimited.</p>
+
+  <h3>Trefolio User &mdash; 2 Active Connections</h3>
+  <div class="mockup-frame">
+    <div class="mockup-bar">
+      <div class="mockup-dot r"></div>
+      <div class="mockup-dot y"></div>
+      <div class="mockup-dot g"></div>
+      <span class="mockup-title">Import &rarr; Broker Sync &mdash; Trefolio Plan</span>
+    </div>
+    <div class="mockup-body">
+
+      <!-- Sync status bar -->
+      <div class="sync-bar mb-3">
+        <div class="pulse-dot"></div>
+        <span class="text-xs fw-600 text-emerald">Auto-sync active</span>
+        <span class="text-xs text-muted">&middot;</span>
+        <span class="text-xs text-dim">Last synced 2h ago</span>
+        <span class="text-xs text-muted">&middot;</span>
+        <span class="text-xs text-dim">Next sync in ~4h</span>
+        <span style="flex:1;"></span>
+        <button class="btn btn-outline btn-xs">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+          Sync Now
+        </button>
+      </div>
+
+      <!-- Broker cards -->
+      <div class="grid-2 mb-3">
+        <div class="broker-card">
+          <div class="flex-between mb-2">
+            <div class="flex-center gap-3">
+              <div class="broker-logo">DG</div>
+              <div>
+                <div class="text-sm fw-700">DEGIRO</div>
+                <div class="text-xs text-muted">Connected Mar 1, 2026</div>
+              </div>
+            </div>
+            <span class="badge-pill badge-active">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="6"/></svg>
+              Active
+            </span>
+          </div>
+          <hr class="sep" style="margin:0.65rem 0;">
+          <div class="flex-between">
+            <div>
+              <div class="text-xs text-muted">Last imported</div>
+              <div class="text-xs fw-600 text-dim">Mar 11, 2026 at 06:00</div>
+            </div>
+            <div style="text-align:right;">
+              <div class="text-xs text-muted">Transactions</div>
+              <div class="text-xs fw-600 text-dim">142 synced</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="broker-card">
+          <div class="flex-between mb-2">
+            <div class="flex-center gap-3">
+              <div class="broker-logo">IB</div>
+              <div>
+                <div class="text-sm fw-700">Interactive Brokers</div>
+                <div class="text-xs text-muted">Connected Feb 15, 2026</div>
+              </div>
+            </div>
+            <span class="badge-pill badge-active">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="6"/></svg>
+              Active
+            </span>
+          </div>
+          <hr class="sep" style="margin:0.65rem 0;">
+          <div class="flex-between">
+            <div>
+              <div class="text-xs text-muted">Last imported</div>
+              <div class="text-xs fw-600 text-dim">Mar 11, 2026 at 06:00</div>
+            </div>
+            <div style="text-align:right;">
+              <div class="text-xs text-muted">Transactions</div>
+              <div class="text-xs fw-600 text-dim">87 synced</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex-between">
+        <button class="btn btn-primary btn-sm">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Another Broker
+        </button>
+        <div class="flex-center gap-2">
+          <span class="badge-pill badge-trefolio">Trefolio</span>
+          <span class="text-xs text-muted">Unlimited connections</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="annotation">
+    <strong>Key elements:</strong> (1) Auto-sync status bar with pulse indicator, relative times, and manual "Sync Now" button. (2) Per-broker cards showing connection date, status badge, last import time, and transaction count. (3) "Add Another Broker" CTA. (4) Tier badge showing connection allowance. All times are relative ("2h ago") with absolute on hover.
+  </div>
+
+  <h3>Bifolio User &mdash; 1 Connection (at limit)</h3>
+  <div class="mockup-frame">
+    <div class="mockup-bar">
+      <div class="mockup-dot r"></div>
+      <div class="mockup-dot y"></div>
+      <div class="mockup-dot g"></div>
+      <span class="mockup-title">Import &rarr; Broker Sync &mdash; Bifolio Plan</span>
+    </div>
+    <div class="mockup-body">
+      <div class="sync-bar mb-3">
+        <div class="pulse-dot"></div>
+        <span class="text-xs fw-600 text-emerald">Auto-sync active</span>
+        <span class="text-xs text-muted">&middot;</span>
+        <span class="text-xs text-dim">Last synced 4h ago</span>
+        <span class="text-xs text-muted">&middot;</span>
+        <span class="text-xs text-dim">Next sync in ~2h</span>
+        <span style="flex:1;"></span>
+        <button class="btn btn-outline btn-xs">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+          Sync Now
+        </button>
+      </div>
+
+      <div class="broker-card mb-3">
+        <div class="flex-between mb-2">
+          <div class="flex-center gap-3">
+            <div class="broker-logo">T2</div>
+            <div>
+              <div class="text-sm fw-700">Trading 212</div>
+              <div class="text-xs text-muted">Connected Mar 5, 2026</div>
+            </div>
+          </div>
+          <span class="badge-pill badge-active">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="6"/></svg>
+            Active
+          </span>
+        </div>
+        <hr class="sep" style="margin:0.65rem 0;">
+        <div class="flex-between">
+          <div>
+            <div class="text-xs text-muted">Last imported</div>
+            <div class="text-xs fw-600 text-dim">Mar 11, 2026 at 06:00</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="text-xs text-muted">Transactions</div>
+            <div class="text-xs fw-600 text-dim">56 synced</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- At limit notice -->
+      <div style="border-radius:10px;border:1px solid rgba(139,92,246,0.25);background:linear-gradient(135deg,rgba(139,92,246,0.06) 0%,rgba(139,92,246,0.02) 100%);padding:0.85rem 1rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;">
+        <div>
+          <div class="flex-center gap-2 mb-2" style="margin-bottom:0.2rem;">
+            <span class="badge-pill badge-bifolio">Bifolio</span>
+            <span class="text-xs fw-600" style="color:var(--text-dim);">1 / 1 connection used</span>
+          </div>
+          <span class="text-xs text-muted">Upgrade to Trefolio for unlimited broker connections</span>
+        </div>
+        <button class="btn btn-violet btn-sm">Upgrade</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- 3. PRIVACY & TRUST SECTION -->
+<!-- ============================================================ -->
+<section id="privacy" aria-labelledby="privacy-heading">
+  <h2 id="privacy-heading"><span class="num">03</span> Privacy &amp; Trust Messaging</h2>
+  <p class="section-desc">Shown above the "Connect Broker" button on the SnapTrade tab. Clearly communicates that trefolio never sees credentials and only has read-only access.</p>
+
+  <div class="mockup-frame">
+    <div class="mockup-bar">
+      <div class="mockup-dot r"></div>
+      <div class="mockup-dot y"></div>
+      <div class="mockup-dot g"></div>
+      <span class="mockup-title">Import &rarr; Broker Sync &mdash; Before Connect</span>
+    </div>
+    <div class="mockup-body">
+      <div class="trust-section mb-3">
+        <div class="flex-center gap-2 mb-3" style="margin-bottom:0.85rem;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--emerald)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          <span class="fw-700" style="font-size:0.95rem;">Your credentials are never shared with trefolio</span>
+        </div>
+
+        <div class="trust-point">
+          <div class="trust-icon" style="background:var(--emerald-dim);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--emerald)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div>
+            <div class="text-sm fw-600">SnapTrade handles authentication</div>
+            <div class="text-xs text-dim">You log in directly through <a href="https://snaptrade.com" target="_blank" rel="noopener">SnapTrade</a>, a regulated financial data provider. trefolio never sees your broker username or password.</div>
+          </div>
+        </div>
+
+        <div class="trust-point">
+          <div class="trust-icon" style="background:var(--emerald-dim);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--emerald)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          </div>
+          <div>
+            <div class="text-sm fw-600">Encrypted credentials stored by Plaid</div>
+            <div class="text-xs text-dim">Your encrypted login is stored by <strong>Plaid</strong>, a banking-grade infrastructure provider used by thousands of financial apps. SnapTrade and trefolio do not store your passwords.</div>
+          </div>
+        </div>
+
+        <div class="trust-point">
+          <div class="trust-icon" style="background:var(--emerald-dim);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--emerald)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+          </div>
+          <div>
+            <div class="text-sm fw-600">Read-only access &mdash; we cannot trade or move funds</div>
+            <div class="text-xs text-dim">We only request permission to <strong>view</strong> your holdings and transaction history. trefolio cannot execute trades, transfer money, or modify your brokerage account in any way.</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align:center;">
+        <button class="btn btn-primary" style="padding:0.6rem 2rem;font-size:0.88rem;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+          Connect Your Broker
+        </button>
+        <div class="text-xs text-muted mt-3" style="margin-top:0.65rem;">
+          Powered by <a href="https://snaptrade.com" target="_blank" rel="noopener">SnapTrade</a> &middot; Bank-grade encryption &middot; SOC 2 compliant
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="annotation">
+    <strong>Design rationale:</strong> Three trust points with check icons mirror the pattern Snowball Analytics uses ("Your information will remain secure and will never be shared with anyone, including us"). Each point addresses a specific fear: (1) "Who sees my login?" &rarr; SnapTrade, not us. (2) "Where is it stored?" &rarr; Plaid, encrypted. (3) "Can they trade?" &rarr; Read-only, impossible. The green shield + green checks create an immediate "safe" signal.
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- 4. AUTO-SYNC STATUS -->
+<!-- ============================================================ -->
+<section id="auto-sync" aria-labelledby="sync-heading">
+  <h2 id="sync-heading"><span class="num">04</span> Auto-Sync Status</h2>
+  <p class="section-desc">Shows sync status on the dashboard (subtle) and the import page (detailed). Syncs every 6 hours automatically.</p>
+
+  <h3>Dashboard &mdash; Subtle Sync Indicator</h3>
+  <div class="mockup-frame">
+    <div class="mockup-bar">
+      <div class="mockup-dot r"></div>
+      <div class="mockup-dot y"></div>
+      <div class="mockup-dot g"></div>
+      <span class="mockup-title">Dashboard &mdash; Portfolio Summary Area</span>
+    </div>
+    <div class="mockup-body">
+      <div class="app-card">
+        <div class="flex-between">
+          <div>
+            <div class="text-xs text-muted fw-600" style="text-transform:uppercase;letter-spacing:0.06em;">Total Portfolio Value</div>
+            <div style="font-size:1.8rem;font-weight:800;font-variant-numeric:tabular-nums;margin-top:0.15rem;">
+              &euro;47,832<span class="text-muted" style="font-size:1rem;font-weight:400;">.50</span>
+            </div>
+            <div class="flex-center gap-2 mt-2" style="margin-top:0.35rem;">
+              <span class="text-xs fw-600 text-emerald">+&euro;312.40 (+0.66%)</span>
+              <span class="text-xs text-muted">today</span>
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <div class="flex-center gap-2" style="justify-content:flex-end;">
+              <div class="pulse-dot" style="width:6px;height:6px;"></div>
+              <span class="text-xs text-dim">Synced 2h ago</span>
+            </div>
+            <div class="text-xs text-muted mt-2" style="margin-top:0.15rem;">via DEGIRO, IBKR</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="annotation">
+    <strong>Dashboard placement:</strong> Small green pulse dot + "Synced 2h ago" in the portfolio summary card. Non-intrusive, confirms data is fresh. Shows broker names so users know which accounts are connected. Clicking navigates to the import page Broker Sync tab.
+  </div>
+
+  <h3>Import Page &mdash; Detailed Sync Bar</h3>
+  <div class="mockup-frame">
+    <div class="mockup-bar">
+      <div class="mockup-dot r"></div>
+      <div class="mockup-dot y"></div>
+      <div class="mockup-dot g"></div>
+      <span class="mockup-title">Import &rarr; Broker Sync &mdash; Sync Bar Detail</span>
+    </div>
+    <div class="mockup-body">
+      <div class="sync-bar" style="flex-wrap:wrap;">
+        <div class="pulse-dot"></div>
+        <span class="text-xs fw-600 text-emerald">Auto-sync active</span>
+        <span class="text-xs text-muted">&middot;</span>
+        <span class="text-xs text-dim">Last synced Mar 11 at 12:00 UTC (2h ago)</span>
+        <span class="text-xs text-muted">&middot;</span>
+        <span class="text-xs text-dim">Next sync at ~18:00 UTC (~4h)</span>
+        <span style="flex:1;"></span>
+        <button class="btn btn-outline btn-xs">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+          Sync Now
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="annotation">
+    <strong>Frequency:</strong> Every 6 hours (00:00, 06:00, 12:00, 18:00 UTC). Covers European pre-market (06:00), mid-day (12:00), post-close (18:00), and overnight (00:00). "Sync Now" triggers an immediate manual refresh. The cron iterates all active <code>snaptrade_connections</code>, calls the SnapTrade refresh endpoint, fetches new activities, and deduplicates.
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- 5. EMPTY STATE (FIRST CONNECTION) -->
+<!-- ============================================================ -->
+<section id="empty-state" aria-labelledby="empty-heading">
+  <h2 id="empty-heading"><span class="num">05</span> Empty State &mdash; First Connection</h2>
+  <p class="section-desc">What Bifolio/Trefolio users see on the Broker Sync tab before connecting any broker. Combines onboarding guidance with trust messaging.</p>
+
+  <div class="mockup-frame">
+    <div class="mockup-bar">
+      <div class="mockup-dot r"></div>
+      <div class="mockup-dot y"></div>
+      <div class="mockup-dot g"></div>
+      <span class="mockup-title">Import &rarr; Broker Sync &mdash; No Connection Yet</span>
+    </div>
+    <div class="mockup-body">
+      <div style="text-align:center;padding:1.5rem 1rem;">
+        <div style="width:56px;height:56px;border-radius:16px;background:var(--emerald-dim);display:inline-flex;align-items:center;justify-content:center;margin-bottom:1rem;">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--emerald)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/>
+            <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
+          </svg>
+        </div>
+        <h3 style="font-family:'Inter',sans-serif;font-size:1.1rem;font-weight:700;margin-bottom:0.25rem;">Connect your broker</h3>
+        <p class="text-sm text-dim" style="max-width:420px;margin:0 auto 1.25rem;">
+          Automatically import your holdings, transactions, and dividends. Your portfolio syncs every 6 hours &mdash; no manual uploads needed.
+        </p>
+
+        <!-- How it works -->
+        <div style="display:flex;gap:1.5rem;justify-content:center;margin-bottom:1.5rem;flex-wrap:wrap;">
+          <div style="text-align:center;max-width:140px;">
+            <div style="width:40px;height:40px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);display:inline-flex;align-items:center;justify-content:center;margin-bottom:0.4rem;">
+              <span style="font-size:1rem;">1</span>
+            </div>
+            <div class="text-xs fw-600">Select your broker</div>
+            <div class="text-xs text-muted">from 20+ supported</div>
+          </div>
+          <div style="text-align:center;max-width:140px;">
+            <div style="width:40px;height:40px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);display:inline-flex;align-items:center;justify-content:center;margin-bottom:0.4rem;">
+              <span style="font-size:1rem;">2</span>
+            </div>
+            <div class="text-xs fw-600">Log in securely</div>
+            <div class="text-xs text-muted">via SnapTrade portal</div>
+          </div>
+          <div style="text-align:center;max-width:140px;">
+            <div style="width:40px;height:40px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);display:inline-flex;align-items:center;justify-content:center;margin-bottom:0.4rem;">
+              <span style="font-size:1rem;">3</span>
+            </div>
+            <div class="text-xs fw-600">Auto-sync starts</div>
+            <div class="text-xs text-muted">every 6 hours</div>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" style="padding:0.6rem 2rem;font-size:0.88rem;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+          Connect Your Broker
+        </button>
+      </div>
+
+      <hr class="sep">
+
+      <!-- Compact trust messaging -->
+      <div style="display:flex;gap:1.5rem;padding:0 0.5rem;flex-wrap:wrap;">
+        <div class="flex-center gap-2" style="flex:1;min-width:200px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--emerald)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span class="text-xs text-dim"><strong style="color:var(--text);">trefolio never sees</strong> your broker credentials</span>
+        </div>
+        <div class="flex-center gap-2" style="flex:1;min-width:200px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--emerald)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          <span class="text-xs text-dim">Encrypted via <strong style="color:var(--text);">SnapTrade</strong> &amp; <strong style="color:var(--text);">Plaid</strong></span>
+        </div>
+        <div class="flex-center gap-2" style="flex:1;min-width:200px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--emerald)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+          <span class="text-xs text-dim"><strong style="color:var(--text);">Read-only</strong> &mdash; we cannot trade or move funds</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="annotation">
+    <strong>Design rationale:</strong> Combines a clear 3-step onboarding flow with compact trust messaging below the fold. The empty state should feel inviting, not intimidating. "20+ supported" brokers sets expectations without overpromising. Trust points are condensed into a single row since the full trust section appears on first connect.
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- 6. FREE TIER GATE -->
+<!-- ============================================================ -->
+<section id="free-gate" aria-labelledby="gate-heading">
+  <h2 id="gate-heading"><span class="num">06</span> Free Tier Gate</h2>
+  <p class="section-desc">Free (Folio) users cannot connect brokers. They see an upgrade prompt explaining the value.</p>
+
+  <div class="mockup-frame">
+    <div class="mockup-bar">
+      <div class="mockup-dot r"></div>
+      <div class="mockup-dot y"></div>
+      <div class="mockup-dot g"></div>
+      <span class="mockup-title">Import &rarr; Broker Sync &mdash; Free Plan</span>
+    </div>
+    <div class="mockup-body">
+      <div class="upgrade-card">
+        <div style="width:48px;height:48px;border-radius:14px;background:var(--violet-dim);display:inline-flex;align-items:center;justify-content:center;margin-bottom:0.85rem;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--violet)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/>
+            <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
+          </svg>
+        </div>
+        <h3 style="font-family:'Inter',sans-serif;font-size:1.05rem;font-weight:700;margin-bottom:0.25rem;">Automatic Broker Sync</h3>
+        <p class="text-sm text-dim" style="max-width:400px;margin:0 auto 1rem;">
+          Connect your broker and your portfolio syncs automatically every 6 hours. No more manual CSV uploads.
+        </p>
+        <div style="display:flex;gap:0.75rem;justify-content:center;margin-bottom:1.25rem;flex-wrap:wrap;">
+          <div class="flex-center gap-2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--emerald)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            <span class="text-xs text-dim">Auto-import holdings</span>
+          </div>
+          <div class="flex-center gap-2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--emerald)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            <span class="text-xs text-dim">Syncs every 6 hours</span>
+          </div>
+          <div class="flex-center gap-2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--emerald)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            <span class="text-xs text-dim">20+ brokers</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:0.75rem;justify-content:center;align-items:center;">
+          <button class="btn btn-violet" style="padding:0.55rem 1.5rem;">
+            Upgrade to Bifolio &mdash; &euro;2.99/mo
+          </button>
+        </div>
+        <div class="text-xs text-muted" style="margin-top:0.65rem;">
+          or <a href="#">Trefolio</a> for unlimited connections
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="annotation">
+    <strong>Gate behavior:</strong> Free tier users see this upgrade card instead of the connection UI. The primary CTA is Bifolio (&euro;2.99/mo, 1 connection) as the low-friction entry point. Trefolio is mentioned as a secondary option for power users. CSV and manual import remain available on other tabs.
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- 7. ERROR STATES -->
+<!-- ============================================================ -->
+<section id="errors" aria-labelledby="errors-heading">
+  <h2 id="errors-heading"><span class="num">07</span> Error States</h2>
+  <p class="section-desc">How sync failures and expired credentials appear on the import page.</p>
+
+  <h3>Expired Credentials (Import Page)</h3>
+  <div class="mockup-frame">
+    <div class="mockup-bar">
+      <div class="mockup-dot r"></div>
+      <div class="mockup-dot y"></div>
+      <div class="mockup-dot g"></div>
+      <span class="mockup-title">Import &rarr; Broker Sync &mdash; Expired Connection</span>
+    </div>
+    <div class="mockup-body">
+      <div class="sync-bar mb-3" style="border-color:rgba(245,158,11,0.3);background:rgba(245,158,11,0.05);">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        <span class="text-xs fw-600 text-amber">Auto-sync paused</span>
+        <span class="text-xs text-muted">&middot;</span>
+        <span class="text-xs text-dim">1 connection needs attention</span>
+      </div>
+
+      <div class="broker-card mb-3" style="border-color:rgba(245,158,11,0.35);">
+        <div class="flex-between mb-2">
+          <div class="flex-center gap-3">
+            <div class="broker-logo" style="border-color:rgba(245,158,11,0.3);">DG</div>
+            <div>
+              <div class="text-sm fw-700">DEGIRO</div>
+              <div class="text-xs text-muted">Expired Mar 9, 2026</div>
+            </div>
+          </div>
+          <span class="badge-pill badge-expired">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            Expired
+          </span>
+        </div>
+        <hr class="sep" style="margin:0.65rem 0;">
+        <div class="flex-between" style="align-items:flex-end;">
+          <div>
+            <div class="text-xs text-muted">Last successful sync</div>
+            <div class="text-xs fw-600 text-dim">Mar 9, 2026 at 00:00</div>
+            <div class="text-xs text-amber mt-2" style="margin-top:0.25rem;">Access token expired. Re-authorize to resume syncing.</div>
+          </div>
+          <button class="btn btn-amber btn-sm">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+            Reconnect
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Sync Failure (Temporary Error)</h3>
+  <div class="mockup-frame">
+    <div class="mockup-bar">
+      <div class="mockup-dot r"></div>
+      <div class="mockup-dot y"></div>
+      <div class="mockup-dot g"></div>
+      <span class="mockup-title">Import &rarr; Broker Sync &mdash; Sync Error</span>
+    </div>
+    <div class="mockup-body">
+      <div class="error-banner">
+        <div class="icon-wrap">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+        </div>
+        <div style="flex:1;min-width:0;">
+          <span class="text-sm fw-700" style="color:var(--rose);">Sync failed for DEGIRO</span>
+          <p class="text-xs text-dim" style="margin-top:0.15rem;">A temporary error occurred while fetching your latest transactions. This usually resolves on its own. The next automatic sync will retry in ~4 hours.</p>
+          <div style="margin-top:0.5rem;display:flex;gap:0.5rem;">
+            <button class="btn btn-outline btn-xs">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+              Retry Now
+            </button>
+            <button class="btn btn-outline btn-xs">Contact Support</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="annotation">
+    <strong>Error hierarchy:</strong> (1) <strong style="color:var(--amber);">Expired credentials (amber)</strong> &mdash; user action required, shows on both dashboard and import page. (2) <strong style="color:var(--rose);">Sync failure (red)</strong> &mdash; temporary, import page only, auto-retries on next cron cycle. Expired credentials block all syncing; sync failures are transient and resolve automatically.
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- 8. TIER LIMITS -->
+<!-- ============================================================ -->
+<section id="tier-limits" aria-labelledby="tier-heading">
+  <h2 id="tier-heading"><span class="num">08</span> Tier Connection Limits</h2>
+  <p class="section-desc">Summary of broker sync access by subscription tier.</p>
+
+  <div class="grid-3">
+    <div class="app-card" style="text-align:center;border-top:3px solid var(--text-muted);">
+      <span class="badge-pill badge-free" style="margin-bottom:0.5rem;">Folio (Free)</span>
+      <div style="font-size:1.5rem;font-weight:800;margin:0.35rem 0;color:var(--text-muted);">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-3px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </div>
+      <div class="text-xs text-muted fw-600">No broker sync</div>
+      <div class="text-xs text-muted" style="margin-top:0.25rem;">CSV &amp; manual import available</div>
+    </div>
+
+    <div class="app-card" style="text-align:center;border-top:3px solid var(--amber);">
+      <span class="badge-pill badge-bifolio" style="margin-bottom:0.5rem;">Bifolio</span>
+      <div style="font-size:1.5rem;font-weight:800;margin:0.35rem 0;color:var(--amber);">1</div>
+      <div class="text-xs fw-600" style="color:var(--amber);">broker connection</div>
+      <div class="text-xs text-muted" style="margin-top:0.25rem;">&euro;2.99/mo &middot; Auto-sync 4&times;/day</div>
+    </div>
+
+    <div class="app-card" style="text-align:center;border-top:3px solid var(--violet);">
+      <span class="badge-pill badge-trefolio" style="margin-bottom:0.5rem;">Trefolio</span>
+      <div style="font-size:1.5rem;font-weight:800;margin:0.35rem 0;color:var(--violet);">&infin;</div>
+      <div class="text-xs fw-600" style="color:var(--violet);">unlimited connections</div>
+      <div class="text-xs text-muted" style="margin-top:0.25rem;">&euro;7.99/mo &middot; Auto-sync 4&times;/day</div>
+    </div>
+  </div>
+
+  <div class="annotation-amber annotation" style="margin-top:1rem;">
+    <strong>Cost note:</strong> SnapTrade charges $2/connected user/month (not per broker). A Bifolio user connecting 1 broker costs ~&euro;1.85/mo in SnapTrade fees against &euro;2.70/mo net revenue (31% variable cost). Still profitable, but thinner than Trefolio where the cost is amortized across higher ARPU (&euro;7.62/mo net).
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p>trefolio Broker Sync Design Mockup &mdash; March 2026 &mdash; For Internal Review</p>
+  <p style="margin-top:0.25rem;">All mockups represent the dark theme. Components will adapt to light theme via existing Tailwind dark: classes.</p>
+</footer>
+
+</body>
+</html>
