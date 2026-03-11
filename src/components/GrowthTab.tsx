@@ -18,7 +18,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-const ProCompareCard = dynamic(() => import("./ProCompareCard"), { ssr: false });
+const BlurredProSection = dynamic(() => import("./BlurredProSection"), { ssr: false });
 
 type Range = "1m" | "3m" | "6m" | "1y" | "all";
 const FREE_RANGE: Range = "1m";
@@ -129,7 +129,9 @@ export default function GrowthTab() {
       </div>
 
       {showPaywall ? (
-        <ProCompareCard surface="portfolio_history_locked" reason="upgrade_required" compact />
+        <BlurredProSection blurb="Upgrade to see your full portfolio history with 3M, 6M, 1Y, and All-time views.">
+          <div className="h-64 rounded-xl bg-gradient-to-b from-emerald-500/10 to-transparent" />
+        </BlurredProSection>
       ) : loading ? (
         <div className="flex items-center justify-center py-16 gap-2 text-sm text-gray-400 dark:text-slate-500">
           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-500" />

@@ -21,7 +21,7 @@ import {
 import { formatPercent } from "@/lib/utils";
 import type { Transaction, Holding, CashEntry, HistoricalDataPoint } from "@/lib/types";
 
-const ProCompareCard = dynamic(() => import("./ProCompareCard"), { ssr: false });
+const BlurredProSection = dynamic(() => import("./BlurredProSection"), { ssr: false });
 
 // ECB deposit rate (risk-free rate approximation, updated periodically)
 const RISK_FREE_RATE_PCT = 3.5;
@@ -175,7 +175,16 @@ export default function MetricsTab({ holdings: holdingsProp, cashEntries: cashEn
 
       {/* Pro metrics */}
       {!isPro ? (
-        <ProCompareCard surface="metrics_locked" reason="upgrade_required" compact />
+        <BlurredProSection blurb="Upgrade to Pro for Sharpe Ratio, Max Drawdown, Volatility, and Beta.">
+          <div className="grid grid-cols-3 gap-3">
+            {["Sharpe Ratio", "Max Drawdown", "Volatility"].map((label) => (
+              <div key={label} className="bg-gray-50 dark:bg-slate-800 rounded-xl p-3">
+                <p className="text-[10px] text-gray-500 dark:text-slate-400 font-medium uppercase mb-1">{label}</p>
+                <div className="h-7 w-16 rounded bg-gray-200 dark:bg-slate-700" />
+              </div>
+            ))}
+          </div>
+        </BlurredProSection>
       ) : (
         <div className="grid grid-cols-3 gap-3">
           {proMetrics.map((m) => {

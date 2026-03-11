@@ -14,7 +14,7 @@ import { usePortfolio } from "@/lib/portfolio-context";
 import { useI18n } from "@/lib/i18n";
 import { useTheme } from "@/lib/theme-context";
 import { useAuth } from "@/lib/auth-context";
-import ProCompareCard from "@/components/ProCompareCard";
+import BlurredProSection from "@/components/BlurredProSection";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
 import { formatCurrency, formatCompactNumber } from "@/lib/utils";
 
@@ -166,21 +166,27 @@ export default function PortfolioProjection({ holdings: holdingsProp, cashEntrie
         <p className="text-xs text-gray-500 dark:text-slate-400">{t("projectionMinimizedHint")}</p>
       )}
 
-      {!isMinimized && (
-        <div className="relative">
-          {!isPro && (
-            <div className="absolute inset-0 z-20 flex items-center justify-center p-4">
-              <div className="w-full max-w-xl">
-                <ProCompareCard
-                  surface="dashboard_projection_locked"
-                  reason="upgrade_required"
-                  compact
-                />
-              </div>
+      {!isMinimized && !isPro && (
+        <BlurredProSection blurb="Upgrade to Pro for portfolio growth projections with customizable rates and contributions.">
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="h-14 rounded-lg bg-gray-100 dark:bg-slate-700/30" />
+              <div className="h-14 rounded-lg bg-gray-100 dark:bg-slate-700/30" />
+              <div className="h-14 rounded-lg bg-gray-100 dark:bg-slate-700/30" />
+              <div className="h-14 rounded-lg bg-gray-100 dark:bg-slate-700/30" />
             </div>
-          )}
+            <div className="h-64 rounded-xl bg-gradient-to-b from-emerald-500/10 to-transparent" />
+            <div className="grid grid-cols-3 gap-3">
+              <div className="h-16 rounded-xl bg-gray-100 dark:bg-slate-700/30" />
+              <div className="h-16 rounded-xl bg-gray-100 dark:bg-slate-700/30" />
+              <div className="h-16 rounded-xl bg-gray-100 dark:bg-slate-700/30" />
+            </div>
+          </div>
+        </BlurredProSection>
+      )}
 
-          <div className={!isPro ? "blur-sm pointer-events-none select-none" : ""}>
+      {!isMinimized && isPro && (
+        <div>
       {/* Controls */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Growth rate */}
@@ -410,7 +416,6 @@ export default function PortfolioProjection({ holdings: holdingsProp, cashEntrie
           </div>
         </div>
       )}
-          </div>
         </div>
       )}
     </div>
