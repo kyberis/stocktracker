@@ -44,7 +44,7 @@ const TIERS: TierInfo[] = [
     regularAnnual: "€0", annualPrice: "€0",
     annualSavePct: 0, launchDiscountPct: 0, isFree: true,
     descriptionKey: "landingPricingFolioDesc",
-    featureKeys: Array.from({ length: 13 }, (_, i) => `landingPricingFolioFeature${i + 1}` as TranslationKey),
+    featureKeys: Array.from({ length: 15 }, (_, i) => `landingPricingFolioFeature${i + 1}` as TranslationKey),
   },
   {
     name: "Bifolio",
@@ -54,7 +54,7 @@ const TIERS: TierInfo[] = [
     regularAnnual: "€31.99", annualPrice: "€23.99",
     annualSavePct: 33, launchDiscountPct: 25,
     descriptionKey: "landingPricingBifolioDesc",
-    featureKeys: Array.from({ length: 8 }, (_, i) => `landingPricingBifolioFeature${i + 1}` as TranslationKey),
+    featureKeys: Array.from({ length: 11 }, (_, i) => `landingPricingBifolioFeature${i + 1}` as TranslationKey),
   },
   {
     name: "Trefolio",
@@ -64,7 +64,7 @@ const TIERS: TierInfo[] = [
     regularAnnual: "€79.99", annualPrice: "€59.99",
     annualSavePct: 37, launchDiscountPct: 20,
     descriptionKey: "landingPricingTrefolioDesc",
-    featureKeys: Array.from({ length: 15 }, (_, i) => `landingPricingTrefolioFeature${i + 1}` as TranslationKey),
+    featureKeys: Array.from({ length: 16 }, (_, i) => `landingPricingTrefolioFeature${i + 1}` as TranslationKey),
     highlighted: true,
   },
 ];
