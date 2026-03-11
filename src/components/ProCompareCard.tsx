@@ -64,7 +64,7 @@ const TIERS: TierInfo[] = [
     regularAnnual: "€79.99", annualPrice: "€59.99",
     annualSavePct: 37, launchDiscountPct: 20,
     descriptionKey: "landingPricingTrefolioDesc",
-    featureKeys: Array.from({ length: 16 }, (_, i) => `landingPricingTrefolioFeature${i + 1}` as TranslationKey),
+    featureKeys: Array.from({ length: 15 }, (_, i) => `landingPricingTrefolioFeature${i + 1}` as TranslationKey),
     highlighted: true,
   },
 ];

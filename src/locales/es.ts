@@ -1101,6 +1101,7 @@ const es: TranslationStrings = {
   landingPricingTrefolioFeature12: "Broker Sync automático (20+ brokers)",
   landingPricingTrefolioFeature13: "Soporte prioritario",
   landingPricingTrefolioFeature14: "Hasta 3 portafolios con seguimiento independiente",
+  landingPricingTrefolioFeature15: "Importación de cartera con IA (cualquier archivo o captura)",
   landingPricingTrefolioCta: "Probar Trefolio",
 
   landingFaqHeading: "Preguntas",

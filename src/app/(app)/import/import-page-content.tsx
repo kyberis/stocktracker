@@ -300,7 +300,7 @@ export default function ImportPageContent() {
                 <path strokeLinecap="round" strokeLinejoin="round" d={tab.icon} />
               </svg>
               {methodLabel(tab.key)}
-              {tab.key === "snaptrade_api" && (
+              {(tab.key === "snaptrade_api" || tab.key === "ai_import") && (
                 <span className="text-[9px] font-bold bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded-full">Pro</span>
               )}
             </button>
@@ -542,6 +542,9 @@ export default function ImportPageContent() {
       {/* ═══════════ AI IMPORT ═══════════ */}
       {method === "ai_import" && (
         <div className="space-y-4">
+          {!isPro ? (
+            <ProCompareCard surface="ai_import" reason="upgrade_required" compact />
+          ) : (<>
           {/* Guide */}
           {aiGuide && aiImport.step === "idle" && <InlineGuide guide={aiGuide} locale={locale} />}
 
@@ -618,6 +621,7 @@ export default function ImportPageContent() {
           {aiImport.step === "done" && (
             <DoneCard txCount={aiImport.importedTxCount} holdingsCapped={aiImport.holdingsCapped} onReset={aiImport.reset} t={t} />
           )}
+          </>)}
         </div>
       )}
 
