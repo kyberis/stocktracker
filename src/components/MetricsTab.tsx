@@ -50,7 +50,7 @@ export default function MetricsTab({ holdings: holdingsProp, cashEntries: cashEn
   const [txs, setTxs] = useState<Transaction[]>([]);
   const [historySeries, setHistorySeries] = useState<Record<string, HistoricalDataPoint[]>>({});
 
-  const isPro = user?.plan === "pro";
+  const isPaid = user?.plan === "starter" || user?.plan === "pro";
 
   useEffect(() => {
     track("metrics_tab_viewed");
@@ -59,7 +59,7 @@ export default function MetricsTab({ holdings: holdingsProp, cashEntries: cashEn
   }, []);
 
   useEffect(() => {
-    if (!isPro) return;
+    if (!isPaid) return;
     const tickers = holdings.map((h) => h.ticker).slice(0, 10);
     Promise.allSettled(
       tickers.map((ticker) =>
@@ -74,7 +74,7 @@ export default function MetricsTab({ holdings: holdingsProp, cashEntries: cashEn
       });
       setHistorySeries(map);
     });
-  }, [holdings, isPro]);
+  }, [holdings, isPaid]);
 
   const { totalCurrentEUR, totalCostEUR } = calculatePortfolioTotals(
     holdings, cashEntries, quotes, exchangeRates, baseCurrency
@@ -88,7 +88,7 @@ export default function MetricsTab({ holdings: holdingsProp, cashEntries: cashEn
     : 0;
 
   const { sharpe, maxDrawdown, volatility } = useMemo(() => {
-    if (!isPro || Object.keys(historySeries).length === 0) {
+    if (!isPaid || Object.keys(historySeries).length === 0) {
       return { sharpe: null, maxDrawdown: null, volatility: null };
     }
 
@@ -115,28 +115,28 @@ export default function MetricsTab({ holdings: holdingsProp, cashEntries: cashEn
       maxDrawdown: calculateMaxDrawdown(values),
       volatility: calculateAnnualizedVolatility(dailyReturns),
     };
-  }, [isPro, historySeries, holdings, exchangeRates, baseCurrency]);
+  }, [isPaid, historySeries, holdings, exchangeRates, baseCurrency]);
 
   const proMetrics: MetricCard[] = [
     {
       label: t("sharpeRatio"),
       tooltip: t("sharpeRatioTooltip"),
       value: sharpe != null ? sharpe.toFixed(2) : null,
-      isPro: true,
+      isPro: false,
       metricKey: "sharpe",
     },
     {
       label: t("maxDrawdown"),
       tooltip: t("maxDrawdownTooltip"),
       value: maxDrawdown != null ? formatPercent(maxDrawdown) : null,
-      isPro: true,
+      isPro: false,
       metricKey: "drawdown",
     },
     {
       label: t("annualizedVolatility"),
       tooltip: t("volatilityTooltip"),
       value: volatility != null ? `${volatility.toFixed(1)}%` : null,
-      isPro: true,
+      isPro: false,
       metricKey: "volatility",
     },
   ];
@@ -174,8 +174,8 @@ export default function MetricsTab({ holdings: holdingsProp, cashEntries: cashEn
       </div>
 
       {/* Pro metrics */}
-      {!isPro ? (
-        <BlurredProSection blurb="Upgrade to Pro for Sharpe Ratio, Max Drawdown, Volatility, and Beta.">
+      {!isPaid ? (
+        <BlurredProSection blurb="Upgrade to Bifolio for Sharpe Ratio, Max Drawdown, Volatility, and Beta." ctaLabel="Upgrade to Bifolio">
           <div className="grid grid-cols-3 gap-3">
             {["Sharpe Ratio", "Max Drawdown", "Volatility"].map((label) => (
               <div key={label} className="bg-gray-50 dark:bg-slate-800 rounded-xl p-3">

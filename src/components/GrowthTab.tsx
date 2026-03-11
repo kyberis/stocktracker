@@ -22,7 +22,6 @@ const BlurredProSection = dynamic(() => import("./BlurredProSection"), { ssr: fa
 
 type Range = "1m" | "3m" | "6m" | "1y" | "all";
 const FREE_RANGE: Range = "1m";
-const STARTER_MAX_RANGE: Range = "1y";
 
 interface SnapshotPoint {
   date: string;
@@ -40,10 +39,7 @@ export default function GrowthTab() {
   const [loading, setLoading] = useState(true);
   const [showPaywall, setShowPaywall] = useState(false);
 
-  const isPro = user?.plan === "pro";
-  const isStarter = user?.plan === "starter";
-
-  const STARTER_RANGES = new Set<Range>(["1m", "3m", "6m", "1y"]);
+  const isPaid = user?.plan === "starter" || user?.plan === "pro";
 
   // Upsert today's snapshot when portfolio loads — skip if any holding
   // still lacks both a live quote and a meaningful stored value, to avoid
@@ -65,9 +61,7 @@ export default function GrowthTab() {
 
   useEffect(() => {
     const isFreeRange = range === FREE_RANGE;
-    const isStarterRange = STARTER_RANGES.has(range);
-    const blocked = (!isFreeRange && !isStarter && !isPro) || (!isStarterRange && isStarter && !isPro);
-    if (blocked) {
+    if (!isFreeRange && !isPaid) {
       setShowPaywall(true);
       return;
     }
@@ -81,7 +75,7 @@ export default function GrowthTab() {
       })
       .catch(() => setLoading(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [range, isPro, isStarter]);
+  }, [range, isPaid]);
 
   function handleRangeChange(r: Range) {
     setRange(r);
@@ -102,7 +96,7 @@ export default function GrowthTab() {
         <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{t("growthTab")}</h3>
         <div className="flex gap-1" role="group" aria-label="Time range">
           {ranges.map((r) => {
-            const isLocked = r !== FREE_RANGE && !isPro;
+            const isLocked = r !== FREE_RANGE && !isPaid;
             return (
               <button
                 key={r}
@@ -129,7 +123,7 @@ export default function GrowthTab() {
       </div>
 
       {showPaywall ? (
-        <BlurredProSection blurb="Upgrade to see your full portfolio history with 3M, 6M, 1Y, and All-time views.">
+        <BlurredProSection blurb="Upgrade to Bifolio for full portfolio history with 3M, 6M, 1Y, and All-time views." ctaLabel="Upgrade to Bifolio">
           <div className="h-64 rounded-xl bg-gradient-to-b from-emerald-500/10 to-transparent" />
         </BlurredProSection>
       ) : loading ? (

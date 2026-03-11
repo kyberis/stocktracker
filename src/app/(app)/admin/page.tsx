@@ -11,7 +11,7 @@ interface AdminUser {
   id: string;
   username: string;
   role: "admin" | "user";
-  plan: "free" | "pro";
+  plan: "free" | "starter" | "pro";
   email: string;
   displayName: string;
   mustChangePassword: boolean;
@@ -2346,7 +2346,7 @@ function UsersTab() {
     }
   };
 
-  const handlePlanChange = async (userId: string, newPlan: "free" | "pro") => {
+  const handlePlanChange = async (userId: string, newPlan: "free" | "starter" | "pro") => {
     const res = await fetch("/api/admin/users", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -2432,11 +2432,12 @@ function UsersTab() {
                   <div className="flex items-center gap-2">
                     <select
                       value={user.plan}
-                      onChange={(e) => handlePlanChange(user.id, e.target.value as "free" | "pro")}
+                      onChange={(e) => handlePlanChange(user.id, e.target.value as "free" | "starter" | "pro")}
                       className="text-xs px-2 py-1 rounded-lg"
                     >
-                      <option value="free">free</option>
-                      <option value="pro">pro</option>
+                      <option value="free">Folio (free)</option>
+                      <option value="starter">Bifolio (starter)</option>
+                      <option value="pro">Trefolio (pro)</option>
                     </select>
                     {planUpdated === user.id && (
                       <span className="text-xs text-emerald-500">Updated</span>

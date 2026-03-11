@@ -13,8 +13,6 @@ import {
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useI18n } from "@/lib/i18n";
 import { useTheme } from "@/lib/theme-context";
-import { useAuth } from "@/lib/auth-context";
-import BlurredProSection from "@/components/BlurredProSection";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
 import { formatCurrency, formatCompactNumber } from "@/lib/utils";
 
@@ -39,7 +37,6 @@ interface Props {
 export default function PortfolioProjection({ holdings: holdingsProp, cashEntries: cashEntriesProp }: Props) {
   const { t } = useI18n();
   const { isDark } = useTheme();
-  const { user } = useAuth();
   const { holdings: ctxHoldings, cashEntries: ctxCashEntries, quotes, exchangeRates, activePortfolioCurrency } = usePortfolio();
   const baseCurrency = activePortfolioCurrency;
   const holdings = holdingsProp ?? ctxHoldings;
@@ -133,7 +130,6 @@ export default function PortfolioProjection({ holdings: holdingsProp, cashEntrie
 
   const tickFill = isDark ? "#94a3b8" : "#9ca3af";
   const axisStroke = isDark ? "#334155" : "#e5e7eb";
-  const isPro = user?.plan === "pro";
 
   if (holdings.length === 0) {
     return (
@@ -166,26 +162,7 @@ export default function PortfolioProjection({ holdings: holdingsProp, cashEntrie
         <p className="text-xs text-gray-500 dark:text-slate-400">{t("projectionMinimizedHint")}</p>
       )}
 
-      {!isMinimized && !isPro && (
-        <BlurredProSection blurb="Upgrade to Pro for portfolio growth projections with customizable rates and contributions.">
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="h-14 rounded-lg bg-gray-100 dark:bg-slate-700/30" />
-              <div className="h-14 rounded-lg bg-gray-100 dark:bg-slate-700/30" />
-              <div className="h-14 rounded-lg bg-gray-100 dark:bg-slate-700/30" />
-              <div className="h-14 rounded-lg bg-gray-100 dark:bg-slate-700/30" />
-            </div>
-            <div className="h-64 rounded-xl bg-gradient-to-b from-emerald-500/10 to-transparent" />
-            <div className="grid grid-cols-3 gap-3">
-              <div className="h-16 rounded-xl bg-gray-100 dark:bg-slate-700/30" />
-              <div className="h-16 rounded-xl bg-gray-100 dark:bg-slate-700/30" />
-              <div className="h-16 rounded-xl bg-gray-100 dark:bg-slate-700/30" />
-            </div>
-          </div>
-        </BlurredProSection>
-      )}
-
-      {!isMinimized && isPro && (
+      {!isMinimized && (
         <div>
       {/* Controls */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

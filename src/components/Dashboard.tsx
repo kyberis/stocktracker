@@ -325,8 +325,10 @@ export default function Dashboard() {
                 <PortfolioSummary holdings={filteredHoldings} cashEntries={filteredCashEntries} />
                 <AdSlot slot="dashboard-summary" format="horizontal" />
                 <PortfolioTable holdings={filteredHoldings} onAddStock={() => setShowAddModal(true)} />
-                <PortfolioGrowthPeriods holdings={filteredHoldings} />
-                <PerformanceMetrics holdings={filteredHoldings} cashEntries={filteredCashEntries} />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                  <PortfolioGrowthPeriods holdings={filteredHoldings} />
+                  <PerformanceMetrics holdings={filteredHoldings} cashEntries={filteredCashEntries} />
+                </div>
                 <MarketAndCash holdings={filteredHoldings} cashEntries={filteredCashEntries} />
                 <PortfolioProjection holdings={filteredHoldings} cashEntries={filteredCashEntries} />
                 <AdSlot slot="dashboard-bottom" format="auto" />

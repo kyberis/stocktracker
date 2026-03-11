@@ -14,9 +14,37 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "1.17.0";
+export const CURRENT_VERSION = "1.18.0";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "1.18.0",
+    date: "2026-03-11",
+    title: "Tier Rebalance — More Value at Every Plan",
+    titleTranslations: { es: "Rebalanceo de planes — Más valor en cada nivel" },
+    changes: [
+      {
+        type: "feature",
+        text: "Portfolio Growth Projection is now free for all users",
+        translations: { es: "La Proyección de Crecimiento del Portafolio ahora es gratis para todos los usuarios" },
+      },
+      {
+        type: "feature",
+        text: "Advanced metrics (Sharpe Ratio, Max Drawdown, Volatility) now included in Bifolio",
+        translations: { es: "Métricas avanzadas (Ratio de Sharpe, Máximo Drawdown, Volatilidad) ahora incluidas en Bifolio" },
+      },
+      {
+        type: "feature",
+        text: "Full portfolio growth history (all time ranges) now included in Bifolio",
+        translations: { es: "Historial completo de crecimiento del portafolio (todos los rangos) ahora incluido en Bifolio" },
+      },
+      {
+        type: "improvement",
+        text: "Updated pricing pages, landing page, and plan comparisons to reflect new tier structure",
+        translations: { es: "Páginas de precios, landing page y comparaciones de planes actualizadas con la nueva estructura de niveles" },
+      },
+    ],
+  },
   {
     version: "1.17.0",
     date: "2026-03-11",

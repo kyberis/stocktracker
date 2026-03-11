@@ -20,6 +20,8 @@ const STARTER_FEATURES = new Set<SubscriptionFeature>([
   "csv-export",
   "alerts-email",
   "alerts-push",
+  "metrics",
+  "portfolio-history-full",
 ]);
 
 /**
@@ -32,8 +34,6 @@ const PRO_FEATURES = new Set<SubscriptionFeature>([
   "economic-indicators",
   "alerts-whatsapp",
   "alerts-device",
-  "metrics",
-  "portfolio-history-full",
   "crypto-pro",
   "crypto-portfolio",
 ]);

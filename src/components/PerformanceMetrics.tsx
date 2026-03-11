@@ -4,10 +4,12 @@ import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { useI18n } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/portfolio-context";
+import { useAuth } from "@/lib/auth-context";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
 import { calculateTTWROR, calculateXIRR, buildXIRRCashFlows } from "@/lib/performance";
 import type { Transaction, Holding, CashEntry } from "@/lib/types";
 
+const BlurredProSection = dynamic(() => import("./BlurredProSection"), { ssr: false });
 const PerformanceExplainerModal = dynamic(() => import("./PerformanceExplainerModal"), { ssr: false });
 
 interface Props {
@@ -18,15 +20,18 @@ interface Props {
 export default function PerformanceMetrics({ holdings: holdingsProp, cashEntries: cashEntriesProp }: Props) {
   const { t } = useI18n();
   const { holdings: ctxHoldings, cashEntries: ctxCashEntries, quotes, exchangeRates, activePortfolioCurrency } = usePortfolio();
+  const { user } = useAuth();
   const holdings = holdingsProp ?? ctxHoldings;
   const cashEntries = cashEntriesProp ?? ctxCashEntries;
   const baseCurrency = activePortfolioCurrency;
+  const isPaid = user?.plan === "starter" || user?.plan === "pro";
   const [txs, setTxs] = useState<Transaction[]>([]);
   const [showExplainer, setShowExplainer] = useState(false);
 
   useEffect(() => {
+    if (!isPaid) return;
     fetch("/api/transactions").then((r) => r.ok ? r.json() : []).then(setTxs);
-  }, []);
+  }, [isPaid]);
 
   const { totalCurrentEUR, totalCostEUR } = calculatePortfolioTotals(holdings, cashEntries, quotes, exchangeRates, baseCurrency);
 
@@ -52,6 +57,24 @@ export default function PerformanceMetrics({ holdings: holdingsProp, cashEntries
       active: hasTxData,
     },
   ];
+
+  if (!isPaid) {
+    return (
+      <div className="card">
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">{t("portfolioPerformance")}</h3>
+        <BlurredProSection blurb="Upgrade to Bifolio for TTWROR, IRR, and advanced portfolio performance metrics." ctaLabel="Upgrade to Bifolio">
+          <div className="grid grid-cols-2 gap-3">
+            {["TTWROR", "IRR"].map((label) => (
+              <div key={label} className="bg-gray-50 dark:bg-slate-800/50 rounded-xl p-3 text-center">
+                <p className="text-[10px] text-gray-500 dark:text-slate-400 font-medium uppercase mb-1">{label}</p>
+                <div className="h-7 w-16 mx-auto rounded bg-gray-200 dark:bg-slate-700" />
+              </div>
+            ))}
+          </div>
+        </BlurredProSection>
+      </div>
+    );
+  }
 
   return (
     <div className="card">

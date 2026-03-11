@@ -1,10 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useI18n } from "@/lib/i18n";
+import { useAuth } from "@/lib/auth-context";
 import { useTrack } from "@/lib/use-track";
 import { convertCurrency, formatPercent } from "@/lib/utils";
+
+const BlurredProSection = dynamic(() => import("./BlurredProSection"), { ssr: false });
 import {
   calculatePortfolioValueOnDate,
   calculatePeriodReturn,
@@ -40,7 +44,9 @@ export default function PortfolioGrowthPeriods({ holdings: holdingsProp }: Props
   const baseCurrency = activePortfolioCurrency;
   const holdings = holdingsProp ?? ctxHoldings;
   const { t } = useI18n();
+  const { user } = useAuth();
   const track = useTrack();
+  const isPaid = user?.plan === "starter" || user?.plan === "pro";
   const tracked = useRef(false);
 
   const [loading, setLoading] = useState(false);
@@ -86,7 +92,7 @@ export default function PortfolioGrowthPeriods({ holdings: holdingsProp }: Props
   );
 
   useEffect(() => {
-    if (tickers.length === 0) {
+    if (!isPaid || tickers.length === 0) {
       setResults({ ytd: null, oneMonth: null, oneYear: null });
       return;
     }
@@ -124,7 +130,7 @@ export default function PortfolioGrowthPeriods({ holdings: holdingsProp }: Props
 
     load();
     return () => { cancelled = true; };
-  }, [tickers, holdings, exchangeRates, currentEquityEUR, fetchHistorical, baseCurrency]);
+  }, [isPaid, tickers, holdings, exchangeRates, currentEquityEUR, fetchHistorical, baseCurrency]);
 
   useEffect(() => {
     if (!tracked.current && !loading && (results.ytd !== null || results.oneMonth !== null || results.oneYear !== null)) {
@@ -140,6 +146,26 @@ export default function PortfolioGrowthPeriods({ holdings: holdingsProp }: Props
     { label: t("oneMonth"), value: results.oneMonth },
     { label: t("oneYear"), value: results.oneYear },
   ];
+
+  if (!isPaid) {
+    return (
+      <div className="card">
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
+          {t("portfolioGrowth")}
+        </h3>
+        <BlurredProSection blurb="Upgrade to Bifolio for YTD, 1M, and 1Y portfolio growth tracking." ctaLabel="Upgrade to Bifolio">
+          <div className="grid grid-cols-3 gap-3">
+            {["YTD", "1M", "1Y"].map((label) => (
+              <div key={label} className="bg-gray-50 dark:bg-slate-800/50 rounded-xl p-3 text-center">
+                <p className="text-[10px] text-gray-500 dark:text-slate-400 font-medium uppercase mb-1">{label}</p>
+                <div className="h-7 w-16 mx-auto rounded bg-gray-200 dark:bg-slate-700" />
+              </div>
+            ))}
+          </div>
+        </BlurredProSection>
+      </div>
+    );
+  }
 
   return (
     <div className="card">

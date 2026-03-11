@@ -126,7 +126,7 @@ const SOFTWARE_APP_SCHEMA = {
       priceCurrency: "EUR",
       name: "Folio",
       description:
-        "Up to 15 holdings, real-time quotes, charts, broker import, 5 AI calls/month",
+        "Up to 15 holdings, real-time quotes, charts, growth projection, broker import, 5 AI calls/month",
     },
     {
       "@type": "Offer",
@@ -134,7 +134,7 @@ const SOFTWARE_APP_SCHEMA = {
       priceCurrency: "EUR",
       name: "Bifolio",
       description:
-        "Up to 50 holdings, 20 AI calls/month, portfolio sharing, CSV export, 1-year growth history",
+        "Up to 50 holdings, 20 AI calls/month, full portfolio history, advanced metrics, portfolio sharing, CSV export",
     },
     {
       "@type": "Offer",
@@ -196,7 +196,7 @@ const FAQ_SCHEMA = {
       name: "What's the difference between the plans?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Folio (free) includes up to 15 holdings, real-time quotes, charts, broker import, and 5 AI calls/month. Bifolio (€2.99/month) adds 50 holdings, 20 AI calls, portfolio sharing, and CSV export. Trefolio (€7.99/month) adds unlimited holdings, unlimited AI analysis, company fundamentals, stock intelligence, economic indicators, and Alpha Vantage premium data.",
+        text: "Folio (free) includes up to 15 holdings, real-time quotes, charts, growth projection, broker import, and 5 AI calls/month. Bifolio (€2.99/month) adds 50 holdings, 20 AI calls, full portfolio history, advanced metrics (Sharpe, Drawdown, Volatility), portfolio sharing, and CSV export. Trefolio (€7.99/month) adds unlimited holdings, unlimited AI analysis, company fundamentals, stock intelligence, economic indicators, and Alpha Vantage premium data.",
       },
     },
     {

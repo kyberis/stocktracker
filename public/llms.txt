@@ -8,8 +8,8 @@ trefolio is a web-based portfolio tracker that supports real-time quotes from NY
 
 ## Pricing
 
-- Free: Up to 15 holdings, real-time quotes, charts, broker import, 5 AI calls/month
-- Bifolio (€2.99/month or €23.99/year): 50 holdings, 20 AI calls/month, portfolio sharing, CSV export
+- Free: Up to 15 holdings, real-time quotes, charts, growth projection, broker import, 5 AI calls/month
+- Bifolio (€2.99/month or €23.99/year): 50 holdings, 20 AI calls/month, full portfolio history, advanced metrics, portfolio sharing, CSV export
 - Trefolio (€7.99/month or €59.99/year): Unlimited holdings, unlimited AI analysis, fundamentals, stock intelligence, economic indicators, broker sync
 
 ## Key Pages
