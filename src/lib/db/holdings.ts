@@ -245,15 +245,16 @@ export async function resetUserHoldings(
   portfolioId?: string
 ): Promise<number> {
   const client = await ensureInitialized();
-  const portfolioFilter = portfolioId ? " AND portfolio_id = ?" : "";
-  const portfolioArgs = portfolioId ? [portfolioId] : [];
+  const resolved = await resolvePortfolioId(userId, portfolioId);
+  const portfolioFilter = " AND portfolio_id = ?";
+  const portfolioArgs = [resolved];
   await client.execute({ sql: `DELETE FROM holdings WHERE user_id = ?${portfolioFilter}`, args: [userId, ...portfolioArgs] });
   await client.execute({ sql: `DELETE FROM cash_entries WHERE user_id = ?${portfolioFilter}`, args: [userId, ...portfolioArgs] });
   await client.execute({ sql: `DELETE FROM transactions WHERE user_id = ?${portfolioFilter}`, args: [userId, ...portfolioArgs] });
   if (useSeedData) {
-    const holdingsCount = await seedHoldingsForUser(client, userId);
-    const cashCount = await seedCashForUser(client, userId);
-    const txCount = await seedTransactionsForUser(client, userId);
+    const holdingsCount = await seedHoldingsForUser(client, userId, resolved);
+    const cashCount = await seedCashForUser(client, userId, resolved);
+    const txCount = await seedTransactionsForUser(client, userId, resolved);
     return holdingsCount + cashCount + txCount;
   }
   return 0;

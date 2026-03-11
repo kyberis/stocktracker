@@ -26,6 +26,7 @@ const PRODUCT_LINKS = [
   { label: "Pricing", href: "/landing#pricing" },
   { label: "FAQ", href: "/landing#faq" },
   { label: "Blog", href: "/blog" },
+  { label: "Release Notes", href: "/releasenotes" },
   { label: "Contact Us", href: "/contact" },
 ];
 

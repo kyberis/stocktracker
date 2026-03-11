@@ -64,7 +64,17 @@ async function ensureAdminUser(client: Client) {
   );
 
   if (isNew) {
-    await seedTransactionsForUser(client, adminId);
+    const pId = randomUUID();
+    await client.execute({
+      sql: "INSERT OR IGNORE INTO portfolios (id, user_id, name, is_default, sort_order) VALUES (?, ?, 'My Portfolio', 1, 0)",
+      args: [pId, adminId],
+    });
+    const pRow = await client.execute({
+      sql: "SELECT id FROM portfolios WHERE user_id = ? AND is_default = 1",
+      args: [adminId],
+    });
+    const portfolioId = (pRow.rows[0]?.id as string) || pId;
+    await seedTransactionsForUser(client, adminId, portfolioId);
   }
 }
 

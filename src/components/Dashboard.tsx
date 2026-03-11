@@ -133,7 +133,7 @@ export default function Dashboard() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const { showWhatsNew: autoShowWhatsNew, dismissWhatsNew } = useWhatsNewAutoShow();
   const { t } = useI18n();
-  const { holdings, cashEntries, isLoading, refreshHoldings, refreshQuotes } = usePortfolio();
+  const { holdings, cashEntries, isLoading, refreshHoldings, refreshQuotes, activePortfolioId } = usePortfolio();
   const { user, isLoading: authLoading } = useAuth();
   const track = useTrack();
 
@@ -290,7 +290,8 @@ export default function Dashboard() {
                 onAddStock={() => setShowAddModal(true)}
                 onSeedData={async () => {
                   try {
-                    const res = await fetch("/api/reset-portfolio", {
+                    const qp = activePortfolioId ? `?portfolioId=${encodeURIComponent(activePortfolioId)}` : "";
+                    const res = await fetch(`/api/reset-portfolio${qp}`, {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({ mode: "seed" }),
@@ -327,7 +328,7 @@ export default function Dashboard() {
 
                 <PortfolioSummary holdings={filteredHoldings} cashEntries={filteredCashEntries} />
                 <AdSlot slot="dashboard-summary" format="horizontal" />
-                <PortfolioTable holdings={filteredHoldings} />
+                <PortfolioTable holdings={filteredHoldings} onAddStock={() => setShowAddModal(true)} />
                 <PortfolioGrowthPeriods holdings={filteredHoldings} />
                 <PerformanceMetrics holdings={filteredHoldings} cashEntries={filteredCashEntries} />
                 <MarketAndCash holdings={filteredHoldings} cashEntries={filteredCashEntries} />

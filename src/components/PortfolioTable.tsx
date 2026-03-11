@@ -14,9 +14,10 @@ type SortDir = "asc" | "desc";
 
 interface Props {
   holdings?: Holding[];
+  onAddStock?: () => void;
 }
 
-export default function PortfolioTable({ holdings: holdingsProp }: Props) {
+export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: Props) {
   const { holdings: ctxHoldings, quotes } = usePortfolio();
   const holdings = holdingsProp ?? ctxHoldings;
   const { t } = useI18n();
@@ -103,8 +104,33 @@ export default function PortfolioTable({ holdings: holdingsProp }: Props) {
 
   if (holdings.length === 0) {
     return (
-      <div className="card text-center py-12">
-        <p className="text-gray-400 dark:text-slate-500 text-lg">{t("noHoldings")}</p>
+      <div className="card text-center py-10 px-4">
+        <svg className="w-10 h-10 mx-auto mb-3 text-gray-300 dark:text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
+        </svg>
+        <p className="text-gray-400 dark:text-slate-500 text-base mb-4">{t("noHoldings")}</p>
+        <div className="flex items-center justify-center gap-3 flex-wrap">
+          <a
+            href="/import"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            {t("emptyStateImport")}
+          </a>
+          {onAddStock && (
+            <button
+              onClick={onAddStock}
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-400 border border-violet-200 dark:border-violet-500/30 hover:bg-violet-100 dark:hover:bg-violet-500/20 transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              {t("addStock")}
+            </button>
+          )}
+        </div>
       </div>
     );
   }

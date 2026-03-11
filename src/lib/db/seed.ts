@@ -82,12 +82,12 @@ const EXTRA_ISIN_MAP: Record<string, string> = {
   "IE00BJ5JPG56": "ICGA",      // iShares MSCI China
 };
 
-export async function seedHoldingsForUser(client: Client, userId: string): Promise<number> {
+export async function seedHoldingsForUser(client: Client, userId: string, portfolioId: string): Promise<number> {
   const holdings = getSeedHoldings();
   const stmts = holdings.map((row) => ({
     sql: `INSERT INTO holdings (
-      id, user_id, name, ticker, isin, asset_type, shares, purchase_price, display_currency, exchange, value_in_eur
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      id, user_id, name, ticker, isin, asset_type, shares, purchase_price, display_currency, exchange, value_in_eur, portfolio_id
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       randomUUID(),
       userId,
@@ -100,6 +100,7 @@ export async function seedHoldingsForUser(client: Client, userId: string): Promi
       row.displayCurrency,
       row.exchange,
       row.valueInEUR,
+      portfolioId,
     ],
   }));
 
@@ -107,21 +108,21 @@ export async function seedHoldingsForUser(client: Client, userId: string): Promi
   return holdings.length;
 }
 
-export async function seedCashForUser(client: Client, userId: string): Promise<number> {
+export async function seedCashForUser(client: Client, userId: string, portfolioId: string): Promise<number> {
   const cash = getSeedCash();
   if (cash.length === 0) return 0;
 
   const stmts = cash.map((row) => ({
-    sql: `INSERT OR IGNORE INTO cash_entries (id, user_id, name, amount_eur)
-          VALUES (?, ?, ?, ?)`,
-    args: [randomUUID(), userId, row.name, row.amountEUR],
+    sql: `INSERT OR IGNORE INTO cash_entries (id, user_id, name, amount_eur, portfolio_id)
+          VALUES (?, ?, ?, ?, ?)`,
+    args: [randomUUID(), userId, row.name, row.amountEUR, portfolioId],
   }));
 
   await client.batch(stmts, "write");
   return cash.length;
 }
 
-export async function seedTransactionsForUser(client: Client, userId: string): Promise<number> {
+export async function seedTransactionsForUser(client: Client, userId: string, portfolioId: string): Promise<number> {
   const csvPath = path.join(process.cwd(), "docs", "portfolio_sample_degiro.csv");
   if (!existsSync(csvPath)) return 0;
 
@@ -137,8 +138,8 @@ export async function seedTransactionsForUser(client: Client, userId: string): P
   for (let i = 0; i < txs.length; i += BATCH_SIZE) {
     const batch = txs.slice(i, i + BATCH_SIZE);
     const stmts = batch.map((tx) => ({
-      sql: `INSERT INTO transactions (id, user_id, holding_id, ticker, type, date, shares, price_per_share, total_amount, fees, taxes, currency, notes)
-            VALUES (?, ?, '', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      sql: `INSERT INTO transactions (id, user_id, holding_id, ticker, type, date, shares, price_per_share, total_amount, fees, taxes, currency, notes, portfolio_id)
+            VALUES (?, ?, '', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       args: [
         randomUUID(),
         userId,
@@ -152,6 +153,7 @@ export async function seedTransactionsForUser(client: Client, userId: string): P
         tx.taxes,
         tx.currency,
         tx.name,
+        portfolioId,
       ],
     }));
     await client.batch(stmts, "write");

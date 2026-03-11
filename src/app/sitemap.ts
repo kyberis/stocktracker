@@ -54,5 +54,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly",
       priority: 0.2,
     },
+    {
+      url: "https://trefolio.com/releasenotes",
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.4,
+    },
   ];
 }

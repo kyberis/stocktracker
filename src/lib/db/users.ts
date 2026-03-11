@@ -13,6 +13,7 @@ import {
   num,
 } from "./helpers";
 import { seedHoldingsForUser, seedTransactionsForUser } from "./seed";
+import { resolvePortfolioId } from "./portfolios";
 
 export async function findUserByUsername(username: string): Promise<DbUser | null> {
   const client = await ensureInitialized();
@@ -108,8 +109,9 @@ export async function createUser(params: {
   );
 
   if (params.seedWithData) {
-    await seedHoldingsForUser(client, id);
-    await seedTransactionsForUser(client, id);
+    const portfolioId = await resolvePortfolioId(id);
+    await seedHoldingsForUser(client, id, portfolioId);
+    await seedTransactionsForUser(client, id, portfolioId);
   }
 
   const created = await findUserById(id);
