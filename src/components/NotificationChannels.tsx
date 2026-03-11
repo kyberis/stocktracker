@@ -5,6 +5,7 @@ import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth-context";
 import { useSettings } from "@/lib/settings-context";
 import type { NotificationChannel } from "@/lib/types";
+import TierFeatureBadge from "./TierFeatureBadge";
 
 interface WhatsAppQuotaInfo {
   remainingToday: number;
@@ -191,7 +192,7 @@ export default function NotificationChannels() {
             <svg className="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-900 dark:text-white">{t("channelEmail")}</p>
+            <p className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-1">{t("channelEmail")} <TierFeatureBadge requiredPlan="starter" size="xs" /></p>
             {!isStarter && <p className="text-[10px] text-amber-500">{t("channelRequiresStarter")}</p>}
           </div>
         </div>
@@ -208,7 +209,7 @@ export default function NotificationChannels() {
             <svg className="w-4 h-4 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-900 dark:text-white">{t("channelPush")}</p>
+            <p className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-1">{t("channelPush")} <TierFeatureBadge requiredPlan="starter" size="xs" /></p>
             {!isStarter && <p className="text-[10px] text-amber-500">{t("channelRequiresStarter")}</p>}
           </div>
         </div>
@@ -232,7 +233,7 @@ export default function NotificationChannels() {
               <svg className="w-4 h-4 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-900 dark:text-white">{t("channelWhatsApp")}</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-1">{t("channelWhatsApp")} <TierFeatureBadge requiredPlan="pro" size="xs" /></p>
               {!isPro && <p className="text-[10px] text-amber-500">{t("channelRequiresPro")}</p>}
             </div>
           </div>
@@ -306,7 +307,7 @@ export default function NotificationChannels() {
               <svg className="w-4 h-4 text-slate-600 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-900 dark:text-white">{t("channelDevice")}</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-1">{t("channelDevice")} <TierFeatureBadge requiredPlan="pro" size="xs" /></p>
               {!isPro && <p className="text-[10px] text-amber-500">{t("channelRequiresPro")}</p>}
             </div>
           </div>

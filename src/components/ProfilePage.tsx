@@ -8,6 +8,7 @@ import { useSettings } from "@/lib/settings-context";
 import { useI18n, type TranslationKey } from "@/lib/i18n";
 import ProCompareCard from "@/components/ProCompareCard";
 import TierIcon from "@/components/TierIcon";
+import TierFeatureBadge from "@/components/TierFeatureBadge";
 import { Smartphone, Monitor, Copy, Check, Trash2, User, CreditCard, Bell, FolderOpen } from "lucide-react";
 import NotificationChannels from "@/components/NotificationChannels";
 
@@ -1450,7 +1451,7 @@ export default function ProfilePage() {
         {/* Portfolio Sharing */}
         {isPaid ? (
           <div className="card p-6 space-y-4">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t("portfolioSharing")}</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">{t("portfolioSharing")} <TierFeatureBadge requiredPlan="starter" size="sm" /></h2>
             <p className="text-sm text-gray-500 dark:text-slate-400">{t("portfolioSharingDesc")}</p>
             <PortfolioShareSection />
           </div>
@@ -1545,7 +1546,7 @@ export default function ProfilePage() {
               <Monitor className="w-5 h-5 text-violet-600 dark:text-violet-400" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Device Passkey</h2>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">Device Passkey <TierFeatureBadge requiredPlan="pro" size="sm" /></h2>
               <p className="text-xs text-gray-500 dark:text-slate-400">
                 Connect your trefolio Leaf display
               </p>

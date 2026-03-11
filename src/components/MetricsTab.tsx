@@ -6,6 +6,7 @@ import { useI18n } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useAuth } from "@/lib/auth-context";
 import { useTrack } from "@/lib/use-track";
+import TierFeatureBadge from "./TierFeatureBadge";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
 import {
   calculateTTWROR,
@@ -145,7 +146,7 @@ export default function MetricsTab({ holdings: holdingsProp, cashEntries: cashEn
 
   return (
     <div className="card space-y-6">
-      <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{t("portfolioPerformance")}</h3>
+      <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-1.5">{t("portfolioPerformance")} <TierFeatureBadge requiredPlan="starter" size="sm" /></h3>
 
       {/* Free metrics (TTWROR + IRR) */}
       <div className="grid grid-cols-2 gap-3">

@@ -17,6 +17,7 @@ import { useTheme } from "@/lib/theme-context";
 import type { EconDataPoint } from "@/lib/types";
 import ProCompareCard from "@/components/ProCompareCard";
 import type { UpsellReason } from "@/lib/upsell";
+import TierFeatureBadge from "./TierFeatureBadge";
 
 type AiStatus = "idle" | "loading" | "done" | "error" | "no-key" | "ai-limit" | "upgrade";
 
@@ -285,7 +286,7 @@ export default function EconomicIndicators() {
               </svg>
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">{t("economicIndicators")}</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">{t("economicIndicators")} <TierFeatureBadge requiredPlan="pro" size="sm" /></h2>
               <p className="text-sm text-gray-500 dark:text-slate-400">{t("economicIndicatorsDesc")}</p>
             </div>
           </div>

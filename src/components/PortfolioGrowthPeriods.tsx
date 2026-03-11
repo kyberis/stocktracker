@@ -9,6 +9,7 @@ import { useTrack } from "@/lib/use-track";
 import { convertCurrency, formatPercent } from "@/lib/utils";
 
 const BlurredProSection = dynamic(() => import("./BlurredProSection"), { ssr: false });
+import TierFeatureBadge from "./TierFeatureBadge";
 import {
   calculatePortfolioValueOnDate,
   calculatePeriodReturn,
@@ -150,8 +151,8 @@ export default function PortfolioGrowthPeriods({ holdings: holdingsProp }: Props
   if (!isPaid) {
     return (
       <div className="card">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
-          {t("portfolioGrowth")}
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-1.5">
+          {t("portfolioGrowth")} <TierFeatureBadge requiredPlan="starter" size="sm" />
         </h3>
         <BlurredProSection blurb="Upgrade to Bifolio for YTD, 1M, and 1Y portfolio growth tracking." ctaLabel="Upgrade to Bifolio">
           <div className="grid grid-cols-3 gap-3">
@@ -169,8 +170,8 @@ export default function PortfolioGrowthPeriods({ holdings: holdingsProp }: Props
 
   return (
     <div className="card">
-      <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
-        {t("portfolioGrowth")}
+      <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-1.5">
+        {t("portfolioGrowth")} <TierFeatureBadge requiredPlan="starter" size="sm" />
       </h3>
       <div className="grid grid-cols-3 gap-3">
         {periods.map((p) => {

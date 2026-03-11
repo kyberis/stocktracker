@@ -6,6 +6,7 @@ import { usePortfolio } from "@/lib/portfolio-context";
 import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n";
 import { getPortfolioLimit } from "@/lib/subscription";
+import TierFeatureBadge from "./TierFeatureBadge";
 
 function AddMenu({ onAddStock, onAddCrypto }: { onAddStock: () => void; onAddCrypto?: () => void }) {
   const { t } = useI18n();
@@ -66,9 +67,7 @@ function AddMenu({ onAddStock, onAddCrypto }: { onAddStock: () => void; onAddCry
           >
             <span className="w-4 h-4 rounded-full bg-[#f7931a] flex items-center justify-center text-white text-[10px] font-bold shrink-0">₿</span>
             {t("addCrypto")}
-            {!isPro && (
-              <span className="ml-auto text-[10px] font-semibold bg-amber-400/20 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded-full">Pro</span>
-            )}
+            <TierFeatureBadge requiredPlan="pro" size="xs" className="ml-auto" />
           </button>
         </div>
       )}

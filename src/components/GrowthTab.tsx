@@ -19,6 +19,7 @@ import {
 } from "recharts";
 
 const BlurredProSection = dynamic(() => import("./BlurredProSection"), { ssr: false });
+import TierFeatureBadge from "./TierFeatureBadge";
 
 type Range = "1m" | "3m" | "6m" | "1y" | "all";
 const FREE_RANGE: Range = "1m";
@@ -93,7 +94,7 @@ export default function GrowthTab() {
   return (
     <div className="card space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{t("growthTab")}</h3>
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-1.5">{t("growthTab")} <TierFeatureBadge requiredPlan="starter" size="sm" /></h3>
         <div className="flex gap-1" role="group" aria-label="Time range">
           {ranges.map((r) => {
             const isLocked = r !== FREE_RANGE && !isPaid;

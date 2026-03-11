@@ -6,6 +6,7 @@ import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth-context";
 import { useSettings } from "@/lib/settings-context";
 import AdSlot from "@/components/AdSlot";
+import TierFeatureBadge from "./TierFeatureBadge";
 
 const TransactionHistory = dynamic(() => import("./TransactionHistory"), { ssr: false });
 const DividendSummary = dynamic(() => import("./DividendSummary"), { ssr: false });
@@ -16,6 +17,11 @@ const AccountsManager = dynamic(() => import("./AccountsManager"), { ssr: false 
 const Watchlist = dynamic(() => import("./Watchlist"), { ssr: false });
 const PriceAlerts = dynamic(() => import("./PriceAlerts"), { ssr: false });
 type Tab = "transactions" | "dividends" | "performance" | "taxonomy" | "rebalancing" | "accounts" | "watchlist" | "alerts";
+
+const TIER_BADGE_MAP: Partial<Record<Tab, "starter" | "pro">> = {
+  performance: "starter",
+  alerts: "starter",
+};
 
 const ALL_TABS: { key: Tab; icon: string }[] = [
   { key: "transactions", icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" },
@@ -92,10 +98,12 @@ export default function PortfolioTools() {
             <button onClick={() => handleExport("holdings")} className="text-xs text-gray-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
               {t("exportCSV")}
+              <TierFeatureBadge requiredPlan="starter" size="xs" className="ml-0.5" />
             </button>
             <button onClick={() => handleExport("transactions")} className="text-xs text-gray-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
               {t("transactions")}
+              <TierFeatureBadge requiredPlan="starter" size="xs" className="ml-0.5" />
             </button>
           </div>
         )}
@@ -128,6 +136,7 @@ export default function PortfolioTools() {
                 <path strokeLinecap="round" strokeLinejoin="round" d={icon} />
               </svg>
               <span className="hidden sm:inline">{tabLabel(key)}</span>
+              {TIER_BADGE_MAP[key] && <TierFeatureBadge requiredPlan={TIER_BADGE_MAP[key]!} size="xs" className="ml-0.5" />}
             </button>
           ))}
         </div>

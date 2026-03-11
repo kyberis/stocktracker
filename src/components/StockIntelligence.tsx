@@ -11,6 +11,7 @@ import { useTrack } from "@/lib/use-track";
 import { useAuth } from "@/lib/auth-context";
 import ProCompareCard from "@/components/ProCompareCard";
 import type { UpsellReason } from "@/lib/upsell";
+import TierFeatureBadge from "./TierFeatureBadge";
 import type {
   NewsArticle,
   InsiderTransaction,
@@ -278,6 +279,7 @@ export default function StockIntelligence({ ticker, exchange }: StockIntelligenc
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
                   </svg>
                   {t("intelligence")}
+                  <TierFeatureBadge requiredPlan="pro" size="xs" />
                 </span>
               </div>
               <p className="text-sm text-gray-500 dark:text-slate-400 mt-0.5 flex items-center gap-2 flex-wrap">

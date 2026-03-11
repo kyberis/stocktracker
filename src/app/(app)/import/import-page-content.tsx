@@ -12,6 +12,7 @@ import { useSnapTradeApi } from "@/hooks/useSnapTradeApi";
 import { IMPORT_GUIDES, type ImportGuide } from "@/lib/import-guides";
 import { downloadImportTemplate } from "@/lib/download-import-template";
 import ProCompareCard from "@/components/ProCompareCard";
+import TierFeatureBadge from "@/components/TierFeatureBadge";
 import AdSlot from "@/components/AdSlot";
 import type { BrokerFormat } from "@/hooks/import-types";
 import type { SearchResult } from "@/lib/types";
@@ -72,7 +73,7 @@ function InlineGuide({ guide, locale }: { guide: ImportGuide; locale: string }) 
 
 export default function ImportPageContent() {
   const { t, language: locale } = useI18n();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const { addHolding, refreshHoldings, activePortfolioId, portfolios } = usePortfolio();
   const { getApiHeaders } = useSettings();
   const track = useTrack();
@@ -92,6 +93,7 @@ export default function ImportPageContent() {
   const brokerCSV = useImportBrokerCSV();
   const aiImport = useImportAI();
   const snapTradeApi = useSnapTradeApi();
+  const [snapTradeStartDate, setSnapTradeStartDate] = useState<Record<string, string>>({});
 
   // Manual add stock state
   const [searchQuery, setSearchQuery] = useState("");
@@ -301,7 +303,7 @@ export default function ImportPageContent() {
               </svg>
               {methodLabel(tab.key)}
               {(tab.key === "snaptrade_api" || tab.key === "ai_import") && (
-                <span className="text-[9px] font-bold bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded-full">Pro</span>
+                <TierFeatureBadge requiredPlan="pro" size="xs" />
               )}
             </button>
           );
@@ -412,7 +414,9 @@ export default function ImportPageContent() {
       {/* ═══════════ BROKER SYNC ═══════════ */}
       {method === "snaptrade_api" && (
         <div className="space-y-4">
-          {!isPro ? (
+          {authLoading ? (
+            <div className="py-12"><div className="w-8 h-8 mx-auto border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" /></div>
+          ) : !isPro ? (
             <ProCompareCard surface="broker_sync_import" reason="upgrade_required" compact />
           ) : (
             <>
@@ -444,30 +448,92 @@ export default function ImportPageContent() {
                           </div>
                         </div>
                       )}
-                      <div className={`${snapTradeApi.needsReconnect ? "bg-gray-50 dark:bg-slate-800/50 border-gray-200 dark:border-slate-700" : "bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30"} border rounded-xl p-4`}>
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className={`w-2 h-2 rounded-full ${snapTradeApi.needsReconnect ? "bg-amber-500" : "bg-emerald-500 animate-pulse"}`} />
-                          <span className={`text-xs font-semibold ${snapTradeApi.needsReconnect ? "text-amber-700 dark:text-amber-400" : "text-emerald-700 dark:text-emerald-400"}`}>{t("brokerSyncConnected")}</span>
+
+                      {/* Per-brokerage cards */}
+                      {snapTradeApi.brokerSyncs.length > 0 ? (
+                        <div className="space-y-3">
+                          {snapTradeApi.brokerSyncs.map((bs) => {
+                            const isDisabled = snapTradeApi.disabledConnections.some((dc) => dc.id === bs.brokerageAuthorizationId);
+                            const dateKey = bs.brokerageAuthorizationId;
+                            const userTouched = dateKey in snapTradeStartDate;
+                            const displayDate = userTouched ? snapTradeStartDate[dateKey] : (bs.lastImportedAt ? bs.lastImportedAt.slice(0, 10) : "");
+                            return (
+                              <div key={dateKey} className={`${isDisabled ? "bg-gray-50 dark:bg-slate-800/50 border-gray-200 dark:border-slate-700" : "bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30"} border rounded-xl p-4`}>
+                                <div className="flex items-center gap-2 mb-1">
+                                  <div className={`w-2 h-2 rounded-full ${isDisabled ? "bg-amber-500" : "bg-emerald-500 animate-pulse"}`} />
+                                  <span className={`text-xs font-semibold ${isDisabled ? "text-amber-700 dark:text-amber-400" : "text-emerald-700 dark:text-emerald-400"}`}>{bs.brokerageName}</span>
+                                </div>
+                                <p className="text-[10px] text-gray-500 dark:text-slate-400 mb-2">
+                                  {bs.lastImportedAt
+                                    ? `${t("brokerSyncLastImported")}: ${new Date(bs.lastImportedAt).toLocaleDateString()}`
+                                    : t("brokerSyncNeverImported")}
+                                </p>
+                                {!isDisabled && !snapTradeApi.needsReconnect && (
+                                  <div className="flex items-center gap-2">
+                                    <label className="text-[10px] text-gray-500 dark:text-slate-400 whitespace-nowrap">{t("brokerSyncStartDate")}:</label>
+                                    <input
+                                      type="date"
+                                      value={displayDate}
+                                      onChange={(e) => setSnapTradeStartDate((prev) => ({ ...prev, [dateKey]: e.target.value }))}
+                                      className="text-xs px-2 py-1 border border-gray-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+                                    />
+                                    {displayDate && (
+                                      <button
+                                        onClick={() => setSnapTradeStartDate((prev) => ({ ...prev, [dateKey]: "" }))}
+                                        className="text-[10px] text-gray-400 hover:text-gray-600 dark:hover:text-slate-300"
+                                        aria-label="Clear date"
+                                      >
+                                        ✕
+                                      </button>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
-                        <div className="text-[10px] text-emerald-600 dark:text-emerald-400/80 mb-3">
-                          <p>{t("brokerSyncLastSynced")}: {snapTradeApi.connection.lastSyncedAt ? new Date(snapTradeApi.connection.lastSyncedAt).toLocaleString() : t("brokerSyncNeverSynced")}</p>
+                      ) : (
+                        <div className="bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 rounded-xl p-4">
+                          <div className="flex items-center gap-2 mb-1">
+                            <div className={`w-2 h-2 rounded-full ${snapTradeApi.needsReconnect ? "bg-amber-500" : "bg-emerald-500 animate-pulse"}`} />
+                            <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">{t("brokerSyncConnected")}</span>
+                          </div>
+                          <p className="text-[10px] text-gray-500 dark:text-slate-400">
+                            {t("brokerSyncLastSynced")}: {snapTradeApi.connection.lastSyncedAt ? new Date(snapTradeApi.connection.lastSyncedAt).toLocaleString() : t("brokerSyncNeverSynced")}
+                          </p>
                         </div>
-                        <div className="flex gap-2">
-                          {!snapTradeApi.needsReconnect && (
-                            <button onClick={() => snapTradeApi.fetchPortfolio(activePortfolioId)} disabled={snapTradeApi.isFetching} className="btn-primary text-xs px-3 py-1.5 min-h-[44px]">
-                              {snapTradeApi.isFetching ? t("brokerSyncFetching") : t("brokerSyncResync")}
-                            </button>
-                          )}
-                          <button onClick={() => snapTradeApi.connect()} className="btn-secondary text-xs px-3 py-1.5 min-h-[44px]">
-                            {t("brokerSyncAddBrokerage")}
-                          </button>
+                      )}
+
+                      {/* Action buttons */}
+                      <div className="flex gap-2">
+                        {!snapTradeApi.needsReconnect && (
                           <button
-                            onClick={() => { if (confirm(t("brokerSyncDisconnectConfirm"))) snapTradeApi.disconnect(); }}
-                            className="btn-secondary text-xs px-3 py-1.5 text-red-600 dark:text-red-400 min-h-[44px]"
+                            onClick={() => {
+                              const overrides: Record<string, string> = {};
+                              for (const bs of snapTradeApi.brokerSyncs) {
+                                const key = bs.brokerageAuthorizationId;
+                                if (key in snapTradeStartDate) {
+                                  overrides[key] = snapTradeStartDate[key];
+                                }
+                              }
+                              const hasOverrides = Object.keys(overrides).length > 0;
+                              snapTradeApi.fetchPortfolio(activePortfolioId, null, hasOverrides ? overrides : null);
+                            }}
+                            disabled={snapTradeApi.isFetching}
+                            className="btn-primary text-xs px-3 py-1.5 min-h-[44px]"
                           >
-                            {t("brokerSyncDisconnect")}
+                            {snapTradeApi.isFetching ? t("brokerSyncFetching") : t("brokerSyncResync")}
                           </button>
-                        </div>
+                        )}
+                        <button onClick={() => snapTradeApi.connect()} className="btn-secondary text-xs px-3 py-1.5 min-h-[44px]">
+                          {t("brokerSyncAddBrokerage")}
+                        </button>
+                        <button
+                          onClick={() => { if (confirm(t("brokerSyncDisconnectConfirm"))) snapTradeApi.disconnect(); }}
+                          className="btn-secondary text-xs px-3 py-1.5 text-red-600 dark:text-red-400 min-h-[44px]"
+                        >
+                          {t("brokerSyncDisconnect")}
+                        </button>
                       </div>
                     </>
                   )}
@@ -514,7 +580,58 @@ export default function ImportPageContent() {
                 />
               )}
 
-              {snapTradeApi.step === "preview" && (
+              {snapTradeApi.step === "preview" && snapTradeApi.transactions.length === 0 && (
+                snapTradeApi.lastFetchHadDateFilter ? (
+                  <div className="py-6 space-y-4">
+                    <div className="text-center">
+                      <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-blue-100 dark:bg-blue-500/15 flex items-center justify-center">
+                        <svg className="w-6 h-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                        </svg>
+                      </div>
+                      <p className="text-sm font-medium text-gray-700 dark:text-slate-200">{t("brokerSyncNoTransactions")}</p>
+                    </div>
+                    <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 rounded-xl p-4 max-w-md mx-auto">
+                      <p className="text-xs text-blue-700 dark:text-blue-300 mb-3">{t("brokerSyncNoTransactionsExplain")}</p>
+                      <button
+                        onClick={() => {
+                          setSnapTradeStartDate({});
+                          snapTradeApi.fetchPortfolio(activePortfolioId, null, Object.fromEntries(
+                            snapTradeApi.brokerSyncs.map((bs) => [bs.brokerageAuthorizationId, ""])
+                          ));
+                        }}
+                        className="btn-primary text-xs px-4 py-2 w-full min-h-[44px]"
+                      >
+                        {t("brokerSyncFetchAll")}
+                      </button>
+                    </div>
+                    <div className="text-center">
+                      <button onClick={snapTradeApi.reset} className="text-xs text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300 underline underline-offset-2 min-h-[44px]">{t("close")}</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="py-8 text-center space-y-3">
+                    <div className="w-12 h-12 mx-auto rounded-full bg-emerald-100 dark:bg-emerald-500/15 flex items-center justify-center">
+                      <svg className="w-6 h-6 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                      </svg>
+                    </div>
+                    <p className="text-sm font-medium text-gray-700 dark:text-slate-200">{t("brokerSyncUpToDate")}</p>
+                    <p className="text-xs text-gray-500 dark:text-slate-400 max-w-sm mx-auto">{t("brokerSyncUpToDateDesc")}</p>
+                    <div className="flex flex-col items-center gap-2 pt-1">
+                      <a href="/" className="btn-primary text-sm min-h-[44px] inline-flex items-center gap-2">
+                        {t("viewPortfolio") || "View Portfolio"}
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                        </svg>
+                      </a>
+                      <button onClick={snapTradeApi.reset} className="text-xs text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300 underline underline-offset-2 min-h-[44px]">{t("close")}</button>
+                    </div>
+                  </div>
+                )
+              )}
+
+              {snapTradeApi.step === "preview" && snapTradeApi.transactions.length > 0 && (
                 <PreviewPanel
                   transactions={snapTradeApi.transactions}
                   holdings={[]}
@@ -542,7 +659,9 @@ export default function ImportPageContent() {
       {/* ═══════════ AI IMPORT ═══════════ */}
       {method === "ai_import" && (
         <div className="space-y-4">
-          {!isPro ? (
+          {authLoading ? (
+            <div className="py-12"><div className="w-8 h-8 mx-auto border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" /></div>
+          ) : !isPro ? (
             <ProCompareCard surface="ai_import" reason="upgrade_required" compact />
           ) : (<>
           {/* Guide */}

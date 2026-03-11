@@ -35,6 +35,7 @@ const LeafPromoBanner = dynamic(() => import("./LeafPromoBanner"), { ssr: false 
 const CryptoPortfolioTab = dynamic(() => import("./CryptoPortfolioTab"), { ssr: false });
 const AddCryptoModal = dynamic(() => import("./AddCryptoModal"), { ssr: false });
 const AdSlot = dynamic(() => import("./AdSlot"), { ssr: false });
+import TierFeatureBadge from "./TierFeatureBadge";
 
 
 type DashboardTab = "portfolio" | "crypto" | "diversification" | "dividends" | "metrics" | "growth" | "news";
@@ -174,15 +175,15 @@ export default function Dashboard() {
   const holdingsAtLimit = !authLoading && holdingsLimit !== Infinity && holdingsCount >= holdingsLimit;
 
   const hasCryptoHoldings = filteredHoldings.some((h) => h.assetType === "crypto");
-  const dashboardTabs: { key: DashboardTab; label: string; badge?: string }[] = [
+  const dashboardTabs: { key: DashboardTab; label: string; tierBadge?: "starter" | "pro" }[] = [
     { key: "portfolio", label: t("portfolioTab") },
     ...(isPro || hasCryptoHoldings
-      ? [{ key: "crypto" as const, label: t("cryptoTab"), badge: isPro ? undefined : "Pro" }]
+      ? [{ key: "crypto" as const, label: t("cryptoTab"), tierBadge: "pro" as const }]
       : []),
     { key: "diversification", label: t("diversificationTab") },
     { key: "dividends", label: t("dividendsTab") },
-    { key: "metrics", label: t("metricsTab") },
-    { key: "growth", label: t("growthTab") },
+    { key: "metrics", label: t("metricsTab"), tierBadge: "starter" as const },
+    { key: "growth", label: t("growthTab"), tierBadge: "starter" as const },
     { key: "news", label: t("newsTab") },
   ];
 
@@ -261,10 +262,8 @@ export default function Dashboard() {
               }`}
             >
               {tab.label}
-              {tab.badge && (
-                <span className="ml-1 text-[10px] font-semibold bg-amber-400/20 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded-full">
-                  {tab.badge}
-                </span>
+              {tab.tierBadge && (
+                <TierFeatureBadge requiredPlan={tab.tierBadge} size="xs" className="ml-1" />
               )}
             </button>
           ))}

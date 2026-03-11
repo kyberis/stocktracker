@@ -43,6 +43,11 @@ export const releaseNotes: ReleaseEntry[] = [
         text: "Updated pricing pages, landing page, and plan comparisons to reflect new tier structure",
         translations: { es: "Páginas de precios, landing page y comparaciones de planes actualizadas con la nueva estructura de niveles" },
       },
+      {
+        type: "improvement",
+        text: "Paid features now show tier badges — subtle leaf icons for subscribers, upgrade pills for free users",
+        translations: { es: "Las funciones de pago ahora muestran insignias de nivel — iconos de hoja sutiles para suscriptores, indicadores de mejora para usuarios gratuitos" },
+      },
     ],
   },
   {

@@ -11,6 +11,7 @@ import type { Transaction, Holding, CashEntry } from "@/lib/types";
 
 const BlurredProSection = dynamic(() => import("./BlurredProSection"), { ssr: false });
 const PerformanceExplainerModal = dynamic(() => import("./PerformanceExplainerModal"), { ssr: false });
+import TierFeatureBadge from "./TierFeatureBadge";
 
 interface Props {
   holdings?: Holding[];
@@ -61,7 +62,7 @@ export default function PerformanceMetrics({ holdings: holdingsProp, cashEntries
   if (!isPaid) {
     return (
       <div className="card">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">{t("portfolioPerformance")}</h3>
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-1.5">{t("portfolioPerformance")} <TierFeatureBadge requiredPlan="starter" size="sm" /></h3>
         <BlurredProSection blurb="Upgrade to Bifolio for TTWROR, IRR, and advanced portfolio performance metrics." ctaLabel="Upgrade to Bifolio">
           <div className="grid grid-cols-2 gap-3">
             {["TTWROR", "IRR"].map((label) => (
@@ -78,7 +79,7 @@ export default function PerformanceMetrics({ holdings: holdingsProp, cashEntries
 
   return (
     <div className="card">
-      <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">{t("portfolioPerformance")}</h3>
+      <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-1.5">{t("portfolioPerformance")} <TierFeatureBadge requiredPlan="starter" size="sm" /></h3>
       <div className="grid grid-cols-2 gap-3">
         {metrics.map((m) => {
           const hasValue = m.value !== null;

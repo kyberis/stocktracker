@@ -21,6 +21,7 @@ import { useTrack } from "@/lib/use-track";
 import { useAuth } from "@/lib/auth-context";
 import ProCompareCard from "@/components/ProCompareCard";
 import AdSlot from "@/components/AdSlot";
+import TierFeatureBadge from "./TierFeatureBadge";
 import TransactionHistory from "./TransactionHistory";
 import type { UpsellReason } from "@/lib/upsell";
 import StockChart from "./StockChart";
@@ -304,6 +305,7 @@ export default function StockDetail({ ticker, exchange }: StockDetailProps) {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
                   </svg>
                   {t("viewIntelligence")}
+                  <TierFeatureBadge requiredPlan="pro" size="xs" />
                 </Link>
               )}
             </div>
@@ -377,7 +379,7 @@ export default function StockDetail({ ticker, exchange }: StockDetailProps) {
         {canAccessPremium && (
           <>
             {/* Main Tab Pills */}
-            <div className="flex gap-1.5">
+            <div className="flex gap-1.5 items-center">
               {mainTabs.map((tab) => (
                 <button
                   key={tab.key}
@@ -391,6 +393,7 @@ export default function StockDetail({ ticker, exchange }: StockDetailProps) {
                   {tab.label}
                 </button>
               ))}
+              <TierFeatureBadge requiredPlan="pro" size="xs" />
             </div>
 
             {/* Overview Tab */}

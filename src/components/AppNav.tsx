@@ -7,6 +7,7 @@ import { useStealthMode } from "@/lib/stealth-context";
 import { useTrack } from "@/lib/use-track";
 import LanguageSwitcher from "./LanguageSwitcher";
 import UserDropdown from "./UserDropdown";
+import TierFeatureBadge from "./TierFeatureBadge";
 
 interface AppNavProps {
   onWhatsNew?: () => void;
@@ -33,11 +34,13 @@ const NAV_LINKS = [
     href: "/crypto",
     labelKey: "cryptoNav" as const,
     match: (p: string) => p === "/crypto",
+    tierBadge: "pro" as const,
   },
   {
     href: "/economic-indicators",
     labelKey: "indicatorsNav" as const,
     match: (p: string) => p === "/economic-indicators",
+    tierBadge: "pro" as const,
   },
 ];
 
@@ -94,6 +97,9 @@ export default function AppNav({ onWhatsNew, hasNewRelease }: AppNavProps) {
                   }`}
                 >
                   {t(link.labelKey)}
+                  {"tierBadge" in link && link.tierBadge && (
+                    <TierFeatureBadge requiredPlan={link.tierBadge} size="xs" className="ml-1" />
+                  )}
                 </a>
               );
             })}
