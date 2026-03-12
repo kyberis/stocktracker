@@ -169,6 +169,11 @@ export default function Dashboard() {
     return cashEntries.filter((c) => c.name.toUpperCase().startsWith(account.name.toUpperCase()));
   }, [cashEntries, brokerFilter, accounts]);
 
+  const investmentCashEntries = useMemo(
+    () => filteredCashEntries.filter((c) => !c.type || c.type === "cash"),
+    [filteredCashEntries],
+  );
+
   const handleImportComplete = useCallback(async () => {
     await refreshHoldings();
     await refreshQuotes();
@@ -377,16 +382,16 @@ export default function Dashboard() {
                 />
 
                 <NetWorthSummary holdings={filteredHoldings} cashEntries={filteredCashEntries} />
-                <PortfolioSummary holdings={filteredHoldings} cashEntries={filteredCashEntries} />
+                <PortfolioSummary holdings={filteredHoldings} cashEntries={investmentCashEntries} />
                 <AdSlot slot="dashboard-summary" format="horizontal" />
                 <PortfolioTable holdings={filteredHoldings} onAddStock={() => setShowAddModal(true)} />
                 <UpcomingEarnings onNavigateToEvents={() => handleTabChange("events")} />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                   <PortfolioGrowthPeriods holdings={filteredHoldings} />
-                  <PerformanceMetrics holdings={filteredHoldings} cashEntries={filteredCashEntries} />
+                  <PerformanceMetrics holdings={filteredHoldings} cashEntries={investmentCashEntries} />
                 </div>
                 <MarketAndCash holdings={filteredHoldings} cashEntries={filteredCashEntries} />
-                <PortfolioProjection holdings={filteredHoldings} cashEntries={filteredCashEntries} />
+                <PortfolioProjection holdings={filteredHoldings} cashEntries={investmentCashEntries} />
                 <AdSlot slot="dashboard-bottom" format="auto" />
 
                 {holdingsAtLimit && (
@@ -465,7 +470,7 @@ export default function Dashboard() {
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-500" />
               </div>
             }>
-              <MetricsTab holdings={filteredHoldings} cashEntries={filteredCashEntries} />
+              <MetricsTab holdings={filteredHoldings} cashEntries={investmentCashEntries} />
             </Suspense>
           </div>
         )}
