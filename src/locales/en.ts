@@ -1216,6 +1216,7 @@ const en: TranslationStrings = {
   landingPricingBifolioFeature9: "No ads",
   landingPricingBifolioFeature10: "Broker Sync — 1 brokerage connection with auto-sync",
   landingPricingBifolioFeature11: "Full earnings calendar + economic events",
+  landingPricingBifolioFeature12: "Net worth tracking — up to 10 manual assets (real estate, savings, pensions)",
   landingPricingBifolioCta: "Start with Bifolio",
 
   landingPricingTrefolioDesc: "Full power for serious investors.",
@@ -1235,6 +1236,7 @@ const en: TranslationStrings = {
   landingPricingTrefolioFeature14: "Up to 3 portfolios with independent tracking",
   landingPricingTrefolioFeature15: "AI-powered portfolio import (any file or screenshot)",
   landingPricingTrefolioFeature16: "Full event calendar with IPO tracking",
+  landingPricingTrefolioFeature17: "Unlimited manual assets for full net worth tracking",
   landingPricingTrefolioCta: "Start Trefolio Trial",
 
   landingFaqHeading: "Frequently Asked",
@@ -1264,6 +1266,33 @@ const en: TranslationStrings = {
   landingCtaParagraph: "Join investors across Europe who trust trefolio. Start with Folio, grow to Trefolio.",
   landingCtaSignup: "Create Free Account",
   landingCtaLogin: "Already have an account? Log in",
+
+  // Net Worth Tracking
+  netWorth: "Net Worth",
+  netWorthOverview: "Net Worth Overview",
+  totalNetWorth: "Total Net Worth",
+  addManualAsset: "Add Manual Asset",
+  manualAssets: "Assets & Accounts",
+  realEstate: "Real Estate",
+  savingsAccounts: "Savings Accounts",
+  pensionRetirement: "Pension & Retirement",
+  assetName: "Asset name",
+  currentValue: "Current Value",
+  valuationDate: "Last Updated",
+  assetNotes: "Notes",
+  assetNotesPlaceholder: "Address, account details, interest rate…",
+  assetTypeRealEstate: "Real Estate",
+  assetTypeSavings: "Savings",
+  assetTypePension: "Pension",
+  assetTypeCash: "Cash",
+  investments: "Investments",
+  noManualAssets: "No assets added yet. Track your real estate, savings, and pensions.",
+  netWorthTrackingLocked: "Track Your Full Net Worth",
+  netWorthTrackingLockedDesc: "Add real estate, savings accounts, and pension funds to see your complete financial picture.",
+  manualAssetLimitReached: "You've reached your asset limit ({count}/{limit}). Upgrade for more.",
+  upsellAttemptNetWorth: "Track your full net worth with real estate, savings, and pension accounts.",
+  upsellStarterItemNetWorth: "Net worth tracking with up to 10 manual assets",
+  upsellProItemUnlimitedAssets: "Unlimited manual assets and future valuation history",
 };
 
 export default en;

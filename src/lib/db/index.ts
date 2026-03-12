@@ -87,6 +87,7 @@ export {
   addCashEntry,
   updateCashEntry,
   removeCashEntry,
+  getManualAssetCount,
 } from "./cash";
 
 export type { PlatformFeature, WhatsAppQuota, StripePriceKey, PromoBannerConfig, AdConfig, AdSlotConfig } from "./settings";

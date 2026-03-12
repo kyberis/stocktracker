@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>trefolio — Net Worth Tracking Feature Mockup</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+  :root {
+    --bg: #0f172a;
+    --bg-surface: #1e293b;
+    --bg-card: #1e293b;
+    --bg-card-hover: #273549;
+    --bg-input: #0f172a;
+    --border: #334155;
+    --border-light: #1e293b;
+    --text: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --emerald: #10b981;
+    --emerald-dark: #059669;
+    --emerald-bg: rgba(16, 185, 129, 0.1);
+    --red: #ef4444;
+    --red-bg: rgba(239, 68, 68, 0.1);
+    --blue: #3b82f6;
+    --blue-bg: rgba(59, 130, 246, 0.1);
+    --violet: #8b5cf6;
+    --violet-bg: rgba(139, 92, 246, 0.1);
+    --amber: #f59e0b;
+    --amber-bg: rgba(245, 158, 11, 0.1);
+    --rose: #f43f5e;
+    --rose-bg: rgba(244, 63, 94, 0.1);
+    --indigo: #6366f1;
+    --cyan: #06b6d4;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  .mockup-banner {
+    background: linear-gradient(90deg, #6366f1, #8b5cf6);
+    padding: 12px 24px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: white;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .mockup-banner span { opacity: 0.8; font-weight: 400; }
+
+  .header {
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .header h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--emerald);
+  }
+
+  .tabs {
+    display: flex;
+    gap: 2px;
+    padding: 0 32px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+  }
+  .tab {
+    padding: 12px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .tab:hover { color: var(--text-secondary); }
+  .tab.active {
+    color: var(--emerald);
+    border-bottom-color: var(--emerald);
+  }
+  .tab .badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 5px;
+    border-radius: 4px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+  .badge-starter { background: var(--blue-bg); color: var(--blue); }
+  .badge-pro { background: var(--violet-bg); color: var(--violet); }
+
+  .content { padding: 24px 32px; max-width: 1280px; margin: 0 auto; }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+  }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px 24px;
+  }
+
+  .card-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  /* ===== NET WORTH HERO ===== */
+  .net-worth-hero {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+  @media (max-width: 900px) { .net-worth-hero { grid-template-columns: 1fr; } }
+
+  .net-worth-total {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 32px;
+  }
+  .net-worth-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+  }
+  .net-worth-value {
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  .net-worth-change {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 8px;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .change-positive {
+    background: var(--emerald-bg);
+    color: var(--emerald);
+  }
+  .change-negative {
+    background: var(--red-bg);
+    color: var(--red);
+  }
+
+  .breakdown-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 20px;
+  }
+  .breakdown-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.04);
+  }
+  .breakdown-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+  .breakdown-item-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .breakdown-item-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    margin-left: auto;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ===== DONUT CHART ===== */
+  .donut-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .donut-svg { width: 220px; height: 220px; }
+  .donut-center-text {
+    font-size: 13px;
+    fill: var(--text-secondary);
+  }
+  .donut-center-value {
+    font-size: 18px;
+    font-weight: 700;
+    fill: var(--text);
+  }
+
+  /* ===== MANUAL ASSETS SECTION ===== */
+  .assets-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .assets-header h2 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .assets-header .total {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .add-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 10px;
+    border: none;
+    background: var(--emerald);
+    color: white;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .add-btn:hover { background: var(--emerald-dark); }
+
+  .asset-type-section { margin-bottom: 24px; }
+  .asset-type-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-light);
+  }
+  .asset-type-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+  .icon-real-estate { background: var(--blue-bg); }
+  .icon-savings { background: var(--emerald-bg); }
+  .icon-pension { background: var(--violet-bg); }
+  .icon-cash { background: rgba(30, 41, 59, 0.5); }
+
+  .asset-type-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .asset-type-total {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-left: auto;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .asset-row {
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    margin: 0 -12px;
+    border-radius: 10px;
+    transition: background 0.15s;
+  }
+  .asset-row:hover { background: var(--bg-card-hover); }
+  .asset-name {
+    font-size: 13px;
+    color: var(--text-secondary);
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .asset-note {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 1px;
+  }
+  .asset-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+    margin-left: 16px;
+  }
+  .asset-date {
+    font-size: 11px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    margin-left: 16px;
+    min-width: 80px;
+    text-align: right;
+  }
+  .asset-actions {
+    display: flex;
+    gap: 4px;
+    margin-left: 12px;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .asset-row:hover .asset-actions { opacity: 1; }
+  .icon-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: all 0.15s;
+  }
+  .icon-btn:hover { background: rgba(255,255,255,0.06); color: var(--text); }
+  .icon-btn.danger:hover { color: var(--red); }
+
+  /* ===== ADD FORM (inline) ===== */
+  .add-form {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-light);
+    margin-top: 8px;
+  }
+  .add-form input, .add-form select {
+    padding: 7px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg-input);
+    color: var(--text);
+    font-size: 12px;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .add-form input:focus, .add-form select:focus {
+    border-color: var(--emerald);
+  }
+  .add-form input::placeholder { color: var(--text-muted); }
+  .add-form .name-input { flex: 1; min-width: 0; }
+  .add-form .amount-input { width: 110px; }
+  .add-form .currency-select { width: 72px; }
+  .add-btn-sm {
+    padding: 7px 12px;
+    border-radius: 8px;
+    border: none;
+    background: var(--emerald);
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .add-btn-sm:hover { background: var(--emerald-dark); }
+
+  /* ===== MODAL ===== */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    animation: fadeIn 0.15s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .modal {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px 32px;
+    width: 480px;
+    max-width: 92vw;
+    animation: slideUp 0.2s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+  .modal h2 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 20px;
+  }
+  .modal-field {
+    margin-bottom: 16px;
+  }
+  .modal-field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+  }
+  .modal-field input,
+  .modal-field select,
+  .modal-field textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg-input);
+    color: var(--text);
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .modal-field input:focus,
+  .modal-field select:focus,
+  .modal-field textarea:focus {
+    border-color: var(--emerald);
+  }
+  .modal-field textarea {
+    resize: vertical;
+    min-height: 60px;
+    font-size: 13px;
+  }
+  .modal-field input::placeholder,
+  .modal-field textarea::placeholder { color: var(--text-muted); }
+
+  .type-selector {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .type-option {
+    padding: 14px 12px;
+    border-radius: 12px;
+    border: 2px solid var(--border);
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    font-family: 'Inter', sans-serif;
+  }
+  .type-option:hover { border-color: var(--text-muted); }
+  .type-option.selected {
+    border-color: var(--emerald);
+    background: var(--emerald-bg);
+    color: var(--emerald);
+  }
+  .type-option-icon { font-size: 22px; margin-bottom: 4px; }
+  .type-option-label { font-size: 12px; font-weight: 600; }
+
+  .modal-row {
+    display: grid;
+    grid-template-columns: 1fr 120px;
+    gap: 12px;
+  }
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 24px;
+    justify-content: flex-end;
+  }
+  .btn-cancel {
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+  }
+  .btn-cancel:hover { background: rgba(255,255,255,0.04); }
+  .btn-save {
+    padding: 10px 24px;
+    border-radius: 10px;
+    border: none;
+    background: var(--emerald);
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+  }
+  .btn-save:hover { background: var(--emerald-dark); }
+
+  /* ===== PAYWALL OVERLAY ===== */
+  .paywall-container { position: relative; }
+  .paywall-blur {
+    filter: blur(4px);
+    pointer-events: none;
+    user-select: none;
+    opacity: 0.5;
+  }
+  .paywall-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(15, 23, 42, 0.4);
+    border-radius: 16px;
+    z-index: 10;
+  }
+  .paywall-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 36px;
+    text-align: center;
+    max-width: 360px;
+  }
+  .paywall-card h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .paywall-card p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+  .paywall-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 24px;
+    border-radius: 10px;
+    border: none;
+    background: linear-gradient(135deg, var(--emerald), #059669);
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: transform 0.1s, box-shadow 0.15s;
+  }
+  .paywall-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+  }
+
+  /* ===== TIER RECOMMENDATION ===== */
+  .tier-section {
+    margin-top: 48px;
+    padding-top: 32px;
+    border-top: 2px solid var(--border);
+  }
+  .tier-section h2 {
+    font-size: 20px;
+    font-weight: 800;
+    margin-bottom: 20px;
+    color: var(--text);
+  }
+  .tier-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  @media (max-width: 900px) { .tier-grid { grid-template-columns: 1fr; } }
+
+  .tier-card {
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    position: relative;
+    background: var(--bg-card);
+  }
+  .tier-card.recommended {
+    border-color: var(--emerald);
+    box-shadow: 0 0 0 1px var(--emerald);
+  }
+  .tier-card.recommended::before {
+    content: 'RECOMMENDED';
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--emerald);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 12px;
+    border-radius: 6px;
+    letter-spacing: 0.05em;
+  }
+  .tier-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .tier-price {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+  }
+  .tier-features {
+    list-style: none;
+    padding: 0;
+  }
+  .tier-features li {
+    font-size: 13px;
+    color: var(--text-secondary);
+    padding: 5px 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .tier-features li::before {
+    content: '✓';
+    color: var(--emerald);
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .tier-features li.disabled {
+    opacity: 0.35;
+  }
+  .tier-features li.disabled::before {
+    content: '—';
+    color: var(--text-muted);
+  }
+
+  /* ===== VIEW SWITCHER ===== */
+  .view-switch {
+    display: inline-flex;
+    background: var(--bg-input);
+    border-radius: 10px;
+    padding: 3px;
+    gap: 2px;
+    margin-bottom: 24px;
+  }
+  .view-btn {
+    padding: 8px 18px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.15s;
+  }
+  .view-btn.active {
+    background: var(--emerald);
+    color: white;
+  }
+
+  .notes-section {
+    margin-top: 48px;
+    padding: 24px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+  }
+  .notes-section h3 {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+  .notes-section ul {
+    list-style: disc;
+    padding-left: 20px;
+  }
+  .notes-section li {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 4px;
+  }
+  .notes-section li strong { color: var(--text); }
+</style>
+</head>
+<body>
+
+<div class="mockup-banner">
+  NET WORTH TRACKING — FEATURE MOCKUP
+  <span>&nbsp;|&nbsp;Not functional — design review only</span>
+</div>
+
+<!-- ===== VIEW SWITCHER ===== -->
+<div class="content" style="padding-bottom: 0;">
+  <div class="view-switch">
+    <button class="view-btn active" onclick="showView('dashboard')">Dashboard View</button>
+    <button class="view-btn" onclick="showView('modal')">Add Asset Modal</button>
+    <button class="view-btn" onclick="showView('paywall')">Free User (Paywall)</button>
+    <button class="view-btn" onclick="showView('tier')">Tier Recommendation</button>
+  </div>
+</div>
+
+<!-- ===== VIEW: DASHBOARD ===== -->
+<div id="view-dashboard" class="content">
+
+  <!-- Header -->
+  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
+    <div>
+      <div class="section-label">Portfolio Overview</div>
+      <h2 style="font-size: 22px; font-weight: 800;">Net Worth</h2>
+    </div>
+    <button class="add-btn" onclick="showView('modal')">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="7" y1="1" x2="7" y2="13"/><line x1="1" y1="7" x2="13" y2="7"/></svg>
+      Add Asset
+    </button>
+  </div>
+
+  <!-- Net Worth Hero -->
+  <div class="net-worth-hero">
+    <!-- Left: Total + Breakdown -->
+    <div class="net-worth-total">
+      <div class="net-worth-label">Total Net Worth</div>
+      <div class="net-worth-value">€547,823.40</div>
+      <div class="net-worth-change change-positive">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
+        +€3,241.80 today (+0.59%)
+      </div>
+
+      <div class="breakdown-grid">
+        <div class="breakdown-item">
+          <div class="breakdown-dot" style="background: var(--indigo)"></div>
+          <div>
+            <div class="breakdown-item-label">Investments</div>
+          </div>
+          <div class="breakdown-item-value">€142,350</div>
+        </div>
+        <div class="breakdown-item">
+          <div class="breakdown-dot" style="background: var(--blue)"></div>
+          <div>
+            <div class="breakdown-item-label">Real Estate</div>
+          </div>
+          <div class="breakdown-item-value">€320,000</div>
+        </div>
+        <div class="breakdown-item">
+          <div class="breakdown-dot" style="background: var(--emerald)"></div>
+          <div>
+            <div class="breakdown-item-label">Savings</div>
+          </div>
+          <div class="breakdown-item-value">€45,200</div>
+        </div>
+        <div class="breakdown-item">
+          <div class="breakdown-dot" style="background: var(--violet)"></div>
+          <div>
+            <div class="breakdown-item-label">Pension</div>
+          </div>
+          <div class="breakdown-item-value">€28,750</div>
+        </div>
+        <div class="breakdown-item">
+          <div class="breakdown-dot" style="background: var(--amber)"></div>
+          <div>
+            <div class="breakdown-item-label">Crypto</div>
+          </div>
+          <div class="breakdown-item-value">€8,523</div>
+        </div>
+        <div class="breakdown-item">
+          <div class="breakdown-dot" style="background: var(--text-muted)"></div>
+          <div>
+            <div class="breakdown-item-label">Cash</div>
+          </div>
+          <div class="breakdown-item-value">€3,000</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Donut Chart -->
+    <div class="card" style="display: flex; align-items: center; justify-content: center;">
+      <svg class="donut-svg" viewBox="0 0 220 220">
+        <!-- Investments 26% -->
+        <circle cx="110" cy="110" r="85" fill="none" stroke="#6366f1" stroke-width="28"
+          stroke-dasharray="138.7 395.6" stroke-dashoffset="0"
+          transform="rotate(-90 110 110)" opacity="0.9"/>
+        <!-- Real Estate 58.4% -->
+        <circle cx="110" cy="110" r="85" fill="none" stroke="#3b82f6" stroke-width="28"
+          stroke-dasharray="312 222.3" stroke-dashoffset="-138.7"
+          transform="rotate(-90 110 110)" opacity="0.9"/>
+        <!-- Savings 8.25% -->
+        <circle cx="110" cy="110" r="85" fill="none" stroke="#10b981" stroke-width="28"
+          stroke-dasharray="44.1 490.2" stroke-dashoffset="-450.7"
+          transform="rotate(-90 110 110)" opacity="0.9"/>
+        <!-- Pension 5.25% -->
+        <circle cx="110" cy="110" r="85" fill="none" stroke="#8b5cf6" stroke-width="28"
+          stroke-dasharray="28 506.3" stroke-dashoffset="-494.8"
+          transform="rotate(-90 110 110)" opacity="0.9"/>
+        <!-- Crypto 1.56% -->
+        <circle cx="110" cy="110" r="85" fill="none" stroke="#f59e0b" stroke-width="28"
+          stroke-dasharray="8.3 526" stroke-dashoffset="-522.8"
+          transform="rotate(-90 110 110)" opacity="0.9"/>
+        <!-- Cash 0.55% -->
+        <circle cx="110" cy="110" r="85" fill="none" stroke="#64748b" stroke-width="28"
+          stroke-dasharray="2.9 531.4" stroke-dashoffset="-531.1"
+          transform="rotate(-90 110 110)" opacity="0.9"/>
+        <!-- Center text -->
+        <text x="110" y="103" text-anchor="middle" class="donut-center-text" font-size="12">Net Worth</text>
+        <text x="110" y="124" text-anchor="middle" class="donut-center-value" font-size="16">€547,823</text>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Manual Assets Section -->
+  <div class="card">
+    <div class="assets-header">
+      <h2>Assets &amp; Accounts</h2>
+      <div class="total">€396,950.00</div>
+    </div>
+
+    <!-- Real Estate -->
+    <div class="asset-type-section">
+      <div class="asset-type-header">
+        <div class="asset-type-icon icon-real-estate">🏠</div>
+        <div class="asset-type-name">Real Estate</div>
+        <div class="asset-type-total">€320,000.00</div>
+      </div>
+      <div class="asset-row">
+        <div style="min-width:0; flex:1;">
+          <div class="asset-name">Apartment — Berlin Mitte</div>
+          <div class="asset-note">2BR, 75m² — Purchased 2019</div>
+        </div>
+        <div class="asset-date">Updated Mar 1</div>
+        <div class="asset-value">€280,000</div>
+        <div class="asset-actions">
+          <button class="icon-btn" title="Edit">✏️</button>
+          <button class="icon-btn danger" title="Remove">✕</button>
+        </div>
+      </div>
+      <div class="asset-row">
+        <div style="min-width:0; flex:1;">
+          <div class="asset-name">Parking Spot — Prenzlauer Berg</div>
+          <div class="asset-note">Rented out, €120/mo income</div>
+        </div>
+        <div class="asset-date">Updated Feb 15</div>
+        <div class="asset-value">€40,000</div>
+        <div class="asset-actions">
+          <button class="icon-btn" title="Edit">✏️</button>
+          <button class="icon-btn danger" title="Remove">✕</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Savings Accounts -->
+    <div class="asset-type-section">
+      <div class="asset-type-header">
+        <div class="asset-type-icon icon-savings">🏦</div>
+        <div class="asset-type-name">Savings Accounts</div>
+        <div class="asset-type-total">€45,200.00</div>
+      </div>
+      <div class="asset-row">
+        <div style="min-width:0; flex:1;">
+          <div class="asset-name">ING Tagesgeld</div>
+          <div class="asset-note">3.3% APY</div>
+        </div>
+        <div class="asset-date">Updated Mar 10</div>
+        <div class="asset-value">€32,000</div>
+        <div class="asset-actions">
+          <button class="icon-btn" title="Edit">✏️</button>
+          <button class="icon-btn danger" title="Remove">✕</button>
+        </div>
+      </div>
+      <div class="asset-row">
+        <div style="min-width:0; flex:1;">
+          <div class="asset-name">Trade Republic Cash</div>
+          <div class="asset-note">3.75% APY</div>
+        </div>
+        <div class="asset-date">Updated Mar 8</div>
+        <div class="asset-value">€13,200</div>
+        <div class="asset-actions">
+          <button class="icon-btn" title="Edit">✏️</button>
+          <button class="icon-btn danger" title="Remove">✕</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pension -->
+    <div class="asset-type-section">
+      <div class="asset-type-header">
+        <div class="asset-type-icon icon-pension">🏛️</div>
+        <div class="asset-type-name">Pension &amp; Retirement</div>
+        <div class="asset-type-total">€28,750.00</div>
+      </div>
+      <div class="asset-row">
+        <div style="min-width:0; flex:1;">
+          <div class="asset-name">Riester Rente — Allianz</div>
+          <div class="asset-note">State-subsidised pension</div>
+        </div>
+        <div class="asset-date">Updated Jan 30</div>
+        <div class="asset-value">€18,750</div>
+        <div class="asset-actions">
+          <button class="icon-btn" title="Edit">✏️</button>
+          <button class="icon-btn danger" title="Remove">✕</button>
+        </div>
+      </div>
+      <div class="asset-row">
+        <div style="min-width:0; flex:1;">
+          <div class="asset-name">Company Pension (bAV)</div>
+          <div class="asset-note">Employer-matched contributions</div>
+        </div>
+        <div class="asset-date">Updated Dec 31</div>
+        <div class="asset-value">€10,000</div>
+        <div class="asset-actions">
+          <button class="icon-btn" title="Edit">✏️</button>
+          <button class="icon-btn danger" title="Remove">✕</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cash -->
+    <div class="asset-type-section" style="margin-bottom: 0;">
+      <div class="asset-type-header">
+        <div class="asset-type-icon icon-cash">💶</div>
+        <div class="asset-type-name">Cash</div>
+        <div class="asset-type-total">€3,000.00</div>
+      </div>
+      <div class="asset-row">
+        <div style="min-width:0; flex:1;">
+          <div class="asset-name">Emergency Fund</div>
+        </div>
+        <div class="asset-value">€3,000</div>
+        <div class="asset-actions">
+          <button class="icon-btn" title="Edit">✏️</button>
+          <button class="icon-btn danger" title="Remove">✕</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Inline add form -->
+    <div class="add-form">
+      <select style="width: 130px;">
+        <option>Real Estate</option>
+        <option>Savings</option>
+        <option>Pension</option>
+        <option selected>Cash</option>
+      </select>
+      <input class="name-input" placeholder="Asset name" />
+      <input class="amount-input" type="number" placeholder="Amount" />
+      <select class="currency-select">
+        <option>EUR</option>
+        <option>USD</option>
+        <option>GBP</option>
+        <option>CHF</option>
+      </select>
+      <button class="add-btn-sm">+</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== VIEW: ADD ASSET MODAL ===== -->
+<div id="view-modal" class="content" style="display: none;">
+  <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 24px;">
+    This modal appears when clicking "Add Asset" from the dashboard toolbar or the net worth section.
+  </p>
+
+  <div style="max-width: 480px; margin: 0 auto;">
+    <div class="modal" style="position: relative; animation: none;">
+      <h2>Add Manual Asset</h2>
+
+      <div class="type-selector">
+        <button class="type-option" onclick="selectType(this)">
+          <div class="type-option-icon">🏠</div>
+          <div class="type-option-label">Real Estate</div>
+        </button>
+        <button class="type-option selected" onclick="selectType(this)">
+          <div class="type-option-icon">🏦</div>
+          <div class="type-option-label">Savings</div>
+        </button>
+        <button class="type-option" onclick="selectType(this)">
+          <div class="type-option-icon">🏛️</div>
+          <div class="type-option-label">Pension</div>
+        </button>
+      </div>
+
+      <div class="modal-field">
+        <label>Name</label>
+        <input placeholder="e.g. ING Tagesgeld" value="N26 Savings" />
+      </div>
+
+      <div class="modal-row">
+        <div class="modal-field">
+          <label>Current Value</label>
+          <input type="number" placeholder="0.00" value="15000" />
+        </div>
+        <div class="modal-field">
+          <label>Currency</label>
+          <select>
+            <option selected>EUR</option>
+            <option>USD</option>
+            <option>GBP</option>
+            <option>CHF</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-field">
+        <label>Notes <span style="color: var(--text-muted); font-weight: 400;">(optional)</span></label>
+        <textarea placeholder="Address, account details, interest rate...">2.5% variable APY</textarea>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-cancel">Cancel</button>
+        <button class="btn-save">Add Asset</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== VIEW: PAYWALL ===== -->
+<div id="view-paywall" class="content" style="display: none;">
+  <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 24px;">
+    Free users see the blurred paywall. They know the feature exists but must upgrade to Starter (Bifolio) to use it.
+    Existing cash entries remain visible and free — only the new asset types are gated.
+  </p>
+
+  <div class="paywall-container" style="min-height: 400px;">
+    <div class="paywall-blur">
+      <!-- Blurred ghost content -->
+      <div class="net-worth-hero">
+        <div class="net-worth-total">
+          <div class="net-worth-label">Total Net Worth</div>
+          <div class="net-worth-value">€547,823.40</div>
+          <div class="net-worth-change change-positive">+€3,241.80 today</div>
+          <div class="breakdown-grid">
+            <div class="breakdown-item">
+              <div class="breakdown-dot" style="background: var(--indigo)"></div>
+              <div class="breakdown-item-label">Investments</div>
+              <div class="breakdown-item-value">€142,350</div>
+            </div>
+            <div class="breakdown-item">
+              <div class="breakdown-dot" style="background: var(--blue)"></div>
+              <div class="breakdown-item-label">Real Estate</div>
+              <div class="breakdown-item-value">€320,000</div>
+            </div>
+            <div class="breakdown-item">
+              <div class="breakdown-dot" style="background: var(--emerald)"></div>
+              <div class="breakdown-item-label">Savings</div>
+              <div class="breakdown-item-value">€45,200</div>
+            </div>
+            <div class="breakdown-item">
+              <div class="breakdown-dot" style="background: var(--violet)"></div>
+              <div class="breakdown-item-label">Pension</div>
+              <div class="breakdown-item-value">€28,750</div>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="height: 240px;"></div>
+      </div>
+    </div>
+    <div class="paywall-overlay">
+      <div class="paywall-card">
+        <div style="font-size: 28px; margin-bottom: 12px;">🏠</div>
+        <h3>Track Your Full Net Worth</h3>
+        <p>Add real estate, savings accounts, and pension funds to see your complete financial picture. Upgrade to Bifolio to unlock.</p>
+        <button class="paywall-btn">
+          Upgrade to Bifolio — €2.99/mo
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== VIEW: TIER ===== -->
+<div id="view-tier" class="content" style="display: none;">
+  <h2 style="font-size: 20px; font-weight: 800; margin-bottom: 8px;">Tier Recommendation</h2>
+  <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 24px; max-width: 680px; line-height: 1.6;">
+    Net worth tracking is a <strong style="color: var(--text);">high-perceived-value, low-development-cost</strong> feature.
+    Placing it at <strong style="color: var(--emerald);">Starter (Bifolio)</strong> tier maximizes conversion from Free users at the impulse-buy price point (€2.99/mo),
+    while keeping Pro for power features. Cash entries remain free for all tiers.
+  </p>
+
+  <div class="tier-grid">
+    <!-- Free -->
+    <div class="tier-card">
+      <div class="tier-name">Folio</div>
+      <div class="tier-price">Free</div>
+      <ul class="tier-features">
+        <li>Cash entries (unlimited)</li>
+        <li>Up to 15 holdings with live quotes</li>
+        <li>Portfolio chart and benchmarks</li>
+        <li class="disabled">Real estate tracking</li>
+        <li class="disabled">Savings account tracking</li>
+        <li class="disabled">Pension / retirement tracking</li>
+        <li class="disabled">Net worth overview</li>
+      </ul>
+    </div>
+
+    <!-- Starter -->
+    <div class="tier-card recommended">
+      <div class="tier-name" style="color: var(--emerald);">Bifolio</div>
+      <div class="tier-price">€2.99/mo</div>
+      <ul class="tier-features">
+        <li>Everything in Free</li>
+        <li><strong style="color: var(--text);">Up to 10 manual assets</strong></li>
+        <li><strong style="color: var(--text);">Net worth overview with donut chart</strong></li>
+        <li><strong style="color: var(--text);">Real estate, savings, pension entries</strong></li>
+        <li>Multi-currency manual assets</li>
+        <li>CSV export of all assets</li>
+        <li>50 holdings, metrics, full history</li>
+      </ul>
+    </div>
+
+    <!-- Pro -->
+    <div class="tier-card">
+      <div class="tier-name" style="color: var(--violet);">Trefolio</div>
+      <div class="tier-price">€7.99/mo</div>
+      <ul class="tier-features">
+        <li>Everything in Bifolio</li>
+        <li><strong style="color: var(--text);">Unlimited manual assets</strong></li>
+        <li><strong style="color: var(--text);">Valuation history tracking (future)</strong></li>
+        <li><strong style="color: var(--text);">Net worth growth chart (future)</strong></li>
+        <li>Unlimited holdings, alerts, AI</li>
+        <li>Alpha Vantage, fundamentals</li>
+        <li>Up to 3 portfolios</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="notes-section" style="margin-top: 32px;">
+    <h3>Rationale</h3>
+    <ul>
+      <li><strong>Why Starter, not Pro?</strong> — The feature is manual data entry with no external API cost. Gating it at Pro (€7.99/mo) would be a high barrier for a feature that is fundamentally simple. Starter at €2.99/mo is below the impulse-buy threshold and directly competes with Getquin Free → Premium upsell.</li>
+      <li><strong>Why not Free?</strong> — Cash entries (the current model) stay free. But full net worth tracking with categorised asset types, a dedicated overview, and multi-currency support is a material upgrade. Keeping it paid protects the value perception and gives Free users a clear reason to convert.</li>
+      <li><strong>Limit strategy</strong> — Starter gets up to 10 manual assets (enough for most users: 1-2 properties, 2-3 savings, 1-2 pensions). Pro gets unlimited, which matters for HNW users with many properties/accounts.</li>
+      <li><strong>Future upsell</strong> — Pro-only features like valuation history charts (track your home value over time) and net worth growth charts create a natural upgrade path from Starter to Pro.</li>
+      <li><strong>Competitor benchmarks</strong> — Getquin charges €150/yr for Wealth tier (net worth + retirement). Kubera starts at $249/yr. Even our Pro at €95.88/yr significantly undercuts both. Starter at €35.88/yr is a steal.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+function showView(view) {
+  document.querySelectorAll('[id^="view-"]').forEach(el => el.style.display = 'none');
+  document.getElementById('view-' + view).style.display = 'block';
+  document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+function selectType(el) {
+  el.parentElement.querySelectorAll('.type-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+}
+</script>
+
+</body>
+</html>

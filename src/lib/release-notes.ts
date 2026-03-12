@@ -14,9 +14,42 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "1.22.0";
+export const CURRENT_VERSION = "1.23.0";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "1.23.0",
+    date: "2026-03-12",
+    title: "Net Worth Tracking — Real Estate, Savings & Pensions",
+    titleTranslations: { es: "Seguimiento de Patrimonio Neto — Inmuebles, Ahorros y Pensiones" },
+    changes: [
+      {
+        type: "feature",
+        text: "Track your full net worth with manual entries for real estate, savings accounts, and pension/retirement funds",
+        translations: { es: "Registra tu patrimonio neto completo con entradas manuales para inmuebles, cuentas de ahorro y fondos de pensión/jubilación" },
+      },
+      {
+        type: "feature",
+        text: "Net Worth Overview card with total value, category breakdown, and donut chart on the portfolio dashboard",
+        translations: { es: "Tarjeta de Resumen de Patrimonio Neto con valor total, desglose por categoría y gráfico de dona en el panel del portafolio" },
+      },
+      {
+        type: "feature",
+        text: "Add Manual Asset modal with type picker, multi-currency support, and optional notes for each asset",
+        translations: { es: "Modal de Añadir Activo Manual con selector de tipo, soporte multi-divisa y notas opcionales para cada activo" },
+      },
+      {
+        type: "improvement",
+        text: "Cash section now groups entries by category (real estate, savings, pension, cash) with subtotals",
+        translations: { es: "La sección de efectivo ahora agrupa las entradas por categoría (inmuebles, ahorros, pensión, efectivo) con subtotales" },
+      },
+      {
+        type: "improvement",
+        text: "Asset allocation donut chart now includes real estate, savings, and pension alongside stocks, ETFs, and crypto",
+        translations: { es: "El gráfico de asignación de activos ahora incluye inmuebles, ahorros y pensión junto con acciones, ETFs y cripto" },
+      },
+    ],
+  },
   {
     version: "1.22.0",
     date: "2026-03-12",

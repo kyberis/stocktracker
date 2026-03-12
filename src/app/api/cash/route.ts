@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { addCashEntry, listCashEntries, removeCashEntry, updateCashEntry } from "@/lib/db";
+import { addCashEntry, listCashEntries, removeCashEntry, updateCashEntry, getManualAssetCount } from "@/lib/db";
 import { withMetrics } from "@/lib/with-metrics";
 import { parseBody } from "@/lib/api-response";
 import { createCashSchema, updateCashSchema } from "@/lib/schemas";
+import { canAccessFeature, getManualAssetLimit } from "@/lib/subscription";
 
 export const GET = withMetrics("/api/cash", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
@@ -21,8 +22,29 @@ export const POST = withMetrics("/api/cash", async (req: NextRequest) => {
   const portfolioId = req.nextUrl.searchParams.get("portfolioId") || undefined;
   const result = await parseBody(req, createCashSchema);
   if (!result.success) return result.error;
-  const { name, amountEUR } = result.data;
-  const created = await addCashEntry(session.userId, { name, amountEUR }, portfolioId);
+  const data = result.data;
+
+  if (data.type && data.type !== "cash") {
+    const entitlement = canAccessFeature("net-worth", { plan: session.plan, aiCallsThisMonth: 0 });
+    if (!entitlement.allowed) {
+      return NextResponse.json({ error: "Upgrade to Bifolio to track net worth assets.", code: "upgrade_required" }, { status: 403 });
+    }
+    const count = await getManualAssetCount(session.userId);
+    const limit = getManualAssetLimit(session.plan);
+    if (count >= limit) {
+      return NextResponse.json({ error: `Manual asset limit reached (${count}/${limit}).`, code: "limit_reached", count, limit }, { status: 403 });
+    }
+  }
+
+  const created = await addCashEntry(session.userId, {
+    name: data.name,
+    amountEUR: data.amountEUR,
+    type: data.type ?? "cash",
+    displayCurrency: data.displayCurrency ?? "EUR",
+    displayAmount: data.displayAmount ?? data.amountEUR,
+    notes: data.notes ?? "",
+    valuationDate: data.valuationDate ?? "",
+  }, portfolioId);
   return NextResponse.json(created, { status: 201 });
 });
 

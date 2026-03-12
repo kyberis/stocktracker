@@ -1216,6 +1216,7 @@ const es: TranslationStrings = {
   landingPricingBifolioFeature9: "Sin anuncios",
   landingPricingBifolioFeature10: "Broker Sync — 1 conexión de bróker con auto-sincronización",
   landingPricingBifolioFeature11: "Calendario completo de resultados + eventos económicos",
+  landingPricingBifolioFeature12: "Seguimiento de patrimonio neto — hasta 10 activos manuales (inmuebles, ahorros, pensiones)",
   landingPricingBifolioCta: "Empezar con Bifolio",
 
   landingPricingTrefolioDesc: "Potencia completa para inversores serios.",
@@ -1235,6 +1236,7 @@ const es: TranslationStrings = {
   landingPricingTrefolioFeature14: "Hasta 3 portafolios con seguimiento independiente",
   landingPricingTrefolioFeature15: "Importación de cartera con IA (cualquier archivo o captura)",
   landingPricingTrefolioFeature16: "Calendario completo de eventos con OPVs",
+  landingPricingTrefolioFeature17: "Activos manuales ilimitados para seguimiento completo de patrimonio neto",
   landingPricingTrefolioCta: "Probar Trefolio",
 
   landingFaqHeading: "Preguntas",
@@ -1264,6 +1266,33 @@ const es: TranslationStrings = {
   landingCtaParagraph: "Únete a inversores en toda Europa que confían en trefolio. Empieza con Folio, crece hasta Trefolio.",
   landingCtaSignup: "Crear cuenta gratis",
   landingCtaLogin: "¿Ya tienes cuenta? Iniciar sesión",
+
+  // Net Worth Tracking
+  netWorth: "Patrimonio Neto",
+  netWorthOverview: "Resumen de Patrimonio Neto",
+  totalNetWorth: "Patrimonio Neto Total",
+  addManualAsset: "Añadir Activo Manual",
+  manualAssets: "Activos y Cuentas",
+  realEstate: "Inmuebles",
+  savingsAccounts: "Cuentas de Ahorro",
+  pensionRetirement: "Pensión y Jubilación",
+  assetName: "Nombre del activo",
+  currentValue: "Valor Actual",
+  valuationDate: "Última Actualización",
+  assetNotes: "Notas",
+  assetNotesPlaceholder: "Dirección, detalles de cuenta, tasa de interés…",
+  assetTypeRealEstate: "Inmueble",
+  assetTypeSavings: "Ahorro",
+  assetTypePension: "Pensión",
+  assetTypeCash: "Efectivo",
+  investments: "Inversiones",
+  noManualAssets: "Aún no hay activos. Registra tus inmuebles, ahorros y pensiones.",
+  netWorthTrackingLocked: "Registra tu Patrimonio Neto Completo",
+  netWorthTrackingLockedDesc: "Añade inmuebles, cuentas de ahorro y fondos de pensiones para ver tu panorama financiero completo.",
+  manualAssetLimitReached: "Has alcanzado el límite de activos ({count}/{limit}). Mejora tu plan para más.",
+  upsellAttemptNetWorth: "Registra tu patrimonio neto completo con inmuebles, ahorros y cuentas de pensión.",
+  upsellStarterItemNetWorth: "Seguimiento de patrimonio neto con hasta 10 activos manuales",
+  upsellProItemUnlimitedAssets: "Activos manuales ilimitados e historial de valoración futuro",
 };
 
 export default es;

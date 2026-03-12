@@ -1,10 +1,47 @@
 [
   {
     "name": "CASH & CASH FUND & FTX CASH (EUR)",
-    "amountEUR": 552.96
+    "amountEUR": 552.96,
+    "type": "cash",
+    "displayCurrency": "EUR",
+    "displayAmount": 552.96,
+    "notes": "",
+    "valuationDate": ""
   },
   {
     "name": "CASH & CASH FUND & FTX CASH (USD)",
-    "amountEUR": 5.15
+    "amountEUR": 5.15,
+    "type": "cash",
+    "displayCurrency": "EUR",
+    "displayAmount": 5.15,
+    "notes": "",
+    "valuationDate": ""
+  },
+  {
+    "name": "Apartment — Berlin Mitte",
+    "amountEUR": 280000,
+    "type": "real_estate",
+    "displayCurrency": "EUR",
+    "displayAmount": 280000,
+    "notes": "2BR, 75m² — Purchased 2019",
+    "valuationDate": "2026-03-01"
+  },
+  {
+    "name": "ING Tagesgeld",
+    "amountEUR": 32000,
+    "type": "savings",
+    "displayCurrency": "EUR",
+    "displayAmount": 32000,
+    "notes": "3.3% APY",
+    "valuationDate": "2026-03-10"
+  },
+  {
+    "name": "Riester Rente — Allianz",
+    "amountEUR": 18750,
+    "type": "pension",
+    "displayCurrency": "EUR",
+    "displayAmount": 18750,
+    "notes": "State-subsidised pension",
+    "valuationDate": "2026-01-30"
   }
 ]

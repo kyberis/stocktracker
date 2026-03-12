@@ -19,6 +19,11 @@ interface SeedHolding {
 interface SeedCash {
   name: string;
   amountEUR: number;
+  type?: string;
+  displayCurrency?: string;
+  displayAmount?: number;
+  notes?: string;
+  valuationDate?: string;
 }
 
 function inferAssetType(row: SeedHolding): "stock" | "etf" {
@@ -113,9 +118,17 @@ export async function seedCashForUser(client: Client, userId: string, portfolioI
   if (cash.length === 0) return 0;
 
   const stmts = cash.map((row) => ({
-    sql: `INSERT OR IGNORE INTO cash_entries (id, user_id, name, amount_eur, portfolio_id)
-          VALUES (?, ?, ?, ?, ?)`,
-    args: [randomUUID(), userId, row.name, row.amountEUR, portfolioId],
+    sql: `INSERT OR IGNORE INTO cash_entries (id, user_id, name, amount_eur, type, display_currency, display_amount, notes, valuation_date, portfolio_id)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    args: [
+      randomUUID(), userId, row.name, row.amountEUR,
+      row.type ?? "cash",
+      row.displayCurrency ?? "EUR",
+      row.displayAmount ?? row.amountEUR,
+      row.notes ?? "",
+      row.valuationDate ?? "",
+      portfolioId,
+    ],
   }));
 
   await client.batch(stmts, "write");

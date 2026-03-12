@@ -168,11 +168,18 @@ export const updateTransactionSchema = z.object({
   }),
 });
 
-/* ── Cash ──────────────────────────────────────────────────── */
+/* ── Cash / Manual Assets ─────────────────────────────────── */
+
+export const manualAssetTypeSchema = z.enum(["cash", "real_estate", "savings", "pension"]);
 
 export const createCashSchema = z.object({
   name: z.string().min(1, "Name is required"),
   amountEUR: z.number().min(0, "Amount must be non-negative"),
+  type: manualAssetTypeSchema.optional().default("cash"),
+  displayCurrency: z.string().optional().default("EUR"),
+  displayAmount: z.number().min(0).optional().default(0),
+  notes: z.string().optional().default(""),
+  valuationDate: z.string().optional().default(""),
 });
 
 export const updateCashSchema = z.object({
@@ -180,6 +187,11 @@ export const updateCashSchema = z.object({
   updates: z.object({
     name: z.string().min(1).optional(),
     amountEUR: z.number().min(0).optional(),
+    type: manualAssetTypeSchema.optional(),
+    displayCurrency: z.string().optional(),
+    displayAmount: z.number().min(0).optional(),
+    notes: z.string().optional(),
+    valuationDate: z.string().optional(),
   }),
 });
 

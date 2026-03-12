@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useI18n } from "@/lib/i18n";
 import { formatCurrency, formatPercent } from "@/lib/utils";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
 import PortfolioBenchmarkChart from "./PortfolioBenchmarkChart";
 import { useTheme } from "@/lib/theme-context";
+import type { Holding, CashEntry, ManualAssetType } from "@/lib/types";
 
 interface IndexQuote {
   symbol: string;
@@ -24,7 +25,14 @@ const INDICES = [
   { symbol: "^STOXX50E", labelKey: "benchmarkEuroStoxx50" },
 ] as const;
 
-import type { Holding, CashEntry } from "@/lib/types";
+const ASSET_TYPE_META: Record<ManualAssetType, { icon: string; labelKey: string }> = {
+  real_estate: { icon: "🏠", labelKey: "realEstate" },
+  savings: { icon: "🏦", labelKey: "savingsAccounts" },
+  pension: { icon: "🏛️", labelKey: "pensionRetirement" },
+  cash: { icon: "💶", labelKey: "assetTypeCash" },
+};
+
+const TYPE_ORDER: ManualAssetType[] = ["real_estate", "savings", "pension", "cash"];
 
 interface Props {
   holdings?: Holding[];
@@ -90,6 +98,17 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
   const dayGainLossPercent = prevPortfolioValue > 0 ? (dayGainLossEUR / prevPortfolioValue) * 100 : 0;
 
   const cashTotal = cashEntries.reduce((sum, e) => sum + e.amountEUR, 0);
+
+  const groupedEntries = useMemo(() => {
+    const groups: Record<ManualAssetType, CashEntry[]> = {
+      real_estate: [], savings: [], pension: [], cash: [],
+    };
+    for (const entry of cashEntries) {
+      const type = entry.type ?? "cash";
+      groups[type].push(entry);
+    }
+    return groups;
+  }, [cashEntries]);
 
   const handleAddCash = async () => {
     const parsed = parseFloat(cashAmount);
@@ -248,10 +267,10 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
           </div>
         </div>
 
-        {/* Cash Balances */}
+        {/* Assets & Cash Balances */}
         <div className={cardClass}>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{t("cash")}</h3>
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{t("manualAssets")}</h3>
             {cashEntries.length > 0 && (
               <span className="text-sm font-bold text-gray-900 dark:text-white tabular-nums">
                 {formatCurrency(cashTotal, baseCurrency)}
@@ -259,75 +278,103 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
             )}
           </div>
 
-          <div className="space-y-1.5 mb-3">
+          <div className="space-y-3 mb-3">
             {cashEntries.length === 0 ? (
               <p className="text-xs text-gray-400 dark:text-slate-500">{t("noCashEntries")}</p>
             ) : (
-              cashEntries.map((entry) => {
-                const isEditing = editingId === entry.id;
-                return isEditing ? (
-                  <div key={entry.id} className="rounded-lg border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-500/5 p-2 space-y-1.5">
-                    <input
-                      value={editName}
-                      onChange={(e) => setEditName(e.target.value)}
-                      aria-label={t("cashName")}
-                      className="w-full text-sm"
-                      autoFocus
-                    />
-                    <div className="flex items-center gap-1.5">
-                      <input
-                        type="number"
-                        min="0"
-                        step="any"
-                        value={editAmount}
-                        onChange={(e) => setEditAmount(e.target.value)}
-                        aria-label={t("cash") + " EUR"}
-                        className="flex-1 text-sm"
-                      />
-                      <button className="btn-primary text-xs px-2 py-1" onClick={() => saveEdit(entry.id)}>
-                        {t("saveChanges")}
-                      </button>
-                      <button className="btn-secondary text-xs px-2 py-1" onClick={() => setEditingId(null)}>
-                        {t("cancel")}
-                      </button>
+              TYPE_ORDER
+                .filter((type) => groupedEntries[type].length > 0)
+                .map((type) => {
+                  const meta = ASSET_TYPE_META[type];
+                  const entries = groupedEntries[type];
+                  const groupTotal = entries.reduce((s, e) => s + e.amountEUR, 0);
+                  return (
+                    <div key={type}>
+                      {/* Only show type header if there are non-cash types */}
+                      {(TYPE_ORDER.some((t) => t !== "cash" && groupedEntries[t].length > 0)) && (
+                        <div className="flex items-center gap-2 mb-1 pb-1 border-b border-gray-100 dark:border-slate-700/50">
+                          <span className="text-sm">{meta.icon}</span>
+                          <span className="text-xs font-semibold text-gray-600 dark:text-slate-300">
+                            {t(meta.labelKey as Parameters<typeof t>[0])}
+                          </span>
+                          <span className="text-xs font-semibold text-gray-500 dark:text-slate-400 ml-auto tabular-nums">
+                            {formatCurrency(groupTotal, baseCurrency)}
+                          </span>
+                        </div>
+                      )}
+                      {entries.map((entry) => {
+                        const isEditing = editingId === entry.id;
+                        return isEditing ? (
+                          <div key={entry.id} className="rounded-lg border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-500/5 p-2 space-y-1.5">
+                            <input
+                              value={editName}
+                              onChange={(e) => setEditName(e.target.value)}
+                              aria-label={t("cashName")}
+                              className="w-full text-sm"
+                              autoFocus
+                            />
+                            <div className="flex items-center gap-1.5">
+                              <input
+                                type="number"
+                                min="0"
+                                step="any"
+                                value={editAmount}
+                                onChange={(e) => setEditAmount(e.target.value)}
+                                aria-label={t("cash") + " EUR"}
+                                className="flex-1 text-sm"
+                              />
+                              <button className="btn-primary text-xs px-2 py-1" onClick={() => saveEdit(entry.id)}>
+                                {t("saveChanges")}
+                              </button>
+                              <button className="btn-secondary text-xs px-2 py-1" onClick={() => setEditingId(null)}>
+                                {t("cancel")}
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div
+                            key={entry.id}
+                            className="group flex items-center justify-between py-1.5 px-2 -mx-2 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700/30 transition-colors"
+                          >
+                            <div className="min-w-0 flex-1 mr-2">
+                              <span className="text-sm text-gray-600 dark:text-slate-300 truncate block">{entry.name}</span>
+                              {entry.notes && (
+                                <span className="text-[11px] text-gray-400 dark:text-slate-500 truncate block">{entry.notes}</span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <span className="text-sm font-medium text-gray-900 dark:text-white tabular-nums">
+                                {formatCurrency(entry.amountEUR, baseCurrency)}
+                              </span>
+                              <div className="hidden group-hover:flex items-center gap-1">
+                                <button
+                                  onClick={() => startEdit(entry.id, entry.name, entry.amountEUR)}
+                                  className="p-0.5 rounded text-gray-400 hover:text-emerald-500 transition-colors"
+                                  title={t("editValues")}
+                                  aria-label={t("editValues")}
+                                >
+                                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                  </svg>
+                                </button>
+                                <button
+                                  onClick={() => removeCashEntry(entry.id)}
+                                  className="p-0.5 rounded text-gray-400 hover:text-red-500 transition-colors"
+                                  title={t("removeStock")}
+                                  aria-label={t("removeStock")}
+                                >
+                                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                  </svg>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                  </div>
-                ) : (
-                  <div
-                    key={entry.id}
-                    className="group flex items-center justify-between py-1.5 px-2 -mx-2 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700/30 transition-colors"
-                  >
-                    <span className="text-sm text-gray-600 dark:text-slate-300 truncate mr-2">{entry.name}</span>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <span className="text-sm font-medium text-gray-900 dark:text-white tabular-nums">
-                        {formatCurrency(entry.amountEUR, baseCurrency)}
-                      </span>
-                      <div className="hidden group-hover:flex items-center gap-1">
-                        <button
-                          onClick={() => startEdit(entry.id, entry.name, entry.amountEUR)}
-                          className="p-0.5 rounded text-gray-400 hover:text-emerald-500 transition-colors"
-                          title={t("editValues")}
-                          aria-label={t("editValues")}
-                        >
-                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                          </svg>
-                        </button>
-                        <button
-                          onClick={() => removeCashEntry(entry.id)}
-                          className="p-0.5 rounded text-gray-400 hover:text-red-500 transition-colors"
-                          title={t("removeStock")}
-                          aria-label={t("removeStock")}
-                        >
-                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
+                  );
+                })
             )}
           </div>
 

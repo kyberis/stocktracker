@@ -24,6 +24,7 @@ const STARTER_FEATURES = new Set<SubscriptionFeature>([
   "metrics",
   "portfolio-history-full",
   "event-calendar-economic",
+  "net-worth",
 ]);
 
 /**
@@ -129,6 +130,16 @@ export function getPortfolioLimit(plan: SubscriptionPlan): number {
   if (plan === "pro") return PLATFORM_LIMITS.PRO_PORTFOLIO_LIMIT;
   if (plan === "starter") return PLATFORM_LIMITS.STARTER_PORTFOLIO_LIMIT;
   return PLATFORM_LIMITS.FREE_PORTFOLIO_LIMIT;
+}
+
+/**
+ * Returns the manual asset limit (non-cash types) for a given plan.
+ * Free: 0. Starter: 10. Pro: unlimited.
+ */
+export function getManualAssetLimit(plan: SubscriptionPlan): number {
+  if (plan === "pro") return PLATFORM_LIMITS.PRO_MANUAL_ASSET_LIMIT;
+  if (plan === "starter") return PLATFORM_LIMITS.STARTER_MANUAL_ASSET_LIMIT;
+  return PLATFORM_LIMITS.FREE_MANUAL_ASSET_LIMIT;
 }
 
 /**

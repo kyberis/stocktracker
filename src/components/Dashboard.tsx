@@ -39,6 +39,8 @@ const AddCryptoModal = dynamic(() => import("./AddCryptoModal"), { ssr: false })
 const AdSlot = dynamic(() => import("./AdSlot"), { ssr: false });
 const EventCalendar = dynamic(() => import("./EventCalendar"), { ssr: false });
 const UpcomingEarnings = dynamic(() => import("./UpcomingEarnings"), { ssr: false });
+const AddManualAssetModal = dynamic(() => import("./AddManualAssetModal"), { ssr: false });
+import NetWorthSummary from "./NetWorthSummary";
 import TierFeatureBadge from "./TierFeatureBadge";
 
 
@@ -128,6 +130,7 @@ function EmptyPortfolio({ onAddStock, onSeedData }: { onAddStock: () => void; on
 export default function Dashboard() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showAddCrypto, setShowAddCrypto] = useState(false);
+  const [showAddAsset, setShowAddAsset] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [showReset, setShowReset] = useState(false);
@@ -267,6 +270,7 @@ export default function Dashboard() {
             setActiveTab("crypto");
           }
         }}
+        onAddAsset={() => setShowAddAsset(true)}
         onOpenSettings={() => setShowSettings(true)}
         onResetPortfolio={() => setShowReset(true)}
       />
@@ -372,6 +376,7 @@ export default function Dashboard() {
                   onChange={setBrokerFilter}
                 />
 
+                <NetWorthSummary holdings={filteredHoldings} cashEntries={filteredCashEntries} />
                 <PortfolioSummary holdings={filteredHoldings} cashEntries={filteredCashEntries} />
                 <AdSlot slot="dashboard-summary" format="horizontal" />
                 <PortfolioTable holdings={filteredHoldings} onAddStock={() => setShowAddModal(true)} />
@@ -531,6 +536,13 @@ export default function Dashboard() {
         <AddCryptoModal
           isOpen={showAddCrypto}
           onClose={() => setShowAddCrypto(false)}
+        />
+      )}
+
+      {showAddAsset && (
+        <AddManualAssetModal
+          isOpen={showAddAsset}
+          onClose={() => setShowAddAsset(false)}
         />
       )}
 

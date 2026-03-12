@@ -78,6 +78,11 @@ export const PLATFORM_LIMITS = {
   FREE_SNAPTRADE_LIMIT: 0,
   STARTER_SNAPTRADE_LIMIT: 1,
   PRO_SNAPTRADE_LIMIT: 999,
+
+  /** Max manual assets (non-cash: real_estate, savings, pension) per tier. */
+  FREE_MANUAL_ASSET_LIMIT: 0,
+  STARTER_MANUAL_ASSET_LIMIT: 10,
+  PRO_MANUAL_ASSET_LIMIT: 999,
 } as const;
 
 export type RateLimitProvider = "alphavantage" | "openai" | "openai_import";

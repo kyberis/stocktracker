@@ -25,7 +25,8 @@ export type SubscriptionFeature =
   | "crypto-portfolio"
   | "event-calendar-earnings"
   | "event-calendar-economic"
-  | "event-calendar-ipo";
+  | "event-calendar-ipo"
+  | "net-worth";
 
 export type AlertCondition = "above" | "below";
 export type AlertType = "threshold" | "percent_change";
@@ -67,6 +68,8 @@ export interface DeviceNotification {
   read: boolean;
   createdAt: string;
 }
+export type ManualAssetType = "cash" | "real_estate" | "savings" | "pension";
+
 export type HoldingAssetType = "stock" | "etf" | "crypto";
 
 export interface Holding {
@@ -90,6 +93,11 @@ export interface CashEntry {
   id: string;
   name: string;
   amountEUR: number;
+  type?: ManualAssetType;
+  displayCurrency?: string;
+  displayAmount?: number;
+  notes?: string;
+  valuationDate?: string;
 }
 
 /* ── Transaction Ledger ──────────────────────────────────── */

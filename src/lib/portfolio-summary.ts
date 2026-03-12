@@ -1,4 +1,4 @@
-import type { CashEntry, ExchangeRates, Holding, HoldingAssetType, QuoteData } from "./types";
+import type { CashEntry, ExchangeRates, Holding, HoldingAssetType, ManualAssetType, QuoteData } from "./types";
 import { convertCurrency, convertToEUR, resolveQuoteCurrency } from "./utils";
 
 export interface AllocationSlice {
@@ -9,17 +9,25 @@ export interface AllocationSlice {
   color: string;
 }
 
-const ALLOCATION_COLORS: Record<HoldingAssetType | "cash", string> = {
+type AllocationKey = HoldingAssetType | ManualAssetType;
+
+const ALLOCATION_COLORS: Record<AllocationKey, string> = {
   stock: "#6366f1",
   etf: "#10b981",
   crypto: "#f59e0b",
+  real_estate: "#3b82f6",
+  savings: "#06b6d4",
+  pension: "#8b5cf6",
   cash: "#1e293b",
 };
 
-const ALLOCATION_LABELS: Record<HoldingAssetType | "cash", string> = {
+const ALLOCATION_LABELS: Record<AllocationKey, string> = {
   stock: "Stocks",
   etf: "ETFs",
   crypto: "Crypto",
+  real_estate: "Real Estate",
+  savings: "Savings",
+  pension: "Pension",
   cash: "Cash",
 };
 
@@ -59,17 +67,15 @@ export function computeAllocationByType(
     buckets[type] = (buckets[type] || 0) + valueBase;
   }
 
-  let cashTotal = 0;
   for (const c of cashEntries) {
-    cashTotal += convertCurrency(c.amountEUR, "EUR", baseCurrency, exchangeRates);
-  }
-  if (cashTotal > 0) {
-    buckets["cash"] = cashTotal;
+    const assetType: ManualAssetType = c.type ?? "cash";
+    const valueBase = convertCurrency(c.amountEUR, "EUR", baseCurrency, exchangeRates);
+    buckets[assetType] = (buckets[assetType] || 0) + valueBase;
   }
 
   const grandTotal = Object.values(buckets).reduce((s, v) => s + v, 0);
 
-  const order: (HoldingAssetType | "cash")[] = ["stock", "etf", "crypto", "cash"];
+  const order: AllocationKey[] = ["stock", "etf", "crypto", "real_estate", "savings", "pension", "cash"];
   return order
     .filter((key) => (buckets[key] ?? 0) > 0)
     .map((key) => ({

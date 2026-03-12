@@ -20,7 +20,8 @@ export type UpsellSurface =
   | "portfolio_history_locked"
   | "crypto_pro_locked"
   | "crypto_portfolio"
-  | "ai_import";
+  | "ai_import"
+  | "net_worth_locked";
 
 export interface UpsellConfig {
   subtitleKey: TranslationKey;
@@ -241,6 +242,26 @@ const UPSELL_BY_SURFACE: Record<UpsellSurface, UpsellConfig> = {
     freeItems: DEFAULT_FREE_ITEMS,
     starterItems: DEFAULT_STARTER_ITEMS,
     proItems: DEFAULT_PRO_ITEMS,
+  },
+  net_worth_locked: {
+    subtitleKey: "upsellCompareSubtitleLocked",
+    attemptedActionKey: "upsellAttemptNetWorth",
+    feature: "net-worth",
+    freeItems: [
+      "upsellFreeItemYahoo",
+      "upsellFreeItemBasicCharts",
+      "upsellFreeItemAiLimited",
+    ],
+    starterItems: [
+      "upsellStarterItemNetWorth",
+      "upsellStarterItemMoreHoldings",
+      "upsellStarterItemMoreAi",
+    ],
+    proItems: [
+      "upsellProItemUnlimitedAssets",
+      "upsellProItemAlphaVantage",
+      "upsellProItemAiUnlimited",
+    ],
   },
 };
 

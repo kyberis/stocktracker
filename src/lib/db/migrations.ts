@@ -1097,6 +1097,28 @@ const MIGRATIONS: Migration[] = [
       }
     },
   },
+  {
+    version: 35,
+    description: "Add type, display_currency, display_amount, notes, valuation_date to cash_entries for net worth tracking",
+    up: async (client: Client) => {
+      const cols = await client.execute("PRAGMA table_info(cash_entries)");
+      const colNames = new Set(cols.rows.map((r) => str(r.name)));
+      for (const [col, ddl] of [
+        ["type", "ALTER TABLE cash_entries ADD COLUMN type TEXT NOT NULL DEFAULT 'cash'"],
+        ["display_currency", "ALTER TABLE cash_entries ADD COLUMN display_currency TEXT NOT NULL DEFAULT 'EUR'"],
+        ["display_amount", "ALTER TABLE cash_entries ADD COLUMN display_amount REAL NOT NULL DEFAULT 0"],
+        ["notes", "ALTER TABLE cash_entries ADD COLUMN notes TEXT NOT NULL DEFAULT ''"],
+        ["valuation_date", "ALTER TABLE cash_entries ADD COLUMN valuation_date TEXT NOT NULL DEFAULT ''"],
+      ] as const) {
+        if (!colNames.has(col)) {
+          await client.execute({ sql: ddl });
+        }
+      }
+      await client.execute({
+        sql: "UPDATE cash_entries SET display_currency = 'EUR', display_amount = amount_eur WHERE type = 'cash' AND display_amount = 0",
+      });
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

@@ -13,7 +13,7 @@ import { SUPPORTED_PORTFOLIO_CURRENCIES } from "@/lib/db/helpers";
 
 const CURRENCY_SELECT_OPTIONS = SUPPORTED_PORTFOLIO_CURRENCIES;
 
-function AddMenu({ onAddStock, onAddCrypto }: { onAddStock: () => void; onAddCrypto?: () => void }) {
+function AddMenu({ onAddStock, onAddCrypto, onAddAsset }: { onAddStock: () => void; onAddCrypto?: () => void; onAddAsset?: () => void }) {
   const { t } = useI18n();
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
@@ -28,7 +28,9 @@ function AddMenu({ onAddStock, onAddCrypto }: { onAddStock: () => void; onAddCry
     return () => document.removeEventListener("mousedown", close);
   }, [open]);
 
-  if (!onAddCrypto) {
+  const showDropdown = !!onAddCrypto || !!onAddAsset;
+
+  if (!showDropdown) {
     return (
       <button onClick={onAddStock} className="btn-primary text-sm flex items-center gap-1.5 py-1.5" aria-label={t("addStock")}>
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden="true">
@@ -66,14 +68,26 @@ function AddMenu({ onAddStock, onAddCrypto }: { onAddStock: () => void; onAddCry
             </svg>
             {t("addStock")}
           </button>
-          <button
-            onClick={() => { onAddCrypto(); setOpen(false); }}
-            className="w-full text-left px-3 py-2.5 text-sm flex items-center gap-2.5 text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
-          >
-            <span className="w-4 h-4 rounded-full bg-[#f7931a] flex items-center justify-center text-white text-[10px] font-bold shrink-0">₿</span>
-            {t("addCrypto")}
-            <TierFeatureBadge requiredPlan="pro" size="xs" className="ml-auto" />
-          </button>
+          {onAddCrypto && (
+            <button
+              onClick={() => { onAddCrypto(); setOpen(false); }}
+              className="w-full text-left px-3 py-2.5 text-sm flex items-center gap-2.5 text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+            >
+              <span className="w-4 h-4 rounded-full bg-[#f7931a] flex items-center justify-center text-white text-[10px] font-bold shrink-0">₿</span>
+              {t("addCrypto")}
+              <TierFeatureBadge requiredPlan="pro" size="xs" className="ml-auto" />
+            </button>
+          )}
+          {onAddAsset && (
+            <button
+              onClick={() => { onAddAsset(); setOpen(false); }}
+              className="w-full text-left px-3 py-2.5 text-sm flex items-center gap-2.5 text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+            >
+              <span className="w-4 h-4 flex items-center justify-center text-sm shrink-0">🏠</span>
+              {t("addManualAsset")}
+              <TierFeatureBadge requiredPlan="starter" size="xs" className="ml-auto" />
+            </button>
+          )}
         </div>
       )}
     </div>
@@ -83,6 +97,7 @@ function AddMenu({ onAddStock, onAddCrypto }: { onAddStock: () => void; onAddCry
 interface DashboardToolbarProps {
   onAddStock: () => void;
   onAddCrypto?: () => void;
+  onAddAsset?: () => void;
   onOpenSettings: () => void;
   onImportPortfolio?: () => void;
   onResetPortfolio?: () => void;
@@ -91,6 +106,7 @@ interface DashboardToolbarProps {
 export default function DashboardToolbar({
   onAddStock,
   onAddCrypto,
+  onAddAsset,
   onOpenSettings,
   onResetPortfolio,
 }: DashboardToolbarProps) {
@@ -427,7 +443,7 @@ export default function DashboardToolbar({
             </button>
           )}
 
-          <AddMenu onAddStock={onAddStock} onAddCrypto={onAddCrypto} />
+          <AddMenu onAddStock={onAddStock} onAddCrypto={onAddCrypto} onAddAsset={onAddAsset} />
         </div>
       </div>
     </div>
