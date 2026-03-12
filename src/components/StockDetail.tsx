@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSettings } from "@/lib/settings-context";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useI18n } from "@/lib/i18n";
@@ -47,11 +48,23 @@ interface StockDetailProps {
 }
 
 export default function StockDetail({ ticker, exchange }: StockDetailProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { hasGlobalAvKey, getApiHeaders } = useSettings();
   const { holdings, quotes, exchangeRates } = usePortfolio();
   const { user } = useAuth();
   const { t, language } = useI18n();
   const { stealthMode } = useStealthMode();
+
+  const fromScreener = searchParams.get("from") === "screener";
+
+  const handleBack = () => {
+    if (fromScreener) {
+      router.push("/tools#screener");
+    } else {
+      router.back();
+    }
+  };
 
   const holding = holdings.find(
     (h) =>
@@ -255,6 +268,17 @@ export default function StockDetail({ ticker, exchange }: StockDetailProps) {
 
   return (
     <main className="max-w-6xl mx-auto px-4 py-6 space-y-6">
+        {/* Back button */}
+        <button
+          onClick={handleBack}
+          className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white transition-colors -mb-3"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+          </svg>
+          {fromScreener ? t("screenerNav") : t("backToPortfolio")}
+        </button>
+
         {/* Stock Identity */}
         <div className="card px-6 py-5">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">

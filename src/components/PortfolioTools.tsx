@@ -37,6 +37,13 @@ const ALL_TABS: { key: Tab; icon: string }[] = [
   { key: "screener", icon: "M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" },
 ];
 
+function getInitialTab(): Tab {
+  if (typeof window === "undefined") return "transactions";
+  const hash = window.location.hash.replace("#", "");
+  const valid: Tab[] = ["transactions", "dividends", "performance", "taxonomy", "rebalancing", "accounts", "watchlist", "alerts", "screener"];
+  return valid.includes(hash as Tab) ? (hash as Tab) : "transactions";
+}
+
 export default function PortfolioTools() {
   const { t } = useI18n();
   const { user } = useAuth();
@@ -45,8 +52,23 @@ export default function PortfolioTools() {
     toolTransactionsEnabled, toolDividendsEnabled, toolPerformanceEnabled,
     toolTaxonomyEnabled, toolRebalancingEnabled, toolAccountsEnabled, toolWatchlistEnabled,
   } = useSettings();
-  const [activeTab, setActiveTab] = useState<Tab>("transactions");
+  const [activeTab, setActiveTabState] = useState<Tab>(getInitialTab);
   const isPaid = user?.plan === "starter" || user?.plan === "pro";
+
+  const setActiveTab = (tab: Tab) => {
+    setActiveTabState(tab);
+    window.history.replaceState(null, "", `#${tab}`);
+  };
+
+  useEffect(() => {
+    const onHashChange = () => {
+      const hash = window.location.hash.replace("#", "");
+      const valid: Tab[] = ["transactions", "dividends", "performance", "taxonomy", "rebalancing", "accounts", "watchlist", "alerts", "screener"];
+      if (valid.includes(hash as Tab)) setActiveTabState(hash as Tab);
+    };
+    window.addEventListener("hashchange", onHashChange);
+    return () => window.removeEventListener("hashchange", onHashChange);
+  }, []);
 
   const toolFlagMap: Record<Tab, boolean> = {
     transactions: toolTransactionsEnabled,
