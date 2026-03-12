@@ -25,6 +25,7 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
 
   if (request.method !== "GET") return;
+  if (url.origin !== self.location.origin) return;
   if (url.pathname.startsWith("/api/")) return;
 
   event.respondWith(
