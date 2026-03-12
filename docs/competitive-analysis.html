@@ -550,7 +550,7 @@
 <header>
   <h1>Competitive Analysis &amp; Market Opportunity</h1>
   <p class="subtitle">Deep analysis of trefolio against 10+ portfolio trackers worldwide &mdash; features, UI/UX, pricing, investor priorities, and strategic opportunities.</p>
-  <span class="date-badge" aria-label="Report date">March 12, 2026 &mdash; v1.22</span>
+  <span class="date-badge" aria-label="Report date">March 12, 2026 &mdash; v1.23</span>
 </header>
 
 <nav aria-label="Report sections">
@@ -596,7 +596,7 @@
           <td>Pre-launch</td>
           <td>Free &ndash; &euro;60/yr</td>
           <td>Europe</td>
-          <td>35 languages, AI analysis, hardware device</td>
+          <td>35 languages, AI analysis, hardware device, net worth</td>
         </tr>
         <tr>
           <td><strong>Getquin</strong></td>
@@ -967,7 +967,7 @@
         </tr>
         <tr>
           <td>Real estate / alts</td>
-          <td><span class="cross" aria-label="No">&#10007;</span></td>
+          <td><span class="partial" aria-label="Partial">&#9679;</span> manual</td>
           <td><span class="partial" aria-label="Partial">&#9679;</span></td>
           <td><span class="check" aria-label="Yes">&#10003;</span></td>
           <td><span class="cross" aria-label="No">&#10007;</span></td>
@@ -1350,12 +1350,12 @@
           <td><span class="badge badge-high">High</span></td>
           <td>Getquin&rsquo;s social layer is their #1 moat. Creates network effects and organic growth.</td>
         </tr>
-        <tr>
+        <tr style="opacity:0.5;text-decoration:line-through;">
           <td><strong>Net worth / alternative assets</strong></td>
           <td>Kubera, Snowball, Getquin</td>
           <td><span class="badge badge-med">Medium</span></td>
           <td><span class="badge badge-low">Low</span></td>
-          <td>Manual real estate, savings, pensions. Low effort, high perceived value.</td>
+          <td><strong style="color:var(--emerald);text-decoration:none;">CLOSED v1.23</strong> &mdash; Manual entries for real estate, savings, pensions. Net Worth Overview card with category breakdown, donut chart, and multi-currency support.</td>
         </tr>
         <tr style="opacity:0.5;text-decoration:line-through;">
           <td><strong>Event calendars (earnings, IPO, economic)</strong></td>
@@ -1416,6 +1416,16 @@
       </thead>
       <tbody>
         <tr>
+          <td><strong>Net worth tracking</strong></td>
+          <td>Manual entries for real estate, savings, pensions. Net Worth Overview card with category breakdown and donut chart. Cash grouped by category with subtotals. Asset allocation expanded.</td>
+          <td><span class="badge badge-lead">v1.23</span></td>
+        </tr>
+        <tr>
+          <td><strong>Guided theme tour</strong></td>
+          <td>First-time walkthrough of main dashboard sections when switching to a new theme. Improves onboarding and theme discoverability.</td>
+          <td><span class="badge badge-lead">v1.23</span></td>
+        </tr>
+        <tr>
           <td><strong>Multi-currency (5 &rarr; 21)</strong></td>
           <td>21 currencies, dynamic FX fetching, changeable base currency, FX impact indicator, default preference in Settings</td>
           <td><span class="badge badge-lead">v1.22</span></td>
@@ -1461,7 +1471,7 @@
 
   <div class="callout callout-amber">
     <div class="callout-title">Highest ROI Gaps Still Open</div>
-    <strong>European tax reports</strong> (most defensible moat, no competitor owns EU tax), <strong>expanded broker sync to 100+</strong> (high impact on onboarding), <strong>net worth tracking</strong> (low effort, high perceived value), and <strong>stock screener</strong> (discovery drives engagement). Social/community remains the hardest gap to close due to Getquin&rsquo;s network effect moat.
+    <strong>European tax reports</strong> (most defensible moat, no competitor owns EU tax), <strong>expanded broker sync to 100+</strong> (high impact on onboarding), and <strong>stock screener</strong> (discovery drives engagement). Social/community remains the hardest gap to close due to Getquin&rsquo;s network effect moat. <span style="color:var(--emerald);">Net worth tracking closed in v1.23.</span>
   </div>
 </section>
 
@@ -1531,6 +1541,12 @@
       <div class="card-label">Current Moat</div>
       <div class="card-title">Event Calendars</div>
       <div class="card-body">Earnings reports, economic events, and IPO calendar with portfolio-aware highlights. Interactive month grid and chronological list. Tiered access: Free sees own holdings, Bifolio adds full market, Trefolio unlocks IPO calendar. Closes the Stock Events gap.</div>
+    </div>
+
+    <div class="card" style="border-top: 3px solid var(--emerald);">
+      <div class="card-label">Current Moat</div>
+      <div class="card-title">Net Worth Tracking</div>
+      <div class="card-body">Manual entries for real estate, savings accounts, and pension/retirement funds with multi-currency support. Net Worth Overview card on dashboard with total value, category breakdown, and donut chart. Cash section grouped by category with subtotals. Partially closes the gap with Kubera and Getquin; still missing automated valuations and exotic asset classes (art, cars, NFTs).</div>
     </div>
 
     <div class="card" style="border-top: 3px solid var(--violet);">
@@ -1615,7 +1631,7 @@
 
   <div class="callout callout-emerald">
     <div class="callout-title">Sweet Spot</div>
-    trefolio is the only product in the <strong>simple + affordable quadrant</strong> that also offers AI capabilities, 35-language support, 21-currency multi-currency, 4 dashboard themes, and a hardware device. Stock Events shares the simplicity but lacks depth. Getquin is nearby but 2.5&times; more expensive at the top tier. Portfolio Performance is free but desktop-only with a steep learning curve.
+    trefolio is the only product in the <strong>simple + affordable quadrant</strong> that also offers AI capabilities, 35-language support, 21-currency multi-currency, net worth tracking, 4 dashboard themes, and a hardware device. Stock Events shares the simplicity but lacks depth. Getquin is nearby but 2.5&times; more expensive at the top tier. Portfolio Performance is free but desktop-only with a steep learning curve.
   </div>
 </section>
 
@@ -1665,10 +1681,11 @@
 
     <div class="timeline-item short">
       <div class="timeline-header">
-        <span class="timeline-title">Net worth tracking (manual)</span>
+        <span class="timeline-title" style="text-decoration:line-through;opacity:0.6;">Net worth tracking (manual)</span>
+        <span class="badge badge-lead">DONE v1.23</span>
       </div>
-      <div class="timeline-desc">Add manual entries for real estate, savings accounts, and pensions. Low development cost (extend existing cash model), high perceived value. Getquin and Kubera prove this drives engagement.</div>
-      <span class="timeline-impact impact-med">Medium Impact &middot; Low Effort</span>
+      <div class="timeline-desc">Manual entries for real estate, savings accounts, and pension/retirement funds. Net Worth Overview card with category breakdown and donut chart. Cash section grouped by category with subtotals. Asset allocation expanded to include all asset types.</div>
+      <span class="timeline-impact impact-med">Shipped</span>
     </div>
   </div>
 
@@ -1792,6 +1809,16 @@
       </thead>
       <tbody>
         <tr>
+          <td><strong>Net worth tracking</strong></td>
+          <td>Manual real estate, savings, pensions. Net Worth Overview card, category grouping, expanded donut chart</td>
+          <td>v1.23</td>
+        </tr>
+        <tr>
+          <td><strong>Guided theme tour</strong></td>
+          <td>First-time walkthrough of dashboard sections when switching themes</td>
+          <td>v1.23</td>
+        </tr>
+        <tr>
           <td><strong>Multi-currency expansion</strong></td>
           <td>5 &rarr; 21 currencies, dynamic FX, changeable base currency, FX impact indicator, default preference</td>
           <td>v1.22</td>
@@ -1857,7 +1884,7 @@
 
   <div class="callout callout-emerald">
     <div class="callout-title">Execution Velocity</div>
-    12 major initiatives shipped from v1.0 to v1.22 in under two weeks. The most impactful gap closures: <strong>multi-currency</strong> (5&rarr;21, approaching leader parity), <strong>broker sync democratization</strong> (Pro-only &rarr; Bifolio+), and <strong>event calendars</strong> (matching Stock Events). Remaining high-impact gaps: European tax reports, social/community, and broker breadth expansion to 100+.
+    14 major initiatives shipped from v1.0 to v1.23 in under two weeks. The most impactful gap closures: <strong>net worth tracking</strong> (real estate, savings, pensions), <strong>multi-currency</strong> (5&rarr;21, approaching leader parity), <strong>broker sync democratization</strong> (Pro-only &rarr; Bifolio+), and <strong>event calendars</strong> (matching Stock Events). Remaining high-impact gaps: European tax reports, social/community, and broker breadth expansion to 100+.
   </div>
 </section>
 
@@ -1911,22 +1938,22 @@
 
     <div class="card" style="border-left: 3px solid var(--teal);">
       <div class="card-label" style="color:var(--teal);">Rapid Gap Closure</div>
-      <div class="card-title">8+ Gaps Closed (v1.0 &rarr; v1.22)</div>
-      <div class="card-body">Multi-currency (5&rarr;21), dashboard themes (4 layouts), event calendars, broker sync for all tiers, broker reconnect UX, market move callouts, crypto portfolio, and native mobile apps &mdash; all shipped. Remaining high-impact gaps: European tax reports, social/community, broker breadth (100+), and stock screener.</div>
+      <div class="card-title">10+ Gaps Closed (v1.0 &rarr; v1.23)</div>
+      <div class="card-body">Net worth tracking (real estate, savings, pensions), guided theme tour, multi-currency (5&rarr;21), dashboard themes (4 layouts), event calendars, broker sync for all tiers, broker reconnect UX, market move callouts, crypto portfolio, and native mobile apps &mdash; all shipped. Remaining high-impact gaps: European tax reports, social/community, broker breadth (100+), and stock screener.</div>
     </div>
   </div>
 
   <div class="callout callout-emerald" style="margin-top:1.5rem;">
-    <div class="callout-title">Executive Summary (Updated v1.22)</div>
-    trefolio enters a $2.5B+ market with clear differentiation: <strong>35 languages</strong> (3&times; more than any competitor), <strong>AI analysis in native language</strong> (unique), <strong>trefolio Leaf hardware</strong> (category-first), <strong>21-currency multi-currency</strong> (approaching leader parity), <strong>4 dashboard themes</strong> (unique personalization), <strong>market move callouts</strong> (unique engagement driver), and <strong>aggressive pricing</strong> (2&ndash;5&times; cheaper). Since the original analysis, 8+ competitive gaps have been closed including broker sync democratization, event calendars, crypto, and native mobile apps. The primary remaining challenges are broker sync breadth (Getquin: 30K+ vs trefolio: 20+), social community moat (Getquin: 500K+ users), and European tax reports (unoccupied niche). The highest-ROI strategic moves are: <strong>(1)</strong> European tax reports to own the EU tax niche, <strong>(2)</strong> multi-language SEO blitz for uncontested long-tail queries, and <strong>(3)</strong> expansion of broker connections to 100+. The AI leadership window is 12&ndash;18 months &mdash; speed remains essential.
+    <div class="callout-title">Executive Summary (Updated v1.23)</div>
+    trefolio enters a $2.5B+ market with clear differentiation: <strong>35 languages</strong> (3&times; more than any competitor), <strong>AI analysis in native language</strong> (unique), <strong>trefolio Leaf hardware</strong> (category-first), <strong>net worth tracking</strong> (real estate, savings, pensions), <strong>21-currency multi-currency</strong> (approaching leader parity), <strong>4 dashboard themes</strong> (unique personalization), <strong>market move callouts</strong> (unique engagement driver), and <strong>aggressive pricing</strong> (2&ndash;5&times; cheaper). Since the original analysis, 10+ competitive gaps have been closed including net worth tracking, guided theme tour, broker sync democratization, event calendars, crypto, and native mobile apps. The primary remaining challenges are broker sync breadth (Getquin: 30K+ vs trefolio: 20+), social community moat (Getquin: 500K+ users), and European tax reports (unoccupied niche). The highest-ROI strategic moves are: <strong>(1)</strong> European tax reports to own the EU tax niche, <strong>(2)</strong> multi-language SEO blitz for uncontested long-tail queries, and <strong>(3)</strong> expansion of broker connections to 100+. The AI leadership window is 12&ndash;18 months &mdash; speed remains essential.
   </div>
 </section>
 
 </main>
 
 <footer>
-  <p>trefolio Competitive Analysis &mdash; March 12, 2026 (v1.22) &mdash; Internal Document</p>
-  <p style="margin-top:0.35rem;">Data sourced from public pricing pages, app store reviews, product documentation, and market research reports. Updated to reflect features shipped through v1.22.</p>
+  <p>trefolio Competitive Analysis &mdash; March 12, 2026 (v1.23) &mdash; Internal Document</p>
+  <p style="margin-top:0.35rem;">Data sourced from public pricing pages, app store reviews, product documentation, and market research reports. Updated to reflect features shipped through v1.23.</p>
 </footer>
 
 </body>
