@@ -227,6 +227,18 @@ export async function getSnapTradeBrokerSyncs(userId: string): Promise<SnapTrade
   }));
 }
 
+export async function deleteSnapTradeBrokerSync(
+  userId: string,
+  brokerageAuthorizationId: string,
+): Promise<boolean> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: "DELETE FROM snaptrade_broker_syncs WHERE user_id = ? AND brokerage_authorization_id = ?",
+    args: [userId, brokerageAuthorizationId],
+  });
+  return (result.rowsAffected ?? 0) > 0;
+}
+
 export async function upsertSnapTradeBrokerSync(
   userId: string,
   brokerageAuthorizationId: string,

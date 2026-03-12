@@ -189,6 +189,7 @@ export {
   getSnapTradeConnectionsPendingDeletion,
   getSnapTradeBrokerSyncs,
   upsertSnapTradeBrokerSync,
+  deleteSnapTradeBrokerSync,
   setSnapTradeNeedsAttention,
   getSnapTradeNeedsAttention,
   listActiveSnapTradeConnections,
@@ -237,3 +238,13 @@ export {
   listCalendarEvents,
   listCalendarEventsByType,
 } from "./calendar-events";
+
+export type { ScreenerCacheRow, ScreenerFilters, ScreenerResponse } from "./screener";
+export {
+  queryScreener,
+  upsertScreenerCache,
+  getScreenerCacheCount,
+  getScreenerDistinctSectors,
+  getScreenerDistinctCountries,
+  getScreenerDistinctExchanges,
+} from "./screener";

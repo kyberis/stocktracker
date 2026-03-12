@@ -38,6 +38,12 @@ const NAV_LINKS = [
     tierBadge: "pro" as const,
   },
   {
+    href: "/screener",
+    labelKey: "screenerNav" as const,
+    match: (p: string) => p === "/screener",
+    tierBadge: "pro" as const,
+  },
+  {
     href: "/economic-indicators",
     labelKey: "indicatorsNav" as const,
     match: (p: string) => p === "/economic-indicators",

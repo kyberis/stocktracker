@@ -1170,6 +1170,46 @@ const MIGRATIONS: Migration[] = [
       });
     },
   },
+  {
+    version: 39,
+    description: "Create screener_cache table for stock screener feature",
+    up: async (client: Client) => {
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS screener_cache (
+          symbol TEXT PRIMARY KEY,
+          short_name TEXT,
+          sector TEXT,
+          industry TEXT,
+          country TEXT,
+          exchange TEXT,
+          currency TEXT,
+          market_cap REAL,
+          pe_ratio REAL,
+          forward_pe REAL,
+          dividend_yield REAL,
+          dividend_per_share REAL,
+          eps REAL,
+          beta REAL,
+          profit_margin REAL,
+          return_on_equity REAL,
+          fifty_two_week_high REAL,
+          fifty_two_week_low REAL,
+          regular_market_price REAL,
+          regular_market_change_percent REAL,
+          analyst_strong_buy INTEGER,
+          analyst_buy INTEGER,
+          analyst_hold INTEGER,
+          analyst_sell INTEGER,
+          analyst_strong_sell INTEGER,
+          updated_at TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_screener_cache_sector ON screener_cache(sector);
+        CREATE INDEX IF NOT EXISTS idx_screener_cache_dividend_yield ON screener_cache(dividend_yield);
+        CREATE INDEX IF NOT EXISTS idx_screener_cache_pe_ratio ON screener_cache(pe_ratio);
+        CREATE INDEX IF NOT EXISTS idx_screener_cache_market_cap ON screener_cache(market_cap);
+      `);
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

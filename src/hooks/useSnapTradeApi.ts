@@ -45,6 +45,7 @@ export interface UseSnapTradeApiReturn {
   fetchBroker: (brokerConnectionId: string, portfolioId?: string | null, startDate?: string | null) => Promise<void>;
   resync: () => Promise<void>;
   disconnect: () => Promise<void>;
+  disconnectBroker: (brokerConnectionId: string) => Promise<void>;
   importAll: (portfolioId?: string | null) => Promise<void>;
   removeTransaction: (idx: number) => void;
   reset: () => void;
@@ -380,8 +381,25 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
       await fetch("/api/snaptrade", { method: "POST", body: form });
       setConnection({ connected: false });
       setBrokerSyncs([]);
+      setBrokerageConnections([]);
       setTransactions([]);
       setStep("idle");
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const disconnectBroker = useCallback(async (brokerConnectionId: string) => {
+    try {
+      const form = new FormData();
+      form.append("action", "disconnect-broker");
+      form.append("brokerConnectionId", brokerConnectionId);
+      const res = await fetch("/api/snaptrade", { method: "POST", body: form });
+      if (res.ok) {
+        setBrokerageConnections((prev) => prev.filter((c) => c.id !== brokerConnectionId));
+        setBrokerSyncs((prev) => prev.filter((s) => s.brokerageAuthorizationId !== brokerConnectionId));
+        setActiveBrokerCount((prev) => Math.max(0, prev - 1));
+      }
     } catch {
       // ignore
     }
@@ -508,6 +526,7 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
     fetchBroker,
     resync,
     disconnect,
+    disconnectBroker,
     importAll,
     removeTransaction,
     reset,

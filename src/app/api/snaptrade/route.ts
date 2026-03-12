@@ -14,6 +14,7 @@ import {
   trackEvent,
   getSnapTradeBrokerSyncs,
   upsertSnapTradeBrokerSync,
+  deleteSnapTradeBrokerSync,
   setSnapTradeNeedsAttention,
   getSnapTradeNeedsAttention,
 } from "@/lib/db";
@@ -26,6 +27,7 @@ import {
   listBrokerageConnections,
   listAccounts,
   listBrokerages,
+  removeBrokerageConnection,
   SnapTradeClientError,
 } from "@/lib/snaptrade-client";
 import type { ExtractedTransaction } from "@/hooks/import-types";
@@ -45,7 +47,8 @@ import type { SubscriptionPlan } from "@/lib/types";
  *   connect-url       — Generate Connection Portal redirect URL
  *   reconnect-url     — Generate reconnect portal URL for a disabled connection
  *   fetch             — Pull holdings from all connected accounts
- *   disconnect        — Remove saved SnapTrade connection
+ *   disconnect        — Remove saved SnapTrade connection (all brokers)
+ *   disconnect-broker — Remove a single brokerage connection
  */
 export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
@@ -409,7 +412,40 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
     }
   }
 
-  /* ── Disconnect ── */
+  /* ── Disconnect single broker ── */
+  if (action === "disconnect-broker") {
+    const brokerConnectionId = formData.get("brokerConnectionId") as string;
+    if (!brokerConnectionId) {
+      return NextResponse.json(
+        { error: "Missing brokerConnectionId." },
+        { status: 400 },
+      );
+    }
+
+    const conn = await getSnapTradeConnection(session.userId);
+    const userSecret = conn ? await getSnapTradeConnectionSecret(session.userId) : null;
+
+    if (!conn || !userSecret) {
+      return NextResponse.json(
+        { error: "No SnapTrade connection found." },
+        { status: 400 },
+      );
+    }
+
+    try {
+      await removeBrokerageConnection(conn.snapTradeUserId, userSecret, brokerConnectionId);
+    } catch {
+      // Connection may already be removed on SnapTrade side; continue with local cleanup
+    }
+
+    await deleteSnapTradeBrokerSync(session.userId, brokerConnectionId);
+
+    trackEvent(session.userId, "snaptrade_disconnect_broker", { brokerConnectionId });
+
+    return NextResponse.json({ disconnected: true, brokerConnectionId });
+  }
+
+  /* ── Disconnect all ── */
   if (action === "disconnect") {
     const conn = await getSnapTradeConnection(session.userId);
     if (conn) {

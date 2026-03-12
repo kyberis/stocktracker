@@ -40,6 +40,7 @@ const PRO_FEATURES = new Set<SubscriptionFeature>([
   "crypto-pro",
   "crypto-portfolio",
   "event-calendar-ipo",
+  "screener",
 ]);
 
 export interface EntitlementInput {

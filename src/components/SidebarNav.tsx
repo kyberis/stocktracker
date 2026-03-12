@@ -12,6 +12,7 @@ const NAV_LINKS = [
   { href: "/import", labelKey: "importNav" as const, icon: "import" },
   { href: "/tools", labelKey: "toolsNav" as const, icon: "tools" },
   { href: "/crypto", labelKey: "cryptoNav" as const, icon: "crypto", tierBadge: "pro" as const },
+  { href: "/screener", labelKey: "screenerNav" as const, icon: "screener", tierBadge: "pro" as const },
   { href: "/economic-indicators", labelKey: "indicatorsNav" as const, icon: "indicators", tierBadge: "pro" as const },
 ];
 
@@ -41,6 +42,12 @@ const ICONS: Record<string, React.ReactNode> = {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-4 h-4">
       <circle cx="12" cy="12" r="9" />
       <path strokeLinecap="round" d="M9.5 9h3a2 2 0 010 4h-3m0-4v4m0 0h3.5a2 2 0 010 4H9.5m0-4v4m2-11v1m0 10v1" />
+    </svg>
+  ),
+  screener: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-4 h-4">
+      <circle cx="11" cy="11" r="8" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-4.3-4.3" />
     </svg>
   ),
   indicators: (

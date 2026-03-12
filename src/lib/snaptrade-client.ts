@@ -48,6 +48,24 @@ export interface AvailableBrokerage {
   logoUrl: string | null;
 }
 
+export async function removeBrokerageConnection(
+  userId: string,
+  userSecret: string,
+  connectionId: string,
+): Promise<void> {
+  const client = getClient();
+  try {
+    await client.connections.removeBrokerageAuthorization({
+      authorizationId: connectionId,
+      userId,
+      userSecret,
+    });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    throw new SnapTradeClientError(`Failed to remove brokerage connection: ${msg}`);
+  }
+}
+
 export async function listBrokerages(): Promise<AvailableBrokerage[]> {
   const client = getClient();
   try {

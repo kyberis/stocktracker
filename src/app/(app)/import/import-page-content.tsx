@@ -529,20 +529,36 @@ export default function ImportPageContent() {
                                       </p>
                                     </div>
                                   </div>
-                                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-                                    isDisabled
-                                      ? "bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400"
-                                      : neverSynced
-                                        ? "bg-blue-100 dark:bg-blue-500/15 text-blue-700 dark:text-blue-400"
-                                        : "bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
-                                  }`}>
-                                    {isDisabled ? (
-                                      <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
-                                    ) : (
-                                      <span className={`w-1.5 h-1.5 rounded-full ${neverSynced ? "bg-blue-500" : "bg-emerald-500"}`} />
-                                    )}
-                                    {isDisabled ? t("brokerSyncStatusExpired") || "Expired" : neverSynced ? t("brokerSyncStatusNew") || "New" : t("brokerSyncStatusActive") || "Active"}
-                                  </span>
+                                  <div className="flex items-center gap-2">
+                                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                                      isDisabled
+                                        ? "bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400"
+                                        : neverSynced
+                                          ? "bg-blue-100 dark:bg-blue-500/15 text-blue-700 dark:text-blue-400"
+                                          : "bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
+                                    }`}>
+                                      {isDisabled ? (
+                                        <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                                      ) : (
+                                        <span className={`w-1.5 h-1.5 rounded-full ${neverSynced ? "bg-blue-500" : "bg-emerald-500"}`} />
+                                      )}
+                                      {isDisabled ? t("brokerSyncStatusExpired") || "Expired" : neverSynced ? t("brokerSyncStatusNew") || "New" : t("brokerSyncStatusActive") || "Active"}
+                                    </span>
+                                    <button
+                                      onClick={() => {
+                                        if (confirm((t("brokerSyncDisconnectBrokerConfirm") || "Disconnect {name}? You can reconnect it later.").replace("{name}", bs.brokerageName))) {
+                                          snapTradeApi.disconnectBroker(bs.brokerageAuthorizationId);
+                                        }
+                                      }}
+                                      className="p-1 rounded-md text-gray-400 hover:text-red-500 dark:text-slate-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+                                      aria-label={`${t("brokerSyncDisconnectBroker") || "Disconnect"} ${bs.brokerageName}`}
+                                      title={t("brokerSyncDisconnectBroker") || "Disconnect broker"}
+                                    >
+                                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M18.36 5.64a9 9 0 11-12.73 0" /><line x1="12" y1="2" x2="12" y2="12" />
+                                      </svg>
+                                    </button>
+                                  </div>
                                 </div>
 
                                 {/* Separator */}

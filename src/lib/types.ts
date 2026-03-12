@@ -26,7 +26,8 @@ export type SubscriptionFeature =
   | "event-calendar-earnings"
   | "event-calendar-economic"
   | "event-calendar-ipo"
-  | "net-worth";
+  | "net-worth"
+  | "screener";
 
 export type AlertCondition = "above" | "below";
 export type AlertType = "threshold" | "percent_change";

@@ -14,9 +14,22 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "1.24.0";
+export const CURRENT_VERSION = "1.25.0";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "1.25.0",
+    date: "2026-03-12",
+    title: "Stock Screener",
+    titleTranslations: { es: "Filtro de Acciones" },
+    changes: [
+      {
+        type: "feature",
+        text: "New stock screener lets you filter 600+ stocks by dividend yield, P/E ratio, sector, market cap, exchange, and country with preset strategies",
+        translations: { es: "Nuevo filtro de acciones que permite filtrar más de 600 acciones por dividendo, ratio P/E, sector, capitalización, bolsa y país con estrategias predefinidas" },
+      },
+    ],
+  },
   {
     version: "1.24.0",
     date: "2026-03-12",
