@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useI18n } from "@/lib/i18n";
@@ -76,9 +76,18 @@ export default function PortfolioReviewCard() {
     }
   }, [status, language, refreshUser]);
 
+  const hasHoldings = holdings.length > 0;
+
+  const autoRanRef = useRef(false);
+  useEffect(() => {
+    if (!autoRanRef.current && status === "idle" && isPro && hasHoldings && remaining > 0) {
+      autoRanRef.current = true;
+      runReview();
+    }
+  }, [status, isPro, hasHoldings, remaining, runReview]);
+
   if (!isPro) return null;
 
-  const hasHoldings = holdings.length > 0;
   const isRunning = status === "loading" || status === "streaming";
 
   return (
