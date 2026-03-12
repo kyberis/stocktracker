@@ -1423,6 +1423,9 @@ const en: TranslationStrings = {
   screenerDay: "Day",
   screenerAnalyst: "Analyst",
   screenerDisclaimer: "Screener data is for informational purposes only and does not constitute investment advice. Data may be delayed.",
+  screenerBannerTitle: "Discover Stocks",
+  screenerBannerDesc: "Filter by dividend yield, P/E, sector, and more",
+  screenerBannerCta: "Open Screener",
   upsellAttemptScreener: "Screen stocks by dividend yield, P/E ratio, sector, and more to find your next investment.",
   upsellProItemScreener: "Stock screener with fundamental filters",
 

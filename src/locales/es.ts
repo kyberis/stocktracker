@@ -1423,6 +1423,9 @@ const es: TranslationStrings = {
   screenerDay: "Día",
   screenerAnalyst: "Analista",
   screenerDisclaimer: "Los datos del filtro son solo informativos y no constituyen asesoramiento de inversión. Los datos pueden estar retrasados.",
+  screenerBannerTitle: "Descubre acciones",
+  screenerBannerDesc: "Filtra por dividendo, P/E, sector y más",
+  screenerBannerCta: "Abrir filtro",
   upsellAttemptScreener: "Filtra acciones por dividendo, P/E, sector y más para encontrar tu próxima inversión.",
   upsellProItemScreener: "Filtro de acciones con filtros fundamentales",
 
