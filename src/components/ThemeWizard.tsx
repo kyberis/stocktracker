@@ -7,7 +7,7 @@ import { useWizardSpotlight, type SpotlightRect } from "@/hooks/useWizardSpotlig
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import type { LayoutTheme } from "@/lib/types";
 
-const STORAGE_KEY = "trefolio_seen_themes";
+const STORAGE_KEY = "trefolio_tour_completed";
 const STEP_COUNT = 5;
 const AUTO_DISMISS_MS = 30_000;
 const PADDING = 8;
@@ -84,22 +84,17 @@ const STEPS: WizardStep[] = [
   },
 ];
 
-function getSeenThemes(): string[] {
+function isTourCompleted(): boolean {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
+    return localStorage.getItem(STORAGE_KEY) === "1";
   } catch {
-    return [];
+    return false;
   }
 }
 
-function markThemeSeen(theme: string) {
+function markTourCompleted() {
   try {
-    const seen = getSeenThemes();
-    if (!seen.includes(theme)) {
-      seen.push(theme);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(seen));
-    }
+    localStorage.setItem(STORAGE_KEY, "1");
   } catch {}
 }
 
@@ -255,8 +250,7 @@ export default function ThemeWizard() {
     themeRef.current = layoutTheme;
 
     const delay = setTimeout(() => {
-      const seen = getSeenThemes();
-      if (!seen.includes(layoutTheme)) {
+      if (!isTourCompleted()) {
         setStep(0);
         setActive(true);
       }
@@ -281,7 +275,7 @@ export default function ThemeWizard() {
 
   const dismiss = useCallback(() => {
     setActive(false);
-    markThemeSeen(themeRef.current);
+    markTourCompleted();
   }, []);
 
   const goNext = useCallback(() => {

@@ -24,6 +24,7 @@ export interface SessionPayload {
   mustChangePassword: boolean;
   plan: SubscriptionPlan;
   emailVerified: boolean;
+  onboardingCompleted: boolean;
 }
 
 export async function createSessionToken(payload: SessionPayload): Promise<string> {
@@ -47,6 +48,7 @@ export async function verifySessionToken(token: string): Promise<SessionPayload 
       mustChangePassword: Boolean(payload.mustChangePassword),
       plan: payload.plan === "pro" ? "pro" : "free",
       emailVerified: Boolean(payload.emailVerified),
+      onboardingCompleted: Boolean(payload.onboardingCompleted),
     };
   } catch {
     return null;

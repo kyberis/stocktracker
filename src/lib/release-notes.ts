@@ -14,15 +14,33 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "1.23.1";
+export const CURRENT_VERSION = "1.24.0";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "1.24.0",
+    date: "2026-03-12",
+    title: "Onboarding Wizard",
+    titleTranslations: { es: "Asistente de Configuración Inicial" },
+    changes: [
+      {
+        type: "feature",
+        text: "New onboarding wizard after email verification guides you through setting your name, default currency, tax residency, passkey, and Google account linking",
+        translations: { es: "Nuevo asistente de configuración tras la verificación de email que te guía para establecer tu nombre, moneda predeterminada, residencia fiscal, passkey y vinculación de cuenta de Google" },
+      },
+    ],
+  },
   {
     version: "1.23.1",
     date: "2026-03-12",
     title: "Multi-Broker Sync Fixes",
     titleTranslations: { es: "Correcciones de Sincronización Multi-Broker" },
     changes: [
+      {
+        type: "improvement",
+        text: "Theme fonts now load on demand — only the font for your active theme is downloaded, reducing page weight for most users",
+        translations: { es: "Las fuentes de los temas ahora se cargan bajo demanda — solo se descarga la fuente del tema activo, reduciendo el peso de la página para la mayoría de usuarios" },
+      },
       {
         type: "fix",
         text: "Fixed automatic 6-hour broker sync failing silently due to missing cron authentication on the bulk import endpoint",

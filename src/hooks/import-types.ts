@@ -26,6 +26,7 @@ export interface ExtractedTransaction {
   fees: number;
   currency: string;
   sourceRef?: string;
+  brokerName?: string;
 }
 
 export interface ExtractedHolding {
@@ -41,6 +42,13 @@ export interface ExtractedHolding {
 export interface CashBalance {
   currency: string;
   amount: number;
+}
+
+export interface BrokerageConnection {
+  id: string;
+  brokerageName: string;
+  disabled: boolean;
+  disabledDate: string | null;
 }
 
 export interface DisabledBrokerageConnection {

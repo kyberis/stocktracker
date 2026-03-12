@@ -91,7 +91,7 @@ export default function AppNav({ onWhatsNew, hasNewRelease }: AppNavProps) {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  className={`inline-flex items-center whitespace-nowrap px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                     active
                       ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
                       : "text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-800"

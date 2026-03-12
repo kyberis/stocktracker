@@ -31,7 +31,7 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-primary, var(--font-geist-sans, -apple-system, sans-serif));
+  font-family: var(--font-geist-sans, -apple-system, sans-serif);
 }
 
 /* ━━━ Theme: Terminal ━━━━━━━━━━━━━━━━━━━━━ */
@@ -165,7 +165,6 @@ html.theme-terminal {
 }
 
 html.theme-terminal body {
-  font-family: 'IBM Plex Mono', 'Courier New', monospace;
   font-size: 13px;
   line-height: 1.5;
 }
@@ -318,7 +317,6 @@ html.theme-canvas {
 }
 
 html.theme-canvas body {
-  font-family: 'DM Sans', -apple-system, sans-serif;
   font-size: 15px;
   line-height: 1.65;
 }
@@ -448,7 +446,6 @@ html.theme-studio {
 }
 
 html.theme-studio body {
-  font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
   font-size: 14px;
   line-height: 1.6;
 }

@@ -31,6 +31,7 @@ const bulkTransactionSchema = z.object({
       exchangeRateEur: z.number().optional(),
       notes: z.string().optional().default(""),
       sourceRef: z.string().optional().default(""),
+      brokerName: z.string().optional().default(""),
     })
   ).min(1).max(200),
   finalize: z.boolean().optional().default(false),

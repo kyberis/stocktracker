@@ -59,6 +59,7 @@ export {
   getDeviceTemplate,
   updateLastActive,
   getLastActive,
+  completeOnboarding,
 } from "./users";
 
 export {

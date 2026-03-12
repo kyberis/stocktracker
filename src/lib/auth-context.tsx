@@ -30,6 +30,8 @@ interface AuthUser {
   deviceProEligible: boolean;
   devicePortfolioId: string;
   lastActiveAt: string;
+  taxResidency: string;
+  onboardingCompleted: boolean;
 }
 
 interface AuthContextType {

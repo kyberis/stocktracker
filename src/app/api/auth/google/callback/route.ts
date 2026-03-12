@@ -270,6 +270,8 @@ async function handleLoginFlow(
         device_pro_redeemed_at: "",
         device_portfolio_id: "",
         last_active_at: "",
+        tax_residency: "",
+        onboarding_completed: 0,
       };
       trackEvent(publicUser.id, "signup");
       authEventsTotal.inc({ event: "signup" });
@@ -290,6 +292,7 @@ async function handleLoginFlow(
       mustChangePassword: false,
       plan: dbUser.plan,
       emailVerified: dbUser.email_verified === 1,
+      onboardingCompleted: dbUser.onboarding_completed === 1,
     });
 
     trackEvent(dbUser.id, "login");

@@ -50,16 +50,41 @@ export async function ensureLoggedOut(request: APIRequestContext) {
 }
 
 /**
- * Create a fresh test user via API signup (returns 201).
+ * Static verification token shared by all test+*@trefolio.com accounts.
+ * The verify-email route resolves the user from the session when this token is used.
+ */
+export const TEST_VERIFICATION_TOKEN = "trefolio-test-verify-000";
+
+/**
+ * Create a fresh test user via API signup, auto-verify email, and complete onboarding.
+ * Uses test+slug@trefolio.com with deterministic verification tokens.
  * The request context will carry the session cookie after this call.
  */
 export async function createTestUser(request: APIRequestContext, seed = false) {
   const slug = `e2e_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
-  const email = `${slug}@test.example.com`;
+  const email = `test+${slug}@trefolio.com`;
   const password = "TestPass123!";
   const res = await apiSignup(request, email, password, seed);
   expect(res.status()).toBe(201);
-  return { email, username: slug, password };
+  const body = await res.json();
+  const userId = body.user?.id || "";
+
+  // Auto-verify email via static test token (session resolves the user)
+  await request.get(`/api/auth/verify-email?token=${TEST_VERIFICATION_TOKEN}`, {
+    maxRedirects: 0,
+  }).catch(() => {});
+
+  // Re-login to get a session with emailVerified: true
+  await request.post("/api/auth/login", {
+    data: { identifier: email, password },
+  });
+
+  // Complete onboarding so tests land on the dashboard
+  await request.post("/api/auth/onboarding", {
+    data: { displayName: slug, defaultCurrency: "EUR" },
+  });
+
+  return { email, username: slug, password, userId };
 }
 
 /**

@@ -65,7 +65,11 @@ const runSync = withCronLogging("snaptrade-sync", async () => {
       const activeAccounts = accounts.filter((a) => activeBrokerIds.has(a.brokerageAuthorizationId));
 
       const brokerSyncs = await getSnapTradeBrokerSyncs(conn.userId);
-      const syncMap = new Map(brokerSyncs.map((s) => [s.brokerageAuthorizationId, s.lastImportedAt]));
+      const syncMap = new Map(
+        brokerSyncs
+          .filter((s) => s.transactionCount > 0)
+          .map((s) => [s.brokerageAuthorizationId, s.lastImportedAt]),
+      );
 
       let totalNewTx = 0;
       const fetchedBrokers: { id: string; name: string }[] = [];
@@ -167,8 +171,10 @@ const runSync = withCronLogging("snaptrade-sync", async () => {
         console.warn(`[snaptrade-sync] Cash update failed for user ${conn.userId}:`, err instanceof Error ? err.message : err);
       }
 
-      for (const broker of fetchedBrokers) {
-        await upsertSnapTradeBrokerSync(conn.userId, broker.id, broker.name);
+      if (totalNewTx > 0) {
+        for (const broker of fetchedBrokers) {
+          await upsertSnapTradeBrokerSync(conn.userId, broker.id, broker.name);
+        }
       }
 
       await updateSnapTradeLastSynced(conn.userId);

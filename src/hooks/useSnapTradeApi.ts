@@ -1,18 +1,33 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import type {
   SnapTradeConnectionInfo,
   DisabledBrokerageConnection,
+  BrokerageConnection,
   BrokerSyncInfo,
   ExtractedTransaction,
 } from "./import-types";
 
 export type { SnapTradeConnectionInfo, ExtractedTransaction, BrokerSyncInfo };
 
+export interface MergedBrokerInfo {
+  brokerageAuthorizationId: string;
+  brokerageName: string;
+  disabled: boolean;
+  disabledDate: string | null;
+  lastImportedAt: string;
+  connectedAt?: string;
+  transactionCount?: number;
+  hasSyncRecord: boolean;
+}
+
 export interface UseSnapTradeApiReturn {
   connection: SnapTradeConnectionInfo | null;
   brokerSyncs: BrokerSyncInfo[];
+  mergedBrokers: MergedBrokerInfo[];
+  activeBrokerCount: number;
   connectionLimit: number;
   isFetching: boolean;
+  syncingBrokerId: string | null;
   transactions: ExtractedTransaction[];
   step: "idle" | "connecting" | "reconnecting" | "fetching" | "preview" | "importing" | "done" | "error";
   importedCount: number;
@@ -22,10 +37,12 @@ export interface UseSnapTradeApiReturn {
   importProgress: { current: number; total: number; errors: number };
   holdingsCapped: number;
   lastFetchHadDateFilter: boolean;
+  lastFetchSummary: { total: number; duplicatesRemoved: number } | null;
   loadConnection: () => Promise<void>;
   connect: () => Promise<void>;
   reconnect: (connectionId: string) => Promise<void>;
   fetchPortfolio: (portfolioId?: string | null, startDate?: string | null, brokerStartDates?: Record<string, string> | null) => Promise<void>;
+  fetchBroker: (brokerConnectionId: string, portfolioId?: string | null, startDate?: string | null) => Promise<void>;
   resync: () => Promise<void>;
   disconnect: () => Promise<void>;
   importAll: (portfolioId?: string | null) => Promise<void>;
@@ -98,14 +115,18 @@ function normalizeTransaction(tx: Record<string, unknown>): ExtractedTransaction
     fees: Number(tx.fees || 0),
     currency: String(tx.currency || "EUR").toUpperCase(),
     sourceRef: tx.sourceRef ? String(tx.sourceRef) : undefined,
+    brokerName: tx.brokerName ? String(tx.brokerName) : undefined,
   };
 }
 
 export function useSnapTradeApi(): UseSnapTradeApiReturn {
   const [connection, setConnection] = useState<SnapTradeConnectionInfo | null>(null);
   const [brokerSyncs, setBrokerSyncs] = useState<BrokerSyncInfo[]>([]);
+  const [brokerageConnections, setBrokerageConnections] = useState<BrokerageConnection[]>([]);
+  const [activeBrokerCount, setActiveBrokerCount] = useState(0);
   const [connectionLimit, setConnectionLimit] = useState(0);
   const [isFetching, setIsFetching] = useState(false);
+  const [syncingBrokerId, setSyncingBrokerId] = useState<string | null>(null);
   const [transactions, setTransactions] = useState<ExtractedTransaction[]>([]);
   const [step, setStep] = useState<UseSnapTradeApiReturn["step"]>("idle");
   const [importedCount, setImportedCount] = useState(0);
@@ -115,6 +136,45 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
   const [importProgress, setImportProgress] = useState({ current: 0, total: 0, errors: 0 });
   const [holdingsCapped, setHoldingsCapped] = useState(0);
   const [lastFetchHadDateFilter, setLastFetchHadDateFilter] = useState(false);
+  const [lastFetchSummary, setLastFetchSummary] = useState<{ total: number; duplicatesRemoved: number } | null>(null);
+
+  const mergedBrokers = useMemo<MergedBrokerInfo[]>(() => {
+    const syncById = new Map(brokerSyncs.map((s) => [s.brokerageAuthorizationId, s]));
+    const seen = new Set<string>();
+    const result: MergedBrokerInfo[] = [];
+
+    for (const conn of brokerageConnections) {
+      seen.add(conn.id);
+      const sync = syncById.get(conn.id);
+      result.push({
+        brokerageAuthorizationId: conn.id,
+        brokerageName: conn.brokerageName,
+        disabled: conn.disabled,
+        disabledDate: conn.disabledDate,
+        lastImportedAt: sync?.lastImportedAt ?? "",
+        connectedAt: sync?.connectedAt,
+        transactionCount: sync?.transactionCount,
+        hasSyncRecord: !!sync,
+      });
+    }
+
+    for (const sync of brokerSyncs) {
+      if (!seen.has(sync.brokerageAuthorizationId)) {
+        result.push({
+          brokerageAuthorizationId: sync.brokerageAuthorizationId,
+          brokerageName: sync.brokerageName,
+          disabled: false,
+          disabledDate: null,
+          lastImportedAt: sync.lastImportedAt,
+          connectedAt: sync.connectedAt,
+          transactionCount: sync.transactionCount,
+          hasSyncRecord: true,
+        });
+      }
+    }
+
+    return result;
+  }, [brokerageConnections, brokerSyncs]);
 
   const loadConnection = useCallback(async () => {
     try {
@@ -128,6 +188,8 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
         setDisabledConnections(disabled);
         setNeedsReconnect(disabled.length > 0);
         setBrokerSyncs(data.brokerSyncs || []);
+        setBrokerageConnections(data.brokerageConnections || []);
+        if (typeof data.activeBrokerCount === "number") setActiveBrokerCount(data.activeBrokerCount);
         if (typeof data.connectionLimit === "number") setConnectionLimit(data.connectionLimit);
       }
     } catch {
@@ -255,6 +317,7 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
           normalizeTransaction(tx),
         ),
       );
+      setLastFetchSummary(data.summary ?? null);
       setStep("preview");
     } catch {
       setErrorMsg("Failed to fetch portfolio.");
@@ -263,6 +326,48 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
       setIsFetching(false);
     }
   }, [brokerSyncs]);
+
+  const fetchBroker = useCallback(async (brokerConnectionId: string, portfolioId?: string | null, startDate?: string | null) => {
+    setErrorMsg("");
+    setIsFetching(true);
+    setSyncingBrokerId(brokerConnectionId);
+    setStep("fetching");
+    setLastFetchHadDateFilter(!!startDate);
+
+    try {
+      const form = new FormData();
+      form.append("action", "fetch");
+      form.append("brokerConnectionId", brokerConnectionId);
+      if (portfolioId) form.append("portfolioId", portfolioId);
+      if (startDate) form.append("startDate", startDate);
+      const res = await fetch("/api/snaptrade", { method: "POST", body: form });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setErrorMsg(data.error || "Failed to fetch portfolio.");
+        if (data.needsReconnect && data.disabledConnections?.length > 0) {
+          setNeedsReconnect(true);
+          setDisabledConnections(data.disabledConnections);
+        }
+        setStep("error");
+        return;
+      }
+
+      setTransactions(
+        (data.transactions || []).map((tx: Record<string, unknown>) =>
+          normalizeTransaction(tx),
+        ),
+      );
+      setLastFetchSummary(data.summary ?? null);
+      setStep("preview");
+    } catch {
+      setErrorMsg("Failed to fetch portfolio.");
+      setStep("error");
+    } finally {
+      setIsFetching(false);
+      setSyncingBrokerId(null);
+    }
+  }, []);
 
   const resync = useCallback(async () => {
     await fetchPortfolio();
@@ -294,6 +399,7 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
     setNeedsReconnect(false);
     setImportProgress({ current: 0, total: 0, errors: 0 });
     setHoldingsCapped(0);
+    setLastFetchSummary(null);
   }, []);
 
   const importAll = useCallback(async (portfolioId?: string | null) => {
@@ -334,7 +440,8 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
         taxes: 0,
         currency: tx.currency,
         displayCurrency: tx.currency,
-        notes: importSource,
+        notes: tx.brokerName ? `SnapTrade · ${tx.brokerName}` : importSource,
+        brokerName: tx.brokerName || "",
         sourceRef: tx.sourceRef || "",
       }));
 
@@ -379,8 +486,11 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
   return {
     connection,
     brokerSyncs,
+    mergedBrokers,
+    activeBrokerCount,
     connectionLimit,
     isFetching,
+    syncingBrokerId,
     transactions,
     step,
     importedCount,
@@ -390,10 +500,12 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
     importProgress,
     holdingsCapped,
     lastFetchHadDateFilter,
+    lastFetchSummary,
     loadConnection,
     connect,
     reconnect,
     fetchPortfolio,
+    fetchBroker,
     resync,
     disconnect,
     importAll,

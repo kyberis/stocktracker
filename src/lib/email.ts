@@ -8,7 +8,18 @@ const TEST_EMAIL_DOMAINS = ["test.example.com", "example.com"];
 
 function isTestEmail(email: string): boolean {
   const domain = email.split("@")[1]?.toLowerCase();
-  return TEST_EMAIL_DOMAINS.includes(domain);
+  if (TEST_EMAIL_DOMAINS.includes(domain)) return true;
+  return isTreefolioTestEmail(email);
+}
+
+const TREFOLIO_TEST_PREFIX = "test+";
+const TREFOLIO_TEST_DOMAIN = "trefolio.com";
+export const TEST_VERIFICATION_TOKEN = "trefolio-test-verify-000";
+
+export function isTreefolioTestEmail(email: string): boolean {
+  const lower = email.toLowerCase();
+  const [local, domain] = lower.split("@");
+  return domain === TREFOLIO_TEST_DOMAIN && local.startsWith(TREFOLIO_TEST_PREFIX);
 }
 
 async function getResendClient(): Promise<Resend | null> {
@@ -31,12 +42,17 @@ function getFromAddress(): string {
 }
 
 export async function createVerificationToken(userId: string, email: string): Promise<string> {
+  if (isTreefolioTestEmail(email)) return TEST_VERIFICATION_TOKEN;
   const secret = new TextEncoder().encode(getSessionSecret());
   return new SignJWT({ userId, email, purpose: "email_verification" })
     .setProtectedHeader({ alg: "HS256", typ: "JWT" })
     .setIssuedAt()
     .setExpirationTime(`${VERIFICATION_TOKEN_TTL}s`)
     .sign(secret);
+}
+
+export function isTestVerificationToken(token: string): boolean {
+  return token === TEST_VERIFICATION_TOKEN;
 }
 
 export async function verifyVerificationToken(

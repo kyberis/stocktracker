@@ -227,6 +227,7 @@ export default function TransactionHistory({ holdingId, ticker, exchange: holdin
                 <th scope="col" className="text-right p-2 font-medium">{t("transactionTotal")}</th>
                 <th scope="col" className="text-right p-2 font-medium">{t("transactionFees")}</th>
                 {hasSells && <th scope="col" className="text-right p-2 font-medium">{t("realizedPl")}</th>}
+                <th scope="col" className="text-left p-2 font-medium hidden sm:table-cell">{t("transactionSource")}</th>
                 <th scope="col" className="p-2"><span className="sr-only">Actions</span></th>
               </tr>
             </thead>
@@ -264,6 +265,7 @@ export default function TransactionHistory({ holdingId, ticker, exchange: holdin
                       <input type="number" value={editFees} onChange={(e) => setEditFees(e.target.value)} className="text-xs w-full text-right" step="any" aria-label={t("transactionFees")} />
                     </td>
                     {hasSells && <td className="p-1.5" />}
+                    <td className="p-1.5 hidden sm:table-cell" />
                     <td className="p-1.5">
                       <div className="flex items-center gap-1">
                         <button
@@ -335,6 +337,15 @@ export default function TransactionHistory({ holdingId, ticker, exchange: holdin
                           : "—"}
                       </td>
                     )}
+                    <td className="p-2 hidden sm:table-cell">
+                      {tx.brokerName ? (
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400">
+                          {tx.brokerName}
+                        </span>
+                      ) : tx.notes && tx.notes !== "SnapTrade import" ? (
+                        <span className="text-[10px] text-gray-400 dark:text-slate-500 truncate max-w-[80px] block" title={tx.notes}>{tx.notes}</span>
+                      ) : null}
+                    </td>
                     <td className="p-2">
                       <div className="flex items-center gap-1">
                         <button

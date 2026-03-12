@@ -14,7 +14,6 @@ import MarketMoveToast from "@/components/MarketMoveToast";
 import CapacitorBridge from "@/components/CapacitorBridge";
 import NativePushBridge from "@/components/NativePushBridge";
 import DeviceInterestEnroller from "@/components/DeviceInterestEnroller";
-import LayoutThemeBridge from "@/components/LayoutThemeBridge";
 import ThemeWizard from "@/components/ThemeWizard";
 import type { LayoutTheme } from "@/lib/types";
 
@@ -24,7 +23,7 @@ function AppShell({ children }: { children: React.ReactNode }) {
 
   if (isStudio) {
     return (
-      <div className="min-h-screen bg-[#09090b] flex">
+      <div className="min-h-screen bg-[#09090b] flex" style={{ fontFamily: "var(--font-primary, inherit)" }}>
         <SidebarNav />
         <div className="flex-1 min-h-screen bg-[#18181b] pb-14 sm:pb-0">
           <MarketTickerBar />
@@ -41,7 +40,7 @@ function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen pb-14 sm:pb-0" style={{ background: "var(--background)" }}>
+    <div className="min-h-screen pb-14 sm:pb-0" style={{ background: "var(--background)", fontFamily: "var(--font-primary, inherit)" }}>
       <MarketTickerBar />
       <AppNav />
       <main id="main-content">{children}</main>
@@ -67,7 +66,6 @@ export default function AppLayoutClient({
       <AuthProvider>
         <I18nProvider>
           <SettingsProvider>
-            <LayoutThemeBridge />
             <StealthProvider>
               <AppShell>{children}</AppShell>
               <ThemeWizard />

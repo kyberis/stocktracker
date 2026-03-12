@@ -5,6 +5,8 @@ import {
   createVerificationToken,
   sendVerificationEmail,
   verifyVerificationToken,
+  isTestVerificationToken,
+  isTreefolioTestEmail,
 } from "@/lib/email";
 import {
   createSessionToken,
@@ -48,32 +50,50 @@ export const GET = withMetrics("/api/auth/verify-email", async (req: NextRequest
     return NextResponse.json({ error: "Missing token" }, { status: 400 });
   }
 
-  const payload = await verifyVerificationToken(token);
-  if (!payload) {
-    return NextResponse.json({ error: "Invalid or expired token" }, { status: 400 });
+  let userId: string;
+  let email: string;
+
+  if (isTestVerificationToken(token)) {
+    const existingToken = req.cookies.get("trefolio_session")?.value;
+    const existingSession = existingToken ? await verifySessionToken(existingToken) : null;
+    if (!existingSession) {
+      return NextResponse.json({ error: "Session required for test verification" }, { status: 401 });
+    }
+    const sessionUser = await findUserById(existingSession.userId);
+    if (!sessionUser || !isTreefolioTestEmail(sessionUser.email)) {
+      return NextResponse.json({ error: "Test token only valid for test accounts" }, { status: 403 });
+    }
+    userId = sessionUser.id;
+    email = sessionUser.email;
+  } else {
+    const payload = await verifyVerificationToken(token);
+    if (!payload) {
+      return NextResponse.json({ error: "Invalid or expired token" }, { status: 400 });
+    }
+    const user = await findUserById(payload.userId);
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+    if (user.email !== payload.email) {
+      return NextResponse.json({ error: "Email mismatch" }, { status: 400 });
+    }
+    userId = payload.userId;
+    email = payload.email;
   }
 
-  const user = await findUserById(payload.userId);
-  if (!user) {
-    return NextResponse.json({ error: "User not found" }, { status: 404 });
-  }
-
-  if (user.email !== payload.email) {
-    return NextResponse.json({ error: "Email mismatch" }, { status: 400 });
-  }
-
-  await setEmailVerified(payload.userId, true);
-  trackEvent(payload.userId, "email_verification_completed");
+  await setEmailVerified(userId, true);
+  trackEvent(userId, "email_verification_completed");
 
   const existingToken = req.cookies.get("trefolio_session")?.value;
   const existingSession = existingToken ? await verifySessionToken(existingToken) : null;
 
-  if (existingSession && existingSession.userId === payload.userId) {
+  if (existingSession && existingSession.userId === userId) {
     const newSessionToken = await createSessionToken({
       ...existingSession,
       emailVerified: true,
     });
-    const response = NextResponse.redirect(`${baseUrl}/`);
+    const dest = existingSession.onboardingCompleted ? "/" : "/onboarding";
+    const response = NextResponse.redirect(`${baseUrl}${dest}`);
     response.cookies.set(getSessionCookieConfig(newSessionToken));
     return response;
   }

@@ -125,6 +125,7 @@ export interface Transaction {
   exchangeRateEur?: number;
   notes: string;
   sourceRef?: string;
+  brokerName?: string;
   createdAt: string;
 }
 

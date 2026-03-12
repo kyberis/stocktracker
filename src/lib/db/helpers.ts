@@ -46,6 +46,8 @@ export interface DbUser {
   device_pro_redeemed_at: string;
   device_portfolio_id: string;
   last_active_at: string;
+  tax_residency: string;
+  onboarding_completed: number;
 }
 
 export type PortfolioCurrency =
@@ -247,6 +249,8 @@ export function rowToDbUser(row: Row): DbUser {
     device_pro_redeemed_at: str(row.device_pro_redeemed_at),
     device_portfolio_id: str(row.device_portfolio_id),
     last_active_at: str(row.last_active_at),
+    tax_residency: str(row.tax_residency),
+    onboarding_completed: num(row.onboarding_completed),
   };
 }
 

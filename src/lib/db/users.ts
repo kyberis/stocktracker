@@ -133,7 +133,7 @@ export async function updateUserPassword(
 
 export async function updateUserProfile(
   userId: string,
-  updates: Partial<{ email: string; displayName: string; avatarUrl: string; devicePortfolioId: string }>
+  updates: Partial<{ email: string; displayName: string; avatarUrl: string; devicePortfolioId: string; taxResidency: string }>
 ): Promise<PublicUser | null> {
   const client = await ensureInitialized();
   const user = await findUserById(userId);
@@ -143,14 +143,39 @@ export async function updateUserProfile(
   const displayName = updates.displayName ?? user.display_name;
   const avatarUrl = updates.avatarUrl ?? user.avatar_url;
   const devicePortfolioId = updates.devicePortfolioId !== undefined ? updates.devicePortfolioId : (user.device_portfolio_id ?? "");
+  const taxResidency = updates.taxResidency !== undefined ? updates.taxResidency : (user.tax_residency ?? "");
 
   await client.execute({
-    sql: "UPDATE users SET email = ?, display_name = ?, avatar_url = ?, device_portfolio_id = ? WHERE id = ?",
-    args: [email, displayName, avatarUrl, devicePortfolioId, userId],
+    sql: "UPDATE users SET email = ?, display_name = ?, avatar_url = ?, device_portfolio_id = ?, tax_residency = ? WHERE id = ?",
+    args: [email, displayName, avatarUrl, devicePortfolioId, taxResidency, userId],
   });
 
   const updated = await findUserById(userId);
   return updated ? mapUser(updated) : null;
+}
+
+export async function completeOnboarding(
+  userId: string,
+  data: { displayName?: string; taxResidency?: string }
+): Promise<void> {
+  const client = await ensureInitialized();
+  const sets: string[] = ["onboarding_completed = 1"];
+  const args: (string | number)[] = [];
+
+  if (data.displayName !== undefined) {
+    sets.push("display_name = ?");
+    args.push(data.displayName);
+  }
+  if (data.taxResidency !== undefined) {
+    sets.push("tax_residency = ?");
+    args.push(data.taxResidency);
+  }
+  args.push(userId);
+
+  await client.execute({
+    sql: `UPDATE users SET ${sets.join(", ")} WHERE id = ?`,
+    args,
+  });
 }
 
 export async function updateUserRole(userId: string, role: UserRole): Promise<void> {

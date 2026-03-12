@@ -96,6 +96,13 @@ export const profileUpdateSchema = z.object({
   displayName: z.string().max(100).optional(),
   avatarUrl: z.string().max(500).optional(),
   devicePortfolioId: z.string().optional(),
+  taxResidency: z.string().max(2).optional(),
+});
+
+export const onboardingSchema = z.object({
+  displayName: z.string().max(100).optional(),
+  defaultCurrency: z.string().max(3).optional(),
+  taxResidency: z.string().max(2).optional(),
 });
 
 /* ── Holdings ──────────────────────────────────────────────── */

@@ -217,6 +217,8 @@ describe("rowToDbUser", () => {
       device_pro_redeemed_at: "",
       device_portfolio_id: "",
       last_active_at: "",
+      tax_residency: "",
+      onboarding_completed: 0,
     });
   });
 
@@ -316,6 +318,8 @@ describe("mapUser", () => {
       device_pro_redeemed_at: "",
       device_portfolio_id: "",
       last_active_at: "",
+      tax_residency: "",
+      onboarding_completed: 0,
     };
 
     const publicUser = mapUser(dbUser);
@@ -379,6 +383,8 @@ describe("mapUser", () => {
       device_pro_redeemed_at: "",
       device_portfolio_id: "",
       last_active_at: "",
+      tax_residency: "",
+      onboarding_completed: 0,
     };
 
     const publicUser = mapUser(dbUser);
@@ -420,6 +426,8 @@ describe("mapUser", () => {
       device_pro_redeemed_at: "",
       device_portfolio_id: "",
       last_active_at: "",
+      tax_residency: "",
+      onboarding_completed: 0,
     };
 
     const publicUser = mapUser(dbUser);
@@ -459,6 +467,8 @@ describe("mapUser", () => {
       device_pro_redeemed_at: "",
       device_portfolio_id: "",
       last_active_at: "",
+      tax_residency: "",
+      onboarding_completed: 0,
     };
 
     const publicUser = mapUser(dbUser);

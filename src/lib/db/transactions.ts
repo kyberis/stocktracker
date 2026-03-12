@@ -82,6 +82,7 @@ export async function listTransactions(userId: string, holdingId?: string, portf
     exchangeRateEur: r.exchange_rate_eur != null ? Number(r.exchange_rate_eur) || undefined : undefined,
     notes: str(r.notes),
     sourceRef: str(r.source_ref),
+    brokerName: str(r.broker_name) || undefined,
     createdAt: str(r.created_at),
   }));
 }
@@ -293,16 +294,16 @@ export async function addTransactionsBulk(
       return {
         sql: `INSERT OR IGNORE INTO transactions (
                 id, user_id, holding_id, ticker, name, exchange, isin, asset_type, account_id,
-                type, date, shares, price_per_share, total_amount, fees, taxes, currency, display_currency, exchange_rate_eur, notes, source_ref, portfolio_id
+                type, date, shares, price_per_share, total_amount, fees, taxes, currency, display_currency, exchange_rate_eur, notes, source_ref, broker_name, portfolio_id
               )
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         args: [
           id, userId, tx.holdingId || "", ticker, tx.name || "", exchange,
           tx.isin || "", tx.assetType || "stock", tx.accountId || "",
           tx.type, tx.date, tx.shares, tx.pricePerShare, total,
           tx.fees || 0, tx.taxes || 0, tx.currency || "EUR",
           tx.displayCurrency || tx.currency || "EUR", tx.exchangeRateEur ?? null,
-          tx.notes || "", sourceRef,
+          tx.notes || "", sourceRef, (tx as Record<string, unknown>).brokerName || "",
           resolved,
         ],
       };

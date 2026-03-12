@@ -210,21 +210,20 @@ export interface SnapTradeBrokerSync {
 export async function getSnapTradeBrokerSyncs(userId: string): Promise<SnapTradeBrokerSync[]> {
   const client = await ensureInitialized();
   const result = await client.execute({
-    sql: "SELECT brokerage_authorization_id, brokerage_name, last_imported_at, created_at FROM snaptrade_broker_syncs WHERE user_id = ?",
+    sql: `SELECT s.brokerage_authorization_id, s.brokerage_name, s.last_imported_at, s.created_at,
+            COUNT(t.id) as tx_count
+          FROM snaptrade_broker_syncs s
+          LEFT JOIN transactions t ON t.user_id = s.user_id AND t.broker_name = s.brokerage_name
+          WHERE s.user_id = ?
+          GROUP BY s.brokerage_authorization_id`,
     args: [userId],
   });
-  const txCountRes = await client.execute({
-    sql: "SELECT COUNT(*) as cnt FROM transactions WHERE user_id = ?",
-    args: [userId],
-  });
-  const totalTxCount = Number(txCountRes.rows[0]?.cnt) || 0;
-  const brokerCount = result.rows.length || 1;
   return result.rows.map((r) => ({
     brokerageAuthorizationId: str(r.brokerage_authorization_id),
     brokerageName: str(r.brokerage_name),
     lastImportedAt: str(r.last_imported_at),
     connectedAt: str(r.created_at),
-    transactionCount: Math.round(totalTxCount / brokerCount),
+    transactionCount: Number(r.tx_count) || 0,
   }));
 }
 

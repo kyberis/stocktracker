@@ -225,6 +225,7 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
     const userSecret = conn ? await getSnapTradeConnectionSecret(session.userId) : null;
     const portfolioId = (formData.get("portfolioId") as string) || undefined;
     const customStartDate = (formData.get("startDate") as string) || undefined;
+    const brokerConnectionId = (formData.get("brokerConnectionId") as string) || undefined;
     let brokerDateOverrides: Record<string, string> = {};
     try {
       const raw = formData.get("brokerStartDates") as string;
@@ -257,10 +258,17 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
 
       const accounts = await listAccounts(conn.snapTradeUserId, userSecret);
       const activeBrokerIds = new Set(brokerageConns.filter((c) => !c.disabled).map((c) => c.id));
-      const activeAccounts = accounts.filter((a) => activeBrokerIds.has(a.brokerageAuthorizationId));
+      let activeAccounts = accounts.filter((a) => activeBrokerIds.has(a.brokerageAuthorizationId));
+      if (brokerConnectionId) {
+        activeAccounts = activeAccounts.filter((a) => a.brokerageAuthorizationId === brokerConnectionId);
+      }
 
       const brokerSyncs = await getSnapTradeBrokerSyncs(session.userId);
-      const syncMap = new Map(brokerSyncs.map((s) => [s.brokerageAuthorizationId, s.lastImportedAt]));
+      const syncMap = new Map(
+        brokerSyncs
+          .filter((s) => s.transactionCount > 0)
+          .map((s) => [s.brokerageAuthorizationId, s.lastImportedAt]),
+      );
 
       const allTransactions: ExtractedTransaction[] = [];
       const fetchedBrokers: { id: string; name: string }[] = [];
@@ -283,6 +291,9 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
           accountId: acct.id,
           startDate,
         });
+        for (const tx of result.transactions) {
+          tx.brokerName = acct.institution;
+        }
         allTransactions.push(...result.transactions);
 
         if (!seenBrokerIds.has(acct.brokerageAuthorizationId)) {
@@ -346,7 +357,10 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
       }
 
       for (const broker of fetchedBrokers) {
-        await upsertSnapTradeBrokerSync(session.userId, broker.id, broker.name);
+        const hasTxForBroker = deduped.some((tx) => tx.brokerName === broker.name);
+        if (hasTxForBroker) {
+          await upsertSnapTradeBrokerSync(session.userId, broker.id, broker.name);
+        }
       }
 
       await updateSnapTradeLastSynced(session.userId);

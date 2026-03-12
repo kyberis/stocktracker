@@ -89,10 +89,10 @@ export async function middleware(req: NextRequest) {
     "/api/auth/verify-email",
     "/api/auth/logout",
     "/api/auth/me",
+    "/onboarding",
+    "/api/auth/onboarding",
   ]);
-  const skipEmailVerify = process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test";
   if (
-    !skipEmailVerify &&
     session.role !== "admin" &&
     !session.emailVerified &&
     !session.mustChangePassword &&
@@ -102,6 +102,30 @@ export async function middleware(req: NextRequest) {
       return NextResponse.json({ error: "Email verification required" }, { status: 403 });
     }
     return NextResponse.redirect(new URL("/verify-email", req.url));
+  }
+
+  const ONBOARDING_ALLOWED = new Set([
+    "/onboarding",
+    "/api/auth/onboarding",
+    "/api/auth/me",
+    "/api/auth/logout",
+    "/api/user-settings",
+    "/api/auth/passkey/register-options",
+    "/api/auth/passkey/register-verify",
+    "/api/auth/passkey/list",
+    "/api/auth/google",
+    "/api/auth/google/callback",
+  ]);
+  if (
+    session.emailVerified &&
+    !session.onboardingCompleted &&
+    session.role !== "admin" &&
+    !ONBOARDING_ALLOWED.has(pathname)
+  ) {
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json({ error: "Onboarding required" }, { status: 403 });
+    }
+    return NextResponse.redirect(new URL("/onboarding", req.url));
   }
 
   if (["/login", "/signup", "/landing"].includes(pathname) && session) {

@@ -37,6 +37,8 @@ export const GET = withMetrics("/api/auth/me", async (req: NextRequest) => {
       deviceProEligible: deviceOn && !!user?.device_linked_at && !user?.device_pro_redeemed_at && (user?.plan || session.plan || "free") === "free",
       devicePortfolioId: user?.device_portfolio_id || "",
       lastActiveAt: user?.last_active_at || "",
+      taxResidency: user?.tax_residency || "",
+      onboardingCompleted: user?.onboarding_completed === 1,
     },
   });
 });

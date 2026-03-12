@@ -74,18 +74,28 @@ export default async function RootLayout({
   return (
     <html lang="en" className={htmlClass || undefined}>
       <head>
-        {/* Apply layout theme from cookie before paint to prevent flash */}
+        {/* Apply dark class from cookie before paint to prevent flash */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var m=document.cookie.match(/(?:^|; )trefolio_layout_theme=([^;]*)/);if(m){var t=decodeURIComponent(m[1]);if(/^(terminal|canvas|studio)$/.test(t)){document.documentElement.classList.add("theme-"+t);if(t==="terminal"||t==="studio")document.documentElement.classList.add("dark");if(t==="canvas")document.documentElement.classList.remove("dark")}}}catch(e){}})()`,
+            __html: `(function(){try{var m=document.cookie.match(/(?:^|; )trefolio_layout_theme=([^;]*)/);if(m){var t=decodeURIComponent(m[1]);if(t==="terminal"||t==="studio")document.documentElement.classList.add("dark");if(t==="canvas")document.documentElement.classList.remove("dark")}else{var s=localStorage.getItem("trefolio-theme");if(s==="dark")document.documentElement.classList.add("dark")}}catch(e){}})()`,
           }}
         />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap"
-          rel="stylesheet"
-        />
+        {layoutCookie && validThemes.has(layoutCookie) && (
+          <>
+            <link rel="preconnect" href="https://fonts.googleapis.com" />
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+            <link
+              href={
+                layoutCookie === "terminal"
+                  ? "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+                  : layoutCookie === "canvas"
+                    ? "https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap"
+                    : "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap"
+              }
+              rel="stylesheet"
+            />
+          </>
+        )}
       </head>
       <body className={`${GeistSans.variable} ${GeistMono.variable} font-sans antialiased`}>
         <a

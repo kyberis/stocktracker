@@ -78,6 +78,7 @@ export const POST = withMetrics("/api/auth/login", async (req: NextRequest) => {
       mustChangePassword: user.must_change_password === 1,
       plan: user.plan,
       emailVerified: user.email_verified === 1,
+      onboardingCompleted: user.onboarding_completed === 1,
     });
 
     trackEvent(user.id, "login");

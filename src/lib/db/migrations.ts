@@ -1120,6 +1120,56 @@ const MIGRATIONS: Migration[] = [
       });
     },
   },
+  {
+    version: 36,
+    description: "Add transaction_count to snaptrade_broker_syncs, broker_name to transactions",
+    up: async (client: Client) => {
+      for (const ddl of [
+        "ALTER TABLE snaptrade_broker_syncs ADD COLUMN transaction_count INTEGER NOT NULL DEFAULT 0",
+        "ALTER TABLE transactions ADD COLUMN broker_name TEXT NOT NULL DEFAULT ''",
+      ]) {
+        try {
+          await client.execute({ sql: ddl });
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : String(e);
+          if (!msg.includes("duplicate column")) throw e;
+        }
+      }
+    },
+  },
+  {
+    version: 37,
+    description: "Add tax_residency column to users for future tax support",
+    up: async (client: Client) => {
+      try {
+        await client.execute({
+          sql: "ALTER TABLE users ADD COLUMN tax_residency TEXT NOT NULL DEFAULT ''",
+          args: [],
+        });
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("duplicate column")) throw e;
+      }
+    },
+  },
+  {
+    version: 38,
+    description: "Add onboarding_completed column to users",
+    up: async (client: Client) => {
+      try {
+        await client.execute({
+          sql: "ALTER TABLE users ADD COLUMN onboarding_completed INTEGER NOT NULL DEFAULT 0",
+          args: [],
+        });
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("duplicate column")) throw e;
+      }
+      await client.execute({
+        sql: "UPDATE users SET onboarding_completed = 1 WHERE email_verified = 1",
+      });
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

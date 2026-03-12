@@ -147,6 +147,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     } catch {
       // Keep optimistic UI state.
     }
+    window.location.reload();
   }, []);
 
   const setDefaultCurrency = useCallback(async (currency: string) => {
