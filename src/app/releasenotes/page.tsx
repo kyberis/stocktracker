@@ -8,6 +8,21 @@ export const metadata: Metadata = {
   description:
     "See what's new in trefolio — the latest features, improvements, and fixes for your portfolio tracker.",
   alternates: { canonical: "https://trefolio.com/releasenotes" },
+  openGraph: {
+    title: "Release Notes — trefolio",
+    description:
+      "See what's new in trefolio — the latest features, improvements, and fixes for your portfolio tracker.",
+    url: "https://trefolio.com/releasenotes",
+    siteName: "trefolio",
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Release Notes — trefolio",
+    description:
+      "See what's new in trefolio — the latest features, improvements, and fixes for your portfolio tracker.",
+  },
 };
 
 const TYPE_STYLES: Record<ChangeType, { label: string; pill: string; dot: string }> = {

@@ -7,6 +7,21 @@ export const metadata: Metadata = {
   description:
     "trefolio Terms of Service. Subscription terms, acceptable use, financial disclaimers, and liability limitations for our portfolio tracking service.",
   alternates: { canonical: "https://trefolio.com/terms" },
+  openGraph: {
+    title: "Terms of Service — trefolio",
+    description:
+      "trefolio Terms of Service. Subscription terms, acceptable use, financial disclaimers, and liability limitations.",
+    url: "https://trefolio.com/terms",
+    siteName: "trefolio",
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Terms of Service — trefolio",
+    description:
+      "trefolio Terms of Service. Subscription terms, acceptable use, financial disclaimers, and liability limitations.",
+  },
 };
 
 export default function TermsOfServicePage() {

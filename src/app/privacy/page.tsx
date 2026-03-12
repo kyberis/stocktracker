@@ -7,6 +7,21 @@ export const metadata: Metadata = {
   description:
     "trefolio is a GDPR-compliant portfolio tracker. Learn how we collect, process, and protect your personal data. Optional analytics with consent, no data selling.",
   alternates: { canonical: "https://trefolio.com/privacy" },
+  openGraph: {
+    title: "Privacy Policy — trefolio",
+    description:
+      "Learn how trefolio collects, processes, and protects your personal data. GDPR-compliant, no data selling, optional analytics.",
+    url: "https://trefolio.com/privacy",
+    siteName: "trefolio",
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Privacy Policy — trefolio",
+    description:
+      "Learn how trefolio collects, processes, and protects your personal data. GDPR-compliant, no data selling.",
+  },
 };
 
 export default function PrivacyPolicyPage() {

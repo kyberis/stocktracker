@@ -102,12 +102,35 @@ const ORGANIZATION_SCHEMA = {
     "Simple portfolio tracking with AI insights for European investors",
   email: "support@trefolio.com",
   foundingDate: "2025",
-  contactPoint: {
-    "@type": "ContactPoint",
-    email: "support@trefolio.com",
-    contactType: "customer support",
-    availableLanguage: ["English", "Spanish"],
+  contactPoint: [
+    {
+      "@type": "ContactPoint",
+      email: "support@trefolio.com",
+      contactType: "customer support",
+      availableLanguage: ["English", "Spanish"],
+      url: "https://trefolio.com/contact",
+    },
+    {
+      "@type": "ContactPoint",
+      email: "privacy@trefolio.com",
+      contactType: "privacy",
+      availableLanguage: ["English"],
+    },
+  ],
+  address: {
+    "@type": "PostalAddress",
+    addressCountry: "EU",
   },
+  areaServed: {
+    "@type": "Place",
+    name: "Europe",
+  },
+  knowsLanguage: [
+    "en", "es", "fr", "de", "it", "pt", "nl", "pl", "cs", "sk",
+    "hu", "ro", "bg", "hr", "sl", "el", "sv", "da", "fi", "et",
+    "lv", "lt", "ga", "mt", "nb", "uk", "tr", "sr", "is", "sq",
+    "bs", "mk", "be", "ca", "cy",
+  ],
 };
 
 const SOFTWARE_APP_SCHEMA = {
@@ -115,10 +138,30 @@ const SOFTWARE_APP_SCHEMA = {
   "@type": "SoftwareApplication",
   name: "trefolio",
   applicationCategory: "FinanceApplication",
-  operatingSystem: "Web",
+  applicationSubCategory: "Portfolio Tracker",
+  operatingSystem: "Web, iOS, Android",
   url: "https://trefolio.com",
   description:
     "Portfolio tracker with real-time quotes, broker imports, AI analysis, and dividend projections for European investors.",
+  screenshot: "https://trefolio.com/screenshots/dashboard-overview.png",
+  featureList: [
+    "Real-time stock quotes from NYSE, NASDAQ, XETRA, LSE, and more",
+    "Broker import from DEGIRO, Interactive Brokers, Trading 212, and Revolut",
+    "AI-powered stock analysis and portfolio review",
+    "Dividend tracking and 5-year projections",
+    "Performance metrics (TTWROR, XIRR)",
+    "Multi-currency support (EUR, USD, GBP, DKK, CAD)",
+    "35 European languages",
+    "Portfolio sharing with public links",
+    "Company fundamentals and economic indicators",
+    "Price alerts with email and push notifications",
+  ],
+  inLanguage: [
+    "en", "es", "fr", "de", "it", "pt", "nl", "pl", "cs", "sk",
+    "hu", "ro", "bg", "hr", "sl", "el", "sv", "da", "fi", "et",
+    "lv", "lt", "ga", "mt", "nb", "uk", "tr", "sr", "is", "sq",
+    "bs", "mk", "be", "ca", "cy",
+  ],
   offers: [
     {
       "@type": "Offer",

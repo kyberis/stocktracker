@@ -4,7 +4,7 @@
 
 ## What is trefolio?
 
-trefolio is a web-based portfolio tracker that supports real-time quotes from NYSE, NASDAQ, XETRA, LSE, and more. It offers one-click import from DEGIRO, Interactive Brokers, Trading 212, and Revolut. Features include dividend tracking, growth projections, performance metrics (TTWROR, IRR), and AI-powered stock analysis.
+trefolio is a web-based portfolio tracker that supports real-time quotes from NYSE, NASDAQ, XETRA, LSE, and more. It offers one-click import from DEGIRO, Interactive Brokers, Trading 212, and Revolut, plus AI-powered smart import for any format. Features include dividend tracking, growth projections, performance metrics (TTWROR, IRR), and AI-powered stock analysis. Available in 35 European languages.
 
 ## Pricing
 
@@ -18,6 +18,9 @@ trefolio is a web-based portfolio tracker that supports real-time quotes from NY
 - Blog: https://trefolio.com/blog
 - Interactive Demo: https://trefolio.com/demo
 - Sign Up: https://trefolio.com/signup
+- Contact: https://trefolio.com/contact
+- Release Notes: https://trefolio.com/releasenotes
+- trefolio Leaf (device): https://trefolio.com/leaf
 - Privacy Policy: https://trefolio.com/privacy
 - Terms of Service: https://trefolio.com/terms
 

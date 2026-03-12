@@ -34,13 +34,14 @@ trefolio is a web-based portfolio tracking application designed for European ret
 - Historical dividend calendar
 
 ### Broker Import
-One-click import from popular European brokers:
+All 7 import methods on one unified /import page:
 - DEGIRO Account CSV (includes cash balance detection)
 - Interactive Brokers Activity Statement and Flex Query CSV
+- Interactive Brokers API (direct sync via guided 3-step wizard, Trefolio plan)
 - Trading 212 History CSV export
 - Revolut Account Statement (Excel/CSV)
 - Simple CSV format (ticker, type, price, amount, currency)
-- AI-powered smart import from screenshots and unstructured data
+- AI-powered smart import from screenshots, PDFs, and unstructured data
 
 ### AI Analysis (Pro)
 - AI Portfolio Review with personalized recommendations (5 reviews/month)
@@ -53,10 +54,11 @@ One-click import from popular European brokers:
 ### Additional Features
 - Price alerts (2 for Free, unlimited + email for Pro)
 - CSV export of holdings, transactions, and cash balances (Pro)
-- Dark and light mode
+- Dark and light mode, plus 4 dashboard themes (Default, Canvas, Terminal, Studio)
 - 35 European languages
 - Cash balance tracking
 - Privacy-first: no tracking cookies, no data selling
+- PWA support (installable on mobile and desktop)
 
 ## Pricing Details
 
@@ -94,11 +96,22 @@ Everything in Bifolio, plus:
 - Alpha Vantage premium data
 - AI Portfolio Review (5/month)
 - Unlimited price alerts + email delivery
+- IBKR API direct sync
 - Priority support
 
 ## Supported Exchanges
 
 NYSE, NASDAQ, XETRA, LSE, Amsterdam (AMS), Madrid (MAD), Copenhagen (OMK), and additional exchanges via Yahoo Finance.
+
+## Technology Stack
+
+- Frontend: Next.js 15, React 19, TypeScript, Tailwind CSS
+- Database: Turso (libSQL)
+- Hosting: Vercel
+- AI: OpenAI GPT
+- Payments: Stripe
+- Market Data: Yahoo Finance, Alpha Vantage (Pro)
+- Mobile: Progressive Web App (PWA) + Capacitor (iOS, Android)
 
 ## Data & Privacy
 
@@ -122,10 +135,10 @@ NYSE, NASDAQ, XETRA, LSE, Amsterdam (AMS), Madrid (MAD), Copenhagen (OMK), and a
 ## Frequently Asked Questions
 
 ### How do I import my portfolio?
-Go to your Dashboard and click the upload icon in the header. Choose your broker (DEGIRO, Interactive Brokers, Trading 212, Revolut, or Simple CSV), drag & drop your file, review the parsed transactions, and click Import All. Your holdings will appear on the dashboard immediately.
+Go to the unified /import page to access all 7 import methods in one place: DEGIRO, IBKR CSV, IBKR API, Trading 212, Revolut, Simple CSV, and AI Import. Each method has a built-in step-by-step guide. For CSV or AI import: choose your method, drag & drop your file (or paste for AI), review the parsed transactions, and click Import. Trefolio users can connect via IBKR API with a guided 3-step wizard that takes under 2 minutes.
 
 ### What CSV formats are supported?
-Five formats: (1) DEGIRO Account.csv, (2) Interactive Brokers Activity Statement or Flex Query CSV, (3) Trading 212 History CSV export, (4) Revolut Account Statement (Excel/CSV), and (5) Simple CSV with columns: ticker, type, price, amount, currency.
+Six CSV formats plus AI Import: (1) DEGIRO Account.csv, (2) IBKR CSV (Activity Statement or Flex Query), (3) Trading 212 History CSV, (4) Revolut Account Statement (Excel/CSV), (5) Simple CSV with columns: ticker, type, price, amount, currency. For any other format, use AI Import — upload or paste your file and AI will parse it. Trefolio users get IBKR API for direct sync — connect once, re-sync anytime with one click.
 
 ### Is my data secure?
 Yes. All data is encrypted at rest, passwords are hashed with bcrypt, and sessions use secure HTTP-only cookies. We never sell or share your data with third parties.
@@ -136,11 +149,11 @@ trefolio supports NYSE, NASDAQ, XETRA, LSE, Amsterdam (AMS), Madrid (MAD), Copen
 ### How are performance metrics calculated?
 TTWROR uses the Modified Dietz method, which weights each cash flow by the fraction of the period remaining — so returns reflect market performance only, not deposit timing. IRR (XIRR) finds the annualized rate that makes the net present value of all dated cash flows equal zero.
 
-### What's the difference between Free and Pro?
-Free includes up to 15 holdings, real-time quotes, charts, growth projection, broker import, and 5 AI calls/month. Bifolio (€2.99/month) adds 50 holdings, 20 AI calls, full portfolio history, advanced metrics (Sharpe, Drawdown, Volatility), portfolio sharing, and CSV export. Trefolio (€7.99/month) adds unlimited holdings, unlimited AI analysis, company fundamentals, stock intelligence, economic indicators, and Alpha Vantage premium data.
+### What's the difference between the plans?
+Folio (free) includes up to 15 holdings, real-time quotes, charts, growth projection, broker import, and 5 AI calls/month. Bifolio (€2.99/month) adds 50 holdings, 20 AI calls, full portfolio history, advanced metrics (Sharpe, Drawdown, Volatility), portfolio sharing, and CSV export. Trefolio (€7.99/month) adds unlimited holdings, unlimited AI analysis, company fundamentals, stock intelligence, economic indicators, and Alpha Vantage premium data.
 
-### Can I cancel Pro anytime?
-Yes. Bifolio is billed monthly (€2.99) or annually (€23.99/year, save 33%). Trefolio is billed monthly (€7.99) or annually (€59.99/year, save 37%). You can cancel anytime from the billing portal — your features remain active until the end of the billing period.
+### Can I cancel anytime?
+Yes. Bifolio and Trefolio are billed monthly or annually (save ~37%). You can cancel anytime from the billing portal — your paid features remain active until the end of the billing period.
 
 ### How do dividends and fees get tracked?
 When you import a broker CSV (DEGIRO, IBKR, Trading 212, or Revolut), dividends, withholding taxes, and broker fees are parsed automatically. For Simple CSV imports, use the type column with 'dividend' or 'fee' values. All transactions are stored in your ledger and reflected in performance metrics.
@@ -152,6 +165,9 @@ When you import a broker CSV (DEGIRO, IBKR, Trading 212, or Revolut), dividends,
 - Interactive Demo: https://trefolio.com/demo
 - Sign Up: https://trefolio.com/signup
 - Log In: https://trefolio.com/login
+- Contact: https://trefolio.com/contact
+- Release Notes: https://trefolio.com/releasenotes
+- trefolio Leaf (device): https://trefolio.com/leaf
 - Privacy Policy: https://trefolio.com/privacy
 - Terms of Service: https://trefolio.com/terms
 

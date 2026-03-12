@@ -56,6 +56,11 @@ export async function generateMetadata(
       description: `View this portfolio on trefolio`,
       images: ["/og-default.png"],
     },
+    twitter: {
+      card: "summary",
+      title: `${data.displayName}'s Portfolio — trefolio`,
+      description: `View ${data.displayName}'s investment portfolio on trefolio.`,
+    },
   };
 }
 

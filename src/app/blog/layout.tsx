@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { JsonLd } from "@/components/JsonLd";
 
 export const metadata: Metadata = {
   title: {
@@ -34,6 +35,37 @@ export const metadata: Metadata = {
   },
 };
 
+const BLOG_SCHEMA = {
+  "@context": "https://schema.org",
+  "@type": "Blog",
+  name: "trefolio Blog",
+  url: "https://trefolio.com/blog",
+  description:
+    "Investment insights, portfolio management tips, and product updates from trefolio.",
+  publisher: {
+    "@type": "Organization",
+    name: "trefolio",
+    url: "https://trefolio.com",
+    logo: "https://trefolio.com/icon.svg",
+  },
+  inLanguage: "en",
+};
+
+const BREADCRUMB_SCHEMA = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "trefolio", item: "https://trefolio.com" },
+    { "@type": "ListItem", position: 2, name: "Blog", item: "https://trefolio.com/blog" },
+  ],
+};
+
 export default function BlogLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+  return (
+    <>
+      <JsonLd data={BLOG_SCHEMA} />
+      <JsonLd data={BREADCRUMB_SCHEMA} />
+      {children}
+    </>
+  );
 }
