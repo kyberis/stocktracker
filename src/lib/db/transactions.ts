@@ -1,4 +1,5 @@
 import { randomUUID } from "crypto";
+import type { InValue } from "@libsql/client";
 import { ensureInitialized } from "./client";
 import { str, num, holdingAssetType, txType, normalizeTickerForExchange } from "./helpers";
 import type { Transaction } from "@/lib/types";
@@ -305,7 +306,7 @@ export async function addTransactionsBulk(
           tx.displayCurrency || tx.currency || "EUR", tx.exchangeRateEur ?? null,
           tx.notes || "", sourceRef, (tx as Record<string, unknown>).brokerName || "",
           resolved,
-        ],
+        ] as InValue[],
       };
     });
 
