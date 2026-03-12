@@ -1,5 +1,5 @@
 import { Snaptrade } from "snaptrade-typescript-sdk";
-import type { AccountHoldings, Position, UniversalActivity } from "snaptrade-typescript-sdk";
+import type { AccountHoldings, Brokerage, Position, UniversalActivity } from "snaptrade-typescript-sdk";
 import type { ExtractedTransaction, ExtractedHolding, CashBalance } from "@/hooks/import-types";
 
 let _client: Snaptrade | null = null;
@@ -35,6 +35,37 @@ export async function registerUser(userId: string): Promise<{ snapTradeUserId: s
 export async function deleteUser(userId: string): Promise<void> {
   const client = getClient();
   await client.authentication.deleteSnapTradeUser({ userId });
+}
+
+export interface AvailableBrokerage {
+  id: string;
+  slug: string;
+  name: string;
+  displayName: string;
+  enabled: boolean;
+  maintenanceMode: boolean;
+  isDegraded: boolean;
+  logoUrl: string | null;
+}
+
+export async function listBrokerages(): Promise<AvailableBrokerage[]> {
+  const client = getClient();
+  try {
+    const res = await client.referenceData.listAllBrokerages();
+    return (res.data ?? []).map((b: Brokerage) => ({
+      id: b.id || "",
+      slug: b.slug || "",
+      name: b.name || "",
+      displayName: b.display_name || b.name || "",
+      enabled: b.enabled ?? false,
+      maintenanceMode: b.maintenance_mode ?? false,
+      isDegraded: b.is_degraded ?? false,
+      logoUrl: b.aws_s3_square_logo_url || b.aws_s3_logo_url || null,
+    }));
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    throw new SnapTradeClientError(`Failed to list brokerages: ${msg}`);
+  }
 }
 
 export async function generateConnectionPortalUrl(

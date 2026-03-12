@@ -37,8 +37,21 @@ const bulkTransactionSchema = z.object({
 });
 
 export const POST = withMetrics("/api/transactions/bulk", async (req: NextRequest) => {
-  const { session, error } = await requireSession(req);
-  if (error || !session) return error;
+  // Support cron auth: x-cron-user-id + Bearer CRON_SECRET
+  const cronUserId = req.headers.get("x-cron-user-id");
+  const authHeader = req.headers.get("authorization");
+  const cronSecret = process.env.CRON_SECRET;
+  const isCronAuth = cronUserId && cronSecret && authHeader === `Bearer ${cronSecret}`;
+
+  let userId: string;
+
+  if (isCronAuth) {
+    userId = cronUserId;
+  } else {
+    const { session, error } = await requireSession(req);
+    if (error || !session) return error;
+    userId = session.userId;
+  }
 
   const portfolioId = req.nextUrl.searchParams.get("portfolioId") || undefined;
   const result = await parseBody(req, bulkTransactionSchema);
@@ -46,15 +59,15 @@ export const POST = withMetrics("/api/transactions/bulk", async (req: NextReques
 
   const { transactions, finalize } = result.data;
 
-  const user = await findUserById(session.userId);
-  const plan = (user?.plan || session.plan) ?? "free";
+  const user = await findUserById(userId);
+  const plan = (user?.plan ?? "free");
   const holdingsLimit = getHoldingsLimit(plan);
 
   let holdingsCapped = 0;
   let allowedTickers: Set<string> | null = null;
 
   if (holdingsLimit < Infinity) {
-    const currentHoldings = await listHoldings(session.userId, portfolioId);
+    const currentHoldings = await listHoldings(userId, portfolioId);
     const existingTickers = new Set(
       currentHoldings.map((h) => `${h.ticker}|${h.exchange || ""}`)
     );
@@ -108,11 +121,11 @@ export const POST = withMetrics("/api/transactions/bulk", async (req: NextReques
   });
 
   const skippedByLimit = transactions.length - filtered.length;
-  const { inserted, skipped } = await addTransactionsBulk(session.userId, enriched, portfolioId);
+  const { inserted, skipped } = await addTransactionsBulk(userId, enriched, portfolioId);
 
   if (finalize && inserted > 0) {
-    await rebuildHoldings(session.userId, portfolioId);
-    enrichHoldingClassifications(session.userId).catch((err) =>
+    await rebuildHoldings(userId, portfolioId);
+    enrichHoldingClassifications(userId).catch((err) =>
       console.warn("[bulk] auto-classification failed:", err)
     );
   }

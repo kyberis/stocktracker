@@ -117,15 +117,19 @@ const runSync = withCronLogging("snaptrade-sync", async () => {
           }));
 
           try {
-            const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.VERCEL_URL
+            const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || (process.env.VERCEL_URL
               ? `https://${process.env.VERCEL_URL}`
-              : "http://localhost:3000";
+              : "http://localhost:3000");
+            const cronHeaders: Record<string, string> = {
+              "Content-Type": "application/json",
+              "x-cron-user-id": conn.userId,
+            };
+            if (process.env.CRON_SECRET) {
+              cronHeaders["Authorization"] = `Bearer ${process.env.CRON_SECRET}`;
+            }
             await fetch(`${baseUrl}/api/transactions/bulk`, {
               method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "x-cron-user-id": conn.userId,
-              },
+              headers: cronHeaders,
               body: JSON.stringify({ transactions: bulkPayload, finalize: true }),
             });
           } catch (err) {

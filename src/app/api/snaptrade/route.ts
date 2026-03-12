@@ -25,6 +25,7 @@ import {
   fetchActivities,
   listBrokerageConnections,
   listAccounts,
+  listBrokerages,
   SnapTradeClientError,
 } from "@/lib/snaptrade-client";
 import type { ExtractedTransaction } from "@/hooks/import-types";
@@ -39,6 +40,7 @@ import type { SubscriptionPlan } from "@/lib/types";
  *
  * Actions:
  *   get-connection    — Check if a SnapTrade connection exists + live brokerage status
+ *   list-brokerages   — List all brokerages available via SnapTrade
  *   register-user     — Register SnapTrade user and store credentials
  *   connect-url       — Generate Connection Portal redirect URL
  *   reconnect-url     — Generate reconnect portal URL for a disabled connection
@@ -57,11 +59,15 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
     const conn = await getSnapTradeConnection(session.userId);
     if (!conn) return NextResponse.json({ connected: false });
 
+    let allBrokerageConnections: { id: string; brokerageName: string; disabled: boolean; disabledDate: string | null }[] = [];
     let disabledConnections: { id: string; brokerageName: string; disabledDate: string | null }[] = [];
     try {
       const userSecret = await getSnapTradeConnectionSecret(session.userId);
       if (userSecret) {
         const brokerageConns = await listBrokerageConnections(conn.snapTradeUserId, userSecret);
+        allBrokerageConnections = brokerageConns.map(({ id, brokerageName, disabled, disabledDate }) => ({
+          id, brokerageName, disabled, disabledDate,
+        }));
         disabledConnections = brokerageConns
           .filter((c) => c.disabled)
           .map(({ id, brokerageName, disabledDate }) => ({ id, brokerageName, disabledDate }));
@@ -72,7 +78,6 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
 
     const brokerSyncs = await getSnapTradeBrokerSyncs(session.userId);
 
-    // Sync the needs_attention flag based on live brokerage status
     const hasDisabled = disabledConnections.length > 0;
     await setSnapTradeNeedsAttention(session.userId, hasDisabled);
 
@@ -85,11 +90,24 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
       label: conn.label,
       lastSyncedAt: conn.lastSyncedAt,
       createdAt: conn.createdAt,
+      brokerageConnections: allBrokerageConnections,
       disabledConnections,
       brokerSyncs,
       connectionLimit: getSnapTradeConnectionLimit(userPlan),
       needsAttention: hasDisabled,
+      activeBrokerCount: allBrokerageConnections.filter((c) => !c.disabled).length,
     });
+  }
+
+  /* ── List available brokerages (no Pro check) ── */
+  if (action === "list-brokerages") {
+    try {
+      const brokerages = await listBrokerages();
+      return NextResponse.json({ brokerages });
+    } catch (err) {
+      const msg = err instanceof SnapTradeClientError ? err.message : "Failed to list brokerages.";
+      return NextResponse.json({ error: msg }, { status: 502 });
+    }
   }
 
   /* ── Tier check: Free users cannot access broker sync ── */

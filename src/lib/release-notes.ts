@@ -14,9 +14,32 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "1.23.0";
+export const CURRENT_VERSION = "1.23.1";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "1.23.1",
+    date: "2026-03-12",
+    title: "Multi-Broker Sync Fixes",
+    titleTranslations: { es: "Correcciones de Sincronización Multi-Broker" },
+    changes: [
+      {
+        type: "fix",
+        text: "Fixed automatic 6-hour broker sync failing silently due to missing cron authentication on the bulk import endpoint",
+        translations: { es: "Corregida la sincronización automática cada 6 horas que fallaba silenciosamente por falta de autenticación cron en el endpoint de importación masiva" },
+      },
+      {
+        type: "improvement",
+        text: "Broker connection status now shows all connected brokerages with active/disabled state and expiry dates for easier multi-broker management",
+        translations: { es: "El estado de conexión del broker ahora muestra todas las cuentas conectadas con estado activo/deshabilitado y fechas de expiración para facilitar la gestión multi-broker" },
+      },
+      {
+        type: "feature",
+        text: "Added broker availability check to diagnose which brokerages are supported and their current status",
+        translations: { es: "Añadida verificación de disponibilidad de brokers para diagnosticar qué brokers están soportados y su estado actual" },
+      },
+    ],
+  },
   {
     version: "1.23.0",
     date: "2026-03-12",
