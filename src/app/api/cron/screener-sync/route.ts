@@ -7,16 +7,18 @@ import screenerUniverse from "@/../data/screener-universe.json";
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
-const BATCH_SIZE = 5;
-const DELAY_MS = 1500;
+const BATCH_SIZE = 20;
+const DELAY_MS = 500;
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-const runSync = withCronLogging("screener-sync", async () => {
-  const yahoo = new YahooProvider();
-  const tickers: string[] = screenerUniverse.tickers;
+function createSync(offset = 0, limit = 0) {
+  return withCronLogging("screener-sync", async () => {
+    const yahoo = new YahooProvider();
+    const allTickers: string[] = screenerUniverse.tickers;
+    const tickers = limit > 0 ? allTickers.slice(offset, offset + limit) : allTickers;
 
   let synced = 0;
   let errors = 0;
@@ -79,7 +81,8 @@ const runSync = withCronLogging("screener-sync", async () => {
   }
 
   return { synced, errors, skipped, total: tickers.length };
-});
+  });
+}
 
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
@@ -88,5 +91,10 @@ export async function GET(request: NextRequest) {
     return new Response("Unauthorized", { status: 401 });
   }
 
+  const url = new URL(request.url);
+  const offset = parseInt(url.searchParams.get("offset") || "0", 10);
+  const limit = parseInt(url.searchParams.get("limit") || "0", 10);
+
+  const runSync = createSync(offset, limit);
   return runSync();
 }
