@@ -12,7 +12,6 @@ const NAV_LINKS = [
   { href: "/import", labelKey: "importNav" as const, icon: "import" },
   { href: "/tools", labelKey: "toolsNav" as const, icon: "tools" },
   { href: "/crypto", labelKey: "cryptoNav" as const, icon: "crypto", tierBadge: "pro" as const },
-  { href: "/screener", labelKey: "screenerNav" as const, icon: "screener", tierBadge: "pro" as const },
   { href: "/economic-indicators", labelKey: "indicatorsNav" as const, icon: "indicators", tierBadge: "pro" as const },
 ];
 

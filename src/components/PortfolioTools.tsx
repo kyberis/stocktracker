@@ -16,11 +16,13 @@ const RebalancingView = dynamic(() => import("./RebalancingView"), { ssr: false 
 const AccountsManager = dynamic(() => import("./AccountsManager"), { ssr: false });
 const Watchlist = dynamic(() => import("./Watchlist"), { ssr: false });
 const PriceAlerts = dynamic(() => import("./PriceAlerts"), { ssr: false });
-type Tab = "transactions" | "dividends" | "performance" | "taxonomy" | "rebalancing" | "accounts" | "watchlist" | "alerts";
+const StockScreener = dynamic(() => import("./StockScreener"), { ssr: false });
+type Tab = "transactions" | "dividends" | "performance" | "taxonomy" | "rebalancing" | "accounts" | "watchlist" | "alerts" | "screener";
 
 const TIER_BADGE_MAP: Partial<Record<Tab, "starter" | "pro">> = {
   performance: "starter",
   alerts: "starter",
+  screener: "pro",
 };
 
 const ALL_TABS: { key: Tab; icon: string }[] = [
@@ -32,6 +34,7 @@ const ALL_TABS: { key: Tab; icon: string }[] = [
   { key: "accounts", icon: "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" },
   { key: "watchlist", icon: "M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" },
   { key: "alerts", icon: "M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" },
+  { key: "screener", icon: "M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" },
 ];
 
 export default function PortfolioTools() {
@@ -54,6 +57,7 @@ export default function PortfolioTools() {
     accounts: toolAccountsEnabled,
     watchlist: toolWatchlistEnabled,
     alerts: alertsEnabled,
+    screener: true,
   };
 
   const visibleTabs = useMemo(() => {
@@ -84,6 +88,7 @@ export default function PortfolioTools() {
       accounts: t("accounts"),
       watchlist: t("watchlist"),
       alerts: t("priceAlerts"),
+      screener: t("screenerNav"),
     };
     return map[key];
   };
@@ -120,20 +125,6 @@ export default function PortfolioTools() {
         <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 whitespace-nowrap">{t("importGoToPage")} →</span>
       </a>
 
-      {/* Screener redirect card */}
-      <a href="/screener" className="flex items-center gap-3 mb-4 px-4 py-3 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors group">
-        <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-          <circle cx="11" cy="11" r="8" /><path strokeLinecap="round" strokeLinejoin="round" d="m21 21-4.3-4.3" />
-        </svg>
-        <div className="min-w-0 flex-1">
-          <p className="text-xs font-medium text-blue-700 dark:text-blue-400">{t("screenerBannerTitle")} — {t("screenerBannerDesc")}</p>
-        </div>
-        <div className="flex items-center gap-1 shrink-0">
-          <TierFeatureBadge requiredPlan="pro" size="xs" />
-          <span className="text-xs font-medium text-blue-600 dark:text-blue-400 whitespace-nowrap">{t("screenerBannerCta")} →</span>
-        </div>
-      </a>
-
       {/* Tab navigation */}
       <div className="flex flex-wrap gap-1 mb-6 bg-white dark:bg-slate-800 rounded-2xl p-1.5 border border-gray-200 dark:border-slate-700 shadow-sm">
           {visibleTabs.map(({ key, icon }) => (
@@ -166,6 +157,7 @@ export default function PortfolioTools() {
             {activeTab === "accounts" && <AccountsManager />}
             {activeTab === "watchlist" && <Watchlist />}
             {activeTab === "alerts" && <PriceAlerts />}
+            {activeTab === "screener" && <StockScreener />}
           </div>
         </Suspense>
 
