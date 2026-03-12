@@ -24,16 +24,24 @@ export default function StockScreener() {
   const isPro = user?.plan === "pro";
   const isFree = !user || user.plan === "free";
 
+  const STORAGE_KEY = "trefolio_screener_filters";
+
   const [results, setResults] = useState<ScreenerCacheRow[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [filters, setFilters] = useState<ScreenerFiltersType>({
-    sortBy: "dividendYield",
-    sortDir: "desc",
-    limit: 50,
-    page: 1,
+  const [filters, setFilters] = useState<ScreenerFiltersType>(() => {
+    const defaults: ScreenerFiltersType = { sortBy: "dividendYield", sortDir: "desc", limit: 50, page: 1 };
+    try {
+      const saved = sessionStorage.getItem(STORAGE_KEY);
+      if (saved) return { ...defaults, ...JSON.parse(saved) };
+    } catch { /* ignore */ }
+    return defaults;
   });
   const [meta, setMeta] = useState<{ sectors: string[]; countries: string[]; exchanges: string[]; total: number } | null>(null);
+
+  useEffect(() => {
+    try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(filters)); } catch { /* ignore */ }
+  }, [filters]);
 
   useEffect(() => {
     track("screener_page_viewed");
