@@ -24,6 +24,11 @@ export const releaseNotes: ReleaseEntry[] = [
     titleTranslations: { es: "Seguimiento de Patrimonio Neto — Inmuebles, Ahorros y Pensiones" },
     changes: [
       {
+        type: "improvement",
+        text: "Redesigned landing page with CSS-illustrated dashboard mock, themes showcase, value proposition cards, trust section, and getting-started steps",
+        translations: { es: "Página de inicio rediseñada con panel CSS ilustrado, vitrina de temas, tarjetas de propuesta de valor, sección de confianza y pasos de inicio" },
+      },
+      {
         type: "feature",
         text: "Guided theme tour walks you through the main dashboard sections the first time you switch to a new theme",
         translations: { es: "Tour guiado del tema que te muestra las secciones principales del panel la primera vez que cambias a un tema nuevo" },

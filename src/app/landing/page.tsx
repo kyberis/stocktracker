@@ -110,6 +110,7 @@ function getFeatureCards(t: T) {
     { icon: "pie", title: t("landingCardDiversTitle"), desc: t("landingCardDiversDesc") },
     { icon: "eye", title: t("landingCardStealthTitle"), desc: t("landingCardStealthDesc") },
     { icon: "calendar", title: t("landingCardEventsTitle"), desc: t("landingCardEventsDesc") },
+    { icon: "globe", title: "35 Languages", desc: "The most multilingual portfolio tracker on the market. AI insights delivered in your native language.", badge: "#1" },
   ];
 }
 
@@ -227,6 +228,9 @@ function FeatureIcon({ type }: { type: string }) {
         <rect x="3" y="4" width="18" height="18" rx="2" strokeLinecap="round" strokeLinejoin="round" />
         <path strokeLinecap="round" strokeLinejoin="round" d="M16 2v4M8 2v4M3 10h18" />
       </>
+    ),
+    globe: (
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582" />
     ),
   };
 
@@ -403,6 +407,109 @@ function NavBar() {
   );
 }
 
+/* ─── CSS mock dashboard for hero ─── */
+
+function HeroDashboardMock() {
+  return (
+    <div className="relative max-w-5xl mx-auto">
+      <div className="absolute -inset-4 bg-gradient-to-r from-emerald-500/20 via-teal-500/20 to-cyan-500/20 rounded-3xl blur-2xl" />
+      <div className="relative rounded-2xl overflow-hidden border border-slate-700/50 shadow-2xl shadow-black/50 bg-slate-900 p-4 sm:p-6">
+        {/* Top bar */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex gap-2">
+            {["Portfolio", "Dividends", "Metrics", "Events"].map((tab, i) => (
+              <span key={tab} className={`text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${i === 0 ? "bg-emerald-500/15 text-emerald-400" : "text-slate-500 hover:text-slate-300"}`}>
+                {tab}
+              </span>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <div className="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center text-slate-500">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
+            </div>
+            <div className="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center text-slate-500">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx="11" cy="11" r="8" /><path strokeLinecap="round" d="M21 21l-4.35-4.35" /></svg>
+            </div>
+          </div>
+        </div>
+
+        {/* Summary */}
+        <div className="flex items-baseline gap-3 mb-1">
+          <span className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">€47,284.50</span>
+          <span className="text-sm font-semibold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-md">+€1,247.30 (+2.71%)</span>
+        </div>
+        <div className="text-xs text-slate-500 mb-4">Total Value · 12 holdings · EUR</div>
+
+        {/* Chart */}
+        <div className="w-full h-20 sm:h-24 mb-4">
+          <svg viewBox="0 0 500 100" preserveAspectRatio="none" className="w-full h-full">
+            <defs>
+              <linearGradient id="hero-cg" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="rgba(16,185,129,0.3)" />
+                <stop offset="100%" stopColor="rgba(16,185,129,0)" />
+              </linearGradient>
+            </defs>
+            <path d="M0,80 C30,75 60,70 90,60 C120,50 150,55 180,45 C210,35 240,40 270,30 C300,20 330,25 360,18 C390,12 420,15 450,10 L500,8 L500,100 L0,100Z" fill="url(#hero-cg)" />
+            <path d="M0,80 C30,75 60,70 90,60 C120,50 150,55 180,45 C210,35 240,40 270,30 C300,20 330,25 360,18 C390,12 420,15 450,10 L500,8" fill="none" stroke="#10b981" strokeWidth="2" />
+          </svg>
+        </div>
+
+        {/* Metric cards */}
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-4">
+          {[
+            { label: "Day Gain", value: "+€347.20" },
+            { label: "Total Gain", value: "+€8,241" },
+            { label: "Dividends", value: "€1,420" },
+          ].map((m) => (
+            <div key={m.label} className="bg-white/[0.03] rounded-lg p-2.5 sm:p-3">
+              <div className="text-[10px] text-slate-500 mb-0.5">{m.label}</div>
+              <div className="text-sm font-bold text-emerald-400">{m.value}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Holdings */}
+        <div className="space-y-1">
+          {[
+            { ticker: "ASML", name: "ASML Holding", gain: "+18.42%", color: "#3b82f6", shares: "8 shares" },
+            { ticker: "VWCE", name: "Vanguard FTSE All-World", gain: "+12.05%", color: "#10b981", shares: "42 shares" },
+            { ticker: "AAPL", name: "Apple Inc.", gain: "+8.73%", color: "#f59e0b", shares: "15 shares" },
+            { ticker: "BABA", name: "Alibaba Group", gain: "-4.21%", color: "#ef4444", shares: "20 shares", isLoss: true },
+          ].map((h) => (
+            <div key={h.ticker} className="flex items-center justify-between px-2.5 py-2 bg-white/[0.02] rounded-md text-xs">
+              <div className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full" style={{ background: h.color }} />
+                <span className="font-semibold text-white">{h.ticker}</span>
+                <span className="text-slate-500 hidden sm:inline">{h.shares}</span>
+              </div>
+              <span className={h.isLoss ? "text-red-400 font-semibold" : "text-emerald-400 font-semibold"}>{h.gain}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Floating AI card */}
+      <div className="absolute -right-2 sm:-right-6 top-16 sm:top-20 w-48 sm:w-56 bg-slate-800/95 backdrop-blur-sm border border-slate-700/60 rounded-xl p-3 shadow-xl hidden md:block">
+        <div className="text-[10px] font-semibold text-slate-400 mb-1.5">AI Portfolio Review</div>
+        <p className="text-[11px] text-slate-300 leading-relaxed mb-2">
+          Your tech allocation is <span className="text-emerald-400 font-semibold">well-balanced</span>. Consider adding...
+        </p>
+        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-violet-400 bg-violet-500/10 px-2 py-0.5 rounded-full border border-violet-500/20">
+          <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" /></svg>
+          Trefolio AI
+        </span>
+      </div>
+
+      {/* Floating dividend card */}
+      <div className="absolute -left-2 sm:-left-6 bottom-16 sm:bottom-20 w-40 sm:w-44 bg-slate-800/95 backdrop-blur-sm border border-slate-700/60 rounded-xl p-3 shadow-xl hidden md:block">
+        <div className="text-[10px] font-semibold text-slate-400 mb-1">Next Dividend</div>
+        <div className="text-lg font-extrabold text-emerald-400">€82.40</div>
+        <div className="text-[10px] text-slate-500 mt-0.5">ASML · Ex-date Apr 28</div>
+      </div>
+    </div>
+  );
+}
+
 /* ─── hero section ─── */
 
 function HeroSection() {
@@ -450,7 +557,7 @@ function HeroSection() {
             {t("landingHeroParagraph")}
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
             <Link
               href="/signup"
               onClick={() => trackLanding("landing_cta_click", { cta: "hero_signup" })}
@@ -472,15 +579,23 @@ function HeroSection() {
               </svg>
             </Link>
           </div>
-        </div>
 
-        <div className="relative max-w-5xl mx-auto">
-          <div className="absolute -inset-4 bg-gradient-to-r from-emerald-500/20 via-teal-500/20 to-cyan-500/20 rounded-3xl blur-2xl" />
-          <div className="relative rounded-2xl overflow-hidden border border-slate-700/50 shadow-2xl shadow-black/50 bg-slate-900">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/screenshots/dashboard-overview.png" alt={t("landingHeroScreenshotAlt")} className="w-full h-auto" loading="eager" />
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 mb-16 max-w-2xl mx-auto">
+            {[
+              { value: t("landingHeroProof1Value"), label: t("landingHeroProof1Label") },
+              { value: t("landingHeroProof2Value"), label: t("landingHeroProof2Label") },
+              { value: t("landingHeroProof3Value"), label: t("landingHeroProof3Label") },
+              { value: t("landingHeroProof4Value"), label: t("landingHeroProof4Label") },
+            ].map((s) => (
+              <div key={s.label} className="text-center">
+                <div className="text-2xl font-extrabold text-white tracking-tight">{s.value}</div>
+                <div className="text-xs text-slate-400 mt-1">{s.label}</div>
+              </div>
+            ))}
           </div>
         </div>
+
+        <HeroDashboardMock />
       </div>
     </section>
   );
@@ -595,7 +710,7 @@ function FeaturesSection() {
           })}
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-24">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-24">
           {featureCards.map((card) => (
             <div
               key={card.title}
@@ -604,7 +719,14 @@ function FeaturesSection() {
               <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-4 group-hover:bg-emerald-500/20 transition-colors">
                 <FeatureIcon type={card.icon} />
               </div>
-              <h4 className="text-lg font-semibold text-white mb-2">{card.title}</h4>
+              <h4 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
+                {card.title}
+                {"badge" in card && card.badge && (
+                  <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                    {card.badge}
+                  </span>
+                )}
+              </h4>
               <p className="text-sm text-slate-400 leading-relaxed">{card.desc}</p>
             </div>
           ))}
@@ -694,15 +816,20 @@ function WhySection() {
   const sectionRef = useInViewOnce(sectionCb);
 
   const comparisons = useMemo(() => [
-    { feature: t("landingWhyRow1"), us: true, others: false, spreadsheets: true },
-    { feature: t("landingWhyRow2"), us: true, others: true, spreadsheets: false },
-    { feature: t("landingWhyRow3"), us: true, others: true, spreadsheets: false },
-    { feature: t("landingWhyRow4"), us: true, others: false, spreadsheets: false },
-    { feature: t("landingWhyRow5"), us: true, others: true, spreadsheets: false },
-    { feature: t("landingWhyRow6"), us: true, others: true, spreadsheets: false },
+    { feature: t("landingWhyRow1"), us: true, others: false, spreadsheets: false, exclusive: true },
+    { feature: t("landingWhyRow2"), us: true, others: false, spreadsheets: false, exclusive: true },
+    { feature: t("landingWhyRow3"), us: true, others: false, spreadsheets: false, exclusive: true },
+    { feature: t("landingWhyRow4"), us: true, others: false, spreadsheets: false, exclusive: true },
+    { feature: t("landingWhyRow5"), us: true, others: false, spreadsheets: false, exclusive: true },
+    { feature: t("landingWhyRow6"), us: true, others: false, spreadsheets: false, exclusive: true },
     { feature: t("landingWhyRow7"), us: true, others: false, spreadsheets: true },
-    { feature: t("landingWhyRow8"), us: true, others: false, spreadsheets: true },
-    { feature: t("landingWhyRow9"), us: true, others: false, spreadsheets: false },
+    { feature: t("landingWhyRow8"), us: true, others: true, spreadsheets: false },
+    { feature: t("landingWhyRow9"), us: true, others: true, spreadsheets: false },
+    { feature: t("landingWhyRow10" as TranslationKey), us: true, others: true, spreadsheets: false },
+    { feature: t("landingWhyRow11" as TranslationKey), us: true, others: true, spreadsheets: false },
+    { feature: t("landingWhyRow12" as TranslationKey), us: true, others: false, spreadsheets: false },
+    { feature: t("landingWhyRow13" as TranslationKey), us: true, others: false, spreadsheets: true },
+    { feature: t("landingWhyRow14" as TranslationKey), us: true, others: false, spreadsheets: false },
   ], [t]);
 
   const Check = () => (
@@ -721,7 +848,10 @@ function WhySection() {
     <section className="py-20 sm:py-28 border-t border-slate-800/50" ref={sectionRef as React.RefObject<HTMLElement>}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+          <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+            Feature by feature
+          </span>
+          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4 mt-4">
             {t("landingWhyHeading")}{" "}
             <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
               {t("landingWhyHeadingAccent")}
@@ -745,7 +875,7 @@ function WhySection() {
             <tbody>
               {comparisons.map((row) => (
                 <tr key={row.feature} className="border-b border-slate-800/50">
-                  <td className="px-4 py-3.5 text-slate-300">{row.feature}</td>
+                  <td className={`px-4 py-3.5 ${row.exclusive ? "text-white font-semibold" : "text-slate-300"}`}>{row.feature}</td>
                   <td className="px-4 py-3.5">{row.us ? <Check /> : <Cross />}</td>
                   <td className="px-4 py-3.5">{row.others ? <Check /> : <Cross />}</td>
                   <td className="px-4 py-3.5">{row.spreadsheets ? <Check /> : <Cross />}</td>
@@ -753,6 +883,9 @@ function WhySection() {
               ))}
             </tbody>
           </table>
+          <p className="text-center text-xs text-slate-500 mt-6">
+            <span className="text-emerald-400 font-semibold">Bold rows</span> = features exclusive to trefolio or where trefolio significantly leads the market.
+          </p>
         </div>
       </div>
     </section>
@@ -1036,6 +1169,305 @@ function DeviceSection() {
               {t("landingDeviceDisclaimer")}
             </p>
           </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ─── themes showcase ─── */
+
+function ThemesShowcase() {
+  const { t } = useI18n();
+  const sectionCb = useCallback(() => trackLanding("landing_section_view", { section: "themes" }), []);
+  const sectionRef = useInViewOnce(sectionCb);
+
+  const themes = useMemo(() => [
+    {
+      name: t("landingThemeDefaultName"),
+      desc: t("landingThemeDefaultDesc"),
+      tier: t("landingThemeDefaultTier"),
+      tierClass: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
+      bg: "bg-slate-900", text: "text-white", accent: "#10b981", muted: "text-slate-400",
+      valueBg: "bg-slate-800/50",
+    },
+    {
+      name: t("landingThemeCanvasName"),
+      desc: t("landingThemeCanvasDesc"),
+      tier: t("landingThemeCanvasTier"),
+      tierClass: "text-amber-400 bg-amber-500/10 border-amber-500/20",
+      bg: "bg-[#f8f5f0]", text: "text-[#1a1a1a]", accent: "#16a34a", muted: "text-[#7a7a6a]",
+      valueBg: "bg-white/80",
+    },
+    {
+      name: t("landingThemeTerminalName"),
+      desc: t("landingThemeTerminalDesc"),
+      tier: t("landingThemeTerminalTier"),
+      tierClass: "text-violet-400 bg-violet-500/10 border-violet-500/20",
+      bg: "bg-[#09090b]", text: "text-[#22c55e]", accent: "#22c55e", muted: "text-[#52525b]",
+      valueBg: "bg-[#18181b]",
+    },
+    {
+      name: t("landingThemeStudioName"),
+      desc: t("landingThemeStudioDesc"),
+      tier: t("landingThemeStudioTier"),
+      tierClass: "text-violet-400 bg-violet-500/10 border-violet-500/20",
+      bg: "bg-[#0c0c0c]", text: "text-white", accent: "#22c55e", muted: "text-[#525252]",
+      valueBg: "bg-[#1a1a1a]",
+    },
+  ], [t]);
+
+  return (
+    <section id="themes" className="py-20 sm:py-28 border-t border-slate-800/50" ref={sectionRef as React.RefObject<HTMLElement>}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+            {t("landingThemesEyebrow")}
+          </span>
+          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4 mt-4">
+            {t("landingThemesHeading")}{" "}
+            <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
+              {t("landingThemesHeadingAccent")}
+            </span>
+          </h2>
+          <p className="text-lg text-slate-400 max-w-2xl mx-auto">
+            {t("landingThemesSubtitle")}
+          </p>
+        </div>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {themes.map((theme) => (
+            <div
+              key={theme.name}
+              className={`${theme.bg} rounded-2xl border border-slate-700/40 p-5 shadow-lg`}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <span className={`font-bold text-sm ${theme.text}`}>{theme.name}</span>
+                <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${theme.tierClass}`}>
+                  {theme.tier}
+                </span>
+              </div>
+              <div className={`text-xs ${theme.muted} mb-3`}>{theme.desc}</div>
+              <div className={`text-xl font-extrabold tracking-tight ${theme.text}`}>€47,284</div>
+              <div className="text-xs font-semibold mt-0.5 mb-3" style={{ color: theme.accent }}>+2.71%</div>
+              <div className="space-y-1">
+                {["ASML", "VWCE", "AAPL"].map((ticker) => (
+                  <div key={ticker} className={`flex items-center justify-between ${theme.valueBg} rounded-md px-2 py-1.5 text-[11px]`}>
+                    <span className={`font-semibold ${theme.text}`}>{ticker}</span>
+                    <span style={{ color: theme.accent }} className="font-semibold">+18.42%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ─── value proposition ─── */
+
+function ValuePropsSection() {
+  const { t } = useI18n();
+  const sectionCb = useCallback(() => trackLanding("landing_section_view", { section: "value_props" }), []);
+  const sectionRef = useInViewOnce(sectionCb);
+
+  const values = useMemo(() => [
+    {
+      icon: (
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582" />
+        </svg>
+      ),
+      value: t("landingValue1Value"), label: t("landingValue1Label"), desc: t("landingValue1Desc"),
+    },
+    {
+      icon: (
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+        </svg>
+      ),
+      value: t("landingValue2Value"), label: t("landingValue2Label"), desc: t("landingValue2Desc"),
+    },
+    {
+      icon: (
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
+        </svg>
+      ),
+      value: t("landingValue3Value"), label: t("landingValue3Label"), desc: t("landingValue3Desc"),
+      badge: t("landingValue3Badge"), highlighted: true,
+    },
+    {
+      icon: (
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+        </svg>
+      ),
+      value: t("landingValue4Value"), label: t("landingValue4Label"), desc: t("landingValue4Desc"),
+    },
+  ], [t]);
+
+  return (
+    <section className="py-20 sm:py-28 border-t border-slate-800/50" ref={sectionRef as React.RefObject<HTMLElement>}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+            {t("landingValueEyebrow")}
+          </span>
+          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4 mt-4">
+            {t("landingValueHeading")}{" "}
+            <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
+              {t("landingValueHeadingAccent")}
+            </span>
+          </h2>
+          <p className="text-lg text-slate-400 max-w-2xl mx-auto">
+            {t("landingValueSubtitle")}
+          </p>
+        </div>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
+          {values.map((v) => (
+            <div
+              key={v.label}
+              className={`relative rounded-2xl p-7 text-center ${
+                v.highlighted
+                  ? "bg-slate-900/50 border-2 border-emerald-500/40"
+                  : "bg-slate-900/50 border border-slate-800"
+              }`}
+            >
+              {v.badge && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] font-bold text-white bg-emerald-500 px-3 py-1 rounded-full">
+                  {v.badge}
+                </div>
+              )}
+              <div className="w-11 h-11 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-3 text-emerald-400">
+                {v.icon}
+              </div>
+              <div className="text-4xl font-extrabold text-white tracking-tight mb-1">
+                {v.value}{v.highlighted && <span className="text-base font-medium text-slate-400">/mo</span>}
+              </div>
+              <div className="text-sm font-semibold text-slate-300 mb-1">{v.label}</div>
+              <div className="text-xs text-slate-500">{v.desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ─── trust & privacy ─── */
+
+function TrustSection() {
+  const { t } = useI18n();
+  const sectionCb = useCallback(() => trackLanding("landing_section_view", { section: "trust" }), []);
+  const sectionRef = useInViewOnce(sectionCb);
+
+  const cards = useMemo(() => [
+    {
+      icon: (
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+        </svg>
+      ),
+      iconClass: "bg-emerald-500/10 text-emerald-400",
+      title: t("landingTrust1Title"), desc: t("landingTrust1Desc"),
+    },
+    {
+      icon: (
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+        </svg>
+      ),
+      iconClass: "bg-cyan-500/10 text-cyan-400",
+      title: t("landingTrust2Title"), desc: t("landingTrust2Desc"),
+    },
+    {
+      icon: (
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+        </svg>
+      ),
+      iconClass: "bg-violet-500/10 text-violet-400",
+      title: t("landingTrust3Title"), desc: t("landingTrust3Desc"),
+    },
+  ], [t]);
+
+  return (
+    <section className="py-20 sm:py-28 border-t border-slate-800/50" ref={sectionRef as React.RefObject<HTMLElement>}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+            {t("landingTrustEyebrow")}
+          </span>
+          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4 mt-4">
+            {t("landingTrustHeading")}{" "}
+            <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
+              {t("landingTrustHeadingAccent")}
+            </span>
+          </h2>
+          <p className="text-lg text-slate-400 max-w-xl mx-auto">
+            {t("landingTrustSubtitle")}
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+          {cards.map((card) => (
+            <div key={card.title} className="rounded-2xl border border-slate-800 bg-slate-900/50 p-8 text-center hover:border-slate-700 transition-colors">
+              <div className={`w-14 h-14 rounded-xl ${card.iconClass} flex items-center justify-center mx-auto mb-5`}>
+                {card.icon}
+              </div>
+              <h4 className="text-lg font-semibold text-white mb-2">{card.title}</h4>
+              <p className="text-sm text-slate-400 leading-relaxed">{card.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ─── getting started steps ─── */
+
+function GettingStartedSection() {
+  const { t } = useI18n();
+  const sectionCb = useCallback(() => trackLanding("landing_section_view", { section: "getting_started" }), []);
+  const sectionRef = useInViewOnce(sectionCb);
+
+  return (
+    <section className="py-20 sm:py-28 border-t border-slate-800/50" ref={sectionRef as React.RefObject<HTMLElement>}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+            {t("landingGsEyebrow")}
+          </span>
+          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4 mt-4">
+            {t("landingGsHeading")}{" "}
+            <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
+              {t("landingGsHeadingAccent")}
+            </span>
+          </h2>
+          <p className="text-lg text-slate-400 max-w-xl mx-auto">
+            {t("landingGsSubtitle")}
+          </p>
+        </div>
+
+        <div className="grid sm:grid-cols-3 gap-8 max-w-3xl mx-auto">
+          {[
+            { step: "1", title: t("landingGs1Title"), desc: t("landingGs1Desc") },
+            { step: "2", title: t("landingGs2Title"), desc: t("landingGs2Desc") },
+            { step: "3", title: t("landingGs3Title"), desc: t("landingGs3Desc") },
+          ].map((s) => (
+            <div key={s.step} className="text-center">
+              <div className="w-12 h-12 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center font-bold text-xl mx-auto mb-4">
+                {s.step}
+              </div>
+              <h4 className="text-base font-semibold text-white mb-2">{s.title}</h4>
+              <p className="text-sm text-slate-400 leading-relaxed">{s.desc}</p>
+            </div>
+          ))}
         </div>
       </div>
     </section>
@@ -1354,11 +1786,15 @@ export default function LandingPage() {
       <HeroSection />
       <StatsBar />
       <FeaturesSection />
-      <TestimonialsSection />
-      <MidFunnelCTA />
+      <ThemesShowcase />
+      <ValuePropsSection />
       <WhySection />
+      <TestimonialsSection />
+      <TrustSection />
+      <MidFunnelCTA />
       <PricingSection />
       <FAQSection />
+      <GettingStartedSection />
       <VideoTutorialSection />
       <InstallAppSection />
       <DeviceSection />
