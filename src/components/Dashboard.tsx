@@ -13,6 +13,7 @@ import { usePortfolio } from "@/lib/portfolio-context";
 import { useAuth } from "@/lib/auth-context";
 import { getHoldingsLimit } from "@/lib/subscription";
 import { useTrack } from "@/lib/use-track";
+import { useTheme } from "@/lib/theme-context";
 import type { Account } from "@/lib/types";
 
 const PortfolioGrowthPeriods = dynamic(() => import("./PortfolioGrowthPeriods"), { ssr: false });
@@ -140,6 +141,7 @@ export default function Dashboard() {
   const { holdings, cashEntries, isLoading, refreshHoldings, refreshQuotes, activePortfolioId } = usePortfolio();
   const { user, isLoading: authLoading } = useAuth();
   const track = useTrack();
+  const { layoutTheme } = useTheme();
 
   useEffect(() => {
     fetch("/api/accounts")
@@ -201,6 +203,26 @@ export default function Dashboard() {
     if (tab === "events") track("events_tab_viewed");
   }
 
+  function handleTabKeyDown(e: React.KeyboardEvent) {
+    const keys = dashboardTabs.map((dt) => dt.key);
+    const idx = keys.indexOf(activeTab);
+    let next = -1;
+    if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+      next = (idx + 1) % keys.length;
+    } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+      next = (idx - 1 + keys.length) % keys.length;
+    } else if (e.key === "Home") {
+      next = 0;
+    } else if (e.key === "End") {
+      next = keys.length - 1;
+    }
+    if (next >= 0) {
+      e.preventDefault();
+      handleTabChange(keys[next]);
+      document.getElementById(`tab-${keys[next]}`)?.focus();
+    }
+  }
+
   const hasLoadedOnce = useRef(false);
   if (!isLoading && (holdingsCount > 0 || cashEntries.length > 0)) {
     hasLoadedOnce.current = true;
@@ -249,30 +271,53 @@ export default function Dashboard() {
         onResetPortfolio={() => setShowReset(true)}
       />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-6 space-y-4 sm:space-y-8">
-        {/* Dashboard Tab Bar */}
-        <div role="tablist" aria-label={t("portfolioTab")} className="flex gap-1 overflow-x-auto sm:flex-wrap sm:overflow-visible scrollbar-hide bg-white dark:bg-slate-800 rounded-2xl p-1.5 border border-gray-200 dark:border-slate-700 shadow-sm">
-          {dashboardTabs.map((tab) => (
-            <button
-              key={tab.key}
-              role="tab"
-              id={`tab-${tab.key}`}
-              aria-selected={activeTab === tab.key}
-              aria-controls={`tabpanel-${tab.key}`}
-              onClick={() => handleTabChange(tab.key)}
-              className={`shrink-0 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium rounded-xl transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none ${
-                activeTab === tab.key
-                  ? "bg-emerald-500 text-white shadow-sm"
-                  : "text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-700"
-              }`}
-            >
-              {tab.label}
-              {tab.tierBadge && (
-                <TierFeatureBadge requiredPlan={tab.tierBadge} size="xs" className="ml-1" />
-              )}
-            </button>
-          ))}
-        </div>
+      <main className={`max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-6 ${layoutTheme === "terminal" ? "space-y-2 sm:space-y-4" : layoutTheme === "canvas" ? "space-y-5 sm:space-y-10" : "space-y-4 sm:space-y-8"}`}>
+        {/* Dashboard Tab Bar — theme-aware */}
+        {layoutTheme === "terminal" ? (
+          <div role="tablist" aria-label={t("portfolioTab")} className="flex gap-0 overflow-x-auto scrollbar-hide border-b border-zinc-800 font-mono" data-testid="tabbar-terminal" onKeyDown={handleTabKeyDown}>
+            {dashboardTabs.map((tab) => (
+              <button key={tab.key} role="tab" id={`tab-${tab.key}`} aria-selected={activeTab === tab.key} aria-controls={`tabpanel-${tab.key}`} tabIndex={activeTab === tab.key ? 0 : -1} onClick={() => handleTabChange(tab.key)}
+                className={`shrink-0 px-3 py-1.5 text-xs transition-colors focus-visible:ring-1 focus-visible:ring-green-500 focus-visible:outline-none border-b-2 ${activeTab === tab.key ? "border-green-500 text-green-400" : "border-transparent text-zinc-600 hover:text-zinc-300"}`}
+              >
+                {tab.label.toLowerCase()}
+                {tab.tierBadge && <TierFeatureBadge requiredPlan={tab.tierBadge} size="xs" className="ml-1" />}
+              </button>
+            ))}
+          </div>
+        ) : layoutTheme === "canvas" ? (
+          <div role="tablist" aria-label={t("portfolioTab")} className="flex gap-2 overflow-x-auto sm:flex-wrap sm:overflow-visible scrollbar-hide" data-testid="tabbar-canvas" onKeyDown={handleTabKeyDown}>
+            {dashboardTabs.map((tab) => (
+              <button key={tab.key} role="tab" id={`tab-${tab.key}`} aria-selected={activeTab === tab.key} aria-controls={`tabpanel-${tab.key}`} tabIndex={activeTab === tab.key ? 0 : -1} onClick={() => handleTabChange(tab.key)}
+                className={`shrink-0 px-5 py-2.5 text-sm font-medium rounded-full transition-all focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:outline-none ${activeTab === tab.key ? "bg-slate-900 text-white shadow-md" : "bg-white text-slate-500 border border-slate-200 hover:border-slate-300 hover:text-slate-800"}`}
+              >
+                {tab.label}
+                {tab.tierBadge && <TierFeatureBadge requiredPlan={tab.tierBadge} size="xs" className="ml-1" />}
+              </button>
+            ))}
+          </div>
+        ) : layoutTheme === "studio" ? (
+          <div role="tablist" aria-label={t("portfolioTab")} className="flex gap-0 overflow-x-auto scrollbar-hide border-b border-white/10" data-testid="tabbar-studio" onKeyDown={handleTabKeyDown}>
+            {dashboardTabs.map((tab) => (
+              <button key={tab.key} role="tab" id={`tab-${tab.key}`} aria-selected={activeTab === tab.key} aria-controls={`tabpanel-${tab.key}`} tabIndex={activeTab === tab.key ? 0 : -1} onClick={() => handleTabChange(tab.key)}
+                className={`shrink-0 px-4 py-2.5 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none border-b-2 ${activeTab === tab.key ? "border-emerald-400 text-white" : "border-transparent text-zinc-500 hover:text-zinc-300"}`}
+              >
+                {tab.label}
+                {tab.tierBadge && <TierFeatureBadge requiredPlan={tab.tierBadge} size="xs" className="ml-1" />}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div role="tablist" aria-label={t("portfolioTab")} className="flex gap-1 overflow-x-auto sm:flex-wrap sm:overflow-visible scrollbar-hide bg-white dark:bg-slate-800 rounded-2xl p-1.5 border border-gray-200 dark:border-slate-700 shadow-sm" data-testid="tabbar-default" onKeyDown={handleTabKeyDown}>
+            {dashboardTabs.map((tab) => (
+              <button key={tab.key} role="tab" id={`tab-${tab.key}`} aria-selected={activeTab === tab.key} aria-controls={`tabpanel-${tab.key}`} tabIndex={activeTab === tab.key ? 0 : -1} onClick={() => handleTabChange(tab.key)}
+                className={`shrink-0 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium rounded-xl transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none ${activeTab === tab.key ? "bg-emerald-500 text-white shadow-sm" : "text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-700"}`}
+              >
+                {tab.label}
+                {tab.tierBadge && <TierFeatureBadge requiredPlan={tab.tierBadge} size="xs" className="ml-1" />}
+              </button>
+            ))}
+          </div>
+        )}
 
         <SnapTradeReconnectBanner />
         <LeafPromoBanner />

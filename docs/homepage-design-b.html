@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>trefolio — Design B: The Terminal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #030712;
+    --bg-surface: #0a0f1a;
+    --bg-card: #111827;
+    --bg-card-alt: #0d1424;
+    --border: rgba(255,255,255,0.06);
+    --border-hover: rgba(255,255,255,0.12);
+    --text: #f8fafc;
+    --text-dim: #cbd5e1;
+    --text-muted: #64748b;
+    --text-faint: #475569;
+    --emerald: #10b981;
+    --emerald-bright: #34d399;
+    --emerald-glow: rgba(16,185,129,0.12);
+    --emerald-glow-strong: rgba(16,185,129,0.25);
+    --amber: #fbbf24;
+    --amber-glow: rgba(251,191,36,0.1);
+    --red: #f87171;
+    --cyan: #22d3ee;
+    --display: 'Outfit', -apple-system, sans-serif;
+    --mono: 'JetBrains Mono', 'Fira Code', monospace;
+    --body: 'Outfit', -apple-system, sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+  body { font-family: var(--body); background: var(--bg); color: var(--text); line-height: 1.6; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+  a { text-decoration: none; color: inherit; }
+
+  /* ── NAV ── */
+  .nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    height: 64px; display: flex; align-items: center; justify-content: space-between;
+    padding: 0 clamp(1rem, 4vw, 3rem);
+    background: rgba(3, 7, 18, 0.7); backdrop-filter: blur(24px) saturate(1.8);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-left { display: flex; align-items: center; gap: 10px; }
+  .nav-left svg { width: 32px; height: 32px; }
+  .nav-brand { font-family: var(--display); font-weight: 700; font-size: 1.25rem; letter-spacing: -0.03em; }
+  .nav-center { display: flex; align-items: center; gap: 0; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; padding: 4px; }
+  .nav-pill { font-size: 0.8rem; font-weight: 500; color: var(--text-muted); padding: 6px 16px; border-radius: 7px; transition: all 0.2s; }
+  .nav-pill:hover { color: var(--text-dim); background: rgba(255,255,255,0.04); }
+  .nav-right { display: flex; align-items: center; gap: 12px; }
+  .btn-sm { font-size: 0.8rem; font-weight: 500; padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; transition: all 0.2s; }
+  .btn-sm-ghost { background: none; color: var(--text-dim); }
+  .btn-sm-ghost:hover { color: var(--text); }
+  .btn-sm-primary { background: var(--emerald); color: #fff; font-weight: 600; box-shadow: 0 2px 12px rgba(16,185,129,0.3); }
+  .btn-sm-primary:hover { background: var(--emerald-bright); transform: translateY(-1px); }
+
+  /* ── HERO ── */
+  .hero {
+    padding: 140px 2rem 80px; position: relative; text-align: center;
+    background:
+      radial-gradient(ellipse 60% 50% at 50% 0%, rgba(16,185,129,0.06) 0%, transparent 100%),
+      radial-gradient(ellipse 40% 40% at 30% 20%, rgba(6,182,212,0.04) 0%, transparent 100%);
+  }
+  .hero-grid-bg {
+    position: absolute; inset: 0; z-index: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black 20%, transparent 70%);
+    -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black 20%, transparent 70%);
+  }
+  .hero-content { position: relative; z-index: 2; max-width: 800px; margin: 0 auto; }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--mono); font-size: 0.72rem; font-weight: 500; letter-spacing: 0.04em;
+    color: var(--emerald); background: var(--emerald-glow); border: 1px solid rgba(16,185,129,0.2);
+    padding: 6px 16px; border-radius: 100px; margin-bottom: 28px;
+  }
+  .hero-badge .pulse { width: 6px; height: 6px; border-radius: 50%; background: var(--emerald); box-shadow: 0 0 8px var(--emerald); animation: glow 2s infinite; }
+  @keyframes glow { 0%, 100% { opacity: 1; box-shadow: 0 0 8px var(--emerald); } 50% { opacity: 0.5; box-shadow: 0 0 16px var(--emerald); } }
+  .hero h1 {
+    font-family: var(--display); font-size: clamp(2.5rem, 6vw, 4.5rem);
+    font-weight: 900; line-height: 1.05; letter-spacing: -0.04em; margin-bottom: 20px;
+  }
+  .hero h1 .accent { background: linear-gradient(135deg, var(--emerald-bright), var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .hero-sub { font-size: 1.15rem; font-weight: 400; color: var(--text-dim); max-width: 560px; margin: 0 auto 36px; line-height: 1.7; }
+  .hero-actions { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 48px; }
+  .btn-hero {
+    font-family: var(--body); font-size: 0.95rem; font-weight: 600; padding: 14px 32px;
+    border-radius: 12px; border: none; cursor: pointer; transition: all 0.25s; display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn-hero-primary {
+    background: var(--emerald); color: #fff;
+    box-shadow: 0 4px 24px rgba(16,185,129,0.3), 0 0 0 1px rgba(16,185,129,0.4) inset;
+  }
+  .btn-hero-primary:hover { background: var(--emerald-bright); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(16,185,129,0.35), 0 0 0 1px rgba(16,185,129,0.5) inset; }
+  .btn-hero-ghost {
+    background: rgba(255,255,255,0.04); color: var(--text-dim); border: 1px solid var(--border-hover);
+  }
+  .btn-hero-ghost:hover { background: rgba(255,255,255,0.06); color: var(--text); border-color: rgba(255,255,255,0.2); }
+
+  /* ── HERO BENTO ── */
+  .hero-bento {
+    max-width: 1100px; margin: 0 auto; position: relative; z-index: 2;
+    display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: auto auto; gap: 12px;
+  }
+  .bento-cell {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
+    padding: 24px; overflow: hidden; transition: border-color 0.3s;
+  }
+  .bento-cell:hover { border-color: var(--border-hover); }
+  .bento-main { grid-row: 1 / 3; }
+  .bento-label { font-family: var(--mono); font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 12px; }
+  .bento-value-lg { font-family: var(--display); font-size: 2.5rem; font-weight: 800; letter-spacing: -0.03em; }
+  .bento-change { display: inline-flex; align-items: center; gap: 4px; font-family: var(--mono); font-size: 0.8rem; font-weight: 600; color: var(--emerald); background: var(--emerald-glow); padding: 4px 10px; border-radius: 6px; margin-left: 12px; }
+  .bento-chart { margin-top: 16px; width: 100%; height: 140px; }
+  .bento-chart svg { width: 100%; height: 100%; }
+  .bento-holdings { margin-top: 16px; display: grid; gap: 6px; }
+  .b-holding {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px; background: rgba(255,255,255,0.02); border-radius: 8px;
+    font-size: 0.8rem; border: 1px solid transparent; transition: all 0.2s;
+  }
+  .b-holding:hover { border-color: var(--border); background: rgba(255,255,255,0.04); }
+  .b-holding-left { display: flex; align-items: center; gap: 10px; }
+  .b-holding-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .b-holding-ticker { font-family: var(--mono); font-weight: 600; color: var(--text); }
+  .b-holding-name { color: var(--text-muted); font-size: 0.75rem; }
+  .b-holding-gain { font-family: var(--mono); font-weight: 600; color: var(--emerald); }
+  .b-holding-loss { font-family: var(--mono); font-weight: 600; color: var(--red); }
+
+  /* AI card */
+  .bento-ai { display: flex; flex-direction: column; justify-content: space-between; }
+  .ai-insight { font-size: 0.85rem; color: var(--text-dim); line-height: 1.6; margin-top: 8px; }
+  .ai-badge { display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 0.65rem; font-weight: 600; color: var(--emerald); background: var(--emerald-glow); padding: 4px 10px; border-radius: 6px; margin-top: 12px; }
+  .ai-sparkle { width: 14px; height: 14px; }
+  .pro-lock { font-family: var(--mono); font-size: 0.6rem; font-weight: 600; color: var(--amber); background: var(--amber-glow); padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(251,191,36,0.2); }
+
+  /* Dividend mini card */
+  .bento-dividend-row { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+  .div-amount { font-family: var(--mono); font-size: 1.6rem; font-weight: 700; color: var(--emerald-bright); }
+  .div-meta { font-size: 0.75rem; color: var(--text-muted); }
+
+  /* ── TICKER STRIP ── */
+  .ticker-strip {
+    border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+    padding: 14px 0; overflow: hidden; background: var(--bg-surface);
+  }
+  .ticker-track {
+    display: flex; gap: 48px; animation: scroll 30s linear infinite; width: max-content;
+  }
+  @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+  .ticker-item { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; white-space: nowrap; }
+  .ticker-symbol { font-family: var(--mono); font-weight: 600; color: var(--text); }
+  .ticker-price { color: var(--text-dim); }
+  .ticker-up { color: var(--emerald); font-family: var(--mono); font-weight: 500; }
+  .ticker-down { color: var(--red); font-family: var(--mono); font-weight: 500; }
+
+  /* ── BROKERS ── */
+  .brokers {
+    padding: 48px 2rem; text-align: center;
+  }
+  .brokers-label { font-family: var(--mono); font-size: 0.7rem; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 20px; }
+  .brokers-list { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; max-width: 800px; margin: 0 auto; }
+  .broker-chip {
+    font-family: var(--mono); font-size: 0.72rem; font-weight: 500; color: var(--text-muted);
+    background: rgba(255,255,255,0.03); border: 1px solid var(--border); padding: 6px 16px; border-radius: 8px;
+    transition: all 0.2s;
+  }
+  .broker-chip:hover { color: var(--text-dim); border-color: var(--border-hover); background: rgba(255,255,255,0.05); }
+
+  /* ── FEATURES BENTO ── */
+  .features-section { padding: 100px 2rem; }
+  .features-inner { max-width: 1100px; margin: 0 auto; }
+  .section-head { margin-bottom: 60px; }
+  .section-overline { font-family: var(--mono); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--emerald); margin-bottom: 12px; }
+  .section-h2 { font-family: var(--display); font-size: clamp(2rem, 4vw, 3rem); font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; margin-bottom: 12px; }
+  .section-h2 .accent { color: var(--emerald-bright); }
+  .section-p { font-size: 1.05rem; color: var(--text-dim); max-width: 520px; line-height: 1.7; }
+
+  .features-bento {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+  }
+  .fb-card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
+    padding: 28px; position: relative; overflow: hidden; transition: all 0.3s;
+  }
+  .fb-card:hover { border-color: var(--border-hover); transform: translateY(-2px); }
+  .fb-card.span-2 { grid-column: span 2; }
+  .fb-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: var(--emerald-glow); border: 1px solid rgba(16,185,129,0.15);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 16px; color: var(--emerald);
+  }
+  .fb-icon svg { width: 20px; height: 20px; }
+  .fb-card h3 { font-family: var(--display); font-size: 1.1rem; font-weight: 700; margin-bottom: 6px; }
+  .fb-card p { font-size: 0.85rem; color: var(--text-muted); line-height: 1.6; }
+  .fb-pro-tag { position: absolute; top: 16px; right: 16px; }
+
+  /* Big feature row */
+  .big-feature {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center;
+    padding: 100px 2rem;
+  }
+  .big-feature-inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+  .bf-text h3 { font-family: var(--display); font-size: 2rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 12px; }
+  .bf-text p { font-size: 1rem; color: var(--text-dim); line-height: 1.7; margin-bottom: 24px; }
+  .bf-points { list-style: none; display: grid; gap: 10px; }
+  .bf-points li { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; color: var(--text-dim); }
+  .bf-check { width: 20px; height: 20px; border-radius: 6px; background: var(--emerald-glow); border: 1px solid rgba(16,185,129,0.2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--emerald); }
+  .bf-check svg { width: 12px; height: 12px; }
+  .bf-visual {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
+    padding: 32px; min-height: 320px; display: flex; flex-direction: column; justify-content: center;
+  }
+  .bf-visual-placeholder { color: var(--text-faint); font-size: 0.85rem; text-align: center; padding: 60px 0; }
+
+  /* ── TIER COMPARISON ── */
+  .tiers { padding: 100px 2rem; background: var(--bg-surface); }
+  .tiers-inner { max-width: 1100px; margin: 0 auto; }
+  .tiers-table { width: 100%; border-collapse: collapse; margin-top: 48px; }
+  .tiers-table th {
+    padding: 16px 20px; font-family: var(--mono); font-size: 0.7rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); text-align: center;
+    border-bottom: 1px solid var(--border);
+  }
+  .tiers-table th:first-child { text-align: left; }
+  .tiers-table th.highlight { color: var(--emerald); background: var(--emerald-glow); border-radius: 12px 12px 0 0; }
+  .tiers-table td {
+    padding: 12px 20px; font-size: 0.85rem; color: var(--text-dim); text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+  }
+  .tiers-table td:first-child { text-align: left; color: var(--text); font-weight: 500; }
+  .tiers-table td.highlight { background: rgba(16,185,129,0.03); }
+  .t-check { color: var(--emerald); font-weight: 700; }
+  .t-cross { color: var(--text-faint); }
+  .t-value { font-family: var(--mono); font-weight: 600; color: var(--text); }
+  .t-value.emerald { color: var(--emerald-bright); }
+
+  /* ── PRICING ── */
+  .pricing { padding: 100px 2rem; }
+  .pricing-inner { max-width: 1100px; margin: 0 auto; }
+
+  .p-toggle {
+    display: flex; align-items: center; justify-content: center; gap: 12px; margin: 40px 0;
+  }
+  .p-toggle-label { font-family: var(--mono); font-size: 0.8rem; font-weight: 500; color: var(--text-muted); cursor: pointer; transition: color 0.2s; }
+  .p-toggle-label.active { color: var(--text); }
+  .p-toggle-track {
+    width: 44px; height: 24px; border-radius: 12px; background: var(--border-hover);
+    position: relative; cursor: pointer; transition: background 0.2s;
+  }
+  .p-toggle-track.active { background: var(--emerald); }
+  .p-toggle-dot {
+    width: 18px; height: 18px; border-radius: 50%; background: #fff;
+    position: absolute; top: 3px; left: 3px; transition: transform 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  }
+  .p-toggle-track.active .p-toggle-dot { transform: translateX(20px); }
+  .p-save { font-family: var(--mono); font-size: 0.65rem; font-weight: 600; color: var(--emerald); background: var(--emerald-glow); border: 1px solid rgba(16,185,129,0.2); padding: 3px 10px; border-radius: 100px; }
+
+  .pricing-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .p-card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px;
+    padding: 32px; position: relative; transition: all 0.3s;
+  }
+  .p-card:hover { border-color: var(--border-hover); }
+  .p-card.featured {
+    border: 2px solid rgba(16,185,129,0.4);
+    background: linear-gradient(180deg, rgba(16,185,129,0.04) 0%, var(--bg-card) 40%);
+    box-shadow: 0 0 80px rgba(16,185,129,0.06);
+  }
+  .p-popular {
+    position: absolute; top: -13px; left: 50%; transform: translateX(-50%);
+    font-family: var(--mono); font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+    background: var(--emerald); color: #fff; padding: 5px 18px; border-radius: 100px;
+    box-shadow: 0 4px 16px rgba(16,185,129,0.35);
+  }
+  .p-tier { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .p-tier-name { font-family: var(--display); font-size: 1.25rem; font-weight: 700; }
+  .p-tier-desc { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 20px; }
+  .p-price { display: flex; align-items: baseline; gap: 4px; margin-bottom: 4px; }
+  .p-price-old { font-family: var(--mono); font-size: 0.9rem; color: var(--text-faint); text-decoration: line-through; }
+  .p-price-val { font-family: var(--display); font-size: 2.8rem; font-weight: 900; letter-spacing: -0.04em; }
+  .p-price-period { font-size: 0.85rem; color: var(--text-muted); }
+  .p-annual-info { font-family: var(--mono); font-size: 0.72rem; color: var(--text-muted); margin-bottom: 20px; min-height: 18px; }
+  .p-annual-info .green { color: var(--emerald); font-weight: 600; }
+  .p-divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+  .p-features { list-style: none; display: grid; gap: 8px; margin-bottom: 24px; }
+  .p-features li { font-size: 0.82rem; color: var(--text-dim); display: flex; align-items: flex-start; gap: 8px; }
+  .p-features li::before { content: '✓'; font-weight: 700; color: var(--emerald); flex-shrink: 0; }
+  .p-cta {
+    display: block; width: 100%; text-align: center; font-family: var(--body); font-weight: 600;
+    font-size: 0.9rem; padding: 13px; border-radius: 12px; border: none; cursor: pointer; transition: all 0.2s;
+  }
+  .p-cta-ghost { background: rgba(255,255,255,0.04); color: var(--text); border: 1px solid var(--border); }
+  .p-cta-ghost:hover { background: rgba(255,255,255,0.06); border-color: var(--border-hover); }
+  .p-cta-mid { background: rgba(16,185,129,0.08); color: var(--emerald-bright); border: 1px solid rgba(16,185,129,0.2); }
+  .p-cta-mid:hover { background: rgba(16,185,129,0.12); }
+  .p-cta-primary { background: var(--emerald); color: #fff; box-shadow: 0 4px 20px rgba(16,185,129,0.3); }
+  .p-cta-primary:hover { background: var(--emerald-bright); transform: translateY(-1px); }
+
+  /* ── UPGRADE BANNER ── */
+  .upgrade-banner { padding: 0 2rem; margin: 80px auto; max-width: 1100px; }
+  .ub-card {
+    display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 40px;
+    background: linear-gradient(135deg, rgba(16,185,129,0.06), rgba(34,211,238,0.03));
+    border: 1px solid rgba(16,185,129,0.15); border-radius: 20px; padding: 40px 48px;
+  }
+  .ub-card h3 { font-family: var(--display); font-size: 1.6rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 6px; }
+  .ub-card p { font-size: 0.95rem; color: var(--text-dim); }
+  .ub-features { display: flex; gap: 20px; margin-top: 12px; flex-wrap: wrap; }
+  .ub-feat { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 0.72rem; color: var(--emerald); }
+  .ub-feat::before { content: '✓'; font-weight: 700; }
+
+  /* ── TESTIMONIALS ── */
+  .testimonials { padding: 100px 2rem; background: var(--bg-surface); }
+  .testimonials-inner { max-width: 1100px; margin: 0 auto; }
+  .test-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 48px; }
+  .test-card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
+    padding: 28px; transition: border-color 0.2s;
+  }
+  .test-card:hover { border-color: var(--border-hover); }
+  .test-stars { display: flex; gap: 2px; margin-bottom: 12px; color: var(--amber); }
+  .test-stars svg { width: 14px; height: 14px; }
+  .test-quote { font-size: 0.88rem; color: var(--text-dim); line-height: 1.65; margin-bottom: 16px; }
+  .test-author { font-size: 0.82rem; font-weight: 600; }
+  .test-role { font-size: 0.72rem; color: var(--text-faint); }
+
+  /* ── FAQ ── */
+  .faq { padding: 100px 2rem; }
+  .faq-inner { max-width: 680px; margin: 0 auto; }
+  .faq-item { border-bottom: 1px solid var(--border); }
+  .faq-q {
+    width: 100%; display: flex; justify-content: space-between; align-items: center;
+    padding: 18px 0; background: none; border: none; color: var(--text);
+    font-family: var(--body); font-size: 0.95rem; font-weight: 500; text-align: left; cursor: pointer; transition: color 0.2s;
+  }
+  .faq-q:hover { color: var(--emerald-bright); }
+  .faq-q svg { width: 18px; height: 18px; color: var(--text-faint); transition: transform 0.3s; flex-shrink: 0; margin-left: 12px; }
+  .faq-q.open svg { transform: rotate(180deg); }
+  .faq-a { font-size: 0.88rem; color: var(--text-muted); line-height: 1.7; padding-bottom: 18px; display: none; }
+  .faq-a.open { display: block; }
+
+  /* ── FINAL CTA ── */
+  .final-cta { padding: 100px 2rem; }
+  .fct-inner {
+    max-width: 800px; margin: 0 auto; text-align: center;
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 24px;
+    padding: 64px 48px; position: relative; overflow: hidden;
+  }
+  .fct-inner::before {
+    content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 400px; height: 200px;
+    background: radial-gradient(ellipse, rgba(16,185,129,0.12) 0%, transparent 70%);
+  }
+  .fct-inner h2 { font-family: var(--display); font-size: 2.2rem; font-weight: 900; letter-spacing: -0.03em; margin-bottom: 12px; position: relative; }
+  .fct-inner p { font-size: 1rem; color: var(--text-dim); margin-bottom: 28px; max-width: 440px; margin-left: auto; margin-right: auto; position: relative; }
+
+  /* ── FOOTER ── */
+  .footer { border-top: 1px solid var(--border); padding: 48px 2rem 32px; }
+  .footer-inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 32px; }
+  .footer-brand { font-family: var(--display); font-weight: 700; font-size: 1.2rem; margin-bottom: 6px; }
+  .footer-desc { font-size: 0.78rem; color: var(--text-faint); max-width: 260px; line-height: 1.6; }
+  .footer-col h5 { font-family: var(--mono); font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-faint); margin-bottom: 14px; }
+  .footer-col a { display: block; font-size: 0.82rem; color: var(--text-muted); margin-bottom: 8px; transition: color 0.2s; }
+  .footer-col a:hover { color: var(--text); }
+  .footer-bottom { max-width: 1100px; margin: 24px auto 0; padding-top: 20px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; font-family: var(--mono); font-size: 0.68rem; color: var(--text-faint); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 1024px) {
+    .hero-bento { grid-template-columns: 1fr; }
+    .bento-main { grid-row: auto; }
+    .features-bento { grid-template-columns: 1fr; }
+    .fb-card.span-2 { grid-column: span 1; }
+    .big-feature-inner { grid-template-columns: 1fr; }
+    .tiers-table { font-size: 0.8rem; }
+    .pricing-cards { grid-template-columns: 1fr; max-width: 420px; margin: 0 auto; }
+    .test-grid { grid-template-columns: 1fr; }
+    .footer-inner { grid-template-columns: 1fr 1fr; }
+    .ub-card { grid-template-columns: 1fr; text-align: center; }
+    .ub-features { justify-content: center; }
+  }
+  @media (max-width: 640px) {
+    .nav-center { display: none; }
+    .hero h1 { font-size: 2.2rem; }
+    .hero-actions { flex-direction: column; }
+    .footer-inner { grid-template-columns: 1fr; }
+  }
+
+  /* ── DESIGN LABEL ── */
+  .design-label {
+    position: fixed; bottom: 20px; right: 20px; z-index: 999;
+    background: linear-gradient(135deg, var(--emerald), var(--cyan)); color: var(--bg);
+    font-family: var(--mono); font-size: 0.72rem; font-weight: 700;
+    padding: 8px 16px; border-radius: 8px; box-shadow: 0 4px 12px rgba(16,185,129,0.3);
+    letter-spacing: 0.04em;
+  }
+</style>
+</head>
+<body>
+
+<div class="design-label">DESIGN B — The Terminal</div>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-left">
+    <svg viewBox="0 0 32 32"><defs><linearGradient id="la" x1=".5" y1="0" x2=".5" y2="1"><stop offset="0%" stop-color="#6ee7b7"/><stop offset="100%" stop-color="#10b981"/></linearGradient><linearGradient id="lb" x1="0" y1=".3" x2="1" y2=".7"><stop offset="0%" stop-color="#34d399"/><stop offset="100%" stop-color="#059669"/></linearGradient><linearGradient id="lc" x1=".5" y1="1" x2=".5" y2="0"><stop offset="0%" stop-color="#10b981"/><stop offset="100%" stop-color="#047857"/></linearGradient><linearGradient id="ld" x1="1" y1=".3" x2="0" y2=".7"><stop offset="0%" stop-color="#a7f3d0"/><stop offset="100%" stop-color="#34d399"/></linearGradient></defs><rect width="32" height="32" rx="7" fill="#0f172a"/><g transform="translate(16,16) rotate(45)"><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="url(#la)"/><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="url(#lb)" transform="rotate(90)"/><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="url(#lc)" transform="rotate(180)"/><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="url(#ld)" transform="rotate(270)"/><circle cx="0" cy="0" r="1.2" fill="#0f172a" opacity=".35"/></g></svg>
+    <span class="nav-brand">trefolio</span>
+  </div>
+  <div class="nav-center">
+    <a href="#features" class="nav-pill">Features</a>
+    <a href="#pricing" class="nav-pill">Pricing</a>
+    <a href="#faq" class="nav-pill">FAQ</a>
+  </div>
+  <div class="nav-right">
+    <button class="btn-sm btn-sm-ghost">Log in</button>
+    <button class="btn-sm btn-sm-primary">Sign Up Free</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-grid-bg"></div>
+  <div class="hero-content">
+    <div class="hero-badge"><span class="pulse"></span> AI-POWERED PORTFOLIO TRACKER</div>
+    <h1>Track. Analyze.<br><span class="accent">Grow.</span></h1>
+    <p class="hero-sub">Real-time quotes, dividend projections, AI analysis, and 14+ broker imports. Built for European investors. Free to start.</p>
+    <div class="hero-actions">
+      <button class="btn-hero btn-hero-primary">Get Started Free <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></button>
+      <button class="btn-hero btn-hero-ghost">Try Demo →</button>
+    </div>
+  </div>
+
+  <!-- BENTO HERO -->
+  <div class="hero-bento">
+    <div class="bento-cell bento-main">
+      <div class="bento-label">Portfolio Value</div>
+      <div style="display:flex;align-items:baseline">
+        <span class="bento-value-lg">€47,832</span>
+        <span class="bento-change">↑ +12.4%</span>
+      </div>
+      <div class="bento-chart">
+        <svg viewBox="0 0 500 120" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="bg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#10b981" stop-opacity="0.2"/><stop offset="100%" stop-color="#10b981" stop-opacity="0"/></linearGradient>
+          </defs>
+          <path d="M0,100 C30,95 60,85 100,75 C140,65 170,55 210,48 C250,40 280,52 320,35 C360,22 400,15 450,10 C480,7 500,5 500,5 L500,120 L0,120 Z" fill="url(#bg1)"/>
+          <path d="M0,100 C30,95 60,85 100,75 C140,65 170,55 210,48 C250,40 280,52 320,35 C360,22 400,15 450,10 C480,7 500,5 500,5" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="320" cy="35" r="4" fill="#10b981"/>
+          <circle cx="320" cy="35" r="8" fill="none" stroke="#10b981" stroke-width="1" opacity="0.3"/>
+        </svg>
+      </div>
+      <div class="bento-holdings">
+        <div class="b-holding"><div class="b-holding-left"><span class="b-holding-dot" style="background:#10b981"></span><span class="b-holding-ticker">AAPL</span><span class="b-holding-name">Apple Inc.</span></div><span class="b-holding-gain">+18.2%</span></div>
+        <div class="b-holding"><div class="b-holding-left"><span class="b-holding-dot" style="background:#22d3ee"></span><span class="b-holding-ticker">ASML</span><span class="b-holding-name">ASML Holding</span></div><span class="b-holding-gain">+24.7%</span></div>
+        <div class="b-holding"><div class="b-holding-left"><span class="b-holding-dot" style="background:#a78bfa"></span><span class="b-holding-ticker">VWCE</span><span class="b-holding-name">Vanguard FTSE</span></div><span class="b-holding-gain">+8.3%</span></div>
+        <div class="b-holding"><div class="b-holding-left"><span class="b-holding-dot" style="background:#f87171"></span><span class="b-holding-ticker">BMW</span><span class="b-holding-name">BMW AG</span></div><span class="b-holding-loss">-3.1%</span></div>
+      </div>
+    </div>
+
+    <div class="bento-cell bento-ai">
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div class="bento-label">AI Insight</div>
+          <span class="pro-lock">PRO</span>
+        </div>
+        <p class="ai-insight">Your tech allocation is 42%. Consider rebalancing into energy and healthcare for better risk-adjusted returns.</p>
+        <div class="ai-badge">
+          <svg class="ai-sparkle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>
+          Powered by AI
+        </div>
+      </div>
+    </div>
+
+    <div class="bento-cell">
+      <div class="bento-label">Next Dividend</div>
+      <div class="bento-dividend-row">
+        <div>
+          <div class="div-amount">€124.50</div>
+          <div class="div-meta">AAPL — Apr 15, 2026</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:var(--mono);font-size:0.75rem;color:var(--text-muted)">Annual est.</div>
+          <div style="font-family:var(--mono);font-size:1rem;font-weight:700;color:var(--emerald)">€1,847</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TICKER STRIP -->
+<div class="ticker-strip">
+  <div class="ticker-track">
+    <div class="ticker-item"><span class="ticker-symbol">S&P 500</span><span class="ticker-price">5,842.31</span><span class="ticker-up">+0.83%</span></div>
+    <div class="ticker-item"><span class="ticker-symbol">EUR/USD</span><span class="ticker-price">1.0921</span><span class="ticker-down">-0.12%</span></div>
+    <div class="ticker-item"><span class="ticker-symbol">BTC</span><span class="ticker-price">$87,432</span><span class="ticker-up">+2.41%</span></div>
+    <div class="ticker-item"><span class="ticker-symbol">Gold</span><span class="ticker-price">$2,834</span><span class="ticker-up">+0.34%</span></div>
+    <div class="ticker-item"><span class="ticker-symbol">DAX</span><span class="ticker-price">18,924</span><span class="ticker-up">+0.67%</span></div>
+    <div class="ticker-item"><span class="ticker-symbol">STOXX 600</span><span class="ticker-price">522.15</span><span class="ticker-down">-0.08%</span></div>
+    <div class="ticker-item"><span class="ticker-symbol">AAPL</span><span class="ticker-price">$248.12</span><span class="ticker-up">+1.24%</span></div>
+    <div class="ticker-item"><span class="ticker-symbol">ASML</span><span class="ticker-price">€832.40</span><span class="ticker-up">+2.15%</span></div>
+    <!-- duplicate for seamless scroll -->
+    <div class="ticker-item"><span class="ticker-symbol">S&P 500</span><span class="ticker-price">5,842.31</span><span class="ticker-up">+0.83%</span></div>
+    <div class="ticker-item"><span class="ticker-symbol">EUR/USD</span><span class="ticker-price">1.0921</span><span class="ticker-down">-0.12%</span></div>
+    <div class="ticker-item"><span class="ticker-symbol">BTC</span><span class="ticker-price">$87,432</span><span class="ticker-up">+2.41%</span></div>
+    <div class="ticker-item"><span class="ticker-symbol">Gold</span><span class="ticker-price">$2,834</span><span class="ticker-up">+0.34%</span></div>
+    <div class="ticker-item"><span class="ticker-symbol">DAX</span><span class="ticker-price">18,924</span><span class="ticker-up">+0.67%</span></div>
+    <div class="ticker-item"><span class="ticker-symbol">STOXX 600</span><span class="ticker-price">522.15</span><span class="ticker-down">-0.08%</span></div>
+    <div class="ticker-item"><span class="ticker-symbol">AAPL</span><span class="ticker-price">$248.12</span><span class="ticker-up">+1.24%</span></div>
+    <div class="ticker-item"><span class="ticker-symbol">ASML</span><span class="ticker-price">€832.40</span><span class="ticker-up">+2.15%</span></div>
+  </div>
+</div>
+
+<!-- BROKERS -->
+<section class="brokers">
+  <div class="brokers-label">Import from 14+ European brokers</div>
+  <div class="brokers-list">
+    <span class="broker-chip">DEGIRO</span>
+    <span class="broker-chip">Interactive Brokers</span>
+    <span class="broker-chip">Trading 212</span>
+    <span class="broker-chip">Revolut</span>
+    <span class="broker-chip">Scalable Capital</span>
+    <span class="broker-chip">Trade Republic</span>
+    <span class="broker-chip">Swissquote</span>
+    <span class="broker-chip">eToro</span>
+    <span class="broker-chip">XTB</span>
+    <span class="broker-chip">Lightyear</span>
+    <span class="broker-chip">+ more</span>
+  </div>
+</section>
+
+<!-- FEATURES BENTO -->
+<section class="features-section" id="features">
+  <div class="features-inner">
+    <div class="section-head">
+      <div class="section-overline">Features</div>
+      <h2 class="section-h2">Built for investors<br>who want <span class="accent">clarity</span></h2>
+      <p class="section-p">Every tool you need to track, analyze, and grow your portfolio — from day one.</p>
+    </div>
+
+    <div class="features-bento">
+      <div class="fb-card span-2">
+        <div class="fb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/></svg></div>
+        <h3>Real-Time Portfolio Dashboard</h3>
+        <p>Live market values, daily changes, allocation charts, and performance metrics. Multi-currency with EUR-base conversion. Benchmark against S&P 500, MSCI World, and more.</p>
+      </div>
+      <div class="fb-card">
+        <div class="fb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+        <h3>Dividend Tracking</h3>
+        <p>Automatic DPS, yield, projected annual income, and dividend calendar.</p>
+      </div>
+      <div class="fb-card">
+        <div class="fb-icon" style="background:var(--amber-glow);border-color:rgba(251,191,36,0.15);color:var(--amber)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg></div>
+        <span class="fb-pro-tag"><span class="pro-lock">PRO</span></span>
+        <h3>AI Analysis</h3>
+        <p>Portfolio reviews, stock intelligence, company fundamentals, and news sentiment.</p>
+      </div>
+      <div class="fb-card span-2">
+        <div class="fb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg></div>
+        <h3>14+ Broker Imports &amp; Auto-Sync</h3>
+        <p>Upload CSV from DEGIRO, IBKR, Trading 212, Revolut, and more. Trefolio Pro includes automatic broker sync with 20+ brokerages. Or use AI-powered import to parse any file or screenshot.</p>
+      </div>
+      <div class="fb-card">
+        <div class="fb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
+        <h3>Events Calendar</h3>
+        <p>Earnings, dividends, economic events, and IPO tracking in one view.</p>
+      </div>
+      <div class="fb-card">
+        <div class="fb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/></svg></div>
+        <h3>Price Alerts</h3>
+        <p>Target prices with email, push, and WhatsApp notifications.</p>
+      </div>
+      <div class="fb-card">
+        <div class="fb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6z M13.5 10.5H21A7.5 7.5 0 0013.5 3v7.5z"/></svg></div>
+        <h3>Diversification</h3>
+        <p>Sector, geography, and asset-type breakdowns.</p>
+      </div>
+      <div class="fb-card">
+        <div class="fb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"/></svg></div>
+        <h3>Stealth Mode</h3>
+        <p>Hide portfolio values in public with one click.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TIER COMPARISON TABLE -->
+<section class="tiers" id="tiers">
+  <div class="tiers-inner">
+    <div class="section-head" style="text-align:center">
+      <div class="section-overline">Plan Comparison</div>
+      <h2 class="section-h2">What you get at <span class="accent">every level</span></h2>
+      <p class="section-p" style="margin:12px auto 0">Start free. Unlock more as your portfolio grows.</p>
+    </div>
+
+    <table class="tiers-table">
+      <thead>
+        <tr>
+          <th></th>
+          <th>Folio<br><span style="font-size:0.6rem;opacity:0.7">FREE</span></th>
+          <th>Bifolio<br><span style="font-size:0.6rem;opacity:0.7">FROM €2.99/MO</span></th>
+          <th class="highlight">Trefolio<br><span style="font-size:0.6rem;opacity:0.7">FROM €7.99/MO</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Holdings</td><td class="t-value">15</td><td class="t-value">50</td><td class="t-value emerald highlight">Unlimited</td></tr>
+        <tr><td>Real-time quotes</td><td><span class="t-check">✓</span></td><td><span class="t-check">✓</span></td><td class="highlight"><span class="t-check">✓</span></td></tr>
+        <tr><td>AI analysis calls</td><td class="t-value">5/mo</td><td class="t-value">20/mo</td><td class="t-value emerald highlight">Unlimited</td></tr>
+        <tr><td>Price alerts</td><td class="t-value">2 (in-app)</td><td class="t-value">10 + email/push</td><td class="t-value emerald highlight">Unlimited + WhatsApp</td></tr>
+        <tr><td>Portfolio history</td><td class="t-value">30 days</td><td class="t-value">All time</td><td class="t-value emerald highlight">All time</td></tr>
+        <tr><td>Broker CSV import</td><td><span class="t-check">✓</span></td><td><span class="t-check">✓</span></td><td class="highlight"><span class="t-check">✓</span></td></tr>
+        <tr><td>Broker auto-sync</td><td><span class="t-cross">—</span></td><td class="t-value">1 connection</td><td class="t-value emerald highlight">20+ brokerages</td></tr>
+        <tr><td>Advanced metrics</td><td><span class="t-cross">—</span></td><td><span class="t-check">✓</span></td><td class="highlight"><span class="t-check">✓</span></td></tr>
+        <tr><td>AI portfolio review</td><td><span class="t-cross">—</span></td><td><span class="t-cross">—</span></td><td class="t-value emerald highlight">5/month</td></tr>
+        <tr><td>Company fundamentals</td><td><span class="t-cross">—</span></td><td><span class="t-cross">—</span></td><td class="highlight"><span class="t-check">✓</span></td></tr>
+        <tr><td>Crypto portfolio</td><td><span class="t-cross">—</span></td><td><span class="t-cross">—</span></td><td class="highlight"><span class="t-check">✓</span></td></tr>
+        <tr><td>Economic indicators</td><td><span class="t-cross">—</span></td><td><span class="t-cross">—</span></td><td class="highlight"><span class="t-check">✓</span></td></tr>
+        <tr><td>Portfolios</td><td class="t-value">1</td><td class="t-value">1</td><td class="t-value emerald highlight">3</td></tr>
+        <tr><td>Portfolio sharing</td><td><span class="t-cross">—</span></td><td><span class="t-check">✓</span></td><td class="highlight"><span class="t-check">✓</span></td></tr>
+        <tr><td>Priority support</td><td><span class="t-cross">—</span></td><td><span class="t-cross">—</span></td><td class="highlight"><span class="t-check">✓</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing" id="pricing">
+  <div class="pricing-inner">
+    <div class="section-head" style="text-align:center">
+      <div class="section-overline">Pricing</div>
+      <h2 class="section-h2">Simple, <span class="accent">transparent</span> pricing</h2>
+      <p class="section-p" style="margin:12px auto 0">No credit card required. Cancel anytime.</p>
+      <div style="margin-top:16px"><span class="pro-lock" style="font-size:0.72rem;padding:4px 12px;color:var(--amber)">🚀 Launch pricing — up to 25% off</span></div>
+    </div>
+
+    <div class="p-toggle">
+      <span class="p-toggle-label active" onclick="toggleBilling('monthly')">Monthly</span>
+      <div class="p-toggle-track" id="pToggle" onclick="toggleBilling()"><div class="p-toggle-dot"></div></div>
+      <span class="p-toggle-label" onclick="toggleBilling('annual')">Annual</span>
+      <span class="p-save">Save up to 37%</span>
+    </div>
+
+    <div class="pricing-cards">
+      <!-- FOLIO -->
+      <div class="p-card">
+        <div class="p-tier"><span style="font-size:1.2rem">🍀</span><span class="p-tier-name">Folio</span></div>
+        <div class="p-tier-desc">For getting started</div>
+        <div class="p-price">
+          <span class="p-price-val">€0</span>
+          <span class="p-price-period">forever</span>
+        </div>
+        <div class="p-annual-info">&nbsp;</div>
+        <hr class="p-divider">
+        <ul class="p-features">
+          <li>Up to 15 stocks & ETFs</li>
+          <li>Real-time Yahoo Finance quotes</li>
+          <li>Historical price charts</li>
+          <li>Cash balance tracking</li>
+          <li>Benchmark comparison</li>
+          <li>14 broker CSV imports</li>
+          <li>5 AI analysis calls/month</li>
+          <li>2 price alerts (in-app)</li>
+          <li>30-day portfolio history</li>
+          <li>Crypto market overview</li>
+          <li>1 portfolio</li>
+          <li>Earnings calendar</li>
+          <li>Dark & light mode</li>
+          <li>35+ languages</li>
+          <li>Growth projection</li>
+        </ul>
+        <button class="p-cta p-cta-ghost">Get Started Free</button>
+      </div>
+
+      <!-- BIFOLIO -->
+      <div class="p-card">
+        <div class="p-tier"><span style="font-size:1.2rem">🍀🍀</span><span class="p-tier-name">Bifolio</span><span class="pro-lock" style="font-size:0.6rem">-25%</span></div>
+        <div class="p-tier-desc">For active investors</div>
+        <div class="p-price" id="bPrice">
+          <span class="p-price-old">€3.99</span>
+          <span class="p-price-val">€2.99</span>
+          <span class="p-price-period">/mo</span>
+        </div>
+        <div class="p-annual-info" id="bAnnual">&nbsp;</div>
+        <hr class="p-divider">
+        <ul class="p-features">
+          <li>Everything in Folio, plus:</li>
+          <li>Up to 50 stocks & ETFs</li>
+          <li>20 AI calls/month</li>
+          <li>10 alerts + email & push</li>
+          <li>Full portfolio history</li>
+          <li>Sharpe, Drawdown, Volatility</li>
+          <li>Portfolio sharing</li>
+          <li>CSV export</li>
+          <li>No ads</li>
+          <li>1 brokerage auto-sync</li>
+          <li>Full events calendar</li>
+        </ul>
+        <button class="p-cta p-cta-mid">Start 14-Day Trial</button>
+      </div>
+
+      <!-- TREFOLIO -->
+      <div class="p-card featured">
+        <div class="p-popular">MOST POPULAR</div>
+        <div class="p-tier"><span style="font-size:1.2rem">🍀🍀🍀</span><span class="p-tier-name">Trefolio</span><span class="pro-lock" style="font-size:0.6rem">-20%</span></div>
+        <div class="p-tier-desc">For serious investors</div>
+        <div class="p-price" id="tPrice">
+          <span class="p-price-old">€9.99</span>
+          <span class="p-price-val">€7.99</span>
+          <span class="p-price-period">/mo</span>
+        </div>
+        <div class="p-annual-info" id="tAnnual">&nbsp;</div>
+        <hr class="p-divider">
+        <ul class="p-features">
+          <li>Everything in Bifolio, plus:</li>
+          <li>Unlimited holdings</li>
+          <li>Unlimited AI analysis</li>
+          <li>Company fundamentals</li>
+          <li>Stock intelligence & news</li>
+          <li>Portfolio news feed</li>
+          <li>Economic indicators</li>
+          <li>Crypto tracking & AI</li>
+          <li>AI Portfolio Review (5/mo)</li>
+          <li>Unlimited alerts + WhatsApp</li>
+          <li>Auto Broker Sync (20+)</li>
+          <li>Priority support</li>
+          <li>Up to 3 portfolios</li>
+          <li>AI import (any file)</li>
+          <li>Full calendar + IPOs</li>
+          <li>Alpha Vantage premium</li>
+        </ul>
+        <button class="p-cta p-cta-primary">Start 14-Day Trial</button>
+      </div>
+    </div>
+
+    <p style="text-align:center;font-family:var(--mono);font-size:0.72rem;color:var(--text-faint);margin-top:20px">No credit card required · Cancel anytime · Prices in EUR, excl. VAT</p>
+  </div>
+</section>
+
+<!-- UPGRADE BANNER -->
+<div class="upgrade-banner">
+  <div class="ub-card">
+    <div>
+      <h3>Outgrown the free plan?</h3>
+      <p>Trefolio Pro unlocks the full experience — unlimited AI, broker sync, crypto, and 3 portfolios.</p>
+      <div class="ub-features">
+        <span class="ub-feat">Unlimited AI</span>
+        <span class="ub-feat">20+ broker sync</span>
+        <span class="ub-feat">Crypto tracking</span>
+        <span class="ub-feat">3 portfolios</span>
+        <span class="ub-feat">Priority support</span>
+      </div>
+    </div>
+    <button class="btn-hero btn-hero-primary" style="white-space:nowrap">Upgrade to Trefolio →</button>
+  </div>
+</div>
+
+<!-- TESTIMONIALS -->
+<section class="testimonials">
+  <div class="testimonials-inner">
+    <div class="section-head" style="text-align:center">
+      <div class="section-overline">Testimonials</div>
+      <h2 class="section-h2">Trusted by <span class="accent">European investors</span></h2>
+    </div>
+    <div class="test-grid">
+      <div class="test-card">
+        <div class="test-stars"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg><svg viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg><svg viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg><svg viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg><svg viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg></div>
+        <p class="test-quote">"Replaced my Google Sheets with trefolio in 5 minutes. DEGIRO import just works. The dividend tracking alone is worth it."</p>
+        <div class="test-author">Marcus K.</div>
+        <div class="test-role">Retail Investor, Germany</div>
+      </div>
+      <div class="test-card">
+        <div class="test-stars"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg><svg viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg><svg viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg><svg viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg><svg viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg></div>
+        <p class="test-quote">"The AI warned me about my overweight tech allocation before the correction. Trefolio Pro pays for itself many times over."</p>
+        <div class="test-author">Sofia L.</div>
+        <div class="test-role">Dividend Investor, Spain</div>
+      </div>
+      <div class="test-card">
+        <div class="test-stars"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg><svg viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg><svg viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg><svg viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg><svg viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg></div>
+        <p class="test-quote">"Finally a tracker that understands European brokers. Imported IBKR and Trading 212 in under a minute. No more spreadsheets."</p>
+        <div class="test-author">Jan V.</div>
+        <div class="test-role">ETF Investor, Netherlands</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq" id="faq">
+  <div class="faq-inner">
+    <div class="section-head" style="text-align:center">
+      <div class="section-overline">FAQ</div>
+      <h2 class="section-h2">Common <span class="accent">questions</span></h2>
+    </div>
+    <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)">Is trefolio really free?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></button><div class="faq-a">Yes! The Folio plan is free forever — no credit card required. Up to 15 holdings, real-time quotes, charts, and 5 AI calls/month included.</div></div>
+    <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)">Which brokers do you support?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></button><div class="faq-a">14+ CSV import formats: DEGIRO, IBKR, Trading 212, Revolut, Scalable Capital, Trade Republic, eToro, Swissquote, and more. Trefolio adds auto-sync with 20+ brokerages via SnapTrade.</div></div>
+    <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)">How does AI analysis work?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></button><div class="faq-a">AI analyzes your allocation, individual holdings, and market conditions. Trefolio Pro users get unlimited analysis, full portfolio reviews, and company fundamentals.</div></div>
+    <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)">Can I cancel anytime?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></button><div class="faq-a">Yes. Cancel from your profile — you keep paid features until the end of your billing period. Your data stays accessible on the free Folio plan.</div></div>
+    <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)">Is my data safe?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></button><div class="faq-a">Encrypted at rest and in transit. GDPR compliant. We never sell your data. Export or delete anytime.</div></div>
+    <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)">Do you support crypto?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></button><div class="faq-a">Free plan includes a crypto market overview. Trefolio Pro adds full crypto portfolio tracking with charts, exchange rates, and AI analysis.</div></div>
+    <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)">What makes trefolio different?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></button><div class="faq-a">Built for European investors: native European broker support, EUR base currency, withholding tax handling, AI-powered insights — all starting free.</div></div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="final-cta">
+  <div class="fct-inner">
+    <h2>Ready to track smarter?</h2>
+    <p>Join European investors who use trefolio to manage their portfolios. Free forever — upgrade when ready.</p>
+    <button class="btn-hero btn-hero-primary">Create Free Account <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></button>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div>
+      <div class="footer-brand">trefolio</div>
+      <p class="footer-desc">Simple portfolio tracking with AI insights for European investors.</p>
+    </div>
+    <div class="footer-col">
+      <h5>Product</h5>
+      <a href="#features">Features</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#faq">FAQ</a>
+      <a href="#">Blog</a>
+      <a href="#">Release Notes</a>
+    </div>
+    <div class="footer-col">
+      <h5>Account</h5>
+      <a href="#">Sign Up</a>
+      <a href="#">Log In</a>
+      <a href="#">Contact Us</a>
+    </div>
+    <div class="footer-col">
+      <h5>Legal</h5>
+      <a href="#">Privacy Policy</a>
+      <a href="#">Terms of Service</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>&copy; 2026 trefolio</span>
+    <span>Made in Europe</span>
+  </div>
+</footer>
+
+<script>
+  // FAQ
+  function toggleFaq(btn) {
+    const a = btn.nextElementSibling;
+    const open = a.classList.contains('open');
+    document.querySelectorAll('.faq-a').forEach(x => x.classList.remove('open'));
+    document.querySelectorAll('.faq-q').forEach(x => x.classList.remove('open'));
+    if (!open) { a.classList.add('open'); btn.classList.add('open'); }
+  }
+
+  // Billing toggle
+  let annual = false;
+  function toggleBilling(force) {
+    if (force === 'monthly') annual = false;
+    else if (force === 'annual') annual = true;
+    else annual = !annual;
+    const track = document.getElementById('pToggle');
+    const labels = document.querySelectorAll('.p-toggle-label');
+    track.classList.toggle('active', annual);
+    labels[0].classList.toggle('active', !annual);
+    labels[1].classList.toggle('active', annual);
+    if (annual) {
+      document.getElementById('bPrice').innerHTML = '<span class="p-price-old">€2.67</span><span class="p-price-val">€2.00</span><span class="p-price-period">/mo</span>';
+      document.getElementById('bAnnual').innerHTML = '<span style="text-decoration:line-through;color:var(--text-faint)">€31.99/yr</span> → €23.99/yr <span class="green">Save 33%</span>';
+      document.getElementById('tPrice').innerHTML = '<span class="p-price-old">€6.67</span><span class="p-price-val">€5.00</span><span class="p-price-period">/mo</span>';
+      document.getElementById('tAnnual').innerHTML = '<span style="text-decoration:line-through;color:var(--text-faint)">€79.99/yr</span> → €59.99/yr <span class="green">Save 37%</span>';
+    } else {
+      document.getElementById('bPrice').innerHTML = '<span class="p-price-old">€3.99</span><span class="p-price-val">€2.99</span><span class="p-price-period">/mo</span>';
+      document.getElementById('bAnnual').innerHTML = '&nbsp;';
+      document.getElementById('tPrice').innerHTML = '<span class="p-price-old">€9.99</span><span class="p-price-val">€7.99</span><span class="p-price-period">/mo</span>';
+      document.getElementById('tAnnual').innerHTML = '&nbsp;';
+    }
+  }
+</script>
+</body>
+</html>

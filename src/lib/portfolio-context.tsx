@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef, useMemo } from "react";
 import type { CashEntry, Holding, QuoteData, ExchangeRates } from "./types";
-import { generateId } from "./utils";
+import { generateId, normalizeCurrency } from "./utils";
 import { useSettings } from "./settings-context";
 
 const QUOTES_CACHE_KEY = "trefolio-quotes-v3";
@@ -19,7 +19,26 @@ interface PortfolioInfo {
   currency: string;
 }
 
-const FX_PAIRS = ["EURUSD", "EURGBP", "EURDKK", "EURCAD"];
+const BASE_FX_PAIRS = ["EURUSD", "EURGBP", "EURDKK", "EURCAD"];
+
+function buildFxPairs(holdings: Holding[], portfolioCurrency: string): string[] {
+  const needed = new Set<string>();
+  for (const pair of BASE_FX_PAIRS) needed.add(pair);
+
+  for (const h of holdings) {
+    const norm = normalizeCurrency(h.displayCurrency);
+    if (norm === "EUR") continue;
+    if (norm === "GBX") { needed.add("EURGBP"); continue; }
+    needed.add(`EUR${norm}`);
+  }
+
+  if (portfolioCurrency && portfolioCurrency !== "EUR") {
+    needed.add(`EUR${portfolioCurrency}`);
+  }
+
+  return [...needed];
+}
+
 const ACTIVE_PORTFOLIO_KEY = "trefolio-active-portfolio";
 
 interface PortfolioContextType {
@@ -291,14 +310,22 @@ export function PortfolioProvider({
     []
   );
 
-  const fetchExchangeRates = useCallback(async (): Promise<ExchangeRates> => {
-    const params = new URLSearchParams({ pairs: FX_PAIRS.join(",") });
+  const getPortfolioCurrency = useCallback(() => {
+    if (!activePortfolioId) return "EUR";
+    const found = portfolios.find((p) => p.id === activePortfolioId);
+    return found?.currency ?? "EUR";
+  }, [activePortfolioId, portfolios]);
+
+  const fetchExchangeRates = useCallback(async (currentHoldings?: Holding[]): Promise<ExchangeRates> => {
+    const fxPairs = buildFxPairs(currentHoldings ?? holdings, getPortfolioCurrency());
+    if (fxPairs.length === 0) return {};
+    const params = new URLSearchParams({ pairs: fxPairs.join(",") });
     const res = await fetch(`/api/exchange-rates?${params}`);
     if (res.status === 429) throw new Error("rate_limited");
     if (!res.ok) throw new Error("Failed to fetch exchange rates");
     const data = await res.json();
     return parseExchangeRatesFromApi(data);
-  }, []);
+  }, [holdings, getPortfolioCurrency]);
 
   const fetchQuotes = useCallback(async (tickers: string[]) => {
     if (fetchingRef.current || tickers.length === 0) return;

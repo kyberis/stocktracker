@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useI18n } from "@/lib/i18n";
 import StockRow from "./StockRow";
+import { useTheme } from "@/lib/theme-context";
 import type { Holding } from "@/lib/types";
 
 const StockDetailDrawer = dynamic(() => import("./StockDetailDrawer"), { ssr: false });
@@ -21,6 +22,7 @@ export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: P
   const { holdings: ctxHoldings, quotes } = usePortfolio();
   const holdings = holdingsProp ?? ctxHoldings;
   const { t } = useI18n();
+  const { layoutTheme } = useTheme();
   const [sortField, setSortField] = useState<SortField>("name");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [filter, setFilter] = useState("");
@@ -135,70 +137,164 @@ export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: P
     );
   }
 
-  return (
-    <div className="card p-0 overflow-hidden">
-      <div className="p-4 border-b border-gray-100 dark:border-slate-700 flex items-center gap-3 flex-wrap">
-        <input
-          type="text"
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          placeholder={t("searchPlaceholder")}
-          aria-label={t("searchPlaceholder")}
-          className="flex-1 min-w-[200px] text-sm"
-        />
-      </div>
+  const searchInput = (
+    <input
+      type="text"
+      value={filter}
+      onChange={(e) => setFilter(e.target.value)}
+      placeholder={t("searchPlaceholder")}
+      aria-label={t("searchPlaceholder")}
+      className="flex-1 min-w-[200px] text-sm"
+    />
+  );
 
-      <div className="hidden sm:flex sm:items-center sm:justify-between px-4 py-2.5 bg-gray-50 dark:bg-slate-800/50 border-b border-gray-100 dark:border-slate-700">
-        <div className="flex items-center gap-3">
-          {renderSortButton("name", t("priceTimesCount"))}
+  const drawer = selectedHolding && (
+    <StockDetailDrawer key={selectedHolding.id} holding={selectedHolding} onClose={() => setSelectedHolding(null)} />
+  );
+
+  /* ── TERMINAL: Dense compact list, no card, monospace header ── */
+  if (layoutTheme === "terminal") {
+    return (
+      <div className="border border-zinc-800 rounded-none overflow-hidden" data-testid="portfolio-table-terminal">
+        <div className="px-3 py-2 border-b border-zinc-800 flex items-center gap-3">{searchInput}</div>
+        <div className="hidden sm:flex items-center justify-between px-3 py-1.5 bg-zinc-900/50 border-b border-zinc-800 font-mono text-[10px] uppercase tracking-widest text-zinc-600">
+          <div className="flex items-center gap-3">
+            {renderSortButton("name", "SYMBOL")}
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="w-12 text-right">QTY</span>
+            {renderSortButton("value", "VALUE")}
+            <span className="w-1" />
+            {renderSortButton("gainLoss", "DAY")}
+          </div>
         </div>
+        <div className="max-h-[600px] overflow-y-auto">
+          {stocks.length > 0 && (
+            <>
+              <div className="px-3 py-1 bg-zinc-900 border-b border-zinc-800 font-mono text-[10px] uppercase tracking-widest text-zinc-600 flex items-center gap-2">
+                <span>{t("stocksGroup")}</span><span>({stocks.length})</span>
+              </div>
+              {stocks.map((h) => <StockRow key={h.id} holding={h} onSelect={setSelectedHolding} />)}
+            </>
+          )}
+          {etfs.length > 0 && (
+            <>
+              <div className="px-3 py-1 bg-zinc-900 border-b border-zinc-800 font-mono text-[10px] uppercase tracking-widest text-zinc-600 flex items-center gap-2">
+                <span>{t("etfsGroup")}</span><span>({etfs.length})</span>
+              </div>
+              {etfs.map((h) => <StockRow key={h.id} holding={h} onSelect={setSelectedHolding} />)}
+            </>
+          )}
+        </div>
+        {drawer}
+      </div>
+    );
+  }
+
+  /* ── CANVAS: Card grid layout ──────────────────────────────── */
+  if (layoutTheme === "canvas") {
+    return (
+      <div data-testid="portfolio-table-canvas">
+        <div className="bg-white border border-slate-200 rounded-2xl p-4 mb-4 flex items-center gap-3">{searchInput}</div>
+        <div className="flex items-center gap-3 mb-3 flex-wrap">
+          {renderSortButton("name", t("priceTimesCount"))}
+          <span className="text-slate-300">·</span>
+          {renderSortButton("value", t("value"))}
+          <span className="text-slate-300">·</span>
+          {renderSortButton("gainLoss", t("dayPlusMinus"))}
+        </div>
+        {stocks.length > 0 && (
+          <>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">{t("stocksGroup")} ({stocks.length})</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-5">
+              {stocks.map((h) => <StockRow key={h.id} holding={h} onSelect={setSelectedHolding} />)}
+            </div>
+          </>
+        )}
+        {etfs.length > 0 && (
+          <>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">{t("etfsGroup")} ({etfs.length})</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {etfs.map((h) => <StockRow key={h.id} holding={h} onSelect={setSelectedHolding} />)}
+            </div>
+          </>
+        )}
+        {drawer}
+      </div>
+    );
+  }
+
+  /* ── STUDIO: Sleek glass card ──────────────────────────────── */
+  if (layoutTheme === "studio") {
+    return (
+      <div className="rounded-[20px] border border-white/5 bg-white/[0.02] backdrop-blur-sm overflow-hidden" data-testid="portfolio-table-studio">
+        <div className="p-4 border-b border-white/5 flex items-center gap-3">{searchInput}</div>
+        <div className="hidden sm:flex items-center justify-between px-4 py-2.5 bg-white/[0.02] border-b border-white/5">
+          <div className="flex items-center gap-3">{renderSortButton("name", t("priceTimesCount"))}</div>
+          <div className="flex items-center gap-3">
+            {renderSortButton("value", t("value"))}
+            <span className="text-zinc-700">·</span>
+            {renderSortButton("gainLoss", t("dayPlusMinus"))}
+          </div>
+        </div>
+        <div className="max-h-[600px] overflow-y-auto">
+          {stocks.length > 0 && (
+            <>
+              <div className="sticky top-0 z-[1] px-4 py-2 bg-zinc-950/90 backdrop-blur-sm border-b border-white/5 flex items-center gap-2">
+                <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">{t("stocksGroup")}</span>
+                <span className="text-[10px] text-zinc-600">({stocks.length})</span>
+              </div>
+              {stocks.map((h) => <StockRow key={h.id} holding={h} onSelect={setSelectedHolding} />)}
+            </>
+          )}
+          {etfs.length > 0 && (
+            <>
+              <div className="sticky top-0 z-[1] px-4 py-2 bg-zinc-950/90 backdrop-blur-sm border-b border-white/5 flex items-center gap-2">
+                <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">{t("etfsGroup")}</span>
+                <span className="text-[10px] text-zinc-600">({etfs.length})</span>
+              </div>
+              {etfs.map((h) => <StockRow key={h.id} holding={h} onSelect={setSelectedHolding} />)}
+            </>
+          )}
+        </div>
+        {drawer}
+      </div>
+    );
+  }
+
+  /* ── DEFAULT: Original card layout ─────────────────────────── */
+  return (
+    <div className="card p-0 overflow-hidden" data-testid="portfolio-table-default">
+      <div className="p-4 border-b border-gray-100 dark:border-slate-700 flex items-center gap-3 flex-wrap">{searchInput}</div>
+      <div className="hidden sm:flex sm:items-center sm:justify-between px-4 py-2.5 bg-gray-50 dark:bg-slate-800/50 border-b border-gray-100 dark:border-slate-700">
+        <div className="flex items-center gap-3">{renderSortButton("name", t("priceTimesCount"))}</div>
         <div className="flex items-center gap-3">
           {renderSortButton("value", t("value"))}
           <span className="text-gray-300 dark:text-slate-600">·</span>
           {renderSortButton("gainLoss", t("dayPlusMinus"))}
         </div>
       </div>
-
       <div className="max-h-[600px] overflow-y-auto">
         {stocks.length > 0 && (
           <>
             <div className="sticky top-0 z-[1] px-4 py-2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border-b border-gray-100 dark:border-slate-700 flex items-center gap-2">
-              <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">
-                {t("stocksGroup")}
-              </span>
-              <span className="text-[10px] font-medium text-gray-400 dark:text-slate-500">
-                ({stocks.length})
-              </span>
+              <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">{t("stocksGroup")}</span>
+              <span className="text-[10px] font-medium text-gray-400 dark:text-slate-500">({stocks.length})</span>
             </div>
-            {stocks.map((holding) => (
-              <StockRow key={holding.id} holding={holding} onSelect={setSelectedHolding} />
-            ))}
+            {stocks.map((h) => <StockRow key={h.id} holding={h} onSelect={setSelectedHolding} />)}
           </>
         )}
         {etfs.length > 0 && (
           <>
             <div className="sticky top-0 z-[1] px-4 py-2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border-b border-gray-100 dark:border-slate-700 flex items-center gap-2">
-              <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">
-                {t("etfsGroup")}
-              </span>
-              <span className="text-[10px] font-medium text-gray-400 dark:text-slate-500">
-                ({etfs.length})
-              </span>
+              <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">{t("etfsGroup")}</span>
+              <span className="text-[10px] font-medium text-gray-400 dark:text-slate-500">({etfs.length})</span>
             </div>
-            {etfs.map((holding) => (
-              <StockRow key={holding.id} holding={holding} onSelect={setSelectedHolding} />
-            ))}
+            {etfs.map((h) => <StockRow key={h.id} holding={h} onSelect={setSelectedHolding} />)}
           </>
         )}
       </div>
-
-      {selectedHolding && (
-        <StockDetailDrawer
-          key={selectedHolding.id}
-          holding={selectedHolding}
-          onClose={() => setSelectedHolding(null)}
-        />
-      )}
+      {drawer}
     </div>
   );
 }

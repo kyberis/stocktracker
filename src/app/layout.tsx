@@ -3,6 +3,7 @@ import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { cookies } from "next/headers";
 import CookieConsent from "@/components/CookieConsent";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import AdSenseScript from "@/components/AdSenseScript";
@@ -63,8 +64,29 @@ export default async function RootLayout({
   const [gaId, adConfig] = await Promise.all([getGaMeasurementId(), getAdConfig()]);
   const adsClientId = adConfig.globalEnabled ? adConfig.clientId : "";
 
+  const cookieStore = cookies();
+  const layoutCookie = cookieStore.get("trefolio_layout_theme")?.value;
+  const validThemes = new Set(["terminal", "canvas", "studio"]);
+  const initialThemeClass = layoutCookie && validThemes.has(layoutCookie) ? `theme-${layoutCookie}` : "";
+  const initialDarkClass = layoutCookie === "terminal" || layoutCookie === "studio" ? "dark" : "";
+  const htmlClass = [initialThemeClass, initialDarkClass].filter(Boolean).join(" ");
+
   return (
-    <html lang="en">
+    <html lang="en" className={htmlClass || undefined}>
+      <head>
+        {/* Apply layout theme from cookie before paint to prevent flash */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var m=document.cookie.match(/(?:^|; )trefolio_layout_theme=([^;]*)/);if(m){var t=decodeURIComponent(m[1]);if(/^(terminal|canvas|studio)$/.test(t)){document.documentElement.classList.add("theme-"+t);if(t==="terminal"||t==="studio")document.documentElement.classList.add("dark");if(t==="canvas")document.documentElement.classList.remove("dark")}}}catch(e){}})()`,
+          }}
+        />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap"
+          rel="stylesheet"
+        />
+      </head>
       <body className={`${GeistSans.variable} ${GeistMono.variable} font-sans antialiased`}>
         <a
           href="#main-content"

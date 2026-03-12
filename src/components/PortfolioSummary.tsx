@@ -11,6 +11,7 @@ import { useStealthMode } from "@/lib/stealth-context";
 import { PLATFORM_LIMITS } from "@/lib/platform-config";
 import type { Holding, CashEntry } from "@/lib/types";
 import PortfolioReviewCard from "./PortfolioReviewCard";
+import { useTheme } from "@/lib/theme-context";
 
 function formatTimeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -94,6 +95,7 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
   const { t } = useI18n();
   const { stealthMode } = useStealthMode();
   const { user } = useAuth();
+  const { layoutTheme } = useTheme();
   const {
     totalCurrentEUR,
     totalCostEUR,
@@ -143,8 +145,151 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
     };
   }, [allocationOpen]);
 
+  const dayLabel = stealthMode ? "•••••" : `${dayIsPositive ? "+" : ""}${formatCurrency(dayGainLossEUR, baseCurrency)} (${formatPercent(dayPercent)})`;
+  const valueLabel = formatStealthCurrency(totalCurrentEUR, baseCurrency, stealthMode);
+  const costLabel = formatStealthCurrency(totalCostEUR, baseCurrency, stealthMode);
+
+  const aiReviewBtn = isPro ? (
+    <button
+      onClick={() => setReviewOpen(!reviewOpen)}
+      disabled={!hasHoldings || remaining <= 0}
+      className="inline-flex items-center gap-1.5 text-xs font-medium text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 rounded"
+    >
+      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden="true">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
+      </svg>
+      AI Review
+      <span className="tabular-nums text-gray-400 dark:text-slate-500">{used}/{limit}</span>
+    </button>
+  ) : (
+    <a href="/billing" className="inline-flex items-center gap-1.5 text-xs font-medium text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 rounded">
+      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden="true">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
+      </svg>
+      AI Review <span className="text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded-full bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-300">Pro</span>
+    </a>
+  );
+
+  const reviewPanel = reviewOpen ? (
+    <div className="mt-4 pt-4 border-t border-gray-100 dark:border-slate-700">
+      <PortfolioReviewCard />
+    </div>
+  ) : null;
+
+  /* ── TERMINAL: Dense inline stats, no card wrapper ─────────── */
+  if (layoutTheme === "terminal") {
+    return (
+      <div className="border-b border-zinc-800 py-2 relative" data-testid="portfolio-summary-terminal">
+        {isLoading && <div className="absolute top-0 left-0 right-0 h-px bg-emerald-500/50 animate-progress-bar" />}
+        <div className="flex items-baseline gap-4 flex-wrap font-mono">
+          <span className={`text-xl font-semibold text-zinc-200 ${isLoading ? "animate-value-shimmer" : ""}`}>
+            {valueLabel}
+          </span>
+          <span className={`text-sm px-1.5 py-0.5 rounded ${dayIsPositive ? "text-green-400 bg-green-500/10" : "text-red-400 bg-red-500/10"}`}>
+            {dayIsPositive ? "▲" : "▼"} {dayLabel}
+          </span>
+          <span className="text-xs text-zinc-600">cost <b className="text-zinc-500">{costLabel}</b></span>
+          <span className="text-xs text-zinc-600">gain <b className={totalIsPositive ? "text-green-400" : "text-red-400"}>{formatPercent(totalGainLossPercent)}</b></span>
+          <span className="text-xs text-zinc-600">holdings <b className="text-zinc-500">{holdingsCount}</b></span>
+          {aiReviewBtn}
+          <BrokerSyncDot />
+        </div>
+        {allocationSlices.length > 0 && (
+          <div className="flex gap-3 mt-1 text-xs text-zinc-600 font-mono">
+            {allocationSlices.map((s) => (
+              <span key={s.key} style={{ color: s.color }}>■ {s.label} {formatPercent(s.percent)}</span>
+            ))}
+          </div>
+        )}
+        {reviewPanel}
+      </div>
+    );
+  }
+
+  /* ── CANVAS: Big spacious card, large value, allocation bar ── */
+  if (layoutTheme === "canvas") {
+    return (
+      <div className="bg-white border border-slate-200 rounded-[20px] p-7 shadow-sm relative" data-testid="portfolio-summary-canvas">
+        {isLoading && <div className="absolute top-0 left-0 right-0 h-0.5 overflow-hidden rounded-t-[20px]"><div className="h-full w-1/3 bg-green-500/60 animate-progress-bar" /></div>}
+        <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">{t("portfolioValue")}</p>
+        <p className={`text-4xl font-bold text-slate-900 tracking-tight ${isLoading ? "animate-value-shimmer" : ""}`}>{valueLabel}</p>
+        <div className="flex gap-2 mt-3">
+          <span className={`text-sm font-semibold px-3 py-1 rounded-xl ${dayIsPositive ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"}`}>
+            {dayIsPositive ? "▲" : "▼"} {dayLabel}
+          </span>
+          <span className={`text-sm font-semibold px-3 py-1 rounded-xl ${totalIsPositive ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"}`}>
+            {formatPercent(totalGainLossPercent)} {t("totalGainLoss").toLowerCase()}
+          </span>
+        </div>
+        <div className="flex gap-7 mt-5 pt-4 border-t border-slate-100 flex-wrap">
+          <div><p className="text-xs text-slate-400 mb-0.5">{t("cost")}</p><p className="text-base font-semibold text-slate-700">{costLabel}</p></div>
+          <div><p className="text-xs text-slate-400 mb-0.5">{t("totalGainLoss")}</p><p className={`text-base font-semibold ${totalIsPositive ? "text-green-600" : "text-red-500"}`}>{stealthMode ? "•••••" : `${totalIsPositive ? "+" : ""}${formatCurrency(totalGainLoss, baseCurrency)}`}</p></div>
+          <div><p className="text-xs text-slate-400 mb-0.5">{t("holdings")}</p><p className="text-base font-semibold text-slate-700">{holdingsCount}</p></div>
+        </div>
+        {allocationSlices.length > 0 && (
+          <>
+            <div className="flex h-2 rounded-full overflow-hidden mt-4 bg-slate-100">
+              {allocationSlices.map((s) => <div key={s.key} style={{ width: `${s.percent}%`, background: s.color }} />)}
+            </div>
+            <div className="flex gap-4 mt-2 flex-wrap text-xs text-slate-500">
+              {allocationSlices.map((s) => <span key={s.key}><span style={{ color: s.color }}>●</span> {s.label} {formatPercent(s.percent)}</span>)}
+            </div>
+          </>
+        )}
+        <div className="flex justify-between items-center mt-4 pt-3 border-t border-slate-100">
+          {aiReviewBtn}
+          <BrokerSyncDot />
+        </div>
+        {reviewPanel}
+      </div>
+    );
+  }
+
+  /* ── STUDIO: Hero with gradient glow, embedded chart area ──── */
+  if (layoutTheme === "studio") {
+    return (
+      <div className="relative rounded-[20px] p-7 border border-white/5 overflow-hidden" style={{ background: "linear-gradient(180deg, rgba(34,197,94,0.04) 0%, transparent 100%)" }} data-testid="portfolio-summary-studio">
+        <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full bg-emerald-500/[0.06] blur-2xl pointer-events-none" />
+        {isLoading && <div className="absolute top-0 left-0 right-0 h-0.5 overflow-hidden rounded-t-[20px]"><div className="h-full w-1/3 bg-emerald-500/50 animate-progress-bar" /></div>}
+        <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-2">{t("portfolioValue")}</p>
+        <p className={`text-[42px] font-extrabold text-white tracking-tighter leading-none ${isLoading ? "animate-value-shimmer" : ""}`}>{valueLabel}</p>
+        <div className="flex gap-2 mt-3">
+          <span className={`font-mono text-xs font-semibold px-2.5 py-1 rounded-lg ${dayIsPositive ? "text-emerald-400 bg-emerald-500/10" : "text-red-400 bg-red-500/10"}`}>
+            {dayIsPositive ? "▲" : "▼"} {dayLabel}
+          </span>
+          <span className={`font-mono text-xs font-semibold px-2.5 py-1 rounded-lg ${totalIsPositive ? "text-emerald-400 bg-emerald-500/10" : "text-red-400 bg-red-500/10"}`}>
+            {formatPercent(totalGainLossPercent)} all time
+          </span>
+        </div>
+        {/* Chart placeholder area */}
+        <div className="w-full h-20 mt-5 rounded-lg" style={{ background: "linear-gradient(to top, transparent, rgba(34,197,94,0.04))" }} />
+        <div className="flex gap-6 mt-4 pt-3 border-t border-white/5 flex-wrap">
+          <div><p className="text-xs text-zinc-500">{t("cost")}</p><p className="text-sm font-bold font-mono text-zinc-300">{costLabel}</p></div>
+          <div><p className="text-xs text-zinc-500">{t("totalGainLoss")}</p><p className={`text-sm font-bold font-mono ${totalIsPositive ? "text-emerald-400" : "text-red-400"}`}>{stealthMode ? "•••••" : `${totalIsPositive ? "+" : ""}${formatCurrency(totalGainLoss, baseCurrency)}`}</p></div>
+          <div><p className="text-xs text-zinc-500">{t("holdings")}</p><p className="text-sm font-bold font-mono text-zinc-300">{holdingsCount}</p></div>
+        </div>
+        {allocationSlices.length > 0 && (
+          <>
+            <div className="flex h-1.5 rounded-full overflow-hidden mt-3 bg-white/[0.03]">
+              {allocationSlices.map((s) => <div key={s.key} style={{ width: `${s.percent}%`, background: s.color }} />)}
+            </div>
+            <div className="flex gap-3 mt-1.5 flex-wrap text-xs text-zinc-500">
+              {allocationSlices.map((s) => <span key={s.key}><span style={{ color: s.color }}>●</span> {s.label} {formatPercent(s.percent)}</span>)}
+            </div>
+          </>
+        )}
+        <div className="flex justify-between items-center mt-3 pt-2.5 border-t border-white/5">
+          {aiReviewBtn}
+          <BrokerSyncDot />
+        </div>
+        {reviewPanel}
+      </div>
+    );
+  }
+
+  /* ── DEFAULT: Current card layout (unchanged) ──────────────── */
   return (
-    <div className="card px-5 py-4 relative">
+    <div className="card px-5 py-4 relative" data-testid="portfolio-summary-default">
       {isLoading && (
         <div className="absolute top-0 left-0 right-0 h-0.5 overflow-hidden rounded-t-2xl">
           <div className="h-full w-1/3 bg-emerald-500/70 dark:bg-emerald-400/50 animate-progress-bar" />
@@ -157,10 +302,10 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
               className={`text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white ${isLoading ? "animate-value-shimmer" : ""}`}
               aria-label={stealthMode ? formatCurrency(totalCurrentEUR, baseCurrency) : undefined}
             >
-              {formatStealthCurrency(totalCurrentEUR, baseCurrency, stealthMode)}
+              {valueLabel}
             </p>
             <p className="text-xs text-gray-400 dark:text-slate-500">
-              {t("cost")}: <span aria-label={stealthMode ? formatCurrency(totalCostEUR, baseCurrency) : undefined}>{formatStealthCurrency(totalCostEUR, baseCurrency, stealthMode)}</span>
+              {t("cost")}: <span aria-label={stealthMode ? formatCurrency(totalCostEUR, baseCurrency) : undefined}>{costLabel}</span>
             </p>
           </div>
           <span
@@ -171,7 +316,7 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
             }`}
             aria-label={stealthMode ? `${formatCurrency(dayGainLossEUR, baseCurrency)} (${formatPercent(dayPercent)})` : undefined}
           >
-            {stealthMode ? "•••••" : `${dayIsPositive ? "+" : ""}${formatCurrency(dayGainLossEUR, baseCurrency)} (${formatPercent(dayPercent)})`}
+            {dayLabel}
           </span>
         </div>
 
@@ -187,7 +332,7 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
               <div className="relative" ref={allocationRef}>
                 <button
                   onClick={() => setAllocationOpen((v) => !v)}
-                  className="inline-flex items-center gap-1 text-xs font-medium text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 transition-colors"
+                  className="inline-flex items-center gap-1 text-xs font-medium text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded"
                   aria-label={t("assetAllocation")}
                   title={t("assetAllocation")}
                 >
@@ -197,52 +342,17 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
                   </svg>
                 </button>
                 {allocationOpen && (
-                  <AllocationPopover
-                    slices={allocationSlices}
-                    title={t("assetAllocation")}
-                    stealthMode={stealthMode}
-                    baseCurrency={baseCurrency}
-                  />
+                  <AllocationPopover slices={allocationSlices} title={t("assetAllocation")} stealthMode={stealthMode} baseCurrency={baseCurrency} />
                 )}
               </div>
             </>
           )}
           <span className="text-gray-300 dark:text-slate-600">·</span>
-          {isPro ? (
-            <button
-              onClick={() => setReviewOpen(!reviewOpen)}
-              disabled={!hasHoldings || remaining <= 0}
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
-              </svg>
-              AI Review
-              <span className="tabular-nums text-gray-400 dark:text-slate-500">{used}/{limit}</span>
-            </button>
-          ) : (
-            <a
-              href="/billing"
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition-colors"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
-              </svg>
-              AI Review
-              <span className="text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded-full bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-300">
-                Pro
-              </span>
-            </a>
-          )}
+          {aiReviewBtn}
           <BrokerSyncDot />
         </div>
       </div>
-
-      {reviewOpen && (
-        <div className="mt-4 pt-4 border-t border-gray-100 dark:border-slate-700">
-          <PortfolioReviewCard />
-        </div>
-      )}
+      {reviewPanel}
     </div>
   );
 }

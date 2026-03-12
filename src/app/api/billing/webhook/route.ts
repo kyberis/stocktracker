@@ -11,7 +11,10 @@ import {
   getSnapTradeConnection,
   scheduleSnapTradeDeletion,
   clearSnapTradeDeletion,
+  getUserSettings,
+  updateUserSettings,
 } from "@/lib/db";
+import { canAccessTheme } from "@/lib/subscription";
 import { sendBifolioUpgradeEmail, sendTrefolioUpgradeEmail } from "@/lib/email";
 import { billingEventsTotal } from "@/lib/metrics";
 import { getStripeClient } from "@/lib/stripe";
@@ -139,6 +142,7 @@ export const POST = withMetrics("/api/billing/webhook", async (req: NextRequest)
           planExpiresAt: nextExpiresAt,
         });
         await reconcileSnapTrade(user.id, nextPlan);
+        await reconcileTheme(user.id, nextPlan);
         break;
       }
       case "customer.subscription.deleted": {
@@ -151,6 +155,7 @@ export const POST = withMetrics("/api/billing/webhook", async (req: NextRequest)
           planExpiresAt: "",
         });
         await reconcileSnapTrade(user.id, "free");
+        await reconcileTheme(user.id, "free");
         break;
       }
       default:
@@ -163,6 +168,22 @@ export const POST = withMetrics("/api/billing/webhook", async (req: NextRequest)
 
   return NextResponse.json({ received: true });
 });
+
+/**
+ * Reset dashboard theme to default if the user's current theme
+ * is no longer available on their new plan.
+ */
+async function reconcileTheme(userId: string, newPlan: string): Promise<void> {
+  try {
+    const settings = await getUserSettings(userId);
+    const plan = (newPlan || "free") as import("@/lib/types").SubscriptionPlan;
+    if (!canAccessTheme(settings.dashboardTheme, plan)) {
+      await updateUserSettings(userId, { dashboardTheme: "default" });
+    }
+  } catch (err) {
+    console.error("[billing/webhook] Theme reconcile error:", err instanceof Error ? err.message : err);
+  }
+}
 
 /**
  * Schedule or cancel SnapTrade user deletion based on plan change.

@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>trefolio Dashboard — Design C: Fintech App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#09090b;--bg-raised:#18181b;--surface:#27272a;--surface-hover:#303036;
+  --border:rgba(255,255,255,0.06);--border-hover:rgba(255,255,255,0.12);
+  --text:#fafafa;--text-dim:#a1a1aa;--text-muted:#71717a;--text-faint:#52525b;
+  --gain:#22c55e;--gain-bg:rgba(34,197,94,0.1);--loss:#ef4444;--loss-bg:rgba(239,68,68,0.1);
+  --accent:#22c55e;--accent-light:#4ade80;
+  --amber:#f59e0b;--amber-bg:rgba(245,158,11,0.08);
+  --blue:#3b82f6;--indigo:#6366f1;--pink:#ec4899;
+  --sans:'Plus Jakarta Sans',-apple-system,sans-serif;--mono:'Space Mono',monospace;
+  --r:16px;--r-sm:12px;
+}
+html{font-size:14px}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+
+/* ── SIDEBAR NAV ── */
+.layout{display:grid;grid-template-columns:220px 1fr;min-height:100vh}
+.sidebar{background:var(--bg);border-right:1px solid var(--border);padding:20px 12px;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+.sb-logo{display:flex;align-items:center;gap:10px;padding:4px 8px;margin-bottom:24px}
+.sb-logo svg{width:30px;height:30px}
+.sb-brand{font-weight:800;font-size:1.1rem;letter-spacing:-0.03em}
+.sb-nav{display:flex;flex-direction:column;gap:2px;flex:1}
+.sb-link{display:flex;align-items:center;gap:10px;font-size:0.82rem;font-weight:500;color:var(--text-muted);padding:9px 12px;border-radius:10px;text-decoration:none;transition:all 0.15s}
+.sb-link:hover{color:var(--text-dim);background:rgba(255,255,255,0.04)}
+.sb-link.active{color:var(--text);background:rgba(34,197,94,0.08)}
+.sb-link.active .sb-icon{color:var(--accent)}
+.sb-icon{width:18px;height:18px;color:var(--text-faint);flex-shrink:0}
+.sb-link .pro-badge{font-family:var(--mono);font-size:0.5rem;font-weight:700;color:var(--amber);background:var(--amber-bg);padding:1px 5px;border-radius:3px;margin-left:auto}
+.sb-divider{height:1px;background:var(--border);margin:12px 8px}
+.sb-section{font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:var(--text-faint);padding:4px 12px;margin-bottom:4px}
+.sb-bottom{margin-top:auto;padding-top:12px;border-top:1px solid var(--border)}
+.sb-user{display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px;cursor:pointer;transition:background 0.15s}
+.sb-user:hover{background:rgba(255,255,255,0.04)}
+.sb-avatar{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--blue));display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:#fff}
+.sb-user-name{font-size:0.82rem;font-weight:600}
+.sb-user-plan{font-size:0.65rem;color:var(--text-faint)}
+
+/* ── MAIN AREA ── */
+.content{background:var(--bg-raised);overflow-y:auto;min-height:100vh}
+
+/* Ticker strip in main */
+.ticker-strip{display:flex;align-items:center;gap:24px;padding:8px 28px;border-bottom:1px solid var(--border);overflow-x:auto;font-size:0.7rem;background:rgba(0,0,0,0.2)}
+.tk{display:flex;align-items:center;gap:5px;white-space:nowrap}
+.tk-sym{font-weight:600;color:var(--text-dim)}
+.tk-val{color:var(--text-muted)}
+.tk-up{color:var(--gain);font-weight:500}
+.tk-dn{color:var(--loss);font-weight:500}
+.tk-dot{width:5px;height:5px;border-radius:50%;background:var(--gain);box-shadow:0 0 6px var(--gain)}
+
+/* Header bar */
+.header-bar{display:flex;align-items:center;justify-content:space-between;padding:16px 28px;border-bottom:1px solid var(--border)}
+.hb-left{display:flex;align-items:center;gap:12px}
+.port-switch{font-size:0.88rem;font-weight:700;display:flex;align-items:center;gap:6px;cursor:pointer}
+.port-switch svg{width:16px;height:16px;color:var(--text-muted)}
+.hb-updated{font-family:var(--mono);font-size:0.6rem;color:var(--text-faint)}
+.hb-right{display:flex;gap:6px}
+.hb-btn{font-size:0.72rem;font-weight:500;color:var(--text-dim);background:var(--surface);border:1px solid var(--border);padding:6px 12px;border-radius:var(--r-sm);cursor:pointer;display:flex;align-items:center;gap:5px;transition:all 0.15s}
+.hb-btn:hover{background:var(--surface-hover);border-color:var(--border-hover)}
+.hb-btn svg{width:14px;height:14px}
+.hb-btn.primary{background:var(--gain-bg);color:var(--gain);border-color:rgba(34,197,94,0.2)}
+
+/* ── PORTFOLIO HERO ── */
+.port-hero{padding:28px;background:linear-gradient(180deg,rgba(34,197,94,0.03) 0%,transparent 60%)}
+.ph-value{font-family:var(--mono);font-size:3.2rem;font-weight:700;letter-spacing:-0.05em;line-height:1}
+.ph-row{display:flex;align-items:center;gap:10px;margin-top:10px}
+.ph-badge{font-family:var(--mono);font-size:0.78rem;font-weight:600;padding:4px 10px;border-radius:8px}
+.ph-chart{width:100%;height:160px;margin-top:16px;position:relative}
+.ph-chart svg{width:100%;height:100%}
+.ph-chart-labels{position:absolute;bottom:-2px;left:0;right:0;display:flex;justify-content:space-between;font-family:var(--mono);font-size:0.55rem;color:var(--text-faint)}
+
+/* Quick stats row */
+.quick-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border);margin:0 28px;border-radius:var(--r);overflow:hidden}
+.qs-item{background:var(--bg-raised);padding:16px;text-align:center}
+.qs-label{font-size:0.62rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-faint);margin-bottom:4px}
+.qs-val{font-family:var(--mono);font-size:1.05rem;font-weight:700}
+
+/* ── SECTION TABS ── */
+.section-tabs{display:flex;gap:2px;padding:0 28px;margin-top:24px;border-bottom:1px solid var(--border)}
+.s-tab{font-size:0.78rem;font-weight:500;color:var(--text-muted);padding:10px 14px;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.15s}
+.s-tab:hover{color:var(--text-dim)}
+.s-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.s-tab .pro{font-family:var(--mono);font-size:0.48rem;font-weight:700;color:var(--amber);background:var(--amber-bg);padding:1px 4px;border-radius:3px;margin-left:3px}
+
+/* ── HOLDINGS ── */
+.holdings-section{padding:20px 28px}
+.hs-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.hs-title{font-size:0.85rem;font-weight:700}
+.hs-count{font-family:var(--mono);font-size:0.68rem;color:var(--text-faint)}
+.hs-filters{display:flex;gap:4px}
+.hs-chip{font-size:0.68rem;font-weight:500;color:var(--text-muted);background:rgba(255,255,255,0.03);border:1px solid var(--border);padding:3px 10px;border-radius:100px;cursor:pointer;transition:all 0.15s}
+.hs-chip:hover{color:var(--text-dim);border-color:var(--border-hover)}
+.hs-chip.active{color:var(--accent);background:var(--gain-bg);border-color:rgba(34,197,94,0.2)}
+
+.h-list{display:grid;gap:4px}
+.h-row{display:grid;grid-template-columns:44px 1.5fr 1fr 0.8fr 0.6fr;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,0.02);border:1px solid transparent;border-radius:var(--r-sm);transition:all 0.15s;cursor:pointer}
+.h-row:hover{background:rgba(255,255,255,0.04);border-color:var(--border)}
+.h-logo{width:44px;height:44px;border-radius:12px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:0.55rem;font-weight:700;color:var(--text-dim)}
+.h-info{}
+.h-ticker{font-weight:700;font-size:0.9rem}
+.h-name{font-size:0.68rem;color:var(--text-muted)}
+.h-col{text-align:right}
+.h-val{font-family:var(--mono);font-weight:600;font-size:0.85rem}
+.h-sub{font-family:var(--mono);font-size:0.62rem;color:var(--text-muted)}
+/* Sparkline */
+.h-spark{text-align:right}
+.h-spark svg{width:60px;height:24px}
+
+/* ── PANELS GRID ── */
+.panels{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 28px;margin-top:20px;padding-bottom:28px}
+.panel{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:var(--r);padding:20px;transition:border-color 0.2s}
+.panel:hover{border-color:var(--border-hover)}
+.panel-title{font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-faint);margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+.panel-title .pro-tag{font-family:var(--mono);font-size:0.48rem;font-weight:700;color:var(--amber);background:var(--amber-bg);padding:2px 6px;border-radius:3px}
+.p-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.03)}
+.p-row:last-child{border:none}
+.p-row-l{font-size:0.8rem;color:var(--text-dim)}
+.p-row-r{font-family:var(--mono);font-size:0.78rem;font-weight:600}
+
+.growth-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.gr-val{font-family:var(--mono);font-size:1.3rem;font-weight:700}
+.gr-label{font-size:0.62rem;color:var(--text-faint);margin-top:2px}
+
+/* cash list */
+.cash-total{display:flex;align-items:center;justify-content:space-between;padding:8px 0;margin-top:4px;border-top:1px solid var(--border)}
+.cash-total span:first-child{font-weight:600;font-size:0.8rem}
+.cash-total span:last-child{font-family:var(--mono);font-weight:700;color:var(--accent);font-size:0.9rem}
+
+/* ── UPGRADE CARD ── */
+.upgrade-card{margin:0 28px 28px;background:linear-gradient(135deg,rgba(34,197,94,0.05),rgba(99,102,241,0.03));border:1px solid rgba(34,197,94,0.12);border-radius:var(--r);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.uc-content{display:flex;align-items:center;gap:14px}
+.uc-icon{width:44px;height:44px;border-radius:12px;background:var(--gain-bg);border:1px solid rgba(34,197,94,0.15);display:flex;align-items:center;justify-content:center;color:var(--accent);flex-shrink:0}
+.uc-icon svg{width:22px;height:22px}
+.uc-content h4{font-size:0.88rem;font-weight:700;margin-bottom:2px}
+.uc-content p{font-size:0.72rem;color:var(--text-muted)}
+.uc-features{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap}
+.uc-feat{font-family:var(--mono);font-size:0.6rem;font-weight:600;color:var(--accent);background:var(--gain-bg);padding:2px 8px;border-radius:4px}
+.uc-btn{font-size:0.78rem;font-weight:600;color:#fff;background:var(--accent);padding:10px 20px;border-radius:var(--r-sm);border:none;cursor:pointer;white-space:nowrap;transition:all 0.15s;box-shadow:0 2px 12px rgba(34,197,94,0.25)}
+.uc-btn:hover{background:var(--accent-light);transform:translateY(-1px)}
+
+/* Ad */
+.ad{background:rgba(255,255,255,0.015);border:1px dashed var(--border);border-radius:8px;padding:10px;text-align:center;font-size:0.62rem;color:var(--text-faint);margin:16px 28px}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1024px){
+  .layout{grid-template-columns:1fr}
+  .sidebar{display:none}
+  .panels{grid-template-columns:1fr}
+  .quick-stats{grid-template-columns:repeat(3,1fr)}
+  .quick-stats .qs-item:nth-child(4),.quick-stats .qs-item:nth-child(5){display:none}
+  .h-row{grid-template-columns:40px 1.5fr 1fr 0.8fr}
+  .h-spark{display:none}
+}
+@media(max-width:640px){
+  .ph-value{font-size:2.2rem}
+  .quick-stats{grid-template-columns:1fr 1fr}
+  .h-row{grid-template-columns:36px 1fr auto}
+  .h-row .h-col:nth-child(4){display:none}
+  .hb-right{display:none}
+  .upgrade-card{flex-direction:column;text-align:center}
+  .uc-features{justify-content:center}
+}
+
+.design-label{position:fixed;bottom:16px;right:16px;z-index:999;background:linear-gradient(135deg,var(--accent),var(--indigo));color:#fff;font-family:var(--mono);font-size:0.65rem;font-weight:700;padding:6px 14px;border-radius:6px;box-shadow:0 4px 12px rgba(34,197,94,0.3)}
+</style>
+</head>
+<body>
+
+<div class="design-label">DESIGN C — Fintech App</div>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <svg viewBox="0 0 32 32"><defs><linearGradient id="la" x1=".5" y1="0" x2=".5" y2="1"><stop offset="0%" stop-color="#6ee7b7"/><stop offset="100%" stop-color="#10b981"/></linearGradient><linearGradient id="lb" x1="0" y1=".3" x2="1" y2=".7"><stop offset="0%" stop-color="#34d399"/><stop offset="100%" stop-color="#059669"/></linearGradient><linearGradient id="lc" x1=".5" y1="1" x2=".5" y2="0"><stop offset="0%" stop-color="#10b981"/><stop offset="100%" stop-color="#047857"/></linearGradient><linearGradient id="ld" x1="1" y1=".3" x2="0" y2=".7"><stop offset="0%" stop-color="#a7f3d0"/><stop offset="100%" stop-color="#34d399"/></linearGradient></defs><rect width="32" height="32" rx="7" fill="#0f172a"/><g transform="translate(16,16) rotate(45)"><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="url(#la)"/><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="url(#lb)" transform="rotate(90)"/><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="url(#lc)" transform="rotate(180)"/><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="url(#ld)" transform="rotate(270)"/><circle cx="0" cy="0" r="1.2" fill="#0f172a" opacity=".35"/></g></svg>
+      <span class="sb-brand">trefolio</span>
+    </div>
+
+    <div class="sb-section">Main</div>
+    <nav class="sb-nav">
+      <a href="#" class="sb-link active">
+        <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg>
+        Portfolio
+      </a>
+      <a href="#" class="sb-link">
+        <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
+        Import
+      </a>
+      <a href="#" class="sb-link">
+        <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11.42 15.17l-5.1-5.1m0 0L11.42 4.97m-5.1 5.1H21M3.75 3.75v16.5"/></svg>
+        Tools
+      </a>
+      <a href="#" class="sb-link">
+        <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.893 13.393l-1.135-1.135a2.252 2.252 0 01-.421-.585l-1.08-2.16a.414.414 0 00-.663-.107.827.827 0 01-.812.21l-1.273-.363a.89.89 0 00-.738 1.595l.587.39c.59.395.674 1.23.172 1.732l-.2.2c-.212.212-.33.498-.33.796v.41c0 .409-.11.809-.32 1.158l-1.315 2.191a2.11 2.11 0 01-1.81 1.025 1.055 1.055 0 01-1.055-1.055v-1.172c0-.92-.56-1.747-1.414-2.089l-.655-.261a2.25 2.25 0 01-1.383-2.46l.007-.042a2.25 2.25 0 01.29-.787l.09-.15a2.25 2.25 0 012.37-1.048l1.178.236a1.125 1.125 0 001.302-.795l.208-.73a1.125 1.125 0 00-.578-1.315l-.665-.332-.091.091a2.25 2.25 0 01-1.591.659h-.18c-.249 0-.487.1-.662.274a.931.931 0 01-1.458-1.137l1.411-2.353a2.25 2.25 0 00.286-.76m11.928 9.869A9 9 0 008.965 3.525m11.928 9.868A9 9 0 118.965 3.525"/></svg>
+        Crypto<span class="pro-badge">PRO</span>
+      </a>
+      <a href="#" class="sb-link">
+        <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75z"/></svg>
+        Indicators<span class="pro-badge">PRO</span>
+      </a>
+    </nav>
+
+    <div class="sb-divider"></div>
+    <div class="sb-section">Account</div>
+    <nav class="sb-nav" style="flex:0">
+      <a href="#" class="sb-link">
+        <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87"/></svg>
+        Settings
+      </a>
+      <a href="#" class="sb-link">
+        <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25"/></svg>
+        What's New
+      </a>
+    </nav>
+
+    <div class="sb-bottom">
+      <div class="sb-user">
+        <div class="sb-avatar">MC</div>
+        <div>
+          <div class="sb-user-name">Marco C.</div>
+          <div class="sb-user-plan">Folio (Free)</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="content">
+
+    <!-- TICKER -->
+    <div class="ticker-strip">
+      <div class="tk"><span class="tk-dot"></span><span class="tk-sym">NYSE Open</span></div>
+      <div class="tk"><span class="tk-sym">EUR/USD</span><span class="tk-val">1.0921</span><span class="tk-dn">-0.12%</span></div>
+      <div class="tk"><span class="tk-sym">BTC</span><span class="tk-val">$87,432</span><span class="tk-up">+2.41%</span></div>
+      <div class="tk"><span class="tk-sym">Gold</span><span class="tk-val">$2,834</span><span class="tk-up">+0.34%</span></div>
+      <div class="tk"><span class="tk-sym">S&P 500</span><span class="tk-val">5,842</span><span class="tk-up">+0.83%</span></div>
+      <div class="tk"><span class="tk-sym">DAX</span><span class="tk-val">18,924</span><span class="tk-up">+0.67%</span></div>
+    </div>
+
+    <!-- HEADER BAR -->
+    <div class="header-bar">
+      <div class="hb-left">
+        <div class="port-switch">My Portfolio <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 9l-7 7-7-7"/></svg></div>
+        <span class="hb-updated">Updated 2 min ago</span>
+      </div>
+      <div class="hb-right">
+        <button class="hb-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182"/></svg>Refresh</button>
+        <button class="hb-btn primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5v15m7.5-7.5h-15"/></svg>Add Asset</button>
+      </div>
+    </div>
+
+    <!-- PORTFOLIO HERO -->
+    <div class="port-hero">
+      <div style="font-size:0.68rem;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.06em;font-weight:600;margin-bottom:6px">Portfolio Value</div>
+      <div class="ph-value">€47,832.14</div>
+      <div class="ph-row">
+        <span class="ph-badge" style="color:var(--gain);background:var(--gain-bg)">▲ +€584.20 (+1.24%) today</span>
+        <span class="ph-badge" style="color:var(--gain);background:var(--gain-bg)">+12.4% all time</span>
+      </div>
+      <div class="ph-chart">
+        <svg viewBox="0 0 600 140" preserveAspectRatio="none">
+          <defs><linearGradient id="pg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#22c55e" stop-opacity="0.12"/><stop offset="100%" stop-color="#22c55e" stop-opacity="0"/></linearGradient></defs>
+          <path d="M0,120 C40,115 60,105 100,90 C150,72 180,80 240,60 C300,42 340,50 400,32 C440,22 500,15 560,10 C580,8 600,6 600,6 L600,140 L0,140Z" fill="url(#pg)"/>
+          <path d="M0,120 C40,115 60,105 100,90 C150,72 180,80 240,60 C300,42 340,50 400,32 C440,22 500,15 560,10 C580,8 600,6 600,6" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="560" cy="10" r="4" fill="#22c55e"/>
+          <circle cx="560" cy="10" r="8" fill="none" stroke="#22c55e" stroke-width="1" opacity="0.3"/>
+        </svg>
+        <div class="ph-chart-labels">
+          <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- QUICK STATS -->
+    <div class="quick-stats">
+      <div class="qs-item"><div class="qs-label">Cost Basis</div><div class="qs-val">€42,550</div></div>
+      <div class="qs-item"><div class="qs-label">Total Gain</div><div class="qs-val" style="color:var(--gain)">+€5,282</div></div>
+      <div class="qs-item"><div class="qs-label">Holdings</div><div class="qs-val">8 / 15</div></div>
+      <div class="qs-item"><div class="qs-label">Cash</div><div class="qs-val">€4,152</div></div>
+      <div class="qs-item"><div class="qs-label">Div. Yield</div><div class="qs-val">2.3%</div></div>
+    </div>
+
+    <!-- SECTION TABS -->
+    <div class="section-tabs">
+      <div class="s-tab active">Portfolio</div>
+      <div class="s-tab">Diversification</div>
+      <div class="s-tab">Dividends</div>
+      <div class="s-tab">Metrics<span class="pro">PRO</span></div>
+      <div class="s-tab">Growth<span class="pro">PRO</span></div>
+      <div class="s-tab">Events</div>
+      <div class="s-tab">News</div>
+    </div>
+
+    <!-- HOLDINGS -->
+    <div class="holdings-section">
+      <div class="hs-header">
+        <div><span class="hs-title">Holdings</span> <span class="hs-count">8 positions</span></div>
+        <div class="hs-filters">
+          <span class="hs-chip active">All</span>
+          <span class="hs-chip">DEGIRO</span>
+          <span class="hs-chip">IBKR</span>
+          <span class="hs-chip">Manual</span>
+        </div>
+      </div>
+
+      <div class="h-list">
+        <div class="h-row">
+          <div class="h-logo">AAPL</div>
+          <div class="h-info"><div class="h-ticker">Apple Inc.</div><div class="h-name">42 shares · AAPL</div></div>
+          <div class="h-col"><div class="h-val">€9,581.04</div><div class="h-sub">€228.12/sh</div></div>
+          <div class="h-col"><div class="h-val" style="color:var(--gain)">+18.2%</div><div class="h-sub">+€1,479</div></div>
+          <div class="h-spark"><svg viewBox="0 0 60 24"><path d="M0,18 C10,16 15,14 25,10 C35,6 45,4 60,2" fill="none" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+        </div>
+        <div class="h-row">
+          <div class="h-logo">ASML</div>
+          <div class="h-info"><div class="h-ticker">ASML Holding NV</div><div class="h-name">8 shares · ASML</div></div>
+          <div class="h-col"><div class="h-val">€6,659.20</div><div class="h-sub">€832.40/sh</div></div>
+          <div class="h-col"><div class="h-val" style="color:var(--gain)">+24.7%</div><div class="h-sub">+€1,322</div></div>
+          <div class="h-spark"><svg viewBox="0 0 60 24"><path d="M0,20 C10,18 20,12 30,8 C40,4 50,3 60,1" fill="none" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+        </div>
+        <div class="h-row">
+          <div class="h-logo">VWCE</div>
+          <div class="h-info"><div class="h-ticker">Vanguard FTSE All-World</div><div class="h-name">55 shares · VWCE.DE</div></div>
+          <div class="h-col"><div class="h-val">€6,178.70</div><div class="h-sub">€112.34/sh</div></div>
+          <div class="h-col"><div class="h-val" style="color:var(--gain)">+8.3%</div><div class="h-sub">+€474</div></div>
+          <div class="h-spark"><svg viewBox="0 0 60 24"><path d="M0,16 C10,15 20,14 30,12 C40,10 50,9 60,6" fill="none" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+        </div>
+        <div class="h-row">
+          <div class="h-logo">NOVO</div>
+          <div class="h-info"><div class="h-ticker">Novo Nordisk A/S</div><div class="h-name">25 shares · NOVO-B.CO</div></div>
+          <div class="h-col"><div class="h-val">€4,740.00</div><div class="h-sub">€189.60/sh</div></div>
+          <div class="h-col"><div class="h-val" style="color:var(--gain)">+15.1%</div><div class="h-sub">+€623</div></div>
+          <div class="h-spark"><svg viewBox="0 0 60 24"><path d="M0,18 C15,14 25,10 40,8 C50,6 55,5 60,4" fill="none" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+        </div>
+        <div class="h-row">
+          <div class="h-logo">MSFT</div>
+          <div class="h-info"><div class="h-ticker">Microsoft Corp</div><div class="h-name">12 shares · MSFT</div></div>
+          <div class="h-col"><div class="h-val">€4,542.00</div><div class="h-sub">€378.50/sh</div></div>
+          <div class="h-col"><div class="h-val" style="color:var(--gain)">+21.8%</div><div class="h-sub">+€812</div></div>
+          <div class="h-spark"><svg viewBox="0 0 60 24"><path d="M0,20 C10,16 25,10 35,8 C45,5 55,4 60,3" fill="none" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+        </div>
+        <div class="h-row">
+          <div class="h-logo">BMW</div>
+          <div class="h-info"><div class="h-ticker">BMW AG</div><div class="h-name">40 shares · BMW.DE</div></div>
+          <div class="h-col"><div class="h-val">€3,873.60</div><div class="h-sub">€96.84/sh</div></div>
+          <div class="h-col"><div class="h-val" style="color:var(--loss)">-3.1%</div><div class="h-sub">-€124</div></div>
+          <div class="h-spark"><svg viewBox="0 0 60 24"><path d="M0,6 C10,8 20,12 30,14 C40,16 50,18 60,20" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ad">Ad — Free plan (remove with Bifolio)</div>
+
+    <!-- PANELS -->
+    <div class="panels">
+      <div class="panel">
+        <div class="panel-title">Upcoming Earnings</div>
+        <div class="p-row"><span class="p-row-l">AAPL — Apple Inc.</span><span class="p-row-r" style="color:var(--text-dim)">Apr 24</span></div>
+        <div class="p-row"><span class="p-row-l">MSFT — Microsoft</span><span class="p-row-r" style="color:var(--text-dim)">Apr 29</span></div>
+        <div class="p-row"><span class="p-row-l">SAP.DE — SAP SE</span><span class="p-row-r" style="color:var(--text-dim)">May 6</span></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Markets Today</div>
+        <div class="p-row"><span class="p-row-l">S&P 500</span><span class="p-row-r" style="color:var(--gain)">+0.83%</span></div>
+        <div class="p-row"><span class="p-row-l">Nasdaq</span><span class="p-row-r" style="color:var(--gain)">+1.12%</span></div>
+        <div class="p-row"><span class="p-row-l">Euro Stoxx 50</span><span class="p-row-r" style="color:var(--gain)">+0.45%</span></div>
+        <div class="p-row"><span class="p-row-l">DAX</span><span class="p-row-r" style="color:var(--gain)">+0.67%</span></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Cash Balances</div>
+        <div class="p-row"><span class="p-row-l">DEGIRO Cash</span><span class="p-row-r">€2,340</span></div>
+        <div class="p-row"><span class="p-row-l">IBKR Cash</span><span class="p-row-r">€1,812</span></div>
+        <div class="cash-total"><span>Total Cash</span><span>€4,152</span></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Growth Periods <span class="pro-tag">BIFOLIO+</span></div>
+        <div class="growth-row">
+          <div><div class="gr-val" style="color:var(--gain)">+3.2%</div><div class="gr-label">YTD</div></div>
+          <div><div class="gr-val" style="color:var(--gain)">+1.8%</div><div class="gr-label">1 Month</div></div>
+          <div><div class="gr-val" style="color:var(--gain)">+12.4%</div><div class="gr-label">1 Year</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- UPGRADE -->
+    <div class="upgrade-card">
+      <div class="uc-content">
+        <div class="uc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg></div>
+        <div>
+          <h4>Unlock the full trefolio experience</h4>
+          <p>Unlimited AI, auto broker sync, crypto tracking, advanced metrics, and up to 3 portfolios.</p>
+          <div class="uc-features">
+            <span class="uc-feat">Unlimited AI</span>
+            <span class="uc-feat">Broker Sync</span>
+            <span class="uc-feat">Crypto</span>
+            <span class="uc-feat">3 Portfolios</span>
+          </div>
+        </div>
+      </div>
+      <button class="uc-btn">Upgrade →</button>
+    </div>
+
+  </main>
+</div>
+</body>
+</html>

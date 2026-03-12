@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>trefolio — Dashboard Themes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+/* ━━━ THEME PICKER BAR ━━━ */
+.picker{position:fixed;top:0;left:0;right:0;z-index:9999;background:#000;border-bottom:2px solid #10b981;padding:8px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.picker-label{font-family:'Inter',sans-serif;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.1em}
+.picker-btns{display:flex;gap:6px;flex-wrap:wrap}
+.pbtn{font-family:'Inter',sans-serif;font-size:12px;font-weight:600;padding:6px 14px;border-radius:7px;border:1px solid #334155;background:#1e293b;color:#94a3b8;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:6px}
+.pbtn:hover{border-color:#475569;color:#e2e8f0}
+.pbtn.on{background:#10b981;border-color:#10b981;color:#fff;box-shadow:0 2px 12px rgba(16,185,129,0.3)}
+.pbtn .tag{font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px}
+.tag-all{background:rgba(148,163,184,0.2);color:#94a3b8}
+.tag-bif{background:rgba(16,185,129,0.15);color:#34d399}
+.tag-pro{background:rgba(245,158,11,0.15);color:#fbbf24}
+.picker-info{margin-left:auto;font-family:'Inter',sans-serif;font-size:11px;color:#475569}
+
+body{padding-top:50px}
+
+/* ━━━ SVG logo reused by all themes ━━━ */
+.logo-svg{width:28px;height:28px;flex-shrink:0}
+
+/* Shared gain/loss for all themes */
+.up,.gain{color:#10b981}.dn,.loss{color:#ef4444}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   THEME DEFAULT — Current App Design
+   Inter/Geist, emerald accent, card-based, dark
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.theme-default{font-family:'Inter',-apple-system,sans-serif;font-size:14px;background:#0f172a;color:#f1f5f9;line-height:1.55;display:none}
+.theme-default.visible{display:block}
+
+/* Ticker */
+.theme-default .d-ticker{height:32px;background:#0f172a;border-bottom:1px solid #1e293b;display:flex;align-items:center;gap:24px;padding:0 20px;font-size:12px;color:#94a3b8;overflow:hidden}
+.theme-default .d-ticker .sym{font-weight:600;color:#cbd5e1}
+.theme-default .d-ticker .dot{width:6px;height:6px;border-radius:50%;background:#10b981;display:inline-block;margin-right:4px}
+
+/* Nav */
+.theme-default .d-nav{height:48px;background:#0f172a;border-bottom:1px solid #1e293b;display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:sticky;top:50px;z-index:50}
+.theme-default .d-nav-l{display:flex;align-items:center;gap:16px}
+.theme-default .d-nav-brand{font-weight:700;font-size:16px;color:#f1f5f9;letter-spacing:-0.02em}
+.theme-default .d-nav-links{display:flex;gap:1px}
+.theme-default .d-nav-links a{font-size:13px;font-weight:500;color:#94a3b8;padding:6px 12px;border-radius:8px;text-decoration:none;transition:all 0.15s}
+.theme-default .d-nav-links a:hover{color:#e2e8f0;background:#1e293b}
+.theme-default .d-nav-links a.on{color:#fff;background:#10b981}
+.theme-default .d-nav-links .pro-badge{font-size:9px;font-weight:700;color:#fbbf24;background:rgba(245,158,11,0.15);padding:1px 5px;border-radius:4px;margin-left:3px}
+.theme-default .d-nav-r{display:flex;align-items:center;gap:6px}
+.theme-default .d-nav-r button{width:32px;height:32px;border-radius:8px;border:1px solid #334155;background:transparent;color:#64748b;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px}
+.theme-default .d-nav-r button:hover{background:#1e293b;color:#94a3b8}
+.theme-default .d-nav-r .av{width:30px;height:30px;border-radius:8px;background:#10b981;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+
+/* Body */
+.theme-default .d-body{max-width:1100px;margin:0 auto;padding:20px}
+
+/* Toolbar */
+.theme-default .d-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.theme-default .d-toolbar-l{display:flex;align-items:center;gap:10px}
+.theme-default .d-toolbar-l .port{font-size:15px;font-weight:700;color:#f1f5f9;cursor:pointer}
+.theme-default .d-toolbar-l .upd{font-size:11px;color:#64748b}
+.theme-default .d-toolbar-r{display:flex;gap:6px}
+.theme-default .d-btn{font-family:inherit;font-size:12px;font-weight:500;color:#94a3b8;background:transparent;border:1px solid #334155;padding:6px 12px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:4px;transition:all 0.15s}
+.theme-default .d-btn:hover{background:#1e293b;border-color:#475569;color:#e2e8f0}
+.theme-default .d-btn.acc{color:#10b981;border-color:rgba(16,185,129,0.3)}
+.theme-default .d-btn.acc:hover{background:rgba(16,185,129,0.1)}
+
+/* Banners */
+.theme-default .d-banner{font-size:13px;padding:10px 14px;border-radius:12px;margin-bottom:8px;display:flex;align-items:center;gap:8px;font-weight:500}
+.theme-default .d-banner.warn{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);color:#fbbf24}
+.theme-default .d-banner.info{background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.15);color:#60a5fa}
+.theme-default .d-banner .x{margin-left:auto;cursor:pointer;opacity:0.4}
+
+/* Tabs */
+.theme-default .d-tabs{display:flex;gap:2px;margin-bottom:16px;border-bottom:1px solid #1e293b}
+.theme-default .d-tabs span{font-size:12px;font-weight:500;color:#64748b;padding:8px 14px;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.15s}
+.theme-default .d-tabs span:hover{color:#94a3b8}
+.theme-default .d-tabs span.on{color:#10b981;border-bottom-color:#10b981;font-weight:600}
+
+/* Summary card */
+.theme-default .d-summary{background:#1e293b;border:1px solid #334155;border-radius:16px;padding:24px;margin-bottom:14px}
+.theme-default .d-summary .label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#64748b;margin-bottom:6px}
+.theme-default .d-summary .value{font-size:32px;font-weight:700;color:#f1f5f9;letter-spacing:-0.03em;line-height:1}
+.theme-default .d-summary .badges{display:flex;gap:8px;margin-top:10px}
+.theme-default .d-summary .badge{font-size:12px;font-weight:600;padding:4px 10px;border-radius:8px}
+.theme-default .d-summary .stats{display:flex;gap:24px;margin-top:16px;padding-top:14px;border-top:1px solid #334155;flex-wrap:wrap}
+.theme-default .d-summary .st-l{font-size:10px;color:#64748b;margin-bottom:2px}
+.theme-default .d-summary .st-v{font-size:14px;font-weight:600;color:#e2e8f0}
+.theme-default .d-alloc-bar{display:flex;height:6px;border-radius:3px;overflow:hidden;background:#334155;margin-top:14px}
+.theme-default .d-alloc-bar div{height:100%}
+.theme-default .d-alloc-legend{display:flex;gap:12px;margin-top:6px;font-size:11px;color:#94a3b8;flex-wrap:wrap}
+.theme-default .d-alloc-legend span::before{content:'● ';font-size:9px}
+.theme-default .d-ai-row{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:10px;border-top:1px solid #334155}
+.theme-default .d-ai-btn{font-family:inherit;font-size:12px;font-weight:600;color:#10b981;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);padding:6px 14px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:5px}
+.theme-default .d-sync{font-size:11px;color:#64748b;display:flex;align-items:center;gap:5px}
+.theme-default .d-sync .dot{width:6px;height:6px;border-radius:50%;background:#10b981}
+
+.theme-default .d-ad{font-size:10px;color:#334155;text-align:center;padding:6px;border:1px dashed #1e293b;border-radius:8px;margin:8px 0}
+
+/* Filter */
+.theme-default .d-filter{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.theme-default .d-filter-pills{display:flex;gap:4px}
+.theme-default .d-fp{font-size:11px;font-weight:500;color:#64748b;background:transparent;border:1px solid #334155;padding:4px 12px;border-radius:20px;cursor:pointer}
+.theme-default .d-fp.on{color:#fff;background:#10b981;border-color:#10b981}
+.theme-default .d-fc{font-size:11px;color:#475569}
+
+/* Holdings table */
+.theme-default table.dt{width:100%;border-collapse:collapse;margin-bottom:12px}
+.theme-default table.dt th{font-size:11px;font-weight:600;color:#64748b;text-align:left;padding:8px 10px;border-bottom:1px solid #334155}
+.theme-default table.dt th.r{text-align:right}
+.theme-default table.dt td{font-size:13px;padding:10px;border-bottom:1px solid #1e293b;color:#cbd5e1}
+.theme-default table.dt td.r{text-align:right}
+.theme-default table.dt tr:hover{background:#1e293b}
+.theme-default .tk{font-weight:600;color:#f1f5f9}
+
+/* Section cards */
+.theme-default .d-card{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:16px;margin-bottom:10px}
+.theme-default .d-card-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#64748b;margin-bottom:10px;display:flex;justify-content:space-between}
+.theme-default .d-card-title a{font-size:11px;color:#10b981;text-transform:none;letter-spacing:0;text-decoration:none}
+.theme-default .d-card .row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:#cbd5e1;border-bottom:1px solid rgba(255,255,255,0.04)}
+.theme-default .d-card .row:last-child{border:none}
+
+.theme-default .d-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* Blur overlay */
+.theme-default .d-blur{position:relative;border-radius:12px;overflow:hidden}
+.theme-default .d-blur-content{filter:blur(4px);pointer-events:none}
+.theme-default .d-blur-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:rgba(15,23,42,0.6);backdrop-filter:blur(4px);z-index:2}
+.theme-default .d-blur-overlay span{font-size:13px;font-weight:600;color:#e2e8f0}
+.theme-default .d-blur-overlay button{font-family:inherit;font-size:11px;font-weight:600;color:#fff;background:#10b981;padding:7px 16px;border-radius:8px;border:none;cursor:pointer}
+
+.theme-default .d-growth{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center}
+.theme-default .d-growth .gv{font-size:18px;font-weight:700}
+.theme-default .d-growth .gl{font-size:10px;color:#64748b;margin-top:2px}
+
+.theme-default .d-upgrade{background:linear-gradient(135deg,rgba(16,185,129,0.06),rgba(59,130,246,0.04));border:1px solid rgba(16,185,129,0.15);border-radius:12px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;margin:14px 0}
+.theme-default .d-upgrade h4{font-size:14px;font-weight:600;color:#f1f5f9;margin-bottom:2px}
+.theme-default .d-upgrade p{font-size:12px;color:#94a3b8}
+.theme-default .d-upgrade button{font-family:inherit;font-size:12px;font-weight:600;color:#fff;background:#10b981;padding:8px 18px;border-radius:8px;border:none;cursor:pointer;white-space:nowrap}
+
+.theme-default .d-proj{margin-bottom:10px}
+.theme-default .d-proj-chart{height:60px;background:linear-gradient(to top,transparent,rgba(16,185,129,0.04));border-radius:8px;margin-bottom:8px}
+
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   THEME TERMINAL — Dense monospace
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.theme-terminal{font-family:'IBM Plex Mono','Courier New',monospace;font-size:13px;background:#0a0a0a;color:#a1a1aa;line-height:1.5;display:none}
+.theme-terminal.visible{display:block}
+.theme-terminal .up,.theme-terminal .gain{color:#22c55e}
+.theme-terminal .dn,.theme-terminal .loss{color:#ef4444}
+
+.theme-terminal .t-ticker{height:28px;background:#000;border-bottom:1px solid #18181b;display:flex;align-items:center;gap:20px;padding:0 12px;font-size:12px;overflow:hidden}
+.theme-terminal .t-ticker .sym{color:#52525b;font-weight:600}
+.theme-terminal .t-ticker .dot{width:5px;height:5px;border-radius:50%;background:#22c55e;display:inline-block;margin-right:4px}
+
+.theme-terminal .t-nav{height:36px;background:#0a0a0a;border-bottom:1px solid #18181b;display:flex;align-items:center;justify-content:space-between;padding:0 12px;position:sticky;top:50px;z-index:50}
+.theme-terminal .t-nav-l{display:flex;align-items:center;gap:12px}
+.theme-terminal .t-nav-brand{font-weight:600;font-size:14px;color:#e4e4e7}
+.theme-terminal .t-nav-links{display:flex;gap:0}
+.theme-terminal .t-nav-links a{font-size:12px;color:#52525b;padding:4px 8px;text-decoration:none;transition:color 0.15s;border-bottom:2px solid transparent}
+.theme-terminal .t-nav-links a:hover{color:#71717a}
+.theme-terminal .t-nav-links a.on{color:#22c55e;border-bottom-color:#22c55e}
+.theme-terminal .t-nav-links .pro-badge{font-size:9px;color:#ca8a04;margin-left:2px}
+.theme-terminal .t-nav-r{display:flex;gap:4px}
+.theme-terminal .t-nav-r button{width:28px;height:28px;background:none;border:1px solid #27272a;color:#52525b;cursor:pointer;font-size:12px;border-radius:4px;display:flex;align-items:center;justify-content:center}
+.theme-terminal .t-nav-r button:hover{color:#71717a;background:#18181b;border-color:#3f3f46}
+.theme-terminal .t-nav-r .av{width:24px;height:24px;border-radius:4px;background:#22c55e;color:#000;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}
+
+.theme-terminal .t-body{padding:10px 12px;max-width:1400px;margin:0 auto}
+
+.theme-terminal .t-toolbar{display:flex;align-items:center;justify-content:space-between;padding:4px 0;margin-bottom:8px;border-bottom:1px solid #18181b}
+.theme-terminal .t-toolbar-l{display:flex;align-items:center;gap:8px}
+.theme-terminal .t-toolbar-l .port{font-weight:600;color:#e4e4e7;font-size:13px;cursor:pointer}
+.theme-terminal .t-toolbar-l .upd{font-size:12px;color:#3f3f46}
+.theme-terminal .t-toolbar-r{display:flex;gap:4px}
+.theme-terminal .t-toolbar-r button{font-family:inherit;font-size:12px;color:#52525b;background:none;border:1px solid #27272a;padding:3px 8px;border-radius:4px;cursor:pointer}
+.theme-terminal .t-toolbar-r button:hover{color:#71717a;border-color:#3f3f46}
+.theme-terminal .t-toolbar-r button.acc{color:#22c55e;border-color:rgba(34,197,94,0.3)}
+
+.theme-terminal .t-banner{font-size:12px;padding:6px 10px;border-radius:4px;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.theme-terminal .t-banner.warn{background:rgba(202,138,4,0.06);border-left:3px solid #ca8a04;color:#ca8a04}
+.theme-terminal .t-banner.info{background:rgba(8,145,178,0.06);border-left:3px solid #0891b2;color:#06b6d4}
+.theme-terminal .t-banner .x{margin-left:auto;cursor:pointer;opacity:0.5}
+
+.theme-terminal .t-tabs{display:flex;gap:0;margin-bottom:8px;border-bottom:1px solid #18181b}
+.theme-terminal .t-tabs span{font-size:12px;color:#3f3f46;padding:6px 10px;cursor:pointer;border-bottom:2px solid transparent}
+.theme-terminal .t-tabs span:hover{color:#52525b}
+.theme-terminal .t-tabs span.on{color:#22c55e;border-bottom-color:#22c55e}
+
+/* Summary — compact inline row */
+.theme-terminal .t-summary{display:flex;gap:16px;align-items:baseline;padding:8px 0;margin-bottom:8px;border-bottom:1px solid #18181b;flex-wrap:wrap}
+.theme-terminal .t-summary .big{font-size:22px;font-weight:600;color:#e4e4e7;letter-spacing:-0.02em}
+.theme-terminal .t-summary .chg{font-size:12px;font-weight:500;padding:2px 6px;border-radius:3px}
+.theme-terminal .t-summary .stat{font-size:12px;color:#3f3f46}
+.theme-terminal .t-summary .stat b{color:#71717a;font-weight:500}
+.theme-terminal .t-alloc{display:flex;gap:10px;font-size:12px;color:#3f3f46;margin-bottom:8px}
+.theme-terminal .t-alloc span::before{content:'■ '}
+.theme-terminal .t-ai{font-size:12px;color:#3f3f46;margin-left:auto}
+.theme-terminal .t-ai a{color:#22c55e;text-decoration:none}
+
+.theme-terminal .t-filter{font-size:12px;color:#3f3f46;margin-bottom:6px;display:flex;align-items:center;gap:4px}
+.theme-terminal .t-filter a{color:#52525b;text-decoration:none;padding:2px 6px;cursor:pointer;border-radius:3px}
+.theme-terminal .t-filter a.on{color:#22c55e;background:rgba(34,197,94,0.08)}
+
+/* Table */
+.theme-terminal table.ht{width:100%;border-collapse:collapse;margin-bottom:8px}
+.theme-terminal table.ht th{font-size:12px;font-weight:600;color:#3f3f46;text-align:left;padding:4px 8px;border-bottom:1px solid #18181b;text-transform:uppercase;letter-spacing:0.04em}
+.theme-terminal table.ht th.r{text-align:right}
+.theme-terminal table.ht td{font-size:13px;padding:6px 8px;border-bottom:1px solid #18181b;color:#a1a1aa}
+.theme-terminal table.ht td.r{text-align:right}
+.theme-terminal table.ht tr:hover{background:#18181b}
+.theme-terminal .tk{font-weight:600;color:#d4d4d8}
+
+.theme-terminal .t-ad{font-size:12px;color:#27272a;text-align:center;padding:4px;border:1px dashed #18181b;margin:6px 0}
+
+.theme-terminal .t-section{border-top:1px solid #18181b;padding:8px 0;margin-bottom:4px}
+.theme-terminal .t-section-title{font-size:12px;font-weight:600;color:#3f3f46;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px}
+.theme-terminal .t-row{display:flex;justify-content:space-between;font-size:13px;padding:3px 0;color:#71717a}
+.theme-terminal .t-row b{color:#a1a1aa;font-weight:500}
+
+.theme-terminal .t-blur{position:relative;overflow:hidden;border:1px solid #18181b;border-radius:4px;margin-bottom:4px}
+.theme-terminal .t-blur-content{filter:blur(3px);pointer-events:none;padding:8px;font-size:12px;color:#3f3f46}
+.theme-terminal .t-blur-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:8px;font-size:12px;color:#ca8a04;background:rgba(0,0,0,0.6)}
+.theme-terminal .t-blur-overlay button{font-family:inherit;font-size:12px;color:#000;background:#ca8a04;border:none;padding:4px 10px;border-radius:3px;cursor:pointer}
+
+.theme-terminal .t-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.theme-terminal .t-upgrade{font-size:12px;color:#22c55e;border:1px solid rgba(34,197,94,0.2);padding:8px 10px;border-radius:4px;margin-top:8px;display:flex;justify-content:space-between;align-items:center}
+.theme-terminal .t-upgrade button{font-family:inherit;font-size:12px;color:#000;background:#22c55e;border:none;padding:4px 12px;border-radius:3px;cursor:pointer}
+
+.theme-terminal .t-proj{border-top:1px solid #18181b;padding:8px 0}
+.theme-terminal .t-proj-chart{height:60px;background:linear-gradient(to top,transparent,rgba(34,197,94,0.04));margin-bottom:6px;border-bottom:1px solid #18181b}
+.theme-terminal .t-proj-summary{display:flex;gap:16px;font-size:12px;color:#3f3f46;flex-wrap:wrap}
+.theme-terminal .t-proj-summary b{color:#22c55e}
+
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   THEME CANVAS — Light, spacious, rounded
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.theme-canvas{font-family:'DM Sans',-apple-system,sans-serif;font-size:15px;background:#f8f9fb;color:#1e293b;line-height:1.6;display:none}
+.theme-canvas.visible{display:block}
+.theme-canvas .up,.theme-canvas .gain{color:#16a34a}
+.theme-canvas .dn,.theme-canvas .loss{color:#dc2626}
+
+.theme-canvas .c-ticker{height:36px;background:#fff;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:24px;padding:0 24px;font-size:12px;color:#64748b;overflow:hidden}
+.theme-canvas .c-ticker .sym{font-weight:600;color:#334155}
+.theme-canvas .c-ticker .dot{width:6px;height:6px;border-radius:50%;background:#16a34a;display:inline-block;margin-right:3px;box-shadow:0 0 4px #16a34a}
+
+.theme-canvas .c-nav{height:56px;background:#fff;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:50px;z-index:50;box-shadow:0 1px 3px rgba(0,0,0,0.04)}
+.theme-canvas .c-nav-l{display:flex;align-items:center;gap:20px}
+.theme-canvas .c-nav-brand{font-weight:700;font-size:18px;color:#0f172a;letter-spacing:-0.03em}
+.theme-canvas .c-nav-links{display:flex;gap:4px}
+.theme-canvas .c-nav-links a{font-size:14px;font-weight:500;color:#64748b;padding:7px 14px;border-radius:20px;text-decoration:none;transition:all 0.15s}
+.theme-canvas .c-nav-links a:hover{color:#334155;background:#f1f5f9}
+.theme-canvas .c-nav-links a.on{color:#fff;background:#0f172a}
+.theme-canvas .c-nav-links .pro-badge{font-size:9px;font-weight:700;color:#d97706;background:#fef3c7;padding:1px 5px;border-radius:8px;margin-left:2px}
+.theme-canvas .c-nav-r{display:flex;align-items:center;gap:8px}
+.theme-canvas .c-nav-r button{width:36px;height:36px;border-radius:10px;border:1px solid #e2e8f0;background:#fff;color:#94a3b8;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s}
+.theme-canvas .c-nav-r button:hover{color:#64748b;background:#f8fafc;border-color:#cbd5e1}
+.theme-canvas .c-nav-r .av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#10b981,#0ea5e9);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
+
+.theme-canvas .c-body{max-width:960px;margin:0 auto;padding:28px 24px}
+
+.theme-canvas .c-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.theme-canvas .c-toolbar-l{display:flex;align-items:center;gap:12px}
+.theme-canvas .c-toolbar-l .port{font-size:18px;font-weight:700;color:#0f172a;cursor:pointer}
+.theme-canvas .c-toolbar-l .upd{font-size:12px;color:#94a3b8}
+.theme-canvas .c-toolbar-r{display:flex;gap:8px}
+.theme-canvas .c-btn{font-family:inherit;font-size:13px;font-weight:500;color:#64748b;background:#fff;border:1px solid #e2e8f0;padding:8px 14px;border-radius:12px;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all 0.15s;box-shadow:0 1px 2px rgba(0,0,0,0.04)}
+.theme-canvas .c-btn:hover{border-color:#cbd5e1;color:#334155}
+.theme-canvas .c-btn.acc{color:#16a34a;border-color:#bbf7d0;background:#f0fdf4}
+
+.theme-canvas .c-banner{font-size:14px;padding:12px 16px;border-radius:12px;margin-bottom:10px;display:flex;align-items:center;gap:10px;font-weight:500}
+.theme-canvas .c-banner.warn{background:#fffbeb;border:1px solid #fde68a;color:#92400e}
+.theme-canvas .c-banner.info{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af}
+.theme-canvas .c-banner .x{margin-left:auto;cursor:pointer;opacity:0.4;font-size:16px}
+
+.theme-canvas .c-tabs{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap}
+.theme-canvas .c-tabs span{font-size:13px;font-weight:500;color:#94a3b8;padding:7px 16px;border-radius:20px;cursor:pointer;transition:all 0.15s;background:#fff;border:1px solid #f1f5f9}
+.theme-canvas .c-tabs span:hover{color:#64748b;border-color:#e2e8f0}
+.theme-canvas .c-tabs span.on{color:#fff;background:#0f172a;border-color:#0f172a}
+
+/* Summary */
+.theme-canvas .c-summary{background:#fff;border:1px solid #e2e8f0;border-radius:20px;padding:28px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,0.04)}
+.theme-canvas .c-summary .label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;margin-bottom:6px}
+.theme-canvas .c-summary .value{font-size:38px;font-weight:700;color:#0f172a;letter-spacing:-0.03em;line-height:1}
+.theme-canvas .c-summary .badges{display:flex;gap:8px;margin-top:10px}
+.theme-canvas .c-summary .badge{font-size:13px;font-weight:600;padding:5px 12px;border-radius:10px}
+.theme-canvas .badge-up{color:#16a34a;background:#f0fdf4}
+.theme-canvas .c-summary .stats{display:flex;gap:28px;margin-top:20px;padding-top:16px;border-top:1px solid #f1f5f9;flex-wrap:wrap}
+.theme-canvas .c-summary .stat-l{font-size:12px;color:#94a3b8;margin-bottom:2px}
+.theme-canvas .c-summary .stat-v{font-size:16px;font-weight:600;color:#334155}
+.theme-canvas .c-alloc-bar{display:flex;height:8px;border-radius:4px;overflow:hidden;margin-top:16px;background:#f1f5f9}
+.theme-canvas .c-alloc-bar div{height:100%}
+.theme-canvas .c-alloc-legend{display:flex;gap:14px;margin-top:8px;flex-wrap:wrap;font-size:12px;color:#64748b}
+.theme-canvas .c-alloc-legend span::before{content:'● '}
+.theme-canvas .c-ai-row{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid #f1f5f9}
+.theme-canvas .c-ai-btn{font-family:inherit;font-size:13px;font-weight:600;color:#16a34a;background:#f0fdf4;border:1px solid #bbf7d0;padding:7px 14px;border-radius:12px;cursor:pointer;display:flex;align-items:center;gap:5px}
+.theme-canvas .c-sync{font-size:12px;color:#94a3b8;display:flex;align-items:center;gap:5px}
+.theme-canvas .c-sync .dot{width:7px;height:7px;border-radius:50%;background:#16a34a}
+
+.theme-canvas .c-ad{font-size:12px;color:#cbd5e1;text-align:center;padding:8px;border:1px dashed #e2e8f0;border-radius:10px;margin:10px 0}
+
+.theme-canvas .c-filter{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.theme-canvas .c-filter-pills{display:flex;gap:6px}
+.theme-canvas .c-fp{font-size:12px;font-weight:500;color:#94a3b8;background:#fff;border:1px solid #f1f5f9;padding:5px 14px;border-radius:20px;cursor:pointer}
+.theme-canvas .c-fp.on{color:#0f172a;background:#f1f5f9;border-color:#e2e8f0;font-weight:600}
+.theme-canvas .c-fc{font-size:12px;color:#cbd5e1}
+
+/* Holdings cards */
+.theme-canvas .c-holdings{display:grid;gap:8px;margin-bottom:16px}
+.theme-canvas .c-hold{display:grid;grid-template-columns:48px 1.5fr 1fr 0.8fr;align-items:center;gap:14px;padding:14px 18px;background:#fff;border:1px solid #f1f5f9;border-radius:16px;cursor:pointer;transition:all 0.2s;box-shadow:0 1px 2px rgba(0,0,0,0.02)}
+.theme-canvas .c-hold:hover{border-color:#e2e8f0;box-shadow:0 4px 12px rgba(0,0,0,0.06);transform:translateY(-1px)}
+.theme-canvas .c-hold-icon{width:48px;height:48px;border-radius:14px;background:#f8fafc;border:1px solid #f1f5f9;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#334155}
+.theme-canvas .c-hold-name{font-size:15px;font-weight:600;color:#0f172a}
+.theme-canvas .c-hold-sub{font-size:12px;color:#94a3b8;margin-top:1px}
+.theme-canvas .c-hold-val{font-size:15px;font-weight:600;color:#334155;text-align:right}
+.theme-canvas .c-hold-price{font-size:12px;color:#94a3b8;text-align:right}
+.theme-canvas .c-hold-gain{font-size:15px;font-weight:600;text-align:right}
+.theme-canvas .c-hold-amt{font-size:12px;color:#94a3b8;text-align:right}
+
+.theme-canvas .c-card{background:#fff;border:1px solid #f1f5f9;border-radius:16px;padding:20px;margin-bottom:12px;box-shadow:0 1px 2px rgba(0,0,0,0.02)}
+.theme-canvas .c-card-title{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#94a3b8;margin-bottom:12px;display:flex;justify-content:space-between}
+.theme-canvas .c-card-title a{font-size:12px;color:#16a34a;text-transform:none;letter-spacing:0;text-decoration:none;font-weight:500}
+.theme-canvas .c-card .row{display:flex;justify-content:space-between;padding:7px 0;font-size:14px;border-bottom:1px solid #f8f9fb}
+.theme-canvas .c-card .row:last-child{border:none}
+
+.theme-canvas .c-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.theme-canvas .c-blur{position:relative;border-radius:16px;overflow:hidden}
+.theme-canvas .c-blur-content{filter:blur(5px);pointer-events:none}
+.theme-canvas .c-blur-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:rgba(255,255,255,0.7);backdrop-filter:blur(4px);border-radius:16px;z-index:2}
+.theme-canvas .c-blur-overlay span{font-size:14px;font-weight:600;color:#334155}
+.theme-canvas .c-blur-overlay button{font-family:inherit;font-size:13px;font-weight:600;color:#fff;background:#0f172a;padding:8px 18px;border-radius:12px;border:none;cursor:pointer}
+.theme-canvas .c-growth{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center}
+.theme-canvas .c-growth .gv{font-size:22px;font-weight:700}
+.theme-canvas .c-growth .gl{font-size:12px;color:#94a3b8;margin-top:2px}
+
+.theme-canvas .c-upgrade{background:linear-gradient(135deg,#f0fdf4,#eff6ff);border:1px solid #bbf7d0;border-radius:16px;padding:20px;display:flex;align-items:center;justify-content:space-between;gap:16px;margin:16px 0}
+.theme-canvas .c-upgrade h4{font-size:15px;font-weight:600;color:#0f172a;margin-bottom:2px}
+.theme-canvas .c-upgrade p{font-size:13px;color:#64748b}
+.theme-canvas .c-upgrade button{font-family:inherit;font-size:13px;font-weight:600;color:#fff;background:#0f172a;padding:10px 20px;border-radius:12px;border:none;cursor:pointer;white-space:nowrap}
+
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   THEME STUDIO — Sidebar, glass, sparklines
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.theme-studio{font-family:'Plus Jakarta Sans',-apple-system,sans-serif;font-size:14px;background:#09090b;color:#d4d4d8;line-height:1.55;display:none}
+.theme-studio.visible{display:block}
+.theme-studio .up,.theme-studio .gain{color:#22c55e}
+.theme-studio .dn,.theme-studio .loss{color:#f87171}
+
+.theme-studio .s-layout{display:grid;grid-template-columns:200px 1fr}
+.theme-studio .s-sidebar{background:#09090b;border-right:1px solid rgba(255,255,255,0.05);padding:16px;position:sticky;top:50px;height:calc(100vh - 50px);display:flex;flex-direction:column}
+.theme-studio .s-sb-logo{display:flex;align-items:center;gap:8px;margin-bottom:28px;padding:0 4px}
+.theme-studio .s-sb-brand{font-weight:800;font-size:16px;color:#fafafa;letter-spacing:-0.04em}
+.theme-studio .s-sb-section{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:#3f3f46;padding:0 8px;margin:20px 0 6px}
+.theme-studio .s-sb-link{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500;color:#71717a;padding:8px;border-radius:10px;text-decoration:none;transition:all 0.15s;margin-bottom:1px}
+.theme-studio .s-sb-link:hover{color:#a1a1aa;background:rgba(255,255,255,0.03)}
+.theme-studio .s-sb-link.on{color:#fafafa;background:rgba(34,197,94,0.08)}
+.theme-studio .s-sb-link.on svg{color:#22c55e}
+.theme-studio .s-sb-link svg{width:16px;height:16px;color:#3f3f46;flex-shrink:0}
+.theme-studio .s-sb-link .pro-badge{font-size:9px;font-weight:700;color:#f59e0b;background:rgba(245,158,11,0.1);padding:1px 5px;border-radius:4px;margin-left:auto}
+.theme-studio .s-sb-bottom{margin-top:auto;padding-top:12px;border-top:1px solid rgba(255,255,255,0.05)}
+.theme-studio .s-sb-user{display:flex;align-items:center;gap:8px;padding:6px}
+.theme-studio .s-sb-av{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#22c55e,#6366f1);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff}
+.theme-studio .s-sb-name{font-size:14px;font-weight:600;color:#fafafa}
+.theme-studio .s-sb-plan{font-size:12px;color:#52525b}
+
+.theme-studio .s-main{background:#18181b;min-height:calc(100vh - 50px);overflow-y:auto}
+.theme-studio .s-ticker{height:30px;background:rgba(0,0,0,0.4);border-bottom:1px solid rgba(255,255,255,0.04);display:flex;align-items:center;gap:24px;padding:0 24px;font-size:12px;overflow:hidden}
+.theme-studio .s-ticker .sym{font-weight:600;color:#71717a}
+.theme-studio .s-ticker .dot{width:5px;height:5px;border-radius:50%;background:#22c55e;display:inline-block;margin-right:3px;box-shadow:0 0 6px #22c55e}
+
+.theme-studio .s-body{max-width:900px;margin:0 auto;padding:24px}
+.theme-studio .s-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.theme-studio .s-toolbar-l{display:flex;align-items:center;gap:10px}
+.theme-studio .s-toolbar .port{font-size:18px;font-weight:800;color:#fafafa;letter-spacing:-0.02em;cursor:pointer}
+.theme-studio .s-toolbar .upd{font-family:'Space Mono',monospace;font-size:12px;color:#3f3f46}
+.theme-studio .s-toolbar-r{display:flex;gap:6px}
+.theme-studio .s-btn{font-family:inherit;font-size:12px;font-weight:500;color:#a1a1aa;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);padding:7px 12px;border-radius:10px;cursor:pointer;display:flex;align-items:center;gap:4px;backdrop-filter:blur(8px);transition:all 0.15s}
+.theme-studio .s-btn:hover{background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.1)}
+.theme-studio .s-btn.acc{color:#22c55e;border-color:rgba(34,197,94,0.2);background:rgba(34,197,94,0.05)}
+
+.theme-studio .s-banner{font-size:13px;padding:10px 14px;border-radius:12px;margin-bottom:8px;display:flex;align-items:center;gap:8px;backdrop-filter:blur(8px)}
+.theme-studio .s-banner.warn{background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.15);color:#fbbf24}
+.theme-studio .s-banner.info{background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.12);color:#60a5fa}
+.theme-studio .s-banner .x{margin-left:auto;cursor:pointer;opacity:0.4}
+
+.theme-studio .s-tabs{display:flex;gap:2px;margin-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.05)}
+.theme-studio .s-tabs span{font-size:13px;font-weight:500;color:#52525b;padding:10px 16px;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.15s}
+.theme-studio .s-tabs span:hover{color:#71717a}
+.theme-studio .s-tabs span.on{color:#22c55e;border-bottom-color:#22c55e}
+
+/* Hero */
+.theme-studio .s-hero{background:linear-gradient(180deg,rgba(34,197,94,0.04) 0%,transparent 100%);border:1px solid rgba(255,255,255,0.05);border-radius:20px;padding:28px;margin-bottom:14px;position:relative;overflow:hidden}
+.theme-studio .s-hero::before{content:'';position:absolute;top:-40px;right:-40px;width:200px;height:200px;background:radial-gradient(circle,rgba(34,197,94,0.08),transparent 70%);pointer-events:none}
+.theme-studio .s-hero .label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:#52525b;margin-bottom:8px}
+.theme-studio .s-hero .value{font-size:42px;font-weight:800;color:#fafafa;letter-spacing:-0.04em;line-height:1}
+.theme-studio .s-hero .badges{display:flex;gap:8px;margin-top:10px}
+.theme-studio .s-hero .badge{font-family:'Space Mono',monospace;font-size:12px;font-weight:600;padding:4px 10px;border-radius:8px}
+.theme-studio .s-hero .chart{width:100%;height:100px;margin-top:16px}
+.theme-studio .s-hero .chart svg{width:100%;height:100%}
+.theme-studio .s-hero .stats{display:flex;gap:24px;margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.05);flex-wrap:wrap}
+.theme-studio .s-hero .st-l{font-size:12px;color:#52525b;margin-bottom:1px}
+.theme-studio .s-hero .st-v{font-family:'Space Mono',monospace;font-size:14px;font-weight:700;color:#d4d4d8}
+.theme-studio .s-alloc-bar{display:flex;height:6px;border-radius:3px;overflow:hidden;background:rgba(255,255,255,0.03);margin-top:14px}
+.theme-studio .s-alloc-bar div{height:100%}
+.theme-studio .s-alloc-legend{display:flex;gap:12px;margin-top:6px;font-size:12px;color:#71717a;flex-wrap:wrap}
+.theme-studio .s-alloc-legend span::before{content:'● '}
+.theme-studio .s-ai-row{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.05)}
+.theme-studio .s-ai-btn{font-family:inherit;font-size:12px;font-weight:600;color:#22c55e;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.15);padding:6px 14px;border-radius:10px;cursor:pointer;display:flex;align-items:center;gap:5px}
+.theme-studio .s-sync{font-size:12px;color:#52525b;display:flex;align-items:center;gap:4px}
+.theme-studio .s-sync .dot{width:6px;height:6px;border-radius:50%;background:#22c55e;box-shadow:0 0 6px #22c55e}
+
+.theme-studio .s-ad{font-size:12px;color:#27272a;text-align:center;padding:6px;border:1px dashed rgba(255,255,255,0.04);border-radius:8px;margin:8px 0}
+
+.theme-studio .s-filter{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.theme-studio .s-filter-pills{display:flex;gap:4px}
+.theme-studio .s-fp{font-size:12px;font-weight:500;color:#52525b;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);padding:5px 12px;border-radius:20px;cursor:pointer}
+.theme-studio .s-fp.on{color:#22c55e;background:rgba(34,197,94,0.08);border-color:rgba(34,197,94,0.15)}
+.theme-studio .s-fc{font-family:'Space Mono',monospace;font-size:12px;color:#3f3f46}
+
+.theme-studio .s-holdings{display:grid;gap:4px;margin-bottom:14px}
+.theme-studio .s-hold{display:grid;grid-template-columns:42px 1.4fr 0.9fr 0.7fr 60px;align-items:center;gap:10px;padding:12px 16px;background:rgba(255,255,255,0.02);border:1px solid transparent;border-radius:14px;cursor:pointer;transition:all 0.2s}
+.theme-studio .s-hold:hover{background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.06)}
+.theme-studio .s-hold-icon{width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:12px;font-weight:700;color:#a1a1aa}
+.theme-studio .s-hold-name{font-size:14px;font-weight:700;color:#fafafa}
+.theme-studio .s-hold-sub{font-size:12px;color:#52525b;margin-top:1px}
+.theme-studio .s-hold-col{text-align:right}
+.theme-studio .s-hold-v{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:#d4d4d8}
+.theme-studio .s-hold-s{font-family:'Space Mono',monospace;font-size:12px;color:#52525b}
+.theme-studio .s-spark svg{width:60px;height:24px}
+
+.theme-studio .s-card{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:16px;padding:18px;margin-bottom:10px;backdrop-filter:blur(4px)}
+.theme-studio .s-card-title{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#3f3f46;margin-bottom:10px;display:flex;justify-content:space-between}
+.theme-studio .s-card-title a{font-size:12px;color:#22c55e;text-transform:none;letter-spacing:0;text-decoration:none}
+.theme-studio .s-card .row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:#a1a1aa;border-bottom:1px solid rgba(255,255,255,0.03)}
+.theme-studio .s-card .row:last-child{border:none}
+.theme-studio .s-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+.theme-studio .s-blur{position:relative;border-radius:16px;overflow:hidden}
+.theme-studio .s-blur-content{filter:blur(4px);pointer-events:none}
+.theme-studio .s-blur-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:rgba(0,0,0,0.4);backdrop-filter:blur(4px);z-index:2}
+.theme-studio .s-blur-overlay span{font-size:13px;font-weight:600;color:#d4d4d8}
+.theme-studio .s-blur-overlay button{font-family:inherit;font-size:12px;font-weight:600;color:#fff;background:#22c55e;padding:7px 16px;border-radius:10px;border:none;cursor:pointer}
+
+.theme-studio .s-growth{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center}
+.theme-studio .s-growth .gv{font-family:'Space Mono',monospace;font-size:18px;font-weight:700}
+.theme-studio .s-growth .gl{font-size:12px;color:#52525b;margin-top:2px}
+
+.theme-studio .s-upgrade{background:linear-gradient(135deg,rgba(34,197,94,0.04),rgba(99,102,241,0.03));border:1px solid rgba(34,197,94,0.1);border-radius:16px;padding:18px 22px;display:flex;align-items:center;justify-content:space-between;gap:16px;margin:14px 0}
+.theme-studio .s-upgrade h4{font-size:14px;font-weight:700;color:#fafafa;margin-bottom:2px}
+.theme-studio .s-upgrade p{font-size:12px;color:#71717a}
+.theme-studio .s-upgrade button{font-family:inherit;font-size:12px;font-weight:600;color:#fff;background:#22c55e;padding:10px 20px;border-radius:12px;border:none;cursor:pointer;white-space:nowrap;box-shadow:0 2px 12px rgba(34,197,94,0.2)}
+
+/* Feedback FAB */
+.fab{position:fixed;bottom:20px;right:20px;width:44px;height:44px;border-radius:50%;background:#27272a;border:1px solid #3f3f46;color:#71717a;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:100;font-size:16px}
+
+/* ━━━ Responsive ━━━ */
+@media(max-width:900px){
+  .theme-studio .s-layout{grid-template-columns:1fr}
+  .theme-studio .s-sidebar{display:none}
+  .theme-studio .s-grid{grid-template-columns:1fr}
+  .theme-studio .s-hold{grid-template-columns:36px 1fr auto}
+  .theme-studio .s-hold .s-hold-col:nth-child(4),.theme-studio .s-spark{display:none}
+  .theme-canvas .c-hold{grid-template-columns:40px 1fr auto}
+  .theme-canvas .c-hold .c-hold-gain,.theme-canvas .c-hold .c-hold-amt{display:none}
+  .theme-canvas .c-grid{grid-template-columns:1fr}
+  .theme-terminal .t-grid{grid-template-columns:1fr}
+  .theme-default .d-grid{grid-template-columns:1fr}
+  .picker{flex-wrap:wrap;gap:8px}
+  .picker-info{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- PICKER -->
+<div class="picker">
+  <span class="picker-label">Theme</span>
+  <div class="picker-btns">
+    <button class="pbtn on" onclick="show('default',this)">Default <span class="tag tag-all">ALL TIERS</span></button>
+    <button class="pbtn" onclick="show('canvas',this)">Canvas <span class="tag tag-bif">BIFOLIO+</span></button>
+    <button class="pbtn" onclick="show('terminal',this)">Terminal <span class="tag tag-pro">TREFOLIO</span></button>
+    <button class="pbtn" onclick="show('studio',this)">Studio <span class="tag tag-pro">TREFOLIO</span></button>
+  </div>
+  <span class="picker-info">Folio: Default only | Bifolio: +Canvas | Trefolio: +Terminal +Studio</span>
+</div>
+
+<!-- ═══════════════════ DEFAULT ═══════════════════ -->
+<div class="theme-default visible" id="themeDefault">
+  <div class="d-ticker"><span class="dot"></span><span class="sym">NYSE</span> Open &nbsp; <span class="sym">EUR/USD</span> 1.0921 <span class="dn">-0.12%</span> &nbsp; <span class="sym">BTC</span> $87,432 <span class="up">+2.41%</span> &nbsp; <span class="sym">Gold</span> $2,834 <span class="up">+0.34%</span> &nbsp; <span class="sym">S&P 500</span> 5,842 <span class="up">+0.83%</span></div>
+  <nav class="d-nav">
+    <div class="d-nav-l">
+      <svg class="logo-svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#0f172a"/><g transform="translate(16,16) rotate(45)"><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#10b981"/><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#059669" transform="rotate(90)"/><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#047857" transform="rotate(180)"/><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#34d399" transform="rotate(270)"/></g></svg>
+      <span class="d-nav-brand">trefolio</span>
+      <div class="d-nav-links"><a class="on">Portfolio</a><a>Import</a><a>Tools</a><a>Crypto<span class="pro-badge">PRO</span></a><a>Indicators<span class="pro-badge">PRO</span></a></div>
+    </div>
+    <div class="d-nav-r"><button title="What's New">✦</button><button title="Stealth">◉</button><button title="Theme">◐</button><button title="Language">🌐</button><div class="av">MC</div></div>
+  </nav>
+  <div class="d-body">
+    <div class="d-toolbar"><div class="d-toolbar-l"><span class="port">My Portfolio ▾</span><span class="upd">Updated 2 min ago</span></div><div class="d-toolbar-r"><button class="d-btn">↻ Refresh</button><button class="d-btn">⚙ Settings</button><button class="d-btn">Import</button><button class="d-btn acc">+ Add Asset</button></div></div>
+    <div class="d-banner info">DEGIRO connection needs reauthorization — <a style="color:#60a5fa;text-decoration:underline">Reconnect</a><span class="x">×</span></div>
+    <div class="d-banner warn">13 of 15 holdings used — <a style="color:#fbbf24;text-decoration:underline">Upgrade</a></div>
+    <div class="d-tabs"><span class="on">Portfolio</span><span>Crypto<span class="pro-badge" style="margin-left:3px">PRO</span></span><span>Diversification</span><span>Dividends</span><span>Metrics<span class="pro-badge" style="margin-left:3px">BIF+</span></span><span>Growth<span class="pro-badge" style="margin-left:3px">BIF+</span></span><span>Events</span><span>News</span></div>
+    <div class="d-summary">
+      <div class="label">Portfolio Value</div>
+      <div class="value">€47,832.14</div>
+      <div class="badges"><span class="badge" style="color:#10b981;background:rgba(16,185,129,0.1)">▲ +€584.20 today (+1.24%)</span><span class="badge" style="color:#10b981;background:rgba(16,185,129,0.1)">+12.4% all time</span></div>
+      <div class="stats"><div><div class="st-l">Cost Basis</div><div class="st-v">€42,550</div></div><div><div class="st-l">Total Gain</div><div class="st-v up">+€5,282</div></div><div><div class="st-l">Holdings</div><div class="st-v">8 / 15</div></div><div><div class="st-l">Cash</div><div class="st-v">€4,152</div></div><div><div class="st-l">Yield</div><div class="st-v">2.3%</div></div></div>
+      <div class="d-alloc-bar"><div style="width:45%;background:#10b981"></div><div style="width:20%;background:#3b82f6"></div><div style="width:15%;background:#8b5cf6"></div><div style="width:10%;background:#f59e0b"></div><div style="width:10%;background:#64748b"></div></div>
+      <div class="d-alloc-legend"><span style="color:#10b981">Stocks 45%</span><span style="color:#3b82f6">ETFs 20%</span><span style="color:#8b5cf6">Crypto 15%</span><span style="color:#f59e0b">Cash 10%</span><span>Other 10%</span></div>
+      <div class="d-ai-row"><button class="d-ai-btn">✦ AI Review <span class="pro-badge" style="margin-left:4px">PRO</span></button><div class="d-sync"><span class="dot"></span>Synced 1h ago · DEGIRO <span class="pro-badge" style="margin-left:4px">PRO</span></div></div>
+    </div>
+    <div class="d-ad">Ad — Free plan (remove with Bifolio)</div>
+    <div class="d-filter"><div class="d-filter-pills"><span class="d-fp on">All</span><span class="d-fp">DEGIRO</span><span class="d-fp">IBKR</span><span class="d-fp">Manual</span></div><span class="d-fc">8 holdings</span></div>
+    <table class="dt"><thead><tr><th>Asset</th><th>Exchange</th><th class="r">Shares</th><th class="r">Price</th><th class="r">Value (€)</th><th class="r">Day</th><th class="r">Total</th></tr></thead><tbody>
+      <tr><td><span class="tk">AAPL</span> Apple Inc.</td><td>NYSE</td><td class="r">42</td><td class="r">228.12</td><td class="r">9,581</td><td class="r up">+1.84%</td><td class="r up">+18.2%</td></tr>
+      <tr><td><span class="tk">ASML</span> ASML Holding</td><td>AMS</td><td class="r">8</td><td class="r">832.40</td><td class="r">6,659</td><td class="r up">+2.15%</td><td class="r up">+24.7%</td></tr>
+      <tr><td><span class="tk">VWCE.DE</span> Vanguard FTSE</td><td>XETRA</td><td class="r">55</td><td class="r">112.34</td><td class="r">6,179</td><td class="r up">+0.42%</td><td class="r up">+8.3%</td></tr>
+      <tr><td><span class="tk">BMW.DE</span> BMW AG</td><td>XETRA</td><td class="r">40</td><td class="r">96.84</td><td class="r">3,874</td><td class="r dn">-1.20%</td><td class="r dn">-3.1%</td></tr>
+      <tr><td><span class="tk">SAP.DE</span> SAP SE</td><td>XETRA</td><td class="r">18</td><td class="r">188.20</td><td class="r">3,388</td><td class="r up">+1.05%</td><td class="r up">+14.3%</td></tr>
+    </tbody></table>
+    <div class="d-card"><div class="d-card-title">Upcoming Earnings <a>View all →</a></div><div class="row"><span>AAPL — Apple</span><span>Apr 24</span></div><div class="row"><span>MSFT — Microsoft</span><span>Apr 29</span></div></div>
+    <div class="d-grid">
+      <div class="d-blur"><div class="d-blur-overlay"><span>Growth Periods</span><button>Upgrade to Bifolio</button></div><div class="d-blur-content"><div class="d-card"><div class="d-card-title">Growth</div><div class="d-growth"><div><div class="gv up">+3.2%</div><div class="gl">YTD</div></div><div><div class="gv up">+1.8%</div><div class="gl">1M</div></div><div><div class="gv up">+12.4%</div><div class="gl">1Y</div></div></div></div></div></div>
+      <div class="d-blur"><div class="d-blur-overlay"><span>Performance Metrics</span><button>Upgrade to Bifolio</button></div><div class="d-blur-content"><div class="d-card"><div class="d-card-title">Metrics</div><div class="row"><span>TTWROR</span><span class="up" style="font-weight:700">+11.8%</span></div><div class="row"><span>IRR</span><span class="up" style="font-weight:700">+9.4%</span></div></div></div></div>
+    </div>
+    <div class="d-grid">
+      <div class="d-card"><div class="d-card-title">Markets Today</div><div class="row" style="font-weight:600"><span>Portfolio</span><span class="up">+1.24%</span></div><div class="row"><span>S&P 500</span><span class="up">+0.83%</span></div><div class="row"><span>Nasdaq</span><span class="up">+1.12%</span></div></div>
+      <div class="d-card"><div class="d-card-title">Cash <a>+ Add</a></div><div class="row"><span>DEGIRO</span><span style="font-weight:600">€2,340</span></div><div class="row"><span>IBKR</span><span style="font-weight:600">€1,812</span></div><div class="row" style="border-top:1px solid #334155;padding-top:6px;font-weight:600"><span>Total</span><span class="up">€4,152</span></div></div>
+    </div>
+    <div class="d-card d-proj"><div class="d-card-title">Projection</div><div class="d-proj-chart"></div><div style="display:flex;gap:16px;font-size:13px;color:#94a3b8;flex-wrap:wrap">Current: <b style="color:#e2e8f0">€47,832</b> &nbsp;│&nbsp; 20y: <b class="up">€284,210</b> &nbsp;│&nbsp; Return: <b class="up">+494%</b></div></div>
+    <div class="d-ad">Ad — Free plan</div>
+    <div class="d-upgrade"><div><h4>Unlock the full experience</h4><p>AI review, broker sync, crypto, metrics, and premium themes.</p></div><button>Upgrade →</button></div>
+  </div>
+</div>
+
+<!-- ═══════════════════ CANVAS ═══════════════════ -->
+<div class="theme-canvas" id="themeCanvas">
+  <div class="c-ticker"><span class="dot"></span><span class="sym">NYSE</span> Open &nbsp; <span class="sym">EUR/USD</span> 1.0921 <span class="dn">-0.12%</span> &nbsp; <span class="sym">BTC</span> $87,432 <span class="up">+2.41%</span> &nbsp; <span class="sym">Gold</span> $2,834 <span class="up">+0.34%</span> &nbsp; <span class="sym">S&P 500</span> 5,842 <span class="up">+0.83%</span></div>
+  <nav class="c-nav">
+    <div class="c-nav-l">
+      <svg class="logo-svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#0f172a"/><g transform="translate(16,16) rotate(45)"><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#10b981"/><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#059669" transform="rotate(90)"/><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#047857" transform="rotate(180)"/><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#34d399" transform="rotate(270)"/></g></svg>
+      <span class="c-nav-brand">trefolio</span>
+      <div class="c-nav-links"><a class="on">Portfolio</a><a>Import</a><a>Tools</a><a>Crypto<span class="pro-badge">PRO</span></a><a>Indicators<span class="pro-badge">PRO</span></a></div>
+    </div>
+    <div class="c-nav-r"><button title="What's New">✦</button><button title="Stealth">👁</button><button title="Theme">🌙</button><button title="Language">🌐</button><div class="av">MC</div></div>
+  </nav>
+  <div class="c-body">
+    <div class="c-toolbar"><div class="c-toolbar-l"><span class="port">My Portfolio ▾</span><span class="upd">Updated 2 min ago</span></div><div class="c-toolbar-r"><button class="c-btn">Refresh</button><button class="c-btn">Settings</button><button class="c-btn acc">+ Add Asset</button></div></div>
+    <div class="c-banner info">DEGIRO connection needs reauthorization. <a style="color:#1e40af;font-weight:600;text-decoration:underline">Reconnect</a><span class="x">×</span></div>
+    <div class="c-banner warn">13 of 15 holdings used. <a style="color:#92400e;font-weight:600;text-decoration:underline">Upgrade</a></div>
+    <div class="c-tabs"><span class="on">Portfolio</span><span>Crypto <span class="pro-badge">PRO</span></span><span>Diversification</span><span>Dividends</span><span>Metrics <span class="pro-badge">BIF+</span></span><span>Growth <span class="pro-badge">BIF+</span></span><span>Events</span><span>News</span></div>
+    <div class="c-summary">
+      <div class="label">Portfolio Value</div>
+      <div class="value">€47,832.14</div>
+      <div class="badges"><span class="badge badge-up">▲ +€584.20 today (+1.24%)</span><span class="badge badge-up">+12.4% all time</span></div>
+      <div class="stats"><div><div class="stat-l">Cost Basis</div><div class="stat-v">€42,550</div></div><div><div class="stat-l">Total Gain</div><div class="stat-v" style="color:#16a34a">+€5,282</div></div><div><div class="stat-l">Holdings</div><div class="stat-v">8 / 15</div></div><div><div class="stat-l">Cash</div><div class="stat-v">€4,152</div></div><div><div class="stat-l">Div. Yield</div><div class="stat-v">2.3%</div></div></div>
+      <div class="c-alloc-bar"><div style="width:45%;background:#16a34a"></div><div style="width:20%;background:#0ea5e9"></div><div style="width:15%;background:#8b5cf6"></div><div style="width:10%;background:#d97706"></div><div style="width:10%;background:#94a3b8"></div></div>
+      <div class="c-alloc-legend"><span style="color:#16a34a">Stocks 45%</span><span style="color:#0ea5e9">ETFs 20%</span><span style="color:#8b5cf6">Crypto 15%</span><span style="color:#d97706">Cash 10%</span><span>Other 10%</span></div>
+      <div class="c-ai-row"><button class="c-ai-btn">✦ AI Review <span class="pro-badge" style="margin-left:4px">PRO</span></button><div class="c-sync"><span class="dot"></span>Synced 1h · DEGIRO <span class="pro-badge" style="margin-left:4px">PRO</span></div></div>
+    </div>
+    <div class="c-ad">Ad — Free plan (remove with Bifolio)</div>
+    <div class="c-filter"><div class="c-filter-pills"><span class="c-fp on">All</span><span class="c-fp">DEGIRO</span><span class="c-fp">IBKR</span><span class="c-fp">Manual</span></div><span class="c-fc">8 holdings</span></div>
+    <div class="c-holdings">
+      <div class="c-hold"><div class="c-hold-icon">AAPL</div><div><div class="c-hold-name">Apple Inc.</div><div class="c-hold-sub">42 shares · NYSE</div></div><div><div class="c-hold-val">€9,581</div><div class="c-hold-price">€228.12 / sh</div></div><div><div class="c-hold-gain gain">+18.2%</div><div class="c-hold-amt">+€1,479</div></div></div>
+      <div class="c-hold"><div class="c-hold-icon">ASML</div><div><div class="c-hold-name">ASML Holding</div><div class="c-hold-sub">8 shares · AMS</div></div><div><div class="c-hold-val">€6,659</div><div class="c-hold-price">€832.40 / sh</div></div><div><div class="c-hold-gain gain">+24.7%</div><div class="c-hold-amt">+€1,322</div></div></div>
+      <div class="c-hold"><div class="c-hold-icon">BMW</div><div><div class="c-hold-name">BMW AG</div><div class="c-hold-sub">40 shares · XETRA</div></div><div><div class="c-hold-val">€3,874</div><div class="c-hold-price">€96.84 / sh</div></div><div><div class="c-hold-gain loss">-3.1%</div><div class="c-hold-amt">-€124</div></div></div>
+      <div class="c-hold"><div class="c-hold-icon">SAP</div><div><div class="c-hold-name">SAP SE</div><div class="c-hold-sub">18 shares · XETRA</div></div><div><div class="c-hold-val">€3,388</div><div class="c-hold-price">€188.20 / sh</div></div><div><div class="c-hold-gain gain">+14.3%</div><div class="c-hold-amt">+€424</div></div></div>
+    </div>
+    <div class="c-card"><div class="c-card-title">Upcoming Earnings <a>View all →</a></div><div class="row"><span>AAPL — Apple</span><span style="color:#64748b">Apr 24</span></div><div class="row"><span>MSFT — Microsoft</span><span style="color:#64748b">Apr 29</span></div></div>
+    <div class="c-grid">
+      <div class="c-blur"><div class="c-blur-overlay"><span>Growth Periods</span><button>Upgrade to Bifolio</button></div><div class="c-blur-content"><div class="c-card"><div class="c-card-title">Growth</div><div class="c-growth"><div><div class="gv gain">+3.2%</div><div class="gl">YTD</div></div><div><div class="gv gain">+1.8%</div><div class="gl">1M</div></div><div><div class="gv gain">+12.4%</div><div class="gl">1Y</div></div></div></div></div></div>
+      <div class="c-blur"><div class="c-blur-overlay"><span>Metrics</span><button>Upgrade to Bifolio</button></div><div class="c-blur-content"><div class="c-card"><div class="c-card-title">Metrics</div><div class="row"><span>TTWROR</span><span class="gain" style="font-weight:600">+11.8%</span></div><div class="row"><span>IRR</span><span class="gain" style="font-weight:600">+9.4%</span></div></div></div></div>
+    </div>
+    <div class="c-grid">
+      <div class="c-card"><div class="c-card-title">Markets Today</div><div class="row" style="font-weight:600"><span>Portfolio</span><span class="gain">+1.24%</span></div><div class="row"><span>S&P 500</span><span class="gain">+0.83%</span></div><div class="row"><span>Nasdaq</span><span class="gain">+1.12%</span></div></div>
+      <div class="c-card"><div class="c-card-title">Cash <a>+ Add</a></div><div class="row"><span>DEGIRO</span><span style="font-weight:600">€2,340</span></div><div class="row"><span>IBKR</span><span style="font-weight:600">€1,812</span></div><div class="row" style="border-top:1px solid #f1f5f9;padding-top:6px;font-weight:600"><span>Total</span><span class="gain">€4,152</span></div></div>
+    </div>
+    <div class="c-card"><div class="c-card-title">Projection</div><div style="height:60px;background:linear-gradient(to top,transparent,rgba(22,163,106,0.05));border-radius:8px;margin-bottom:8px"></div><div style="display:flex;gap:16px;font-size:13px;color:#64748b;flex-wrap:wrap">Current: <b style="color:#334155">€47,832</b> &nbsp;│&nbsp; 20y: <b class="gain">€284,210</b> &nbsp;│&nbsp; Return: <b class="gain">+494%</b></div></div>
+    <div class="c-ad">Ad — Free plan</div>
+    <div class="c-upgrade"><div><h4>Unlock the full experience</h4><p>AI review, broker sync, crypto, advanced metrics, and premium themes.</p></div><button>Upgrade to Trefolio →</button></div>
+  </div>
+</div>
+
+<!-- ═══════════════════ TERMINAL ═══════════════════ -->
+<div class="theme-terminal" id="themeTerminal">
+  <div class="t-ticker"><span class="dot"></span><span class="sym">NYSE</span> Open &nbsp;<span class="sym">EUR/USD</span> 1.0921 <span class="dn">-0.12%</span> &nbsp;<span class="sym">BTC</span> $87,432 <span class="up">+2.41%</span> &nbsp;<span class="sym">Gold</span> $2,834 <span class="up">+0.34%</span> &nbsp;<span class="sym">S&P</span> 5,842 <span class="up">+0.83%</span></div>
+  <nav class="t-nav">
+    <div class="t-nav-l">
+      <svg class="logo-svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#0f172a"/><g transform="translate(16,16) rotate(45)"><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#10b981"/><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#059669" transform="rotate(90)"/><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#047857" transform="rotate(180)"/><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#34d399" transform="rotate(270)"/></g></svg>
+      <span class="t-nav-brand">trefolio</span>
+      <div class="t-nav-links"><a class="on">portfolio</a><a>import</a><a>tools</a><a>crypto<span class="pro-badge">PRO</span></a><a>indicators<span class="pro-badge">PRO</span></a></div>
+    </div>
+    <div class="t-nav-r"><button title="new">✦</button><button title="stealth">◉</button><button title="theme">◐</button><button title="lang">⌐</button><div class="av">MC</div></div>
+  </nav>
+  <div class="t-body">
+    <div class="t-toolbar"><div class="t-toolbar-l"><span class="port">▸ My Portfolio</span><span class="upd">updated 2m ago</span></div><div class="t-toolbar-r"><button>↻ refresh</button><button>⚙ settings</button><button>↑ import</button><button class="acc">+ add asset</button></div></div>
+    <div class="t-banner info">⟳ DEGIRO connection needs reauthorization — <a style="color:#06b6d4;text-decoration:underline">reconnect</a><span class="x">×</span></div>
+    <div class="t-banner warn">▲ 13 of 15 holdings used — <a style="color:#ca8a04;text-decoration:underline">upgrade</a></div>
+    <div class="t-tabs"><span class="on">portfolio</span><span>crypto<span class="pro-badge" style="margin-left:2px">PRO</span></span><span>diversification</span><span>dividends</span><span>metrics<span class="pro-badge" style="margin-left:2px">BIF+</span></span><span>growth<span class="pro-badge" style="margin-left:2px">BIF+</span></span><span>events</span><span>news</span></div>
+    <div class="t-summary">
+      <span class="big">€47,832.14</span>
+      <span class="chg" style="color:#22c55e;background:rgba(34,197,94,0.1)">▲ +1.24%</span>
+      <span class="chg" style="color:#22c55e;background:rgba(34,197,94,0.1)">+€584.20 today</span>
+      <span class="stat">cost <b>€42,550</b></span>
+      <span class="stat">gain <b class="gain">+€5,282 (+12.4%)</b></span>
+      <span class="stat">holdings <b>8/15</b></span>
+      <span class="stat">cash <b>€4,152</b></span>
+      <span class="stat">yield <b>2.3%</b></span>
+      <span class="t-ai"><a>✦ AI review</a> <span class="pro-badge" style="margin-left:2px">PRO</span> │ <span style="color:#22c55e">● synced 1h</span> <span class="pro-badge" style="margin-left:2px">PRO</span></span>
+    </div>
+    <div class="t-alloc"><span style="color:#22c55e">Stocks 45%</span><span style="color:#22d3ee">ETFs 20%</span><span style="color:#a78bfa">Crypto 15%</span><span style="color:#ca8a04">Cash 10%</span><span>Other 10%</span></div>
+    <div class="t-filter">filter: <a class="on">all</a> <a>DEGIRO</a> <a>IBKR</a> <a>manual</a> │ search: <input style="font-family:inherit;font-size:12px;background:#18181b;border:1px solid #27272a;color:#a1a1aa;padding:2px 6px;width:100px;border-radius:3px" placeholder="ticker..."></div>
+    <table class="ht"><thead><tr><th>Asset</th><th>Exchange</th><th class="r">Shares</th><th class="r">Price</th><th class="r">Value (€)</th><th class="r">Day</th><th class="r">Total</th></tr></thead><tbody>
+      <tr><td><span class="tk">AAPL</span> Apple Inc.</td><td>NYSE</td><td class="r">42</td><td class="r">228.12</td><td class="r">9,581</td><td class="r gain">+1.84%</td><td class="r gain">+18.2%</td></tr>
+      <tr><td><span class="tk">ASML</span> ASML Holding</td><td>AMS</td><td class="r">8</td><td class="r">832.40</td><td class="r">6,659</td><td class="r gain">+2.15%</td><td class="r gain">+24.7%</td></tr>
+      <tr><td><span class="tk">VWCE.DE</span> Vanguard FTSE</td><td>XETRA</td><td class="r">55</td><td class="r">112.34</td><td class="r">6,179</td><td class="r gain">+0.42%</td><td class="r gain">+8.3%</td></tr>
+      <tr><td><span class="tk">BMW.DE</span> BMW AG</td><td>XETRA</td><td class="r">40</td><td class="r">96.84</td><td class="r">3,874</td><td class="r loss">-1.20%</td><td class="r loss">-3.1%</td></tr>
+      <tr><td><span class="tk">SAP.DE</span> SAP SE</td><td>XETRA</td><td class="r">18</td><td class="r">188.20</td><td class="r">3,388</td><td class="r gain">+1.05%</td><td class="r gain">+14.3%</td></tr>
+    </tbody></table>
+    <div class="t-section"><div class="t-section-title">upcoming earnings</div><div class="t-row"><span>AAPL</span><b>Apr 24 after-hours</b></div><div class="t-row"><span>MSFT</span><b>Apr 29 after-hours</b></div></div>
+    <div class="t-ad">[ ad — free plan — remove with bifolio ]</div>
+    <div class="t-grid">
+      <div class="t-blur"><div class="t-blur-overlay">growth periods <button>upgrade</button></div><div class="t-blur-content">YTD +3.2% │ 1M +1.8% │ 1Y +12.4%</div></div>
+      <div class="t-blur"><div class="t-blur-overlay">metrics <button>upgrade</button></div><div class="t-blur-content">TTWROR +11.8% │ IRR +9.4%</div></div>
+    </div>
+    <div class="t-grid">
+      <div class="t-section"><div class="t-section-title">markets today</div><div class="t-row"><span>Portfolio</span><b class="gain">+1.24%</b></div><div class="t-row"><span>S&P 500</span><b class="gain">+0.83%</b></div><div class="t-row"><span>Nasdaq</span><b class="gain">+1.12%</b></div></div>
+      <div class="t-section"><div class="t-section-title">cash balances <span style="color:#22c55e;cursor:pointer">+ add</span></div><div class="t-row"><span>DEGIRO</span><b>€2,340</b></div><div class="t-row"><span>IBKR</span><b>€1,812</b></div><div class="t-row" style="border-top:1px solid #18181b;margin-top:2px;padding-top:3px"><span style="color:#a1a1aa">total</span><b class="gain">€4,152</b></div></div>
+    </div>
+    <div class="t-proj"><div class="t-section-title">projection</div><div class="t-proj-chart"></div><div class="t-proj-summary">current: €47,832 │ projected: <b>€284,210</b> │ return: <b>+494%</b></div></div>
+    <div class="t-ad">[ ad — free plan ]</div>
+    <div class="t-upgrade"><span>▲ unlock AI review, broker sync, crypto, metrics, themes → trefolio from €5/mo</span><button>upgrade →</button></div>
+  </div>
+</div>
+
+<!-- ═══════════════════ STUDIO ═══════════════════ -->
+<div class="theme-studio" id="themeStudio">
+  <div class="s-layout">
+    <aside class="s-sidebar">
+      <div class="s-sb-logo"><svg class="logo-svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#0f172a"/><g transform="translate(16,16) rotate(45)"><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#10b981"/><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#059669" transform="rotate(90)"/><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#047857" transform="rotate(180)"/><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#34d399" transform="rotate(270)"/></g></svg><span class="s-sb-brand">trefolio</span></div>
+      <div class="s-sb-section">Main</div>
+      <a class="s-sb-link on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75"/></svg>Portfolio</a>
+      <a class="s-sb-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5"/></svg>Import</a>
+      <a class="s-sb-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M11.42 15.17l-5.1-5.1"/></svg>Tools</a>
+      <a class="s-sb-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><circle cx="12" cy="12" r="9"/></svg>Crypto<span class="pro-badge">PRO</span></a>
+      <a class="s-sb-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25"/></svg>Indicators<span class="pro-badge">PRO</span></a>
+      <div class="s-sb-section">Account</div>
+      <a class="s-sb-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593"/></svg>Settings</a>
+      <a class="s-sb-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M9.813 15.904L9 18.75l-.813-2.846"/></svg>What's New</a>
+      <div class="s-sb-bottom"><div class="s-sb-user"><div class="s-sb-av">MC</div><div><div class="s-sb-name">Marco C.</div><div class="s-sb-plan">Trefolio (Pro)</div></div></div></div>
+    </aside>
+    <main class="s-main">
+      <div class="s-ticker"><span class="dot"></span><span class="sym">NYSE Open</span> &nbsp;<span class="sym">EUR/USD</span> 1.0921 <span class="dn">-0.12%</span> &nbsp;<span class="sym">BTC</span> $87,432 <span class="up">+2.41%</span> &nbsp;<span class="sym">Gold</span> $2,834 <span class="up">+0.34%</span> &nbsp;<span class="sym">S&P</span> 5,842 <span class="up">+0.83%</span></div>
+      <div class="s-body">
+        <div class="s-toolbar"><div class="s-toolbar-l"><span class="port">My Portfolio ▾</span><span class="upd">Updated 2 min ago</span></div><div class="s-toolbar-r"><button class="s-btn">↻ Refresh</button><button class="s-btn acc">+ Add Asset</button></div></div>
+        <div class="s-banner info">DEGIRO connection needs reauthorization — <a style="color:#60a5fa;text-decoration:underline">Reconnect</a><span class="x">×</span></div>
+        <div class="s-tabs"><span class="on">Portfolio</span><span>Crypto<span class="pro-badge" style="margin-left:3px">PRO</span></span><span>Diversification</span><span>Dividends</span><span>Metrics<span class="pro-badge" style="margin-left:3px">BIF+</span></span><span>Growth<span class="pro-badge" style="margin-left:3px">BIF+</span></span><span>Events</span><span>News</span></div>
+        <div class="s-hero">
+          <div class="label">Portfolio Value</div>
+          <div class="value">€47,832.14</div>
+          <div class="badges"><span class="badge" style="color:#22c55e;background:rgba(34,197,94,0.1)">▲ +€584.20 (+1.24%) today</span><span class="badge" style="color:#22c55e;background:rgba(34,197,94,0.1)">+12.4% all time</span></div>
+          <div class="chart"><svg viewBox="0 0 500 90" preserveAspectRatio="none"><defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#22c55e" stop-opacity="0.1"/><stop offset="100%" stop-color="#22c55e" stop-opacity="0"/></linearGradient></defs><path d="M0,70 C40,65 80,55 140,45 C200,35 250,42 320,25 C380,14 440,8 500,5 L500,90 L0,90Z" fill="url(#sg)"/><path d="M0,70 C40,65 80,55 140,45 C200,35 250,42 320,25 C380,14 440,8 500,5" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round"/><circle cx="500" cy="5" r="3" fill="#22c55e"/></svg></div>
+          <div class="stats"><div><div class="st-l">Cost Basis</div><div class="st-v">€42,550</div></div><div><div class="st-l">Total Gain</div><div class="st-v gain">+€5,282</div></div><div><div class="st-l">Holdings</div><div class="st-v">8 / 15</div></div><div><div class="st-l">Cash</div><div class="st-v">€4,152</div></div><div><div class="st-l">Yield</div><div class="st-v">2.3%</div></div></div>
+          <div class="s-alloc-bar"><div style="width:45%;background:#22c55e"></div><div style="width:20%;background:#3b82f6"></div><div style="width:15%;background:#6366f1"></div><div style="width:10%;background:#f59e0b"></div><div style="width:10%;background:#52525b"></div></div>
+          <div class="s-alloc-legend"><span style="color:#22c55e">Stocks 45%</span><span style="color:#3b82f6">ETFs 20%</span><span style="color:#6366f1">Crypto 15%</span><span style="color:#f59e0b">Cash 10%</span><span>Other 10%</span></div>
+          <div class="s-ai-row"><button class="s-ai-btn">✦ AI Review <span class="pro-badge" style="margin-left:4px">PRO</span></button><div class="s-sync"><span class="dot"></span>Synced 1h · DEGIRO <span class="pro-badge" style="margin-left:4px">PRO</span></div></div>
+        </div>
+        <div class="s-ad">Ad — free plan (remove with Bifolio)</div>
+        <div class="s-filter"><div class="s-filter-pills"><span class="s-fp on">All</span><span class="s-fp">DEGIRO</span><span class="s-fp">IBKR</span><span class="s-fp">Manual</span></div><span class="s-fc">8 of 15</span></div>
+        <div class="s-holdings">
+          <div class="s-hold"><div class="s-hold-icon">AAPL</div><div><div class="s-hold-name">Apple Inc.</div><div class="s-hold-sub">42 sh · NYSE</div></div><div class="s-hold-col"><div class="s-hold-v">€9,581</div><div class="s-hold-s">€228.12</div></div><div class="s-hold-col"><div class="s-hold-v gain">+18.2%</div><div class="s-hold-s">+€1,479</div></div><div class="s-spark"><svg viewBox="0 0 60 24"><path d="M0,18 C10,15 25,8 40,4 C52,2 60,1 60,1" fill="none" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round"/></svg></div></div>
+          <div class="s-hold"><div class="s-hold-icon">ASML</div><div><div class="s-hold-name">ASML Holding</div><div class="s-hold-sub">8 sh · AMS</div></div><div class="s-hold-col"><div class="s-hold-v">€6,659</div><div class="s-hold-s">€832.40</div></div><div class="s-hold-col"><div class="s-hold-v gain">+24.7%</div><div class="s-hold-s">+€1,322</div></div><div class="s-spark"><svg viewBox="0 0 60 24"><path d="M0,20 C10,14 30,6 45,3 C55,1 60,1 60,1" fill="none" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round"/></svg></div></div>
+          <div class="s-hold"><div class="s-hold-icon">BMW</div><div><div class="s-hold-name">BMW AG</div><div class="s-hold-sub">40 sh · XETRA</div></div><div class="s-hold-col"><div class="s-hold-v">€3,874</div><div class="s-hold-s">€96.84</div></div><div class="s-hold-col"><div class="s-hold-v loss">-3.1%</div><div class="s-hold-s">-€124</div></div><div class="s-spark"><svg viewBox="0 0 60 24"><path d="M0,4 C10,7 25,13 40,17 C52,20 60,21 60,21" fill="none" stroke="#f87171" stroke-width="1.5" stroke-linecap="round"/></svg></div></div>
+          <div class="s-hold"><div class="s-hold-icon">SAP</div><div><div class="s-hold-name">SAP SE</div><div class="s-hold-sub">18 sh · XETRA</div></div><div class="s-hold-col"><div class="s-hold-v">€3,388</div><div class="s-hold-s">€188.20</div></div><div class="s-hold-col"><div class="s-hold-v gain">+14.3%</div><div class="s-hold-s">+€424</div></div><div class="s-spark"><svg viewBox="0 0 60 24"><path d="M0,18 C15,12 30,7 45,4 C55,2 60,1 60,1" fill="none" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round"/></svg></div></div>
+        </div>
+        <div class="s-card"><div class="s-card-title">Upcoming Earnings <a>View all →</a></div><div class="row"><span>AAPL</span><span>Apr 24</span></div><div class="row"><span>MSFT</span><span>Apr 29</span></div></div>
+        <div class="s-grid">
+          <div class="s-blur"><div class="s-blur-overlay"><span>Growth Periods</span><button>Upgrade to Bifolio</button></div><div class="s-blur-content"><div class="s-card"><div class="s-card-title">Growth</div><div class="s-growth"><div><div class="gv gain">+3.2%</div><div class="gl">YTD</div></div><div><div class="gv gain">+1.8%</div><div class="gl">1M</div></div><div><div class="gv gain">+12.4%</div><div class="gl">1Y</div></div></div></div></div></div>
+          <div class="s-blur"><div class="s-blur-overlay"><span>Metrics</span><button>Upgrade to Bifolio</button></div><div class="s-blur-content"><div class="s-card"><div class="s-card-title">Metrics</div><div class="row"><span>TTWROR</span><span class="gain" style="font-weight:700">+11.8%</span></div><div class="row"><span>IRR</span><span class="gain" style="font-weight:700">+9.4%</span></div></div></div></div>
+        </div>
+        <div class="s-grid">
+          <div class="s-card"><div class="s-card-title">Markets Today</div><div class="row" style="font-weight:600"><span>Portfolio</span><span class="gain">+1.24%</span></div><div class="row"><span>S&P 500</span><span class="gain">+0.83%</span></div><div class="row"><span>Nasdaq</span><span class="gain">+1.12%</span></div></div>
+          <div class="s-card"><div class="s-card-title">Cash <a>+ Add</a></div><div class="row"><span>DEGIRO</span><span style="font-weight:600">€2,340</span></div><div class="row"><span>IBKR</span><span style="font-weight:600">€1,812</span></div><div class="row" style="border-top:1px solid rgba(255,255,255,0.05);padding-top:6px;font-weight:600"><span>Total</span><span class="gain">€4,152</span></div></div>
+        </div>
+        <div class="s-card"><div class="s-card-title">Projection</div><div style="height:60px;background:linear-gradient(to top,transparent,rgba(34,197,94,0.04));border-radius:8px;margin-bottom:8px"></div><div style="display:flex;gap:16px;font-size:13px;color:#71717a;flex-wrap:wrap">Current: <b style="color:#d4d4d8">€47,832</b> &nbsp;│&nbsp; 20y: <b class="gain">€284,210</b> &nbsp;│&nbsp; Return: <b class="gain">+494%</b></div></div>
+        <div class="s-ad">Ad — free plan</div>
+        <div class="s-upgrade"><div><h4>Unlock the full experience</h4><p>Unlimited AI, broker sync, crypto, metrics, premium themes.</p></div><button>Upgrade →</button></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div class="fab" title="Feedback">💬</div>
+
+<script>
+function show(id, btn) {
+  document.querySelectorAll('[class^="theme-"]').forEach(function(el) {
+    if (el.className.indexOf('theme-') === 0) el.classList.remove('visible');
+  });
+  var el = document.getElementById('theme' + id.charAt(0).toUpperCase() + id.slice(1));
+  if (el) el.classList.add('visible');
+  document.querySelectorAll('.pbtn').forEach(function(b) { b.classList.remove('on'); });
+  btn.classList.add('on');
+}
+</script>
+</body>
+</html>

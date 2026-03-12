@@ -23,6 +23,13 @@ const DEFAULT_ENABLED_FLAGS: Set<PlatformFeature> = new Set([
   "tool_watchlist_enabled",
 ]);
 
+const VALID_THEMES = new Set(["default", "terminal", "canvas", "studio"]);
+
+function parseTheme(val: unknown): import("@/lib/types").LayoutTheme {
+  const s = String(val || "default");
+  return VALID_THEMES.has(s) ? (s as import("@/lib/types").LayoutTheme) : "default";
+}
+
 const DEFAULT_SETTINGS: UserSettings = {
   language: "en",
   refreshInterval: 15,
@@ -30,12 +37,13 @@ const DEFAULT_SETTINGS: UserSettings = {
   whatsappPhone: "",
   whatsappVerified: false,
   alertDeviceEnabled: false,
+  dashboardTheme: "default",
 };
 
 export async function getUserSettings(userId: string): Promise<UserSettings> {
   const client = await ensureInitialized();
   const result = await client.execute({
-    sql: "SELECT language, refresh_interval, alert_channels, whatsapp_phone, whatsapp_verified, alert_device_enabled FROM user_settings WHERE user_id = ?",
+    sql: "SELECT language, refresh_interval, alert_channels, whatsapp_phone, whatsapp_verified, alert_device_enabled, dashboard_theme FROM user_settings WHERE user_id = ?",
     args: [userId],
   });
 
@@ -56,6 +64,7 @@ export async function getUserSettings(userId: string): Promise<UserSettings> {
     whatsappPhone: str(row.whatsapp_phone),
     whatsappVerified: num(row.whatsapp_verified) === 1,
     alertDeviceEnabled: num(row.alert_device_enabled) === 1,
+    dashboardTheme: parseTheme(row.dashboard_theme),
   };
 }
 
@@ -71,17 +80,19 @@ export async function updateUserSettings(
     whatsappPhone: updates.whatsappPhone ?? current.whatsappPhone,
     whatsappVerified: updates.whatsappVerified ?? current.whatsappVerified,
     alertDeviceEnabled: updates.alertDeviceEnabled ?? current.alertDeviceEnabled,
+    dashboardTheme: updates.dashboardTheme ?? current.dashboardTheme,
   };
 
   const client = await ensureInitialized();
   await client.execute({
     sql: `UPDATE user_settings SET language = ?, refresh_interval = ?,
-          alert_channels = ?, whatsapp_phone = ?, whatsapp_verified = ?, alert_device_enabled = ?
+          alert_channels = ?, whatsapp_phone = ?, whatsapp_verified = ?, alert_device_enabled = ?,
+          dashboard_theme = ?
           WHERE user_id = ?`,
     args: [
       next.language, next.refreshInterval,
       next.alertChannels.join(","), next.whatsappPhone, next.whatsappVerified ? 1 : 0,
-      next.alertDeviceEnabled ? 1 : 0, userId,
+      next.alertDeviceEnabled ? 1 : 0, next.dashboardTheme, userId,
     ],
   });
 

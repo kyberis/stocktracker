@@ -6,6 +6,7 @@ import { useI18n } from "@/lib/i18n";
 import { formatCurrency, formatPercent } from "@/lib/utils";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
 import PortfolioBenchmarkChart from "./PortfolioBenchmarkChart";
+import { useTheme } from "@/lib/theme-context";
 
 interface IndexQuote {
   symbol: string;
@@ -36,6 +37,7 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
   const holdings = holdingsProp ?? ctxHoldings;
   const cashEntries = cashEntriesProp ?? ctxCashEntries;
   const { t } = useI18n();
+  const { layoutTheme } = useTheme();
   const [indices, setIndices] = useState<IndexQuote[]>(
     INDICES.map((idx) => ({
       symbol: idx.symbol,
@@ -120,11 +122,20 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
       ? "bg-emerald-50 dark:bg-emerald-500/10"
       : "bg-red-50 dark:bg-red-500/10";
 
+  const cardClass =
+    layoutTheme === "terminal"
+      ? "border border-zinc-800 rounded-none p-3 sm:p-4"
+      : layoutTheme === "canvas"
+      ? "bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm"
+      : layoutTheme === "studio"
+      ? "rounded-[20px] border border-white/5 bg-white/[0.02] backdrop-blur-sm p-4 sm:p-5"
+      : "card";
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-4">
         {/* Market Indices */}
-        <div className="card">
+        <div className={cardClass}>
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
               {t("marketsToday")}
@@ -238,7 +249,7 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
         </div>
 
         {/* Cash Balances */}
-        <div className="card">
+        <div className={cardClass}>
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{t("cash")}</h3>
             {cashEntries.length > 0 && (

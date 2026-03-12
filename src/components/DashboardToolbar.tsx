@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n";
 import { getPortfolioLimit } from "@/lib/subscription";
 import TierFeatureBadge from "./TierFeatureBadge";
+import { useTheme } from "@/lib/theme-context";
 
 function AddMenu({ onAddStock, onAddCrypto }: { onAddStock: () => void; onAddCrypto?: () => void }) {
   const { t } = useI18n();
@@ -93,6 +94,7 @@ export default function DashboardToolbar({
   const { user } = useAuth();
   const { isLoading, refreshQuotes, lastUpdated, portfolios, activePortfolioId, setActivePortfolio, refreshPortfolios } = usePortfolio();
   const { t } = useI18n();
+  const { layoutTheme } = useTheme();
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
@@ -166,8 +168,16 @@ export default function DashboardToolbar({
   }
 
   return (
-    <div className="bg-gray-50 dark:bg-slate-800/50 border-b border-gray-200 dark:border-slate-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2 flex items-center justify-between gap-3">
+    <div className={
+      layoutTheme === "terminal"
+        ? "border-b border-zinc-800 bg-transparent"
+        : layoutTheme === "canvas"
+        ? "bg-white border-b border-slate-200"
+        : layoutTheme === "studio"
+        ? "border-b border-white/5 bg-transparent"
+        : "bg-gray-50 dark:bg-slate-800/50 border-b border-gray-200 dark:border-slate-800"
+    } data-testid="dashboard-toolbar">
+      <div className={`max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between gap-3 ${layoutTheme === "terminal" ? "py-1.5" : "py-2"}`}>
         <div className="flex items-center gap-2 min-w-0">
           {/* Portfolio switcher */}
           {portfolios.length > 0 && (
@@ -337,7 +347,7 @@ export default function DashboardToolbar({
         <div className="flex items-center gap-1.5">
           <button
             onClick={onOpenSettings}
-            className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-500 dark:text-slate-400 transition-colors"
+            className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-500 dark:text-slate-400 transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"
             title={t("settings")}
             aria-label={t("settings")}
           >
@@ -350,7 +360,7 @@ export default function DashboardToolbar({
           <button
             onClick={refreshQuotes}
             disabled={isLoading}
-            className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-500 dark:text-slate-400 transition-colors disabled:opacity-50"
+            className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-500 dark:text-slate-400 transition-colors disabled:opacity-50 min-w-[36px] min-h-[36px] flex items-center justify-center"
             title="Refresh"
             aria-label="Refresh"
           >
@@ -372,7 +382,7 @@ export default function DashboardToolbar({
 
           <button
             onClick={() => router.push("/import")}
-            className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-500 dark:text-slate-400 transition-colors"
+            className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-500 dark:text-slate-400 transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"
             title={t("importPortfolio")}
             aria-label={t("importPortfolio")}
           >
@@ -384,7 +394,7 @@ export default function DashboardToolbar({
           {onResetPortfolio && (
             <button
               onClick={onResetPortfolio}
-              className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-500 dark:text-slate-400 transition-colors"
+              className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-500 dark:text-slate-400 transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"
               title={t("resetPortfolio")}
               aria-label={t("resetPortfolio")}
             >

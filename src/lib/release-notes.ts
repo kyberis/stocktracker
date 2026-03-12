@@ -14,9 +14,32 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "1.20.0";
+export const CURRENT_VERSION = "1.21.0";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "1.21.0",
+    date: "2026-03-11",
+    title: "Dashboard Themes — Personalize Your Experience",
+    titleTranslations: { es: "Temas del Panel — Personaliza tu Experiencia" },
+    changes: [
+      {
+        type: "feature",
+        text: "Choose from 4 dashboard themes: Default, Canvas (light & spacious), Terminal (dense monospace), and Studio (sidebar + glass effects)",
+        translations: { es: "Elige entre 4 temas: Predeterminado, Canvas (claro y espacioso), Terminal (monoespacio denso) y Studio (barra lateral + efectos de cristal)" },
+      },
+      {
+        type: "feature",
+        text: "Themes apply site-wide across all authenticated pages — portfolio, import, tools, profile, and more",
+        translations: { es: "Los temas se aplican en todo el sitio: cartera, importación, herramientas, perfil y más" },
+      },
+      {
+        type: "improvement",
+        text: "Theme selection available in Settings — Default for all plans, Canvas for Bifolio+, Terminal and Studio for Trefolio",
+        translations: { es: "Selección de temas disponible en Configuración — Predeterminado para todos, Canvas para Bifolio+, Terminal y Studio para Trefolio" },
+      },
+    ],
+  },
   {
     version: "1.20.0",
     date: "2026-03-11",
@@ -57,6 +80,11 @@ export const releaseNotes: ReleaseEntry[] = [
         type: "feature",
         text: "Last activity timestamp shown on your profile for security awareness",
         translations: { es: "Marca de tiempo de última actividad visible en tu perfil para mayor seguridad" },
+      },
+      {
+        type: "feature",
+        text: "Big market move alerts — marquee highlights, a floating toast, and an optional browser push notification when any index moves more than 4%",
+        translations: { es: "Alertas de grandes movimientos — el marquesina resalta, una notificación flotante, y notificación push del navegador cuando un índice se mueve más del 4%" },
       },
       {
         type: "improvement",

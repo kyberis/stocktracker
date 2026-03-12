@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
 
@@ -46,7 +47,7 @@ export default function MobileTabBar() {
         {TABS.map((tab) => {
           const active = tab.match(pathname);
           return (
-            <a
+            <Link
               key={tab.href}
               href={tab.href}
               className={`flex-1 flex flex-col items-center gap-0.5 py-2 text-[10px] font-medium transition-colors ${
@@ -59,7 +60,7 @@ export default function MobileTabBar() {
                 <path strokeLinecap="round" strokeLinejoin="round" d={tab.icon} />
               </svg>
               {t(tab.labelKey)}
-            </a>
+            </Link>
           );
         })}
       </div>

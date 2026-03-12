@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useI18n } from "@/lib/i18n";
-import { useTickerBar, type QuoteSnapshot } from "@/lib/hooks/use-ticker-bar";
+import { useTickerBar, BIG_MOVE_THRESHOLD, type QuoteSnapshot } from "@/lib/hooks/use-ticker-bar";
 import { getTickerMarketStatuses, type TickerMarketStatus } from "@/lib/market-hours";
 
 interface Props {
@@ -39,12 +39,20 @@ function MarketDot({ isOpen }: { isOpen: boolean }) {
   );
 }
 
+function isBigMove(changePercent: number | null): boolean {
+  return changePercent != null && Math.abs(changePercent) >= BIG_MOVE_THRESHOLD;
+}
+
 function QuoteItem({ label, price, decimals = 2, snapshot }: { label: string; price?: string; decimals?: number; snapshot?: QuoteSnapshot }) {
   const displayPrice = price ?? (snapshot?.price != null ? formatUsd(snapshot.price, decimals) : "—");
   const change = snapshot?.changePercent ?? null;
+  const big = isBigMove(change);
+  const glowBg = big
+    ? change! >= 0 ? "bg-emerald-500/15" : "bg-red-500/15"
+    : "";
   return (
-    <span className="inline-flex items-center">
-      <span className="text-slate-400 mr-1">{label}</span>
+    <span className={`inline-flex items-center ${big ? `${glowBg} rounded px-1 animate-big-move-pulse` : ""}`}>
+      <span className={`mr-1 ${big ? "text-white" : "text-slate-400"}`}>{label}</span>
       <span className="text-slate-200 font-medium tabular-nums">{displayPrice}</span>
       <ChangePercent value={change} />
     </span>
@@ -85,13 +93,21 @@ function TickerContent({
       <TickerDivider />
 
       {/* BTC */}
-      <span className="inline-flex items-center">
-        <span className="text-slate-400 mr-1">{t("tickerBtc")}</span>
-        <span className="text-slate-200 font-medium tabular-nums">
-          {btcPriceUsd != null ? formatUsd(btcPriceUsd, 0) : "—"}
-        </span>
-        <ChangePercent value={btcChange24h} />
-      </span>
+      {(() => {
+        const big = isBigMove(btcChange24h);
+        const glowBg = big
+          ? btcChange24h! >= 0 ? "bg-emerald-500/15" : "bg-red-500/15"
+          : "";
+        return (
+          <span className={`inline-flex items-center ${big ? `${glowBg} rounded px-1 animate-big-move-pulse` : ""}`}>
+            <span className={`mr-1 ${big ? "text-white" : "text-slate-400"}`}>{t("tickerBtc")}</span>
+            <span className="text-slate-200 font-medium tabular-nums">
+              {btcPriceUsd != null ? formatUsd(btcPriceUsd, 0) : "—"}
+            </span>
+            <ChangePercent value={btcChange24h} />
+          </span>
+        );
+      })()}
 
       <TickerDivider />
 

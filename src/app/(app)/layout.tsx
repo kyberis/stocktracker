@@ -1,41 +1,17 @@
-"use client";
+import { cookies } from "next/headers";
+import AppLayoutClient from "./app-layout-client";
+import type { LayoutTheme } from "@/lib/types";
 
-import { ThemeProvider } from "@/lib/theme-context";
-import { AuthProvider } from "@/lib/auth-context";
-import { I18nProvider } from "@/lib/i18n";
-import { SettingsProvider } from "@/lib/settings-context";
-import { StealthProvider } from "@/lib/stealth-context";
-import AppNav from "@/components/AppNav";
-import MarketTickerBar from "@/components/MarketTickerBar";
-import MobileTabBar from "@/components/MobileTabBar";
-import InstallPrompt from "@/components/InstallPrompt";
-import CapacitorBridge from "@/components/CapacitorBridge";
-import NativePushBridge from "@/components/NativePushBridge";
-import DeviceInterestEnroller from "@/components/DeviceInterestEnroller";
+const VALID_THEMES = new Set<string>(["default", "terminal", "canvas", "studio"]);
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
+  const cookieStore = cookies();
+  const raw = cookieStore.get("trefolio_layout_theme")?.value;
+  const initialTheme: LayoutTheme = raw && VALID_THEMES.has(raw) ? (raw as LayoutTheme) : "default";
+
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <I18nProvider>
-          <SettingsProvider>
-            <StealthProvider>
-              <div className="min-h-screen bg-gray-50 dark:bg-slate-900 pb-14 sm:pb-0">
-                <MarketTickerBar />
-                <AppNav />
-                <main id="main-content">
-                  {children}
-                </main>
-                <MobileTabBar />
-                <InstallPrompt />
-                <CapacitorBridge />
-                <NativePushBridge />
-                <DeviceInterestEnroller />
-              </div>
-            </StealthProvider>
-          </SettingsProvider>
-        </I18nProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <AppLayoutClient initialTheme={initialTheme}>
+      {children}
+    </AppLayoutClient>
   );
 }

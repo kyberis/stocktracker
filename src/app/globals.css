@@ -31,6 +31,67 @@
 body {
   background: var(--background);
   color: var(--foreground);
+  font-family: var(--font-primary, var(--font-geist-sans, -apple-system, sans-serif));
+}
+
+/* ━━━ Theme: Terminal ━━━━━━━━━━━━━━━━━━━━━ */
+html.theme-terminal {
+  --background: #0a0a0a;
+  --foreground: #a1a1aa;
+  --card: #18181b;
+  --card-hover: #27272a;
+  --border: #27272a;
+  --muted: #71717a;
+  --gain: #22c55e;
+  --loss: #ef4444;
+  --accent: #22c55e;
+  --accent-light: rgba(34,197,94,0.1);
+  --nav-bg: #0a0a0a;
+  --nav-text: #e4e4e7;
+  --font-primary: 'IBM Plex Mono', 'Courier New', monospace;
+  --font-mono: 'IBM Plex Mono', monospace;
+  --radius-card: 4px;
+  --radius-button: 4px;
+}
+
+/* ━━━ Theme: Canvas ━━━━━━━━━━━━━━━━━━━━━━ */
+html.theme-canvas {
+  --background: #f8f9fb;
+  --foreground: #1e293b;
+  --card: #ffffff;
+  --card-hover: #f1f5f9;
+  --border: #e2e8f0;
+  --muted: #64748b;
+  --gain: #16a34a;
+  --loss: #dc2626;
+  --accent: #16a34a;
+  --accent-light: #f0fdf4;
+  --nav-bg: #ffffff;
+  --nav-text: #0f172a;
+  --font-primary: 'DM Sans', -apple-system, sans-serif;
+  --font-mono: 'DM Sans', monospace;
+  --radius-card: 16px;
+  --radius-button: 12px;
+}
+
+/* ━━━ Theme: Studio ━━━━━━━━━━━━━━━━━━━━━━ */
+html.theme-studio {
+  --background: #18181b;
+  --foreground: #d4d4d8;
+  --card: rgba(255,255,255,0.02);
+  --card-hover: rgba(255,255,255,0.04);
+  --border: rgba(255,255,255,0.06);
+  --muted: #71717a;
+  --gain: #22c55e;
+  --loss: #f87171;
+  --accent: #22c55e;
+  --accent-light: rgba(34,197,94,0.08);
+  --nav-bg: #09090b;
+  --nav-text: #fafafa;
+  --font-primary: 'Plus Jakarta Sans', -apple-system, sans-serif;
+  --font-mono: 'Space Mono', monospace;
+  --radius-card: 16px;
+  --radius-button: 10px;
 }
 
 @layer base {
@@ -39,33 +100,501 @@ body {
   }
 
   input, select, textarea {
-    @apply bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900 outline-none focus-visible:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500 transition-colors placeholder:text-gray-400
-      dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 dark:placeholder:text-slate-500;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-button, 8px);
+    padding: 0.5rem 0.75rem;
+    color: var(--foreground);
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    font-family: inherit;
+  }
+  input::placeholder, textarea::placeholder {
+    color: var(--muted);
+  }
+  input:focus-visible, select:focus-visible, textarea:focus-visible {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.4);
   }
 
   button {
     @apply cursor-pointer transition-all duration-200;
   }
+  button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
 }
 
 @layer components {
   .card {
-    @apply bg-white border border-gray-100 rounded-2xl p-5 shadow-sm
-      dark:bg-slate-800 dark:border-slate-700 dark:shadow-none;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card, 16px);
+    padding: var(--card-padding, 1.25rem);
+    box-shadow: var(--card-shadow, 0 1px 2px rgba(0,0,0,0.05));
+    color: var(--foreground);
   }
 
   .btn-primary {
-    @apply bg-emerald-500 hover:bg-emerald-600 text-white font-medium px-4 py-2 rounded-lg transition-colors shadow-sm;
+    @apply font-medium px-4 py-2 transition-colors shadow-sm;
+    background: var(--accent);
+    color: #fff;
+    border-radius: var(--radius-button, 8px);
   }
+  .btn-primary:hover { filter: brightness(0.9); }
 
   .btn-secondary {
-    @apply bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-4 py-2 rounded-lg transition-colors
-      dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-200;
+    @apply font-medium px-4 py-2 transition-colors;
+    background: var(--card-hover);
+    color: var(--foreground);
+    border-radius: var(--radius-button, 8px);
   }
+  .btn-secondary:hover { filter: brightness(0.92); }
 
   .btn-danger {
-    @apply bg-red-500 hover:bg-red-600 text-white font-medium px-4 py-2 rounded-lg transition-colors shadow-sm;
+    @apply bg-red-500 hover:bg-red-600 text-white font-medium px-4 py-2 transition-colors shadow-sm;
+    border-radius: var(--radius-button, 8px);
   }
+}
+
+/* ━━━ TERMINAL: Full experience override ━━━━━━━━━━━━━━━━━━━ */
+html.theme-terminal {
+  --card-padding: 0.75rem;
+  --card-shadow: none;
+}
+
+html.theme-terminal body {
+  font-family: 'IBM Plex Mono', 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+html.theme-terminal .card {
+  border-radius: 2px;
+  box-shadow: none;
+}
+
+html.theme-terminal input,
+html.theme-terminal select,
+html.theme-terminal textarea {
+  font-family: inherit;
+  background: #18181b;
+  border-color: #3f3f46;
+  color: #e4e4e7;
+  border-radius: 2px;
+  font-size: 12px;
+  padding: 0.35rem 0.5rem;
+}
+html.theme-terminal input::placeholder,
+html.theme-terminal textarea::placeholder {
+  color: #71717a;
+}
+html.theme-terminal input:focus-visible,
+html.theme-terminal select:focus-visible,
+html.theme-terminal textarea:focus-visible {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 2px rgba(34,197,94,0.5);
+}
+
+/* Nav */
+html.theme-terminal header {
+  background: #0a0a0a !important;
+  border-color: #27272a !important;
+}
+html.theme-terminal header * {
+  font-family: 'IBM Plex Mono', monospace;
+}
+html.theme-terminal header a,
+html.theme-terminal header span {
+  color: #a1a1aa;
+}
+html.theme-terminal header a.bg-emerald-50,
+html.theme-terminal header a[class*="bg-emerald"] {
+  background: rgba(34,197,94,0.1) !important;
+  color: #22c55e !important;
+}
+html.theme-terminal header nav a {
+  border-radius: 2px;
+  padding: 0.25rem 0.5rem;
+  font-size: 12px;
+  text-transform: lowercase;
+}
+html.theme-terminal header nav a:hover {
+  background: #18181b;
+  color: #e4e4e7;
+}
+
+/* Toolbar */
+html.theme-terminal [data-testid="dashboard-toolbar"] {
+  background: transparent !important;
+  border-color: #27272a !important;
+}
+html.theme-terminal [data-testid="dashboard-toolbar"] button,
+html.theme-terminal [data-testid="dashboard-toolbar"] span,
+html.theme-terminal [data-testid="dashboard-toolbar"] a {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+}
+
+/* Override all dark: bg and border */
+html.theme-terminal .dark\:bg-slate-800,
+html.theme-terminal .bg-white {
+  background: var(--card) !important;
+}
+html.theme-terminal .dark\:bg-slate-900,
+html.theme-terminal .bg-gray-50 {
+  background: var(--background) !important;
+}
+html.theme-terminal .dark\:border-slate-700,
+html.theme-terminal .border-gray-100,
+html.theme-terminal .border-gray-200 {
+  border-color: var(--border) !important;
+}
+html.theme-terminal .dark\:bg-slate-800\/50,
+html.theme-terminal .bg-gray-50 {
+  background: rgba(24,24,27,0.5) !important;
+}
+
+/* Text colors */
+html.theme-terminal .text-gray-900,
+html.theme-terminal .dark\:text-white {
+  color: #e4e4e7 !important;
+}
+html.theme-terminal .text-gray-500,
+html.theme-terminal .text-gray-600,
+html.theme-terminal .dark\:text-slate-400 {
+  color: #71717a !important;
+}
+html.theme-terminal .text-gray-400,
+html.theme-terminal .dark\:text-slate-500 {
+  color: #71717a !important;
+}
+
+/* Gain/loss */
+html.theme-terminal .text-emerald-600,
+html.theme-terminal .text-emerald-500,
+html.theme-terminal .dark\:text-emerald-400 {
+  color: #22c55e !important;
+}
+html.theme-terminal .text-red-500,
+html.theme-terminal .dark\:text-red-400 {
+  color: #ef4444 !important;
+}
+
+/* Hover states */
+html.theme-terminal .hover\:bg-gray-50:hover,
+html.theme-terminal .dark\:hover\:bg-slate-800\/50:hover,
+html.theme-terminal .hover\:bg-gray-100:hover,
+html.theme-terminal .dark\:hover\:bg-slate-700:hover,
+html.theme-terminal .dark\:hover\:bg-slate-800:hover {
+  background: #27272a !important;
+}
+
+/* Scrollbar */
+html.theme-terminal ::-webkit-scrollbar-track { background: #0a0a0a; }
+html.theme-terminal ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 2px; }
+html.theme-terminal ::-webkit-scrollbar-thumb:hover { background: #52525b; }
+
+/* Active tab pill override */
+html.theme-terminal .bg-emerald-500 {
+  background: #22c55e !important;
+}
+
+/* Rounded overrides */
+html.theme-terminal .rounded-2xl,
+html.theme-terminal .rounded-xl,
+html.theme-terminal .rounded-lg {
+  border-radius: 2px !important;
+}
+html.theme-terminal .rounded-full {
+  border-radius: 2px !important;
+}
+
+/* ━━━ CANVAS: Full experience override ━━━━━━━━━━━━━━━━━━━━ */
+html.theme-canvas {
+  --card-padding: 1.5rem;
+  --card-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+html.theme-canvas body {
+  font-family: 'DM Sans', -apple-system, sans-serif;
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+html.theme-canvas .card {
+  border-radius: 20px;
+  border-color: #e2e8f0;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+html.theme-canvas input,
+html.theme-canvas select,
+html.theme-canvas textarea {
+  font-family: inherit;
+  background: #ffffff;
+  border-color: #e2e8f0;
+  color: #1e293b;
+  border-radius: 14px;
+  font-size: 14px;
+  padding: 0.625rem 1rem;
+}
+html.theme-canvas input::placeholder,
+html.theme-canvas textarea::placeholder {
+  color: #94a3b8;
+}
+html.theme-canvas input:focus-visible,
+html.theme-canvas select:focus-visible,
+html.theme-canvas textarea:focus-visible {
+  border-color: #16a34a;
+  box-shadow: 0 0 0 2px rgba(22,163,74,0.35);
+}
+
+/* Nav */
+html.theme-canvas header {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+html.theme-canvas header * {
+  font-family: 'DM Sans', sans-serif;
+}
+html.theme-canvas header a,
+html.theme-canvas header span {
+  color: #475569;
+}
+html.theme-canvas header a.bg-emerald-50,
+html.theme-canvas header a[class*="bg-emerald"] {
+  background: #f0fdf4 !important;
+  color: #16a34a !important;
+}
+html.theme-canvas header nav a {
+  border-radius: 14px;
+  padding: 0.375rem 0.875rem;
+  font-size: 14px;
+  font-weight: 500;
+}
+html.theme-canvas header nav a:hover {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+/* Toolbar */
+html.theme-canvas [data-testid="dashboard-toolbar"] {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Override dark: classes (Canvas forces light) */
+html.theme-canvas .dark\:bg-slate-800,
+html.theme-canvas .dark\:bg-slate-900 {
+  background: initial;
+}
+html.theme-canvas .dark\:border-slate-700,
+html.theme-canvas .dark\:border-slate-800 {
+  border-color: initial;
+}
+html.theme-canvas .dark\:text-white,
+html.theme-canvas .dark\:text-slate-100 {
+  color: initial;
+}
+
+/* Background overrides */
+html.theme-canvas .bg-white {
+  background: #ffffff !important;
+}
+html.theme-canvas .bg-gray-50 {
+  background: #f8f9fb !important;
+}
+
+/* Border radius overrides */
+html.theme-canvas .rounded-2xl {
+  border-radius: 20px !important;
+}
+html.theme-canvas .rounded-xl {
+  border-radius: 16px !important;
+}
+html.theme-canvas .rounded-lg {
+  border-radius: 14px !important;
+}
+
+/* Text */
+html.theme-canvas .text-gray-900 { color: #0f172a !important; }
+html.theme-canvas .text-gray-600,
+html.theme-canvas .text-gray-500 { color: #475569 !important; }
+html.theme-canvas .text-gray-400 { color: #94a3b8 !important; }
+html.theme-canvas .text-emerald-600,
+html.theme-canvas .text-emerald-500 { color: #16a34a !important; }
+
+/* Active states */
+html.theme-canvas .bg-emerald-500 {
+  background: #16a34a !important;
+}
+
+/* Shadow */
+html.theme-canvas .shadow-sm {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06) !important;
+}
+
+/* Scrollbar */
+html.theme-canvas ::-webkit-scrollbar-track { background: #f8f9fb; }
+html.theme-canvas ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+/* ━━━ STUDIO: Full experience override ━━━━━━━━━━━━━━━━━━━━ */
+html.theme-studio {
+  --card-padding: 1.25rem;
+  --card-shadow: none;
+}
+
+html.theme-studio body {
+  font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+html.theme-studio .card {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 16px;
+  backdrop-filter: blur(8px);
+  box-shadow: none;
+}
+
+html.theme-studio input,
+html.theme-studio select,
+html.theme-studio textarea {
+  font-family: inherit;
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.08);
+  color: #e4e4e7;
+  border-radius: 10px;
+  font-size: 13px;
+}
+html.theme-studio input::placeholder,
+html.theme-studio textarea::placeholder {
+  color: #71717a;
+}
+html.theme-studio input:focus-visible,
+html.theme-studio select:focus-visible,
+html.theme-studio textarea:focus-visible {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 2px rgba(34,197,94,0.5);
+}
+
+/* Nav — Studio uses SidebarNav, but fallback for header */
+html.theme-studio header {
+  background: #09090b !important;
+  border-color: rgba(255,255,255,0.06) !important;
+}
+html.theme-studio header a,
+html.theme-studio header span {
+  color: #a1a1aa;
+}
+html.theme-studio header a.bg-emerald-50,
+html.theme-studio header a[class*="bg-emerald"] {
+  background: rgba(34,197,94,0.08) !important;
+  color: #22c55e !important;
+}
+html.theme-studio header nav a {
+  border-radius: 10px;
+  font-size: 13px;
+}
+html.theme-studio header nav a:hover {
+  background: rgba(255,255,255,0.04);
+  color: #fafafa;
+}
+
+/* Content alignment — sidebar layout should left-align, not center */
+html.theme-studio #main-content .mx-auto {
+  margin-left: 0;
+}
+
+/* Toolbar */
+html.theme-studio [data-testid="dashboard-toolbar"] {
+  background: transparent !important;
+  border-color: rgba(255,255,255,0.06) !important;
+}
+
+/* Override dark: classes */
+html.theme-studio .dark\:bg-slate-800,
+html.theme-studio .bg-white {
+  background: rgba(255,255,255,0.02) !important;
+}
+html.theme-studio .dark\:bg-slate-900,
+html.theme-studio .bg-gray-50 {
+  background: #18181b !important;
+}
+html.theme-studio .dark\:border-slate-700,
+html.theme-studio .border-gray-100,
+html.theme-studio .border-gray-200 {
+  border-color: rgba(255,255,255,0.06) !important;
+}
+html.theme-studio .dark\:bg-slate-800\/50 {
+  background: rgba(255,255,255,0.02) !important;
+}
+
+/* Text colors */
+html.theme-studio .text-gray-900,
+html.theme-studio .dark\:text-white {
+  color: #fafafa !important;
+}
+html.theme-studio .text-gray-500,
+html.theme-studio .text-gray-600,
+html.theme-studio .dark\:text-slate-400 {
+  color: #71717a !important;
+}
+html.theme-studio .text-gray-400,
+html.theme-studio .dark\:text-slate-500 {
+  color: #71717a !important;
+}
+
+/* Gain/loss */
+html.theme-studio .text-emerald-600,
+html.theme-studio .text-emerald-500,
+html.theme-studio .dark\:text-emerald-400 {
+  color: #22c55e !important;
+}
+
+/* Hover states */
+html.theme-studio .hover\:bg-gray-50:hover,
+html.theme-studio .dark\:hover\:bg-slate-800\/50:hover,
+html.theme-studio .hover\:bg-gray-100:hover,
+html.theme-studio .dark\:hover\:bg-slate-700:hover,
+html.theme-studio .dark\:hover\:bg-slate-800:hover {
+  background: rgba(255,255,255,0.04) !important;
+}
+
+/* Active tab */
+html.theme-studio .bg-emerald-500 {
+  background: #22c55e !important;
+}
+
+/* Glass hover */
+html.theme-studio .card:hover {
+  border-color: rgba(255,255,255,0.1);
+}
+
+/* Tabular numbers in Studio use Space Mono */
+html.theme-studio .tabular-nums,
+html.theme-studio .font-mono {
+  font-family: 'Space Mono', monospace !important;
+}
+
+/* Scrollbar */
+html.theme-studio ::-webkit-scrollbar-track { background: #18181b; }
+html.theme-studio ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 8px; }
+html.theme-studio ::-webkit-scrollbar-thumb:hover { background: #52525b; }
+
+/* Rounded overrides */
+html.theme-studio .rounded-2xl {
+  border-radius: 16px !important;
+}
+html.theme-studio .rounded-xl {
+  border-radius: 12px !important;
+}
+html.theme-studio .rounded-lg {
+  border-radius: 10px !important;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -148,8 +677,32 @@ body {
   animation-play-state: paused;
 }
 
+@keyframes big-move-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.65; }
+}
+
+.animate-big-move-pulse {
+  animation: big-move-pulse 2s ease-in-out infinite;
+}
+
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(20px) translateY(10px); }
+  to { opacity: 1; transform: translateX(0) translateY(0); }
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes toast-dismiss-bar {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+
 .recharts-tooltip-wrapper {
   outline: none !important;
+  pointer-events: none;
 }
 
 ::-webkit-scrollbar {
@@ -270,5 +823,11 @@ body {
   .animate-dot-bounce {
     animation: none;
     opacity: 0.6;
+  }
+  .animate-big-move-pulse {
+    animation: none;
+  }
+  .animate-slide-in-right {
+    animation: none;
   }
 }

@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>trefolio Dashboard — Design B: Clean Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0b0f19;--bg-raised:#141b2d;--surface:#1a2236;--surface-hover:#212d45;
+  --border:rgba(148,163,184,0.08);--border-hover:rgba(148,163,184,0.15);
+  --text:#f0f4f8;--text-dim:#a0aec0;--text-muted:#718096;--text-faint:#4a5568;
+  --gain:#48bb78;--gain-bg:rgba(72,187,120,0.1);--loss:#fc8181;--loss-bg:rgba(252,129,129,0.1);
+  --accent:#48bb78;--accent-light:#68d391;
+  --amber:#ecc94b;--amber-bg:rgba(236,201,75,0.08);
+  --blue:#63b3ed;--violet:#b794f4;--pink:#f687b3;
+  --sans:'DM Sans',-apple-system,sans-serif;--mono:'DM Mono',monospace;
+  --radius:14px;--radius-sm:10px;
+}
+html{font-size:14px}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+
+/* ── TICKER ── */
+.ticker{height:34px;background:rgba(0,0,0,0.3);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:28px;overflow:hidden}
+.t-item{display:flex;align-items:center;gap:6px;font-size:0.72rem;white-space:nowrap}
+.t-sym{font-weight:600;color:var(--text-dim)}
+.t-price{color:var(--text-muted)}
+.t-up{color:var(--gain);font-weight:500}
+.t-dn{color:var(--loss);font-weight:500}
+.t-dot{width:6px;height:6px;border-radius:50%;background:var(--gain);box-shadow:0 0 6px var(--gain)}
+
+/* ── NAV ── */
+.nav{height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;background:rgba(11,15,25,0.92);backdrop-filter:blur(16px)}
+.nav-l{display:flex;align-items:center;gap:20px}
+.nav-logo{display:flex;align-items:center;gap:8px}
+.nav-logo svg{width:30px;height:30px}
+.brand{font-weight:700;font-size:1.1rem;letter-spacing:-0.03em}
+.nav-tabs{display:flex;gap:4px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:3px}
+.n-tab{font-size:0.78rem;font-weight:500;color:var(--text-muted);padding:5px 14px;border-radius:7px;cursor:pointer;transition:all 0.15s;text-decoration:none}
+.n-tab:hover{color:var(--text-dim)}
+.n-tab.active{color:var(--text);background:rgba(255,255,255,0.06)}
+.n-tab .pro{font-size:0.55rem;font-weight:700;color:var(--amber);background:var(--amber-bg);padding:1px 5px;border-radius:3px;margin-left:3px}
+.nav-r{display:flex;align-items:center;gap:8px}
+.n-btn{width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s}
+.n-btn:hover{color:var(--text-dim);background:rgba(255,255,255,0.04);border-color:var(--border-hover)}
+.avatar{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--blue));display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:#fff;cursor:pointer}
+
+/* ── DASHBOARD ── */
+.dash{max-width:1200px;margin:0 auto;padding:24px}
+
+/* Hero Portfolio Section */
+.hero-section{margin-bottom:24px}
+.hero-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.hero-top-l{display:flex;align-items:center;gap:12px}
+.port-select{font-size:0.85rem;font-weight:600;color:var(--text);background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:6px}
+.port-select svg{width:16px;height:16px;color:var(--text-muted)}
+.updated{font-family:var(--mono);font-size:0.65rem;color:var(--text-faint)}
+.hero-actions{display:flex;gap:6px}
+.h-btn{font-size:0.75rem;font-weight:500;color:var(--text-dim);background:var(--surface);border:1px solid var(--border);padding:7px 14px;border-radius:var(--radius-sm);cursor:pointer;display:flex;align-items:center;gap:5px;transition:all 0.15s}
+.h-btn:hover{background:var(--surface-hover);border-color:var(--border-hover)}
+.h-btn svg{width:15px;height:15px}
+.h-btn.accent{background:var(--gain-bg);color:var(--gain);border-color:rgba(72,187,120,0.2)}
+.h-btn.accent:hover{background:rgba(72,187,120,0.15)}
+
+/* Value hero card */
+.value-card{background:var(--bg-raised);border:1px solid var(--border);border-radius:var(--radius);padding:28px 32px;position:relative;overflow:hidden}
+.value-card::before{content:'';position:absolute;top:0;right:0;width:400px;height:200px;background:radial-gradient(ellipse,rgba(72,187,120,0.06),transparent 70%);pointer-events:none}
+.vc-row{display:flex;align-items:flex-start;justify-content:space-between;position:relative}
+.vc-main h2{font-family:var(--mono);font-size:2.8rem;font-weight:800;letter-spacing:-0.04em;line-height:1}
+.vc-badges{display:flex;gap:8px;margin-top:10px}
+.vc-badge{font-family:var(--mono);font-size:0.75rem;font-weight:600;padding:4px 10px;border-radius:8px;display:flex;align-items:center;gap:4px}
+.vc-badge svg{width:12px;height:12px}
+.vc-stats{display:flex;gap:32px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+.vc-stat-label{font-size:0.68rem;color:var(--text-faint);margin-bottom:2px}
+.vc-stat-val{font-family:var(--mono);font-size:1.05rem;font-weight:700}
+.vc-chart{width:280px;height:90px;flex-shrink:0}
+.vc-chart svg{width:100%;height:100%}
+
+/* Allocation pill */
+.alloc-bar{display:flex;height:6px;border-radius:3px;overflow:hidden;margin-top:16px;background:rgba(255,255,255,0.03)}
+.alloc-seg{height:100%;transition:width 0.3s}
+.alloc-legend{display:flex;gap:16px;margin-top:8px;flex-wrap:wrap}
+.al-item{display:flex;align-items:center;gap:5px;font-size:0.7rem;color:var(--text-muted)}
+.al-dot{width:8px;height:8px;border-radius:3px}
+
+/* ── TABS BAR ── */
+.view-tabs{display:flex;gap:2px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:0}
+.v-tab{font-size:0.8rem;font-weight:500;color:var(--text-muted);padding:10px 16px;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.15s}
+.v-tab:hover{color:var(--text-dim)}
+.v-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.v-tab .pro{font-size:0.5rem;font-weight:700;color:var(--amber);background:var(--amber-bg);padding:1px 4px;border-radius:3px;margin-left:4px}
+
+/* Filter pills */
+.filters{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.filter-l{display:flex;gap:6px}
+.f-pill{font-size:0.72rem;font-weight:500;color:var(--text-muted);background:rgba(255,255,255,0.03);border:1px solid var(--border);padding:4px 12px;border-radius:100px;cursor:pointer;transition:all 0.15s}
+.f-pill:hover{color:var(--text-dim);border-color:var(--border-hover)}
+.f-pill.active{color:var(--accent);background:var(--gain-bg);border-color:rgba(72,187,120,0.2)}
+.filter-r{font-family:var(--mono);font-size:0.68rem;color:var(--text-faint)}
+
+/* ── HOLDINGS LIST (card-based) ── */
+.holdings-list{display:grid;gap:6px;margin-bottom:20px}
+.holding-card{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 80px;align-items:center;gap:8px;background:var(--bg-raised);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 16px;transition:all 0.2s;cursor:pointer}
+.holding-card:hover{border-color:var(--border-hover);background:var(--surface)}
+.hc-asset{display:flex;align-items:center;gap:10px}
+.hc-icon{width:36px;height:36px;border-radius:8px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:0.6rem;font-weight:700;color:var(--text-dim);flex-shrink:0}
+.hc-ticker{font-weight:700;font-size:0.88rem}
+.hc-name{font-size:0.7rem;color:var(--text-muted)}
+.hc-col{text-align:right}
+.hc-val{font-family:var(--mono);font-weight:600;font-size:0.85rem}
+.hc-sub{font-family:var(--mono);font-size:0.65rem;color:var(--text-muted)}
+.hc-bar{width:100%;height:4px;border-radius:2px;background:rgba(255,255,255,0.04);overflow:hidden;margin-top:4px}
+.hc-bar-fill{height:100%;border-radius:2px}
+
+/* ── BOTTOM GRID ── */
+.bottom-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:20px}
+.b-card{background:var(--bg-raised);border:1px solid var(--border);border-radius:var(--radius);padding:20px;transition:border-color 0.2s}
+.b-card:hover{border-color:var(--border-hover)}
+.b-card-title{font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-faint);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.b-card-title .pro-tag{font-family:var(--mono);font-size:0.5rem;font-weight:700;color:var(--amber);background:var(--amber-bg);padding:2px 6px;border-radius:4px}
+
+.b-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.03)}
+.b-row:last-child{border:none}
+.b-row-l{font-size:0.8rem;color:var(--text-dim)}
+.b-row-r{font-family:var(--mono);font-size:0.8rem;font-weight:600}
+
+.growth-trio{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center}
+.g-period-val{font-family:var(--mono);font-size:1.2rem;font-weight:700}
+.g-period-label{font-size:0.65rem;color:var(--text-faint);margin-top:2px}
+
+/* ── UPGRADE STRIP ── */
+.upgrade-strip{background:linear-gradient(135deg,rgba(72,187,120,0.06),rgba(99,179,237,0.04));border:1px solid rgba(72,187,120,0.12);border-radius:var(--radius);padding:18px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:20px}
+.us-text{display:flex;align-items:center;gap:12px}
+.us-icon{width:40px;height:40px;border-radius:10px;background:var(--gain-bg);border:1px solid rgba(72,187,120,0.2);display:flex;align-items:center;justify-content:center;color:var(--accent);flex-shrink:0}
+.us-icon svg{width:20px;height:20px}
+.us-text h4{font-size:0.88rem;font-weight:600;margin-bottom:1px}
+.us-text p{font-size:0.72rem;color:var(--text-muted)}
+.us-btn{font-size:0.78rem;font-weight:600;color:#fff;background:var(--accent);padding:10px 20px;border-radius:var(--radius-sm);border:none;cursor:pointer;white-space:nowrap;transition:all 0.15s;box-shadow:0 2px 12px rgba(72,187,120,0.2)}
+.us-btn:hover{background:var(--accent-light);transform:translateY(-1px)}
+
+/* Ad slot */
+.ad{background:rgba(255,255,255,0.015);border:1px dashed var(--border);border-radius:8px;padding:10px;text-align:center;font-size:0.65rem;color:var(--text-faint);margin-top:16px}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1024px){
+  .bottom-grid{grid-template-columns:1fr}
+  .holding-card{grid-template-columns:2fr 1fr 1fr;gap:6px}
+  .holding-card .hc-col:nth-child(4),.holding-card .hc-col:nth-child(5){display:none}
+  .vc-row{flex-direction:column;gap:16px}
+  .vc-chart{width:100%;height:80px}
+}
+@media(max-width:640px){
+  .nav-tabs{display:none}
+  .dash{padding:16px}
+  .vc-main h2{font-size:2rem}
+  .vc-stats{flex-direction:column;gap:12px}
+  .holding-card{grid-template-columns:1fr auto}
+  .holding-card .hc-col:nth-child(3){display:none}
+  .hero-actions{flex-wrap:wrap}
+}
+
+.design-label{position:fixed;bottom:16px;right:16px;z-index:999;background:linear-gradient(135deg,var(--accent),var(--blue));color:#fff;font-family:var(--mono);font-size:0.65rem;font-weight:700;padding:6px 14px;border-radius:6px;box-shadow:0 4px 12px rgba(72,187,120,0.3)}
+</style>
+</head>
+<body>
+
+<div class="design-label">DESIGN B — Clean Dashboard</div>
+
+<!-- TICKER -->
+<div class="ticker">
+  <div class="t-item"><span class="t-dot"></span><span class="t-sym">NYSE</span></div>
+  <div class="t-item"><span class="t-sym">EUR/USD</span><span class="t-price">1.0921</span><span class="t-dn">-0.12%</span></div>
+  <div class="t-item"><span class="t-sym">BTC</span><span class="t-price">$87,432</span><span class="t-up">+2.41%</span></div>
+  <div class="t-item"><span class="t-sym">Gold</span><span class="t-price">$2,834</span><span class="t-up">+0.34%</span></div>
+  <div class="t-item"><span class="t-sym">S&P 500</span><span class="t-price">5,842</span><span class="t-up">+0.83%</span></div>
+  <div class="t-item"><span class="t-sym">DAX</span><span class="t-price">18,924</span><span class="t-up">+0.67%</span></div>
+  <div class="t-item"><span class="t-sym">Oil</span><span class="t-price">$74.21</span><span class="t-dn">-1.2%</span></div>
+</div>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-l">
+    <div class="nav-logo">
+      <svg viewBox="0 0 32 32"><defs><linearGradient id="la" x1=".5" y1="0" x2=".5" y2="1"><stop offset="0%" stop-color="#6ee7b7"/><stop offset="100%" stop-color="#10b981"/></linearGradient><linearGradient id="lb" x1="0" y1=".3" x2="1" y2=".7"><stop offset="0%" stop-color="#34d399"/><stop offset="100%" stop-color="#059669"/></linearGradient><linearGradient id="lc" x1=".5" y1="1" x2=".5" y2="0"><stop offset="0%" stop-color="#10b981"/><stop offset="100%" stop-color="#047857"/></linearGradient><linearGradient id="ld" x1="1" y1=".3" x2="0" y2=".7"><stop offset="0%" stop-color="#a7f3d0"/><stop offset="100%" stop-color="#34d399"/></linearGradient></defs><rect width="32" height="32" rx="7" fill="#0f172a"/><g transform="translate(16,16) rotate(45)"><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="url(#la)"/><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="url(#lb)" transform="rotate(90)"/><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="url(#lc)" transform="rotate(180)"/><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="url(#ld)" transform="rotate(270)"/><circle cx="0" cy="0" r="1.2" fill="#0f172a" opacity=".35"/></g></svg>
+      <span class="brand">trefolio</span>
+    </div>
+    <div class="nav-tabs">
+      <a class="n-tab active">Portfolio</a>
+      <a class="n-tab">Import</a>
+      <a class="n-tab">Tools</a>
+      <a class="n-tab">Crypto<span class="pro">PRO</span></a>
+      <a class="n-tab">Indicators<span class="pro">PRO</span></a>
+    </div>
+  </div>
+  <div class="nav-r">
+    <button class="n-btn" title="What's new"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25"/></svg></button>
+    <button class="n-btn" title="Stealth"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></button>
+    <button class="n-btn" title="Theme"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z"/></svg></button>
+    <div class="avatar">MC</div>
+  </div>
+</nav>
+
+<!-- DASHBOARD -->
+<div class="dash">
+
+  <!-- HERO TOP BAR -->
+  <div class="hero-section">
+    <div class="hero-top">
+      <div class="hero-top-l">
+        <div class="port-select">My Portfolio <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 9l-7 7-7-7"/></svg></div>
+        <span class="updated">Updated 2 min ago</span>
+      </div>
+      <div class="hero-actions">
+        <button class="h-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182"/></svg>Refresh</button>
+        <button class="h-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87"/></svg>Settings</button>
+        <button class="h-btn accent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5v15m7.5-7.5h-15"/></svg>Add Asset</button>
+      </div>
+    </div>
+
+    <!-- VALUE CARD -->
+    <div class="value-card">
+      <div class="vc-row">
+        <div class="vc-main">
+          <div style="font-size:0.7rem;color:var(--text-faint);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.06em;font-weight:600">Portfolio Value</div>
+          <h2>€47,832.14</h2>
+          <div class="vc-badges">
+            <span class="vc-badge" style="color:var(--gain);background:var(--gain-bg)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25"/></svg>
+              +€584.20 today (+1.24%)
+            </span>
+            <span class="vc-badge" style="color:var(--gain);background:var(--gain-bg)">+12.4% all time</span>
+          </div>
+        </div>
+        <div class="vc-chart">
+          <svg viewBox="0 0 280 90" preserveAspectRatio="none">
+            <defs><linearGradient id="cg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#48bb78" stop-opacity="0.15"/><stop offset="100%" stop-color="#48bb78" stop-opacity="0"/></linearGradient></defs>
+            <path d="M0,70 C20,65 40,58 70,50 C100,42 120,48 160,35 C200,24 230,18 260,12 C270,10 280,8 280,8 L280,90 L0,90Z" fill="url(#cg)"/>
+            <path d="M0,70 C20,65 40,58 70,50 C100,42 120,48 160,35 C200,24 230,18 260,12 C270,10 280,8 280,8" fill="none" stroke="#48bb78" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="260" cy="12" r="3" fill="#48bb78"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="vc-stats">
+        <div><div class="vc-stat-label">Cost Basis</div><div class="vc-stat-val">€42,550.00</div></div>
+        <div><div class="vc-stat-label">Total Gain</div><div class="vc-stat-val" style="color:var(--gain)">+€5,282.14</div></div>
+        <div><div class="vc-stat-label">Holdings</div><div class="vc-stat-val">8 of 15</div></div>
+        <div><div class="vc-stat-label">Cash</div><div class="vc-stat-val">€4,152.00</div></div>
+        <div><div class="vc-stat-label">Div. Yield</div><div class="vc-stat-val">2.3%</div></div>
+      </div>
+
+      <div class="alloc-bar">
+        <div class="alloc-seg" style="width:45%;background:var(--accent)"></div>
+        <div class="alloc-seg" style="width:20%;background:var(--blue)"></div>
+        <div class="alloc-seg" style="width:15%;background:var(--violet)"></div>
+        <div class="alloc-seg" style="width:10%;background:var(--amber)"></div>
+        <div class="alloc-seg" style="width:10%;background:var(--text-faint)"></div>
+      </div>
+      <div class="alloc-legend">
+        <div class="al-item"><span class="al-dot" style="background:var(--accent)"></span>Stocks 45%</div>
+        <div class="al-item"><span class="al-dot" style="background:var(--blue)"></span>ETFs 20%</div>
+        <div class="al-item"><span class="al-dot" style="background:var(--violet)"></span>Crypto 15%</div>
+        <div class="al-item"><span class="al-dot" style="background:var(--amber)"></span>Cash 10%</div>
+        <div class="al-item"><span class="al-dot" style="background:var(--text-faint)"></span>Other 10%</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEW TABS -->
+  <div class="view-tabs">
+    <div class="v-tab active">Portfolio</div>
+    <div class="v-tab">Diversification</div>
+    <div class="v-tab">Dividends</div>
+    <div class="v-tab">Metrics<span class="pro">PRO</span></div>
+    <div class="v-tab">Growth<span class="pro">PRO</span></div>
+    <div class="v-tab">Events</div>
+    <div class="v-tab">News</div>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="filters">
+    <div class="filter-l">
+      <span class="f-pill active">All</span>
+      <span class="f-pill">DEGIRO</span>
+      <span class="f-pill">IBKR</span>
+      <span class="f-pill">Manual</span>
+    </div>
+    <div class="filter-r">8 holdings</div>
+  </div>
+
+  <!-- HOLDINGS LIST -->
+  <div class="holdings-list">
+    <div class="holding-card">
+      <div class="hc-asset"><div class="hc-icon">AAPL</div><div><div class="hc-ticker">Apple Inc.</div><div class="hc-name">42 shares · AAPL</div></div></div>
+      <div class="hc-col"><div class="hc-val">€9,581.04</div><div class="hc-sub">€228.12 / share</div></div>
+      <div class="hc-col"><div class="hc-val" style="color:var(--gain)">+1.84%</div><div class="hc-sub">today</div></div>
+      <div class="hc-col"><div class="hc-val" style="color:var(--gain)">+18.2%</div><div class="hc-sub">+€1,479</div></div>
+      <div class="hc-col"><div class="hc-sub">20%</div><div class="hc-bar"><div class="hc-bar-fill" style="width:20%;background:var(--accent)"></div></div></div>
+    </div>
+    <div class="holding-card">
+      <div class="hc-asset"><div class="hc-icon">ASML</div><div><div class="hc-ticker">ASML Holding NV</div><div class="hc-name">8 shares · ASML</div></div></div>
+      <div class="hc-col"><div class="hc-val">€6,659.20</div><div class="hc-sub">€832.40 / share</div></div>
+      <div class="hc-col"><div class="hc-val" style="color:var(--gain)">+2.15%</div><div class="hc-sub">today</div></div>
+      <div class="hc-col"><div class="hc-val" style="color:var(--gain)">+24.7%</div><div class="hc-sub">+€1,322</div></div>
+      <div class="hc-col"><div class="hc-sub">14%</div><div class="hc-bar"><div class="hc-bar-fill" style="width:14%;background:var(--accent)"></div></div></div>
+    </div>
+    <div class="holding-card">
+      <div class="hc-asset"><div class="hc-icon">VWCE</div><div><div class="hc-ticker">Vanguard FTSE All-World</div><div class="hc-name">55 shares · VWCE.DE</div></div></div>
+      <div class="hc-col"><div class="hc-val">€6,178.70</div><div class="hc-sub">€112.34 / share</div></div>
+      <div class="hc-col"><div class="hc-val" style="color:var(--gain)">+0.42%</div><div class="hc-sub">today</div></div>
+      <div class="hc-col"><div class="hc-val" style="color:var(--gain)">+8.3%</div><div class="hc-sub">+€474</div></div>
+      <div class="hc-col"><div class="hc-sub">13%</div><div class="hc-bar"><div class="hc-bar-fill" style="width:13%;background:var(--accent)"></div></div></div>
+    </div>
+    <div class="holding-card">
+      <div class="hc-asset"><div class="hc-icon">NOVO</div><div><div class="hc-ticker">Novo Nordisk A/S</div><div class="hc-name">25 shares · NOVO-B.CO</div></div></div>
+      <div class="hc-col"><div class="hc-val">€4,740.00</div><div class="hc-sub">€189.60 / share</div></div>
+      <div class="hc-col"><div class="hc-val" style="color:var(--gain)">+0.87%</div><div class="hc-sub">today</div></div>
+      <div class="hc-col"><div class="hc-val" style="color:var(--gain)">+15.1%</div><div class="hc-sub">+€623</div></div>
+      <div class="hc-col"><div class="hc-sub">10%</div><div class="hc-bar"><div class="hc-bar-fill" style="width:10%;background:var(--accent)"></div></div></div>
+    </div>
+    <div class="holding-card">
+      <div class="hc-asset"><div class="hc-icon">MSFT</div><div><div class="hc-ticker">Microsoft Corp</div><div class="hc-name">12 shares · MSFT</div></div></div>
+      <div class="hc-col"><div class="hc-val">€4,542.00</div><div class="hc-sub">€378.50 / share</div></div>
+      <div class="hc-col"><div class="hc-val" style="color:var(--loss)">-0.34%</div><div class="hc-sub">today</div></div>
+      <div class="hc-col"><div class="hc-val" style="color:var(--gain)">+21.8%</div><div class="hc-sub">+€812</div></div>
+      <div class="hc-col"><div class="hc-sub">9%</div><div class="hc-bar"><div class="hc-bar-fill" style="width:9%;background:var(--accent)"></div></div></div>
+    </div>
+    <div class="holding-card">
+      <div class="hc-asset"><div class="hc-icon">BMW</div><div><div class="hc-ticker">BMW AG</div><div class="hc-name">40 shares · BMW.DE</div></div></div>
+      <div class="hc-col"><div class="hc-val">€3,873.60</div><div class="hc-sub">€96.84 / share</div></div>
+      <div class="hc-col"><div class="hc-val" style="color:var(--loss)">-1.20%</div><div class="hc-sub">today</div></div>
+      <div class="hc-col"><div class="hc-val" style="color:var(--loss)">-3.1%</div><div class="hc-sub">-€124</div></div>
+      <div class="hc-col"><div class="hc-sub">8%</div><div class="hc-bar"><div class="hc-bar-fill" style="width:8%;background:var(--loss)"></div></div></div>
+    </div>
+  </div>
+
+  <div class="ad">Ad — Free plan (remove with Bifolio)</div>
+
+  <!-- BOTTOM GRID -->
+  <div class="bottom-grid">
+    <div class="b-card">
+      <div class="b-card-title">Upcoming Earnings</div>
+      <div class="b-row"><span class="b-row-l">AAPL</span><span class="b-row-r" style="color:var(--text-dim)">Apr 24</span></div>
+      <div class="b-row"><span class="b-row-l">MSFT</span><span class="b-row-r" style="color:var(--text-dim)">Apr 29</span></div>
+      <div class="b-row"><span class="b-row-l">SAP.DE</span><span class="b-row-r" style="color:var(--text-dim)">May 6</span></div>
+    </div>
+    <div class="b-card">
+      <div class="b-card-title">Markets Today</div>
+      <div class="b-row"><span class="b-row-l">S&P 500</span><span class="b-row-r" style="color:var(--gain)">+0.83%</span></div>
+      <div class="b-row"><span class="b-row-l">Nasdaq</span><span class="b-row-r" style="color:var(--gain)">+1.12%</span></div>
+      <div class="b-row"><span class="b-row-l">Euro Stoxx 50</span><span class="b-row-r" style="color:var(--gain)">+0.45%</span></div>
+      <div class="b-row"><span class="b-row-l">DAX</span><span class="b-row-r" style="color:var(--gain)">+0.67%</span></div>
+    </div>
+    <div class="b-card">
+      <div class="b-card-title">Growth Periods <span class="pro-tag">BIFOLIO+</span></div>
+      <div class="growth-trio">
+        <div><div class="g-period-val" style="color:var(--gain)">+3.2%</div><div class="g-period-label">YTD</div></div>
+        <div><div class="g-period-val" style="color:var(--gain)">+1.8%</div><div class="g-period-label">1 Month</div></div>
+        <div><div class="g-period-val" style="color:var(--gain)">+12.4%</div><div class="g-period-label">1 Year</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- UPGRADE -->
+  <div class="upgrade-strip">
+    <div class="us-text">
+      <div class="us-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg></div>
+      <div>
+        <h4>Get more from your portfolio</h4>
+        <p>Trefolio Pro: unlimited AI, broker auto-sync, crypto tracking, advanced metrics, and up to 3 portfolios.</p>
+      </div>
+    </div>
+    <button class="us-btn">Upgrade to Trefolio →</button>
+  </div>
+
+</div>
+</body>
+</html>

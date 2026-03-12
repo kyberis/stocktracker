@@ -1067,6 +1067,20 @@ const MIGRATIONS: Migration[] = [
       `);
     },
   },
+  {
+    version: 33,
+    description: "Add dashboard_theme column to user_settings for layout theme selection",
+    up: async (client: Client) => {
+      const cols = await client.execute("PRAGMA table_info(user_settings)");
+      const existing = new Set(cols.rows.map((r) => str(r.name)));
+      if (!existing.has("dashboard_theme")) {
+        await client.execute({
+          sql: "ALTER TABLE user_settings ADD COLUMN dashboard_theme TEXT NOT NULL DEFAULT 'default'",
+          args: [],
+        });
+      }
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

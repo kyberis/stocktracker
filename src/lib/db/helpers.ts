@@ -103,6 +103,7 @@ export interface UserSettings {
   whatsappPhone: string;
   whatsappVerified: boolean;
   alertDeviceEnabled: boolean;
+  dashboardTheme: import("@/lib/types").LayoutTheme;
 }
 
 export const ADMIN_DEFAULT_USERNAME = "admin";

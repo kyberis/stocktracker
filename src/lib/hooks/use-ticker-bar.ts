@@ -1,10 +1,17 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+
+export const BIG_MOVE_THRESHOLD = 4;
 
 export interface QuoteSnapshot {
   price: number | null;
   changePercent: number | null;
+}
+
+export interface BigMover {
+  label: string;
+  changePercent: number;
 }
 
 export interface TickerBarData {
@@ -38,7 +45,20 @@ function parseQuote(raw: { price?: number; changePercent?: number } | undefined)
   return { price: raw.price ?? null, changePercent: raw.changePercent ?? null };
 }
 
-export function useTickerBar(demoMode = false): TickerBarData {
+function deriveBigMovers(data: TickerBarData): BigMover[] {
+  const candidates: { label: string; changePercent: number | null }[] = [
+    { label: "BTC", changePercent: data.btcChange24h },
+    { label: "Gold", changePercent: data.gold.changePercent },
+    { label: "Silver", changePercent: data.silver.changePercent },
+    { label: "S&P 500", changePercent: data.sp500.changePercent },
+    { label: "Oil", changePercent: data.oil.changePercent },
+  ];
+  return candidates.filter(
+    (c): c is BigMover => c.changePercent != null && Math.abs(c.changePercent) >= BIG_MOVE_THRESHOLD,
+  );
+}
+
+export function useTickerBar(demoMode = false): TickerBarData & { bigMovers: BigMover[] } {
   const [data, setData] = useState<TickerBarData>(
     demoMode
       ? DEMO_DATA
@@ -72,5 +92,7 @@ export function useTickerBar(demoMode = false): TickerBarData {
     return () => window.clearInterval(id);
   }, [demoMode, fetchData]);
 
-  return data;
+  const bigMovers = useMemo(() => deriveBigMovers(data), [data]);
+
+  return { ...data, bigMovers };
 }

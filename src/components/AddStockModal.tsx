@@ -26,7 +26,7 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
   const [price, setPrice] = useState("");
   const [currency, setCurrency] = useState("USD");
   const [exchange, setExchange] = useState("");
-  const [assetType, setAssetType] = useState<"stock" | "etf">("stock");
+  const [assetType, setAssetType] = useState<"stock" | "etf" | "">("");
   const searchTimeout = useRef<NodeJS.Timeout | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -44,7 +44,7 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
       setPrice("");
       setCurrency("USD");
       setExchange("");
-      setAssetType("stock");
+      setAssetType("");
     }
   }, [isOpen]);
 
@@ -82,17 +82,18 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
     setStockName(result.shortname);
     setTicker(result.symbol);
     setExchange(result.exchange);
+    setAssetType(result.quoteType === "ETF" ? "etf" : "stock");
     setResults([]);
   };
 
   const handleSubmit = () => {
-    if (!stockName.trim() || !ticker.trim() || !exchange.trim() || !shares || !price) return;
+    if (!stockName.trim() || !ticker.trim() || !exchange.trim() || !shares || !price || !assetType) return;
 
     addHolding({
       name: stockName.trim(),
       ticker: ticker.trim().toUpperCase(),
       isin: "",
-      assetType,
+      assetType: assetType as "stock" | "etf",
       shares: parseFloat(shares),
       purchasePrice: parseFloat(price),
       displayCurrency: currency,
@@ -197,9 +198,10 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
             <select
               id="addstock-assettype"
               value={assetType}
-              onChange={(e) => setAssetType((e.target.value as "stock" | "etf"))}
+              onChange={(e) => setAssetType(e.target.value as "stock" | "etf" | "")}
               className="w-full"
             >
+              <option value="" disabled>{t("selectAssetType")}</option>
               <option value="stock">{t("stockType")}</option>
               <option value="etf">{t("etfType")}</option>
             </select>
@@ -259,7 +261,7 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
           </button>
           <button
             onClick={handleSubmit}
-            disabled={!stockName.trim() || !ticker.trim() || !exchange.trim() || !shares || !price}
+            disabled={!stockName.trim() || !ticker.trim() || !exchange.trim() || !shares || !price || !assetType}
             className="btn-primary disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {t("addToPortfolio")}

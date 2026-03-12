@@ -128,6 +128,7 @@ export const userSettingsSchema = z.object({
     "be", "ca", "cy",
   ]).optional(),
   refreshInterval: z.union([z.literal(15), z.literal(30), z.literal(60)]).optional(),
+  dashboardTheme: z.enum(["default", "terminal", "canvas", "studio"]).optional(),
 });
 
 /* ── Alerts ────────────────────────────────────────────────── */

@@ -1,4 +1,4 @@
-import type { SubscriptionFeature, SubscriptionPlan } from "@/lib/types";
+import type { SubscriptionFeature, SubscriptionPlan, LayoutTheme } from "@/lib/types";
 import { PLATFORM_LIMITS } from "@/lib/platform-config";
 
 /**
@@ -139,6 +139,31 @@ export function getSnapTradeConnectionLimit(plan: SubscriptionPlan): number {
   if (plan === "pro") return PLATFORM_LIMITS.PRO_SNAPTRADE_LIMIT;
   if (plan === "starter") return PLATFORM_LIMITS.STARTER_SNAPTRADE_LIMIT;
   return PLATFORM_LIMITS.FREE_SNAPTRADE_LIMIT;
+}
+
+/**
+ * Theme access rules per plan.
+ * Default: all tiers. Canvas: starter+. Terminal/Studio: pro only.
+ */
+const THEME_ACCESS: Record<LayoutTheme, Set<SubscriptionPlan>> = {
+  default: new Set(["free", "starter", "pro"]),
+  canvas: new Set(["starter", "pro"]),
+  terminal: new Set(["pro"]),
+  studio: new Set(["pro"]),
+};
+
+export function canAccessTheme(theme: LayoutTheme, plan: SubscriptionPlan): boolean {
+  return THEME_ACCESS[theme]?.has(plan) ?? false;
+}
+
+export function getAvailableThemes(plan: SubscriptionPlan): LayoutTheme[] {
+  return (Object.keys(THEME_ACCESS) as LayoutTheme[]).filter((t) => THEME_ACCESS[t].has(plan));
+}
+
+export function getThemeUpgradeTarget(theme: LayoutTheme): SubscriptionPlan | null {
+  if (theme === "canvas") return "starter";
+  if (theme === "terminal" || theme === "studio") return "pro";
+  return null;
 }
 
 /** Maps internal plan identifiers to user-facing tier names. */

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
 import { useTheme } from "@/lib/theme-context";
@@ -47,7 +48,7 @@ const NAV_LINKS = [
 export default function AppNav({ onWhatsNew, hasNewRelease }: AppNavProps) {
   const pathname = usePathname();
   const { t } = useI18n();
-  const { isDark, toggleTheme } = useTheme();
+  const { isDark, canToggleMode, toggleTheme } = useTheme();
   const { stealthMode, toggleStealth } = useStealthMode();
   const track = useTrack();
 
@@ -63,7 +64,7 @@ export default function AppNav({ onWhatsNew, hasNewRelease }: AppNavProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between gap-4">
         {/* Left: Logo + Nav */}
         <div className="flex items-center gap-1 sm:gap-6">
-          <a href="/" className="flex items-center gap-2 mr-2 sm:mr-0">
+          <Link href="/" className="flex items-center gap-2 mr-2 sm:mr-0">
             <svg className="w-7 h-7 rounded-lg" viewBox="0 0 32 32" aria-hidden="true">
               <defs>
                 <linearGradient id="nav-a" x1=".5" y1="0" x2=".5" y2="1"><stop offset="0%" stopColor="#6ee7b7"/><stop offset="100%" stopColor="#10b981"/></linearGradient>
@@ -81,13 +82,13 @@ export default function AppNav({ onWhatsNew, hasNewRelease }: AppNavProps) {
               </g>
             </svg>
             <span className="hidden sm:inline text-base font-bold text-gray-900 dark:text-white">{t("appTitle")}</span>
-          </a>
+          </Link>
 
           <nav className="hidden sm:flex items-center gap-1">
             {NAV_LINKS.map((link) => {
               const active = link.match(pathname);
               return (
-                <a
+                <Link
                   key={link.href}
                   href={link.href}
                   className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
@@ -100,7 +101,7 @@ export default function AppNav({ onWhatsNew, hasNewRelease }: AppNavProps) {
                   {"tierBadge" in link && link.tierBadge && (
                     <TierFeatureBadge requiredPlan={link.tierBadge} size="xs" className="ml-1" />
                   )}
-                </a>
+                </Link>
               );
             })}
           </nav>
@@ -148,22 +149,24 @@ export default function AppNav({ onWhatsNew, hasNewRelease }: AppNavProps) {
             )}
           </button>
 
-          <button
-            onClick={toggleTheme}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-500 dark:text-slate-400 transition-colors"
-            title={isDark ? "Light mode" : "Dark mode"}
-            aria-label={isDark ? "Light mode" : "Dark mode"}
-          >
-            {isDark ? (
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
-            ) : (
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-              </svg>
-            )}
-          </button>
+          {canToggleMode && (
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-500 dark:text-slate-400 transition-colors"
+              title={isDark ? "Light mode" : "Dark mode"}
+              aria-label={isDark ? "Light mode" : "Dark mode"}
+            >
+              {isDark ? (
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+              )}
+            </button>
+          )}
 
           <div className="hidden sm:block">
             <LanguageSwitcher />
