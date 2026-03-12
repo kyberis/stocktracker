@@ -155,7 +155,7 @@ export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: P
   /* ── TERMINAL: Dense compact list, no card, monospace header ── */
   if (layoutTheme === "terminal") {
     return (
-      <div className="border border-zinc-800 rounded-none overflow-hidden" data-testid="portfolio-table-terminal">
+      <div className="border border-zinc-800 rounded-none overflow-hidden" data-testid="portfolio-table-terminal" data-tour="holdings">
         <div className="px-3 py-2 border-b border-zinc-800 flex items-center gap-3">{searchInput}</div>
         <div className="hidden sm:flex items-center justify-between px-3 py-1.5 bg-zinc-900/50 border-b border-zinc-800 font-mono text-[10px] uppercase tracking-widest text-zinc-600">
           <div className="flex items-center gap-3">
@@ -194,7 +194,7 @@ export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: P
   /* ── CANVAS: Card grid layout ──────────────────────────────── */
   if (layoutTheme === "canvas") {
     return (
-      <div data-testid="portfolio-table-canvas">
+      <div data-testid="portfolio-table-canvas" data-tour="holdings">
         <div className="bg-white border border-slate-200 rounded-2xl p-4 mb-4 flex items-center gap-3">{searchInput}</div>
         <div className="flex items-center gap-3 mb-3 flex-wrap">
           {renderSortButton("name", t("priceTimesCount"))}
@@ -227,7 +227,7 @@ export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: P
   /* ── STUDIO: Sleek glass card ──────────────────────────────── */
   if (layoutTheme === "studio") {
     return (
-      <div className="rounded-[20px] border border-white/5 bg-white/[0.02] backdrop-blur-sm overflow-hidden" data-testid="portfolio-table-studio">
+      <div className="rounded-[20px] border border-white/5 bg-white/[0.02] backdrop-blur-sm overflow-hidden" data-testid="portfolio-table-studio" data-tour="holdings">
         <div className="p-4 border-b border-white/5 flex items-center gap-3">{searchInput}</div>
         <div className="hidden sm:flex items-center justify-between px-4 py-2.5 bg-white/[0.02] border-b border-white/5">
           <div className="flex items-center gap-3">{renderSortButton("name", t("priceTimesCount"))}</div>
@@ -264,7 +264,7 @@ export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: P
 
   /* ── DEFAULT: Original card layout ─────────────────────────── */
   return (
-    <div className="card p-0 overflow-hidden" data-testid="portfolio-table-default">
+    <div className="card p-0 overflow-hidden" data-testid="portfolio-table-default" data-tour="holdings">
       <div className="p-4 border-b border-gray-100 dark:border-slate-700 flex items-center gap-3 flex-wrap">{searchInput}</div>
       <div className="hidden sm:flex sm:items-center sm:justify-between px-4 py-2.5 bg-gray-50 dark:bg-slate-800/50 border-b border-gray-100 dark:border-slate-700">
         <div className="flex items-center gap-3">{renderSortButton("name", t("priceTimesCount"))}</div>

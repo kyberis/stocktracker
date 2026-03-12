@@ -1293,6 +1293,32 @@ const es: TranslationStrings = {
   upsellAttemptNetWorth: "Registra tu patrimonio neto completo con inmuebles, ahorros y cuentas de pensión.",
   upsellStarterItemNetWorth: "Seguimiento de patrimonio neto con hasta 10 activos manuales",
   upsellProItemUnlimitedAssets: "Activos manuales ilimitados e historial de valoración futuro",
+
+  // Theme Wizard Tour
+  wizardStep1Label: "Navegación",
+  wizardStep1Title: "Tu navegación principal",
+  wizardStep1Body: "Accede a todas las secciones desde aquí — Portafolio, Importar, Herramientas, Crypto y Indicadores Económicos.",
+  wizardStep1Hint: "Las secciones Pro están marcadas con una insignia. Mejora tu plan en cualquier momento desde Ajustes.",
+  wizardStep2Label: "Resumen",
+  wizardStep2Title: "Tu portafolio de un vistazo",
+  wizardStep2Body: "Valor total, coste base y ganancias diarias en una sola tarjeta. Revisión con IA disponible para Pro.",
+  wizardStep2Hint: "Activa el modo oculto desde la barra de navegación para esconder los valores monetarios.",
+  wizardStep3Label: "Posiciones",
+  wizardStep3Title: "Tus posiciones en bolsa",
+  wizardStep3Body: "Busca, ordena y haz clic en cualquier posición para ver todos los detalles. Los precios se actualizan automáticamente.",
+  wizardStep3Hint: "Toca una fila para ver gráficos, fundamentales y datos de dividendos.",
+  wizardStep4Label: "Pestañas",
+  wizardStep4Title: "Explora diferentes vistas",
+  wizardStep4Body: "Cambia entre Portafolio, Crypto, Diversificación, Dividendos, Métricas, Crecimiento, Eventos y Noticias.",
+  wizardStep4Hint: "Algunas pestañas requieren un plan Starter o Pro y están marcadas con una insignia.",
+  wizardStep5Label: "Acciones",
+  wizardStep5Title: "Construye tu portafolio",
+  wizardStep5Body: "Añade acciones y crypto manualmente, o importa todo tu portafolio desde un bróker en segundos.",
+  wizardStep5Hint: "El botón Importar es compatible con más de 15 brókers incluyendo DEGIRO, Interactive Brokers y Trading 212.",
+  wizardSkip: "Saltar tour",
+  wizardBack: "Atrás",
+  wizardNext: "Siguiente",
+  wizardFinish: "Terminar tour",
 };
 
 export default es;

@@ -383,7 +383,7 @@ export default function DashboardToolbar({
           )}
         </div>
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5" data-tour="actions">
           <button
             onClick={onOpenSettings}
             className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-500 dark:text-slate-400 transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"

@@ -77,7 +77,7 @@ export default function SidebarNav() {
     : user?.email?.slice(0, 2).toUpperCase() ?? "?";
 
   return (
-    <aside className="hidden sm:flex w-[200px] flex-shrink-0 flex-col border-r border-white/5 bg-[#09090b] sticky top-0 h-screen overflow-y-auto">
+    <aside className="hidden sm:flex w-[200px] flex-shrink-0 flex-col border-r border-white/5 bg-[#09090b] sticky top-0 h-screen overflow-y-auto" data-tour="nav">
       {/* Logo */}
       <div className="flex items-center gap-2 px-4 py-4">
         <svg className="w-7 h-7 flex-shrink-0" viewBox="0 0 32 32" aria-hidden="true">

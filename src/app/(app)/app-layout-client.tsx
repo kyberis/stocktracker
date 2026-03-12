@@ -15,6 +15,7 @@ import CapacitorBridge from "@/components/CapacitorBridge";
 import NativePushBridge from "@/components/NativePushBridge";
 import DeviceInterestEnroller from "@/components/DeviceInterestEnroller";
 import LayoutThemeBridge from "@/components/LayoutThemeBridge";
+import ThemeWizard from "@/components/ThemeWizard";
 import type { LayoutTheme } from "@/lib/types";
 
 function AppShell({ children }: { children: React.ReactNode }) {
@@ -69,6 +70,7 @@ export default function AppLayoutClient({
             <LayoutThemeBridge />
             <StealthProvider>
               <AppShell>{children}</AppShell>
+              <ThemeWizard />
             </StealthProvider>
           </SettingsProvider>
         </I18nProvider>

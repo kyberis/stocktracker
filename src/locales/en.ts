@@ -1293,6 +1293,32 @@ const en: TranslationStrings = {
   upsellAttemptNetWorth: "Track your full net worth with real estate, savings, and pension accounts.",
   upsellStarterItemNetWorth: "Net worth tracking with up to 10 manual assets",
   upsellProItemUnlimitedAssets: "Unlimited manual assets and future valuation history",
+
+  // Theme Wizard Tour
+  wizardStep1Label: "Navigation",
+  wizardStep1Title: "Your main navigation",
+  wizardStep1Body: "Access all sections from here — Portfolio, Import, Tools, Crypto market, and Economic Indicators.",
+  wizardStep1Hint: "Pro sections are marked with a badge. Upgrade anytime from Settings.",
+  wizardStep2Label: "Overview",
+  wizardStep2Title: "Your portfolio at a glance",
+  wizardStep2Body: "Total value, cost basis, and daily gains all in one card. AI review available for Pro users.",
+  wizardStep2Hint: "Enable stealth mode from the nav bar to hide monetary values.",
+  wizardStep3Label: "Holdings",
+  wizardStep3Title: "Your stock holdings",
+  wizardStep3Body: "Search, sort, and click any holding for full details. Prices update automatically.",
+  wizardStep3Hint: "Tap a row to see charts, fundamentals, and dividend data.",
+  wizardStep4Label: "Tabs",
+  wizardStep4Title: "Explore different views",
+  wizardStep4Body: "Switch between Portfolio, Crypto, Diversification, Dividends, Metrics, Growth, Events, and News.",
+  wizardStep4Hint: "Some tabs require a Starter or Pro plan and are labeled with a badge.",
+  wizardStep5Label: "Actions",
+  wizardStep5Title: "Build your portfolio",
+  wizardStep5Body: "Add stocks and crypto manually, or import your entire portfolio from a broker in seconds.",
+  wizardStep5Hint: "The Import button supports 15+ brokers including DEGIRO, Interactive Brokers, and Trading 212.",
+  wizardSkip: "Skip tour",
+  wizardBack: "Back",
+  wizardNext: "Next",
+  wizardFinish: "Finish tour",
 };
 
 export default en;

@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Theme Wizard Tour — Guided Onboarding Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --step-color: #10b981;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #08080c;
+    color: #e2e2e6;
+    min-height: 100vh;
+  }
+
+  /* ---- Page layout ---- */
+  .page { max-width: 1200px; margin: 0 auto; padding: 48px 24px 120px; }
+  h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 6px; }
+  .subtitle { color: #94a3b8; font-size: 15px; margin-bottom: 48px; line-height: 1.7; }
+  .subtitle code { background: #1e293b; padding: 2px 6px; border-radius: 4px; font-size: 13px; color: #a5b4fc; }
+  .section-title { font-size: 20px; font-weight: 700; color: #f8fafc; margin-bottom: 8px; }
+  .section-subtitle { font-size: 14px; color: #64748b; margin-bottom: 28px; line-height: 1.6; }
+
+  /* ---- Dashboard frame ---- */
+  .dashboard-frame {
+    position: relative;
+    border-radius: 16px; overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.06);
+    background: #0f172a;
+    margin-bottom: 48px;
+  }
+
+  /* Navigation bar */
+  .frame-nav {
+    height: 48px; background: #0f172a; display: flex; align-items: center;
+    padding: 0 16px; gap: 12px; border-bottom: 1px solid #1e293b;
+  }
+  .frame-nav .logo { width: 8px; height: 8px; border-radius: 50%; background: #10b981; }
+  .frame-nav .brand { font-weight: 600; font-size: 13px; color: #f1f5f9; opacity: 0.7; }
+  .frame-nav .nav-links { display: flex; gap: 16px; margin-left: 20px; }
+  .frame-nav .nav-link { font-size: 12px; color: #94a3b8; font-weight: 500; cursor: default; }
+  .frame-nav .nav-link.active { color: #10b981; }
+  .frame-nav .nav-right { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+  .frame-nav .nav-icon { width: 28px; height: 28px; border-radius: 8px; background: #1e293b; display: flex; align-items: center; justify-content: center; }
+  .frame-nav .nav-icon svg { color: #94a3b8; }
+  .frame-nav .avatar { width: 28px; height: 28px; border-radius: 50%; background: #334155; }
+
+  /* Toolbar */
+  .frame-toolbar {
+    height: 52px; display: flex; align-items: center; padding: 0 20px; gap: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .toolbar-portfolio {
+    font-size: 13px; font-weight: 600; color: #e2e8f0; background: #1e293b;
+    padding: 6px 12px; border-radius: 8px; display: flex; align-items: center; gap: 6px;
+  }
+  .toolbar-portfolio svg { color: #64748b; }
+  .toolbar-updated { font-size: 11px; color: #64748b; margin-left: 8px; }
+  .toolbar-actions { margin-left: auto; display: flex; gap: 6px; }
+  .toolbar-btn {
+    font-size: 11px; font-weight: 600; padding: 6px 12px; border-radius: 8px;
+    border: 1px solid #334155; color: #94a3b8; background: transparent; cursor: default;
+  }
+  .toolbar-btn.primary { background: #10b981; color: #fff; border-color: #10b981; }
+
+  /* Tab bar */
+  .frame-tabs {
+    display: flex; gap: 2px; padding: 0 20px; height: 40px; align-items: end;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .frame-tab {
+    font-size: 12px; font-weight: 500; color: #64748b; padding: 8px 14px;
+    border-bottom: 2px solid transparent; cursor: default;
+  }
+  .frame-tab.active { color: #10b981; border-bottom-color: #10b981; }
+
+  /* Dashboard body */
+  .frame-body { padding: 20px; display: grid; gap: 16px; }
+
+  /* Summary card */
+  .summary-card {
+    background: #1e293b; border: 1px solid #334155; border-radius: 14px; padding: 20px;
+  }
+  .summary-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+  .summary-label { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+  .summary-value { font-size: 28px; font-weight: 700; color: #f8fafc; font-variant-numeric: tabular-nums; margin-top: 2px; }
+  .summary-change { font-size: 13px; font-weight: 600; color: #10b981; margin-top: 4px; }
+  .summary-stats { display: flex; gap: 24px; }
+  .summary-stat { }
+  .summary-stat-label { font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+  .summary-stat-value { font-size: 15px; font-weight: 600; color: #cbd5e1; margin-top: 2px; }
+
+  /* Holdings table */
+  .holdings-card {
+    background: #1e293b; border: 1px solid #334155; border-radius: 14px; overflow: hidden;
+  }
+  .holdings-header { padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; }
+  .holdings-title { font-size: 13px; font-weight: 600; color: #e2e8f0; }
+  .holdings-search { font-size: 11px; color: #64748b; background: #0f172a; border: 1px solid #334155; padding: 5px 10px; border-radius: 6px; width: 140px; }
+  .holdings-row {
+    display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; padding: 10px 16px; border-bottom: 1px solid rgba(255,255,255,0.03);
+    font-size: 12px; align-items: center;
+  }
+  .holdings-row .ticker { font-weight: 600; color: #e2e8f0; }
+  .holdings-row .name { font-size: 11px; color: #64748b; }
+  .holdings-row .price { color: #cbd5e1; font-variant-numeric: tabular-nums; text-align: right; }
+  .holdings-row .change { text-align: right; font-weight: 600; }
+  .holdings-row .change.up { color: #10b981; }
+  .holdings-row .change.down { color: #ef4444; }
+  .holdings-row .value { color: #e2e8f0; font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+
+  /* Metrics grid */
+  .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .metric-card {
+    background: #1e293b; border: 1px solid #334155; border-radius: 14px; padding: 16px;
+  }
+  .metric-label { font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .metric-value { font-size: 20px; font-weight: 700; color: #f8fafc; margin-top: 4px; }
+  .metric-sub { font-size: 11px; color: #10b981; margin-top: 2px; }
+
+  /* ================= SPOTLIGHT OVERLAY ================= */
+  .spotlight-overlay {
+    position: absolute; inset: 0; z-index: 50;
+    pointer-events: none;
+  }
+  .spotlight-overlay.active { pointer-events: auto; }
+
+  /* Dimmed backdrop with cutout */
+  .spotlight-backdrop {
+    position: absolute; inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    transition: opacity 0.3s;
+  }
+
+  /* The highlighted zone — a transparent window */
+  .spotlight-hole {
+    position: absolute;
+    border-radius: 12px;
+    box-shadow: 0 0 0 4000px rgba(0, 0, 0, 0.65);
+    border: 2px solid rgba(16, 185, 129, 0.5);
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 51;
+  }
+  .spotlight-hole::after {
+    content: '';
+    position: absolute; inset: -4px;
+    border-radius: 14px;
+    border: 2px solid rgba(16, 185, 129, 0.15);
+    animation: spotlightPulse 2s ease-in-out infinite;
+  }
+  @keyframes spotlightPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* ================= WIZARD TOOLTIP ================= */
+  .wizard-tooltip {
+    position: absolute; z-index: 60;
+    width: 340px;
+    border-radius: 16px;
+    padding: 0;
+    overflow: hidden;
+    box-shadow: 0 24px 48px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.08);
+    animation: wizardIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  @keyframes wizardIn {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Arrow pointer */
+  .wizard-tooltip .arrow {
+    position: absolute; width: 12px; height: 12px;
+    background: #1e293b; border-radius: 2px;
+    transform: rotate(45deg);
+  }
+  .wizard-tooltip .arrow.top { top: -6px; left: 28px; border-top: 1px solid #334155; border-left: 1px solid #334155; }
+  .wizard-tooltip .arrow.bottom { bottom: -6px; right: 28px; border-bottom: 1px solid #334155; border-right: 1px solid #334155; }
+  .wizard-tooltip .arrow.left { left: -6px; top: 24px; border-bottom: 1px solid #334155; border-left: 1px solid #334155; }
+
+  /* Step badge */
+  .wizard-step-banner {
+    padding: 10px 16px; display: flex; align-items: center; gap: 8px;
+    background: rgba(16, 185, 129, 0.08); border-bottom: 1px solid rgba(16, 185, 129, 0.12);
+  }
+  .wizard-step-num {
+    width: 22px; height: 22px; border-radius: 6px; background: #10b981;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0;
+  }
+  .wizard-step-label { font-size: 11px; font-weight: 600; color: #10b981; text-transform: uppercase; letter-spacing: 0.5px; }
+  .wizard-step-progress { margin-left: auto; display: flex; gap: 4px; }
+  .wizard-step-progress .pdot {
+    width: 6px; height: 6px; border-radius: 50%; background: #334155; transition: all 0.2s;
+  }
+  .wizard-step-progress .pdot.done { background: #10b981; }
+  .wizard-step-progress .pdot.current { background: #10b981; width: 16px; border-radius: 3px; }
+
+  /* Content area */
+  .wizard-content { padding: 16px; background: #1e293b; }
+  .wizard-title { font-size: 16px; font-weight: 700; color: #f8fafc; margin-bottom: 6px; line-height: 1.3; }
+  .wizard-body { font-size: 13px; color: #94a3b8; line-height: 1.6; margin-bottom: 4px; }
+  .wizard-hint {
+    font-size: 12px; color: #64748b; line-height: 1.5; margin-top: 8px;
+    padding: 8px 10px; background: rgba(15, 23, 42, 0.5); border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.04);
+  }
+  .wizard-hint code { background: #0f172a; padding: 1px 5px; border-radius: 3px; font-size: 11px; color: #a5b4fc; }
+  .wizard-hint .kbd {
+    display: inline-block; background: #0f172a; border: 1px solid #334155; padding: 1px 6px;
+    border-radius: 4px; font-size: 10px; font-weight: 600; color: #cbd5e1; font-family: inherit;
+  }
+
+  /* Footer with nav buttons */
+  .wizard-footer {
+    padding: 12px 16px; display: flex; align-items: center; justify-content: space-between;
+    background: #1e293b; border-top: 1px solid rgba(255,255,255,0.04);
+  }
+  .wizard-skip {
+    font-size: 12px; color: #64748b; cursor: pointer; border: none; background: none;
+    transition: color 0.15s; font-weight: 500;
+  }
+  .wizard-skip:hover { color: #94a3b8; }
+  .wizard-nav { display: flex; gap: 6px; }
+  .wizard-btn {
+    font-size: 12px; font-weight: 600; padding: 7px 16px; border-radius: 8px;
+    border: none; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 5px;
+  }
+  .wizard-btn.back { background: #0f172a; color: #94a3b8; border: 1px solid #334155; }
+  .wizard-btn.back:hover { border-color: #475569; color: #cbd5e1; }
+  .wizard-btn.next { background: #10b981; color: #fff; }
+  .wizard-btn.next:hover { background: #059669; }
+  .wizard-btn.finish { background: #10b981; color: #fff; }
+  .wizard-btn svg { width: 12px; height: 12px; }
+
+  /* ================= STEPS SHOWCASE ================= */
+  .steps-row { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 56px; }
+  @media (max-width: 800px) { .steps-row { grid-template-columns: 1fr; } }
+
+  /* ================= THEME VARIANTS ================= */
+  .themes-section { margin-top: 56px; }
+  .theme-variants { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  @media (max-width: 900px) { .theme-variants { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 500px) { .theme-variants { grid-template-columns: 1fr; } }
+
+  .theme-variant {
+    border-radius: 14px; overflow: hidden; border: 1px solid rgba(255,255,255,0.06);
+  }
+  .tv-header { padding: 10px 12px; display: flex; align-items: center; gap: 8px; }
+  .tv-dot { width: 6px; height: 6px; border-radius: 50%; }
+  .tv-name { font-size: 11px; font-weight: 600; }
+  .tv-body { padding: 8px 12px 14px; position: relative; }
+  .tv-card { border-radius: 8px; padding: 10px; margin-bottom: 6px; }
+  .tv-row { height: 6px; border-radius: 3px; margin-bottom: 5px; }
+  .tv-row:last-child { margin-bottom: 0; }
+
+  /* Mini tooltip inside theme variant */
+  .tv-tooltip {
+    position: absolute; right: 8px; bottom: 10px;
+    width: 140px; border-radius: 10px; padding: 10px; font-size: 10px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+  }
+  .tv-tooltip .tv-tt-step { font-size: 9px; font-weight: 700; margin-bottom: 3px; display: flex; align-items: center; gap: 4px; }
+  .tv-tooltip .tv-tt-step .num { width: 14px; height: 14px; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; font-size: 8px; color: #fff; }
+  .tv-tooltip .tv-tt-title { font-weight: 700; font-size: 11px; margin-bottom: 2px; }
+  .tv-tooltip .tv-tt-body { line-height: 1.4; opacity: 0.7; }
+
+  /* Default variant */
+  .tv-default { background: #0f172a; }
+  .tv-default .tv-header { background: #0f172a; border-bottom: 1px solid #1e293b; }
+  .tv-default .tv-dot { background: #10b981; }
+  .tv-default .tv-name { color: #f1f5f9; }
+  .tv-default .tv-card { background: #1e293b; border: 1px solid #334155; }
+  .tv-default .tv-row { background: #334155; }
+  .tv-default .tv-row:first-child { background: #10b981; opacity: 0.4; width: 60%; }
+  .tv-default .tv-row:nth-child(2) { width: 80%; }
+  .tv-default .tv-tooltip { background: #1e293b; border: 1px solid #334155; color: #e2e8f0; }
+  .tv-default .tv-tt-step .num { background: #10b981; }
+  .tv-default .tv-tt-title { color: #f8fafc; }
+
+  /* Canvas variant */
+  .tv-canvas { background: #f8f9fb; }
+  .tv-canvas .tv-header { background: #f0f1f3; border-bottom: 1px solid #e2e5ea; }
+  .tv-canvas .tv-dot { background: #16a34a; }
+  .tv-canvas .tv-name { color: #1e293b; }
+  .tv-canvas .tv-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; }
+  .tv-canvas .tv-row { background: #e5e7eb; }
+  .tv-canvas .tv-row:first-child { background: #16a34a; opacity: 0.3; width: 60%; }
+  .tv-canvas .tv-row:nth-child(2) { width: 80%; }
+  .tv-canvas .tv-tooltip { background: #fff; border: 1px solid #e5e7eb; color: #1e293b; box-shadow: 0 8px 16px rgba(0,0,0,0.08); }
+  .tv-canvas .tv-tt-step .num { background: #16a34a; }
+  .tv-canvas .tv-tt-title { color: #0f172a; }
+
+  /* Terminal variant */
+  .tv-terminal { background: #0a0a0a; }
+  .tv-terminal .tv-header { background: #0a0a0a; border-bottom: 1px solid #1a1a1a; }
+  .tv-terminal .tv-dot { background: #22c55e; }
+  .tv-terminal .tv-name { color: #a1a1aa; font-family: 'IBM Plex Mono', monospace; font-size: 10px; }
+  .tv-terminal .tv-card { background: #111; border: 1px solid #222; border-radius: 4px; }
+  .tv-terminal .tv-row { background: #222; }
+  .tv-terminal .tv-row:first-child { background: #22c55e; opacity: 0.25; width: 60%; }
+  .tv-terminal .tv-row:nth-child(2) { width: 80%; }
+  .tv-terminal .tv-tooltip { background: #111; border: 1px solid #2a2a2a; color: #a1a1aa; font-family: 'IBM Plex Mono', monospace; border-radius: 6px; }
+  .tv-terminal .tv-tt-step .num { background: #22c55e; }
+  .tv-terminal .tv-tt-title { color: #22c55e; font-family: 'IBM Plex Mono', monospace; }
+
+  /* Studio variant */
+  .tv-studio { background: #18181b; }
+  .tv-studio .tv-header { background: #18181b; border-bottom: 1px solid #27272a; }
+  .tv-studio .tv-dot { background: #22c55e; }
+  .tv-studio .tv-name { color: #d4d4d8; font-family: 'Plus Jakarta Sans', sans-serif; }
+  .tv-studio .tv-card { background: rgba(39,39,42,0.5); border: 1px solid #3f3f46; border-radius: 10px; }
+  .tv-studio .tv-row { background: #3f3f46; }
+  .tv-studio .tv-row:first-child { background: #22c55e; opacity: 0.25; width: 60%; }
+  .tv-studio .tv-row:nth-child(2) { width: 80%; }
+  .tv-studio .tv-tooltip { background: rgba(24,24,27,0.92); border: 1px solid #3f3f46; color: #d4d4d8; font-family: 'Plus Jakarta Sans', sans-serif; border-radius: 10px; backdrop-filter: blur(12px); }
+  .tv-studio .tv-tt-step .num { background: #22c55e; }
+  .tv-studio .tv-tt-title { color: #fafafa; font-family: 'Plus Jakarta Sans', sans-serif; }
+
+  /* ================= ANNOTATIONS ================= */
+  .annotations {
+    margin-top: 56px; padding: 32px; border-radius: 16px;
+    background: #1a1a22; border: 1px solid rgba(255,255,255,0.06);
+  }
+  .annotations h2 { font-size: 18px; font-weight: 700; margin-bottom: 20px; color: #f8fafc; }
+  .ann-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 720px) { .ann-grid { grid-template-columns: 1fr; } }
+  .ann-card {
+    background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 16px;
+  }
+  .ann-card h3 { font-size: 13px; font-weight: 600; color: #10b981; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .ann-card p { font-size: 13px; line-height: 1.6; color: #94a3b8; }
+  .ann-card code { background: #1e293b; padding: 1px 5px; border-radius: 3px; font-size: 12px; color: #a5b4fc; }
+
+  /* ================= STEPS LIST ================= */
+  .steps-list { margin-top: 56px; }
+  .steps-list h2 { font-size: 18px; font-weight: 700; margin-bottom: 24px; color: #f8fafc; }
+  .step-item {
+    display: flex; gap: 16px; padding: 16px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .step-item:last-child { border-bottom: none; }
+  .step-num-big {
+    width: 36px; height: 36px; border-radius: 10px; background: #10b981;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 700; color: #fff; flex-shrink: 0;
+  }
+  .step-info { flex: 1; }
+  .step-info h3 { font-size: 15px; font-weight: 600; color: #f8fafc; margin-bottom: 4px; }
+  .step-info p { font-size: 13px; color: #94a3b8; line-height: 1.5; }
+  .step-info .target {
+    display: inline-block; margin-top: 6px; font-size: 11px; color: #a5b4fc;
+    background: #1e293b; padding: 2px 8px; border-radius: 4px; font-family: 'IBM Plex Mono', monospace;
+  }
+
+  /* ================= MOBILE PREVIEW ================= */
+  .mobile-section { margin-top: 56px; }
+  .mobile-frame {
+    width: 340px; margin: 0 auto; border-radius: 28px; overflow: hidden;
+    background: #0f172a; border: 2px solid #1e293b;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+  }
+  .mobile-status { height: 28px; background: #0f172a; display: flex; align-items: center; justify-content: center; }
+  .mobile-status .notch { width: 100px; height: 5px; background: #1e293b; border-radius: 3px; }
+  .mob-nav {
+    height: 40px; background: #0f172a; display: flex; align-items: center; padding: 0 16px; gap: 8px;
+    border-bottom: 1px solid #1e293b;
+  }
+  .mob-nav .dot { width: 6px; height: 6px; border-radius: 50%; background: #10b981; }
+  .mob-nav .brand { font-size: 12px; font-weight: 600; color: #f1f5f9; opacity: 0.7; }
+  .mob-body { padding: 12px; position: relative; min-height: 300px; }
+  .mob-body .fake-card { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 12px; margin-bottom: 8px; }
+  .mob-body .fake-row { height: 8px; border-radius: 3px; background: #334155; margin-bottom: 6px; }
+  .mob-body .fake-row:first-child { width: 50%; background: #10b981; opacity: 0.4; }
+  .mob-body .fake-row:nth-child(2) { width: 80%; }
+  .mob-body .fake-row:last-child { width: 40%; margin-bottom: 0; }
+  .mob-tab-bar {
+    height: 36px; background: #0f172a; border-top: 1px solid #1e293b;
+    display: flex; align-items: center; justify-content: center; gap: 24px;
+  }
+  .mob-tab-bar .tab { width: 20px; height: 3px; border-radius: 2px; background: #334155; }
+  .mob-tab-bar .tab.active { background: #10b981; width: 32px; }
+
+  /* Mobile wizard sheet */
+  .mob-wizard-sheet {
+    position: absolute; bottom: 0; left: 0; right: 0; z-index: 60;
+    background: #1e293b; border-radius: 16px 16px 0 0;
+    border-top: 1px solid #334155;
+    box-shadow: 0 -12px 32px rgba(0,0,0,0.3);
+    animation: mobileSheetIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    opacity: 0; transform: translateY(20px);
+  }
+  @keyframes mobileSheetIn {
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .mob-wizard-sheet .handle {
+    width: 32px; height: 4px; background: #334155; border-radius: 2px;
+    margin: 10px auto 0;
+  }
+  .mob-wizard-sheet .wizard-step-banner { padding: 8px 16px; }
+  .mob-wizard-sheet .wizard-content { padding: 12px 16px; background: transparent; }
+  .mob-wizard-sheet .wizard-title { font-size: 15px; }
+  .mob-wizard-sheet .wizard-body { font-size: 12px; }
+  .mob-wizard-sheet .wizard-footer { padding: 10px 16px 14px; background: transparent; border-top: 1px solid rgba(255,255,255,0.04); }
+
+  /* Highlighted zone on mobile (simplified) */
+  .mob-highlight {
+    position: absolute; top: 0; left: 0; right: 0;
+    border: 2px solid rgba(16, 185, 129, 0.5);
+    border-radius: 12px;
+    animation: spotlightPulse 2s ease-in-out infinite;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <h1>Theme Wizard Tour</h1>
+  <p class="subtitle">
+    A step-by-step guided tour that walks users through the <strong>main dashboard sections</strong> the first time they activate a new theme.
+    Each step spotlights a UI region with a dimmed overlay and an explanatory tooltip.
+    Dismissed state stored in <code>localStorage</code> via <code>trefolio_seen_themes</code>.
+  </p>
+
+  <!-- ====== FULL DASHBOARD WITH SPOTLIGHT — STEP 1 ====== -->
+  <div class="section-title">Step 1 of 5: Navigation</div>
+  <div class="section-subtitle">The spotlight highlights the nav bar. The rest of the dashboard is dimmed. The wizard tooltip explains the navigation.</div>
+
+  <div class="dashboard-frame" style="position:relative;">
+    <!-- Spotlight hole on the nav -->
+    <div class="spotlight-hole" style="top: 2px; left: 2px; right: 2px; height: 46px; border-radius: 14px 14px 0 0;"></div>
+
+    <!-- Nav (highlighted) -->
+    <div class="frame-nav" style="position:relative; z-index: 52;">
+      <div class="logo"></div>
+      <span class="brand">trefolio</span>
+      <div class="nav-links">
+        <span class="nav-link active">Portfolio</span>
+        <span class="nav-link">Import</span>
+        <span class="nav-link">Tools</span>
+        <span class="nav-link">Crypto</span>
+        <span class="nav-link">Indicators</span>
+      </div>
+      <div class="nav-right">
+        <div class="nav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></div>
+        <div class="avatar"></div>
+      </div>
+    </div>
+
+    <!-- Toolbar (dimmed) -->
+    <div class="frame-toolbar" style="opacity: 0.25;">
+      <div class="toolbar-portfolio">
+        All Portfolios
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <span class="toolbar-updated">Updated 14:32</span>
+      <div class="toolbar-actions">
+        <div class="toolbar-btn">Import</div>
+        <div class="toolbar-btn primary">+ Add</div>
+      </div>
+    </div>
+
+    <!-- Tabs (dimmed) -->
+    <div class="frame-tabs" style="opacity: 0.25;">
+      <div class="frame-tab active">Portfolio</div>
+      <div class="frame-tab">Crypto</div>
+      <div class="frame-tab">Diversification</div>
+      <div class="frame-tab">Dividends</div>
+      <div class="frame-tab">Metrics</div>
+      <div class="frame-tab">Growth</div>
+    </div>
+
+    <!-- Body (dimmed) -->
+    <div class="frame-body" style="opacity: 0.15;">
+      <div class="summary-card">
+        <div><div class="summary-label">Portfolio Value</div>
+        <div class="summary-value">&euro;47,832.50</div>
+        <div class="summary-change">+&euro;312.40 (+0.66%)</div></div>
+      </div>
+      <div class="holdings-card">
+        <div class="holdings-header"><span class="holdings-title">Holdings (12)</span></div>
+        <div class="holdings-row"><div><span class="ticker">AAPL</span><br><span class="name">Apple Inc.</span></div><div class="price">&euro;198.50</div><div class="change up">+1.2%</div><div class="value">&euro;5,955</div></div>
+        <div class="holdings-row"><div><span class="ticker">MSFT</span><br><span class="name">Microsoft</span></div><div class="price">&euro;412.30</div><div class="change down">-0.3%</div><div class="value">&euro;8,246</div></div>
+      </div>
+    </div>
+
+    <!-- Wizard tooltip for Step 1 -->
+    <div class="wizard-tooltip" style="top: 56px; left: 16px;">
+      <div class="arrow top"></div>
+      <div class="wizard-step-banner">
+        <div class="wizard-step-num">1</div>
+        <span class="wizard-step-label">Navigation</span>
+        <div class="wizard-step-progress">
+          <div class="pdot current"></div>
+          <div class="pdot"></div>
+          <div class="pdot"></div>
+          <div class="pdot"></div>
+          <div class="pdot"></div>
+        </div>
+      </div>
+      <div class="wizard-content">
+        <div class="wizard-title">Your main navigation</div>
+        <p class="wizard-body">Access all sections from here — Portfolio, Import, Tools, Crypto market, and Economic Indicators.</p>
+        <div class="wizard-hint">Pro sections are marked with a badge. Upgrade anytime from Settings.</div>
+      </div>
+      <div class="wizard-footer">
+        <button class="wizard-skip">Skip tour</button>
+        <div class="wizard-nav">
+          <button class="wizard-btn next">Next <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== STEPS 2-5 IN GRID ====== -->
+  <div class="steps-row">
+
+    <!-- STEP 2: Portfolio Summary -->
+    <div>
+      <div class="section-title" style="font-size:16px;">Step 2: Portfolio Overview</div>
+      <div class="section-subtitle" style="font-size:13px; margin-bottom:16px;">Spotlight moves to the summary card.</div>
+      <div class="dashboard-frame" style="position:relative; overflow:visible;">
+        <div class="frame-nav" style="opacity: 0.2; height:36px;">
+          <div class="logo"></div><span class="brand" style="font-size:11px;">trefolio</span>
+        </div>
+        <div class="frame-toolbar" style="opacity: 0.2; height:40px;">
+          <div class="toolbar-portfolio" style="font-size:11px;">All Portfolios</div>
+        </div>
+        <div class="frame-body" style="padding:12px;">
+          <!-- Spotlight on summary -->
+          <div style="position:relative;">
+            <div class="spotlight-hole" style="top: -4px; left: -4px; right: -4px; bottom: -4px; position: absolute;"></div>
+            <div class="summary-card" style="position:relative; z-index:52;">
+              <div><div class="summary-label">Portfolio Value</div>
+              <div class="summary-value" style="font-size:22px;">&euro;47,832.50</div>
+              <div class="summary-change" style="font-size:12px;">+&euro;312.40 (+0.66%)</div></div>
+              <div class="summary-stats" style="margin-top:10px;">
+                <div class="summary-stat"><div class="summary-stat-label">Cost basis</div><div class="summary-stat-value" style="font-size:13px;">&euro;41,200</div></div>
+                <div class="summary-stat"><div class="summary-stat-label">Day gain</div><div class="summary-stat-value" style="font-size:13px; color:#10b981;">+&euro;312</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="holdings-card" style="opacity:0.15; margin-top:12px;">
+            <div class="holdings-header"><span class="holdings-title" style="font-size:11px;">Holdings</span></div>
+            <div class="holdings-row" style="padding:8px 12px;"><div><span class="ticker" style="font-size:11px;">AAPL</span></div><div class="value" style="font-size:11px;">&euro;5,955</div></div>
+          </div>
+        </div>
+
+        <!-- Wizard tooltip Step 2 -->
+        <div class="wizard-tooltip" style="top: 86px; right: -10px; width: 280px; position:absolute;">
+          <div class="arrow left" style="top: 30px;"></div>
+          <div class="wizard-step-banner">
+            <div class="wizard-step-num">2</div>
+            <span class="wizard-step-label">Overview</span>
+            <div class="wizard-step-progress">
+              <div class="pdot done"></div>
+              <div class="pdot current"></div>
+              <div class="pdot"></div>
+              <div class="pdot"></div>
+              <div class="pdot"></div>
+            </div>
+          </div>
+          <div class="wizard-content">
+            <div class="wizard-title">Your portfolio at a glance</div>
+            <p class="wizard-body">Total value, cost basis, and daily gains all in one card. AI review available for Pro users.</p>
+          </div>
+          <div class="wizard-footer">
+            <button class="wizard-skip">Skip</button>
+            <div class="wizard-nav">
+              <button class="wizard-btn back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg> Back</button>
+              <button class="wizard-btn next">Next <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: Holdings Table -->
+    <div>
+      <div class="section-title" style="font-size:16px;">Step 3: Holdings</div>
+      <div class="section-subtitle" style="font-size:13px; margin-bottom:16px;">Spotlight moves to the holdings table.</div>
+      <div class="dashboard-frame" style="position:relative; overflow:visible;">
+        <div class="frame-nav" style="opacity: 0.2; height:36px;">
+          <div class="logo"></div><span class="brand" style="font-size:11px;">trefolio</span>
+        </div>
+        <div class="frame-body" style="padding:12px;">
+          <div class="summary-card" style="opacity:0.15; padding:12px;">
+            <div class="summary-value" style="font-size:18px;">&euro;47,832.50</div>
+          </div>
+          <!-- Spotlight on holdings -->
+          <div style="position:relative; margin-top:12px;">
+            <div class="spotlight-hole" style="top: -4px; left: -4px; right: -4px; bottom: -4px; position: absolute;"></div>
+            <div class="holdings-card" style="position:relative; z-index:52;">
+              <div class="holdings-header"><span class="holdings-title" style="font-size:12px;">Holdings (12)</span><input class="holdings-search" placeholder="Search..." /></div>
+              <div class="holdings-row" style="padding:8px 12px;"><div><span class="ticker" style="font-size:11px;">AAPL</span><br><span class="name" style="font-size:10px;">Apple Inc.</span></div><div class="price" style="font-size:11px;">&euro;198.50</div><div class="change up" style="font-size:11px;">+1.2%</div><div class="value" style="font-size:11px;">&euro;5,955</div></div>
+              <div class="holdings-row" style="padding:8px 12px;"><div><span class="ticker" style="font-size:11px;">MSFT</span><br><span class="name" style="font-size:10px;">Microsoft</span></div><div class="price" style="font-size:11px;">&euro;412.30</div><div class="change down" style="font-size:11px;">-0.3%</div><div class="value" style="font-size:11px;">&euro;8,246</div></div>
+              <div class="holdings-row" style="padding:8px 12px;"><div><span class="ticker" style="font-size:11px;">NVDA</span><br><span class="name" style="font-size:10px;">NVIDIA</span></div><div class="price" style="font-size:11px;">&euro;892.10</div><div class="change up" style="font-size:11px;">+2.4%</div><div class="value" style="font-size:11px;">&euro;4,460</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Wizard tooltip Step 3 -->
+        <div class="wizard-tooltip" style="bottom: -90px; left: 10px; width: 280px; position:absolute;">
+          <div class="arrow" style="top: -6px; left: 28px; position:absolute; width: 12px; height: 12px; background: #1e293b; border-radius: 2px; transform: rotate(45deg); border-top: 1px solid #334155; border-left: 1px solid #334155;"></div>
+          <div class="wizard-step-banner">
+            <div class="wizard-step-num">3</div>
+            <span class="wizard-step-label">Holdings</span>
+            <div class="wizard-step-progress">
+              <div class="pdot done"></div>
+              <div class="pdot done"></div>
+              <div class="pdot current"></div>
+              <div class="pdot"></div>
+              <div class="pdot"></div>
+            </div>
+          </div>
+          <div class="wizard-content">
+            <div class="wizard-title">Your stock holdings</div>
+            <p class="wizard-body">Search, sort, and click any holding for full details. Prices update automatically.</p>
+          </div>
+          <div class="wizard-footer">
+            <button class="wizard-skip">Skip</button>
+            <div class="wizard-nav">
+              <button class="wizard-btn back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg> Back</button>
+              <button class="wizard-btn next">Next <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="steps-row">
+
+    <!-- STEP 4: Tabs -->
+    <div>
+      <div class="section-title" style="font-size:16px;">Step 4: Dashboard Tabs</div>
+      <div class="section-subtitle" style="font-size:13px; margin-bottom:16px;">Spotlight highlights the tab bar.</div>
+      <div class="dashboard-frame" style="position:relative;">
+        <div class="frame-nav" style="opacity: 0.2; height:36px;">
+          <div class="logo"></div><span class="brand" style="font-size:11px;">trefolio</span>
+        </div>
+        <div class="frame-toolbar" style="opacity: 0.2; height:40px;">
+          <div class="toolbar-portfolio" style="font-size:11px;">All Portfolios</div>
+        </div>
+        <!-- Spotlight on tabs -->
+        <div style="position:relative;">
+          <div class="spotlight-hole" style="top: 0; left: 0; right: 0; bottom: 0; position: absolute; border-radius: 0; z-index:51;"></div>
+          <div class="frame-tabs" style="position:relative; z-index:52;">
+            <div class="frame-tab active">Portfolio</div>
+            <div class="frame-tab">Crypto</div>
+            <div class="frame-tab">Diversification</div>
+            <div class="frame-tab">Dividends</div>
+            <div class="frame-tab">Metrics</div>
+            <div class="frame-tab">Growth</div>
+          </div>
+        </div>
+        <div class="frame-body" style="opacity:0.15; padding:12px;">
+          <div class="summary-card" style="padding:12px;"><div class="summary-value" style="font-size:16px;">&euro;47,832.50</div></div>
+        </div>
+
+        <!-- Wizard tooltip Step 4 -->
+        <div class="wizard-tooltip" style="top: 128px; right: 12px; width: 280px;">
+          <div class="arrow top" style="left: auto; right: 28px;"></div>
+          <div class="wizard-step-banner">
+            <div class="wizard-step-num">4</div>
+            <span class="wizard-step-label">Tabs</span>
+            <div class="wizard-step-progress">
+              <div class="pdot done"></div>
+              <div class="pdot done"></div>
+              <div class="pdot done"></div>
+              <div class="pdot current"></div>
+              <div class="pdot"></div>
+            </div>
+          </div>
+          <div class="wizard-content">
+            <div class="wizard-title">Explore different views</div>
+            <p class="wizard-body">Switch between Portfolio, Crypto, Diversification, Dividends, Metrics, Growth, Events, and News.</p>
+            <div class="wizard-hint">Some tabs require a <strong>Starter</strong> or <strong>Pro</strong> plan and are labeled with a badge.</div>
+          </div>
+          <div class="wizard-footer">
+            <button class="wizard-skip">Skip</button>
+            <div class="wizard-nav">
+              <button class="wizard-btn back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg> Back</button>
+              <button class="wizard-btn next">Next <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 5: Add & Import (final) -->
+    <div>
+      <div class="section-title" style="font-size:16px;">Step 5: Add &amp; Import</div>
+      <div class="section-subtitle" style="font-size:13px; margin-bottom:16px;">Final step highlights the toolbar actions. "Finish" ends the tour.</div>
+      <div class="dashboard-frame" style="position:relative;">
+        <div class="frame-nav" style="opacity: 0.2; height:36px;">
+          <div class="logo"></div><span class="brand" style="font-size:11px;">trefolio</span>
+        </div>
+        <!-- Spotlight on toolbar -->
+        <div style="position:relative;">
+          <div class="spotlight-hole" style="top: 0; left: 0; right: 0; bottom: 0; position: absolute; border-radius: 0; z-index:51;"></div>
+          <div class="frame-toolbar" style="position:relative; z-index:52; height:48px;">
+            <div class="toolbar-portfolio" style="font-size:11px;">All Portfolios</div>
+            <span class="toolbar-updated" style="font-size:10px;">Updated 14:32</span>
+            <div class="toolbar-actions">
+              <div class="toolbar-btn" style="font-size:10px;">Settings</div>
+              <div class="toolbar-btn" style="font-size:10px;">Import</div>
+              <div class="toolbar-btn primary" style="font-size:10px;">+ Add</div>
+            </div>
+          </div>
+        </div>
+        <div class="frame-tabs" style="opacity:0.2;">
+          <div class="frame-tab active" style="font-size:11px;">Portfolio</div>
+          <div class="frame-tab" style="font-size:11px;">Crypto</div>
+          <div class="frame-tab" style="font-size:11px;">Dividends</div>
+        </div>
+        <div class="frame-body" style="opacity:0.15; padding:12px;">
+          <div class="summary-card" style="padding:12px;"><div class="summary-value" style="font-size:16px;">&euro;47,832.50</div></div>
+        </div>
+
+        <!-- Wizard tooltip Step 5 (final) -->
+        <div class="wizard-tooltip" style="top: 92px; right: 12px; width: 280px;">
+          <div class="arrow top" style="left: auto; right: 28px;"></div>
+          <div class="wizard-step-banner">
+            <div class="wizard-step-num">5</div>
+            <span class="wizard-step-label">Actions</span>
+            <div class="wizard-step-progress">
+              <div class="pdot done"></div>
+              <div class="pdot done"></div>
+              <div class="pdot done"></div>
+              <div class="pdot done"></div>
+              <div class="pdot current"></div>
+            </div>
+          </div>
+          <div class="wizard-content">
+            <div class="wizard-title">Build your portfolio</div>
+            <p class="wizard-body">Add stocks and crypto manually, or import your entire portfolio from a broker in seconds.</p>
+            <div class="wizard-hint">Tip: the <strong>Import</strong> button supports 15+ brokers including DEGIRO, Interactive Brokers, and Trading 212.</div>
+          </div>
+          <div class="wizard-footer">
+            <button class="wizard-skip" style="visibility:hidden;">Skip</button>
+            <div class="wizard-nav">
+              <button class="wizard-btn back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg> Back</button>
+              <button class="wizard-btn finish">Finish tour <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== THEME VARIANTS ====== -->
+  <div class="themes-section">
+    <div class="section-title">Theme-Adaptive Styling</div>
+    <div class="section-subtitle">The wizard tooltip matches each theme's design language — fonts, colors, borders, and effects.</div>
+
+    <div class="theme-variants">
+      <!-- Default -->
+      <div class="theme-variant tv-default">
+        <div class="tv-header"><div class="tv-dot"></div><span class="tv-name">Default</span></div>
+        <div class="tv-body">
+          <div class="tv-card"><div class="tv-row" style="width:60%"></div><div class="tv-row" style="width:80%"></div><div class="tv-row" style="width:45%"></div></div>
+          <div class="tv-tooltip">
+            <div class="tv-tt-step"><span class="num">2</span> Overview</div>
+            <div class="tv-tt-title">Your portfolio</div>
+            <div class="tv-tt-body">Total value and daily gains at a glance.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Canvas -->
+      <div class="theme-variant tv-canvas">
+        <div class="tv-header"><div class="tv-dot"></div><span class="tv-name">Canvas</span></div>
+        <div class="tv-body">
+          <div class="tv-card"><div class="tv-row" style="width:60%"></div><div class="tv-row" style="width:80%"></div><div class="tv-row" style="width:45%"></div></div>
+          <div class="tv-tooltip">
+            <div class="tv-tt-step"><span class="num">2</span> Overview</div>
+            <div class="tv-tt-title">Your portfolio</div>
+            <div class="tv-tt-body">Total value and daily gains at a glance.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Terminal -->
+      <div class="theme-variant tv-terminal">
+        <div class="tv-header"><div class="tv-dot"></div><span class="tv-name">terminal</span></div>
+        <div class="tv-body">
+          <div class="tv-card"><div class="tv-row" style="width:60%"></div><div class="tv-row" style="width:80%"></div><div class="tv-row" style="width:45%"></div></div>
+          <div class="tv-tooltip">
+            <div class="tv-tt-step"><span class="num">2</span> overview</div>
+            <div class="tv-tt-title">portfolio</div>
+            <div class="tv-tt-body">Value and daily gains.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Studio -->
+      <div class="theme-variant tv-studio">
+        <div class="tv-header"><div class="tv-dot"></div><span class="tv-name">Studio</span></div>
+        <div class="tv-body">
+          <div class="tv-card"><div class="tv-row" style="width:60%"></div><div class="tv-row" style="width:80%"></div><div class="tv-row" style="width:45%"></div></div>
+          <div class="tv-tooltip">
+            <div class="tv-tt-step"><span class="num">2</span> Overview</div>
+            <div class="tv-tt-title">Your portfolio</div>
+            <div class="tv-tt-body">Total value and daily gains at a glance.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== MOBILE PREVIEW ====== -->
+  <div class="mobile-section">
+    <div class="section-title">Mobile Variant</div>
+    <div class="section-subtitle">On smaller viewports (&lt;640px), the wizard tooltip becomes a bottom sheet. The spotlight wraps the target element without the full-screen overlay.</div>
+
+    <div class="mobile-frame">
+      <div class="mobile-status"><div class="notch"></div></div>
+      <div class="mob-nav">
+        <div class="dot"></div>
+        <span class="brand">trefolio</span>
+      </div>
+      <div class="mob-body">
+        <!-- Highlighted card -->
+        <div style="position:relative;">
+          <div class="mob-highlight" style="top:-2px; left:-2px; right:-2px; bottom:-2px;"></div>
+          <div class="fake-card" style="position:relative; z-index:2;">
+            <div class="fake-row" style="width:50%"></div>
+            <div class="fake-row" style="width:80%"></div>
+            <div class="fake-row" style="width:40%"></div>
+          </div>
+        </div>
+        <div class="fake-card" style="opacity:0.3;">
+          <div class="fake-row" style="width:65%"></div>
+          <div class="fake-row" style="width:45%"></div>
+        </div>
+
+        <!-- Mobile wizard sheet -->
+        <div class="mob-wizard-sheet">
+          <div class="handle"></div>
+          <div class="wizard-step-banner">
+            <div class="wizard-step-num" style="width:18px; height:18px; font-size:10px; border-radius:5px;">2</div>
+            <span class="wizard-step-label" style="font-size:10px;">Overview</span>
+            <div class="wizard-step-progress">
+              <div class="pdot done" style="width:5px; height:5px; background:#10b981;"></div>
+              <div class="pdot current" style="width:12px; height:5px; border-radius:3px; background:#10b981;"></div>
+              <div class="pdot" style="width:5px; height:5px; background:#334155;"></div>
+              <div class="pdot" style="width:5px; height:5px; background:#334155;"></div>
+              <div class="pdot" style="width:5px; height:5px; background:#334155;"></div>
+            </div>
+          </div>
+          <div class="wizard-content">
+            <div class="wizard-title" style="font-size:14px;">Your portfolio at a glance</div>
+            <p class="wizard-body" style="font-size:12px;">Total value, cost basis, and daily gains. Tap for details.</p>
+          </div>
+          <div class="wizard-footer">
+            <button class="wizard-skip" style="font-size:11px;">Skip</button>
+            <div class="wizard-nav">
+              <button class="wizard-btn back" style="font-size:11px; padding:6px 12px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:10px; height:10px;"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg> Back</button>
+              <button class="wizard-btn next" style="font-size:11px; padding:6px 12px;">Next <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:10px; height:10px;"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="mob-tab-bar">
+        <div class="tab active"></div>
+        <div class="tab"></div>
+        <div class="tab"></div>
+        <div class="tab"></div>
+        <div class="tab"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== WIZARD STEPS REFERENCE ====== -->
+  <div class="steps-list">
+    <h2>All 5 Wizard Steps</h2>
+
+    <div class="step-item">
+      <div class="step-num-big">1</div>
+      <div class="step-info">
+        <h3>Navigation</h3>
+        <p>Introduces the main navigation bar (top nav for Default/Canvas/Terminal, sidebar for Studio). Points to all major sections: Portfolio, Import, Tools, Crypto, Indicators.</p>
+        <span class="target">AppNav / SidebarNav</span>
+      </div>
+    </div>
+
+    <div class="step-item">
+      <div class="step-num-big">2</div>
+      <div class="step-info">
+        <h3>Portfolio Overview</h3>
+        <p>Highlights the portfolio summary card — total value, cost basis, day gains, and the AI review button. Explains the stealth mode toggle for hiding values.</p>
+        <span class="target">PortfolioSummary</span>
+      </div>
+    </div>
+
+    <div class="step-item">
+      <div class="step-num-big">3</div>
+      <div class="step-info">
+        <h3>Holdings Table</h3>
+        <p>Spotlights the holdings list with search and sort. Explains that clicking a row opens the detail drawer (desktop) or detail page (mobile) with charts and fundamentals.</p>
+        <span class="target">PortfolioTable</span>
+      </div>
+    </div>
+
+    <div class="step-item">
+      <div class="step-num-big">4</div>
+      <div class="step-info">
+        <h3>Dashboard Tabs</h3>
+        <p>Highlights the tab bar and explains each view: Portfolio, Crypto, Diversification, Dividends, Metrics, Growth, Events, News. Mentions tier-gated tabs.</p>
+        <span class="target">Tab bar (role="tablist")</span>
+      </div>
+    </div>
+
+    <div class="step-item">
+      <div class="step-num-big">5</div>
+      <div class="step-info">
+        <h3>Add &amp; Import</h3>
+        <p>Final step points to the toolbar action buttons — Add Asset (stock/crypto), Import (broker file upload or SnapTrade), Settings, and Refresh. Ends with "Finish tour".</p>
+        <span class="target">DashboardToolbar actions</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== IMPLEMENTATION NOTES ====== -->
+  <div class="annotations">
+    <h2>Implementation Notes</h2>
+    <div class="ann-grid">
+      <div class="ann-card">
+        <h3>Spotlight Positioning</h3>
+        <p>Each step targets a DOM element by <code>data-tour</code> attribute (e.g. <code>data-tour="nav"</code>). The component uses <code>getBoundingClientRect()</code> to position the spotlight hole and the tooltip. A <code>ResizeObserver</code> keeps it in sync on resize.</p>
+      </div>
+      <div class="ann-card">
+        <h3>Smooth Transitions</h3>
+        <p>The spotlight hole animates between steps with a 400ms cubic-bezier transition. The tooltip fades out and back in on each step change. On mobile, the bottom sheet slides between content without unmounting.</p>
+      </div>
+      <div class="ann-card">
+        <h3>Persistence</h3>
+        <p>Key: <code>trefolio_seen_themes</code>. Value: JSON array of theme IDs. "Finish tour" or completing all steps appends the theme. "Skip tour" also marks the current theme as seen.</p>
+      </div>
+      <div class="ann-card">
+        <h3>Scroll-Into-View</h3>
+        <p>Before each step, the target element is scrolled into view with <code>scrollIntoView({ behavior: "smooth", block: "center" })</code>. The tooltip only renders after the scroll animation completes (~300ms).</p>
+      </div>
+      <div class="ann-card">
+        <h3>Theme Adaptation</h3>
+        <p>The tooltip, step banner, buttons, and spotlight border all adapt to the active theme's CSS variables. Terminal uses <code>IBM Plex Mono</code>, Canvas uses light colors, Studio uses glass blur.</p>
+      </div>
+      <div class="ann-card">
+        <h3>Accessibility</h3>
+        <p><code>role="dialog"</code> with <code>aria-label</code>. Focus trapped to Back/Next/Skip. Escape key skips the tour. Respects <code>prefers-reduced-motion</code> (instant transitions). Screen reader announces step changes via live region.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

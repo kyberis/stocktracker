@@ -25,6 +25,11 @@ export const releaseNotes: ReleaseEntry[] = [
     changes: [
       {
         type: "feature",
+        text: "Guided theme tour walks you through the main dashboard sections the first time you switch to a new theme",
+        translations: { es: "Tour guiado del tema que te muestra las secciones principales del panel la primera vez que cambias a un tema nuevo" },
+      },
+      {
+        type: "feature",
         text: "Track your full net worth with manual entries for real estate, savings accounts, and pension/retirement funds",
         translations: { es: "Registra tu patrimonio neto completo con entradas manuales para inmuebles, cuentas de ahorro y fondos de pensión/jubilación" },
       },

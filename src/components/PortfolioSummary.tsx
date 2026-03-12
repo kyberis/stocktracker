@@ -199,7 +199,7 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
   /* ── TERMINAL: Dense inline stats, no card wrapper ─────────── */
   if (layoutTheme === "terminal") {
     return (
-      <div className="border-b border-zinc-800 py-2 relative" data-testid="portfolio-summary-terminal">
+      <div className="border-b border-zinc-800 py-2 relative" data-testid="portfolio-summary-terminal" data-tour="summary">
         {isLoading && <div className="absolute top-0 left-0 right-0 h-px bg-emerald-500/50 animate-progress-bar" />}
         <div className="flex items-baseline gap-4 flex-wrap font-mono">
           <span className={`text-xl font-semibold text-zinc-200 ${isLoading ? "animate-value-shimmer" : ""}`}>
@@ -229,7 +229,7 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
   /* ── CANVAS: Big spacious card, large value, allocation bar ── */
   if (layoutTheme === "canvas") {
     return (
-      <div className="bg-white border border-slate-200 rounded-[20px] p-7 shadow-sm relative" data-testid="portfolio-summary-canvas">
+      <div className="bg-white border border-slate-200 rounded-[20px] p-7 shadow-sm relative" data-testid="portfolio-summary-canvas" data-tour="summary">
         {isLoading && <div className="absolute top-0 left-0 right-0 h-0.5 overflow-hidden rounded-t-[20px]"><div className="h-full w-1/3 bg-green-500/60 animate-progress-bar" /></div>}
         <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">{t("portfolioValue")}</p>
         <p className={`text-4xl font-bold text-slate-900 tracking-tight ${isLoading ? "animate-value-shimmer" : ""}`}>{valueLabel}</p>
@@ -268,7 +268,7 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
   /* ── STUDIO: Hero with gradient glow, embedded chart area ──── */
   if (layoutTheme === "studio") {
     return (
-      <div className="relative rounded-[20px] p-7 border border-white/5 overflow-hidden" style={{ background: "linear-gradient(180deg, rgba(34,197,94,0.04) 0%, transparent 100%)" }} data-testid="portfolio-summary-studio">
+      <div className="relative rounded-[20px] p-7 border border-white/5 overflow-hidden" style={{ background: "linear-gradient(180deg, rgba(34,197,94,0.04) 0%, transparent 100%)" }} data-testid="portfolio-summary-studio" data-tour="summary">
         <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full bg-emerald-500/[0.06] blur-2xl pointer-events-none" />
         {isLoading && <div className="absolute top-0 left-0 right-0 h-0.5 overflow-hidden rounded-t-[20px]"><div className="h-full w-1/3 bg-emerald-500/50 animate-progress-bar" /></div>}
         <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-2">{t("portfolioValue")}</p>
@@ -309,7 +309,7 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
 
   /* ── DEFAULT: Current card layout (unchanged) ──────────────── */
   return (
-    <div className="card px-5 py-4 relative" data-testid="portfolio-summary-default">
+    <div className="card px-5 py-4 relative" data-testid="portfolio-summary-default" data-tour="summary">
       {isLoading && (
         <div className="absolute top-0 left-0 right-0 h-0.5 overflow-hidden rounded-t-2xl">
           <div className="h-full w-1/3 bg-emerald-500/70 dark:bg-emerald-400/50 animate-progress-bar" />

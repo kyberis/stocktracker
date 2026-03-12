@@ -283,7 +283,7 @@ export default function Dashboard() {
       <main className={`max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-6 ${layoutTheme === "terminal" ? "space-y-2 sm:space-y-4" : layoutTheme === "canvas" ? "space-y-5 sm:space-y-10" : "space-y-4 sm:space-y-8"}`}>
         {/* Dashboard Tab Bar — theme-aware */}
         {layoutTheme === "terminal" ? (
-          <div role="tablist" aria-label={t("portfolioTab")} className="flex gap-0 overflow-x-auto scrollbar-hide border-b border-zinc-800 font-mono" data-testid="tabbar-terminal" onKeyDown={handleTabKeyDown}>
+          <div role="tablist" aria-label={t("portfolioTab")} className="flex gap-0 overflow-x-auto scrollbar-hide border-b border-zinc-800 font-mono" data-testid="tabbar-terminal" data-tour="tabs" onKeyDown={handleTabKeyDown}>
             {dashboardTabs.map((tab) => (
               <button key={tab.key} role="tab" id={`tab-${tab.key}`} aria-selected={activeTab === tab.key} aria-controls={`tabpanel-${tab.key}`} tabIndex={activeTab === tab.key ? 0 : -1} onClick={() => handleTabChange(tab.key)}
                 className={`shrink-0 px-3 py-1.5 text-xs transition-colors focus-visible:ring-1 focus-visible:ring-green-500 focus-visible:outline-none border-b-2 ${activeTab === tab.key ? "border-green-500 text-green-400" : "border-transparent text-zinc-600 hover:text-zinc-300"}`}
@@ -294,7 +294,7 @@ export default function Dashboard() {
             ))}
           </div>
         ) : layoutTheme === "canvas" ? (
-          <div role="tablist" aria-label={t("portfolioTab")} className="flex gap-2 overflow-x-auto sm:flex-wrap sm:overflow-visible scrollbar-hide" data-testid="tabbar-canvas" onKeyDown={handleTabKeyDown}>
+          <div role="tablist" aria-label={t("portfolioTab")} className="flex gap-2 overflow-x-auto sm:flex-wrap sm:overflow-visible scrollbar-hide" data-testid="tabbar-canvas" data-tour="tabs" onKeyDown={handleTabKeyDown}>
             {dashboardTabs.map((tab) => (
               <button key={tab.key} role="tab" id={`tab-${tab.key}`} aria-selected={activeTab === tab.key} aria-controls={`tabpanel-${tab.key}`} tabIndex={activeTab === tab.key ? 0 : -1} onClick={() => handleTabChange(tab.key)}
                 className={`shrink-0 px-5 py-2.5 text-sm font-medium rounded-full transition-all focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:outline-none ${activeTab === tab.key ? "bg-slate-900 text-white shadow-md" : "bg-white text-slate-500 border border-slate-200 hover:border-slate-300 hover:text-slate-800"}`}
@@ -305,7 +305,7 @@ export default function Dashboard() {
             ))}
           </div>
         ) : layoutTheme === "studio" ? (
-          <div role="tablist" aria-label={t("portfolioTab")} className="flex gap-0 overflow-x-auto scrollbar-hide border-b border-white/10" data-testid="tabbar-studio" onKeyDown={handleTabKeyDown}>
+          <div role="tablist" aria-label={t("portfolioTab")} className="flex gap-0 overflow-x-auto scrollbar-hide border-b border-white/10" data-testid="tabbar-studio" data-tour="tabs" onKeyDown={handleTabKeyDown}>
             {dashboardTabs.map((tab) => (
               <button key={tab.key} role="tab" id={`tab-${tab.key}`} aria-selected={activeTab === tab.key} aria-controls={`tabpanel-${tab.key}`} tabIndex={activeTab === tab.key ? 0 : -1} onClick={() => handleTabChange(tab.key)}
                 className={`shrink-0 px-4 py-2.5 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none border-b-2 ${activeTab === tab.key ? "border-emerald-400 text-white" : "border-transparent text-zinc-500 hover:text-zinc-300"}`}
@@ -316,7 +316,7 @@ export default function Dashboard() {
             ))}
           </div>
         ) : (
-          <div role="tablist" aria-label={t("portfolioTab")} className="flex gap-1 overflow-x-auto sm:flex-wrap sm:overflow-visible scrollbar-hide bg-white dark:bg-slate-800 rounded-2xl p-1.5 border border-gray-200 dark:border-slate-700 shadow-sm" data-testid="tabbar-default" onKeyDown={handleTabKeyDown}>
+          <div role="tablist" aria-label={t("portfolioTab")} className="flex gap-1 overflow-x-auto sm:flex-wrap sm:overflow-visible scrollbar-hide bg-white dark:bg-slate-800 rounded-2xl p-1.5 border border-gray-200 dark:border-slate-700 shadow-sm" data-testid="tabbar-default" data-tour="tabs" onKeyDown={handleTabKeyDown}>
             {dashboardTabs.map((tab) => (
               <button key={tab.key} role="tab" id={`tab-${tab.key}`} aria-selected={activeTab === tab.key} aria-controls={`tabpanel-${tab.key}`} tabIndex={activeTab === tab.key ? 0 : -1} onClick={() => handleTabChange(tab.key)}
                 className={`shrink-0 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium rounded-xl transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none ${activeTab === tab.key ? "bg-emerald-500 text-white shadow-sm" : "text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-700"}`}
