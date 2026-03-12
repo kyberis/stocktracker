@@ -5,6 +5,7 @@
     { "path": "/api/cron/check-alerts", "schedule": "*/15 * * * *" },
     { "path": "/api/cron/snaptrade-cleanup", "schedule": "30 23 * * *" },
     { "path": "/api/cron/snaptrade-sync", "schedule": "0 */6 * * *" },
-    { "path": "/api/cron/event-sync", "schedule": "0 6 * * *" }
+    { "path": "/api/cron/event-sync", "schedule": "0 6 * * *" },
+    { "path": "/api/cron/screener-sync", "schedule": "0 3 * * *" }
   ]
 }
