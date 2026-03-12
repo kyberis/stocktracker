@@ -39,7 +39,6 @@ const AddCryptoModal = dynamic(() => import("./AddCryptoModal"), { ssr: false })
 const AdSlot = dynamic(() => import("./AdSlot"), { ssr: false });
 const EventCalendar = dynamic(() => import("./EventCalendar"), { ssr: false });
 const UpcomingEarnings = dynamic(() => import("./UpcomingEarnings"), { ssr: false });
-import ScreenerBanner from "./ScreenerBanner";
 const AddManualAssetModal = dynamic(() => import("./AddManualAssetModal"), { ssr: false });
 import NetWorthSummary from "./NetWorthSummary";
 import TierFeatureBadge from "./TierFeatureBadge";
@@ -387,7 +386,6 @@ export default function Dashboard() {
                 <AdSlot slot="dashboard-summary" format="horizontal" />
                 <PortfolioTable holdings={filteredHoldings} onAddStock={() => setShowAddModal(true)} />
                 <UpcomingEarnings onNavigateToEvents={() => handleTabChange("events")} />
-                <ScreenerBanner />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                   <PortfolioGrowthPeriods holdings={filteredHoldings} />
                   <PerformanceMetrics holdings={filteredHoldings} cashEntries={investmentCashEntries} />

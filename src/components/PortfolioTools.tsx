@@ -120,6 +120,20 @@ export default function PortfolioTools() {
         <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 whitespace-nowrap">{t("importGoToPage")} →</span>
       </a>
 
+      {/* Screener redirect card */}
+      <a href="/screener" className="flex items-center gap-3 mb-4 px-4 py-3 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors group">
+        <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <circle cx="11" cy="11" r="8" /><path strokeLinecap="round" strokeLinejoin="round" d="m21 21-4.3-4.3" />
+        </svg>
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-medium text-blue-700 dark:text-blue-400">{t("screenerBannerTitle")} — {t("screenerBannerDesc")}</p>
+        </div>
+        <div className="flex items-center gap-1 shrink-0">
+          <TierFeatureBadge requiredPlan="pro" size="xs" />
+          <span className="text-xs font-medium text-blue-600 dark:text-blue-400 whitespace-nowrap">{t("screenerBannerCta")} →</span>
+        </div>
+      </a>
+
       {/* Tab navigation */}
       <div className="flex flex-wrap gap-1 mb-6 bg-white dark:bg-slate-800 rounded-2xl p-1.5 border border-gray-200 dark:border-slate-700 shadow-sm">
           {visibleTabs.map(({ key, icon }) => (
