@@ -174,6 +174,11 @@ export async function queryScreener(filters: ScreenerFilters): Promise<ScreenerR
   };
 }
 
+function fin(v: number | null | undefined): number | null {
+  if (v == null) return null;
+  return Number.isFinite(v) ? v : null;
+}
+
 export async function upsertScreenerCache(row: {
   symbol: string;
   shortName: string;
@@ -214,11 +219,11 @@ export async function upsertScreenerCache(row: {
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
     args: [
       row.symbol, row.shortName, row.sector, row.industry, row.country, row.exchange, row.currency,
-      row.marketCap, row.peRatio, row.forwardPe, row.dividendYield, row.dividendPerShare,
-      row.eps, row.beta, row.profitMargin, row.returnOnEquity,
-      row.fiftyTwoWeekHigh, row.fiftyTwoWeekLow,
-      row.regularMarketPrice, row.regularMarketChangePercent,
-      row.analystStrongBuy, row.analystBuy, row.analystHold, row.analystSell, row.analystStrongSell,
+      fin(row.marketCap), fin(row.peRatio), fin(row.forwardPe), fin(row.dividendYield), fin(row.dividendPerShare),
+      fin(row.eps), fin(row.beta), fin(row.profitMargin), fin(row.returnOnEquity),
+      fin(row.fiftyTwoWeekHigh), fin(row.fiftyTwoWeekLow),
+      fin(row.regularMarketPrice), fin(row.regularMarketChangePercent),
+      fin(row.analystStrongBuy) ?? 0, fin(row.analystBuy) ?? 0, fin(row.analystHold) ?? 0, fin(row.analystSell) ?? 0, fin(row.analystStrongSell) ?? 0,
     ],
   });
 }
