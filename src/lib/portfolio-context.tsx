@@ -446,6 +446,29 @@ export function PortfolioProvider({
     }
   }, [buildFetchUrl, getApiHeaders, refreshingTickers, fetchExchangeRates]);
 
+  const fetchQuoteForTicker = useCallback(async (ticker: string) => {
+    setRefreshingTickers((prev) => { const s = new Set(prev); s.add(ticker); return s; });
+    try {
+      const headers = getApiHeaders();
+      const url = buildFetchUrl("/api/quote", { symbols: ticker });
+      const res = await fetch(url, { headers });
+      if (!res.ok) return;
+      const data = (await res.json()) as Record<string, QuoteData>;
+      const q = data[ticker];
+      if (q) {
+        const now = Date.now();
+        const stamped = { ...q, fetchedAt: now };
+        setQuotes((prev) => { const m = { ...prev, [ticker]: stamped }; saveToStorage(QUOTES_CACHE_KEY, m); return m; });
+        setQuoteUpdatedAt((prev) => ({ ...prev, [ticker]: now }));
+      }
+      const rates = await fetchExchangeRates();
+      setExchangeRates((prev) => { const m = { ...prev, ...rates }; saveToStorage(RATES_CACHE_KEY, m); return m; });
+      setLastUpdated(new Date());
+    } catch { /* non-critical */ } finally {
+      setRefreshingTickers((prev) => { const s = new Set(prev); s.delete(ticker); return s; });
+    }
+  }, [getApiHeaders, buildFetchUrl, fetchExchangeRates]);
+
   const addHolding = useCallback(async (holding: Omit<Holding, "id">) => {
     const tempId = generateId();
     const optimistic = { ...holding, id: tempId };
@@ -474,11 +497,12 @@ export function PortfolioProvider({
         }
         return prev.map((h) => (h.id === tempId ? created : h));
       });
+      fetchQuoteForTicker(created.ticker);
     } catch (err) {
       setHoldings((prev) => prev.filter((h) => h.id !== tempId));
       setError(err instanceof Error ? err.message : "Failed to add holding");
     }
-  }, [activePortfolioId]);
+  }, [activePortfolioId, fetchQuoteForTicker]);
 
   const removeHolding = useCallback(async (id: string) => {
     const previous = holdings;
