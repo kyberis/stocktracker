@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth-context";
+import { useSettings } from "@/lib/settings-context";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import TierIcon from "@/components/TierIcon";
 import ThemeSelector from "@/components/ThemeSelector";
+import { SUPPORTED_PORTFOLIO_CURRENCIES } from "@/lib/db/helpers";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -15,6 +17,7 @@ interface SettingsModalProps {
 export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const { t } = useI18n();
   const { user } = useAuth();
+  const { defaultCurrency, setDefaultCurrency } = useSettings();
 
   const plan = (user?.plan ?? "free") as "free" | "starter" | "pro";
   const isPro = plan === "pro";
@@ -53,6 +56,22 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         <div className="mt-5">
           <label className="block text-sm text-gray-500 dark:text-slate-400 mb-2">{t("dashboardTheme")}</label>
           <ThemeSelector />
+        </div>
+
+        {/* Default currency */}
+        <div className="mt-5">
+          <label htmlFor="default-currency-select" className="block text-sm text-gray-500 dark:text-slate-400 mb-2">{t("defaultCurrency")}</label>
+          <select
+            id="default-currency-select"
+            value={defaultCurrency}
+            onChange={(e) => setDefaultCurrency(e.target.value)}
+            className="w-full text-sm px-3 py-2 rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          >
+            {SUPPORTED_PORTFOLIO_CURRENCIES.map((cur) => (
+              <option key={cur} value={cur}>{cur}</option>
+            ))}
+          </select>
+          <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">{t("defaultCurrencyHint")}</p>
         </div>
 
         {/* Footer actions */}

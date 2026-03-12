@@ -11,6 +11,7 @@ import {
   convertToEUR,
   normalizeCurrency,
   resolveQuoteCurrency,
+  hasExchangeRate,
 } from "@/lib/utils";
 import { getMarketStatus } from "@/lib/market-hours";
 import type { Holding, QuoteData } from "@/lib/types";
@@ -83,6 +84,18 @@ function StockRow({ holding, onSelect }: StockRowProps) {
   const totalValueEUR = hasQuote
     ? convertToEUR(totalValue, holding.displayCurrency, exchangeRates)
     : holding.valueInEUR;
+
+  // FX impact: difference between actual gain and gain at constant FX rate
+  // stockGain = change in value due to stock price movement alone (in display currency, then converted)
+  // fxGain = totalGain - stockGain = the portion of gain due to currency movement
+  const stockGainLocal = hasQuote ? holding.shares * (currentPriceInDisplay - holding.purchasePrice) : 0;
+  const totalGainEUR = totalValueEUR - convertToEUR(totalCost, holding.displayCurrency, exchangeRates);
+  const stockGainEUR = hasQuote && hasExchangeRate(holding.displayCurrency, exchangeRates)
+    ? convertToEUR(stockGainLocal, holding.displayCurrency, exchangeRates)
+    : 0;
+  const fxImpactEUR = hasQuote && hasExchangeRate(holding.displayCurrency, exchangeRates)
+    ? totalGainEUR - stockGainEUR
+    : null;
 
   const dayIsPositive = dayChangeAmountEUR >= 0;
   const dayColor = dayIsPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400";
@@ -194,6 +207,15 @@ function StockRow({ holding, onSelect }: StockRowProps) {
     );
   }
 
+  const fxTag = fxImpactEUR !== null && Math.abs(fxImpactEUR) >= 0.01 ? (
+    <span
+      className={`text-[10px] px-1 py-0.5 rounded ${fxImpactEUR >= 0 ? "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400" : "bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400"}`}
+      title={t("fxImpact")}
+    >
+      FX {fxImpactEUR >= 0 ? "+" : ""}{formatCurrency(fxImpactEUR, "EUR")}
+    </span>
+  ) : null;
+
   /* ── DEFAULT: Original layout ──────────────────────────────── */
   return (
     <div className="border-b border-gray-100 dark:border-slate-700 last:border-b-0" data-testid="stock-row-default">
@@ -219,6 +241,7 @@ function StockRow({ holding, onSelect }: StockRowProps) {
             <p className={`text-xs mt-0.5 flex items-center justify-end gap-1 ${dayColor}`}>
               {marketDot}
               {dayIsPositive ? "+" : ""}{formatCurrency(dayChangeAmountEUR, "EUR")} ({formatPercent(dayChangePercent)})
+              {fxTag}
             </p>
           ) : (
             <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5">--</p>

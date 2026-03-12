@@ -1,6 +1,6 @@
 import { ensureInitialized } from "./client";
-import { str, num, parseRefreshInterval, parseAlertChannels, monthWindowKey, shouldResetDailyAiWindow } from "./helpers";
-import type { UserSettings } from "./helpers";
+import { str, num, parseRefreshInterval, parseAlertChannels, monthWindowKey, shouldResetDailyAiWindow, SUPPORTED_PORTFOLIO_CURRENCIES } from "./helpers";
+import type { UserSettings, PortfolioCurrency } from "./helpers";
 import type { Language, NotificationChannel } from "@/lib/types";
 import { isValidLanguage } from "@/lib/languages";
 import { encrypt, tryDecryptOrPlaintext } from "@/lib/crypto";
@@ -30,6 +30,11 @@ function parseTheme(val: unknown): import("@/lib/types").LayoutTheme {
   return VALID_THEMES.has(s) ? (s as import("@/lib/types").LayoutTheme) : "default";
 }
 
+function parseCurrency(val: unknown): PortfolioCurrency {
+  const s = String(val || "EUR").toUpperCase() as PortfolioCurrency;
+  return SUPPORTED_PORTFOLIO_CURRENCIES.includes(s) ? s : "EUR";
+}
+
 const DEFAULT_SETTINGS: UserSettings = {
   language: "en",
   refreshInterval: 15,
@@ -44,7 +49,7 @@ const DEFAULT_SETTINGS: UserSettings = {
 export async function getUserSettings(userId: string): Promise<UserSettings> {
   const client = await ensureInitialized();
   const result = await client.execute({
-    sql: "SELECT language, refresh_interval, alert_channels, whatsapp_phone, whatsapp_verified, alert_device_enabled, dashboard_theme FROM user_settings WHERE user_id = ?",
+    sql: "SELECT language, refresh_interval, alert_channels, whatsapp_phone, whatsapp_verified, alert_device_enabled, dashboard_theme, default_currency FROM user_settings WHERE user_id = ?",
     args: [userId],
   });
 
@@ -66,6 +71,7 @@ export async function getUserSettings(userId: string): Promise<UserSettings> {
     whatsappVerified: num(row.whatsapp_verified) === 1,
     alertDeviceEnabled: num(row.alert_device_enabled) === 1,
     dashboardTheme: parseTheme(row.dashboard_theme),
+    defaultCurrency: parseCurrency(row.default_currency),
   };
 }
 
@@ -82,18 +88,19 @@ export async function updateUserSettings(
     whatsappVerified: updates.whatsappVerified ?? current.whatsappVerified,
     alertDeviceEnabled: updates.alertDeviceEnabled ?? current.alertDeviceEnabled,
     dashboardTheme: updates.dashboardTheme ?? current.dashboardTheme,
+    defaultCurrency: updates.defaultCurrency ?? current.defaultCurrency,
   };
 
   const client = await ensureInitialized();
   await client.execute({
     sql: `UPDATE user_settings SET language = ?, refresh_interval = ?,
           alert_channels = ?, whatsapp_phone = ?, whatsapp_verified = ?, alert_device_enabled = ?,
-          dashboard_theme = ?
+          dashboard_theme = ?, default_currency = ?
           WHERE user_id = ?`,
     args: [
       next.language, next.refreshInterval,
       next.alertChannels.join(","), next.whatsappPhone, next.whatsappVerified ? 1 : 0,
-      next.alertDeviceEnabled ? 1 : 0, next.dashboardTheme, userId,
+      next.alertDeviceEnabled ? 1 : 0, next.dashboardTheme, next.defaultCurrency, userId,
     ],
   });
 

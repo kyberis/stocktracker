@@ -17,6 +17,7 @@ import {
 import { sendWelcomeEmail } from "@/lib/email";
 import { ensureSessionSecret } from "@/lib/auth/session-secret";
 import { authEventsTotal } from "@/lib/metrics";
+import { isBlockedEmailDomain } from "@/lib/schemas";
 
 const APPLE_TOKEN_URL = "https://appleid.apple.com/auth/token";
 const APPLE_JWKS_URL = new URL("https://appleid.apple.com/auth/keys");
@@ -133,6 +134,10 @@ export async function POST(req: NextRequest) {
 
     if (!appleSub) {
       return errorRedirect(req, "Apple authentication failed.");
+    }
+
+    if (appleEmail && isBlockedEmailDomain(appleEmail)) {
+      return errorRedirect(req, "Disposable email addresses are not allowed. Please use a real email.");
     }
 
     let dbUser: DbUser | null = await findUserByAppleId(appleSub);

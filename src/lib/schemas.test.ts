@@ -117,6 +117,35 @@ describe("signupSchema", () => {
     const result = signupSchema.safeParse({ email: 123, password: "secret123" });
     expect(result.success).toBe(false);
   });
+
+  it("rejects disposable email domains", () => {
+    const disposable = [
+      "user@mailinator.com",
+      "user@guerrillamail.com",
+      "user@yopmail.com",
+      "user@tempmail.com",
+      "user@throwaway.email",
+      "user@10minutemail.com",
+      "user@maildrop.cc",
+    ];
+    for (const email of disposable) {
+      const result = signupSchema.safeParse({ email, password: "secret123" });
+      expect(result.success, `expected ${email} to be rejected`).toBe(false);
+    }
+  });
+
+  it("allows legitimate email domains", () => {
+    const legitimate = [
+      "user@gmail.com",
+      "user@outlook.com",
+      "user@company.org",
+      "user@example.com",
+    ];
+    for (const email of legitimate) {
+      const result = signupSchema.safeParse({ email, password: "secret123" });
+      expect(result.success, `expected ${email} to be accepted`).toBe(true);
+    }
+  });
 });
 
 describe("createHoldingSchema", () => {

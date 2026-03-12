@@ -20,6 +20,7 @@ function getInitialLayoutTheme(): LayoutTheme {
 interface SettingsContextType {
   refreshInterval: RefreshInterval;
   dashboardTheme: LayoutTheme;
+  defaultCurrency: string;
   hasGlobalAvKey: boolean;
   alertsEnabled: boolean;
   csvExportEnabled: boolean;
@@ -34,6 +35,7 @@ interface SettingsContextType {
   toolWatchlistEnabled: boolean;
   setRefreshInterval: (interval: RefreshInterval) => void;
   setDashboardTheme: (theme: LayoutTheme) => void;
+  setDefaultCurrency: (currency: string) => void;
   getApiHeaders: () => Record<string, string>;
   getApiParams: () => URLSearchParams;
 }
@@ -55,6 +57,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [toolRebalancingEnabled, setToolRebalancingEnabled] = useState(false);
   const [toolAccountsEnabled, setToolAccountsEnabled] = useState(true);
   const [toolWatchlistEnabled, setToolWatchlistEnabled] = useState(true);
+  const [defaultCurrency, setDefaultCurrencyState] = useState("EUR");
 
   useEffect(() => {
     const load = async () => {
@@ -105,6 +108,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
           if (typeof settings.toolWatchlistEnabled === "boolean") {
             setToolWatchlistEnabled(settings.toolWatchlistEnabled);
           }
+          if (settings.defaultCurrency && typeof settings.defaultCurrency === "string") {
+            setDefaultCurrencyState(settings.defaultCurrency);
+          }
         }
       } catch {
         // Keep defaults.
@@ -143,6 +149,17 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const setDefaultCurrency = useCallback(async (currency: string) => {
+    setDefaultCurrencyState(currency);
+    try {
+      await fetch("/api/user-settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ defaultCurrency: currency }),
+      });
+    } catch { /* keep optimistic */ }
+  }, []);
+
   const getApiHeaders = useCallback((): Record<string, string> => {
     return {};
   }, []);
@@ -155,6 +172,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     () => ({
       refreshInterval,
       dashboardTheme,
+      defaultCurrency,
       hasGlobalAvKey,
       alertsEnabled,
       csvExportEnabled,
@@ -169,14 +187,15 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       toolWatchlistEnabled,
       setRefreshInterval,
       setDashboardTheme,
+      setDefaultCurrency,
       getApiHeaders,
       getApiParams,
     }),
     [
-      refreshInterval, dashboardTheme, hasGlobalAvKey, alertsEnabled, csvExportEnabled, deviceEnabled,
+      refreshInterval, dashboardTheme, defaultCurrency, hasGlobalAvKey, alertsEnabled, csvExportEnabled, deviceEnabled,
       whatsappEnabled, toolTransactionsEnabled, toolDividendsEnabled, toolPerformanceEnabled,
       toolTaxonomyEnabled, toolRebalancingEnabled, toolAccountsEnabled, toolWatchlistEnabled,
-      setRefreshInterval, setDashboardTheme, getApiHeaders, getApiParams,
+      setRefreshInterval, setDashboardTheme, setDefaultCurrency, getApiHeaders, getApiParams,
     ]
   );
 

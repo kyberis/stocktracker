@@ -1,5 +1,71 @@
 import { z } from "zod";
 
+/* ── Disposable / fake-email domain blocklist ─────────────── */
+
+const BLOCKED_EMAIL_DOMAINS = new Set([
+  "mailinator.com",
+  "guerrillamail.com",
+  "guerrillamail.de",
+  "grr.la",
+  "guerrillamailblock.com",
+  "tempmail.com",
+  "temp-mail.org",
+  "throwaway.email",
+  "throwaway.com",
+  "yopmail.com",
+  "yopmail.fr",
+  "sharklasers.com",
+  "guerrillamail.info",
+  "guerrillamail.net",
+  "dispostable.com",
+  "mailnesia.com",
+  "maildrop.cc",
+  "discard.email",
+  "trashmail.com",
+  "trashmail.me",
+  "trashmail.net",
+  "trashmail.org",
+  "10minutemail.com",
+  "10minutemail.net",
+  "minutemail.com",
+  "tempail.com",
+  "tempr.email",
+  "temp-mail.io",
+  "mohmal.com",
+  "fakeinbox.com",
+  "mailcatch.com",
+  "nada.email",
+  "getnada.com",
+  "emailondeck.com",
+  "spamgourmet.com",
+  "mytemp.email",
+  "burnermail.io",
+  "inboxkitten.com",
+  "harakirimail.com",
+  "mailsac.com",
+  "crazymailing.com",
+  "tmail.ws",
+  "tmpmail.org",
+  "tmpmail.net",
+  "moakt.com",
+  "mail7.io",
+  "emailfake.com",
+  "generator.email",
+  "guerrillamail.org",
+]);
+
+export function isBlockedEmailDomain(email: string): boolean {
+  const domain = email.split("@")[1]?.toLowerCase();
+  return !!domain && BLOCKED_EMAIL_DOMAINS.has(domain);
+}
+
+const BLOCKED_DOMAIN_MSG = "Disposable email addresses are not allowed. Please use a real email.";
+
+const safeEmail = z
+  .string()
+  .email("Invalid email address")
+  .refine((e) => !isBlockedEmailDomain(e), { message: BLOCKED_DOMAIN_MSG });
+
 /* ── Auth ──────────────────────────────────────────────────── */
 
 export const loginSchema = z.object({
@@ -9,7 +75,7 @@ export const loginSchema = z.object({
 });
 
 export const signupSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  email: safeEmail,
   password: z.string().min(6, "Password must be at least 6 characters"),
   displayName: z.string().max(100).optional(),
   seedWithData: z.boolean().optional(),
@@ -26,7 +92,7 @@ export const deleteAccountSchema = z.object({
 });
 
 export const profileUpdateSchema = z.object({
-  email: z.string().email("Invalid email address").optional(),
+  email: safeEmail.optional(),
   displayName: z.string().max(100).optional(),
   avatarUrl: z.string().max(500).optional(),
   devicePortfolioId: z.string().optional(),
@@ -129,6 +195,11 @@ export const userSettingsSchema = z.object({
   ]).optional(),
   refreshInterval: z.union([z.literal(15), z.literal(30), z.literal(60)]).optional(),
   dashboardTheme: z.enum(["default", "terminal", "canvas", "studio"]).optional(),
+  defaultCurrency: z.enum([
+    "EUR", "USD", "GBP", "CHF", "SEK", "NOK", "DKK", "CAD",
+    "AUD", "NZD", "JPY", "PLN", "CZK", "HUF", "RON",
+    "SGD", "HKD", "ZAR", "TRY", "BRL", "MXN",
+  ]).optional(),
 });
 
 /* ── Alerts ────────────────────────────────────────────────── */

@@ -14,9 +14,52 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "1.21.0";
+export const CURRENT_VERSION = "1.22.0";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "1.22.0",
+    date: "2026-03-12",
+    title: "Multi-Currency Expansion — 21 Currencies Supported",
+    titleTranslations: { es: "Expansión Multi-Divisa — 21 Monedas Soportadas" },
+    changes: [
+      {
+        type: "feature",
+        text: "Expanded from 5 to 21 supported currencies including GBP, CHF, SEK, NOK, AUD, NZD, JPY, PLN, CZK, HUF, SGD, HKD, and more",
+        translations: { es: "Ampliación de 5 a 21 divisas soportadas incluyendo GBP, CHF, SEK, NOK, AUD, NZD, JPY, PLN, CZK, HUF, SGD, HKD y más" },
+      },
+      {
+        type: "feature",
+        text: "Dynamic exchange rate fetching — only the currencies in your portfolio are fetched, no wasted API calls",
+        translations: { es: "Obtención dinámica de tipos de cambio — solo se consultan las divisas de tu portafolio" },
+      },
+      {
+        type: "feature",
+        text: "Change portfolio base currency after creation directly from the portfolio dropdown",
+        translations: { es: "Cambia la moneda base del portafolio después de crearlo desde el menú desplegable" },
+      },
+      {
+        type: "feature",
+        text: "Default currency preference in Settings — new portfolios automatically use your preferred currency",
+        translations: { es: "Preferencia de moneda predeterminada en Configuración — los nuevos portafolios usan tu moneda preferida" },
+      },
+      {
+        type: "feature",
+        text: "FX impact indicator on holdings — see how much of your gain/loss is from currency movement vs stock performance",
+        translations: { es: "Indicador de impacto cambiario en posiciones — ve cuánto de tu ganancia/pérdida es por movimiento de divisa vs rendimiento del activo" },
+      },
+      {
+        type: "improvement",
+        text: "Warning banner when exchange rates are unavailable instead of silently showing approximate values",
+        translations: { es: "Banner de advertencia cuando los tipos de cambio no están disponibles en lugar de mostrar valores aproximados silenciosamente" },
+      },
+      {
+        type: "fix",
+        text: "Fixed incorrect exchange rate key format in portfolio projection chart causing wrong dividend yield calculations",
+        translations: { es: "Corregido el formato incorrecto de clave de tipo de cambio en la proyección del portafolio que causaba cálculos erróneos de rendimiento de dividendos" },
+      },
+    ],
+  },
   {
     version: "1.21.0",
     date: "2026-03-11",

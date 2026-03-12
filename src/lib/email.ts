@@ -4,6 +4,13 @@ import { getGlobalResendApiKey } from "@/lib/db";
 
 const VERIFICATION_TOKEN_TTL = 60 * 60 * 24; // 24 hours
 
+const TEST_EMAIL_DOMAINS = ["test.example.com", "example.com"];
+
+function isTestEmail(email: string): boolean {
+  const domain = email.split("@")[1]?.toLowerCase();
+  return TEST_EMAIL_DOMAINS.includes(domain);
+}
+
 async function getResendClient(): Promise<Resend | null> {
   const dbKey = await getGlobalResendApiKey();
   const key = dbKey || process.env.RESEND_API_KEY;
@@ -117,6 +124,8 @@ export async function sendVerificationEmail(
   email: string,
   token: string
 ): Promise<{ success: boolean; error?: string }> {
+  if (isTestEmail(email)) return { success: true };
+
   const resend = await getResendClient();
   if (!resend) {
     console.warn("Resend API key not configured; skipping verification email.");
@@ -144,6 +153,8 @@ export async function sendAlertEmail(
   email: string,
   alert: { ticker: string; name: string; condition: string; threshold: number; currentPrice: number; currency: string }
 ): Promise<{ success: boolean; error?: string }> {
+  if (isTestEmail(email)) return { success: true };
+
   const resend = await getResendClient();
   if (!resend) {
     console.warn("Resend API key not configured; skipping alert email.");
@@ -188,6 +199,8 @@ export async function sendPercentAlertEmail(
     isPortfolioWide: boolean;
   }
 ): Promise<{ success: boolean; error?: string }> {
+  if (isTestEmail(email)) return { success: true };
+
   const resend = await getResendClient();
   if (!resend) {
     console.warn("Resend API key not configured; skipping percent alert email.");
@@ -380,6 +393,8 @@ export async function sendWelcomeEmail(
   displayName: string,
   locale: EmailLocale = "en",
 ): Promise<{ success: boolean; error?: string }> {
+  if (isTestEmail(email)) return { success: true };
+
   const resend = await getResendClient();
   if (!resend) {
     console.warn("Resend API key not configured; skipping welcome email.");
@@ -476,6 +491,8 @@ export async function sendBifolioUpgradeEmail(
   displayName: string,
   locale: EmailLocale = "en",
 ): Promise<{ success: boolean; error?: string }> {
+  if (isTestEmail(email)) return { success: true };
+
   const resend = await getResendClient();
   if (!resend) {
     console.warn("Resend API key not configured; skipping Bifolio upgrade email.");
@@ -582,6 +599,8 @@ export async function sendTrefolioUpgradeEmail(
   displayName: string,
   locale: EmailLocale = "en",
 ): Promise<{ success: boolean; error?: string }> {
+  if (isTestEmail(email)) return { success: true };
+
   const resend = await getResendClient();
   if (!resend) {
     console.warn("Resend API key not configured; skipping Trefolio upgrade email.");

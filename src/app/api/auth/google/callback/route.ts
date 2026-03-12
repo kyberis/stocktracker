@@ -18,6 +18,7 @@ import {
 import { sendWelcomeEmail } from "@/lib/email";
 import { ensureSessionSecret } from "@/lib/auth/session-secret";
 import { authEventsTotal } from "@/lib/metrics";
+import { isBlockedEmailDomain } from "@/lib/schemas";
 
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo";
@@ -203,6 +204,10 @@ async function handleLoginFlow(
     }
     if (!googleUser.email) {
       return errorRedirect(req, "No email returned from Google.");
+    }
+
+    if (isBlockedEmailDomain(googleUser.email)) {
+      return errorRedirect(req, "Disposable email addresses are not allowed. Please use a real email.");
     }
 
     let dbUser: DbUser | null = await findUserByGoogleId(googleUser.sub);

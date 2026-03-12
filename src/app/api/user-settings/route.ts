@@ -42,6 +42,7 @@ export const GET = withMetrics("/api/user-settings", async (req: NextRequest) =>
     language: settings.language,
     refreshInterval: settings.refreshInterval,
     dashboardTheme,
+    defaultCurrency: settings.defaultCurrency,
     hasGlobalAvKey: getGlobalAlphaVantageApiKey().length > 0,
     hasOpenAIKey: getGlobalOpenAIApiKey().length > 0,
     alertsEnabled,
@@ -71,5 +72,6 @@ export const PUT = withMetrics("/api/user-settings", async (req: NextRequest) =>
     language: next.language,
     refreshInterval: next.refreshInterval,
     dashboardTheme: next.dashboardTheme,
+    defaultCurrency: next.defaultCurrency,
   });
 });

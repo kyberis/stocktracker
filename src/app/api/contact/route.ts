@@ -3,6 +3,7 @@ import { Resend } from "resend";
 import { getGlobalResendApiKey } from "@/lib/db";
 import { verifyTurnstileToken } from "@/lib/turnstile";
 import { withMetrics } from "@/lib/with-metrics";
+import { isBlockedEmailDomain } from "@/lib/schemas";
 
 const MAX_NAME_LENGTH = 100;
 const MAX_EMAIL_LENGTH = 200;
@@ -64,6 +65,10 @@ export const POST = withMetrics("/api/contact", async (req: NextRequest) => {
 
   if (!isValidEmail(email)) {
     return NextResponse.json({ error: "Please enter a valid email address." }, { status: 400 });
+  }
+
+  if (isBlockedEmailDomain(email)) {
+    return NextResponse.json({ error: "Disposable email addresses are not allowed. Please use a real email." }, { status: 400 });
   }
 
   const turnstileOk = await verifyTurnstileToken(turnstileToken, ip);

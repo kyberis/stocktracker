@@ -8,6 +8,7 @@ import { useI18n } from "@/lib/i18n";
 import { getPortfolioLimit } from "@/lib/subscription";
 import TierFeatureBadge from "./TierFeatureBadge";
 import { useTheme } from "@/lib/theme-context";
+import { useSettings } from "@/lib/settings-context";
 import { SUPPORTED_PORTFOLIO_CURRENCIES } from "@/lib/db/helpers";
 
 const CURRENCY_SELECT_OPTIONS = SUPPORTED_PORTFOLIO_CURRENCIES;
@@ -98,11 +99,12 @@ export default function DashboardToolbar({
   const { isLoading, refreshQuotes, lastUpdated, portfolios, activePortfolioId, setActivePortfolio, refreshPortfolios } = usePortfolio();
   const { t } = useI18n();
   const { layoutTheme } = useTheme();
+  const { defaultCurrency } = useSettings();
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState("");
-  const [newCurrency, setNewCurrency] = useState("EUR");
+  const [newCurrency, setNewCurrency] = useState(defaultCurrency);
   const [creating, setCreating] = useState(false);
   const [settingDefault, setSettingDefault] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -144,7 +146,7 @@ export default function DashboardToolbar({
       if (res.ok) {
         const data = await res.json();
         setNewName("");
-        setNewCurrency("EUR");
+        setNewCurrency(defaultCurrency);
         setShowCreate(false);
         await refreshPortfolios();
         if (data.portfolio?.id) setActivePortfolio(data.portfolio.id);
