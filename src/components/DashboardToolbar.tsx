@@ -8,6 +8,9 @@ import { useI18n } from "@/lib/i18n";
 import { getPortfolioLimit } from "@/lib/subscription";
 import TierFeatureBadge from "./TierFeatureBadge";
 import { useTheme } from "@/lib/theme-context";
+import { SUPPORTED_PORTFOLIO_CURRENCIES } from "@/lib/db/helpers";
+
+const CURRENCY_SELECT_OPTIONS = SUPPORTED_PORTFOLIO_CURRENCIES;
 
 function AddMenu({ onAddStock, onAddCrypto }: { onAddStock: () => void; onAddCrypto?: () => void }) {
   const { t } = useI18n();
@@ -99,7 +102,7 @@ export default function DashboardToolbar({
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState("");
-  const [newCurrency, setNewCurrency] = useState<"EUR" | "USD">("EUR");
+  const [newCurrency, setNewCurrency] = useState("EUR");
   const [creating, setCreating] = useState(false);
   const [settingDefault, setSettingDefault] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -148,6 +151,17 @@ export default function DashboardToolbar({
       }
     } catch { /* ignore */ }
     setCreating(false);
+  }
+
+  async function handleCurrencyChange(portfolioId: string, currency: string) {
+    try {
+      const res = await fetch(`/api/portfolios/${encodeURIComponent(portfolioId)}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currency }),
+      });
+      if (res.ok) await refreshPortfolios();
+    } catch { /* ignore */ }
   }
 
   async function handleSetDefault(id: string) {
@@ -246,7 +260,21 @@ export default function DashboardToolbar({
                           <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
                         </svg>
                         <span className="truncate">{p.name}</span>
-                        <span className="shrink-0 text-[10px] font-medium text-gray-400 dark:text-slate-500">{p.currency ?? "EUR"}</span>
+                        {activePortfolioId === p.id ? (
+                          <select
+                            value={p.currency ?? "EUR"}
+                            onClick={(e) => e.stopPropagation()}
+                            onChange={(e) => { e.stopPropagation(); handleCurrencyChange(p.id, e.target.value); }}
+                            className="shrink-0 text-[10px] font-medium text-gray-400 dark:text-slate-500 bg-transparent border-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-500 rounded py-0 pr-3 appearance-none"
+                            aria-label={t("currency")}
+                          >
+                            {CURRENCY_SELECT_OPTIONS.map((cur) => (
+                              <option key={cur} value={cur}>{cur}</option>
+                            ))}
+                          </select>
+                        ) : (
+                          <span className="shrink-0 text-[10px] font-medium text-gray-400 dark:text-slate-500">{p.currency ?? "EUR"}</span>
+                        )}
                       </button>
                       {p.isDefault ? (
                         <span className="pr-3 shrink-0" title={t("setAsDefault")} aria-label={t("setAsDefault")}>
@@ -291,22 +319,15 @@ export default function DashboardToolbar({
                           />
                         </div>
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-1 rounded-lg border border-gray-200 dark:border-slate-600 overflow-hidden">
-                            {(["EUR", "USD"] as const).map((cur) => (
-                              <button
-                                key={cur}
-                                type="button"
-                                onClick={() => setNewCurrency(cur)}
-                                className={`px-2.5 py-0.5 text-xs font-medium transition-colors ${
-                                  newCurrency === cur
-                                    ? "bg-blue-600 text-white"
-                                    : "text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700"
-                                }`}
-                              >
-                                {cur === "EUR" ? "\u20AC EUR" : "$ USD"}
-                              </button>
+                          <select
+                            value={newCurrency}
+                            onChange={(e) => setNewCurrency(e.target.value)}
+                            className="text-xs font-medium px-2 py-1 rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          >
+                            {CURRENCY_SELECT_OPTIONS.map((cur) => (
+                              <option key={cur} value={cur}>{cur}</option>
                             ))}
-                          </div>
+                          </select>
                           <button
                             onClick={handleCreate}
                             disabled={creating || !newName.trim()}

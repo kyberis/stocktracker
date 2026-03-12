@@ -568,6 +568,7 @@ const es: TranslationStrings = {
   txFee: "Comisión",
   txFxHistorical: "histórico",
   txFxCurrent: "actual",
+  missingExchangeRate: "Tipo de cambio no disponible — los valores pueden ser aproximados para",
   dividends: "Dividendos",
   dividendIncome: "Ingresos por Dividendos",
   totalDividends: "Total Dividendos",

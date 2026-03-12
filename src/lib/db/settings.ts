@@ -38,6 +38,7 @@ const DEFAULT_SETTINGS: UserSettings = {
   whatsappVerified: false,
   alertDeviceEnabled: false,
   dashboardTheme: "default",
+  defaultCurrency: "EUR",
 };
 
 export async function getUserSettings(userId: string): Promise<UserSettings> {

@@ -48,7 +48,16 @@ export interface DbUser {
   last_active_at: string;
 }
 
-export type PortfolioCurrency = "EUR" | "USD";
+export type PortfolioCurrency =
+  | "EUR" | "USD" | "GBP" | "CHF" | "SEK" | "NOK" | "DKK" | "CAD"
+  | "AUD" | "NZD" | "JPY" | "PLN" | "CZK" | "HUF" | "RON"
+  | "SGD" | "HKD" | "ZAR" | "TRY" | "BRL" | "MXN";
+
+export const SUPPORTED_PORTFOLIO_CURRENCIES: PortfolioCurrency[] = [
+  "EUR", "USD", "GBP", "CHF", "SEK", "NOK", "DKK", "CAD",
+  "AUD", "NZD", "JPY", "PLN", "CZK", "HUF", "RON",
+  "SGD", "HKD", "ZAR", "TRY", "BRL", "MXN",
+];
 
 export interface DbPortfolio {
   id: string;
@@ -104,6 +113,7 @@ export interface UserSettings {
   whatsappVerified: boolean;
   alertDeviceEnabled: boolean;
   dashboardTheme: import("@/lib/types").LayoutTheme;
+  defaultCurrency: PortfolioCurrency;
 }
 
 export const ADMIN_DEFAULT_USERNAME = "admin";
@@ -241,8 +251,8 @@ export function rowToDbUser(row: Row): DbUser {
 }
 
 export function rowToPortfolio(row: Row): Portfolio {
-  const raw = str(row.currency).toUpperCase();
-  const currency: PortfolioCurrency = raw === "USD" ? "USD" : "EUR";
+  const raw = str(row.currency).toUpperCase() as PortfolioCurrency;
+  const currency: PortfolioCurrency = SUPPORTED_PORTFOLIO_CURRENCIES.includes(raw) ? raw : "EUR";
   return {
     id: str(row.id),
     userId: str(row.user_id),

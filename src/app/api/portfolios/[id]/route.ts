@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { findPortfolioById, renamePortfolio, deletePortfolio, setDefaultPortfolio, countPortfolios } from "@/lib/db";
+import { findPortfolioById, renamePortfolio, updatePortfolioCurrency, deletePortfolio, setDefaultPortfolio, countPortfolios, SUPPORTED_PORTFOLIO_CURRENCIES } from "@/lib/db";
+import type { PortfolioCurrency } from "@/lib/db";
 import { getPortfolioLimit } from "@/lib/subscription";
 import { withMetrics } from "@/lib/with-metrics";
 
@@ -47,17 +48,27 @@ export const PUT = withMetrics("/api/portfolios/[id] PUT", async (req: NextReque
   }
   let name: string | undefined;
   let isDefault: boolean | undefined;
+  let currency: PortfolioCurrency | undefined;
 
   try {
     const body = await req.json();
     if (body.name && typeof body.name === "string") name = body.name.trim().slice(0, 50);
     if (typeof body.isDefault === "boolean") isDefault = body.isDefault;
+    if (body.currency && typeof body.currency === "string") {
+      const upper = body.currency.toUpperCase() as PortfolioCurrency;
+      if (SUPPORTED_PORTFOLIO_CURRENCIES.includes(upper)) currency = upper;
+    }
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
   if (name) {
     const ok = await renamePortfolio(session.userId, id, name);
+    if (!ok) return NextResponse.json({ error: "Portfolio not found" }, { status: 404 });
+  }
+
+  if (currency) {
+    const ok = await updatePortfolioCurrency(session.userId, id, currency);
     if (!ok) return NextResponse.json({ error: "Portfolio not found" }, { status: 404 });
   }
 

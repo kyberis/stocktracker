@@ -14,7 +14,7 @@ import { usePortfolio } from "@/lib/portfolio-context";
 import { useI18n } from "@/lib/i18n";
 import { useTheme } from "@/lib/theme-context";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
-import { formatCurrency, formatCompactNumber } from "@/lib/utils";
+import { formatCurrency, formatCompactNumber, convertToEUR } from "@/lib/utils";
 
 const HORIZON_OPTIONS = [10, 20, 30] as const;
 type Horizon = (typeof HORIZON_OPTIONS)[number];
@@ -62,12 +62,7 @@ export default function PortfolioProjection({ holdings: holdingsProp, cashEntrie
       if (!q || !q.regularMarketPrice) continue;
 
       const cur = q.currency || h.displayCurrency || "USD";
-      const rateToEUR =
-        cur === "EUR"
-          ? 1
-          : exchangeRates[`${cur}_EUR`] ||
-            1 / (exchangeRates[`EUR_${cur}`] || 1);
-      const valueEUR = h.shares * q.regularMarketPrice * rateToEUR;
+      const valueEUR = convertToEUR(h.shares * q.regularMarketPrice, cur, exchangeRates);
       const yld = q.trailingAnnualDividendYield ?? 0;
 
       totalValueEUR += valueEUR;
@@ -221,7 +216,7 @@ export default function PortfolioProjection({ holdings: holdingsProp, cashEntrie
           </label>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 dark:text-slate-500">
-              €
+              {baseCurrency === "USD" ? "$" : baseCurrency === "GBP" ? "£" : "€"}
             </span>
             <input
               id="proj-yearly-contribution"
@@ -285,7 +280,7 @@ export default function PortfolioProjection({ holdings: holdingsProp, cashEntrie
               minTickGap={40}
             />
             <YAxis
-              tickFormatter={(v: number) => `€${formatCompactNumber(v)}`}
+              tickFormatter={(v: number) => `${formatCompactNumber(v)}`}
               tick={{ fill: tickFill, fontSize: 11 }}
               axisLine={false}
               tickLine={false}

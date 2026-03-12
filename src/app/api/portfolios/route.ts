@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { listPortfolios, createPortfolio, countPortfolios } from "@/lib/db";
+import { listPortfolios, createPortfolio, countPortfolios, SUPPORTED_PORTFOLIO_CURRENCIES } from "@/lib/db";
 import type { PortfolioCurrency } from "@/lib/db";
 import { getPortfolioLimit } from "@/lib/subscription";
 import { withMetrics } from "@/lib/with-metrics";
-
-const VALID_CURRENCIES: PortfolioCurrency[] = ["EUR", "USD"];
 
 export const dynamic = "force-dynamic";
 
@@ -47,7 +45,7 @@ export const POST = withMetrics("/api/portfolios POST", async (req: NextRequest)
     }
     if (body.currency && typeof body.currency === "string") {
       const upper = body.currency.toUpperCase() as PortfolioCurrency;
-      if (VALID_CURRENCIES.includes(upper)) {
+      if (SUPPORTED_PORTFOLIO_CURRENCIES.includes(upper)) {
         currency = upper;
       }
     }

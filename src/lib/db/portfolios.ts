@@ -60,6 +60,15 @@ export async function renamePortfolio(userId: string, portfolioId: string, name:
   return (result.rowsAffected ?? 0) > 0;
 }
 
+export async function updatePortfolioCurrency(userId: string, portfolioId: string, currency: PortfolioCurrency): Promise<boolean> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: "UPDATE portfolios SET currency = ? WHERE id = ? AND user_id = ?",
+    args: [currency, portfolioId, userId],
+  });
+  return (result.rowsAffected ?? 0) > 0;
+}
+
 /**
  * Deletes a non-default portfolio and moves all its data to the default portfolio.
  * Returns false if the portfolio is the default or doesn't exist.

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n";
-import { formatCurrency, formatPercent, formatStealthCurrency } from "@/lib/utils";
+import { formatCurrency, formatPercent, formatStealthCurrency, hasExchangeRate, normalizeCurrency } from "@/lib/utils";
 import { calculatePortfolioTotals, computeAllocationByType, type AllocationSlice } from "@/lib/portfolio-summary";
 import { useStealthMode } from "@/lib/stealth-context";
 import { PLATFORM_LIMITS } from "@/lib/platform-config";
@@ -104,6 +104,17 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
     totalGainLossPercent,
   } = calculatePortfolioTotals(holdings, cashEntries, quotes, exchangeRates, baseCurrency);
 
+  const missingRateCurrencies = useMemo(() => {
+    const missing = new Set<string>();
+    for (const h of holdings) {
+      const q = quotes[h.ticker];
+      const cur = normalizeCurrency(q?.currency || h.displayCurrency || "USD");
+      if (cur !== "EUR" && !hasExchangeRate(cur, exchangeRates)) missing.add(cur);
+    }
+    if (baseCurrency !== "EUR" && !hasExchangeRate(baseCurrency, exchangeRates)) missing.add(baseCurrency);
+    return [...missing];
+  }, [holdings, quotes, exchangeRates, baseCurrency]);
+
   const dayIsPositive = dayGainLossEUR >= 0;
   const dayPercent = totalCurrentEUR > 0
     ? (dayGainLossEUR / (totalCurrentEUR - dayGainLossEUR)) * 100
@@ -173,6 +184,15 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
   const reviewPanel = reviewOpen ? (
     <div className="mt-4 pt-4 border-t border-gray-100 dark:border-slate-700">
       <PortfolioReviewCard />
+    </div>
+  ) : null;
+
+  const missingRateBanner = missingRateCurrencies.length > 0 ? (
+    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-xs text-amber-700 dark:text-amber-300 mb-3" role="alert">
+      <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+      </svg>
+      <span>{t("missingExchangeRate")}: <strong>{missingRateCurrencies.join(", ")}</strong></span>
     </div>
   ) : null;
 
@@ -295,6 +315,7 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
           <div className="h-full w-1/3 bg-emerald-500/70 dark:bg-emerald-400/50 animate-progress-bar" />
         </div>
       )}
+      {missingRateBanner}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex items-center gap-4 flex-wrap">
           <div>

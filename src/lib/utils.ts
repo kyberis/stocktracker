@@ -16,6 +16,18 @@ const CURRENCY_SYMBOLS: Record<string, { prefix: string; suffix: string }> = {
   JPY: { prefix: "¥", suffix: "" },
   SEK: { prefix: "", suffix: " SEK" },
   NOK: { prefix: "", suffix: " NOK" },
+  AUD: { prefix: "A$", suffix: "" },
+  NZD: { prefix: "NZ$", suffix: "" },
+  PLN: { prefix: "", suffix: " zł" },
+  CZK: { prefix: "", suffix: " Kč" },
+  HUF: { prefix: "", suffix: " Ft" },
+  RON: { prefix: "", suffix: " lei" },
+  SGD: { prefix: "S$", suffix: "" },
+  HKD: { prefix: "HK$", suffix: "" },
+  ZAR: { prefix: "R", suffix: "" },
+  TRY: { prefix: "₺", suffix: "" },
+  BRL: { prefix: "R$", suffix: "" },
+  MXN: { prefix: "MX$", suffix: "" },
 };
 
 export function formatCurrency(value: number, currency: string): string {
@@ -152,6 +164,33 @@ export function convertCurrency(
   const targetRate = rates[targetKey];
   if (!targetRate) return amount;
   return amountInEUR * targetRate;
+}
+
+/**
+ * Check if a usable exchange rate exists for converting a currency to EUR.
+ * Returns true for EUR itself, and for any currency with a non-zero rate key.
+ */
+export function hasExchangeRate(currency: string, rates: ExchangeRates): boolean {
+  const norm = normalizeCurrency(currency);
+  if (norm === "EUR") return true;
+  if (norm === "GBX") return !!rates["EURGBP"];
+  return !!rates[`EUR${norm}`];
+}
+
+/**
+ * Format a currency value, returning "--" when the required exchange rate is missing.
+ * Use this when the display value depends on a conversion from a different currency.
+ */
+export function formatCurrencyWithGuard(
+  value: number,
+  displayCurrency: string,
+  sourceCurrency: string,
+  rates: ExchangeRates,
+): string {
+  if (displayCurrency !== sourceCurrency && !hasExchangeRate(sourceCurrency, rates)) {
+    return "--";
+  }
+  return formatCurrency(value, displayCurrency);
 }
 
 export function cn(...classes: (string | boolean | undefined | null)[]): string {
