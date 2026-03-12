@@ -45,9 +45,10 @@ type AiStatus = "idle" | "loading" | "done" | "error" | "no-key" | "ai-limit" | 
 interface StockDetailProps {
   ticker: string;
   exchange: string;
+  fromScreener?: boolean;
 }
 
-export default function StockDetail({ ticker, exchange }: StockDetailProps) {
+export default function StockDetail({ ticker, exchange, fromScreener = false }: StockDetailProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { hasGlobalAvKey, getApiHeaders } = useSettings();
@@ -56,11 +57,11 @@ export default function StockDetail({ ticker, exchange }: StockDetailProps) {
   const { t, language } = useI18n();
   const { stealthMode } = useStealthMode();
 
-  const fromScreener = searchParams.get("from") === "screener";
+  const isFromScreener = fromScreener || searchParams.get("from") === "screener";
 
   const handleBack = () => {
-    if (fromScreener) {
-      router.push("/tools#screener");
+    if (isFromScreener) {
+      router.push("/tools/screener");
     } else {
       router.back();
     }
@@ -276,7 +277,7 @@ export default function StockDetail({ ticker, exchange }: StockDetailProps) {
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
           </svg>
-          {fromScreener ? t("screenerNav") : t("backToPortfolio")}
+          {isFromScreener ? t("screenerNav") : t("backToPortfolio")}
         </button>
 
         {/* Stock Identity */}
@@ -347,15 +348,13 @@ export default function StockDetail({ ticker, exchange }: StockDetailProps) {
         )}
 
         {/* Chart */}
-        {holding && (
-          <div className="card px-6 py-5">
-            <StockChart
-              ticker={holding.ticker}
-              purchasePrice={holding.purchasePrice}
-              displayCurrency={holding.displayCurrency}
-            />
-          </div>
-        )}
+        <div className="card px-6 py-5">
+          <StockChart
+            ticker={ticker}
+            purchasePrice={holding?.purchasePrice}
+            displayCurrency={holding?.displayCurrency || quote?.currency || "USD"}
+          />
+        </div>
 
         <AdSlot slot="stock-detail" format="auto" />
 

@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect, Suspense } from "react";
 import dynamic from "next/dynamic";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth-context";
 import { useSettings } from "@/lib/settings-context";
@@ -37,14 +38,11 @@ const ALL_TABS: { key: Tab; icon: string }[] = [
   { key: "screener", icon: "M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" },
 ];
 
-function getInitialTab(): Tab {
-  if (typeof window === "undefined") return "transactions";
-  const hash = window.location.hash.replace("#", "");
-  const valid: Tab[] = ["transactions", "dividends", "performance", "taxonomy", "rebalancing", "accounts", "watchlist", "alerts", "screener"];
-  return valid.includes(hash as Tab) ? (hash as Tab) : "transactions";
+interface PortfolioToolsProps {
+  initialTab?: Tab;
 }
 
-export default function PortfolioTools() {
+export default function PortfolioTools({ initialTab = "transactions" }: PortfolioToolsProps) {
   const { t } = useI18n();
   const { user } = useAuth();
   const {
@@ -52,23 +50,25 @@ export default function PortfolioTools() {
     toolTransactionsEnabled, toolDividendsEnabled, toolPerformanceEnabled,
     toolTaxonomyEnabled, toolRebalancingEnabled, toolAccountsEnabled, toolWatchlistEnabled,
   } = useSettings();
-  const [activeTab, setActiveTabState] = useState<Tab>(getInitialTab);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab") as Tab | null;
+  const VALID_TABS: Tab[] = ["transactions", "dividends", "performance", "taxonomy", "rebalancing", "accounts", "watchlist", "alerts", "screener"];
+  const resolvedInitial = (tabParam && VALID_TABS.includes(tabParam)) ? tabParam : initialTab;
+  const [activeTab, setActiveTabState] = useState<Tab>(resolvedInitial);
   const isPaid = user?.plan === "starter" || user?.plan === "pro";
 
   const setActiveTab = (tab: Tab) => {
+    if (tab === "screener") {
+      router.push("/tools/screener");
+      return;
+    }
+    const wasScreener = activeTab === ("screener" as Tab);
+    if (wasScreener) {
+      router.push("/tools");
+    }
     setActiveTabState(tab);
-    window.history.replaceState(null, "", `#${tab}`);
   };
-
-  useEffect(() => {
-    const onHashChange = () => {
-      const hash = window.location.hash.replace("#", "");
-      const valid: Tab[] = ["transactions", "dividends", "performance", "taxonomy", "rebalancing", "accounts", "watchlist", "alerts", "screener"];
-      if (valid.includes(hash as Tab)) setActiveTabState(hash as Tab);
-    };
-    window.addEventListener("hashchange", onHashChange);
-    return () => window.removeEventListener("hashchange", onHashChange);
-  }, []);
 
   const toolFlagMap: Record<Tab, boolean> = {
     transactions: toolTransactionsEnabled,

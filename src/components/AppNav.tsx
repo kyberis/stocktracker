@@ -9,6 +9,7 @@ import { useTrack } from "@/lib/use-track";
 import LanguageSwitcher from "./LanguageSwitcher";
 import UserDropdown from "./UserDropdown";
 import TierFeatureBadge from "./TierFeatureBadge";
+import NotificationBell from "./NotificationBell";
 
 interface AppNavProps {
   onWhatsNew?: () => void;
@@ -29,7 +30,7 @@ const NAV_LINKS = [
   {
     href: "/tools",
     labelKey: "toolsNav" as const,
-    match: (p: string) => p === "/tools",
+    match: (p: string) => p === "/tools" || p.startsWith("/tools/"),
   },
   {
     href: "/crypto",
@@ -109,6 +110,7 @@ export default function AppNav({ onWhatsNew, hasNewRelease }: AppNavProps) {
 
         {/* Right: Actions */}
         <div className="flex items-center gap-1.5 sm:gap-2">
+          <NotificationBell />
           {onWhatsNew && (
             <button
               onClick={onWhatsNew}

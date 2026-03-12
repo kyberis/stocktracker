@@ -52,7 +52,7 @@ export default function ScreenerResultRow({ row, index, inPortfolio }: Props) {
 
   function handleClick() {
     track("screener_stock_clicked", { ticker: row.symbol });
-    router.push(`/stock/${encodeURIComponent(row.symbol)}?from=screener`);
+    router.push(`/tools/screener/stock/${encodeURIComponent(row.symbol)}`);
   }
 
   const dayChangeClass = (row.regularMarketChangePercent ?? 0) >= 0

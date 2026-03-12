@@ -14,9 +14,40 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "1.25.0";
+export const CURRENT_VERSION = "1.27.0";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "1.27.0",
+    date: "2026-03-12",
+    title: "Screener Navigation & Price Charts",
+    titleTranslations: { es: "Navegación del Screener y Gráficos de Precios" },
+    changes: [
+      {
+        type: "improvement",
+        text: "Stock screener now lives at /tools/screener with its own URL — clicking a stock goes to /tools/screener/stock/TICKER, and back always returns to the screener with filters preserved",
+        translations: { es: "El screener de acciones ahora tiene su propia URL en /tools/screener — al hacer clic en una acción se navega a /tools/screener/stock/TICKER, y volver siempre regresa al screener con los filtros aplicados" },
+      },
+      {
+        type: "feature",
+        text: "Price evolution chart now always visible on stock detail pages, even for stocks not in your portfolio",
+        translations: { es: "El gráfico de evolución de precios ahora siempre es visible en las páginas de detalle de acciones, incluso para acciones que no están en tu cartera" },
+      },
+    ],
+  },
+  {
+    version: "1.26.0",
+    date: "2026-03-12",
+    title: "In-App Notification Center",
+    titleTranslations: { es: "Centro de Notificaciones" },
+    changes: [
+      {
+        type: "feature",
+        text: "New notification center with bell icon — receive welcome, upgrade, and downgrade notifications plus admin broadcasts right inside the app",
+        translations: { es: "Nuevo centro de notificaciones con icono de campana — recibe notificaciones de bienvenida, upgrade y downgrade, además de avisos del administrador dentro de la app" },
+      },
+    ],
+  },
   {
     version: "1.25.0",
     date: "2026-03-12",

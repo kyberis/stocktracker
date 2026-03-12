@@ -19,7 +19,7 @@ import type { HistoricalDataPoint, TimePeriod } from "@/lib/types";
 
 interface StockChartProps {
   ticker: string;
-  purchasePrice: number;
+  purchasePrice?: number;
   displayCurrency: string;
 }
 
@@ -104,9 +104,13 @@ export default function StockChart({ ticker, purchasePrice, displayCurrency }: S
     fetchData();
   }, [fetchData]);
 
+  const firstPrice = data.length > 0 ? data[0].close : 0;
   const lastPrice = data.length > 0 ? data[data.length - 1].close : 0;
-  const isAbovePurchase = lastPrice >= purchasePrice;
-  const chartColor = isAbovePurchase ? "#10b981" : "#ef4444";
+  const refPrice = purchasePrice ?? firstPrice;
+  const isAboveRef = lastPrice >= refPrice;
+  const chartColor = purchasePrice != null
+    ? (isAboveRef ? "#10b981" : "#ef4444")
+    : (lastPrice >= firstPrice ? "#10b981" : "#ef4444");
 
   const tickFill = isDark ? "#94a3b8" : "#9ca3af";
   const axisStroke = isDark ? "#334155" : "#e5e7eb";
@@ -183,18 +187,20 @@ export default function StockChart({ ticker, purchasePrice, displayCurrency }: S
               tickFormatter={(v: number) => v.toFixed(0)}
             />
             <Tooltip content={tooltipContent} />
-            <ReferenceLine
-              y={purchasePrice}
-              stroke="#f59e0b"
-              strokeDasharray="6 4"
-              strokeWidth={1.5}
-              label={{
-                value: t("purchaseLine"),
-                fill: "#f59e0b",
-                fontSize: 11,
-                position: "insideTopRight",
-              }}
-            />
+            {purchasePrice != null && (
+              <ReferenceLine
+                y={purchasePrice}
+                stroke="#f59e0b"
+                strokeDasharray="6 4"
+                strokeWidth={1.5}
+                label={{
+                  value: t("purchaseLine"),
+                  fill: "#f59e0b",
+                  fontSize: 11,
+                  position: "insideTopRight",
+                }}
+              />
+            )}
             <Area
               type="monotone"
               dataKey="close"

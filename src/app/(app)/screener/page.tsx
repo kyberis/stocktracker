@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
 export default function ScreenerPage() {
-  redirect("/tools");
+  redirect("/tools/screener");
 }

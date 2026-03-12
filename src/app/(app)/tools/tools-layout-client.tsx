@@ -1,18 +1,18 @@
 "use client";
 
 import { PortfolioProvider } from "@/lib/portfolio-context";
-import PortfolioTools from "@/components/PortfolioTools";
 import type { Holding, CashEntry } from "@/lib/types";
 
 interface Props {
   initialHoldings: Holding[];
   initialCash: CashEntry[];
+  children: React.ReactNode;
 }
 
-export default function ToolsShell({ initialHoldings, initialCash }: Props) {
+export default function ToolsLayoutClient({ initialHoldings, initialCash, children }: Props) {
   return (
     <PortfolioProvider initialHoldings={initialHoldings} initialCash={initialCash}>
-      <PortfolioTools />
+      {children}
     </PortfolioProvider>
   );
 }
