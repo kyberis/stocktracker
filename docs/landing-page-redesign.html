@@ -1,0 +1,1954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>trefolio — Landing Page Redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Instrument+Serif&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #060a14;
+    --bg-raised: #0b1120;
+    --bg-card: #111827;
+    --bg-card-hover: #182030;
+    --border: #1c2740;
+    --border-light: #253350;
+    --text: #f1f5f9;
+    --text-dim: #b8c5d6;
+    --text-muted: #64748b;
+    --text-faint: #3e5068;
+    --emerald: #10b981;
+    --emerald-bright: #34d399;
+    --emerald-glow: rgba(16, 185, 129, 0.12);
+    --emerald-glow-strong: rgba(16, 185, 129, 0.25);
+    --cyan: #22d3ee;
+    --amber: #f59e0b;
+    --amber-glow: rgba(245, 158, 11, 0.1);
+    --red: #f87171;
+    --violet: #a78bfa;
+    --violet-glow: rgba(167, 139, 250, 0.1);
+    --display: 'Instrument Serif', Georgia, serif;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--sans); background: var(--bg); color: var(--text);
+    line-height: 1.6; -webkit-font-smoothing: antialiased; overflow-x: hidden;
+  }
+  a { text-decoration: none; color: inherit; }
+
+  /* ── UTILITIES ── */
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 clamp(1rem, 4vw, 3rem); }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--emerald); background: var(--emerald-glow); border: 1px solid rgba(16,185,129,0.2);
+    padding: 6px 16px; border-radius: 100px;
+  }
+  .badge-new {
+    font-size: 0.6rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--cyan); background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.2);
+    padding: 2px 8px; border-radius: 4px;
+  }
+  .badge-pro {
+    font-size: 0.6rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--amber); background: var(--amber-glow); border: 1px solid rgba(245,158,11,0.2);
+    padding: 2px 8px; border-radius: 4px;
+  }
+  .section-eyebrow { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--emerald); margin-bottom: 16px; }
+  .section-title { font-family: var(--display); font-size: clamp(2rem, 4vw, 3.2rem); line-height: 1.1; margin-bottom: 16px; }
+  .section-title .accent { color: var(--emerald-bright); }
+  .section-sub { font-size: 1.05rem; color: var(--text-dim); max-width: 560px; line-height: 1.7; }
+  .section-header { text-align: center; max-width: 640px; margin: 0 auto 64px; }
+  .section-header .section-sub { margin: 0 auto; max-width: 560px; }
+
+  /* ── BUTTONS ── */
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--sans); font-size: 0.95rem; font-weight: 600;
+    color: #fff; background: var(--emerald); padding: 14px 32px; border-radius: 12px;
+    border: none; cursor: pointer; transition: all 0.25s;
+    box-shadow: 0 4px 24px rgba(16,185,129,0.25), inset 0 1px 0 rgba(255,255,255,0.15);
+  }
+  .btn-primary:hover { background: var(--emerald-bright); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(16,185,129,0.3); }
+  .btn-ghost {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--sans); font-size: 0.95rem; font-weight: 500;
+    color: var(--text-dim); background: rgba(255,255,255,0.04); border: 1px solid var(--border-light);
+    padding: 14px 28px; border-radius: 12px; cursor: pointer; transition: all 0.25s;
+  }
+  .btn-ghost:hover { color: var(--text); border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.06); }
+
+  /* ── ANIMATIONS ── */
+  @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+  @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  @keyframes gradient-shift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+  @keyframes typing { 0% { width: 0; } 100% { width: 100%; } }
+
+  /* ═══════════════════════════════════════════
+     1. NAVIGATION
+     ═══════════════════════════════════════════ */
+  .nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    height: 68px; display: flex; align-items: center; justify-content: center;
+    background: rgba(6, 10, 20, 0.75); backdrop-filter: blur(24px) saturate(1.8);
+    border-bottom: 1px solid transparent; transition: border-color 0.3s, background 0.3s;
+  }
+  .nav.scrolled { border-bottom-color: var(--border); background: rgba(6, 10, 20, 0.92); }
+  .nav-inner { width: 100%; max-width: 1200px; padding: 0 clamp(1rem, 4vw, 3rem); display: flex; align-items: center; justify-content: space-between; }
+  .nav-left { display: flex; align-items: center; gap: 10px; }
+  .nav-logo { width: 34px; height: 34px; border-radius: 8px; overflow: hidden; }
+  .nav-brand { font-family: var(--display); font-size: 1.35rem; color: var(--text); letter-spacing: -0.01em; }
+  .nav-center { display: flex; align-items: center; gap: 0; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 10px; padding: 4px; }
+  .nav-pill { font-size: 0.8rem; font-weight: 500; color: var(--text-muted); padding: 6px 18px; border-radius: 7px; transition: all 0.2s; cursor: pointer; }
+  .nav-pill:hover { color: var(--text-dim); background: rgba(255,255,255,0.05); }
+  .nav-right { display: flex; align-items: center; gap: 12px; }
+  .nav-btn-ghost { font-size: 0.8rem; font-weight: 500; color: var(--text-dim); padding: 8px 16px; border-radius: 8px; transition: all 0.2s; }
+  .nav-btn-ghost:hover { color: var(--text); }
+  .nav-btn-primary {
+    font-size: 0.8rem; font-weight: 600; color: #fff; background: var(--emerald);
+    padding: 8px 20px; border-radius: 8px; border: none; cursor: pointer;
+    transition: all 0.2s; box-shadow: 0 2px 12px rgba(16,185,129,0.25);
+  }
+  .nav-btn-primary:hover { background: var(--emerald-bright); transform: translateY(-1px); }
+
+  /* ═══════════════════════════════════════════
+     2. HERO
+     ═══════════════════════════════════════════ */
+  .hero {
+    padding: 160px 0 100px; position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: ''; position: absolute; top: -120px; left: 50%; transform: translateX(-50%);
+    width: 1200px; height: 800px;
+    background:
+      radial-gradient(ellipse 50% 40% at 35% 30%, rgba(16,185,129,0.1) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 50% at 70% 25%, rgba(34,211,238,0.06) 0%, transparent 70%),
+      radial-gradient(ellipse 30% 30% at 50% 60%, rgba(167,139,250,0.04) 0%, transparent 70%);
+    pointer-events: none; z-index: 0;
+  }
+  .hero-grid {
+    position: absolute; inset: 0; z-index: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+    background-size: 72px 72px;
+    mask-image: radial-gradient(ellipse 70% 50% at 50% 35%, black 10%, transparent 65%);
+    -webkit-mask-image: radial-gradient(ellipse 70% 50% at 50% 35%, black 10%, transparent 65%);
+  }
+  .hero-inner {
+    display: grid; grid-template-columns: 1fr 1.15fr; gap: 64px; align-items: center;
+    position: relative; z-index: 2;
+  }
+  .hero-content { position: relative; }
+  .hero-eyebrow { margin-bottom: 28px; }
+  .hero-eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--emerald); animation: pulse-dot 2s infinite; box-shadow: 0 0 6px var(--emerald); }
+  .hero h1 {
+    font-family: var(--display); font-size: clamp(2.8rem, 5.5vw, 4rem); line-height: 1.08;
+    letter-spacing: -0.02em; margin-bottom: 24px; font-weight: 400;
+  }
+  .hero h1 em {
+    font-style: italic;
+    background: linear-gradient(135deg, var(--emerald-bright), var(--cyan));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .hero-sub { font-size: 1.1rem; color: var(--text-dim); max-width: 440px; margin-bottom: 36px; line-height: 1.7; }
+  .hero-ctas { display: flex; gap: 14px; align-items: center; margin-bottom: 48px; }
+  .hero-proof { display: flex; gap: 36px; }
+  .hero-proof-item { display: flex; flex-direction: column; }
+  .hero-proof-value { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.03em; }
+  .hero-proof-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; }
+
+  /* ── Hero Dashboard Mock ── */
+  .hero-visual { position: relative; }
+  .hero-dashboard {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
+    padding: 24px; box-shadow: 0 40px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03) inset;
+    position: relative;
+  }
+  .hero-dashboard::before {
+    content: ''; position: absolute; inset: -1px; border-radius: 17px;
+    background: linear-gradient(135deg, rgba(16,185,129,0.25), transparent 50%, rgba(34,211,238,0.15));
+    z-index: -1; mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude; padding: 1px;
+  }
+  .dash-topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .dash-tabs { display: flex; gap: 2px; background: rgba(255,255,255,0.04); border-radius: 8px; padding: 3px; }
+  .dash-tab { font-size: 0.65rem; font-weight: 600; padding: 5px 12px; border-radius: 6px; color: var(--text-muted); }
+  .dash-tab.active { background: rgba(16,185,129,0.15); color: var(--emerald); }
+  .dash-actions { display: flex; gap: 6px; }
+  .dash-action-btn { width: 28px; height: 28px; border-radius: 6px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; }
+  .dash-action-btn svg { width: 14px; height: 14px; color: var(--text-muted); }
+  .dash-summary { display: flex; align-items: baseline; gap: 12px; margin-bottom: 4px; }
+  .dash-total { font-size: 2rem; font-weight: 800; letter-spacing: -0.03em; }
+  .dash-change { font-size: 0.78rem; font-weight: 600; color: var(--emerald); background: var(--emerald-glow); padding: 3px 10px; border-radius: 6px; }
+  .dash-subtitle { font-size: 0.72rem; color: var(--text-muted); margin-bottom: 16px; }
+  .dash-chart { width: 100%; height: 100px; margin-bottom: 14px; }
+  .dash-chart svg { width: 100%; height: 100%; }
+  .dash-holdings { display: grid; gap: 6px; }
+  .dash-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 9px 12px; background: rgba(255,255,255,0.02); border-radius: 8px;
+    font-size: 0.75rem; border: 1px solid transparent; transition: all 0.2s;
+  }
+  .dash-row:hover { border-color: var(--border); background: rgba(255,255,255,0.04); }
+  .dash-row-left { display: flex; align-items: center; gap: 10px; }
+  .dash-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .dash-ticker { font-weight: 700; color: var(--text); }
+  .dash-name { color: var(--text-muted); }
+  .dash-gain { font-weight: 600; color: var(--emerald); }
+  .dash-loss { font-weight: 600; color: var(--red); }
+
+  /* Floating cards on hero */
+  .float-card {
+    position: absolute; background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    z-index: 4;
+  }
+  .float-ai {
+    top: -16px; right: -24px; width: 200px;
+    animation: float 4.5s ease-in-out infinite;
+  }
+  .float-dividend {
+    bottom: 30px; left: -28px; width: 190px;
+    animation: float 4.5s ease-in-out infinite 1.2s;
+  }
+  .float-label { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 4px; }
+  .float-value { font-size: 1rem; font-weight: 700; }
+  .float-ai-tag {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 0.62rem; font-weight: 600; color: var(--emerald);
+    background: var(--emerald-glow); padding: 3px 8px; border-radius: 4px; margin-top: 6px;
+  }
+
+  /* ═══════════════════════════════════════════
+     3. STATS BAR
+     ═══════════════════════════════════════════ */
+  .stats {
+    padding: 48px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+    background: var(--bg-raised);
+  }
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px; text-align: center; }
+  .stat-value { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 4px; }
+  .stat-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+
+  /* ═══════════════════════════════════════════
+     4. HERO FEATURES (alternating rows)
+     ═══════════════════════════════════════════ */
+  .features { padding: 120px 0; }
+  .feature-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center;
+    margin-bottom: 120px;
+  }
+  .feature-row:last-child { margin-bottom: 0; }
+  .feature-row.reversed .feature-text { order: 2; }
+  .feature-row.reversed .feature-visual { order: 1; }
+  .feature-tag {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--emerald); margin-bottom: 16px;
+  }
+  .feature-title { font-family: var(--display); font-size: 2.2rem; line-height: 1.15; margin-bottom: 16px; }
+  .feature-desc { font-size: 1rem; color: var(--text-dim); margin-bottom: 24px; line-height: 1.7; max-width: 420px; }
+  .feature-points { list-style: none; display: grid; gap: 10px; }
+  .feature-points li {
+    display: flex; align-items: center; gap: 10px; font-size: 0.88rem; color: var(--text-dim);
+  }
+  .feature-check {
+    width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0;
+    background: var(--emerald-glow); border: 1px solid rgba(16,185,129,0.25);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .feature-check svg { width: 12px; height: 12px; color: var(--emerald); }
+
+  /* Feature visual frames */
+  .feature-frame {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
+    padding: 24px; box-shadow: 0 24px 48px rgba(0,0,0,0.3);
+    position: relative; overflow: hidden;
+  }
+  .feature-frame::before {
+    content: ''; position: absolute; inset: -1px; border-radius: 17px;
+    background: linear-gradient(135deg, rgba(16,185,129,0.2), transparent 60%);
+    z-index: -1; mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude; padding: 1px;
+  }
+
+  /* Mock: Themes preview */
+  .theme-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .theme-preview {
+    border-radius: 10px; padding: 14px; position: relative; overflow: hidden;
+    border: 1px solid; min-height: 140px;
+  }
+  .theme-preview .tp-label {
+    font-size: 0.6rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+    margin-bottom: 8px; opacity: 0.7;
+  }
+  .theme-preview .tp-value { font-size: 1.1rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 4px; }
+  .theme-preview .tp-change { font-size: 0.65rem; font-weight: 600; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-bottom: 8px; }
+  .theme-preview .tp-bar { height: 3px; border-radius: 2px; margin-bottom: 4px; }
+
+  .tp-default { background: #0f172a; border-color: #334155; color: #f1f5f9; }
+  .tp-default .tp-change { color: #10b981; background: rgba(16,185,129,0.15); }
+  .tp-default .tp-bar { background: linear-gradient(90deg, #10b981 0%, #10b981 65%, #1e293b 65%); }
+
+  .tp-canvas { background: #f8f9fb; border-color: #e2e8f0; color: #1a202c; }
+  .tp-canvas .tp-label { color: #64748b; }
+  .tp-canvas .tp-change { color: #16a34a; background: rgba(22,163,74,0.1); }
+  .tp-canvas .tp-bar { background: linear-gradient(90deg, #16a34a 0%, #16a34a 65%, #e2e8f0 65%); }
+
+  .tp-terminal { background: #0a0a0a; border-color: #27272a; color: #fafafa; font-family: 'Courier New', monospace; }
+  .tp-terminal .tp-value { font-family: 'Courier New', monospace; }
+  .tp-terminal .tp-change { color: #22c55e; background: rgba(34,197,94,0.15); font-family: 'Courier New', monospace; }
+  .tp-terminal .tp-bar { background: linear-gradient(90deg, #22c55e 0%, #22c55e 65%, #27272a 65%); }
+
+  .tp-studio { background: #18181b; border-color: rgba(255,255,255,0.06); color: #fafafa; }
+  .tp-studio .tp-change { color: #22c55e; background: rgba(34,197,94,0.1); }
+  .tp-studio .tp-bar { background: linear-gradient(90deg, #22c55e 0%, #22c55e 65%, #27272a 65%); }
+
+  .theme-tier {
+    position: absolute; top: 8px; right: 8px;
+    font-size: 0.55rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+    padding: 2px 6px; border-radius: 3px;
+  }
+  .tier-free { color: var(--text-muted); background: rgba(255,255,255,0.06); }
+  .tier-starter { color: var(--emerald); background: var(--emerald-glow); }
+  .tier-pro { color: var(--amber); background: var(--amber-glow); }
+
+  /* Mock: Dividends */
+  .div-mock-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 16px; }
+  .div-mock-total { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.02em; }
+  .div-mock-yield { font-size: 0.8rem; font-weight: 600; color: var(--emerald); background: var(--emerald-glow); padding: 3px 10px; border-radius: 6px; }
+  .div-calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 16px; }
+  .div-cal-header { font-size: 0.55rem; color: var(--text-muted); text-align: center; padding: 4px 0; font-weight: 600; }
+  .div-cal-day {
+    aspect-ratio: 1; border-radius: 6px; display: flex; align-items: center; justify-content: center;
+    font-size: 0.6rem; color: var(--text-muted); background: rgba(255,255,255,0.02);
+  }
+  .div-cal-day.has-div { background: var(--emerald-glow); color: var(--emerald); font-weight: 700; border: 1px solid rgba(16,185,129,0.2); }
+  .div-cal-day.today { border: 1px solid var(--border-light); }
+  .div-upcoming { display: grid; gap: 6px; }
+  .div-up-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 10px; background: rgba(255,255,255,0.02); border-radius: 6px; font-size: 0.72rem;
+  }
+  .div-up-left { display: flex; align-items: center; gap: 8px; }
+  .div-up-ticker { font-weight: 700; color: var(--text); }
+  .div-up-date { color: var(--text-muted); }
+  .div-up-amount { font-weight: 600; color: var(--emerald); }
+
+  /* Mock: AI Review */
+  .ai-mock-header { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+  .ai-sparkle-icon { width: 28px; height: 28px; border-radius: 8px; background: var(--emerald-glow); border: 1px solid rgba(16,185,129,0.2); display: flex; align-items: center; justify-content: center; }
+  .ai-sparkle-icon svg { width: 16px; height: 16px; color: var(--emerald); }
+  .ai-mock-title { font-size: 0.85rem; font-weight: 600; }
+  .ai-mock-body { font-size: 0.82rem; color: var(--text-dim); line-height: 1.65; margin-bottom: 16px; }
+  .ai-mock-body .highlight { color: var(--emerald-bright); font-weight: 600; }
+  .ai-mock-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .ai-card-mini {
+    background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px; font-size: 0.7rem;
+  }
+  .ai-card-mini-label { color: var(--text-muted); margin-bottom: 2px; }
+  .ai-card-mini-value { font-weight: 700; font-size: 0.85rem; }
+  .ai-cursor {
+    display: inline-block; width: 2px; height: 14px; background: var(--emerald);
+    animation: pulse-dot 1s infinite; vertical-align: text-bottom; margin-left: 2px;
+  }
+
+  /* ═══════════════════════════════════════════
+     5. FEATURE GRID
+     ═══════════════════════════════════════════ */
+  .feature-grid-section { padding: 80px 0 120px; }
+  .mini-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .mini-card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px;
+    padding: 24px; transition: all 0.3s; position: relative; overflow: hidden;
+  }
+  .mini-card:hover { border-color: var(--border-light); transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,0.3); }
+  .mini-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: var(--emerald-glow); border: 1px solid rgba(16,185,129,0.15);
+    display: flex; align-items: center; justify-content: center; margin-bottom: 14px;
+    color: var(--emerald);
+  }
+  .mini-icon svg { width: 20px; height: 20px; }
+  .mini-card h4 { font-size: 0.9rem; font-weight: 600; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+  .mini-card p { font-size: 0.78rem; color: var(--text-muted); line-height: 1.5; }
+
+  /* ═══════════════════════════════════════════
+     6. THEMES SHOWCASE
+     ═══════════════════════════════════════════ */
+  .themes-section { padding: 120px 0; background: var(--bg-raised); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .themes-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 48px; }
+  .theme-card {
+    border-radius: 14px; overflow: hidden; border: 1px solid var(--border);
+    transition: all 0.3s; position: relative;
+  }
+  .theme-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,0.4); }
+  .theme-card-inner { padding: 20px; min-height: 200px; }
+  .theme-card-name { font-size: 0.8rem; font-weight: 700; margin-bottom: 4px; }
+  .theme-card-desc { font-size: 0.68rem; opacity: 0.6; margin-bottom: 12px; }
+  .theme-card-mock-value { font-size: 1.4rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 4px; }
+  .theme-card-mock-change { font-size: 0.65rem; font-weight: 600; display: inline-block; padding: 2px 8px; border-radius: 4px; margin-bottom: 10px; }
+  .theme-card-mock-rows { display: grid; gap: 4px; }
+  .theme-card-mock-row { display: flex; justify-content: space-between; font-size: 0.62rem; padding: 5px 8px; border-radius: 4px; }
+
+  .tc-default .theme-card-inner { background: #0f172a; color: #f1f5f9; }
+  .tc-default .theme-card-mock-change { color: #10b981; background: rgba(16,185,129,0.15); }
+  .tc-default .theme-card-mock-row { background: rgba(255,255,255,0.03); }
+  .tc-default { border-color: #334155; }
+
+  .tc-canvas .theme-card-inner { background: #f8f9fb; color: #1a202c; }
+  .tc-canvas .theme-card-mock-change { color: #16a34a; background: rgba(22,163,74,0.08); }
+  .tc-canvas .theme-card-mock-row { background: rgba(0,0,0,0.03); color: #475569; }
+  .tc-canvas .theme-card-desc { color: #64748b; }
+  .tc-canvas { border-color: #e2e8f0; }
+
+  .tc-terminal .theme-card-inner { background: #0a0a0a; color: #fafafa; font-family: 'Courier New', monospace; }
+  .tc-terminal .theme-card-mock-value { font-family: 'Courier New', monospace; }
+  .tc-terminal .theme-card-mock-change { color: #22c55e; background: rgba(34,197,94,0.12); font-family: 'Courier New', monospace; }
+  .tc-terminal .theme-card-mock-row { background: rgba(255,255,255,0.03); font-family: 'Courier New', monospace; }
+  .tc-terminal { border-color: #27272a; }
+
+  .tc-studio .theme-card-inner { background: #18181b; color: #fafafa; }
+  .tc-studio .theme-card-mock-change { color: #22c55e; background: rgba(34,197,94,0.08); }
+  .tc-studio .theme-card-mock-row { background: rgba(255,255,255,0.02); }
+  .tc-studio { border-color: rgba(255,255,255,0.08); }
+
+  /* ═══════════════════════════════════════════
+     7. COMPARISON TABLE
+     ═══════════════════════════════════════════ */
+  .comparison { padding: 120px 0; }
+  .comparison-table { width: 100%; max-width: 900px; margin: 0 auto; border-collapse: collapse; }
+  .comparison-table th {
+    padding: 16px 20px; text-align: left; font-size: 0.72rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted);
+    border-bottom: 2px solid var(--border);
+  }
+  .comparison-table th.col-us { color: var(--emerald); }
+  .comparison-table td {
+    padding: 14px 20px; font-size: 0.85rem; color: var(--text-dim);
+    border-bottom: 1px solid rgba(28,39,64,0.5);
+  }
+  .comparison-table td:not(:first-child) { text-align: center; }
+  .check-icon { color: var(--emerald); font-size: 1.1rem; }
+  .cross-icon { color: var(--text-faint); font-size: 1.1rem; }
+
+  /* ═══════════════════════════════════════════
+     8. TESTIMONIALS
+     ═══════════════════════════════════════════ */
+  .testimonials { padding: 120px 0; background: var(--bg-raised); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .testimonial-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; max-width: 1000px; margin: 0 auto; }
+  .testimonial-card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
+    padding: 28px; transition: border-color 0.3s;
+  }
+  .testimonial-card:hover { border-color: var(--border-light); }
+  .tm-stars { display: flex; gap: 3px; margin-bottom: 14px; }
+  .tm-star { color: #fbbf24; font-size: 0.9rem; }
+  .tm-quote { font-size: 0.88rem; color: var(--text-dim); line-height: 1.65; margin-bottom: 18px; }
+  .tm-author { font-size: 0.82rem; font-weight: 600; color: var(--text); }
+  .tm-role { font-size: 0.72rem; color: var(--text-muted); }
+
+  /* ═══════════════════════════════════════════
+     9. PRICING
+     ═══════════════════════════════════════════ */
+  .pricing { padding: 120px 0; }
+  .billing-toggle { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 48px; }
+  .billing-label { font-size: 0.85rem; font-weight: 500; color: var(--text-muted); cursor: pointer; transition: color 0.2s; }
+  .billing-label.active { color: var(--text); }
+  .toggle-track {
+    width: 48px; height: 26px; border-radius: 13px; background: var(--border-light);
+    position: relative; cursor: pointer; transition: background 0.2s;
+  }
+  .toggle-track.on { background: var(--emerald); }
+  .toggle-thumb {
+    width: 20px; height: 20px; border-radius: 50%; background: #fff;
+    position: absolute; top: 3px; left: 3px; transition: transform 0.2s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+  .toggle-track.on .toggle-thumb { transform: translateX(22px); }
+  .save-tag {
+    font-size: 0.68rem; font-weight: 700; color: var(--amber); background: var(--amber-glow);
+    border: 1px solid rgba(245,158,11,0.2); padding: 3px 10px; border-radius: 100px;
+    animation: pulse-dot 2s infinite;
+  }
+  .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; max-width: 1050px; margin: 0 auto; }
+  .price-card {
+    border-radius: 18px; padding: 32px; position: relative;
+    background: var(--bg-card); border: 1px solid var(--border); transition: all 0.3s;
+  }
+  .price-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,0.3); }
+  .price-card.highlighted {
+    border: 2px solid rgba(16,185,129,0.4);
+    background: linear-gradient(180deg, rgba(16,185,129,0.06) 0%, var(--bg-card) 40%);
+    box-shadow: 0 8px 32px rgba(16,185,129,0.1);
+  }
+  .price-popular {
+    position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+    font-size: 0.7rem; font-weight: 700; color: #fff; background: var(--emerald);
+    padding: 5px 18px; border-radius: 100px; box-shadow: 0 4px 16px rgba(16,185,129,0.3);
+    white-space: nowrap;
+  }
+  .price-name { font-size: 1.15rem; font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+  .price-name svg { width: 20px; height: 20px; color: var(--emerald); }
+  .price-desc { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px; }
+  .price-row { display: flex; align-items: baseline; gap: 6px; margin-bottom: 4px; }
+  .price-old { font-size: 1rem; color: var(--text-muted); text-decoration: line-through; }
+  .price-amount { font-size: 2.8rem; font-weight: 800; letter-spacing: -0.04em; }
+  .price-period { font-size: 0.85rem; color: var(--text-muted); }
+  .price-annual-detail { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 20px; }
+  .price-annual-detail .save { font-weight: 600; color: var(--emerald); }
+  .price-features { list-style: none; display: grid; gap: 10px; margin-bottom: 24px; }
+  .price-features li { display: flex; align-items: flex-start; gap: 10px; font-size: 0.82rem; color: var(--text-dim); }
+  .price-features li svg { width: 18px; height: 18px; color: var(--emerald); flex-shrink: 0; margin-top: 2px; }
+  .price-cta {
+    display: block; text-align: center; font-weight: 600; font-size: 0.9rem;
+    padding: 14px; border-radius: 12px; transition: all 0.2s; cursor: pointer;
+  }
+  .price-cta-primary { color: #fff; background: var(--emerald); box-shadow: 0 4px 16px rgba(16,185,129,0.25); }
+  .price-cta-primary:hover { background: var(--emerald-bright); transform: translateY(-1px); }
+  .price-cta-secondary { color: var(--text); background: rgba(255,255,255,0.06); border: 1px solid var(--border-light); }
+  .price-cta-secondary:hover { border-color: var(--text-muted); }
+  .price-discount {
+    font-size: 0.62rem; font-weight: 700; color: var(--amber); background: var(--amber-glow);
+    border: 1px solid rgba(245,158,11,0.2); padding: 2px 8px; border-radius: 4px;
+  }
+  .pricing-footer { text-align: center; font-size: 0.8rem; color: var(--text-muted); margin-top: 32px; }
+
+  /* ═══════════════════════════════════════════
+     10. FAQ
+     ═══════════════════════════════════════════ */
+  .faq { padding: 120px 0; background: var(--bg-raised); border-top: 1px solid var(--border); }
+  .faq-list { max-width: 700px; margin: 0 auto; display: grid; gap: 8px; }
+  .faq-item {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px;
+    overflow: hidden; transition: border-color 0.3s;
+  }
+  .faq-item:hover { border-color: var(--border-light); }
+  .faq-q {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    padding: 18px 22px; cursor: pointer; font-size: 0.9rem; font-weight: 500; color: var(--text);
+    width: 100%; background: none; border: none; text-align: left; font-family: var(--sans);
+  }
+  .faq-q svg { width: 18px; height: 18px; color: var(--text-muted); flex-shrink: 0; transition: transform 0.2s; }
+  .faq-a { padding: 0 22px 18px; font-size: 0.85rem; color: var(--text-dim); line-height: 1.7; display: none; }
+  .faq-item.open .faq-a { display: block; }
+  .faq-item.open .faq-q svg { transform: rotate(180deg); }
+  .faq-item.open { border-color: rgba(16,185,129,0.25); background: rgba(16,185,129,0.03); }
+
+  /* ═══════════════════════════════════════════
+     11. GETTING STARTED
+     ═══════════════════════════════════════════ */
+  .getting-started { padding: 120px 0; border-top: 1px solid var(--border); }
+  .gs-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; max-width: 900px; margin: 0 auto; }
+  .gs-step {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px;
+    padding: 28px; text-align: center; transition: all 0.3s;
+  }
+  .gs-step:hover { border-color: var(--border-light); transform: translateY(-3px); }
+  .gs-num {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: var(--emerald-glow); border: 1px solid rgba(16,185,129,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 1.1rem; color: var(--emerald);
+    margin: 0 auto 14px;
+  }
+  .gs-step h4 { font-size: 0.95rem; font-weight: 600; margin-bottom: 6px; }
+  .gs-step p { font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; }
+
+  /* ═══════════════════════════════════════════
+     12. INSTALL APP (PWA)
+     ═══════════════════════════════════════════ */
+  .install { padding: 120px 0; background: var(--bg-raised); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .install-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
+  .phone-mock {
+    width: 260px; height: 520px; margin: 0 auto;
+    background: var(--bg-card); border: 3px solid var(--border-light); border-radius: 36px;
+    padding: 12px; position: relative; overflow: hidden;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+  }
+  .phone-screen {
+    width: 100%; height: 100%; border-radius: 24px; overflow: hidden;
+    background: #0f172a; display: flex; flex-direction: column;
+  }
+  .phone-status { display: flex; justify-content: space-between; padding: 8px 16px; font-size: 0.55rem; color: var(--text-muted); }
+  .phone-app-header { background: #0f172a; padding: 12px 16px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #1e293b; }
+  .phone-logo { width: 22px; height: 22px; border-radius: 5px; background: linear-gradient(135deg, #6ee7b7, #10b981); }
+  .phone-app-name { font-size: 0.7rem; font-weight: 700; color: var(--text); }
+  .phone-content { padding: 12px; flex: 1; }
+  .phone-value { font-size: 1.3rem; font-weight: 800; margin-bottom: 2px; color: var(--text); }
+  .phone-change-tag { font-size: 0.55rem; font-weight: 600; color: var(--emerald); background: var(--emerald-glow); padding: 2px 6px; border-radius: 4px; display: inline-block; margin-bottom: 10px; }
+  .phone-mini-chart { width: 100%; height: 50px; margin-bottom: 10px; }
+  .phone-mini-chart svg { width: 100%; height: 100%; }
+  .phone-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.6rem; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .phone-row-ticker { font-weight: 600; color: var(--text); }
+  .phone-row-gain { color: var(--emerald); font-weight: 600; }
+  .phone-row-loss { color: var(--red); font-weight: 600; }
+
+  /* ═══════════════════════════════════════════
+     13. DEVICE (trefolio Leaf)
+     ═══════════════════════════════════════════ */
+  .device { padding: 120px 0; }
+  .device-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
+  .device-visual {
+    width: 340px; height: 240px; margin: 0 auto;
+    background: linear-gradient(145deg, #1a1a2e, #16213e);
+    border: 2px solid rgba(167,139,250,0.2); border-radius: 20px;
+    position: relative; overflow: hidden;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.5), 0 0 80px rgba(167,139,250,0.05);
+  }
+  .device-screen {
+    position: absolute; inset: 12px; background: #000;
+    border-radius: 10px; overflow: hidden; display: flex; flex-direction: column;
+  }
+  .device-screen-content { padding: 12px; flex: 1; }
+  .device-screen-label { font-size: 0.5rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
+  .device-screen-value { font-size: 1.4rem; font-weight: 800; color: #fff; margin-bottom: 2px; }
+  .device-screen-change { font-size: 0.55rem; color: var(--emerald); font-weight: 600; }
+  .device-screen-chart { margin-top: 8px; width: 100%; height: 50px; }
+  .device-screen-chart svg { width: 100%; height: 100%; }
+  .device-screen-holdings { display: flex; gap: 12px; margin-top: 8px; }
+  .device-screen-holding { font-size: 0.5rem; color: var(--text-dim); }
+  .device-screen-holding span { display: block; font-size: 0.55rem; font-weight: 700; color: var(--text); }
+  .device-badge-hw {
+    font-size: 0.62rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--violet); background: var(--violet-glow); border: 1px solid rgba(167,139,250,0.2);
+    padding: 4px 12px; border-radius: 4px;
+  }
+  .device-badge-soon {
+    font-size: 0.62rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--amber); background: var(--amber-glow); border: 1px solid rgba(245,158,11,0.2);
+    padding: 4px 12px; border-radius: 4px;
+  }
+  .device-highlights { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 28px; }
+  .dh-item { display: flex; gap: 10px; }
+  .dh-icon {
+    width: 36px; height: 36px; border-radius: 8px; flex-shrink: 0;
+    background: var(--violet-glow); border: 1px solid rgba(167,139,250,0.15);
+    display: flex; align-items: center; justify-content: center; color: var(--violet);
+  }
+  .dh-icon svg { width: 18px; height: 18px; }
+  .dh-item h4 { font-size: 0.78rem; font-weight: 600; margin-bottom: 2px; }
+  .dh-item p { font-size: 0.68rem; color: var(--text-muted); line-height: 1.4; }
+  .device-form { display: flex; gap: 10px; margin-top: 24px; }
+  .device-input {
+    flex: 1; padding: 12px 16px; border-radius: 10px;
+    background: rgba(255,255,255,0.04); border: 1px solid var(--border-light);
+    color: var(--text); font-size: 0.85rem; font-family: var(--sans);
+    outline: none; transition: border-color 0.2s;
+  }
+  .device-input:focus { border-color: var(--violet); }
+  .device-input::placeholder { color: var(--text-muted); }
+  .device-submit {
+    font-family: var(--sans); font-size: 0.85rem; font-weight: 600;
+    color: #fff; background: #7c3aed; padding: 12px 24px; border-radius: 10px;
+    border: none; cursor: pointer; transition: all 0.2s;
+    box-shadow: 0 4px 16px rgba(124,58,237,0.25);
+  }
+  .device-submit:hover { background: #8b5cf6; transform: translateY(-1px); }
+
+  /* ═══════════════════════════════════════════
+     14. FINAL CTA
+     ═══════════════════════════════════════════ */
+  .final-cta { padding: 100px 0; }
+  .cta-banner {
+    border-radius: 24px; overflow: hidden; position: relative;
+    padding: 64px 48px; text-align: center;
+    background: linear-gradient(135deg, #059669, #0d9488, #0891b2);
+    background-size: 200% 200%; animation: gradient-shift 6s ease infinite;
+  }
+  .cta-banner::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(circle at 80% 20%, rgba(255,255,255,0.15), transparent 50%);
+  }
+  .cta-banner h2 { font-family: var(--display); font-size: clamp(1.8rem, 3.5vw, 2.8rem); color: #fff; margin-bottom: 12px; position: relative; }
+  .cta-banner p { font-size: 1.05rem; color: rgba(255,255,255,0.85); max-width: 480px; margin: 0 auto 28px; position: relative; }
+  .cta-banner-actions { display: flex; justify-content: center; gap: 16px; position: relative; }
+  .cta-btn-white {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--sans); font-size: 1rem; font-weight: 600;
+    color: #065f46; background: #fff; padding: 16px 36px; border-radius: 14px;
+    border: none; cursor: pointer; transition: all 0.25s;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  }
+  .cta-btn-white:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(0,0,0,0.25); }
+  .cta-btn-clear {
+    font-family: var(--sans); font-size: 0.95rem; font-weight: 500;
+    color: rgba(255,255,255,0.9); background: none; border: none; cursor: pointer;
+    transition: color 0.2s; padding: 16px;
+  }
+  .cta-btn-clear:hover { color: #fff; }
+
+  /* ═══════════════════════════════════════════
+     FOOTER
+     ═══════════════════════════════════════════ */
+  .footer {
+    padding: 48px 0; border-top: 1px solid var(--border);
+  }
+  .footer-inner { display: flex; justify-content: space-between; align-items: center; }
+  .footer-left { display: flex; align-items: center; gap: 10px; }
+  .footer-brand { font-family: var(--display); font-size: 1.15rem; color: var(--text); }
+  .footer-copy { font-size: 0.75rem; color: var(--text-muted); }
+  .footer-links { display: flex; gap: 24px; }
+  .footer-link { font-size: 0.8rem; color: var(--text-muted); transition: color 0.2s; }
+  .footer-link:hover { color: var(--text); }
+
+  /* ═══════════════════════════════════════════
+     TRUST / PRIVACY SECTION
+     ═══════════════════════════════════════════ */
+  .trust { padding: 100px 0; border-top: 1px solid var(--border); }
+  .trust-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; max-width: 900px; margin: 0 auto; }
+  .trust-card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px;
+    padding: 28px; text-align: center; transition: all 0.3s;
+  }
+  .trust-card:hover { border-color: var(--border-light); transform: translateY(-3px); }
+  .trust-icon {
+    width: 48px; height: 48px; border-radius: 12px; margin: 0 auto 14px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .trust-icon svg { width: 24px; height: 24px; }
+  .trust-card h4 { font-size: 0.95rem; font-weight: 600; margin-bottom: 6px; }
+  .trust-card p { font-size: 0.8rem; color: var(--text-muted); line-height: 1.55; }
+
+  /* ═══════════════════════════════════════════
+     COMPETITIVE PRICING CARDS (responsive)
+     ═══════════════════════════════════════════ */
+  .price-compare-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; max-width: 1000px; margin: 0 auto 48px; }
+
+  /* ═══════════════════════════════════════════
+     RESPONSIVE
+     ═══════════════════════════════════════════ */
+  @media (max-width: 900px) {
+    .hero-inner { grid-template-columns: 1fr; gap: 40px; }
+    .hero-visual { order: -1; }
+    .hero-content { text-align: center; }
+    .hero-sub { margin: 0 auto 36px; }
+    .hero-ctas { justify-content: center; flex-wrap: wrap; }
+    .hero-proof { justify-content: center; flex-wrap: wrap; }
+    .feature-row { grid-template-columns: 1fr; gap: 40px; }
+    .feature-row.reversed .feature-text { order: unset; }
+    .feature-row.reversed .feature-visual { order: unset; }
+    .mini-grid { grid-template-columns: 1fr 1fr; }
+    .themes-row { grid-template-columns: 1fr 1fr; }
+    .testimonial-grid { grid-template-columns: 1fr; }
+    .pricing-grid { grid-template-columns: 1fr; max-width: 400px; margin: 0 auto; }
+    .install-inner { grid-template-columns: 1fr; text-align: center; }
+    .device-inner { grid-template-columns: 1fr; }
+    .footer-inner { flex-direction: column; gap: 16px; text-align: center; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .gs-steps { grid-template-columns: 1fr; max-width: 400px; }
+    .nav-center { display: none; }
+    .price-compare-grid { grid-template-columns: 1fr 1fr; }
+    .trust-grid { grid-template-columns: 1fr; max-width: 400px; }
+    .comparison-table { font-size: 0.75rem; }
+    .comparison-table th, .comparison-table td { padding: 10px 8px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+     1. NAVIGATION
+     ═══════════════════════════════════════════ -->
+<nav class="nav" id="navbar">
+  <div class="nav-inner">
+    <a href="#" class="nav-left">
+      <svg class="nav-logo" viewBox="0 0 32 32">
+        <defs>
+          <linearGradient id="lg-a" x1=".5" y1="0" x2=".5" y2="1"><stop offset="0%" stop-color="#6ee7b7"/><stop offset="100%" stop-color="#10b981"/></linearGradient>
+          <linearGradient id="lg-b" x1="0" y1=".3" x2="1" y2=".7"><stop offset="0%" stop-color="#34d399"/><stop offset="100%" stop-color="#059669"/></linearGradient>
+          <linearGradient id="lg-c" x1=".5" y1="1" x2=".5" y2="0"><stop offset="0%" stop-color="#10b981"/><stop offset="100%" stop-color="#047857"/></linearGradient>
+          <linearGradient id="lg-d" x1="1" y1=".3" x2="0" y2=".7"><stop offset="0%" stop-color="#a7f3d0"/><stop offset="100%" stop-color="#34d399"/></linearGradient>
+        </defs>
+        <rect width="32" height="32" rx="7" fill="#0f172a"/>
+        <g transform="translate(16,16) rotate(45)">
+          <ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="url(#lg-a)"/>
+          <ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="url(#lg-b)" transform="rotate(90)"/>
+          <ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="url(#lg-c)" transform="rotate(180)"/>
+          <ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="url(#lg-d)" transform="rotate(270)"/>
+          <circle cx="0" cy="0" r="1.2" fill="#0f172a" opacity=".35"/>
+        </g>
+      </svg>
+      <span class="nav-brand">trefolio</span>
+    </a>
+    <div class="nav-center">
+      <a href="#features" class="nav-pill">Features</a>
+      <a href="#themes" class="nav-pill">Themes</a>
+      <a href="#pricing" class="nav-pill">Pricing</a>
+      <a href="#faq" class="nav-pill">FAQ</a>
+    </div>
+    <div class="nav-right">
+      <a href="#" class="nav-btn-ghost">Log in</a>
+      <button class="nav-btn-primary">Get Started Free</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════
+     2. HERO
+     ═══════════════════════════════════════════ -->
+<section class="hero">
+  <div class="hero-grid"></div>
+  <div class="container">
+    <div class="hero-inner">
+      <div class="hero-content">
+        <div class="eyebrow hero-eyebrow">
+          <span class="dot"></span>
+          The #1 European portfolio tracker &mdash; in 35 languages
+        </div>
+
+        <h1>Your portfolio,<br/><em>beautifully tracked.</em></h1>
+
+        <p class="hero-sub">
+          AI-powered insights in your language, real-time prices across 21 currencies, dividend tracking, and 4 dashboard themes. All for a fraction of what others charge.
+        </p>
+
+        <div class="hero-ctas">
+          <a href="#" class="btn-primary">
+            Start Free &mdash; No Card Required
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+          </a>
+          <a href="#" class="btn-ghost">Try Interactive Demo</a>
+        </div>
+
+        <div class="hero-proof">
+          <div class="hero-proof-item">
+            <div class="hero-proof-value">35</div>
+            <div class="hero-proof-label">Languages</div>
+          </div>
+          <div class="hero-proof-item">
+            <div class="hero-proof-value">21</div>
+            <div class="hero-proof-label">Currencies</div>
+          </div>
+          <div class="hero-proof-item">
+            <div class="hero-proof-value">&euro;5/mo</div>
+            <div class="hero-proof-label">Pro (annual)</div>
+          </div>
+          <div class="hero-proof-item">
+            <div class="hero-proof-value">100%</div>
+            <div class="hero-proof-label">Privacy-first</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CSS Mock Dashboard -->
+      <div class="hero-visual">
+        <div class="hero-dashboard">
+          <div class="dash-topbar">
+            <div class="dash-tabs">
+              <span class="dash-tab active">Portfolio</span>
+              <span class="dash-tab">Dividends</span>
+              <span class="dash-tab">Metrics</span>
+              <span class="dash-tab">Events</span>
+            </div>
+            <div class="dash-actions">
+              <div class="dash-action-btn">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+              </div>
+              <div class="dash-action-btn">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="dash-summary">
+            <span class="dash-total">&euro;47,284.50</span>
+            <span class="dash-change">+&euro;1,247.30 (+2.71%)</span>
+          </div>
+          <div class="dash-subtitle">Total Value &middot; 12 holdings &middot; EUR</div>
+
+          <div class="dash-chart">
+            <svg viewBox="0 0 500 100" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="cg" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="rgba(16,185,129,0.3)"/>
+                  <stop offset="100%" stop-color="rgba(16,185,129,0)"/>
+                </linearGradient>
+              </defs>
+              <path d="M0,80 C30,75 60,70 90,60 C120,50 150,55 180,45 C210,35 240,40 270,30 C300,20 330,25 360,18 C390,12 420,15 450,10 L500,8 L500,100 L0,100Z" fill="url(#cg)"/>
+              <path d="M0,80 C30,75 60,70 90,60 C120,50 150,55 180,45 C210,35 240,40 270,30 C300,20 330,25 360,18 C390,12 420,15 450,10 L500,8" fill="none" stroke="#10b981" stroke-width="2"/>
+            </svg>
+          </div>
+
+          <div class="dash-holdings">
+            <div class="dash-row">
+              <div class="dash-row-left">
+                <span class="dash-dot" style="background:#3b82f6"></span>
+                <span class="dash-ticker">ASML</span>
+                <span class="dash-name">ASML Holding</span>
+              </div>
+              <span class="dash-gain">+18.42%</span>
+            </div>
+            <div class="dash-row">
+              <div class="dash-row-left">
+                <span class="dash-dot" style="background:#10b981"></span>
+                <span class="dash-ticker">VWCE</span>
+                <span class="dash-name">Vanguard FTSE All-World</span>
+              </div>
+              <span class="dash-gain">+12.05%</span>
+            </div>
+            <div class="dash-row">
+              <div class="dash-row-left">
+                <span class="dash-dot" style="background:#f59e0b"></span>
+                <span class="dash-ticker">AAPL</span>
+                <span class="dash-name">Apple Inc.</span>
+              </div>
+              <span class="dash-gain">+8.73%</span>
+            </div>
+            <div class="dash-row">
+              <div class="dash-row-left">
+                <span class="dash-dot" style="background:#ef4444"></span>
+                <span class="dash-ticker">BABA</span>
+                <span class="dash-name">Alibaba Group</span>
+              </div>
+              <span class="dash-loss">-4.21%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Floating AI card -->
+        <div class="float-card float-ai">
+          <div class="float-label">AI Portfolio Review</div>
+          <div style="font-size:0.78rem; color:var(--text-dim); line-height:1.5; margin-bottom:6px;">
+            Your tech allocation is <span style="color:var(--emerald-bright); font-weight:600">well-balanced</span>. Consider adding...
+          </div>
+          <span class="float-ai-tag">
+            <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>
+            Trefolio AI
+          </span>
+        </div>
+
+        <!-- Floating dividend card -->
+        <div class="float-card float-dividend">
+          <div class="float-label">Next Dividend</div>
+          <div class="float-value" style="color:var(--emerald-bright)">&euro;82.40</div>
+          <div style="font-size:0.65rem; color:var(--text-muted); margin-top:4px;">ASML &middot; Ex-date Apr 28</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     3. STATS BAR
+     ═══════════════════════════════════════════ -->
+<section class="stats">
+  <div class="container">
+    <div class="stats-grid">
+      <div>
+        <div class="stat-value">35 Languages</div>
+        <div class="stat-label">No competitor comes close</div>
+      </div>
+      <div>
+        <div class="stat-value">2&ndash;5x Cheaper</div>
+        <div class="stat-label">Than comparable trackers</div>
+      </div>
+      <div>
+        <div class="stat-value">AI in Your Language</div>
+        <div class="stat-label">Exclusive to trefolio</div>
+      </div>
+      <div>
+        <div class="stat-value">Zero Data Selling</div>
+        <div class="stat-label">GDPR &middot; Privacy-first</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     4. HERO FEATURES (alternating rows)
+     ═══════════════════════════════════════════ -->
+<section class="features" id="features">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-eyebrow">Features</div>
+      <h2 class="section-title">Everything you need to <span class="accent">track &amp; grow</span></h2>
+      <p class="section-sub">From real-time quotes to AI-driven insights, trefolio gives you a complete view of your investments.</p>
+    </div>
+
+    <!-- Feature 1: Portfolio Dashboard -->
+    <div class="feature-row">
+      <div class="feature-text">
+        <div class="feature-tag">Portfolio</div>
+        <h3 class="feature-title">Your entire portfolio at a glance</h3>
+        <p class="feature-desc">See total value, day gains, performance charts, and individual holdings &mdash; all updating in real-time across 21 currencies.</p>
+        <ul class="feature-points">
+          <li><span class="feature-check"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span> Real-time price updates across global exchanges</li>
+          <li><span class="feature-check"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span> Multi-currency with automatic FX conversion</li>
+          <li><span class="feature-check"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span> Performance metrics: TTWROR, IRR, Sharpe ratio</li>
+          <li><span class="feature-check"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span> Net Worth tracking with real estate &amp; savings</li>
+        </ul>
+      </div>
+      <div class="feature-visual">
+        <div class="feature-frame">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+            <div>
+              <div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:2px;">Portfolio Overview</div>
+              <div style="display:flex; align-items:baseline; gap:8px;">
+                <span style="font-size:1.8rem; font-weight:800; letter-spacing:-0.03em;">&euro;47,284</span>
+                <span style="font-size:0.72rem; font-weight:600; color:var(--emerald); background:var(--emerald-glow); padding:2px 8px; border-radius:4px;">+2.71%</span>
+              </div>
+            </div>
+            <div style="display:flex; gap:4px;">
+              <span style="font-size:0.6rem; padding:4px 8px; border-radius:4px; background:rgba(255,255,255,0.06); color:var(--text-muted);">1W</span>
+              <span style="font-size:0.6rem; padding:4px 8px; border-radius:4px; background:var(--emerald-glow); color:var(--emerald); font-weight:600;">1M</span>
+              <span style="font-size:0.6rem; padding:4px 8px; border-radius:4px; background:rgba(255,255,255,0.06); color:var(--text-muted);">1Y</span>
+              <span style="font-size:0.6rem; padding:4px 8px; border-radius:4px; background:rgba(255,255,255,0.06); color:var(--text-muted);">All</span>
+            </div>
+          </div>
+          <div style="width:100%; height:80px; margin-bottom:14px;">
+            <svg viewBox="0 0 400 80" preserveAspectRatio="none" style="width:100%; height:100%;">
+              <defs><linearGradient id="fg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="rgba(16,185,129,0.25)"/><stop offset="100%" stop-color="rgba(16,185,129,0)"/></linearGradient></defs>
+              <path d="M0,65 C40,60 80,50 120,42 C160,34 200,38 240,28 C280,18 320,22 360,14 L400,10 L400,80 L0,80Z" fill="url(#fg1)"/>
+              <path d="M0,65 C40,60 80,50 120,42 C160,34 200,38 240,28 C280,18 320,22 360,14 L400,10" fill="none" stroke="#10b981" stroke-width="1.5"/>
+            </svg>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:14px;">
+            <div style="background:rgba(255,255,255,0.03); border-radius:8px; padding:10px;">
+              <div style="font-size:0.6rem; color:var(--text-muted); margin-bottom:2px;">Day Gain</div>
+              <div style="font-size:0.85rem; font-weight:700; color:var(--emerald);">+&euro;347.20</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.03); border-radius:8px; padding:10px;">
+              <div style="font-size:0.6rem; color:var(--text-muted); margin-bottom:2px;">Total Gain</div>
+              <div style="font-size:0.85rem; font-weight:700; color:var(--emerald);">+&euro;8,241</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.03); border-radius:8px; padding:10px;">
+              <div style="font-size:0.6rem; color:var(--text-muted); margin-bottom:2px;">Dividends</div>
+              <div style="font-size:0.85rem; font-weight:700; color:var(--emerald);">&euro;1,420</div>
+            </div>
+          </div>
+          <div style="display:grid; gap:4px;">
+            <div style="display:flex; justify-content:space-between; padding:7px 10px; background:rgba(255,255,255,0.02); border-radius:6px; font-size:0.7rem;">
+              <div style="display:flex; gap:8px; align-items:center;"><span style="width:6px; height:6px; border-radius:50%; background:#3b82f6;"></span><span style="font-weight:600;">ASML</span><span style="color:var(--text-muted);">8 shares</span></div>
+              <span style="color:var(--emerald); font-weight:600;">+&euro;1,842</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:7px 10px; background:rgba(255,255,255,0.02); border-radius:6px; font-size:0.7rem;">
+              <div style="display:flex; gap:8px; align-items:center;"><span style="width:6px; height:6px; border-radius:50%; background:#10b981;"></span><span style="font-weight:600;">VWCE</span><span style="color:var(--text-muted);">42 shares</span></div>
+              <span style="color:var(--emerald); font-weight:600;">+&euro;3,105</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feature 2: Dashboard Themes (NEW) -->
+    <div class="feature-row reversed">
+      <div class="feature-text">
+        <div class="feature-tag">
+          Themes
+          <span class="badge-new">New</span>
+        </div>
+        <h3 class="feature-title">Four themes, your style</h3>
+        <p class="feature-desc">Choose between Default, Canvas, Terminal, and Studio. Each theme transforms the entire dashboard with unique typography, colors, and personality.</p>
+        <ul class="feature-points">
+          <li><span class="feature-check"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span> Default &mdash; Clean dark/light fintech (Free)</li>
+          <li><span class="feature-check"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span> Canvas &mdash; Warm, light editorial feel (Starter+)</li>
+          <li><span class="feature-check"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span> Terminal &mdash; Monospace hacker aesthetic (Pro)</li>
+          <li><span class="feature-check"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span> Studio &mdash; Sidebar layout, premium dark (Pro)</li>
+        </ul>
+      </div>
+      <div class="feature-visual">
+        <div class="feature-frame" style="padding:16px;">
+          <div class="theme-grid">
+            <div class="theme-preview tp-default">
+              <span class="theme-tier tier-free">Free</span>
+              <div class="tp-label">Default</div>
+              <div class="tp-value">&euro;47,284</div>
+              <div class="tp-change">+2.71%</div>
+              <div class="tp-bar"></div>
+              <div class="tp-bar" style="background: linear-gradient(90deg, #3b82f6 0%, #3b82f6 40%, #1e293b 40%);"></div>
+            </div>
+            <div class="theme-preview tp-canvas">
+              <span class="theme-tier tier-starter">Starter+</span>
+              <div class="tp-label">Canvas</div>
+              <div class="tp-value">&euro;47,284</div>
+              <div class="tp-change">+2.71%</div>
+              <div class="tp-bar"></div>
+              <div class="tp-bar" style="background: linear-gradient(90deg, #3b82f6 0%, #3b82f6 40%, #e2e8f0 40%);"></div>
+            </div>
+            <div class="theme-preview tp-terminal">
+              <span class="theme-tier tier-pro">Pro</span>
+              <div class="tp-label">Terminal</div>
+              <div class="tp-value">&euro;47,284</div>
+              <div class="tp-change">+2.71%</div>
+              <div class="tp-bar"></div>
+              <div class="tp-bar" style="background: linear-gradient(90deg, #22c55e 0%, #22c55e 40%, #27272a 40%);"></div>
+            </div>
+            <div class="theme-preview tp-studio">
+              <span class="theme-tier tier-pro">Pro</span>
+              <div class="tp-label">Studio</div>
+              <div class="tp-value">&euro;47,284</div>
+              <div class="tp-change">+2.71%</div>
+              <div class="tp-bar"></div>
+              <div class="tp-bar" style="background: linear-gradient(90deg, #22c55e 0%, #22c55e 40%, #27272a 40%);"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feature 3: Dividends -->
+    <div class="feature-row">
+      <div class="feature-text">
+        <div class="feature-tag">Dividends</div>
+        <h3 class="feature-title">Track every dividend, plan your income</h3>
+        <p class="feature-desc">See upcoming ex-dates, annual yield projections, and income by holding. Know exactly when and how much you'll receive.</p>
+        <ul class="feature-points">
+          <li><span class="feature-check"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span> Estimated annual dividend income</li>
+          <li><span class="feature-check"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span> Ex-date calendar with notifications</li>
+          <li><span class="feature-check"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span> Yield-on-cost &amp; payout ratio per stock</li>
+          <li><span class="feature-check"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span> Withholding tax tracking by country</li>
+        </ul>
+      </div>
+      <div class="feature-visual">
+        <div class="feature-frame">
+          <div class="div-mock-header">
+            <div>
+              <div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:2px;">Estimated Annual Dividends</div>
+              <div class="div-mock-total">&euro;1,420.80</div>
+            </div>
+            <div class="div-mock-yield">2.8% yield</div>
+          </div>
+          <div class="div-calendar">
+            <span class="div-cal-header">M</span><span class="div-cal-header">T</span><span class="div-cal-header">W</span><span class="div-cal-header">T</span><span class="div-cal-header">F</span><span class="div-cal-header">S</span><span class="div-cal-header">S</span>
+            <span class="div-cal-day">1</span><span class="div-cal-day">2</span><span class="div-cal-day">3</span><span class="div-cal-day has-div">4</span><span class="div-cal-day">5</span><span class="div-cal-day">6</span><span class="div-cal-day">7</span>
+            <span class="div-cal-day">8</span><span class="div-cal-day">9</span><span class="div-cal-day">10</span><span class="div-cal-day">11</span><span class="div-cal-day today">12</span><span class="div-cal-day">13</span><span class="div-cal-day">14</span>
+            <span class="div-cal-day">15</span><span class="div-cal-day has-div">16</span><span class="div-cal-day">17</span><span class="div-cal-day">18</span><span class="div-cal-day">19</span><span class="div-cal-day">20</span><span class="div-cal-day">21</span>
+            <span class="div-cal-day">22</span><span class="div-cal-day">23</span><span class="div-cal-day">24</span><span class="div-cal-day has-div">25</span><span class="div-cal-day">26</span><span class="div-cal-day">27</span><span class="div-cal-day has-div">28</span>
+          </div>
+          <div style="font-size:0.68rem; color:var(--text-muted); margin-bottom:8px; font-weight:600;">Upcoming</div>
+          <div class="div-upcoming">
+            <div class="div-up-row"><div class="div-up-left"><span class="div-up-ticker">ASML</span><span class="div-up-date">Apr 28</span></div><span class="div-up-amount">&euro;82.40</span></div>
+            <div class="div-up-row"><div class="div-up-left"><span class="div-up-ticker">VWCE</span><span class="div-up-date">May 4</span></div><span class="div-up-amount">&euro;34.16</span></div>
+            <div class="div-up-row"><div class="div-up-left"><span class="div-up-ticker">AAPL</span><span class="div-up-date">May 16</span></div><span class="div-up-amount">&euro;18.20</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feature 4: AI Insights -->
+    <div class="feature-row reversed">
+      <div class="feature-text">
+        <div class="feature-tag">
+          AI Insights
+          <span class="badge-pro">Trefolio</span>
+        </div>
+        <h3 class="feature-title">AI that understands your portfolio</h3>
+        <p class="feature-desc">Get personalized analysis of your holdings, sector allocation, risk exposure, and actionable suggestions powered by AI.</p>
+        <ul class="feature-points">
+          <li><span class="feature-check"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span> AI Portfolio Review with personalized advice</li>
+          <li><span class="feature-check"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span> Stock intelligence &amp; fundamental analysis</li>
+          <li><span class="feature-check"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span> Portfolio news feed with AI summaries</li>
+          <li><span class="feature-check"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span> AI-powered screenshot import</li>
+        </ul>
+      </div>
+      <div class="feature-visual">
+        <div class="feature-frame">
+          <div class="ai-mock-header">
+            <div class="ai-sparkle-icon">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>
+            </div>
+            <div>
+              <div class="ai-mock-title">AI Portfolio Review</div>
+              <div style="font-size:0.65rem; color:var(--text-muted);">Last updated 2 min ago</div>
+            </div>
+          </div>
+          <div class="ai-mock-body">
+            Your portfolio shows <span class="highlight">strong growth momentum</span> with a well-diversified mix of growth and value. Tech exposure at 42% is above average &mdash; consider <span class="highlight">adding defensive sectors</span> like utilities or healthcare for better risk-adjusted returns.<span class="ai-cursor"></span>
+          </div>
+          <div class="ai-mock-cards">
+            <div class="ai-card-mini">
+              <div class="ai-card-mini-label">Risk Score</div>
+              <div class="ai-card-mini-value" style="color:var(--amber);">6.2 / 10</div>
+            </div>
+            <div class="ai-card-mini">
+              <div class="ai-card-mini-label">Diversification</div>
+              <div class="ai-card-mini-value" style="color:var(--emerald);">Good</div>
+            </div>
+            <div class="ai-card-mini">
+              <div class="ai-card-mini-label">Sector Balance</div>
+              <div class="ai-card-mini-value" style="color:var(--amber);">Moderate</div>
+            </div>
+            <div class="ai-card-mini">
+              <div class="ai-card-mini-label">Income Score</div>
+              <div class="ai-card-mini-value" style="color:var(--emerald);">8.1 / 10</div>
+            </div>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <span class="float-ai-tag" style="margin:0;">
+              <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>
+              Powered by Trefolio AI
+            </span>
+            <span class="badge-pro">Pro</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     5. FEATURE GRID
+     ═══════════════════════════════════════════ -->
+<section class="feature-grid-section">
+  <div class="container">
+    <div class="mini-grid">
+      <div class="mini-card">
+        <div class="mini-icon">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/></svg>
+        </div>
+        <h4>Performance Metrics</h4>
+        <p>TTWROR, IRR, Sharpe ratio, max drawdown, and volatility analysis.</p>
+      </div>
+      <div class="mini-card">
+        <div class="mini-icon">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <h4>21 Currencies <span class="badge-new">New</span></h4>
+        <p>Dynamic FX conversion with per-portfolio base currency and impact indicator.</p>
+      </div>
+      <div class="mini-card">
+        <div class="mini-icon">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
+        </div>
+        <h4>14+ Broker Imports</h4>
+        <p>CSV from DEGIRO, IBKR, Trading 212, Revolut, Schwab, and more. Plus API sync.</p>
+      </div>
+      <div class="mini-card">
+        <div class="mini-icon">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6z M13.5 10.5H21A7.5 7.5 0 0013.5 3v7.5z"/></svg>
+        </div>
+        <h4>Diversification</h4>
+        <p>Sector &amp; region taxonomy, allocation targets, and rebalancing suggestions.</p>
+      </div>
+      <div class="mini-card">
+        <div class="mini-icon" style="background:rgba(34,211,238,0.1); border-color:rgba(34,211,238,0.15); color:#22d3ee;">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2" stroke-linecap="round" stroke-linejoin="round"/><path stroke-linecap="round" stroke-linejoin="round" d="M16 2v4M8 2v4M3 10h18"/></svg>
+        </div>
+        <h4>Event Calendar <span class="badge-new">New</span></h4>
+        <p>Earnings dates, economic events, and IPOs. Portfolio-aware earnings calendar.</p>
+      </div>
+      <div class="mini-card">
+        <div class="mini-icon" style="background:rgba(167,139,250,0.1); border-color:rgba(167,139,250,0.15); color:#a78bfa;">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3H21m-3.75 3H21"/></svg>
+        </div>
+        <h4>Net Worth <span class="badge-new">New</span></h4>
+        <p>Track real estate, savings, pensions, and custom assets alongside your portfolio.</p>
+      </div>
+      <div class="mini-card">
+        <div class="mini-icon">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"/></svg>
+        </div>
+        <h4>Stealth Mode</h4>
+        <p>Hide sensitive values with one tap. Perfect for checking your portfolio in public.</p>
+      </div>
+      <div class="mini-card">
+        <div class="mini-icon" style="background:rgba(56,189,248,0.1); border-color:rgba(56,189,248,0.15); color:#38bdf8;">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418"/></svg>
+        </div>
+        <h4>35 Languages <span style="font-size:0.55rem; font-weight:700; color:var(--emerald); background:var(--emerald-glow); padding:2px 6px; border-radius:3px; border:1px solid rgba(16,185,129,0.2);">#1</span></h4>
+        <p>The most multilingual portfolio tracker on the market. AI insights delivered in your native language.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     6. THEMES SHOWCASE
+     ═══════════════════════════════════════════ -->
+<section class="themes-section" id="themes">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-eyebrow">Personalization</div>
+      <h2 class="section-title">Make it <span class="accent">yours</span></h2>
+      <p class="section-sub">Four distinct dashboard themes with unique typography, colors, and layout. From clean minimalism to hacker-chic.</p>
+    </div>
+
+    <div class="themes-row">
+      <div class="theme-card tc-default">
+        <div class="theme-card-inner">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <div class="theme-card-name">Default</div>
+            <span class="theme-tier tier-free">Free</span>
+          </div>
+          <div class="theme-card-desc">Clean fintech, dark/light toggle</div>
+          <div class="theme-card-mock-value">&euro;47,284</div>
+          <div class="theme-card-mock-change">+2.71%</div>
+          <div class="theme-card-mock-rows">
+            <div class="theme-card-mock-row"><span style="font-weight:600;">ASML</span><span style="color:#10b981;">+18.42%</span></div>
+            <div class="theme-card-mock-row"><span style="font-weight:600;">VWCE</span><span style="color:#10b981;">+12.05%</span></div>
+            <div class="theme-card-mock-row"><span style="font-weight:600;">AAPL</span><span style="color:#10b981;">+8.73%</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="theme-card tc-canvas">
+        <div class="theme-card-inner">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <div class="theme-card-name">Canvas</div>
+            <span class="theme-tier tier-starter">Starter+</span>
+          </div>
+          <div class="theme-card-desc">Warm, editorial, forced light</div>
+          <div class="theme-card-mock-value">&euro;47,284</div>
+          <div class="theme-card-mock-change">+2.71%</div>
+          <div class="theme-card-mock-rows">
+            <div class="theme-card-mock-row"><span style="font-weight:600;">ASML</span><span style="color:#16a34a;">+18.42%</span></div>
+            <div class="theme-card-mock-row"><span style="font-weight:600;">VWCE</span><span style="color:#16a34a;">+12.05%</span></div>
+            <div class="theme-card-mock-row"><span style="font-weight:600;">AAPL</span><span style="color:#16a34a;">+8.73%</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="theme-card tc-terminal">
+        <div class="theme-card-inner">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <div class="theme-card-name">Terminal</div>
+            <span class="theme-tier tier-pro">Pro</span>
+          </div>
+          <div class="theme-card-desc">Monospace, hacker aesthetic</div>
+          <div class="theme-card-mock-value">&euro;47,284</div>
+          <div class="theme-card-mock-change">+2.71%</div>
+          <div class="theme-card-mock-rows">
+            <div class="theme-card-mock-row"><span style="font-weight:600;">ASML</span><span style="color:#22c55e;">+18.42%</span></div>
+            <div class="theme-card-mock-row"><span style="font-weight:600;">VWCE</span><span style="color:#22c55e;">+12.05%</span></div>
+            <div class="theme-card-mock-row"><span style="font-weight:600;">AAPL</span><span style="color:#22c55e;">+8.73%</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="theme-card tc-studio">
+        <div class="theme-card-inner">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <div class="theme-card-name">Studio</div>
+            <span class="theme-tier tier-pro">Pro</span>
+          </div>
+          <div class="theme-card-desc">Premium dark, sidebar layout</div>
+          <div class="theme-card-mock-value">&euro;47,284</div>
+          <div class="theme-card-mock-change">+2.71%</div>
+          <div class="theme-card-mock-rows">
+            <div class="theme-card-mock-row"><span style="font-weight:600;">ASML</span><span style="color:#22c55e;">+18.42%</span></div>
+            <div class="theme-card-mock-row"><span style="font-weight:600;">VWCE</span><span style="color:#22c55e;">+12.05%</span></div>
+            <div class="theme-card-mock-row"><span style="font-weight:600;">AAPL</span><span style="color:#22c55e;">+8.73%</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     7a. PRICING COMPARISON (vs. competitors)
+     ═══════════════════════════════════════════ -->
+<section class="comparison" style="border-bottom:1px solid var(--border);">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-eyebrow">Why switch to trefolio</div>
+      <h2 class="section-title">Premium features, <span class="accent">fraction of the price</span></h2>
+      <p class="section-sub">trefolio Pro costs &euro;59.99/year. Here's what others charge for comparable features.</p>
+    </div>
+
+    <div class="price-compare-grid">
+      <div style="background:var(--bg-card); border:2px solid rgba(16,185,129,0.4); border-radius:14px; padding:24px; text-align:center; position:relative;">
+        <div style="position:absolute; top:-10px; left:50%; transform:translateX(-50%); font-size:0.6rem; font-weight:700; color:#fff; background:var(--emerald); padding:3px 12px; border-radius:100px;">You are here</div>
+        <div style="font-size:0.9rem; font-weight:700; color:var(--emerald); margin-bottom:4px;">trefolio</div>
+        <div style="font-size:2rem; font-weight:800; letter-spacing:-0.03em; color:var(--text);">&euro;60<span style="font-size:0.8rem; font-weight:500; color:var(--text-muted);">/yr</span></div>
+        <div style="font-size:0.7rem; color:var(--emerald); margin-top:4px;">Save 2&ndash;5x</div>
+      </div>
+      <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:14px; padding:24px; text-align:center;">
+        <div style="font-size:0.9rem; font-weight:700; color:var(--text-dim); margin-bottom:4px;">Simply Wall St</div>
+        <div style="font-size:2rem; font-weight:800; letter-spacing:-0.03em; color:var(--text-muted);">&euro;131<span style="font-size:0.8rem; font-weight:500;">/yr</span></div>
+        <div style="font-size:0.7rem; color:var(--red); margin-top:4px;">2.2x more</div>
+      </div>
+      <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:14px; padding:24px; text-align:center;">
+        <div style="font-size:0.9rem; font-weight:700; color:var(--text-dim); margin-bottom:4px;">Snowball</div>
+        <div style="font-size:2rem; font-weight:800; letter-spacing:-0.03em; color:var(--text-muted);">&euro;150<span style="font-size:0.8rem; font-weight:500;">/yr</span></div>
+        <div style="font-size:0.7rem; color:var(--red); margin-top:4px;">2.5x more</div>
+      </div>
+      <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:14px; padding:24px; text-align:center;">
+        <div style="font-size:0.9rem; font-weight:700; color:var(--text-dim); margin-bottom:4px;">Sharesight</div>
+        <div style="font-size:2rem; font-weight:800; letter-spacing:-0.03em; color:var(--text-muted);">&euro;279<span style="font-size:0.8rem; font-weight:500;">/yr</span></div>
+        <div style="font-size:0.7rem; color:var(--red); margin-top:4px;">4.7x more</div>
+      </div>
+    </div>
+
+    <div style="text-align:center; margin-bottom:48px;">
+      <p style="font-size:0.85rem; color:var(--text-muted); max-width:500px; margin:0 auto;">Prices shown are approximate annual costs for comparable tiers (Pro/Premium). trefolio Pro includes AI analysis, 4 themes, unlimited holdings, and broker sync &mdash; features that cost extra on most competitors.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     7b. FEATURE COMPARISON TABLE
+     ═══════════════════════════════════════════ -->
+<section class="comparison">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-eyebrow">Feature by feature</div>
+      <h2 class="section-title">What only <span class="accent">trefolio</span> offers</h2>
+      <p class="section-sub">Side-by-side comparison with the most popular alternatives.</p>
+    </div>
+
+    <table class="comparison-table">
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th class="col-us">trefolio</th>
+          <th>Getquin</th>
+          <th>Simply Wall St</th>
+          <th>Snowball</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>AI portfolio analysis</strong></td><td><span class="check-icon">&#10003;</span></td><td><span class="check-icon" style="opacity:0.5">~</span></td><td><span class="cross-icon">&#10005;</span></td><td><span class="cross-icon">&#10005;</span></td></tr>
+        <tr><td><strong>AI in your native language</strong></td><td><span class="check-icon">&#10003;</span></td><td><span class="cross-icon">&#10005;</span></td><td><span class="cross-icon">&#10005;</span></td><td><span class="cross-icon">&#10005;</span></td></tr>
+        <tr><td><strong>35 European languages</strong></td><td><span class="check-icon">&#10003;</span></td><td><span class="cross-icon" style="opacity:0.5">~10</span></td><td><span class="cross-icon" style="opacity:0.5">~8</span></td><td><span class="cross-icon">EN</span></td></tr>
+        <tr><td><strong>4 dashboard themes</strong></td><td><span class="check-icon">&#10003;</span></td><td><span class="cross-icon">&#10005;</span></td><td><span class="cross-icon">&#10005;</span></td><td><span class="cross-icon">&#10005;</span></td></tr>
+        <tr><td><strong>Hardware desk display</strong></td><td><span class="check-icon">&#10003;</span></td><td><span class="cross-icon">&#10005;</span></td><td><span class="cross-icon">&#10005;</span></td><td><span class="cross-icon">&#10005;</span></td></tr>
+        <tr><td><strong>Market move alerts</strong></td><td><span class="check-icon">&#10003;</span></td><td><span class="cross-icon">&#10005;</span></td><td><span class="cross-icon">&#10005;</span></td><td><span class="cross-icon">&#10005;</span></td></tr>
+        <tr><td><strong>AI screenshot import</strong></td><td><span class="check-icon">&#10003;</span></td><td><span class="cross-icon">&#10005;</span></td><td><span class="cross-icon">&#10005;</span></td><td><span class="cross-icon">&#10005;</span></td></tr>
+        <tr><td>Multi-currency (21)</td><td><span class="check-icon">&#10003;</span></td><td><span class="check-icon">&#10003;</span></td><td><span class="check-icon">&#10003;</span></td><td><span class="check-icon">&#10003;</span></td></tr>
+        <tr><td>Dividend tracking</td><td><span class="check-icon">&#10003;</span></td><td><span class="check-icon">&#10003;</span></td><td><span class="check-icon">&#10003;</span></td><td><span class="check-icon">&#10003;</span></td></tr>
+        <tr><td>Performance metrics (TTWROR, IRR)</td><td><span class="check-icon">&#10003;</span></td><td><span class="check-icon">&#10003;</span></td><td><span class="cross-icon">&#10005;</span></td><td><span class="check-icon">&#10003;</span></td></tr>
+        <tr><td>Net worth tracking</td><td><span class="check-icon">&#10003;</span></td><td><span class="check-icon">&#10003;</span></td><td><span class="cross-icon">&#10005;</span></td><td><span class="check-icon">&#10003;</span></td></tr>
+        <tr><td>Stealth mode</td><td><span class="check-icon">&#10003;</span></td><td><span class="cross-icon">&#10005;</span></td><td><span class="cross-icon">&#10005;</span></td><td><span class="cross-icon">&#10005;</span></td></tr>
+        <tr style="font-weight:600;">
+          <td>Annual Pro price</td>
+          <td style="color:var(--emerald);">&euro;60/yr</td>
+          <td style="color:var(--text-muted);">&euro;150/yr</td>
+          <td style="color:var(--text-muted);">&euro;131/yr</td>
+          <td style="color:var(--text-muted);">&euro;150/yr</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="text-align:center; margin-top:32px;">
+      <p style="font-size:0.78rem; color:var(--text-faint);"><strong style="color:var(--emerald);">Bold rows</strong> = features exclusive to trefolio or where trefolio leads. Prices in EUR, approximate for comparable paid tiers.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     8. TESTIMONIALS
+     ═══════════════════════════════════════════ -->
+<section class="testimonials">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-eyebrow">Social Proof</div>
+      <h2 class="section-title">Loved by <span class="accent">investors</span></h2>
+      <p class="section-sub">Hear what our users have to say about tracking their portfolios with trefolio.</p>
+    </div>
+
+    <div class="testimonial-grid">
+      <div class="testimonial-card">
+        <div class="tm-stars"><span class="tm-star">&#9733;</span><span class="tm-star">&#9733;</span><span class="tm-star">&#9733;</span><span class="tm-star">&#9733;</span><span class="tm-star">&#9733;</span></div>
+        <p class="tm-quote">&ldquo;Finally a portfolio tracker that handles European brokers properly. The DEGIRO import saved me hours of manual entry. Multi-currency support is flawless.&rdquo;</p>
+        <div class="tm-author">Alex M.</div>
+        <div class="tm-role">Long-term investor, Netherlands</div>
+      </div>
+      <div class="testimonial-card">
+        <div class="tm-stars"><span class="tm-star">&#9733;</span><span class="tm-star">&#9733;</span><span class="tm-star">&#9733;</span><span class="tm-star">&#9733;</span><span class="tm-star">&#9733;</span></div>
+        <p class="tm-quote">&ldquo;The AI review blew my mind. It spotted that I was overweight in tech before my financial advisor did. The Terminal theme makes me feel like a Wall Street pro.&rdquo;</p>
+        <div class="tm-author">Sarah L.</div>
+        <div class="tm-role">Growth investor, Germany</div>
+      </div>
+      <div class="testimonial-card">
+        <div class="tm-stars"><span class="tm-star">&#9733;</span><span class="tm-star">&#9733;</span><span class="tm-star">&#9733;</span><span class="tm-star">&#9733;</span><span class="tm-star">&#9733;</span></div>
+        <p class="tm-quote">&ldquo;I moved from a spreadsheet to trefolio in 5 minutes. Dividend tracking, performance metrics, and the stealth mode for checking at work &mdash; perfect.&rdquo;</p>
+        <div class="tm-author">James K.</div>
+        <div class="tm-role">Dividend investor, Ireland</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     TRUST & PRIVACY
+     ═══════════════════════════════════════════ -->
+<section class="trust">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-eyebrow">Privacy &amp; Trust</div>
+      <h2 class="section-title">Your data stays <span class="accent">yours</span></h2>
+      <p class="section-sub">We never sell your data. Our business model is simple: subscriptions. That's it.</p>
+    </div>
+
+    <div class="trust-grid">
+      <div class="trust-card">
+        <div class="trust-icon" style="background:var(--emerald-glow); color:var(--emerald);">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+        </div>
+        <h4>GDPR Compliant</h4>
+        <p>Fully compliant with European data protection laws. Your financial data is encrypted at rest and in transit.</p>
+      </div>
+      <div class="trust-card">
+        <div class="trust-icon" style="background:rgba(34,211,238,0.1); color:#22d3ee;">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+        </div>
+        <h4>No Credential Access</h4>
+        <p>Broker sync runs through SnapTrade and Plaid &mdash; regulated providers. We never see your login credentials.</p>
+      </div>
+      <div class="trust-card">
+        <div class="trust-icon" style="background:var(--violet-glow); color:var(--violet);">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+        </div>
+        <h4>Export &amp; Delete Anytime</h4>
+        <p>Download all your data or permanently delete your account at any time. Zero lock-in. Your portfolio, your rules.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     9. PRICING
+     ═══════════════════════════════════════════ -->
+<section class="pricing" id="pricing">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-eyebrow">Pricing</div>
+      <h2 class="section-title">Simple, <span class="accent">transparent</span> pricing</h2>
+      <p class="section-sub">Start free and upgrade as your portfolio grows. No hidden fees.</p>
+      <div style="margin-top:16px;">
+        <span class="eyebrow" style="color:var(--amber); background:var(--amber-glow); border-color:rgba(245,158,11,0.2);">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>
+          Launch Discount &mdash; Up to 25% off
+        </span>
+      </div>
+    </div>
+
+    <div class="billing-toggle">
+      <span class="billing-label active" id="lbl-monthly">Monthly</span>
+      <div class="toggle-track" id="billing-toggle" onclick="toggleBilling()">
+        <div class="toggle-thumb"></div>
+      </div>
+      <span class="billing-label" id="lbl-annual">Annually</span>
+      <span class="save-tag">Save up to 37%</span>
+    </div>
+
+    <div class="pricing-grid">
+      <!-- Folio (Free) -->
+      <div class="price-card">
+        <div class="price-name">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.048 8.287 8.287 0 009 9.6a8.983 8.983 0 013.361-6.867 8.21 8.21 0 003 2.48z"/></svg>
+          Folio
+        </div>
+        <div class="price-desc">For getting started with portfolio tracking</div>
+        <div class="price-row">
+          <span class="price-amount">&euro;0</span>
+          <span class="price-period">forever</span>
+        </div>
+        <div class="price-annual-detail">&nbsp;</div>
+        <ul class="price-features">
+          <li><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Up to 15 holdings</li>
+          <li><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> 1 portfolio</li>
+          <li><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Real-time quotes</li>
+          <li><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Dividend tracking</li>
+          <li><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Default theme</li>
+          <li><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> CSV broker import</li>
+          <li><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> 2 price alerts</li>
+          <li><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Growth projection</li>
+        </ul>
+        <a href="#" class="price-cta price-cta-secondary">Get Started Free</a>
+      </div>
+
+      <!-- Bifolio (Starter) -->
+      <div class="price-card">
+        <div class="price-name">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.048 8.287 8.287 0 009 9.6a8.983 8.983 0 013.361-6.867 8.21 8.21 0 003 2.48z"/></svg>
+          Bifolio
+          <span class="price-discount">-25%</span>
+        </div>
+        <div class="price-desc">For active investors tracking more holdings</div>
+        <div class="price-row" id="bifolio-price">
+          <span class="price-old">&euro;3.99</span>
+          <span class="price-amount">&euro;2.99</span>
+          <span class="price-period">/month</span>
+        </div>
+        <div class="price-annual-detail" id="bifolio-annual" style="display:none;">&euro;23.99/year &middot; <span class="save">Save 33%</span></div>
+        <ul class="price-features">
+          <li><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Up to 50 holdings</li>
+          <li><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> 10 price alerts</li>
+          <li><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> 1 broker sync connection</li>
+          <li><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Advanced metrics</li>
+          <li><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Default + Canvas themes</li>
+          <li><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> 10 manual assets</li>
+          <li><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> 20 AI calls/month</li>
+        </ul>
+        <a href="#" class="price-cta price-cta-secondary">Start Bifolio</a>
+      </div>
+
+      <!-- Trefolio (Pro) -->
+      <div class="price-card highlighted">
+        <div class="price-popular">Most Popular</div>
+        <div class="price-name">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.048 8.287 8.287 0 009 9.6a8.983 8.983 0 013.361-6.867 8.21 8.21 0 003 2.48z"/></svg>
+          Trefolio
+          <span class="price-discount">-20%</span>
+        </div>
+        <div class="price-desc">For serious investors who want it all</div>
+        <div class="price-row" id="trefolio-price">
+          <span class="price-old">&euro;9.99</span>
+          <span class="price-amount">&euro;7.99</span>
+          <span class="price-period">/month</span>
+        </div>
+        <div class="price-annual-detail" id="trefolio-annual" style="display:none;">&euro;59.99/year &middot; <span class="save">Save 37%</span></div>
+        <ul class="price-features">
+          <li><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Unlimited holdings</li>
+          <li><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> 3 portfolios</li>
+          <li><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Unlimited broker sync</li>
+          <li><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> All 4 dashboard themes</li>
+          <li><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Unlimited AI calls</li>
+          <li><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> AI Portfolio Review</li>
+          <li><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Unlimited manual assets</li>
+          <li><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Net Worth tracking</li>
+          <li><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Crypto portfolio</li>
+          <li><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Economic indicators</li>
+        </ul>
+        <a href="#" class="price-cta price-cta-primary">Start Trefolio</a>
+      </div>
+    </div>
+
+    <p class="pricing-footer">All plans include 14-day free trial on paid tiers. Cancel anytime. Prices in EUR.</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     10. FAQ
+     ═══════════════════════════════════════════ -->
+<section class="faq" id="faq">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-eyebrow">FAQ</div>
+      <h2 class="section-title">Frequently <span class="accent">asked</span></h2>
+    </div>
+
+    <div class="faq-list">
+      <div class="faq-item open">
+        <button class="faq-q">
+          Is trefolio really free?
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div class="faq-a">Yes! The Folio plan is completely free with up to 15 holdings, real-time quotes, dividend tracking, and CSV import. No credit card required. Upgrade to Bifolio or Trefolio when you need more.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">
+          Which brokers can I import from?
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div class="faq-a">We support CSV import from 14+ brokers including DEGIRO, Interactive Brokers, Trading 212, Revolut, Charles Schwab, Fidelity, Nordnet, Tastytrade, Freetrade, eToro, Wealthsimple, Questrade, and Firstrade. Plus automatic sync via SnapTrade and Plaid on Starter and Pro plans.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">
+          How does multi-currency work?
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div class="faq-a">trefolio supports 21 currencies with real-time FX rates. You can set a base currency per portfolio, and all values are automatically converted. The FX impact indicator shows you how currency movements affect your gains.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">
+          What does the AI Portfolio Review do?
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div class="faq-a">The AI reviews your entire portfolio and provides personalized analysis: sector allocation, risk assessment, diversification score, and actionable suggestions. Available on the Trefolio (Pro) plan with up to 5 reviews per month.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">
+          Can I track crypto and manual assets?
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div class="faq-a">Crypto tracking is available on the Trefolio (Pro) plan. Manual assets (real estate, savings, pensions) are part of the Net Worth feature &mdash; available for Bifolio (up to 10) and Trefolio (unlimited).</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">
+          Is my financial data secure?
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div class="faq-a">Absolutely. We never have access to your brokerage credentials. Broker sync is handled through SnapTrade and Plaid (regulated financial data providers). All data is encrypted at rest and in transit. You can export or delete your data at any time.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">
+          Do you sell my data?
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div class="faq-a">Never. Your portfolio data is yours. We don&rsquo;t sell, share, or monetize your financial data. Our business model is simple: subscriptions. That&rsquo;s it.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">
+          Can I install it as a mobile app?
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div class="faq-a">Yes! trefolio is a Progressive Web App (PWA). Add it to your home screen on iOS or Android for a native app-like experience with offline support, push notifications, and fast loading.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     11. GETTING STARTED
+     ═══════════════════════════════════════════ -->
+<section class="getting-started">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-eyebrow">How it works</div>
+      <h2 class="section-title">Up and running in <span class="accent">3 steps</span></h2>
+      <p class="section-sub">From signup to a fully tracked portfolio in under 5 minutes.</p>
+    </div>
+
+    <div class="gs-steps">
+      <div class="gs-step">
+        <div class="gs-num">1</div>
+        <h4>Create your account</h4>
+        <p>Sign up free with email or Google. No credit card required. Takes 30 seconds.</p>
+      </div>
+      <div class="gs-step">
+        <div class="gs-num">2</div>
+        <h4>Import your portfolio</h4>
+        <p>Upload a CSV from your broker, connect via API, or add holdings manually.</p>
+      </div>
+      <div class="gs-step">
+        <div class="gs-num">3</div>
+        <h4>Track &amp; grow</h4>
+        <p>See real-time valuations, dividends, performance metrics, and AI insights.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     12. INSTALL APP (PWA)
+     ═══════════════════════════════════════════ -->
+<section class="install">
+  <div class="container">
+    <div class="install-inner">
+      <div>
+        <div class="phone-mock">
+          <div class="phone-screen">
+            <div class="phone-status">
+              <span>9:41</span>
+              <span style="display:flex; gap:4px; align-items:center;">
+                <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M12 18c3.31 0 6-2.69 6-6s-2.69-6-6-6-6 2.69-6 6 2.69 6 6 6z"/></svg>
+                <svg width="14" height="12" fill="currentColor" viewBox="0 0 24 24"><rect x="2" y="6" width="4" height="12" rx="1"/><rect x="8" y="4" width="4" height="14" rx="1"/><rect x="14" y="2" width="4" height="16" rx="1"/><rect x="20" y="0" width="4" height="18" rx="1"/></svg>
+              </span>
+            </div>
+            <div class="phone-app-header">
+              <div class="phone-logo"></div>
+              <span class="phone-app-name">trefolio</span>
+            </div>
+            <div class="phone-content">
+              <div class="phone-value">&euro;47,284</div>
+              <div class="phone-change-tag">+&euro;1,247 (+2.71%)</div>
+              <div class="phone-mini-chart">
+                <svg viewBox="0 0 200 50" preserveAspectRatio="none">
+                  <defs><linearGradient id="mcg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="rgba(16,185,129,0.3)"/><stop offset="100%" stop-color="rgba(16,185,129,0)"/></linearGradient></defs>
+                  <path d="M0,40 C25,38 50,30 75,25 C100,20 125,22 150,15 L200,10 L200,50 L0,50Z" fill="url(#mcg)"/>
+                  <path d="M0,40 C25,38 50,30 75,25 C100,20 125,22 150,15 L200,10" fill="none" stroke="#10b981" stroke-width="1.5"/>
+                </svg>
+              </div>
+              <div class="phone-row"><span class="phone-row-ticker">ASML</span><span class="phone-row-gain">+18.42%</span></div>
+              <div class="phone-row"><span class="phone-row-ticker">VWCE</span><span class="phone-row-gain">+12.05%</span></div>
+              <div class="phone-row"><span class="phone-row-ticker">AAPL</span><span class="phone-row-gain">+8.73%</span></div>
+              <div class="phone-row"><span class="phone-row-ticker">BABA</span><span class="phone-row-loss">-4.21%</span></div>
+              <div class="phone-row"><span class="phone-row-ticker">MSFT</span><span class="phone-row-gain">+22.18%</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="eyebrow" style="margin-bottom:20px;">PWA</div>
+        <h2 style="font-family:var(--display); font-size:clamp(1.8rem, 3vw, 2.4rem); line-height:1.15; margin-bottom:16px;">Install on your <em style="font-style:italic; color:var(--emerald-bright);">phone</em></h2>
+        <p style="font-size:1rem; color:var(--text-dim); margin-bottom:24px; line-height:1.7; max-width:400px;">
+          Add trefolio to your home screen for a native app experience. Works on iOS, Android, and desktop.
+        </p>
+        <ul class="feature-points">
+          <li><span class="feature-check"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span> No app store needed</li>
+          <li><span class="feature-check"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span> Offline support</li>
+          <li><span class="feature-check"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span> Push notifications for price alerts</li>
+          <li><span class="feature-check"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span> Fast, native-like performance</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     13. DEVICE (trefolio Leaf)
+     ═══════════════════════════════════════════ -->
+<section class="device">
+  <div class="container">
+    <div class="device-inner">
+      <div>
+        <div class="device-visual">
+          <div class="device-screen">
+            <div class="device-screen-content">
+              <div class="device-screen-label">Portfolio</div>
+              <div class="device-screen-value">&euro;47,284</div>
+              <div class="device-screen-change">&#9650; +2.71% today</div>
+              <div class="device-screen-chart">
+                <svg viewBox="0 0 300 50" preserveAspectRatio="none">
+                  <defs><linearGradient id="dcg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="rgba(34,197,94,0.4)"/><stop offset="100%" stop-color="rgba(34,197,94,0)"/></linearGradient></defs>
+                  <path d="M0,38 C40,35 80,28 120,22 C160,16 200,19 240,12 L300,8 L300,50 L0,50Z" fill="url(#dcg)"/>
+                  <path d="M0,38 C40,35 80,28 120,22 C160,16 200,19 240,12 L300,8" fill="none" stroke="#22c55e" stroke-width="1.5"/>
+                </svg>
+              </div>
+              <div class="device-screen-holdings">
+                <div class="device-screen-holding"><span>ASML</span>+18.4%</div>
+                <div class="device-screen-holding"><span>VWCE</span>+12.1%</div>
+                <div class="device-screen-holding"><span>AAPL</span>+8.7%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div style="display:flex; gap:8px; margin-bottom:20px;">
+          <span class="device-badge-hw">Hardware</span>
+          <span class="device-badge-soon">Coming Soon</span>
+        </div>
+        <h2 style="font-family:var(--display); font-size:clamp(1.8rem, 3vw, 2.6rem); line-height:1.15; margin-bottom:16px;">
+          The trefolio <em style="font-style:italic; background:linear-gradient(135deg, var(--violet), var(--emerald-bright), var(--cyan)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">Leaf</em>
+        </h2>
+        <p style="font-size:1rem; color:var(--text-dim); margin-bottom:24px; line-height:1.7; max-width:420px;">
+          A stunning AMOLED desk display that shows your portfolio in real-time. Powered by ESP32-S3, updated over WiFi.
+        </p>
+
+        <div class="device-highlights">
+          <div class="dh-item">
+            <div class="dh-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 12V5.25"/></svg></div>
+            <div><h4>AMOLED Display</h4><p>Vivid colors, true blacks, always gorgeous on your desk.</p></div>
+          </div>
+          <div class="dh-item">
+            <div class="dh-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/></svg></div>
+            <div><h4>Live Data</h4><p>Portfolio syncs every 5 minutes over WiFi.</p></div>
+          </div>
+          <div class="dh-item">
+            <div class="dh-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg></div>
+            <div><h4>AI Ticker</h4><p>Scrolling AI insights right on the device.</p></div>
+          </div>
+          <div class="dh-item">
+            <div class="dh-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182"/></svg></div>
+            <div><h4>OTA Updates</h4><p>New features pushed wirelessly. Always improving.</p></div>
+          </div>
+        </div>
+
+        <div class="device-form">
+          <input type="email" class="device-input" placeholder="Enter your email for updates">
+          <button class="device-submit">Notify Me</button>
+        </div>
+        <p style="font-size:0.7rem; color:var(--text-muted); margin-top:10px;">We'll only email you about the Leaf. No spam.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     14. FINAL CTA
+     ═══════════════════════════════════════════ -->
+<section class="final-cta">
+  <div class="container">
+    <div class="cta-banner">
+      <h2>Start tracking your portfolio today</h2>
+      <p>Join thousands of investors who trust trefolio to manage their wealth. Free forever, upgrade when you're ready.</p>
+      <div class="cta-banner-actions">
+        <button class="cta-btn-white">
+          Create Free Account
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+        </button>
+        <button class="cta-btn-clear">Already have an account? Log in</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     FOOTER
+     ═══════════════════════════════════════════ -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-left">
+        <svg width="28" height="28" viewBox="0 0 32 32">
+          <rect width="32" height="32" rx="7" fill="#0f172a"/>
+          <g transform="translate(16,16) rotate(45)">
+            <ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="url(#lg-a)"/>
+            <ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="url(#lg-b)" transform="rotate(90)"/>
+            <ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="url(#lg-c)" transform="rotate(180)"/>
+            <ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="url(#lg-d)" transform="rotate(270)"/>
+            <circle cx="0" cy="0" r="1.2" fill="#0f172a" opacity=".35"/>
+          </g>
+        </svg>
+        <span class="footer-brand">trefolio</span>
+        <span class="footer-copy">&copy; 2026 trefolio. All rights reserved.</span>
+      </div>
+      <div class="footer-links">
+        <a href="#" class="footer-link">Privacy</a>
+        <a href="#" class="footer-link">Terms</a>
+        <a href="#" class="footer-link">Contact</a>
+        <a href="#" class="footer-link">Blog</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- ═══════════════════════════════════════════
+     INTERACTIVE JS
+     ═══════════════════════════════════════════ -->
+<script>
+  // Navbar scroll effect
+  window.addEventListener('scroll', () => {
+    document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 20);
+  }, { passive: true });
+
+  // FAQ accordion
+  document.querySelectorAll('.faq-q').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const item = btn.parentElement;
+      const wasOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+      if (!wasOpen) item.classList.add('open');
+    });
+  });
+
+  // Billing toggle
+  let annual = false;
+  function toggleBilling() {
+    annual = !annual;
+    document.getElementById('billing-toggle').classList.toggle('on', annual);
+    document.getElementById('lbl-monthly').classList.toggle('active', !annual);
+    document.getElementById('lbl-annual').classList.toggle('active', annual);
+
+    // Bifolio
+    document.getElementById('bifolio-price').innerHTML = annual
+      ? '<span class="price-old">&euro;2.67</span><span class="price-amount">&euro;2.00</span><span class="price-period">/month</span>'
+      : '<span class="price-old">&euro;3.99</span><span class="price-amount">&euro;2.99</span><span class="price-period">/month</span>';
+    document.getElementById('bifolio-annual').style.display = annual ? 'block' : 'none';
+
+    // Trefolio
+    document.getElementById('trefolio-price').innerHTML = annual
+      ? '<span class="price-old">&euro;6.67</span><span class="price-amount">&euro;5.00</span><span class="price-period">/month</span>'
+      : '<span class="price-old">&euro;9.99</span><span class="price-amount">&euro;7.99</span><span class="price-period">/month</span>';
+    document.getElementById('trefolio-annual').style.display = annual ? 'block' : 'none';
+  }
+
+  // Smooth scroll for nav links
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+      e.preventDefault();
+      const target = document.querySelector(this.getAttribute('href'));
+      if (target) target.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+</script>
+
+</body>
+</html>
