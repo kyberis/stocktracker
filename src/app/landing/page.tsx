@@ -103,12 +103,12 @@ function getHeroFeatures(t: T) {
 
 function getFeatureCards(t: T) {
   return [
-    { icon: "chart", title: t("landingCardPerfTitle"), desc: t("landingCardPerfDesc") },
-    { icon: "currency", title: t("landingCardCurrencyTitle"), desc: t("landingCardCurrencyDesc") },
+    { icon: "shield", title: t("landingCardTaxTitle"), desc: t("landingCardTaxDesc"), badge: "Pro" },
+    { icon: "search", title: t("landingCardScreenerTitle"), desc: t("landingCardScreenerDesc"), badge: "Pro" },
+    { icon: "wallet", title: t("landingCardNetWorthTitle"), desc: t("landingCardNetWorthDesc") },
     { icon: "sparkle", title: t("landingCardAiTitle"), desc: t("landingCardAiDesc") },
     { icon: "upload", title: t("landingCardImportTitle"), desc: t("landingCardImportDesc") },
-    { icon: "pie", title: t("landingCardDiversTitle"), desc: t("landingCardDiversDesc") },
-    { icon: "eye", title: t("landingCardStealthTitle"), desc: t("landingCardStealthDesc") },
+    { icon: "chart", title: t("landingCardPerfTitle"), desc: t("landingCardPerfDesc") },
     { icon: "calendar", title: t("landingCardEventsTitle"), desc: t("landingCardEventsDesc") },
     { icon: "globe", title: "35 Languages", desc: "The most multilingual portfolio tracker on the market. AI insights delivered in your native language.", badge: "#1" },
   ];
@@ -171,7 +171,7 @@ function getPricing(t: T): PricingTier[] {
       regularAnnual: "€79.99", annualPrice: "€59.99",
       annualSavePct: 37, launchDiscountPct: 20,
       description: t("landingPricingTrefolioDesc"),
-      features: Array.from({ length: 17 }, (_, i) => t(`landingPricingTrefolioFeature${i + 1}` as TranslationKey)),
+      features: Array.from({ length: 20 }, (_, i) => t(`landingPricingTrefolioFeature${i + 1}` as TranslationKey)),
       cta: t("landingPricingTrefolioCta"),
       highlighted: true,
     },
@@ -231,6 +231,12 @@ function FeatureIcon({ type }: { type: string }) {
     ),
     globe: (
       <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582" />
+    ),
+    search: (
+      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+    ),
+    wallet: (
+      <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 9m18 0V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v3" />
     ),
   };
 
@@ -829,7 +835,9 @@ function WhySection() {
     { feature: t("landingWhyRow11" as TranslationKey), us: true, others: true, spreadsheets: false },
     { feature: t("landingWhyRow12" as TranslationKey), us: true, others: false, spreadsheets: false },
     { feature: t("landingWhyRow13" as TranslationKey), us: true, others: false, spreadsheets: true },
-    { feature: t("landingWhyRow14" as TranslationKey), us: true, others: false, spreadsheets: false },
+    { feature: t("landingWhyRow14" as TranslationKey), us: true, others: false, spreadsheets: false, exclusive: true },
+    { feature: t("landingWhyRow15" as TranslationKey), us: true, others: true, spreadsheets: false },
+    { feature: t("landingWhyRow16" as TranslationKey), us: true, others: false, spreadsheets: false },
   ], [t]);
 
   const Check = () => (
@@ -1778,9 +1786,22 @@ function CTASection() {
 
 /* ─── page ─── */
 
+function NativeRedirect() {
+  useEffect(() => {
+    const cap = (window as unknown as Record<string, unknown>).Capacitor as
+      | { isNativePlatform?: () => boolean }
+      | undefined;
+    if (cap?.isNativePlatform?.()) {
+      window.location.replace("/login");
+    }
+  }, []);
+  return null;
+}
+
 export default function LandingPage() {
   return (
     <LandingI18nProvider>
+    <NativeRedirect />
     <div className="min-h-screen bg-slate-950 text-slate-100">
       <NavBar />
       <HeroSection />

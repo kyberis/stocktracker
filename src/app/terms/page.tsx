@@ -77,11 +77,14 @@ export default function TermsOfServicePage() {
               you to:
             </p>
             <ul className="list-disc pl-6 space-y-2">
-              <li>Track stock and ETF holdings with real-time market data.</li>
+              <li>Track stock, ETF, and crypto holdings with real-time market data.</li>
               <li>View portfolio performance, historical charts, and benchmark comparisons.</li>
-              <li>Access AI-powered stock analysis and insights (subject to tier limits).</li>
-              <li>Import portfolio data from broker statements or connect brokerage accounts via third-party aggregators (Trefolio).</li>
-              <li>Track cash balances and dividend projections.</li>
+              <li>Access AI-powered stock analysis, portfolio review, and tax optimization insights (subject to tier limits).</li>
+              <li>Import portfolio data from 14 broker CSV formats, connect brokerage accounts via SnapTrade auto-sync, or use AI-powered import.</li>
+              <li>Generate country-specific European tax reports (Germany, France, Spain, Netherlands, Italy) with AI Tax Assistant (Trefolio).</li>
+              <li>Filter and discover stocks using the stock screener with fundamental filters (Trefolio).</li>
+              <li>Track net worth with manual entries for real estate, savings, and pension assets.</li>
+              <li>Track cash balances, dividend projections, and event calendars (earnings, economic events, IPOs).</li>
             </ul>
           </section>
 

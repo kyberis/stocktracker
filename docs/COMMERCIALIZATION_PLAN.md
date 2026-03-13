@@ -1,7 +1,7 @@
 # trefolio — Commercialization Plan
 
 > **Plan version:** 2.0 — March 2026
-> **App version:** v0.29.0
+> **App version:** v1.29.0
 > **Price:** Bifolio 2.99 EUR/month | Trefolio 7.99 EUR/month | Free tier available
 > **Annual:** Bifolio 23.99 EUR/year | Trefolio 59.99 EUR/year (save up to 37%)
 > **Status:** Technical foundation ready — remaining items are legal entity, domain purchase, and production Stripe configuration
@@ -28,18 +28,21 @@
 
 ### One-liner
 
-**trefolio** — The simplest way to track your stock portfolio with AI-powered insights, in 35 European languages, starting at 2.99 EUR/month.
+**trefolio** — The European investor's portfolio tracker with EU tax reports, stock screener, AI insights, and net worth tracking in 35 languages, starting at 2.99 EUR/month.
 
 ### Why trefolio?
 
 | Pain point | How trefolio solves it |
 |---|---|
 | Most portfolio trackers are complex, designed for traders | Simple UI for people who just want to track long-term holdings |
-| Free tools lack fundamentals and AI analysis | Pro tier includes company fundamentals, economic indicators, and AI explanations in plain language |
-| Multi-currency portfolios are messy | Automatic currency conversion, multi-exchange support (NYSE, XETRA, LSE, AMS, MAD, OMK, etc.) |
+| No EU-specific tax support | Country-specific tax reports for DE, FR, ES, NL, IT with AI Tax Assistant |
+| No stock discovery tools | Stock screener with 600+ stocks, 6 filters, and 5 preset strategies |
+| Free tools lack fundamentals and AI analysis | Pro tier includes company fundamentals, economic indicators, and AI explanations in your language |
+| Multi-currency portfolios are messy | 21-currency support with automatic FX conversion and impact tracking |
 | Data privacy concerns with big platforms | All data encrypted at rest; no selling of user data; EU cookie consent and GDPR-compliant |
 | English-only tools exclude most of Europe | 35 European languages including all 24 official EU languages |
-| Importing portfolio data is painful | One-click import from DEGIRO, Interactive Brokers, Trading 212, and Revolut |
+| Importing portfolio data is painful | 14 broker CSV formats, SnapTrade auto-sync (20+ brokerages), and AI Import |
+| No holistic view of wealth | Net worth tracking for real estate, savings, pensions alongside investments |
 
 ### Target Audience
 
@@ -56,7 +59,7 @@
 | Simply Wall St | $10/mo | 2x more expensive, no broker import, limited languages |
 | Portfolio Performance | Free (desktop) | No web/mobile, no AI, steep learning curve, no broker CSV import |
 | Snowball Analytics | $8/mo | More expensive, no AI analysis, fewer languages |
-| **trefolio** | **2.99-7.99 EUR/mo** | Simple, AI-powered, 35 languages, 14 broker imports, 3-tier model with free tier |
+| **trefolio** | **2.99-7.99 EUR/mo** | Simple, AI-powered, EU tax reports, stock screener, 35 languages, 14 broker imports + auto-sync, net worth tracking, 3-tier model with free tier |
 
 ---
 
@@ -71,7 +74,7 @@
 | Historical price charts | Yes |
 | Cash balance tracking | Yes |
 | Benchmark comparison (S&P 500, Nasdaq, Euro Stoxx 50) | Yes |
-| DEGIRO, IBKR, Trading 212, Revolut & Simple CSV import | Yes |
+| 14 broker CSV imports (DEGIRO, IBKR, Trading 212, Revolut, Schwab, and more) + AI Import | Yes |
 | Dark/Light mode | Yes |
 | **35 European languages** | Yes |
 | Portfolio growth projection (blurred preview) | Yes |
@@ -94,9 +97,14 @@ Everything in Free, plus:
 | **Up to 50 holdings** | Yes |
 | AI analysis | **20 calls/month** |
 | **10 price alerts** + email & push notifications | Yes |
-| 1-year portfolio growth history | Yes |
+| Full portfolio growth history (all time) | Yes |
+| Advanced metrics (Sharpe, Drawdown, Volatility) | Yes |
 | Portfolio sharing (public link) | Yes |
 | CSV export (holdings, transactions, cash) | Yes |
+| 1 SnapTrade broker sync connection with auto-sync | Yes |
+| Canvas dashboard theme | Yes |
+| Full earnings calendar + economic events | Yes |
+| Net worth tracking — up to 10 manual assets (real estate, savings, pensions) | Yes |
 
 ### Pro Tier (Trefolio) — 7.99 EUR/month (59.99 EUR/year)
 
@@ -105,6 +113,9 @@ Everything in Bifolio, plus:
 | Feature | Included |
 |---|---|
 | **Unlimited holdings** | Yes |
+| **EU tax reports (DE, FR, ES, NL, IT) with AI Tax Assistant** | Yes |
+| **Stock screener (600+ stocks, 6 filters, 5 strategies)** | Yes |
+| **All 4 dashboard themes (Default, Canvas, Terminal, Studio)** | Yes |
 | Alpha Vantage premium data | Yes |
 | Company fundamentals (income, balance, cash flow) | Yes |
 | Stock intelligence (news sentiment, insider trades) | Yes |
@@ -115,9 +126,11 @@ Everything in Bifolio, plus:
 | Unlimited price alerts + WhatsApp, push & email | Yes |
 | Advanced metrics (Sharpe, Drawdown, Volatility) | Yes |
 | Full portfolio history (all time) | Yes |
-| Automatic Broker Sync (20+ brokerages via SnapTrade) | Yes |
+| Automatic Broker Sync — unlimited connections (20+ brokerages via SnapTrade) | Yes |
+| IPO calendar | Yes |
 | Priority support | Yes |
 | Up to 3 portfolios with independent tracking | Yes |
+| Unlimited manual assets for full net worth tracking | Yes |
 
 ### Why this pricing?
 
@@ -239,13 +252,13 @@ Graceful degradation: when a Pro subscription lapses, all user data is preserved
 
 ## 4. Features Shipped
 
-30 versions shipped from v0.5.0 (December 2025) through v0.29.0 (March 2026).
+30+ versions shipped from v0.5.0 (December 2025) through v1.29.0 (March 2026).
 
 ### Core Portfolio
 
 - Real-time dashboard with Yahoo Finance quotes
 - Multi-exchange support: NYSE, NASDAQ, XETRA, LSE, AMS, MAD, OMK
-- Cash balance tracking with multi-currency (EUR, USD, GBP, DKK, CAD)
+- Cash balance tracking with 21-currency support (EUR, USD, GBP, CHF, SEK, NOK, DKK, CAD, AUD, NZD, JPY, and more)
 - Simplified portfolio view inspired by DEGIRO (v0.23.0)
 - Holdings auto-classification by sector, region, and asset class via Yahoo Finance (v0.23.0)
 - Performance metrics: TTWROR (Modified Dietz) and IRR/XIRR with methodology notes (v0.12.0)
@@ -255,14 +268,13 @@ Graceful degradation: when a Pro subscription lapses, all user data is preserved
 
 ### Import & Data
 
-- **DEGIRO** CSV import: transactions, dividends, fees, cash balances (v0.10.0-v0.12.0)
-- **Interactive Brokers** import: Activity Statement & Flex Query CSV (v0.26.0)
-- **Trading 212** History CSV import with automatic fee detection (v0.26.0)
-- **Revolut** Account Statement import (Excel/CSV) with dividend grouping (v0.26.0)
-- **Simple CSV** format with manual column mapping (v0.12.0)
-- **AI-powered smart import** from screenshots or CSV via OpenAI (v0.9.0)
+- **14 broker CSV formats**: DEGIRO, Interactive Brokers, Trading 212, Revolut, Schwab, Fidelity, Nordnet, Tastytrade, Freetrade, eToro, Wealthsimple, Questrade, Firstrade, Simple CSV
+- **SnapTrade auto-sync** with 20+ brokerages, auto-sync every 6 hours (Bifolio: 1 connection, Trefolio: unlimited)
+- **AI-powered smart import** from screenshots, PDFs, and unstructured data via OpenAI (v0.9.0)
 - Unified broker parser architecture with shared deduplication and ISIN resolution (v0.26.0)
 - Automatic ISIN-to-ticker resolution via Yahoo Finance search (v0.18.1)
+- Dashboard reconnect banner for expired broker sync credentials
+- Country-aware broker suggestions during onboarding (v1.28.0)
 
 ### Intelligence & Analysis (Pro)
 
@@ -275,6 +287,32 @@ Graceful degradation: when a Pro subscription lapses, all user data is preserved
 - US economic indicators dashboard: GDP, CPI, unemployment, treasury yields (v0.9.0)
 - AI-powered analysis with hallucination safeguards (temperature 0.3, grounding rules, ticker/date validation) (v0.9.0, v0.24.1)
 - AI responses generated in the user's selected language (v0.29.0)
+
+### European Tax Reports (Trefolio) — NEW
+
+- Country-specific tax reports for Germany (Anlage KAP, Vorabpauschale, Teilfreistellung, Sparerpauschbetrag), France (Déclaration 2074), Spain (Modelo 100/720, wash sale rule), Netherlands (Box 3 wealth tax), and Italy (Quadro RT/RW, IVAFE, LIFO cost basis) (v1.29.0)
+- AI Tax Assistant with optimization suggestions and data quality checks (v1.29.0)
+- FIFO, LIFO, and average cost basis methods with CSV export (v1.29.0)
+
+### Stock Screener (Trefolio) — NEW
+
+- Filter 600+ stocks (S&P 500 + STOXX Europe 600) by dividend yield, P/E ratio, sector, market cap, exchange, and country (v1.25.0)
+- 5 preset strategies: All, High Dividend, Value, Growth, Blue Chip (v1.25.0)
+- Own URL routes (/tools/screener) with filter persistence and price charts (v1.27.0)
+- Nightly data refresh via automated cron job (v1.25.0)
+
+### Net Worth Tracking — NEW
+
+- Manual entries for real estate, savings accounts, and pension/retirement funds (v1.23.0)
+- Net Worth Overview card on dashboard with total value, category breakdown, and donut chart (v1.23.0)
+- Multi-currency support per asset with optional notes (v1.23.0)
+
+### Onboarding & Notifications — NEW
+
+- Post-signup onboarding wizard: name, currency, tax residency, passkey, Google account linking (v1.24.0)
+- Portfolio import step during onboarding with country-aware broker suggestions (v1.28.0)
+- Sample data auto-loaded for users who skip import, first-visit interactive dashboard tour (v1.28.0)
+- In-app notification center (bell icon) for welcome, upgrade/downgrade, and admin broadcasts (v1.26.0)
 
 ### Dividends & Projections
 
@@ -457,7 +495,7 @@ The landing page has been built in Next.js (same repo) and is deployed at the ro
 1. **Hero** — "Track Your Portfolio With Clarity" with gradient text, CTA buttons, dashboard screenshot
 2. **Stats bar** — 5+ exchanges, 35 languages, from 2.99 EUR/mo, 25+ features
 3. **Feature showcase** — Tabbed interface with screenshots for Portfolio, Dividends, AI Insights, and Import
-4. **Feature grid** — 6 cards: Performance Metrics, Multi-Currency, AI Analysis, CSV Import, Price Alerts, Privacy First
+4. **Feature grid** — 8 cards: EU Tax Reports, Stock Screener, Net Worth Tracking, AI & News, Broker Import, Performance Metrics, Event Calendar, 35 Languages
 5. **Video tutorial** — "See It in Action" with how-to-upload video and step-by-step guide
 6. **FAQ** — 8 questions covering import, security, exchanges, pricing, performance metrics, dividends
 7. **Pricing** — Free / Bifolio / Trefolio cards with feature lists, annual plan callout
@@ -684,4 +722,4 @@ Revenue per user after Stripe fees: Bifolio ~2.70 EUR/month, Trefolio ~7.62 EUR/
 
 ---
 
-*This plan is a living document. Last updated: March 2026 (v0.29.0).*
+*This plan is a living document. Last updated: March 2026 (v1.29.0).*

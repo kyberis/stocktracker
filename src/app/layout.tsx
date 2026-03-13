@@ -13,6 +13,7 @@ import "./globals.css";
 
 export const viewport: Viewport = {
   themeColor: "#10b981",
+  viewportFit: "cover",
 };
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -22,7 +23,7 @@ export async function generateMetadata(): Promise<Metadata> {
     metadataBase: new URL("https://trefolio.com"),
     title: "trefolio - Portfolio Manager",
     description:
-      "trefolio is a portfolio tracker for European investors. Real-time quotes, broker imports (DEGIRO, IBKR, T212, Revolut), AI analysis, and dividend projections. Free to start.",
+      "trefolio is the portfolio tracker for European investors. EU tax reports, stock screener, net worth tracking, broker sync, AI analysis in 35 languages, and dividend projections. Free to start.",
     verification: {
       google: process.env.GOOGLE_SITE_VERIFICATION,
       other: {

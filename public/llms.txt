@@ -1,16 +1,16 @@
 # trefolio
 
-> The simplest way to track your stock portfolio with AI-powered insights. Built for European investors.
+> The European investor's portfolio tracker — EU tax reports, stock screener, AI insights, and net worth tracking in 35 languages.
 
 ## What is trefolio?
 
-trefolio is a web-based portfolio tracker that supports real-time quotes from NYSE, NASDAQ, XETRA, LSE, and more. It offers one-click import from DEGIRO, Interactive Brokers, Trading 212, and Revolut, plus AI-powered smart import for any format. Features include dividend tracking, growth projections, performance metrics (TTWROR, IRR), and AI-powered stock analysis. Available in 35 European languages.
+trefolio is a web-based portfolio tracker built for European retail investors. It offers EU-specific tax reports for Germany, France, Spain, Netherlands, and Italy (with AI Tax Assistant), a stock screener covering 600+ stocks, net worth tracking (real estate, savings, pensions), broker auto-sync via SnapTrade (20+ brokerages), 14 broker CSV import formats, AI-powered analysis in your native language, dividend tracking and projections, performance metrics (TTWROR, XIRR, Sharpe, Max Drawdown), and 4 dashboard themes. Available in 35 European languages with 21-currency support.
 
 ## Pricing
 
-- Free: Up to 15 holdings, real-time quotes, charts, growth projection, broker import, 5 AI calls/month
-- Bifolio (€2.99/month or €23.99/year): 50 holdings, 20 AI calls/month, full portfolio history, advanced metrics, portfolio sharing, CSV export
-- Trefolio (€7.99/month or €59.99/year): Unlimited holdings, unlimited AI analysis, fundamentals, stock intelligence, economic indicators, broker sync
+- Free (Folio): Up to 15 holdings, real-time quotes, charts, growth projection, broker import, earnings calendar, 5 AI calls/month
+- Bifolio (€2.99/month or €23.99/year): 50 holdings, 20 AI calls/month, full portfolio history, advanced metrics, portfolio sharing, CSV export, 1 broker sync, Canvas theme
+- Trefolio (€7.99/month or €59.99/year): Unlimited holdings, unlimited AI, EU tax reports (DE/FR/ES/NL/IT), stock screener, net worth tracking, fundamentals, all 4 themes, unlimited broker sync, IPO calendar
 
 ## Key Pages
 

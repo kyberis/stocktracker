@@ -4,12 +4,12 @@ import { JsonLd } from "@/components/JsonLd";
 export const metadata: Metadata = {
   title: "Interactive Demo — trefolio",
   description:
-    "Try trefolio with a sample portfolio. No signup required. See the dashboard, performance metrics, dividends, and AI analysis in action.",
+    "Try trefolio with a sample portfolio. No signup required. Explore the dashboard, EU tax reports, stock screener, net worth tracking, performance metrics, dividends, and AI analysis.",
   alternates: { canonical: "https://trefolio.com/demo" },
   openGraph: {
     title: "Interactive Demo — trefolio",
     description:
-      "Try trefolio with a sample portfolio. No signup required. See the dashboard, performance metrics, dividends, and AI analysis in action.",
+      "Try trefolio with a sample portfolio. No signup required. Explore the dashboard, EU tax reports, stock screener, net worth tracking, performance metrics, dividends, and AI analysis.",
     url: "https://trefolio.com/demo",
     siteName: "trefolio",
     locale: "en_US",
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Interactive Demo — trefolio",
     description:
-      "Try trefolio with a sample portfolio. No signup required. See the dashboard, performance metrics, dividends, and AI analysis in action.",
+      "Try trefolio with a sample portfolio. No signup required. Explore the dashboard, EU tax reports, stock screener, net worth tracking, performance metrics, dividends, and AI analysis.",
     images: ["/screenshots/dashboard-overview.png"],
   },
 };
@@ -39,7 +39,7 @@ const DEMO_APP_SCHEMA = {
   applicationCategory: "FinanceApplication",
   url: "https://trefolio.com/demo",
   description:
-    "Try trefolio with a sample portfolio. No signup required. See the dashboard, performance metrics, dividends, and AI analysis in action.",
+    "Try trefolio with a sample portfolio. No signup required. Explore the dashboard, EU tax reports, stock screener, net worth tracking, performance metrics, dividends, and AI analysis.",
   offers: {
     "@type": "Offer",
     price: "0",

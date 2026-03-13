@@ -2,59 +2,86 @@
 
 **Your portfolio. Understood.**
 
-A modern, AI-powered stock portfolio tracker built for people who invest but don't speak Wall Street. Track your holdings across multiple exchanges and currencies, get plain-language AI analysis of company fundamentals, and explore economic indicators — all in a clean, fast interface.
+A modern, AI-powered stock portfolio tracker built for European investors. Track holdings across multiple exchanges and 21 currencies, get EU-specific tax reports, discover stocks with the screener, track your full net worth, and receive AI analysis in 35 European languages — all in a clean, fast interface with 4 dashboard themes.
 
 ## Why trefolio?
 
-- **Built for real people, not traders.** Most portfolio tools are cluttered with features you'll never use. trefolio shows you what matters: what you own, what it's worth, and whether it's doing well.
-- **AI that explains, not confuses.** Click a button and get a plain-language breakdown of any company's financials, market intelligence, or economic trends. No jargon.
-- **Multi-currency, multi-exchange.** Holding stocks in NYSE, XETRA, LSE, and MAD? Cash in EUR and USD? It all works together, converted automatically.
-- **2 EUR/month for Pro.** Cheaper than a coffee. Includes Alpha Vantage data, unlimited AI analysis, stock intelligence, and economic indicators.
-- **Your data stays yours.** AES-256 encryption at rest, no tracking, no selling your data. Ever.
+- **Built for European investors.** EU tax reports for Germany, France, Spain, Netherlands, and Italy. AI Tax Assistant with country-specific optimization.
+- **AI that explains, not confuses.** Plain-language analysis of any company's financials, market intelligence, or your tax report. In your language.
+- **Multi-currency, multi-exchange.** 21 currencies, NYSE to XETRA to LSE. Automatic FX conversion with impact tracking.
+- **From €2.99/month.** Cheaper than a coffee. Trefolio at €7.99/month includes tax reports, screener, net worth, and unlimited AI.
+- **Your data stays yours.** GDPR-compliant, built in Portugal. No tracking, no selling your data. Ever.
 
 ## Features
 
-### Free Tier
+### Free Tier (Folio)
 
 - Portfolio dashboard with real-time quotes (Yahoo Finance)
 - Historical price charts with multiple time ranges
-- Cash balance tracking in EUR
+- Cash balance tracking with 21-currency support
 - Benchmark comparison (S&P 500, Nasdaq, Dow Jones, Euro Stoxx 50)
-- Dark mode / Light mode
-- English + Spanish
-- 5 AI analysis calls per month
-- Multi-user with authentication
+- 14 broker CSV import formats + AI Import
+- Portfolio growth projection
+- Earnings calendar for your holdings
+- Guided onboarding wizard
+- Dark & light mode
+- 35 European languages
+- 5 AI analysis calls/month
+- 2 price alerts (in-app)
 
-### Pro Tier — 2 EUR/month
+### Bifolio — €2.99/month
 
 Everything in Free, plus:
 
-- **Alpha Vantage data** — more accurate quotes, 75 requests/minute
-- **Company fundamentals** — Income Statement, Balance Sheet, Cash Flow, Earnings for any stock
-- **Stock Intelligence** — news sentiment analysis, insider transactions, institutional holdings, earnings call transcripts
-- **Economic Indicators** — Real GDP, CPI, Unemployment, Treasury Yields, and more with interactive charts
-- **Unlimited AI analysis** — plain-language explanations of all financial data
-- **Priority support**
+- Up to 50 holdings
+- 20 AI analysis calls/month
+- 10 price alerts + email & push notifications
+- Full portfolio growth history (all time)
+- Advanced metrics (Sharpe Ratio, Max Drawdown, Volatility)
+- Portfolio sharing (public link)
+- CSV export of holdings & transactions
+- 1 SnapTrade broker sync connection with auto-sync
+- Canvas dashboard theme
+- Full market earnings + economic events calendar
+- Net worth tracking (manual assets)
 
-## Screenshots
+### Trefolio — €7.99/month
 
-> *(Add dashboard screenshots here — dark mode recommended for marketing)*
+Everything in Bifolio, plus:
+
+- **Unlimited holdings**
+- **Unlimited AI analysis**
+- **EU tax reports** for Germany, France, Spain, Netherlands, Italy
+- **AI Tax Assistant** with optimization suggestions
+- **Stock screener** (600+ stocks, 6 filters, 5 preset strategies)
+- Company fundamentals (income, balance, cash flow)
+- Stock intelligence (news sentiment, insider trades)
+- Economic indicators dashboard
+- All 4 dashboard themes (Default, Canvas, Terminal, Studio)
+- Unlimited SnapTrade broker sync connections
+- IPO calendar
+- Up to 3 portfolios
+- Unlimited price alerts + all notification channels
+- trefolio Leaf device support
+- Priority support
 
 ## Tech Stack
 
 | Layer | Technology |
 |---|---|
-| Framework | Next.js 14 (App Router, Edge Runtime) |
+| Framework | Next.js 15 (App Router) |
 | Language | TypeScript |
-| Styling | Tailwind CSS (light/dark theme) |
-| Database | SQLite via [@libsql/client](https://github.com/tursodatabase/libsql-client-ts) (local file or Turso cloud) |
-| Auth | bcryptjs + jose (JWT in httpOnly cookies) |
+| Styling | Tailwind CSS (4 themes, light/dark) |
+| Database | Turso (libSQL) |
+| Auth | bcrypt + jose (JWT), Google/Apple OAuth, Passkeys |
 | Encryption | AES-256-GCM for sensitive data at rest |
 | Charts | Recharts |
-| AI | OpenAI GPT-4o-mini (streaming responses) |
-| Market data | Yahoo Finance (free), Alpha Vantage (Pro) |
-| Payments | Stripe (subscriptions) |
-| Email | Resend (verification, password reset) |
+| AI | OpenAI GPT |
+| Market data | Yahoo Finance, Alpha Vantage (Pro) |
+| Broker sync | SnapTrade (20+ brokerages) |
+| Payments | Stripe |
+| Email | Resend (transactional) |
+| Mobile | PWA + Capacitor (iOS, Android) |
 | Hosting | Vercel (serverless) |
 
 ## Getting Started (Local Development)
@@ -120,51 +147,16 @@ Go to **Settings > Environment Variables** and add all variables from the table 
 
 Push to `main` or import the repo in the Vercel dashboard. After the first deployment, log in as `admin` / `admin` and change the password.
 
-## Project Structure
-
-```
-src/
-├── app/                        # Next.js App Router
-│   ├── api/
-│   │   ├── admin/              # Admin endpoints
-│   │   ├── auth/               # Login, signup, verification, password reset
-│   │   ├── billing/            # Stripe checkout, webhooks, portal
-│   │   ├── holdings/           # Portfolio CRUD
-│   │   ├── quote/              # Real-time stock quotes
-│   │   ├── historical/         # Price history
-│   │   ├── fundamentals/       # Company financial statements
-│   │   ├── intelligence/       # News, insider, institutional data
-│   │   ├── economic-indicators/# US economic data
-│   │   ├── ai-analysis/        # AI-powered explanations
-│   │   └── exchange-rates/     # Currency conversion
-│   ├── stock/[ticker]/         # Stock detail + intelligence pages
-│   ├── economic-indicators/    # Economic indicators dashboard
-│   ├── admin/                  # Admin panel
-│   └── login/ signup/          # Auth pages
-├── components/                 # React components
-├── lib/
-│   ├── api-providers/          # Yahoo & Alpha Vantage abstraction
-│   ├── auth/                   # Password hashing, JWT, guards
-│   ├── db/                     # Database layer, migrations, seed
-│   ├── crypto.ts               # AES-256-GCM encryption
-│   └── ...                     # Contexts, i18n, types, utils
-├── middleware.ts                # Route protection
-data/
-├── seed-holdings.json          # Sample portfolio
-└── seed-cash.json              # Sample cash balances
-docs/
-└── COMMERCIALIZATION_PLAN.md   # Full business plan
-```
-
 ## Security
 
 - Passwords hashed with **bcrypt** (12 rounds)
 - Sessions via **JWT** in `httpOnly`, `SameSite=Lax` cookies
-- Alpha Vantage API keys encrypted with **AES-256-GCM** at rest
+- API keys encrypted with **AES-256-GCM** at rest
 - All database queries use **parameterized statements** (no SQL injection)
 - **HTTPS** enforced on Vercel
 - **Middleware** protects all authenticated routes
-- No tracking cookies, no analytics cookies
+- **GDPR-compliant** — built in Portugal (EU)
+- Cookie consent with Consent Mode v2
 
 ## Contributing
 

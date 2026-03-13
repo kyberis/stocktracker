@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { JsonLd } from "@/components/JsonLd";
 
 export const metadata: Metadata = {
-  title: "trefolio — Simple Portfolio Tracking with AI Insights",
+  title: "trefolio — Portfolio Tracking, EU Tax Reports & AI Insights",
   description:
-    "trefolio is a portfolio tracker for European investors. Real-time quotes, broker imports (DEGIRO, IBKR, T212, Revolut), AI analysis, and dividend projections. Start with Folio for free, Trefolio for €7.99/month.",
+    "trefolio is the portfolio tracker built for European investors. EU tax reports (DE/FR/ES/NL/IT), stock screener, net worth tracking, broker sync, AI analysis in 35 languages, and dividend projections. Free to start, Trefolio for €7.99/month.",
   alternates: {
     canonical: "https://trefolio.com",
     languages: {
@@ -47,9 +47,9 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: "trefolio — Simple Portfolio Tracking with AI Insights",
+    title: "trefolio — Portfolio Tracking, EU Tax Reports & AI Insights",
     description:
-      "The simplest way to manage your stock portfolio. Real-time quotes, dividend tracking, growth projections, and AI analysis — plans from €2.99/month.",
+      "The European investor's portfolio tracker. EU tax reports, stock screener, net worth tracking, AI analysis in 35 languages, and dividend projections — plans from €2.99/month.",
     url: "https://trefolio.com",
     siteName: "trefolio",
     locale: "en_US",
@@ -65,9 +65,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "trefolio — Simple Portfolio Tracking with AI Insights",
+    title: "trefolio — Portfolio Tracking, EU Tax Reports & AI Insights",
     description:
-      "The simplest way to manage your stock portfolio. Real-time quotes, dividend tracking, growth projections, and AI analysis — plans from €2.99/month.",
+      "The European investor's portfolio tracker. EU tax reports, stock screener, net worth tracking, AI analysis in 35 languages, and dividend projections — plans from €2.99/month.",
     images: ["/screenshots/dashboard-overview.png"],
   },
 };
@@ -78,7 +78,7 @@ const WEBSITE_SCHEMA = {
   name: "trefolio",
   url: "https://trefolio.com",
   description:
-    "Simple portfolio tracking with AI insights for European investors",
+    "Portfolio tracking with EU tax reports, stock screener, AI insights, and net worth tracking for European investors in 35 languages",
   inLanguage: [
     "en", "es", "fr", "de", "it", "pt", "nl", "pl", "cs", "sk",
     "hu", "ro", "bg", "hr", "sl", "el", "sv", "da", "fi", "et",
@@ -99,7 +99,7 @@ const ORGANIZATION_SCHEMA = {
   url: "https://trefolio.com",
   logo: "https://trefolio.com/icon.svg",
   description:
-    "Simple portfolio tracking with AI insights for European investors",
+    "Portfolio tracking with EU tax reports, stock screener, AI insights, and net worth tracking for European investors in 35 languages",
   email: "support@trefolio.com",
   foundingDate: "2025",
   contactPoint: [
@@ -119,7 +119,7 @@ const ORGANIZATION_SCHEMA = {
   ],
   address: {
     "@type": "PostalAddress",
-    addressCountry: "EU",
+    addressCountry: "PT",
   },
   areaServed: {
     "@type": "Place",
@@ -142,19 +142,24 @@ const SOFTWARE_APP_SCHEMA = {
   operatingSystem: "Web, iOS, Android",
   url: "https://trefolio.com",
   description:
-    "Portfolio tracker with real-time quotes, broker imports, AI analysis, and dividend projections for European investors.",
+    "Portfolio tracker with EU tax reports, stock screener, net worth tracking, broker imports, AI analysis, and dividend projections for European investors.",
   screenshot: "https://trefolio.com/screenshots/dashboard-overview.png",
   featureList: [
+    "European tax reports for Germany, France, Spain, Netherlands, and Italy with AI Tax Assistant",
+    "Stock screener with 600+ stocks, 6 filter dimensions, and preset strategies",
+    "Net worth tracking for real estate, savings, and pension assets",
     "Real-time stock quotes from NYSE, NASDAQ, XETRA, LSE, and more",
-    "Broker import from DEGIRO, Interactive Brokers, Trading 212, and Revolut",
-    "AI-powered stock analysis and portfolio review",
-    "Dividend tracking and 5-year projections",
-    "Performance metrics (TTWROR, XIRR)",
-    "Multi-currency support (EUR, USD, GBP, DKK, CAD)",
-    "35 European languages",
-    "Portfolio sharing with public links",
-    "Company fundamentals and economic indicators",
-    "Price alerts with email and push notifications",
+    "Broker import and auto-sync from 20+ brokerages via SnapTrade",
+    "AI-powered stock analysis, portfolio review, and AI Tax Assistant",
+    "Dividend tracking, calendars, and 5-year projections",
+    "Performance metrics (TTWROR, XIRR, Sharpe, Max Drawdown)",
+    "Multi-currency support with 21 currencies and FX impact tracking",
+    "35 European languages with AI insights in your native language",
+    "4 dashboard themes (Default, Canvas, Terminal, Studio)",
+    "Event calendars for earnings, economic events, and IPOs",
+    "Price alerts via email, push, WhatsApp, and trefolio Leaf device",
+    "Guided onboarding wizard with country-aware broker suggestions",
+    "In-app notification center for updates and alerts",
   ],
   inLanguage: [
     "en", "es", "fr", "de", "it", "pt", "nl", "pl", "cs", "sk",
@@ -169,7 +174,7 @@ const SOFTWARE_APP_SCHEMA = {
       priceCurrency: "EUR",
       name: "Folio",
       description:
-        "Up to 15 holdings, real-time quotes, charts, growth projection, broker import, 5 AI calls/month",
+        "Up to 15 holdings, real-time quotes, charts, growth projection, broker import, earnings calendar, 5 AI calls/month",
     },
     {
       "@type": "Offer",
@@ -177,7 +182,7 @@ const SOFTWARE_APP_SCHEMA = {
       priceCurrency: "EUR",
       name: "Bifolio",
       description:
-        "Up to 50 holdings, 20 AI calls/month, full portfolio history, advanced metrics, portfolio sharing, CSV export",
+        "Up to 50 holdings, 20 AI calls/month, full portfolio history, advanced metrics, portfolio sharing, CSV export, 1 broker sync, Canvas theme",
     },
     {
       "@type": "Offer",
@@ -185,7 +190,7 @@ const SOFTWARE_APP_SCHEMA = {
       priceCurrency: "EUR",
       name: "Trefolio",
       description:
-        "Unlimited holdings, unlimited AI analysis, fundamentals, stock intelligence, economic indicators",
+        "Unlimited holdings, unlimited AI, EU tax reports, stock screener, net worth tracking, fundamentals, all 4 themes, unlimited broker sync",
     },
   ],
 };
@@ -199,7 +204,7 @@ const FAQ_SCHEMA = {
       name: "How do I import my portfolio?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Go to the unified /import page to access all 7 import methods in one place: DEGIRO, IBKR CSV, IBKR API, Trading 212, Revolut, Simple CSV, and AI Import. Each method has a built-in step-by-step guide. For CSV or AI import: choose your method, drag & drop your file (or paste for AI), review the parsed transactions, and click Import. Trefolio users can connect via IBKR API with a guided 3-step wizard that takes under 2 minutes.",
+        text: "Go to the unified /import page to access all import methods in one place: 14 broker CSV formats (DEGIRO, IBKR, Trading 212, Revolut, Schwab, Fidelity, Nordnet, and more), SnapTrade auto-sync with 20+ brokerages, and AI Import from screenshots or any file. Each method has a built-in guide. Bifolio users get 1 broker sync connection, Trefolio gets unlimited.",
       },
     },
     {
@@ -207,7 +212,7 @@ const FAQ_SCHEMA = {
       name: "What CSV formats are supported?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Six CSV formats plus AI Import: (1) DEGIRO Account.csv, (2) IBKR CSV (Activity Statement or Flex Query), (3) Trading 212 History CSV, (4) Revolut Account Statement (Excel/CSV), (5) Simple CSV with columns: ticker, type, price, amount, currency. For any other format, use AI Import — upload or paste your file and AI will parse it. Trefolio users get IBKR API for direct sync — connect once, re-sync anytime with one click.",
+        text: "14 broker CSV formats: DEGIRO, IBKR, Trading 212, Revolut, Schwab, Fidelity, Nordnet, Tastytrade, Freetrade, eToro, Wealthsimple, Questrade, Firstrade, and Simple CSV. For any other format, use AI Import — upload or paste your file and AI will parse it. Bifolio and Trefolio users can also connect 20+ brokerages via SnapTrade for automatic syncing every 6 hours.",
       },
     },
     {
@@ -223,7 +228,7 @@ const FAQ_SCHEMA = {
       name: "What exchanges are supported?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "trefolio supports NYSE, NASDAQ, XETRA, LSE, Amsterdam (AMS), Madrid (MAD), Copenhagen (OMK), and more. Multi-currency conversion between EUR, USD, GBP, DKK, and CAD is handled automatically.",
+        text: "trefolio supports NYSE, NASDAQ, XETRA, LSE, Amsterdam (AMS), Madrid (MAD), Copenhagen (OMK), and more. Multi-currency conversion between 21 currencies (EUR, USD, GBP, CHF, SEK, NOK, DKK, CAD, AUD, NZD, JPY, and more) is handled automatically.",
       },
     },
     {
@@ -239,7 +244,7 @@ const FAQ_SCHEMA = {
       name: "What's the difference between the plans?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Folio (free) includes up to 15 holdings, real-time quotes, charts, growth projection, broker import, and 5 AI calls/month. Bifolio (€2.99/month) adds 50 holdings, 20 AI calls, full portfolio history, advanced metrics (Sharpe, Drawdown, Volatility), portfolio sharing, and CSV export. Trefolio (€7.99/month) adds unlimited holdings, unlimited AI analysis, company fundamentals, stock intelligence, economic indicators, and Alpha Vantage premium data.",
+        text: "Folio (free) includes up to 15 holdings, real-time quotes, charts, growth projection, broker import, earnings calendar, and 5 AI calls/month. Bifolio (€2.99/month) adds 50 holdings, 20 AI calls, full portfolio history, advanced metrics, portfolio sharing, CSV export, 1 broker sync, and Canvas theme. Trefolio (€7.99/month) adds unlimited holdings, unlimited AI, EU tax reports for 5 countries, stock screener, net worth tracking, fundamentals, all 4 dashboard themes, unlimited broker sync, and IPO calendar.",
       },
     },
     {
