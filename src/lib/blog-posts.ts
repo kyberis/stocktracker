@@ -396,3 +396,644 @@ registerPost({
 <p>The best way to evaluate AI analysis is to use it with your actual holdings. <a href="https://trefolio.com/signup">Create a free trefolio account</a>, import your portfolio, and run your first AI analysis. You get 5 free calls to see if it adds value to your investment process.</p>
 `,
 });
+
+registerPost({
+  slug: "stock-tax-reports-17-countries",
+  title: "Stock Tax Reports for Investors in 17 Countries: From Anlage KAP to Modelo 100",
+  description:
+    "trefolio generates country-specific stock tax reports for 17 countries — Germany, France, Spain, Netherlands, Italy, UK, US, and 10 more. Form mappings, AI tax assistant, and CSV export included.",
+  date: "2026-03-13",
+  readingTime: "10 min read",
+  keywords: [
+    "stock tax report europe",
+    "capital gains tax Germany",
+    "Anlage KAP",
+    "Modelo 100",
+    "Box 3 Netherlands",
+    "stock tax UK",
+    "capital gains tax US",
+  ],
+  image: "/screenshots/tools-page.png",
+  content: /* html */ `
+<h2>The Tax Filing Problem for International Investors</h2>
+<p>If you hold stocks across multiple countries or brokers, tax season becomes a nightmare. Each jurisdiction has its own forms, rules, and deadlines. Germany wants Anlage KAP. Spain wants Modelo 100. The Netherlands has Box 3. The UK has CGT returns. And if you're a US expat or hold US securities, Schedule D adds another layer. Manually compiling this from broker statements is error-prone and time-consuming.</p>
+<p>trefolio solves this by generating country-specific stock tax reports for 17 countries — all from your imported portfolio data. No spreadsheets, no manual calculations, no guessing which form goes where.</p>
+
+<h2>17 Countries, One Tax Report Tool</h2>
+<p>trefolio maps your holdings and transactions to the correct tax forms and rules for each country:</p>
+
+<h3>Germany</h3>
+<p><strong>Anlage KAP</strong> — capital gains and dividends. trefolio calculates Vorabpauschale (advance lump-sum tax on ETFs), Sparerpauschbetrag (€1,000 single / €2,000 joint allowance), and separates Veräußerungsgewinne from dividend income.</p>
+
+<h3>France</h3>
+<p><strong>Déclaration 2074</strong> — PEA and CTO accounts. PFU (flat tax) at 30% or progressive scale. trefolio handles both regimes and separates French vs. foreign source income.</p>
+
+<h3>Spain</h3>
+<p><strong>Modelo 100</strong> — income tax return with capital gains and dividends. trefolio supports Modelo 720 for foreign asset reporting and applies wash sale rules where applicable.</p>
+
+<h3>Netherlands</h3>
+<p><strong>Box 3</strong> — wealth tax on deemed returns. trefolio calculates your taxable base from stocks, ETFs, and cash, applying the correct rates and thresholds.</p>
+
+<h3>Italy</h3>
+<p><strong>Quadro RT-RW</strong> — capital gains and foreign investments. IVAFE (tax on foreign securities) and LIFO cost basis for Italian tax purposes.</p>
+
+<h3>United Kingdom</h3>
+<p><strong>CGT (Capital Gains Tax)</strong> — trefolio computes gains/losses with correct cost basis, annual exempt amount, and reporting thresholds.</p>
+
+<h3>United States</h3>
+<p><strong>Schedule D</strong> — capital gains and losses. trefolio supports short-term vs. long-term classification and wash sale adjustments.</p>
+
+<h3>Switzerland</h3>
+<p><strong>Verrechnungssteuer</strong> — withholding tax on dividends. trefolio tracks reclaimable amounts for Swiss residents.</p>
+
+<h3>Austria</h3>
+<p><strong>KESt (Kapitalertragsteuer)</strong> — 27.5% on dividends and capital gains. trefolio handles the Austrian exemption thresholds.</p>
+
+<h3>Portugal</h3>
+<p><strong>IRS Anexo J</strong> — capital gains and dividends. trefolio maps to Portuguese tax categories.</p>
+
+<h3>Belgium</h3>
+<p><strong>TOB (Taxe sur les Opérations de Bourse)</strong> — transaction tax. trefolio includes transaction costs in your report.</p>
+
+<h3>Ireland</h3>
+<p><strong>CGT at 33%</strong> — trefolio calculates gains with Irish rules and annual exemption.</p>
+
+<h3>Sweden</h3>
+<p><strong>K4 (Declaration)</strong> — capital income from securities. trefolio supports ISK (investment savings account) and traditional account reporting.</p>
+
+<h3>Denmark</h3>
+<p><strong>Aktieindkomst</strong> — stock income taxation. trefolio applies Danish rules for gains and dividends.</p>
+
+<h3>Norway</h3>
+<p><strong>RF-1159</strong> — capital gains and dividends. trefolio calculates according to Norwegian tax law.</p>
+
+<h3>Finland</h3>
+<p><strong>Capital income</strong> — 30% on capital gains and dividends. trefolio maps to Finnish tax reporting.</p>
+
+<h3>Poland</h3>
+<p><strong>PIT-38</strong> — capital gains tax return. trefolio supports Polish tax reporting.</p>
+
+<h2>How to Generate Your Tax Report</h2>
+<ol>
+<li>Import your portfolio from DEGIRO, IBKR, Trading 212, or Revolut — or add holdings manually.</li>
+<li>Go to <strong>Tools</strong> → <strong>Tax Report</strong> in trefolio.</li>
+<li>Select your country from the dropdown.</li>
+<li>Choose the tax year and review the generated summary.</li>
+<li>Download your report as PDF or CSV for your accountant.</li>
+</ol>
+<p><img src="/screenshots/tools-page.png" alt="trefolio Tools page with Tax Report" width="800" height="450" /></p>
+
+<h2>AI Tax Assistant</h2>
+<p>Not sure which form applies or how to report a specific transaction? trefolio's AI tax assistant answers questions in plain language. Ask about wash sales, cost basis methods, or foreign tax credits — get clear, country-specific guidance without digging through tax manuals.</p>
+
+<h2>CSV Export for Your Accountant</h2>
+<p>Accountants prefer raw data. trefolio exports your transactions as CSV with all fields needed for tax preparation: date, symbol, quantity, cost basis, proceeds, gain/loss, dividend amount, withholding tax, and currency. Hand it to your Steuerberater, comptable, or CPA — they'll have everything they need.</p>
+
+<h2>Get Started with Tax Reports</h2>
+<p>Stop wrestling with broker statements and tax forms. <a href="https://trefolio.com/signup">Create a free trefolio account</a> — no credit card required. Import your portfolio from any supported broker and generate your first country-specific tax report in minutes. The free Folio tier includes tax reports for up to 15 holdings; upgrade to Trefolio for unlimited holdings and full CSV export.</p>
+`,
+});
+
+registerPost({
+  slug: "dividend-tracking-projections-european-investors",
+  title: "Track Dividends Like a Pro: Income Tracking, Projections & Ex-Dividend Calendar",
+  description:
+    "Track dividend income, project future payouts, and never miss an ex-dividend date. trefolio handles withholding tax across European brokers automatically.",
+  date: "2026-03-13",
+  readingTime: "7 min read",
+  keywords: [
+    "dividend tracker",
+    "dividend income projections",
+    "ex-dividend calendar",
+    "dividend portfolio tracker",
+    "dividend withholding tax Europe",
+  ],
+  image: "/screenshots/dividends.png",
+  content: /* html */ `
+<h2>Why Dividends Matter for European Investors</h2>
+<p>Dividends are a core part of many European investment strategies. Whether you're building passive income, reinvesting for growth, or simply holding quality companies that pay shareholders, you need to know exactly what you're earning — and when. Yet most portfolio trackers treat dividends as an afterthought: a line item in your transaction history, nothing more.</p>
+<p>trefolio treats dividends as a first-class feature. From per-stock yield and payout ratios to 5-year income projections and an ex-dividend calendar, you get the full picture without spreadsheets.</p>
+
+<h2>What trefolio Tracks</h2>
+<p>For every holding in your portfolio, trefolio calculates:</p>
+<ul>
+<li><strong>Dividend per share (DPS)</strong> — trailing 12-month and forward estimates</li>
+<li><strong>Dividend yield</strong> — current yield based on your cost basis and market price</li>
+<li><strong>Payout ratio</strong> — how much of earnings the company pays out as dividends</li>
+<li><strong>Estimated annual income</strong> — projected dividends for the next 12 months based on your shares</li>
+<li><strong>Withholding tax</strong> — automatically parsed from broker imports (DEGIRO, IBKR, Trading 212, Revolut)</li>
+</ul>
+<p><img src="/screenshots/dividends.png" alt="trefolio dividend tracking dashboard" width="800" height="450" /></p>
+
+<h2>Ex-Dividend Calendar</h2>
+<p>Never miss an ex-dividend date again. trefolio shows a calendar of upcoming ex-dividend dates for all your holdings. Plan your buys: if you want to capture the next dividend, you need to own the stock before the ex-date. Plan your sells: selling after the ex-date means you still receive the dividend. The calendar keeps you informed so you're never caught off guard.</p>
+
+<h2>Withholding Tax Handling</h2>
+<p>European investors face a patchwork of withholding taxes. US dividends are subject to 15% or 30% withholding. Irish-domiciled ETFs may have different treatment. trefolio parses withholding tax from your broker statements automatically — no manual entry. You see net dividends received and can reconcile with your tax report for reclaims or foreign tax credits.</p>
+
+<h2>5-Year Dividend Projections</h2>
+<p>How much dividend income can you expect over the next 5 years? trefolio projects forward based on current DPS, historical growth rates, and your share count. Use it to plan cash flow, set income goals, or compare dividend stocks side by side.</p>
+
+<h2>Step-by-Step: Setting Up Dividend Tracking</h2>
+<ol>
+<li>Import your portfolio from your broker (DEGIRO, IBKR, Trading 212, or Revolut) or add holdings manually.</li>
+<li>Navigate to the <strong>Dividends</strong> section in trefolio.</li>
+<li>Review your estimated annual income and per-stock yields.</li>
+<li>Check the ex-dividend calendar for upcoming dates.</li>
+<li>Use the 5-year projection to model your income trajectory.</li>
+</ol>
+
+<h2>Get Started</h2>
+<p><a href="https://trefolio.com/signup">Create a free trefolio account</a> — no credit card required. Import your portfolio and start tracking dividends immediately. The free Folio tier includes dividend tracking, ex-dividend calendar, and 5-year projections for up to 15 holdings. Upgrade to Trefolio for unlimited holdings and advanced dividend analytics.</p>
+`,
+});
+
+registerPost({
+  slug: "portfolio-simulator-backtesting-what-if",
+  title: "Portfolio Simulator: Backtest Strategies, Run What-If Scenarios & Stress Test Your Portfolio",
+  description:
+    "Backtest DCA strategies over 30 years, simulate what-if scenarios, and stress test against 5 historical crises. CAGR, Sharpe ratio, and max drawdown included.",
+  date: "2026-03-13",
+  readingTime: "8 min read",
+  keywords: [
+    "portfolio backtesting tool",
+    "what-if portfolio simulator",
+    "stress test portfolio",
+    "DCA simulator",
+    "portfolio backtest",
+  ],
+  image: "/screenshots/tools-page.png",
+  content: /* html */ `
+<h2>"What If I Had Invested Differently?"</h2>
+<p>Every investor has wondered: what if I had started earlier? What if I had put more into that ETF? What if I had diversified differently? Hindsight is 20/20, but you don't need a time machine to learn from the past. trefolio's portfolio simulator lets you backtest strategies, run what-if scenarios, and stress test your portfolio against real historical crises — all with a few clicks.</p>
+
+<h2>Three Modes, One Tool</h2>
+
+<h3>1. Historical Backtesting</h3>
+<p>Backtest dollar-cost averaging (DCA) strategies over up to 30 years. Pick a ticker (e.g., S&P 500 ETF, Euro Stoxx 50), set your monthly contribution, choose your start date, and see how your portfolio would have grown. trefolio calculates CAGR, Sharpe ratio, max drawdown, and total dividend income over the period. No coding required — just configure and run.</p>
+
+<h3>2. What-If Scenarios</h3>
+<p>What if you had allocated 50% to tech instead of 20%? What if you had held more cash during the 2022 rate hike? trefolio's what-if mode lets you adjust sector weights, add or remove positions, and see how your portfolio would have performed. Sector concentration analysis helps you understand diversification impact before you make changes.</p>
+
+<h3>3. Crisis Stress Testing</h3>
+<p>How would your portfolio have held up during the 2008 financial crisis? COVID-19? The dot-com crash? trefolio stress tests against 5 historical crises:</p>
+<ul>
+<li><strong>2008 Global Financial Crisis</strong> — Lehman collapse, bank failures, market crash</li>
+<li><strong>COVID-19 (2020)</strong> — rapid sell-off and V-shaped recovery</li>
+<li><strong>Dot-Com Bubble (2000–2002)</strong> — tech collapse and prolonged bear market</li>
+<li><strong>2022 Rate Hike</strong> — inflation shock and bond/equity drawdowns</li>
+<li><strong>Euro Debt Crisis (2011–2012)</strong> — sovereign stress and European equity sell-off</li>
+</ul>
+<p>See your max drawdown, recovery time, and how your allocation would have fared. Knowledge is power — and preparation.</p>
+
+<h2>Metrics You Get</h2>
+<ul>
+<li><strong>CAGR (Compound Annual Growth Rate)</strong> — your annualized return over the period</li>
+<li><strong>Sharpe ratio</strong> — risk-adjusted return (higher is better)</li>
+<li><strong>Max drawdown</strong> — largest peak-to-trough decline</li>
+<li><strong>Dividend income</strong> — total dividends received over the backtest period</li>
+</ul>
+<p><img src="/screenshots/tools-page.png" alt="trefolio Tools page with Portfolio Simulator" width="800" height="450" /></p>
+
+<h2>Step-by-Step: Running Your First Backtest</h2>
+<ol>
+<li>Go to <strong>Tools</strong> → <strong>Portfolio Simulator</strong> in trefolio.</li>
+<li>Choose <strong>Historical Backtest</strong>, <strong>What-If</strong>, or <strong>Stress Test</strong>.</li>
+<li>For backtest: select ticker, monthly amount, start date, and run.</li>
+<li>For what-if: adjust your portfolio weights and compare results.</li>
+<li>For stress test: select a crisis and see your portfolio's hypothetical performance.</li>
+</ol>
+
+<h2>Get Started</h2>
+<p><a href="https://trefolio.com/signup">Create a free trefolio account</a> — no credit card required. The portfolio simulator is available on the free Folio tier. Run backtests, what-if scenarios, and stress tests with your real portfolio data. Upgrade to Trefolio for unlimited simulations and advanced analytics.</p>
+`,
+});
+
+registerPost({
+  slug: "stock-screener-european-exchanges",
+  title: "Stock Screener for European Exchanges: Filter 600+ Stocks by Yield, P/E & Sector",
+  description:
+    "Screen 600+ stocks on European exchanges by dividend yield, P/E ratio, sector, market cap, and country. Preset filters and direct portfolio integration.",
+  date: "2026-03-13",
+  readingTime: "6 min read",
+  keywords: [
+    "stock screener Europe",
+    "European stock screener",
+    "filter stocks dividend yield",
+    "stock screener XETRA",
+    "best stock screener 2026",
+  ],
+  image: "/screenshots/tools-page.png",
+  content: /* html */ `
+<h2>Why European Stock Screening Is Hard</h2>
+<p>US investors have dozens of screeners — Yahoo Finance, Finviz, TradingView — with deep coverage of NYSE and Nasdaq. European investors? Not so much. XETRA, Euronext, LSE, SIX Swiss, and Nordic exchanges have thousands of listed companies, but finding a screener that covers them well, with dividend yield, P/E, and sector filters, is surprisingly difficult. Most tools are US-centric or require expensive subscriptions.</p>
+<p>trefolio's stock screener covers 600+ stocks across major European exchanges. Filter by dividend yield, P/E ratio, sector, market cap, exchange, and country — then add winners directly to your portfolio with one click.</p>
+
+<h2>What You Can Filter</h2>
+<ul>
+<li><strong>Dividend yield</strong> — find high-yield dividend stocks (e.g., yield &gt; 4%)</li>
+<li><strong>P/E ratio</strong> — screen for value (low P/E) or growth (higher P/E)</li>
+<li><strong>Sector</strong> — technology, healthcare, financials, consumer goods, energy, and more</li>
+<li><strong>Market cap</strong> — large-cap, mid-cap, small-cap</li>
+<li><strong>Exchange</strong> — XETRA, Euronext Paris/Amsterdam, LSE, SIX Swiss, Oslo, Stockholm, Helsinki, and others</li>
+<li><strong>Country</strong> — filter by company domicile or primary listing</li>
+</ul>
+<p><img src="/screenshots/tools-page.png" alt="trefolio stock screener" width="800" height="450" /></p>
+
+<h2>Preset Filters</h2>
+<p>Don't want to build filters from scratch? trefolio includes preset filters for common strategies:</p>
+<ul>
+<li><strong>High dividend yield</strong> — stocks with yield above 4%</li>
+<li><strong>Value stocks</strong> — low P/E, solid fundamentals</li>
+<li><strong>Large-cap stability</strong> — blue chips on major exchanges</li>
+<li><strong>European tech</strong> — technology sector on European exchanges</li>
+</ul>
+<p>One click applies the preset; adjust as needed.</p>
+
+<h2>Adding Directly to Your Portfolio</h2>
+<p>Found a stock you like? Add it to your portfolio with one click. No need to switch apps or manually enter tickers. trefolio's screener is integrated with your portfolio — screen, add, and track in one place.</p>
+
+<h2>Step-by-Step: Using the Stock Screener</h2>
+<ol>
+<li>Go to <strong>Tools</strong> → <strong>Stock Screener</strong> in trefolio.</li>
+<li>Set your filters: yield, P/E, sector, cap, exchange, country.</li>
+<li>Or choose a preset filter and refine.</li>
+<li>Browse results and click <strong>Add to Portfolio</strong> on any stock.</li>
+<li>Your new holding appears on your dashboard with real-time quotes.</li>
+</ol>
+
+<h2>Get Started</h2>
+<p><a href="https://trefolio.com/signup">Create a free trefolio account</a> — no credit card required. The stock screener is available on the free Folio tier. Screen 600+ European stocks, apply filters, and add holdings directly to your portfolio. Upgrade to Trefolio for unlimited holdings and advanced screening criteria.</p>
+`,
+});
+
+registerPost({
+  slug: "portfolio-performance-metrics-ttwror-irr",
+  title: "Portfolio Performance: TTWROR, IRR, Sharpe Ratio & Benchmark Comparison Explained",
+  description:
+    "Understand TTWROR, IRR, Sharpe ratio, max drawdown, and volatility. Learn how trefolio calculates real performance and compares against S&P 500 and Euro Stoxx 50.",
+  date: "2026-03-13",
+  readingTime: "9 min read",
+  keywords: [
+    "TTWROR explained",
+    "IRR portfolio",
+    "Sharpe ratio portfolio",
+    "portfolio benchmark comparison",
+    "portfolio performance metrics",
+  ],
+  image: "/screenshots/tools-page.png",
+  content: /* html */ `
+<h2>"Am I Actually Beating the Market?"</h2>
+<p>Your portfolio is up 15% this year. Sounds great — but is it? If the S&P 500 returned 25%, you underperformed. If you added cash mid-year, your "return" might be distorted by the timing of deposits. And what about risk? A 15% return with 30% volatility is very different from 15% with 5% volatility.</p>
+<p>Understanding portfolio performance requires the right metrics. trefolio calculates TTWROR, IRR, Sharpe ratio, max drawdown, and volatility from your actual transactions — and compares you against S&P 500, Nasdaq, Dow Jones, and Euro Stoxx 50. No guesswork, no spreadsheets.</p>
+
+<h2>TTWROR Explained</h2>
+<p><strong>Time-Weighted Rate of Return (TTWROR)</strong> measures your portfolio's performance independent of when you added or withdrew cash. It answers: "How well did my investments perform?" — not "How much money did I make?"</p>
+<p>Why does this matter? If you deposit €10,000 in January and your portfolio doubles by December, your "simple return" is 100%. But if you deposited €50,000 in November, that same 100% gain would look very different. TTWROR eliminates cash flow distortion by breaking the period into sub-periods and chain-linking returns. It's the standard metric used by fund managers and financial advisors.</p>
+<p>trefolio calculates TTWROR from your real buy/sell transactions and cash flows. No manual entry — import from DEGIRO, IBKR, Trading 212, or Revolut and get accurate numbers.</p>
+
+<h2>IRR Explained</h2>
+<p><strong>Internal Rate of Return (IRR)</strong> is money-weighted. It accounts for the timing and size of your deposits and withdrawals. It answers: "What return did I personally achieve on the money I invested?"</p>
+<p>IRR is useful when you want to know your personal outcome — e.g., "I put in €5,000 over 3 years and now have €6,500. What's my effective annual return?" IRR captures that. TTWROR would tell you how the market did; IRR tells you how you did given your specific cash flow pattern.</p>
+<p>trefolio computes IRR from your transaction history. Use it alongside TTWROR to get the full picture.</p>
+
+<h2>Sharpe Ratio</h2>
+<p><strong>Sharpe ratio</strong> measures risk-adjusted return. It's your excess return (above the risk-free rate) divided by volatility. A higher Sharpe means you're getting more return per unit of risk. A portfolio with 10% return and 5% volatility has a better Sharpe than one with 10% return and 20% volatility.</p>
+<p>trefolio calculates Sharpe from your historical returns. Use it to compare strategies or to see if your portfolio is efficiently rewarded for the risk you're taking.</p>
+
+<h2>Max Drawdown</h2>
+<p><strong>Max drawdown</strong> is the largest peak-to-trough decline in your portfolio value. If your portfolio went from €100,000 to €70,000 at its lowest point, your max drawdown is 30%. It's a simple, intuitive measure of "how bad did it get?" — and how long it took to recover.</p>
+
+<h2>Volatility</h2>
+<p><strong>Volatility</strong> (standard deviation of returns) measures how much your portfolio fluctuates. Low volatility means smooth, predictable returns. High volatility means bigger swings — both up and down. trefolio shows annualized volatility so you can compare across time periods.</p>
+
+<h2>Benchmark Comparison</h2>
+<p>Beating the market is the goal for many investors. trefolio compares your TTWROR and IRR against:</p>
+<ul>
+<li><strong>S&P 500</strong> — US large-cap benchmark</li>
+<li><strong>Nasdaq</strong> — US tech-heavy benchmark</li>
+<li><strong>Dow Jones</strong> — US blue-chip benchmark</li>
+<li><strong>Euro Stoxx 50</strong> — European large-cap benchmark</li>
+</ul>
+<p>See side-by-side how you're doing vs. passive index investing. Are you adding value, or would you have been better off in an ETF?</p>
+<p><img src="/screenshots/tools-page.png" alt="trefolio performance metrics and benchmark comparison" width="800" height="450" /></p>
+
+<h2>How trefolio Calculates From Real Transactions</h2>
+<p>trefolio doesn't guess. It uses your actual buy/sell transactions, dividends, and cash flows from your broker import. TTWROR, IRR, Sharpe, and max drawdown are computed from this data — no manual entry, no approximations. Import from DEGIRO, IBKR, Trading 212, or Revolut and get performance metrics that reflect your real investing history.</p>
+
+<h2>Performance Explainer Feature</h2>
+<p>Not sure what a metric means or why your return differs from the benchmark? trefolio's performance explainer breaks it down in plain language. Click on any metric to get a short explanation and context. No finance degree required.</p>
+
+<h2>Step-by-Step: Viewing Your Performance</h2>
+<ol>
+<li>Import your portfolio from your broker.</li>
+<li>Go to your dashboard — TTWROR, IRR, and daily change are shown at the top.</li>
+<li>Scroll to the <strong>Performance</strong> section for full metrics: Sharpe, max drawdown, volatility.</li>
+<li>Check the <strong>Benchmark Comparison</strong> to see how you stack up vs. S&P 500 and Euro Stoxx 50.</li>
+<li>Use the performance explainer for any metric you want to understand better.</li>
+</ol>
+
+<h2>Get Started</h2>
+<p><a href="https://trefolio.com/signup">Create a free trefolio account</a> — no credit card required. Import your portfolio and get accurate TTWROR, IRR, Sharpe ratio, and benchmark comparison from day one. The free Folio tier includes full performance metrics for up to 15 holdings. Upgrade to Trefolio for unlimited holdings and historical performance analytics.</p>
+`,
+});
+
+registerPost({
+  slug: "stock-price-alerts-whatsapp-push-email",
+  title: "Stock Price Alerts on WhatsApp, Push & Email: Never Miss a Market Move",
+  description:
+    "Set stock price alerts delivered via WhatsApp, browser push, or email. Percentage-based triggers and portfolio-wide alerts for European investors.",
+  date: "2026-03-13",
+  readingTime: "6 min read",
+  keywords: [
+    "stock price alert WhatsApp",
+    "push notification stock price",
+    "portfolio alert",
+    "price drop alert",
+    "stock alert app Europe",
+  ],
+  image: "/screenshots/dashboard-overview.png",
+  content: /* html */ `
+<h2>The Cost of Missing a Market Move</h2>
+<p>A stock in your portfolio drops 8% in a single session. By the time you check your phone at lunch, it's recovered 3% — and you missed the buying opportunity. Or worse: a position you've been meaning to sell finally hits your target price while you're in a meeting. Minutes later, it retreats. You had the plan. You just didn't have the alert.</p>
+<p>trefolio delivers price alerts where you actually see them — WhatsApp, browser push notifications, and email. Set your thresholds once, and trefolio watches the market for you.</p>
+
+<h2>Multi-Channel Alerts: WhatsApp, Push & Email</h2>
+<p>Most alert systems are limited to email or in-app notifications — channels you might not check in real time. trefolio supports three channels:</p>
+<ul>
+<li><strong>WhatsApp</strong> — instant messages to your phone. No app to install, no notifications to miss. This is the fastest way to get alerted during market hours.</li>
+<li><strong>Browser push notifications</strong> — alerts pop up on your desktop or mobile even when trefolio isn't open. Works on Chrome, Firefox, Safari, and Edge.</li>
+<li><strong>Email</strong> — for a persistent record of every triggered alert. Great for end-of-day review.</li>
+</ul>
+<p>You can enable one channel or all three. WhatsApp is the standout — most European investors have it open all day, making it the lowest-latency option.</p>
+
+<h2>Percentage-Based Price Triggers</h2>
+<p>trefolio supports two types of percentage-based alerts:</p>
+<ul>
+<li><strong>Daily change</strong> — notify when a stock moves more than X% in a single session (e.g., "Alert me if ASML drops more than 5% today")</li>
+<li><strong>Versus purchase price</strong> — notify when a stock moves X% from your cost basis (e.g., "Alert me if my NVIDIA position is up 50% from my average buy price")</li>
+</ul>
+<p>This is more flexible than fixed price alerts. Percentage-based triggers adjust with the stock's price, so you don't need to recalculate targets manually.</p>
+
+<h2>Portfolio-Wide Alerts</h2>
+<p>Don't just monitor individual stocks — monitor your entire portfolio. Set a portfolio-wide alert to notify you when your total portfolio value changes by more than a specified percentage in a day. This catches broad market moves (like index-level sell-offs) without requiring an alert on every single holding.</p>
+
+<h2>Big Market Move Alerts</h2>
+<p>trefolio also watches major indices. When the S&P 500, Nasdaq, or Euro Stoxx 50 moves more than 4% in a session, you get an automatic alert — even without setting one. These rare, high-impact moves are the ones that matter most, and trefolio makes sure you know about them.</p>
+
+<h2>Step-by-Step: Setting Up Your First Alert</h2>
+<ol>
+<li>Go to your <strong>Profile</strong> page and enable your preferred notification channels (WhatsApp, push, email).</li>
+<li>Navigate to any stock in your portfolio or watchlist.</li>
+<li>Click <strong>Set Alert</strong> and choose your trigger type (daily change or vs. purchase price).</li>
+<li>Set your percentage threshold.</li>
+<li>Save — trefolio monitors the stock and notifies you when the condition is met.</li>
+</ol>
+
+<h2>Get Started</h2>
+<p>Stop checking your portfolio every hour. <a href="https://trefolio.com/signup">Create a free trefolio account</a> — no credit card required. The free Folio tier includes 2 price alerts with in-app notifications. Upgrade to Bifolio for 10 alerts with WhatsApp, push, and email. Trefolio unlocks unlimited alerts across all channels.</p>
+`,
+});
+
+registerPost({
+  slug: "net-worth-tracker-beyond-stocks",
+  title: "Track Your Full Net Worth: Stocks, Real Estate, Savings & Pension in One View",
+  description:
+    "Go beyond stock tracking. Add real estate, savings accounts, and pension to see your complete net worth with multi-currency support and visual breakdowns.",
+  date: "2026-03-13",
+  readingTime: "6 min read",
+  keywords: [
+    "net worth tracker",
+    "track net worth stocks real estate",
+    "personal finance tracker Europe",
+    "net worth calculator",
+    "net worth app",
+  ],
+  image: "/screenshots/dashboard-overview.png",
+  content: /* html */ `
+<h2>Your Portfolio Is Not Your Net Worth</h2>
+<p>You track your stocks obsessively — every dip, every dividend, every daily change. But your stock portfolio is probably just one piece of your financial picture. You have a savings account. Maybe a pension. Perhaps real estate. These assets matter, and ignoring them gives you an incomplete view of where you actually stand.</p>
+<p>trefolio's net worth tracking lets you add manual assets alongside your stock portfolio so you can see everything in one place — your true financial position.</p>
+
+<h2>What You Can Track</h2>
+<p>trefolio supports four categories of manual assets beyond your stock and ETF portfolio:</p>
+<ul>
+<li><strong>Real estate</strong> — your primary residence, rental properties, or REITs held outside a brokerage. Enter the current estimated value and trefolio includes it in your net worth.</li>
+<li><strong>Savings accounts</strong> — cash in bank accounts, high-yield savings, money market funds. Track multiple accounts across different banks and currencies.</li>
+<li><strong>Pension</strong> — employer pension, state pension entitlements, private retirement accounts. Even approximate values help complete the picture.</li>
+<li><strong>Other assets</strong> — anything else with monetary value: crypto held in cold storage, collectibles, loans you've made. Optional notes help you remember what each entry represents.</li>
+</ul>
+
+<h2>Multi-Currency Support</h2>
+<p>European investors often have assets in multiple currencies — a savings account in EUR, a property valued in GBP, a US stock portfolio in USD. trefolio converts everything to your base currency automatically using live exchange rates. Your net worth is always displayed in one number, one currency.</p>
+
+<h2>Net Worth Overview with Visual Breakdown</h2>
+<p>The Net Worth Overview card on your dashboard shows your total net worth as a single figure, with a donut chart breaking it down by category: stocks and ETFs, real estate, savings, pension, and other. At a glance, you see how diversified your total wealth is — not just your stock portfolio, but everything.</p>
+<p><img src="/screenshots/dashboard-overview.png" alt="trefolio net worth overview" width="800" height="450" /></p>
+
+<h2>Step-by-Step: Adding Manual Assets</h2>
+<ol>
+<li>From your dashboard, click <strong>Add Asset</strong> in the Net Worth section.</li>
+<li>Choose the asset type: real estate, savings, pension, or other.</li>
+<li>Enter the value and currency.</li>
+<li>Add optional notes (e.g., "Berlin apartment" or "Company pension fund").</li>
+<li>Save — the asset appears in your net worth breakdown immediately.</li>
+</ol>
+
+<h2>Why This Matters</h2>
+<p>If 80% of your net worth is in stocks and 20% in cash, that's a very different risk profile than 40% stocks, 30% real estate, and 30% pension. You can't manage what you can't measure. Net worth tracking gives you the full picture so you can make informed decisions about asset allocation, risk, and financial planning.</p>
+
+<h2>Get Started</h2>
+<p>See your full financial picture, not just your stock portfolio. <a href="https://trefolio.com/signup">Create a free trefolio account</a> — no credit card required. The free Folio tier includes net worth tracking with up to 15 holdings and unlimited manual assets. Add your savings, real estate, and pension alongside your stocks and see where you truly stand.</p>
+`,
+});
+
+registerPost({
+  slug: "auto-sync-broker-snaptrade",
+  title: "Auto-Sync Your Broker Portfolio: Connect 20+ Brokerages With One Click",
+  description:
+    "Connect your brokerage account to trefolio via SnapTrade and auto-sync your portfolio every 6 hours. No more CSV exports — just one-click OAuth.",
+  date: "2026-03-13",
+  readingTime: "6 min read",
+  keywords: [
+    "auto sync broker portfolio",
+    "SnapTrade portfolio tracker",
+    "connect broker portfolio app",
+    "automatic portfolio sync",
+    "broker API portfolio tracker",
+  ],
+  image: "/screenshots/dashboard-overview.png",
+  content: /* html */ `
+<h2>The Problem with Manual Imports</h2>
+<p>CSV imports work. They're reliable and they get your data into trefolio accurately. But they're also tedious. Every time you make a trade, you need to re-export your CSV, upload it, and wait for the import to process. For active traders making several trades a week, this adds up fast. For passive investors, it's an inconvenience you'd rather not deal with every quarter.</p>
+<p>trefolio's broker sync solves this. Connect your brokerage account once via SnapTrade, and your portfolio syncs automatically every 6 hours. No CSV exports, no manual uploads, no missed transactions.</p>
+
+<h2>How Broker Sync Works</h2>
+<p>trefolio uses SnapTrade — a secure, regulated broker aggregation platform — to connect directly to your brokerage account. The process is simple:</p>
+<ol>
+<li>Go to the <strong>Import</strong> page in trefolio and select <strong>Connect Broker</strong>.</li>
+<li>Choose your broker from the list of 20+ supported brokerages.</li>
+<li>Authenticate via OAuth — you log in to your broker directly. trefolio never sees your broker password.</li>
+<li>trefolio pulls your current positions, transaction history, and cash balances.</li>
+<li>Your portfolio updates automatically every 6 hours. No action needed.</li>
+</ol>
+<p><img src="/screenshots/dashboard-overview.png" alt="trefolio broker sync" width="800" height="450" /></p>
+
+<h2>Supported Brokerages</h2>
+<p>SnapTrade supports 20+ brokerages commonly used by European and North American investors, including:</p>
+<ul>
+<li><strong>Interactive Brokers (IBKR)</strong> — the most popular broker for serious European investors</li>
+<li><strong>Schwab</strong> — including former TD Ameritrade accounts</li>
+<li><strong>Fidelity</strong> — US brokerage with European access</li>
+<li><strong>Questrade</strong> — popular Canadian broker</li>
+<li><strong>Alpaca</strong> — commission-free API broker</li>
+<li><strong>Wealthsimple</strong> — Canadian investing platform</li>
+</ul>
+<p>The full list is available on the Import page. New brokers are added regularly as SnapTrade expands coverage.</p>
+
+<h2>Sync vs. CSV: When to Use Each</h2>
+<table>
+<thead>
+<tr><th>Feature</th><th>Broker Sync (SnapTrade)</th><th>CSV Import</th></tr>
+</thead>
+<tbody>
+<tr><td>Setup effort</td><td>One-time OAuth</td><td>Export + upload each time</td></tr>
+<tr><td>Updates</td><td>Automatic every 6 hours</td><td>Manual</td></tr>
+<tr><td>Supported brokers</td><td>20+ (growing)</td><td>14+ (DEGIRO, IBKR, Trading 212, Revolut, etc.)</td></tr>
+<tr><td>Historical data</td><td>Depends on broker API</td><td>Full history from CSV</td></tr>
+<tr><td>Best for</td><td>Active traders, convenience</td><td>Full history import, unsupported brokers</td></tr>
+</tbody>
+</table>
+<p>You can use both: import your historical CSV first, then enable auto-sync for ongoing updates. trefolio deduplicates automatically.</p>
+
+<h2>Security</h2>
+<p>Your broker credentials are handled entirely by SnapTrade via OAuth. trefolio never stores your broker username or password. SnapTrade is a regulated financial data provider with bank-grade encryption. Read-only access means trefolio can see your positions but never place trades or move money.</p>
+
+<h2>Get Started</h2>
+<p>Stop exporting CSVs. <a href="https://trefolio.com/signup">Create a free trefolio account</a> — no credit card required. Broker sync is available starting on the Bifolio tier (€2.99/month) with one broker connection. Upgrade to Trefolio for multiple broker connections and auto-sync across all your accounts.</p>
+`,
+});
+
+registerPost({
+  slug: "earnings-calendar-economic-events-investors",
+  title: "Earnings Calendar & Economic Events: Stay Ahead of Market-Moving Dates",
+  description:
+    "Track earnings dates for your holdings, economic events like rate decisions, and upcoming IPOs. Portfolio-aware calendar with month grid and list views.",
+  date: "2026-03-13",
+  readingTime: "6 min read",
+  keywords: [
+    "earnings calendar investors",
+    "economic events calendar",
+    "IPO calendar Europe",
+    "stock earnings dates",
+    "market events calendar 2026",
+  ],
+  image: "/screenshots/tools-page.png",
+  content: /* html */ `
+<h2>Why Earnings Dates Move Markets</h2>
+<p>Earnings announcements are the single most impactful events for individual stocks. A company that beats expectations can gap up 10-15% overnight. A miss can wipe out months of gains in minutes. If you own the stock, you need to know when earnings are coming — and what the market expects.</p>
+<p>trefolio's event calendar tracks earnings dates, economic events, and IPOs in one view. It's portfolio-aware: your holdings' earnings are highlighted so you never get caught off guard.</p>
+
+<h2>Portfolio-Aware Earnings Calendar</h2>
+<p>The most important earnings dates are the ones for stocks you actually own. trefolio highlights your holdings' upcoming earnings with a distinct color in the calendar, so they stand out from the hundreds of other companies reporting that week. At a glance, you see: "ASML reports next Thursday" or "Apple's earnings are in two weeks."</p>
+<p>This is not a generic market calendar — it's personalized to your portfolio.</p>
+
+<h2>Economic Events</h2>
+<p>Beyond individual company earnings, macro events move markets too. trefolio tracks:</p>
+<ul>
+<li><strong>Central bank rate decisions</strong> — ECB, Fed, Bank of England. Rate changes affect everything from bond yields to stock valuations.</li>
+<li><strong>GDP releases</strong> — quarterly economic growth figures for major economies.</li>
+<li><strong>Inflation reports</strong> — CPI and PPI data that influence monetary policy.</li>
+<li><strong>Employment data</strong> — non-farm payrolls, unemployment rates.</li>
+</ul>
+<p>Each event is color-coded by impact level (high, medium, low) so you can focus on what matters most.</p>
+
+<h2>IPO Calendar</h2>
+<p>Interested in new listings? trefolio's IPO calendar shows upcoming initial public offerings on European exchanges. See the company name, expected listing date, exchange, and sector. Use it to stay informed about new investment opportunities.</p>
+
+<h2>Two Views: Month Grid & Chronological List</h2>
+<p>The calendar offers two ways to browse events:</p>
+<ul>
+<li><strong>Month grid</strong> — see the full month at a glance with color-coded dots for earnings, economic events, and IPOs. Click any day to see details.</li>
+<li><strong>Chronological list</strong> — a scrollable feed of upcoming events sorted by date. Better for scanning the next few weeks quickly.</li>
+</ul>
+<p><img src="/screenshots/tools-page.png" alt="trefolio event calendar" width="800" height="450" /></p>
+
+<h2>Step-by-Step: Using the Event Calendar</h2>
+<ol>
+<li>Import your portfolio into trefolio (from DEGIRO, IBKR, Trading 212, Revolut, or manually).</li>
+<li>Go to the <strong>Event Calendar</strong> tab from the dashboard.</li>
+<li>Your holdings' earnings are highlighted automatically.</li>
+<li>Toggle between month grid and list view.</li>
+<li>Click any event for details: date, time, consensus estimates (for earnings), and impact level (for economic events).</li>
+</ol>
+
+<h2>Get Started</h2>
+<p>Know what's coming before the market reacts. <a href="https://trefolio.com/signup">Create a free trefolio account</a> — no credit card required. The free Folio tier includes earnings dates for your holdings. Upgrade to Bifolio for full market earnings and economic events. Trefolio unlocks the IPO calendar and advanced event filtering.</p>
+`,
+});
+
+registerPost({
+  slug: "trefolio-leaf-amoled-portfolio-display",
+  title: "trefolio Leaf: A Dedicated AMOLED Display for Your Portfolio",
+  description:
+    "A compact AMOLED device that shows your portfolio value, top holdings, and AI insights at a glance. WiFi connected, OTA updates, and a free year of trefolio Pro.",
+  date: "2026-03-13",
+  readingTime: "5 min read",
+  keywords: [
+    "portfolio display device",
+    "stock ticker display",
+    "trefolio Leaf",
+    "AMOLED portfolio tracker device",
+    "desk stock display",
+  ],
+  image: "/screenshots/device-t4s3.png",
+  content: /* html */ `
+<h2>Your Portfolio, Always Visible</h2>
+<p>Checking your portfolio shouldn't require unlocking your phone, opening an app, and waiting for it to load. What if your portfolio value, top holdings, and market status were always visible — sitting on your desk, always on, always up to date?</p>
+<p>That's trefolio Leaf: a compact AMOLED display that connects to your trefolio account over WiFi and shows your portfolio data in real time. It's a dedicated financial display for investors who want a glanceable overview without the distractions of a phone or browser.</p>
+<p><img src="/screenshots/device-t4s3.png" alt="trefolio Leaf AMOLED display device" width="800" height="450" /></p>
+
+<h2>What the Leaf Shows</h2>
+<p>The trefolio Leaf cycles through several screens:</p>
+<ul>
+<li><strong>Portfolio value</strong> — total value, daily change (amount and percentage), and an intraday sparkline chart</li>
+<li><strong>Top holdings</strong> — your largest positions with current price and daily change</li>
+<li><strong>AI insights</strong> — a summary of your portfolio's health from trefolio's AI analysis</li>
+<li><strong>Market status</strong> — whether major exchanges (NYSE, XETRA, LSE) are open or closed, plus key index movements</li>
+</ul>
+<p>Each screen is designed for readability at arm's length — large fonts, high-contrast AMOLED colors, and minimal clutter.</p>
+
+<h2>Hardware Specs</h2>
+<ul>
+<li><strong>Display</strong> — AMOLED, vibrant colors with true blacks. Readable in any lighting condition.</li>
+<li><strong>Processor</strong> — ESP32-S3 (LILYGO T4-S3) with WiFi connectivity</li>
+<li><strong>Connectivity</strong> — 2.4 GHz WiFi. Connects to your home or office network via a captive portal setup.</li>
+<li><strong>Power</strong> — USB-C powered. Sits on your desk next to your monitor.</li>
+<li><strong>Updates</strong> — over-the-air (OTA) firmware updates. New features and improvements delivered automatically.</li>
+</ul>
+
+<h2>Setup in 3 Minutes</h2>
+<ol>
+<li><strong>Power on</strong> — plug in the Leaf via USB-C.</li>
+<li><strong>Connect to WiFi</strong> — the Leaf creates a WiFi hotspot. Connect from your phone, enter your home WiFi credentials, and it connects automatically.</li>
+<li><strong>Link your trefolio account</strong> — scan a QR code or enter a pairing code in trefolio. The Leaf pulls your portfolio data and starts displaying.</li>
+</ol>
+<p>That's it. No app to install, no Bluetooth pairing, no complex configuration.</p>
+
+<h2>Free Year of trefolio Pro</h2>
+<p>Every trefolio Leaf purchase includes a full year of trefolio Pro (Trefolio tier). That means unlimited holdings, AI analysis, tax reports, stock screener, portfolio simulator, and all premium features — included with your device.</p>
+
+<h2>Who Is It For?</h2>
+<p>The trefolio Leaf is for investors who want a persistent, distraction-free view of their portfolio:</p>
+<ul>
+<li><strong>Desk traders</strong> who want a secondary display without giving up screen real estate</li>
+<li><strong>Long-term investors</strong> who want a daily glance at their portfolio without opening apps</li>
+<li><strong>Gift for investors</strong> — a unique, practical gift for anyone who follows the markets</li>
+<li><strong>Home office aesthetic</strong> — a sleek device that adds information to your workspace</li>
+</ul>
+
+<h2>Join the Waitlist</h2>
+<p>The trefolio Leaf is coming soon. <a href="https://trefolio.com/signup">Create a free trefolio account</a> and join the Leaf waitlist from your profile page. You'll be the first to know when it's available — no credit card required, no commitment. In the meantime, set up your portfolio in trefolio so it's ready to display the moment your Leaf arrives.</p>
+`,
+});

@@ -5,6 +5,7 @@ export interface BlogPost {
   date: string;
   readingTime: string;
   keywords: string[];
+  image?: string;
   content: string;
 }
 

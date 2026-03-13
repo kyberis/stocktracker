@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { getPostBySlug, getAllSlugs } from "@/lib/blog";
 import { JsonLd } from "@/components/JsonLd";
 import PublicFooter from "@/components/PublicFooter";
+import ShareBar from "./share-bar";
 import "@/lib/blog-posts";
 
 interface Props {
@@ -33,7 +34,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       publishedTime: post.date,
       images: [
         {
-          url: "/screenshots/dashboard-overview.png",
+          url: post.image || "/screenshots/dashboard-overview.png",
           width: 1280,
           height: 800,
           alt: post.title,
@@ -44,7 +45,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       card: "summary_large_image",
       title: `${post.title} — trefolio blog`,
       description: post.description,
-      images: ["/screenshots/dashboard-overview.png"],
+      images: [post.image || "/screenshots/dashboard-overview.png"],
     },
   };
 }
@@ -107,7 +108,10 @@ export default function BlogPostPage({ params }: Props) {
               <time className="text-sm text-gray-500">{post.date}</time>
               <h1 className="text-3xl sm:text-4xl font-bold mt-2 mb-3">{post.title}</h1>
               <p className="text-gray-400 text-lg leading-relaxed">{post.description}</p>
-              <span className="text-sm text-gray-500 mt-2 inline-block">{post.readingTime}</span>
+              <div className="flex items-center gap-3 mt-3">
+                <span className="text-sm text-gray-500">{post.readingTime}</span>
+                <ShareBar title={post.title} slug={post.slug} />
+              </div>
             </header>
 
             <div
