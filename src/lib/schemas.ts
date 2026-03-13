@@ -361,28 +361,6 @@ export const resetPortfolioSchema = z.object({
 
 /* ── Analytics ─────────────────────────────────────────────── */
 
-const ALLOWED_EVENTS = [
-  "stock_view", "ai_analysis", "page_view", "settings_changed",
-  "theme_toggled", "billing_checkout_started", "billing_checkout_completed",
-  "billing_portal_opened", "paywall_shown", "upgrade_compare_shown",
-  "upgrade_compare_clicked", "portfolio_period_returns_viewed",
-  "alert_created", "alert_triggered", "alert_limit_reached",
-  "alert_email_sent", "csv_exported",
-  "diversification_tab_viewed", "dividends_tab_viewed",
-  "stealth_mode_enabled", "stealth_mode_disabled",
-  "exdiv_calendar_viewed", "exdiv_ticker_expanded",
-  "metrics_tab_viewed", "metrics_lock_clicked",
-  "growth_tab_viewed", "growth_range_changed",
-  "portfolio_share_created", "portfolio_share_revoked",
-  "portfolio_share_viewed", "share_signup_cta_clicked",
-  "transaction_pl_viewed",
-] as const;
-
-export const trackEventSchema = z.object({
-  event: z.enum(ALLOWED_EVENTS, { message: "Unknown event type" }),
-  metadata: z.record(z.string(), z.string()).optional(),
-});
-
 const LANDING_EVENTS = [
   "landing_page_view", "landing_feature_tab", "landing_cta_click",
   "landing_section_view", "landing_pricing_view", "landing_faq_open",
