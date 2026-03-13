@@ -550,7 +550,7 @@
 <header>
   <h1>Competitive Analysis &amp; Market Opportunity</h1>
   <p class="subtitle">Deep analysis of trefolio against 10+ portfolio trackers worldwide &mdash; features, UI/UX, pricing, investor priorities, and strategic opportunities.</p>
-  <span class="date-badge" aria-label="Report date">March 13, 2026 &mdash; v1.29</span>
+  <span class="date-badge" aria-label="Report date">March 13, 2026 &mdash; v1.30</span>
 </header>
 
 <nav aria-label="Report sections">
@@ -957,7 +957,7 @@
         </tr>
         <tr>
           <td>Backtesting</td>
-          <td><span class="cross" aria-label="No">&#10007;</span></td>
+          <td><span class="check" aria-label="Yes">&#10003;</span> <strong>30yr</strong></td>
           <td><span class="cross" aria-label="No">&#10007;</span></td>
           <td><span class="check" aria-label="Yes">&#10003;</span></td>
           <td><span class="cross" aria-label="No">&#10007;</span></td>
@@ -1381,12 +1381,12 @@
           <td><span class="badge badge-med">Medium</span></td>
           <td><strong style="color:var(--emerald);text-decoration:none;">CLOSED v1.25</strong> &mdash; 600+ stocks, 6 filter dimensions, 5 preset strategies. Theme-aware UI. Nightly cache refresh. Pro-gated.</td>
         </tr>
-        <tr>
+        <tr style="opacity:0.5;text-decoration:line-through;">
           <td><strong>Backtesting / &ldquo;what-if&rdquo;</strong></td>
           <td>Snowball (30yr), Ziggma (simulator)</td>
           <td><span class="badge badge-med">Medium</span></td>
           <td><span class="badge badge-high">High</span></td>
-          <td>Power-user feature. Snowball charges $250/yr partly for this.</td>
+          <td><strong style="color:var(--emerald);text-decoration:none;">CLOSED v1.30</strong> &mdash; 30yr DCA backtesting, what-if scenario builder, and crisis stress testing (5 historical crises). Snowball charges $250/yr; trefolio includes it in Pro at &euro;60/yr.</td>
         </tr>
         <tr>
           <td><strong>Home screen widgets</strong></td>
@@ -1418,6 +1418,11 @@
         </tr>
       </thead>
       <tbody>
+        <tr>
+          <td><strong>Portfolio simulator</strong></td>
+          <td>30yr DCA backtesting with benchmark comparison, what-if scenario builder with side-by-side analysis, crisis stress testing (5 historical crises) with resilience score and holding-level impact.</td>
+          <td><span class="badge badge-lead">v1.30</span></td>
+        </tr>
         <tr>
           <td><strong>European tax reports</strong></td>
           <td>DE (Anlage KAP, Vorabpauschale, Teilfreistellung), FR (D&eacute;claration 2074), ES (Modelo 100/720, wash sale), NL (Box 3 wealth tax), IT (Quadro RT/RW, IVAFE, LIFO). AI Tax Assistant. CSV export. <strong>#1 gap now closed.</strong></td>
@@ -1601,6 +1606,12 @@
     </div>
 
     <div class="card" style="border-top: 3px solid var(--emerald);">
+      <div class="card-label">Current Moat</div>
+      <div class="card-title">Portfolio Simulator</div>
+      <div class="card-body">Historical backtesting (30yr DCA simulation with benchmark comparison, CAGR, Sharpe, max drawdown, best/worst year, dividend income), what-if scenario builder (current vs scenario side-by-side, sector concentration analysis), and crisis stress testing (5 historical crises with sector-level drawdowns, resilience score, holding-by-holding impact). Snowball charges $250/yr for backtesting alone &mdash; trefolio includes backtesting + what-if + stress testing in Pro at &euro;60/yr.</div>
+    </div>
+
+    <div class="card" style="border-top: 3px solid var(--emerald);">
       <div class="card-label">Current Moat &mdash; THE GAME-CHANGER</div>
       <div class="card-title">European Tax Intelligence</div>
       <div class="card-body"><strong>The #1 gap identified in the original analysis &mdash; now closed.</strong> Country-specific tax reports for DE (Anlage KAP, Vorabpauschale, Teilfreistellung, Sparerpauschbetrag), FR (D&eacute;claration 2074), ES (Modelo 100/720, wash sale rule), NL (Box 3 wealth tax, deemed returns), IT (Quadro RT/RW, IVAFE, LIFO). AI Tax Assistant with optimization suggestions and data quality checks. CSV export. This is trefolio&rsquo;s Sharesight-equivalent moat &mdash; <strong>no competitor offers EU-specific tax reports</strong>.</div>
@@ -1682,7 +1693,7 @@
 
   <div class="callout callout-emerald">
     <div class="callout-title">Sweet Spot</div>
-    trefolio is the only product in the <strong>simple + affordable quadrant</strong> that also offers EU tax reports, AI capabilities, 35-language support, stock screener, 21-currency multi-currency, net worth tracking, 4 dashboard themes, and a hardware device. Stock Events shares the simplicity but lacks depth. Getquin is nearby but 2.5&times; more expensive and has no tax reports. Portfolio Performance is free but desktop-only with a steep learning curve.
+    trefolio is the only product in the <strong>simple + affordable quadrant</strong> that also offers EU tax reports, portfolio simulator (30yr backtesting + what-if + stress testing), AI capabilities, 35-language support, stock screener, 21-currency multi-currency, net worth tracking, 4 dashboard themes, and a hardware device. Stock Events shares the simplicity but lacks depth. Getquin is nearby but 2.5&times; more expensive with no tax reports or backtesting. Snowball has backtesting but at 4&times; the price.
   </div>
 </section>
 
@@ -1843,14 +1854,15 @@
 
     <div class="timeline-item long">
       <div class="timeline-header">
-        <span class="timeline-title">Backtesting &amp; &ldquo;what-if&rdquo; analysis</span>
+        <span class="timeline-title" style="text-decoration:line-through;opacity:0.6;">Backtesting &amp; &ldquo;what-if&rdquo; analysis</span>
+        <span class="badge badge-lead">DONE v1.30</span>
       </div>
-      <div class="timeline-desc">&ldquo;What if I had invested &euro;10K in MSCI World 5 years ago?&rdquo; and portfolio stress testing. Snowball charges $250/yr partly for this. Power-user feature with strong Pro upgrade potential.</div>
-      <span class="timeline-impact impact-med">Medium Impact &middot; High Effort</span>
+      <div class="timeline-desc">30yr DCA backtesting with benchmark comparison, what-if scenario builder with current vs scenario side-by-side, and crisis stress testing (5 historical crises) with resilience score and holding-level impact. Snowball charges $250/yr for backtesting alone; trefolio includes all three in Pro at &euro;60/yr.</div>
+      <span class="timeline-impact impact-med">Shipped</span>
     </div>
   </div>
 
-  <h3>Shipped Since Original Analysis <span style="color:var(--emerald);font-size:0.85rem;">(v1.0 &rarr; v1.29)</span></h3>
+  <h3>Shipped Since Original Analysis <span style="color:var(--emerald);font-size:0.85rem;">(v1.0 &rarr; v1.30)</span></h3>
 
   <div class="table-wrapper" role="region" aria-label="Completed strategy initiatives" tabindex="0">
     <table>
@@ -1862,6 +1874,11 @@
         </tr>
       </thead>
       <tbody>
+        <tr>
+          <td><strong>Portfolio simulator</strong></td>
+          <td>30yr backtesting, what-if scenarios, crisis stress testing (5 crises), resilience score</td>
+          <td>v1.30</td>
+        </tr>
         <tr>
           <td><strong>European tax reports</strong></td>
           <td>DE/FR/ES/NL/IT tax summaries, AI Tax Assistant, form field mapping, CSV export</td>
@@ -1968,7 +1985,7 @@
 
   <div class="callout callout-emerald">
     <div class="callout-title">Execution Velocity</div>
-    20 major initiatives shipped from v1.0 to v1.29. The single most impactful: <strong>European tax reports</strong> (v1.29) &mdash; the #1 gap identified in the original analysis, now owning an unoccupied niche no competitor serves. Other major closures: <strong>stock screener</strong> (600+ stocks), <strong>streamlined onboarding</strong> (portfolio import + sample data), <strong>net worth tracking</strong>, <strong>multi-currency</strong> (5&rarr;21), <strong>broker sync democratization</strong>, and <strong>event calendars</strong>. Remaining high-impact gaps: social/community and broker breadth expansion to 100+.
+    21 major initiatives shipped from v1.0 to v1.30. Most impactful: <strong>European tax reports</strong> (v1.29 &mdash; the #1 gap, now owned) and <strong>portfolio simulator</strong> (v1.30 &mdash; 30yr backtesting + what-if + stress testing, matching Snowball at 4&times; lower price). Other major closures: stock screener, streamlined onboarding, net worth tracking, multi-currency (5&rarr;21), broker sync democratization, and event calendars. Remaining high-impact gaps: social/community and broker breadth expansion to 100+.
   </div>
 </section>
 
@@ -2022,22 +2039,22 @@
 
     <div class="card" style="border-left: 3px solid var(--teal);">
       <div class="card-label" style="color:var(--teal);">Rapid Gap Closure</div>
-      <div class="card-title">16+ Gaps Closed (v1.0 &rarr; v1.29)</div>
-      <div class="card-body">European tax reports (v1.29 &mdash; the #1 gap), streamlined onboarding (v1.28), screener navigation (v1.27), notification center (v1.26), stock screener (v1.25), onboarding wizard (v1.24), net worth tracking (v1.23), guided theme tour, multi-currency (5&rarr;21), dashboard themes (4 layouts), event calendars, broker sync for all tiers, broker reconnect UX, market move callouts, crypto portfolio, and native mobile apps &mdash; all shipped. Remaining high-impact gaps: social/community and broker breadth (100+).</div>
+      <div class="card-title">17+ Gaps Closed (v1.0 &rarr; v1.30)</div>
+      <div class="card-body">Portfolio simulator (v1.30), European tax reports (v1.29 &mdash; the #1 gap), streamlined onboarding (v1.28), screener navigation (v1.27), notification center (v1.26), stock screener (v1.25), onboarding wizard (v1.24), net worth tracking (v1.23), guided theme tour, multi-currency (5&rarr;21), dashboard themes (4 layouts), event calendars, broker sync for all tiers, broker reconnect UX, market move callouts, crypto portfolio, and native mobile apps &mdash; all shipped. Remaining high-impact gaps: social/community and broker breadth (100+).</div>
     </div>
   </div>
 
   <div class="callout callout-emerald" style="margin-top:1.5rem;">
-    <div class="callout-title">Executive Summary (Updated v1.29)</div>
-    trefolio enters a $2.5B+ market with clear differentiation: <strong>European tax reports</strong> (DE/FR/ES/NL/IT &mdash; unoccupied niche, now owned), <strong>35 languages</strong> (3&times; more than any competitor), <strong>AI analysis + AI Tax Assistant in native language</strong> (unique), <strong>trefolio Leaf hardware</strong> (category-first), <strong>stock screener</strong> (600+ stocks), <strong>net worth tracking</strong>, <strong>streamlined onboarding</strong> (portfolio import + sample data), <strong>21-currency multi-currency</strong>, <strong>4 dashboard themes</strong>, and <strong>aggressive pricing</strong> (2&ndash;5&times; cheaper). Since the original analysis, 16+ competitive gaps have been closed &mdash; most critically <strong>European tax reports</strong> (the #1 gap), along with stock screener, onboarding, notification center, net worth tracking, broker sync democratization, event calendars, and more. The primary remaining challenges are broker sync breadth (Getquin: 30K+ vs trefolio: 20+) and social community moat (Getquin: 500K+ users). The highest-ROI strategic moves are now: <strong>(1)</strong> multi-language SEO blitz leveraging EU tax + 35 languages for uncontested long-tail queries, <strong>(2)</strong> expansion of broker connections to 100+, and <strong>(3)</strong> lightweight social features to build community. The AI leadership window is 12&ndash;18 months &mdash; speed remains essential.
+    <div class="callout-title">Executive Summary (Updated v1.30)</div>
+    trefolio enters a $2.5B+ market with clear differentiation: <strong>European tax reports</strong> (DE/FR/ES/NL/IT &mdash; unoccupied niche, now owned), <strong>portfolio simulator</strong> (30yr backtesting + what-if + stress testing at 4&times; less than Snowball), <strong>35 languages</strong> (3&times; more than any competitor), <strong>AI analysis + AI Tax Assistant in native language</strong> (unique), <strong>trefolio Leaf hardware</strong> (category-first), <strong>stock screener</strong> (600+ stocks), <strong>net worth tracking</strong>, <strong>streamlined onboarding</strong>, <strong>21-currency multi-currency</strong>, <strong>4 dashboard themes</strong>, and <strong>aggressive pricing</strong> (2&ndash;5&times; cheaper). Since the original analysis, 17+ competitive gaps have been closed &mdash; most critically <strong>European tax reports</strong> (the #1 gap) and <strong>portfolio simulator</strong> (closing the backtesting gap), along with stock screener, onboarding, notification center, net worth tracking, broker sync democratization, event calendars, and more. The primary remaining challenges are broker sync breadth (Getquin: 30K+ vs trefolio: 20+) and social community moat (Getquin: 500K+ users). The highest-ROI strategic moves are now: <strong>(1)</strong> multi-language SEO blitz leveraging EU tax + simulator + 35 languages for uncontested long-tail queries, <strong>(2)</strong> expansion of broker connections to 100+, and <strong>(3)</strong> lightweight social features to build community. The AI leadership window is 12&ndash;18 months &mdash; speed remains essential.
   </div>
 </section>
 
 </main>
 
 <footer>
-  <p>trefolio Competitive Analysis &mdash; March 13, 2026 (v1.29) &mdash; Internal Document</p>
-  <p style="margin-top:0.35rem;">Data sourced from public pricing pages, app store reviews, product documentation, and market research reports. Updated to reflect features shipped through v1.29.</p>
+  <p>trefolio Competitive Analysis &mdash; March 13, 2026 (v1.30) &mdash; Internal Document</p>
+  <p style="margin-top:0.35rem;">Data sourced from public pricing pages, app store reviews, product documentation, and market research reports. Updated to reflect features shipped through v1.30.</p>
 </footer>
 
 </body>
