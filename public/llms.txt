@@ -4,13 +4,13 @@
 
 ## What is trefolio?
 
-trefolio is a web-based portfolio tracker built for European retail investors. It offers EU-specific tax reports for Germany, France, Spain, Netherlands, and Italy (with AI Tax Assistant), a stock screener covering 600+ stocks, net worth tracking (real estate, savings, pensions), broker auto-sync via SnapTrade (20+ brokerages), 14 broker CSV import formats, AI-powered analysis in your native language, dividend tracking and projections, performance metrics (TTWROR, XIRR, Sharpe, Max Drawdown), and 4 dashboard themes. Available in 35 European languages with 21-currency support.
+trefolio is a web-based portfolio tracker built for European retail investors. It offers tax reports for 17 countries (Germany, France, Spain, Netherlands, Italy, UK, US, Switzerland, Austria, Portugal, Belgium, Ireland, Sweden, Denmark, Norway, Finland, Poland) with AI Tax Assistant, a stock screener covering 600+ stocks, net worth tracking (real estate, savings, pensions), broker auto-sync via SnapTrade (20+ brokerages), 14 broker CSV import formats, AI-powered analysis in your native language, dividend tracking and projections, performance metrics (TTWROR, XIRR, Sharpe, Max Drawdown), portfolio simulator (backtesting, what-if, stress testing), and 4 dashboard themes. Available in 35 European languages with 21-currency support.
 
 ## Pricing
 
 - Free (Folio): Up to 15 holdings, real-time quotes, charts, growth projection, broker import, earnings calendar, 5 AI calls/month
 - Bifolio (€2.99/month or €23.99/year): 50 holdings, 20 AI calls/month, full portfolio history, advanced metrics, portfolio sharing, CSV export, 1 broker sync, Canvas theme
-- Trefolio (€7.99/month or €59.99/year): Unlimited holdings, unlimited AI, EU tax reports (DE/FR/ES/NL/IT), stock screener, net worth tracking, fundamentals, all 4 themes, unlimited broker sync, IPO calendar
+- Trefolio (€7.99/month or €59.99/year): Unlimited holdings, unlimited AI, tax reports (17 countries), stock screener, portfolio simulator, net worth tracking, fundamentals, all 4 themes, unlimited broker sync, IPO calendar
 
 ## Key Pages
 
@@ -23,6 +23,24 @@ trefolio is a web-based portfolio tracker built for European retail investors. I
 - trefolio Leaf (device): https://trefolio.com/leaf
 - Privacy Policy: https://trefolio.com/privacy
 - Terms of Service: https://trefolio.com/terms
+
+## Blog Articles
+
+- Best Portfolio Trackers for European Investors in 2026: https://trefolio.com/blog/best-portfolio-trackers-europe-2026
+- How to Import Your DEGIRO Portfolio: https://trefolio.com/blog/how-to-import-degiro-portfolio
+- How to Import Interactive Brokers Trades: https://trefolio.com/blog/how-to-import-interactive-brokers
+- Free vs Paid Portfolio Trackers: https://trefolio.com/blog/free-vs-paid-portfolio-trackers
+- AI Portfolio Analysis Explained: https://trefolio.com/blog/ai-portfolio-analysis-explained
+- Stock Tax Reports for 17 Countries: https://trefolio.com/blog/stock-tax-reports-17-countries
+- Dividend Tracking & Projections: https://trefolio.com/blog/dividend-tracking-projections-european-investors
+- Portfolio Simulator (Backtest, What-If, Stress Test): https://trefolio.com/blog/portfolio-simulator-backtesting-what-if
+- Stock Screener for European Exchanges: https://trefolio.com/blog/stock-screener-european-exchanges
+- Performance Metrics (TTWROR, IRR, Sharpe): https://trefolio.com/blog/portfolio-performance-metrics-ttwror-irr
+- Price Alerts (WhatsApp, Push, Email): https://trefolio.com/blog/stock-price-alerts-whatsapp-push-email
+- Net Worth Tracking: https://trefolio.com/blog/net-worth-tracker-beyond-stocks
+- Auto-Sync Broker via SnapTrade: https://trefolio.com/blog/auto-sync-broker-snaptrade
+- Earnings Calendar & Economic Events: https://trefolio.com/blog/earnings-calendar-economic-events-investors
+- trefolio Leaf AMOLED Display: https://trefolio.com/blog/trefolio-leaf-amoled-portfolio-display
 
 ## Optional
 

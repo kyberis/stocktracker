@@ -11,7 +11,7 @@ trefolio is a web-based portfolio tracking application designed for European ret
 - Primary: Beginner-to-intermediate retail investors in Europe (roughly 5–50 stocks/ETFs)
 - Secondary: Expats with multi-currency portfolios (21 currencies supported)
 - Tertiary: Non-English-speaking European investors (35 languages supported)
-- Emerging: Dividend-focused investors needing EU tax reporting (DE, FR, ES, NL, IT)
+- Emerging: Dividend-focused investors needing tax reporting (17 countries: DE, FR, ES, NL, IT, GB, US, CH, AT, PT, BE, IE, SE, DK, NO, FI, PL)
 
 ## Core Features
 
@@ -26,8 +26,8 @@ trefolio is a web-based portfolio tracking application designed for European ret
 - Market ticker bar showing EUR/USD, Bitcoin, Gold, S&P 500, and exchange statuses
 - Big market move callouts (≥4% index movement) via marquee, toast, and push notifications
 
-### European Tax Reports (Pro)
-- Country-specific tax summaries for Germany (Anlage KAP, Vorabpauschale, Teilfreistellung, Sparerpauschbetrag), France (Déclaration 2074), Spain (Modelo 100/720, wash sale rule), Netherlands (Box 3 wealth tax, deemed returns), and Italy (Quadro RT/RW, IVAFE, LIFO cost basis)
+### Tax Reports (Pro)
+- Country-specific tax summaries for 17 countries: Germany (Anlage KAP, Vorabpauschale, Teilfreistellung, Sparerpauschbetrag), France (Déclaration 2074, PFU 30%), Spain (Modelo 100/720, wash sale rule), Netherlands (Box 3 wealth tax, deemed returns), Italy (Quadro RT/RW, IVAFE, LIFO cost basis), UK (CGT allowance), US (Schedule D, wash sale), Switzerland (Verrechnungssteuer), Austria (KESt 27.5%), Portugal (IRS Anexo J), Belgium (TOB), Ireland (CGT 33%), Sweden (K4 form), Denmark (Aktieindkomst), Norway (RF-1159), Finland (capital income 30%), Poland (PIT-38)
 - AI Tax Assistant with optimization suggestions and data quality checks
 - FIFO, LIFO, and average cost basis methods
 - CSV export for tax data (realized gains, dividends, form field summaries)
@@ -138,8 +138,9 @@ Everything in Free, plus:
 Everything in Bifolio, plus:
 - Unlimited holdings
 - Unlimited AI analysis
-- EU tax reports for Germany, France, Spain, Netherlands, Italy
+- Tax reports for 17 countries (DE, FR, ES, NL, IT, GB, US, CH, AT, PT, BE, IE, SE, DK, NO, FI, PL)
 - AI Tax Assistant with optimization suggestions
+- Portfolio simulator (backtesting, what-if scenarios, crisis stress testing)
 - Stock screener (600+ stocks, 6 filters, 5 presets)
 - Company fundamentals (income, balance, cash flow)
 - Stock intelligence (news sentiment, insider trades)
@@ -208,10 +209,10 @@ trefolio supports NYSE, NASDAQ, XETRA, LSE, Amsterdam (AMS), Madrid (MAD), Copen
 TTWROR uses the Modified Dietz method, which weights each cash flow by the fraction of the period remaining — so returns reflect market performance only, not deposit timing. IRR (XIRR) finds the annualized rate that makes the net present value of all dated cash flows equal zero. Advanced metrics (Sharpe, Drawdown, Volatility) are available from Bifolio.
 
 ### What's the difference between the plans?
-Folio (free) includes up to 15 holdings, real-time quotes, charts, growth projection, broker import, earnings calendar, and 5 AI calls/month. Bifolio (€2.99/month) adds 50 holdings, 20 AI calls, full portfolio history, advanced metrics, portfolio sharing, CSV export, 1 broker sync, and Canvas theme. Trefolio (€7.99/month) adds unlimited holdings, unlimited AI, EU tax reports for 5 countries, stock screener, net worth tracking, fundamentals, all 4 dashboard themes, unlimited broker sync, and IPO calendar.
+Folio (free) includes up to 15 holdings, real-time quotes, charts, growth projection, broker import, earnings calendar, and 5 AI calls/month. Bifolio (€2.99/month) adds 50 holdings, 20 AI calls, full portfolio history, advanced metrics, portfolio sharing, CSV export, 1 broker sync, and Canvas theme. Trefolio (€7.99/month) adds unlimited holdings, unlimited AI, tax reports for 17 countries, stock screener, portfolio simulator, net worth tracking, fundamentals, all 4 dashboard themes, unlimited broker sync, and IPO calendar.
 
-### What EU tax reports are available?
-Trefolio includes country-specific tax reports for Germany (Anlage KAP, Vorabpauschale, Teilfreistellung), France (Déclaration 2074), Spain (Modelo 100/720), Netherlands (Box 3), and Italy (Quadro RT/RW, IVAFE). Reports include FIFO/LIFO/average cost basis, dividend income, withholding tax, and form field mapping. An AI Tax Assistant provides optimization suggestions.
+### What tax reports are available?
+Trefolio includes country-specific tax reports for 17 countries: Germany (Anlage KAP, Vorabpauschale, Teilfreistellung), France (Déclaration 2074), Spain (Modelo 100/720), Netherlands (Box 3), Italy (Quadro RT/RW, IVAFE), UK (CGT), US (Schedule D), Switzerland (Verrechnungssteuer), Austria (KESt), Portugal (IRS Anexo J), Belgium (TOB), Ireland (CGT 33%), Sweden (K4), Denmark (Aktieindkomst), Norway (RF-1159), Finland (capital income 30%), and Poland (PIT-38). Reports include FIFO/LIFO/average cost basis, dividend income, withholding tax, and form field mapping. An AI Tax Assistant provides optimization suggestions.
 
 ### Can I cancel anytime?
 Yes. Bifolio and Trefolio are billed monthly or annually (save ~37%). You can cancel anytime from the billing portal — your paid features remain active until the end of the billing period.
@@ -231,6 +232,24 @@ When you import a broker CSV or connect via SnapTrade, dividends, withholding ta
 - trefolio Leaf (device): https://trefolio.com/leaf
 - Privacy Policy: https://trefolio.com/privacy
 - Terms of Service: https://trefolio.com/terms
+
+## Blog Articles
+
+- Best Portfolio Trackers for European Investors in 2026: https://trefolio.com/blog/best-portfolio-trackers-europe-2026
+- How to Import Your DEGIRO Portfolio: https://trefolio.com/blog/how-to-import-degiro-portfolio
+- How to Import Interactive Brokers Trades: https://trefolio.com/blog/how-to-import-interactive-brokers
+- Free vs Paid Portfolio Trackers: https://trefolio.com/blog/free-vs-paid-portfolio-trackers
+- AI Portfolio Analysis Explained: https://trefolio.com/blog/ai-portfolio-analysis-explained
+- Stock Tax Reports for 17 Countries: https://trefolio.com/blog/stock-tax-reports-17-countries
+- Dividend Tracking & Projections: https://trefolio.com/blog/dividend-tracking-projections-european-investors
+- Portfolio Simulator (Backtest, What-If, Stress Test): https://trefolio.com/blog/portfolio-simulator-backtesting-what-if
+- Stock Screener for European Exchanges: https://trefolio.com/blog/stock-screener-european-exchanges
+- Performance Metrics (TTWROR, IRR, Sharpe): https://trefolio.com/blog/portfolio-performance-metrics-ttwror-irr
+- Price Alerts (WhatsApp, Push, Email): https://trefolio.com/blog/stock-price-alerts-whatsapp-push-email
+- Net Worth Tracking: https://trefolio.com/blog/net-worth-tracker-beyond-stocks
+- Auto-Sync Broker via SnapTrade: https://trefolio.com/blog/auto-sync-broker-snaptrade
+- Earnings Calendar & Economic Events: https://trefolio.com/blog/earnings-calendar-economic-events-investors
+- trefolio Leaf AMOLED Display: https://trefolio.com/blog/trefolio-leaf-amoled-portfolio-display
 
 ## Contact
 
