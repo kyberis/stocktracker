@@ -1214,7 +1214,7 @@ const MIGRATIONS: Migration[] = [
     version: 40,
     description: "Create notifications table for in-app notification platform",
     up: async (client: Client) => {
-      await client.execute(`
+      await client.executeMultiple(`
         CREATE TABLE IF NOT EXISTS notifications (
           id TEXT PRIMARY KEY,
           user_id TEXT NOT NULL,
