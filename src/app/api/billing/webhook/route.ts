@@ -19,6 +19,13 @@ import { sendBifolioUpgradeEmail, sendTrefolioUpgradeEmail } from "@/lib/email";
 import { billingEventsTotal } from "@/lib/metrics";
 import { getStripeClient } from "@/lib/stripe";
 import { withMetrics } from "@/lib/with-metrics";
+import { createNotification } from "@/lib/db";
+import {
+  bifolioUpgradeNotification,
+  trefolioUpgradeNotification,
+  downgradeNotification,
+  planExpiredNotification,
+} from "@/lib/notification-templates";
 
 function stripeCustomerId(value: string | Stripe.Customer | Stripe.DeletedCustomer | null): string {
   if (!value) return "";
@@ -121,6 +128,11 @@ export const POST = withMetrics("/api/billing/webhook", async (req: NextRequest)
             sendUpgradeEmail(user.email, user.display_name || "").catch((err) =>
               console.error("Upgrade email failed:", err),
             );
+            const upgradeNotif =
+              checkoutPlan === "starter" ? bifolioUpgradeNotification() : trefolioUpgradeNotification();
+            createNotification(user.id, upgradeNotif).catch((err) =>
+              console.error("Upgrade notification failed:", err),
+            );
           }
         }
         break;
@@ -141,6 +153,11 @@ export const POST = withMetrics("/api/billing/webhook", async (req: NextRequest)
           stripeSubscriptionId: subscription.id,
           planExpiresAt: nextExpiresAt,
         });
+        if (cancelAtPeriodEnd && nextExpiresAt) {
+          createNotification(user.id, downgradeNotification(nextExpiresAt)).catch((err) =>
+            console.error("Downgrade notification failed:", err),
+          );
+        }
         await reconcileSnapTrade(user.id, nextPlan);
         await reconcileTheme(user.id, nextPlan);
         break;
@@ -149,13 +166,27 @@ export const POST = withMetrics("/api/billing/webhook", async (req: NextRequest)
         const subscription = event.data.object as Stripe.Subscription;
         const user = await resolveUserFromSubscription(subscription);
         if (!user) break;
-        await updateUserSubscription(user.id, {
-          plan: "free",
-          stripeSubscriptionId: "",
-          planExpiresAt: "",
-        });
-        await reconcileSnapTrade(user.id, "free");
-        await reconcileTheme(user.id, "free");
+
+        const periodEnd = periodEndIso(subscription);
+        const stillHasTime = periodEnd && new Date(periodEnd) > new Date();
+
+        if (stillHasTime) {
+          await updateUserSubscription(user.id, {
+            stripeSubscriptionId: "",
+            planExpiresAt: periodEnd,
+          });
+        } else {
+          await updateUserSubscription(user.id, {
+            plan: "free",
+            stripeSubscriptionId: "",
+            planExpiresAt: "",
+          });
+          await reconcileSnapTrade(user.id, "free");
+          await reconcileTheme(user.id, "free");
+          createNotification(user.id, planExpiredNotification()).catch((err) =>
+            console.error("Plan-expired notification failed:", err),
+          );
+        }
         break;
       }
       default:

@@ -430,8 +430,8 @@ export default function EconomicIndicators() {
 
                 {/* Chart */}
                 {chartData.length > 0 && (
-                  <div className="card p-4">
-                    <ResponsiveContainer width="100%" height={340}>
+                  <div className="card p-4" style={{ aspectRatio: "2.8/1", maxHeight: "min(340px, 45vh)" }}>
+                    <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={chartData} margin={{ top: 10, right: 20, bottom: 20, left: 10 }}>
                         <CartesianGrid stroke={gridColor} strokeDasharray="3 3" />
                         <XAxis

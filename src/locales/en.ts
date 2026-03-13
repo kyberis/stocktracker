@@ -988,6 +988,8 @@ const en: TranslationStrings = {
   brokerSyncFetchAll: "Fetch All Transactions (No Date Filter)",
   brokerSyncUpToDate: "Your portfolio is up to date.",
   brokerSyncUpToDateDesc: "All transactions from your brokerage have already been imported. There is nothing new to sync.",
+  brokerSyncDataSyncTriggered: "Data sync initiated",
+  brokerSyncDataSyncTriggeredDesc: "Your broker's transaction history is being synced for the first time. This usually takes a few minutes. Please try syncing again shortly.",
   brokerSyncUpToDateStats: "0 new transactions found. {count} already imported from your brokerage.",
   brokerSyncLastImported: "Last imported",
   brokerSyncNeverImported: "Never imported — will fetch all transactions",

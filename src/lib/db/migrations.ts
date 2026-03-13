@@ -1210,6 +1210,30 @@ const MIGRATIONS: Migration[] = [
       `);
     },
   },
+  {
+    version: 40,
+    description: "Create notifications table for in-app notification platform",
+    up: async (client: Client) => {
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS notifications (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          type TEXT NOT NULL DEFAULT 'info',
+          title TEXT NOT NULL,
+          title_es TEXT NOT NULL DEFAULT '',
+          message TEXT NOT NULL,
+          message_es TEXT NOT NULL DEFAULT '',
+          link TEXT NOT NULL DEFAULT '',
+          link_label TEXT NOT NULL DEFAULT '',
+          link_label_es TEXT NOT NULL DEFAULT '',
+          read INTEGER NOT NULL DEFAULT 0,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, read, created_at);
+      `);
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

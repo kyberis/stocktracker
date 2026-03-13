@@ -88,6 +88,9 @@ export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: P
     [sortedHoldings]
   );
 
+  const hasFilter = filter.trim().length > 0;
+  const noResults = hasFilter && sortedHoldings.length === 0;
+
   const renderSortButton = (field: SortField, label: string) => (
     <button
       onClick={() => toggleSort(field)}
@@ -152,6 +155,57 @@ export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: P
     <StockDetailDrawer key={selectedHolding.id} holding={selectedHolding} onClose={() => setSelectedHolding(null)} />
   );
 
+  const noResultsCTA = (
+    <div className={`flex flex-col items-center justify-center py-10 px-4 text-center ${layoutTheme === "terminal" ? "font-mono" : ""}`}>
+      <svg
+        className={`w-8 h-8 mb-3 ${
+          layoutTheme === "terminal" ? "text-zinc-600" :
+          layoutTheme === "canvas" ? "text-slate-300" :
+          layoutTheme === "studio" ? "text-zinc-600" :
+          "text-gray-300 dark:text-slate-600"
+        }`}
+        fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}
+      >
+        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+      </svg>
+      <p className={`text-sm mb-1 ${
+        layoutTheme === "terminal" ? "text-zinc-500" :
+        layoutTheme === "canvas" ? "text-slate-500" :
+        layoutTheme === "studio" ? "text-zinc-500" :
+        "text-gray-500 dark:text-slate-400"
+      }`}>
+        {t("noResults")}
+      </p>
+      <p className={`text-xs mb-4 ${
+        layoutTheme === "terminal" ? "text-zinc-600" :
+        layoutTheme === "canvas" ? "text-slate-400" :
+        layoutTheme === "studio" ? "text-zinc-600" :
+        "text-gray-400 dark:text-slate-500"
+      }`}>
+        &ldquo;<span className="font-medium">{filter}</span>&rdquo;
+      </p>
+      {onAddStock && (
+        <button
+          onClick={onAddStock}
+          className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+            layoutTheme === "terminal"
+              ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20 font-mono"
+              : layoutTheme === "canvas"
+              ? "bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
+              : layoutTheme === "studio"
+              ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20"
+              : "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/20"
+          }`}
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
+          {t("searchNoResultsAdd")}
+        </button>
+      )}
+    </div>
+  );
+
   /* ── TERMINAL: Dense compact list, no card, monospace header ── */
   if (layoutTheme === "terminal") {
     return (
@@ -169,6 +223,7 @@ export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: P
           </div>
         </div>
         <div className="max-h-[600px] overflow-y-auto">
+          {noResults && noResultsCTA}
           {stocks.length > 0 && (
             <>
               <div className="px-3 py-1 bg-zinc-900 border-b border-zinc-800 font-mono text-[10px] uppercase tracking-widest text-zinc-600 flex items-center gap-2">
@@ -203,6 +258,7 @@ export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: P
           <span className="text-slate-300">·</span>
           {renderSortButton("gainLoss", t("dayPlusMinus"))}
         </div>
+        {noResults && noResultsCTA}
         {stocks.length > 0 && (
           <>
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">{t("stocksGroup")} ({stocks.length})</p>
@@ -238,6 +294,7 @@ export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: P
           </div>
         </div>
         <div className="max-h-[600px] overflow-y-auto">
+          {noResults && noResultsCTA}
           {stocks.length > 0 && (
             <>
               <div className="sticky top-0 z-[1] px-4 py-2 bg-zinc-950/90 backdrop-blur-sm border-b border-white/5 flex items-center gap-2">
@@ -275,6 +332,7 @@ export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: P
         </div>
       </div>
       <div className="max-h-[600px] overflow-y-auto">
+        {noResults && noResultsCTA}
         {stocks.length > 0 && (
           <>
             <div className="sticky top-0 z-[1] px-4 py-2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border-b border-gray-100 dark:border-slate-700 flex items-center gap-2">

@@ -38,6 +38,7 @@ export interface UseSnapTradeApiReturn {
   holdingsCapped: number;
   lastFetchHadDateFilter: boolean;
   lastFetchSummary: { total: number; duplicatesRemoved: number } | null;
+  lastFetchSyncTriggered: boolean;
   loadConnection: () => Promise<void>;
   connect: () => Promise<void>;
   reconnect: (connectionId: string) => Promise<void>;
@@ -138,6 +139,7 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
   const [holdingsCapped, setHoldingsCapped] = useState(0);
   const [lastFetchHadDateFilter, setLastFetchHadDateFilter] = useState(false);
   const [lastFetchSummary, setLastFetchSummary] = useState<{ total: number; duplicatesRemoved: number } | null>(null);
+  const [lastFetchSyncTriggered, setLastFetchSyncTriggered] = useState(false);
 
   const mergedBrokers = useMemo<MergedBrokerInfo[]>(() => {
     const syncById = new Map(brokerSyncs.map((s) => [s.brokerageAuthorizationId, s]));
@@ -313,12 +315,12 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
         return;
       }
 
-      setTransactions(
-        (data.transactions || []).map((tx: Record<string, unknown>) =>
-          normalizeTransaction(tx),
-        ),
+      const normalized = (data.transactions || []).map((tx: Record<string, unknown>) =>
+        normalizeTransaction(tx),
       );
+      setTransactions(normalized);
       setLastFetchSummary(data.summary ?? null);
+      setLastFetchSyncTriggered(!!data.syncTriggered);
       setStep("preview");
     } catch {
       setErrorMsg("Failed to fetch portfolio.");
@@ -354,12 +356,12 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
         return;
       }
 
-      setTransactions(
-        (data.transactions || []).map((tx: Record<string, unknown>) =>
-          normalizeTransaction(tx),
-        ),
+      const normalized = (data.transactions || []).map((tx: Record<string, unknown>) =>
+        normalizeTransaction(tx),
       );
+      setTransactions(normalized);
       setLastFetchSummary(data.summary ?? null);
+      setLastFetchSyncTriggered(!!data.syncTriggered);
       setStep("preview");
     } catch {
       setErrorMsg("Failed to fetch portfolio.");
@@ -418,6 +420,7 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
     setImportProgress({ current: 0, total: 0, errors: 0 });
     setHoldingsCapped(0);
     setLastFetchSummary(null);
+    setLastFetchSyncTriggered(false);
   }, []);
 
   const importAll = useCallback(async (portfolioId?: string | null) => {
@@ -519,6 +522,7 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
     holdingsCapped,
     lastFetchHadDateFilter,
     lastFetchSummary,
+    lastFetchSyncTriggered,
     loadConnection,
     connect,
     reconnect,

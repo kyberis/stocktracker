@@ -326,11 +326,12 @@ export default function CryptoMarket() {
                 </div>
               </div>
               {historyLoading ? (
-                <div className="h-64 flex items-center justify-center">
+                <div className="flex items-center justify-center" style={{ aspectRatio: "2.8/1", maxHeight: "min(280px, 45vh)" }}>
                   <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
                 </div>
               ) : chartData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={280}>
+                <div style={{ aspectRatio: "2.8/1", maxHeight: "min(280px, 45vh)" }}>
+                <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={chartData}>
                     <defs>
                       <linearGradient id="cryptoGrad" x1="0" y1="0" x2="0" y2="1">
@@ -382,6 +383,7 @@ export default function CryptoMarket() {
                     />
                   </AreaChart>
                 </ResponsiveContainer>
+                </div>
               ) : (
                 <div className="h-64 flex items-center justify-center text-gray-400 dark:text-slate-500 text-sm">
                   {t("cryptoNoData")}

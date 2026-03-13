@@ -6,6 +6,7 @@
     { "path": "/api/cron/snaptrade-cleanup", "schedule": "30 23 * * *" },
     { "path": "/api/cron/snaptrade-sync", "schedule": "0 */6 * * *" },
     { "path": "/api/cron/event-sync", "schedule": "0 6 * * *" },
-    { "path": "/api/cron/screener-sync", "schedule": "0 3 * * *" }
+    { "path": "/api/cron/screener-sync", "schedule": "0 3 * * *" },
+    { "path": "/api/cron/tax-rules-review", "schedule": "0 9 2 1 *" }
   ]
 }

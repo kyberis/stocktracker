@@ -14,9 +14,101 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "1.27.0";
+export const CURRENT_VERSION = "1.29.0";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "1.29.0",
+    date: "2026-03-13",
+    title: "European Tax Reports",
+    titleTranslations: { es: "Informes Fiscales Europeos", de: "Europäische Steuerberichte", fr: "Rapports Fiscaux Européens", nl: "Europese Belastingrapporten", it: "Report Fiscali Europei" },
+    changes: [
+      {
+        type: "feature",
+        text: "European tax reports for Germany, France, Spain, Netherlands, and Italy — generate country-specific tax summaries with FIFO/LIFO/average cost basis, dividend income, withholding tax, and form field mapping (Anlage KAP, Déclaration 2074, Modelo 100, Box 3, Quadro RT/RW)",
+        translations: {
+          es: "Informes fiscales europeos para Alemania, Francia, España, Países Bajos e Italia — genera resúmenes fiscales específicos por país con base de coste FIFO/LIFO/promedio, ingresos por dividendos, retenciones y mapeo de campos de formulario",
+          de: "Europäische Steuerberichte für Deutschland, Frankreich, Spanien, die Niederlande und Italien — länderspezifische Steuerzusammenfassungen mit FIFO/LIFO/Durchschnittskostenbasis, Dividendenerträgen, Quellensteuern und Formularfeldzuordnung (Anlage KAP, Vorabpauschale, Teilfreistellung)",
+        },
+      },
+      {
+        type: "feature",
+        text: "AI Tax Assistant — get an AI-powered analysis of your tax report with optimization suggestions, data quality checks, and country-specific guidance",
+        translations: {
+          es: "Asistente fiscal IA — obtén un análisis impulsado por IA de tu informe fiscal con sugerencias de optimización, comprobaciones de calidad de datos y orientación específica por país",
+          de: "KI-Steuerassistent — KI-gestützte Analyse Ihres Steuerberichts mit Optimierungsvorschlägen, Datenqualitätsprüfungen und länderspezifischer Beratung",
+        },
+      },
+      {
+        type: "feature",
+        text: "Germany-specific: Vorabpauschale calculator for accumulating ETFs, Teilfreistellung (30% equity exemption), and Sparerpauschbetrag tracking",
+        translations: {
+          de: "Deutschland-spezifisch: Vorabpauschale-Rechner für thesaurierende ETFs, Teilfreistellung (30% Aktienfreistellung) und Sparerpauschbetrag-Verfolgung",
+        },
+      },
+      {
+        type: "feature",
+        text: "Spain-specific: Modelo 720 foreign asset threshold detection and 2-month wash sale rule checking",
+        translations: {
+          es: "Específico para España: Detección del umbral del Modelo 720 para activos en el extranjero y verificación de la regla antiaplicación de 2 meses",
+        },
+      },
+      {
+        type: "feature",
+        text: "Netherlands Box 3 wealth tax calculator with deemed return rates and threshold tracking",
+        translations: {
+          nl: "Box 3 vermogensbelastingberekening met forfaitaire rendementen en drempelbewaking",
+        },
+      },
+      {
+        type: "feature",
+        text: "Italy-specific: LIFO cost basis for regime dichiarativo, Quadro RW foreign asset monitoring, and IVAFE calculation",
+        translations: {
+          it: "Specifico per l'Italia: Base di costo LIFO per regime dichiarativo, monitoraggio Quadro RW attività estere e calcolo IVAFE",
+        },
+      },
+      {
+        type: "improvement",
+        text: "CSV export for tax data — download realized gains, dividends, and form field summaries",
+        translations: {
+          es: "Exportación CSV de datos fiscales — descarga ganancias realizadas, dividendos y resúmenes de campos de formulario",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.28.0",
+    date: "2026-03-13",
+    title: "Streamlined Onboarding",
+    titleTranslations: { es: "Onboarding Simplificado" },
+    changes: [
+      {
+        type: "feature",
+        text: "New portfolio import step during onboarding — connect your broker, upload a CSV, or use AI import right from setup",
+        translations: { es: "Nuevo paso de importación de portafolio durante el onboarding — conecta tu broker, sube un CSV o usa importación con IA directamente desde la configuración" },
+      },
+      {
+        type: "improvement",
+        text: "Email verification is no longer a blocker — sign up and start using trefolio immediately; verify later to unlock billing and data export",
+        translations: { es: "La verificación de email ya no es obligatoria — regístrate y empieza a usar trefolio inmediatamente; verifica después para desbloquear facturación y exportación" },
+      },
+      {
+        type: "feature",
+        text: "Country-aware broker suggestions during onboarding — see the most popular brokers for your region first",
+        translations: { es: "Sugerencias de brokers por país durante el onboarding — ve primero los brokers más populares de tu región" },
+      },
+      {
+        type: "improvement",
+        text: "New users always see a populated dashboard — sample data is auto-loaded if you skip import, with a banner to import your real portfolio",
+        translations: { es: "Los nuevos usuarios siempre ven un dashboard con datos — se cargan datos de ejemplo automáticamente si omites la importación, con un banner para importar tu portafolio real" },
+      },
+      {
+        type: "improvement",
+        text: "Interactive dashboard tour now triggers on first visit, not just theme changes",
+        translations: { es: "El tour interactivo del dashboard ahora se activa en la primera visita, no solo al cambiar de tema" },
+      },
+    ],
+  },
   {
     version: "1.27.0",
     date: "2026-03-12",

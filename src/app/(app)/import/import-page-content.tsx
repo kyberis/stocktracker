@@ -861,7 +861,33 @@ export default function ImportPageContent() {
               )}
 
               {snapTradeApi.step === "preview" && snapTradeApi.transactions.length === 0 && (
-                snapTradeApi.lastFetchHadDateFilter ? (
+                snapTradeApi.lastFetchSyncTriggered ? (
+                  <div className="py-6 space-y-4">
+                    <div className="text-center">
+                      <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-amber-100 dark:bg-amber-500/15 flex items-center justify-center">
+                        <svg className="w-6 h-6 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <p className="text-sm font-medium text-gray-700 dark:text-slate-200">
+                        {t("brokerSyncDataSyncTriggered") || "Data sync initiated"}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-slate-400 max-w-sm mx-auto mt-2">
+                        {t("brokerSyncDataSyncTriggeredDesc") || "Your broker's transaction history is being synced for the first time. This usually takes a few minutes. Please try syncing again shortly."}
+                      </p>
+                    </div>
+                    <div className="flex flex-col items-center gap-2 pt-1">
+                      <button
+                        onClick={() => {
+                          snapTradeApi.reset();
+                        }}
+                        className="btn-primary text-sm min-h-[44px] inline-flex items-center gap-2"
+                      >
+                        {t("close") || "Close"}
+                      </button>
+                    </div>
+                  </div>
+                ) : snapTradeApi.lastFetchHadDateFilter ? (
                   <div className="py-6 space-y-4">
                     <div className="text-center">
                       <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-blue-100 dark:bg-blue-500/15 flex items-center justify-center">

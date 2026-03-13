@@ -127,6 +127,17 @@ export async function listHoldings(userId: string, portfolioId?: string): Promis
   return [];
 }
 
+export async function countHoldings(userId: string, portfolioId?: string): Promise<number> {
+  const client = await ensureInitialized();
+  const portfolioFilter = portfolioId ? " AND portfolio_id = ?" : "";
+  const portfolioArgs = portfolioId ? [portfolioId] : [];
+  const result = await client.execute({
+    sql: `SELECT COUNT(*) as cnt FROM holdings WHERE user_id = ?${portfolioFilter}`,
+    args: [userId, ...portfolioArgs],
+  });
+  return Number(result.rows[0]?.cnt ?? 0);
+}
+
 export async function addHolding(
   userId: string,
   holding: Omit<Holding, "id">,

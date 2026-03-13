@@ -3,64 +3,53 @@ import type { CreateNotificationInput } from "@/lib/db/notifications";
 export function welcomeNotification(): CreateNotificationInput {
   return {
     type: "welcome",
-    title: "Welcome to trefolio!",
-    titleEs: "\u00a1Bienvenido a trefolio!",
-    message:
-      "Your free Folio account is ready. You can track real-time quotes, monitor dividends, get AI-powered insights (5/month), and import your portfolio from 13+ brokers in seconds.",
-    messageEs:
-      "Tu cuenta Folio gratuita est\u00e1 lista. Puedes seguir cotizaciones en tiempo real, monitorear dividendos, obtener an\u00e1lisis con IA (5/mes) e importar tu cartera de 13+ br\u00f3kers en segundos.",
+    title: "i18n:notifWelcomeTitle",
+    message: "i18n:notifWelcomeMessage",
     link: "/landing",
-    linkLabel: "Explore all features",
-    linkLabelEs: "Explorar todas las funciones",
+    linkLabel: "i18n:notifWelcomeCta",
   };
 }
 
 export function bifolioUpgradeNotification(): CreateNotificationInput {
   return {
     type: "upgrade",
-    title: "Welcome to Bifolio!",
-    titleEs: "\u00a1Bienvenido a Bifolio!",
-    message:
-      "Congratulations on upgrading! You\u2019ve unlocked: Portfolio Sharing, CSV Export, Email & Push Alerts (up to 10), 50 holdings, 20 AI calls/month, Net Worth tracking, and Economic Calendar.",
-    messageEs:
-      "\u00a1Felicidades por mejorar tu plan! Has desbloqueado: Compartir Cartera, Exportar CSV, Alertas Email y Push (hasta 10), 50 posiciones, 20 consultas IA/mes, Seguimiento de Patrimonio y Calendario Econ\u00f3mico.",
+    title: "i18n:notifBifolioUpgradeTitle",
+    message: "i18n:notifBifolioUpgradeMessage",
     link: "/tools/alerts",
-    linkLabel: "Set up your first alert",
-    linkLabelEs: "Configura tu primera alerta",
+    linkLabel: "i18n:notifBifolioUpgradeCta",
   };
 }
 
 export function trefolioUpgradeNotification(): CreateNotificationInput {
   return {
     type: "upgrade",
-    title: "Welcome to Trefolio Pro!",
-    titleEs: "\u00a1Bienvenido a Trefolio Pro!",
-    message:
-      "You now have full access to everything: Fundamentals & Financial Statements, Alpha Intelligence (news, insiders, institutions), WhatsApp & Device Alerts, Unlimited Holdings & Alerts, Stock Screener, Crypto Portfolio, up to 3 portfolios, and 30 AI calls/day.",
-    messageEs:
-      "Ahora tienes acceso completo: Fundamentales y Estados Financieros, Alpha Intelligence (noticias, insiders, instituciones), Alertas WhatsApp y Dispositivo, Posiciones y Alertas ilimitadas, Screener de Acciones, Cartera Crypto, hasta 3 carteras y 30 consultas IA/d\u00eda.",
+    title: "i18n:notifTrefolioUpgradeTitle",
+    message: "i18n:notifTrefolioUpgradeMessage",
     link: "/",
-    linkLabel: "Explore AI Insights",
-    linkLabelEs: "Explorar AI Insights",
+    linkLabel: "i18n:notifTrefolioUpgradeCta",
   };
 }
 
-export function downgradeNotification(planExpiresAt: string): CreateNotificationInput {
-  const dateStr = planExpiresAt
-    ? new Date(planExpiresAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
-    : "the end of your billing period";
-  const dateStrEs = planExpiresAt
-    ? new Date(planExpiresAt).toLocaleDateString("es-ES", { year: "numeric", month: "long", day: "numeric" })
-    : "el final de tu periodo de facturaci\u00f3n";
-
+export function planExpiredNotification(): CreateNotificationInput {
   return {
     type: "downgrade",
-    title: "Your subscription is changing",
-    titleEs: "Tu suscripci\u00f3n va a cambiar",
-    message: `Your current plan remains fully active until ${dateStr}. After that, your account will revert to the free Folio plan. You can resubscribe anytime from your profile.`,
-    messageEs: `Tu plan actual sigue completamente activo hasta el ${dateStrEs}. Despu\u00e9s, tu cuenta volver\u00e1 al plan gratuito Folio. Puedes volver a suscribirte en cualquier momento desde tu perfil.`,
+    title: "i18n:notifPlanExpiredTitle",
+    message: "i18n:notifPlanExpiredMessage",
+    link: "/profile?section=subscription",
+    linkLabel: "i18n:notifPlanExpiredCta",
+  };
+}
+
+/**
+ * Pending-downgrade notice. The ISO date is appended as a parameter
+ * so the frontend can format it in the user's locale via `{0}`.
+ */
+export function downgradeNotification(planExpiresAt: string): CreateNotificationInput {
+  return {
+    type: "downgrade",
+    title: "i18n:notifDowngradeTitle",
+    message: `i18n:notifDowngradeMessage|${planExpiresAt}`,
     link: "/profile",
-    linkLabel: "Manage subscription",
-    linkLabelEs: "Gestionar suscripci\u00f3n",
+    linkLabel: "i18n:notifDowngradeCta",
   };
 }

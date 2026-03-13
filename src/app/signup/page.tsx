@@ -80,7 +80,7 @@ function SignupForm() {
         return;
       }
 
-      router.replace("/verify-email");
+      router.replace("/onboarding");
       router.refresh();
     } catch {
       setError("Signup failed.");

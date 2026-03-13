@@ -218,6 +218,17 @@ export {
   purgeOldDeviceNotifications,
 } from "./device-notifications";
 
+export type { CreateNotificationInput } from "./notifications";
+export {
+  createNotification,
+  broadcastNotification,
+  listNotifications,
+  countUnreadNotifications,
+  markNotificationsRead,
+  purgeOldNotifications,
+  listBroadcastHistory,
+} from "./notifications";
+
 export type { DbPasskey, PublicPasskey } from "./passkeys";
 export {
   getPasskeysByUserId,

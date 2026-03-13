@@ -16,7 +16,7 @@ const CATEGORY_META: Record<string, { label: string; icon: string; color: string
   real_estate: { label: "realEstate", icon: "🏠", color: "#3b82f6" },
   savings: { label: "savingsAccounts", icon: "🏦", color: "#06b6d4" },
   pension: { label: "pensionRetirement", icon: "🏛️", color: "#8b5cf6" },
-  cash: { label: "assetTypeCash", icon: "💶", color: "#64748b" },
+  cash: { label: "assetTypeCash", icon: "💵", color: "#64748b" },
 };
 
 interface BreakdownItem {
@@ -155,7 +155,7 @@ export default function NetWorthSummary({ holdings: holdingsProp, cashEntries: c
           {isLoading ? (
             <div className="h-9 w-48 bg-gray-100 dark:bg-slate-700 rounded animate-pulse mb-2" />
           ) : (
-            <p className="text-3xl sm:text-4xl font-extrabold text-gray-900 dark:text-white tabular-nums tracking-tight">
+            <p className="font-extrabold text-gray-900 dark:text-white tabular-nums tracking-tight" style={{ fontSize: "var(--text-hero)" }}>
               {isStealth ? "••••••" : formatCurrency(totalCurrentEUR, baseCurrency)}
             </p>
           )}

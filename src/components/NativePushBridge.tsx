@@ -17,51 +17,10 @@ import { isNativePlatform } from "@/lib/capacitor";
 export default function NativePushBridge() {
   useEffect(() => {
     if (!isNativePlatform()) return;
-
-    let cleanup: (() => void) | undefined;
-
-    async function register() {
-      try {
-        const { PushNotifications } = await import("@capacitor/push-notifications");
-
-        const permResult = await PushNotifications.requestPermissions();
-        if (permResult.receive !== "granted") return;
-
-        await PushNotifications.register();
-
-        const tokenListener = await PushNotifications.addListener(
-          "registration",
-          async (token) => {
-            try {
-              await fetch("/api/notifications/native-token", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ token: token.value }),
-              });
-            } catch {
-              console.warn("Failed to send native push token to backend");
-            }
-          }
-        );
-
-        const errorListener = await PushNotifications.addListener(
-          "registrationError",
-          (err) => {
-            console.warn("Native push registration failed:", err);
-          }
-        );
-
-        cleanup = () => {
-          tokenListener.remove();
-          errorListener.remove();
-        };
-      } catch {
-        // @capacitor/push-notifications not installed yet — silently skip
-      }
-    }
-
-    register();
-    return () => cleanup?.();
+    // Native push registration is disabled until google-services.json (Android)
+    // and APNs entitlements (iOS) are configured. Without Firebase initialized,
+    // calling PushNotifications.register() crashes the Android app at the native layer.
+    // TODO: Enable when FCM/APNs backend dispatch is wired up.
   }, []);
 
   return null;

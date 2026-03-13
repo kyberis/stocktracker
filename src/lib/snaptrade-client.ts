@@ -66,6 +66,24 @@ export async function removeBrokerageConnection(
   }
 }
 
+export async function refreshBrokerageConnection(
+  userId: string,
+  userSecret: string,
+  connectionId: string,
+): Promise<void> {
+  const client = getClient();
+  try {
+    await client.connections.refreshBrokerageAuthorization({
+      authorizationId: connectionId,
+      userId,
+      userSecret,
+    });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn(`[SnapTrade] refreshBrokerageAuthorization failed: ${msg}`);
+  }
+}
+
 export async function listBrokerages(): Promise<AvailableBrokerage[]> {
   const client = getClient();
   try {

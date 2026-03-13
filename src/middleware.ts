@@ -24,6 +24,7 @@ const PUBLIC_API_ROUTES = new Set([
   "/api/cron/snaptrade-sync",
   "/api/cron/snaptrade-cleanup",
   "/api/cron/screener-sync",
+  "/api/cron/tax-rules-review",
   "/api/portfolio/summary",
   "/api/device/ai-summary",
   "/api/device/firmware",
@@ -85,24 +86,18 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/change-password", req.url));
   }
 
-  const EMAIL_VERIFY_ALLOWED = new Set([
-    "/verify-email",
-    "/api/auth/verify-email",
-    "/api/auth/logout",
-    "/api/auth/me",
-    "/onboarding",
-    "/api/auth/onboarding",
+  const EMAIL_GATED_API_ROUTES = new Set([
+    "/api/billing/checkout",
+    "/api/billing/portal",
+    "/api/auth/delete-account",
   ]);
   if (
     session.role !== "admin" &&
     !session.emailVerified &&
     !session.mustChangePassword &&
-    !EMAIL_VERIFY_ALLOWED.has(pathname)
+    EMAIL_GATED_API_ROUTES.has(pathname)
   ) {
-    if (pathname.startsWith("/api/")) {
-      return NextResponse.json({ error: "Email verification required" }, { status: 403 });
-    }
-    return NextResponse.redirect(new URL("/verify-email", req.url));
+    return NextResponse.json({ error: "Email verification required" }, { status: 403 });
   }
 
   const ONBOARDING_ALLOWED = new Set([
@@ -110,6 +105,7 @@ export async function middleware(req: NextRequest) {
     "/api/auth/onboarding",
     "/api/auth/me",
     "/api/auth/logout",
+    "/api/auth/verify-email",
     "/api/user-settings",
     "/api/auth/passkey/register-options",
     "/api/auth/passkey/register-verify",
@@ -118,7 +114,6 @@ export async function middleware(req: NextRequest) {
     "/api/auth/google/callback",
   ]);
   if (
-    session.emailVerified &&
     !session.onboardingCompleted &&
     session.role !== "admin" &&
     !ONBOARDING_ALLOWED.has(pathname)

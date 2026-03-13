@@ -623,7 +623,7 @@ export default function ProfilePage() {
   const searchParams = useSearchParams();
   const { user, refreshUser } = useAuth();
   const { deviceEnabled } = useSettings();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
 
   const sectionParam = searchParams.get("section") as ProfileTab | null;
   const initialTab = sectionParam && PROFILE_TABS.includes(sectionParam) ? sectionParam : "account";
@@ -1490,6 +1490,23 @@ export default function ProfilePage() {
               </span>
             </div>
           </div>
+          {(() => {
+            const expiresAt = user?.planExpiresAt;
+            if (!expiresAt || !isPaid) return null;
+            const expiryDate = new Date(expiresAt);
+            if (expiryDate <= new Date()) return null;
+            const formatted = expiryDate.toLocaleDateString(language, { year: "numeric", month: "long", day: "numeric" });
+            return (
+              <div className="rounded-xl border border-amber-200 dark:border-amber-500/30 bg-amber-50/60 dark:bg-amber-500/10 p-4 flex items-center gap-3">
+                <svg className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-sm text-amber-700 dark:text-amber-300">
+                  {t("planActiveUntil")} <span className="font-semibold">{formatted}</span>
+                </p>
+              </div>
+            );
+          })()}
           {isPaid ? (
             <a
               href="/api/billing/portal"

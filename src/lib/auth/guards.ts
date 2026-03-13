@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getSessionFromRequest } from "./session";
 import { findUserById, getAiUsage, trackEvent, updateLastActive } from "@/lib/db";
-import { canAccessFeature } from "@/lib/subscription";
+import { canAccessFeature, effectivePlan } from "@/lib/subscription";
 import type { SubscriptionFeature } from "@/lib/types";
 import { paywallHitsTotal, rateLimitHitsTotal } from "@/lib/metrics";
 import { checkAvRateLimit, checkAiRateLimit, checkAiImportRateLimit } from "@/lib/rate-limit";
@@ -46,7 +46,8 @@ export async function requirePro(req: NextRequest) {
   const { session, error } = await requireSession(req);
   if (error || !session) return { session: null, error: error! };
   const user = await findUserById(session.userId);
-  const isPro = (user?.plan || session.plan) === "pro";
+  const plan = effectivePlan(user?.plan || session.plan || "free", user?.plan_expires_at || "");
+  const isPro = plan === "pro";
   if (!isPro) {
     return {
       session: null,
@@ -72,8 +73,9 @@ export async function requireFeatureAccess(req: NextRequest, feature: Subscripti
   }
 
   const usage = await getAiUsage(session.userId);
+  const plan = effectivePlan(user.plan, user.plan_expires_at);
   const entitlement = canAccessFeature(feature, {
-    plan: user.plan,
+    plan,
     aiCallsThisMonth: usage.aiCallsThisMonth,
   });
   if (entitlement.allowed) return { session, error: null };
@@ -112,7 +114,8 @@ export async function requireRateLimit(
     result = await checkAvRateLimit(session.userId);
   } else if (provider === "openai") {
     const user = await findUserById(session.userId);
-    result = await checkAiRateLimit(session.userId, user?.plan || "free");
+    const plan = effectivePlan(user?.plan || "free", user?.plan_expires_at || "");
+    result = await checkAiRateLimit(session.userId, plan);
   } else {
     result = await checkAiImportRateLimit(session.userId);
   }

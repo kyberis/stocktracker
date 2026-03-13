@@ -41,6 +41,7 @@ const PRO_FEATURES = new Set<SubscriptionFeature>([
   "crypto-portfolio",
   "event-calendar-ipo",
   "screener",
+  "tax-reports",
 ]);
 
 export interface EntitlementInput {
@@ -176,6 +177,16 @@ export function getThemeUpgradeTarget(theme: LayoutTheme): SubscriptionPlan | nu
   if (theme === "canvas") return "starter";
   if (theme === "terminal" || theme === "studio") return "pro";
   return null;
+}
+
+/**
+ * Resolves the plan the user should currently be treated as, considering
+ * a pending expiry date. If `planExpiresAt` is set and in the past the
+ * user's paid period has ended and they should be treated as free.
+ */
+export function effectivePlan(plan: SubscriptionPlan, planExpiresAt: string): SubscriptionPlan {
+  if (plan === "free" || !planExpiresAt) return plan;
+  return new Date(planExpiresAt) > new Date() ? plan : "free";
 }
 
 /** Maps internal plan identifiers to user-facing tier names. */

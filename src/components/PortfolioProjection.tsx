@@ -255,8 +255,8 @@ export default function PortfolioProjection({ holdings: holdingsProp, cashEntrie
 
       {/* Chart */}
       {projectionData.length > 0 && (
-        <div role="img" aria-label="Portfolio projection chart">
-        <ResponsiveContainer width="100%" height={320}>
+        <div role="img" aria-label="Portfolio projection chart" style={{ aspectRatio: "2.8/1", maxHeight: "min(320px, 45vh)" }}>
+        <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={projectionData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
             <defs>
               <linearGradient id="gradBase" x1="0" y1="0" x2="0" y2="1">

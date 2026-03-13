@@ -3,7 +3,7 @@ import PortfolioTools from "@/components/PortfolioTools";
 
 const VALID_TABS = [
   "transactions", "dividends", "performance", "taxonomy",
-  "rebalancing", "accounts", "watchlist", "alerts",
+  "rebalancing", "accounts", "watchlist", "alerts", "tax",
 ] as const;
 
 type Tab = (typeof VALID_TABS)[number];

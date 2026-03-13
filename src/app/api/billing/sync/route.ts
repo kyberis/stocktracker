@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
 import { findUserById, updateUserSubscription, getStripePriceConfig } from "@/lib/db";
+import { effectivePlan } from "@/lib/subscription";
 import { getStripeClient } from "@/lib/stripe";
 import { withMetrics } from "@/lib/with-metrics";
 
@@ -31,7 +32,8 @@ export const POST = withMetrics("/api/billing/sync", async (req: NextRequest) =>
     });
 
     const activeSub = subs.data[0];
-    if (activeSub && user.plan === "free") {
+    const resolvedPlan = effectivePlan(user.plan, user.plan_expires_at);
+    if (activeSub && resolvedPlan === "free") {
       const starterPriceIds = new Set(
         [await getStripePriceConfig("stripe_price_starter_monthly"), await getStripePriceConfig("stripe_price_starter_annual")].filter(Boolean)
       );
@@ -49,9 +51,10 @@ export const POST = withMetrics("/api/billing/sync", async (req: NextRequest) =>
       return NextResponse.json({ plan: syncedPlan, synced: true });
     }
 
-    return NextResponse.json({ plan: user.plan, synced: false });
+    return NextResponse.json({ plan: resolvedPlan, synced: false });
   } catch (err) {
     console.error("Billing sync error:", err instanceof Error ? err.message : err);
-    return NextResponse.json({ plan: user.plan, synced: false });
+    const fallbackPlan = effectivePlan(user.plan, user.plan_expires_at);
+    return NextResponse.json({ plan: fallbackPlan, synced: false });
   }
 });

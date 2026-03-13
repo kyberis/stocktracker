@@ -16,6 +16,8 @@ import {
 import { getMarketStatus } from "@/lib/market-hours";
 import type { Holding, QuoteData } from "@/lib/types";
 import AlertBadge from "./AlertBadge";
+import Sparkline from "./Sparkline";
+import HoldingHealthBadge from "./HoldingHealthBadge";
 import { useTheme } from "@/lib/theme-context";
 
 const MOBILE_BREAKPOINT = 768;
@@ -151,7 +153,9 @@ function StockRow({ holding, onSelect }: StockRowProps) {
             {refreshSpinner}
           </div>
           <div className="flex items-center gap-4 text-xs shrink-0 tabular-nums">
+            <HoldingHealthBadge holding={holding} size={22} />
             <span className="text-zinc-500 w-12 text-right">{holding.shares}</span>
+            <Sparkline ticker={holding.ticker} width={48} height={16} positive={hasQuote ? dayIsPositive : undefined} className="hidden sm:block shrink-0" />
             <span className="text-zinc-300 w-20 text-right font-semibold">{awaitingQuote ? valueShimmer : formatCurrency(totalValueEUR, "EUR")}</span>
             <span className={`w-24 text-right ${hasQuote ? (dayIsPositive ? "text-green-400" : "text-red-400") : "text-zinc-600"}`}>{awaitingQuote ? dayShimmer : dayText}</span>
           </div>
@@ -173,24 +177,29 @@ function StockRow({ holding, onSelect }: StockRowProps) {
             </div>
             <p className="text-xs text-slate-400 mt-0.5">{holding.ticker}{holding.exchange ? ` · ${holding.exchange}` : ""}</p>
           </div>
-          {marketDot}
+          <div className="flex items-center gap-2">
+            <HoldingHealthBadge holding={holding} size={28} />
+            {marketDot}
+          </div>
         </div>
         <div className="flex items-end justify-between">
           <div>
             <p className="text-2xl font-bold text-slate-900">{awaitingQuote ? <span className="inline-block h-7 w-24 rounded bg-slate-200 animate-pulse align-middle" /> : formatCurrency(totalValueEUR, "EUR")}</p>
             <p className="text-xs text-slate-400 mt-0.5">{hasQuote ? formatCurrency(currentPriceInDisplay, cur) : formatCurrency(holding.purchasePrice, cur)} × {holding.shares}</p>
           </div>
-          <span className={`text-sm font-semibold px-2.5 py-1 rounded-xl ${hasQuote ? (dayIsPositive ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600") : "bg-slate-50 text-slate-400"}`}>
-            {awaitingQuote ? dayShimmer : (hasQuote ? `${dayIsPositive ? "+" : ""}${formatPercent(dayChangePercent)}` : "--")}
-          </span>
+          <div className="flex items-center gap-2">
+            <Sparkline ticker={holding.ticker} width={56} height={20} positive={hasQuote ? dayIsPositive : undefined} className="shrink-0" />
+            <span className={`text-sm font-semibold px-2.5 py-1 rounded-xl ${hasQuote ? (dayIsPositive ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600") : "bg-slate-50 text-slate-400"}`}>
+              {awaitingQuote ? dayShimmer : (hasQuote ? `${dayIsPositive ? "+" : ""}${formatPercent(dayChangePercent)}` : "--")}
+            </span>
+          </div>
         </div>
       </div>
     );
   }
 
-  /* ── STUDIO: Row with sparkline placeholder ────────────────── */
+  /* ── STUDIO: Row with real sparkline ────────────────────────── */
   if (layoutTheme === "studio") {
-    const sparkPath = hasQuote ? "M0,8 L3,6 L6,9 L9,4 L12,5 L15,2 L18,6 L21,3 L24,5" : "M0,8 L24,8";
     return (
       <div className="border-b border-white/5 last:border-b-0" data-testid="stock-row-studio">
         <div role="button" tabIndex={0} aria-label={rowLabel} className="flex items-center justify-between px-4 py-3 hover:bg-white/[0.02] cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500" onClick={handleClick} onKeyDown={handleKeyDown}>
@@ -203,9 +212,8 @@ function StockRow({ holding, onSelect }: StockRowProps) {
             </div>
             <p className="text-xs text-zinc-500 mt-0.5">{holding.ticker}{holding.exchange ? ` · ${holding.exchange}` : ""}</p>
           </div>
-          <svg className="w-16 h-6 mx-3 shrink-0" viewBox="0 0 24 12" aria-hidden="true">
-            <path d={sparkPath} fill="none" stroke={hasQuote ? (dayIsPositive ? "#34d399" : "#f87171") : "#555"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
+          <HoldingHealthBadge holding={holding} size={26} />
+          <Sparkline ticker={holding.ticker} width={64} height={24} positive={hasQuote ? dayIsPositive : undefined} className="mx-2 shrink-0" />
           <div className="text-right shrink-0">
             <p className="text-sm font-bold font-mono text-white">{awaitingQuote ? valueShimmer : formatCurrency(totalValueEUR, "EUR")}</p>
             <p className={`text-xs font-mono mt-0.5 ${hasQuote ? (dayIsPositive ? "text-emerald-400" : "text-red-400") : "text-zinc-600"}`}>{awaitingQuote ? dayShimmer : dayText}</p>
@@ -243,19 +251,23 @@ function StockRow({ holding, onSelect }: StockRowProps) {
           </div>
           <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5">{priceInfo}</p>
         </div>
-        <div className="text-right flex-shrink-0">
-          <p className="text-sm font-semibold text-gray-900 dark:text-white">{awaitingQuote ? valueShimmer : formatCurrency(totalValueEUR, "EUR")}</p>
-          {awaitingQuote ? (
-            <div className="mt-1 flex justify-end">{dayShimmer}</div>
-          ) : hasQuote ? (
-            <p className={`text-xs mt-0.5 flex items-center justify-end gap-1 ${dayColor}`}>
-              {marketDot}
-              {dayIsPositive ? "+" : ""}{formatCurrency(dayChangeAmountEUR, "EUR")} ({formatPercent(dayChangePercent)})
-              {fxTag}
-            </p>
-          ) : (
-            <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5">--</p>
-          )}
+        <div className="flex items-center gap-3 flex-shrink-0">
+          <HoldingHealthBadge holding={holding} size={28} />
+          <Sparkline ticker={holding.ticker} width={64} height={24} positive={hasQuote ? dayIsPositive : undefined} className="hidden sm:block shrink-0" />
+          <div className="text-right min-w-[120px] tabular-nums">
+            <p className="text-sm font-semibold text-gray-900 dark:text-white">{awaitingQuote ? valueShimmer : formatCurrency(totalValueEUR, "EUR")}</p>
+            {awaitingQuote ? (
+              <div className="mt-1 flex justify-end">{dayShimmer}</div>
+            ) : hasQuote ? (
+              <p className={`text-xs mt-0.5 flex items-center justify-end gap-1 ${dayColor}`}>
+                {marketDot}
+                {dayIsPositive ? "+" : ""}{formatCurrency(dayChangeAmountEUR, "EUR")} ({formatPercent(dayChangePercent)})
+                {fxTag}
+              </p>
+            ) : (
+              <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5">--</p>
+            )}
+          </div>
         </div>
       </div>
     </div>

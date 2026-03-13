@@ -72,6 +72,7 @@ export const POST = withMetrics("/api/ai-analysis", async (request: NextRequest)
     cryptoName?: string;
     cryptoData?: Record<string, unknown>;
     historyData?: Array<Record<string, unknown>>;
+    taxReport?: Record<string, unknown>;
   };
 
   try {
@@ -89,8 +90,13 @@ export const POST = withMetrics("/api/ai-analysis", async (request: NextRequest)
   const isIntelligence = body.analysisType === "intelligence";
   const isEconomic = body.analysisType === "economic_indicator";
   const isCrypto = body.analysisType === "crypto_market";
+  const isTaxAssistant = body.analysisType === "tax_assistant";
 
-  if (isCrypto) {
+  if (isTaxAssistant) {
+    if (body.taxReport) {
+      dataSections.push(`## Tax Report\n${JSON.stringify(body.taxReport, null, 2)}`);
+    }
+  } else if (isCrypto) {
     if (body.cryptoData) {
       dataSections.push(
         `## ${body.cryptoName || body.cryptoSymbol || "Cryptocurrency"} (${body.cryptoSymbol || ""})\n` +
@@ -156,7 +162,9 @@ export const POST = withMetrics("/api/ai-analysis", async (request: NextRequest)
         ? "economic"
         : body.analysisType === "crypto_market"
           ? "crypto"
-          : "fundamental";
+          : body.analysisType === "tax_assistant"
+            ? "tax_assistant"
+            : "fundamental";
 
   let systemPrompt: string;
   let userPrompt: string;
@@ -235,6 +243,27 @@ Rules:
 Please analyze it and explain what these signals mean in simple terms.
 
 ${dataSections.join("\n\n")}`;
+  } else if (isTaxAssistant) {
+    systemPrompt = `You are a knowledgeable European tax advisor assistant. You help retail investors understand their tax reports. You speak clearly and concisely, avoiding jargon where possible. When you must use technical terms (like Vorabpauschale, Teilfreistellung, PFU, Box 3), explain them briefly in parentheses. You NEVER give definitive tax advice — always recommend consulting a professional tax advisor. You identify potential issues, optimizations, and missing data.
+
+Rules:
+- Write in ${lang}.
+- ONLY use facts and figures explicitly present in the tax report data provided below. Do NOT invent numbers or rules.
+- Structure your response with clear headings using markdown ##.
+- Cover: key findings summary, data quality issues, potential optimizations (tax-loss harvesting, allowance usage, withholding tax recovery), country-specific rules that apply, and any required filings (Modelo 720, Quadro RW, etc.).
+- Keep the total response under 700 words.
+- Always end with a disclaimer that this is not tax advice and the user should consult a professional.`;
+
+    userPrompt = `Here is a tax report for a retail investor. Please analyze it and provide helpful guidance.
+
+${dataSections.join("\n\n")}
+
+Please:
+1. Summarize the key findings (realized gains/losses, dividends, estimated tax).
+2. Flag any data quality issues or missing data.
+3. Suggest potential optimizations (tax-loss harvesting, allowance usage, withholding tax recovery).
+4. Explain country-specific rules that apply to this report.
+5. Note any required filings (e.g. Modelo 720, Quadro RW) and thresholds.`;
   } else {
     systemPrompt = `You are a friendly financial analyst who explains company financials to beginners. 
 Your audience has NO financial background — they don't know what P/E ratio, EBITDA, or cash flow means.

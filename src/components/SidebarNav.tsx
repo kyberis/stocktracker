@@ -6,6 +6,7 @@ import { useI18n } from "@/lib/i18n";
 import { useStealthMode } from "@/lib/stealth-context";
 import { useAuth } from "@/lib/auth-context";
 import TierFeatureBadge from "./TierFeatureBadge";
+import NotificationBell from "./NotificationBell";
 
 const NAV_LINKS = [
   { href: "/", labelKey: "portfolio" as const, icon: "home" },
@@ -173,6 +174,7 @@ export default function SidebarNav() {
               {user?.plan === "pro" ? "Trefolio (Pro)" : user?.plan === "starter" ? "Bifolio (Starter)" : "Folio (Free)"}
             </div>
           </div>
+          <NotificationBell />
           <button
             onClick={logout}
             title={t("signOut")}

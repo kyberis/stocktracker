@@ -153,16 +153,16 @@ export default function StockChart({ ticker, purchasePrice, displayCurrency }: S
       </div>
 
       {loading ? (
-        <div className="h-[300px] flex items-center justify-center">
+        <div className="flex items-center justify-center" style={{ aspectRatio: "2.8/1", maxHeight: "min(300px, 45vh)" }}>
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500" />
         </div>
       ) : data.length === 0 ? (
-        <div className="h-[300px] flex items-center justify-center text-gray-400 dark:text-slate-500">
+        <div className="flex items-center justify-center text-gray-400 dark:text-slate-500" style={{ aspectRatio: "2.8/1", maxHeight: "min(300px, 45vh)" }}>
           No data available
         </div>
       ) : (
-        <div role="img" aria-label="Stock price chart">
-        <ResponsiveContainer width="100%" height={300}>
+        <div role="img" aria-label="Stock price chart" style={{ aspectRatio: "2.8/1", maxHeight: "min(300px, 45vh)" }}>
+        <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
             <defs>
               <linearGradient id={`gradient-${ticker}`} x1="0" y1="0" x2="0" y2="1">

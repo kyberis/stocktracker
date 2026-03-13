@@ -13,6 +13,8 @@ import { signupSchema } from "@/lib/schemas";
 import { createVerificationToken, sendVerificationEmail, sendWelcomeEmail } from "@/lib/email";
 import { checkSignupRateLimit, getClientIp } from "@/lib/rate-limit";
 import { verifyTurnstileToken } from "@/lib/turnstile";
+import { createNotification } from "@/lib/db";
+import { welcomeNotification } from "@/lib/notification-templates";
 
 function deriveUsername(email: string): string {
   const prefix = email.split("@")[0].replace(/[^a-zA-Z0-9._-]/g, "");
@@ -88,6 +90,9 @@ export const POST = withMetrics("/api/auth/signup", async (req: NextRequest) => 
     });
     sendWelcomeEmail(normalizedEmail, displayName || "").catch((err) =>
       console.error("Welcome email failed:", err),
+    );
+    createNotification(user.id, welcomeNotification()).catch((err) =>
+      console.error("Welcome notification failed:", err),
     );
 
     const response = NextResponse.json({ user }, { status: 201 });

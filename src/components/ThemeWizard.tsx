@@ -8,6 +8,7 @@ import { useFocusTrap } from "@/hooks/useFocusTrap";
 import type { LayoutTheme } from "@/lib/types";
 
 const STORAGE_KEY = "trefolio_tour_completed";
+const FIRST_VISIT_KEY = "trefolio_first_visit_tour";
 const STEP_COUNT = 5;
 const AUTO_DISMISS_MS = 30_000;
 const PADDING = 8;
@@ -258,6 +259,21 @@ export default function ThemeWizard() {
 
     return () => clearTimeout(delay);
   }, [layoutTheme]);
+
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(FIRST_VISIT_KEY) === "1") return;
+      if (isTourCompleted()) return;
+      const delay = setTimeout(() => {
+        localStorage.setItem(FIRST_VISIT_KEY, "1");
+        if (!isTourCompleted()) {
+          setStep(0);
+          setActive(true);
+        }
+      }, 1500);
+      return () => clearTimeout(delay);
+    } catch { /* SSR safe */ }
+  }, []);
 
   useEffect(() => {
     if (!active) return;

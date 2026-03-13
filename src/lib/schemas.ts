@@ -103,6 +103,7 @@ export const onboardingSchema = z.object({
   displayName: z.string().max(100).optional(),
   defaultCurrency: z.string().max(3).optional(),
   taxResidency: z.string().max(2).optional(),
+  importMethod: z.enum(["broker_sync", "csv", "ai", "skip"]).optional(),
 });
 
 /* ── Holdings ──────────────────────────────────────────────── */

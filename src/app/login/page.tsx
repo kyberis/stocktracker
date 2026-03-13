@@ -273,7 +273,7 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <ThemeProvider>
-      <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-slate-900">
+      <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-slate-900 safe-area-top">
         <Suspense>
           <LoginForm />
         </Suspense>

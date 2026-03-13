@@ -29,7 +29,7 @@ const ASSET_TYPE_META: Record<ManualAssetType, { icon: string; labelKey: string 
   real_estate: { icon: "🏠", labelKey: "realEstate" },
   savings: { icon: "🏦", labelKey: "savingsAccounts" },
   pension: { icon: "🏛️", labelKey: "pensionRetirement" },
-  cash: { icon: "💶", labelKey: "assetTypeCash" },
+  cash: { icon: "💵", labelKey: "assetTypeCash" },
 };
 
 const TYPE_ORDER: ManualAssetType[] = ["real_estate", "savings", "pension", "cash"];

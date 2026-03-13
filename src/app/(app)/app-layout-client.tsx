@@ -15,6 +15,7 @@ import CapacitorBridge from "@/components/CapacitorBridge";
 import NativePushBridge from "@/components/NativePushBridge";
 import DeviceInterestEnroller from "@/components/DeviceInterestEnroller";
 import ThemeWizard from "@/components/ThemeWizard";
+import EmailVerificationBanner from "@/components/EmailVerificationBanner";
 import type { LayoutTheme } from "@/lib/types";
 
 function AppShell({ children }: { children: React.ReactNode }) {
@@ -26,6 +27,7 @@ function AppShell({ children }: { children: React.ReactNode }) {
       <div className="min-h-screen bg-[#09090b] flex" style={{ fontFamily: "var(--font-primary, inherit)" }}>
         <SidebarNav />
         <div className="flex-1 min-h-screen bg-[#18181b] pb-14 sm:pb-0">
+          <EmailVerificationBanner />
           <MarketTickerBar />
           <main id="main-content">{children}</main>
           <MobileTabBar />
@@ -41,6 +43,7 @@ function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen pb-14 sm:pb-0" style={{ background: "var(--background)", fontFamily: "var(--font-primary, inherit)" }}>
+      <EmailVerificationBanner />
       <MarketTickerBar />
       <AppNav />
       <main id="main-content">{children}</main>

@@ -18,6 +18,8 @@ import { sendWelcomeEmail } from "@/lib/email";
 import { ensureSessionSecret } from "@/lib/auth/session-secret";
 import { authEventsTotal } from "@/lib/metrics";
 import { isBlockedEmailDomain } from "@/lib/schemas";
+import { createNotification } from "@/lib/db";
+import { welcomeNotification } from "@/lib/notification-templates";
 
 const APPLE_TOKEN_URL = "https://appleid.apple.com/auth/token";
 const APPLE_JWKS_URL = new URL("https://appleid.apple.com/auth/keys");
@@ -211,6 +213,9 @@ export async function POST(req: NextRequest) {
           console.error("Welcome email failed:", err),
         );
       }
+      createNotification(publicUser.id, welcomeNotification()).catch((err) =>
+        console.error("Welcome notification failed:", err),
+      );
     }
 
     const token = await createSessionToken({

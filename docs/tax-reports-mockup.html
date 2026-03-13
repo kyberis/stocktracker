@@ -1,0 +1,1609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>trefolio — European Tax Reports Feature Mockup</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+  :root {
+    --bg: #0f172a;
+    --bg-surface: #1e293b;
+    --bg-card: #1e293b;
+    --bg-card-hover: #273549;
+    --bg-input: #0f172a;
+    --border: #334155;
+    --border-light: #1e293b;
+    --text: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --emerald: #10b981;
+    --emerald-dark: #059669;
+    --emerald-bg: rgba(16, 185, 129, 0.1);
+    --red: #ef4444;
+    --red-bg: rgba(239, 68, 68, 0.1);
+    --blue: #3b82f6;
+    --blue-bg: rgba(59, 130, 246, 0.1);
+    --violet: #8b5cf6;
+    --violet-bg: rgba(139, 92, 246, 0.1);
+    --amber: #f59e0b;
+    --amber-bg: rgba(245, 158, 11, 0.1);
+    --rose: #f43f5e;
+    --rose-bg: rgba(244, 63, 94, 0.1);
+    --indigo: #6366f1;
+    --cyan: #06b6d4;
+    --cyan-bg: rgba(6, 182, 212, 0.1);
+    --orange: #f97316;
+    --orange-bg: rgba(249, 115, 22, 0.1);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  .mockup-banner {
+    background: linear-gradient(90deg, #6366f1, #8b5cf6);
+    padding: 12px 24px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: white;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .mockup-banner span { opacity: 0.8; font-weight: 400; }
+
+  .header {
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .header h1 { font-size: 20px; font-weight: 700; color: var(--emerald); }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+
+  .tabs {
+    display: flex;
+    gap: 2px;
+    padding: 0 32px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+  }
+  .tab {
+    padding: 12px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: all 0.15s;
+  }
+  .tab:hover { color: var(--text-secondary); }
+  .tab.active { color: var(--emerald); border-bottom-color: var(--emerald); }
+  .tab .badge {
+    font-size: 9px;
+    padding: 2px 5px;
+    border-radius: 4px;
+    margin-left: 6px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .badge-pro { background: var(--violet-bg); color: var(--violet); }
+  .badge-new { background: var(--emerald-bg); color: var(--emerald); }
+
+  .container { max-width: 1200px; margin: 0 auto; padding: 24px 32px; }
+
+  /* Disclaimer banner */
+  .disclaimer {
+    background: var(--amber-bg);
+    border: 1px solid rgba(245, 158, 11, 0.25);
+    border-radius: 10px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 20px;
+    font-size: 12.5px;
+    color: var(--amber);
+    line-height: 1.5;
+  }
+  .disclaimer svg { flex-shrink: 0; margin-top: 1px; }
+
+  /* Controls bar */
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+  .control-group { display: flex; align-items: center; gap: 8px; }
+  .control-group label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+
+  select, .btn {
+    font-family: inherit;
+    font-size: 13px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg-surface);
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  select:hover, .btn:hover { border-color: var(--text-muted); }
+  select:focus { outline: none; border-color: var(--emerald); }
+
+  .btn-primary {
+    background: var(--emerald);
+    color: white;
+    border-color: var(--emerald);
+    font-weight: 600;
+  }
+  .btn-primary:hover { background: var(--emerald-dark); }
+  .btn-outline { background: transparent; }
+  .btn-outline:hover { background: var(--bg-card-hover); }
+
+  .btn svg { vertical-align: -2px; margin-right: 4px; }
+
+  .spacer { flex: 1; }
+
+  /* Summary cards */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .summary-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+  }
+  .summary-card .label {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+  .summary-card .value {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+  .summary-card .sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+  .positive { color: var(--emerald); }
+  .negative { color: var(--red); }
+  .neutral { color: var(--text); }
+
+  /* Section headings */
+  .section {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .section-header {
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-header h3 {
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-header .tag {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 10px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  th.right, td.right { text-align: right; }
+  td {
+    font-size: 13px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border-light);
+    color: var(--text-secondary);
+  }
+  tr:last-child td { border-bottom: none; }
+  td.ticker { color: var(--text); font-weight: 600; font-size: 12.5px; }
+  td .flag { margin-right: 4px; }
+
+  /* Form field mapping (Phase 3) */
+  .form-mapping {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+  }
+  .form-field {
+    background: var(--bg-card);
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .form-field .field-label {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .form-field .field-ref {
+    font-size: 11px;
+    color: var(--cyan);
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    background: var(--cyan-bg);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  .form-field .field-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  /* AI Assistant (Phase 4) */
+  .ai-panel {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(139, 92, 246, 0.08));
+    border: 1px solid rgba(99, 102, 241, 0.25);
+    border-radius: 12px;
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .ai-panel-header {
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid rgba(99, 102, 241, 0.15);
+  }
+  .ai-panel-header h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--indigo);
+  }
+  .ai-panel-header .ai-badge {
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: var(--violet-bg);
+    color: var(--violet);
+    font-weight: 700;
+  }
+  .ai-content {
+    padding: 16px;
+  }
+  .ai-message {
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text-secondary);
+  }
+  .ai-message strong { color: var(--text); }
+  .ai-message .highlight {
+    background: var(--emerald-bg);
+    color: var(--emerald);
+    padding: 0 4px;
+    border-radius: 3px;
+    font-weight: 600;
+  }
+  .ai-message .warning-highlight {
+    background: var(--amber-bg);
+    color: var(--amber);
+    padding: 0 4px;
+    border-radius: 3px;
+    font-weight: 600;
+  }
+
+  .ai-suggestions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  .ai-suggestion {
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    color: var(--indigo);
+    cursor: pointer;
+    transition: all 0.15s;
+    background: transparent;
+    font-family: inherit;
+  }
+  .ai-suggestion:hover {
+    background: rgba(99, 102, 241, 0.1);
+    border-color: var(--indigo);
+  }
+
+  /* Data quality section */
+  .quality-checks {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .quality-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+  }
+  .quality-icon { font-size: 14px; }
+  .quality-ok { color: var(--emerald); }
+  .quality-warn { color: var(--amber); }
+  .quality-err { color: var(--red); }
+
+  /* Country tabs */
+  .country-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .country-tab {
+    padding: 8px 14px;
+    font-size: 12.5px;
+    font-weight: 500;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .country-tab:hover { border-color: var(--text-muted); color: var(--text-secondary); }
+  .country-tab.active {
+    background: var(--emerald-bg);
+    border-color: var(--emerald);
+    color: var(--emerald);
+    font-weight: 600;
+  }
+
+  /* Totals row */
+  tr.total-row td {
+    font-weight: 700;
+    color: var(--text);
+    border-top: 2px solid var(--border);
+    background: rgba(255,255,255,0.02);
+  }
+
+  /* Vorabpauschale section */
+  .info-box {
+    background: var(--blue-bg);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin: 12px 16px;
+    font-size: 12px;
+    color: var(--blue);
+    line-height: 1.5;
+    display: flex;
+    gap: 8px;
+  }
+  .info-box svg { flex-shrink: 0; margin-top: 1px; }
+
+  /* Phase indicators */
+  .phase-strip {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .phase-tag {
+    font-size: 10px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    border: 1px solid;
+    font-family: inherit;
+    transition: all 0.2s;
+  }
+  .phase-tag.ph1 { background: var(--emerald-bg); color: var(--emerald); border-color: rgba(16,185,129,0.3); }
+  .phase-tag.ph2 { background: var(--blue-bg); color: var(--blue); border-color: rgba(59,130,246,0.3); }
+  .phase-tag.ph3 { background: var(--orange-bg); color: var(--orange); border-color: rgba(249,115,22,0.3); }
+  .phase-tag.ph4 { background: var(--violet-bg); color: var(--violet); border-color: rgba(139,92,246,0.3); }
+  .phase-tag.active { transform: scale(1.05); }
+  .phase-tag:not(.active) { opacity: 0.5; }
+
+  /* PDF Preview */
+  .pdf-preview {
+    background: white;
+    border-radius: 8px;
+    padding: 32px;
+    margin: 16px;
+    color: #1a1a2e;
+    font-size: 12px;
+    position: relative;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
+  .pdf-preview h2 {
+    font-size: 16px;
+    color: #1a1a2e;
+    margin-bottom: 4px;
+  }
+  .pdf-preview .pdf-subtitle {
+    font-size: 11px;
+    color: #666;
+    margin-bottom: 16px;
+  }
+  .pdf-preview table { margin-bottom: 12px; }
+  .pdf-preview th {
+    color: #666;
+    font-size: 10px;
+    padding: 6px 10px;
+    border-bottom: 2px solid #e2e8f0;
+    background: #f8fafc;
+  }
+  .pdf-preview td {
+    font-size: 11px;
+    padding: 6px 10px;
+    border-bottom: 1px solid #e2e8f0;
+    color: #334155;
+  }
+  .pdf-preview .form-ref {
+    display: inline-block;
+    font-size: 10px;
+    background: #eef2ff;
+    color: #4f46e5;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-family: monospace;
+  }
+  .pdf-logo {
+    position: absolute;
+    top: 20px;
+    right: 24px;
+    font-size: 14px;
+    font-weight: 800;
+    color: #10b981;
+  }
+  .pdf-footer {
+    margin-top: 16px;
+    padding-top: 10px;
+    border-top: 1px solid #e2e8f0;
+    font-size: 9px;
+    color: #94a3b8;
+    text-align: center;
+  }
+  .pdf-overlay {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    font-size: 9px;
+    background: var(--orange);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 700;
+  }
+
+  /* Optimization cards */
+  .optimization-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    padding: 16px;
+  }
+  .opt-card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    background: var(--bg);
+  }
+  .opt-card .opt-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .opt-card .opt-desc {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+  .opt-card .opt-savings {
+    margin-top: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--emerald);
+  }
+
+  /* Tab content visibility */
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* Animate sections */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .tab-content.active > * {
+    animation: fadeIn 0.25s ease-out;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .container { padding: 16px; }
+    .summary-grid { grid-template-columns: 1fr 1fr; }
+    .form-mapping { grid-template-columns: 1fr; }
+    .optimization-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="mockup-banner">
+  FEATURE MOCKUP — European Tax Reports <span>· trefolio Pro · All 4 phases shown</span>
+</div>
+
+<div class="header">
+  <h1>trefolio</h1>
+  <div class="header-right">
+    <span style="font-size:12px;color:var(--text-muted)">Tax Year: 2025</span>
+    <div style="width:32px;height:32px;border-radius:50%;background:var(--emerald);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white">MS</div>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab">Transactions</div>
+  <div class="tab">Dividends</div>
+  <div class="tab">Performance</div>
+  <div class="tab">Taxonomy</div>
+  <div class="tab">Rebalancing</div>
+  <div class="tab">Accounts</div>
+  <div class="tab">Watchlist</div>
+  <div class="tab">Alerts</div>
+  <div class="tab">Screener <span class="badge badge-pro">Pro</span></div>
+  <div class="tab active">Tax Reports <span class="badge badge-new">New</span></div>
+</div>
+
+<div class="container">
+
+  <!-- Phase indicators -->
+  <div class="phase-strip">
+    <button class="phase-tag ph1 active" onclick="togglePhase(1)">Phase 1 — Core Engine</button>
+    <button class="phase-tag ph2 active" onclick="togglePhase(2)">Phase 2 — All Countries</button>
+    <button class="phase-tag ph3 active" onclick="togglePhase(3)">Phase 3 — PDF & Form Mapping</button>
+    <button class="phase-tag ph4 active" onclick="togglePhase(4)">Phase 4 — AI Assistant</button>
+  </div>
+
+  <!-- Disclaimer -->
+  <div class="disclaimer">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+    <div><strong>Tax information only.</strong> This summary is provided for informational purposes and does not constitute tax advice. Always consult a qualified tax advisor for your specific situation. Tax rules may have changed since this report was generated.</div>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <div class="control-group">
+      <label>Tax Year</label>
+      <select>
+        <option>2025</option>
+        <option>2024</option>
+        <option>2023</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label>Country</label>
+      <select id="countrySelect" onchange="switchCountry(this.value)">
+        <option value="de">🇩🇪 Germany</option>
+        <option value="fr">🇫🇷 France</option>
+        <option value="es">🇪🇸 Spain</option>
+        <option value="nl">🇳🇱 Netherlands</option>
+        <option value="it">🇮🇹 Italy</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label>Portfolio</label>
+      <select>
+        <option>My Portfolio</option>
+        <option>All Portfolios</option>
+      </select>
+    </div>
+    <div class="spacer"></div>
+    <button class="btn btn-outline" data-phase="1">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2M12 3v12m0 0-4-4m4 4 4-4"/></svg>
+      CSV
+    </button>
+    <button class="btn btn-outline" data-phase="3">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></svg>
+      PDF Report
+    </button>
+    <button class="btn btn-primary" data-phase="1">
+      Generate Report
+    </button>
+  </div>
+
+  <!-- Country tabs -->
+  <div class="country-tabs" data-phase="2">
+    <button class="country-tab active" onclick="switchCountryTab(this, 'de')">🇩🇪 Germany</button>
+    <button class="country-tab" onclick="switchCountryTab(this, 'fr')">🇫🇷 France</button>
+    <button class="country-tab" onclick="switchCountryTab(this, 'es')">🇪🇸 Spain</button>
+    <button class="country-tab" onclick="switchCountryTab(this, 'nl')">🇳🇱 Netherlands</button>
+    <button class="country-tab" onclick="switchCountryTab(this, 'it')">🇮🇹 Italy</button>
+  </div>
+
+  <!-- ==================== AI ASSISTANT (Phase 4) ==================== -->
+  <div data-phase="4">
+    <div class="ai-panel">
+      <div class="ai-panel-header">
+        <svg width="16" height="16" fill="none" stroke="var(--indigo)" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2a4 4 0 0 1 4 4v2a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4Zm-6 8a6 6 0 0 0 12 0"/><path d="M9 22h6m-3-4v4"/></svg>
+        <h3>AI Tax Assistant</h3>
+        <span class="ai-badge">PRO</span>
+      </div>
+      <div class="ai-content">
+        <div class="ai-message" id="aiMessage">
+          <strong>Your 2025 German tax summary is ready.</strong> Here's what I found:<br><br>
+          Your total <strong>realized capital gains</strong> are <span class="highlight">€2,847.32</span> from 8 sell transactions. After applying the <strong>Sparerpauschbetrag</strong> (€1,000 individual allowance), your taxable capital income is <span class="highlight">€1,847.32</span>.<br><br>
+          Your 3 equity ETFs (iShares Core MSCI World, Vanguard FTSE All-World, Xtrackers DAX) qualify for <strong>30% Teilfreistellung</strong>, reducing their taxable portion to 70%.<br><br>
+          <span class="warning-highlight">⚠ Note:</span> I detected 2 accumulating ETFs that may trigger <strong>Vorabpauschale</strong>. The 2025 Basiszins is 2.29% — I've estimated your Vorabpauschale at <span class="highlight">€47.18</span>. Verify this with your broker's tax certificate (Steuerbescheinigung).<br><br>
+          You paid <span class="highlight">€412.60</span> in foreign withholding taxes on dividends from US and UK stocks, which may be creditable against German tax via <strong>Anrechnung ausländischer Quellensteuer</strong> (Anlage KAP Zeile 41).
+        </div>
+        <div class="ai-suggestions">
+          <button class="ai-suggestion">Explain Vorabpauschale in detail</button>
+          <button class="ai-suggestion">How do I fill Anlage KAP?</button>
+          <button class="ai-suggestion">Can I deduct more withholding tax?</button>
+          <button class="ai-suggestion">What is Teilfreistellung?</button>
+          <button class="ai-suggestion">Optimize for tax loss harvesting</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Data quality checks -->
+    <div class="section" style="margin-bottom: 16px;">
+      <div class="section-header">
+        <h3>
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+          Data Quality Checks
+        </h3>
+      </div>
+      <div class="quality-checks">
+        <div class="quality-item"><span class="quality-icon quality-ok">✓</span> <span>All sell transactions have matching buy lots (FIFO complete)</span></div>
+        <div class="quality-item"><span class="quality-icon quality-ok">✓</span> <span>Exchange rates available for all foreign-currency transactions</span></div>
+        <div class="quality-item"><span class="quality-icon quality-ok">✓</span> <span>Dividend withholding tax recorded for 12 of 14 dividend transactions</span></div>
+        <div class="quality-item"><span class="quality-icon quality-warn">⚠</span> <span style="color:var(--amber)">2 dividend transactions from VWRL.AS missing withholding tax — verify with broker statement</span></div>
+        <div class="quality-item"><span class="quality-icon quality-ok">✓</span> <span>Portfolio snapshots available for Jan 1 and Dec 31 (Vorabpauschale)</span></div>
+        <div class="quality-item"><span class="quality-icon quality-warn">⚠</span> <span style="color:var(--amber)">1 transaction (ASML.AS sell on Mar 15) missing historical exchange rate — using current rate as fallback</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== GERMANY (DE) ==================== -->
+  <div class="tab-content active" id="country-de">
+
+    <!-- Summary Cards (Phase 1) -->
+    <div class="summary-grid" data-phase="1">
+      <div class="summary-card">
+        <div class="label">Realized Capital Gains</div>
+        <div class="value positive">€2,847.32</div>
+        <div class="sub">8 sell transactions</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Dividend Income (Gross)</div>
+        <div class="value neutral">€1,431.88</div>
+        <div class="sub">14 payments · 9 tickers</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Withholding Tax Paid</div>
+        <div class="value negative">−€412.60</div>
+        <div class="sub">Creditable against German tax</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Sparerpauschbetrag Used</div>
+        <div class="value neutral">€1,000 / €1,000</div>
+        <div class="sub">Single filer · Fully utilized</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Vorabpauschale (Est.)</div>
+        <div class="value neutral">€47.18</div>
+        <div class="sub">2 accumulating ETFs · Basiszins 2.29%</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Est. Taxable Income</div>
+        <div class="value neutral">€3,326.38</div>
+        <div class="sub">After Sparerpauschbetrag &amp; Teilfreistellung</div>
+      </div>
+    </div>
+
+    <!-- Realized Gains Table (Phase 1) -->
+    <div class="section" data-phase="1">
+      <div class="section-header">
+        <h3>Realized Capital Gains (FIFO)</h3>
+        <span class="tag" style="background:var(--emerald-bg);color:var(--emerald)">FIFO · Mandatory for DE</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Ticker</th>
+            <th>Name</th>
+            <th>Sell Date</th>
+            <th>Shares</th>
+            <th class="right">Proceeds (€)</th>
+            <th class="right">Cost Basis (€)</th>
+            <th class="right">Gain/Loss (€)</th>
+            <th class="right">Teilfreistellung</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="ticker">EUNL.DE</td>
+            <td>iShares Core MSCI World</td>
+            <td>2025-02-14</td>
+            <td>15</td>
+            <td class="right">€1,247.55</td>
+            <td class="right">€1,082.30</td>
+            <td class="right positive">€165.25</td>
+            <td class="right" style="color:var(--cyan)">30% → €115.68</td>
+          </tr>
+          <tr>
+            <td class="ticker">SAP.DE</td>
+            <td>SAP SE</td>
+            <td>2025-03-22</td>
+            <td>10</td>
+            <td class="right">€2,340.00</td>
+            <td class="right">€1,870.50</td>
+            <td class="right positive">€469.50</td>
+            <td class="right" style="color:var(--text-muted)">N/A (stock)</td>
+          </tr>
+          <tr>
+            <td class="ticker">ASML.AS</td>
+            <td>ASML Holding</td>
+            <td>2025-05-10</td>
+            <td>3</td>
+            <td class="right">€2,118.00</td>
+            <td class="right">€1,764.30</td>
+            <td class="right positive">€353.70</td>
+            <td class="right" style="color:var(--text-muted)">N/A (stock)</td>
+          </tr>
+          <tr>
+            <td class="ticker">VWCE.DE</td>
+            <td>Vanguard FTSE All-World</td>
+            <td>2025-06-18</td>
+            <td>20</td>
+            <td class="right">€2,480.00</td>
+            <td class="right">€1,910.40</td>
+            <td class="right positive">€569.60</td>
+            <td class="right" style="color:var(--cyan)">30% → €398.72</td>
+          </tr>
+          <tr>
+            <td class="ticker">ALV.DE</td>
+            <td>Allianz SE</td>
+            <td>2025-07-05</td>
+            <td>5</td>
+            <td class="right">€1,430.00</td>
+            <td class="right">€1,285.50</td>
+            <td class="right positive">€144.50</td>
+            <td class="right" style="color:var(--text-muted)">N/A (stock)</td>
+          </tr>
+          <tr>
+            <td class="ticker">BAS.DE</td>
+            <td>BASF SE</td>
+            <td>2025-08-12</td>
+            <td>20</td>
+            <td class="right">€940.00</td>
+            <td class="right">€1,122.80</td>
+            <td class="right negative">−€182.80</td>
+            <td class="right" style="color:var(--text-muted)">N/A (stock)</td>
+          </tr>
+          <tr>
+            <td class="ticker">IWDA.AS</td>
+            <td>iShares MSCI World (Acc)</td>
+            <td>2025-09-20</td>
+            <td>8</td>
+            <td class="right">€712.80</td>
+            <td class="right">€584.00</td>
+            <td class="right positive">€128.80</td>
+            <td class="right" style="color:var(--cyan)">30% → €90.16</td>
+          </tr>
+          <tr>
+            <td class="ticker">SIE.DE</td>
+            <td>Siemens AG</td>
+            <td>2025-11-01</td>
+            <td>12</td>
+            <td class="right">€2,364.00</td>
+            <td class="right">€1,165.23</td>
+            <td class="right positive">€1,198.77</td>
+            <td class="right" style="color:var(--text-muted)">N/A (stock)</td>
+          </tr>
+          <tr class="total-row">
+            <td colspan="4"><strong>Total Realized</strong></td>
+            <td class="right">€14,632.35</td>
+            <td class="right">€10,785.03</td>
+            <td class="right positive">€2,847.32</td>
+            <td class="right" style="color:var(--cyan)">€604.56 taxable</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Vorabpauschale (Phase 1 — DE specific) -->
+    <div class="section" data-phase="1">
+      <div class="section-header">
+        <h3>Vorabpauschale (Deemed Income on Accumulating ETFs)</h3>
+        <span class="tag" style="background:var(--blue-bg);color:var(--blue)">Basiszins 2.29% · 2025</span>
+      </div>
+      <div class="info-box">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 6v4m0 4h.01"/></svg>
+        <span>The Vorabpauschale is a deemed tax on accumulating ETFs even when no distribution is paid. Formula: Basisertrag = Jan 1 value × Basiszins × 0.7. After Teilfreistellung (30% for equity ETFs), 70% is taxable.</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>ETF</th>
+            <th class="right">Jan 1 Value (€)</th>
+            <th class="right">Dec 31 Value (€)</th>
+            <th class="right">Gain (€)</th>
+            <th class="right">Basisertrag (€)</th>
+            <th class="right">Teilfreistellung</th>
+            <th class="right">Vorabpauschale (€)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="ticker">IWDA.AS</td>
+            <td class="right">€4,280.00</td>
+            <td class="right">€4,812.40</td>
+            <td class="right">€532.40</td>
+            <td class="right">€68.61</td>
+            <td class="right" style="color:var(--cyan)">30%</td>
+            <td class="right">€33.61</td>
+          </tr>
+          <tr>
+            <td class="ticker">VWCE.DE</td>
+            <td class="right">€1,720.00</td>
+            <td class="right">€1,842.60</td>
+            <td class="right">€122.60</td>
+            <td class="right">€27.56</td>
+            <td class="right" style="color:var(--cyan)">30%</td>
+            <td class="right">€13.57</td>
+          </tr>
+          <tr class="total-row">
+            <td colspan="5"><strong>Total Vorabpauschale</strong></td>
+            <td></td>
+            <td class="right">€47.18</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Dividend Income (Phase 1) -->
+    <div class="section" data-phase="1">
+      <div class="section-header">
+        <h3>Dividend Income</h3>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Ticker</th>
+            <th>Name</th>
+            <th>Country</th>
+            <th class="right">Gross (€)</th>
+            <th class="right">Withholding Tax (€)</th>
+            <th class="right">Net (€)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="ticker">SAP.DE</td>
+            <td>SAP SE</td>
+            <td><span class="flag">🇩🇪</span>Germany</td>
+            <td class="right">€220.00</td>
+            <td class="right negative">−€57.64</td>
+            <td class="right">€162.36</td>
+          </tr>
+          <tr>
+            <td class="ticker">ALV.DE</td>
+            <td>Allianz SE</td>
+            <td><span class="flag">🇩🇪</span>Germany</td>
+            <td class="right">€178.50</td>
+            <td class="right negative">−€46.77</td>
+            <td class="right">€131.73</td>
+          </tr>
+          <tr>
+            <td class="ticker">AAPL</td>
+            <td>Apple Inc.</td>
+            <td><span class="flag">🇺🇸</span>United States</td>
+            <td class="right">€342.20</td>
+            <td class="right negative">−€102.66</td>
+            <td class="right">€239.54</td>
+          </tr>
+          <tr>
+            <td class="ticker">MSFT</td>
+            <td>Microsoft Corp.</td>
+            <td><span class="flag">🇺🇸</span>United States</td>
+            <td class="right">€286.40</td>
+            <td class="right negative">−€85.92</td>
+            <td class="right">€200.48</td>
+          </tr>
+          <tr>
+            <td class="ticker">ULVR.L</td>
+            <td>Unilever PLC</td>
+            <td><span class="flag">🇬🇧</span>United Kingdom</td>
+            <td class="right">€198.30</td>
+            <td class="right negative">−€0.00</td>
+            <td class="right">€198.30</td>
+          </tr>
+          <tr>
+            <td class="ticker">EUNL.DE</td>
+            <td>iShares Core MSCI World</td>
+            <td><span class="flag">🇮🇪</span>Ireland</td>
+            <td class="right">€126.48</td>
+            <td class="right negative">−€31.62</td>
+            <td class="right">€94.86</td>
+          </tr>
+          <tr>
+            <td class="ticker">BAS.DE</td>
+            <td>BASF SE</td>
+            <td><span class="flag">🇩🇪</span>Germany</td>
+            <td class="right">€80.00</td>
+            <td class="right negative">−€20.96</td>
+            <td class="right">€59.04</td>
+          </tr>
+          <tr class="total-row">
+            <td colspan="3"><strong>Total Dividends</strong></td>
+            <td class="right">€1,431.88</td>
+            <td class="right negative">−€412.60</td>
+            <td class="right">€1,019.28</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Anlage KAP Form Mapping (Phase 3) -->
+    <div class="section" data-phase="3">
+      <div class="section-header">
+        <h3>
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></svg>
+          Anlage KAP — Form Field Mapping
+        </h3>
+        <span class="tag" style="background:var(--orange-bg);color:var(--orange)">Phase 3</span>
+      </div>
+      <div class="form-mapping">
+        <div class="form-field">
+          <div>
+            <div class="field-label">Capital gains from securities sales</div>
+            <div class="field-ref">Zeile 7</div>
+          </div>
+          <div class="field-value">€2,847.32</div>
+        </div>
+        <div class="form-field">
+          <div>
+            <div class="field-label">Taxable gains after Teilfreistellung</div>
+            <div class="field-ref">Zeile 8</div>
+          </div>
+          <div class="field-value">€2,242.76</div>
+        </div>
+        <div class="form-field">
+          <div>
+            <div class="field-label">Dividend income (domestic)</div>
+            <div class="field-ref">Zeile 14</div>
+          </div>
+          <div class="field-value">€478.50</div>
+        </div>
+        <div class="form-field">
+          <div>
+            <div class="field-label">Dividend income (foreign)</div>
+            <div class="field-ref">Zeile 15</div>
+          </div>
+          <div class="field-value">€953.38</div>
+        </div>
+        <div class="form-field">
+          <div>
+            <div class="field-label">Foreign withholding tax (creditable)</div>
+            <div class="field-ref">Zeile 41</div>
+          </div>
+          <div class="field-value">€287.21</div>
+        </div>
+        <div class="form-field">
+          <div>
+            <div class="field-label">Vorabpauschale (accumulating ETFs)</div>
+            <div class="field-ref">Zeile 9</div>
+          </div>
+          <div class="field-value">€47.18</div>
+        </div>
+        <div class="form-field">
+          <div>
+            <div class="field-label">Sparerpauschbetrag (allowance claimed)</div>
+            <div class="field-ref">Zeile 12</div>
+          </div>
+          <div class="field-value">€1,000.00</div>
+        </div>
+        <div class="form-field">
+          <div>
+            <div class="field-label">Total taxable capital income</div>
+            <div class="field-ref">Zeile 47</div>
+          </div>
+          <div class="field-value">€3,326.38</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PDF Preview (Phase 3) -->
+    <div class="section" data-phase="3">
+      <div class="section-header">
+        <h3>
+          PDF Report Preview
+        </h3>
+        <button class="btn btn-primary" style="font-size:12px;padding:6px 12px">
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2M12 3v12m0 0-4-4m4 4 4-4"/></svg>
+          Download PDF
+        </button>
+      </div>
+      <div style="padding:16px;background:#111827;border-radius:0 0 12px 12px">
+        <div class="pdf-preview">
+          <div class="pdf-overlay">PDF PREVIEW</div>
+          <div class="pdf-logo">trefolio</div>
+          <h2>Tax Report — Germany 2025</h2>
+          <div class="pdf-subtitle">Generated March 13, 2026 · Portfolio: My Portfolio · Base currency: EUR</div>
+
+          <div style="margin-bottom:12px">
+            <strong style="font-size:12px;color:#1e293b">Summary for Anlage KAP</strong>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Line Item</th>
+                <th>Form Reference</th>
+                <th style="text-align:right">Amount (EUR)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Capital gains from securities</td><td><span class="form-ref">Zeile 7</span></td><td style="text-align:right">2,847.32</td></tr>
+              <tr><td>After Teilfreistellung</td><td><span class="form-ref">Zeile 8</span></td><td style="text-align:right">2,242.76</td></tr>
+              <tr><td>Dividend income (domestic)</td><td><span class="form-ref">Zeile 14</span></td><td style="text-align:right">478.50</td></tr>
+              <tr><td>Dividend income (foreign)</td><td><span class="form-ref">Zeile 15</span></td><td style="text-align:right">953.38</td></tr>
+              <tr><td>Vorabpauschale</td><td><span class="form-ref">Zeile 9</span></td><td style="text-align:right">47.18</td></tr>
+              <tr><td>Sparerpauschbetrag</td><td><span class="form-ref">Zeile 12</span></td><td style="text-align:right">−1,000.00</td></tr>
+              <tr><td>Foreign withholding tax</td><td><span class="form-ref">Zeile 41</span></td><td style="text-align:right">287.21</td></tr>
+              <tr style="background:#f0fdf4"><td><strong>Total taxable capital income</strong></td><td><span class="form-ref">Zeile 47</span></td><td style="text-align:right"><strong>3,326.38</strong></td></tr>
+            </tbody>
+          </table>
+          <div class="pdf-footer">
+            This report is for informational purposes only. It does not constitute tax advice. · trefolio.app · Generated for user: ms***@gmail.com
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Optimization (Phase 4) -->
+    <div data-phase="4">
+      <div class="ai-panel">
+        <div class="ai-panel-header">
+          <svg width="16" height="16" fill="none" stroke="var(--indigo)" stroke-width="2" viewBox="0 0 24 24"><path d="m21 15-9-9-9 9"/></svg>
+          <h3>Tax Optimization Suggestions</h3>
+          <span class="ai-badge">AI</span>
+        </div>
+        <div class="optimization-grid">
+          <div class="opt-card">
+            <div class="opt-title">
+              <span style="color:var(--emerald)">💡</span> Tax Loss Harvesting
+            </div>
+            <div class="opt-desc">Your BASF position has an unrealized loss of −€312.40. Selling before Dec 31 would offset gains and reduce taxable income.</div>
+            <div class="opt-savings">Potential saving: ~€82 in tax</div>
+          </div>
+          <div class="opt-card">
+            <div class="opt-title">
+              <span style="color:var(--blue)">📋</span> Sparerpauschbetrag Optimization
+            </div>
+            <div class="opt-desc">Your allowance is fully used (€1,000). If you file jointly, you could use your partner's unused allowance (€1,000 more) to reduce taxable income by up to €1,000.</div>
+            <div class="opt-savings">Potential saving: ~€264 in tax</div>
+          </div>
+          <div class="opt-card">
+            <div class="opt-title">
+              <span style="color:var(--amber)">🔄</span> Withholding Tax Recovery
+            </div>
+            <div class="opt-desc">You paid €102.66 US withholding tax on Apple dividends (30% rate). Under the DE-US treaty, the limit is 15%. You may be able to reclaim €51.33 from the IRS.</div>
+            <div class="opt-savings">Potential recovery: €51.33</div>
+          </div>
+          <div class="opt-card">
+            <div class="opt-title">
+              <span style="color:var(--violet)">📊</span> Accumulating vs Distributing
+            </div>
+            <div class="opt-desc">Your distributing ETF (EUNL.DE) paid €126.48 in dividends. Switching to the accumulating variant (SWDA) would defer taxation until sale and reduce annual tax burden.</div>
+            <div class="opt-savings">Deferred tax: ~€33/yr</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== FRANCE (FR) ==================== -->
+  <div class="tab-content" id="country-fr">
+    <div class="summary-grid" data-phase="1">
+      <div class="summary-card">
+        <div class="label">Plus-Values Mobilières</div>
+        <div class="value positive">€2,847.32</div>
+        <div class="sub">Realized capital gains</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Revenus de Capitaux</div>
+        <div class="value neutral">€1,431.88</div>
+        <div class="sub">Dividends received</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">PFU (Flat Tax 30%)</div>
+        <div class="value negative">−€1,283.76</div>
+        <div class="sub">12.8% IR + 17.2% PS</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Prélèvements Sociaux</div>
+        <div class="value negative">−€735.62</div>
+        <div class="sub">17.2% on all investment income</div>
+      </div>
+    </div>
+
+    <div class="section" data-phase="1">
+      <div class="section-header">
+        <h3>Plus-Values Mobilières (Capital Gains)</h3>
+        <span class="tag" style="background:var(--blue-bg);color:var(--blue)">Weighted Average Cost</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Ticker</th>
+            <th>Name</th>
+            <th>Sell Date</th>
+            <th class="right">Prix de Cession (€)</th>
+            <th class="right">Prix d'Acquisition (€)</th>
+            <th class="right">Plus/Moins-Value (€)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="ticker">AI.PA</td><td>Air Liquide SA</td><td>2025-04-18</td><td class="right">€3,420.00</td><td class="right">€2,940.00</td><td class="right positive">€480.00</td></tr>
+          <tr><td class="ticker">MC.PA</td><td>LVMH Moët Hennessy</td><td>2025-06-22</td><td class="right">€7,840.00</td><td class="right">€6,520.00</td><td class="right positive">€1,320.00</td></tr>
+          <tr><td class="ticker">BN.PA</td><td>Danone SA</td><td>2025-09-10</td><td class="right">€1,180.00</td><td class="right">€1,410.00</td><td class="right negative">−€230.00</td></tr>
+          <tr><td class="ticker">SAN.PA</td><td>Sanofi SA</td><td>2025-11-15</td><td class="right">€2,890.00</td><td class="right">€1,612.68</td><td class="right positive">€1,277.32</td></tr>
+          <tr class="total-row"><td colspan="3"><strong>Total</strong></td><td class="right">€15,330.00</td><td class="right">€12,482.68</td><td class="right positive">€2,847.32</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section" data-phase="3">
+      <div class="section-header">
+        <h3>Déclaration 2074 — Form Field Mapping</h3>
+        <span class="tag" style="background:var(--orange-bg);color:var(--orange)">Phase 3</span>
+      </div>
+      <div class="form-mapping">
+        <div class="form-field"><div><div class="field-label">Plus-values nettes</div><div class="field-ref">Case 3VG</div></div><div class="field-value">€2,847.32</div></div>
+        <div class="form-field"><div><div class="field-label">Moins-values nettes</div><div class="field-ref">Case 3VH</div></div><div class="field-value">€230.00</div></div>
+        <div class="form-field"><div><div class="field-label">Dividendes bruts</div><div class="field-ref">Case 2DC</div></div><div class="field-value">€1,431.88</div></div>
+        <div class="form-field"><div><div class="field-label">Crédit d'impôt (retenue à la source)</div><div class="field-ref">Case 2AB</div></div><div class="field-value">€412.60</div></div>
+        <div class="form-field"><div><div class="field-label">Revenus soumis au PFU</div><div class="field-ref">Case 2CK</div></div><div class="field-value">€4,279.20</div></div>
+        <div class="form-field"><div><div class="field-label">IR sur revenus mobiliers (12.8%)</div><div class="field-ref">Case 2CK-IR</div></div><div class="field-value">€547.74</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SPAIN (ES) ==================== -->
+  <div class="tab-content" id="country-es">
+    <div class="summary-grid" data-phase="1">
+      <div class="summary-card">
+        <div class="label">Ganancias Patrimoniales</div>
+        <div class="value positive">€2,847.32</div>
+        <div class="sub">FIFO · 8 ventas</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Rendimientos del Capital</div>
+        <div class="value neutral">€1,431.88</div>
+        <div class="sub">Dividendos recibidos</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Retenciones en Origen</div>
+        <div class="value negative">−€412.60</div>
+        <div class="sub">Deducible en Modelo 100</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">IRPF Estimado</div>
+        <div class="value negative">−€812.03</div>
+        <div class="sub">19% (≤6K) + 21% (6K-50K)</div>
+      </div>
+    </div>
+
+    <!-- Modelo 720 check -->
+    <div class="section" data-phase="2">
+      <div class="section-header">
+        <h3>
+          <svg width="14" height="14" fill="none" stroke="var(--amber)" stroke-width="2" viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+          Modelo 720 — Foreign Asset Declaration
+        </h3>
+        <span class="tag" style="background:var(--amber-bg);color:var(--amber)">Action Required</span>
+      </div>
+      <div class="info-box" style="background:var(--amber-bg);border-color:rgba(245,158,11,0.2);margin:0;border-radius:0">
+        <svg width="14" height="14" fill="none" stroke="var(--amber)" stroke-width="2" viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+        <span style="color:var(--amber)">Your foreign securities (held at Trade Republic, Germany) exceeded <strong>€50,000</strong> on Dec 31, 2025. You are required to file <strong>Modelo 720</strong> between Jan 1 – Mar 31, 2026.</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th>Broker / Institution</th>
+            <th>Country</th>
+            <th class="right">Dec 31 Value (€)</th>
+            <th class="right">Threshold</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Securities (Valores)</td>
+            <td>Trade Republic</td>
+            <td><span class="flag">🇩🇪</span>Germany</td>
+            <td class="right">€67,420.30</td>
+            <td class="right">€50,000</td>
+            <td><span style="background:var(--red-bg);color:var(--red);padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600">EXCEEDS</span></td>
+          </tr>
+          <tr>
+            <td>Bank Accounts (Cuentas)</td>
+            <td>N26</td>
+            <td><span class="flag">🇩🇪</span>Germany</td>
+            <td class="right">€12,340.00</td>
+            <td class="right">€50,000</td>
+            <td><span style="background:var(--emerald-bg);color:var(--emerald);padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600">BELOW</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Wash sale warning -->
+    <div class="section" data-phase="2">
+      <div class="section-header">
+        <h3>
+          Regla Antiaplicación (2-Month Wash Sale Rule)
+        </h3>
+      </div>
+      <div class="info-box" style="margin:0;border-radius:0">
+        <svg width="14" height="14" fill="none" stroke="var(--blue)" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 6v4m0 4h.01"/></svg>
+        <span>Losses on securities are <strong>not deductible</strong> if you repurchased the same security within 2 months before or after the sale. I checked your transactions — <strong style="color:var(--emerald)">no wash sales detected</strong>.</span>
+      </div>
+    </div>
+
+    <div class="section" data-phase="3">
+      <div class="section-header">
+        <h3>Modelo 100 — IRPF Field Mapping</h3>
+        <span class="tag" style="background:var(--orange-bg);color:var(--orange)">Phase 3</span>
+      </div>
+      <div class="form-mapping">
+        <div class="form-field"><div><div class="field-label">Ganancias patrimoniales (base del ahorro)</div><div class="field-ref">Casilla 0340</div></div><div class="field-value">€2,847.32</div></div>
+        <div class="form-field"><div><div class="field-label">Rendimientos de capital mobiliario</div><div class="field-ref">Casilla 0029</div></div><div class="field-value">€1,431.88</div></div>
+        <div class="form-field"><div><div class="field-label">Retenciones e ingresos a cuenta</div><div class="field-ref">Casilla 0588</div></div><div class="field-value">€412.60</div></div>
+        <div class="form-field"><div><div class="field-label">Cuota íntegra estatal (ahorro)</div><div class="field-ref">Casilla 0545</div></div><div class="field-value">€812.03</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== NETHERLANDS (NL) ==================== -->
+  <div class="tab-content" id="country-nl">
+    <div class="summary-grid" data-phase="1">
+      <div class="summary-card">
+        <div class="label">Vermogen per 1 januari</div>
+        <div class="value neutral">€87,640.00</div>
+        <div class="sub">Investments + bank deposits</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Heffingsvrij Vermogen</div>
+        <div class="value neutral">€57,684.00</div>
+        <div class="sub">Tax-free threshold (2025)</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Forfaitair Rendement</div>
+        <div class="value neutral">€1,808.20</div>
+        <div class="sub">Deemed return (6.04% investments)</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Box 3 Belasting (Est.)</div>
+        <div class="value negative">−€650.95</div>
+        <div class="sub">36% on deemed return</div>
+      </div>
+    </div>
+
+    <div class="info-box" style="margin-bottom:16px">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 6v4m0 4h.01"/></svg>
+      <span>The Netherlands uses <strong>Box 3</strong> — a wealth tax on a deemed (fictional) return. You are <strong>not taxed on realized gains</strong>. Tax is based on the total value of your assets on January 1, multiplied by a deemed return rate that varies by asset type.</span>
+    </div>
+
+    <div class="section" data-phase="1">
+      <div class="section-header">
+        <h3>Box 3 — Vermogensrendementsheffing</h3>
+        <span class="tag" style="background:var(--blue-bg);color:var(--blue)">Peildatum: 1 januari 2025</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Asset Category</th>
+            <th class="right">Value (€)</th>
+            <th class="right">Deemed Return Rate</th>
+            <th class="right">Deemed Return (€)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Banktegoeden (Bank deposits)</td>
+            <td class="right">€15,420.00</td>
+            <td class="right">1.44%</td>
+            <td class="right">€222.05</td>
+          </tr>
+          <tr>
+            <td>Overige beleggingen (Investments)</td>
+            <td class="right">€72,220.00</td>
+            <td class="right">6.04%</td>
+            <td class="right">€4,362.09</td>
+          </tr>
+          <tr>
+            <td>Schulden (Debts)</td>
+            <td class="right">−€0.00</td>
+            <td class="right">2.47%</td>
+            <td class="right">€0.00</td>
+          </tr>
+          <tr class="total-row">
+            <td><strong>Totaal vermogen</strong></td>
+            <td class="right">€87,640.00</td>
+            <td></td>
+            <td class="right">€4,584.14</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div style="padding:16px">
+        <table style="width:auto;margin-left:auto">
+          <tbody>
+            <tr><td style="border:none;padding:4px 16px;color:var(--text-muted);font-size:12px">Totaal vermogen</td><td style="border:none;padding:4px 16px;text-align:right;font-size:13px">€87,640.00</td></tr>
+            <tr><td style="border:none;padding:4px 16px;color:var(--text-muted);font-size:12px">Heffingsvrij vermogen</td><td style="border:none;padding:4px 16px;text-align:right;font-size:13px">−€57,684.00</td></tr>
+            <tr><td style="border:none;padding:4px 16px;color:var(--text-muted);font-size:12px">Grondslag</td><td style="border:none;padding:4px 16px;text-align:right;font-size:13px;font-weight:600">€29,956.00</td></tr>
+            <tr><td style="border:none;padding:4px 16px;color:var(--text-muted);font-size:12px">Forfaitair rendement (gewogen)</td><td style="border:none;padding:4px 16px;text-align:right;font-size:13px">€1,808.20</td></tr>
+            <tr style="background:rgba(255,255,255,0.03)"><td style="border-top:2px solid var(--border);padding:8px 16px;font-weight:700;font-size:13px">Box 3 belasting (36%)</td><td style="border-top:2px solid var(--border);padding:8px 16px;text-align:right;font-size:15px;font-weight:700;color:var(--red)">€650.95</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div data-phase="4">
+      <div class="ai-panel">
+        <div class="ai-panel-header">
+          <svg width="16" height="16" fill="none" stroke="var(--indigo)" stroke-width="2" viewBox="0 0 24 24"><path d="m21 15-9-9-9 9"/></svg>
+          <h3>AI Insight: Actual Return Comparison</h3>
+          <span class="ai-badge">AI</span>
+        </div>
+        <div class="ai-content">
+          <div class="ai-message">
+            Your <strong>actual return</strong> in 2025 was <span class="highlight">€3,126.42</span> (dividends + realized gains), which is <strong>lower</strong> than the deemed return of €4,584.14. Since 2025, you can file a claim for <strong>werkelijk rendement</strong> (actual return) to potentially reduce your Box 3 tax.<br><br>
+            <strong>If you opt for actual return:</strong> Tax = €3,126.42 × 36% = <span class="highlight">€1,125.51</span> vs deemed €1,650.29 → <span class="highlight">potential saving of €524.78</span>.
+          </div>
+          <div class="ai-suggestions">
+            <button class="ai-suggestion">Explain Box 3 actual return option</button>
+            <button class="ai-suggestion">How do I file werkelijk rendement?</button>
+            <button class="ai-suggestion">Should I use deemed or actual return?</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== ITALY (IT) ==================== -->
+  <div class="tab-content" id="country-it">
+    <div class="summary-grid" data-phase="1">
+      <div class="summary-card">
+        <div class="label">Plusvalenze Realizzate</div>
+        <div class="value positive">€2,847.32</div>
+        <div class="sub">LIFO (regime dichiarativo)</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Dividendi Lordi</div>
+        <div class="value neutral">€1,431.88</div>
+        <div class="sub">14 pagamenti</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Imposta Sostitutiva (26%)</div>
+        <div class="value negative">−€1,112.59</div>
+        <div class="sub">On gains + dividends</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">IVAFE (Foreign Assets)</div>
+        <div class="value negative">−€134.84</div>
+        <div class="sub">0.2% on Dec 31 value</div>
+      </div>
+    </div>
+
+    <!-- Regime selector -->
+    <div class="controls" data-phase="2" style="margin-bottom:16px">
+      <div class="control-group">
+        <label>Tax Regime</label>
+        <select>
+          <option>Regime Dichiarativo (LIFO, self-reported)</option>
+          <option>Regime Amministrato (average cost, broker-reported)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="section" data-phase="2">
+      <div class="section-header">
+        <h3>Quadro RW — Monitoraggio Fiscale (Foreign Assets)</h3>
+        <span class="tag" style="background:var(--amber-bg);color:var(--amber)">Mandatory Filing</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Asset</th>
+            <th>Broker</th>
+            <th>Country</th>
+            <th>Code</th>
+            <th class="right">Initial Value (€)</th>
+            <th class="right">Dec 31 Value (€)</th>
+            <th class="right">IVAFE (0.2%)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="ticker">Portfolio (securities)</td><td>DEGIRO</td><td><span class="flag">🇳🇱</span>Netherlands</td><td>20</td><td class="right">€52,340.00</td><td class="right">€67,420.30</td><td class="right">€134.84</td></tr>
+          <tr class="total-row"><td colspan="5"><strong>Total IVAFE</strong></td><td></td><td class="right">€134.84</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section" data-phase="1">
+      <div class="section-header">
+        <h3>Quadro RT — Capital Gains (LIFO)</h3>
+        <span class="tag" style="background:var(--violet-bg);color:var(--violet)">LIFO · Regime Dichiarativo</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Ticker</th>
+            <th>Name</th>
+            <th>Sell Date</th>
+            <th class="right">Corrispettivi (€)</th>
+            <th class="right">Costo (€)</th>
+            <th class="right">Plusvalenza (€)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="ticker">ENI.MI</td><td>Eni SpA</td><td>2025-03-14</td><td class="right">€3,420.00</td><td class="right">€2,940.00</td><td class="right positive">€480.00</td></tr>
+          <tr><td class="ticker">ISP.MI</td><td>Intesa Sanpaolo</td><td>2025-06-20</td><td class="right">€1,840.00</td><td class="right">€1,520.00</td><td class="right positive">€320.00</td></tr>
+          <tr><td class="ticker">ENEL.MI</td><td>Enel SpA</td><td>2025-08-05</td><td class="right">€2,180.00</td><td class="right">€2,410.00</td><td class="right negative">−€230.00</td></tr>
+          <tr><td class="ticker">UCG.MI</td><td>UniCredit SpA</td><td>2025-11-18</td><td class="right">€5,890.00</td><td class="right">€3,612.68</td><td class="right positive">€2,277.32</td></tr>
+          <tr class="total-row"><td colspan="3"><strong>Total</strong></td><td class="right">€13,330.00</td><td class="right">€10,482.68</td><td class="right positive">€2,847.32</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section" data-phase="3">
+      <div class="section-header">
+        <h3>Modello Redditi PF — Field Mapping</h3>
+        <span class="tag" style="background:var(--orange-bg);color:var(--orange)">Phase 3</span>
+      </div>
+      <div class="form-mapping">
+        <div class="form-field"><div><div class="field-label">Corrispettivi (total proceeds)</div><div class="field-ref">RT21 col. 1</div></div><div class="field-value">€13,330.00</div></div>
+        <div class="form-field"><div><div class="field-label">Costo o valore di acquisto</div><div class="field-ref">RT22 col. 1</div></div><div class="field-value">€10,482.68</div></div>
+        <div class="form-field"><div><div class="field-label">Plusvalenze nette</div><div class="field-ref">RT23 col. 1</div></div><div class="field-value">€2,847.32</div></div>
+        <div class="form-field"><div><div class="field-label">Imposta sostitutiva (26%)</div><div class="field-ref">RT26 col. 1</div></div><div class="field-value">€740.30</div></div>
+        <div class="form-field"><div><div class="field-label">IVAFE dovuta</div><div class="field-ref">RW6 col. 1</div></div><div class="field-value">€134.84</div></div>
+        <div class="form-field"><div><div class="field-label">Minusvalenze riportabili</div><div class="field-ref">RT24 col. 1</div></div><div class="field-value">€230.00</div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function switchCountry(value) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  const target = document.getElementById('country-' + value);
+  if (target) target.classList.add('active');
+  document.querySelectorAll('.country-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.country-tab').forEach(t => {
+    if (t.textContent.toLowerCase().includes(getCountryName(value).toLowerCase())) t.classList.add('active');
+  });
+  updateAiMessage(value);
+}
+
+function switchCountryTab(el, value) {
+  document.querySelectorAll('.country-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  const target = document.getElementById('country-' + value);
+  if (target) target.classList.add('active');
+  document.getElementById('countrySelect').value = value;
+  updateAiMessage(value);
+}
+
+function getCountryName(code) {
+  const map = { de: 'Germany', fr: 'France', es: 'Spain', nl: 'Netherlands', it: 'Italy' };
+  return map[code] || code;
+}
+
+const aiMessages = {
+  de: document.getElementById('aiMessage')?.innerHTML || '',
+  fr: `<strong>Your 2025 French tax summary is ready.</strong><br><br>
+    Your total <strong>plus-values mobilières</strong> (capital gains) are <span class="highlight">€2,847.32</span>. Under the <strong>PFU (Prélèvement Forfaitaire Unique)</strong>, you owe 30% flat tax: 12.8% income tax + 17.2% social contributions.<br><br>
+    You had one loss (Danone: −€230.00). Losses can be <strong>carried forward for 10 years</strong> to offset future gains.<br><br>
+    <span class="warning-highlight">💡 Tip:</span> Your marginal income tax rate appears to be below 12.8%. You may benefit from opting for <strong>barème progressif</strong> (progressive taxation) instead of PFU. This would reduce your income tax portion but note: this applies to <strong>all</strong> your investment income for the year.`,
+  es: `<strong>Your 2025 Spanish tax summary is ready.</strong><br><br>
+    Your total <strong>ganancias patrimoniales</strong> are <span class="highlight">€2,847.32</span>, taxed at progressive rates: 19% on the first €6,000, then 21% up to €50,000.<br><br>
+    <span class="warning-highlight">⚠ Important:</span> Your foreign securities at Trade Republic exceed <strong>€50,000</strong>. You must file <strong>Modelo 720</strong> by March 31, 2026. Failure to file carries penalties of up to €5,000 per data group.<br><br>
+    I checked for the <strong>2-month anti-avoidance rule</strong> (regla antiaplicación) — no wash sales detected in your transactions.`,
+  nl: `<strong>Your 2025 Dutch tax summary is ready.</strong><br><br>
+    In the Netherlands, you are taxed under <strong>Box 3</strong> on a deemed return, not on actual gains. Your total assets on January 1 were <span class="highlight">€87,640.00</span>.<br><br>
+    After the <strong>heffingsvrij vermogen</strong> (€57,684 threshold), your taxable base is €29,956. The deemed return on investments (6.04%) results in an estimated tax of <span class="highlight">€650.95</span>.<br><br>
+    <span class="warning-highlight">💡 New in 2025:</span> You can now opt for <strong>werkelijk rendement</strong> (actual return) if it's lower than the deemed return. Your actual return was €3,126.42 vs deemed €4,584.14 — filing for actual return could <span class="highlight">save you €524.78</span>.`,
+  it: `<strong>Your 2025 Italian tax summary is ready.</strong><br><br>
+    Under <strong>regime dichiarativo</strong>, your capital gains are calculated using <strong>LIFO</strong> (Last In, First Out). Total plusvalenze: <span class="highlight">€2,847.32</span>, taxed at 26% flat rate.<br><br>
+    You have a <strong>minusvalenza</strong> (loss) of €230.00 on Enel that can be <strong>carried forward for 4 years</strong> to offset future gains.<br><br>
+    Your <strong>Quadro RW</strong> (foreign asset monitoring) shows €67,420.30 in securities held at DEGIRO (Netherlands). The <strong>IVAFE</strong> (foreign financial asset tax) of 0.2% applies: <span class="highlight">€134.84</span>.`
+};
+
+function updateAiMessage(country) {
+  const el = document.getElementById('aiMessage');
+  if (el && aiMessages[country]) el.innerHTML = aiMessages[country];
+}
+
+// Store initial DE message
+aiMessages.de = document.getElementById('aiMessage')?.innerHTML || '';
+
+// Phase toggle
+const activePhases = new Set([1, 2, 3, 4]);
+function togglePhase(phase) {
+  if (activePhases.has(phase)) activePhases.delete(phase);
+  else activePhases.add(phase);
+  applyPhaseVisibility();
+}
+
+function applyPhaseVisibility() {
+  document.querySelectorAll('.phase-tag').forEach(tag => {
+    const ph = parseInt(tag.textContent.match(/\d/)?.[0] || '0');
+    tag.classList.toggle('active', activePhases.has(ph));
+  });
+  document.querySelectorAll('[data-phase]').forEach(el => {
+    const ph = parseInt(el.dataset.phase);
+    el.style.display = activePhases.has(ph) ? '' : 'none';
+  });
+}
+applyPhaseVisibility();
+</script>
+
+</body>
+</html>

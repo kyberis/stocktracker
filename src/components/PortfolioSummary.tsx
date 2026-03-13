@@ -9,9 +9,26 @@ import { formatCurrency, formatPercent, formatStealthCurrency, hasExchangeRate, 
 import { calculatePortfolioTotals, computeAllocationByType, type AllocationSlice } from "@/lib/portfolio-summary";
 import { useStealthMode } from "@/lib/stealth-context";
 import { PLATFORM_LIMITS } from "@/lib/platform-config";
-import type { Holding, CashEntry } from "@/lib/types";
+import type { Holding, CashEntry, ManualAssetType, HoldingAssetType } from "@/lib/types";
 import PortfolioReviewCard from "./PortfolioReviewCard";
 import { useTheme } from "@/lib/theme-context";
+
+const CATEGORY_META: Record<string, { label: string; icon: string; color: string }> = {
+  stock: { label: "investments", icon: "📈", color: "#6366f1" },
+  etf: { label: "investments", icon: "📈", color: "#10b981" },
+  crypto: { label: "investments", icon: "₿", color: "#f59e0b" },
+  real_estate: { label: "realEstate", icon: "🏠", color: "#3b82f6" },
+  savings: { label: "savingsAccounts", icon: "🏦", color: "#06b6d4" },
+  pension: { label: "pensionRetirement", icon: "🏛️", color: "#8b5cf6" },
+  cash: { label: "assetTypeCash", icon: "💵", color: "#64748b" },
+};
+
+interface BreakdownItem {
+  key: string;
+  label: string;
+  color: string;
+  value: number;
+}
 
 function formatTimeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -85,17 +102,20 @@ function BrokerSyncDot() {
 interface Props {
   holdings?: Holding[];
   cashEntries?: CashEntry[];
+  allCashEntries?: CashEntry[];
 }
 
-export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: cashEntriesProp }: Props) {
+export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: cashEntriesProp, allCashEntries: allCashEntriesProp }: Props) {
   const { holdings: ctxHoldings, cashEntries: ctxCashEntries, quotes, exchangeRates, isLoading, activePortfolioCurrency } = usePortfolio();
   const holdings = holdingsProp ?? ctxHoldings;
   const cashEntries = cashEntriesProp ?? ctxCashEntries;
+  const allCashEntries = allCashEntriesProp ?? ctxCashEntries;
   const baseCurrency = activePortfolioCurrency;
   const { t } = useI18n();
   const { stealthMode } = useStealthMode();
   const { user } = useAuth();
   const { layoutTheme } = useTheme();
+
   const {
     totalCurrentEUR,
     totalCostEUR,
@@ -103,6 +123,39 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
     totalGainLoss,
     totalGainLossPercent,
   } = calculatePortfolioTotals(holdings, cashEntries, quotes, exchangeRates, baseCurrency);
+
+  const hasManualAssets = allCashEntries.some((c) => c.type && c.type !== "cash");
+
+  const netWorthTotals = useMemo(() => {
+    if (!hasManualAssets) return null;
+    return calculatePortfolioTotals(holdings, allCashEntries, quotes, exchangeRates, baseCurrency);
+  }, [hasManualAssets, holdings, allCashEntries, quotes, exchangeRates, baseCurrency]);
+
+  const netWorthAllocationSlices = useMemo(() => {
+    if (!hasManualAssets) return [];
+    return computeAllocationByType(holdings, allCashEntries, quotes, exchangeRates, baseCurrency);
+  }, [hasManualAssets, holdings, allCashEntries, quotes, exchangeRates, baseCurrency]);
+
+  const netWorthBreakdown = useMemo<BreakdownItem[]>(() => {
+    if (!hasManualAssets) return [];
+    const investmentTypes = new Set<HoldingAssetType>(["stock", "etf", "crypto"]);
+    const investmentSlices = netWorthAllocationSlices.filter((s) => investmentTypes.has(s.key as HoldingAssetType));
+    const investmentTotal = investmentSlices.reduce((sum, s) => sum + s.valueEUR, 0);
+
+    const items: BreakdownItem[] = [];
+    if (investmentTotal > 0) {
+      items.push({ key: "investments", label: t("investments"), color: "#6366f1", value: investmentTotal });
+    }
+    const manualTypes: ManualAssetType[] = ["real_estate", "savings", "pension", "cash"];
+    for (const type of manualTypes) {
+      const slice = netWorthAllocationSlices.find((s) => s.key === type);
+      if (slice && slice.valueEUR > 0) {
+        const meta = CATEGORY_META[type];
+        items.push({ key: type, label: t(meta.label as Parameters<typeof t>[0]), color: meta.color, value: slice.valueEUR });
+      }
+    }
+    return items;
+  }, [hasManualAssets, netWorthAllocationSlices, t]);
 
   const missingRateCurrencies = useMemo(() => {
     const missing = new Set<string>();
@@ -160,6 +213,11 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
   const valueLabel = formatStealthCurrency(totalCurrentEUR, baseCurrency, stealthMode);
   const costLabel = formatStealthCurrency(totalCostEUR, baseCurrency, stealthMode);
 
+  const primaryLabel = hasManualAssets ? t("totalNetWorth") : t("portfolioValue");
+  const primaryValue = hasManualAssets && netWorthTotals
+    ? formatStealthCurrency(netWorthTotals.totalCurrentEUR, baseCurrency, stealthMode)
+    : valueLabel;
+
   const aiReviewBtn = isPro ? (
     <button
       onClick={() => setReviewOpen(!reviewOpen)}
@@ -196,18 +254,83 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
     </div>
   ) : null;
 
+  const allocationBar = allocationSlices.length > 0 ? (
+    <>
+      <div className="flex h-1.5 rounded-full overflow-hidden mt-3 bg-gray-100 dark:bg-white/[0.04]">
+        {allocationSlices.map((s) => <div key={s.key} style={{ width: `${s.percent}%`, background: s.color }} />)}
+      </div>
+      <div className="flex gap-3 mt-1.5 flex-wrap" style={{ fontSize: "var(--text-label)" }}>
+        {allocationSlices.map((s) => (
+          <span key={s.key} className="text-gray-500 dark:text-slate-400">
+            <span style={{ color: s.color }}>●</span> {s.label} {formatPercent(s.percent)}
+          </span>
+        ))}
+      </div>
+    </>
+  ) : null;
+
+  const breakdownGrid = hasManualAssets && netWorthBreakdown.length > 0 ? (
+    <div className="grid grid-cols-2 gap-2 mt-3">
+      {netWorthBreakdown.map((item) => (
+        <div
+          key={item.key}
+          className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-gray-50/50 dark:bg-white/[0.03] border border-gray-100 dark:border-white/[0.04]"
+        >
+          <div className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ background: item.color }} />
+          <div className="min-w-0 flex-1">
+            <p className="text-gray-500 dark:text-slate-400 truncate" style={{ fontSize: "var(--text-label)" }}>{item.label}</p>
+          </div>
+          <p className="font-semibold text-gray-900 dark:text-white tabular-nums flex-shrink-0" style={{ fontSize: "var(--text-label)" }}>
+            {stealthMode ? "••••" : formatCurrency(item.value, baseCurrency)}
+          </p>
+        </div>
+      ))}
+    </div>
+  ) : null;
+
+  const secondaryStats = (
+    <div className="flex gap-5 flex-wrap" style={{ fontSize: "var(--text-body)" }}>
+      {hasManualAssets && (
+        <div>
+          <p className="text-gray-400 dark:text-slate-500 mb-0.5" style={{ fontSize: "var(--text-label)" }}>{t("portfolioValue")}</p>
+          <p className="font-semibold text-gray-700 dark:text-slate-200 tabular-nums">{valueLabel}</p>
+        </div>
+      )}
+      <div>
+        <p className="text-gray-400 dark:text-slate-500 mb-0.5" style={{ fontSize: "var(--text-label)" }}>{t("cost")}</p>
+        <p className="font-semibold text-gray-700 dark:text-slate-200 tabular-nums">{costLabel}</p>
+      </div>
+      <div>
+        <p className="text-gray-400 dark:text-slate-500 mb-0.5" style={{ fontSize: "var(--text-label)" }}>{t("totalGainLoss")}</p>
+        <p className={`font-semibold tabular-nums ${totalIsPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
+          {stealthMode ? "•••••" : `${totalIsPositive ? "+" : ""}${formatCurrency(totalGainLoss, baseCurrency)}`}
+        </p>
+      </div>
+      <div>
+        <p className="text-gray-400 dark:text-slate-500 mb-0.5" style={{ fontSize: "var(--text-label)" }}>{t("holdings")}</p>
+        <p className="font-semibold text-gray-700 dark:text-slate-200 tabular-nums">{holdingsCount}</p>
+      </div>
+    </div>
+  );
+
   /* ── TERMINAL: Dense inline stats, no card wrapper ─────────── */
   if (layoutTheme === "terminal") {
     return (
       <div className="border-b border-zinc-800 py-2 relative" data-testid="portfolio-summary-terminal" data-tour="summary">
         {isLoading && <div className="absolute top-0 left-0 right-0 h-px bg-emerald-500/50 animate-progress-bar" />}
         <div className="flex items-baseline gap-4 flex-wrap font-mono">
-          <span className={`text-xl font-semibold text-zinc-200 ${isLoading ? "animate-value-shimmer" : ""}`}>
-            {valueLabel}
-          </span>
+          <div>
+            <span className="text-[10px] uppercase tracking-wider text-zinc-600">{primaryLabel}</span>
+            <span className={`block font-semibold text-zinc-200 ${isLoading ? "animate-value-shimmer" : ""}`} style={{ fontSize: "var(--text-metric)" }}>
+              {primaryValue}
+            </span>
+          </div>
           <span className={`text-sm px-1.5 py-0.5 rounded ${dayIsPositive ? "text-green-400 bg-green-500/10" : "text-red-400 bg-red-500/10"}`}>
             {dayIsPositive ? "▲" : "▼"} {dayLabel}
           </span>
+          {hasManualAssets && (
+            <span className="text-xs text-zinc-600">portfolio <b className="text-zinc-500">{valueLabel}</b></span>
+          )}
           <span className="text-xs text-zinc-600">cost <b className="text-zinc-500">{costLabel}</b></span>
           <span className="text-xs text-zinc-600">gain <b className={totalIsPositive ? "text-green-400" : "text-red-400"}>{formatPercent(totalGainLossPercent)}</b></span>
           <span className="text-xs text-zinc-600">holdings <b className="text-zinc-500">{holdingsCount}</b></span>
@@ -231,8 +354,8 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
     return (
       <div className="bg-white border border-slate-200 rounded-[20px] p-7 shadow-sm relative" data-testid="portfolio-summary-canvas" data-tour="summary">
         {isLoading && <div className="absolute top-0 left-0 right-0 h-0.5 overflow-hidden rounded-t-[20px]"><div className="h-full w-1/3 bg-green-500/60 animate-progress-bar" /></div>}
-        <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">{t("portfolioValue")}</p>
-        <p className={`text-4xl font-bold text-slate-900 tracking-tight ${isLoading ? "animate-value-shimmer" : ""}`}>{valueLabel}</p>
+        <p className="font-semibold uppercase tracking-wider text-slate-400 mb-1" style={{ fontSize: "var(--text-label)" }}>{primaryLabel}</p>
+        <p className={`font-bold text-slate-900 tracking-tight ${isLoading ? "animate-value-shimmer" : ""}`} style={{ fontSize: "var(--text-hero)" }}>{primaryValue}</p>
         <div className="flex gap-2 mt-3">
           <span className={`text-sm font-semibold px-3 py-1 rounded-xl ${dayIsPositive ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"}`}>
             {dayIsPositive ? "▲" : "▼"} {dayLabel}
@@ -242,10 +365,14 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
           </span>
         </div>
         <div className="flex gap-7 mt-5 pt-4 border-t border-slate-100 flex-wrap">
+          {hasManualAssets && (
+            <div><p className="text-xs text-slate-400 mb-0.5">{t("portfolioValue")}</p><p className="text-base font-semibold text-slate-700">{valueLabel}</p></div>
+          )}
           <div><p className="text-xs text-slate-400 mb-0.5">{t("cost")}</p><p className="text-base font-semibold text-slate-700">{costLabel}</p></div>
           <div><p className="text-xs text-slate-400 mb-0.5">{t("totalGainLoss")}</p><p className={`text-base font-semibold ${totalIsPositive ? "text-green-600" : "text-red-500"}`}>{stealthMode ? "•••••" : `${totalIsPositive ? "+" : ""}${formatCurrency(totalGainLoss, baseCurrency)}`}</p></div>
           <div><p className="text-xs text-slate-400 mb-0.5">{t("holdings")}</p><p className="text-base font-semibold text-slate-700">{holdingsCount}</p></div>
         </div>
+        {breakdownGrid}
         {allocationSlices.length > 0 && (
           <>
             <div className="flex h-2 rounded-full overflow-hidden mt-4 bg-slate-100">
@@ -271,8 +398,8 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
       <div className="relative rounded-[20px] p-7 border border-white/5 overflow-hidden" style={{ background: "linear-gradient(180deg, rgba(34,197,94,0.04) 0%, transparent 100%)" }} data-testid="portfolio-summary-studio" data-tour="summary">
         <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full bg-emerald-500/[0.06] blur-2xl pointer-events-none" />
         {isLoading && <div className="absolute top-0 left-0 right-0 h-0.5 overflow-hidden rounded-t-[20px]"><div className="h-full w-1/3 bg-emerald-500/50 animate-progress-bar" /></div>}
-        <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-2">{t("portfolioValue")}</p>
-        <p className={`text-[42px] font-extrabold text-white tracking-tighter leading-none ${isLoading ? "animate-value-shimmer" : ""}`}>{valueLabel}</p>
+        <p className="font-semibold uppercase tracking-wider text-zinc-500 mb-2" style={{ fontSize: "var(--text-label)" }}>{primaryLabel}</p>
+        <p className={`font-extrabold text-white tracking-tighter leading-none ${isLoading ? "animate-value-shimmer" : ""}`} style={{ fontSize: "var(--text-hero)" }}>{primaryValue}</p>
         <div className="flex gap-2 mt-3">
           <span className={`font-mono text-xs font-semibold px-2.5 py-1 rounded-lg ${dayIsPositive ? "text-emerald-400 bg-emerald-500/10" : "text-red-400 bg-red-500/10"}`}>
             {dayIsPositive ? "▲" : "▼"} {dayLabel}
@@ -281,13 +408,15 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
             {formatPercent(totalGainLossPercent)} all time
           </span>
         </div>
-        {/* Chart placeholder area */}
-        <div className="w-full h-20 mt-5 rounded-lg" style={{ background: "linear-gradient(to top, transparent, rgba(34,197,94,0.04))" }} />
-        <div className="flex gap-6 mt-4 pt-3 border-t border-white/5 flex-wrap">
+        <div className="flex gap-6 mt-5 pt-3 border-t border-white/5 flex-wrap">
+          {hasManualAssets && (
+            <div><p className="text-xs text-zinc-500">{t("portfolioValue")}</p><p className="text-sm font-bold font-mono text-zinc-300">{valueLabel}</p></div>
+          )}
           <div><p className="text-xs text-zinc-500">{t("cost")}</p><p className="text-sm font-bold font-mono text-zinc-300">{costLabel}</p></div>
           <div><p className="text-xs text-zinc-500">{t("totalGainLoss")}</p><p className={`text-sm font-bold font-mono ${totalIsPositive ? "text-emerald-400" : "text-red-400"}`}>{stealthMode ? "•••••" : `${totalIsPositive ? "+" : ""}${formatCurrency(totalGainLoss, baseCurrency)}`}</p></div>
           <div><p className="text-xs text-zinc-500">{t("holdings")}</p><p className="text-sm font-bold font-mono text-zinc-300">{holdingsCount}</p></div>
         </div>
+        {breakdownGrid}
         {allocationSlices.length > 0 && (
           <>
             <div className="flex h-1.5 rounded-full overflow-hidden mt-3 bg-white/[0.03]">
@@ -307,7 +436,7 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
     );
   }
 
-  /* ── DEFAULT: Current card layout (unchanged) ──────────────── */
+  /* ── DEFAULT: Unified hero card with inline allocation ──────── */
   return (
     <div className="card px-5 py-4 relative" data-testid="portfolio-summary-default" data-tour="summary">
       {isLoading && (
@@ -316,19 +445,18 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
         </div>
       )}
       {missingRateBanner}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div className="flex items-center gap-4 flex-wrap">
-          <div>
-            <p
-              className={`text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white ${isLoading ? "animate-value-shimmer" : ""}`}
-              aria-label={stealthMode ? formatCurrency(totalCurrentEUR, baseCurrency) : undefined}
-            >
-              {valueLabel}
-            </p>
-            <p className="text-xs text-gray-400 dark:text-slate-500">
-              {t("cost")}: <span aria-label={stealthMode ? formatCurrency(totalCostEUR, baseCurrency) : undefined}>{costLabel}</span>
-            </p>
-          </div>
+      <div className="flex flex-col gap-3">
+        <div>
+          <p className="text-gray-400 dark:text-slate-500 font-medium uppercase tracking-wider mb-1" style={{ fontSize: "var(--text-label)" }}>{primaryLabel}</p>
+          <p
+            className={`font-bold text-gray-900 dark:text-white tabular-nums ${isLoading ? "animate-value-shimmer" : ""}`}
+            style={{ fontSize: "var(--text-hero)" }}
+            aria-label={stealthMode ? formatCurrency(hasManualAssets && netWorthTotals ? netWorthTotals.totalCurrentEUR : totalCurrentEUR, baseCurrency) : undefined}
+          >
+            {primaryValue}
+          </p>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
           <span
             className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold ${
               dayIsPositive
@@ -339,36 +467,38 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
           >
             {dayLabel}
           </span>
-        </div>
-
-        <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-slate-400">
-          <span className={`font-medium ${totalIsPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
+          <span className={`text-sm font-medium ${totalIsPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
             {formatPercent(totalGainLossPercent)} {t("totalGainLoss").toLowerCase()}
           </span>
-          <span className="text-gray-300 dark:text-slate-600">·</span>
-          <span>{holdingsCount} {t("holdings").toLowerCase()}</span>
-          {allocationSlices.length > 0 && (
-            <>
-              <span className="text-gray-300 dark:text-slate-600">·</span>
-              <div className="relative" ref={allocationRef}>
-                <button
-                  onClick={() => setAllocationOpen((v) => !v)}
-                  className="inline-flex items-center gap-1 text-xs font-medium text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded"
-                  aria-label={t("assetAllocation")}
-                  title={t("assetAllocation")}
-                >
-                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
-                    <path d="M22 12A10 10 0 0 0 12 2v10z" />
-                  </svg>
-                </button>
-                {allocationOpen && (
-                  <AllocationPopover slices={allocationSlices} title={t("assetAllocation")} stealthMode={stealthMode} baseCurrency={baseCurrency} />
-                )}
-              </div>
-            </>
+        </div>
+
+        <div className="flex gap-5 pt-3 border-t border-gray-100 dark:border-slate-700 flex-wrap" style={{ fontSize: "var(--text-body)" }}>
+          {hasManualAssets && (
+            <div>
+              <p className="text-gray-400 dark:text-slate-500 mb-0.5" style={{ fontSize: "var(--text-label)" }}>{t("portfolioValue")}</p>
+              <p className="font-semibold text-gray-700 dark:text-slate-200 tabular-nums">{valueLabel}</p>
+            </div>
           )}
-          <span className="text-gray-300 dark:text-slate-600">·</span>
+          <div>
+            <p className="text-gray-400 dark:text-slate-500 mb-0.5" style={{ fontSize: "var(--text-label)" }}>{t("cost")}</p>
+            <p className="font-semibold text-gray-700 dark:text-slate-200 tabular-nums">{costLabel}</p>
+          </div>
+          <div>
+            <p className="text-gray-400 dark:text-slate-500 mb-0.5" style={{ fontSize: "var(--text-label)" }}>{t("totalGainLoss")}</p>
+            <p className={`font-semibold tabular-nums ${totalIsPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
+              {stealthMode ? "•••••" : `${totalIsPositive ? "+" : ""}${formatCurrency(totalGainLoss, baseCurrency)}`}
+            </p>
+          </div>
+          <div>
+            <p className="text-gray-400 dark:text-slate-500 mb-0.5" style={{ fontSize: "var(--text-label)" }}>{t("holdings")}</p>
+            <p className="font-semibold text-gray-700 dark:text-slate-200 tabular-nums">{holdingsCount}</p>
+          </div>
+        </div>
+
+        {breakdownGrid}
+        {allocationBar}
+
+        <div className="flex items-center gap-3 pt-2">
           {aiReviewBtn}
           <BrokerSyncDot />
         </div>

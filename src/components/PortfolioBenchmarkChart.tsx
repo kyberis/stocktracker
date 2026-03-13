@@ -268,20 +268,20 @@ export default function PortfolioBenchmarkChart() {
       </div>
 
       {loading ? (
-        <div className="h-[320px] flex items-center justify-center">
+        <div className="flex items-center justify-center" style={{ aspectRatio: "2.8/1", maxHeight: "min(320px, 45vh)" }}>
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500" />
         </div>
       ) : error ? (
-        <div className="h-[320px] flex items-center justify-center text-sm text-amber-600 dark:text-amber-400">
+        <div className="flex items-center justify-center text-sm text-amber-600 dark:text-amber-400" style={{ aspectRatio: "2.8/1", maxHeight: "min(320px, 45vh)" }}>
           {error}
         </div>
       ) : data.length === 0 ? (
-        <div className="h-[320px] flex items-center justify-center text-sm text-gray-400 dark:text-slate-500">
+        <div className="flex items-center justify-center text-sm text-gray-400 dark:text-slate-500" style={{ aspectRatio: "2.8/1", maxHeight: "min(320px, 45vh)" }}>
           {t("benchmarkUnavailable")}
         </div>
       ) : (
-        <div role="img" aria-label="Portfolio benchmark comparison chart">
-        <ResponsiveContainer width="100%" height={320}>
+        <div role="img" aria-label="Portfolio benchmark comparison chart" style={{ aspectRatio: "2.8/1", maxHeight: "min(320px, 45vh)" }}>
+        <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
             <XAxis
               dataKey="date"

@@ -27,7 +27,8 @@ export type SubscriptionFeature =
   | "event-calendar-economic"
   | "event-calendar-ipo"
   | "net-worth"
-  | "screener";
+  | "screener"
+  | "tax-reports";
 
 export type AlertCondition = "above" | "below";
 export type AlertType = "threshold" | "percent_change";
@@ -69,6 +70,23 @@ export interface DeviceNotification {
   read: boolean;
   createdAt: string;
 }
+
+export type NotificationType = "welcome" | "upgrade" | "downgrade" | "admin" | "info";
+
+export interface AppNotification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  titleEs: string;
+  message: string;
+  messageEs: string;
+  link: string;
+  linkLabel: string;
+  linkLabelEs: string;
+  read: boolean;
+  createdAt: string;
+}
+
 export type ManualAssetType = "cash" | "real_estate" | "savings" | "pension";
 
 export type HoldingAssetType = "stock" | "etf" | "crypto";

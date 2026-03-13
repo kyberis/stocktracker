@@ -28,6 +28,7 @@ import {
   listAccounts,
   listBrokerages,
   removeBrokerageConnection,
+  refreshBrokerageConnection,
   SnapTradeClientError,
 } from "@/lib/snaptrade-client";
 import type { ExtractedTransaction } from "@/hooks/import-types";
@@ -312,6 +313,20 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
         }
       }
 
+      // If a broker returned 0 activities and has no sync record at all,
+      // trigger a one-time refresh so SnapTrade starts pulling transaction history.
+      const refreshedBrokerIds: string[] = [];
+      if (allTransactions.length === 0) {
+        const allSyncedIds = new Set(brokerSyncs.map((s) => s.brokerageAuthorizationId));
+        const neverSyncedBrokerIds = [...seenBrokerIds].filter((id) => !allSyncedIds.has(id));
+        for (const bId of neverSyncedBrokerIds) {
+          const brokerInfo = fetchedBrokers.find((b) => b.id === bId);
+          await refreshBrokerageConnection(conn.snapTradeUserId, userSecret, bId);
+          await upsertSnapTradeBrokerSync(session.userId, bId, brokerInfo?.name || "Unknown");
+          refreshedBrokerIds.push(bId);
+        }
+      }
+
       const existingRefs = await listTransactionSourceRefs(session.userId);
       const deduped = allTransactions.filter(
         (tx) => !tx.sourceRef || !existingRefs.has(tx.sourceRef),
@@ -386,7 +401,12 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
         await setSnapTradeNeedsAttention(session.userId, false);
       }
 
-      return NextResponse.json({ transactions: deduped, summary, cashImported });
+      return NextResponse.json({
+        transactions: deduped,
+        summary,
+        cashImported,
+        ...(refreshedBrokerIds.length > 0 ? { syncTriggered: true, refreshedBrokerIds } : {}),
+      });
     } catch (err) {
       const msg = err instanceof SnapTradeClientError ? err.message : "Failed to fetch from SnapTrade.";
       portfolioImportsTotal.inc({ source: "snaptrade", status: "error" });

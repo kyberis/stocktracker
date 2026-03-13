@@ -40,8 +40,10 @@ const AdSlot = dynamic(() => import("./AdSlot"), { ssr: false });
 const EventCalendar = dynamic(() => import("./EventCalendar"), { ssr: false });
 const UpcomingEarnings = dynamic(() => import("./UpcomingEarnings"), { ssr: false });
 const AddManualAssetModal = dynamic(() => import("./AddManualAssetModal"), { ssr: false });
-import NetWorthSummary from "./NetWorthSummary";
 import TierFeatureBadge from "./TierFeatureBadge";
+import SampleDataBanner from "./SampleDataBanner";
+import SecureAccountPrompt from "./SecureAccountPrompt";
+import { HeroSkeleton, TableSkeleton, ChartSkeleton } from "./Skeleton";
 
 
 type DashboardTab = "portfolio" | "crypto" | "diversification" | "dividends" | "metrics" | "growth" | "events" | "news";
@@ -330,6 +332,8 @@ export default function Dashboard() {
 
         <SnapTradeReconnectBanner />
         <LeafPromoBanner />
+        <SampleDataBanner />
+        <SecureAccountPrompt />
 
         {activeTab === "portfolio" && (
           <div
@@ -337,12 +341,12 @@ export default function Dashboard() {
             id="tabpanel-portfolio"
             aria-labelledby="tab-portfolio"
             tabIndex={0}
-            className="focus-visible:outline-none space-y-6"
+            className="focus-visible:outline-none space-y-6 animate-tab-fade"
           >
             {isLoading && holdingsCount === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 gap-3">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" />
-                <span className="text-sm text-gray-500 dark:text-slate-400">{t("loading")}</span>
+              <div className="space-y-6">
+                <HeroSkeleton />
+                <TableSkeleton rows={4} />
               </div>
             ) : holdingsCount === 0 ? (
               <EmptyPortfolio
@@ -381,8 +385,7 @@ export default function Dashboard() {
                   onChange={setBrokerFilter}
                 />
 
-                <NetWorthSummary holdings={filteredHoldings} cashEntries={filteredCashEntries} />
-                <PortfolioSummary holdings={filteredHoldings} cashEntries={investmentCashEntries} />
+                <PortfolioSummary holdings={filteredHoldings} cashEntries={investmentCashEntries} allCashEntries={filteredCashEntries} />
                 <AdSlot slot="dashboard-summary" format="horizontal" />
                 <PortfolioTable holdings={filteredHoldings} onAddStock={() => setShowAddModal(true)} />
                 <UpcomingEarnings onNavigateToEvents={() => handleTabChange("events")} />
@@ -408,13 +411,9 @@ export default function Dashboard() {
             id="tabpanel-crypto"
             aria-labelledby="tab-crypto"
             tabIndex={0}
-            className="focus-visible:outline-none"
+            className="focus-visible:outline-none animate-tab-fade"
           >
-            <Suspense fallback={
-              <div className="card px-6 py-10 flex items-center justify-center gap-3 text-gray-400 dark:text-slate-500 text-sm">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-amber-500" />
-              </div>
-            }>
+            <Suspense fallback={<ChartSkeleton />}>
               <CryptoPortfolioTab holdings={filteredHoldings} />
             </Suspense>
           </div>
@@ -426,12 +425,10 @@ export default function Dashboard() {
             id="tabpanel-diversification"
             aria-labelledby="tab-diversification"
             tabIndex={0}
-            className="focus-visible:outline-none space-y-6"
+            className="focus-visible:outline-none space-y-6 animate-tab-fade"
           >
             <Suspense fallback={
-              <div className="card px-6 py-10 flex items-center justify-center gap-3 text-gray-400 dark:text-slate-500 text-sm">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-500" />
-              </div>
+              <ChartSkeleton />
             }>
               <TaxonomyView />
               <RebalancingView />
@@ -445,12 +442,10 @@ export default function Dashboard() {
             id="tabpanel-dividends"
             aria-labelledby="tab-dividends"
             tabIndex={0}
-            className="focus-visible:outline-none"
+            className="focus-visible:outline-none animate-tab-fade"
           >
             <Suspense fallback={
-              <div className="card px-6 py-10 flex items-center justify-center gap-3 text-gray-400 dark:text-slate-500 text-sm">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-500" />
-              </div>
+              <ChartSkeleton />
             }>
               <DividendSummary />
             </Suspense>
@@ -463,12 +458,10 @@ export default function Dashboard() {
             id="tabpanel-metrics"
             aria-labelledby="tab-metrics"
             tabIndex={0}
-            className="focus-visible:outline-none"
+            className="focus-visible:outline-none animate-tab-fade"
           >
             <Suspense fallback={
-              <div className="card px-6 py-10 flex items-center justify-center gap-3 text-gray-400 dark:text-slate-500 text-sm">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-500" />
-              </div>
+              <ChartSkeleton />
             }>
               <MetricsTab holdings={filteredHoldings} cashEntries={investmentCashEntries} />
             </Suspense>
@@ -481,12 +474,10 @@ export default function Dashboard() {
             id="tabpanel-growth"
             aria-labelledby="tab-growth"
             tabIndex={0}
-            className="focus-visible:outline-none"
+            className="focus-visible:outline-none animate-tab-fade"
           >
             <Suspense fallback={
-              <div className="card px-6 py-10 flex items-center justify-center gap-3 text-gray-400 dark:text-slate-500 text-sm">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-500" />
-              </div>
+              <ChartSkeleton />
             }>
               <GrowthTab />
             </Suspense>
@@ -499,12 +490,10 @@ export default function Dashboard() {
             id="tabpanel-events"
             aria-labelledby="tab-events"
             tabIndex={0}
-            className="focus-visible:outline-none"
+            className="focus-visible:outline-none animate-tab-fade"
           >
             <Suspense fallback={
-              <div className="card px-6 py-10 flex items-center justify-center gap-3 text-gray-400 dark:text-slate-500 text-sm">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-500" />
-              </div>
+              <ChartSkeleton />
             }>
               <EventCalendar />
             </Suspense>
@@ -517,12 +506,10 @@ export default function Dashboard() {
             id="tabpanel-news"
             aria-labelledby="tab-news"
             tabIndex={0}
-            className="focus-visible:outline-none"
+            className="focus-visible:outline-none animate-tab-fade"
           >
             <Suspense fallback={
-              <div className="card px-6 py-10 flex items-center justify-center gap-3 text-gray-400 dark:text-slate-500 text-sm">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-500" />
-              </div>
+              <ChartSkeleton />
             }>
               <PortfolioNewsFeed />
             </Suspense>

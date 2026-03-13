@@ -19,6 +19,8 @@ import { sendWelcomeEmail } from "@/lib/email";
 import { ensureSessionSecret } from "@/lib/auth/session-secret";
 import { authEventsTotal } from "@/lib/metrics";
 import { isBlockedEmailDomain } from "@/lib/schemas";
+import { createNotification } from "@/lib/db";
+import { welcomeNotification } from "@/lib/notification-templates";
 
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo";
@@ -277,6 +279,9 @@ async function handleLoginFlow(
       authEventsTotal.inc({ event: "signup" });
       sendWelcomeEmail(googleUser.email.toLowerCase(), googleUser.name || "").catch((err) =>
         console.error("Welcome email failed:", err),
+      );
+      createNotification(publicUser.id, welcomeNotification()).catch((err) =>
+        console.error("Welcome notification failed:", err),
       );
     }
 

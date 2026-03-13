@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { LayoutTheme, SubscriptionPlan } from "@/lib/types";
 import { canAccessTheme, getThemeUpgradeTarget, planDisplayName } from "@/lib/subscription";
 import { useSettings } from "@/lib/settings-context";
@@ -67,7 +67,15 @@ export default function ThemeSelector() {
   const { t } = useI18n();
   const plan = (user?.plan ?? "free") as SubscriptionPlan;
   const [selected, setSelected] = useState<LayoutTheme>(dashboardTheme);
+  const [isMobile, setIsMobile] = useState(false);
   const hasChanges = selected !== dashboardTheme;
+
+  useEffect(() => {
+    setIsMobile(window.innerWidth < 768);
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", onResize, { passive: true });
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   function handleSelect(theme: LayoutTheme) {
     if (!canAccessTheme(theme, plan)) return;
@@ -79,10 +87,12 @@ export default function ThemeSelector() {
     setDashboardTheme(selected);
   }
 
+  const visibleThemes = isMobile ? THEMES.filter((th) => th.id !== "studio") : THEMES;
+
   return (
     <div>
       <div className="grid grid-cols-2 gap-3">
-        {THEMES.map((theme) => {
+        {visibleThemes.map((theme) => {
           const active = selected === theme.id;
           const locked = !canAccessTheme(theme.id, plan);
 

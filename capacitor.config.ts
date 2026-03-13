@@ -7,6 +7,12 @@ const config: CapacitorConfig = {
   server: {
     url: process.env.CAPACITOR_SERVER_URL || "https://trefolio.app",
     cleartext: process.env.CAPACITOR_SERVER_URL?.startsWith("http://") ?? false,
+    allowNavigation: [
+      "accounts.google.com",
+      "appleid.apple.com",
+      "*.google.com",
+      "*.apple.com",
+    ],
   },
   plugins: {
     SplashScreen: {

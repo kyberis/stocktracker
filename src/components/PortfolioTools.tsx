@@ -18,12 +18,14 @@ const AccountsManager = dynamic(() => import("./AccountsManager"), { ssr: false 
 const Watchlist = dynamic(() => import("./Watchlist"), { ssr: false });
 const PriceAlerts = dynamic(() => import("./PriceAlerts"), { ssr: false });
 const StockScreener = dynamic(() => import("./StockScreener"), { ssr: false });
-type Tab = "transactions" | "dividends" | "performance" | "taxonomy" | "rebalancing" | "accounts" | "watchlist" | "alerts" | "screener";
+const TaxReport = dynamic(() => import("./TaxReport"), { ssr: false });
+type Tab = "transactions" | "dividends" | "performance" | "taxonomy" | "rebalancing" | "accounts" | "watchlist" | "alerts" | "screener" | "tax";
 
 const TIER_BADGE_MAP: Partial<Record<Tab, "starter" | "pro">> = {
   performance: "starter",
   alerts: "starter",
   screener: "pro",
+  tax: "pro",
 };
 
 const ALL_TABS: { key: Tab; icon: string }[] = [
@@ -36,6 +38,7 @@ const ALL_TABS: { key: Tab; icon: string }[] = [
   { key: "watchlist", icon: "M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" },
   { key: "alerts", icon: "M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" },
   { key: "screener", icon: "M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" },
+  { key: "tax", icon: "M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" },
 ];
 
 interface PortfolioToolsProps {
@@ -72,6 +75,7 @@ export default function PortfolioTools({ initialTab = "transactions" }: Portfoli
     watchlist: toolWatchlistEnabled,
     alerts: alertsEnabled,
     screener: true,
+    tax: true,
   };
 
   const visibleTabs = useMemo(() => {
@@ -108,6 +112,7 @@ export default function PortfolioTools({ initialTab = "transactions" }: Portfoli
       watchlist: t("watchlist"),
       alerts: t("priceAlerts"),
       screener: t("screenerNav"),
+      tax: t("taxReportsNav"),
     };
     return map[key];
   };
@@ -177,6 +182,7 @@ export default function PortfolioTools({ initialTab = "transactions" }: Portfoli
             {activeTab === "watchlist" && <Watchlist />}
             {activeTab === "alerts" && <PriceAlerts />}
             {activeTab === "screener" && <StockScreener />}
+            {activeTab === "tax" && <TaxReport />}
           </div>
         </Suspense>
 
