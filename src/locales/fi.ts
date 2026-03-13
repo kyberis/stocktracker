@@ -744,6 +744,8 @@ const fi: TranslationStrings = {
   taxReportsExportGains: "Export Gains (CSV)",
   taxReportsExportDividends: "Export Dividends (CSV)",
   taxReportsExportSummary: "Export Summary (CSV)",
+  taxReportsPortfolio: "Salkku",
+  taxReportsAllPortfolios: "Kaikki salkut",
   taxReportsAccountType: "Tilityyppi",
   taxReportsRegularAccount: "Tavallinen tili",
   taxReportsNhrRegime: "NHR-järjestelmä",

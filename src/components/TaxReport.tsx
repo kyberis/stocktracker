@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth-context";
+import { usePortfolio } from "@/lib/portfolio-context";
 import TierFeatureBadge from "./TierFeatureBadge";
 import type {
   TaxReport as TaxReportType,
@@ -46,6 +47,7 @@ function pct(n: number): string {
 export default function TaxReport() {
   const { t, language } = useI18n();
   const { user } = useAuth();
+  const { portfolios } = usePortfolio();
 
   const [report, setReport] = useState<TaxReportType | null>(null);
   const [loading, setLoading] = useState(false);
@@ -54,22 +56,26 @@ export default function TaxReport() {
   const currentYear = new Date().getFullYear();
   const [taxYear, setTaxYear] = useState(currentYear - 1);
   const [country, setCountry] = useState<TaxCountry>("DE");
-  const [countrySetFromProfile, setCountrySetFromProfile] = useState(false);
+  const [countryResolved, setCountryResolved] = useState(false);
   const [filingStatus, setFilingStatus] = useState<"single" | "joint">("single");
   const [italyRegime, setItalyRegime] = useState<"dichiarativo" | "amministrato">("dichiarativo");
   const [swedenAccountType, setSwedenAccountType] = useState<"isk" | "kf" | "regular">("regular");
   const [portugalNhr, setPortugalNhr] = useState(false);
   const [swissCanton, setSwissCanton] = useState("ZH");
+  const [portfolioId, setPortfolioId] = useState<string>("all");
 
-  // Sync country from user's tax residency once profile loads
+  // Resolve country from user's tax residency once profile loads, then mark resolved.
+  // If user has no taxResidency, mark resolved after user loads (keeps DE default).
   useEffect(() => {
-    if (countrySetFromProfile || !user?.taxResidency) return;
-    const upper = user.taxResidency.toUpperCase() as TaxCountry;
-    if (TAX_COUNTRIES.includes(upper)) {
-      setCountry(upper);
-      setCountrySetFromProfile(true);
+    if (countryResolved || !user) return;
+    if (user.taxResidency) {
+      const upper = user.taxResidency.toUpperCase() as TaxCountry;
+      if (TAX_COUNTRIES.includes(upper)) {
+        setCountry(upper);
+      }
     }
-  }, [user?.taxResidency, countrySetFromProfile]);
+    setCountryResolved(true);
+  }, [user, countryResolved]);
 
   const [aiSummary, setAiSummary] = useState<string>("");
   const [aiLoading, setAiLoading] = useState(false);
@@ -91,6 +97,9 @@ export default function TaxReport() {
         portugalNhr: String(portugalNhr),
         swissCanton,
       });
+      if (portfolioId !== "all") {
+        params.set("portfolioId", portfolioId);
+      }
       const res = await fetch(`/api/tax/report?${params}`);
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
@@ -103,13 +112,14 @@ export default function TaxReport() {
     } finally {
       setLoading(false);
     }
-  }, [taxYear, country, filingStatus, italyRegime, swedenAccountType, portugalNhr, swissCanton]);
+  }, [taxYear, country, filingStatus, italyRegime, swedenAccountType, portugalNhr, swissCanton, portfolioId]);
 
+  // Auto-fetch once country is resolved from profile (avoids the DE-default race)
   useEffect(() => {
-    if (user?.plan === "pro") {
+    if (user?.plan === "pro" && countryResolved) {
       fetchReport();
     }
-  }, [fetchReport, user?.plan]);
+  }, [fetchReport, user?.plan, countryResolved]);
 
   /* ── AI Tax Assistant (Phase 4) ────────────────────────── */
 
@@ -221,6 +231,18 @@ export default function TaxReport() {
             ))}
           </select>
         </div>
+
+        {portfolios.length > 1 && (
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-medium text-gray-500 dark:text-slate-400">{t("taxReportsPortfolio")}</label>
+            <select value={portfolioId} onChange={(e) => setPortfolioId(e.target.value)} className="text-sm rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white px-3 py-1.5">
+              <option value="all">{t("taxReportsAllPortfolios")}</option>
+              {portfolios.map((p) => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
 
         <div className="flex items-center gap-2">
           <label className="text-xs font-medium text-gray-500 dark:text-slate-400">{t("taxReportsCountry")}</label>

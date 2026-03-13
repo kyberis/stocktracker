@@ -744,6 +744,8 @@ const sv: TranslationStrings = {
   taxReportsExportGains: "Export Gains (CSV)",
   taxReportsExportDividends: "Export Dividends (CSV)",
   taxReportsExportSummary: "Export Summary (CSV)",
+  taxReportsPortfolio: "Portfölj",
+  taxReportsAllPortfolios: "Alla portföljer",
   taxReportsAccountType: "Kontotyp",
   taxReportsRegularAccount: "Vanligt konto",
   taxReportsNhrRegime: "NHR-regime",

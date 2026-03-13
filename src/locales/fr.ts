@@ -746,6 +746,8 @@ const fr: TranslationStrings = {
   taxReportsExportGains: "Export Gains (CSV)",
   taxReportsExportDividends: "Export Dividends (CSV)",
   taxReportsExportSummary: "Export Summary (CSV)",
+  taxReportsPortfolio: "Portefeuille",
+  taxReportsAllPortfolios: "Tous les portefeuilles",
   taxReportsAccountType: "Type de compte",
   taxReportsRegularAccount: "Compte régulier",
   taxReportsNhrRegime: "Régime NHR",

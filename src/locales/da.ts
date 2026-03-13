@@ -744,6 +744,8 @@ const da: TranslationStrings = {
   taxReportsExportGains: "Export Gains (CSV)",
   taxReportsExportDividends: "Export Dividends (CSV)",
   taxReportsExportSummary: "Export Summary (CSV)",
+  taxReportsPortfolio: "Portefølje",
+  taxReportsAllPortfolios: "Alle porteføljer",
   taxReportsAccountType: "Kontotype",
   taxReportsRegularAccount: "Almindelig konto",
   taxReportsNhrRegime: "NHR-ordning",

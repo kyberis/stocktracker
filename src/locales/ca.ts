@@ -744,6 +744,8 @@ const ca: TranslationStrings = {
   taxReportsExportGains: "Export Gains (CSV)",
   taxReportsExportDividends: "Export Dividends (CSV)",
   taxReportsExportSummary: "Export Summary (CSV)",
+  taxReportsPortfolio: "Portfolio",
+  taxReportsAllPortfolios: "All Portfolios",
   taxReportsAccountType: "Account Type",
   taxReportsRegularAccount: "Regular Account",
   taxReportsNhrRegime: "NHR Regime",
