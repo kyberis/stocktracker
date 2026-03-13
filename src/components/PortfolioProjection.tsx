@@ -175,7 +175,13 @@ export default function PortfolioProjection({ holdings: holdingsProp, cashEntrie
   const bestLine = showContribLine ? "withContributions" : showDividendLine ? "withDividends" : "base";
 
   const goalYearInfo = useMemo(() => {
-    if (goalTarget <= 0 || projectionData.length < 2) return null;
+    if (goalTarget <= 0 || totals.totalCurrentEUR <= 0) return null;
+
+    if (totals.totalCurrentEUR >= goalTarget) {
+      return { reached: true as const, withinHorizon: true, years: 0, months: 0 };
+    }
+
+    // Check within the chart data first
     for (let i = 1; i < projectionData.length; i++) {
       const prev = projectionData[i - 1][bestLine as keyof ProjectionPoint] as number;
       const curr = projectionData[i][bestLine as keyof ProjectionPoint] as number;
@@ -184,11 +190,33 @@ export default function PortfolioProjection({ holdings: holdingsProp, cashEntrie
         const exactYears = (i - 1) + fraction;
         const years = Math.floor(exactYears);
         const months = Math.round((exactYears - years) * 12);
-        return { reached: true as const, years, months, exactYears };
+        return { reached: true as const, withinHorizon: true, years, months };
       }
     }
-    return { reached: false as const, horizon };
-  }, [projectionData, goalTarget, bestLine, horizon]);
+
+    // Extrapolate beyond the horizon to find the actual year
+    const rate = growthRate / 100;
+    const divYield = weightedDividendYield;
+    let value = projectionData.length > 0
+      ? (projectionData[projectionData.length - 1][bestLine as keyof ProjectionPoint] as number)
+      : totals.totalCurrentEUR;
+    const maxExtraYears = 200;
+
+    for (let y = horizon + 1; y <= horizon + maxExtraYears; y++) {
+      const divIncome = value * divYield;
+      value = (value + (reinvestDividends ? divIncome : 0)) * (1 + rate) + yearlyContribution;
+      if (value >= goalTarget) {
+        const prevValue = (value - yearlyContribution) / (1 + rate) - (reinvestDividends ? (value - yearlyContribution) / (1 + rate) * divYield : 0);
+        const fraction = prevValue < goalTarget ? (goalTarget - prevValue) / (value - prevValue) : 0;
+        const exactYears = (y - 1) + fraction;
+        const years = Math.floor(exactYears);
+        const months = Math.round((exactYears - years) * 12);
+        return { reached: true as const, withinHorizon: false, years, months };
+      }
+    }
+
+    return { reached: false as const, withinHorizon: false, years: 0, months: 0 };
+  }, [projectionData, goalTarget, bestLine, horizon, growthRate, weightedDividendYield, reinvestDividends, yearlyContribution, totals.totalCurrentEUR]);
 
   const goalProgress = goalTarget > 0 ? Math.min(100, (totals.totalCurrentEUR / goalTarget) * 100) : 0;
 
@@ -269,21 +297,35 @@ export default function PortfolioProjection({ holdings: holdingsProp, cashEntrie
               />
             </div>
           </div>
-          {goalTarget > 0 && (
+          {goalTarget > 0 && goalYearInfo && (
             <div className="text-right shrink-0">
-              {goalYearInfo?.reached ? (
+              {goalYearInfo.reached && goalYearInfo.years === 0 && goalYearInfo.months === 0 ? (
                 <div>
                   <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                    {t("goalBannerReached")}
+                  </p>
+                  <p className="text-[10px] text-gray-500 dark:text-slate-400 mt-0.5">
+                    {t("projGoalProgress").replace("{percent}", goalProgress.toFixed(0))}
+                  </p>
+                </div>
+              ) : goalYearInfo.reached ? (
+                <div>
+                  <p className={`text-xs font-semibold ${goalYearInfo.withinHorizon ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}`}>
                     {t("projGoalReachedExact").replace("{years}", String(goalYearInfo.years)).replace("{months}", String(goalYearInfo.months))}
                   </p>
+                  {!goalYearInfo.withinHorizon && (yearlyContribution > 0 || reinvestDividends) && (
+                    <p className="text-[10px] text-gray-500 dark:text-slate-400 mt-0.5">
+                      {t("projGoalWithPlan")}
+                    </p>
+                  )}
                   <p className="text-[10px] text-gray-500 dark:text-slate-400 mt-0.5">
                     {t("projGoalProgress").replace("{percent}", goalProgress.toFixed(0))}
                   </p>
                 </div>
               ) : (
                 <div>
-                  <p className="text-xs font-semibold text-amber-600 dark:text-amber-400">
-                    {t("projGoalNotReached").replace("{horizon}", String(horizon))}
+                  <p className="text-xs font-semibold text-red-500 dark:text-red-400">
+                    {t("projGoalNotReached")}
                   </p>
                   <p className="text-[10px] text-gray-500 dark:text-slate-400 mt-0.5">
                     {t("projGoalProgress").replace("{percent}", goalProgress.toFixed(0))}

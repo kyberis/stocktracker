@@ -38,7 +38,8 @@ export default function GoalProgressBanner({ holdings: holdingsProp, cashEntries
     if (rate <= 0) return null;
     let value = totals.totalCurrentEUR;
     const yearly = goal.yearlyContribution;
-    for (let y = 1; y <= goal.horizon; y++) {
+    const maxYears = Math.max(goal.horizon, 200);
+    for (let y = 1; y <= maxYears; y++) {
       value = value * (1 + rate) + yearly;
       if (value >= goal.targetAmount) {
         const prev = (value - yearly) / (1 + rate);
