@@ -510,7 +510,7 @@ if (user.plan !== "pro") return <ProCompareCard reason="..." />;`,
   {
     id: "release-notes",
     name: "Release Notes",
-    description: "Versioned changelog with EN/ES support displayed in WhatsNewModal.",
+    description: "Versioned changelog with EN/ES support displayed at /releasenotes and linked from the app footer.",
     code: `// src/lib/release-notes.ts
 {
   version: "0.23.0",
@@ -519,7 +519,7 @@ if (user.plan !== "pro") return <ProCompareCard reason="..." />;`,
   titleEs: "Vista de Cartera Simplificada",
   changes: [{ type: "feature", text: "...", textEs: "..." }],
 }`,
-    usedIn: ["WhatsNewModal", "Landing page"],
+    usedIn: ["/releasenotes page", "App footer", "Landing page"],
   },
 ];
 

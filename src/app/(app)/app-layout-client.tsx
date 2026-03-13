@@ -16,7 +16,29 @@ import NativePushBridge from "@/components/NativePushBridge";
 import DeviceInterestEnroller from "@/components/DeviceInterestEnroller";
 import ThemeWizard from "@/components/ThemeWizard";
 import EmailVerificationBanner from "@/components/EmailVerificationBanner";
+import { CURRENT_VERSION } from "@/lib/release-notes";
+import Link from "next/link";
 import type { LayoutTheme } from "@/lib/types";
+
+function AppFooter() {
+  return (
+    <footer className="hidden sm:flex items-center justify-center gap-3 py-3 text-[11px] text-gray-400 dark:text-slate-500">
+      <span>&copy; {new Date().getFullYear()} trefolio</span>
+      <span className="opacity-40">·</span>
+      <Link href="/releasenotes" className="hover:text-gray-600 dark:hover:text-slate-300 transition-colors">
+        v{CURRENT_VERSION} &mdash; What&apos;s New
+      </Link>
+      <span className="opacity-40">·</span>
+      <Link href="/privacy" className="hover:text-gray-600 dark:hover:text-slate-300 transition-colors">
+        Privacy
+      </Link>
+      <span className="opacity-40">·</span>
+      <Link href="/terms" className="hover:text-gray-600 dark:hover:text-slate-300 transition-colors">
+        Terms
+      </Link>
+    </footer>
+  );
+}
 
 function AppShell({ children }: { children: React.ReactNode }) {
   const { layoutTheme } = useTheme();
@@ -30,6 +52,7 @@ function AppShell({ children }: { children: React.ReactNode }) {
           <EmailVerificationBanner />
           <MarketTickerBar />
           <main id="main-content">{children}</main>
+          <AppFooter />
           <MobileTabBar />
           <InstallPrompt />
           <MarketMoveToast />
@@ -47,6 +70,7 @@ function AppShell({ children }: { children: React.ReactNode }) {
       <MarketTickerBar />
       <AppNav />
       <main id="main-content">{children}</main>
+      <AppFooter />
       <MobileTabBar />
       <InstallPrompt />
       <MarketMoveToast />

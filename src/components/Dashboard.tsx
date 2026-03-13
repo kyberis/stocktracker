@@ -6,7 +6,6 @@ import PortfolioSummary from "./PortfolioSummary";
 import MarketAndCash from "./MarketAndCash";
 import PortfolioTable from "./PortfolioTable";
 import BrokerFilter from "./BrokerFilter";
-import { useWhatsNewAutoShow } from "./WhatsNewModal";
 import DashboardToolbar from "./DashboardToolbar";
 import { useI18n } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/portfolio-context";
@@ -29,7 +28,6 @@ const AddStockModal = dynamic(() => import("./AddStockModal"), { ssr: false });
 const SettingsModal = dynamic(() => import("./SettingsModal"), { ssr: false });
 const ImportPortfolioModal = dynamic(() => import("./ImportPortfolioModal"), { ssr: false });
 const ResetPortfolioModal = dynamic(() => import("./ResetPortfolioModal"), { ssr: false });
-const WhatsNewModal = dynamic(() => import("./WhatsNewModal"), { ssr: false });
 const FeedbackModal = dynamic(() => import("./FeedbackModal"), { ssr: false });
 const ProCompareCard = dynamic(() => import("./ProCompareCard"), { ssr: false });
 const LeafPromoBanner = dynamic(() => import("./LeafPromoBanner"), { ssr: false });
@@ -136,12 +134,10 @@ export default function Dashboard() {
   const [showSettings, setShowSettings] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [showReset, setShowReset] = useState(false);
-  const [showWhatsNew, setShowWhatsNew] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [activeTab, setActiveTab] = useState<DashboardTab>("portfolio");
   const [brokerFilter, setBrokerFilter] = useState<string>("all");
   const [accounts, setAccounts] = useState<Account[]>([]);
-  const { showWhatsNew: autoShowWhatsNew, dismissWhatsNew } = useWhatsNewAutoShow();
   const { t } = useI18n();
   const { holdings, cashEntries, isLoading, refreshHoldings, refreshQuotes, activePortfolioId } = usePortfolio();
   const { user, isLoading: authLoading } = useAuth();
@@ -180,8 +176,6 @@ export default function Dashboard() {
     await refreshHoldings();
     await refreshQuotes();
   }, [refreshHoldings, refreshQuotes]);
-
-  const whatsNewOpen = showWhatsNew || autoShowWhatsNew;
 
   const isPro = user?.plan === "pro";
   const holdingsCount = holdings.length;
@@ -557,16 +551,6 @@ export default function Dashboard() {
         <ResetPortfolioModal
           isOpen={showReset}
           onClose={() => setShowReset(false)}
-        />
-      )}
-
-      {whatsNewOpen && (
-        <WhatsNewModal
-          isOpen={whatsNewOpen}
-          onClose={() => {
-            setShowWhatsNew(false);
-            dismissWhatsNew();
-          }}
         />
       )}
 
