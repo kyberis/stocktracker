@@ -8,7 +8,8 @@ import { ADMIN_DEFAULT_USERNAME, ADMIN_DEFAULT_PASSWORD, BCRYPT_ROUNDS } from ".
 import { seedTransactionsForUser } from "./seed";
 
 let _client: Client | null = null;
-let _initialized = false;
+let _initPromise: Promise<Client> | null = null;
+let _isLocal = false;
 
 function getClient(): Client {
   if (_client) return _client;
@@ -28,6 +29,7 @@ function getClient(): Client {
       authToken: tursoToken,
     });
   } else {
+    _isLocal = true;
     const dataDir = path.join(process.cwd(), "data");
     mkdirSync(dataDir, { recursive: true });
     _client = createClient({
@@ -78,11 +80,38 @@ async function ensureAdminUser(client: Client) {
   }
 }
 
+async function initWithRetry(client: Client, retries = 4): Promise<void> {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      if (_isLocal) {
+        await client.execute("PRAGMA busy_timeout=10000");
+        await client.execute("PRAGMA journal_mode=WAL");
+      }
+      await runMigrations(client);
+      await ensureAdminUser(client);
+      return;
+    } catch (err: unknown) {
+      const isBusy = err instanceof Error && err.message.includes("SQLITE_BUSY");
+      if (!isBusy || attempt === retries) throw err;
+      const delay = 500 * Math.pow(2, attempt); // 500, 1000, 2000, 4000ms
+      await new Promise((r) => setTimeout(r, delay));
+    }
+  }
+}
+
 export async function ensureInitialized(): Promise<Client> {
-  const client = getClient();
-  if (_initialized) return client;
-  await runMigrations(client);
-  await ensureAdminUser(client);
-  _initialized = true;
-  return client;
+  if (_initPromise) return _initPromise;
+
+  _initPromise = (async () => {
+    const client = getClient();
+    try {
+      await initWithRetry(client);
+    } catch {
+      _initPromise = null;
+      throw new Error("Database initialization failed after retries");
+    }
+    return client;
+  })();
+
+  return _initPromise;
 }
