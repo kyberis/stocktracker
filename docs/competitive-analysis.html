@@ -550,7 +550,7 @@
 <header>
   <h1>Competitive Analysis &amp; Market Opportunity</h1>
   <p class="subtitle">Deep analysis of trefolio against 10+ portfolio trackers worldwide &mdash; features, UI/UX, pricing, investor priorities, and strategic opportunities.</p>
-  <span class="date-badge" aria-label="Report date">March 12, 2026 &mdash; v1.27</span>
+  <span class="date-badge" aria-label="Report date">March 13, 2026 &mdash; v1.29</span>
 </header>
 
 <nav aria-label="Report sections">
@@ -917,7 +917,7 @@
         </tr>
         <tr>
           <td>Tax reports</td>
-          <td><span class="partial" aria-label="Partial">&#9679;</span> FIFO</td>
+          <td><span class="check" aria-label="Yes">&#10003;</span> <strong>EU 5</strong></td>
           <td><span class="cross" aria-label="No">&#10007;</span></td>
           <td><span class="partial" aria-label="Partial">&#9679;</span></td>
           <td><span class="partial" aria-label="Partial">&#9679;</span></td>
@@ -1192,7 +1192,8 @@
           <li><strong>AI in native language</strong> &mdash; Unique: analysis delivered in the user's selected language</li>
           <li><strong>Market move callouts</strong> &mdash; Big index move alerts via marquee, toast, and push create urgency</li>
           <li><strong>Broker reconnect UX</strong> &mdash; Dashboard banner with one-tap fix for expired credentials</li>
-          <li><strong>Onboarding wizard</strong> &mdash; Post-verification guided setup: name, currency, tax residency, passkey, Google linking (v1.24)</li>
+          <li><strong>Streamlined onboarding</strong> &mdash; Wizard (v1.24) + portfolio import step, country-aware broker suggestions, sample data, first-visit tour (v1.28)</li>
+          <li><strong>European tax reports</strong> &mdash; DE/FR/ES/NL/IT with AI Tax Assistant, form field mapping, CSV export (v1.29)</li>
           <li><strong>Stock screener</strong> &mdash; 600+ stocks with 6 filter dimensions, preset strategies, and theme-aware UI (v1.25)</li>
           <li><strong>In-app notifications</strong> &mdash; Bell icon with welcome, upgrade, downgrade, and admin broadcast notifications (v1.26)</li>
         </ul>
@@ -1213,7 +1214,7 @@
     <div class="callout-title">UX Priority Recommendations (Updated)</div>
     <strong>1.</strong> Native home screen widgets for iOS/Android (Scriptable shipped, native pending) &mdash; now the #1 UX gap.
     <strong>2.</strong> Visual portfolio health score (inspired by Snowflake, adapted for trefolio's aesthetic).
-    <strong style="color:var(--emerald);">&#10003;</strong> <span style="text-decoration:line-through;opacity:0.6;">Onboarding wizard</span> &mdash; <strong style="color:var(--emerald);">Shipped in v1.24</strong> with post-verification guided setup: name, currency, tax residency, passkey, Google linking.
+    <strong style="color:var(--emerald);">&#10003;</strong> <span style="text-decoration:line-through;opacity:0.6;">Onboarding wizard</span> &mdash; <strong style="color:var(--emerald);">Shipped in v1.24 + enhanced in v1.28</strong> with portfolio import step, country-aware broker suggestions, sample data auto-load, and first-visit dashboard tour.
     <strong style="color:var(--emerald);">&#10003;</strong> <span style="text-decoration:line-through;opacity:0.6;">Calendar view for dividends and earnings</span> &mdash; <strong style="color:var(--emerald);">Shipped in v1.20</strong> with earnings, economic events, and IPO calendar.
   </div>
 </section>
@@ -1282,8 +1283,8 @@
         <tr>
           <td>7</td>
           <td><strong>Tax awareness</strong></td>
-          <td>Grows in importance as portfolios grow. Country-specific reports drive premium upgrades.</td>
-          <td><span class="badge badge-gap">Gap</span></td>
+          <td>Grows in importance as portfolios grow. Country-specific EU reports now available (v1.29).</td>
+          <td><span class="badge badge-lead">Leading (EU)</span></td>
           <td><span class="badge badge-high">High</span></td>
         </tr>
         <tr>
@@ -1338,12 +1339,12 @@
           <td><span class="badge badge-med">Medium</span></td>
           <td>Frictionless import is the #1 onboarding factor. SnapTrade now available on Bifolio+ (v1.19) with 20+ brokers, auto-sync every 6h, and reconnect UX. <strong>Breadth (20+ vs 1K+) remains the gap.</strong></td>
         </tr>
-        <tr>
+        <tr style="opacity:0.5;text-decoration:line-through;">
           <td><strong>European tax reports</strong></td>
           <td>Sharesight (AU/NZ/US)</td>
           <td><span class="badge badge-high">High</span></td>
           <td><span class="badge badge-high">High</span></td>
-          <td>No one owns EU-specific tax reports (DE, FR, ES, NL, IT). Massive Pro upgrade driver.</td>
+          <td><strong style="color:var(--emerald);text-decoration:none;">CLOSED v1.29</strong> &mdash; DE (Anlage KAP, Vorabpauschale, Teilfreistellung), FR (D&eacute;claration 2074), ES (Modelo 100/720), NL (Box 3), IT (Quadro RT/RW, IVAFE). AI Tax Assistant. CSV export. <strong style="text-decoration:none;">trefolio now LEADS in EU tax.</strong></td>
         </tr>
         <tr>
           <td><strong>Social / community</strong></td>
@@ -1417,6 +1418,16 @@
         </tr>
       </thead>
       <tbody>
+        <tr>
+          <td><strong>European tax reports</strong></td>
+          <td>DE (Anlage KAP, Vorabpauschale, Teilfreistellung), FR (D&eacute;claration 2074), ES (Modelo 100/720, wash sale), NL (Box 3 wealth tax), IT (Quadro RT/RW, IVAFE, LIFO). AI Tax Assistant. CSV export. <strong>#1 gap now closed.</strong></td>
+          <td><span class="badge badge-lead">v1.29</span></td>
+        </tr>
+        <tr>
+          <td><strong>Streamlined onboarding</strong></td>
+          <td>Portfolio import step during setup, email verification no longer a blocker, country-aware broker suggestions, sample data auto-loaded, dashboard tour on first visit.</td>
+          <td><span class="badge badge-lead">v1.28</span></td>
+        </tr>
         <tr>
           <td><strong>Screener navigation &amp; price charts</strong></td>
           <td>Screener at own URL (<code>/tools/screener</code>), stock detail at <code>/tools/screener/stock/TICKER</code>, filters preserved on back. Price chart always visible on stock detail, even for non-portfolio stocks.</td>
@@ -1493,7 +1504,7 @@
 
   <div class="callout callout-amber">
     <div class="callout-title">Highest ROI Gaps Still Open</div>
-    <strong>European tax reports</strong> (most defensible moat, no competitor owns EU tax) and <strong>expanded broker sync to 100+</strong> (high impact on onboarding). Social/community remains the hardest gap to close due to Getquin&rsquo;s network effect moat. <span style="color:var(--emerald);">Recently closed: stock screener (v1.25), onboarding wizard (v1.24), net worth tracking (v1.23).</span>
+    <strong>Expanded broker sync to 100+</strong> (high impact on onboarding) is now the top remaining gap. Social/community remains the hardest gap to close due to Getquin&rsquo;s network effect moat. <span style="color:var(--emerald);">Major gaps closed: European tax reports (v1.29 &mdash; the #1 gap), stock screener (v1.25), onboarding wizard (v1.24), net worth tracking (v1.23).</span>
   </div>
 </section>
 
@@ -1589,10 +1600,10 @@
       <div class="card-body">Bell icon with notification drawer for welcome messages, plan upgrade/downgrade confirmations, and admin broadcasts. Reduces dependency on email for user communication and creates an in-app engagement channel.</div>
     </div>
 
-    <div class="card" style="border-top: 3px solid var(--violet);">
-      <div class="card-label">Moat to Build</div>
+    <div class="card" style="border-top: 3px solid var(--emerald);">
+      <div class="card-label">Current Moat &mdash; THE GAME-CHANGER</div>
       <div class="card-title">European Tax Intelligence</div>
-      <div class="card-body">Country-specific tax reports for DE (Kapitalertragsteuer), FR (PFU), ES (Modelo 720/100), NL (Box 3), IT (Quadro RW). This is Sharesight&rsquo;s moat in AU/NZ &mdash; no one owns it in Europe. Massive Pro upgrade driver.</div>
+      <div class="card-body"><strong>The #1 gap identified in the original analysis &mdash; now closed.</strong> Country-specific tax reports for DE (Anlage KAP, Vorabpauschale, Teilfreistellung, Sparerpauschbetrag), FR (D&eacute;claration 2074), ES (Modelo 100/720, wash sale rule), NL (Box 3 wealth tax, deemed returns), IT (Quadro RT/RW, IVAFE, LIFO). AI Tax Assistant with optimization suggestions and data quality checks. CSV export. This is trefolio&rsquo;s Sharesight-equivalent moat &mdash; <strong>no competitor offers EU-specific tax reports</strong>.</div>
     </div>
 
     <div class="card" style="border-top: 3px solid var(--violet);">
@@ -1671,7 +1682,7 @@
 
   <div class="callout callout-emerald">
     <div class="callout-title">Sweet Spot</div>
-    trefolio is the only product in the <strong>simple + affordable quadrant</strong> that also offers AI capabilities, 35-language support, stock screener, 21-currency multi-currency, net worth tracking, 4 dashboard themes, and a hardware device. Stock Events shares the simplicity but lacks depth. Getquin is nearby but 2.5&times; more expensive at the top tier. Portfolio Performance is free but desktop-only with a steep learning curve.
+    trefolio is the only product in the <strong>simple + affordable quadrant</strong> that also offers EU tax reports, AI capabilities, 35-language support, stock screener, 21-currency multi-currency, net worth tracking, 4 dashboard themes, and a hardware device. Stock Events shares the simplicity but lacks depth. Getquin is nearby but 2.5&times; more expensive and has no tax reports. Portfolio Performance is free but desktop-only with a steep learning curve.
   </div>
 </section>
 
@@ -1736,10 +1747,11 @@
   <div class="timeline">
     <div class="timeline-item mid">
       <div class="timeline-header">
-        <span class="timeline-title">European tax reports</span>
+        <span class="timeline-title" style="text-decoration:line-through;opacity:0.6;">European tax reports</span>
+        <span class="badge badge-lead">DONE v1.29</span>
       </div>
-      <div class="timeline-desc">Build country-specific tax summaries: DE (Kapitalertragsteuer), FR (PFU/flat tax), ES (Modelo 720/100), NL (Box 3), IT (Quadro RW). This is Sharesight's moat in AU/NZ &mdash; <strong>no one owns it in Europe</strong>. Biggest Pro upgrade driver possible.</div>
-      <span class="timeline-impact impact-high">Highest Impact &middot; High Effort</span>
+      <div class="timeline-desc">DE (Anlage KAP, Vorabpauschale, Teilfreistellung, Sparerpauschbetrag), FR (D&eacute;claration 2074), ES (Modelo 100/720, wash sale), NL (Box 3 wealth tax), IT (Quadro RT/RW, IVAFE, LIFO). AI Tax Assistant with optimization suggestions. CSV export. <strong>The #1 gap is now closed &mdash; trefolio owns EU tax reporting.</strong></div>
+      <span class="timeline-impact impact-high">Shipped &mdash; Game-Changer</span>
     </div>
 
     <div class="timeline-item mid">
@@ -1838,7 +1850,7 @@
     </div>
   </div>
 
-  <h3>Shipped Since Original Analysis <span style="color:var(--emerald);font-size:0.85rem;">(v1.0 &rarr; v1.27)</span></h3>
+  <h3>Shipped Since Original Analysis <span style="color:var(--emerald);font-size:0.85rem;">(v1.0 &rarr; v1.29)</span></h3>
 
   <div class="table-wrapper" role="region" aria-label="Completed strategy initiatives" tabindex="0">
     <table>
@@ -1850,6 +1862,16 @@
         </tr>
       </thead>
       <tbody>
+        <tr>
+          <td><strong>European tax reports</strong></td>
+          <td>DE/FR/ES/NL/IT tax summaries, AI Tax Assistant, form field mapping, CSV export</td>
+          <td>v1.29</td>
+        </tr>
+        <tr>
+          <td><strong>Streamlined onboarding</strong></td>
+          <td>Portfolio import in setup, no email blocker, country-aware brokers, sample data, first-visit tour</td>
+          <td>v1.28</td>
+        </tr>
         <tr>
           <td><strong>Screener navigation &amp; price charts</strong></td>
           <td>Own URL routes, stock detail with price chart for all stocks, filter persistence</td>
@@ -1946,7 +1968,7 @@
 
   <div class="callout callout-emerald">
     <div class="callout-title">Execution Velocity</div>
-    18 major initiatives shipped from v1.0 to v1.27 in under two weeks. The most impactful gap closures: <strong>stock screener</strong> (600+ stocks, matching Simply Wall St), <strong>onboarding wizard</strong> (competitive funnel), <strong>net worth tracking</strong> (real estate, savings, pensions), <strong>multi-currency</strong> (5&rarr;21, approaching leader parity), <strong>broker sync democratization</strong> (Pro-only &rarr; Bifolio+), and <strong>event calendars</strong> (matching Stock Events). Remaining high-impact gaps: European tax reports, social/community, and broker breadth expansion to 100+.
+    20 major initiatives shipped from v1.0 to v1.29. The single most impactful: <strong>European tax reports</strong> (v1.29) &mdash; the #1 gap identified in the original analysis, now owning an unoccupied niche no competitor serves. Other major closures: <strong>stock screener</strong> (600+ stocks), <strong>streamlined onboarding</strong> (portfolio import + sample data), <strong>net worth tracking</strong>, <strong>multi-currency</strong> (5&rarr;21), <strong>broker sync democratization</strong>, and <strong>event calendars</strong>. Remaining high-impact gaps: social/community and broker breadth expansion to 100+.
   </div>
 </section>
 
@@ -1960,13 +1982,13 @@
     <div class="card" style="border-left: 3px solid var(--rose);">
       <div class="card-label" style="color:var(--rose);">Biggest Threat</div>
       <div class="card-title">Getquin</div>
-      <div class="card-body">Similar market (Europe), overlapping price range, but with 500K+ users, social community moat, 30K+ bank connections, and retirement planning. They are the incumbent to beat. Their weaknesses: fewer languages, privacy concerns, tier fatigue.</div>
+      <div class="card-body">Similar market (Europe), overlapping price range, but with 500K+ users, social community moat, 30K+ bank connections, and retirement planning. They are the incumbent to beat. However, trefolio now has EU tax reports (Getquin doesn&rsquo;t), a stock screener, 35 languages vs ~10, and 2.5&times; cheaper pricing. Their remaining advantages: social community, bank connection breadth.</div>
     </div>
 
     <div class="card" style="border-left: 3px solid var(--emerald);">
-      <div class="card-label" style="color:var(--emerald);">Biggest Opportunity</div>
+      <div class="card-label" style="color:var(--emerald);">Biggest Opportunity &mdash; NOW REALIZED</div>
       <div class="card-title">European Tax Reports + Multi-Language SEO</div>
-      <div class="card-body">No one serves non-English European investors well. No one offers EU-specific tax reports. trefolio's 35-language support + localized SEO + country-specific tax tools could create an unassailable position. Tax reports remain the #1 unaddressed high-impact gap.</div>
+      <div class="card-body"><strong>The #1 gap is now closed (v1.29).</strong> trefolio is the only product offering EU-specific tax reports (DE/FR/ES/NL/IT) + 35-language support + AI Tax Assistant. Combined with localized SEO, this creates an unassailable position for European investors. The marketing message writes itself.</div>
     </div>
 
     <div class="card" style="border-left: 3px solid var(--amber);">
@@ -1975,14 +1997,14 @@
       <div class="card-body">
         <strong>1.</strong> European long-term holders who find Portfolio Performance too complex but want accuracy.<br>
         <strong>2.</strong> Non-English-speaking investors ignored by US/UK-centric products.<br>
-        <strong>3.</strong> Dividend-focused European investors with no Sharesight-like tax tool.
+        <strong>3.</strong> Dividend-focused European investors who now have trefolio as their Sharesight-equivalent tax tool (v1.29).
       </div>
     </div>
 
     <div class="card" style="border-left: 3px solid var(--sky);">
       <div class="card-label" style="color:var(--sky);">Timing Advantage</div>
       <div class="card-title">AI Leadership Window</div>
-      <div class="card-body">Most competitors are just adding AI (or haven't). trefolio's AI analysis + native language delivery + AI import is 12&ndash;18 months ahead. This window won't last forever &mdash; competitors will catch up. Move fast to establish AI as core brand identity.</div>
+      <div class="card-body">Most competitors are just adding AI (or haven't). trefolio's AI analysis + AI Tax Assistant + native language delivery + AI import is 12&ndash;18 months ahead. This window won't last forever &mdash; competitors will catch up. Move fast to establish AI as core brand identity.</div>
     </div>
 
     <div class="card" style="border-left: 3px solid var(--violet);">
@@ -2000,22 +2022,22 @@
 
     <div class="card" style="border-left: 3px solid var(--teal);">
       <div class="card-label" style="color:var(--teal);">Rapid Gap Closure</div>
-      <div class="card-title">14+ Gaps Closed (v1.0 &rarr; v1.27)</div>
-      <div class="card-body">Screener navigation &amp; price charts (v1.27), in-app notification center (v1.26), stock screener (v1.25), onboarding wizard (v1.24), net worth tracking (v1.23), guided theme tour, multi-currency (5&rarr;21), dashboard themes (4 layouts), event calendars, broker sync for all tiers, broker reconnect UX, market move callouts, crypto portfolio, and native mobile apps &mdash; all shipped. Remaining high-impact gaps: European tax reports, social/community, and broker breadth (100+).</div>
+      <div class="card-title">16+ Gaps Closed (v1.0 &rarr; v1.29)</div>
+      <div class="card-body">European tax reports (v1.29 &mdash; the #1 gap), streamlined onboarding (v1.28), screener navigation (v1.27), notification center (v1.26), stock screener (v1.25), onboarding wizard (v1.24), net worth tracking (v1.23), guided theme tour, multi-currency (5&rarr;21), dashboard themes (4 layouts), event calendars, broker sync for all tiers, broker reconnect UX, market move callouts, crypto portfolio, and native mobile apps &mdash; all shipped. Remaining high-impact gaps: social/community and broker breadth (100+).</div>
     </div>
   </div>
 
   <div class="callout callout-emerald" style="margin-top:1.5rem;">
-    <div class="callout-title">Executive Summary (Updated v1.27)</div>
-    trefolio enters a $2.5B+ market with clear differentiation: <strong>35 languages</strong> (3&times; more than any competitor), <strong>AI analysis in native language</strong> (unique), <strong>trefolio Leaf hardware</strong> (category-first), <strong>stock screener</strong> (600+ stocks with preset strategies), <strong>net worth tracking</strong> (real estate, savings, pensions), <strong>onboarding wizard</strong> (competitive funnel), <strong>21-currency multi-currency</strong> (approaching leader parity), <strong>4 dashboard themes</strong> (unique personalization), <strong>in-app notification center</strong>, <strong>market move callouts</strong> (unique engagement driver), and <strong>aggressive pricing</strong> (2&ndash;5&times; cheaper). Since the original analysis, 14+ competitive gaps have been closed including stock screener, onboarding wizard, notification center, net worth tracking, broker sync democratization, event calendars, crypto, and native mobile apps. The primary remaining challenges are broker sync breadth (Getquin: 30K+ vs trefolio: 20+), social community moat (Getquin: 500K+ users), and European tax reports (unoccupied niche). The highest-ROI strategic moves are: <strong>(1)</strong> European tax reports to own the EU tax niche, <strong>(2)</strong> multi-language SEO blitz for uncontested long-tail queries, and <strong>(3)</strong> expansion of broker connections to 100+. The AI leadership window is 12&ndash;18 months &mdash; speed remains essential.
+    <div class="callout-title">Executive Summary (Updated v1.29)</div>
+    trefolio enters a $2.5B+ market with clear differentiation: <strong>European tax reports</strong> (DE/FR/ES/NL/IT &mdash; unoccupied niche, now owned), <strong>35 languages</strong> (3&times; more than any competitor), <strong>AI analysis + AI Tax Assistant in native language</strong> (unique), <strong>trefolio Leaf hardware</strong> (category-first), <strong>stock screener</strong> (600+ stocks), <strong>net worth tracking</strong>, <strong>streamlined onboarding</strong> (portfolio import + sample data), <strong>21-currency multi-currency</strong>, <strong>4 dashboard themes</strong>, and <strong>aggressive pricing</strong> (2&ndash;5&times; cheaper). Since the original analysis, 16+ competitive gaps have been closed &mdash; most critically <strong>European tax reports</strong> (the #1 gap), along with stock screener, onboarding, notification center, net worth tracking, broker sync democratization, event calendars, and more. The primary remaining challenges are broker sync breadth (Getquin: 30K+ vs trefolio: 20+) and social community moat (Getquin: 500K+ users). The highest-ROI strategic moves are now: <strong>(1)</strong> multi-language SEO blitz leveraging EU tax + 35 languages for uncontested long-tail queries, <strong>(2)</strong> expansion of broker connections to 100+, and <strong>(3)</strong> lightweight social features to build community. The AI leadership window is 12&ndash;18 months &mdash; speed remains essential.
   </div>
 </section>
 
 </main>
 
 <footer>
-  <p>trefolio Competitive Analysis &mdash; March 12, 2026 (v1.27) &mdash; Internal Document</p>
-  <p style="margin-top:0.35rem;">Data sourced from public pricing pages, app store reviews, product documentation, and market research reports. Updated to reflect features shipped through v1.27.</p>
+  <p>trefolio Competitive Analysis &mdash; March 13, 2026 (v1.29) &mdash; Internal Document</p>
+  <p style="margin-top:0.35rem;">Data sourced from public pricing pages, app store reviews, product documentation, and market research reports. Updated to reflect features shipped through v1.29.</p>
 </footer>
 
 </body>
