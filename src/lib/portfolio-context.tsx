@@ -69,7 +69,6 @@ interface PortfolioContextType {
   lastUpdated: Date | null;
   demoMode: boolean;
   goal: Goal | null;
-  goalProgress: number;
   saveGoal: (params: Omit<Goal, "id" | "userId" | "createdAt" | "updatedAt">) => Promise<Goal | null>;
   deleteGoal: () => Promise<void>;
   refreshGoal: () => Promise<void>;
@@ -682,14 +681,6 @@ export function PortfolioProvider({
     return found?.currency ?? "EUR";
   }, [activePortfolioId, portfolios]);
 
-  const goalProgress = useMemo(() => {
-    if (!goal || goal.targetAmount <= 0) return 0;
-    // Simple progress: uses convertToEUR-based total from holdings + cash
-    // The exact total calculation happens in components that have access to calculatePortfolioTotals
-    // Here we provide a reasonable estimate using raw holdings cost as floor
-    return 0; // Components compute this from calculatePortfolioTotals
-  }, [goal]);
-
   const noop = useCallback(async () => {}, []);
   const noopGoal = useCallback(async () => null as Goal | null, []);
   const value = useMemo(
@@ -721,7 +712,6 @@ export function PortfolioProvider({
       lastUpdated,
       demoMode: !!demoMode,
       goal,
-      goalProgress,
       saveGoal: demoMode ? noopGoal : saveGoalCb,
       deleteGoal: demoMode ? noop : deleteGoalCb,
       refreshGoal: demoMode ? noop : fetchGoal,
@@ -732,7 +722,7 @@ export function PortfolioProvider({
       addHolding, removeHolding, updateHolding, addCashEntry,
       removeCashEntry, updateCashEntry, refreshHoldings, refreshQuotes, refreshSingleQuote,
       refreshAlertedTickers, lastUpdated, demoMode, noop, noopGoal,
-      goal, goalProgress, saveGoalCb, deleteGoalCb, fetchGoal,
+      goal, saveGoalCb, deleteGoalCb, fetchGoal,
     ]
   );
 

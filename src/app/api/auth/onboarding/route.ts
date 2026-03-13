@@ -28,7 +28,7 @@ export const POST = withMetrics("/api/auth/onboarding", async (req: NextRequest)
   const portfolioId = await ensureDefaultPortfolio(session.userId);
   const holdingsCount = await countHoldings(session.userId, portfolioId);
 
-  if (holdingsCount === 0 && importMethod !== "csv" && importMethod !== "broker_sync") {
+  if (holdingsCount === 0 && importMethod !== "csv" && importMethod !== "broker_sync" && importMethod !== "skip") {
     await resetUserHoldings(session.userId, true, portfolioId);
     trackEvent(session.userId, "onboarding_auto_seeded");
   }

@@ -1,11 +1,31 @@
 import { test, expect, type Page, type APIRequestContext } from "@playwright/test";
-import { createTestUser, ensureLoggedOut, loginViaUI, dismissOverlays } from "./helpers";
+import { createTestUser, ensureLoggedOut, loginViaUI, dismissOverlays, loginAsAdmin } from "./helpers";
 
 async function setThemeViaAPI(request: APIRequestContext, theme: string) {
   const res = await request.put("/api/user-settings", {
     data: { dashboardTheme: theme },
   });
   expect(res.status()).toBe(200);
+}
+
+async function setPlanViaAdmin(request: APIRequestContext, userId: string, plan: "free" | "starter" | "pro") {
+  const res = await request.post("/api/admin/users", {
+    data: { action: "setPlan", userId, plan },
+  });
+  expect(res.status()).toBe(200);
+}
+
+async function upgradeToProAndSetTheme(
+  request: APIRequestContext,
+  creds: { email: string; password: string; userId: string },
+  theme: string,
+) {
+  await loginAsAdmin(request);
+  await setPlanViaAdmin(request, creds.userId, "pro");
+  await request.post("/api/auth/login", {
+    data: { identifier: creds.email, password: creds.password },
+  });
+  await setThemeViaAPI(request, theme);
 }
 
 async function scrollToGoalPlanner(page: Page) {
@@ -187,7 +207,7 @@ test.describe("Goal Tracker", () => {
       test.setTimeout(60_000);
       await ensureLoggedOut(request);
       const creds = await createTestUser(request, true);
-      await setThemeViaAPI(request, "terminal");
+      await upgradeToProAndSetTheme(request, creds, "terminal");
 
       await request.post("/api/goals", {
         data: { portfolioId: "", name: "Terminal Goal", targetAmount: 300000 },
@@ -214,7 +234,7 @@ test.describe("Goal Tracker", () => {
       test.setTimeout(60_000);
       await ensureLoggedOut(request);
       const creds = await createTestUser(request, true);
-      await setThemeViaAPI(request, "canvas");
+      await upgradeToProAndSetTheme(request, creds, "canvas");
 
       await request.post("/api/goals", {
         data: { portfolioId: "", name: "Canvas Goal", targetAmount: 400000 },
@@ -241,7 +261,7 @@ test.describe("Goal Tracker", () => {
       test.setTimeout(60_000);
       await ensureLoggedOut(request);
       const creds = await createTestUser(request, true);
-      await setThemeViaAPI(request, "studio");
+      await upgradeToProAndSetTheme(request, creds, "studio");
 
       await request.post("/api/goals", {
         data: { portfolioId: "", name: "Studio Goal", targetAmount: 750000 },

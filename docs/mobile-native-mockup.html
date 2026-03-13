@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>trefolio Mobile — iOS &amp; Android Mockups</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Shared dark palette */
+  --bg-body: #0a0f1a;
+  --bg-primary: #020617;
+  --bg-card: #0f172a;
+  --bg-card-hover: #1e293b;
+  --bg-input: #1e293b;
+  --bg-elevated: #162032;
+  --border: #334155;
+  --border-light: #1e293b;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --emerald: #10b981;
+  --emerald-light: #34d399;
+  --emerald-dark: #059669;
+  --emerald-bg: rgba(16,185,129,0.12);
+  --red: #ef4444;
+  --red-bg: rgba(239,68,68,0.12);
+  --amber: #f59e0b;
+  --amber-bg: rgba(245,158,11,0.12);
+  --blue: #3b82f6;
+  --blue-bg: rgba(59,130,246,0.12);
+  --violet: #8b5cf6;
+  --violet-bg: rgba(139,92,246,0.12);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; -webkit-font-smoothing:antialiased; }
+
+body {
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: var(--bg-body);
+  color: var(--text-primary);
+  overflow-x: hidden;
+}
+
+/* ── Top bar ── */
+.topbar {
+  position: fixed; top:0; left:0; right:0; z-index:200;
+  height: 56px;
+  background: rgba(10,15,26,0.88);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border-light);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 32px;
+}
+.topbar-logo { display:flex; align-items:center; gap:10px; font-size:16px; font-weight:700; }
+.topbar-logo .dot { width:24px; height:24px; border-radius:6px; background:linear-gradient(135deg,#6ee7b7,#10b981); }
+.topbar-tabs { display:flex; gap:4px; background:var(--bg-card); border-radius:10px; padding:3px; border:1px solid var(--border-light); }
+.topbar-tab { padding:7px 20px; border-radius:8px; font-size:13px; font-weight:600; color:var(--text-muted); cursor:pointer; transition:all .2s; user-select:none; }
+.topbar-tab.active { background:var(--emerald); color:#fff; }
+.topbar-tab:not(.active):hover { color:var(--text-secondary); background:var(--bg-card-hover); }
+
+/* ── Layout ── */
+.main-area { margin-top: 56px; padding: 32px; }
+.platform-row { display:flex; gap:24px; flex-wrap:wrap; justify-content:center; }
+.phone-col { display:flex; flex-direction:column; align-items:center; gap:10px; }
+.phone-label { font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--text-muted); }
+
+/* ── Phone frames ── */
+.phone {
+  width:375px; height:812px;
+  border-radius:44px; overflow:hidden; position:relative;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.04);
+}
+.phone-ios { border: 3px solid #2a3244; background: var(--bg-primary); }
+.phone-android { border: 3px solid #2a3244; background: #0d1117; }
+
+/* Dynamic Island / Punch hole */
+.dynamic-island { width:126px; height:36px; background:#000; border-radius:20px; position:absolute; top:10px; left:50%; transform:translateX(-50%); z-index:10; }
+.punch-hole { width:12px; height:12px; background:#000; border-radius:50%; position:absolute; top:14px; left:50%; transform:translateX(-50%); z-index:10; border:2px solid #1a1a1a; }
+
+/* Status bars */
+.ios-status { height:54px; padding:14px 28px 0; display:flex; justify-content:space-between; align-items:center; font-size:16px; font-weight:600; }
+.android-status { height:36px; padding:8px 20px 0; display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:500; color:var(--text-secondary); }
+
+.status-icons { display:flex; gap:4px; align-items:center; }
+.status-icons svg { width:16px; height:12px; }
+
+/* Scroll area */
+.screen-scroll {
+  height: calc(100% - 54px - 68px);
+  overflow-y: auto; scrollbar-width:none;
+}
+.screen-scroll::-webkit-scrollbar { display:none; }
+.screen-scroll.android-scroll { height: calc(100% - 36px - 68px); }
+.screen-scroll.full { height: calc(100% - 54px); }
+.screen-scroll.full-android { height: calc(100% - 36px); }
+
+.pad { padding:0 16px 24px; }
+
+/* ── iOS Bottom Tab Bar ── */
+.ios-tabbar {
+  position:absolute; bottom:0; left:0; right:0; height:68px;
+  background:rgba(2,6,23,0.92); backdrop-filter:blur(20px);
+  border-top:1px solid var(--border-light);
+  display:flex; align-items:flex-start; justify-content:space-around;
+  padding:8px 8px 20px;
+}
+/* ── Android Bottom Nav ── */
+.android-navbar {
+  position:absolute; bottom:0; left:0; right:0; height:68px;
+  background: #0d1117;
+  border-top:1px solid rgba(255,255,255,0.06);
+  display:flex; align-items:center; justify-content:space-around;
+  padding: 0 8px;
+}
+.nav-item {
+  display:flex; flex-direction:column; align-items:center; gap:2px;
+  font-size:10px; font-weight:500; color:var(--text-muted); cursor:pointer; transition:color .2s; padding:4px 16px; user-select:none; position:relative;
+}
+.nav-item.active { color:var(--emerald); }
+.nav-item svg { width:22px; height:22px; }
+/* Android pill indicator */
+.android-navbar .nav-item.active::before {
+  content:''; position:absolute; top:0; left:50%; transform:translateX(-50%);
+  width:56px; height:28px; border-radius:14px; background:var(--emerald-bg); z-index:-1;
+}
+
+/* ── Screen switching ── */
+.screen { display:none; }
+.screen.active { display:block; }
+
+/* ── Shared UI components ── */
+.card { background:var(--bg-card); border:1px solid var(--border-light); border-radius:16px; padding:16px; margin-bottom:12px; }
+.card-sm { background:var(--bg-card); border:1px solid var(--border-light); border-radius:12px; padding:14px; margin-bottom:10px; }
+.value-lg { font-size:28px; font-weight:800; letter-spacing:-0.5px; line-height:1.1; }
+.value-md { font-size:18px; font-weight:700; }
+.value-sm { font-size:14px; font-weight:600; }
+.label-sm { font-size:12px; color:var(--text-muted); font-weight:500; }
+.label-xs { font-size:11px; color:var(--text-muted); }
+.text-green { color:var(--emerald-light); }
+.text-red { color:var(--red); }
+.text-muted { color:var(--text-muted); }
+.badge { display:inline-flex; align-items:center; padding:2px 8px; border-radius:6px; font-size:11px; font-weight:600; }
+.badge-green { background:var(--emerald-bg); color:var(--emerald-light); }
+.badge-red { background:var(--red-bg); color:var(--red); }
+.badge-amber { background:var(--amber-bg); color:var(--amber); }
+.badge-blue { background:var(--blue-bg); color:var(--blue); }
+
+.flex { display:flex; }
+.flex-col { flex-direction:column; }
+.items-center { align-items:center; }
+.justify-between { justify-content:space-between; }
+.justify-center { justify-content:center; }
+.gap-1 { gap:4px; }
+.gap-2 { gap:8px; }
+.gap-3 { gap:12px; }
+.mt-1 { margin-top:4px; }
+.mt-2 { margin-top:8px; }
+.mt-3 { margin-top:12px; }
+.mb-2 { margin-bottom:8px; }
+.mb-3 { margin-bottom:12px; }
+.text-center { text-align:center; }
+.w-full { width:100%; }
+
+/* ── iOS Segmented Control ── */
+.ios-segmented {
+  display:flex; gap:0; background:rgba(15,23,42,0.8); border-radius:10px; padding:3px; margin-bottom:16px;
+  border:1px solid var(--border-light);
+}
+.ios-seg-item {
+  flex:1; padding:7px 4px; text-align:center; font-size:12px; font-weight:500; color:var(--text-muted);
+  border-radius:8px; cursor:pointer; transition:all .2s; user-select:none;
+}
+.ios-seg-item.active { background:var(--emerald); color:#fff; font-weight:600; }
+
+/* ── Android Tabs (Material 3) ── */
+.m3-tabs {
+  display:flex; gap:0; margin-bottom:16px; border-bottom:1px solid rgba(255,255,255,0.06);
+}
+.m3-tab {
+  flex:1; padding:12px 4px 10px; text-align:center; font-size:13px; font-weight:500; color:var(--text-muted);
+  border-bottom:2px solid transparent; cursor:pointer; transition:all .2s; user-select:none;
+}
+.m3-tab.active { color:var(--emerald-light); border-bottom-color:var(--emerald); font-weight:600; }
+
+/* ── iOS Nav Bar ── */
+.ios-navbar { padding:2px 16px 10px; }
+.ios-navbar .title { font-size:28px; font-weight:800; letter-spacing:-0.5px; }
+.ios-navbar .title-sm { font-size:17px; font-weight:600; text-align:center; }
+
+/* ── Android Top App Bar ── */
+.m3-appbar { padding:8px 16px 12px; display:flex; align-items:center; gap:12px; }
+.m3-appbar .title { font-size:22px; font-weight:700; }
+
+/* ── Holding card ── */
+.holding-card {
+  background:var(--bg-card); border:1px solid var(--border-light); border-radius:14px;
+  padding:14px 16px; margin-bottom:8px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.ticker-badge {
+  width:40px; height:40px; border-radius:12px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:800; font-family:'JetBrains Mono',monospace; color:#fff;
+}
+.ticker-sm { width:32px; height:32px; border-radius:9px; font-size:9px; }
+
+/* ── Android FAB ── */
+.fab {
+  position:absolute; bottom:80px; right:16px; z-index:5;
+  width:56px; height:56px; border-radius:16px;
+  background:var(--emerald); display:flex; align-items:center; justify-content:center;
+  box-shadow: 0 6px 20px rgba(16,185,129,0.35); cursor:pointer;
+}
+.fab svg { width:24px; height:24px; color:#fff; }
+
+/* ── Input fields ── */
+.input-field {
+  width:100%; padding:14px 16px; border-radius:12px; border:1px solid var(--border);
+  background:var(--bg-input); color:var(--text-primary); font-size:15px; font-family:inherit;
+  outline:none; transition:border-color .2s;
+}
+.input-field:focus { border-color:var(--emerald); }
+.input-field::placeholder { color:var(--text-muted); }
+
+/* ── Buttons ── */
+.btn-primary {
+  width:100%; padding:14px; border-radius:14px; border:none;
+  background:var(--emerald); color:#fff; font-size:16px; font-weight:700; font-family:inherit;
+  cursor:pointer; transition:background .2s; text-align:center;
+}
+.btn-primary:hover { background:var(--emerald-dark); }
+.btn-outline {
+  width:100%; padding:14px; border-radius:14px;
+  border:1px solid var(--border); background:transparent;
+  color:var(--text-primary); font-size:15px; font-weight:600; font-family:inherit;
+  cursor:pointer; text-align:center;
+}
+.btn-sm {
+  padding:10px 20px; border-radius:10px; border:none;
+  font-size:13px; font-weight:600; font-family:inherit; cursor:pointer;
+}
+
+/* Android Material button */
+.m3-btn {
+  width:100%; padding:16px; border-radius:28px; border:none;
+  background:var(--emerald); color:#020617; font-size:15px; font-weight:700; font-family:inherit;
+  cursor:pointer; letter-spacing:0.3px; text-align:center;
+}
+.m3-btn-outline {
+  width:100%; padding:15px; border-radius:28px;
+  border:1px solid var(--border); background:transparent;
+  color:var(--text-primary); font-size:14px; font-weight:600; font-family:inherit;
+  cursor:pointer; text-align:center;
+}
+.m3-btn-tonal {
+  width:100%; padding:15px; border-radius:28px; border:none;
+  background:var(--emerald-bg); color:var(--emerald-light);
+  font-size:14px; font-weight:600; font-family:inherit; cursor:pointer; text-align:center;
+}
+
+/* ── Pie chart ── */
+.pie-chart {
+  width:160px; height:160px; border-radius:50%; margin:12px auto; position:relative;
+  background:conic-gradient(#10b981 0deg 108deg,#3b82f6 108deg 194deg,#f59e0b 194deg 259deg,#8b5cf6 259deg 317deg,#64748b 317deg 360deg);
+}
+.pie-chart::after { content:''; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:80px; height:80px; background:var(--bg-card); border-radius:50%; }
+
+/* ── Bar chart ── */
+.bar-chart { display:flex; align-items:flex-end; gap:5px; height:80px; margin:12px 0; padding:0 2px; }
+.bar { flex:1; background:linear-gradient(to top,var(--emerald-dark),var(--emerald-light)); border-radius:3px 3px 0 0; min-height:6px; position:relative; }
+.bar-label { position:absolute; bottom:-16px; left:50%; transform:translateX(-50%); font-size:8px; color:var(--text-muted); white-space:nowrap; }
+
+/* ── Legend ── */
+.legend-row { display:flex; align-items:center; justify-content:space-between; padding:7px 0; border-bottom:1px solid var(--border-light); }
+.legend-row:last-child { border-bottom:none; }
+.legend-color { width:10px; height:10px; border-radius:3px; margin-right:8px; flex-shrink:0; }
+
+/* ── Tool row ── */
+.tool-row {
+  background:var(--bg-card); border:1px solid var(--border-light); border-radius:14px;
+  padding:14px 16px; margin-bottom:8px;
+  display:flex; align-items:center; gap:12px; cursor:pointer; transition:background .15s;
+}
+.tool-row:hover { background:var(--bg-card-hover); }
+.tool-icon { width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.tool-icon svg { width:20px; height:20px; }
+
+/* ── Profile row ── */
+.profile-row { display:flex; align-items:center; justify-content:space-between; padding:13px 0; border-bottom:1px solid var(--border-light); }
+.profile-row:last-child { border-bottom:none; }
+
+/* ── Progress bar ── */
+.progress-bar { width:100%; height:6px; background:var(--bg-input); border-radius:3px; overflow:hidden; margin-top:8px; }
+.progress-fill { height:100%; background:linear-gradient(90deg,var(--emerald-dark),var(--emerald-light)); border-radius:3px; }
+
+/* ── Paywall ── */
+.paywall-gradient {
+  background: linear-gradient(180deg, rgba(16,185,129,0.12) 0%, var(--bg-primary) 40%);
+}
+.paywall-gradient-android {
+  background: linear-gradient(180deg, rgba(16,185,129,0.08) 0%, #0d1117 40%);
+}
+.feature-check { display:flex; align-items:flex-start; gap:10px; padding:6px 0; }
+.feature-check svg { width:18px; height:18px; color:var(--emerald); flex-shrink:0; margin-top:1px; }
+.feature-check span { font-size:14px; color:var(--text-secondary); line-height:1.4; }
+
+/* ── News ── */
+.news-item { padding:10px 0; border-bottom:1px solid var(--border-light); }
+.news-item:last-child { border-bottom:none; }
+
+/* ── Divider label ── */
+.section-label { font-size:11px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:var(--text-muted); padding:16px 0 8px; }
+
+/* ── Desktop-only tag ── */
+.desktop-tag { display:inline-flex; padding:2px 6px; background:rgba(100,116,139,0.15); border:1px solid rgba(100,116,139,0.2); border-radius:5px; font-size:9px; font-weight:700; color:var(--text-muted); letter-spacing:0.5px; text-transform:uppercase; }
+
+/* ── Tier badge ── */
+.tier-starter { display:inline-flex; padding:2px 7px; background:var(--blue-bg); border-radius:5px; font-size:9px; font-weight:700; color:var(--blue); letter-spacing:0.3px; }
+.tier-pro { display:inline-flex; padding:2px 7px; background:var(--violet-bg); border-radius:5px; font-size:9px; font-weight:700; color:var(--violet); letter-spacing:0.3px; }
+
+/* Locked overlay */
+.locked-row { opacity:0.45; pointer-events:none; }
+
+/* ── Social login buttons ── */
+.social-btn {
+  width:100%; padding:13px; border-radius:12px; border:1px solid var(--border);
+  background:var(--bg-card); color:var(--text-primary); font-size:14px; font-weight:600;
+  font-family:inherit; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px;
+}
+.social-btn-android {
+  width:100%; padding:14px; border-radius:28px; border:1px solid var(--border);
+  background:#0d1117; color:var(--text-primary); font-size:14px; font-weight:600;
+  font-family:inherit; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px;
+}
+
+/* ── Pricing cards ── */
+.pricing-card {
+  border:1px solid var(--border-light); border-radius:16px; padding:20px 16px; margin-bottom:10px;
+  background:var(--bg-card); position:relative;
+}
+.pricing-card.recommended {
+  border-color:var(--emerald); background:rgba(16,185,129,0.04);
+}
+.pricing-popular {
+  position:absolute; top:-10px; left:50%; transform:translateX(-50%);
+  background:var(--emerald); color:#020617; font-size:10px; font-weight:700;
+  padding:3px 12px; border-radius:10px; letter-spacing:0.5px; white-space:nowrap;
+}
+
+/* Toggle */
+.toggle-track { width:44px; height:26px; border-radius:13px; background:var(--emerald); position:relative; cursor:pointer; flex-shrink:0; }
+.toggle-thumb { width:22px; height:22px; border-radius:50%; background:#fff; position:absolute; top:2px; right:2px; box-shadow:0 1px 3px rgba(0,0,0,0.3); }
+
+/* ── Responsive ── */
+@media (max-width:820px) { .platform-row { flex-direction:column; align-items:center; } }
+</style>
+</head>
+<body>
+
+<!-- ═══════ TOP BAR ═══════ -->
+<div class="topbar">
+  <div class="topbar-logo">
+    <span class="dot"></span> trefolio Mobile
+  </div>
+  <div class="topbar-tabs">
+    <div class="topbar-tab active" onclick="showPlatform('ios')">iOS</div>
+    <div class="topbar-tab" onclick="showPlatform('android')">Android</div>
+    <div class="topbar-tab" onclick="showPlatform('both')">Side by Side</div>
+  </div>
+</div>
+
+<div class="main-area">
+
+<!-- ═══════════════════════════════════════════════════════════════
+     iOS SCREENS
+     ═══════════════════════════════════════════════════════════════ -->
+<div id="ios-section">
+<div style="text-align:center; margin-bottom:24px;">
+  <span style="font-size:13px; font-weight:700; letter-spacing:3px; text-transform:uppercase; color:var(--text-muted);">iOS &mdash; Human Interface Guidelines</span>
+</div>
+<div class="platform-row">
+
+<!-- ──── iOS: Sign Up ──── -->
+<div class="phone-col">
+  <div class="phone-label">Sign Up</div>
+  <div class="phone phone-ios">
+    <div class="dynamic-island"></div>
+    <div class="ios-status"><span>9:41</span><div class="status-icons"><svg fill="currentColor" viewBox="0 0 16 12"><rect x="0" y="3" width="3" height="9" rx="1"/><rect x="4.5" y="1" width="3" height="11" rx="1"/><rect x="9" y="0" width="3" height="12" rx="1"/><rect x="13" y="2" width="3" height="10" rx="1"/></svg><svg fill="currentColor" viewBox="0 0 24 16"><rect x="0" y="2" width="20" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="2" y="4" width="14" height="8" rx="1" fill="var(--emerald)"/></svg></div></div>
+    <div class="screen-scroll full" style="padding:0 24px;">
+      <div style="text-align:center; padding:40px 0 32px;">
+        <div style="width:64px; height:64px; margin:0 auto 16px; border-radius:18px; background:linear-gradient(135deg,#6ee7b7,#10b981); display:flex; align-items:center; justify-content:center;">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><g transform="translate(16,16) rotate(45)"><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#fff"/><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#fff" transform="rotate(90)" opacity=".8"/><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#fff" transform="rotate(180)" opacity=".6"/><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#fff" transform="rotate(270)" opacity=".4"/></g></svg>
+        </div>
+        <div style="font-size:24px; font-weight:800; letter-spacing:-0.3px;">Create Account</div>
+        <div style="font-size:14px; color:var(--text-secondary); margin-top:6px;">Track your portfolio everywhere</div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <input class="input-field" placeholder="Full name" />
+        <input class="input-field" placeholder="Email address" type="email" />
+        <input class="input-field" placeholder="Password" type="password" />
+        <button class="btn-primary" style="margin-top:4px;">Create Account</button>
+        <div style="display:flex; align-items:center; gap:12px; margin:8px 0;">
+          <div style="flex:1; height:1px; background:var(--border);"></div>
+          <span style="font-size:12px; color:var(--text-muted);">or continue with</span>
+          <div style="flex:1; height:1px; background:var(--border);"></div>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <button class="social-btn" style="flex:1;">
+            <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+            Google
+          </button>
+          <button class="social-btn" style="flex:1;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+            Apple
+          </button>
+        </div>
+        <div style="text-align:center; margin-top:16px; font-size:13px; color:var(--text-secondary);">
+          Already have an account? <span style="color:var(--emerald); font-weight:600; cursor:pointer;">Sign In</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ──── iOS: Sign In ──── -->
+<div class="phone-col">
+  <div class="phone-label">Sign In</div>
+  <div class="phone phone-ios">
+    <div class="dynamic-island"></div>
+    <div class="ios-status"><span>9:41</span><div class="status-icons"><svg fill="currentColor" viewBox="0 0 16 12"><rect x="0" y="3" width="3" height="9" rx="1"/><rect x="4.5" y="1" width="3" height="11" rx="1"/><rect x="9" y="0" width="3" height="12" rx="1"/><rect x="13" y="2" width="3" height="10" rx="1"/></svg><svg fill="currentColor" viewBox="0 0 24 16"><rect x="0" y="2" width="20" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="2" y="4" width="14" height="8" rx="1" fill="var(--emerald)"/></svg></div></div>
+    <div class="screen-scroll full" style="padding:0 24px;">
+      <div style="text-align:center; padding:48px 0 36px;">
+        <div style="width:64px; height:64px; margin:0 auto 16px; border-radius:18px; background:linear-gradient(135deg,#6ee7b7,#10b981); display:flex; align-items:center; justify-content:center;">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><g transform="translate(16,16) rotate(45)"><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#fff"/><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#fff" transform="rotate(90)" opacity=".8"/><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#fff" transform="rotate(180)" opacity=".6"/><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#fff" transform="rotate(270)" opacity=".4"/></g></svg>
+        </div>
+        <div style="font-size:24px; font-weight:800; letter-spacing:-0.3px;">Welcome Back</div>
+        <div style="font-size:14px; color:var(--text-secondary); margin-top:6px;">Sign in to your portfolio</div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <input class="input-field" placeholder="Email address" type="email" />
+        <input class="input-field" placeholder="Password" type="password" />
+        <div style="text-align:right;"><span style="font-size:13px; color:var(--emerald); font-weight:500; cursor:pointer;">Forgot password?</span></div>
+        <button class="btn-primary" style="margin-top:4px;">Sign In</button>
+        <div style="display:flex; align-items:center; gap:12px; margin:8px 0;">
+          <div style="flex:1; height:1px; background:var(--border);"></div>
+          <span style="font-size:12px; color:var(--text-muted);">or</span>
+          <div style="flex:1; height:1px; background:var(--border);"></div>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <button class="social-btn" style="flex:1;">
+            <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+            Google
+          </button>
+          <button class="social-btn" style="flex:1;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+            Apple
+          </button>
+        </div>
+        <div style="text-align:center; margin-top:20px; font-size:13px; color:var(--text-secondary);">
+          New here? <span style="color:var(--emerald); font-weight:600; cursor:pointer;">Create Account</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ──── iOS: Portfolio Home ──── -->
+<div class="phone-col">
+  <div class="phone-label">Home</div>
+  <div class="phone phone-ios" id="ios-home">
+    <div class="dynamic-island"></div>
+    <div class="ios-status"><span>9:41</span><div class="status-icons"><svg fill="currentColor" viewBox="0 0 16 12"><rect x="0" y="3" width="3" height="9" rx="1"/><rect x="4.5" y="1" width="3" height="11" rx="1"/><rect x="9" y="0" width="3" height="12" rx="1"/><rect x="13" y="2" width="3" height="10" rx="1"/></svg><svg fill="currentColor" viewBox="0 0 24 16"><rect x="0" y="2" width="20" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="2" y="4" width="14" height="8" rx="1" fill="var(--emerald)"/></svg></div></div>
+    <div class="screen-scroll">
+      <div class="pad">
+        <!-- iOS Segmented Control -->
+        <div class="ios-segmented" id="ios-home-tabs">
+          <div class="ios-seg-item active" onclick="iosHomeTab('portfolio')">Portfolio</div>
+          <div class="ios-seg-item" onclick="iosHomeTab('diversify')">Diversify</div>
+          <div class="ios-seg-item" onclick="iosHomeTab('dividends')">Dividends</div>
+          <div class="ios-seg-item" onclick="iosHomeTab('news')">News</div>
+        </div>
+
+        <!-- Portfolio -->
+        <div class="screen active" id="ios-home-portfolio">
+          <div class="card">
+            <div class="label-sm mb-2">Total Portfolio Value</div>
+            <div class="value-lg">€47,832.61</div>
+            <div class="flex items-center gap-2 mt-1"><span class="badge badge-green">+12.4%</span><span class="label-xs">+€5,284.19 all time</span></div>
+            <div class="progress-bar" style="margin-top:14px;"><div class="progress-fill" style="width:48%;"></div></div>
+            <div class="flex justify-between mt-1"><span class="label-xs">Goal: €100,000</span><span class="label-xs text-green">48%</span></div>
+          </div>
+          <div class="flex gap-2 mb-3">
+            <div class="card-sm" style="flex:1;text-align:center;"><div class="label-xs">Day</div><div class="value-sm text-green">+0.84%</div></div>
+            <div class="card-sm" style="flex:1;text-align:center;"><div class="label-xs">Week</div><div class="value-sm text-red">-1.2%</div></div>
+            <div class="card-sm" style="flex:1;text-align:center;"><div class="label-xs">Month</div><div class="value-sm text-green">+3.1%</div></div>
+          </div>
+          <div class="flex justify-between items-center mb-2" style="padding:0 2px;"><span style="font-size:14px;font-weight:700;">Holdings</span><span class="label-xs">12 stocks</span></div>
+          <div class="holding-card"><div class="flex items-center gap-3"><div class="ticker-badge" style="background:linear-gradient(135deg,#3b82f6,#1d4ed8);">AAPL</div><div><div style="font-size:14px;font-weight:600;">Apple Inc.</div><div class="label-xs">48 shares &middot; €171.70</div></div></div><div style="text-align:right;"><div class="value-sm">€8,241.60</div><div style="font-size:12px;" class="text-green">+24.3%</div></div></div>
+          <div class="holding-card"><div class="flex items-center gap-3"><div class="ticker-badge" style="background:linear-gradient(135deg,#10b981,#047857);">MSFT</div><div><div style="font-size:14px;font-weight:600;">Microsoft</div><div class="label-xs">22 shares &middot; €356.10</div></div></div><div style="text-align:right;"><div class="value-sm">€7,854.20</div><div style="font-size:12px;" class="text-green">+18.7%</div></div></div>
+          <div class="holding-card"><div class="flex items-center gap-3"><div class="ticker-badge" style="background:linear-gradient(135deg,#f59e0b,#d97706);">ASML</div><div><div style="font-size:14px;font-weight:600;">ASML Holding</div><div class="label-xs">8 shares &middot; €709.00</div></div></div><div style="text-align:right;"><div class="value-sm">€5,672.00</div><div style="font-size:12px;" class="text-red">-3.1%</div></div></div>
+          <div class="holding-card"><div class="flex items-center gap-3"><div class="ticker-badge" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9);">NOVO</div><div><div style="font-size:14px;font-weight:600;">Novo Nordisk</div><div class="label-xs">35 shares &middot; €125.21</div></div></div><div style="text-align:right;"><div class="value-sm">€4,382.50</div><div style="font-size:12px;" class="text-green">+42.1%</div></div></div>
+          <div class="holding-card" style="opacity:.45;"><div class="flex items-center gap-3"><div class="ticker-badge" style="background:var(--bg-input);">+8</div><div><div style="font-size:13px;color:var(--text-muted);">8 more holdings</div></div></div><div style="text-align:right;"><div class="value-sm text-muted">€21,682</div></div></div>
+        </div>
+
+        <!-- Diversify -->
+        <div class="screen" id="ios-home-diversify">
+          <div class="card"><div style="font-size:14px;font-weight:700;margin-bottom:4px;">Sector Allocation</div><div class="pie-chart"></div><div style="margin-top:8px;"><div class="legend-row"><div class="flex items-center"><div class="legend-color" style="background:#10b981;"></div><span style="font-size:13px;">Technology</span></div><span class="value-sm">30%</span></div><div class="legend-row"><div class="flex items-center"><div class="legend-color" style="background:#3b82f6;"></div><span style="font-size:13px;">Healthcare</span></div><span class="value-sm">24%</span></div><div class="legend-row"><div class="flex items-center"><div class="legend-color" style="background:#f59e0b;"></div><span style="font-size:13px;">Industrials</span></div><span class="value-sm">18%</span></div><div class="legend-row"><div class="flex items-center"><div class="legend-color" style="background:#8b5cf6;"></div><span style="font-size:13px;">Consumer</span></div><span class="value-sm">16%</span></div><div class="legend-row"><div class="flex items-center"><div class="legend-color" style="background:#64748b;"></div><span style="font-size:13px;">Other</span></div><span class="value-sm">12%</span></div></div></div>
+          <div class="card"><div style="font-size:14px;font-weight:700;margin-bottom:10px;">Rebalancing Drift</div><div class="legend-row"><div><span style="font-size:13px;">Technology</span><div class="label-xs">Target 25% &middot; Actual 30%</div></div><span class="badge badge-red">+5%</span></div><div class="legend-row"><div><span style="font-size:13px;">Healthcare</span><div class="label-xs">Target 25% &middot; Actual 24%</div></div><span class="badge badge-green">-1%</span></div><div class="legend-row"><div><span style="font-size:13px;">Industrials</span><div class="label-xs">Target 20% &middot; Actual 18%</div></div><span class="badge badge-green">-2%</span></div></div>
+        </div>
+
+        <!-- Dividends -->
+        <div class="screen" id="ios-home-dividends">
+          <div class="card"><div class="label-sm mb-2">Estimated Annual Income</div><div class="value-lg text-green">€1,284.50</div><div class="label-xs mt-1">~€107/mo &middot; 2.7% yield</div></div>
+          <div class="card"><div style="font-size:14px;font-weight:700;">Monthly Income</div><div class="bar-chart"><div class="bar" style="height:30%;"><span class="bar-label">J</span></div><div class="bar" style="height:55%;"><span class="bar-label">F</span></div><div class="bar" style="height:25%;"><span class="bar-label">M</span></div><div class="bar" style="height:70%;"><span class="bar-label">A</span></div><div class="bar" style="height:40%;"><span class="bar-label">M</span></div><div class="bar" style="height:85%;"><span class="bar-label">J</span></div><div class="bar" style="height:35%;"><span class="bar-label">J</span></div><div class="bar" style="height:60%;"><span class="bar-label">A</span></div><div class="bar" style="height:45%;"><span class="bar-label">S</span></div><div class="bar" style="height:90%;"><span class="bar-label">O</span></div><div class="bar" style="height:50%;"><span class="bar-label">N</span></div><div class="bar" style="height:100%;"><span class="bar-label">D</span></div></div></div>
+          <div class="card" style="margin-top:24px;"><div style="font-size:14px;font-weight:700;margin-bottom:8px;">Top Payers</div><div class="legend-row"><div class="flex items-center gap-2"><div class="ticker-badge ticker-sm" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9);">NOVO</div><div><div style="font-size:13px;font-weight:500;">Novo Nordisk</div><div class="label-xs">1.24% yield</div></div></div><span class="value-sm text-green">€456/yr</span></div><div class="legend-row"><div class="flex items-center gap-2"><div class="ticker-badge ticker-sm" style="background:linear-gradient(135deg,#10b981,#047857);">MSFT</div><div><div style="font-size:13px;font-weight:500;">Microsoft</div><div class="label-xs">0.72% yield</div></div></div><span class="value-sm text-green">€312/yr</span></div><div class="legend-row"><div class="flex items-center gap-2"><div class="ticker-badge ticker-sm" style="background:linear-gradient(135deg,#3b82f6,#1d4ed8);">AAPL</div><div><div style="font-size:13px;font-weight:500;">Apple Inc.</div><div class="label-xs">0.51% yield</div></div></div><span class="value-sm text-green">€192/yr</span></div></div>
+        </div>
+
+        <!-- News -->
+        <div class="screen" id="ios-home-news">
+          <div class="card"><div style="font-size:14px;font-weight:700;margin-bottom:6px;">Portfolio News</div><div class="news-item"><div style="font-size:14px;font-weight:500;line-height:1.4;margin-bottom:3px;">Apple reports record Q1 revenue driven by iPhone 16 sales</div><div class="label-xs">Reuters &middot; 2h &middot; <span class="text-green">AAPL +1.2%</span></div></div><div class="news-item"><div style="font-size:14px;font-weight:500;line-height:1.4;margin-bottom:3px;">ASML warns of slower orders as chip demand normalizes</div><div class="label-xs">Bloomberg &middot; 4h &middot; <span class="text-red">ASML -2.8%</span></div></div><div class="news-item"><div style="font-size:14px;font-weight:500;line-height:1.4;margin-bottom:3px;">Novo Nordisk Wegovy approved in three new markets</div><div class="label-xs">FT &middot; 6h &middot; <span class="text-green">NOVO +3.4%</span></div></div><div class="news-item"><div style="font-size:14px;font-weight:500;line-height:1.4;margin-bottom:3px;">Microsoft Azure revenue grows 28% on AI workloads</div><div class="label-xs">CNBC &middot; 8h &middot; <span class="text-green">MSFT +0.9%</span></div></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="ios-tabbar">
+      <div class="nav-item active"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>Home</div>
+      <div class="nav-item"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>Tools</div>
+      <div class="nav-item"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>Profile</div>
+    </div>
+  </div>
+</div>
+
+<!-- ──── iOS: Tools ──── -->
+<div class="phone-col">
+  <div class="phone-label">Tools</div>
+  <div class="phone phone-ios">
+    <div class="dynamic-island"></div>
+    <div class="ios-status"><span>9:41</span><div class="status-icons"><svg fill="currentColor" viewBox="0 0 16 12"><rect x="0" y="3" width="3" height="9" rx="1"/><rect x="4.5" y="1" width="3" height="11" rx="1"/><rect x="9" y="0" width="3" height="12" rx="1"/><rect x="13" y="2" width="3" height="10" rx="1"/></svg><svg fill="currentColor" viewBox="0 0 24 16"><rect x="0" y="2" width="20" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="2" y="4" width="14" height="8" rx="1" fill="var(--emerald)"/></svg></div></div>
+    <div class="screen-scroll">
+      <div class="pad">
+        <div class="ios-navbar"><div class="title">Tools</div></div>
+        <div class="section-label">Available</div>
+        <div class="tool-row"><div class="tool-icon" style="background:var(--blue-bg);"><svg fill="none" viewBox="0 0 24 24" stroke="var(--blue)" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg></div><div style="flex:1;"><div style="font-size:15px;font-weight:600;">Watchlist</div><div class="label-xs">Track stocks you're interested in</div></div><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="var(--text-muted)" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></div>
+        <div class="tool-row"><div class="tool-icon" style="background:var(--violet-bg);"><svg fill="none" viewBox="0 0 24 24" stroke="var(--violet)" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg></div><div style="flex:1;"><div style="font-size:15px;font-weight:600;">Accounts</div><div class="label-xs">Manage broker accounts</div></div><div class="flex items-center gap-2"><span class="label-xs">2</span><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="var(--text-muted)" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></div></div>
+
+        <div class="section-label">Starter+</div>
+        <div class="tool-row"><div class="tool-icon" style="background:var(--amber-bg);"><svg fill="none" viewBox="0 0 24 24" stroke="var(--amber)" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg></div><div style="flex:1;"><div style="font-size:15px;font-weight:600;">Price Alerts <span class="tier-starter">Bifolio</span></div><div class="label-xs">Get notified on price moves</div></div><div class="flex items-center gap-2"><span class="badge badge-green">3</span><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="var(--text-muted)" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></div></div>
+
+        <div class="section-label">Desktop Only</div>
+        <div class="tool-row locked-row"><div class="tool-icon" style="background:var(--emerald-bg);"><svg fill="none" viewBox="0 0 24 24" stroke="var(--emerald)" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg></div><div style="flex:1;"><div style="font-size:15px;font-weight:600;">Tax Report <span class="desktop-tag">Desktop</span> <span class="tier-pro">Pro</span></div><div class="label-xs">Multi-country tax calculations</div></div></div>
+        <div class="tool-row locked-row"><div class="tool-icon" style="background:rgba(236,72,153,0.12);"><svg fill="none" viewBox="0 0 24 24" stroke="#ec4899" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg></div><div style="flex:1;"><div style="font-size:15px;font-weight:600;">Simulator <span class="desktop-tag">Desktop</span> <span class="tier-pro">Pro</span></div><div class="label-xs">Backtest &amp; stress test</div></div></div>
+        <div class="tool-row locked-row"><div class="tool-icon" style="background:rgba(14,165,233,0.12);"><svg fill="none" viewBox="0 0 24 24" stroke="#0ea5e9" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg></div><div style="flex:1;"><div style="font-size:15px;font-weight:600;">Screener <span class="desktop-tag">Desktop</span> <span class="tier-pro">Pro</span></div><div class="label-xs">Filter 600+ stocks</div></div></div>
+        <div class="tool-row locked-row"><div class="tool-icon" style="background:rgba(168,85,247,0.12);"><svg fill="none" viewBox="0 0 24 24" stroke="#a855f7" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg></div><div style="flex:1;"><div style="font-size:15px;font-weight:600;">Transactions <span class="desktop-tag">Desktop</span></div><div class="label-xs">Full history &amp; FIFO P&amp;L</div></div></div>
+        <div class="tool-row locked-row"><div class="tool-icon" style="background:rgba(34,197,94,0.12);"><svg fill="none" viewBox="0 0 24 24" stroke="#22c55e" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div><div style="flex:1;"><div style="font-size:15px;font-weight:600;">Performance <span class="desktop-tag">Desktop</span> <span class="tier-starter">Bifolio</span></div><div class="label-xs">TTWROR, IRR, Sharpe</div></div></div>
+      </div>
+    </div>
+    <div class="ios-tabbar">
+      <div class="nav-item"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>Home</div>
+      <div class="nav-item active"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>Tools</div>
+      <div class="nav-item"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>Profile</div>
+    </div>
+  </div>
+</div>
+
+<!-- ──── iOS: Paywall ──── -->
+<div class="phone-col">
+  <div class="phone-label">Upgrade (Free User)</div>
+  <div class="phone phone-ios">
+    <div class="dynamic-island"></div>
+    <div class="ios-status"><span>9:41</span><div class="status-icons"><svg fill="currentColor" viewBox="0 0 16 12"><rect x="0" y="3" width="3" height="9" rx="1"/><rect x="4.5" y="1" width="3" height="11" rx="1"/><rect x="9" y="0" width="3" height="12" rx="1"/><rect x="13" y="2" width="3" height="10" rx="1"/></svg><svg fill="currentColor" viewBox="0 0 24 16"><rect x="0" y="2" width="20" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="2" y="4" width="14" height="8" rx="1" fill="var(--emerald)"/></svg></div></div>
+    <div class="screen-scroll full paywall-gradient" style="padding:0 20px;">
+      <!-- Close button -->
+      <div style="display:flex;justify-content:flex-end;padding:8px 0;">
+        <div style="width:28px;height:28px;border-radius:50%;background:var(--bg-card);display:flex;align-items:center;justify-content:center;cursor:pointer;">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="var(--text-muted)" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </div>
+      </div>
+      <div style="text-align:center;padding:8px 0 20px;">
+        <div style="width:56px;height:56px;margin:0 auto 14px;border-radius:16px;background:linear-gradient(135deg,#6ee7b7,#10b981);display:flex;align-items:center;justify-content:center;">
+          <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+        </div>
+        <div style="font-size:22px;font-weight:800;letter-spacing:-0.3px;">Unlock Your<br>Full Potential</div>
+        <div style="font-size:13px;color:var(--text-secondary);margin-top:8px;line-height:1.5;">Get deeper insights, more alerts, and<br>advanced tools for your portfolio</div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:20px;padding:0 4px;">
+        <div class="feature-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg><span>Up to <strong style="color:var(--text-primary);">50 holdings</strong> (vs 15 free)</span></div>
+        <div class="feature-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg><span><strong style="color:var(--text-primary);">Price alerts</strong> with email &amp; push</span></div>
+        <div class="feature-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg><span><strong style="color:var(--text-primary);">Performance metrics</strong> &mdash; TTWROR, IRR</span></div>
+        <div class="feature-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg><span><strong style="color:var(--text-primary);">CSV export</strong> &amp; portfolio sharing</span></div>
+        <div class="feature-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg><span><strong style="color:var(--text-primary);">Net worth tracking</strong> across accounts</span></div>
+      </div>
+
+      <!-- Pricing cards -->
+      <div class="pricing-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div><div style="font-size:15px;font-weight:700;">Bifolio</div><div class="label-xs">Starter plan</div></div>
+          <div style="text-align:right;"><span style="font-size:20px;font-weight:800;">€2.99</span><span style="font-size:12px;color:var(--text-muted);">/mo</span></div>
+        </div>
+      </div>
+      <div class="pricing-card recommended">
+        <div class="pricing-popular">MOST POPULAR</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
+          <div><div style="font-size:15px;font-weight:700;">Trefolio</div><div class="label-xs">Everything unlimited</div></div>
+          <div style="text-align:right;"><span style="font-size:20px;font-weight:800;">€7.99</span><span style="font-size:12px;color:var(--text-muted);">/mo</span></div>
+        </div>
+      </div>
+
+      <button class="btn-primary" style="margin-top:12px;">Start Free Trial</button>
+      <div style="text-align:center;margin-top:10px;font-size:12px;color:var(--text-muted);">7-day free trial &middot; Cancel anytime</div>
+    </div>
+  </div>
+</div>
+
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     ANDROID SCREENS
+     ═══════════════════════════════════════════════════════════════ -->
+<div id="android-section" style="margin-top:48px;">
+<div style="text-align:center; margin-bottom:24px;">
+  <span style="font-size:13px; font-weight:700; letter-spacing:3px; text-transform:uppercase; color:var(--text-muted);">Android &mdash; Material Design 3</span>
+</div>
+<div class="platform-row">
+
+<!-- ──── Android: Sign Up ──── -->
+<div class="phone-col">
+  <div class="phone-label">Sign Up</div>
+  <div class="phone phone-android">
+    <div class="punch-hole"></div>
+    <div class="android-status"><span>9:41</span><div class="status-icons"><svg fill="currentColor" viewBox="0 0 16 12"><rect x="0" y="3" width="3" height="9" rx="1"/><rect x="4.5" y="1" width="3" height="11" rx="1"/><rect x="9" y="0" width="3" height="12" rx="1"/><rect x="13" y="2" width="3" height="10" rx="1"/></svg><svg fill="currentColor" viewBox="0 0 24 16"><rect x="0" y="2" width="20" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="2" y="4" width="14" height="8" rx="1" fill="var(--emerald)"/></svg></div></div>
+    <div class="screen-scroll full-android" style="padding:0 24px;">
+      <div style="text-align:center; padding:48px 0 32px;">
+        <div style="width:72px; height:72px; margin:0 auto 16px; border-radius:22px; background:linear-gradient(135deg,#6ee7b7,#10b981); display:flex; align-items:center; justify-content:center;">
+          <svg width="36" height="36" viewBox="0 0 32 32" fill="none"><g transform="translate(16,16) rotate(45)"><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#fff"/><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#fff" transform="rotate(90)" opacity=".8"/><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#fff" transform="rotate(180)" opacity=".6"/><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#fff" transform="rotate(270)" opacity=".4"/></g></svg>
+        </div>
+        <div style="font-size:24px; font-weight:700;">Create Account</div>
+        <div style="font-size:14px; color:var(--text-secondary); margin-top:6px;">Your portfolio, always with you</div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <input class="input-field" style="border-radius:28px;padding:16px 20px;" placeholder="Full name" />
+        <input class="input-field" style="border-radius:28px;padding:16px 20px;" placeholder="Email address" type="email" />
+        <input class="input-field" style="border-radius:28px;padding:16px 20px;" placeholder="Password" type="password" />
+        <button class="m3-btn" style="margin-top:4px;">Create Account</button>
+        <div style="display:flex; align-items:center; gap:12px; margin:4px 0;">
+          <div style="flex:1; height:1px; background:var(--border);"></div>
+          <span style="font-size:12px; color:var(--text-muted);">or</span>
+          <div style="flex:1; height:1px; background:var(--border);"></div>
+        </div>
+        <button class="social-btn-android">
+          <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+          Continue with Google
+        </button>
+        <div style="text-align:center; margin-top:12px; font-size:13px; color:var(--text-secondary);">
+          Already have an account? <span style="color:var(--emerald); font-weight:600; cursor:pointer;">Sign In</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ──── Android: Sign In ──── -->
+<div class="phone-col">
+  <div class="phone-label">Sign In</div>
+  <div class="phone phone-android">
+    <div class="punch-hole"></div>
+    <div class="android-status"><span>9:41</span><div class="status-icons"><svg fill="currentColor" viewBox="0 0 16 12"><rect x="0" y="3" width="3" height="9" rx="1"/><rect x="4.5" y="1" width="3" height="11" rx="1"/><rect x="9" y="0" width="3" height="12" rx="1"/><rect x="13" y="2" width="3" height="10" rx="1"/></svg><svg fill="currentColor" viewBox="0 0 24 16"><rect x="0" y="2" width="20" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="2" y="4" width="14" height="8" rx="1" fill="var(--emerald)"/></svg></div></div>
+    <div class="screen-scroll full-android" style="padding:0 24px;">
+      <div style="text-align:center; padding:56px 0 40px;">
+        <div style="width:72px; height:72px; margin:0 auto 16px; border-radius:22px; background:linear-gradient(135deg,#6ee7b7,#10b981); display:flex; align-items:center; justify-content:center;">
+          <svg width="36" height="36" viewBox="0 0 32 32" fill="none"><g transform="translate(16,16) rotate(45)"><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#fff"/><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#fff" transform="rotate(90)" opacity=".8"/><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#fff" transform="rotate(180)" opacity=".6"/><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#fff" transform="rotate(270)" opacity=".4"/></g></svg>
+        </div>
+        <div style="font-size:24px; font-weight:700;">Welcome Back</div>
+        <div style="font-size:14px; color:var(--text-secondary); margin-top:6px;">Sign in to your portfolio</div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <input class="input-field" style="border-radius:28px;padding:16px 20px;" placeholder="Email address" type="email" />
+        <input class="input-field" style="border-radius:28px;padding:16px 20px;" placeholder="Password" type="password" />
+        <div style="text-align:right;"><span style="font-size:13px; color:var(--emerald); font-weight:500; cursor:pointer;">Forgot password?</span></div>
+        <button class="m3-btn" style="margin-top:4px;">Sign In</button>
+        <div style="display:flex; align-items:center; gap:12px; margin:4px 0;">
+          <div style="flex:1; height:1px; background:var(--border);"></div>
+          <span style="font-size:12px; color:var(--text-muted);">or</span>
+          <div style="flex:1; height:1px; background:var(--border);"></div>
+        </div>
+        <button class="social-btn-android">
+          <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+          Continue with Google
+        </button>
+        <div style="text-align:center; margin-top:16px; font-size:13px; color:var(--text-secondary);">
+          New here? <span style="color:var(--emerald); font-weight:600; cursor:pointer;">Create Account</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ──── Android: Home ──── -->
+<div class="phone-col">
+  <div class="phone-label">Home</div>
+  <div class="phone phone-android" id="android-home">
+    <div class="punch-hole"></div>
+    <div class="android-status"><span>9:41</span><div class="status-icons"><svg fill="currentColor" viewBox="0 0 16 12"><rect x="0" y="3" width="3" height="9" rx="1"/><rect x="4.5" y="1" width="3" height="11" rx="1"/><rect x="9" y="0" width="3" height="12" rx="1"/><rect x="13" y="2" width="3" height="10" rx="1"/></svg><svg fill="currentColor" viewBox="0 0 24 16"><rect x="0" y="2" width="20" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="2" y="4" width="14" height="8" rx="1" fill="var(--emerald)"/></svg></div></div>
+    <div class="screen-scroll android-scroll">
+      <div class="pad">
+        <!-- M3 Tabs -->
+        <div class="m3-tabs" id="android-home-tabs">
+          <div class="m3-tab active" onclick="androidHomeTab('portfolio')">Portfolio</div>
+          <div class="m3-tab" onclick="androidHomeTab('diversify')">Diversify</div>
+          <div class="m3-tab" onclick="androidHomeTab('dividends')">Dividends</div>
+          <div class="m3-tab" onclick="androidHomeTab('news')">News</div>
+        </div>
+
+        <!-- Portfolio -->
+        <div class="screen active" id="android-home-portfolio">
+          <div class="card" style="border-radius:20px;">
+            <div class="label-sm mb-2">Total Portfolio Value</div>
+            <div class="value-lg">€47,832.61</div>
+            <div class="flex items-center gap-2 mt-1"><span class="badge badge-green">+12.4%</span><span class="label-xs">+€5,284.19 all time</span></div>
+            <div class="progress-bar" style="margin-top:14px;border-radius:4px;height:8px;"><div class="progress-fill" style="width:48%;border-radius:4px;"></div></div>
+            <div class="flex justify-between mt-1"><span class="label-xs">Goal: €100,000</span><span class="label-xs text-green">48%</span></div>
+          </div>
+          <div class="flex gap-2 mb-3">
+            <div class="card-sm" style="flex:1;text-align:center;border-radius:16px;"><div class="label-xs">Day</div><div class="value-sm text-green">+0.84%</div></div>
+            <div class="card-sm" style="flex:1;text-align:center;border-radius:16px;"><div class="label-xs">Week</div><div class="value-sm text-red">-1.2%</div></div>
+            <div class="card-sm" style="flex:1;text-align:center;border-radius:16px;"><div class="label-xs">Month</div><div class="value-sm text-green">+3.1%</div></div>
+          </div>
+          <div class="flex justify-between items-center mb-2" style="padding:0 2px;"><span style="font-size:14px;font-weight:700;">Holdings</span><span class="label-xs">12 stocks</span></div>
+          <div class="holding-card" style="border-radius:16px;"><div class="flex items-center gap-3"><div class="ticker-badge" style="background:linear-gradient(135deg,#3b82f6,#1d4ed8);border-radius:14px;">AAPL</div><div><div style="font-size:14px;font-weight:600;">Apple Inc.</div><div class="label-xs">48 shares &middot; €171.70</div></div></div><div style="text-align:right;"><div class="value-sm">€8,241.60</div><div style="font-size:12px;" class="text-green">+24.3%</div></div></div>
+          <div class="holding-card" style="border-radius:16px;"><div class="flex items-center gap-3"><div class="ticker-badge" style="background:linear-gradient(135deg,#10b981,#047857);border-radius:14px;">MSFT</div><div><div style="font-size:14px;font-weight:600;">Microsoft</div><div class="label-xs">22 shares &middot; €356.10</div></div></div><div style="text-align:right;"><div class="value-sm">€7,854.20</div><div style="font-size:12px;" class="text-green">+18.7%</div></div></div>
+          <div class="holding-card" style="border-radius:16px;"><div class="flex items-center gap-3"><div class="ticker-badge" style="background:linear-gradient(135deg,#f59e0b,#d97706);border-radius:14px;">ASML</div><div><div style="font-size:14px;font-weight:600;">ASML Holding</div><div class="label-xs">8 shares &middot; €709.00</div></div></div><div style="text-align:right;"><div class="value-sm">€5,672.00</div><div style="font-size:12px;" class="text-red">-3.1%</div></div></div>
+          <div class="holding-card" style="border-radius:16px;"><div class="flex items-center gap-3"><div class="ticker-badge" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9);border-radius:14px;">NOVO</div><div><div style="font-size:14px;font-weight:600;">Novo Nordisk</div><div class="label-xs">35 shares &middot; €125.21</div></div></div><div style="text-align:right;"><div class="value-sm">€4,382.50</div><div style="font-size:12px;" class="text-green">+42.1%</div></div></div>
+          <div class="holding-card" style="border-radius:16px;opacity:.45;"><div class="flex items-center gap-3"><div class="ticker-badge" style="background:var(--bg-input);border-radius:14px;">+8</div><div><div style="font-size:13px;color:var(--text-muted);">8 more holdings</div></div></div><div style="text-align:right;"><div class="value-sm text-muted">€21,682</div></div></div>
+        </div>
+
+        <!-- Diversify -->
+        <div class="screen" id="android-home-diversify">
+          <div class="card" style="border-radius:20px;"><div style="font-size:14px;font-weight:700;margin-bottom:4px;">Sector Allocation</div><div class="pie-chart"></div><div style="margin-top:8px;"><div class="legend-row"><div class="flex items-center"><div class="legend-color" style="background:#10b981;"></div><span style="font-size:13px;">Technology</span></div><span class="value-sm">30%</span></div><div class="legend-row"><div class="flex items-center"><div class="legend-color" style="background:#3b82f6;"></div><span style="font-size:13px;">Healthcare</span></div><span class="value-sm">24%</span></div><div class="legend-row"><div class="flex items-center"><div class="legend-color" style="background:#f59e0b;"></div><span style="font-size:13px;">Industrials</span></div><span class="value-sm">18%</span></div><div class="legend-row"><div class="flex items-center"><div class="legend-color" style="background:#8b5cf6;"></div><span style="font-size:13px;">Consumer</span></div><span class="value-sm">16%</span></div><div class="legend-row"><div class="flex items-center"><div class="legend-color" style="background:#64748b;"></div><span style="font-size:13px;">Other</span></div><span class="value-sm">12%</span></div></div></div>
+          <div class="card" style="border-radius:20px;"><div style="font-size:14px;font-weight:700;margin-bottom:10px;">Rebalancing Drift</div><div class="legend-row"><div><span style="font-size:13px;">Technology</span><div class="label-xs">Target 25% &middot; Actual 30%</div></div><span class="badge badge-red">+5%</span></div><div class="legend-row"><div><span style="font-size:13px;">Healthcare</span><div class="label-xs">Target 25% &middot; Actual 24%</div></div><span class="badge badge-green">-1%</span></div></div>
+        </div>
+
+        <!-- Dividends -->
+        <div class="screen" id="android-home-dividends">
+          <div class="card" style="border-radius:20px;"><div class="label-sm mb-2">Estimated Annual Income</div><div class="value-lg text-green">€1,284.50</div><div class="label-xs mt-1">~€107/mo &middot; 2.7% yield</div></div>
+          <div class="card" style="border-radius:20px;"><div style="font-size:14px;font-weight:700;">Monthly Income</div><div class="bar-chart"><div class="bar" style="height:30%;border-radius:4px 4px 0 0;"><span class="bar-label">J</span></div><div class="bar" style="height:55%;border-radius:4px 4px 0 0;"><span class="bar-label">F</span></div><div class="bar" style="height:25%;border-radius:4px 4px 0 0;"><span class="bar-label">M</span></div><div class="bar" style="height:70%;border-radius:4px 4px 0 0;"><span class="bar-label">A</span></div><div class="bar" style="height:40%;border-radius:4px 4px 0 0;"><span class="bar-label">M</span></div><div class="bar" style="height:85%;border-radius:4px 4px 0 0;"><span class="bar-label">J</span></div><div class="bar" style="height:35%;border-radius:4px 4px 0 0;"><span class="bar-label">J</span></div><div class="bar" style="height:60%;border-radius:4px 4px 0 0;"><span class="bar-label">A</span></div><div class="bar" style="height:45%;border-radius:4px 4px 0 0;"><span class="bar-label">S</span></div><div class="bar" style="height:90%;border-radius:4px 4px 0 0;"><span class="bar-label">O</span></div><div class="bar" style="height:50%;border-radius:4px 4px 0 0;"><span class="bar-label">N</span></div><div class="bar" style="height:100%;border-radius:4px 4px 0 0;"><span class="bar-label">D</span></div></div></div>
+        </div>
+
+        <!-- News -->
+        <div class="screen" id="android-home-news">
+          <div class="card" style="border-radius:20px;"><div style="font-size:14px;font-weight:700;margin-bottom:6px;">Portfolio News</div><div class="news-item"><div style="font-size:14px;font-weight:500;line-height:1.4;margin-bottom:3px;">Apple reports record Q1 revenue driven by iPhone 16 sales</div><div class="label-xs">Reuters &middot; 2h &middot; <span class="text-green">AAPL +1.2%</span></div></div><div class="news-item"><div style="font-size:14px;font-weight:500;line-height:1.4;margin-bottom:3px;">ASML warns of slower orders as chip demand normalizes</div><div class="label-xs">Bloomberg &middot; 4h &middot; <span class="text-red">ASML -2.8%</span></div></div><div class="news-item"><div style="font-size:14px;font-weight:500;line-height:1.4;margin-bottom:3px;">Novo Nordisk Wegovy approved in three new markets</div><div class="label-xs">FT &middot; 6h &middot; <span class="text-green">NOVO +3.4%</span></div></div></div>
+        </div>
+      </div>
+    </div>
+    <!-- FAB -->
+    <div class="fab"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg></div>
+    <div class="android-navbar">
+      <div class="nav-item active"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>Home</div>
+      <div class="nav-item"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>Tools</div>
+      <div class="nav-item"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>Profile</div>
+    </div>
+  </div>
+</div>
+
+<!-- ──── Android: Tools ──── -->
+<div class="phone-col">
+  <div class="phone-label">Tools</div>
+  <div class="phone phone-android">
+    <div class="punch-hole"></div>
+    <div class="android-status"><span>9:41</span><div class="status-icons"><svg fill="currentColor" viewBox="0 0 16 12"><rect x="0" y="3" width="3" height="9" rx="1"/><rect x="4.5" y="1" width="3" height="11" rx="1"/><rect x="9" y="0" width="3" height="12" rx="1"/><rect x="13" y="2" width="3" height="10" rx="1"/></svg><svg fill="currentColor" viewBox="0 0 24 16"><rect x="0" y="2" width="20" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="2" y="4" width="14" height="8" rx="1" fill="var(--emerald)"/></svg></div></div>
+    <div class="screen-scroll android-scroll">
+      <div class="pad">
+        <div class="m3-appbar"><div class="title">Tools</div></div>
+        <div class="section-label">Available</div>
+        <div class="tool-row" style="border-radius:16px;"><div class="tool-icon" style="background:var(--blue-bg);border-radius:14px;"><svg fill="none" viewBox="0 0 24 24" stroke="var(--blue)" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg></div><div style="flex:1;"><div style="font-size:15px;font-weight:600;">Watchlist</div><div class="label-xs">Track interesting stocks</div></div><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="var(--text-muted)" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></div>
+        <div class="tool-row" style="border-radius:16px;"><div class="tool-icon" style="background:var(--violet-bg);border-radius:14px;"><svg fill="none" viewBox="0 0 24 24" stroke="var(--violet)" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg></div><div style="flex:1;"><div style="font-size:15px;font-weight:600;">Accounts</div><div class="label-xs">Manage broker accounts</div></div><div class="flex items-center gap-2"><span class="label-xs">2</span><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="var(--text-muted)" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></div></div>
+
+        <div class="section-label">Bifolio (Starter)</div>
+        <div class="tool-row" style="border-radius:16px;"><div class="tool-icon" style="background:var(--amber-bg);border-radius:14px;"><svg fill="none" viewBox="0 0 24 24" stroke="var(--amber)" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg></div><div style="flex:1;"><div style="font-size:15px;font-weight:600;">Price Alerts <span class="tier-starter">Bifolio</span></div><div class="label-xs">Push &amp; email notifications</div></div><div class="flex items-center gap-2"><span class="badge badge-green">3</span><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="var(--text-muted)" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></div></div>
+
+        <div class="section-label">Desktop Only</div>
+        <div class="tool-row locked-row" style="border-radius:16px;"><div class="tool-icon" style="background:var(--emerald-bg);border-radius:14px;"><svg fill="none" viewBox="0 0 24 24" stroke="var(--emerald)" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg></div><div style="flex:1;"><div style="font-size:15px;font-weight:600;">Tax Report <span class="desktop-tag">Desktop</span> <span class="tier-pro">Pro</span></div><div class="label-xs">Multi-country calculations</div></div></div>
+        <div class="tool-row locked-row" style="border-radius:16px;"><div class="tool-icon" style="background:rgba(236,72,153,0.12);border-radius:14px;"><svg fill="none" viewBox="0 0 24 24" stroke="#ec4899" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg></div><div style="flex:1;"><div style="font-size:15px;font-weight:600;">Simulator <span class="desktop-tag">Desktop</span> <span class="tier-pro">Pro</span></div><div class="label-xs">Backtest &amp; stress test</div></div></div>
+        <div class="tool-row locked-row" style="border-radius:16px;"><div class="tool-icon" style="background:rgba(14,165,233,0.12);border-radius:14px;"><svg fill="none" viewBox="0 0 24 24" stroke="#0ea5e9" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg></div><div style="flex:1;"><div style="font-size:15px;font-weight:600;">Screener <span class="desktop-tag">Desktop</span> <span class="tier-pro">Pro</span></div><div class="label-xs">Filter 600+ stocks</div></div></div>
+        <div class="tool-row locked-row" style="border-radius:16px;"><div class="tool-icon" style="background:rgba(168,85,247,0.12);border-radius:14px;"><svg fill="none" viewBox="0 0 24 24" stroke="#a855f7" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg></div><div style="flex:1;"><div style="font-size:15px;font-weight:600;">Transactions <span class="desktop-tag">Desktop</span></div><div class="label-xs">Full history &amp; FIFO P&amp;L</div></div></div>
+        <div class="tool-row locked-row" style="border-radius:16px;"><div class="tool-icon" style="background:rgba(34,197,94,0.12);border-radius:14px;"><svg fill="none" viewBox="0 0 24 24" stroke="#22c55e" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div><div style="flex:1;"><div style="font-size:15px;font-weight:600;">Performance <span class="desktop-tag">Desktop</span> <span class="tier-starter">Bifolio</span></div><div class="label-xs">TTWROR, IRR, Sharpe</div></div></div>
+      </div>
+    </div>
+    <div class="android-navbar">
+      <div class="nav-item"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>Home</div>
+      <div class="nav-item active"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>Tools</div>
+      <div class="nav-item"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>Profile</div>
+    </div>
+  </div>
+</div>
+
+<!-- ──── Android: Paywall ──── -->
+<div class="phone-col">
+  <div class="phone-label">Upgrade (Free User)</div>
+  <div class="phone phone-android">
+    <div class="punch-hole"></div>
+    <div class="android-status"><span>9:41</span><div class="status-icons"><svg fill="currentColor" viewBox="0 0 16 12"><rect x="0" y="3" width="3" height="9" rx="1"/><rect x="4.5" y="1" width="3" height="11" rx="1"/><rect x="9" y="0" width="3" height="12" rx="1"/><rect x="13" y="2" width="3" height="10" rx="1"/></svg><svg fill="currentColor" viewBox="0 0 24 16"><rect x="0" y="2" width="20" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="2" y="4" width="14" height="8" rx="1" fill="var(--emerald)"/></svg></div></div>
+    <div class="screen-scroll full-android paywall-gradient-android" style="padding:0 20px;">
+      <div style="display:flex;justify-content:flex-end;padding:12px 0;">
+        <div style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;cursor:pointer;">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="var(--text-muted)" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </div>
+      </div>
+      <div style="text-align:center;padding:4px 0 24px;">
+        <div style="width:64px;height:64px;margin:0 auto 14px;border-radius:20px;background:linear-gradient(135deg,#6ee7b7,#10b981);display:flex;align-items:center;justify-content:center;">
+          <svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+        </div>
+        <div style="font-size:22px;font-weight:800;letter-spacing:-0.3px;">Unlock Your<br>Full Potential</div>
+        <div style="font-size:13px;color:var(--text-secondary);margin-top:8px;line-height:1.5;">Deeper insights and advanced tools<br>for serious investors</div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:20px;padding:0 4px;">
+        <div class="feature-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg><span>Up to <strong style="color:var(--text-primary);">50 holdings</strong> (vs 15 free)</span></div>
+        <div class="feature-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg><span><strong style="color:var(--text-primary);">Price alerts</strong> with push &amp; email</span></div>
+        <div class="feature-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg><span><strong style="color:var(--text-primary);">Performance metrics</strong> &mdash; TTWROR, IRR</span></div>
+        <div class="feature-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg><span><strong style="color:var(--text-primary);">CSV export</strong> &amp; portfolio sharing</span></div>
+        <div class="feature-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg><span><strong style="color:var(--text-primary);">Net worth tracking</strong> across accounts</span></div>
+      </div>
+
+      <!-- Material 3 pricing cards -->
+      <div class="pricing-card" style="border-radius:20px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div><div style="font-size:15px;font-weight:700;">Bifolio</div><div class="label-xs">Starter plan</div></div>
+          <div style="text-align:right;"><span style="font-size:20px;font-weight:800;">€2.99</span><span style="font-size:12px;color:var(--text-muted);">/mo</span></div>
+        </div>
+      </div>
+      <div class="pricing-card recommended" style="border-radius:20px;">
+        <div class="pricing-popular" style="border-radius:14px;">MOST POPULAR</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
+          <div><div style="font-size:15px;font-weight:700;">Trefolio</div><div class="label-xs">Everything unlimited</div></div>
+          <div style="text-align:right;"><span style="font-size:20px;font-weight:800;">€7.99</span><span style="font-size:12px;color:var(--text-muted);">/mo</span></div>
+        </div>
+      </div>
+
+      <button class="m3-btn" style="margin-top:14px;">Start Free Trial</button>
+      <div style="text-align:center;margin-top:10px;font-size:12px;color:var(--text-muted);">7-day free trial &middot; Cancel anytime</div>
+    </div>
+  </div>
+</div>
+
+</div>
+</div>
+
+<script>
+/* Platform toggle */
+function showPlatform(p) {
+  document.querySelectorAll('.topbar-tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  const ios = document.getElementById('ios-section');
+  const android = document.getElementById('android-section');
+  if (p === 'ios') { ios.style.display=''; android.style.display='none'; }
+  else if (p === 'android') { ios.style.display='none'; android.style.display=''; }
+  else { ios.style.display=''; android.style.display=''; }
+}
+
+/* iOS home sub-tabs */
+function iosHomeTab(tab) {
+  const phone = document.getElementById('ios-home');
+  phone.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  phone.querySelectorAll('.ios-seg-item').forEach(t => t.classList.remove('active'));
+  document.getElementById('ios-home-' + tab).classList.add('active');
+  const tabs = ['portfolio','diversify','dividends','news'];
+  const items = phone.querySelectorAll('.ios-seg-item');
+  items[tabs.indexOf(tab)]?.classList.add('active');
+}
+
+/* Android home tabs */
+function androidHomeTab(tab) {
+  const phone = document.getElementById('android-home');
+  phone.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  phone.querySelectorAll('.m3-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('android-home-' + tab).classList.add('active');
+  const tabs = ['portfolio','diversify','dividends','news'];
+  const items = phone.querySelectorAll('.m3-tab');
+  items[tabs.indexOf(tab)]?.classList.add('active');
+}
+</script>
+</body>
+</html>

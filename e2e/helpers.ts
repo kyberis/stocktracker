@@ -81,7 +81,11 @@ export async function createTestUser(request: APIRequestContext, seed = false) {
 
   // Complete onboarding so tests land on the dashboard
   await request.post("/api/auth/onboarding", {
-    data: { displayName: slug, defaultCurrency: "EUR" },
+    data: {
+      displayName: slug,
+      defaultCurrency: "EUR",
+      importMethod: seed ? undefined : "skip",
+    },
   });
 
   return { email, username: slug, password, userId };

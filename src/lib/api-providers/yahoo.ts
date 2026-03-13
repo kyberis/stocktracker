@@ -118,21 +118,24 @@ export class YahooProvider implements StockDataProvider {
           interval = "1d";
       }
 
-      const result = await yahooFinance.historical(symbol, {
+      const result = await yahooFinance.chart(symbol, {
         period1,
         period2: now,
         interval,
       });
 
       ok = true;
-      return result.map((item) => ({
-        date: item.date.toISOString().split("T")[0],
-        open: item.open ?? 0,
-        high: item.high ?? 0,
-        low: item.low ?? 0,
-        close: item.close ?? 0,
-        volume: item.volume ?? 0,
-      }));
+      const quotes = result.quotes ?? [];
+      return quotes
+        .filter((item) => item.close != null)
+        .map((item) => ({
+          date: item.date.toISOString().split("T")[0],
+          open: item.open ?? 0,
+          high: item.high ?? 0,
+          low: item.low ?? 0,
+          close: item.close ?? 0,
+          volume: item.volume ?? 0,
+        }));
     } finally {
       end();
       providerRequestsTotal.inc({ provider: "yahoo", operation: "historical", status: ok ? "success" : "error" });
