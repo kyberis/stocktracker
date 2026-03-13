@@ -9,12 +9,14 @@ import {
   YAxis,
   Tooltip,
   Legend,
+  ReferenceLine,
 } from "recharts";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useI18n } from "@/lib/i18n";
 import { useTheme } from "@/lib/theme-context";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
 import { formatCurrency, formatCompactNumber, convertToEUR } from "@/lib/utils";
+import type { Holding, CashEntry } from "@/lib/types";
 
 const HORIZON_OPTIONS = [10, 20, 30] as const;
 type Horizon = (typeof HORIZON_OPTIONS)[number];
@@ -25,9 +27,8 @@ interface ProjectionPoint {
   base: number;
   withDividends: number;
   withContributions: number;
+  goal?: number;
 }
-
-import type { Holding, CashEntry } from "@/lib/types";
 
 interface Props {
   holdings?: Holding[];
@@ -44,9 +45,13 @@ export default function PortfolioProjection({ holdings: holdingsProp, cashEntrie
 
   const [growthRate, setGrowthRate] = useState(7);
   const [reinvestDividends, setReinvestDividends] = useState(true);
-  const [yearlyContribution, setYearlyContribution] = useState(0);
+  const [contributionAmount, setContributionAmount] = useState(0);
+  const [contributionMode, setContributionMode] = useState<"monthly" | "yearly">("monthly");
   const [horizon, setHorizon] = useState<Horizon>(20);
+  const [goalTarget, setGoalTarget] = useState(0);
   const [isMinimized, setIsMinimized] = useState(false);
+
+  const yearlyContribution = contributionMode === "monthly" ? contributionAmount * 12 : contributionAmount;
 
   const totals = useMemo(
     () => calculatePortfolioTotals(holdings, cashEntries, quotes, exchangeRates, baseCurrency),
@@ -87,6 +92,7 @@ export default function PortfolioProjection({ holdings: holdingsProp, cashEntrie
         base: currentValue,
         withDividends: currentValue,
         withContributions: currentValue,
+        ...(goalTarget > 0 ? { goal: goalTarget } : {}),
       },
     ];
 
@@ -111,11 +117,12 @@ export default function PortfolioProjection({ holdings: holdingsProp, cashEntrie
         base,
         withDividends: withDiv,
         withContributions: withContrib,
+        ...(goalTarget > 0 ? { goal: goalTarget } : {}),
       });
     }
 
     return points;
-  }, [totals.totalCurrentEUR, growthRate, weightedDividendYield, reinvestDividends, yearlyContribution, horizon]);
+  }, [totals.totalCurrentEUR, growthRate, weightedDividendYield, reinvestDividends, yearlyContribution, horizon, goalTarget]);
 
   const finalPoint = projectionData[projectionData.length - 1];
   const totalContributed = totals.totalCurrentEUR + yearlyContribution * horizon;
@@ -123,8 +130,33 @@ export default function PortfolioProjection({ holdings: holdingsProp, cashEntrie
   const showDividendLine = reinvestDividends && weightedDividendYield > 0;
   const showContribLine = yearlyContribution > 0;
 
+  const bestLine = showContribLine ? "withContributions" : showDividendLine ? "withDividends" : "base";
+
+  const goalYearInfo = useMemo(() => {
+    if (goalTarget <= 0 || projectionData.length < 2) return null;
+
+    for (let i = 1; i < projectionData.length; i++) {
+      const prev = projectionData[i - 1][bestLine as keyof ProjectionPoint] as number;
+      const curr = projectionData[i][bestLine as keyof ProjectionPoint] as number;
+      if (curr >= goalTarget) {
+        const fraction = prev < goalTarget
+          ? (goalTarget - prev) / (curr - prev)
+          : 0;
+        const exactYears = (i - 1) + fraction;
+        const years = Math.floor(exactYears);
+        const months = Math.round((exactYears - years) * 12);
+        return { reached: true as const, years, months, exactYears };
+      }
+    }
+
+    return { reached: false as const, horizon };
+  }, [projectionData, goalTarget, bestLine]);
+
+  const goalProgress = goalTarget > 0 ? Math.min(100, (totals.totalCurrentEUR / goalTarget) * 100) : 0;
+
   const tickFill = isDark ? "#94a3b8" : "#9ca3af";
   const axisStroke = isDark ? "#334155" : "#e5e7eb";
+  const currencySymbol = baseCurrency === "USD" ? "$" : baseCurrency === "GBP" ? "£" : "€";
 
   if (holdings.length === 0) {
     return (
@@ -159,8 +191,68 @@ export default function PortfolioProjection({ holdings: holdingsProp, cashEntrie
 
       {!isMinimized && (
         <div>
+      {/* Goal banner */}
+      <div className="rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/60 p-4 space-y-3">
+        <div className="flex items-center gap-3">
+          <div className="flex-1 space-y-1.5">
+            <label htmlFor="proj-goal-target" className="text-[11px] font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wide">
+              {t("projGoalTarget")}
+            </label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 dark:text-slate-500">
+                {currencySymbol}
+              </span>
+              <input
+                id="proj-goal-target"
+                type="number"
+                min={0}
+                step={10000}
+                value={goalTarget || ""}
+                onChange={(e) => setGoalTarget(Math.max(0, Number(e.target.value)))}
+                placeholder="500,000"
+                className="w-full pl-7 pr-3 py-2 text-sm font-mono rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+          {goalTarget > 0 && (
+            <div className="text-right shrink-0">
+              {goalYearInfo?.reached ? (
+                <div>
+                  <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                    {t("projGoalReachedExact")
+                      .replace("{years}", String(goalYearInfo.years))
+                      .replace("{months}", String(goalYearInfo.months))}
+                  </p>
+                  <p className="text-[10px] text-gray-500 dark:text-slate-400 mt-0.5">
+                    {t("projGoalProgress").replace("{percent}", goalProgress.toFixed(0))}
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <p className="text-xs font-semibold text-amber-600 dark:text-amber-400">
+                    {t("projGoalNotReached").replace("{horizon}", String(horizon))}
+                  </p>
+                  <p className="text-[10px] text-gray-500 dark:text-slate-400 mt-0.5">
+                    {t("projGoalProgress").replace("{percent}", goalProgress.toFixed(0))}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {goalTarget > 0 && (
+          <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all duration-500 ease-out bg-gradient-to-r from-emerald-400 to-emerald-500"
+              style={{ width: `${Math.min(100, goalProgress)}%` }}
+            />
+          </div>
+        )}
+      </div>
+
       {/* Controls */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
         {/* Growth rate */}
         <div className="space-y-1.5">
           <label htmlFor="proj-growth-rate" className="text-[11px] font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wide">
@@ -209,22 +301,46 @@ export default function PortfolioProjection({ holdings: holdingsProp, cashEntrie
           </div>
         </div>
 
-        {/* Yearly contribution */}
+        {/* Contribution */}
         <div className="space-y-1.5">
-          <label htmlFor="proj-yearly-contribution" className="text-[11px] font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wide">
-            {t("projYearlyContribution")}
-          </label>
+          <div className="flex items-center justify-between">
+            <label htmlFor="proj-contribution" className="text-[11px] font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wide">
+              {t("projContribution")}
+            </label>
+            <div className="flex rounded-md overflow-hidden border border-gray-200 dark:border-slate-600">
+              <button
+                onClick={() => setContributionMode("monthly")}
+                className={`px-1.5 py-0.5 text-[9px] font-medium transition-colors ${
+                  contributionMode === "monthly"
+                    ? "bg-emerald-500 text-white"
+                    : "bg-white dark:bg-slate-700 text-gray-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-600"
+                }`}
+              >
+                {t("projMonthly")}
+              </button>
+              <button
+                onClick={() => setContributionMode("yearly")}
+                className={`px-1.5 py-0.5 text-[9px] font-medium transition-colors ${
+                  contributionMode === "yearly"
+                    ? "bg-emerald-500 text-white"
+                    : "bg-white dark:bg-slate-700 text-gray-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-600"
+                }`}
+              >
+                {t("projYearly")}
+              </button>
+            </div>
+          </div>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 dark:text-slate-500">
-              {baseCurrency === "USD" ? "$" : baseCurrency === "GBP" ? "£" : "€"}
+              {currencySymbol}
             </span>
             <input
-              id="proj-yearly-contribution"
+              id="proj-contribution"
               type="number"
               min={0}
-              step={500}
-              value={yearlyContribution}
-              onChange={(e) => setYearlyContribution(Math.max(0, Number(e.target.value)))}
+              step={contributionMode === "monthly" ? 50 : 500}
+              value={contributionAmount}
+              onChange={(e) => setContributionAmount(Math.max(0, Number(e.target.value)))}
               className="w-full pl-7 pr-3 py-1.5 text-sm font-mono rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
             />
           </div>
@@ -255,7 +371,7 @@ export default function PortfolioProjection({ holdings: holdingsProp, cashEntrie
 
       {/* Chart */}
       {projectionData.length > 0 && (
-        <div role="img" aria-label="Portfolio projection chart" style={{ aspectRatio: "2.8/1", maxHeight: "min(320px, 45vh)" }}>
+        <div className="mt-4" role="img" aria-label="Portfolio projection chart" style={{ aspectRatio: "2.8/1", maxHeight: "min(320px, 45vh)" }}>
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={projectionData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
             <defs>
@@ -287,10 +403,13 @@ export default function PortfolioProjection({ holdings: holdingsProp, cashEntrie
               width={70}
             />
             <Tooltip
-              formatter={(value: number | string | undefined, name: string | undefined) => [
-                formatCurrency(typeof value === "number" ? value : Number(value), baseCurrency),
-                name || t("value"),
-              ]}
+              formatter={(value: number | string | undefined, name: string | undefined) => {
+                if (name === t("projGoalLine")) return [formatCurrency(typeof value === "number" ? value : Number(value), baseCurrency), name];
+                return [
+                  formatCurrency(typeof value === "number" ? value : Number(value), baseCurrency),
+                  name || t("value"),
+                ];
+              }}
               labelFormatter={(label) => `${t("projYear")} ${label}`}
               contentStyle={{
                 backgroundColor: isDark ? "#1e293b" : "#ffffff",
@@ -331,6 +450,21 @@ export default function PortfolioProjection({ holdings: holdingsProp, cashEntrie
                 dot={false}
               />
             )}
+            {goalTarget > 0 && (
+              <ReferenceLine
+                y={goalTarget}
+                stroke={isDark ? "#f59e0b" : "#d97706"}
+                strokeWidth={2}
+                strokeDasharray="6 4"
+                label={{
+                  value: `${t("projGoalLine")}: ${formatCompactNumber(goalTarget)}`,
+                  position: "right",
+                  fill: isDark ? "#fbbf24" : "#b45309",
+                  fontSize: 11,
+                  fontWeight: 600,
+                }}
+              />
+            )}
           </AreaChart>
         </ResponsiveContainer>
         </div>
@@ -338,7 +472,7 @@ export default function PortfolioProjection({ holdings: holdingsProp, cashEntrie
 
       {/* Summary cards */}
       {finalPoint && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
           <div className="bg-gray-50 dark:bg-slate-800 rounded-xl p-3 text-center">
             <p className="text-[10px] text-gray-500 dark:text-slate-400 font-medium uppercase">
               {t("projCurrentValue")}

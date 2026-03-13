@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { createPortal } from "react-dom";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { useI18n } from "@/lib/i18n";
 import { txAmountToEUR } from "@/lib/performance";
@@ -188,7 +189,7 @@ export default function PerformanceExplainerModal({
 
   const hasTxs = transactions.length > 0;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto py-8 px-4">
       <div
         className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm"
@@ -470,7 +471,8 @@ export default function PerformanceExplainerModal({
           </p>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

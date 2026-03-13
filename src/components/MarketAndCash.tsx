@@ -6,6 +6,7 @@ import { useI18n } from "@/lib/i18n";
 import { formatCurrency, formatPercent } from "@/lib/utils";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
 import PortfolioBenchmarkChart from "./PortfolioBenchmarkChart";
+import Sparkline from "./Sparkline";
 import { useTheme } from "@/lib/theme-context";
 import type { Holding, CashEntry, ManualAssetType } from "@/lib/types";
 
@@ -25,11 +26,18 @@ const INDICES = [
   { symbol: "^STOXX50E", labelKey: "benchmarkEuroStoxx50" },
 ] as const;
 
-const ASSET_TYPE_META: Record<ManualAssetType, { icon: string; labelKey: string }> = {
-  real_estate: { icon: "🏠", labelKey: "realEstate" },
-  savings: { icon: "🏦", labelKey: "savingsAccounts" },
-  pension: { icon: "🏛️", labelKey: "pensionRetirement" },
-  cash: { icon: "💵", labelKey: "assetTypeCash" },
+const ASSET_TYPE_META: Record<ManualAssetType, { icon: string; labelKey: string; color: string }> = {
+  real_estate: { icon: "🏠", labelKey: "realEstate", color: "bg-blue-400" },
+  savings: { icon: "🏦", labelKey: "savingsAccounts", color: "bg-amber-400" },
+  pension: { icon: "🏛️", labelKey: "pensionRetirement", color: "bg-violet-400" },
+  cash: { icon: "💵", labelKey: "assetTypeCash", color: "bg-emerald-400" },
+};
+
+const ASSET_TYPE_BORDER: Record<ManualAssetType, string> = {
+  real_estate: "border-l-blue-400",
+  savings: "border-l-amber-400",
+  pension: "border-l-violet-400",
+  cash: "border-l-emerald-400",
 };
 
 const TYPE_ORDER: ManualAssetType[] = ["real_estate", "savings", "pension", "cash"];
@@ -110,6 +118,19 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
     return groups;
   }, [cashEntries]);
 
+  const activeTypes = useMemo(
+    () => TYPE_ORDER.filter((type) => groupedEntries[type].length > 0),
+    [groupedEntries],
+  );
+
+  const groupTotals = useMemo(() => {
+    const totals: Record<ManualAssetType, number> = { real_estate: 0, savings: 0, pension: 0, cash: 0 };
+    for (const type of TYPE_ORDER) {
+      totals[type] = groupedEntries[type].reduce((s, e) => s + e.amountEUR, 0);
+    }
+    return totals;
+  }, [groupedEntries]);
+
   const handleAddCash = async () => {
     const parsed = parseFloat(cashAmount);
     if (!cashName.trim() || Number.isNaN(parsed) || parsed < 0) return;
@@ -143,18 +164,29 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
 
   const cardClass =
     layoutTheme === "terminal"
-      ? "border border-zinc-800 rounded-none p-3 sm:p-4"
+      ? "border border-zinc-800 rounded-none overflow-hidden"
       : layoutTheme === "canvas"
-      ? "bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm"
+      ? "bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden"
       : layoutTheme === "studio"
-      ? "rounded-[20px] border border-white/5 bg-white/[0.02] backdrop-blur-sm p-4 sm:p-5"
-      : "card";
+      ? "rounded-[20px] border border-white/5 bg-white/[0.02] backdrop-blur-sm overflow-hidden"
+      : "bg-[var(--card)] border border-[var(--border)] rounded-[var(--radius-card,16px)] shadow-sm text-[var(--foreground)] overflow-hidden";
+
+  const sectionPad =
+    layoutTheme === "terminal"
+      ? "p-3 sm:p-4"
+      : layoutTheme === "canvas"
+      ? "p-5 sm:p-6"
+      : layoutTheme === "studio"
+      ? "p-4 sm:p-5"
+      : "p-4 sm:p-5";
+
+  const dividerClass = "border-gray-100 dark:border-slate-700";
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-4">
+    <div className={cardClass}>
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px]">
         {/* Market Indices */}
-        <div className={cardClass}>
+        <div className={`${sectionPad} lg:border-r ${dividerClass}`}>
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
               {t("marketsToday")}
@@ -171,40 +203,42 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
             </button>
           </div>
 
-          <div className="overflow-x-auto -mx-4 sm:-mx-5">
+          <div className="overflow-x-auto -mx-3 sm:-mx-4 lg:-mx-4">
             <table className="w-full text-sm">
               <caption className="sr-only">Market indices</caption>
               <thead>
-                <tr className="border-b border-gray-100 dark:border-slate-700">
-                  <th scope="col" className="text-left text-xs font-medium text-gray-400 dark:text-slate-500 pb-2 pl-4 sm:pl-5">{t("stock")}</th>
+                <tr className={`border-b ${dividerClass}`}>
+                  <th scope="col" className="text-left text-xs font-medium text-gray-400 dark:text-slate-500 pb-2 pl-3 sm:pl-4">{t("stock")}</th>
+                  <th scope="col" className="text-center text-xs font-medium text-gray-400 dark:text-slate-500 pb-2 hidden sm:table-cell">{t("weekTrend")}</th>
                   <th scope="col" className="text-right text-xs font-medium text-gray-400 dark:text-slate-500 pb-2">{t("currentPrice")}</th>
-                  <th scope="col" className="text-right text-xs font-medium text-gray-400 dark:text-slate-500 pb-2">{t("dayChange")}</th>
-                  <th scope="col" className="text-right text-xs font-medium text-gray-400 dark:text-slate-500 pb-2 pr-4 sm:pr-5">{t("change")}</th>
+                  <th scope="col" className="text-right text-xs font-medium text-gray-400 dark:text-slate-500 pb-2 hidden sm:table-cell">{t("dayChange")}</th>
+                  <th scope="col" className="text-right text-xs font-medium text-gray-400 dark:text-slate-500 pb-2 pr-3 sm:pr-4">{t("change")}</th>
                 </tr>
               </thead>
               <tbody>
                 {holdings.length > 0 && (
-                  <tr className="border-b border-gray-200 dark:border-slate-600 bg-emerald-50/40 dark:bg-emerald-500/5">
-                    <td className="py-2.5 pl-4 sm:pl-5">
+                  <tr className={`border-b border-gray-200 dark:border-slate-600 bg-emerald-50/40 dark:bg-emerald-500/5 border-l-2 border-l-emerald-500 dark:border-l-emerald-400`}>
+                    <td className="py-2.5 pl-3 sm:pl-4">
                       <span className="font-semibold text-emerald-700 dark:text-emerald-400">
                         {t("portfolio")}
                       </span>
                     </td>
-                    <td className="py-2.5 text-right text-gray-700 dark:text-slate-200 tabular-nums font-medium">
+                    <td className="py-2.5 hidden sm:table-cell" />
+                    <td className="py-2.5 text-right text-gray-700 dark:text-slate-200 tabular-nums font-semibold">
                       {isLoading ? (
                         <span className="inline-block w-16 h-4 bg-gray-100 dark:bg-slate-700 rounded animate-value-shimmer" />
                       ) : (
                         formatCurrency(totalCurrentEUR, baseCurrency)
                       )}
                     </td>
-                    <td className={`py-2.5 text-right tabular-nums font-medium ${changeColor(dayGainLossEUR)}`}>
+                    <td className={`py-2.5 text-right tabular-nums font-medium hidden sm:table-cell ${changeColor(dayGainLossEUR)}`}>
                       {isLoading ? (
                         <span className="inline-block w-12 h-4 bg-gray-100 dark:bg-slate-700 rounded animate-value-shimmer" />
                       ) : (
                         formatCurrency(dayGainLossEUR, baseCurrency)
                       )}
                     </td>
-                    <td className="py-2.5 text-right pr-4 sm:pr-5">
+                    <td className="py-2.5 text-right pr-3 sm:pr-4">
                       {isLoading ? (
                         <span className="inline-block w-14 h-5 bg-gray-100 dark:bg-slate-700 rounded animate-value-shimmer" />
                       ) : (
@@ -217,10 +251,13 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
                 )}
                 {indices.map((idx) => (
                   <tr key={idx.symbol} className="border-b border-gray-50 dark:border-slate-700/50 last:border-0">
-                    <td className="py-2.5 pl-4 sm:pl-5">
+                    <td className="py-2.5 pl-3 sm:pl-4">
                       <span className="font-medium text-gray-900 dark:text-white">
                         {t(idx.name as Parameters<typeof t>[0])}
                       </span>
+                    </td>
+                    <td className="py-2.5 text-center hidden sm:table-cell">
+                      <Sparkline ticker={idx.symbol} width={56} height={20} positive={idx.changePercent >= 0} />
                     </td>
                     <td className="py-2.5 text-right text-gray-700 dark:text-slate-200 tabular-nums">
                       {idx.loading ? (
@@ -229,7 +266,7 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
                         idx.price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                       )}
                     </td>
-                    <td className={`py-2.5 text-right tabular-nums ${changeColor(idx.change)}`}>
+                    <td className={`py-2.5 text-right tabular-nums hidden sm:table-cell ${changeColor(idx.change)}`}>
                       {idx.loading ? (
                         <span className="inline-block w-12 h-4 bg-gray-100 dark:bg-slate-700 rounded animate-pulse" />
                       ) : (
@@ -239,7 +276,7 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
                         </span>
                       )}
                     </td>
-                    <td className="py-2.5 text-right pr-4 sm:pr-5">
+                    <td className="py-2.5 text-right pr-3 sm:pr-4">
                       {idx.loading ? (
                         <span className="inline-block w-14 h-5 bg-gray-100 dark:bg-slate-700 rounded animate-pulse" />
                       ) : (
@@ -254,7 +291,7 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
             </table>
           </div>
 
-          <div className="mt-3 pt-3 border-t border-gray-100 dark:border-slate-700">
+          <div className={`mt-3 pt-3 border-t ${dividerClass}`}>
             <button
               onClick={() => setShowChart(!showChart)}
               className="flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
@@ -265,120 +302,156 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
               {t("viewBenchmarkChart")}
             </button>
           </div>
+
+          {showChart && (
+            <div className={`mt-3 pt-3 border-t ${dividerClass}`}>
+              <PortfolioBenchmarkChart />
+            </div>
+          )}
         </div>
 
         {/* Assets & Cash Balances */}
-        <div className={cardClass}>
-          <div className="flex items-center justify-between mb-3">
+        <div className={`${sectionPad} border-t lg:border-t-0 ${dividerClass}`}>
+          <div className="flex items-center justify-between mb-1">
             <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{t("manualAssets")}</h3>
-            {cashEntries.length > 0 && (
-              <span className="text-sm font-bold text-gray-900 dark:text-white tabular-nums">
-                {formatCurrency(cashTotal, baseCurrency)}
-              </span>
-            )}
           </div>
 
-          <div className="space-y-3 mb-3">
+          {cashEntries.length > 0 && (
+            <div className="mb-3">
+              <span className="text-xl font-bold text-gray-900 dark:text-white tabular-nums">
+                {formatCurrency(cashTotal, baseCurrency)}
+              </span>
+
+              {activeTypes.length >= 2 && cashTotal > 0 && (
+                <div className="mt-2">
+                  <div className="flex h-1.5 rounded-full overflow-hidden gap-px">
+                    {activeTypes.map((type) => {
+                      const pct = (groupTotals[type] / cashTotal) * 100;
+                      if (pct <= 0) return null;
+                      return (
+                        <div
+                          key={type}
+                          className={`${ASSET_TYPE_META[type].color} rounded-full`}
+                          style={{ width: `${pct}%` }}
+                          title={`${t(ASSET_TYPE_META[type].labelKey as Parameters<typeof t>[0])}: ${formatCurrency(groupTotals[type], baseCurrency)}`}
+                        />
+                      );
+                    })}
+                  </div>
+                  <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1.5">
+                    {activeTypes.map((type) => (
+                      <div key={type} className="flex items-center gap-1">
+                        <span className={`inline-block w-2 h-2 rounded-full ${ASSET_TYPE_META[type].color}`} />
+                        <span className="text-[10px] text-gray-500 dark:text-slate-400">
+                          {t(ASSET_TYPE_META[type].labelKey as Parameters<typeof t>[0])}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="space-y-2 mb-3">
             {cashEntries.length === 0 ? (
               <p className="text-xs text-gray-400 dark:text-slate-500">{t("noCashEntries")}</p>
             ) : (
-              TYPE_ORDER
-                .filter((type) => groupedEntries[type].length > 0)
-                .map((type) => {
-                  const meta = ASSET_TYPE_META[type];
-                  const entries = groupedEntries[type];
-                  const groupTotal = entries.reduce((s, e) => s + e.amountEUR, 0);
-                  return (
-                    <div key={type}>
-                      {/* Only show type header if there are non-cash types */}
-                      {(TYPE_ORDER.some((t) => t !== "cash" && groupedEntries[t].length > 0)) && (
-                        <div className="flex items-center gap-2 mb-1 pb-1 border-b border-gray-100 dark:border-slate-700/50">
-                          <span className="text-sm">{meta.icon}</span>
-                          <span className="text-xs font-semibold text-gray-600 dark:text-slate-300">
-                            {t(meta.labelKey as Parameters<typeof t>[0])}
-                          </span>
-                          <span className="text-xs font-semibold text-gray-500 dark:text-slate-400 ml-auto tabular-nums">
-                            {formatCurrency(groupTotal, baseCurrency)}
-                          </span>
-                        </div>
-                      )}
-                      {entries.map((entry) => {
-                        const isEditing = editingId === entry.id;
-                        return isEditing ? (
-                          <div key={entry.id} className="rounded-lg border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-500/5 p-2 space-y-1.5">
+              activeTypes.map((type) => {
+                const meta = ASSET_TYPE_META[type];
+                const entries = groupedEntries[type];
+                const groupTotal = groupTotals[type];
+                const showHeader = activeTypes.length >= 2;
+                return (
+                  <div key={type} className={showHeader ? `border-l-2 ${ASSET_TYPE_BORDER[type]} pl-2.5` : ""}>
+                    {showHeader && (
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <span className="text-xs">{meta.icon}</span>
+                        <span className="text-xs font-semibold text-gray-600 dark:text-slate-300">
+                          {t(meta.labelKey as Parameters<typeof t>[0])}
+                        </span>
+                        <span className="text-xs font-semibold text-gray-500 dark:text-slate-400 ml-auto tabular-nums">
+                          {formatCurrency(groupTotal, baseCurrency)}
+                        </span>
+                      </div>
+                    )}
+                    {entries.map((entry) => {
+                      const isEditing = editingId === entry.id;
+                      return isEditing ? (
+                        <div key={entry.id} className="rounded-lg border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-500/5 p-2 space-y-1.5">
+                          <input
+                            value={editName}
+                            onChange={(e) => setEditName(e.target.value)}
+                            aria-label={t("cashName")}
+                            className="w-full text-sm"
+                            autoFocus
+                          />
+                          <div className="flex items-center gap-1.5">
                             <input
-                              value={editName}
-                              onChange={(e) => setEditName(e.target.value)}
-                              aria-label={t("cashName")}
-                              className="w-full text-sm"
-                              autoFocus
+                              type="number"
+                              min="0"
+                              step="any"
+                              value={editAmount}
+                              onChange={(e) => setEditAmount(e.target.value)}
+                              aria-label={t("cash") + " EUR"}
+                              className="flex-1 text-sm"
                             />
-                            <div className="flex items-center gap-1.5">
-                              <input
-                                type="number"
-                                min="0"
-                                step="any"
-                                value={editAmount}
-                                onChange={(e) => setEditAmount(e.target.value)}
-                                aria-label={t("cash") + " EUR"}
-                                className="flex-1 text-sm"
-                              />
-                              <button className="btn-primary text-xs px-2 py-1" onClick={() => saveEdit(entry.id)}>
-                                {t("saveChanges")}
+                            <button className="btn-primary text-xs px-2 py-1" onClick={() => saveEdit(entry.id)}>
+                              {t("saveChanges")}
+                            </button>
+                            <button className="btn-secondary text-xs px-2 py-1" onClick={() => setEditingId(null)}>
+                              {t("cancel")}
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div
+                          key={entry.id}
+                          className="group flex items-center justify-between py-1.5 px-2 -mx-2 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700/30 transition-colors"
+                        >
+                          <div className="min-w-0 flex-1 mr-2">
+                            <span className="text-sm text-gray-600 dark:text-slate-300 truncate block">{entry.name}</span>
+                            {entry.notes && (
+                              <span className="text-[11px] text-gray-400 dark:text-slate-500 truncate block">{entry.notes}</span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <span className="text-sm font-medium text-gray-900 dark:text-white tabular-nums">
+                              {formatCurrency(entry.amountEUR, baseCurrency)}
+                            </span>
+                            <div className="hidden group-hover:flex items-center gap-1">
+                              <button
+                                onClick={() => startEdit(entry.id, entry.name, entry.amountEUR)}
+                                className="p-0.5 rounded text-gray-400 hover:text-emerald-500 transition-colors"
+                                title={t("editValues")}
+                                aria-label={t("editValues")}
+                              >
+                                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                </svg>
                               </button>
-                              <button className="btn-secondary text-xs px-2 py-1" onClick={() => setEditingId(null)}>
-                                {t("cancel")}
+                              <button
+                                onClick={() => removeCashEntry(entry.id)}
+                                className="p-0.5 rounded text-gray-400 hover:text-red-500 transition-colors"
+                                title={t("removeStock")}
+                                aria-label={t("removeStock")}
+                              >
+                                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
                               </button>
                             </div>
                           </div>
-                        ) : (
-                          <div
-                            key={entry.id}
-                            className="group flex items-center justify-between py-1.5 px-2 -mx-2 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700/30 transition-colors"
-                          >
-                            <div className="min-w-0 flex-1 mr-2">
-                              <span className="text-sm text-gray-600 dark:text-slate-300 truncate block">{entry.name}</span>
-                              {entry.notes && (
-                                <span className="text-[11px] text-gray-400 dark:text-slate-500 truncate block">{entry.notes}</span>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-2 flex-shrink-0">
-                              <span className="text-sm font-medium text-gray-900 dark:text-white tabular-nums">
-                                {formatCurrency(entry.amountEUR, baseCurrency)}
-                              </span>
-                              <div className="hidden group-hover:flex items-center gap-1">
-                                <button
-                                  onClick={() => startEdit(entry.id, entry.name, entry.amountEUR)}
-                                  className="p-0.5 rounded text-gray-400 hover:text-emerald-500 transition-colors"
-                                  title={t("editValues")}
-                                  aria-label={t("editValues")}
-                                >
-                                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                  </svg>
-                                </button>
-                                <button
-                                  onClick={() => removeCashEntry(entry.id)}
-                                  className="p-0.5 rounded text-gray-400 hover:text-red-500 transition-colors"
-                                  title={t("removeStock")}
-                                  aria-label={t("removeStock")}
-                                >
-                                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                  </svg>
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  );
-                })
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })
             )}
           </div>
 
-          <div className="flex items-center gap-1.5 pt-2 border-t border-gray-100 dark:border-slate-700">
+          <div className={`flex items-center gap-1.5 pt-2 border-t ${dividerClass}`}>
             <input
               value={cashName}
               onChange={(e) => setCashName(e.target.value)}
@@ -407,8 +480,6 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
           </div>
         </div>
       </div>
-
-      {showChart && <PortfolioBenchmarkChart />}
     </div>
   );
 }

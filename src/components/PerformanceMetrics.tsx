@@ -27,6 +27,7 @@ export default function PerformanceMetrics({ holdings: holdingsProp, cashEntries
   const baseCurrency = activePortfolioCurrency;
   const isPaid = user?.plan === "starter" || user?.plan === "pro";
   const [txs, setTxs] = useState<Transaction[]>([]);
+  const [showHelp, setShowHelp] = useState(false);
   const [showExplainer, setShowExplainer] = useState(false);
 
   useEffect(() => {
@@ -79,7 +80,34 @@ export default function PerformanceMetrics({ holdings: holdingsProp, cashEntries
 
   return (
     <div className="card">
-      <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-1.5">{t("portfolioPerformance")} <TierFeatureBadge requiredPlan="starter" size="sm" /></h3>
+      <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-1.5">
+        {t("portfolioPerformance")}
+        <TierFeatureBadge requiredPlan="starter" size="sm" />
+        <button
+          onClick={() => setShowHelp((v) => !v)}
+          className="ml-auto p-1 rounded-full text-gray-400 dark:text-slate-500 hover:text-emerald-500 dark:hover:text-emerald-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+          aria-label={t("perfExplHowCalculated")}
+          title={t("perfExplHowCalculated")}
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </button>
+      </h3>
+
+      {showHelp && (
+        <div className="mb-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/60 p-3 space-y-2.5 text-xs animate-in fade-in slide-in-from-top-1 duration-150">
+          <div>
+            <p className="font-semibold text-gray-800 dark:text-slate-200">{t("ttwror")} — {t("ttwrorFull")}</p>
+            <p className="text-gray-600 dark:text-slate-400 mt-0.5 leading-relaxed text-[11px]">{t("ttwrorExplanation")}</p>
+          </div>
+          <div>
+            <p className="font-semibold text-gray-800 dark:text-slate-200">{t("irr")} — {t("irrFull")}</p>
+            <p className="text-gray-600 dark:text-slate-400 mt-0.5 leading-relaxed text-[11px]">{t("irrExplanation")}</p>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 gap-3">
         {metrics.map((m) => {
           const hasValue = m.value !== null;
