@@ -1234,6 +1234,31 @@ const MIGRATIONS: Migration[] = [
       `);
     },
   },
+  {
+    version: 41,
+    description: "Create goals table for persistent portfolio goal tracking",
+    up: async (client: Client) => {
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS goals (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          portfolio_id TEXT NOT NULL DEFAULT '',
+          name TEXT NOT NULL DEFAULT 'My Goal',
+          target_amount REAL NOT NULL,
+          currency TEXT NOT NULL DEFAULT 'EUR',
+          growth_rate REAL NOT NULL DEFAULT 7,
+          yearly_contribution REAL NOT NULL DEFAULT 0,
+          contribution_mode TEXT NOT NULL DEFAULT 'monthly',
+          reinvest_dividends INTEGER NOT NULL DEFAULT 1,
+          horizon INTEGER NOT NULL DEFAULT 20,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+          FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_goals_user ON goals(user_id);
+      `);
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

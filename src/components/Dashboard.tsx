@@ -15,6 +15,8 @@ import { useTrack } from "@/lib/use-track";
 import { useTheme } from "@/lib/theme-context";
 import type { Account } from "@/lib/types";
 
+const GoalProgressBanner = dynamic(() => import("./GoalProgressBanner"), { ssr: false });
+const GoalCelebration = dynamic(() => import("./GoalCelebration"), { ssr: false });
 const PortfolioGrowthPeriods = dynamic(() => import("./PortfolioGrowthPeriods"), { ssr: false });
 const PerformanceMetrics = dynamic(() => import("./PerformanceMetrics"), { ssr: false });
 const PortfolioProjection = dynamic(() => import("./PortfolioProjection"), { ssr: false });
@@ -380,6 +382,8 @@ export default function Dashboard() {
                 />
 
                 <PortfolioSummary holdings={filteredHoldings} cashEntries={investmentCashEntries} allCashEntries={filteredCashEntries} />
+                <GoalProgressBanner holdings={filteredHoldings} cashEntries={investmentCashEntries} />
+                <GoalCelebration holdings={filteredHoldings} cashEntries={investmentCashEntries} />
                 <AdSlot slot="dashboard-summary" format="horizontal" />
                 <PortfolioTable holdings={filteredHoldings} onAddStock={() => setShowAddModal(true)} />
                 <UpcomingEarnings onNavigateToEvents={() => handleTabChange("events")} />

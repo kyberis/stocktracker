@@ -241,6 +241,13 @@ export {
   mapPasskey,
 } from "./passkeys";
 
+export {
+  listGoals,
+  getGoalForPortfolio,
+  upsertGoal,
+  deleteGoal,
+} from "./goals";
+
 export type { CalendarEvent } from "./calendar-events";
 export {
   upsertCalendarEvent,

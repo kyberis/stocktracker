@@ -14,9 +14,24 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "1.31.0";
+export const CURRENT_VERSION = "1.32.0";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "1.32.0",
+    date: "2026-03-13",
+    title: "Persistent Goal Tracker",
+    titleTranslations: { es: "Seguimiento de Metas Persistente" },
+    changes: [
+      {
+        type: "feature",
+        text: "Goal Tracker — set a portfolio target, save it, and track progress automatically as your portfolio grows. Includes a dashboard progress banner, milestone celebrations at 25/50/75/100%, and projection charts with goal line overlay.",
+        translations: {
+          es: "Seguimiento de Metas — establece un objetivo de portafolio, guárdalo y sigue tu progreso automáticamente. Incluye barra de progreso en el panel, celebraciones en hitos del 25/50/75/100% y gráficos de proyección con línea de meta.",
+        },
+      },
+    ],
+  },
   {
     version: "1.31.0",
     date: "2026-03-13",

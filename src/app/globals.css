@@ -853,7 +853,27 @@ html.theme-studio .rounded-lg {
   animation: dot-bounce 1.4s ease-in-out infinite;
 }
 
+@keyframes confetti-fall {
+  0% { opacity: 1; transform: translateY(0) rotate(0deg); }
+  100% { opacity: 0; transform: translateY(120px) rotate(360deg); }
+}
+.animate-confetti {
+  animation: confetti-fall 1.2s ease-out forwards;
+}
+
+@keyframes goal-dismiss-shrink {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+.animate-goal-dismiss {
+  animation: goal-dismiss-shrink 8s linear forwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .animate-confetti {
+    animation: none;
+    opacity: 0;
+  }
   .ai-cta-shimmer::before {
     animation: none;
   }

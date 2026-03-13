@@ -196,6 +196,24 @@ export interface RebalanceDrift {
   actionEUR: number;
 }
 
+/* ── Goals ────────────────────────────────────────────────── */
+
+export interface Goal {
+  id: string;
+  userId: string;
+  portfolioId: string;
+  name: string;
+  targetAmount: number;
+  currency: string;
+  growthRate: number;
+  yearlyContribution: number;
+  contributionMode: "monthly" | "yearly";
+  reinvestDividends: boolean;
+  horizon: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface QuoteData {
   symbol: string;
   shortName: string;

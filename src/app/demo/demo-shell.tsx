@@ -11,7 +11,7 @@ import Dashboard from "@/components/Dashboard";
 import AppNav from "@/components/AppNav";
 import MarketTickerBar from "@/components/MarketTickerBar";
 import MobileTabBar from "@/components/MobileTabBar";
-import type { Holding, CashEntry, QuoteData, ExchangeRates } from "@/lib/types";
+import type { Holding, CashEntry, QuoteData, ExchangeRates, Goal } from "@/lib/types";
 
 interface Props {
   initialHoldings: Holding[];
@@ -19,6 +19,22 @@ interface Props {
   initialQuotes: Record<string, QuoteData>;
   initialExchangeRates: ExchangeRates;
 }
+
+const DEMO_GOAL: Goal = {
+  id: "demo-goal",
+  userId: "demo",
+  portfolioId: "",
+  name: "€500K Portfolio",
+  targetAmount: 500000,
+  currency: "EUR",
+  growthRate: 7,
+  yearlyContribution: 6000,
+  contributionMode: "monthly",
+  reinvestDividends: true,
+  horizon: 20,
+  createdAt: "2024-01-01T00:00:00.000Z",
+  updatedAt: "2024-01-01T00:00:00.000Z",
+};
 
 export default function DemoShell({
   initialHoldings, initialCash, initialQuotes, initialExchangeRates,
@@ -40,6 +56,7 @@ export default function DemoShell({
                     demoMode
                     initialQuotes={initialQuotes}
                     initialExchangeRates={initialExchangeRates}
+                    initialGoal={DEMO_GOAL}
                   >
                     <Dashboard />
                   </PortfolioProvider>

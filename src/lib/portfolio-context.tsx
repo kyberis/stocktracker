@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef, useMemo } from "react";
-import type { CashEntry, Holding, QuoteData, ExchangeRates } from "./types";
+import type { CashEntry, Holding, QuoteData, ExchangeRates, Goal } from "./types";
 import { generateId, normalizeCurrency } from "./utils";
 import { useSettings } from "./settings-context";
 
@@ -68,6 +68,11 @@ interface PortfolioContextType {
   refreshAlertedTickers: () => Promise<void>;
   lastUpdated: Date | null;
   demoMode: boolean;
+  goal: Goal | null;
+  goalProgress: number;
+  saveGoal: (params: Omit<Goal, "id" | "userId" | "createdAt" | "updatedAt">) => Promise<Goal | null>;
+  deleteGoal: () => Promise<void>;
+  refreshGoal: () => Promise<void>;
 }
 
 const PortfolioContext = createContext<PortfolioContextType | null>(null);
@@ -120,11 +125,12 @@ export interface PortfolioProviderProps {
   demoMode?: boolean;
   initialQuotes?: Record<string, QuoteData>;
   initialExchangeRates?: ExchangeRates;
+  initialGoal?: Goal | null;
 }
 
 export function PortfolioProvider({
   children, initialHoldings, initialCash,
-  demoMode, initialQuotes, initialExchangeRates,
+  demoMode, initialQuotes, initialExchangeRates, initialGoal,
 }: PortfolioProviderProps) {
   const { getApiHeaders } = useSettings();
   const hasServerData = !!(initialHoldings || initialCash);
@@ -143,6 +149,7 @@ export function PortfolioProvider({
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(demoMode ? new Date() : null);
   const [alertedTickers, setAlertedTickers] = useState<Set<string>>(new Set());
+  const [goal, setGoal] = useState<Goal | null>(initialGoal ?? null);
   const fetchingRef = useRef(false);
   const fetchPortfolios = useCallback(async (): Promise<PortfolioInfo[]> => {
     try {
@@ -256,6 +263,12 @@ export function PortfolioProvider({
         .then((d) => setAlertedTickers(new Set(d.tickers ?? [])))
         .catch(() => {});
 
+      const goalQp = resolvedPortfolioId ? `?portfolioId=${encodeURIComponent(resolvedPortfolioId)}` : "?portfolioId=";
+      fetch(`/api/goals${goalQp}`, { cache: "no-store" })
+        .then((r) => r.ok ? r.json() : { goal: null })
+        .then((d) => setGoal(d.goal ?? null))
+        .catch(() => {});
+
       setIsLoading(false);
       mountedRef.current = true;
     };
@@ -294,6 +307,12 @@ export function PortfolioProvider({
         if (tickers.length > 0) {
           fetchQuotes(tickers);
         }
+
+        const goalQp = activePortfolioId ? `?portfolioId=${encodeURIComponent(activePortfolioId)}` : "?portfolioId=";
+        fetch(`/api/goals${goalQp}`, { cache: "no-store" })
+          .then((r) => r.ok ? r.json() : { goal: null })
+          .then((d) => { if (switchVersionRef.current === version) setGoal(d.goal ?? null); })
+          .catch(() => {});
       } catch (err) {
         if (switchVersionRef.current !== version) return;
         setError(err instanceof Error ? err.message : "Failed to load portfolio");
@@ -619,6 +638,40 @@ export function PortfolioProvider({
     } catch { /* non-critical */ }
   }, []);
 
+  const fetchGoal = useCallback(async () => {
+    if (demoMode) return;
+    try {
+      const qp = activePortfolioId ? `?portfolioId=${encodeURIComponent(activePortfolioId)}` : "?portfolioId=";
+      const res = await fetch(`/api/goals${qp}`, { cache: "no-store" });
+      if (!res.ok) { setGoal(null); return; }
+      const data = await res.json();
+      setGoal(data.goal ?? null);
+    } catch { setGoal(null); }
+  }, [demoMode, activePortfolioId]);
+
+  const saveGoalCb = useCallback(async (params: Omit<Goal, "id" | "userId" | "createdAt" | "updatedAt">): Promise<Goal | null> => {
+    try {
+      const res = await fetch("/api/goals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(params),
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      const saved = data.goal as Goal;
+      setGoal(saved);
+      return saved;
+    } catch { return null; }
+  }, []);
+
+  const deleteGoalCb = useCallback(async () => {
+    if (!goal) return;
+    try {
+      await fetch(`/api/goals?id=${encodeURIComponent(goal.id)}`, { method: "DELETE" });
+      setGoal(null);
+    } catch { /* non-critical */ }
+  }, [goal]);
+
   const refreshHoldings = useCallback(async () => {
     await Promise.all([fetchHoldings(), fetchCashEntries()]);
   }, [fetchHoldings, fetchCashEntries]);
@@ -629,7 +682,16 @@ export function PortfolioProvider({
     return found?.currency ?? "EUR";
   }, [activePortfolioId, portfolios]);
 
+  const goalProgress = useMemo(() => {
+    if (!goal || goal.targetAmount <= 0) return 0;
+    // Simple progress: uses convertToEUR-based total from holdings + cash
+    // The exact total calculation happens in components that have access to calculatePortfolioTotals
+    // Here we provide a reasonable estimate using raw holdings cost as floor
+    return 0; // Components compute this from calculatePortfolioTotals
+  }, [goal]);
+
   const noop = useCallback(async () => {}, []);
+  const noopGoal = useCallback(async () => null as Goal | null, []);
   const value = useMemo(
     () => ({
       holdings,
@@ -658,13 +720,19 @@ export function PortfolioProvider({
       refreshAlertedTickers: demoMode ? noop : refreshAlertedTickers,
       lastUpdated,
       demoMode: !!demoMode,
+      goal,
+      goalProgress,
+      saveGoal: demoMode ? noopGoal : saveGoalCb,
+      deleteGoal: demoMode ? noop : deleteGoalCb,
+      refreshGoal: demoMode ? noop : fetchGoal,
     }),
     [
       holdings, cashEntries, quotes, quoteUpdatedAt, refreshingTickers, exchangeRates,
       isLoading, error, portfolios, activePortfolioId, activePortfolioCurrency, alertedTickers, setActivePortfolio, fetchPortfolios,
       addHolding, removeHolding, updateHolding, addCashEntry,
       removeCashEntry, updateCashEntry, refreshHoldings, refreshQuotes, refreshSingleQuote,
-      refreshAlertedTickers, lastUpdated, demoMode, noop,
+      refreshAlertedTickers, lastUpdated, demoMode, noop, noopGoal,
+      goal, goalProgress, saveGoalCb, deleteGoalCb, fetchGoal,
     ]
   );
 
