@@ -1,10 +1,11 @@
 "use client";
 
 import { ThemeProvider, useTheme } from "@/lib/theme-context";
-import { AuthProvider } from "@/lib/auth-context";
+import { AuthProvider, useAuth } from "@/lib/auth-context";
 import { I18nProvider } from "@/lib/i18n";
 import { SettingsProvider } from "@/lib/settings-context";
 import { StealthProvider } from "@/lib/stealth-context";
+import { PlatformProvider } from "@/lib/platform-context";
 import AppNav from "@/components/AppNav";
 import SidebarNav from "@/components/SidebarNav";
 import MarketTickerBar from "@/components/MarketTickerBar";
@@ -81,6 +82,15 @@ function AppShell({ children }: { children: React.ReactNode }) {
   );
 }
 
+function PlatformBridge({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+  return (
+    <PlatformProvider userPlan={user?.plan ?? "free"}>
+      {children}
+    </PlatformProvider>
+  );
+}
+
 export default function AppLayoutClient({
   children,
   initialTheme,
@@ -91,14 +101,16 @@ export default function AppLayoutClient({
   return (
     <ThemeProvider initialTheme={initialTheme}>
       <AuthProvider>
-        <I18nProvider>
-          <SettingsProvider>
-            <StealthProvider>
-              <AppShell>{children}</AppShell>
-              <ThemeWizard />
-            </StealthProvider>
-          </SettingsProvider>
-        </I18nProvider>
+        <PlatformBridge>
+          <I18nProvider>
+            <SettingsProvider>
+              <StealthProvider>
+                <AppShell>{children}</AppShell>
+                <ThemeWizard />
+              </StealthProvider>
+            </SettingsProvider>
+          </I18nProvider>
+        </PlatformBridge>
       </AuthProvider>
     </ThemeProvider>
   );
