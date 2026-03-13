@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n";
+import { useTrack } from "@/lib/use-track";
 import { useAuth } from "@/lib/auth-context";
 import { useSettings } from "@/lib/settings-context";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
@@ -18,6 +20,16 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const { t } = useI18n();
   const { user } = useAuth();
   const { defaultCurrency, setDefaultCurrency } = useSettings();
+  const track = useTrack();
+  const openedRef = useRef(false);
+
+  useEffect(() => {
+    if (isOpen && !openedRef.current) {
+      openedRef.current = true;
+      track("settings_opened");
+    }
+    if (!isOpen) openedRef.current = false;
+  }, [isOpen, track]);
 
   const plan = (user?.plan ?? "free") as "free" | "starter" | "pro";
   const isPro = plan === "pro";
@@ -64,7 +76,10 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           <select
             id="default-currency-select"
             value={defaultCurrency}
-            onChange={(e) => setDefaultCurrency(e.target.value)}
+            onChange={(e) => {
+              track("settings_changed");
+              setDefaultCurrency(e.target.value);
+            }}
             className="w-full text-sm px-3 py-2 rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
           >
             {SUPPORTED_PORTFOLIO_CURRENCIES.map((cur) => (

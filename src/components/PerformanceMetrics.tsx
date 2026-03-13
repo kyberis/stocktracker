@@ -12,6 +12,7 @@ import type { Transaction, Holding, CashEntry } from "@/lib/types";
 const BlurredProSection = dynamic(() => import("./BlurredProSection"), { ssr: false });
 const PerformanceExplainerModal = dynamic(() => import("./PerformanceExplainerModal"), { ssr: false });
 import TierFeatureBadge from "./TierFeatureBadge";
+import { useTrack } from "@/lib/use-track";
 
 interface Props {
   holdings?: Holding[];
@@ -29,6 +30,7 @@ export default function PerformanceMetrics({ holdings: holdingsProp, cashEntries
   const [txs, setTxs] = useState<Transaction[]>([]);
   const [showHelp, setShowHelp] = useState(false);
   const [showExplainer, setShowExplainer] = useState(false);
+  const track = useTrack();
 
   useEffect(() => {
     if (!isPaid) return;
@@ -84,7 +86,10 @@ export default function PerformanceMetrics({ holdings: holdingsProp, cashEntries
         {t("portfolioPerformance")}
         <TierFeatureBadge requiredPlan="starter" size="sm" />
         <button
-          onClick={() => setShowHelp((v) => !v)}
+          onClick={() => {
+            track("performance_help_toggled");
+            setShowHelp((v) => !v);
+          }}
           className="ml-auto p-1 rounded-full text-gray-400 dark:text-slate-500 hover:text-emerald-500 dark:hover:text-emerald-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
           aria-label={t("perfExplHowCalculated")}
           title={t("perfExplHowCalculated")}
@@ -141,7 +146,10 @@ export default function PerformanceMetrics({ holdings: holdingsProp, cashEntries
         })}
       </div>
       <button
-        onClick={() => setShowExplainer(true)}
+        onClick={() => {
+          track("performance_explainer_opened");
+          setShowExplainer(true);
+        }}
         className="mt-3 w-full flex items-center justify-center gap-1.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/50 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors p-3 group"
       >
         <svg className="w-3.5 h-3.5 text-gray-400 dark:text-slate-500 group-hover:text-emerald-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

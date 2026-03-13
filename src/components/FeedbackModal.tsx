@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useI18n } from "@/lib/i18n";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
+import { useTrack } from "@/lib/use-track";
 
 type FeedbackType = "feedback" | "bug";
 
@@ -37,6 +38,8 @@ function buildClientContext(locale: string): string {
 
 export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
   const { t, language } = useI18n();
+  const track = useTrack();
+  const openedRef = useRef(false);
   const [feedbackType, setFeedbackType] = useState<FeedbackType>("feedback");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
@@ -63,11 +66,17 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
 
   useEffect(() => {
     if (isOpen) {
+      if (!openedRef.current) {
+        openedRef.current = true;
+        track("feedback_opened");
+      }
       loadHistory();
       setSuccess(false);
       setError("");
+    } else {
+      openedRef.current = false;
     }
-  }, [isOpen, loadHistory]);
+  }, [isOpen, loadHistory, track]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,6 +104,7 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
         setError(data.error || "Failed to send feedback.");
         return;
       }
+      track("feedback_submitted");
       setSubject("");
       setMessage("");
       setSuccess(true);

@@ -6,6 +6,7 @@ import { usePortfolio } from "@/lib/portfolio-context";
 import { useI18n } from "@/lib/i18n";
 import StockRow from "./StockRow";
 import { useTheme } from "@/lib/theme-context";
+import { useTrack } from "@/lib/use-track";
 import type { Holding } from "@/lib/types";
 
 const StockDetailDrawer = dynamic(() => import("./StockDetailDrawer"), { ssr: false });
@@ -23,6 +24,7 @@ export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: P
   const holdings = holdingsProp ?? ctxHoldings;
   const { t } = useI18n();
   const { layoutTheme } = useTheme();
+  const track = useTrack();
   const [sortField, setSortField] = useState<SortField>("name");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [filter, setFilter] = useState("");
@@ -35,6 +37,7 @@ export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: P
       setSortField(field);
       setSortDir(field === "name" ? "asc" : "desc");
     }
+    track("portfolio_sort_changed");
   };
 
   const sortedHoldings = useMemo(() => {
@@ -145,6 +148,9 @@ export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: P
       type="text"
       value={filter}
       onChange={(e) => setFilter(e.target.value)}
+      onBlur={() => {
+        if (filter.trim()) track("portfolio_search_used");
+      }}
       placeholder={t("searchPlaceholder")}
       aria-label={t("searchPlaceholder")}
       className="flex-1 min-w-[200px] text-sm"

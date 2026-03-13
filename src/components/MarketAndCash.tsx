@@ -8,6 +8,7 @@ import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
 import PortfolioBenchmarkChart from "./PortfolioBenchmarkChart";
 import Sparkline from "./Sparkline";
 import { useTheme } from "@/lib/theme-context";
+import { useTrack } from "@/lib/use-track";
 import type { Holding, CashEntry, ManualAssetType } from "@/lib/types";
 
 interface IndexQuote {
@@ -54,6 +55,7 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
   const cashEntries = cashEntriesProp ?? ctxCashEntries;
   const { t } = useI18n();
   const { layoutTheme } = useTheme();
+  const track = useTrack();
   const [indices, setIndices] = useState<IndexQuote[]>(
     INDICES.map((idx) => ({
       symbol: idx.symbol,
@@ -134,6 +136,7 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
   const handleAddCash = async () => {
     const parsed = parseFloat(cashAmount);
     if (!cashName.trim() || Number.isNaN(parsed) || parsed < 0) return;
+    track("cash_entry_added");
     await addCashEntry({ name: cashName.trim(), amountEUR: parsed });
     setCashName("");
     setCashAmount("");
@@ -293,7 +296,10 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
 
           <div className={`mt-3 pt-3 border-t ${dividerClass}`}>
             <button
-              onClick={() => setShowChart(!showChart)}
+              onClick={() => {
+                track("benchmark_chart_toggled");
+                setShowChart(!showChart);
+              }}
               className="flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
             >
               <svg className={`w-3.5 h-3.5 transition-transform ${showChart ? "rotate-90" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

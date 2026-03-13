@@ -12,6 +12,7 @@ import { PLATFORM_LIMITS } from "@/lib/platform-config";
 import type { Holding, CashEntry, ManualAssetType, HoldingAssetType } from "@/lib/types";
 import PortfolioReviewCard from "./PortfolioReviewCard";
 import { useTheme } from "@/lib/theme-context";
+import { useTrack } from "@/lib/use-track";
 
 const CATEGORY_META: Record<string, { label: string; icon: string; color: string }> = {
   stock: { label: "investments", icon: "📈", color: "#6366f1" },
@@ -115,6 +116,8 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
   const { stealthMode } = useStealthMode();
   const { user } = useAuth();
   const { layoutTheme } = useTheme();
+  const track = useTrack();
+  const viewedRef = useRef(false);
 
   const {
     totalCurrentEUR,
@@ -192,6 +195,13 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
   );
 
   useEffect(() => {
+    if (totalCurrentEUR > 0 && !viewedRef.current) {
+      viewedRef.current = true;
+      track("portfolio_summary_viewed");
+    }
+  }, [totalCurrentEUR, track]);
+
+  useEffect(() => {
     if (!allocationOpen) return;
     function handleClick(e: MouseEvent) {
       if (allocationRef.current && !allocationRef.current.contains(e.target as Node)) {
@@ -220,7 +230,10 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
 
   const aiReviewBtn = isPro ? (
     <button
-      onClick={() => setReviewOpen(!reviewOpen)}
+      onClick={() => {
+        if (!reviewOpen) track("ai_review_opened");
+        setReviewOpen(!reviewOpen);
+      }}
       disabled={!hasHoldings || remaining <= 0}
       className="inline-flex items-center gap-1.5 text-xs font-medium text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 rounded"
     >

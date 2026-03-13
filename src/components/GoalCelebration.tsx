@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useI18n } from "@/lib/i18n";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
+import { useTrack } from "@/lib/use-track";
 import type { Holding, CashEntry } from "@/lib/types";
 
 const MILESTONES = [25, 50, 75, 100] as const;
@@ -49,6 +50,7 @@ export default function GoalCelebration({ holdings: holdingsProp, cashEntries: c
   const holdings = holdingsProp ?? ctxHoldings;
   const cashEntries = cashEntriesProp ?? ctxCashEntries;
 
+  const track = useTrack();
   const [activeMilestone, setActiveMilestone] = useState<Milestone | null>(null);
   const [visible, setVisible] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -80,11 +82,12 @@ export default function GoalCelebration({ holdings: holdingsProp, cashEntries: c
       saveCelebratedMilestone(goal.id, newMilestone);
       setActiveMilestone(newMilestone);
       setVisible(true);
+      track("goal_milestone_reached", { milestone: String(newMilestone), goal_name: goal.name });
 
       if (timerRef.current) clearTimeout(timerRef.current);
       timerRef.current = setTimeout(() => setVisible(false), DISMISS_MS);
     }
-  }, [progress, goal, demoMode]);
+  }, [progress, goal, demoMode, track]);
 
   useEffect(() => {
     return () => { if (timerRef.current) clearTimeout(timerRef.current); };

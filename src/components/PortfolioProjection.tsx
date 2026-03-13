@@ -16,6 +16,7 @@ import { useI18n } from "@/lib/i18n";
 import { useTheme } from "@/lib/theme-context";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
 import { formatCurrency, formatCompactNumber, convertToEUR } from "@/lib/utils";
+import { useTrack } from "@/lib/use-track";
 import type { Holding, CashEntry } from "@/lib/types";
 
 const HORIZON_OPTIONS = [10, 20, 30] as const;
@@ -38,6 +39,7 @@ interface Props {
 export default function PortfolioProjection({ holdings: holdingsProp, cashEntries: cashEntriesProp }: Props) {
   const { t } = useI18n();
   const { isDark } = useTheme();
+  const track = useTrack();
   const {
     holdings: ctxHoldings, cashEntries: ctxCashEntries, quotes, exchangeRates,
     activePortfolioCurrency, activePortfolioId, goal: savedGoal, saveGoal, deleteGoal, demoMode,
@@ -110,15 +112,17 @@ export default function PortfolioProjection({ holdings: holdingsProp, cashEntrie
       reinvestDividends,
       horizon,
     });
+    track(savedGoal ? "goal_updated" : "goal_saved", { target: String(goalTarget), horizon: String(horizon) });
     setSaving(false);
-  }, [goalTarget, saving, saveGoal, activePortfolioId, goalName, baseCurrency, growthRate, yearlyContribution, contributionMode, reinvestDividends, horizon]);
+  }, [goalTarget, saving, saveGoal, activePortfolioId, goalName, baseCurrency, growthRate, yearlyContribution, contributionMode, reinvestDividends, horizon, track, savedGoal]);
 
   const handleDelete = useCallback(async () => {
+    track("goal_removed");
     await deleteGoal();
     setGoalTarget(0);
     setGoalName("My Goal");
     initializedRef.current = false;
-  }, [deleteGoal]);
+  }, [deleteGoal, track]);
 
   const totals = useMemo(
     () => calculatePortfolioTotals(holdings, cashEntries, quotes, exchangeRates, baseCurrency),

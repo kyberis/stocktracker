@@ -5,6 +5,7 @@ import { usePortfolio } from "@/lib/portfolio-context";
 import { useSettings } from "@/lib/settings-context";
 import { useI18n } from "@/lib/i18n";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
+import { useTrack } from "@/lib/use-track";
 import type { SearchResult } from "@/lib/types";
 
 interface AddStockModalProps {
@@ -29,12 +30,18 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
   const [assetType, setAssetType] = useState<"stock" | "etf" | "">("");
   const searchTimeout = useRef<NodeJS.Timeout | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const track = useTrack();
+  const openedRef = useRef(false);
 
   useEffect(() => {
-    if (isOpen && inputRef.current) {
-      inputRef.current.focus();
-    }
-    if (!isOpen) {
+    if (isOpen) {
+      if (!openedRef.current) {
+        openedRef.current = true;
+        track("add_stock_modal_opened");
+      }
+      if (inputRef.current) inputRef.current.focus();
+    } else {
+      openedRef.current = false;
       setQuery("");
       setResults([]);
       setSelected(null);
@@ -89,6 +96,7 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
   const handleSubmit = () => {
     if (!stockName.trim() || !ticker.trim() || !exchange.trim() || !shares || !price || !assetType) return;
 
+    track("stock_added");
     addHolding({
       name: stockName.trim(),
       ticker: ticker.trim().toUpperCase(),
