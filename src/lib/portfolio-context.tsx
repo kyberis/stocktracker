@@ -67,6 +67,7 @@ interface PortfolioContextType {
   refreshSingleQuote: (ticker: string) => Promise<void>;
   refreshAlertedTickers: () => Promise<void>;
   lastUpdated: Date | null;
+  demoMode: boolean;
 }
 
 const PortfolioContext = createContext<PortfolioContextType | null>(null);
@@ -656,6 +657,7 @@ export function PortfolioProvider({
       refreshSingleQuote: demoMode ? noop : refreshSingleQuote,
       refreshAlertedTickers: demoMode ? noop : refreshAlertedTickers,
       lastUpdated,
+      demoMode: !!demoMode,
     }),
     [
       holdings, cashEntries, quotes, quoteUpdatedAt, refreshingTickers, exchangeRates,

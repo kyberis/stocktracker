@@ -42,6 +42,7 @@ const PRO_FEATURES = new Set<SubscriptionFeature>([
   "event-calendar-ipo",
   "screener",
   "tax-reports",
+  "simulator",
 ]);
 
 export interface EntitlementInput {

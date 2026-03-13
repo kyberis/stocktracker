@@ -109,6 +109,7 @@ function getFeatureCards(t: T) {
     { icon: "sparkle", title: t("landingCardAiTitle"), desc: t("landingCardAiDesc") },
     { icon: "upload", title: t("landingCardImportTitle"), desc: t("landingCardImportDesc") },
     { icon: "chart", title: t("landingCardPerfTitle"), desc: t("landingCardPerfDesc") },
+    { icon: "beaker", title: t("landingCardSimulatorTitle"), desc: t("landingCardSimulatorDesc"), badge: "Pro" },
     { icon: "calendar", title: t("landingCardEventsTitle"), desc: t("landingCardEventsDesc") },
     { icon: "globe", title: "35 Languages", desc: "The most multilingual portfolio tracker on the market. AI insights delivered in your native language.", badge: "#1" },
   ];
@@ -171,7 +172,7 @@ function getPricing(t: T): PricingTier[] {
       regularAnnual: "€79.99", annualPrice: "€59.99",
       annualSavePct: 37, launchDiscountPct: 20,
       description: t("landingPricingTrefolioDesc"),
-      features: Array.from({ length: 20 }, (_, i) => t(`landingPricingTrefolioFeature${i + 1}` as TranslationKey)),
+      features: Array.from({ length: 21 }, (_, i) => t(`landingPricingTrefolioFeature${i + 1}` as TranslationKey)),
       cta: t("landingPricingTrefolioCta"),
       highlighted: true,
     },
@@ -237,6 +238,9 @@ function FeatureIcon({ type }: { type: string }) {
     ),
     wallet: (
       <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 9m18 0V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v3" />
+    ),
+    beaker: (
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M5 14.5l-1.047 2.094A1.125 1.125 0 005.004 18h13.992a1.125 1.125 0 001.05-1.406L19.8 15.3M5 14.5l14.8.8" />
     ),
   };
 

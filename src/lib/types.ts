@@ -28,7 +28,8 @@ export type SubscriptionFeature =
   | "event-calendar-ipo"
   | "net-worth"
   | "screener"
-  | "tax-reports";
+  | "tax-reports"
+  | "simulator";
 
 export type AlertCondition = "above" | "below";
 export type AlertType = "threshold" | "percent_change";

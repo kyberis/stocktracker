@@ -22,7 +22,8 @@ export type UpsellSurface =
   | "crypto_portfolio"
   | "ai_import"
   | "net_worth_locked"
-  | "screener_locked";
+  | "screener_locked"
+  | "simulator_locked";
 
 export interface UpsellConfig {
   subtitleKey: TranslationKey;
@@ -272,6 +273,18 @@ const UPSELL_BY_SURFACE: Record<UpsellSurface, UpsellConfig> = {
     starterItems: DEFAULT_STARTER_ITEMS,
     proItems: [
       "upsellProItemScreener",
+      "upsellProItemAlphaVantage",
+      "upsellProItemAiUnlimited",
+    ],
+  },
+  simulator_locked: {
+    subtitleKey: "upsellCompareSubtitleLocked",
+    attemptedActionKey: "upsellAttemptSimulator",
+    feature: "simulator",
+    freeItems: DEFAULT_FREE_ITEMS,
+    starterItems: DEFAULT_STARTER_ITEMS,
+    proItems: [
+      "upsellProItemSimulator",
       "upsellProItemAlphaVantage",
       "upsellProItemAiUnlimited",
     ],
