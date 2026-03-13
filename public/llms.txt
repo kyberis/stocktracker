@@ -42,6 +42,20 @@ trefolio is a web-based portfolio tracker built for European retail investors. I
 - Earnings Calendar & Economic Events: https://trefolio.com/blog/earnings-calendar-economic-events-investors
 - trefolio Leaf AMOLED Display: https://trefolio.com/blog/trefolio-leaf-amoled-portfolio-display
 
+## Multi-Language Blog (Broker & Tax Guides)
+
+Blog content is available in 10 European languages with broker-specific and tax-specific guides:
+- Spanish: https://trefolio.com/blog/es
+- French: https://trefolio.com/blog/fr
+- German: https://trefolio.com/blog/de
+- Italian: https://trefolio.com/blog/it
+- Portuguese: https://trefolio.com/blog/pt
+- Dutch: https://trefolio.com/blog/nl
+- Polish: https://trefolio.com/blog/pl
+- Swedish: https://trefolio.com/blog/sv
+- Danish: https://trefolio.com/blog/da
+- Finnish: https://trefolio.com/blog/fi
+
 ## Optional
 
 - [Full details](https://trefolio.com/llms-full.txt)
