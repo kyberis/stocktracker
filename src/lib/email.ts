@@ -488,7 +488,7 @@ function bifolioUpgradeHtml(displayName: string, locale: EmailLocale): string {
             ${featureRow("&#x1F514;", c.f3[0], c.f3[1], true)}
             ${featureRow("&#x1F4C8;", c.f4[0], c.f4[1], true)}
           </table>
-          ${primaryCta(c.ctaPrimary, utm("/tools?tab=alerts", campaign))}
+          ${primaryCta(c.ctaPrimary, utm("/tools/alerts", campaign))}
           ${secondaryCta(c.ctaSecondary, utm("/profile", campaign))}
         </td></tr>
         <tr><td style="padding:0 32px;"><div style="border-top:1px solid #e2e8f0;margin:24px 0;"></div></td></tr>

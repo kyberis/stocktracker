@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useMemo, useEffect, Suspense } from "react";
+import { useMemo, useEffect, Suspense } from "react";
 import dynamic from "next/dynamic";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth-context";
 import { useSettings } from "@/lib/settings-context";
@@ -51,23 +51,15 @@ export default function PortfolioTools({ initialTab = "transactions" }: Portfoli
     toolTaxonomyEnabled, toolRebalancingEnabled, toolAccountsEnabled, toolWatchlistEnabled,
   } = useSettings();
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const tabParam = searchParams.get("tab") as Tab | null;
-  const VALID_TABS: Tab[] = ["transactions", "dividends", "performance", "taxonomy", "rebalancing", "accounts", "watchlist", "alerts", "screener"];
-  const resolvedInitial = (tabParam && VALID_TABS.includes(tabParam)) ? tabParam : initialTab;
-  const [activeTab, setActiveTabState] = useState<Tab>(resolvedInitial);
+  const activeTab: Tab = initialTab;
   const isPaid = user?.plan === "starter" || user?.plan === "pro";
 
   const setActiveTab = (tab: Tab) => {
-    if (tab === "screener") {
-      router.push("/tools/screener");
-      return;
-    }
-    const wasScreener = activeTab === ("screener" as Tab);
-    if (wasScreener) {
+    if (tab === "transactions") {
       router.push("/tools");
+    } else {
+      router.push(`/tools/${tab}`);
     }
-    setActiveTabState(tab);
   };
 
   const toolFlagMap: Record<Tab, boolean> = {
@@ -92,9 +84,14 @@ export default function PortfolioTools({ initialTab = "transactions" }: Portfoli
 
   useEffect(() => {
     if (visibleTabs.length > 0 && !visibleTabs.some((t) => t.key === activeTab)) {
-      setActiveTab(visibleTabs[0].key);
+      const fallback = visibleTabs[0].key;
+      if (fallback === "transactions") {
+        router.replace("/tools");
+      } else {
+        router.replace(`/tools/${fallback}`);
+      }
     }
-  }, [visibleTabs, activeTab]);
+  }, [visibleTabs, activeTab, router]);
 
   const handleExport = (type: string) => {
     window.open(`/api/export/portfolio?type=${type}`, "_blank");
