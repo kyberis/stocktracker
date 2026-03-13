@@ -36,6 +36,9 @@ export async function GET(request: NextRequest) {
   const portfolioId = url.searchParams.get("portfolioId") || undefined;
   const filingStatus = (url.searchParams.get("filingStatus") || "single") as "single" | "joint";
   const italyRegime = (url.searchParams.get("italyRegime") || "dichiarativo") as "dichiarativo" | "amministrato";
+  const swedenAccountType = (url.searchParams.get("swedenAccountType") || "regular") as "isk" | "kf" | "regular";
+  const portugalNhr = url.searchParams.get("portugalNhr") === "true";
+  const swissCanton = url.searchParams.get("swissCanton") || "ZH";
 
   if (!TAX_COUNTRIES.includes(countryParam)) {
     return NextResponse.json(
@@ -100,6 +103,9 @@ export async function GET(request: NextRequest) {
     brokerCountry: undefined,
     filingStatus,
     italyRegime,
+    swedenAccountType,
+    portugalNhr,
+    swissCanton,
     jan1Estimated,
     dec31Estimated,
   };

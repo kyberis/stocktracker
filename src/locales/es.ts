@@ -1528,7 +1528,7 @@ const es: TranslationStrings = {
 
   taxReportsNav: "Informes Fiscales",
   taxReportsTitle: "Informes Fiscales",
-  taxReportsUpgradeDesc: "Generate country-specific tax summaries for Germany, France, Spain, Netherlands, and Italy. Includes FIFO/LIFO cost basis, dividend income, withholding tax, and form field mapping.",
+  taxReportsUpgradeDesc: "Generate country-specific tax summaries for 17 European and global countries. Includes FIFO/LIFO/average cost basis, dividend income, withholding tax, and local form field mapping.",
   taxReportsTaxYear: "Año fiscal",
   taxReportsCountry: "País",
   taxReportsFilingStatus: "Filing Status",
@@ -1571,6 +1571,10 @@ const es: TranslationStrings = {
   taxReportsExportGains: "Export Gains (CSV)",
   taxReportsExportDividends: "Export Dividends (CSV)",
   taxReportsExportSummary: "Export Summary (CSV)",
+  taxReportsAccountType: "Tipo de cuenta",
+  taxReportsRegularAccount: "Cuenta regular",
+  taxReportsNhrRegime: "Régimen NHR",
+  taxReportsCanton: "Cantón",
 
   // Simulator / Backtesting
   simulatorNav: "Simulador",

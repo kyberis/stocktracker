@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 
-export default function ShareBar({ title, slug }: { title: string; slug: string }) {
+export default function ShareBar({ title, slug, lang }: { title: string; slug: string; lang?: string }) {
   const [copied, setCopied] = useState(false);
-  const url = `https://trefolio.com/blog/${slug}`;
+  const url = lang ? `https://trefolio.com/blog/${lang}/${slug}` : `https://trefolio.com/blog/${slug}`;
   const text = encodeURIComponent(title);
   const encodedUrl = encodeURIComponent(url);
 

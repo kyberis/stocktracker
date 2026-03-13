@@ -2,9 +2,16 @@ import type { Transaction, ExchangeRates, HoldingAssetType } from "@/lib/types";
 
 /* ── Supported Countries ───────────────────────────────────── */
 
-export type TaxCountry = "DE" | "FR" | "ES" | "NL" | "IT";
+export type TaxCountry =
+  | "DE" | "FR" | "ES" | "NL" | "IT"
+  | "GB" | "US" | "CH" | "AT" | "PT"
+  | "BE" | "IE" | "SE" | "DK" | "NO" | "FI" | "PL";
 
-export const TAX_COUNTRIES: TaxCountry[] = ["DE", "FR", "ES", "NL", "IT"];
+export const TAX_COUNTRIES: TaxCountry[] = [
+  "DE", "FR", "ES", "NL", "IT",
+  "GB", "US", "CH", "AT", "PT",
+  "BE", "IE", "SE", "DK", "NO", "FI", "PL",
+];
 
 export const TAX_COUNTRY_LABELS: Record<TaxCountry, string> = {
   DE: "Germany",
@@ -12,6 +19,18 @@ export const TAX_COUNTRY_LABELS: Record<TaxCountry, string> = {
   ES: "Spain",
   NL: "Netherlands",
   IT: "Italy",
+  GB: "United Kingdom",
+  US: "United States",
+  CH: "Switzerland",
+  AT: "Austria",
+  PT: "Portugal",
+  BE: "Belgium",
+  IE: "Ireland",
+  SE: "Sweden",
+  DK: "Denmark",
+  NO: "Norway",
+  FI: "Finland",
+  PL: "Poland",
 };
 
 /* ── Cost Basis Methods ────────────────────────────────────── */
@@ -22,8 +41,20 @@ export const COUNTRY_COST_BASIS: Record<TaxCountry, CostBasisMethod> = {
   DE: "fifo",
   FR: "average",
   ES: "fifo",
-  NL: "fifo", // not used for Box 3 but needed if actual return is filed
+  NL: "fifo",
   IT: "lifo",
+  GB: "average", // Section 104 share pooling
+  US: "fifo",
+  CH: "fifo",
+  AT: "average",
+  PT: "fifo",
+  BE: "fifo",
+  IE: "fifo",
+  SE: "average",
+  DK: "average",
+  NO: "average",
+  FI: "fifo",
+  PL: "fifo",
 };
 
 /* ── Engine Input / Output ─────────────────────────────────── */
@@ -58,6 +89,14 @@ export interface TaxReportInput {
   jan1Estimated?: boolean;
   /** True when dec31ValueEUR was estimated from current holdings (no snapshot found) */
   dec31Estimated?: boolean;
+  /** SE: account type for Sweden */
+  swedenAccountType?: "isk" | "kf" | "regular";
+  /** PT: Non-Habitual Resident regime */
+  portugalNhr?: boolean;
+  /** CH: Swiss canton code (e.g. "ZH", "GE", "VD") */
+  swissCanton?: string;
+  /** Per-ticker buy dates for first acquisition (for IE deemed disposal) */
+  tickerFirstBuyDates?: Record<string, string>;
 }
 
 /* ── Realized Gain/Loss per Sell ───────────────────────────── */
@@ -153,6 +192,52 @@ export interface QuadroRWEntry {
   ivafe: number;
 }
 
+export interface TobEntry {
+  transactionId: string;
+  ticker: string;
+  name: string;
+  date: string;
+  type: "buy" | "sell";
+  amount: number;
+  tobRate: number;
+  tobAmount: number;
+}
+
+export interface DeemedDisposalWarning {
+  ticker: string;
+  name: string;
+  firstBuyDate: string;
+  yearsHeld: number;
+  currentValue: number;
+  costBasis: number;
+  deemedGain: number;
+}
+
+export interface IskCalculation {
+  accountType: "isk" | "kf";
+  averageValue: number;
+  govBorrowingRate: number;
+  imputedIncomeRate: number;
+  imputedIncome: number;
+  taxRate: number;
+  tax: number;
+}
+
+export interface MarkToMarketEntry {
+  ticker: string;
+  name: string;
+  jan1Value: number;
+  dec31Value: number;
+  unrealizedGain: number;
+}
+
+export interface ShieldingDeduction {
+  costBasis: number;
+  shieldingRate: number;
+  deduction: number;
+  sharesHeld: number;
+}
+
 /* ── Tax Optimization Suggestion (Phase 4) ─────────────────── */
 
 export interface TaxOptimization {
@@ -230,6 +315,61 @@ export interface TaxReport {
   italyRegime?: "dichiarativo" | "amministrato";
   /** IT: Carryforward losses */
   carryForwardLosses?: number;
+
+  /** GB: CGT annual exempt amount */
+  gbAnnualExemption?: number;
+  /** GB: CGT rate applied (basic or higher) */
+  gbCgtRate?: number;
+  /** GB: Dividend allowance */
+  gbDividendAllowance?: number;
+
+  /** US: Short-term gains (held <= 1 year) */
+  usShortTermGain?: number;
+  /** US: Long-term gains (held > 1 year) */
+  usLongTermGain?: number;
+  /** US: LTCG bracket breakdown */
+  usBrackets?: { from: number; to: number; rate: number; tax: number }[];
+
+  /** CH: Canton wealth tax rate */
+  chCantonRate?: number;
+  /** CH: Wealth tax amount */
+  chWealthTax?: number;
+  /** CH: Verrechnungssteuer (reclaimable) */
+  chVerrechnungssteuer?: number;
+
+  /** AT: KESt rate */
+  atKestRate?: number;
+
+  /** PT: NHR applied */
+  ptNhrApplied?: boolean;
+
+  /** BE: TOB transaction tax entries */
+  beTob?: TobEntry[];
+  /** BE: Total TOB */
+  beTobTotal?: number;
+
+  /** IE: Deemed disposal warnings */
+  ieDeemedDisposal?: DeemedDisposalWarning[];
+  /** IE: Annual exemption */
+  ieAnnualExemption?: number;
+
+  /** SE: ISK/KF calculation */
+  seIskCalculation?: IskCalculation;
+  /** SE: Account type used */
+  seAccountType?: "isk" | "kf" | "regular";
+
+  /** DK: Mark-to-market entries for ETFs */
+  dkMarkToMarket?: MarkToMarketEntry[];
+  /** DK: Aktieindkomst bracket breakdown */
+  dkBrackets?: { from: number; to: number; rate: number; tax: number }[];
+
+  /** NO: Shielding deduction total */
+  noShieldingDeduction?: number;
+  /** NO: Uplift factor */
+  noUpliftFactor?: number;
+
+  /** FI: Presumptive acquisition cost used */
+  fiPresumptiveCostUsed?: boolean;
 
   /* Phase 3: Form field mapping */
   formFields?: FormField[];

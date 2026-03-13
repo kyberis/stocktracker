@@ -149,6 +149,174 @@ function getTaxRuleChecks(currentYear: number): TaxRuleCheck[] {
       urgency: "low",
       note: "0.2% on foreign financial assets. Stable since introduction in DL 201/2011.",
     },
+
+    // UK
+    {
+      country: "GB",
+      rule: "CGT annual exempt amount",
+      file: "src/lib/tax/countries/gb.ts",
+      constant: "ANNUAL_EXEMPT_AMOUNT",
+      lastVerifiedYear: 2024,
+      urgency: "high",
+      note: "Reduced to £3,000 in 2024/25. Check HMRC annual budget announcements.",
+    },
+    {
+      country: "GB",
+      rule: "CGT rates (basic/higher)",
+      file: "src/lib/tax/countries/gb.ts",
+      constant: "CGT_BASIC_RATE / CGT_HIGHER_RATE",
+      lastVerifiedYear: 2024,
+      urgency: "medium",
+      note: "10%/20% for shares. Review Autumn Statement and Budget.",
+    },
+
+    // US
+    {
+      country: "US",
+      rule: "LTCG bracket thresholds",
+      file: "src/lib/tax/countries/us.ts",
+      constant: "LTCG_BRACKETS",
+      lastVerifiedYear: 2024,
+      urgency: "high",
+      note: "Inflation-adjusted annually by the IRS. Check Rev. Proc. each November.",
+    },
+
+    // Switzerland
+    {
+      country: "CH",
+      rule: "Canton wealth tax rates",
+      file: "src/lib/tax/countries/ch.ts",
+      constant: "CANTON_WEALTH_TAX_RATES",
+      lastVerifiedYear: 2024,
+      urgency: "medium",
+      note: "Varies by canton. Check cantonal tax authority publications.",
+    },
+    {
+      country: "CH",
+      rule: "Verrechnungssteuer rate",
+      file: "src/lib/tax/countries/ch.ts",
+      constant: "VERRECHNUNGSSTEUER_RATE",
+      lastVerifiedYear: 2024,
+      urgency: "low",
+      note: "35% on Swiss dividends. Stable. Parliament occasionally discusses partial abolition.",
+    },
+
+    // Sweden
+    {
+      country: "SE",
+      rule: "ISK government borrowing rate",
+      file: "src/lib/tax/countries/se.ts",
+      constant: "GOV_BORROWING_RATE",
+      lastVerifiedYear: 2024,
+      urgency: "high",
+      note: "Published every Nov 30 by Riksgälden. Directly affects ISK/KF imputed income.",
+    },
+
+    // Norway
+    {
+      country: "NO",
+      rule: "Shielding deduction rate (skjermingsrente)",
+      file: "src/lib/tax/countries/no.ts",
+      constant: "SHIELDING_RATE",
+      lastVerifiedYear: 2024,
+      urgency: "high",
+      note: "Based on 3-month treasury bills. Published annually by Skatteetaten.",
+    },
+    {
+      country: "NO",
+      rule: "Uplift factor (oppjusteringsfaktor)",
+      file: "src/lib/tax/countries/no.ts",
+      constant: "UPLIFT_FACTOR",
+      lastVerifiedYear: 2024,
+      urgency: "medium",
+      note: "Currently 1.72. Set annually in Statsbudsjettet.",
+    },
+
+    // Denmark
+    {
+      country: "DK",
+      rule: "Aktieindkomst bracket threshold",
+      file: "src/lib/tax/countries/dk.ts",
+      constant: "AKTIE_BRACKETS",
+      lastVerifiedYear: 2024,
+      urgency: "high",
+      note: "Currently ~61,000 DKK. Inflation-adjusted annually. Check Skatteministeriet.",
+    },
+
+    // Belgium
+    {
+      country: "BE",
+      rule: "TOB rates",
+      file: "src/lib/tax/countries/be.ts",
+      constant: "TOB_RATES",
+      lastVerifiedYear: 2024,
+      urgency: "medium",
+      note: "0.12-1.32%. Relatively stable but check yearly Belgian budget.",
+    },
+    {
+      country: "BE",
+      rule: "Dividend exemption amount",
+      file: "src/lib/tax/countries/be.ts",
+      constant: "DIVIDEND_EXEMPT",
+      lastVerifiedYear: 2024,
+      urgency: "medium",
+      note: "€833 (2024). Indexed annually. Check FOD Financiën.",
+    },
+
+    // Portugal
+    {
+      country: "PT",
+      rule: "NHR regime eligibility",
+      file: "src/lib/tax/countries/pt.ts",
+      constant: "portugalNhr (input flag)",
+      lastVerifiedYear: 2024,
+      urgency: "high",
+      note: "NHR regime was reformed in 2024. Check if new applicants still eligible.",
+    },
+
+    // Ireland
+    {
+      country: "IE",
+      rule: "CGT annual exemption",
+      file: "src/lib/tax/countries/ie.ts",
+      constant: "ANNUAL_EXEMPTION",
+      lastVerifiedYear: 2024,
+      urgency: "low",
+      note: "€1,270. Unchanged for decades but check each Budget.",
+    },
+
+    // Finland
+    {
+      country: "FI",
+      rule: "Capital income bracket threshold",
+      file: "src/lib/tax/countries/fi.ts",
+      constant: "BRACKET_THRESHOLD",
+      lastVerifiedYear: 2024,
+      urgency: "medium",
+      note: "€30,000. Check Valtiovarainministeriö budget proposal.",
+    },
+
+    // Austria
+    {
+      country: "AT",
+      rule: "KESt rate",
+      file: "src/lib/tax/countries/at.ts",
+      constant: "KEST_RATE",
+      lastVerifiedYear: 2024,
+      urgency: "low",
+      note: "27.5%. Stable since 2016. Check Steuerreform updates.",
+    },
+
+    // Poland
+    {
+      country: "PL",
+      rule: "Belka tax rate",
+      file: "src/lib/tax/countries/pl.ts",
+      constant: "BELKA_RATE",
+      lastVerifiedYear: 2024,
+      urgency: "low",
+      note: "19% flat. Stable since 2004. Check Ministerstwo Finansów.",
+    },
   ];
 }
 
