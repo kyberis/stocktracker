@@ -1,15 +1,14 @@
 "use client";
 
-import { useState } from "react";
 import PortfolioTools from "@/components/PortfolioTools";
 import MobileToolsPage from "@/components/mobile/MobileToolsPage";
-import { isNativePlatform } from "@/lib/capacitor";
+import { useIsNative } from "@/lib/use-native";
 
 type Tab = "transactions" | "dividends" | "performance" | "taxonomy" | "rebalancing" | "accounts" | "watchlist" | "alerts" | "screener" | "tax" | "simulator";
 
 export default function ToolsPageGate({ initialTab }: { initialTab?: Tab }) {
-  const [native] = useState(() => isNativePlatform());
+  const isNative = useIsNative();
 
-  if (native) return <MobileToolsPage />;
+  if (isNative) return <MobileToolsPage />;
   return <PortfolioTools initialTab={initialTab} />;
 }

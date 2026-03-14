@@ -1,17 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import MobileTabBar from "./MobileTabBar";
 import CapacitorBridge from "./CapacitorBridge";
 import NativePushBridge from "./NativePushBridge";
-import { getNativePlatform } from "@/lib/capacitor";
+import { useNativePlatform } from "@/lib/use-native";
 
 export default function NativeShell({ children }: { children: React.ReactNode }) {
-  const [platform, setPlatform] = useState<"ios" | "android" | "web">("web");
-
-  useEffect(() => {
-    setPlatform(getNativePlatform());
-  }, []);
+  const platform = useNativePlatform();
 
   return (
     <div

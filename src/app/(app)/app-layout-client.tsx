@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { ThemeProvider, useTheme } from "@/lib/theme-context";
 import { AuthProvider } from "@/lib/auth-context";
 import { I18nProvider } from "@/lib/i18n";
 import { SettingsProvider } from "@/lib/settings-context";
 import { StealthProvider } from "@/lib/stealth-context";
+import { useIsNative } from "@/lib/use-native";
 import AppNav from "@/components/AppNav";
 import SidebarNav from "@/components/SidebarNav";
 import MarketTickerBar from "@/components/MarketTickerBar";
@@ -18,7 +18,6 @@ import DeviceInterestEnroller from "@/components/DeviceInterestEnroller";
 import ThemeWizard from "@/components/ThemeWizard";
 import EmailVerificationBanner from "@/components/EmailVerificationBanner";
 import NativeShell from "@/components/NativeShell";
-import { isNativePlatform } from "@/lib/capacitor";
 import { CURRENT_VERSION } from "@/lib/release-notes";
 import Link from "next/link";
 import type { LayoutTheme } from "@/lib/types";
@@ -46,11 +45,7 @@ function AppFooter() {
 function AppShell({ children }: { children: React.ReactNode }) {
   const { layoutTheme } = useTheme();
   const isStudio = layoutTheme === "studio";
-  const [isNative, setIsNative] = useState(false);
-
-  useEffect(() => {
-    setIsNative(isNativePlatform());
-  }, []);
+  const isNative = useIsNative();
 
   if (isNative) {
     return <NativeShell>{children}</NativeShell>;

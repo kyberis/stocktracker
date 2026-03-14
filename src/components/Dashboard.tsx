@@ -13,7 +13,7 @@ import { useAuth } from "@/lib/auth-context";
 import { getHoldingsLimit } from "@/lib/subscription";
 import { useTrack } from "@/lib/use-track";
 import { useTheme } from "@/lib/theme-context";
-import { isNativePlatform } from "@/lib/capacitor";
+import { useIsNative } from "@/lib/use-native";
 import type { Account } from "@/lib/types";
 
 const MobileDashboard = dynamic(() => import("./mobile/MobileDashboard"), { ssr: false });
@@ -133,9 +133,8 @@ function EmptyPortfolio({ onAddStock, onSeedData }: { onAddStock: () => void; on
 }
 
 export default function Dashboard() {
-  const [native] = useState(() => isNativePlatform());
-  if (native) return <MobileDashboard />;
-
+  const isNative = useIsNative();
+  if (isNative) return <MobileDashboard />;
   return <DesktopDashboard />;
 }
 

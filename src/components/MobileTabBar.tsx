@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
-import { isNativePlatform } from "@/lib/capacitor";
+import { useIsNative } from "@/lib/use-native";
 
 const WEB_TABS = [
   {
@@ -62,7 +62,8 @@ const NATIVE_TABS = [
 export default function MobileTabBar() {
   const pathname = usePathname();
   const { t } = useI18n();
-  const tabs = isNativePlatform() ? NATIVE_TABS : WEB_TABS;
+  const isNative = useIsNative();
+  const tabs = isNative ? NATIVE_TABS : WEB_TABS;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 sm:hidden bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-800 pb-[env(safe-area-inset-bottom)]">
