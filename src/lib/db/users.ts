@@ -529,8 +529,8 @@ export async function listUsersWithStats(): Promise<AdminUserWithStats[]> {
       (SELECT COUNT(*) FROM cash_entries WHERE user_id = u.id) AS cash_count,
       (SELECT COALESCE(SUM(amount_eur), 0) FROM cash_entries WHERE user_id = u.id) AS total_cash_eur,
       (SELECT COUNT(*) FROM transactions WHERE user_id = u.id) AS transaction_count,
-      (SELECT GROUP_CONCAT(DISTINCT broker, ', ') FROM accounts WHERE user_id = u.id) AS broker_accounts,
-      (SELECT GROUP_CONCAT(DISTINCT broker_name, ', ') FROM transactions WHERE user_id = u.id AND broker_name != '') AS broker_imports
+      (SELECT GROUP_CONCAT(DISTINCT broker) FROM accounts WHERE user_id = u.id) AS broker_accounts,
+      (SELECT GROUP_CONCAT(DISTINCT broker_name) FROM transactions WHERE user_id = u.id AND broker_name != '') AS broker_imports
     FROM users u
     ORDER BY u.created_at DESC
   `);
