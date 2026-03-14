@@ -14,6 +14,7 @@ import {
 } from "@/lib/utils";
 import type { Holding, QuoteData } from "@/lib/types";
 import AlertBadge from "@/components/AlertBadge";
+import { hapticImpact } from "@/lib/native-haptics";
 
 interface PortfolioCardsProps {
   holdings: Holding[];
@@ -48,7 +49,7 @@ const HoldingCard = memo(function HoldingCard({ holding }: { holding: Holding })
 
   return (
     <button
-      onClick={() => router.push(`/stock/${encodeURIComponent(holding.ticker)}`)}
+      onClick={() => { hapticImpact("Light"); router.push(`/stock/${encodeURIComponent(holding.ticker)}`); }}
       className="w-full text-left bg-white dark:bg-slate-800/80 rounded-2xl border border-gray-100 dark:border-slate-700/60 p-4 active:scale-[0.98] transition-transform"
     >
       <div className="flex items-start justify-between gap-3">

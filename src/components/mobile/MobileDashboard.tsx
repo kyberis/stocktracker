@@ -2,14 +2,18 @@
 
 import { useState, useCallback, useEffect, useMemo, useRef, Suspense } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import PortfolioSummary from "@/components/PortfolioSummary";
 import MarketAndCash from "@/components/MarketAndCash";
 import PortfolioCards from "./PortfolioCards";
+import MobilePaywall from "./MobilePaywall";
 import { useI18n } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useAuth } from "@/lib/auth-context";
 import { getHoldingsLimit } from "@/lib/subscription";
 import { useTrack } from "@/lib/use-track";
+import { initNudgeTracking, shouldShowPaywallNudge, recordPaywallNudgeShown, recordPaywallNudgeDismiss } from "@/lib/paywall-nudge";
+import { hapticImpact, hapticSelectionChanged } from "@/lib/native-haptics";
 import TierFeatureBadge from "@/components/TierFeatureBadge";
 import SampleDataBanner from "@/components/SampleDataBanner";
 import { HeroSkeleton, ChartSkeleton } from "@/components/Skeleton";
@@ -32,15 +36,30 @@ type DashboardTab = "portfolio" | "crypto" | "diversification" | "dividends" | "
 export default function MobileDashboard() {
   const [activeTab, setActiveTab] = useState<DashboardTab>("portfolio");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [paywallSurface, setPaywallSurface] = useState<string>("tab_gate");
   const { t } = useI18n();
   const { holdings, cashEntries, isLoading, refreshHoldings, refreshQuotes, activePortfolioId } = usePortfolio();
   const { user, isLoading: authLoading } = useAuth();
   const track = useTrack();
 
-  const isPro = user?.plan === "pro";
+  const userPlan = user?.plan ?? "free";
+  const isPro = userPlan === "pro";
+  const isPaid = userPlan === "starter" || userPlan === "pro";
   const holdingsCount = holdings.length;
-  const holdingsLimit = getHoldingsLimit(user?.plan ?? "free");
+  const holdingsLimit = getHoldingsLimit(userPlan);
   const holdingsAtLimit = !authLoading && holdingsLimit !== Infinity && holdingsCount >= holdingsLimit;
+
+  // Periodic paywall nudge for free users
+  useEffect(() => {
+    if (authLoading) return;
+    initNudgeTracking();
+    if (userPlan === "free" && shouldShowPaywallNudge()) {
+      recordPaywallNudgeShown();
+      setPaywallSurface("periodic_nudge");
+      setShowPaywall(true);
+    }
+  }, [authLoading, userPlan]);
 
   const filteredHoldings = holdings;
   const investmentCashEntries = useMemo(
@@ -49,6 +68,12 @@ export default function MobileDashboard() {
   );
 
   const hasCryptoHoldings = holdings.some((h) => h.assetType === "crypto");
+
+  const TIER_GATE: Partial<Record<DashboardTab, "starter" | "pro">> = {
+    metrics: "starter",
+    growth: "starter",
+    crypto: "pro",
+  };
 
   const dashboardTabs: { key: DashboardTab; label: string; tierBadge?: "starter" | "pro" }[] = [
     { key: "portfolio", label: t("portfolioTab") },
@@ -64,8 +89,18 @@ export default function MobileDashboard() {
   ];
 
   function handleTabChange(tab: DashboardTab) {
+    const requiredTier = TIER_GATE[tab];
+    if (requiredTier) {
+      const rank = { free: 0, starter: 1, pro: 2 };
+      if (rank[userPlan] < rank[requiredTier]) {
+        setPaywallSurface(`tab_${tab}`);
+        setShowPaywall(true);
+        return;
+      }
+    }
     setActiveTab(tab);
     track(`${tab}_tab_viewed`);
+    hapticSelectionChanged();
   }
 
   const hasLoadedOnce = useRef(false);
@@ -256,6 +291,31 @@ export default function MobileDashboard() {
       {showAddModal && (
         <AddStockModal isOpen={showAddModal} onClose={() => setShowAddModal(false)} />
       )}
+
+      {showPaywall && (
+        <MobilePaywall
+          surface={paywallSurface}
+          onDismiss={() => {
+            recordPaywallNudgeDismiss();
+            setShowPaywall(false);
+          }}
+        />
+      )}
+
+      {/* Holdings limit paywall trigger */}
+      {holdingsAtLimit && !showPaywall && userPlan === "free" && (
+        <div className="fixed bottom-16 left-4 right-4 z-40">
+          <button
+            onClick={() => { setPaywallSurface("holdings_limit"); setShowPaywall(true); }}
+            className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-sm font-semibold shadow-lg flex items-center justify-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+            </svg>
+            Upgrade to add more holdings
+          </button>
+        </div>
+      )}
     </>
   );
 }
@@ -263,7 +323,7 @@ export default function MobileDashboard() {
 function MobileEmptyState({ onAdd }: { onAdd: () => void }) {
   const { t } = useI18n();
   return (
-    <div className="text-center py-12 space-y-4">
+    <div className="text-center py-12 space-y-6">
       <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
         <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
@@ -271,15 +331,26 @@ function MobileEmptyState({ onAdd }: { onAdd: () => void }) {
       </div>
       <h2 className="text-xl font-bold text-gray-900 dark:text-white">{t("emptyStateTitle")}</h2>
       <p className="text-sm text-gray-500 dark:text-slate-400 max-w-xs mx-auto">{t("emptyStateSubtitle")}</p>
-      <button
-        onClick={onAdd}
-        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-emerald-500 text-white text-sm font-medium shadow-md"
-      >
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-        </svg>
-        {t("addStock")}
-      </button>
+      <div className="space-y-3 max-w-xs mx-auto">
+        <button
+          onClick={onAdd}
+          className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-emerald-500 text-white text-sm font-medium shadow-md"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
+          {t("addStock")}
+        </button>
+        <Link
+          href="/import"
+          className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-slate-300 text-sm font-medium"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+          </svg>
+          {t("importNav")}
+        </Link>
+      </div>
     </div>
   );
 }

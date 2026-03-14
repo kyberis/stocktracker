@@ -12,6 +12,8 @@ const config: CapacitorConfig = {
       "appleid.apple.com",
       "*.google.com",
       "*.apple.com",
+      "checkout.stripe.com",
+      "billing.stripe.com",
     ],
   },
   plugins: {

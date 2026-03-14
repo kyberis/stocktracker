@@ -50,6 +50,7 @@ function LoginForm() {
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const onTurnstileToken = useCallback((token: string) => setTurnstileToken(token), []);
   const [appleEnabled, setAppleEnabled] = useState(false);
+  const [nativePlatform, setNativePlatform] = useState<"ios" | "android" | "web">("web");
 
   const deviceRef = searchParams.get("ref") === "device";
 
@@ -68,7 +69,13 @@ function LoginForm() {
       .then((r) => r.json())
       .then((data) => setAppleEnabled(data.apple_signin_enabled ?? false))
       .catch(() => {});
+    import("@/lib/capacitor").then(({ getNativePlatform }) => {
+      setNativePlatform(getNativePlatform());
+    });
   }, []);
+
+  const showApple = appleEnabled && nativePlatform !== "android";
+  const showPasskey = supportsPasskey && nativePlatform === "web";
 
   const onPasskeyLogin = async () => {
     setPasskeyLoading(true);
@@ -173,7 +180,7 @@ function LoginForm() {
 
           {/* Passkey + OAuth sign-in */}
           <div className="space-y-3">
-            {supportsPasskey && (
+            {showPasskey && (
               <button
                 type="button"
                 onClick={onPasskeyLogin}
@@ -191,7 +198,7 @@ function LoginForm() {
               <GoogleIcon />
               Continue with Google
             </a>
-            {appleEnabled && (
+            {showApple && (
               <a
                 href="/api/auth/apple"
                 className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-xl border-2 border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors text-sm font-medium text-gray-700 dark:text-slate-200"
