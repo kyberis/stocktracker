@@ -239,6 +239,9 @@ function FeatureIcon({ type }: { type: string }) {
     wallet: (
       <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 9m18 0V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v3" />
     ),
+    phone: (
+      <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
+    ),
     beaker: (
       <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M5 14.5l-1.047 2.094A1.125 1.125 0 005.004 18h13.992a1.125 1.125 0 001.05-1.406L19.8 15.3M5 14.5l14.8.8" />
     ),
@@ -962,12 +965,122 @@ function VideoTutorialSection() {
   );
 }
 
-/* ─── install app section ─── */
+/* ─── PWA install section (default) ─── */
 
 function InstallAppSection() {
   const { t } = useI18n();
   const sectionCb = useCallback(() => trackLanding("landing_section_view", { section: "install_app" }), []);
   const sectionRef = useInViewOnce(sectionCb);
+
+  const points = useMemo(() => [
+    t("landingInstallPwaPoint1" as TranslationKey),
+    t("landingInstallPwaPoint2" as TranslationKey),
+    t("landingInstallPwaPoint3" as TranslationKey),
+    t("landingInstallPwaPoint4" as TranslationKey),
+  ], [t]);
+
+  return (
+    <section className="py-20 sm:py-28 border-t border-slate-800/50" ref={sectionRef as React.RefObject<HTMLElement>}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          <div className="relative flex justify-center">
+            <div className="absolute -inset-4 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-2xl blur-xl" />
+            <div className="relative w-[280px] sm:w-[320px]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/screenshots/pwa-homescreen.png"
+                alt={t("landingInstallPwaScreenshotAlt" as TranslationKey)}
+                className="w-full h-auto drop-shadow-2xl rounded-[2rem]"
+                loading="lazy"
+              />
+            </div>
+          </div>
+          <div className="space-y-6">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+                PWA
+              </span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white leading-tight">
+              {t("landingInstallPwaHeading" as TranslationKey)}{" "}
+              <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
+                {t("landingInstallPwaHeadingAccent" as TranslationKey)}
+              </span>
+            </h2>
+            <p className="text-lg text-slate-400 leading-relaxed">
+              {t("landingInstallPwaSubtitle" as TranslationKey)}
+            </p>
+            <ul className="space-y-3">
+              {points.map((point) => (
+                <li key={point} className="flex items-center gap-3 text-sm">
+                  <svg className="w-5 h-5 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className="text-slate-300">{point}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ─── mobile app section (gated by mobile_app_enabled flag) ─── */
+
+function AppStoreBadge() {
+  return (
+    <a
+      href="#"
+      onClick={(e) => { e.preventDefault(); trackLanding("landing_cta_click", { cta: "app_store" }); }}
+      className="inline-flex items-center gap-2.5 bg-black hover:bg-gray-900 text-white pl-3.5 pr-5 py-2.5 rounded-xl border border-slate-700 hover:border-slate-500 transition-all"
+      aria-label="Download on the App Store"
+    >
+      <svg className="w-7 h-7" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
+      </svg>
+      <div className="flex flex-col">
+        <span className="text-[9px] leading-none text-slate-300">Download on the</span>
+        <span className="text-base font-semibold leading-tight">App Store</span>
+      </div>
+    </a>
+  );
+}
+
+function GooglePlayBadge() {
+  return (
+    <a
+      href="#"
+      onClick={(e) => { e.preventDefault(); trackLanding("landing_cta_click", { cta: "google_play" }); }}
+      className="inline-flex items-center gap-2.5 bg-black hover:bg-gray-900 text-white pl-3.5 pr-5 py-2.5 rounded-xl border border-slate-700 hover:border-slate-500 transition-all"
+      aria-label="Get it on Google Play"
+    >
+      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M3.609 1.814L13.792 12 3.61 22.186a.996.996 0 01-.61-.92V2.734a1 1 0 01.609-.92zm10.89 10.893l2.302 2.302-10.937 6.333 8.635-8.635zm3.199-3.199l2.807 1.626a1 1 0 010 1.732l-2.808 1.626L15.206 12l2.492-2.492zM5.864 2.658L16.8 8.99l-2.302 2.302-8.635-8.635z" />
+      </svg>
+      <div className="flex flex-col">
+        <span className="text-[9px] leading-none text-slate-300">GET IT ON</span>
+        <span className="text-base font-semibold leading-tight">Google Play</span>
+      </div>
+    </a>
+  );
+}
+
+function MobileAppSection() {
+  const { t } = useI18n();
+  const [visible, setVisible] = useState(false);
+  const sectionCb = useCallback(() => trackLanding("landing_section_view", { section: "mobile_app" }), []);
+  const sectionRef = useInViewOnce(sectionCb);
+
+  useEffect(() => {
+    fetch("/api/feature-flags")
+      .then((r) => r.json())
+      .then((flags) => { if (flags.mobile_app_enabled) setVisible(true); })
+      .catch(() => {});
+  }, []);
+
+  if (!visible) return null;
 
   const points = useMemo(() => [
     t("landingInstallPoint1" as TranslationKey),
@@ -980,17 +1093,19 @@ function InstallAppSection() {
     <section className="py-20 sm:py-28 border-t border-slate-800/50" ref={sectionRef as React.RefObject<HTMLElement>}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-          {/* Screenshot side */}
+          {/* Phone mockup side */}
           <div className="relative flex justify-center">
-            <div className="absolute -inset-4 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-2xl blur-xl" />
-            <div className="relative w-[280px] sm:w-[320px]">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/screenshots/pwa-homescreen.png"
-                alt={t("landingInstallScreenshotAlt" as TranslationKey)}
-                className="w-full h-auto drop-shadow-2xl rounded-[2rem]"
-                loading="lazy"
-              />
+            <div className="absolute -inset-4 bg-gradient-to-br from-emerald-500/15 via-teal-500/10 to-cyan-500/15 rounded-3xl blur-2xl" />
+            <div className="relative w-[260px] sm:w-[300px]">
+              <div className="rounded-[2.5rem] border-[3px] border-slate-700/60 bg-slate-900 p-1.5 shadow-2xl shadow-black/50">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/screenshots/native-mobile-app.png"
+                  alt={t("landingInstallScreenshotAlt" as TranslationKey)}
+                  className="w-full h-auto rounded-[2rem]"
+                  loading="lazy"
+                />
+              </div>
             </div>
           </div>
 
@@ -998,7 +1113,10 @@ function InstallAppSection() {
           <div className="space-y-6">
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
-                PWA
+                Native App
+              </span>
+              <span className="text-xs font-bold uppercase tracking-wider text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/20">
+                New
               </span>
             </div>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white leading-tight">
@@ -1020,6 +1138,15 @@ function InstallAppSection() {
                 </li>
               ))}
             </ul>
+
+            {/* Store badges */}
+            <div className="flex flex-wrap items-center gap-3 pt-2">
+              <AppStoreBadge />
+              <GooglePlayBadge />
+            </div>
+            <p className="text-xs text-slate-500">
+              Free to download. Same account works on web, iOS, and Android.
+            </p>
           </div>
         </div>
       </div>
@@ -1822,6 +1949,7 @@ export default function LandingPage() {
       <GettingStartedSection />
       <VideoTutorialSection />
       <InstallAppSection />
+      <MobileAppSection />
       <DeviceSection />
       <CTASection />
       <PublicFooter />

@@ -1,5 +1,5 @@
-import PortfolioTools from "@/components/PortfolioTools";
+import ToolsPageGate from "@/components/ToolsPageGate";
 
 export default function ScreenerTabPage() {
-  return <PortfolioTools initialTab="screener" />;
+  return <ToolsPageGate initialTab="screener" />;
 }

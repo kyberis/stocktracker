@@ -916,3 +916,38 @@ html.theme-studio .rounded-lg {
     transform: none;
   }
 }
+
+/* ── Native mobile shell ── */
+.native-shell {
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+.native-ios .card,
+.native-ios .rounded-2xl {
+  border-radius: 14px;
+}
+
+.native-ios button:active {
+  opacity: 0.7;
+  transition: opacity 0.1s;
+}
+
+.native-android .card,
+.native-android .rounded-2xl {
+  border-radius: 16px;
+}
+
+.native-android button:active {
+  transform: scale(0.97);
+  transition: transform 0.1s;
+}
+
+.native-shell .safe-area-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.native-shell .safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}

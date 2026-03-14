@@ -326,6 +326,47 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
     return NextResponse.json({ error: "Unsupported broker or action." }, { status: 400 });
   }
 
+  /* ── import-cash: handled before transaction parsing to avoid unnecessary
+   *    ISIN resolution / Yahoo lookups that could fail and block cash import ── */
+  if (action === "import-cash") {
+    if (!parser.parseCashBalances) {
+      return NextResponse.json({ cashImported: 0 });
+    }
+
+    const cashBalances = parser.parseCashBalances(csv);
+    if (cashBalances.length === 0) {
+      return NextResponse.json({ cashImported: 0 });
+    }
+
+    const existingCash = await listCashEntries(session.userId, portfolioId);
+    const brokerUpper = parser.label.toUpperCase();
+    for (const entry of existingCash) {
+      if (entry.name.toUpperCase().startsWith(brokerUpper)) {
+        await removeCashEntry(session.userId, entry.id);
+      }
+    }
+
+    const yahoo = new YahooProvider();
+    let cashImported = 0;
+    for (const balance of cashBalances) {
+      let amountEUR = balance.amount;
+      if (balance.currency !== "EUR") {
+        try {
+          const rate = await yahoo.getExchangeRate(balance.currency, "EUR");
+          if (rate > 0) amountEUR = +(balance.amount * rate).toFixed(2);
+        } catch {
+          // keep original amount if FX conversion fails
+        }
+      }
+      await addCashEntry(session.userId, {
+        name: `${parser.label.toUpperCase()} – ${balance.currency}`,
+        amountEUR,
+      }, portfolioId);
+      cashImported++;
+    }
+    return NextResponse.json({ cashImported });
+  }
+
   let isinMap: Record<string, string>;
   let parsed: ParsedTransaction[];
   const skipYahoo = action === "parse";
@@ -378,45 +419,6 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
     });
 
     return NextResponse.json({ jobId }, { status: 202 });
-  }
-
-  if (action === "import-cash") {
-    if (!parser.parseCashBalances) {
-      return NextResponse.json({ cashImported: 0 });
-    }
-
-    const cashBalances = parser.parseCashBalances(csv);
-    if (cashBalances.length === 0) {
-      return NextResponse.json({ cashImported: 0 });
-    }
-
-    const existingCash = await listCashEntries(session.userId, portfolioId);
-    const brokerUpper = parser.label.toUpperCase();
-    for (const entry of existingCash) {
-      if (entry.name.toUpperCase().startsWith(brokerUpper)) {
-        await removeCashEntry(session.userId, entry.id);
-      }
-    }
-
-    const yahoo = new YahooProvider();
-    let cashImported = 0;
-    for (const balance of cashBalances) {
-      let amountEUR = balance.amount;
-      if (balance.currency !== "EUR") {
-        try {
-          const rate = await yahoo.getExchangeRate(balance.currency, "EUR");
-          if (rate > 0) amountEUR = +(balance.amount * rate).toFixed(2);
-        } catch {
-          // keep original amount if FX conversion fails
-        }
-      }
-      await addCashEntry(session.userId, {
-        name: `${parser.label.toUpperCase()} – ${balance.currency}`,
-        amountEUR,
-      }, portfolioId);
-      cashImported++;
-    }
-    return NextResponse.json({ cashImported });
   }
 
   return NextResponse.json({ error: "Unsupported broker or action." }, { status: 400 });

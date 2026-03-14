@@ -291,23 +291,26 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
 
       setHoldingsCapped(totalHoldingsCapped);
 
-      if (broker === "degiro" && cashBalances.length > 0 && rawCsvRef.current) {
+      if (cashBalances.length > 0 && rawCsvRef.current) {
         try {
           const cashForm = new FormData();
           cashForm.append("action", "import-cash");
-          cashForm.append("broker", "degiro");
+          cashForm.append("broker", broker);
           if (portfolioId) cashForm.append("portfolioId", portfolioId);
           cashForm.append(
             "file",
             new Blob([rawCsvRef.current], { type: "text/csv" }),
             "import.csv"
           );
-          await fetch("/api/transactions/import-broker", {
+          const cashRes = await fetch("/api/transactions/import-broker", {
             method: "POST",
             body: cashForm,
           });
-        } catch {
-          // cash import failure is non-blocking
+          if (!cashRes.ok) {
+            console.warn("[import] cash import failed:", cashRes.status);
+          }
+        } catch (err) {
+          console.warn("[import] cash import error:", err);
         }
       }
 

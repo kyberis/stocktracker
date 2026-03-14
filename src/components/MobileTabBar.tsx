@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
+import { useIsNative } from "@/lib/use-native";
 
-const TABS = [
+const WEB_TABS = [
   {
     href: "/",
     labelKey: "portfolio" as const,
@@ -37,14 +38,37 @@ const TABS = [
   },
 ];
 
+const NATIVE_TABS = [
+  {
+    href: "/",
+    labelKey: "portfolio" as const,
+    icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6",
+    match: (p: string) => p === "/",
+  },
+  {
+    href: "/tools",
+    labelKey: "toolsNav" as const,
+    icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2",
+    match: (p: string) => p === "/tools" || p.startsWith("/tools/"),
+  },
+  {
+    href: "/profile",
+    labelKey: "profile" as const,
+    icon: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z",
+    match: (p: string) => p === "/profile",
+  },
+];
+
 export default function MobileTabBar() {
   const pathname = usePathname();
   const { t } = useI18n();
+  const isNative = useIsNative();
+  const tabs = isNative ? NATIVE_TABS : WEB_TABS;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 sm:hidden bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-800 pb-[env(safe-area-inset-bottom)]">
+    <nav className={`fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-800 pb-[env(safe-area-inset-bottom)] ${isNative ? "" : "sm:hidden"}`}>
       <div className="flex items-stretch">
-        {TABS.map((tab) => {
+        {tabs.map((tab) => {
           const active = tab.match(pathname);
           return (
             <Link

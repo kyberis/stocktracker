@@ -1,16 +1,27 @@
 "use client";
 
 import { useEffect } from "react";
-import { isNativePlatform, getNativePlatform } from "@/lib/capacitor";
+import { Capacitor } from "@capacitor/core";
+import { isNativePlatform, getNativePlatform, persistNativeDetection } from "@/lib/capacitor";
+import { startSplashFallback } from "@/lib/native-splash";
+
+// Eagerly register the Capacitor bridge so the native shell can call
+// window.Capacitor.triggerEvent as soon as the JS bundle loads.
+if (typeof window !== "undefined" && Capacitor) {
+  try { persistNativeDetection(); } catch { /* ignore */ }
+}
 
 /**
  * Bridges native Capacitor features into the web app:
+ * - Manages native splash screen (hidden once web content is ready)
  * - Android hardware back button → browser history navigation
  * - Status bar configuration on app resume
  */
 export default function CapacitorBridge() {
   useEffect(() => {
     if (!isNativePlatform()) return;
+
+    startSplashFallback();
 
     let cleanup: (() => void) | undefined;
 

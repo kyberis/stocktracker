@@ -13,7 +13,21 @@ import { useAuth } from "@/lib/auth-context";
 import { getHoldingsLimit } from "@/lib/subscription";
 import { useTrack } from "@/lib/use-track";
 import { useTheme } from "@/lib/theme-context";
+import { useIsNative } from "@/lib/use-native";
 import type { Account } from "@/lib/types";
+
+const MobileDashboard = dynamic(() => import("./mobile/MobileDashboard"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="flex gap-1.5">
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-dot-bounce" />
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-dot-bounce" style={{ animationDelay: "0.16s" }} />
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-dot-bounce" style={{ animationDelay: "0.32s" }} />
+      </div>
+    </div>
+  ),
+});
 
 const GoalProgressBanner = dynamic(() => import("./GoalProgressBanner"), { ssr: false });
 const GoalCelebration = dynamic(() => import("./GoalCelebration"), { ssr: false });
@@ -131,6 +145,12 @@ function EmptyPortfolio({ onAddStock, onSeedData }: { onAddStock: () => void; on
 }
 
 export default function Dashboard() {
+  const isNative = useIsNative();
+  if (isNative) return <MobileDashboard />;
+  return <DesktopDashboard />;
+}
+
+function DesktopDashboard() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showAddCrypto, setShowAddCrypto] = useState(false);
   const [showAddAsset, setShowAddAsset] = useState(false);

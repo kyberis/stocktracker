@@ -47,12 +47,19 @@ function SignupForm() {
     }
   }, [deviceRef]);
 
+  const [nativePlatform, setNativePlatform] = useState<"ios" | "android" | "web">("web");
+
   useEffect(() => {
     fetch("/api/feature-flags")
       .then((r) => r.json())
       .then((data) => setAppleEnabled(data.apple_signin_enabled ?? false))
       .catch(() => {});
+    import("@/lib/capacitor").then(({ getNativePlatform }) => {
+      setNativePlatform(getNativePlatform());
+    });
   }, []);
+
+  const showApple = appleEnabled && nativePlatform !== "android";
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -127,7 +134,7 @@ function SignupForm() {
               <GoogleIcon />
               Continue with Google
             </a>
-            {appleEnabled && (
+            {showApple && (
               <a
                 href="/api/auth/apple"
                 className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-xl border-2 border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors text-sm font-medium text-gray-700 dark:text-slate-200"
