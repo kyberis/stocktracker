@@ -10,26 +10,33 @@ import type { ExchangeRates, QuoteData } from "@/lib/types";
 
 const FX_PAIRS = ["EURUSD", "EURGBP", "EURDKK", "EURCAD"];
 
-async function resolveUserId(req: NextRequest): Promise<string | null> {
+type AuthMethod = "session" | "widget_token" | "device_passkey";
+
+interface AuthContext {
+  userId: string | null;
+  method: AuthMethod | null;
+}
+
+async function resolveAuthContext(req: NextRequest): Promise<AuthContext> {
   const session = await getSessionFromRequest(req);
-  if (session) return session.userId;
+  if (session) return { userId: session.userId, method: "session" };
 
   const auth = req.headers.get("authorization");
   if (auth?.startsWith("Bearer ")) {
     const ip = getClientIp(req);
     const rl = await checkDeviceAuthRateLimit(ip);
-    if (!rl.allowed) return null;
+    if (!rl.allowed) return { userId: null, method: null };
 
     const token = auth.slice(7);
     const widgetUser = await findUserByWidgetToken(token);
-    if (widgetUser) return widgetUser.id;
+    if (widgetUser) return { userId: widgetUser.id, method: "widget_token" };
     const deviceUser = await findUserByDevicePasskey(token);
     if (deviceUser) {
       markDeviceLinked(deviceUser.id).catch(() => {});
-      return deviceUser.id;
+      return { userId: deviceUser.id, method: "device_passkey" };
     }
   }
-  return null;
+  return { userId: null, method: null };
 }
 
 export const GET = withMetrics("/api/portfolio/summary", async (req: NextRequest) => {
@@ -38,16 +45,22 @@ export const GET = withMetrics("/api/portfolio/summary", async (req: NextRequest
     deviceApiCalls.inc({ fw_version: fwVersion, route: "/api/portfolio/summary", status: "attempt" });
   }
 
-  const userId = await resolveUserId(req);
-  if (!userId) {
+  const authContext = await resolveAuthContext(req);
+  if (!authContext.userId) {
     if (fwVersion) deviceApiCalls.inc({ fw_version: fwVersion, route: "/api/portfolio/summary", status: "auth_failed" });
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Portfolio scope: ?portfolio= query param overrides device_portfolio_id
-  const dbUser = await findUserById(userId);
+  const userId = authContext.userId;
+  // Portfolio scope:
+  // - Explicit ?portfolio= always wins.
+  // - Device passkey defaults to device_portfolio_id when no explicit portfolio is set.
+  // - Session/widget token default to all portfolios when no explicit portfolio is set.
   const portfolioParam = req.nextUrl.searchParams.get("portfolio");
-  const portfolioId = portfolioParam || dbUser?.device_portfolio_id || undefined;
+  const explicitPortfolioId = portfolioParam && portfolioParam.trim() ? portfolioParam : undefined;
+  const shouldUseDeviceDefault = !explicitPortfolioId && authContext.method === "device_passkey";
+  const dbUser = shouldUseDeviceDefault ? await findUserById(userId) : null;
+  const portfolioId = explicitPortfolioId || dbUser?.device_portfolio_id || undefined;
 
   const [holdings, cashEntries] = await Promise.all([
     listHoldings(userId, portfolioId),

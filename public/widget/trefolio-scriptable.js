@@ -14,6 +14,13 @@ const TEXT = new Color("#f1f5f9");
 const MUTED = new Color("#94a3b8");
 const GREEN = new Color("#10b981");
 const RED = new Color("#ef4444");
+const CURRENCY_SYMBOLS = {
+  EUR: "€",
+  USD: "$",
+  GBP: "£",
+  CAD: "C$",
+  DKK: "kr",
+};
 
 async function fetchData() {
   const url = PORTFOLIO_ID ? `${API_URL}?portfolio=${PORTFOLIO_ID}` : API_URL;
@@ -50,6 +57,17 @@ function sign(n) {
   return num(n) >= 0 ? "+" : "−";
 }
 
+function currencyCode(data) {
+  return typeof data?.currency === "string" && data.currency.trim() ? data.currency.trim().toUpperCase() : "EUR";
+}
+
+function money(amount, data) {
+  const code = currencyCode(data);
+  const symbol = CURRENCY_SYMBOLS[code];
+  if (symbol) return `${symbol}${fmt(amount)}`;
+  return `${code} ${fmt(amount)}`;
+}
+
 function createSmallWidget(data, icon) {
   const w = new ListWidget();
   w.backgroundColor = BG;
@@ -81,7 +99,7 @@ function createSmallWidget(data, icon) {
 
   w.addSpacer(4);
 
-  const value = w.addText(`€${fmt(data.totalValueEUR)}`);
+  const value = w.addText(money(data.totalValueEUR, data));
   value.font = Font.boldSystemFont(22);
   value.textColor = TEXT;
   value.minimumScaleFactor = 0.6;
@@ -89,20 +107,20 @@ function createSmallWidget(data, icon) {
   w.addSpacer(2);
 
   const isUp = num(data.dayChangeEUR) >= 0;
-  const change = w.addText(`${sign(data.dayChangeEUR)}€${fmt(data.dayChangeEUR)} (${sign(data.dayChangePercent)}${Math.abs(num(data.dayChangePercent)).toFixed(2)}%)`);
+  const change = w.addText(`${sign(data.dayChangeEUR)}${money(data.dayChangeEUR, data)} (${sign(data.dayChangePercent)}${Math.abs(num(data.dayChangePercent)).toFixed(2)}%)`);
   change.font = Font.mediumSystemFont(11);
   change.textColor = isUp ? GREEN : RED;
 
   w.addSpacer(4);
 
   const gainUp = num(data.totalGainLoss) >= 0;
-  const pl = w.addText(`P/L ${sign(data.totalGainLoss)}€${fmt(data.totalGainLoss)}`);
+  const pl = w.addText(`P/L ${sign(data.totalGainLoss)}${money(data.totalGainLoss, data)}`);
   pl.font = Font.regularSystemFont(10);
   pl.textColor = gainUp ? GREEN : RED;
 
   w.addSpacer(null);
 
-  const footer = w.addText(`${data.holdingsCount} holdings`);
+  const footer = w.addText(`${data.holdingsCount} holdings · ${currencyCode(data)}`);
   footer.font = Font.regularSystemFont(8);
   footer.textColor = MUTED;
 
@@ -141,13 +159,13 @@ function createMediumWidget(data, icon) {
     header.addSpacer(6);
   }
 
-  const count = header.addText(`${data.holdingsCount} holdings`);
+  const count = header.addText(`${data.holdingsCount} holdings · ${currencyCode(data)}`);
   count.font = Font.regularSystemFont(9);
   count.textColor = MUTED;
 
   w.addSpacer(4);
 
-  const value = w.addText(`€${fmt(data.totalValueEUR)}`);
+  const value = w.addText(money(data.totalValueEUR, data));
   value.font = Font.boldSystemFont(26);
   value.textColor = TEXT;
   value.minimumScaleFactor = 0.6;
@@ -158,7 +176,7 @@ function createMediumWidget(data, icon) {
   changeLine.centerAlignContent();
   changeLine.spacing = 6;
 
-  const change = changeLine.addText(`${sign(data.dayChangeEUR)}€${fmt(data.dayChangeEUR)}`);
+  const change = changeLine.addText(`${sign(data.dayChangeEUR)}${money(data.dayChangeEUR, data)}`);
   change.font = Font.semiboldSystemFont(12);
   change.textColor = isUp ? GREEN : RED;
 

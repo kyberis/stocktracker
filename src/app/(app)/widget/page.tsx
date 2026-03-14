@@ -12,6 +12,7 @@ interface WidgetData {
   holdingsCount: number;
   topHoldings: { ticker: string; name: string; weight: number; dayChange: number }[];
   portfolioName?: string;
+  currency?: string;
   updatedAt: string;
 }
 
@@ -20,8 +21,22 @@ interface PortfolioOption {
   name: string;
 }
 
-function fmt(n: number): string {
-  return Math.abs(n).toLocaleString("en-EU", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+function fmtNumber(n: number): string {
+  return Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function fmtMoney(n: number, currency?: string): string {
+  const code = currency?.trim().toUpperCase() || "EUR";
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: code,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(Math.abs(n));
+  } catch {
+    return `${code} ${fmtNumber(n)}`;
+  }
 }
 
 export default function WidgetPage() {
@@ -112,7 +127,7 @@ export default function WidgetPage() {
         </div>
 
         <p className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
-          &euro;{fmt(data.totalValueEUR)}
+          {fmtMoney(data.totalValueEUR, data.currency)}
         </p>
 
         <div className="flex items-center gap-2 mt-1">
@@ -122,7 +137,7 @@ export default function WidgetPage() {
             <TrendingDown className="w-4 h-4 text-red-500" />
           )}
           <span className={`text-sm font-semibold ${isUp ? "text-emerald-500" : "text-red-500"}`}>
-            {isUp ? "+" : "−"}&euro;{fmt(data.dayChangeEUR)}
+            {isUp ? "+" : "−"}{fmtMoney(data.dayChangeEUR, data.currency)}
           </span>
           <span className={`text-xs ${isUp ? "text-emerald-400" : "text-red-400"}`}>
             ({isUp ? "+" : "−"}{Math.abs(data.dayChangePercent).toFixed(2)}%)
@@ -132,7 +147,7 @@ export default function WidgetPage() {
         <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700 flex items-center gap-2">
           <span className="text-xs text-slate-500 dark:text-slate-400">Total P/L</span>
           <span className={`text-sm font-semibold ${gainIsUp ? "text-emerald-500" : "text-red-500"}`}>
-            {gainIsUp ? "+" : "−"}&euro;{fmt(data.totalGainLoss)}
+            {gainIsUp ? "+" : "−"}{fmtMoney(data.totalGainLoss, data.currency)}
           </span>
           <span className={`text-xs ${gainIsUp ? "text-emerald-400" : "text-red-400"}`}>
             ({gainIsUp ? "+" : "−"}{Math.abs(data.totalGainLossPercent).toFixed(2)}%)
