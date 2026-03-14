@@ -1259,6 +1259,41 @@ const MIGRATIONS: Migration[] = [
       `);
     },
   },
+  {
+    version: 42,
+    description: "Create support_chat_conversations table",
+    up: async (client: Client) => {
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS support_chat_conversations (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          messages TEXT NOT NULL DEFAULT '[]',
+          status TEXT NOT NULL DEFAULT 'active'
+            CHECK(status IN ('active', 'resolved', 'escalated')),
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+          FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_support_chat_user ON support_chat_conversations(user_id);
+        CREATE INDEX IF NOT EXISTS idx_support_chat_status ON support_chat_conversations(status);
+        CREATE INDEX IF NOT EXISTS idx_support_chat_created ON support_chat_conversations(created_at);
+      `);
+    },
+  },
+  {
+    version: 43,
+    description: "Expand goals table for multi-goal and financial planning",
+    up: async (client: Client) => {
+      await client.execute({ sql: "ALTER TABLE goals ADD COLUMN goal_type TEXT NOT NULL DEFAULT 'custom'", args: [] });
+      await client.execute({ sql: "ALTER TABLE goals ADD COLUMN target_date TEXT", args: [] });
+      await client.execute({ sql: "ALTER TABLE goals ADD COLUMN priority INTEGER NOT NULL DEFAULT 0", args: [] });
+      await client.execute({ sql: "ALTER TABLE goals ADD COLUMN milestones TEXT NOT NULL DEFAULT '[]'", args: [] });
+      await client.execute({ sql: "ALTER TABLE goals ADD COLUMN monthly_contribution REAL NOT NULL DEFAULT 0", args: [] });
+      await client.execute({ sql: "ALTER TABLE goals ADD COLUMN notes TEXT NOT NULL DEFAULT ''", args: [] });
+      await client.execute({ sql: "ALTER TABLE goals ADD COLUMN icon TEXT NOT NULL DEFAULT ''", args: [] });
+      await client.execute({ sql: "ALTER TABLE goals ADD COLUMN color TEXT NOT NULL DEFAULT ''", args: [] });
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

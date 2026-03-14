@@ -11,7 +11,8 @@ export type PlatformFeature =
   | "whatsapp_enabled"
   | "tool_transactions_enabled" | "tool_dividends_enabled" | "tool_performance_enabled"
   | "tool_taxonomy_enabled" | "tool_rebalancing_enabled" | "tool_accounts_enabled"
-  | "tool_watchlist_enabled";
+  | "tool_watchlist_enabled"
+  | "support_chat_enabled";
 
 const DEFAULT_ENABLED_FLAGS: Set<PlatformFeature> = new Set([
   "whatsapp_enabled",

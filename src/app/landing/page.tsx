@@ -160,7 +160,7 @@ function getPricing(t: T): PricingTier[] {
       regularAnnual: "€31.99", annualPrice: "€23.99",
       annualSavePct: 33, launchDiscountPct: 25,
       description: t("landingPricingBifolioDesc"),
-      features: Array.from({ length: 12 }, (_, i) => t(`landingPricingBifolioFeature${i + 1}` as TranslationKey)),
+      features: Array.from({ length: 13 }, (_, i) => t(`landingPricingBifolioFeature${i + 1}` as TranslationKey)),
       cta: t("landingPricingBifolioCta"),
       highlighted: false,
     },

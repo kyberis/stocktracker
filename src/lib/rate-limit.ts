@@ -127,10 +127,33 @@ export async function checkAiImportRateLimit(userId: string): Promise<RateLimitR
   return checkAiImportRateLimitTurso(userId);
 }
 
+// ── Support Chat ──────────────────────────────────────────────
+
+export async function checkSupportChatRateLimit(
+  userId: string,
+  plan: string,
+  configuredLimit?: number,
+): Promise<RateLimitResult> {
+  const limit =
+    configuredLimit ??
+    (plan === "pro"
+      ? PLATFORM_LIMITS.SUPPORT_CHAT_PRO_DAILY_DEFAULT
+      : PLATFORM_LIMITS.SUPPORT_CHAT_STARTER_DAILY_DEFAULT);
+  const windowKey = dayWindowKey();
+  const { allowed, remaining, resetAt } = await checkAndIncrementRateLimit(
+    userId,
+    "support_chat",
+    limit,
+    windowKey,
+  );
+  return { allowed, remaining, limit, resetAt };
+}
+
 export function getRateLimitProvider(providerName: string): RateLimitProvider | null {
   if (providerName === "alphavantage") return "alphavantage";
   if (providerName === "openai") return "openai";
   if (providerName === "openai_import") return "openai_import";
+  if (providerName === "support_chat") return "support_chat";
   return null;
 }
 

@@ -337,6 +337,7 @@ export const featureFlagSchema = z.object({
     "tool_transactions_enabled", "tool_dividends_enabled", "tool_performance_enabled",
     "tool_taxonomy_enabled", "tool_rebalancing_enabled", "tool_accounts_enabled",
     "tool_watchlist_enabled",
+    "support_chat_enabled",
   ]),
   enabled: z.boolean(),
 });
@@ -375,4 +376,28 @@ export const landingEventSchema = z.object({
 
 export const importPortfolioJsonSchema = z.object({
   csvText: z.string().min(1, "CSV text is required"),
+});
+
+/* ── Support Chat Admin Config ─────────────────────────────── */
+
+export const supportChatConfigSchema = z.object({
+  starterDailyLimit: z.number().int().min(1).max(100),
+  proDailyLimit: z.number().int().min(1).max(200),
+  welcomeMessage: z.string().max(500).optional(),
+  customInstructions: z.string().max(2000).optional(),
+});
+
+export const supportChatMessageSchema = z.object({
+  conversationId: z.string().min(1).max(64),
+  messages: z.array(z.object({
+    role: z.enum(["user", "assistant"]),
+    content: z.string().min(1).max(4000),
+  })).min(1).max(50),
+  language: z.string().max(5).optional(),
+  portfolioContext: z.object({
+    holdingsCount: z.number().int().min(0),
+    totalValue: z.number().min(0),
+    currency: z.string().max(5),
+    plan: z.string().max(10),
+  }).optional(),
 });

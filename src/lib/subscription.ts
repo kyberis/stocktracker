@@ -25,6 +25,7 @@ const STARTER_FEATURES = new Set<SubscriptionFeature>([
   "portfolio-history-full",
   "event-calendar-economic",
   "net-worth",
+  "support-chat",
 ]);
 
 /**
@@ -43,6 +44,7 @@ const PRO_FEATURES = new Set<SubscriptionFeature>([
   "screener",
   "tax-reports",
   "simulator",
+  "planning",
 ]);
 
 export interface EntitlementInput {

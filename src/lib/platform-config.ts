@@ -83,6 +83,10 @@ export const PLATFORM_LIMITS = {
   FREE_MANUAL_ASSET_LIMIT: 0,
   STARTER_MANUAL_ASSET_LIMIT: 10,
   PRO_MANUAL_ASSET_LIMIT: 999,
+
+  /** Default support chat message limits per day (overridable by admin). */
+  SUPPORT_CHAT_STARTER_DAILY_DEFAULT: 10,
+  SUPPORT_CHAT_PRO_DAILY_DEFAULT: 50,
 } as const;
 
-export type RateLimitProvider = "alphavantage" | "openai" | "openai_import";
+export type RateLimitProvider = "alphavantage" | "openai" | "openai_import" | "support_chat";

@@ -29,7 +29,9 @@ export type SubscriptionFeature =
   | "net-worth"
   | "screener"
   | "tax-reports"
-  | "simulator";
+  | "simulator"
+  | "planning"
+  | "support-chat";
 
 export type AlertCondition = "above" | "below";
 export type AlertType = "threshold" | "percent_change";
@@ -198,18 +200,34 @@ export interface RebalanceDrift {
 
 /* ── Goals ────────────────────────────────────────────────── */
 
+export type GoalType = "retirement" | "fire" | "house" | "education" | "emergency_fund" | "vacation" | "custom";
+
+export interface GoalMilestone {
+  percent: number;
+  label: string;
+  reachedAt: string | null;
+}
+
 export interface Goal {
   id: string;
   userId: string;
   portfolioId: string;
   name: string;
+  goalType: GoalType;
   targetAmount: number;
   currency: string;
   growthRate: number;
   yearlyContribution: number;
+  monthlyContribution: number;
   contributionMode: "monthly" | "yearly";
   reinvestDividends: boolean;
   horizon: number;
+  targetDate: string | null;
+  priority: number;
+  milestones: GoalMilestone[];
+  notes: string;
+  icon: string;
+  color: string;
   createdAt: string;
   updatedAt: string;
 }

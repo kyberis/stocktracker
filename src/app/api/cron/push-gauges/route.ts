@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getMetricsSnapshot, purgeOldAnalyticsEvents, recordRateLimitUsage } from "@/lib/db";
+import { getMetricsSnapshot, purgeOldAnalyticsEvents, purgeSupportChatConversations, recordRateLimitUsage } from "@/lib/db";
 import { pushGauges } from "@/lib/grafana-push";
 import { getRedisClient } from "@/lib/upstash";
 import { withCronLogging } from "@/lib/cron-logging";
@@ -65,6 +65,10 @@ const runPushGauges = withCronLogging("push-gauges", async () => {
     }),
     purgeOldAnalyticsEvents().catch((err) => {
       console.error("Analytics purge failed:", err);
+      return 0;
+    }),
+    purgeSupportChatConversations(90).catch((err) => {
+      console.error("Support chat purge failed:", err);
       return 0;
     }),
   ]);

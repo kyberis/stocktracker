@@ -243,10 +243,25 @@ export {
 
 export {
   listGoals,
+  listGoalsForPortfolio,
   getGoalForPortfolio,
+  getGoalById,
+  createGoal,
+  updateGoal,
   upsertGoal,
   deleteGoal,
 } from "./goals";
+export type { GoalInput } from "./goals";
+
+export type { SupportChatStatus, ChatMessage, SupportChatConversation, SupportChatListItem, ListSupportChatOptions } from "./support-chat";
+export {
+  createSupportChatConversation,
+  appendSupportChatMessages,
+  updateSupportChatStatus,
+  getSupportChatConversation,
+  listSupportChatConversations,
+  purgeSupportChatConversations,
+} from "./support-chat";
 
 export type { CalendarEvent } from "./calendar-events";
 export {

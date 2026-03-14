@@ -40,6 +40,7 @@ const AdSlot = dynamic(() => import("./AdSlot"), { ssr: false });
 const EventCalendar = dynamic(() => import("./EventCalendar"), { ssr: false });
 const UpcomingEarnings = dynamic(() => import("./UpcomingEarnings"), { ssr: false });
 const AddManualAssetModal = dynamic(() => import("./AddManualAssetModal"), { ssr: false });
+const SupportChatWidget = dynamic(() => import("./SupportChatWidget"), { ssr: false });
 import TierFeatureBadge from "./TierFeatureBadge";
 import SampleDataBanner from "./SampleDataBanner";
 import SecureAccountPrompt from "./SecureAccountPrompt";
@@ -137,6 +138,9 @@ export default function Dashboard() {
   const [showImport, setShowImport] = useState(false);
   const [showReset, setShowReset] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
+  const [showSupportChat, setShowSupportChat] = useState(false);
+  const [supportChatEnabled, setSupportChatEnabled] = useState(false);
+  const [supportChatWelcome, setSupportChatWelcome] = useState("");
   const [activeTab, setActiveTab] = useState<DashboardTab>("portfolio");
   const [brokerFilter, setBrokerFilter] = useState<string>("all");
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -152,6 +156,18 @@ export default function Dashboard() {
       .then((data) => setAccounts(Array.isArray(data) ? data : []))
       .catch(() => {});
   }, [holdings]);
+
+  useEffect(() => {
+    fetch("/api/support-chat/config")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data) {
+          setSupportChatEnabled(data.enabled);
+          setSupportChatWelcome(data.welcomeMessage || "");
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const filteredHoldings = useMemo(() => {
     if (brokerFilter === "all") return holdings;
@@ -565,17 +581,43 @@ export default function Dashboard() {
         />
       )}
 
-      {/* Floating feedback button */}
-      <button
-        onClick={() => setShowFeedback(true)}
-        className="fixed bottom-20 sm:bottom-6 right-6 z-30 flex items-center gap-2 px-4 py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium shadow-lg transition-colors"
-        title={t("feedback")}
-      >
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-        </svg>
-        <span className="hidden sm:inline">{t("feedback")}</span>
-      </button>
+      {showSupportChat && (
+        <SupportChatWidget
+          isOpen={showSupportChat}
+          onClose={() => setShowSupportChat(false)}
+          onEscalate={() => {
+            setShowSupportChat(false);
+            setShowFeedback(true);
+          }}
+          welcomeMessage={supportChatWelcome}
+        />
+      )}
+
+      {/* Floating buttons */}
+      <div className="fixed bottom-20 sm:bottom-6 right-6 z-30 flex flex-col gap-2 items-end">
+        {supportChatEnabled && (user?.plan === "starter" || user?.plan === "pro") && (
+          <button
+            onClick={() => setShowSupportChat((v) => !v)}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium shadow-lg transition-colors"
+            title={t("supportChatTitle")}
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+            </svg>
+            <span className="hidden sm:inline">{t("supportChatTitle")}</span>
+          </button>
+        )}
+        <button
+          onClick={() => setShowFeedback(true)}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium shadow-lg transition-colors"
+          title={t("feedback")}
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+          </svg>
+          <span className="hidden sm:inline">{t("feedback")}</span>
+        </button>
+      </div>
     </>
   );
 }

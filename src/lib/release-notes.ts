@@ -14,9 +14,53 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "1.32.0";
+export const CURRENT_VERSION = "1.34.0";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "1.34.0",
+    date: "2026-03-14",
+    title: "Financial Planning Module",
+    titleTranslations: { es: "Módulo de Planificación Financiera" },
+    changes: [
+      {
+        type: "feature",
+        text: "Financial Planning — FIRE calculator with 5 variants (Lean, Regular, Fat, Coast, Barista), retirement projections with Monte Carlo simulation and confidence bands, and multi-goal tracking with custom milestones. New Planning tab in Tools for Pro users.",
+        translations: {
+          es: "Planificación Financiera — calculadora FIRE con 5 variantes (Austero, Regular, Holgado, Costa, Barista), proyecciones de jubilación con simulación Monte Carlo y bandas de confianza, y seguimiento de múltiples metas con hitos personalizados. Nueva pestaña Planificación en Herramientas para usuarios Pro.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Goals expanded to support multiple goals per portfolio with types (retirement, house, education, emergency fund, vacation, FIRE), custom milestones, priority ordering, and a dedicated management UI.",
+        translations: {
+          es: "Metas ampliadas para soportar múltiples metas por portafolio con tipos (jubilación, casa, educación, fondo de emergencia, vacaciones, FIRE), hitos personalizados, orden de prioridad e interfaz de gestión dedicada.",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.33.0",
+    date: "2026-03-14",
+    title: "AI Support Chat",
+    titleTranslations: { es: "Chat de Soporte IA" },
+    changes: [
+      {
+        type: "feature",
+        text: "AI Support Agent — Starter and Pro users can now chat with an AI assistant that knows trefolio inside and out. Get instant help with features, troubleshooting, and account questions directly from the dashboard.",
+        translations: {
+          es: "Agente de Soporte IA — los usuarios Starter y Pro ahora pueden chatear con un asistente IA que conoce trefolio a fondo. Obtén ayuda instantánea con funciones, solución de problemas y preguntas de cuenta directamente desde el panel.",
+        },
+      },
+      {
+        type: "feature",
+        text: "Admin support chat dashboard — admins can review all support conversations, see what users are asking, monitor resolution quality, and configure rate limits and custom AI instructions.",
+        translations: {
+          es: "Panel de soporte para administradores — los admins pueden revisar todas las conversaciones de soporte, ver qué preguntan los usuarios, monitorear la calidad de resolución y configurar límites y instrucciones personalizadas del IA.",
+        },
+      },
+    ],
+  },
   {
     version: "1.32.0",
     date: "2026-03-13",

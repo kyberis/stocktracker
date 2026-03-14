@@ -11,6 +11,7 @@ const ALLOWED_FLAGS: PlatformFeature[] = [
   "tool_transactions_enabled", "tool_dividends_enabled", "tool_performance_enabled",
   "tool_taxonomy_enabled", "tool_rebalancing_enabled", "tool_accounts_enabled",
   "tool_watchlist_enabled",
+  "support_chat_enabled",
 ];
 
 export const GET = withMetrics("/api/admin/feature-flags", async (req: NextRequest) => {

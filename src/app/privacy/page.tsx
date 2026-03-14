@@ -187,6 +187,7 @@ export default function PrivacyPolicyPage() {
               <li>Authenticate your account and maintain your session.</li>
               <li>Display your portfolio, performance metrics, and market data.</li>
               <li>Process AI analysis requests (portfolio data is sent to OpenAI for analysis; see Section 5).</li>
+              <li>Provide AI-powered support chat (your messages and optional portfolio summary are sent to OpenAI; see Section 5). Support chat conversations are stored for up to 90 days to enable admin review and improve support quality.</li>
               <li>Process subscription payments through Stripe (see Section 5).</li>
               <li>Send essential service communications (e.g., password resets, critical security notices).</li>
               <li>Respond to customer support inquiries submitted via the contact form.</li>
@@ -253,8 +254,8 @@ export default function PrivacyPolicyPage() {
                   </tr>
                   <tr>
                     <td className="py-3 pr-6">OpenAI</td>
-                    <td className="py-3 pr-6">AI-powered analysis</td>
-                    <td className="py-3">Portfolio data included in analysis prompts</td>
+                    <td className="py-3 pr-6">AI-powered analysis and support chat</td>
+                    <td className="py-3">Portfolio data included in analysis prompts; support chat messages and optional portfolio summary</td>
                   </tr>
                   <tr>
                     <td className="py-3 pr-6">Yahoo Finance</td>
@@ -348,6 +349,10 @@ export default function PrivacyPolicyPage() {
               <li>
                 <strong className="text-slate-200">Contact form submissions</strong> — 
                 retained until the inquiry is resolved, then purged within 90 days.
+              </li>
+              <li>
+                <strong className="text-slate-200">Support chat conversations</strong> — 
+                retained for up to 90 days for quality review, then automatically purged.
               </li>
               <li>
                 <strong className="text-slate-200">After account deletion</strong>{" "}

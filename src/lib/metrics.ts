@@ -226,6 +226,30 @@ export const deviceHeartbeats = getOrCreate(
     })
 );
 
+/* ── Support Chat Metrics ─────────────────────────────────── */
+
+export const supportChatTotal = getOrCreate(
+  "trefolio_support_chat_total",
+  () =>
+    new Counter({
+      name: "trefolio_support_chat_total",
+      help: "Support chat messages processed",
+      labelNames: ["status"] as const,
+      registers: [getRegistry()],
+    })
+);
+
+export const supportChatDuration = getOrCreate(
+  "trefolio_support_chat_duration_seconds",
+  () =>
+    new Histogram({
+      name: "trefolio_support_chat_duration_seconds",
+      help: "Support chat response duration in seconds",
+      buckets: [0.5, 1, 2, 5, 10, 20],
+      registers: [getRegistry()],
+    })
+);
+
 /* ── Rate Limit Metrics ───────────────────────────────────── */
 
 export const rateLimitHitsTotal = getOrCreate(
