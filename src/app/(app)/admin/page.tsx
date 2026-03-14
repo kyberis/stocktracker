@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import React, { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid,
@@ -14,9 +14,45 @@ interface AdminUser {
   plan: "free" | "starter" | "pro";
   email: string;
   displayName: string;
+  authProvider: "credentials" | "google" | "apple";
+  emailVerified: boolean;
   mustChangePassword: boolean;
   createdAt: string;
   lastActiveAt: string;
+  planExpiresAt: string;
+  stripeCustomerId: string;
+  stripeSubscriptionId: string;
+  taxResidency: string;
+  onboardingCompleted: boolean;
+  aiCallsThisMonth: number;
+  portfolioCount: number;
+  holdingCount: number;
+  totalHoldingsEur: number;
+  cashCount: number;
+  totalCashEur: number;
+  transactionCount: number;
+  brokerAccounts: string;
+  brokerImports: string;
+}
+
+interface UserPortfolio {
+  id: string;
+  name: string;
+  currency: string;
+  isDefault: boolean;
+  holdingCount: number;
+  totalValueEur: number;
+}
+
+interface ImportEvent {
+  event: string;
+  metadata: string;
+  createdAt: string;
+}
+
+interface UserDetail {
+  portfolios: UserPortfolio[];
+  importEvents: ImportEvent[];
 }
 
 interface LandingAnalytics {
@@ -2611,18 +2647,290 @@ function SettingsTab() {
   );
 }
 
-/* ── Users Tab (existing logic) ───────────────────────────── */
+/* ── Users Tab ────────────────────────────────────────────── */
+
+type SortKey = "username" | "authProvider" | "plan" | "holdingCount" | "totalHoldingsEur" | "lastActiveAt" | "createdAt";
+type SortDir = "asc" | "desc";
+
+function relativeTime(iso: string): string {
+  if (!iso) return "—";
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 30) return `${days}d ago`;
+  return new Date(iso).toLocaleDateString();
+}
+
+function formatEur(value: number): string {
+  if (value >= 1_000_000) return `€${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000) return `€${(value / 1_000).toFixed(1)}K`;
+  return `€${Math.round(value).toLocaleString()}`;
+}
+
+function AuthBadge({ provider }: { provider: string }) {
+  if (provider === "google") {
+    return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-red-500/10 text-red-400">G Google</span>;
+  }
+  if (provider === "apple") {
+    return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-white/5 text-slate-300"> Apple</span>;
+  }
+  return <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold bg-gray-100 dark:bg-slate-700/50 text-gray-500 dark:text-slate-400">Credentials</span>;
+}
+
+function PlanBadge({ plan }: { plan: string }) {
+  if (plan === "pro") return <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-500">Trefolio</span>;
+  if (plan === "starter") return <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-500/10 text-blue-400">Bifolio</span>;
+  return <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold bg-gray-100 dark:bg-slate-700/50 text-gray-500 dark:text-slate-400">Folio</span>;
+}
+
+function BrokerBadges({ accounts, imports }: { accounts: string; imports: string }) {
+  const all = new Set<string>();
+  if (accounts) accounts.split(", ").forEach((b) => all.add(b));
+  if (imports) imports.split(", ").forEach((b) => all.add(b));
+  if (all.size === 0) return <span className="text-gray-400 dark:text-slate-600">—</span>;
+  return (
+    <div className="flex flex-wrap gap-1">
+      {Array.from(all).map((b) => (
+        <span key={b} className="inline-flex px-1.5 py-0.5 rounded text-[10px] font-semibold bg-indigo-500/10 text-indigo-300">{b}</span>
+      ))}
+    </div>
+  );
+}
+
+function SortHeader({ label, sortKey, currentKey, dir, onSort }: {
+  label: string; sortKey: SortKey; currentKey: SortKey; dir: SortDir;
+  onSort: (k: SortKey) => void;
+}) {
+  const active = currentKey === sortKey;
+  return (
+    <th
+      className="text-left p-3 font-medium text-[11px] uppercase tracking-wide cursor-pointer select-none whitespace-nowrap hover:text-gray-900 dark:hover:text-white transition-colors"
+      onClick={() => onSort(sortKey)}
+    >
+      {label}
+      <span className={`ml-1 text-[10px] ${active ? "text-indigo-500" : "opacity-40"}`}>
+        {active ? (dir === "asc" ? "▲" : "▼") : "▼"}
+      </span>
+    </th>
+  );
+}
+
+function UserDetailPanel({ user, onRoleChange, onPlanChange }: {
+  user: AdminUser;
+  onRoleChange: (userId: string, role: "admin" | "user") => void;
+  onPlanChange: (userId: string, plan: "free" | "starter" | "pro") => void;
+}) {
+  const [detail, setDetail] = useState<UserDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [resetPwd, setResetPwd] = useState("");
+  const [actionMsg, setActionMsg] = useState("");
+
+  useEffect(() => {
+    fetch(`/api/admin/users/detail?userId=${encodeURIComponent(user.id)}`, { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => setDetail(d))
+      .catch(() => setDetail(null))
+      .finally(() => setLoading(false));
+  }, [user.id]);
+
+  const handlePwdReset = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!resetPwd) return;
+    const res = await fetch("/api/admin/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: user.id, newPassword: resetPwd }),
+    });
+    if (res.ok) { setResetPwd(""); setActionMsg("Password reset"); setTimeout(() => setActionMsg(""), 2000); }
+  };
+
+  const handleResetData = async (mode: "seed" | "empty") => {
+    await fetch("/api/admin/reset-data", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: user.id, mode }),
+    });
+    setActionMsg(mode === "seed" ? "Seeded" : "Emptied");
+    setTimeout(() => setActionMsg(""), 2000);
+  };
+
+  const handleDelete = async () => {
+    if (!confirm(`Delete user "${user.username}"? This cannot be undone.`)) return;
+    const res = await fetch(`/api/admin/users?id=${encodeURIComponent(user.id)}`, { method: "DELETE" });
+    if (res.ok) window.location.reload();
+  };
+
+  const parseImportMeta = (metadata: string): { broker?: string; method?: string; count?: string } => {
+    try { return JSON.parse(metadata); } catch { return {}; }
+  };
+
+  return (
+    <tr className="bg-gray-50/50 dark:bg-slate-800/30">
+      <td colSpan={11} className="p-0">
+        <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+
+          {/* User Info */}
+          <div className="card p-4 space-y-1.5">
+            <h4 className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400 mb-2">User Information</h4>
+            {([
+              ["User ID", <span key="id" className="font-mono text-[11px]">{user.id.slice(0, 18)}...</span>],
+              ["Auth Provider", user.authProvider],
+              ["Email Verified", user.emailVerified ? <span key="v" className="text-emerald-500">Yes</span> : <span key="v" className="text-gray-400">No</span>],
+              ["Plan", `${user.plan === "pro" ? "Trefolio" : user.plan === "starter" ? "Bifolio" : "Folio"} (${user.plan})`],
+              ["Plan Expires", user.planExpiresAt ? new Date(user.planExpiresAt).toLocaleDateString() : "—"],
+              ["Stripe Customer", user.stripeCustomerId ? <span key="sc" className="font-mono text-[11px]">{user.stripeCustomerId.slice(0, 12)}...</span> : "—"],
+              ["Tax Residency", user.taxResidency || "—"],
+              ["Onboarding", user.onboardingCompleted ? <span key="o" className="text-emerald-500">Completed</span> : <span key="o" className="text-amber-400">Pending</span>],
+              ["AI Calls (month)", String(user.aiCallsThisMonth)],
+              ["Created", new Date(user.createdAt).toLocaleDateString()],
+              ["Last Active", relativeTime(user.lastActiveAt)],
+            ] as [string, React.ReactNode][]).map(([label, value]) => (
+              <div key={label} className="flex justify-between items-center text-xs">
+                <span className="text-gray-500 dark:text-slate-400">{label}</span>
+                <span className="text-gray-900 dark:text-white font-medium">{value}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Portfolios */}
+          <div className="card p-4">
+            <h4 className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400 mb-2">
+              Portfolios ({user.portfolioCount})
+            </h4>
+            {loading ? (
+              <p className="text-xs text-gray-400">Loading...</p>
+            ) : detail?.portfolios && detail.portfolios.length > 0 ? (
+              <>
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="text-gray-500 dark:text-slate-400">
+                      <th className="text-left pb-1 font-medium text-[10px] uppercase">Name</th>
+                      <th className="text-left pb-1 font-medium text-[10px] uppercase">Cur</th>
+                      <th className="text-right pb-1 font-medium text-[10px] uppercase">Holdings</th>
+                      <th className="text-right pb-1 font-medium text-[10px] uppercase">Value</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {detail.portfolios.map((p) => (
+                      <tr key={p.id} className="border-t border-gray-100 dark:border-slate-700/50">
+                        <td className="py-1.5 font-medium text-gray-900 dark:text-white">
+                          {p.name} {p.isDefault && <span className="text-[9px] text-gray-400 ml-1">Default</span>}
+                        </td>
+                        <td className="py-1.5 text-gray-500 dark:text-slate-400">{p.currency}</td>
+                        <td className="py-1.5 text-right tabular-nums">{p.holdingCount}</td>
+                        <td className="py-1.5 text-right tabular-nums text-emerald-500 font-medium">{formatEur(p.totalValueEur)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <div className="mt-3 pt-2 border-t border-gray-100 dark:border-slate-700/50 space-y-1">
+                  <div className="flex justify-between text-xs"><span className="text-gray-500 dark:text-slate-400">Total Holdings</span><span className="font-medium">{user.holdingCount}</span></div>
+                  <div className="flex justify-between text-xs"><span className="text-gray-500 dark:text-slate-400">Total Cash</span><span className="font-medium">{formatEur(user.totalCashEur)} ({user.cashCount} entries)</span></div>
+                  <div className="flex justify-between text-xs"><span className="text-gray-500 dark:text-slate-400">Total Transactions</span><span className="font-medium">{user.transactionCount}</span></div>
+                </div>
+              </>
+            ) : (
+              <p className="text-xs text-gray-400">No portfolios</p>
+            )}
+          </div>
+
+          {/* Imports & Actions */}
+          <div className="card p-4">
+            <h4 className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400 mb-2">
+              Broker Accounts & Import History
+            </h4>
+            <BrokerBadges accounts={user.brokerAccounts} imports={user.brokerImports} />
+
+            {!loading && detail?.importEvents && detail.importEvents.length > 0 && (
+              <div className="mt-3">
+                <div className="text-[10px] font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400 mb-1">Import Events</div>
+                <div className="space-y-0.5">
+                  {detail.importEvents.map((ev, i) => {
+                    const meta = parseImportMeta(ev.metadata);
+                    const label = meta.broker ? `${meta.broker} CSV` : meta.method === "file" ? "AI Import (file)" : meta.method || ev.event;
+                    return (
+                      <div key={i} className="flex items-center gap-2 text-xs py-1 border-b border-gray-100 dark:border-slate-700/30 last:border-b-0">
+                        <span className="text-gray-900 dark:text-white font-medium">{label}</span>
+                        {meta.count && <span className="text-emerald-500 text-[11px] font-semibold">+{meta.count} txns</span>}
+                        <span className="text-gray-400 dark:text-slate-500 text-[11px] ml-auto">{new Date(ev.createdAt).toLocaleDateString()}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="mt-4 pt-3 border-t border-gray-200 dark:border-slate-700 space-y-2">
+              <div className="flex flex-wrap gap-2 items-center">
+                {user.username === "admin" ? (
+                  <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400">admin (protected)</span>
+                ) : (
+                  <select
+                    value={user.role}
+                    onChange={(e) => onRoleChange(user.id, e.target.value as "admin" | "user")}
+                    className="text-xs px-2 py-1 rounded-lg"
+                  >
+                    <option value="user">Role: user</option>
+                    <option value="admin">Role: admin</option>
+                  </select>
+                )}
+                <select
+                  value={user.plan}
+                  onChange={(e) => onPlanChange(user.id, e.target.value as "free" | "starter" | "pro")}
+                  className="text-xs px-2 py-1 rounded-lg"
+                >
+                  <option value="free">Folio (free)</option>
+                  <option value="starter">Bifolio (starter)</option>
+                  <option value="pro">Trefolio (pro)</option>
+                </select>
+              </div>
+              <form className="flex items-center gap-2" onSubmit={handlePwdReset}>
+                <input
+                  type="password"
+                  placeholder="New password"
+                  value={resetPwd}
+                  onChange={(e) => setResetPwd(e.target.value)}
+                  className="text-xs px-2 py-1.5 rounded-lg flex-1"
+                />
+                <button type="submit" className="btn-secondary text-xs px-2 py-1">Reset pwd</button>
+              </form>
+              <div className="flex flex-wrap gap-2">
+                <button onClick={() => handleResetData("seed")} className="btn-secondary text-xs px-2 py-1">Seed data</button>
+                <button onClick={() => handleResetData("empty")} className="btn-secondary text-xs px-2 py-1">Empty data</button>
+                {user.username !== "admin" && (
+                  <button onClick={handleDelete} className="btn-danger text-xs px-2 py-1">Delete user</button>
+                )}
+                {actionMsg && <span className="text-xs text-emerald-500 self-center">{actionMsg}</span>}
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </td>
+    </tr>
+  );
+}
 
 function UsersTab() {
   const router = useRouter();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [resetPassword, setResetPassword] = useState<Record<string, string>>({});
-  const [roleUpdated, setRoleUpdated] = useState<string | null>(null);
-  const [planUpdated, setPlanUpdated] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const loadUsers = async () => {
+  const [search, setSearch] = useState("");
+  const [filterPlan, setFilterPlan] = useState<string>("all");
+  const [filterAuth, setFilterAuth] = useState<string>("all");
+  const [filterImport, setFilterImport] = useState<string>("all");
+  const [sortKey, setSortKey] = useState<SortKey>("createdAt");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+
+  const loadUsers = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -2632,207 +2940,211 @@ function UsersTab() {
         router.replace("/");
         return;
       }
-
-      const usersRes = await fetch("/api/admin/users", { cache: "no-store" });
+      const usersRes = await fetch("/api/admin/users/detail", { cache: "no-store" });
       const usersData = await usersRes.json();
-      if (!usersRes.ok) {
-        setError(usersData.error || "Failed to load users.");
-        return;
-      }
+      if (!usersRes.ok) { setError(usersData.error || "Failed to load users."); return; }
       setUsers(usersData.users || []);
     } catch {
       setError("Failed to load users.");
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
 
-  useEffect(() => {
-    loadUsers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  useEffect(() => { loadUsers(); }, [loadUsers]);
 
-  const handlePasswordReset = async (e: FormEvent, userId: string) => {
-    e.preventDefault();
-    const newPassword = resetPassword[userId] || "";
-    if (!newPassword) return;
-
-    const res = await fetch("/api/admin/users", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId, newPassword }),
-    });
-    if (res.ok) {
-      setResetPassword((prev) => ({ ...prev, [userId]: "" }));
-    }
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else { setSortKey(key); setSortDir("desc"); }
   };
 
   const handleRoleChange = async (userId: string, newRole: "admin" | "user") => {
     const res = await fetch("/api/admin/users", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId, action: "setRole", role: newRole }),
     });
-    if (res.ok) {
-      setUsers((prev) =>
-        prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u))
-      );
-      setRoleUpdated(userId);
-      setTimeout(() => setRoleUpdated(null), 2000);
-    }
+    if (res.ok) setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u)));
   };
 
   const handlePlanChange = async (userId: string, newPlan: "free" | "starter" | "pro") => {
     const res = await fetch("/api/admin/users", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId, action: "setPlan", plan: newPlan }),
     });
-    if (res.ok) {
-      setUsers((prev) =>
-        prev.map((u) => (u.id === userId ? { ...u, plan: newPlan } : u))
+    if (res.ok) setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, plan: newPlan } : u)));
+  };
+
+  const filtered = useMemo(() => {
+    let list = users;
+    if (search) {
+      const q = search.toLowerCase();
+      list = list.filter((u) =>
+        u.username.toLowerCase().includes(q) ||
+        u.email.toLowerCase().includes(q) ||
+        u.displayName.toLowerCase().includes(q)
       );
-      setPlanUpdated(userId);
-      setTimeout(() => setPlanUpdated(null), 2000);
     }
-  };
+    if (filterPlan !== "all") list = list.filter((u) => u.plan === filterPlan);
+    if (filterAuth !== "all") list = list.filter((u) => u.authProvider === filterAuth);
+    if (filterImport === "imported") list = list.filter((u) => u.brokerAccounts || u.brokerImports);
+    if (filterImport === "not-imported") list = list.filter((u) => !u.brokerAccounts && !u.brokerImports);
 
-  const handleResetData = async (userId: string, mode: "seed" | "empty") => {
-    await fetch("/api/admin/reset-data", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId, mode }),
+    const sorted = [...list].sort((a, b) => {
+      let cmp = 0;
+      switch (sortKey) {
+        case "username": cmp = a.username.localeCompare(b.username); break;
+        case "authProvider": cmp = a.authProvider.localeCompare(b.authProvider); break;
+        case "plan": { const order = { pro: 3, starter: 2, free: 1 }; cmp = (order[a.plan] || 0) - (order[b.plan] || 0); break; }
+        case "holdingCount": cmp = a.holdingCount - b.holdingCount; break;
+        case "totalHoldingsEur": cmp = a.totalHoldingsEur - b.totalHoldingsEur; break;
+        case "lastActiveAt": cmp = (a.lastActiveAt || "").localeCompare(b.lastActiveAt || ""); break;
+        case "createdAt": cmp = (a.createdAt || "").localeCompare(b.createdAt || ""); break;
+      }
+      return sortDir === "asc" ? cmp : -cmp;
     });
-  };
+    return sorted;
+  }, [users, search, filterPlan, filterAuth, filterImport, sortKey, sortDir]);
 
-  const handleDelete = async (userId: string) => {
-    const res = await fetch(`/api/admin/users?id=${encodeURIComponent(userId)}`, { method: "DELETE" });
-    if (res.ok) {
-      setUsers((prev) => prev.filter((u) => u.id !== userId));
-    }
-  };
+  const stats = useMemo(() => {
+    const total = users.length;
+    const now = Date.now();
+    const active7d = users.filter((u) => u.lastActiveAt && now - new Date(u.lastActiveAt).getTime() < 7 * 86400000).length;
+    const pro = users.filter((u) => u.plan === "pro").length;
+    const imported = users.filter((u) => u.brokerAccounts || u.brokerImports).length;
+    const totalValue = users.reduce((s, u) => s + u.totalHoldingsEur + u.totalCashEur, 0);
+    return { total, active7d, pro, imported, totalValue };
+  }, [users]);
 
   if (loading) return <p className="text-gray-500 dark:text-slate-400">Loading users...</p>;
   if (error) return <p className="text-red-500">{error}</p>;
 
   return (
-    <div className="card p-0 overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 dark:bg-slate-800/50">
-            <tr className="text-gray-500 dark:text-slate-400">
-              <th className="text-left p-3 font-medium">User</th>
-              <th className="text-left p-3 font-medium">Role</th>
-              <th className="text-left p-3 font-medium">Plan</th>
-              <th className="text-left p-3 font-medium">Created</th>
-              <th className="text-left p-3 font-medium">Last Active</th>
-              <th className="text-left p-3 font-medium">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((user) => (
-              <tr key={user.id} className="border-t border-gray-100 dark:border-slate-700 text-gray-700 dark:text-slate-200 align-top">
-                <td className="p-3">
-                  <div className="font-medium text-gray-900 dark:text-white">{user.username}</div>
-                  {user.displayName && (
-                    <div className="text-xs text-gray-500 dark:text-slate-400">{user.displayName}</div>
-                  )}
-                  {user.email && (
-                    <div className="text-xs text-gray-400 dark:text-slate-500">{user.email}</div>
-                  )}
-                  {user.mustChangePassword && (
-                    <div className="text-xs text-amber-600 dark:text-amber-400 mt-1">Must change password</div>
-                  )}
-                </td>
-                <td className="p-3">
-                  {user.username === "admin" ? (
-                    <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400">
-                      admin
-                    </span>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <select
-                        value={user.role}
-                        onChange={(e) => handleRoleChange(user.id, e.target.value as "admin" | "user")}
-                        className="text-xs px-2 py-1 rounded-lg"
-                      >
-                        <option value="user">user</option>
-                        <option value="admin">admin</option>
-                      </select>
-                      {roleUpdated === user.id && (
-                        <span className="text-xs text-emerald-500">Updated</span>
-                      )}
-                    </div>
-                  )}
-                </td>
-                <td className="p-3">
-                  <div className="flex items-center gap-2">
-                    <select
-                      value={user.plan}
-                      onChange={(e) => handlePlanChange(user.id, e.target.value as "free" | "starter" | "pro")}
-                      className="text-xs px-2 py-1 rounded-lg"
-                    >
-                      <option value="free">Folio (free)</option>
-                      <option value="starter">Bifolio (starter)</option>
-                      <option value="pro">Trefolio (pro)</option>
-                    </select>
-                    {planUpdated === user.id && (
-                      <span className="text-xs text-emerald-500">Updated</span>
-                    )}
-                  </div>
-                </td>
-                <td className="p-3 text-gray-500 dark:text-slate-400 text-xs">
-                  {new Date(user.createdAt).toLocaleDateString()}
-                </td>
-                <td className="p-3 text-gray-500 dark:text-slate-400 text-xs">
-                  {user.lastActiveAt ? new Date(user.lastActiveAt).toLocaleString() : "—"}
-                </td>
-                <td className="p-3 space-y-2">
-                  <form
-                    className="flex items-center gap-2"
-                    onSubmit={(e) => handlePasswordReset(e, user.id)}
-                  >
-                    <input
-                      type="password"
-                      placeholder="New password"
-                      value={resetPassword[user.id] || ""}
-                      onChange={(e) =>
-                        setResetPassword((prev) => ({ ...prev, [user.id]: e.target.value }))
-                      }
-                      className="text-xs px-2 py-1.5"
-                    />
-                    <button type="submit" className="btn-secondary text-xs px-2 py-1">
-                      Reset pwd
-                    </button>
-                  </form>
+    <div className="space-y-5">
+      {/* Stat cards */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        {([
+          ["Total Users", stats.total, `${users.filter((u) => { const d = Date.now() - new Date(u.createdAt).getTime(); return d < 7 * 86400000; }).length} this week`],
+          ["Active (7d)", stats.active7d, `${stats.total ? Math.round((stats.active7d / stats.total) * 100) : 0}% of total`],
+          ["Pro Users", stats.pro, `${stats.total ? Math.round((stats.pro / stats.total) * 100) : 0}% conversion`],
+          ["Imported", stats.imported, `${stats.total ? Math.round((stats.imported / stats.total) * 100) : 0}% of total`],
+          ["Total Value", formatEur(stats.totalValue), "Across all users"],
+        ] as [string, number | string, string][]).map(([label, value, sub]) => (
+          <div key={label} className="card p-4">
+            <p className="text-[11px] text-gray-500 dark:text-slate-400 uppercase tracking-wide">{label}</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1 tabular-nums">{typeof value === "number" ? value : value}</p>
+            <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-0.5">{sub}</p>
+          </div>
+        ))}
+      </div>
 
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      onClick={() => handleResetData(user.id, "seed")}
-                      className="btn-secondary text-xs px-2 py-1"
-                    >
-                      Seed data
-                    </button>
-                    <button
-                      onClick={() => handleResetData(user.id, "empty")}
-                      className="btn-secondary text-xs px-2 py-1"
-                    >
-                      Empty data
-                    </button>
-                    {user.username !== "admin" && (
-                      <button
-                        onClick={() => handleDelete(user.id)}
-                        className="btn-danger text-xs px-2 py-1"
-                      >
-                        Delete
-                      </button>
-                    )}
-                  </div>
-                </td>
+      {/* Toolbar */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="relative flex-1 min-w-[200px] max-w-[320px]">
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
+          <input
+            type="text"
+            placeholder="Search by username, email, or name..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-9 pr-3 py-2 text-xs rounded-lg"
+          />
+        </div>
+        <select value={filterPlan} onChange={(e) => setFilterPlan(e.target.value)} className="text-xs px-3 py-2 rounded-lg">
+          <option value="all">All Plans</option>
+          <option value="free">Folio (free)</option>
+          <option value="starter">Bifolio (starter)</option>
+          <option value="pro">Trefolio (pro)</option>
+        </select>
+        <select value={filterAuth} onChange={(e) => setFilterAuth(e.target.value)} className="text-xs px-3 py-2 rounded-lg">
+          <option value="all">All Auth</option>
+          <option value="credentials">Credentials</option>
+          <option value="google">Google</option>
+          <option value="apple">Apple</option>
+        </select>
+        <select value={filterImport} onChange={(e) => setFilterImport(e.target.value)} className="text-xs px-3 py-2 rounded-lg">
+          <option value="all">All Import Status</option>
+          <option value="imported">Has Imported</option>
+          <option value="not-imported">Not Imported</option>
+        </select>
+        <span className="text-xs text-gray-400 dark:text-slate-500 ml-auto">Showing {filtered.length} users</span>
+      </div>
+
+      {/* Table */}
+      <div className="card p-0 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 dark:bg-slate-800/50">
+              <tr className="text-gray-500 dark:text-slate-400">
+                <th className="w-8 p-3" />
+                <SortHeader label="User" sortKey="username" currentKey={sortKey} dir={sortDir} onSort={handleSort} />
+                <SortHeader label="Auth" sortKey="authProvider" currentKey={sortKey} dir={sortDir} onSort={handleSort} />
+                <SortHeader label="Plan" sortKey="plan" currentKey={sortKey} dir={sortDir} onSort={handleSort} />
+                <th className="text-left p-3 font-medium text-[11px] uppercase tracking-wide">Email</th>
+                <SortHeader label="Holdings" sortKey="holdingCount" currentKey={sortKey} dir={sortDir} onSort={handleSort} />
+                <SortHeader label="Portfolio Value" sortKey="totalHoldingsEur" currentKey={sortKey} dir={sortDir} onSort={handleSort} />
+                <th className="text-left p-3 font-medium text-[11px] uppercase tracking-wide">Brokers</th>
+                <th className="text-left p-3 font-medium text-[11px] uppercase tracking-wide">Imported</th>
+                <SortHeader label="Last Active" sortKey="lastActiveAt" currentKey={sortKey} dir={sortDir} onSort={handleSort} />
+                <SortHeader label="Created" sortKey="createdAt" currentKey={sortKey} dir={sortDir} onSort={handleSort} />
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filtered.map((user) => {
+                const isExpanded = expandedId === user.id;
+                const hasImported = !!(user.brokerAccounts || user.brokerImports);
+                const isInactive = user.lastActiveAt && (Date.now() - new Date(user.lastActiveAt).getTime() > 30 * 86400000);
+                return (
+                  <React.Fragment key={user.id}>
+                    <tr
+                      className={`border-t border-gray-100 dark:border-slate-700 text-gray-700 dark:text-slate-200 align-middle cursor-pointer transition-colors ${isExpanded ? "bg-gray-50/50 dark:bg-slate-800/30" : "hover:bg-gray-50 dark:hover:bg-slate-800/20"}`}
+                      onClick={() => setExpandedId(isExpanded ? null : user.id)}
+                    >
+                      <td className="p-3">
+                        <svg className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? "rotate-90 text-indigo-500" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="m9 18 6-6-6-6" /></svg>
+                      </td>
+                      <td className="p-3">
+                        <div className="font-medium text-gray-900 dark:text-white">{user.username}</div>
+                        {user.displayName && <div className="text-[11px] text-gray-500 dark:text-slate-400">{user.displayName}</div>}
+                        {user.email && <div className="text-[11px] text-gray-400 dark:text-slate-500">{user.email}</div>}
+                      </td>
+                      <td className="p-3"><AuthBadge provider={user.authProvider} /></td>
+                      <td className="p-3"><PlanBadge plan={user.plan} /></td>
+                      <td className="p-3">{user.emailVerified ? <span className="text-emerald-500">✓</span> : <span className="text-gray-300 dark:text-slate-600">✗</span>}</td>
+                      <td className="p-3 tabular-nums font-semibold">{user.holdingCount}</td>
+                      <td className="p-3 tabular-nums">
+                        {user.totalHoldingsEur > 0
+                          ? <span className="text-emerald-500 font-semibold">{formatEur(user.totalHoldingsEur)}</span>
+                          : <span className="text-gray-400 dark:text-slate-600">€0</span>}
+                      </td>
+                      <td className="p-3"><BrokerBadges accounts={user.brokerAccounts} imports={user.brokerImports} /></td>
+                      <td className="p-3">
+                        {hasImported
+                          ? <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-500">Imported</span>
+                          : <span className="text-[11px] text-gray-400 dark:text-slate-600">Not imported</span>}
+                      </td>
+                      <td className={`p-3 text-xs whitespace-nowrap ${isInactive ? "text-amber-500" : "text-gray-500 dark:text-slate-400"}`}>
+                        {relativeTime(user.lastActiveAt)}
+                      </td>
+                      <td className="p-3 text-gray-500 dark:text-slate-400 text-xs whitespace-nowrap">
+                        {new Date(user.createdAt).toLocaleDateString()}
+                      </td>
+                    </tr>
+                    {isExpanded && (
+                      <UserDetailPanel
+                        user={user}
+                        onRoleChange={handleRoleChange}
+                        onPlanChange={handlePlanChange}
+                      />
+                    )}
+                  </React.Fragment>
+                );
+              })}
+              {filtered.length === 0 && (
+                <tr><td colSpan={11} className="p-8 text-center text-gray-400 dark:text-slate-500">No users match your filters.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

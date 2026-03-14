@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Users — trefolio Mockup</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f172a;
+    --fg: #f1f5f9;
+    --card: #1e293b;
+    --card-hover: #253347;
+    --border: #334155;
+    --muted: #94a3b8;
+    --accent: #6366f1;
+    --accent-light: rgba(99,102,241,0.12);
+    --green: #10b981;
+    --green-light: rgba(16,185,129,0.12);
+    --red: #ef4444;
+    --red-light: rgba(239,68,68,0.10);
+    --amber: #f59e0b;
+    --amber-light: rgba(245,158,11,0.12);
+    --blue: #3b82f6;
+    --blue-light: rgba(59,130,246,0.12);
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: 'DM Sans', -apple-system, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* ── Nav ── */
+  .topnav {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 12px 24px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  .topnav .logo {
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: -0.5px;
+    color: var(--fg);
+  }
+  .topnav .logo span { color: var(--accent); }
+  .topnav .nav-links { display: flex; gap: 4px; }
+  .topnav .nav-links a {
+    padding: 6px 14px;
+    border-radius: var(--radius-sm);
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all .15s;
+  }
+  .topnav .nav-links a:hover { color: var(--fg); background: rgba(255,255,255,0.04); }
+  .topnav .nav-links a.active { color: var(--fg); background: var(--accent-light); }
+
+  /* ── Page ── */
+  .page { max-width: 1400px; margin: 0 auto; padding: 28px 24px 60px; }
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .page-header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+
+  /* ── Tabs ── */
+  .tabs {
+    display: flex;
+    gap: 2px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 24px;
+    overflow-x: auto;
+  }
+  .tab {
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all .15s;
+    white-space: nowrap;
+    background: none; border-top: none; border-left: none; border-right: none;
+  }
+  .tab:hover { color: var(--fg); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* ── Stat Cards ── */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+  }
+  .stat-card .label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .stat-card .value {
+    font-size: 26px;
+    font-weight: 700;
+    font-feature-settings: 'tnum';
+  }
+  .stat-card .sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  /* ── Toolbar ── */
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .search-box {
+    flex: 1;
+    min-width: 220px;
+    max-width: 340px;
+    padding: 8px 12px 8px 36px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--fg);
+    font-size: 13px;
+    outline: none;
+    transition: border .15s;
+  }
+  .search-box:focus { border-color: var(--accent); }
+  .search-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 220px;
+    max-width: 340px;
+  }
+  .search-wrap svg {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    width: 16px; height: 16px;
+  }
+
+  .filter-select {
+    padding: 8px 28px 8px 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--fg);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+  }
+  .user-count {
+    font-size: 12px;
+    color: var(--muted);
+    margin-left: auto;
+  }
+
+  /* ── Table ── */
+  .table-wrap {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .table-scroll { overflow-x: auto; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  thead { background: rgba(0,0,0,0.15); }
+  th {
+    text-align: left;
+    padding: 10px 14px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--muted);
+    cursor: pointer;
+    white-space: nowrap;
+    user-select: none;
+    border-bottom: 1px solid var(--border);
+  }
+  th:hover { color: var(--fg); }
+  th .sort-arrow { font-size: 10px; margin-left: 3px; opacity: 0.5; }
+  th.sorted .sort-arrow { opacity: 1; color: var(--accent); }
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(51,65,85,0.5);
+    vertical-align: middle;
+  }
+  tr.row { transition: background .1s; cursor: pointer; }
+  tr.row:hover { background: var(--card-hover); }
+
+  .user-cell .name { font-weight: 600; color: var(--fg); }
+  .user-cell .email { font-size: 11px; color: var(--muted); margin-top: 1px; }
+  .user-cell .display-name { font-size: 11px; color: #64748b; }
+
+  /* ── Badges ── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .badge-admin { background: var(--accent-light); color: #818cf8; }
+  .badge-user { background: rgba(148,163,184,0.1); color: var(--muted); }
+  .badge-free { background: rgba(148,163,184,0.1); color: var(--muted); }
+  .badge-starter { background: var(--blue-light); color: var(--blue); }
+  .badge-pro { background: var(--green-light); color: var(--green); }
+  .badge-google { background: var(--red-light); color: #f87171; }
+  .badge-apple { background: rgba(255,255,255,0.08); color: #e2e8f0; }
+  .badge-credentials { background: rgba(148,163,184,0.08); color: var(--muted); }
+  .badge-snaptrade { background: var(--blue-light); color: var(--blue); }
+  .badge-broker { background: var(--accent-light); color: #a5b4fc; font-size: 10px; }
+  .badge-imported { background: var(--green-light); color: var(--green); }
+  .badge-not-imported { background: rgba(148,163,184,0.06); color: #475569; }
+
+  .check { color: var(--green); }
+  .cross { color: #475569; }
+
+  .value-positive { color: var(--green); font-weight: 600; font-feature-settings: 'tnum'; }
+  .value-neutral { color: var(--muted); font-feature-settings: 'tnum'; }
+  .relative-time { color: var(--muted); font-size: 12px; white-space: nowrap; }
+
+  /* ── Detail Panel ── */
+  .detail-panel {
+    background: rgba(0,0,0,0.12);
+    border-bottom: 1px solid var(--border);
+  }
+  .detail-inner {
+    padding: 20px 14px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+  }
+  .detail-section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+  }
+  .detail-section h4 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--muted);
+    margin-bottom: 10px;
+    font-weight: 600;
+  }
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+    font-size: 12px;
+  }
+  .detail-row .dl { color: var(--muted); }
+  .detail-row .dv { color: var(--fg); font-weight: 500; font-feature-settings: 'tnum'; }
+
+  .broker-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+  }
+
+  .import-event {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(51,65,85,0.3);
+    font-size: 12px;
+  }
+  .import-event:last-child { border-bottom: none; }
+  .import-event .ie-method { color: var(--fg); font-weight: 500; }
+  .import-event .ie-time { color: var(--muted); font-size: 11px; margin-left: auto; }
+  .import-event .ie-count { color: var(--green); font-size: 11px; font-weight: 600; }
+
+  .action-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+  .btn {
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--fg);
+    transition: all .15s;
+  }
+  .btn:hover { background: var(--card-hover); }
+  .btn-danger { border-color: rgba(239,68,68,0.3); color: var(--red); }
+  .btn-danger:hover { background: var(--red-light); }
+  .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn-primary:hover { opacity: 0.9; }
+
+  .input-sm {
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: rgba(0,0,0,0.2);
+    color: var(--fg);
+    font-size: 12px;
+    outline: none;
+    width: 140px;
+  }
+  .input-sm:focus { border-color: var(--accent); }
+  .select-sm {
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--fg);
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  /* ── Expand indicator ── */
+  .expand-icon {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    color: var(--muted);
+    transition: transform .2s;
+  }
+  .expanded .expand-icon { transform: rotate(90deg); color: var(--accent); }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* ── Portfolio mini table ── */
+  .mini-table { width: 100%; font-size: 12px; }
+  .mini-table th {
+    font-size: 10px; padding: 4px 8px;
+    border-bottom: 1px solid var(--border);
+    background: transparent;
+  }
+  .mini-table td {
+    padding: 5px 8px;
+    border-bottom: 1px solid rgba(51,65,85,0.3);
+  }
+  .mini-table tr:last-child td { border-bottom: none; }
+
+  .mockup-badge {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    background: var(--accent);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    z-index: 100;
+    box-shadow: 0 4px 20px rgba(99,102,241,0.4);
+  }
+</style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="topnav">
+  <div class="logo"><span>tre</span>folio</div>
+  <div class="nav-links">
+    <a href="#">Portfolio</a>
+    <a href="#">Import</a>
+    <a href="#">Tools</a>
+    <a href="#" class="active">Admin</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <h1>Admin Panel</h1>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active">Users</button>
+    <button class="tab">Settings</button>
+    <button class="tab">Analytics</button>
+    <button class="tab">Feedback</button>
+    <button class="tab">Support Chat</button>
+    <button class="tab">Waitlist</button>
+    <button class="tab">Docs</button>
+    <button class="tab">Notifications</button>
+  </div>
+
+  <!-- Stat cards -->
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="label">Total Users</div>
+      <div class="value">247</div>
+      <div class="sub">+12 this week</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Active (7d)</div>
+      <div class="value">89</div>
+      <div class="sub">36% of total</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Pro Users</div>
+      <div class="value" style="color: var(--green);">34</div>
+      <div class="sub">14% conversion</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Users Who Imported</div>
+      <div class="value" style="color: var(--accent);">156</div>
+      <div class="sub">63% of total</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Total Portfolio Value</div>
+      <div class="value" style="font-size: 22px;">€4.2M</div>
+      <div class="sub">Across all users</div>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input class="search-box" type="text" placeholder="Search by username, email, or name...">
+    </div>
+    <select class="filter-select">
+      <option>All Plans</option>
+      <option>Folio (free)</option>
+      <option>Bifolio (starter)</option>
+      <option>Trefolio (pro)</option>
+    </select>
+    <select class="filter-select">
+      <option>All Auth</option>
+      <option>Credentials</option>
+      <option>Google</option>
+      <option>Apple</option>
+    </select>
+    <select class="filter-select">
+      <option>All Import Status</option>
+      <option>Has Imported</option>
+      <option>Not Imported</option>
+    </select>
+    <span class="user-count">Showing 247 users</span>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrap">
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:28px;"></th>
+            <th class="sorted">User <span class="sort-arrow">▼</span></th>
+            <th>Auth <span class="sort-arrow">▼</span></th>
+            <th>Plan <span class="sort-arrow">▼</span></th>
+            <th>Email <span class="sort-arrow">▼</span></th>
+            <th>Holdings <span class="sort-arrow">▼</span></th>
+            <th>Portfolio Value <span class="sort-arrow">▼</span></th>
+            <th>Brokers <span class="sort-arrow">▼</span></th>
+            <th>Imported <span class="sort-arrow">▼</span></th>
+            <th>Last Active <span class="sort-arrow">▼</span></th>
+            <th>Created <span class="sort-arrow">▼</span></th>
+          </tr>
+        </thead>
+        <tbody>
+
+          <!-- User 1 - expanded -->
+          <tr class="row expanded" onclick="toggleDetail('d1')">
+            <td><svg class="expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></td>
+            <td class="user-cell">
+              <div class="name">maria.garcia</div>
+              <div class="display-name">María García</div>
+              <div class="email">maria.garcia@gmail.com</div>
+            </td>
+            <td><span class="badge badge-google">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/></svg>
+              Google
+            </span></td>
+            <td><span class="badge badge-pro">Trefolio</span></td>
+            <td><span class="check">✓</span></td>
+            <td><span style="font-weight:600; font-feature-settings:'tnum';">47</span></td>
+            <td><span class="value-positive">€128,450</span></td>
+            <td>
+              <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                <span class="badge badge-broker">DEGIRO</span>
+                <span class="badge badge-broker">Interactive Brokers</span>
+              </div>
+            </td>
+            <td><span class="badge badge-imported">Imported</span></td>
+            <td><span class="relative-time">2 hours ago</span></td>
+            <td><span class="relative-time">Jan 15, 2025</span></td>
+          </tr>
+
+          <!-- Detail panel for User 1 -->
+          <tr id="d1" class="detail-panel">
+            <td colspan="11">
+              <div class="detail-inner">
+
+                <!-- User Info -->
+                <div class="detail-section">
+                  <h4>User Information</h4>
+                  <div class="detail-row"><span class="dl">User ID</span><span class="dv" style="font-family:'JetBrains Mono',monospace;font-size:11px;">a3f7c2e1-8d4b-4f9a</span></div>
+                  <div class="detail-row"><span class="dl">Auth Provider</span><span class="dv">Google</span></div>
+                  <div class="detail-row"><span class="dl">Email Verified</span><span class="dv check">Yes</span></div>
+                  <div class="detail-row"><span class="dl">Plan</span><span class="dv">Trefolio (Pro)</span></div>
+                  <div class="detail-row"><span class="dl">Plan Expires</span><span class="dv">Mar 15, 2027</span></div>
+                  <div class="detail-row"><span class="dl">Stripe Customer</span><span class="dv" style="font-family:'JetBrains Mono',monospace;font-size:11px;">cus_R4x...7mK</span></div>
+                  <div class="detail-row"><span class="dl">Tax Residency</span><span class="dv">ES (Spain)</span></div>
+                  <div class="detail-row"><span class="dl">Onboarding</span><span class="dv check">Completed</span></div>
+                  <div class="detail-row"><span class="dl">AI Calls (month)</span><span class="dv">12 / 50</span></div>
+                  <div class="detail-row"><span class="dl">Created</span><span class="dv">Jan 15, 2025</span></div>
+                  <div class="detail-row"><span class="dl">Last Active</span><span class="dv">2 hours ago</span></div>
+                </div>
+
+                <!-- Portfolios -->
+                <div class="detail-section">
+                  <h4>Portfolios (3)</h4>
+                  <table class="mini-table">
+                    <thead>
+                      <tr>
+                        <th style="text-align:left;">Name</th>
+                        <th style="text-align:left;">Currency</th>
+                        <th style="text-align:right;">Holdings</th>
+                        <th style="text-align:right;">Value</th>
+                        <th style="text-align:left;"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td style="font-weight:500;">Main Portfolio</td>
+                        <td>EUR</td>
+                        <td style="text-align:right; font-feature-settings:'tnum';">32</td>
+                        <td style="text-align:right; color:var(--green); font-weight:600; font-feature-settings:'tnum';">€98,230</td>
+                        <td><span class="badge badge-free" style="font-size:9px;">Default</span></td>
+                      </tr>
+                      <tr>
+                        <td style="font-weight:500;">Retirement</td>
+                        <td>EUR</td>
+                        <td style="text-align:right; font-feature-settings:'tnum';">10</td>
+                        <td style="text-align:right; color:var(--green); font-weight:600; font-feature-settings:'tnum';">€24,120</td>
+                        <td></td>
+                      </tr>
+                      <tr>
+                        <td style="font-weight:500;">US Growth</td>
+                        <td>USD</td>
+                        <td style="text-align:right; font-feature-settings:'tnum';">5</td>
+                        <td style="text-align:right; color:var(--green); font-weight:600; font-feature-settings:'tnum';">€6,100</td>
+                        <td></td>
+                      </tr>
+                    </tbody>
+                  </table>
+
+                  <div style="margin-top:12px; padding-top:10px; border-top:1px solid var(--border);">
+                    <div class="detail-row"><span class="dl">Total Holdings</span><span class="dv">47</span></div>
+                    <div class="detail-row"><span class="dl">Total Cash</span><span class="dv">€2,340 (3 entries)</span></div>
+                    <div class="detail-row"><span class="dl">Total Transactions</span><span class="dv">234</span></div>
+                  </div>
+                </div>
+
+                <!-- Import History -->
+                <div class="detail-section">
+                  <h4>Broker Accounts & Import History</h4>
+                  <div class="broker-list" style="margin-bottom: 12px;">
+                    <span class="badge badge-broker">DEGIRO</span>
+                    <span class="badge badge-broker">Interactive Brokers</span>
+                  </div>
+
+                  <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.4px; color:var(--muted); margin: 10px 0 6px; font-weight:600;">
+                    Import Events
+                  </div>
+                  <div class="import-event">
+                    <span class="ie-method">DEGIRO CSV</span>
+                    <span class="ie-count">+32 txns</span>
+                    <span class="ie-time">Jan 16, 2025</span>
+                  </div>
+                  <div class="import-event">
+                    <span class="ie-method">Interactive Brokers CSV</span>
+                    <span class="ie-count">+18 txns</span>
+                    <span class="ie-time">Feb 3, 2025</span>
+                  </div>
+                  <div class="import-event">
+                    <span class="ie-method">DEGIRO CSV</span>
+                    <span class="ie-count">+8 txns</span>
+                    <span class="ie-time">Mar 1, 2026</span>
+                  </div>
+                  <div class="import-event">
+                    <span class="ie-method">AI Import (file)</span>
+                    <span class="ie-count">+5 txns</span>
+                    <span class="ie-time">Mar 10, 2026</span>
+                  </div>
+
+                  <div class="action-bar">
+                    <select class="select-sm">
+                      <option>Role: user</option>
+                      <option>Role: admin</option>
+                    </select>
+                    <select class="select-sm">
+                      <option>Plan: Trefolio (pro)</option>
+                      <option>Plan: Folio (free)</option>
+                      <option>Plan: Bifolio (starter)</option>
+                    </select>
+                    <input class="input-sm" type="password" placeholder="New password">
+                    <button class="btn">Reset Pwd</button>
+                    <button class="btn">Seed Data</button>
+                    <button class="btn btn-danger">Delete User</button>
+                  </div>
+                </div>
+
+              </div>
+            </td>
+          </tr>
+
+          <!-- User 2 -->
+          <tr class="row" onclick="toggleDetail('d2')">
+            <td><svg class="expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></td>
+            <td class="user-cell">
+              <div class="name">john_doe</div>
+              <div class="display-name">John Doe</div>
+              <div class="email">john@outlook.com</div>
+            </td>
+            <td><span class="badge badge-credentials">Credentials</span></td>
+            <td><span class="badge badge-starter">Bifolio</span></td>
+            <td><span class="check">✓</span></td>
+            <td><span style="font-weight:600; font-feature-settings:'tnum';">23</span></td>
+            <td><span class="value-positive">€45,800</span></td>
+            <td>
+              <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                <span class="badge badge-broker">Trading 212</span>
+              </div>
+            </td>
+            <td><span class="badge badge-imported">Imported</span></td>
+            <td><span class="relative-time">5 hours ago</span></td>
+            <td><span class="relative-time">Feb 20, 2025</span></td>
+          </tr>
+          <tr id="d2" class="detail-panel" style="display:none;"><td colspan="11"><div class="detail-inner"><div class="detail-section"><h4>User Information</h4><div class="detail-row"><span class="dl">Auth Provider</span><span class="dv">Credentials</span></div><div class="detail-row"><span class="dl">Plan</span><span class="dv">Bifolio (Starter)</span></div></div></div></td></tr>
+
+          <!-- User 3 -->
+          <tr class="row" onclick="toggleDetail('d3')">
+            <td><svg class="expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></td>
+            <td class="user-cell">
+              <div class="name">admin</div>
+              <div class="email">admin@trefolio.app</div>
+            </td>
+            <td><span class="badge badge-credentials">Credentials</span></td>
+            <td><span class="badge badge-admin" style="background:var(--accent-light);color:#818cf8;">Admin</span></td>
+            <td><span class="check">✓</span></td>
+            <td><span style="font-weight:600; font-feature-settings:'tnum';">15</span></td>
+            <td><span class="value-positive">€312,000</span></td>
+            <td>
+              <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                <span class="badge badge-broker">DEGIRO</span>
+              </div>
+            </td>
+            <td><span class="badge badge-imported">Imported</span></td>
+            <td><span class="relative-time">Just now</span></td>
+            <td><span class="relative-time">Dec 1, 2024</span></td>
+          </tr>
+          <tr id="d3" class="detail-panel" style="display:none;"><td colspan="11"></td></tr>
+
+          <!-- User 4 -->
+          <tr class="row" onclick="toggleDetail('d4')">
+            <td><svg class="expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></td>
+            <td class="user-cell">
+              <div class="name">sophie.müller</div>
+              <div class="display-name">Sophie Müller</div>
+              <div class="email">sophie.m@icloud.com</div>
+            </td>
+            <td><span class="badge badge-apple">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+              Apple
+            </span></td>
+            <td><span class="badge badge-pro">Trefolio</span></td>
+            <td><span class="check">✓</span></td>
+            <td><span style="font-weight:600; font-feature-settings:'tnum';">68</span></td>
+            <td><span class="value-positive">€287,900</span></td>
+            <td>
+              <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                <span class="badge badge-broker">Revolut</span>
+                <span class="badge badge-broker">SnapTrade</span>
+              </div>
+            </td>
+            <td><span class="badge badge-imported">Imported</span></td>
+            <td><span class="relative-time">1 day ago</span></td>
+            <td><span class="relative-time">Mar 5, 2025</span></td>
+          </tr>
+          <tr id="d4" class="detail-panel" style="display:none;"><td colspan="11"></td></tr>
+
+          <!-- User 5 - not imported -->
+          <tr class="row" onclick="toggleDetail('d5')">
+            <td><svg class="expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></td>
+            <td class="user-cell">
+              <div class="name">test_user_42</div>
+              <div class="email">testuser42@gmail.com</div>
+            </td>
+            <td><span class="badge badge-google">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/></svg>
+              Google
+            </span></td>
+            <td><span class="badge badge-free">Folio</span></td>
+            <td><span class="check">✓</span></td>
+            <td><span class="value-neutral">0</span></td>
+            <td><span class="value-neutral">€0</span></td>
+            <td><span class="value-neutral">—</span></td>
+            <td><span class="badge badge-not-imported">Not imported</span></td>
+            <td><span class="relative-time">3 days ago</span></td>
+            <td><span class="relative-time">Mar 11, 2026</span></td>
+          </tr>
+          <tr id="d5" class="detail-panel" style="display:none;"><td colspan="11"></td></tr>
+
+          <!-- User 6 -->
+          <tr class="row" onclick="toggleDetail('d6')">
+            <td><svg class="expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></td>
+            <td class="user-cell">
+              <div class="name">alex.kumar</div>
+              <div class="display-name">Alex Kumar</div>
+              <div class="email">alex.kumar@proton.me</div>
+            </td>
+            <td><span class="badge badge-credentials">Credentials</span></td>
+            <td><span class="badge badge-free">Folio</span></td>
+            <td><span class="cross">✗</span></td>
+            <td><span style="font-weight:600; font-feature-settings:'tnum';">8</span></td>
+            <td><span class="value-positive">€12,340</span></td>
+            <td>
+              <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                <span class="badge badge-broker">Manual</span>
+              </div>
+            </td>
+            <td><span class="badge badge-not-imported">Manual only</span></td>
+            <td><span class="relative-time">1 week ago</span></td>
+            <td><span class="relative-time">Nov 20, 2025</span></td>
+          </tr>
+          <tr id="d6" class="detail-panel" style="display:none;"><td colspan="11"></td></tr>
+
+          <!-- User 7 -->
+          <tr class="row" onclick="toggleDetail('d7')">
+            <td><svg class="expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></td>
+            <td class="user-cell">
+              <div class="name">lucas.bianchi</div>
+              <div class="display-name">Lucas Bianchi</div>
+              <div class="email">lucas.b@yahoo.it</div>
+            </td>
+            <td><span class="badge badge-credentials">Credentials</span></td>
+            <td><span class="badge badge-pro">Trefolio</span></td>
+            <td><span class="check">✓</span></td>
+            <td><span style="font-weight:600; font-feature-settings:'tnum';">112</span></td>
+            <td><span class="value-positive">€534,200</span></td>
+            <td>
+              <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                <span class="badge badge-broker">DEGIRO</span>
+                <span class="badge badge-broker">Nordnet</span>
+                <span class="badge badge-broker">SnapTrade</span>
+              </div>
+            </td>
+            <td><span class="badge badge-imported">Imported</span></td>
+            <td><span class="relative-time">12 hours ago</span></td>
+            <td><span class="relative-time">Aug 3, 2025</span></td>
+          </tr>
+          <tr id="d7" class="detail-panel" style="display:none;"><td colspan="11"></td></tr>
+
+          <!-- User 8 - inactive -->
+          <tr class="row" onclick="toggleDetail('d8')">
+            <td><svg class="expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></td>
+            <td class="user-cell">
+              <div class="name">emma_w</div>
+              <div class="email">emma.w@gmail.com</div>
+            </td>
+            <td><span class="badge badge-google">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/></svg>
+              Google
+            </span></td>
+            <td><span class="badge badge-free">Folio</span></td>
+            <td><span class="check">✓</span></td>
+            <td><span style="font-weight:600; font-feature-settings:'tnum';">3</span></td>
+            <td><span class="value-positive">€1,250</span></td>
+            <td><span class="value-neutral">—</span></td>
+            <td><span class="badge badge-not-imported">Not imported</span></td>
+            <td><span class="relative-time" style="color:var(--amber);">45 days ago</span></td>
+            <td><span class="relative-time">Jan 28, 2026</span></td>
+          </tr>
+          <tr id="d8" class="detail-panel" style="display:none;"><td colspan="11"></td></tr>
+
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<div class="mockup-badge">MOCKUP — Admin Users Page</div>
+
+<script>
+function toggleDetail(id) {
+  const panel = document.getElementById(id);
+  const row = panel.previousElementSibling;
+  if (panel.style.display === 'none') {
+    panel.style.display = '';
+    row.classList.add('expanded');
+  } else {
+    panel.style.display = 'none';
+    row.classList.remove('expanded');
+  }
+}
+</script>
+
+</body>
+</html>

@@ -60,7 +60,10 @@ export {
   updateLastActive,
   getLastActive,
   completeOnboarding,
+  listUsersWithStats,
+  getUserDetailData,
 } from "./users";
+export type { AdminUserWithStats } from "./users";
 
 export {
   listHoldings,

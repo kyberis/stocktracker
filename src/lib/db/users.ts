@@ -5,6 +5,7 @@ import {
   type PublicUser,
   type UserRole,
   type UserPlan,
+  type AuthProvider,
   str,
   rowToDbUser,
   mapUser,
@@ -481,6 +482,136 @@ export async function getDeviceTemplate(userId: string): Promise<string> {
   });
   if (result.rows.length === 0) return "classic-dark";
   return (result.rows[0].device_template_id as string) || "classic-dark";
+}
+
+/* ── Admin: aggregated user list ── */
+
+export interface AdminUserWithStats {
+  id: string;
+  username: string;
+  role: UserRole;
+  plan: UserPlan;
+  email: string;
+  displayName: string;
+  authProvider: AuthProvider;
+  emailVerified: boolean;
+  mustChangePassword: boolean;
+  createdAt: string;
+  lastActiveAt: string;
+  planExpiresAt: string;
+  stripeCustomerId: string;
+  stripeSubscriptionId: string;
+  taxResidency: string;
+  onboardingCompleted: boolean;
+  aiCallsThisMonth: number;
+  portfolioCount: number;
+  holdingCount: number;
+  totalHoldingsEur: number;
+  cashCount: number;
+  totalCashEur: number;
+  transactionCount: number;
+  brokerAccounts: string;
+  brokerImports: string;
+}
+
+export async function listUsersWithStats(): Promise<AdminUserWithStats[]> {
+  const client = await ensureInitialized();
+  const result = await client.execute(`
+    SELECT
+      u.id, u.username, u.role, u.plan, u.email, u.display_name,
+      u.auth_provider, u.email_verified, u.must_change_password,
+      u.created_at, u.last_active_at, u.plan_expires_at,
+      u.stripe_customer_id, u.stripe_subscription_id,
+      u.tax_residency, u.onboarding_completed, u.ai_calls_this_month,
+      (SELECT COUNT(*) FROM portfolios WHERE user_id = u.id) AS portfolio_count,
+      (SELECT COUNT(*) FROM holdings WHERE user_id = u.id) AS holding_count,
+      (SELECT COALESCE(SUM(value_in_eur), 0) FROM holdings WHERE user_id = u.id) AS total_holdings_eur,
+      (SELECT COUNT(*) FROM cash_entries WHERE user_id = u.id) AS cash_count,
+      (SELECT COALESCE(SUM(amount_eur), 0) FROM cash_entries WHERE user_id = u.id) AS total_cash_eur,
+      (SELECT COUNT(*) FROM transactions WHERE user_id = u.id) AS transaction_count,
+      (SELECT GROUP_CONCAT(DISTINCT broker, ', ') FROM accounts WHERE user_id = u.id) AS broker_accounts,
+      (SELECT GROUP_CONCAT(DISTINCT broker_name, ', ') FROM transactions WHERE user_id = u.id AND broker_name != '') AS broker_imports
+    FROM users u
+    ORDER BY u.created_at DESC
+  `);
+
+  return result.rows.map((r) => ({
+    id: str(r.id),
+    username: str(r.username),
+    role: str(r.role) as UserRole,
+    plan: str(r.plan) as UserPlan,
+    email: str(r.email),
+    displayName: str(r.display_name),
+    authProvider: str(r.auth_provider) as AuthProvider,
+    emailVerified: num(r.email_verified) === 1,
+    mustChangePassword: num(r.must_change_password) === 1,
+    createdAt: str(r.created_at),
+    lastActiveAt: str(r.last_active_at),
+    planExpiresAt: str(r.plan_expires_at),
+    stripeCustomerId: str(r.stripe_customer_id),
+    stripeSubscriptionId: str(r.stripe_subscription_id),
+    taxResidency: str(r.tax_residency),
+    onboardingCompleted: num(r.onboarding_completed) === 1,
+    aiCallsThisMonth: num(r.ai_calls_this_month),
+    portfolioCount: num(r.portfolio_count),
+    holdingCount: num(r.holding_count),
+    totalHoldingsEur: Number(r.total_holdings_eur ?? 0),
+    cashCount: num(r.cash_count),
+    totalCashEur: Number(r.total_cash_eur ?? 0),
+    transactionCount: num(r.transaction_count),
+    brokerAccounts: str(r.broker_accounts),
+    brokerImports: str(r.broker_imports),
+  }));
+}
+
+export async function getUserDetailData(userId: string): Promise<{
+  portfolios: { id: string; name: string; currency: string; isDefault: boolean; holdingCount: number; totalValueEur: number }[];
+  importEvents: { event: string; metadata: string; createdAt: string }[];
+}> {
+  const client = await ensureInitialized();
+
+  const [portResult, holdingCounts, importResult] = await Promise.all([
+    client.execute({
+      sql: "SELECT id, name, currency, is_default FROM portfolios WHERE user_id = ? ORDER BY sort_order ASC, created_at ASC",
+      args: [userId],
+    }),
+    client.execute({
+      sql: `SELECT portfolio_id, COUNT(*) as cnt, COALESCE(SUM(value_in_eur), 0) as total_eur
+            FROM holdings WHERE user_id = ? GROUP BY portfolio_id`,
+      args: [userId],
+    }),
+    client.execute({
+      sql: `SELECT event, metadata, created_at FROM analytics_events
+            WHERE user_id = ? AND event IN ('portfolio_import', 'onboarding_import_method')
+            ORDER BY created_at DESC LIMIT 50`,
+      args: [userId],
+    }),
+  ]);
+
+  const holdingMap = new Map<string, { count: number; totalEur: number }>();
+  for (const r of holdingCounts.rows) {
+    holdingMap.set(str(r.portfolio_id), { count: num(r.cnt), totalEur: Number(r.total_eur ?? 0) });
+  }
+
+  const portfolios = portResult.rows.map((r) => {
+    const stats = holdingMap.get(str(r.id)) ?? { count: 0, totalEur: 0 };
+    return {
+      id: str(r.id),
+      name: str(r.name),
+      currency: str(r.currency),
+      isDefault: num(r.is_default) === 1,
+      holdingCount: stats.count,
+      totalValueEur: stats.totalEur,
+    };
+  });
+
+  const importEvents = importResult.rows.map((r) => ({
+    event: str(r.event),
+    metadata: str(r.metadata),
+    createdAt: str(r.created_at),
+  }));
+
+  return { portfolios, importEvents };
 }
 
 /* ── Last-activity tracking ── */
