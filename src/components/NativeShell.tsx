@@ -1,8 +1,10 @@
 "use client";
 
+import { Suspense } from "react";
 import MobileTabBar from "./MobileTabBar";
 import CapacitorBridge from "./CapacitorBridge";
 import NativePushBridge from "./NativePushBridge";
+import NativeLoadingBar from "./mobile/NativeLoadingBar";
 import { useNativePlatform } from "@/lib/use-native";
 
 export default function NativeShell({ children }: { children: React.ReactNode }) {
@@ -19,6 +21,9 @@ export default function NativeShell({ children }: { children: React.ReactNode })
         paddingRight: "env(safe-area-inset-right)",
       }}
     >
+      <Suspense>
+        <NativeLoadingBar />
+      </Suspense>
       <main id="main-content">{children}</main>
       <MobileTabBar />
       <CapacitorBridge />
