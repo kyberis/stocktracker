@@ -14,9 +14,66 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "1.33.0";
+export const CURRENT_VERSION = "1.34.0";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "1.34.0",
+    date: "2026-03-14",
+    title: "Native Mobile App Polish",
+    titleTranslations: { es: "Pulido de la App Nativa Móvil" },
+    changes: [
+      {
+        type: "improvement",
+        text: "Branded app bar with trefolio logo and name replaces the blank white header on iOS and Android.",
+        translations: {
+          es: "Barra de app con el logo y nombre de trefolio reemplaza la cabecera blanca en iOS y Android.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Portfolio switcher — tap the header title to switch between portfolios or view all.",
+        translations: {
+          es: "Selector de portafolio — toca el título de la cabecera para cambiar entre portafolios o ver todos.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Native splash screen stays visible until data is loaded, then fades out smoothly.",
+        translations: {
+          es: "La pantalla de carga nativa permanece visible hasta que los datos se cargan, luego desaparece suavemente.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Navigation loading bar — thin animated progress indicator appears during page transitions.",
+        translations: {
+          es: "Barra de carga de navegación — indicador de progreso animado durante las transiciones de página.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Fixed transaction history table overflowing the viewport on Android, which hid the tool tabs.",
+        translations: {
+          es: "Corregida la tabla de historial de transacciones que desbordaba la pantalla en Android, ocultando las pestañas de herramientas.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Fixed tab bar disappearing on wider Android screens.",
+        translations: {
+          es: "Corregida la barra de pestañas que desaparecía en pantallas Android más anchas.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Fixed iOS opening Safari instead of the in-app WebView for internal navigation.",
+        translations: {
+          es: "Corregido iOS abriendo Safari en lugar del WebView interno para la navegación.",
+        },
+      },
+    ],
+  },
   {
     version: "1.33.0",
     date: "2026-03-14",

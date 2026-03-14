@@ -8,6 +8,7 @@ import CookieConsent from "@/components/CookieConsent";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import AdSenseScript from "@/components/AdSenseScript";
 import ServiceWorkerUpdater from "@/components/ServiceWorkerUpdater";
+import NativeSplashGate from "@/components/NativeSplashGate";
 import { getGaMeasurementId, getAdConfig } from "@/lib/db";
 import "./globals.css";
 
@@ -106,6 +107,7 @@ export default async function RootLayout({
           Skip to main content
         </a>
         {children}
+        <NativeSplashGate />
         <CookieConsent />
         <GoogleAnalytics gaId={gaId} />
         <AdSenseScript clientId={adsClientId} />

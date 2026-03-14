@@ -49,7 +49,7 @@ export default function MobileToolsPage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
+    <div className="max-w-2xl mx-auto px-4 py-4 space-y-4 overflow-x-hidden">
       {/* Tool tabs — horizontal scroll */}
       <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
         {MOBILE_TOOLS.map((tool) => (
@@ -71,14 +71,16 @@ export default function MobileToolsPage() {
         ))}
       </div>
 
-      {/* Active tool content */}
-      <Suspense fallback={<ChartSkeleton />}>
-        {activeTool === "watchlist" && <Watchlist />}
-        {activeTool === "dividends" && <DividendSummary />}
-        {activeTool === "transactions" && <TransactionHistory />}
-        {activeTool === "alerts" && <PriceAlerts />}
-        {activeTool === "performance" && <PerformanceMetrics />}
-      </Suspense>
+      {/* Active tool content — overflow-hidden prevents wide tables from expanding the viewport */}
+      <div className="overflow-hidden rounded-xl">
+        <Suspense fallback={<ChartSkeleton />}>
+          {activeTool === "watchlist" && <Watchlist />}
+          {activeTool === "dividends" && <DividendSummary />}
+          {activeTool === "transactions" && <TransactionHistory />}
+          {activeTool === "alerts" && <PriceAlerts />}
+          {activeTool === "performance" && <PerformanceMetrics />}
+        </Suspense>
+      </div>
 
       {/* Desktop-only tools — greyed out section */}
       <div className="pt-4 border-t border-gray-100 dark:border-slate-800">

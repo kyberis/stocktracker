@@ -1,50 +1,31 @@
 "use client";
 
-import { useState, useEffect, useSyncExternalStore } from "react";
-import { isNativePlatform, getNativePlatform } from "./capacitor";
-
-let cachedIsNative: boolean | null = null;
-let cachedPlatform: "ios" | "android" | "web" | null = null;
-
-function detectOnce() {
-  if (cachedIsNative === null) {
-    cachedIsNative = isNativePlatform();
-    cachedPlatform = getNativePlatform();
-  }
-}
-
-function subscribe(cb: () => void) {
-  if (cachedIsNative === null) {
-    detectOnce();
-    cb();
-  }
-  return () => {};
-}
-
-function getIsNativeSnapshot(): boolean {
-  if (cachedIsNative === null && typeof window !== "undefined") detectOnce();
-  return cachedIsNative ?? false;
-}
-
-function getIsNativeServerSnapshot(): boolean {
-  return false;
-}
-
-function getPlatformSnapshot(): "ios" | "android" | "web" {
-  if (cachedPlatform === null && typeof window !== "undefined") detectOnce();
-  return cachedPlatform ?? "web";
-}
-
-function getPlatformServerSnapshot(): "ios" | "android" | "web" {
-  return "web";
-}
+import { useState, useEffect } from "react";
+import { isNativePlatform, getNativePlatform, persistNativeDetection } from "./capacitor";
 
 /**
  * Returns true when running inside a Capacitor native shell.
  * Safe for SSR — returns false on the server, detects on client after hydration.
+ * Retries detection once after a short delay in case the bridge loads late.
  */
 export function useIsNative(): boolean {
-  return useSyncExternalStore(subscribe, getIsNativeSnapshot, getIsNativeServerSnapshot);
+  const [isNative, setIsNative] = useState(false);
+
+  useEffect(() => {
+    if (isNativePlatform()) {
+      setIsNative(true);
+      persistNativeDetection();
+      return;
+    }
+    const timer = setTimeout(() => {
+      const detected = isNativePlatform();
+      setIsNative(detected);
+      if (detected) persistNativeDetection();
+    }, 150);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return isNative;
 }
 
 /**
@@ -52,5 +33,22 @@ export function useIsNative(): boolean {
  * Safe for SSR — returns "web" on the server.
  */
 export function useNativePlatform(): "ios" | "android" | "web" {
-  return useSyncExternalStore(subscribe, getPlatformSnapshot, getPlatformServerSnapshot);
+  const [platform, setPlatform] = useState<"ios" | "android" | "web">("web");
+
+  useEffect(() => {
+    const p = getNativePlatform();
+    if (p !== "web") {
+      setPlatform(p);
+      persistNativeDetection();
+      return;
+    }
+    const timer = setTimeout(() => {
+      const detected = getNativePlatform();
+      setPlatform(detected);
+      if (detected !== "web") persistNativeDetection();
+    }, 150);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return platform;
 }

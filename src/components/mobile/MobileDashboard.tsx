@@ -14,6 +14,7 @@ import { getHoldingsLimit } from "@/lib/subscription";
 import { useTrack } from "@/lib/use-track";
 import { initNudgeTracking, shouldShowPaywallNudge, recordPaywallNudgeShown, recordPaywallNudgeDismiss } from "@/lib/paywall-nudge";
 import { hapticImpact, hapticSelectionChanged } from "@/lib/native-haptics";
+import { hideNativeSplash } from "@/lib/native-splash";
 import TierFeatureBadge from "@/components/TierFeatureBadge";
 import SampleDataBanner from "@/components/SampleDataBanner";
 import { HeroSkeleton, ChartSkeleton } from "@/components/Skeleton";
@@ -38,8 +39,9 @@ export default function MobileDashboard() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
   const [paywallSurface, setPaywallSurface] = useState<string>("tab_gate");
+  const [showPortfolioPicker, setShowPortfolioPicker] = useState(false);
   const { t } = useI18n();
-  const { holdings, cashEntries, isLoading, refreshHoldings, refreshQuotes, activePortfolioId } = usePortfolio();
+  const { holdings, cashEntries, quotes, isLoading, refreshHoldings, refreshQuotes, activePortfolioId, portfolios, setActivePortfolio } = usePortfolio();
   const { user, isLoading: authLoading } = useAuth();
   const track = useTrack();
 
@@ -47,6 +49,10 @@ export default function MobileDashboard() {
   const isPro = userPlan === "pro";
   const isPaid = userPlan === "starter" || userPlan === "pro";
   const holdingsCount = holdings.length;
+  const hasMultiplePortfolios = portfolios.length > 1;
+  const activeName = activePortfolioId
+    ? portfolios.find((p) => p.id === activePortfolioId)?.name ?? t("portfolio")
+    : hasMultiplePortfolios ? t("allPortfolios") : (portfolios[0]?.name ?? t("portfolio"));
   const holdingsLimit = getHoldingsLimit(userPlan);
   const holdingsAtLimit = !authLoading && holdingsLimit !== Infinity && holdingsCount >= holdingsLimit;
 
@@ -103,12 +109,21 @@ export default function MobileDashboard() {
     hapticSelectionChanged();
   }
 
+  const quotesAvailable = holdingsCount === 0 || holdings.some((h) => quotes[h.ticker]);
   const hasLoadedOnce = useRef(false);
-  if (!isLoading && (holdingsCount > 0 || cashEntries.length > 0)) {
+  const mountTime = useRef(Date.now());
+  const timedOut = Date.now() - mountTime.current > 12_000;
+  if (!isLoading && (quotesAvailable || timedOut) && (holdingsCount > 0 || cashEntries.length > 0)) {
+    if (!hasLoadedOnce.current) hideNativeSplash();
     hasLoadedOnce.current = true;
   }
 
-  if (isLoading && !hasLoadedOnce.current) {
+  // Also hide splash for empty portfolios once loading finishes
+  if (!isLoading && holdingsCount === 0 && cashEntries.length === 0 && !hasLoadedOnce.current) {
+    hideNativeSplash();
+  }
+
+  if ((isLoading || (!quotesAvailable && !timedOut)) && !hasLoadedOnce.current) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-5" role="status" aria-label={t("loading")}>
         <svg className="animate-logo-breathe" width="56" height="56" viewBox="0 0 32 32" aria-hidden="true">
@@ -138,10 +153,21 @@ export default function MobileDashboard() {
 
   return (
     <>
-      {/* Mobile header with portfolio name + add button */}
+      {/* Mobile header with portfolio switcher + actions */}
       <div className="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-gray-100 dark:border-slate-800 px-4 py-3">
         <div className="flex items-center justify-between">
-          <h1 className="text-lg font-bold text-gray-900 dark:text-white">{t("portfolioTab")}</h1>
+          <button
+            onClick={() => { if (portfolios.length > 0) { hapticImpact("Light"); setShowPortfolioPicker(true); } }}
+            className="flex items-center gap-1.5 min-w-0"
+            disabled={portfolios.length === 0}
+          >
+            <h1 className="text-lg font-bold text-gray-900 dark:text-white truncate max-w-[200px]">{activeName}</h1>
+            {portfolios.length > 0 && (
+              <svg className="w-4 h-4 shrink-0 text-gray-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+              </svg>
+            )}
+          </button>
           <div className="flex items-center gap-2">
             <button
               onClick={async () => { await refreshQuotes(); }}
@@ -314,6 +340,93 @@ export default function MobileDashboard() {
             </svg>
             Upgrade to add more holdings
           </button>
+        </div>
+      )}
+
+      {/* Portfolio picker bottom sheet */}
+      {showPortfolioPicker && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center">
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            onClick={() => setShowPortfolioPicker(false)}
+          />
+          <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-t-3xl shadow-2xl animate-slide-up" style={{ paddingBottom: "env(safe-area-inset-bottom, 16px)" }}>
+            <div className="flex justify-center pt-3 pb-1">
+              <div className="w-10 h-1 rounded-full bg-gray-300 dark:bg-slate-600" />
+            </div>
+            <div className="px-5 pb-2 pt-1">
+              <h2 className="text-base font-bold text-gray-900 dark:text-white">{t("portfolio")}</h2>
+            </div>
+            <div className="max-h-[60vh] overflow-y-auto px-2 pb-6">
+              {hasMultiplePortfolios && (
+                <button
+                  onClick={() => { hapticImpact("Light"); setActivePortfolio(null); setShowPortfolioPicker(false); }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-left transition-colors ${
+                    !activePortfolioId
+                      ? "bg-emerald-50 dark:bg-emerald-500/10"
+                      : "active:bg-gray-100 dark:active:bg-slate-800"
+                  }`}
+                >
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                    !activePortfolioId
+                      ? "bg-emerald-500 text-white"
+                      : "bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-slate-400"
+                  }`}>
+                    <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+                    </svg>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className={`text-sm font-medium ${!activePortfolioId ? "text-emerald-700 dark:text-emerald-400" : "text-gray-900 dark:text-white"}`}>
+                      {t("allPortfolios")}
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-slate-400">
+                      {portfolios.length} portfolios
+                    </p>
+                  </div>
+                  {!activePortfolioId && (
+                    <svg className="w-5 h-5 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                    </svg>
+                  )}
+                </button>
+              )}
+              {portfolios.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => { hapticImpact("Light"); setActivePortfolio(p.id); setShowPortfolioPicker(false); }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-left transition-colors ${
+                    activePortfolioId === p.id
+                      ? "bg-emerald-50 dark:bg-emerald-500/10"
+                      : "active:bg-gray-100 dark:active:bg-slate-800"
+                  }`}
+                >
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                    activePortfolioId === p.id
+                      ? "bg-emerald-500 text-white"
+                      : "bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-slate-400"
+                  }`}>
+                    <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
+                    </svg>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className={`text-sm font-medium ${activePortfolioId === p.id ? "text-emerald-700 dark:text-emerald-400" : "text-gray-900 dark:text-white"}`}>
+                      {p.name}
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-slate-400">
+                      {p.currency}{p.isDefault ? " · Default" : ""}
+                    </p>
+                  </div>
+                  {activePortfolioId === p.id && (
+                    <svg className="w-5 h-5 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                    </svg>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </>

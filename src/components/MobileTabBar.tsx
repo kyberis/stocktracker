@@ -66,7 +66,7 @@ export default function MobileTabBar() {
   const tabs = isNative ? NATIVE_TABS : WEB_TABS;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 sm:hidden bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-800 pb-[env(safe-area-inset-bottom)]">
+    <nav className={`fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-800 pb-[env(safe-area-inset-bottom)] ${isNative ? "" : "sm:hidden"}`}>
       <div className="flex items-stretch">
         {tabs.map((tab) => {
           const active = tab.match(pathname);
