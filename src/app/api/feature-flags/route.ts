@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export const GET = withMetrics("/api/feature-flags", async (_req: NextRequest) => {
   const [
     alertsEnabled, csvExportEnabled, appleSigninEnabled, deviceEnabled,
-    whatsappEnabled,
+    mobileAppEnabled, whatsappEnabled,
     toolTransactions, toolDividends, toolPerformance,
     toolTaxonomy, toolRebalancing, toolAccounts, toolWatchlist,
   ] = await Promise.all([
@@ -15,6 +15,7 @@ export const GET = withMetrics("/api/feature-flags", async (_req: NextRequest) =
     isFeatureEnabled("csv_export_enabled"),
     isFeatureEnabled("apple_signin_enabled"),
     isFeatureEnabled("device_enabled"),
+    isFeatureEnabled("mobile_app_enabled"),
     isFeatureEnabled("whatsapp_enabled"),
     isFeatureEnabled("tool_transactions_enabled"),
     isFeatureEnabled("tool_dividends_enabled"),
@@ -30,6 +31,7 @@ export const GET = withMetrics("/api/feature-flags", async (_req: NextRequest) =
     csv_export_enabled: csvExportEnabled,
     apple_signin_enabled: appleSigninEnabled,
     device_enabled: deviceEnabled,
+    mobile_app_enabled: mobileAppEnabled,
     whatsapp_enabled: whatsappEnabled,
     tool_transactions_enabled: toolTransactions,
     tool_dividends_enabled: toolDividends,

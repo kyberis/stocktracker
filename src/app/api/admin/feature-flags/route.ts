@@ -7,7 +7,7 @@ import { withMetrics } from "@/lib/with-metrics";
 
 const ALLOWED_FLAGS: PlatformFeature[] = [
   "alerts_enabled", "csv_export_enabled", "apple_signin_enabled", "device_enabled",
-  "whatsapp_enabled",
+  "mobile_app_enabled", "whatsapp_enabled",
   "tool_transactions_enabled", "tool_dividends_enabled", "tool_performance_enabled",
   "tool_taxonomy_enabled", "tool_rebalancing_enabled", "tool_accounts_enabled",
   "tool_watchlist_enabled",

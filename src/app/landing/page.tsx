@@ -112,7 +112,6 @@ function getFeatureCards(t: T) {
     { icon: "beaker", title: t("landingCardSimulatorTitle"), desc: t("landingCardSimulatorDesc"), badge: "Pro" },
     { icon: "calendar", title: t("landingCardEventsTitle"), desc: t("landingCardEventsDesc") },
     { icon: "globe", title: "35 Languages", desc: "The most multilingual portfolio tracker on the market. AI insights delivered in your native language.", badge: "#1" },
-    { icon: "phone", title: "iOS & Android App", desc: "Native mobile app with card-based dashboard, haptic feedback, push notifications, and mobile-optimized tools." },
   ];
 }
 
@@ -966,7 +965,69 @@ function VideoTutorialSection() {
   );
 }
 
-/* ─── mobile app section ─── */
+/* ─── PWA install section (default) ─── */
+
+function InstallAppSection() {
+  const { t } = useI18n();
+  const sectionCb = useCallback(() => trackLanding("landing_section_view", { section: "install_app" }), []);
+  const sectionRef = useInViewOnce(sectionCb);
+
+  const points = useMemo(() => [
+    t("landingInstallPwaPoint1" as TranslationKey),
+    t("landingInstallPwaPoint2" as TranslationKey),
+    t("landingInstallPwaPoint3" as TranslationKey),
+    t("landingInstallPwaPoint4" as TranslationKey),
+  ], [t]);
+
+  return (
+    <section className="py-20 sm:py-28 border-t border-slate-800/50" ref={sectionRef as React.RefObject<HTMLElement>}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          <div className="relative flex justify-center">
+            <div className="absolute -inset-4 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-2xl blur-xl" />
+            <div className="relative w-[280px] sm:w-[320px]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/screenshots/pwa-homescreen.png"
+                alt={t("landingInstallPwaScreenshotAlt" as TranslationKey)}
+                className="w-full h-auto drop-shadow-2xl rounded-[2rem]"
+                loading="lazy"
+              />
+            </div>
+          </div>
+          <div className="space-y-6">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+                PWA
+              </span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white leading-tight">
+              {t("landingInstallPwaHeading" as TranslationKey)}{" "}
+              <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
+                {t("landingInstallPwaHeadingAccent" as TranslationKey)}
+              </span>
+            </h2>
+            <p className="text-lg text-slate-400 leading-relaxed">
+              {t("landingInstallPwaSubtitle" as TranslationKey)}
+            </p>
+            <ul className="space-y-3">
+              {points.map((point) => (
+                <li key={point} className="flex items-center gap-3 text-sm">
+                  <svg className="w-5 h-5 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className="text-slate-300">{point}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ─── mobile app section (gated by mobile_app_enabled flag) ─── */
 
 function AppStoreBadge() {
   return (
@@ -1008,8 +1069,18 @@ function GooglePlayBadge() {
 
 function MobileAppSection() {
   const { t } = useI18n();
+  const [visible, setVisible] = useState(false);
   const sectionCb = useCallback(() => trackLanding("landing_section_view", { section: "mobile_app" }), []);
   const sectionRef = useInViewOnce(sectionCb);
+
+  useEffect(() => {
+    fetch("/api/feature-flags")
+      .then((r) => r.json())
+      .then((flags) => { if (flags.mobile_app_enabled) setVisible(true); })
+      .catch(() => {});
+  }, []);
+
+  if (!visible) return null;
 
   const points = useMemo(() => [
     t("landingInstallPoint1" as TranslationKey),
@@ -1877,6 +1948,7 @@ export default function LandingPage() {
       <FAQSection />
       <GettingStartedSection />
       <VideoTutorialSection />
+      <InstallAppSection />
       <MobileAppSection />
       <DeviceSection />
       <CTASection />

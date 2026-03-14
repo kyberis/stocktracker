@@ -1132,6 +1132,7 @@ function FeatureTogglesCard() {
   const csvOn = flags.csv_export_enabled ?? false;
   const appleOn = flags.apple_signin_enabled ?? false;
   const deviceOn = flags.device_enabled ?? false;
+  const mobileAppOn = flags.mobile_app_enabled ?? false;
   const whatsappOn = flags.whatsapp_enabled ?? true;
   const toolTransactionsOn = flags.tool_transactions_enabled ?? true;
   const toolDividendsOn = flags.tool_dividends_enabled ?? true;
@@ -1190,6 +1191,13 @@ function FeatureTogglesCard() {
           saving={saving === "apple_signin_enabled"}
           onToggle={(v) => handleToggle("apple_signin_enabled", v)}
           steps={appleSteps}
+        />
+        <FeatureToggle
+          label="Mobile App Promotion"
+          description="Show the native iOS & Android app section on the landing page with App Store and Google Play badges. When disabled, only the PWA install section is shown."
+          enabled={mobileAppOn}
+          saving={saving === "mobile_app_enabled"}
+          onToggle={(v) => handleToggle("mobile_app_enabled", v)}
         />
         <FeatureToggle
           label="trefolio Leaf Device"
