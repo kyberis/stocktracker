@@ -41,6 +41,23 @@ async function upgradeToProAndSetTheme(
 }
 
 /**
+ * Upgrade a test user to Pro (via admin) and set a non-default theme.
+ * Handles session switching: admin login → setPlan → re-login as user → setTheme.
+ */
+async function upgradeToProAndSetTheme(
+  request: APIRequestContext,
+  creds: { email: string; password: string; userId: string },
+  theme: string,
+) {
+  await loginAsAdmin(request);
+  await setPlanViaAdmin(request, creds.userId, "pro");
+  await request.post("/api/auth/login", {
+    data: { identifier: creds.email, password: creds.password },
+  });
+  await setThemeViaAPI(request, theme);
+}
+
+/**
  * Get the current user info.
  */
 async function getMe(request: APIRequestContext) {

@@ -20,3 +20,11 @@ export function getNativePlatform(): "ios" | "android" | "web" {
   if (platform === "android") return "android";
   return "web";
 }
+
+/**
+ * Returns the client platform type for the feature registry.
+ * "mobile" when running inside a Capacitor native shell, "desktop" otherwise.
+ */
+export function getClientPlatform(): "desktop" | "mobile" {
+  return isNativePlatform() ? "mobile" : "desktop";
+}
