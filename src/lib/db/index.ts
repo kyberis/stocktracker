@@ -88,6 +88,7 @@ export {
   addCashEntry,
   updateCashEntry,
   removeCashEntry,
+  removeCashEntriesBySource,
   getManualAssetCount,
 } from "./cash";
 

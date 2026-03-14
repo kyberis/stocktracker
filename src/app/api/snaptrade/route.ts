@@ -8,9 +8,8 @@ import {
   updateSnapTradeLastSynced,
   deleteSnapTradeConnection,
   listTransactionSourceRefs,
-  listCashEntries,
   addCashEntry,
-  removeCashEntry,
+  removeCashEntriesBySource,
   trackEvent,
   getSnapTradeBrokerSyncs,
   upsertSnapTradeBrokerSync,
@@ -348,12 +347,7 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
 
       let cashImported = 0;
       if (holdingsResult.cashBalances.length > 0) {
-        const existingCash = await listCashEntries(session.userId, portfolioId);
-        for (const entry of existingCash) {
-          if (entry.name.toUpperCase().startsWith("CASH ")) {
-            await removeCashEntry(session.userId, entry.id);
-          }
-        }
+        await removeCashEntriesBySource(session.userId, "snaptrade", portfolioId);
 
         const yahoo = new YahooProvider();
         for (const balance of holdingsResult.cashBalances) {
@@ -369,6 +363,7 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
           await addCashEntry(session.userId, {
             name: `Cash ${balance.currency}`,
             amountEUR,
+            source: "snaptrade",
           }, portfolioId);
           cashImported++;
         }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { listHoldings, addTransaction, trackEvent, listCashEntries, addCashEntry, removeCashEntry, listTransactionSourceRefs, rebuildHoldings, findUserById, findOrCreateBrokerAccount } from "@/lib/db";
+import { listHoldings, addTransaction, trackEvent, addCashEntry, removeCashEntriesBySource, listTransactionSourceRefs, rebuildHoldings, findUserById, findOrCreateBrokerAccount } from "@/lib/db";
 import { withMetrics } from "@/lib/with-metrics";
 import { portfolioImportsTotal } from "@/lib/metrics";
 import { buildIsinMap } from "@/lib/degiro-parser";
@@ -204,13 +204,7 @@ async function importTransactions(
   if (parseCashBalances) {
     const cashBalances = parseCashBalances(csv);
     if (cashBalances.length > 0) {
-      const existingCash = await listCashEntries(userId, portfolioId);
-      const brokerUpper = broker.toUpperCase();
-      for (const entry of existingCash) {
-        if (entry.name.toUpperCase().startsWith(brokerUpper)) {
-          await removeCashEntry(userId, entry.id);
-        }
-      }
+      await removeCashEntriesBySource(userId, broker, portfolioId);
 
       const yahoo = new YahooProvider();
       for (const balance of cashBalances) {
@@ -224,8 +218,9 @@ async function importTransactions(
           }
         }
         await addCashEntry(userId, {
-          name: `${broker.toUpperCase()} – ${balance.currency}`,
+          name: `${(brokerLabel || broker).toUpperCase()} – ${balance.currency}`,
           amountEUR,
+          source: broker,
         }, portfolioId);
         cashImported++;
       }
@@ -338,13 +333,7 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
       return NextResponse.json({ cashImported: 0 });
     }
 
-    const existingCash = await listCashEntries(session.userId, portfolioId);
-    const brokerUpper = parser.label.toUpperCase();
-    for (const entry of existingCash) {
-      if (entry.name.toUpperCase().startsWith(brokerUpper)) {
-        await removeCashEntry(session.userId, entry.id);
-      }
-    }
+    await removeCashEntriesBySource(session.userId, broker, portfolioId);
 
     const yahoo = new YahooProvider();
     let cashImported = 0;
@@ -361,6 +350,7 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
       await addCashEntry(session.userId, {
         name: `${parser.label.toUpperCase()} – ${balance.currency}`,
         amountEUR,
+        source: broker,
       }, portfolioId);
       cashImported++;
     }

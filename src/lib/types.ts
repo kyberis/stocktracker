@@ -116,6 +116,7 @@ export interface CashEntry {
   name: string;
   amountEUR: number;
   type?: ManualAssetType;
+  source?: string;
   displayCurrency?: string;
   displayAmount?: number;
   notes?: string;

@@ -9,9 +9,8 @@ import {
   setAllDisabledSince,
   clearAllDisabledSince,
   listTransactionSourceRefs,
-  listCashEntries,
   addCashEntry,
-  removeCashEntry,
+  removeCashEntriesBySource,
   trackEvent,
 } from "@/lib/db";
 import {
@@ -146,12 +145,7 @@ const runSync = withCronLogging("snaptrade-sync", async () => {
       try {
         const holdingsResult = await fetchAllHoldings(conn.snapTradeUserId, userSecret);
         if (holdingsResult.cashBalances.length > 0) {
-          const existingCash = await listCashEntries(conn.userId);
-          for (const entry of existingCash) {
-            if (entry.name.toUpperCase().startsWith("CASH ")) {
-              await removeCashEntry(conn.userId, entry.id);
-            }
-          }
+          await removeCashEntriesBySource(conn.userId, "snaptrade");
 
           const yahoo = new YahooProvider();
           for (const balance of holdingsResult.cashBalances) {
@@ -164,7 +158,7 @@ const runSync = withCronLogging("snaptrade-sync", async () => {
                 // keep original amount
               }
             }
-            await addCashEntry(conn.userId, { name: `Cash ${balance.currency}`, amountEUR });
+            await addCashEntry(conn.userId, { name: `Cash ${balance.currency}`, amountEUR, source: "snaptrade" });
           }
         }
       } catch (err) {

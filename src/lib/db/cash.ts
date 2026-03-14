@@ -16,6 +16,7 @@ function rowToCashEntry(row: Record<string, unknown>): CashEntry {
     name: str(row.name),
     amountEUR: num(row.amount_eur),
     type: parseAssetType(row.type),
+    source: str(row.source) || "manual",
     displayCurrency: str(row.display_currency) || "EUR",
     displayAmount: num(row.display_amount),
     notes: str(row.notes),
@@ -23,7 +24,7 @@ function rowToCashEntry(row: Record<string, unknown>): CashEntry {
   };
 }
 
-const CASH_ENTRY_COLS = "id, name, amount_eur, type, display_currency, display_amount, notes, valuation_date";
+const CASH_ENTRY_COLS = "id, name, amount_eur, type, source, display_currency, display_amount, notes, valuation_date";
 
 export async function listCashEntries(userId: string, portfolioId?: string): Promise<CashEntry[]> {
   const client = await ensureInitialized();
@@ -46,15 +47,16 @@ export async function addCashEntry(
   const resolved = await resolvePortfolioId(userId, portfolioId);
   const id = randomUUID();
   const type = entry.type ?? "cash";
+  const source = entry.source ?? "manual";
   const displayCurrency = entry.displayCurrency ?? "EUR";
   const displayAmount = entry.displayAmount ?? entry.amountEUR;
   const notes = entry.notes ?? "";
   const valuationDate = entry.valuationDate ?? "";
 
   const result = await client.execute({
-    sql: `INSERT INTO cash_entries (id, user_id, name, amount_eur, type, display_currency, display_amount, notes, valuation_date, portfolio_id)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-          ON CONFLICT(user_id, name, portfolio_id) DO UPDATE SET
+    sql: `INSERT INTO cash_entries (id, user_id, name, amount_eur, type, source, display_currency, display_amount, notes, valuation_date, portfolio_id)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          ON CONFLICT(user_id, name, portfolio_id, source) DO UPDATE SET
             amount_eur = excluded.amount_eur,
             type = excluded.type,
             display_currency = excluded.display_currency,
@@ -63,7 +65,7 @@ export async function addCashEntry(
             valuation_date = excluded.valuation_date,
             updated_at = datetime('now')
           RETURNING id`,
-    args: [id, userId, entry.name, entry.amountEUR, type, displayCurrency, displayAmount, notes, valuationDate, resolved],
+    args: [id, userId, entry.name, entry.amountEUR, type, source, displayCurrency, displayAmount, notes, valuationDate, resolved],
   });
   const returnedId = result.rows.length > 0 ? str(result.rows[0].id) : id;
   return {
@@ -71,6 +73,7 @@ export async function addCashEntry(
     name: entry.name,
     amountEUR: entry.amountEUR,
     type,
+    source,
     displayCurrency,
     displayAmount,
     notes,
@@ -124,6 +127,21 @@ export async function removeCashEntry(userId: string, cashId: string): Promise<b
     args: [cashId, userId],
   });
   return (result.rowsAffected ?? 0) > 0;
+}
+
+export async function removeCashEntriesBySource(
+  userId: string,
+  source: string,
+  portfolioId?: string,
+): Promise<number> {
+  const client = await ensureInitialized();
+  const portfolioFilter = portfolioId ? " AND portfolio_id = ?" : "";
+  const portfolioArgs = portfolioId ? [portfolioId] : [];
+  const result = await client.execute({
+    sql: `DELETE FROM cash_entries WHERE user_id = ? AND source = ?${portfolioFilter}`,
+    args: [userId, source, ...portfolioArgs],
+  });
+  return result.rowsAffected ?? 0;
 }
 
 export async function getManualAssetCount(userId: string, portfolioId?: string): Promise<number> {

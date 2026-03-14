@@ -1294,6 +1294,64 @@ const MIGRATIONS: Migration[] = [
       await client.execute({ sql: "ALTER TABLE goals ADD COLUMN color TEXT NOT NULL DEFAULT ''", args: [] });
     },
   },
+  {
+    version: 44,
+    description: "Add source column to cash_entries and widen unique constraint to include it",
+    up: async (client: Client) => {
+      try {
+        await client.execute({ sql: "ALTER TABLE cash_entries ADD COLUMN source TEXT NOT NULL DEFAULT 'manual'", args: [] });
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("duplicate column")) throw e;
+      }
+
+      // Backfill source from name patterns
+      await client.execute({
+        sql: "UPDATE cash_entries SET source = 'snaptrade' WHERE source = 'manual' AND UPPER(name) LIKE 'CASH %'",
+      });
+      await client.execute({
+        sql: "UPDATE cash_entries SET source = 'degiro' WHERE source = 'manual' AND UPPER(name) LIKE 'DEGIRO%'",
+      });
+      await client.execute({
+        sql: "UPDATE cash_entries SET source = 'interactive_brokers' WHERE source = 'manual' AND UPPER(name) LIKE 'INTERACTIVE BROKERS%'",
+      });
+      await client.execute({
+        sql: "UPDATE cash_entries SET source = 'trading_212' WHERE source = 'manual' AND UPPER(name) LIKE 'TRADING 212%'",
+      });
+      await client.execute({
+        sql: "UPDATE cash_entries SET source = 'revolut' WHERE source = 'manual' AND UPPER(name) LIKE 'REVOLUT%'",
+      });
+
+      // Rebuild table to widen unique constraint: (user_id, name, portfolio_id, source)
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS cash_entries_v2 (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          name TEXT NOT NULL,
+          amount_eur REAL NOT NULL DEFAULT 0,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+          portfolio_id TEXT NOT NULL DEFAULT '',
+          type TEXT NOT NULL DEFAULT 'cash',
+          display_currency TEXT NOT NULL DEFAULT 'EUR',
+          display_amount REAL NOT NULL DEFAULT 0,
+          notes TEXT NOT NULL DEFAULT '',
+          valuation_date TEXT NOT NULL DEFAULT '',
+          source TEXT NOT NULL DEFAULT 'manual',
+          FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
+          UNIQUE(user_id, name, portfolio_id, source)
+        );
+        INSERT OR IGNORE INTO cash_entries_v2
+          (id, user_id, name, amount_eur, created_at, updated_at, portfolio_id,
+           type, display_currency, display_amount, notes, valuation_date, source)
+          SELECT id, user_id, name, amount_eur, created_at, updated_at, portfolio_id,
+                 type, display_currency, display_amount, notes, valuation_date, source
+          FROM cash_entries;
+        DROP TABLE cash_entries;
+        ALTER TABLE cash_entries_v2 RENAME TO cash_entries;
+      `);
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

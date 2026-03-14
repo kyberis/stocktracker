@@ -14,9 +14,24 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "1.36.0";
+export const CURRENT_VERSION = "1.37.0";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "1.37.0",
+    date: "2026-03-14",
+    title: "Multi-Broker Cash Fix",
+    titleTranslations: { es: "Corrección de Efectivo Multi-Broker" },
+    changes: [
+      {
+        type: "fix",
+        text: "Importing from a new broker no longer deletes cash entries from other brokers. Cash is now tracked per source so Degiro, Interactive Brokers, SnapTrade, and manual entries coexist safely.",
+        translations: {
+          es: "Importar desde un nuevo broker ya no elimina las entradas de efectivo de otros brokers. El efectivo ahora se rastrea por origen para que Degiro, Interactive Brokers, SnapTrade y entradas manuales coexistan de forma segura.",
+        },
+      },
+    ],
+  },
   {
     version: "1.36.0",
     date: "2026-03-14",
