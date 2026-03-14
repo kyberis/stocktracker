@@ -43,11 +43,11 @@ export default function NativeShell({ children }: { children: React.ReactNode })
         paddingRight: "env(safe-area-inset-right)",
       }}
     >
-      {/* Status bar / safe-area background — brand color */}
-      <div className="bg-slate-950" style={{ paddingTop: "env(safe-area-inset-top)" }}>
+      {/* Sticky app bar — stays pinned above the notch so scrolling never exposes a white gap */}
+      <div className="sticky top-0 z-40 bg-slate-950" style={{ paddingTop: "env(safe-area-inset-top)" }}>
         <NativeAppBar />
       </div>
-      <div style={{ background: "var(--background, #f9fafb)" }}>
+      <div className="flex-1" style={{ background: "var(--background, #f9fafb)" }}>
         <Suspense>
           <NativeLoadingBar />
         </Suspense>

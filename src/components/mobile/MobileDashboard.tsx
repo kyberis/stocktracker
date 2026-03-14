@@ -154,7 +154,7 @@ export default function MobileDashboard() {
   return (
     <>
       {/* Mobile header with portfolio switcher + actions */}
-      <div className="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-gray-100 dark:border-slate-800 px-4 py-3">
+      <div className="z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-gray-100 dark:border-slate-800 px-4 py-3">
         <div className="flex items-center justify-between">
           <button
             onClick={() => { if (portfolios.length > 0) { hapticImpact("Light"); setShowPortfolioPicker(true); } }}
