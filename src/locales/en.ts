@@ -1705,6 +1705,7 @@ const en: TranslationStrings = {
   crisisDotcom2000: "Dot-com Bubble",
   crisisRateHike2022: "2022 Rate Hike Sell-off",
   crisisEuroDebt2010: "Euro Debt Crisis",
+  desktopOnly: "Desktop Only",
 };
 
 export default en;

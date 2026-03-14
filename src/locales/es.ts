@@ -1691,6 +1691,7 @@ const es: TranslationStrings = {
   crisisDotcom2000: "Burbuja Puntocom",
   crisisRateHike2022: "Caída por Subida de Tipos 2022",
   crisisEuroDebt2010: "Crisis de Deuda Europea",
+  desktopOnly: "Solo Escritorio",
 };
 
 export default es;

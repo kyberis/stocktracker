@@ -14,9 +14,24 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "1.32.0";
+export const CURRENT_VERSION = "1.33.0";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "1.33.0",
+    date: "2026-03-14",
+    title: "Native Mobile App UI",
+    titleTranslations: { es: "Interfaz Nativa para Móvil" },
+    changes: [
+      {
+        type: "feature",
+        text: "Native mobile app experience — card-based portfolio dashboard with all 8 tabs, 5 mobile-optimized tools (Watchlist, Dividends, Transactions, Alerts, Performance), simplified 3-tab navigation, and streamlined native shell.",
+        translations: {
+          es: "Experiencia nativa móvil — panel de portafolio con tarjetas en las 8 pestañas, 5 herramientas optimizadas para móvil (Watchlist, Dividendos, Transacciones, Alertas, Rendimiento), navegación simplificada de 3 pestañas y shell nativo optimizado.",
+        },
+      },
+    ],
+  },
   {
     version: "1.32.0",
     date: "2026-03-13",

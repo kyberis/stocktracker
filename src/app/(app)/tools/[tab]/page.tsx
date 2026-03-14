@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import PortfolioTools from "@/components/PortfolioTools";
+import ToolsPageGate from "@/components/ToolsPageGate";
 
 const VALID_TABS = [
   "transactions", "dividends", "performance", "taxonomy",
@@ -19,5 +19,5 @@ export default async function ToolsTabPage({ params }: PageProps) {
     notFound();
   }
 
-  return <PortfolioTools initialTab={tab as Tab} />;
+  return <ToolsPageGate initialTab={tab as Tab} />;
 }
