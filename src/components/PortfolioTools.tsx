@@ -20,7 +20,8 @@ const PriceAlerts = dynamic(() => import("./PriceAlerts"), { ssr: false });
 const StockScreener = dynamic(() => import("./StockScreener"), { ssr: false });
 const TaxReport = dynamic(() => import("./TaxReport"), { ssr: false });
 const PortfolioSimulator = dynamic(() => import("./PortfolioSimulator"), { ssr: false });
-type Tab = "transactions" | "dividends" | "performance" | "taxonomy" | "rebalancing" | "accounts" | "watchlist" | "alerts" | "screener" | "tax" | "simulator";
+const FinancialPlanner = dynamic(() => import("./planning/FinancialPlanner"), { ssr: false });
+type Tab = "transactions" | "dividends" | "performance" | "taxonomy" | "rebalancing" | "accounts" | "watchlist" | "alerts" | "screener" | "tax" | "simulator" | "planning";
 
 const TIER_BADGE_MAP: Partial<Record<Tab, "starter" | "pro">> = {
   performance: "starter",
@@ -28,6 +29,7 @@ const TIER_BADGE_MAP: Partial<Record<Tab, "starter" | "pro">> = {
   screener: "pro",
   tax: "pro",
   simulator: "pro",
+  planning: "pro",
 };
 
 const ALL_TABS: { key: Tab; icon: string }[] = [
@@ -42,6 +44,7 @@ const ALL_TABS: { key: Tab; icon: string }[] = [
   { key: "screener", icon: "M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" },
   { key: "tax", icon: "M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" },
   { key: "simulator", icon: "M3 3v18h18M19 9l-5 5-4-4-3 3" },
+  { key: "planning", icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" },
 ];
 
 interface PortfolioToolsProps {
@@ -80,6 +83,7 @@ export default function PortfolioTools({ initialTab = "transactions" }: Portfoli
     screener: true,
     tax: true,
     simulator: true,
+    planning: true,
   };
 
   const visibleTabs = useMemo(() => {
@@ -118,6 +122,7 @@ export default function PortfolioTools({ initialTab = "transactions" }: Portfoli
       screener: t("screenerNav"),
       tax: t("taxReportsNav"),
       simulator: t("simulatorNav"),
+      planning: "Planning",
     };
     return map[key];
   };
@@ -189,6 +194,7 @@ export default function PortfolioTools({ initialTab = "transactions" }: Portfoli
             {activeTab === "screener" && <StockScreener />}
             {activeTab === "tax" && <TaxReport />}
             {activeTab === "simulator" && <PortfolioSimulator />}
+            {activeTab === "planning" && <FinancialPlanner />}
           </div>
         </Suspense>
 

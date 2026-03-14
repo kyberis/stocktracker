@@ -12,7 +12,7 @@ import {
   shouldResetDailyAiWindow,
   num,
 } from "./helpers";
-import { seedHoldingsForUser, seedTransactionsForUser } from "./seed";
+import { seedHoldingsForUser, seedCashForUser, seedTransactionsForUser } from "./seed";
 import { resolvePortfolioId } from "./portfolios";
 
 export async function findUserByUsername(username: string): Promise<DbUser | null> {
@@ -111,6 +111,7 @@ export async function createUser(params: {
   if (params.seedWithData) {
     const portfolioId = await resolvePortfolioId(id);
     await seedHoldingsForUser(client, id, portfolioId);
+    await seedCashForUser(client, id, portfolioId);
     await seedTransactionsForUser(client, id, portfolioId);
   }
 

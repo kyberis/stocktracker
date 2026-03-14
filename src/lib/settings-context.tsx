@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useCallback, useEffect, useMemo } from "react";
 import type { RefreshInterval, LayoutTheme } from "./types";
+import { useTheme } from "./theme-context";
 
 const VALID_LAYOUT_THEMES = new Set<string>(["default", "terminal", "canvas", "studio"]);
 
@@ -43,6 +44,7 @@ interface SettingsContextType {
 const SettingsContext = createContext<SettingsContextType | null>(null);
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
+  const { setLayoutTheme } = useTheme();
   const [refreshInterval, setRefreshIntervalState] = useState<RefreshInterval>(15);
   const [dashboardTheme, setDashboardThemeState] = useState<LayoutTheme>(getInitialLayoutTheme);
   const [hasGlobalAvKey, setHasGlobalAvKey] = useState(false);
@@ -70,7 +72,15 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
           }
           if (settings.dashboardTheme && ["default", "terminal", "canvas", "studio"].includes(settings.dashboardTheme)) {
             setDashboardThemeState(settings.dashboardTheme);
+            setLayoutTheme(settings.dashboardTheme);
             try { document.cookie = `trefolio_layout_theme=${settings.dashboardTheme};path=/;max-age=${60 * 60 * 24 * 400};SameSite=Lax`; } catch {}
+            try {
+              const html = document.documentElement;
+              html.classList.remove("theme-terminal", "theme-canvas", "theme-studio");
+              if (settings.dashboardTheme !== "default") {
+                html.classList.add(`theme-${settings.dashboardTheme}`);
+              }
+            } catch {}
           }
           if (typeof settings.hasGlobalAvKey === "boolean") {
             setHasGlobalAvKey(settings.hasGlobalAvKey);
@@ -135,8 +145,12 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
   const setDashboardTheme = useCallback(async (theme: LayoutTheme) => {
     setDashboardThemeState(theme);
+    setLayoutTheme(theme);
     try {
       document.cookie = `trefolio_layout_theme=${theme};path=/;max-age=${60 * 60 * 24 * 400};SameSite=Lax`;
+      const html = document.documentElement;
+      html.classList.remove("theme-terminal", "theme-canvas", "theme-studio");
+      if (theme !== "default") html.classList.add(`theme-${theme}`);
     } catch { /* SSR */ }
     try {
       await fetch("/api/user-settings", {
@@ -148,7 +162,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       // Keep optimistic UI state.
     }
     window.location.reload();
-  }, []);
+  }, [setLayoutTheme]);
 
   const setDefaultCurrency = useCallback(async (currency: string) => {
     setDefaultCurrencyState(currency);

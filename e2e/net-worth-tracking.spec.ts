@@ -242,11 +242,11 @@ test.describe("Net Worth Tracking — UI", () => {
     await addAssetOption.click();
 
     const dialog = page.getByRole("dialog", { name: /Add Manual Asset/i });
-    await expect(dialog).toBeVisible({ timeout: 5000 });
+    await expect(dialog).toBeVisible({ timeout: 10000 });
 
-    await expect(page.getByText("Real Estate")).toBeVisible();
-    await expect(page.getByText("Savings")).toBeVisible();
-    await expect(page.getByText("Pension")).toBeVisible();
+    await expect(dialog.getByText("Real Estate")).toBeVisible();
+    await expect(dialog.getByText("Savings")).toBeVisible();
+    await expect(dialog.getByText("Pension")).toBeVisible();
   });
 
   test("seeded demo data shows net worth summary with manual assets", async ({

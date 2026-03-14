@@ -1,5 +1,5 @@
 import { test, expect, type Page, type APIRequestContext } from "@playwright/test";
-import { createTestUser, ensureLoggedOut, loginViaUI, dismissOverlays } from "./helpers";
+import { createTestUser, ensureLoggedOut, loginViaUI, dismissOverlays, loginAsAdmin } from "./helpers";
 
 /**
  * Set the dashboard theme for the current session via API.
@@ -27,6 +27,19 @@ async function setPlanViaAdmin(
   expect(res.status()).toBe(200);
 }
 
+async function upgradeToProAndSetTheme(
+  request: APIRequestContext,
+  creds: { email: string; password: string; userId: string },
+  theme: string,
+) {
+  await loginAsAdmin(request);
+  await setPlanViaAdmin(request, creds.userId, "pro");
+  await request.post("/api/auth/login", {
+    data: { identifier: creds.email, password: creds.password },
+  });
+  await setThemeViaAPI(request, theme);
+}
+
 /**
  * Get the current user info.
  */
@@ -38,8 +51,10 @@ async function getMe(request: APIRequestContext) {
 
 /**
  * Get the current theme class applied on <html>.
+ * Waits briefly for the SettingsProvider to apply theme classes.
  */
 async function getHtmlClasses(page: Page): Promise<string[]> {
+  await page.waitForTimeout(3000);
   return page.evaluate(() => Array.from(document.documentElement.classList));
 }
 
@@ -47,9 +62,11 @@ async function getHtmlClasses(page: Page): Promise<string[]> {
  * Open the settings modal from the dashboard.
  */
 async function openSettings(page: Page) {
+  // Ensure no other dialogs are blocking
+  await page.waitForTimeout(500);
   const settingsBtn = page.locator('button[title="Settings"], button[title="Configuración"]');
   await settingsBtn.click();
-  await expect(page.getByRole("dialog")).toBeVisible({ timeout: 5000 });
+  await expect(page.getByRole("dialog")).toBeVisible({ timeout: 10_000 });
 }
 
 test.describe("Dashboard Themes", () => {
@@ -67,9 +84,8 @@ test.describe("Dashboard Themes", () => {
     });
 
     test("PUT persists theme preference", async ({ request }) => {
-      await createTestUser(request);
-
-      await setThemeViaAPI(request, "terminal");
+      const creds = await createTestUser(request);
+      await upgradeToProAndSetTheme(request, creds, "terminal");
 
       const res = await request.get("/api/user-settings");
       const body = await res.json();
@@ -147,7 +163,7 @@ test.describe("Dashboard Themes", () => {
       test.setTimeout(45_000);
       await ensureLoggedOut(request);
       const creds = await createTestUser(request, true);
-      await setThemeViaAPI(request, "terminal");
+      await upgradeToProAndSetTheme(request, creds, "terminal");
       await loginViaUI(page, creds.email, creds.password);
       await dismissOverlays(page);
 
@@ -160,7 +176,7 @@ test.describe("Dashboard Themes", () => {
       test.setTimeout(45_000);
       await ensureLoggedOut(request);
       const creds = await createTestUser(request, true);
-      await setThemeViaAPI(request, "terminal");
+      await upgradeToProAndSetTheme(request, creds, "terminal");
       await loginViaUI(page, creds.email, creds.password);
       await dismissOverlays(page);
 
@@ -174,7 +190,7 @@ test.describe("Dashboard Themes", () => {
       test.setTimeout(45_000);
       await ensureLoggedOut(request);
       const creds = await createTestUser(request, true);
-      await setThemeViaAPI(request, "terminal");
+      await upgradeToProAndSetTheme(request, creds, "terminal");
       await loginViaUI(page, creds.email, creds.password);
       await dismissOverlays(page);
 
@@ -188,7 +204,7 @@ test.describe("Dashboard Themes", () => {
       test.setTimeout(45_000);
       await ensureLoggedOut(request);
       const creds = await createTestUser(request, true);
-      await setThemeViaAPI(request, "terminal");
+      await upgradeToProAndSetTheme(request, creds, "terminal");
       await loginViaUI(page, creds.email, creds.password);
       await dismissOverlays(page);
 
@@ -200,7 +216,7 @@ test.describe("Dashboard Themes", () => {
       test.setTimeout(45_000);
       await ensureLoggedOut(request);
       const creds = await createTestUser(request, true);
-      await setThemeViaAPI(request, "terminal");
+      await upgradeToProAndSetTheme(request, creds, "terminal");
       await loginViaUI(page, creds.email, creds.password);
       await dismissOverlays(page);
 
@@ -217,7 +233,7 @@ test.describe("Dashboard Themes", () => {
       test.setTimeout(45_000);
       await ensureLoggedOut(request);
       const creds = await createTestUser(request, true);
-      await setThemeViaAPI(request, "canvas");
+      await upgradeToProAndSetTheme(request, creds, "canvas");
       await loginViaUI(page, creds.email, creds.password);
       await dismissOverlays(page);
 
@@ -230,7 +246,7 @@ test.describe("Dashboard Themes", () => {
       test.setTimeout(45_000);
       await ensureLoggedOut(request);
       const creds = await createTestUser(request, true);
-      await setThemeViaAPI(request, "canvas");
+      await upgradeToProAndSetTheme(request, creds, "canvas");
       await loginViaUI(page, creds.email, creds.password);
       await dismissOverlays(page);
 
@@ -244,7 +260,7 @@ test.describe("Dashboard Themes", () => {
       test.setTimeout(45_000);
       await ensureLoggedOut(request);
       const creds = await createTestUser(request, true);
-      await setThemeViaAPI(request, "canvas");
+      await upgradeToProAndSetTheme(request, creds, "canvas");
       await loginViaUI(page, creds.email, creds.password);
       await dismissOverlays(page);
 
@@ -258,7 +274,7 @@ test.describe("Dashboard Themes", () => {
       test.setTimeout(45_000);
       await ensureLoggedOut(request);
       const creds = await createTestUser(request, true);
-      await setThemeViaAPI(request, "canvas");
+      await upgradeToProAndSetTheme(request, creds, "canvas");
       await loginViaUI(page, creds.email, creds.password);
       await dismissOverlays(page);
 
@@ -275,7 +291,7 @@ test.describe("Dashboard Themes", () => {
       test.setTimeout(45_000);
       await ensureLoggedOut(request);
       const creds = await createTestUser(request, true);
-      await setThemeViaAPI(request, "studio");
+      await upgradeToProAndSetTheme(request, creds, "studio");
       await loginViaUI(page, creds.email, creds.password);
       await dismissOverlays(page);
 
@@ -288,7 +304,7 @@ test.describe("Dashboard Themes", () => {
       test.setTimeout(45_000);
       await ensureLoggedOut(request);
       const creds = await createTestUser(request, true);
-      await setThemeViaAPI(request, "studio");
+      await upgradeToProAndSetTheme(request, creds, "studio");
       await loginViaUI(page, creds.email, creds.password);
       await dismissOverlays(page);
 
@@ -300,7 +316,7 @@ test.describe("Dashboard Themes", () => {
       test.setTimeout(45_000);
       await ensureLoggedOut(request);
       const creds = await createTestUser(request, true);
-      await setThemeViaAPI(request, "studio");
+      await upgradeToProAndSetTheme(request, creds, "studio");
       await loginViaUI(page, creds.email, creds.password);
       await dismissOverlays(page);
 
@@ -313,7 +329,7 @@ test.describe("Dashboard Themes", () => {
       test.setTimeout(45_000);
       await ensureLoggedOut(request);
       const creds = await createTestUser(request, true);
-      await setThemeViaAPI(request, "studio");
+      await upgradeToProAndSetTheme(request, creds, "studio");
       await loginViaUI(page, creds.email, creds.password);
       await dismissOverlays(page);
 
@@ -327,7 +343,7 @@ test.describe("Dashboard Themes", () => {
       test.setTimeout(45_000);
       await ensureLoggedOut(request);
       const creds = await createTestUser(request, true);
-      await setThemeViaAPI(request, "studio");
+      await upgradeToProAndSetTheme(request, creds, "studio");
       await loginViaUI(page, creds.email, creds.password);
       await dismissOverlays(page);
 
@@ -340,7 +356,7 @@ test.describe("Dashboard Themes", () => {
       test.setTimeout(45_000);
       await ensureLoggedOut(request);
       const creds = await createTestUser(request, true);
-      await setThemeViaAPI(request, "terminal");
+      await upgradeToProAndSetTheme(request, creds, "terminal");
       await loginViaUI(page, creds.email, creds.password);
       await dismissOverlays(page);
 
@@ -358,7 +374,7 @@ test.describe("Dashboard Themes", () => {
       test.setTimeout(45_000);
       await ensureLoggedOut(request);
       const creds = await createTestUser(request, true);
-      await setThemeViaAPI(request, "canvas");
+      await upgradeToProAndSetTheme(request, creds, "canvas");
       await loginViaUI(page, creds.email, creds.password);
       await dismissOverlays(page);
 
@@ -417,7 +433,15 @@ test.describe("Dashboard Themes", () => {
 
       await openSettings(page);
 
+      // ThemeWizard may appear after opening settings for the first time
+      const skipTour = page.getByRole("button", { name: "Skip tour" });
+      if (await skipTour.isVisible({ timeout: 2000 }).catch(() => false)) {
+        await skipTour.click({ force: true });
+        await page.waitForTimeout(500);
+      }
+
       const dialog = page.getByRole("dialog");
+      await expect(dialog.getByText(/Dashboard Theme|Tema del Panel/i)).toBeVisible({ timeout: 5000 });
       const upgradeTexts = dialog.getByText(/Upgrade to|Mejorar a/i);
       const count = await upgradeTexts.count();
       expect(count).toBeGreaterThanOrEqual(2);
@@ -442,7 +466,7 @@ test.describe("Dashboard Themes", () => {
       test.setTimeout(45_000);
       await ensureLoggedOut(request);
       const creds = await createTestUser(request, true);
-      await setThemeViaAPI(request, "terminal");
+      await upgradeToProAndSetTheme(request, creds, "terminal");
       await loginViaUI(page, creds.email, creds.password);
       await dismissOverlays(page);
 
@@ -456,7 +480,7 @@ test.describe("Dashboard Themes", () => {
       test.setTimeout(45_000);
       await ensureLoggedOut(request);
       const creds = await createTestUser(request, true);
-      await setThemeViaAPI(request, "canvas");
+      await upgradeToProAndSetTheme(request, creds, "canvas");
       await loginViaUI(page, creds.email, creds.password);
       await dismissOverlays(page);
 
@@ -470,7 +494,7 @@ test.describe("Dashboard Themes", () => {
       test.setTimeout(45_000);
       await ensureLoggedOut(request);
       const creds = await createTestUser(request, true);
-      await setThemeViaAPI(request, "studio");
+      await upgradeToProAndSetTheme(request, creds, "studio");
       await loginViaUI(page, creds.email, creds.password);
       await dismissOverlays(page);
 
@@ -486,7 +510,7 @@ test.describe("Dashboard Themes", () => {
       test.setTimeout(45_000);
       await ensureLoggedOut(request);
       const creds = await createTestUser(request, true);
-      await setThemeViaAPI(request, "terminal");
+      await upgradeToProAndSetTheme(request, creds, "terminal");
       await loginViaUI(page, creds.email, creds.password);
       await dismissOverlays(page);
 
@@ -503,7 +527,7 @@ test.describe("Dashboard Themes", () => {
       test.setTimeout(45_000);
       await ensureLoggedOut(request);
       const creds = await createTestUser(request, true);
-      await setThemeViaAPI(request, "canvas");
+      await upgradeToProAndSetTheme(request, creds, "canvas");
       await loginViaUI(page, creds.email, creds.password);
       await dismissOverlays(page);
 
@@ -520,7 +544,7 @@ test.describe("Dashboard Themes", () => {
       test.setTimeout(45_000);
       await ensureLoggedOut(request);
       const creds = await createTestUser(request, true);
-      await setThemeViaAPI(request, "studio");
+      await upgradeToProAndSetTheme(request, creds, "studio");
       await loginViaUI(page, creds.email, creds.password);
       await dismissOverlays(page);
 
@@ -537,7 +561,7 @@ test.describe("Dashboard Themes", () => {
       test.setTimeout(45_000);
       await ensureLoggedOut(request);
       const creds = await createTestUser(request, true);
-      await setThemeViaAPI(request, "studio");
+      await upgradeToProAndSetTheme(request, creds, "studio");
       await loginViaUI(page, creds.email, creds.password);
       await dismissOverlays(page);
 

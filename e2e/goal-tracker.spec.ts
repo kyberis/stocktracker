@@ -1,11 +1,39 @@
 import { test, expect, type Page, type APIRequestContext } from "@playwright/test";
-import { createTestUser, ensureLoggedOut, loginViaUI, dismissOverlays } from "./helpers";
+import { createTestUser, ensureLoggedOut, loginViaUI, dismissOverlays, loginAsAdmin } from "./helpers";
 
 async function setThemeViaAPI(request: APIRequestContext, theme: string) {
   const res = await request.put("/api/user-settings", {
     data: { dashboardTheme: theme },
   });
   expect(res.status()).toBe(200);
+}
+
+async function setPlanViaAdmin(request: APIRequestContext, userId: string, plan: "free" | "starter" | "pro") {
+  const res = await request.post("/api/admin/users", {
+    data: { action: "setPlan", userId, plan },
+  });
+  expect(res.status()).toBe(200);
+}
+
+async function upgradeToProAndSetTheme(
+  request: APIRequestContext,
+  creds: { email: string; password: string; userId: string },
+  theme: string,
+) {
+  await loginAsAdmin(request);
+  await setPlanViaAdmin(request, creds.userId, "pro");
+  await request.post("/api/auth/login", {
+    data: { identifier: creds.email, password: creds.password },
+  });
+  await setThemeViaAPI(request, theme);
+}
+
+async function getDefaultPortfolioId(request: APIRequestContext): Promise<string> {
+  const res = await request.get("/api/portfolios");
+  const body = await res.json();
+  const portfolios = body.portfolios ?? [];
+  const def = portfolios.find((p: { isDefault?: boolean }) => p.isDefault) ?? portfolios[0];
+  return def?.id ?? "";
 }
 
 async function scrollToGoalPlanner(page: Page) {
@@ -153,9 +181,10 @@ test.describe("Goal Tracker", () => {
       test.setTimeout(60_000);
       await ensureLoggedOut(request);
       const creds = await createTestUser(request, true);
+      const portfolioId = await getDefaultPortfolioId(request);
 
       await request.post("/api/goals", {
-        data: { portfolioId: "", name: "E2E Banner Test", targetAmount: 500000 },
+        data: { portfolioId, name: "E2E Banner Test", targetAmount: 500000 },
       });
 
       await loginViaUI(page, creds.email, creds.password);
@@ -169,9 +198,10 @@ test.describe("Goal Tracker", () => {
       test.setTimeout(60_000);
       await ensureLoggedOut(request);
       const creds = await createTestUser(request, true);
+      const portfolioId = await getDefaultPortfolioId(request);
 
       await request.post("/api/goals", {
-        data: { portfolioId: "", name: "Progress Test", targetAmount: 1000000 },
+        data: { portfolioId, name: "Progress Test", targetAmount: 1000000 },
       });
 
       await loginViaUI(page, creds.email, creds.password);
@@ -187,10 +217,11 @@ test.describe("Goal Tracker", () => {
       test.setTimeout(60_000);
       await ensureLoggedOut(request);
       const creds = await createTestUser(request, true);
-      await setThemeViaAPI(request, "terminal");
+      await upgradeToProAndSetTheme(request, creds, "terminal");
+      const portfolioId = await getDefaultPortfolioId(request);
 
       await request.post("/api/goals", {
-        data: { portfolioId: "", name: "Terminal Goal", targetAmount: 300000 },
+        data: { portfolioId, name: "Terminal Goal", targetAmount: 300000 },
       });
 
       await loginViaUI(page, creds.email, creds.password);
@@ -214,10 +245,11 @@ test.describe("Goal Tracker", () => {
       test.setTimeout(60_000);
       await ensureLoggedOut(request);
       const creds = await createTestUser(request, true);
-      await setThemeViaAPI(request, "canvas");
+      await upgradeToProAndSetTheme(request, creds, "canvas");
+      const portfolioId = await getDefaultPortfolioId(request);
 
       await request.post("/api/goals", {
-        data: { portfolioId: "", name: "Canvas Goal", targetAmount: 400000 },
+        data: { portfolioId, name: "Canvas Goal", targetAmount: 400000 },
       });
 
       await loginViaUI(page, creds.email, creds.password);
@@ -241,10 +273,11 @@ test.describe("Goal Tracker", () => {
       test.setTimeout(60_000);
       await ensureLoggedOut(request);
       const creds = await createTestUser(request, true);
-      await setThemeViaAPI(request, "studio");
+      await upgradeToProAndSetTheme(request, creds, "studio");
+      const portfolioId = await getDefaultPortfolioId(request);
 
       await request.post("/api/goals", {
-        data: { portfolioId: "", name: "Studio Goal", targetAmount: 750000 },
+        data: { portfolioId, name: "Studio Goal", targetAmount: 750000 },
       });
 
       await loginViaUI(page, creds.email, creds.password);

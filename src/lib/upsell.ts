@@ -23,7 +23,8 @@ export type UpsellSurface =
   | "ai_import"
   | "net_worth_locked"
   | "screener_locked"
-  | "simulator_locked";
+  | "simulator_locked"
+  | "planning_locked";
 
 export interface UpsellConfig {
   subtitleKey: TranslationKey;
@@ -281,6 +282,18 @@ const UPSELL_BY_SURFACE: Record<UpsellSurface, UpsellConfig> = {
     subtitleKey: "upsellCompareSubtitleLocked",
     attemptedActionKey: "upsellAttemptSimulator",
     feature: "simulator",
+    freeItems: DEFAULT_FREE_ITEMS,
+    starterItems: DEFAULT_STARTER_ITEMS,
+    proItems: [
+      "upsellProItemSimulator",
+      "upsellProItemAlphaVantage",
+      "upsellProItemAiUnlimited",
+    ],
+  },
+  planning_locked: {
+    subtitleKey: "upsellCompareSubtitleLocked",
+    attemptedActionKey: "upsellAttemptSimulator",
+    feature: "planning",
     freeItems: DEFAULT_FREE_ITEMS,
     starterItems: DEFAULT_STARTER_ITEMS,
     proItems: [

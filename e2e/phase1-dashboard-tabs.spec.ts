@@ -32,7 +32,9 @@ test.describe("Phase 1 — Diversification, Dividends, Stealth Mode", () => {
     await loginViaUI(page, testEmail, TEST_PASS);
     await dismissOverlays(page);
 
-    await page.getByRole("tab", { name: /dividend/i }).click();
+    const dividendTab = page.getByRole("tab", { name: /dividend/i });
+    await dividendTab.scrollIntoViewIfNeeded();
+    await dividendTab.click();
     await expect(page.getByRole("tabpanel")).toBeVisible();
   });
 

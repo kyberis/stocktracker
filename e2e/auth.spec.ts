@@ -31,7 +31,7 @@ test.describe("Authentication", () => {
     await pwInputs.nth(0).fill(password);
     await pwInputs.nth(1).fill(password);
     await page.click('button[type="submit"]');
-    await page.waitForURL(/\/(verify-email)?$/, { timeout: 10_000 });
+    await page.waitForURL(/\/(onboarding|verify-email)?$/, { timeout: 10_000 });
     await expect(page).not.toHaveURL(/\/signup/);
   });
 

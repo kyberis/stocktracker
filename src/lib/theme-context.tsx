@@ -11,7 +11,7 @@ import type { LayoutTheme } from "./types";
 
 type Theme = "light" | "dark";
 
-const FORCED_MODE: Record<LayoutTheme, Theme | null> = {
+export const FORCED_MODE: Record<LayoutTheme, Theme | null> = {
   default: null,
   terminal: "dark",
   canvas: "light",
@@ -24,6 +24,7 @@ interface ThemeContextValue {
   layoutTheme: LayoutTheme;
   canToggleMode: boolean;
   toggleTheme: () => void;
+  setLayoutTheme: (lt: LayoutTheme) => void;
 }
 
 const ThemeContext = createContext<ThemeContextValue>({
@@ -32,6 +33,7 @@ const ThemeContext = createContext<ThemeContextValue>({
   layoutTheme: "default",
   canToggleMode: true,
   toggleTheme: () => {},
+  setLayoutTheme: () => {},
 });
 
 const STORAGE_KEY = "trefolio-theme";
@@ -42,10 +44,11 @@ interface ThemeProviderProps {
 }
 
 export function ThemeProvider({ children, initialTheme = "default" }: ThemeProviderProps) {
+  const [currentLayout, setCurrentLayout] = useState<LayoutTheme>(initialTheme);
   const [theme, setTheme] = useState<Theme>(FORCED_MODE[initialTheme] ?? "light");
 
   useEffect(() => {
-    const forced = FORCED_MODE[initialTheme];
+    const forced = FORCED_MODE[currentLayout];
     const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
     const preferred = forced ?? stored ?? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
     setTheme(preferred);
@@ -53,24 +56,34 @@ export function ThemeProvider({ children, initialTheme = "default" }: ThemeProvi
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const setLayoutTheme = useCallback((lt: LayoutTheme) => {
+    setCurrentLayout(lt);
+    const forced = FORCED_MODE[lt];
+    if (forced) {
+      setTheme(forced);
+      document.documentElement.classList.toggle("dark", forced === "dark");
+    }
+  }, []);
+
   const toggleTheme = useCallback(() => {
-    if (FORCED_MODE[initialTheme]) return;
+    if (FORCED_MODE[currentLayout]) return;
     setTheme((prev) => {
       const next = prev === "light" ? "dark" : "light";
       localStorage.setItem(STORAGE_KEY, next);
       document.documentElement.classList.toggle("dark", next === "dark");
       return next;
     });
-  }, [initialTheme]);
+  }, [currentLayout]);
 
   return (
     <ThemeContext.Provider
       value={{
         theme,
         isDark: theme === "dark",
-        layoutTheme: initialTheme,
-        canToggleMode: FORCED_MODE[initialTheme] === null,
+        layoutTheme: currentLayout,
+        canToggleMode: FORCED_MODE[currentLayout] === null,
         toggleTheme,
+        setLayoutTheme,
       }}
     >
       {children}

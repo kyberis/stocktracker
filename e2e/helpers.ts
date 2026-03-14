@@ -43,6 +43,20 @@ export async function dismissOverlays(page: Page) {
     await whatsNewClose.click({ force: true });
     await page.waitForTimeout(500);
   }
+
+  // Theme tour wizard
+  const skipTour = page.getByRole("button", { name: "Skip tour" });
+  if (await skipTour.isVisible({ timeout: 2000 }).catch(() => false)) {
+    await skipTour.click({ force: true });
+    await page.waitForTimeout(500);
+  }
+
+  // Secure Your Account prompt
+  const maybeLater = page.getByRole("button", { name: "Maybe later" });
+  if (await maybeLater.isVisible({ timeout: 1000 }).catch(() => false)) {
+    await maybeLater.click({ force: true });
+    await page.waitForTimeout(500);
+  }
 }
 
 export async function ensureLoggedOut(request: APIRequestContext) {
@@ -81,7 +95,11 @@ export async function createTestUser(request: APIRequestContext, seed = false) {
 
   // Complete onboarding so tests land on the dashboard
   await request.post("/api/auth/onboarding", {
-    data: { displayName: slug, defaultCurrency: "EUR" },
+    data: {
+      displayName: slug,
+      defaultCurrency: "EUR",
+      importMethod: seed ? undefined : "skip",
+    },
   });
 
   return { email, username: slug, password, userId };

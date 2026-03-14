@@ -18,8 +18,9 @@ export default function GoalProgressBanner({ holdings: holdingsProp, cashEntries
   const track = useTrack();
   const {
     holdings: ctxHoldings, cashEntries: ctxCashEntries, quotes, exchangeRates,
-    activePortfolioCurrency, goal,
+    activePortfolioCurrency, goal, goals,
   } = usePortfolio();
+  const additionalGoals = goals.length > 1 ? goals.length - 1 : 0;
   const holdings = holdingsProp ?? ctxHoldings;
   const cashEntries = cashEntriesProp ?? ctxCashEntries;
   const baseCurrency = activePortfolioCurrency;
@@ -67,7 +68,14 @@ export default function GoalProgressBanner({ holdings: holdingsProp, cashEntries
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2 mb-1.5">
-          <span className="text-[13px] font-semibold text-gray-900 dark:text-white truncate">{goal.name}</span>
+          <span className="text-[13px] font-semibold text-gray-900 dark:text-white truncate">
+            {goal.name}
+            {additionalGoals > 0 && (
+              <a href="/tools/planning" className="ml-1.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400 hover:underline" onClick={(e) => e.stopPropagation()}>
+                +{additionalGoals} more
+              </a>
+            )}
+          </span>
           <span className="text-xs font-semibold font-mono text-emerald-600 dark:text-emerald-400 shrink-0">
             {progress.toFixed(1)}%
           </span>

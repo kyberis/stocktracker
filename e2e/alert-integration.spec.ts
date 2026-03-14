@@ -5,9 +5,10 @@ test.describe("Alert Integration API", () => {
   test.beforeEach(async ({ request }) => {
     const ok = await loginAsAdmin(request);
     expect(ok).toBe(true);
-    await request.post("/api/admin/feature-flags", {
+    const flagRes = await request.put("/api/admin/feature-flags", {
       data: { flag: "alerts_enabled", enabled: true },
     });
+    expect(flagRes.status()).toBe(200);
     await createTestUser(request, false);
   });
 

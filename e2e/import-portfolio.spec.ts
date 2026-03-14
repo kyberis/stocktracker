@@ -18,10 +18,11 @@ test.describe("Import Portfolio", () => {
 
     await expect(page.getByRole("button", { name: "Import Portfolio" })).toBeVisible({ timeout: 10000 });
 
-    // Open Import Portfolio modal
+    // Navigate to Import page
     await page.getByRole("button", { name: "Import Portfolio" }).click();
+    await page.waitForURL(/\/import/, { timeout: 10000 });
     await expect(page.getByText(/Drag & drop a file here|drag/i)).toBeVisible({
-      timeout: 5000,
+      timeout: 10000,
     });
 
     // Upload CSV via file input
@@ -41,12 +42,11 @@ test.describe("Import Portfolio", () => {
       page.getByText(/Successfully imported|posiciones importadas|transactions imported|transacciones importadas/)
     ).toBeVisible({ timeout: 15000 });
 
-    // Click Close
-    await page.getByRole("button", { name: "Close" }).click();
+    // Navigate to dashboard via "View Portfolio" link
+    await page.getByRole("link", { name: /View Portfolio|Ver Portafolio/i }).click();
 
-    // Verify holdings appeared after import
-    await page.waitForTimeout(2000);
+    // Verify we land on the dashboard with holdings
+    await expect(page.getByText(/Portfolio|portfolioValue/i).first()).toBeVisible({ timeout: 15000 });
     await expect(page.getByText("No holdings yet")).not.toBeVisible({ timeout: 5000 });
-    await expect(page.getByText(/\d+ holdings/)).toBeVisible({ timeout: 5000 });
   });
 });

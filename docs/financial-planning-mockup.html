@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>trefolio — Financial Planning Module Mockup</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+  :root {
+    --bg: #0f172a;
+    --bg-surface: #1e293b;
+    --bg-card: #1e293b;
+    --bg-card-hover: #273549;
+    --bg-input: #0f172a;
+    --border: #334155;
+    --border-light: #1e293b;
+    --text: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --emerald: #10b981;
+    --emerald-dark: #059669;
+    --emerald-bg: rgba(16, 185, 129, 0.1);
+    --red: #ef4444;
+    --red-bg: rgba(239, 68, 68, 0.1);
+    --blue: #3b82f6;
+    --blue-bg: rgba(59, 130, 246, 0.1);
+    --violet: #8b5cf6;
+    --violet-bg: rgba(139, 92, 246, 0.1);
+    --amber: #f59e0b;
+    --amber-bg: rgba(245, 158, 11, 0.1);
+    --rose: #f43f5e;
+    --rose-bg: rgba(244, 63, 94, 0.1);
+    --indigo: #6366f1;
+    --cyan: #06b6d4;
+    --teal: #14b8a6;
+    --orange: #f97316;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  .mockup-banner {
+    background: linear-gradient(90deg, #6366f1, #8b5cf6);
+    padding: 12px 24px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: white;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .mockup-banner span { opacity: 0.8; font-weight: 400; }
+
+  .header {
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .header h1 { font-size: 20px; font-weight: 700; color: var(--emerald); }
+  .header-right { display: flex; align-items: center; gap: 16px; }
+  .pro-badge {
+    background: linear-gradient(135deg, var(--violet), var(--indigo));
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+
+  .tools-tabs {
+    display: flex;
+    gap: 2px;
+    padding: 0 32px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+  }
+  .tools-tab {
+    padding: 12px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: all 0.15s;
+  }
+  .tools-tab:hover { color: var(--text-secondary); }
+  .tools-tab.active {
+    color: var(--emerald);
+    border-bottom-color: var(--emerald);
+  }
+  .tools-tab .badge {
+    font-size: 9px;
+    padding: 1px 5px;
+    border-radius: 4px;
+    margin-left: 6px;
+    font-weight: 700;
+    vertical-align: middle;
+  }
+  .badge-pro { background: var(--violet-bg); color: var(--violet); }
+
+  .container { max-width: 1280px; margin: 0 auto; padding: 24px 32px; }
+
+  .sub-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 24px;
+    background: var(--bg-surface);
+    border-radius: 10px;
+    padding: 4px;
+    width: fit-content;
+  }
+  .sub-tab {
+    padding: 8px 20px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.15s;
+  }
+  .sub-tab:hover { color: var(--text-secondary); background: var(--bg-card-hover); }
+  .sub-tab.active { color: var(--text); background: var(--bg); box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* Cards */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 16px;
+  }
+
+  /* FIRE Calculator */
+  .fire-grid {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 24px;
+  }
+
+  .controls-panel { display: flex; flex-direction: column; gap: 16px; }
+  .control-group { display: flex; flex-direction: column; gap: 6px; }
+  .control-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    display: flex;
+    justify-content: space-between;
+  }
+  .control-value { color: var(--emerald); font-weight: 700; }
+  input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--border);
+    outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--emerald);
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(16,185,129,0.3);
+  }
+  .input-field {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: inherit;
+    width: 100%;
+  }
+  .input-field:focus { outline: none; border-color: var(--emerald); }
+  .input-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  /* FIRE variant cards */
+  .fire-variants {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .fire-variant {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+  .fire-variant:hover { border-color: var(--emerald); transform: translateY(-2px); }
+  .fire-variant.highlight { border-color: var(--emerald); background: var(--emerald-bg); }
+  .fire-variant .icon { font-size: 24px; margin-bottom: 8px; }
+  .fire-variant .label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+  .fire-variant .amount {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text);
+  }
+  .fire-variant .years {
+    font-size: 12px;
+    color: var(--emerald);
+    font-weight: 600;
+    margin-top: 4px;
+  }
+
+  /* Chart placeholder */
+  .chart-area {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .chart-title {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .chart-canvas { width: 100%; height: 320px; }
+
+  /* Savings gauge */
+  .gauge-container { text-align: center; margin-top: 16px; }
+  .gauge {
+    width: 120px;
+    height: 60px;
+    margin: 0 auto 8px;
+    position: relative;
+  }
+  .gauge-label { font-size: 12px; color: var(--text-secondary); }
+  .gauge-value { font-size: 28px; font-weight: 800; color: var(--emerald); }
+
+  /* Retirement */
+  .retire-grid {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 24px;
+  }
+  .phase-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .phase-card {
+    border-radius: 10px;
+    padding: 16px;
+    border: 1px solid var(--border);
+  }
+  .phase-card.accumulation { background: linear-gradient(135deg, rgba(16,185,129,0.08), rgba(59,130,246,0.08)); border-color: rgba(16,185,129,0.3); }
+  .phase-card.distribution { background: linear-gradient(135deg, rgba(249,115,22,0.08), rgba(244,63,94,0.08)); border-color: rgba(249,115,22,0.3); }
+  .phase-card .phase-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .phase-card.accumulation .phase-label { color: var(--emerald); }
+  .phase-card.distribution .phase-label { color: var(--orange); }
+  .phase-card .phase-value { font-size: 22px; font-weight: 800; }
+  .phase-card .phase-detail { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+
+  .confidence-legend {
+    display: flex;
+    gap: 16px;
+    margin-top: 12px;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .confidence-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  .summary-verdict {
+    background: var(--emerald-bg);
+    border: 1px solid rgba(16,185,129,0.3);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .summary-verdict .verdict-icon { font-size: 28px; }
+  .summary-verdict .verdict-text { font-size: 14px; font-weight: 600; color: var(--emerald); }
+  .summary-verdict .verdict-sub { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+
+  /* Goals */
+  .goals-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  .goals-title { font-size: 18px; font-weight: 700; }
+  .add-goal-btn {
+    background: var(--emerald);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s;
+  }
+  .add-goal-btn:hover { background: var(--emerald-dark); transform: translateY(-1px); }
+
+  .goals-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .goal-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+  .goal-card:hover { border-color: var(--emerald); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
+
+  .goal-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .goal-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+  }
+  .goal-icon.retirement { background: var(--violet-bg); }
+  .goal-icon.house { background: var(--blue-bg); }
+  .goal-icon.education { background: var(--amber-bg); }
+  .goal-icon.emergency { background: var(--rose-bg); }
+  .goal-icon.fire { background: rgba(249,115,22,0.1); }
+  .goal-icon.vacation { background: rgba(6,182,212,0.1); }
+
+  .goal-name { font-size: 15px; font-weight: 700; }
+  .goal-type-badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .goal-type-badge.retirement { background: var(--violet-bg); color: var(--violet); }
+  .goal-type-badge.house { background: var(--blue-bg); color: var(--blue); }
+  .goal-type-badge.education { background: var(--amber-bg); color: var(--amber); }
+  .goal-type-badge.emergency { background: var(--rose-bg); color: var(--rose); }
+
+  .goal-amounts {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 10px;
+  }
+  .goal-current { font-size: 20px; font-weight: 800; }
+  .goal-target { font-size: 13px; color: var(--text-secondary); }
+
+  .goal-progress-bar {
+    height: 8px;
+    background: var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+    margin-bottom: 6px;
+  }
+  .goal-progress-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.5s ease;
+  }
+
+  .milestone-dots {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 2px;
+    margin-bottom: 12px;
+    position: relative;
+  }
+  .milestone-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: var(--bg);
+    position: relative;
+    z-index: 1;
+    transition: all 0.2s;
+  }
+  .milestone-dot.reached {
+    border-color: var(--emerald);
+    background: var(--emerald);
+  }
+  .milestone-dot .dot-label {
+    position: absolute;
+    top: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 9px;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  .goal-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+  }
+  .goal-eta { color: var(--emerald); font-weight: 600; }
+  .goal-contribution { color: var(--text-secondary); }
+
+  /* Goal type picker */
+  .goal-type-picker {
+    display: none;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  .goal-type-picker.visible { display: block; }
+  .type-picker-title { font-size: 14px; font-weight: 700; margin-bottom: 16px; }
+  .type-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+  }
+  .type-option {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .type-option:hover { border-color: var(--emerald); background: var(--emerald-bg); }
+  .type-option .type-icon { font-size: 28px; margin-bottom: 6px; }
+  .type-option .type-name { font-size: 12px; font-weight: 600; }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .fire-grid, .retire-grid { grid-template-columns: 1fr; }
+    .fire-variants { grid-template-columns: repeat(2, 1fr); }
+    .goals-grid { grid-template-columns: 1fr; }
+    .phase-cards { grid-template-columns: 1fr; }
+  }
+
+  /* Toggle */
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+  }
+  .toggle-label { font-size: 13px; font-weight: 500; }
+  .toggle {
+    width: 40px;
+    height: 22px;
+    background: var(--border);
+    border-radius: 11px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .toggle.on { background: var(--emerald); }
+  .toggle .toggle-knob {
+    width: 18px;
+    height: 18px;
+    background: white;
+    border-radius: 50%;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    transition: transform 0.2s;
+  }
+  .toggle.on .toggle-knob { transform: translateX(18px); }
+
+  .divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+
+  .section-note {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    padding: 12px 16px;
+    background: rgba(99,102,241,0.06);
+    border-radius: 8px;
+    border: 1px solid rgba(99,102,241,0.15);
+    margin-top: 16px;
+  }
+</style>
+</head>
+<body>
+
+<div class="mockup-banner">
+  DESIGN MOCKUP — Financial Planning Module <span>| trefolio Pro Feature | Not a working prototype</span>
+</div>
+
+<div class="header">
+  <h1>trefolio</h1>
+  <div class="header-right">
+    <span class="pro-badge">PRO</span>
+    <span style="font-size:13px;color:var(--text-secondary)">Tools</span>
+  </div>
+</div>
+
+<div class="tools-tabs">
+  <div class="tools-tab">Transactions</div>
+  <div class="tools-tab">Dividends</div>
+  <div class="tools-tab">Performance</div>
+  <div class="tools-tab">Taxonomy</div>
+  <div class="tools-tab">Rebalancing</div>
+  <div class="tools-tab">Screener <span class="badge badge-pro">PRO</span></div>
+  <div class="tools-tab">Tax <span class="badge badge-pro">PRO</span></div>
+  <div class="tools-tab">Simulator <span class="badge badge-pro">PRO</span></div>
+  <div class="tools-tab active">Planning <span class="badge badge-pro">PRO</span></div>
+</div>
+
+<div class="container">
+
+  <div class="sub-tabs" id="subTabs">
+    <a class="sub-tab active" href="#fire" data-section="fire">FIRE Calculator</a>
+    <a class="sub-tab" href="#retirement" data-section="retirement">Retirement</a>
+    <a class="sub-tab" href="#goals" data-section="goals">Goals</a>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════ FIRE CALCULATOR ═══ -->
+  <div id="section-fire" class="section active">
+
+    <div class="fire-variants">
+      <div class="fire-variant">
+        <div class="icon">🪶</div>
+        <div class="label">Lean FIRE</div>
+        <div class="amount">€375,000</div>
+        <div class="years">~9.2 years</div>
+      </div>
+      <div class="fire-variant highlight">
+        <div class="icon">🔥</div>
+        <div class="label">Regular FIRE</div>
+        <div class="amount">€750,000</div>
+        <div class="years">~14.6 years</div>
+      </div>
+      <div class="fire-variant">
+        <div class="icon">💎</div>
+        <div class="label">Fat FIRE</div>
+        <div class="amount">€1,500,000</div>
+        <div class="years">~22.1 years</div>
+      </div>
+      <div class="fire-variant">
+        <div class="icon">🏖️</div>
+        <div class="label">Coast FIRE</div>
+        <div class="amount">€198,400</div>
+        <div class="years">~3.8 years</div>
+      </div>
+      <div class="fire-variant">
+        <div class="icon">☕</div>
+        <div class="label">Barista FIRE</div>
+        <div class="amount">€450,000</div>
+        <div class="years">~11.1 years</div>
+      </div>
+    </div>
+
+    <div class="fire-grid">
+      <div class="controls-panel">
+        <div class="card">
+          <div class="card-title">Income & Expenses</div>
+          <div class="control-group">
+            <div class="control-label">Annual Income <span class="control-value">€60,000</span></div>
+            <input type="range" min="10000" max="300000" value="60000" id="income-slider">
+          </div>
+          <div class="control-group" style="margin-top:12px">
+            <div class="control-label">Annual Expenses <span class="control-value">€30,000</span></div>
+            <input type="range" min="5000" max="200000" value="30000" id="expenses-slider">
+          </div>
+          <hr class="divider">
+          <div class="control-group">
+            <div class="control-label">Savings Rate</div>
+            <div class="gauge-container">
+              <div class="gauge-value">50%</div>
+              <div class="gauge-label">€30,000 / year saved</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Assumptions</div>
+          <div class="control-group">
+            <div class="control-label">Expected Return <span class="control-value">7%</span></div>
+            <input type="range" min="1" max="15" value="7" step="0.5">
+          </div>
+          <div class="control-group" style="margin-top:12px">
+            <div class="control-label">Safe Withdrawal Rate <span class="control-value">4%</span></div>
+            <input type="range" min="2" max="6" value="4" step="0.25">
+          </div>
+          <div class="input-row" style="margin-top:12px">
+            <div class="control-group">
+              <div class="control-label">Current Age</div>
+              <input type="number" class="input-field" value="32">
+            </div>
+            <div class="control-group">
+              <div class="control-label">Target Age</div>
+              <input type="number" class="input-field" value="50">
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Portfolio</div>
+          <div class="control-group">
+            <div class="control-label">Current Value</div>
+            <div style="font-size:22px;font-weight:800;color:var(--emerald);margin-top:4px">€127,450</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Auto-filled from your portfolio</div>
+          </div>
+          <div class="toggle-row" style="margin-top:12px">
+            <span class="toggle-label">Include dividends</span>
+            <div class="toggle on"><div class="toggle-knob"></div></div>
+          </div>
+        </div>
+
+        <div class="section-note">
+          FIRE = Financial Independence, Retire Early. Your FIRE number is your annual expenses divided by your safe withdrawal rate (4% = 25x expenses).
+        </div>
+      </div>
+
+      <div>
+        <div class="chart-area">
+          <div class="chart-title">
+            <span>Projected Path to FIRE</span>
+            <span style="font-size:11px;color:var(--text-muted);font-weight:400;margin-left:auto">Age 32 → 50</span>
+          </div>
+          <canvas id="fireChart" class="chart-canvas"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════ RETIREMENT ═══ -->
+  <div id="section-retirement" class="section">
+
+    <div class="phase-cards">
+      <div class="phase-card accumulation">
+        <div class="phase-label">Accumulation Phase (32 → 65)</div>
+        <div class="phase-value">€1,847,200</div>
+        <div class="phase-detail">33 years of growth &bull; €500/mo contributions &bull; 7% return</div>
+      </div>
+      <div class="phase-card distribution">
+        <div class="phase-label">Distribution Phase (65 → 90)</div>
+        <div class="phase-value">€4,120 /mo</div>
+        <div class="phase-detail">Sustainable withdrawal &bull; Inflation-adjusted &bull; Incl. €800/mo pension</div>
+      </div>
+    </div>
+
+    <div class="retire-grid">
+      <div class="controls-panel">
+        <div class="card">
+          <div class="card-title">Timeline</div>
+          <div class="input-row">
+            <div class="control-group">
+              <div class="control-label">Current Age</div>
+              <input type="number" class="input-field" value="32">
+            </div>
+            <div class="control-group">
+              <div class="control-label">Retirement Age</div>
+              <input type="number" class="input-field" value="65">
+            </div>
+          </div>
+          <div class="control-group" style="margin-top:12px">
+            <div class="control-label">Life Expectancy</div>
+            <input type="number" class="input-field" value="90">
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Pre-Retirement</div>
+          <div class="control-group">
+            <div class="control-label">Monthly Contribution <span class="control-value">€500</span></div>
+            <input type="range" min="0" max="5000" value="500" step="50">
+          </div>
+          <div class="control-group" style="margin-top:12px">
+            <div class="control-label">Expected Return <span class="control-value">7%</span></div>
+            <input type="range" min="1" max="15" value="7" step="0.5">
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Post-Retirement</div>
+          <div class="control-group">
+            <div class="control-label">Expected Return <span class="control-value">4%</span></div>
+            <input type="range" min="1" max="10" value="4" step="0.5">
+          </div>
+          <div class="control-group" style="margin-top:12px">
+            <div class="control-label">Inflation Rate <span class="control-value">2%</span></div>
+            <input type="range" min="0" max="6" value="2" step="0.25">
+          </div>
+          <div class="control-group" style="margin-top:12px">
+            <div class="control-label">Pension / Social Security</div>
+            <input type="text" class="input-field" value="€800 /mo" placeholder="€0 /mo">
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Monte Carlo Simulation</div>
+          <div class="toggle-row">
+            <span class="toggle-label">Show confidence bands</span>
+            <div class="toggle on"><div class="toggle-knob"></div></div>
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:8px">1,000 simulations with randomized annual returns (normal distribution, σ = 15%)</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="chart-area">
+          <div class="chart-title">
+            <span>Retirement Projection</span>
+            <span style="font-size:11px;color:var(--text-muted);font-weight:400;margin-left:auto">Age 32 → 90</span>
+          </div>
+          <canvas id="retireChart" class="chart-canvas"></canvas>
+          <div class="confidence-legend">
+            <span><span class="confidence-dot" style="background:var(--emerald)"></span>Median (50th)</span>
+            <span><span class="confidence-dot" style="background:rgba(16,185,129,0.4)"></span>25th–75th percentile</span>
+            <span><span class="confidence-dot" style="background:rgba(16,185,129,0.15)"></span>10th–90th percentile</span>
+            <span><span class="confidence-dot" style="background:var(--orange)"></span>Distribution phase</span>
+          </div>
+        </div>
+        <div class="summary-verdict">
+          <div class="verdict-icon">✅</div>
+          <div>
+            <div class="verdict-text">You're on track to retire at 65 with €4,120/mo</div>
+            <div class="verdict-sub">That's 82% income replacement. With pension, your total monthly income would be €4,920.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════ GOALS ═══ -->
+  <div id="section-goals" class="section">
+
+    <div class="goals-header">
+      <div class="goals-title">My Goals</div>
+      <button class="add-goal-btn" onclick="togglePicker()">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
+        Add Goal
+      </button>
+    </div>
+
+    <div class="goal-type-picker" id="typePicker">
+      <div class="type-picker-title">Choose a goal type</div>
+      <div class="type-options">
+        <div class="type-option" onclick="togglePicker()"><div class="type-icon">🏠</div><div class="type-name">House</div></div>
+        <div class="type-option" onclick="togglePicker()"><div class="type-icon">🎓</div><div class="type-name">Education</div></div>
+        <div class="type-option" onclick="togglePicker()"><div class="type-icon">🛡️</div><div class="type-name">Emergency Fund</div></div>
+        <div class="type-option" onclick="togglePicker()"><div class="type-icon">🏖️</div><div class="type-name">Vacation</div></div>
+        <div class="type-option" onclick="togglePicker()"><div class="type-icon">🔥</div><div class="type-name">FIRE</div></div>
+        <div class="type-option" onclick="togglePicker()"><div class="type-icon">👴</div><div class="type-name">Retirement</div></div>
+        <div class="type-option" onclick="togglePicker()"><div class="type-icon">🎯</div><div class="type-name">Custom</div></div>
+      </div>
+    </div>
+
+    <div class="goals-grid">
+
+      <!-- Goal 1: Retirement -->
+      <div class="goal-card">
+        <div class="goal-card-header">
+          <div class="goal-icon retirement">👴</div>
+          <div>
+            <div class="goal-name">Retirement Fund</div>
+            <span class="goal-type-badge retirement">Retirement</span>
+          </div>
+        </div>
+        <div class="goal-amounts">
+          <div class="goal-current">€127,450</div>
+          <div class="goal-target">of €750,000</div>
+        </div>
+        <div class="goal-progress-bar">
+          <div class="goal-progress-fill" style="width:17%;background:linear-gradient(90deg,var(--violet),var(--indigo))"></div>
+        </div>
+        <div class="milestone-dots">
+          <div class="milestone-dot" style="left:0"><div class="dot-label">Start</div></div>
+          <div class="milestone-dot"><div class="dot-label">25%</div></div>
+          <div class="milestone-dot"><div class="dot-label">50%</div></div>
+          <div class="milestone-dot"><div class="dot-label">75%</div></div>
+          <div class="milestone-dot"><div class="dot-label">100%</div></div>
+        </div>
+        <div class="goal-footer">
+          <div class="goal-eta">~14.6 years to go</div>
+          <div class="goal-contribution">€500/mo</div>
+        </div>
+      </div>
+
+      <!-- Goal 2: House -->
+      <div class="goal-card">
+        <div class="goal-card-header">
+          <div class="goal-icon house">🏠</div>
+          <div>
+            <div class="goal-name">House Down Payment</div>
+            <span class="goal-type-badge house">House</span>
+          </div>
+        </div>
+        <div class="goal-amounts">
+          <div class="goal-current">€34,200</div>
+          <div class="goal-target">of €80,000</div>
+        </div>
+        <div class="goal-progress-bar">
+          <div class="goal-progress-fill" style="width:42.75%;background:linear-gradient(90deg,var(--blue),var(--cyan))"></div>
+        </div>
+        <div class="milestone-dots">
+          <div class="milestone-dot reached" style="left:0"><div class="dot-label">Start</div></div>
+          <div class="milestone-dot reached"><div class="dot-label">25%</div></div>
+          <div class="milestone-dot"><div class="dot-label">50%</div></div>
+          <div class="milestone-dot"><div class="dot-label">75%</div></div>
+          <div class="milestone-dot"><div class="dot-label">100%</div></div>
+        </div>
+        <div class="goal-footer">
+          <div class="goal-eta">~2.3 years to go</div>
+          <div class="goal-contribution">€1,500/mo</div>
+        </div>
+      </div>
+
+      <!-- Goal 3: Emergency Fund -->
+      <div class="goal-card">
+        <div class="goal-card-header">
+          <div class="goal-icon emergency">🛡️</div>
+          <div>
+            <div class="goal-name">Emergency Fund</div>
+            <span class="goal-type-badge emergency">Emergency</span>
+          </div>
+        </div>
+        <div class="goal-amounts">
+          <div class="goal-current">€12,000</div>
+          <div class="goal-target">of €15,000</div>
+        </div>
+        <div class="goal-progress-bar">
+          <div class="goal-progress-fill" style="width:80%;background:linear-gradient(90deg,var(--rose),var(--amber))"></div>
+        </div>
+        <div class="milestone-dots">
+          <div class="milestone-dot reached" style="left:0"><div class="dot-label">Start</div></div>
+          <div class="milestone-dot reached"><div class="dot-label">25%</div></div>
+          <div class="milestone-dot reached"><div class="dot-label">50%</div></div>
+          <div class="milestone-dot reached"><div class="dot-label">75%</div></div>
+          <div class="milestone-dot"><div class="dot-label">100%</div></div>
+        </div>
+        <div class="goal-footer">
+          <div class="goal-eta">~4 months to go</div>
+          <div class="goal-contribution">€800/mo</div>
+        </div>
+      </div>
+
+      <!-- Goal 4: Education -->
+      <div class="goal-card">
+        <div class="goal-card-header">
+          <div class="goal-icon education">🎓</div>
+          <div>
+            <div class="goal-name">MBA Fund</div>
+            <span class="goal-type-badge education">Education</span>
+          </div>
+        </div>
+        <div class="goal-amounts">
+          <div class="goal-current">€8,500</div>
+          <div class="goal-target">of €45,000</div>
+        </div>
+        <div class="goal-progress-bar">
+          <div class="goal-progress-fill" style="width:18.9%;background:linear-gradient(90deg,var(--amber),var(--orange))"></div>
+        </div>
+        <div class="milestone-dots">
+          <div class="milestone-dot reached" style="left:0"><div class="dot-label">Start</div></div>
+          <div class="milestone-dot"><div class="dot-label">€10K</div></div>
+          <div class="milestone-dot"><div class="dot-label">€20K</div></div>
+          <div class="milestone-dot"><div class="dot-label">€35K</div></div>
+          <div class="milestone-dot"><div class="dot-label">€45K</div></div>
+        </div>
+        <div class="goal-footer">
+          <div class="goal-eta">~3.1 years to go</div>
+          <div class="goal-contribution">€1,000/mo</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="section-note">
+      Click a goal to expand its projection chart, edit milestones, or adjust contribution settings. Goals are tracked per portfolio — switch portfolios to see different sets.
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+function showSection(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('section-' + name).classList.add('active');
+  const tab = document.querySelector('.sub-tab[data-section="' + name + '"]');
+  if (tab) tab.classList.add('active');
+}
+
+function handleHash() {
+  const hash = location.hash.replace('#', '') || 'fire';
+  showSection(hash);
+}
+window.addEventListener('hashchange', handleHash);
+window.addEventListener('load', handleHash);
+
+function togglePicker() {
+  document.getElementById('typePicker').classList.toggle('visible');
+}
+
+/* ──────────────── FIRE Chart ──────────────── */
+function drawFireChart() {
+  const canvas = document.getElementById('fireChart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  ctx.scale(dpr, dpr);
+  const W = rect.width, H = rect.height;
+  const pad = { top: 20, right: 20, bottom: 40, left: 60 };
+  const cW = W - pad.left - pad.right;
+  const cH = H - pad.top - pad.bottom;
+
+  const years = 25;
+  const startVal = 127450;
+  const annualSavings = 30000;
+  const returnRate = 0.07;
+  const fireNumber = 750000;
+
+  let data = [];
+  let v = startVal;
+  for (let y = 0; y <= years; y++) {
+    data.push({ year: y, value: v });
+    v = v * (1 + returnRate) + annualSavings;
+  }
+  const maxVal = Math.max(fireNumber * 1.15, data[data.length - 1].value);
+
+  function xPos(y) { return pad.left + (y / years) * cW; }
+  function yPos(val) { return pad.top + cH - (val / maxVal) * cH; }
+
+  // Grid
+  ctx.strokeStyle = 'rgba(51,65,85,0.4)';
+  ctx.lineWidth = 0.5;
+  for (let i = 0; i <= 5; i++) {
+    const val = (maxVal / 5) * i;
+    const y = yPos(val);
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(W - pad.right, y); ctx.stroke();
+    ctx.fillStyle = '#64748b';
+    ctx.font = '11px Inter';
+    ctx.textAlign = 'right';
+    ctx.fillText('€' + Math.round(val / 1000) + 'K', pad.left - 8, y + 4);
+  }
+
+  // X labels
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#64748b';
+  for (let y = 0; y <= years; y += 5) {
+    ctx.fillText('Age ' + (32 + y), xPos(y), H - pad.bottom + 24);
+  }
+
+  // FIRE line
+  ctx.setLineDash([6, 4]);
+  ctx.strokeStyle = 'rgba(239,68,68,0.6)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(pad.left, yPos(fireNumber));
+  ctx.lineTo(W - pad.right, yPos(fireNumber));
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.fillStyle = 'rgba(239,68,68,0.8)';
+  ctx.font = 'bold 11px Inter';
+  ctx.textAlign = 'left';
+  ctx.fillText('FIRE: €750K', pad.left + 4, yPos(fireNumber) - 8);
+
+  // Area gradient
+  const grad = ctx.createLinearGradient(0, pad.top, 0, pad.top + cH);
+  grad.addColorStop(0, 'rgba(16,185,129,0.3)');
+  grad.addColorStop(1, 'rgba(16,185,129,0.02)');
+
+  ctx.beginPath();
+  ctx.moveTo(xPos(0), yPos(0));
+  data.forEach(d => ctx.lineTo(xPos(d.year), yPos(d.value)));
+  ctx.lineTo(xPos(years), yPos(0));
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Line
+  ctx.beginPath();
+  data.forEach((d, i) => i === 0 ? ctx.moveTo(xPos(d.year), yPos(d.value)) : ctx.lineTo(xPos(d.year), yPos(d.value)));
+  ctx.strokeStyle = '#10b981';
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  // FIRE intersection
+  let fireYear = data.findIndex(d => d.value >= fireNumber);
+  if (fireYear > 0) {
+    const fx = xPos(fireYear);
+    const fy = yPos(fireNumber);
+    ctx.beginPath();
+    ctx.arc(fx, fy, 6, 0, Math.PI * 2);
+    ctx.fillStyle = '#10b981';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(fx, fy, 3, 0, Math.PI * 2);
+    ctx.fillStyle = '#0f172a';
+    ctx.fill();
+
+    ctx.fillStyle = '#10b981';
+    ctx.font = 'bold 12px Inter';
+    ctx.textAlign = 'center';
+    ctx.fillText('FIRE at age ' + (32 + fireYear) + '!', fx, fy - 14);
+  }
+}
+
+/* ──────────────── Retirement Chart ──────────────── */
+function drawRetireChart() {
+  const canvas = document.getElementById('retireChart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  ctx.scale(dpr, dpr);
+  const W = rect.width, H = rect.height;
+  const pad = { top: 20, right: 20, bottom: 40, left: 60 };
+  const cW = W - pad.left - pad.right;
+  const cH = H - pad.top - pad.bottom;
+
+  const currentAge = 32, retireAge = 65, endAge = 90;
+  const totalYears = endAge - currentAge;
+  const startVal = 127450;
+  const monthlyContrib = 500;
+  const preReturn = 0.07;
+  const postReturn = 0.04;
+  const inflation = 0.02;
+  const pension = 800 * 12;
+
+  // Generate median path
+  let median = [];
+  let v = startVal;
+  for (let age = currentAge; age <= endAge; age++) {
+    median.push({ age, value: v });
+    if (age < retireAge) {
+      v = v * (1 + preReturn) + monthlyContrib * 12;
+    } else {
+      const withdrawal = 4120 * 12 * Math.pow(1 + inflation, age - retireAge);
+      v = v * (1 + postReturn) - withdrawal + pension;
+      if (v < 0) v = 0;
+    }
+  }
+
+  // Percentile bands (simulated)
+  function band(median, spread) {
+    return median.map(d => ({
+      age: d.age,
+      lo: d.value * (1 - spread),
+      hi: d.value * (1 + spread)
+    }));
+  }
+  const band90 = band(median, 0.35);
+  const band75 = band(median, 0.18);
+
+  const maxVal = Math.max(...band90.map(d => d.hi)) * 1.05;
+
+  function xPos(age) { return pad.left + ((age - currentAge) / totalYears) * cW; }
+  function yPos(val) { return pad.top + cH - (Math.max(0, val) / maxVal) * cH; }
+
+  // Grid
+  ctx.strokeStyle = 'rgba(51,65,85,0.4)';
+  ctx.lineWidth = 0.5;
+  for (let i = 0; i <= 5; i++) {
+    const val = (maxVal / 5) * i;
+    const y = yPos(val);
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(W - pad.right, y); ctx.stroke();
+    ctx.fillStyle = '#64748b';
+    ctx.font = '11px Inter';
+    ctx.textAlign = 'right';
+    if (val >= 1000000) ctx.fillText('€' + (val / 1000000).toFixed(1) + 'M', pad.left - 8, y + 4);
+    else ctx.fillText('€' + Math.round(val / 1000) + 'K', pad.left - 8, y + 4);
+  }
+
+  // X labels
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#64748b';
+  for (let age = currentAge; age <= endAge; age += 5) {
+    ctx.fillText(age.toString(), xPos(age), H - pad.bottom + 24);
+  }
+
+  // Retirement line
+  ctx.setLineDash([4, 4]);
+  ctx.strokeStyle = 'rgba(249,115,22,0.5)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(xPos(retireAge), pad.top);
+  ctx.lineTo(xPos(retireAge), pad.top + cH);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = 'rgba(249,115,22,0.8)';
+  ctx.font = 'bold 11px Inter';
+  ctx.fillText('Retire at 65', xPos(retireAge), pad.top - 6);
+
+  // 90th band
+  ctx.beginPath();
+  band90.forEach((d, i) => i === 0 ? ctx.moveTo(xPos(d.age), yPos(d.hi)) : ctx.lineTo(xPos(d.age), yPos(d.hi)));
+  [...band90].reverse().forEach(d => ctx.lineTo(xPos(d.age), yPos(d.lo)));
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(16,185,129,0.07)';
+  ctx.fill();
+
+  // 75th band
+  ctx.beginPath();
+  band75.forEach((d, i) => i === 0 ? ctx.moveTo(xPos(d.age), yPos(d.hi)) : ctx.lineTo(xPos(d.age), yPos(d.hi)));
+  [...band75].reverse().forEach(d => ctx.lineTo(xPos(d.age), yPos(d.lo)));
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(16,185,129,0.12)';
+  ctx.fill();
+
+  // Accumulation area
+  const accumData = median.filter(d => d.age <= retireAge);
+  const distData = median.filter(d => d.age >= retireAge);
+
+  ctx.beginPath();
+  ctx.moveTo(xPos(accumData[0].age), yPos(0));
+  accumData.forEach(d => ctx.lineTo(xPos(d.age), yPos(d.value)));
+  ctx.lineTo(xPos(accumData[accumData.length - 1].age), yPos(0));
+  ctx.closePath();
+  const accumGrad = ctx.createLinearGradient(0, pad.top, 0, pad.top + cH);
+  accumGrad.addColorStop(0, 'rgba(16,185,129,0.25)');
+  accumGrad.addColorStop(1, 'rgba(16,185,129,0.02)');
+  ctx.fillStyle = accumGrad;
+  ctx.fill();
+
+  // Distribution area
+  ctx.beginPath();
+  ctx.moveTo(xPos(distData[0].age), yPos(0));
+  distData.forEach(d => ctx.lineTo(xPos(d.age), yPos(d.value)));
+  ctx.lineTo(xPos(distData[distData.length - 1].age), yPos(0));
+  ctx.closePath();
+  const distGrad = ctx.createLinearGradient(0, pad.top, 0, pad.top + cH);
+  distGrad.addColorStop(0, 'rgba(249,115,22,0.2)');
+  distGrad.addColorStop(1, 'rgba(249,115,22,0.02)');
+  ctx.fillStyle = distGrad;
+  ctx.fill();
+
+  // Median line - accumulation
+  ctx.beginPath();
+  accumData.forEach((d, i) => i === 0 ? ctx.moveTo(xPos(d.age), yPos(d.value)) : ctx.lineTo(xPos(d.age), yPos(d.value)));
+  ctx.strokeStyle = '#10b981';
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  // Median line - distribution
+  ctx.beginPath();
+  distData.forEach((d, i) => i === 0 ? ctx.moveTo(xPos(d.age), yPos(d.value)) : ctx.lineTo(xPos(d.age), yPos(d.value)));
+  ctx.strokeStyle = '#f97316';
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  // Peak marker
+  const peak = median.reduce((a, b) => b.value > a.value ? b : a);
+  ctx.beginPath();
+  ctx.arc(xPos(peak.age), yPos(peak.value), 5, 0, Math.PI * 2);
+  ctx.fillStyle = '#10b981';
+  ctx.fill();
+  ctx.fillStyle = '#f8fafc';
+  ctx.font = 'bold 11px Inter';
+  ctx.textAlign = 'center';
+  const peakLabel = peak.value >= 1000000
+    ? '€' + (peak.value / 1000000).toFixed(1) + 'M'
+    : '€' + Math.round(peak.value / 1000) + 'K';
+  ctx.fillText(peakLabel, xPos(peak.age), yPos(peak.value) - 12);
+}
+
+// Draw on load and resize
+window.addEventListener('load', () => { drawFireChart(); drawRetireChart(); });
+window.addEventListener('resize', () => { drawFireChart(); drawRetireChart(); });
+</script>
+</body>
+</html>

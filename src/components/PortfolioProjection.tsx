@@ -104,17 +104,30 @@ export default function PortfolioProjection({ holdings: holdingsProp, cashEntrie
     await saveGoal({
       portfolioId: activePortfolioId ?? "",
       name: goalName.trim() || "My Goal",
+      goalType: savedGoal?.goalType ?? "custom",
       targetAmount: goalTarget,
       currency: baseCurrency,
       growthRate,
       yearlyContribution,
+      monthlyContribution: contributionMode === "monthly" ? contributionAmount : 0,
       contributionMode,
       reinvestDividends,
       horizon,
+      targetDate: savedGoal?.targetDate ?? null,
+      priority: savedGoal?.priority ?? 0,
+      milestones: savedGoal?.milestones ?? [
+        { percent: 25, label: "25%", reachedAt: null },
+        { percent: 50, label: "50%", reachedAt: null },
+        { percent: 75, label: "75%", reachedAt: null },
+        { percent: 100, label: "100%", reachedAt: null },
+      ],
+      notes: savedGoal?.notes ?? "",
+      icon: savedGoal?.icon ?? "",
+      color: savedGoal?.color ?? "",
     });
     track(savedGoal ? "goal_updated" : "goal_saved", { target: String(goalTarget), horizon: String(horizon) });
     setSaving(false);
-  }, [goalTarget, saving, saveGoal, activePortfolioId, goalName, baseCurrency, growthRate, yearlyContribution, contributionMode, reinvestDividends, horizon, track, savedGoal]);
+  }, [goalTarget, saving, saveGoal, activePortfolioId, goalName, baseCurrency, growthRate, yearlyContribution, contributionAmount, contributionMode, reinvestDividends, horizon, track, savedGoal]);
 
   const handleDelete = useCallback(async () => {
     track("goal_removed");

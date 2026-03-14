@@ -27,7 +27,7 @@ test.describe("Phase 3 — Public Sharing & Transaction P&L", () => {
   test("public share page /p/invalid-token returns 404-like response", async ({ page }) => {
     await page.goto("/p/this-token-does-not-exist-xyz123");
     // Should show a not found or error state, not dashboard
-    const notFound = page.getByText(/not found|no longer available|invalid/i);
+    const notFound = page.getByText(/not found|no longer available|invalid/i).first();
     await expect(notFound).toBeVisible({ timeout: 10000 });
   });
 

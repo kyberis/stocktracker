@@ -68,9 +68,13 @@ interface PortfolioContextType {
   refreshAlertedTickers: () => Promise<void>;
   lastUpdated: Date | null;
   demoMode: boolean;
+  goals: Goal[];
+  /** Primary goal (highest priority) — convenience alias for dashboard widgets */
   goal: Goal | null;
   saveGoal: (params: Omit<Goal, "id" | "userId" | "createdAt" | "updatedAt">) => Promise<Goal | null>;
-  deleteGoal: () => Promise<void>;
+  deleteGoal: (goalId?: string) => Promise<void>;
+  refreshGoals: () => Promise<void>;
+  /** @deprecated Use refreshGoals */
   refreshGoal: () => Promise<void>;
 }
 
@@ -148,7 +152,7 @@ export function PortfolioProvider({
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(demoMode ? new Date() : null);
   const [alertedTickers, setAlertedTickers] = useState<Set<string>>(new Set());
-  const [goal, setGoal] = useState<Goal | null>(initialGoal ?? null);
+  const [goals, setGoals] = useState<Goal[]>(initialGoal ? [initialGoal] : []);
   const fetchingRef = useRef(false);
   const fetchPortfolios = useCallback(async (): Promise<PortfolioInfo[]> => {
     try {
@@ -264,8 +268,8 @@ export function PortfolioProvider({
 
       const goalQp = resolvedPortfolioId ? `?portfolioId=${encodeURIComponent(resolvedPortfolioId)}` : "?portfolioId=";
       fetch(`/api/goals${goalQp}`, { cache: "no-store" })
-        .then((r) => r.ok ? r.json() : { goal: null })
-        .then((d) => setGoal(d.goal ?? null))
+        .then((r) => r.ok ? r.json() : { goals: [] })
+        .then((d) => setGoals(d.goals ?? (d.goal ? [d.goal] : [])))
         .catch(() => {});
 
       setIsLoading(false);
@@ -309,8 +313,8 @@ export function PortfolioProvider({
 
         const goalQp = activePortfolioId ? `?portfolioId=${encodeURIComponent(activePortfolioId)}` : "?portfolioId=";
         fetch(`/api/goals${goalQp}`, { cache: "no-store" })
-          .then((r) => r.ok ? r.json() : { goal: null })
-          .then((d) => { if (switchVersionRef.current === version) setGoal(d.goal ?? null); })
+          .then((r) => r.ok ? r.json() : { goals: [] })
+          .then((d) => { if (switchVersionRef.current === version) setGoals(d.goals ?? (d.goal ? [d.goal] : [])); })
           .catch(() => {});
       } catch (err) {
         if (switchVersionRef.current !== version) return;
@@ -637,15 +641,15 @@ export function PortfolioProvider({
     } catch { /* non-critical */ }
   }, []);
 
-  const fetchGoal = useCallback(async () => {
+  const fetchGoals = useCallback(async () => {
     if (demoMode) return;
     try {
       const qp = activePortfolioId ? `?portfolioId=${encodeURIComponent(activePortfolioId)}` : "?portfolioId=";
       const res = await fetch(`/api/goals${qp}`, { cache: "no-store" });
-      if (!res.ok) { setGoal(null); return; }
+      if (!res.ok) { setGoals([]); return; }
       const data = await res.json();
-      setGoal(data.goal ?? null);
-    } catch { setGoal(null); }
+      setGoals(data.goals ?? (data.goal ? [data.goal] : []));
+    } catch { setGoals([]); }
   }, [demoMode, activePortfolioId]);
 
   const saveGoalCb = useCallback(async (params: Omit<Goal, "id" | "userId" | "createdAt" | "updatedAt">): Promise<Goal | null> => {
@@ -658,18 +662,23 @@ export function PortfolioProvider({
       if (!res.ok) return null;
       const data = await res.json();
       const saved = data.goal as Goal;
-      setGoal(saved);
+      setGoals((prev) => {
+        const idx = prev.findIndex((g) => g.id === saved.id);
+        if (idx >= 0) return prev.map((g) => (g.id === saved.id ? saved : g));
+        return [...prev, saved];
+      });
       return saved;
     } catch { return null; }
   }, []);
 
-  const deleteGoalCb = useCallback(async () => {
-    if (!goal) return;
+  const deleteGoalCb = useCallback(async (goalId?: string) => {
+    const id = goalId ?? goals[0]?.id;
+    if (!id) return;
     try {
-      await fetch(`/api/goals?id=${encodeURIComponent(goal.id)}`, { method: "DELETE" });
-      setGoal(null);
+      await fetch(`/api/goals?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      setGoals((prev) => prev.filter((g) => g.id !== id));
     } catch { /* non-critical */ }
-  }, [goal]);
+  }, [goals]);
 
   const refreshHoldings = useCallback(async () => {
     await Promise.all([fetchHoldings(), fetchCashEntries()]);
@@ -711,10 +720,12 @@ export function PortfolioProvider({
       refreshAlertedTickers: demoMode ? noop : refreshAlertedTickers,
       lastUpdated,
       demoMode: !!demoMode,
-      goal,
+      goals,
+      goal: goals[0] ?? null,
       saveGoal: demoMode ? noopGoal : saveGoalCb,
       deleteGoal: demoMode ? noop : deleteGoalCb,
-      refreshGoal: demoMode ? noop : fetchGoal,
+      refreshGoals: demoMode ? noop : fetchGoals,
+      refreshGoal: demoMode ? noop : fetchGoals,
     }),
     [
       holdings, cashEntries, quotes, quoteUpdatedAt, refreshingTickers, exchangeRates,
@@ -722,7 +733,7 @@ export function PortfolioProvider({
       addHolding, removeHolding, updateHolding, addCashEntry,
       removeCashEntry, updateCashEntry, refreshHoldings, refreshQuotes, refreshSingleQuote,
       refreshAlertedTickers, lastUpdated, demoMode, noop, noopGoal,
-      goal, saveGoalCb, deleteGoalCb, fetchGoal,
+      goals, saveGoalCb, deleteGoalCb, fetchGoals,
     ]
   );
 
