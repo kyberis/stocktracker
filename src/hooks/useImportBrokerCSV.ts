@@ -135,7 +135,14 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
         : [];
       const dupCount = Number(data.summary?.duplicatesRemoved) || 0;
 
-      if (parsedTransactions.length === 0) {
+      const parsedCash: CashBalance[] = Array.isArray(data.summary?.cashBalances)
+        ? data.summary.cashBalances.filter(
+            (c: CashBalance) => c.currency && c.amount > 0
+          )
+        : [];
+      setCashBalances(parsedCash);
+
+      if (parsedTransactions.length === 0 && parsedCash.length === 0) {
         if (dupCount > 0) {
           setErrorMsg(
             `All ${dupCount} transactions in this file are already in your portfolio.`
@@ -150,13 +157,6 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
         setStep("error");
         return;
       }
-
-      const parsedCash: CashBalance[] = Array.isArray(data.summary?.cashBalances)
-        ? data.summary.cashBalances.filter(
-            (c: CashBalance) => c.currency && c.amount > 0
-          )
-        : [];
-      setCashBalances(parsedCash);
       setDuplicatesRemoved(dupCount);
       setHoldings([]);
       setTransactions(

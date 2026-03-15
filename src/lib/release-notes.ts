@@ -24,6 +24,20 @@ export const releaseNotes: ReleaseEntry[] = [
     titleTranslations: { es: "Profundidad de Dividendos: Rendimiento sobre Coste y Simulación DRIP" },
     changes: [
       {
+        type: "fix",
+        text: "Fixed Degiro broker import not storing cash balances — cash is now correctly imported and displayed in Assets & Accounts, including on re-imports when all transactions are already present.",
+        translations: {
+          es: "Corregido el error en la importación de Degiro que no guardaba los saldos de efectivo — ahora se importan y muestran correctamente en Activos y Cuentas, incluso al reimportar cuando todas las transacciones ya existen.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Non-EUR cash balances from broker imports now display in their original currency instead of defaulting to EUR.",
+        translations: {
+          es: "Los saldos de efectivo en monedas distintas al EUR de las importaciones de broker ahora se muestran en su moneda original en lugar de EUR por defecto.",
+        },
+      },
+      {
         type: "feature",
         text: "Yield-on-Cost (YOC) is now displayed per holding and at the portfolio level in the dividend tab, showing your dividend income relative to your original purchase price.",
         translations: {

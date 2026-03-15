@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseDegiroCSV, buildIsinMap } from "./degiro-parser";
+import { parseDegiroCSV, buildIsinMap, parseDegiroCashBalances } from "./degiro-parser";
 
 const ISIN_MAP: Record<string, string> = {
   US29670G1022: "WTRG",
@@ -170,6 +170,80 @@ describe("parseDegiroCSV", () => {
     expect(txs).toHaveLength(1);
     expect(txs[0].ticker).toBe("");
     expect(txs[0].isin).toBe("XX0000000000");
+  });
+});
+
+describe("parseDegiroCashBalances", () => {
+  it("extracts the latest cash balance per currency", () => {
+    const csv = [
+      HEADER,
+      '03-03-2026,07:23,02-03-2026,ESSENTIAL UTILITIES INC,US29670G1022,Dividendo,,USD,"7,88",EUR,"5,66",',
+      '01-03-2026,10:00,01-03-2026,,,Ingreso,,EUR,"100,00",EUR,"100,00",',
+    ].join("\n");
+
+    const balances = parseDegiroCashBalances(csv);
+    expect(balances).toHaveLength(1);
+    expect(balances[0]).toEqual({ currency: "EUR", amount: 5.66 });
+  });
+
+  it("returns multiple currencies", () => {
+    const csv = [
+      HEADER,
+      '03-03-2026,07:23,02-03-2026,,,Dividendo,,USD,"7,88",USD,"42,50",',
+      '02-03-2026,10:00,02-03-2026,,,Ingreso,,EUR,"100,00",EUR,"200,00",',
+    ].join("\n");
+
+    const balances = parseDegiroCashBalances(csv);
+    expect(balances).toHaveLength(2);
+    expect(balances).toEqual(
+      expect.arrayContaining([
+        { currency: "USD", amount: 42.5 },
+        { currency: "EUR", amount: 200 },
+      ])
+    );
+  });
+
+  it("takes the first (newest) row per currency", () => {
+    const csv = [
+      HEADER,
+      '03-03-2026,07:23,02-03-2026,,,Dividendo,,EUR,"7,88",EUR,"300,00",',
+      '01-03-2026,10:00,01-03-2026,,,Ingreso,,EUR,"100,00",EUR,"100,00",',
+    ].join("\n");
+
+    const balances = parseDegiroCashBalances(csv);
+    expect(balances).toHaveLength(1);
+    expect(balances[0].amount).toBe(300);
+  });
+
+  it("skips zero balances", () => {
+    const csv = [
+      HEADER,
+      '03-03-2026,07:23,02-03-2026,,,Something,,USD,"0,00",USD,"0,00",',
+      '01-03-2026,10:00,01-03-2026,,,Ingreso,,EUR,"100,00",EUR,"5,66",',
+    ].join("\n");
+
+    const balances = parseDegiroCashBalances(csv);
+    expect(balances).toHaveLength(1);
+    expect(balances[0].currency).toBe("EUR");
+  });
+
+  it("returns empty for CSV with only a header", () => {
+    expect(parseDegiroCashBalances(HEADER)).toEqual([]);
+  });
+
+  it("returns empty for empty CSV", () => {
+    expect(parseDegiroCashBalances("")).toEqual([]);
+  });
+
+  it("handles European thousand separators", () => {
+    const csv = [
+      HEADER,
+      '03-03-2026,07:23,02-03-2026,,,Ingreso,,EUR,"1.234,56",EUR,"1.234,56",',
+    ].join("\n");
+
+    const balances = parseDegiroCashBalances(csv);
+    expect(balances).toHaveLength(1);
+    expect(balances[0].amount).toBe(1234.56);
   });
 });
 

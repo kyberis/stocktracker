@@ -221,6 +221,8 @@ async function importTransactions(
           name: `${(brokerLabel || broker).toUpperCase()} – ${balance.currency}`,
           amountEUR,
           source: broker,
+          displayCurrency: balance.currency,
+          displayAmount: balance.amount,
         }, portfolioId);
         cashImported++;
       }
@@ -351,6 +353,8 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
         name: `${parser.label.toUpperCase()} – ${balance.currency}`,
         amountEUR,
         source: broker,
+        displayCurrency: balance.currency,
+        displayAmount: balance.amount,
       }, portfolioId);
       cashImported++;
     }
