@@ -285,3 +285,10 @@ export {
   getScreenerDistinctCountries,
   getScreenerDistinctExchanges,
 } from "./screener";
+
+export type { SnapTradeLogEntry, InsertSnapTradeLogParams, GetSnapTradeLogsOptions } from "./snaptrade-logs";
+export {
+  insertSnapTradeLog,
+  getRecentSnapTradeLogs,
+  pruneOldSnapTradeLogs,
+} from "./snaptrade-logs";

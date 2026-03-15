@@ -1,5 +1,21 @@
 import { describe, expect, it } from "vitest";
-import { FREE_AI_MONTHLY_LIMIT, canAccessFeature } from "./subscription";
+import { PLATFORM_LIMITS } from "./platform-config";
+import {
+  FREE_AI_MONTHLY_LIMIT,
+  STARTER_AI_MONTHLY_LIMIT,
+  canAccessFeature,
+  canAccessTheme,
+  effectivePlan,
+  getAlertLimit,
+  getAvailableThemes,
+  getHoldingsLimit,
+  getManualAssetLimit,
+  getPortfolioLimit,
+  getSnapTradeConnectionLimit,
+  getThemeUpgradeTarget,
+  planDisplayName,
+} from "./subscription";
+import type { LayoutTheme, SubscriptionFeature } from "./types";
 
 describe("canAccessFeature", () => {
   it("allows free features for free users", () => {
@@ -43,5 +59,248 @@ describe("canAccessFeature", () => {
       aiCallsThisMonth: 10000,
     });
     expect(result.allowed).toBe(true);
+  });
+
+  it("allows starter features for starter users", () => {
+    const result = canAccessFeature("portfolio-sharing", {
+      plan: "starter",
+      aiCallsThisMonth: 0,
+    });
+    expect(result.allowed).toBe(true);
+  });
+
+  it("allows starter features for pro users", () => {
+    const result = canAccessFeature("csv-export", {
+      plan: "pro",
+      aiCallsThisMonth: 0,
+    });
+    expect(result.allowed).toBe(true);
+  });
+
+  it("blocks starter features for free users with upgrade reason", () => {
+    const result = canAccessFeature("metrics", {
+      plan: "free",
+      aiCallsThisMonth: 0,
+    });
+    expect(result.allowed).toBe(false);
+    expect(result.reason).toBe("upgrade_required");
+  });
+
+  it("allows AI for starter users under monthly limit", () => {
+    const result = canAccessFeature("ai", {
+      plan: "starter",
+      aiCallsThisMonth: STARTER_AI_MONTHLY_LIMIT - 1,
+    });
+    expect(result.allowed).toBe(true);
+  });
+
+  it("blocks AI for starter users at monthly limit", () => {
+    const result = canAccessFeature("ai", {
+      plan: "starter",
+      aiCallsThisMonth: STARTER_AI_MONTHLY_LIMIT,
+    });
+    expect(result.allowed).toBe(false);
+    expect(result.reason).toBe("ai_limit_reached");
+    expect(result.limit).toBe(STARTER_AI_MONTHLY_LIMIT);
+    expect(result.used).toBe(STARTER_AI_MONTHLY_LIMIT);
+  });
+
+  it("uses freeAiMonthlyLimit override for free users", () => {
+    const customLimit = 10;
+    const resultUnder = canAccessFeature("ai", {
+      plan: "free",
+      aiCallsThisMonth: customLimit - 1,
+      freeAiMonthlyLimit: customLimit,
+    });
+    expect(resultUnder.allowed).toBe(true);
+
+    const resultAt = canAccessFeature("ai", {
+      plan: "free",
+      aiCallsThisMonth: customLimit,
+      freeAiMonthlyLimit: customLimit,
+    });
+    expect(resultAt.allowed).toBe(false);
+    expect(resultAt.reason).toBe("ai_limit_reached");
+    expect(resultAt.limit).toBe(customLimit);
+    expect(resultAt.used).toBe(customLimit);
+  });
+
+  it("returns upgrade_required for unknown feature", () => {
+    const result = canAccessFeature("unknown" as SubscriptionFeature, {
+      plan: "free",
+      aiCallsThisMonth: 0,
+    });
+    expect(result.allowed).toBe(false);
+    expect(result.reason).toBe("upgrade_required");
+  });
+});
+
+describe("getHoldingsLimit", () => {
+  it("returns FREE_HOLDINGS_LIMIT for free plan", () => {
+    expect(getHoldingsLimit("free")).toBe(PLATFORM_LIMITS.FREE_HOLDINGS_LIMIT);
+  });
+
+  it("returns STARTER_HOLDINGS_LIMIT for starter plan", () => {
+    expect(getHoldingsLimit("starter")).toBe(PLATFORM_LIMITS.STARTER_HOLDINGS_LIMIT);
+  });
+
+  it("returns Infinity for pro plan", () => {
+    expect(getHoldingsLimit("pro")).toBe(Infinity);
+  });
+});
+
+describe("getAlertLimit", () => {
+  it("returns FREE_ALERT_LIMIT for free plan", () => {
+    expect(getAlertLimit("free")).toBe(PLATFORM_LIMITS.FREE_ALERT_LIMIT);
+  });
+
+  it("returns STARTER_ALERT_LIMIT for starter plan", () => {
+    expect(getAlertLimit("starter")).toBe(PLATFORM_LIMITS.STARTER_ALERT_LIMIT);
+  });
+
+  it("returns Infinity for pro plan", () => {
+    expect(getAlertLimit("pro")).toBe(Infinity);
+  });
+});
+
+describe("getPortfolioLimit", () => {
+  it("returns FREE_PORTFOLIO_LIMIT for free plan", () => {
+    expect(getPortfolioLimit("free")).toBe(PLATFORM_LIMITS.FREE_PORTFOLIO_LIMIT);
+  });
+
+  it("returns STARTER_PORTFOLIO_LIMIT for starter plan", () => {
+    expect(getPortfolioLimit("starter")).toBe(PLATFORM_LIMITS.STARTER_PORTFOLIO_LIMIT);
+  });
+
+  it("returns PRO_PORTFOLIO_LIMIT for pro plan", () => {
+    expect(getPortfolioLimit("pro")).toBe(PLATFORM_LIMITS.PRO_PORTFOLIO_LIMIT);
+  });
+});
+
+describe("getManualAssetLimit", () => {
+  it("returns FREE_MANUAL_ASSET_LIMIT for free plan", () => {
+    expect(getManualAssetLimit("free")).toBe(PLATFORM_LIMITS.FREE_MANUAL_ASSET_LIMIT);
+  });
+
+  it("returns STARTER_MANUAL_ASSET_LIMIT for starter plan", () => {
+    expect(getManualAssetLimit("starter")).toBe(PLATFORM_LIMITS.STARTER_MANUAL_ASSET_LIMIT);
+  });
+
+  it("returns PRO_MANUAL_ASSET_LIMIT for pro plan", () => {
+    expect(getManualAssetLimit("pro")).toBe(PLATFORM_LIMITS.PRO_MANUAL_ASSET_LIMIT);
+  });
+});
+
+describe("getSnapTradeConnectionLimit", () => {
+  it("returns FREE_SNAPTRADE_LIMIT for free plan", () => {
+    expect(getSnapTradeConnectionLimit("free")).toBe(PLATFORM_LIMITS.FREE_SNAPTRADE_LIMIT);
+  });
+
+  it("returns STARTER_SNAPTRADE_LIMIT for starter plan", () => {
+    expect(getSnapTradeConnectionLimit("starter")).toBe(PLATFORM_LIMITS.STARTER_SNAPTRADE_LIMIT);
+  });
+
+  it("returns PRO_SNAPTRADE_LIMIT for pro plan", () => {
+    expect(getSnapTradeConnectionLimit("pro")).toBe(PLATFORM_LIMITS.PRO_SNAPTRADE_LIMIT);
+  });
+});
+
+describe("canAccessTheme", () => {
+  const themes: LayoutTheme[] = ["default", "canvas", "terminal", "studio"];
+
+  it("allows default theme for free, starter, and pro", () => {
+    expect(canAccessTheme("default", "free")).toBe(true);
+    expect(canAccessTheme("default", "starter")).toBe(true);
+    expect(canAccessTheme("default", "pro")).toBe(true);
+  });
+
+  it("allows canvas theme for starter and pro only", () => {
+    expect(canAccessTheme("canvas", "free")).toBe(false);
+    expect(canAccessTheme("canvas", "starter")).toBe(true);
+    expect(canAccessTheme("canvas", "pro")).toBe(true);
+  });
+
+  it("allows terminal theme for pro only", () => {
+    expect(canAccessTheme("terminal", "free")).toBe(false);
+    expect(canAccessTheme("terminal", "starter")).toBe(false);
+    expect(canAccessTheme("terminal", "pro")).toBe(true);
+  });
+
+  it("allows studio theme for pro only", () => {
+    expect(canAccessTheme("studio", "free")).toBe(false);
+    expect(canAccessTheme("studio", "starter")).toBe(false);
+    expect(canAccessTheme("studio", "pro")).toBe(true);
+  });
+});
+
+describe("getAvailableThemes", () => {
+  it("returns only default for free plan", () => {
+    expect(getAvailableThemes("free")).toEqual(["default"]);
+  });
+
+  it("returns default and canvas for starter plan", () => {
+    expect(getAvailableThemes("starter")).toEqual(["default", "canvas"]);
+  });
+
+  it("returns all themes for pro plan", () => {
+    expect(getAvailableThemes("pro")).toEqual(["default", "canvas", "terminal", "studio"]);
+  });
+});
+
+describe("getThemeUpgradeTarget", () => {
+  it("returns starter for canvas theme", () => {
+    expect(getThemeUpgradeTarget("canvas")).toBe("starter");
+  });
+
+  it("returns pro for terminal theme", () => {
+    expect(getThemeUpgradeTarget("terminal")).toBe("pro");
+  });
+
+  it("returns pro for studio theme", () => {
+    expect(getThemeUpgradeTarget("studio")).toBe("pro");
+  });
+
+  it("returns null for default theme", () => {
+    expect(getThemeUpgradeTarget("default")).toBe(null);
+  });
+});
+
+describe("effectivePlan", () => {
+  it("returns free when plan is free regardless of expiry", () => {
+    expect(effectivePlan("free", "")).toBe("free");
+    expect(effectivePlan("free", "2099-12-31T23:59:59Z")).toBe("free");
+  });
+
+  it("returns plan when planExpiresAt is empty string", () => {
+    expect(effectivePlan("pro", "")).toBe("pro");
+    expect(effectivePlan("starter", "")).toBe("starter");
+  });
+
+  it("returns plan when planExpiresAt is in the future", () => {
+    const future = new Date();
+    future.setFullYear(future.getFullYear() + 1);
+    expect(effectivePlan("pro", future.toISOString())).toBe("pro");
+    expect(effectivePlan("starter", future.toISOString())).toBe("starter");
+  });
+
+  it("returns free when planExpiresAt is in the past", () => {
+    const past = new Date();
+    past.setFullYear(past.getFullYear() - 1);
+    expect(effectivePlan("pro", past.toISOString())).toBe("free");
+    expect(effectivePlan("starter", past.toISOString())).toBe("free");
+  });
+});
+
+describe("planDisplayName", () => {
+  it("returns Folio for free plan", () => {
+    expect(planDisplayName("free")).toBe("Folio");
+  });
+
+  it("returns Bifolio for starter plan", () => {
+    expect(planDisplayName("starter")).toBe("Bifolio");
+  });
+
+  it("returns Trefolio for pro plan", () => {
+    expect(planDisplayName("pro")).toBe("Trefolio");
   });
 });

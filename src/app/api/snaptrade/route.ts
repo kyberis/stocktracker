@@ -331,7 +331,8 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
         (tx) => !tx.sourceRef || !existingRefs.has(tx.sourceRef),
       );
 
-      const holdingsResult = await fetchAllHoldings(conn.snapTradeUserId, userSecret);
+      const activeAccountIds = new Set(activeAccounts.map((a) => a.id));
+      const holdingsResult = await fetchAllHoldings(conn.snapTradeUserId, userSecret, activeAccountIds);
 
       const summary = {
         total: deduped.length,

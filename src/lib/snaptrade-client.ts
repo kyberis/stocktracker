@@ -1,6 +1,7 @@
 import { Snaptrade } from "snaptrade-typescript-sdk";
 import type { AccountHoldings, Brokerage, Position, UniversalActivity } from "snaptrade-typescript-sdk";
 import type { ExtractedTransaction, ExtractedHolding, CashBalance } from "@/hooks/import-types";
+import { insertSnapTradeLog } from "@/lib/db/snaptrade-logs";
 
 let _client: Snaptrade | null = null;
 
@@ -22,19 +23,56 @@ export class SnapTradeClientError extends Error {
   }
 }
 
-export async function registerUser(userId: string): Promise<{ snapTradeUserId: string; userSecret: string }> {
-  const client = getClient();
-  const res = await client.authentication.registerSnapTradeUser({ userId });
-  const data = res.data;
-  if (!data.userId || !data.userSecret) {
-    throw new SnapTradeClientError("SnapTrade registration did not return userId/userSecret.");
+async function logSnapTradeCall<T>(
+  action: string,
+  userId: string,
+  requestSummary: Record<string, unknown>,
+  fn: () => Promise<T>,
+): Promise<T> {
+  const start = Date.now();
+  try {
+    const result = await fn();
+    const durationMs = Date.now() - start;
+    insertSnapTradeLog({
+      userId,
+      action,
+      status: "success",
+      requestSummary,
+      responseBody: result,
+      durationMs,
+    }).catch(() => {});
+    return result;
+  } catch (err) {
+    const durationMs = Date.now() - start;
+    insertSnapTradeLog({
+      userId,
+      action,
+      status: "error",
+      requestSummary,
+      errorMessage: err instanceof Error ? err.message : String(err),
+      durationMs,
+    }).catch(() => {});
+    throw err;
   }
-  return { snapTradeUserId: data.userId, userSecret: data.userSecret };
+}
+
+export async function registerUser(userId: string): Promise<{ snapTradeUserId: string; userSecret: string }> {
+  return logSnapTradeCall("registerUser", userId, { userId }, async () => {
+    const client = getClient();
+    const res = await client.authentication.registerSnapTradeUser({ userId });
+    const data = res.data;
+    if (!data.userId || !data.userSecret) {
+      throw new SnapTradeClientError("SnapTrade registration did not return userId/userSecret.");
+    }
+    return { snapTradeUserId: data.userId, userSecret: data.userSecret };
+  });
 }
 
 export async function deleteUser(userId: string): Promise<void> {
-  const client = getClient();
-  await client.authentication.deleteSnapTradeUser({ userId });
+  return logSnapTradeCall("deleteUser", userId, { userId }, async () => {
+    const client = getClient();
+    await client.authentication.deleteSnapTradeUser({ userId });
+  });
 }
 
 export interface AvailableBrokerage {
@@ -53,17 +91,19 @@ export async function removeBrokerageConnection(
   userSecret: string,
   connectionId: string,
 ): Promise<void> {
-  const client = getClient();
-  try {
-    await client.connections.removeBrokerageAuthorization({
-      authorizationId: connectionId,
-      userId,
-      userSecret,
-    });
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
-    throw new SnapTradeClientError(`Failed to remove brokerage connection: ${msg}`);
-  }
+  return logSnapTradeCall("removeBrokerageConnection", userId, { userId, connectionId }, async () => {
+    const client = getClient();
+    try {
+      await client.connections.removeBrokerageAuthorization({
+        authorizationId: connectionId,
+        userId,
+        userSecret,
+      });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      throw new SnapTradeClientError(`Failed to remove brokerage connection: ${msg}`);
+    }
+  });
 }
 
 export async function refreshBrokerageConnection(
@@ -71,37 +111,41 @@ export async function refreshBrokerageConnection(
   userSecret: string,
   connectionId: string,
 ): Promise<void> {
-  const client = getClient();
-  try {
-    await client.connections.refreshBrokerageAuthorization({
-      authorizationId: connectionId,
-      userId,
-      userSecret,
-    });
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.warn(`[SnapTrade] refreshBrokerageAuthorization failed: ${msg}`);
-  }
+  return logSnapTradeCall("refreshBrokerageConnection", userId, { userId, connectionId }, async () => {
+    const client = getClient();
+    try {
+      await client.connections.refreshBrokerageAuthorization({
+        authorizationId: connectionId,
+        userId,
+        userSecret,
+      });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.warn(`[SnapTrade] refreshBrokerageAuthorization failed: ${msg}`);
+    }
+  });
 }
 
 export async function listBrokerages(): Promise<AvailableBrokerage[]> {
-  const client = getClient();
-  try {
-    const res = await client.referenceData.listAllBrokerages();
-    return (res.data ?? []).map((b: Brokerage) => ({
-      id: b.id || "",
-      slug: b.slug || "",
-      name: b.name || "",
-      displayName: b.display_name || b.name || "",
-      enabled: b.enabled ?? false,
-      maintenanceMode: b.maintenance_mode ?? false,
-      isDegraded: b.is_degraded ?? false,
-      logoUrl: b.aws_s3_square_logo_url || b.aws_s3_logo_url || null,
-    }));
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
-    throw new SnapTradeClientError(`Failed to list brokerages: ${msg}`);
-  }
+  return logSnapTradeCall("listBrokerages", "system", {}, async () => {
+    const client = getClient();
+    try {
+      const res = await client.referenceData.listAllBrokerages();
+      return (res.data ?? []).map((b: Brokerage) => ({
+        id: b.id || "",
+        slug: b.slug || "",
+        name: b.name || "",
+        displayName: b.display_name || b.name || "",
+        enabled: b.enabled ?? false,
+        maintenanceMode: b.maintenance_mode ?? false,
+        isDegraded: b.is_degraded ?? false,
+        logoUrl: b.aws_s3_square_logo_url || b.aws_s3_logo_url || null,
+      }));
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      throw new SnapTradeClientError(`Failed to list brokerages: ${msg}`);
+    }
+  });
 }
 
 export async function generateConnectionPortalUrl(
@@ -110,18 +154,25 @@ export async function generateConnectionPortalUrl(
   reconnectConnectionId?: string,
   customRedirect?: string,
 ): Promise<{ redirectUrl: string; sessionId?: string }> {
-  const client = getClient();
-  const res = await client.authentication.loginSnapTradeUser({
+  return logSnapTradeCall(
+    "generateConnectionPortalUrl",
     userId,
-    userSecret,
-    ...(reconnectConnectionId ? { reconnect: reconnectConnectionId } : {}),
-    ...(customRedirect ? { customRedirect } : {}),
-  });
-  const data = res.data as { redirectURI?: string; sessionId?: string };
-  if (!data.redirectURI) {
-    throw new SnapTradeClientError("SnapTrade did not return a redirect URL.");
-  }
-  return { redirectUrl: data.redirectURI, sessionId: data.sessionId };
+    { userId, reconnectConnectionId: reconnectConnectionId ?? null },
+    async () => {
+      const client = getClient();
+      const res = await client.authentication.loginSnapTradeUser({
+        userId,
+        userSecret,
+        ...(reconnectConnectionId ? { reconnect: reconnectConnectionId } : {}),
+        ...(customRedirect ? { customRedirect } : {}),
+      });
+      const data = res.data as { redirectURI?: string; sessionId?: string };
+      if (!data.redirectURI) {
+        throw new SnapTradeClientError("SnapTrade did not return a redirect URL.");
+      }
+      return { redirectUrl: data.redirectURI, sessionId: data.sessionId };
+    },
+  );
 }
 
 export interface BrokerageConnectionStatus {
@@ -135,19 +186,21 @@ export async function listBrokerageConnections(
   userId: string,
   userSecret: string,
 ): Promise<BrokerageConnectionStatus[]> {
-  const client = getClient();
-  try {
-    const res = await client.connections.listBrokerageAuthorizations({ userId, userSecret });
-    return res.data.map((c) => ({
-      id: c.id || "",
-      brokerageName: c.brokerage?.name || c.name || "",
-      disabled: c.disabled ?? false,
-      disabledDate: c.disabled_date || null,
-    }));
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
-    throw new SnapTradeClientError(`Failed to list brokerage connections: ${msg}`);
-  }
+  return logSnapTradeCall("listBrokerageConnections", userId, { userId }, async () => {
+    const client = getClient();
+    try {
+      const res = await client.connections.listBrokerageAuthorizations({ userId, userSecret });
+      return res.data.map((c) => ({
+        id: c.id || "",
+        brokerageName: c.brokerage?.name || c.name || "",
+        disabled: c.disabled ?? false,
+        disabledDate: c.disabled_date || null,
+      }));
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      throw new SnapTradeClientError(`Failed to list brokerage connections: ${msg}`);
+    }
+  });
 }
 
 /**
@@ -320,62 +373,78 @@ export interface SnapTradeHoldingsResult {
 export async function fetchAllHoldings(
   userId: string,
   userSecret: string,
+  filterAccountIds?: Set<string>,
 ): Promise<SnapTradeHoldingsResult> {
-  const client = getClient();
+  return logSnapTradeCall("fetchAllHoldings", userId, { userId }, async () => {
+    const client = getClient();
 
-  let allAccountHoldings: AccountHoldings[];
-  try {
-    const res = await client.accountInformation.getAllUserHoldings({
-      userId,
-      userSecret,
-    });
-    allAccountHoldings = res.data;
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
-    throw new SnapTradeClientError(`Failed to fetch holdings from SnapTrade: ${msg}`);
-  }
-
-  const holdings: ExtractedHolding[] = [];
-  const transactions: ExtractedTransaction[] = [];
-  const cashBalances: CashBalance[] = [];
-  const accounts: { id: string; name: string; institution: string }[] = [];
-  const seenTickers = new Set<string>();
-
-  for (const acctHoldings of allAccountHoldings) {
-    const acct = acctHoldings.account;
-    if (acct) {
-      accounts.push({
-        id: String(acct.id || ""),
-        name: String(acct.name || "Unknown Account"),
-        institution: String(acct.institution_name || ""),
+    let allAccountHoldings: AccountHoldings[];
+    try {
+      const res = await client.accountInformation.getAllUserHoldings({
+        userId,
+        userSecret,
       });
+      allAccountHoldings = res.data;
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      throw new SnapTradeClientError(`Failed to fetch holdings from SnapTrade: ${msg}`);
     }
 
-    if (acctHoldings.positions) {
-      for (const pos of acctHoldings.positions) {
-        if (pos.cash_equivalent) continue;
+    // Log the raw SDK response before any transformation
+    insertSnapTradeLog({
+      userId,
+      action: "fetchAllHoldings:raw",
+      status: "success",
+      requestSummary: { userId, note: "raw SDK response before transformation" },
+      responseBody: allAccountHoldings,
+      durationMs: 0,
+    }).catch(() => {});
 
-        const holding = positionToHolding(pos);
-        if (holding && !seenTickers.has(holding.ticker)) {
-          seenTickers.add(holding.ticker);
-          holdings.push(holding);
+    const holdings: ExtractedHolding[] = [];
+    const transactions: ExtractedTransaction[] = [];
+    const cashBalances: CashBalance[] = [];
+    const accounts: { id: string; name: string; institution: string }[] = [];
+    const seenTickers = new Set<string>();
+
+    for (const acctHoldings of allAccountHoldings) {
+      const acct = acctHoldings.account;
+      const acctId = String(acct?.id || "");
+      if (filterAccountIds && acctId && !filterAccountIds.has(acctId)) continue;
+
+      if (acct) {
+        accounts.push({
+          id: acctId,
+          name: String(acct.name || "Unknown Account"),
+          institution: String(acct.institution_name || ""),
+        });
+      }
+
+      if (acctHoldings.positions) {
+        for (const pos of acctHoldings.positions) {
+          if (pos.cash_equivalent) continue;
+
+          const holding = positionToHolding(pos);
+          if (holding && !seenTickers.has(holding.ticker)) {
+            seenTickers.add(holding.ticker);
+            holdings.push(holding);
+          }
+
+          const tx = positionToTransaction(pos);
+          if (tx) transactions.push(tx);
         }
+      }
 
-        const tx = positionToTransaction(pos);
-        if (tx) transactions.push(tx);
+      if (acctHoldings.balances) {
+        for (const bal of acctHoldings.balances) {
+          if (bal.currency?.code && bal.cash != null) {
+            cashBalances.push({ currency: bal.currency.code, amount: bal.cash });
+          }
+        }
       }
     }
 
-    if (acctHoldings.balances) {
-      for (const bal of acctHoldings.balances) {
-        if (bal.currency?.code && bal.cash != null) {
-          cashBalances.push({ currency: bal.currency.code, amount: bal.cash });
-        }
-      }
-    }
-  }
-
-  return { holdings, transactions, cashBalances, accounts };
+    return { holdings, transactions, cashBalances, accounts };
+  });
 }
 
 /* ── Activities (real transaction history) ── */
@@ -437,19 +506,21 @@ export async function listAccounts(
   userId: string,
   userSecret: string,
 ): Promise<SnapTradeAccount[]> {
-  const client = getClient();
-  try {
-    const res = await client.accountInformation.listUserAccounts({ userId, userSecret });
-    return (res.data ?? []).map((a) => ({
-      id: String(a.id || ""),
-      name: String(a.name || "Unknown Account"),
-      institution: String(a.institution_name || ""),
-      brokerageAuthorizationId: String(a.brokerage_authorization || ""),
-    }));
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
-    throw new SnapTradeClientError(`Failed to list accounts: ${msg}`);
-  }
+  return logSnapTradeCall("listAccounts", userId, { userId }, async () => {
+    const client = getClient();
+    try {
+      const res = await client.accountInformation.listUserAccounts({ userId, userSecret });
+      return (res.data ?? []).map((a) => ({
+        id: String(a.id || ""),
+        name: String(a.name || "Unknown Account"),
+        institution: String(a.institution_name || ""),
+        brokerageAuthorizationId: String(a.brokerage_authorization || ""),
+      }));
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      throw new SnapTradeClientError(`Failed to list accounts: ${msg}`);
+    }
+  });
 }
 
 export interface FetchActivitiesOptions {
@@ -470,48 +541,64 @@ export interface FetchActivitiesResult {
 export async function fetchActivities(
   opts: FetchActivitiesOptions,
 ): Promise<FetchActivitiesResult> {
-  const client = getClient();
+  return logSnapTradeCall(
+    "fetchActivities",
+    opts.userId,
+    { userId: opts.userId, accountId: opts.accountId, startDate: opts.startDate ?? null },
+    async () => {
+      const client = getClient();
 
-  try {
-    const allActivities: UniversalActivity[] = [];
-    let offset = 0;
+      try {
+        const allActivities: UniversalActivity[] = [];
+        let offset = 0;
 
-    // Paginate through all activities for this account
-    while (true) {
-      const normalizedStartDate = opts.startDate ? opts.startDate.slice(0, 10) : undefined;
-      const res = await client.accountInformation.getAccountActivities({
-        accountId: opts.accountId,
-        userId: opts.userId,
-        userSecret: opts.userSecret,
-        ...(normalizedStartDate ? { startDate: normalizedStartDate } : {}),
-        type: "BUY,SELL,DIVIDEND,REI,FEE",
-        offset,
-        limit: SNAPTRADE_PAGE_LIMIT,
-      });
+        while (true) {
+          const normalizedStartDate = opts.startDate ? opts.startDate.slice(0, 10) : undefined;
+          const res = await client.accountInformation.getAccountActivities({
+            accountId: opts.accountId,
+            userId: opts.userId,
+            userSecret: opts.userSecret,
+            ...(normalizedStartDate ? { startDate: normalizedStartDate } : {}),
+            type: "BUY,SELL,DIVIDEND,REI,FEE",
+            offset,
+            limit: SNAPTRADE_PAGE_LIMIT,
+          });
 
-      const resBody = res.data as { data?: UniversalActivity[]; pagination?: { total?: number } } | UniversalActivity[];
-      const page: UniversalActivity[] = Array.isArray(resBody) ? resBody : (resBody?.data ?? []);
+          const resBody = res.data as { data?: UniversalActivity[]; pagination?: { total?: number } } | UniversalActivity[];
+          const page: UniversalActivity[] = Array.isArray(resBody) ? resBody : (resBody?.data ?? []);
 
-      allActivities.push(...page);
+          allActivities.push(...page);
 
-      if (page.length < SNAPTRADE_PAGE_LIMIT) break;
-      offset += SNAPTRADE_PAGE_LIMIT;
+          if (page.length < SNAPTRADE_PAGE_LIMIT) break;
+          offset += SNAPTRADE_PAGE_LIMIT;
 
-      if (allActivities.length >= 10_000) break;
-    }
+          if (allActivities.length >= 10_000) break;
+        }
 
-    const transactions: ExtractedTransaction[] = [];
-    for (const a of allActivities) {
-      const tx = activityToTransaction(a);
-      if (tx) transactions.push(tx);
-    }
-    return {
-      transactions,
-      rawCount: allActivities.length,
-      possiblyTruncated: allActivities.length >= 10_000,
-    };
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
-    throw new SnapTradeClientError(`Failed to fetch activities from SnapTrade: ${msg}`);
-  }
+        // Log raw activities before transformation
+        insertSnapTradeLog({
+          userId: opts.userId,
+          action: "fetchActivities:raw",
+          status: "success",
+          requestSummary: { userId: opts.userId, accountId: opts.accountId, startDate: opts.startDate ?? null, note: "raw SDK response before transformation" },
+          responseBody: allActivities,
+          durationMs: 0,
+        }).catch(() => {});
+
+        const transactions: ExtractedTransaction[] = [];
+        for (const a of allActivities) {
+          const tx = activityToTransaction(a);
+          if (tx) transactions.push(tx);
+        }
+        return {
+          transactions,
+          rawCount: allActivities.length,
+          possiblyTruncated: allActivities.length >= 10_000,
+        };
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        throw new SnapTradeClientError(`Failed to fetch activities from SnapTrade: ${msg}`);
+      }
+    },
+  );
 }

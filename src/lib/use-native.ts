@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { isNativePlatform, getNativePlatform, persistNativeDetection } from "./capacitor";
+import { isNativePlatform, getNativePlatform, persistNativeDetection, clearStaleNativeFlags } from "./capacitor";
 
 /**
  * Returns true when running inside a Capacitor native shell.
@@ -12,6 +12,7 @@ export function useIsNative(): boolean {
   const [isNative, setIsNative] = useState(false);
 
   useEffect(() => {
+    clearStaleNativeFlags();
     if (isNativePlatform()) {
       setIsNative(true);
       persistNativeDetection();

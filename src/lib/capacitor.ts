@@ -16,7 +16,7 @@ export function isNativePlatform(): boolean {
       const params = new URLSearchParams(window.location.search);
       if (params.get("native") === "1") return true;
     }
-    if (localStorage.getItem("trefolio-native") === "1") return true;
+    if (cap && localStorage.getItem("trefolio-native") === "1") return true;
   } catch { /* ignore */ }
 
   return false;
@@ -33,8 +33,10 @@ export function getNativePlatform(): "ios" | "android" | "web" {
   if (platform === "android") return "android";
 
   try {
-    const stored = localStorage.getItem("trefolio-native-platform");
-    if (stored === "ios" || stored === "android") return stored;
+    if (cap) {
+      const stored = localStorage.getItem("trefolio-native-platform");
+      if (stored === "ios" || stored === "android") return stored;
+    }
   } catch { /* ignore */ }
 
   if (isNativePlatform()) {
@@ -63,5 +65,16 @@ export function persistNativeDetection(): void {
       localStorage.setItem("trefolio-native", "1");
       localStorage.setItem("trefolio-native-platform", platform);
     }
+  } catch { /* ignore */ }
+}
+
+/** Remove stale native flags when running in a regular browser (no Capacitor bridge) */
+export function clearStaleNativeFlags(): void {
+  if (typeof window === "undefined") return;
+  const cap = (window as unknown as Record<string, unknown>).Capacitor;
+  if (cap) return;
+  try {
+    localStorage.removeItem("trefolio-native");
+    localStorage.removeItem("trefolio-native-platform");
   } catch { /* ignore */ }
 }

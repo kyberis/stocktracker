@@ -1352,6 +1352,27 @@ const MIGRATIONS: Migration[] = [
       `);
     },
   },
+  {
+    version: 45,
+    description: "Create snaptrade_api_logs table for admin response inspection",
+    up: async (client: Client) => {
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS snaptrade_api_logs (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL DEFAULT '',
+          action TEXT NOT NULL,
+          status TEXT NOT NULL DEFAULT 'success',
+          request_summary TEXT NOT NULL DEFAULT '',
+          response_body TEXT NOT NULL DEFAULT '{}',
+          error_message TEXT NOT NULL DEFAULT '',
+          duration_ms INTEGER NOT NULL DEFAULT 0,
+          created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_snaptrade_api_logs_user ON snaptrade_api_logs(user_id);
+        CREATE INDEX IF NOT EXISTS idx_snaptrade_api_logs_created ON snaptrade_api_logs(created_at);
+      `);
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

@@ -1,0 +1,808 @@
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import * as settings from "./settings";
+import { isValidLanguage } from "@/lib/languages";
+
+const { mockExecute, mockClient } = vi.hoisted(() => {
+  const mockExecute = vi.fn();
+  const mockClient = { execute: mockExecute };
+  return { mockExecute, mockClient };
+});
+
+vi.mock("@/lib/db/client", () => ({
+  ensureInitialized: vi.fn().mockResolvedValue(mockClient),
+}));
+
+vi.mock("@/lib/languages", () => ({
+  isValidLanguage: vi.fn().mockReturnValue(true),
+}));
+
+vi.mock("@/lib/crypto", () => ({
+  encrypt: vi.fn().mockReturnValue("encrypted"),
+  tryDecryptOrPlaintext: vi.fn().mockImplementation((v: string) => v),
+}));
+
+beforeEach(() => {
+  vi.clearAllMocks();
+});
+
+const DEFAULT_SETTINGS = {
+  language: "en",
+  refreshInterval: 15,
+  alertChannels: ["email"],
+  whatsappPhone: "",
+  whatsappVerified: false,
+  alertDeviceEnabled: false,
+  dashboardTheme: "default",
+  defaultCurrency: "EUR",
+};
+
+const settingsRow = {
+  language: "en",
+  refresh_interval: 15,
+  alert_channels: "email",
+  whatsapp_phone: "",
+  whatsapp_verified: 0,
+  alert_device_enabled: 0,
+  dashboard_theme: "default",
+  default_currency: "EUR",
+};
+
+describe("settings", () => {
+  describe("getUserSettings", () => {
+    it("returns DEFAULT_SETTINGS and inserts defaults when no row found", async () => {
+      mockExecute
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] });
+
+      const result = await settings.getUserSettings("u1");
+
+      expect(mockExecute).toHaveBeenNthCalledWith(1, {
+        sql: "SELECT language, refresh_interval, alert_channels, whatsapp_phone, whatsapp_verified, alert_device_enabled, dashboard_theme, default_currency FROM user_settings WHERE user_id = ?",
+        args: ["u1"],
+      });
+      expect(mockExecute).toHaveBeenNthCalledWith(2, {
+        sql: expect.stringContaining("INSERT INTO user_settings"),
+        args: ["u1"],
+      });
+      expect(result).toEqual(DEFAULT_SETTINGS);
+    });
+
+    it("returns parsed settings when row found", async () => {
+      mockExecute.mockResolvedValue({ rows: [settingsRow] });
+
+      const result = await settings.getUserSettings("u1");
+
+      expect(mockExecute).toHaveBeenCalledWith({
+        sql: "SELECT language, refresh_interval, alert_channels, whatsapp_phone, whatsapp_verified, alert_device_enabled, dashboard_theme, default_currency FROM user_settings WHERE user_id = ?",
+        args: ["u1"],
+      });
+      expect(result).toEqual(DEFAULT_SETTINGS);
+    });
+
+    it("parses custom values when row has overrides", async () => {
+      mockExecute.mockResolvedValue({
+        rows: [{
+          ...settingsRow,
+          language: "es",
+          refresh_interval: 30,
+          alert_channels: "email,whatsapp",
+          whatsapp_phone: "+1234567890",
+          whatsapp_verified: 1,
+          alert_device_enabled: 1,
+          dashboard_theme: "terminal",
+          default_currency: "USD",
+        }],
+      });
+
+      const result = await settings.getUserSettings("u1");
+
+      expect(result).toEqual({
+        language: "es",
+        refreshInterval: 30,
+        alertChannels: ["email", "whatsapp"],
+        whatsappPhone: "+1234567890",
+        whatsappVerified: true,
+        alertDeviceEnabled: true,
+        dashboardTheme: "terminal",
+        defaultCurrency: "USD",
+      });
+    });
+
+    it("falls back to default theme when invalid dashboard_theme", async () => {
+      mockExecute.mockResolvedValue({
+        rows: [{ ...settingsRow, dashboard_theme: "invalid_theme" }],
+      });
+
+      const result = await settings.getUserSettings("u1");
+
+      expect(result.dashboardTheme).toBe("default");
+    });
+
+    it("falls back to EUR when invalid default_currency", async () => {
+      mockExecute.mockResolvedValue({
+        rows: [{ ...settingsRow, default_currency: "XXX" }],
+      });
+
+      const result = await settings.getUserSettings("u1");
+
+      expect(result.defaultCurrency).toBe("EUR");
+    });
+
+    it("falls back to en when invalid language", async () => {
+      vi.mocked(isValidLanguage).mockReturnValueOnce(false);
+      mockExecute.mockResolvedValue({
+        rows: [{ ...settingsRow, language: "zz" }],
+      });
+
+      const result = await settings.getUserSettings("u1");
+
+      expect(result.language).toBe("en");
+    });
+  });
+
+  describe("updateUserSettings", () => {
+    it("merges updates with current settings and executes UPDATE", async () => {
+      mockExecute
+        .mockResolvedValueOnce({ rows: [settingsRow] })
+        .mockResolvedValueOnce({ rows: [] });
+
+      const result = await settings.updateUserSettings("u1", {
+        language: "es",
+        refreshInterval: 30,
+      });
+
+      expect(mockExecute).toHaveBeenCalledTimes(2);
+      expect(mockExecute).toHaveBeenNthCalledWith(2, {
+        sql: expect.stringContaining("UPDATE user_settings SET"),
+        args: expect.arrayContaining(["es", 30, "email", "", 0, 0, "default", "EUR", "u1"]),
+      });
+      expect(result).toMatchObject({
+        language: "es",
+        refreshInterval: 30,
+      });
+    });
+  });
+
+  describe("markWhatsAppVerified", () => {
+    it("updates whatsapp_phone and whatsapp_verified", async () => {
+      mockExecute.mockResolvedValue({ rows: [] });
+
+      await settings.markWhatsAppVerified("u1", "+1234567890");
+
+      expect(mockExecute).toHaveBeenCalledWith({
+        sql: "UPDATE user_settings SET whatsapp_phone = ?, whatsapp_verified = 1 WHERE user_id = ?",
+        args: ["+1234567890", "u1"],
+      });
+    });
+  });
+
+  describe("getWhatsAppQuota", () => {
+    it("returns allowed=true when under all limits", async () => {
+      const now = new Date().toISOString().slice(0, 10);
+      mockExecute
+        .mockResolvedValueOnce({
+          rows: [{
+            wa_msgs_today: 2,
+            wa_daily_reset_at: now,
+            wa_msgs_month: 10,
+            wa_monthly_reset_at: `${now.slice(0, 7)}-01`,
+          }],
+        })
+        .mockResolvedValueOnce({ rows: [{ value: "100" }] })
+        .mockResolvedValueOnce({ rows: [{ value: `${now.slice(0, 7)}-01` }] });
+
+      const result = await settings.getWhatsAppQuota("u1");
+
+      expect(result.allowed).toBe(true);
+      expect(result.reason).toBeUndefined();
+      expect(result.userToday).toBe(2);
+      expect(result.userMonth).toBe(10);
+      expect(result.userDailyLimit).toBe(5);
+      expect(result.userMonthlyLimit).toBe(30);
+      expect(result.globalMonthlyLimit).toBe(3000);
+    });
+
+    it("returns allowed=false with reason daily_limit when userToday >= limit", async () => {
+      const now = new Date().toISOString().slice(0, 10);
+      mockExecute
+        .mockResolvedValueOnce({
+          rows: [{
+            wa_msgs_today: 5,
+            wa_daily_reset_at: now,
+            wa_msgs_month: 0,
+            wa_monthly_reset_at: now,
+          }],
+        })
+        .mockResolvedValueOnce({ rows: [{ value: "0" }] })
+        .mockResolvedValueOnce({ rows: [{ value: now }] });
+
+      const result = await settings.getWhatsAppQuota("u1");
+
+      expect(result.allowed).toBe(false);
+      expect(result.reason).toBe("daily_limit");
+      expect(result.userToday).toBe(5);
+    });
+
+    it("returns allowed=false with reason monthly_limit when userMonth >= limit", async () => {
+      const now = new Date().toISOString().slice(0, 10);
+      mockExecute
+        .mockResolvedValueOnce({
+          rows: [{
+            wa_msgs_today: 0,
+            wa_daily_reset_at: now,
+            wa_msgs_month: 30,
+            wa_monthly_reset_at: `${now.slice(0, 7)}-01`,
+          }],
+        })
+        .mockResolvedValueOnce({ rows: [{ value: "0" }] })
+        .mockResolvedValueOnce({ rows: [{ value: `${now.slice(0, 7)}-01` }] });
+
+      const result = await settings.getWhatsAppQuota("u1");
+
+      expect(result.allowed).toBe(false);
+      expect(result.reason).toBe("monthly_limit");
+      expect(result.userMonth).toBe(30);
+    });
+
+    it("returns allowed=false with reason global_limit when globalMonth >= limit", async () => {
+      const now = new Date().toISOString().slice(0, 10);
+      mockExecute
+        .mockResolvedValueOnce({
+          rows: [{
+            wa_msgs_today: 0,
+            wa_daily_reset_at: now,
+            wa_msgs_month: 0,
+            wa_monthly_reset_at: now,
+          }],
+        })
+        .mockResolvedValueOnce({ rows: [{ value: "3000" }] })
+        .mockResolvedValueOnce({ rows: [{ value: `${now.slice(0, 7)}-01` }] });
+
+      const result = await settings.getWhatsAppQuota("u1");
+
+      expect(result.allowed).toBe(false);
+      expect(result.reason).toBe("global_limit");
+      expect(result.globalMonth).toBe(3000);
+    });
+  });
+
+  describe("incrementWhatsAppCounter", () => {
+    it("returns early when no user row found", async () => {
+      mockExecute.mockResolvedValueOnce({ rows: [] });
+
+      await settings.incrementWhatsAppCounter("u1");
+
+      expect(mockExecute).toHaveBeenCalledTimes(1);
+      expect(mockExecute).toHaveBeenCalledWith({
+        sql: "SELECT wa_daily_reset_at, wa_monthly_reset_at FROM user_settings WHERE user_id = ?",
+        args: ["u1"],
+      });
+    });
+
+    it("updates user and global counters when no resets needed (4 executes)", async () => {
+      const now = new Date();
+      const todayIso = now.toISOString();
+      const monthStart = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}-01`;
+      mockExecute
+        .mockResolvedValueOnce({
+          rows: [{
+            wa_daily_reset_at: todayIso,
+            wa_monthly_reset_at: monthStart,
+          }],
+        })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [{ value: monthStart }] })
+        .mockResolvedValueOnce({ rows: [] });
+
+      await settings.incrementWhatsAppCounter("u1");
+
+      expect(mockExecute).toHaveBeenCalledTimes(4);
+      expect(mockExecute).toHaveBeenNthCalledWith(2, {
+        sql: expect.stringContaining("UPDATE user_settings SET"),
+        args: expect.arrayContaining([0, 0, "u1"]),
+      });
+      expect(mockExecute).toHaveBeenNthCalledWith(4, {
+        sql: expect.stringContaining("wa_global_msgs_month"),
+      });
+    });
+
+    it("resets global counter and writes reset_at when global month reset (5 executes)", async () => {
+      const now = new Date();
+      const todayIso = now.toISOString();
+      const lastMonth = new Date(now);
+      lastMonth.setUTCMonth(lastMonth.getUTCMonth() - 1);
+      const oldMonthStart = `${lastMonth.getUTCFullYear()}-${String(lastMonth.getUTCMonth() + 1).padStart(2, "0")}-01`;
+      mockExecute
+        .mockResolvedValueOnce({
+          rows: [{
+            wa_daily_reset_at: todayIso,
+            wa_monthly_reset_at: oldMonthStart,
+          }],
+        })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [{ value: oldMonthStart }] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] });
+
+      await settings.incrementWhatsAppCounter("u1");
+
+      expect(mockExecute).toHaveBeenCalledTimes(5);
+      expect(mockExecute).toHaveBeenNthCalledWith(4, {
+        sql: expect.stringContaining("wa_global_msgs_month"),
+      });
+      expect(mockExecute).toHaveBeenNthCalledWith(5, {
+        sql: expect.stringContaining("wa_global_monthly_reset_at"),
+        args: expect.any(Array),
+      });
+    });
+  });
+
+  describe("getPlatformSetting", () => {
+    it("returns value when row found", async () => {
+      mockExecute.mockResolvedValue({ rows: [{ value: "my-value" }] });
+
+      const result = await settings.getPlatformSetting("my_key");
+
+      expect(mockExecute).toHaveBeenCalledWith({
+        sql: "SELECT value FROM platform_settings WHERE key = ?",
+        args: ["my_key"],
+      });
+      expect(result).toBe("my-value");
+    });
+
+    it("returns empty string when no row found", async () => {
+      mockExecute.mockResolvedValue({ rows: [] });
+
+      const result = await settings.getPlatformSetting("missing_key");
+
+      expect(result).toBe("");
+    });
+  });
+
+  describe("setPlatformSetting", () => {
+    it("inserts or replaces key-value in platform_settings", async () => {
+      mockExecute.mockResolvedValue({ rows: [] });
+
+      await settings.setPlatformSetting("my_key", "my_value");
+
+      expect(mockExecute).toHaveBeenCalledWith({
+        sql: expect.stringContaining("INSERT INTO platform_settings"),
+        args: ["my_key", "my_value"],
+      });
+    });
+  });
+
+  describe("isFeatureEnabled", () => {
+    it("returns true when platform setting is 'true'", async () => {
+      mockExecute.mockResolvedValue({ rows: [{ value: "true" }] });
+
+      const result = await settings.isFeatureEnabled("whatsapp_enabled");
+
+      expect(result).toBe(true);
+    });
+
+    it("returns false when platform setting is 'false'", async () => {
+      mockExecute.mockResolvedValue({ rows: [{ value: "false" }] });
+
+      const result = await settings.isFeatureEnabled("whatsapp_enabled");
+
+      expect(result).toBe(false);
+    });
+
+    it("returns DEFAULT_ENABLED_FLAGS default when no setting", async () => {
+      mockExecute.mockResolvedValue({ rows: [] });
+
+      const resultEnabled = await settings.isFeatureEnabled("whatsapp_enabled");
+      const resultDisabled = await settings.isFeatureEnabled("alerts_enabled");
+
+      expect(resultEnabled).toBe(true);
+      expect(resultDisabled).toBe(false);
+    });
+  });
+
+  describe("setFeatureEnabled", () => {
+    it("sets feature to true", async () => {
+      mockExecute.mockResolvedValue({ rows: [] });
+
+      await settings.setFeatureEnabled("csv_export_enabled", true);
+
+      expect(mockExecute).toHaveBeenCalledWith({
+        sql: expect.stringContaining("INSERT INTO platform_settings"),
+        args: ["csv_export_enabled", "true"],
+      });
+    });
+
+    it("sets feature to false", async () => {
+      mockExecute.mockResolvedValue({ rows: [] });
+
+      await settings.setFeatureEnabled("csv_export_enabled", false);
+
+      expect(mockExecute).toHaveBeenCalledWith({
+        sql: expect.stringContaining("INSERT INTO platform_settings"),
+        args: ["csv_export_enabled", "false"],
+      });
+    });
+  });
+
+  describe("getGlobalAlphaVantageApiKey", () => {
+    const origEnv = { ...process.env };
+
+    beforeEach(() => {
+      process.env = { ...origEnv };
+    });
+
+    it("returns env value when STOCKTRACKER_ALPHAVANTAGE_API_KEY is set", () => {
+      process.env.STOCKTRACKER_ALPHAVANTAGE_API_KEY = "av-key-123";
+
+      const result = settings.getGlobalAlphaVantageApiKey();
+
+      expect(result).toBe("av-key-123");
+    });
+
+    it("returns empty string when env not set", () => {
+      delete process.env.STOCKTRACKER_ALPHAVANTAGE_API_KEY;
+
+      const result = settings.getGlobalAlphaVantageApiKey();
+
+      expect(result).toBe("");
+    });
+  });
+
+  describe("getGlobalResendApiKey", () => {
+    it("returns decrypted value when resend_api_key is set", async () => {
+      mockExecute.mockResolvedValue({ rows: [{ value: "stored-key" }] });
+
+      const result = await settings.getGlobalResendApiKey();
+
+      expect(mockExecute).toHaveBeenCalledWith({
+        sql: "SELECT value FROM platform_settings WHERE key = ?",
+        args: ["resend_api_key"],
+      });
+      expect(result).toBe("stored-key");
+    });
+
+    it("returns empty string when no resend_api_key", async () => {
+      mockExecute.mockResolvedValue({ rows: [] });
+
+      const result = await settings.getGlobalResendApiKey();
+
+      expect(result).toBe("");
+    });
+  });
+
+  describe("setGlobalResendApiKey", () => {
+    it("encrypts and stores key when non-empty", async () => {
+      mockExecute.mockResolvedValue({ rows: [] });
+
+      await settings.setGlobalResendApiKey("my-resend-key");
+
+      expect(mockExecute).toHaveBeenCalledWith({
+        sql: expect.stringContaining("INSERT INTO platform_settings"),
+        args: ["resend_api_key", "encrypted"],
+      });
+    });
+
+    it("stores empty string when key is empty", async () => {
+      mockExecute.mockResolvedValue({ rows: [] });
+
+      await settings.setGlobalResendApiKey("");
+
+      expect(mockExecute).toHaveBeenCalledWith({
+        sql: expect.stringContaining("INSERT INTO platform_settings"),
+        args: ["resend_api_key", ""],
+      });
+    });
+  });
+
+  describe("getGlobalOpenAIApiKey", () => {
+    const origEnv = { ...process.env };
+
+    beforeEach(() => {
+      process.env = { ...origEnv };
+    });
+
+    it("returns env value when STOCKTRACKER_OPENAI_API_KEY is set", () => {
+      process.env.STOCKTRACKER_OPENAI_API_KEY = "openai-key-123";
+
+      const result = settings.getGlobalOpenAIApiKey();
+
+      expect(result).toBe("openai-key-123");
+    });
+
+    it("returns empty string when env not set", () => {
+      delete process.env.STOCKTRACKER_OPENAI_API_KEY;
+
+      const result = settings.getGlobalOpenAIApiKey();
+
+      expect(result).toBe("");
+    });
+  });
+
+  describe("getStripePriceConfig", () => {
+    it("returns db value when platform setting exists", async () => {
+      mockExecute.mockResolvedValue({ rows: [{ value: "price_abc123" }] });
+
+      const result = await settings.getStripePriceConfig("stripe_price_pro_monthly");
+
+      expect(mockExecute).toHaveBeenCalledWith({
+        sql: "SELECT value FROM platform_settings WHERE key = ?",
+        args: ["stripe_price_pro_monthly"],
+      });
+      expect(result).toBe("price_abc123");
+    });
+
+    it("returns env fallback when db empty", async () => {
+      const origEnv = process.env.STRIPE_PRICE_PRO_MONTHLY;
+      process.env.STRIPE_PRICE_PRO_MONTHLY = "price_env_fallback";
+      mockExecute.mockResolvedValue({ rows: [] });
+
+      const result = await settings.getStripePriceConfig("stripe_price_pro_monthly");
+
+      expect(result).toBe("price_env_fallback");
+      process.env.STRIPE_PRICE_PRO_MONTHLY = origEnv;
+    });
+  });
+
+  describe("getAllStripePriceConfig", () => {
+    it("returns all stripe price configs via getStripePriceConfig", async () => {
+      mockExecute.mockResolvedValue({ rows: [] });
+
+      const result = await settings.getAllStripePriceConfig();
+
+      expect(mockExecute).toHaveBeenCalled();
+      expect(result).toHaveProperty("stripe_price_starter_monthly");
+      expect(result).toHaveProperty("stripe_price_pro_annual");
+      expect(Object.keys(result)).toHaveLength(5);
+    });
+  });
+
+  describe("setStripePriceConfig", () => {
+    it("sets platform setting for stripe price key", async () => {
+      mockExecute.mockResolvedValue({ rows: [] });
+
+      await settings.setStripePriceConfig("stripe_price_pro_annual", "price_xyz");
+
+      expect(mockExecute).toHaveBeenCalledWith({
+        sql: expect.stringContaining("INSERT INTO platform_settings"),
+        args: ["stripe_price_pro_annual", "price_xyz"],
+      });
+    });
+  });
+
+  describe("getPromoBannerConfig", () => {
+    it("returns DEFAULT_PROMO_BANNER when no raw setting", async () => {
+      mockExecute.mockResolvedValue({ rows: [] });
+
+      const result = await settings.getPromoBannerConfig();
+
+      expect(mockExecute).toHaveBeenCalledWith({
+        sql: "SELECT value FROM platform_settings WHERE key = ?",
+        args: ["promo_banner_config"],
+      });
+      expect(result).toMatchObject({ enabled: false, title: expect.any(String) });
+    });
+
+    it("returns merged config when valid JSON", async () => {
+      mockExecute.mockResolvedValue({
+        rows: [{ value: JSON.stringify({ enabled: true, title: "Custom Promo" }) }],
+      });
+
+      const result = await settings.getPromoBannerConfig();
+
+      expect(result.enabled).toBe(true);
+      expect(result.title).toBe("Custom Promo");
+    });
+
+    it("returns DEFAULT_PROMO_BANNER when JSON parse fails", async () => {
+      mockExecute.mockResolvedValue({ rows: [{ value: "not-valid-json" }] });
+
+      const result = await settings.getPromoBannerConfig();
+
+      expect(result).toMatchObject({ enabled: false });
+    });
+  });
+
+  describe("setPromoBannerConfig", () => {
+    it("merges config and persists via setPlatformSetting", async () => {
+      mockExecute
+        .mockResolvedValueOnce({ rows: [{ value: JSON.stringify({ enabled: false }) }] })
+        .mockResolvedValueOnce({ rows: [] });
+
+      const result = await settings.setPromoBannerConfig({ enabled: true });
+
+      expect(mockExecute).toHaveBeenCalledTimes(2);
+      expect(mockExecute).toHaveBeenNthCalledWith(2, {
+        sql: expect.stringContaining("INSERT INTO platform_settings"),
+        args: ["promo_banner_config", expect.stringContaining('"enabled":true')],
+      });
+      expect(result.enabled).toBe(true);
+    });
+  });
+
+  describe("getGaMeasurementId", () => {
+    it("returns db value when platform setting exists", async () => {
+      mockExecute.mockResolvedValue({ rows: [{ value: "G-ABC123" }] });
+
+      const result = await settings.getGaMeasurementId();
+
+      expect(mockExecute).toHaveBeenCalledWith({
+        sql: "SELECT value FROM platform_settings WHERE key = ?",
+        args: ["ga_measurement_id"],
+      });
+      expect(result).toBe("G-ABC123");
+    });
+
+    it("returns env fallback when db empty", async () => {
+      const origEnv = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+      process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID = "G-ENV123";
+      mockExecute.mockResolvedValue({ rows: [] });
+
+      const result = await settings.getGaMeasurementId();
+
+      expect(result).toBe("G-ENV123");
+      process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID = origEnv;
+    });
+  });
+
+  describe("setGaMeasurementId", () => {
+    it("trims and stores ga_measurement_id", async () => {
+      mockExecute.mockResolvedValue({ rows: [] });
+
+      await settings.setGaMeasurementId("  G-ABC123  ");
+
+      expect(mockExecute).toHaveBeenCalledWith({
+        sql: expect.stringContaining("INSERT INTO platform_settings"),
+        args: ["ga_measurement_id", "G-ABC123"],
+      });
+    });
+  });
+
+  describe("getAdConfig", () => {
+    it("returns default config with env clientId when no raw setting", async () => {
+      const origEnv = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID;
+      process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID = "ca-pub-env";
+      mockExecute.mockResolvedValue({ rows: [] });
+
+      const result = await settings.getAdConfig();
+
+      expect(mockExecute).toHaveBeenCalledWith({
+        sql: "SELECT value FROM platform_settings WHERE key = ?",
+        args: ["ad_config"],
+      });
+      expect(result.clientId).toBe("ca-pub-env");
+      expect(result.globalEnabled).toBe(false);
+      expect(result.slots).toHaveProperty("dashboard-summary");
+      process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID = origEnv;
+    });
+
+    it("returns parsed config with merged slots when valid JSON", async () => {
+      mockExecute.mockResolvedValue({
+        rows: [{
+          value: JSON.stringify({
+            clientId: "ca-pub-db",
+            globalEnabled: true,
+            slots: { "dashboard-summary": { enabled: false, slotId: "slot-123" } },
+          }),
+        }],
+      });
+
+      const result = await settings.getAdConfig();
+
+      expect(result.clientId).toBe("ca-pub-db");
+      expect(result.globalEnabled).toBe(true);
+      expect(result.slots["dashboard-summary"]).toEqual({ enabled: false, slotId: "slot-123" });
+    });
+
+    it("returns default config when JSON parse fails", async () => {
+      mockExecute.mockResolvedValue({ rows: [{ value: "invalid" }] });
+
+      const result = await settings.getAdConfig();
+
+      expect(result.globalEnabled).toBe(false);
+      expect(result.slots).toBeDefined();
+    });
+
+    it("uses envClientId when parsed clientId is empty", async () => {
+      const origEnv = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID;
+      process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID = "ca-pub-fallback";
+      mockExecute.mockResolvedValue({
+        rows: [{ value: JSON.stringify({ clientId: "", globalEnabled: true }) }],
+      });
+
+      const result = await settings.getAdConfig();
+
+      expect(result.clientId).toBe("ca-pub-fallback");
+      process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID = origEnv;
+    });
+
+    it("skips unknown slot keys when merging parsed slots", async () => {
+      mockExecute.mockResolvedValue({
+        rows: [{
+          value: JSON.stringify({
+            clientId: "ca-pub",
+            slots: { "unknown-slot": { enabled: true, slotId: "x" } },
+          }),
+        }],
+      });
+
+      const result = await settings.getAdConfig();
+
+      expect(result.slots).not.toHaveProperty("unknown-slot");
+      expect(result.slots["dashboard-summary"]).toBeDefined();
+    });
+  });
+
+  describe("setAdConfig", () => {
+    it("merges partial config and persists", async () => {
+      mockExecute
+        .mockResolvedValueOnce({
+          rows: [{
+            value: JSON.stringify({
+              clientId: "ca-pub",
+              globalEnabled: false,
+              slots: { "dashboard-summary": { enabled: true, slotId: "" } },
+            }),
+          }],
+        })
+        .mockResolvedValueOnce({ rows: [] });
+
+      const result = await settings.setAdConfig({
+        globalEnabled: true,
+        slots: { "dashboard-summary": { slotId: "new-slot" } },
+      });
+
+      expect(mockExecute).toHaveBeenCalledTimes(2);
+      expect(mockExecute).toHaveBeenNthCalledWith(2, {
+        sql: expect.stringContaining("INSERT INTO platform_settings"),
+        args: ["ad_config", expect.stringContaining("new-slot")],
+      });
+      expect(result.globalEnabled).toBe(true);
+      expect(result.slots["dashboard-summary"].slotId).toBe("new-slot");
+    });
+
+    it("skips unknown slot keys when merging config.slots", async () => {
+      mockExecute
+        .mockResolvedValueOnce({
+          rows: [{
+            value: JSON.stringify({
+              clientId: "ca-pub",
+              globalEnabled: false,
+              slots: { "dashboard-summary": { enabled: true, slotId: "" } },
+            }),
+          }],
+        })
+        .mockResolvedValueOnce({ rows: [] });
+
+      const result = await settings.setAdConfig({
+        slots: { "unknown-slot": { enabled: false, slotId: "x" } },
+      });
+
+      expect(result.slots).not.toHaveProperty("unknown-slot");
+      expect(mockExecute).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe("getAllPlatformSettings", () => {
+    it("returns all key-value pairs from platform_settings", async () => {
+      mockExecute.mockResolvedValue({
+        rows: [
+          { key: "k1", value: "v1" },
+          { key: "k2", value: "v2" },
+        ],
+      });
+
+      const result = await settings.getAllPlatformSettings();
+
+      expect(mockExecute).toHaveBeenCalledWith("SELECT key, value FROM platform_settings");
+      expect(result).toEqual({ k1: "v1", k2: "v2" });
+    });
+
+    it("returns empty object when no rows", async () => {
+      mockExecute.mockResolvedValue({ rows: [] });
+
+      const result = await settings.getAllPlatformSettings();
+
+      expect(result).toEqual({});
+    });
+  });
+});

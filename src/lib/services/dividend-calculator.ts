@@ -3,6 +3,8 @@ import { convertToEUR } from "@/lib/utils";
 
 const DEFAULT_GROWTH_RATE = 0.10;
 const DEFAULT_PROJECTION_YEARS = 5;
+const DEFAULT_DRIP_GROWTH_RATE = 0.05;
+const DEFAULT_DRIP_YEARS = 10;
 
 export interface EstimatedDividend {
   ticker: string;
@@ -10,9 +12,16 @@ export interface EstimatedDividend {
   shares: number;
   annualDividendPerShare: number;
   dividendYield: number;
+  yieldOnCost: number;
   annualIncome: number;
   currency: string;
   annualIncomeEUR: number;
+}
+
+export interface DripProjectionRow {
+  year: number;
+  withoutDrip: number;
+  withDrip: number;
 }
 
 export interface YearlyDividend {
@@ -76,12 +85,14 @@ export function computeEstimatedDividends(
     const annualIncome = h.shares * rate;
     const cur = q.currency || h.displayCurrency || "USD";
     const annualIncomeEUR = convertToEUR(annualIncome, cur, exchangeRates);
+    const yoc = h.purchasePrice > 0 ? (rate / h.purchasePrice) * 100 : 0;
     items.push({
       ticker: h.ticker,
       name: h.name,
       shares: h.shares,
       annualDividendPerShare: rate,
       dividendYield: yld * 100,
+      yieldOnCost: yoc,
       annualIncome,
       currency: cur,
       annualIncomeEUR,
@@ -241,4 +252,89 @@ export function computeIncomeByMonth(
     gains: gainByMonth[m],
     total: divByMonth[m] + gainByMonth[m],
   }));
+}
+
+export function computePortfolioYieldOnCost(
+  holdings: Holding[],
+  quotes: Record<string, QuoteData>,
+  exchangeRates: ExchangeRates,
+): number {
+  let totalCostEUR = 0;
+  let totalAnnualDivEUR = 0;
+
+  for (const h of holdings) {
+    const q = quotes[h.ticker];
+    if (!q) continue;
+    const rate = q.trailingAnnualDividendRate;
+    if (!rate || rate <= 0 || h.purchasePrice <= 0) continue;
+    const cur = q.currency || h.displayCurrency || "USD";
+    totalAnnualDivEUR += convertToEUR(h.shares * rate, cur, exchangeRates);
+    totalCostEUR += convertToEUR(h.shares * h.purchasePrice, cur, exchangeRates);
+  }
+
+  return totalCostEUR > 0 ? (totalAnnualDivEUR / totalCostEUR) * 100 : 0;
+}
+
+/**
+ * Projects dividend income with and without DRIP over a given horizon.
+ * Per-holding: each year, reinvested dividends buy fractional shares at
+ * today's price, which then earn additional dividends.
+ */
+export function computeDripSimulation(
+  holdings: Holding[],
+  quotes: Record<string, QuoteData>,
+  exchangeRates: ExchangeRates,
+  growthRate = DEFAULT_DRIP_GROWTH_RATE,
+  years = DEFAULT_DRIP_YEARS,
+): DripProjectionRow[] {
+  interface HoldingState {
+    shares: number;
+    dps: number;
+    price: number;
+    currency: string;
+  }
+
+  const holdingStates: HoldingState[] = [];
+  for (const h of holdings) {
+    const q = quotes[h.ticker];
+    if (!q) continue;
+    const rate = q.trailingAnnualDividendRate;
+    if (!rate || rate <= 0 || q.regularMarketPrice <= 0) continue;
+    holdingStates.push({
+      shares: h.shares,
+      dps: rate,
+      price: q.regularMarketPrice,
+      currency: q.currency || h.displayCurrency || "USD",
+    });
+  }
+
+  if (holdingStates.length === 0) return [];
+
+  const dripStates = holdingStates.map((s) => ({ ...s }));
+
+  const rows: DripProjectionRow[] = [];
+  for (let y = 0; y <= years; y++) {
+    const growthMultiplier = Math.pow(1 + growthRate, y);
+
+    let withoutDrip = 0;
+    let withDrip = 0;
+
+    for (let i = 0; i < holdingStates.length; i++) {
+      const base = holdingStates[i];
+      const drip = dripStates[i];
+      const dpsThisYear = base.dps * growthMultiplier;
+
+      withoutDrip += convertToEUR(base.shares * dpsThisYear, base.currency, exchangeRates);
+      withDrip += convertToEUR(drip.shares * dpsThisYear, drip.currency, exchangeRates);
+
+      if (y < years) {
+        const dripDividend = drip.shares * dpsThisYear;
+        drip.shares += dripDividend / drip.price;
+      }
+    }
+
+    rows.push({ year: y, withoutDrip, withDrip });
+  }
+
+  return rows;
 }

@@ -2,28 +2,39 @@
 
 import { useState, useEffect, useMemo, Suspense } from "react";
 import dynamic from "next/dynamic";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 import { useI18n } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/portfolio-context";
-import { convertToEUR, formatCurrency, formatStealthCurrency } from "@/lib/utils";
+import { formatCurrency, formatStealthCurrency } from "@/lib/utils";
 import type { Transaction } from "@/lib/types";
 import { useTrack } from "@/lib/use-track";
 import { useStealthMode } from "@/lib/stealth-context";
+import { useTheme } from "@/lib/theme-context";
+import {
+  filterDividendTransactions,
+  filterSellTransactions,
+  computeEstimatedDividends,
+  computeTotalEstimatedEUR,
+  computeEstimatedYield,
+  computeYearlyBreakdown,
+  computeMonthlyCalendar,
+  computeTopPayers,
+  computeDividendProjections,
+  computeEstimatedProjections,
+  computeIncomeByMonth,
+  computePortfolioYieldOnCost,
+  computeDripSimulation,
+} from "@/lib/services/dividend-calculator";
 
 const ExDividendCalendar = dynamic(() => import("./ExDividendCalendar"), { ssr: false });
-
-const GROWTH_RATE = 0.10;
-const PROJECTION_YEARS = 5;
-
-interface EstimatedDividend {
-  ticker: string;
-  name: string;
-  shares: number;
-  annualDividendPerShare: number;
-  dividendYield: number;
-  annualIncome: number;
-  currency: string;
-  annualIncomeEUR: number;
-}
 
 export default function DividendSummary() {
   const { t } = useI18n();
@@ -32,6 +43,10 @@ export default function DividendSummary() {
   const [txs, setTxs] = useState<Transaction[]>([]);
   const track = useTrack();
   const { stealthMode } = useStealthMode();
+  const { isDark } = useTheme();
+
+  const [dripGrowthRate, setDripGrowthRate] = useState(5);
+  const [dripYears, setDripYears] = useState(10);
 
   useEffect(() => {
     track("exdiv_calendar_viewed");
@@ -39,7 +54,7 @@ export default function DividendSummary() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const dividendTxs = useMemo(() => txs.filter((tx) => tx.type === "dividend"), [txs]);
+  const dividendTxs = useMemo(() => filterDividendTransactions(txs), [txs]);
   const totalDividends = useMemo(() => dividendTxs.reduce((s, tx) => s + tx.totalAmount, 0), [dividendTxs]);
 
   const thisYear = new Date().getFullYear();
@@ -59,174 +74,50 @@ export default function DividendSummary() {
   );
   const yieldPercent = totalPortfolioValue > 0 ? (annualDividends / totalPortfolioValue) * 100 : 0;
 
-  // --- Estimated dividends from current holdings ---
-  const estimated = useMemo<EstimatedDividend[]>(() => {
-    const items: EstimatedDividend[] = [];
-    for (const h of holdings) {
-      const q = quotes[h.ticker];
-      if (!q) continue;
-      const rate = q.trailingAnnualDividendRate;
-      if (!rate || rate <= 0) continue;
-      const yld = q.trailingAnnualDividendYield ?? 0;
-      const annualIncome = h.shares * rate;
-      const cur = q.currency || h.displayCurrency || "USD";
-      // financial-calculations skill: use convertToEUR, rate key format EUR{CURRENCY}
-      const annualIncomeEUR = convertToEUR(annualIncome, cur, exchangeRates);
-      items.push({
-        ticker: h.ticker,
-        name: h.name,
-        shares: h.shares,
-        annualDividendPerShare: rate,
-        dividendYield: yld * 100,
-        annualIncome,
-        currency: cur,
-        annualIncomeEUR,
-      });
-    }
-    items.sort((a, b) => b.annualIncomeEUR - a.annualIncomeEUR);
-    return items;
-  }, [holdings, quotes, exchangeRates]);
+  const estimated = useMemo(
+    () => computeEstimatedDividends(holdings, quotes, exchangeRates),
+    [holdings, quotes, exchangeRates]
+  );
 
-  const totalEstimatedEUR = useMemo(() => estimated.reduce((s, e) => s + e.annualIncomeEUR, 0), [estimated]);
-  const estimatedYieldPercent = useMemo(() => {
-    const totalValue = holdings.reduce((s, h) => {
-      const q = quotes[h.ticker];
-      if (!q) return s;
-      const cur = q.currency || h.displayCurrency || "USD";
-      // financial-calculations skill: use convertToEUR, correct rate key format
-      const valueEUR = convertToEUR(h.shares * q.regularMarketPrice, cur, exchangeRates);
-      return s + valueEUR;
-    }, 0);
-    return totalValue > 0 ? (totalEstimatedEUR / totalValue) * 100 : 0;
-  }, [holdings, quotes, exchangeRates, totalEstimatedEUR]);
+  const totalEstimatedEUR = useMemo(() => computeTotalEstimatedEUR(estimated), [estimated]);
 
-  // --- Yearly breakdown (from transactions) ---
-  const byYear = useMemo(() => {
-    const map: Record<number, number> = {};
-    dividendTxs.forEach((tx) => {
-      const y = parseInt(tx.date.slice(0, 4), 10);
-      if (!isNaN(y)) map[y] = (map[y] || 0) + tx.totalAmount;
-    });
-    return Object.entries(map)
-      .map(([y, amt]) => ({ year: Number(y), amount: amt }))
-      .sort((a, b) => a.year - b.year);
-  }, [dividendTxs]);
+  const estimatedYieldPercent = useMemo(
+    () => computeEstimatedYield(holdings, quotes, exchangeRates, totalEstimatedEUR),
+    [holdings, quotes, exchangeRates, totalEstimatedEUR]
+  );
 
-  // --- Monthly calendar (last 12 months) ---
-  const byMonth = useMemo(() => {
-    const map: Record<string, number> = {};
-    dividendTxs.forEach((tx) => {
-      const key = tx.date.slice(0, 7);
-      map[key] = (map[key] || 0) + tx.totalAmount;
-    });
-    return Object.entries(map).sort((a, b) => b[0].localeCompare(a[0])).slice(0, 12);
-  }, [dividendTxs]);
+  const portfolioYoc = useMemo(
+    () => computePortfolioYieldOnCost(holdings, quotes, exchangeRates),
+    [holdings, quotes, exchangeRates]
+  );
 
-  // --- Top payers (from transactions) ---
-  const topDividendPayers = useMemo(() => {
-    const map: Record<string, number> = {};
-    dividendTxs.forEach((tx) => {
-      map[tx.ticker] = (map[tx.ticker] || 0) + tx.totalAmount;
-    });
-    return Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 8);
-  }, [dividendTxs]);
+  const byYear = useMemo(() => computeYearlyBreakdown(dividendTxs), [dividendTxs]);
+  const byMonth = useMemo(() => computeMonthlyCalendar(dividendTxs), [dividendTxs]);
+  const topDividendPayers = useMemo(() => computeTopPayers(dividendTxs), [dividendTxs]);
 
-  // --- Future projections ---
-  const projections = useMemo(() => {
-    let base: number;
-    const currentYearData = byYear.find((y) => y.year === thisYear);
-    const lastFullYear = byYear.filter((y) => y.year < thisYear).pop();
+  const projections = useMemo(
+    () => computeDividendProjections(byYear, thisYear, thisMonth),
+    [byYear, thisYear, thisMonth]
+  );
 
-    if (lastFullYear && lastFullYear.amount > 0) {
-      base = lastFullYear.amount;
-    } else if (currentYearData && currentYearData.amount > 0) {
-      base = (currentYearData.amount / thisMonth) * 12;
-    } else {
-      base = 0;
-    }
+  const estimatedProjections = useMemo(
+    () => computeEstimatedProjections(dividendTxs.length > 0, totalEstimatedEUR, thisYear),
+    [dividendTxs.length, totalEstimatedEUR, thisYear]
+  );
 
-    const rows: { year: number; amount: number; isProjection: boolean }[] = [];
+  const dripData = useMemo(
+    () => computeDripSimulation(holdings, quotes, exchangeRates, dripGrowthRate / 100, dripYears),
+    [holdings, quotes, exchangeRates, dripGrowthRate, dripYears]
+  );
 
-    byYear.forEach((y) => rows.push({ year: y.year, amount: y.amount, isProjection: false }));
-
-    if (base > 0) {
-      let projected = lastFullYear ? lastFullYear.amount : base;
-      if (currentYearData) {
-        projected = currentYearData.amount > projected ? currentYearData.amount : projected;
-      }
-
-      for (let i = 1; i <= PROJECTION_YEARS; i++) {
-        const y = thisYear + i;
-        projected = projected * (1 + GROWTH_RATE);
-        rows.push({ year: y, amount: projected, isProjection: true });
-      }
-    }
-
-    return rows;
-  }, [byYear, thisYear, thisMonth]);
-
-  // --- Estimated projections (when no transactions, based on current holdings) ---
-  const estimatedProjections = useMemo(() => {
-    if (dividendTxs.length > 0 || totalEstimatedEUR <= 0) return [];
-    const rows: { year: number; amount: number; isProjection: boolean }[] = [];
-    rows.push({ year: thisYear, amount: totalEstimatedEUR, isProjection: false });
-    let projected = totalEstimatedEUR;
-    for (let i = 1; i <= PROJECTION_YEARS; i++) {
-      projected = projected * (1 + GROWTH_RATE);
-      rows.push({ year: thisYear + i, amount: projected, isProjection: true });
-    }
-    return rows;
-  }, [dividendTxs.length, totalEstimatedEUR, thisYear]);
+  const sellTxs = useMemo(() => filterSellTransactions(txs), [txs]);
+  const incomeByMonth = useMemo(
+    () => computeIncomeByMonth(dividendTxs, sellTxs, exchangeRates),
+    [dividendTxs, sellTxs, exchangeRates]
+  );
 
   const hasDividendTxs = dividendTxs.length > 0;
   const hasEstimatedDividends = estimated.length > 0;
-
-  // --- Income sub-view: monthly dividends vs. realized capital gains (sell txs) ---
-  const sellTxs = useMemo(() => txs.filter((tx) => tx.type === "sell"), [txs]);
-
-  const incomeByMonth = useMemo(() => {
-    // Build last-12-months keys
-    const months: string[] = [];
-    const now = new Date();
-    for (let i = 11; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      months.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
-    }
-
-    const divByMonth: Record<string, number> = {};
-    const gainByMonth: Record<string, number> = {};
-    months.forEach((m) => { divByMonth[m] = 0; gainByMonth[m] = 0; });
-
-    dividendTxs.forEach((tx) => {
-      const key = tx.date.slice(0, 7);
-      if (key in divByMonth) {
-        // financial-calculations: net inflow = totalAmount - taxes, use convertToEUR
-        const net = (tx.totalAmount - (tx.taxes || 0));
-        divByMonth[key] += tx.exchangeRateEur
-          ? net * tx.exchangeRateEur
-          : convertToEUR(net, tx.currency || "EUR", exchangeRates);
-      }
-    });
-
-    sellTxs.forEach((tx) => {
-      const key = tx.date.slice(0, 7);
-      if (key in gainByMonth) {
-        // Raw sell proceeds converted to EUR (raw gain/loss only, no tax fabrication)
-        const proceeds = tx.exchangeRateEur
-          ? tx.totalAmount * tx.exchangeRateEur
-          : convertToEUR(tx.totalAmount, tx.currency || "EUR", exchangeRates);
-        gainByMonth[key] += proceeds;
-      }
-    });
-
-    return months.map((m) => ({
-      month: m,
-      dividends: divByMonth[m],
-      gains: gainByMonth[m],
-      total: divByMonth[m] + gainByMonth[m],
-    }));
-  }, [dividendTxs, sellTxs, exchangeRates]);
-
   const hasIncomeData = incomeByMonth.some((m) => m.total > 0);
   const maxIncomeBar = Math.max(...incomeByMonth.map((m) => m.total), 1);
 
@@ -243,6 +134,9 @@ export default function DividendSummary() {
     ? Math.max(...projections.map((r) => r.amount), 1)
     : Math.max(...estimatedProjections.map((r) => r.amount), 1);
 
+  const tickFill = isDark ? "#94a3b8" : "#9ca3af";
+  const axisStroke = isDark ? "#334155" : "#e5e7eb";
+
   return (
     <div className="space-y-6">
       {/* ── Estimated dividend income from holdings ── */}
@@ -257,7 +151,7 @@ export default function DividendSummary() {
                 {t("estimatedLabel")}
               </span>
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div className="bg-violet-50 dark:bg-violet-500/10 rounded-xl p-3 text-center">
                 <p className="text-[10px] text-violet-600 dark:text-violet-400 font-medium uppercase">{t("estAnnualIncome")}</p>
                 <p className="text-lg font-bold text-violet-700 dark:text-violet-300"
@@ -274,21 +168,30 @@ export default function DividendSummary() {
                 <p className="text-[10px] text-blue-600 dark:text-blue-400 font-medium uppercase">{t("dividendYield")}</p>
                 <p className="text-lg font-bold text-blue-700 dark:text-blue-300">{estimatedYieldPercent.toFixed(2)}%</p>
               </div>
+              <div className="bg-amber-50 dark:bg-amber-500/10 rounded-xl p-3 text-center" title={t("yieldOnCostTooltip")}>
+                <p className="text-[10px] text-amber-600 dark:text-amber-400 font-medium uppercase">{t("yieldOnCost")}</p>
+                <p className="text-lg font-bold text-amber-700 dark:text-amber-300">
+                  {portfolioYoc > 0 ? `${portfolioYoc.toFixed(2)}%` : "--"}
+                </p>
+              </div>
             </div>
           </div>
 
-          {/* Per-stock breakdown */}
+          {/* Per-stock breakdown with YOC column */}
           <div className="card">
             <p className="text-xs font-semibold text-gray-900 dark:text-white mb-3">{t("dividendByStock")}</p>
             <div className="space-y-1.5">
               {estimated.map((e, i) => (
-                <div key={e.ticker} className="flex items-center justify-between text-xs">
+                <div key={e.ticker} className="flex items-center justify-between text-xs gap-2">
                   <span className="text-gray-700 dark:text-slate-300 flex-1 min-w-0">
                     <span className="text-gray-400 dark:text-slate-500 mr-1.5">{i + 1}.</span>
                     <span className="font-mono font-medium">{e.ticker}</span>
                     <span className="text-gray-400 dark:text-slate-500 ml-1.5">
                       {e.dividendYield > 0 ? `${e.dividendYield.toFixed(1)}%` : ""}
                     </span>
+                  </span>
+                  <span className="text-amber-600 dark:text-amber-400 font-mono text-[11px] w-14 text-right shrink-0" title={t("yieldOnCost")}>
+                    {e.yieldOnCost > 0 ? `${e.yieldOnCost.toFixed(1)}%` : "--"}
                   </span>
                   <div className="flex items-center gap-3">
                     <div className="w-24 h-2 bg-gray-100 dark:bg-slate-700 rounded-full overflow-hidden">
@@ -303,6 +206,10 @@ export default function DividendSummary() {
                   </div>
                 </div>
               ))}
+            </div>
+            <div className="flex items-center gap-2 mt-2 pt-2 border-t border-gray-100 dark:border-slate-700">
+              <span className="text-[10px] text-amber-500 dark:text-amber-400 font-medium">{t("yoc")}</span>
+              <span className="text-[10px] text-gray-400 dark:text-slate-500">= {t("yieldOnCostTooltip")}</span>
             </div>
           </div>
 
@@ -460,12 +367,136 @@ export default function DividendSummary() {
         </>
       )}
 
+      {/* ── DRIP Simulation ── */}
+      {dripData.length > 0 && (
+        <div className="card space-y-4">
+          <div>
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{t("dripSimulation")}</h3>
+            <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-0.5">{t("dripSimulationDesc")}</p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-4">
+            <label className="flex items-center gap-2 text-xs text-gray-600 dark:text-slate-400">
+              <span className="font-medium">{t("dripGrowthRate")}</span>
+              <select
+                value={dripGrowthRate}
+                onChange={(e) => setDripGrowthRate(Number(e.target.value))}
+                className="rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1 text-xs text-gray-900 dark:text-white"
+              >
+                {[0, 2, 3, 5, 7, 10, 15].map((r) => (
+                  <option key={r} value={r}>{r}%</option>
+                ))}
+              </select>
+            </label>
+            <label className="flex items-center gap-2 text-xs text-gray-600 dark:text-slate-400">
+              <span className="font-medium">{t("dripYears")}</span>
+              <select
+                value={dripYears}
+                onChange={(e) => setDripYears(Number(e.target.value))}
+                className="rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1 text-xs text-gray-900 dark:text-white"
+              >
+                {[5, 10, 15, 20, 25, 30].map((y) => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={dripData} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+                <defs>
+                  <linearGradient id="dripWithGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="dripWithoutGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.15} />
+                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <XAxis
+                  dataKey="year"
+                  tick={{ fontSize: 11, fill: tickFill }}
+                  axisLine={{ stroke: axisStroke }}
+                  tickLine={false}
+                  tickFormatter={(y: number) => `Yr ${y}`}
+                />
+                <YAxis
+                  tick={{ fontSize: 11, fill: tickFill }}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(v: number) => formatCurrency(v, baseCurrency)}
+                  width={72}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: isDark ? "#1e293b" : "#fff",
+                    border: `1px solid ${isDark ? "#334155" : "#e5e7eb"}`,
+                    borderRadius: 10,
+                    fontSize: 12,
+                  }}
+                  formatter={(value: number | string | undefined, name: string | undefined) => [
+                    formatCurrency(typeof value === "number" ? value : Number(value), baseCurrency),
+                    name || "",
+                  ]}
+                  labelFormatter={(label) => `Year ${label}`}
+                />
+                <Legend
+                  verticalAlign="top"
+                  height={28}
+                  iconType="circle"
+                  wrapperStyle={{ fontSize: 11 }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="withDrip"
+                  name={t("withDrip")}
+                  stroke="#8b5cf6"
+                  strokeWidth={2}
+                  fill="url(#dripWithGrad)"
+                />
+                <Area
+                  type="monotone"
+                  dataKey="withoutDrip"
+                  name={t("withoutDrip")}
+                  stroke="#6366f1"
+                  strokeWidth={1.5}
+                  strokeDasharray="5 3"
+                  fill="url(#dripWithoutGrad)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+
+          {dripData.length > 1 && (
+            <div className="grid grid-cols-2 gap-3 pt-1">
+              <div className="bg-violet-50 dark:bg-violet-500/10 rounded-xl p-3 text-center">
+                <p className="text-[10px] text-violet-600 dark:text-violet-400 font-medium uppercase">{t("withDrip")} (Yr {dripYears})</p>
+                <p className="text-lg font-bold text-violet-700 dark:text-violet-300"
+                  aria-label={stealthMode ? formatCurrency(dripData[dripData.length - 1].withDrip, baseCurrency) : undefined}>
+                  {formatStealthCurrency(dripData[dripData.length - 1].withDrip, baseCurrency, stealthMode)}
+                </p>
+              </div>
+              <div className="bg-indigo-50 dark:bg-indigo-500/10 rounded-xl p-3 text-center">
+                <p className="text-[10px] text-indigo-600 dark:text-indigo-400 font-medium uppercase">{t("withoutDrip")} (Yr {dripYears})</p>
+                <p className="text-lg font-bold text-indigo-700 dark:text-indigo-300"
+                  aria-label={stealthMode ? formatCurrency(dripData[dripData.length - 1].withoutDrip, baseCurrency) : undefined}>
+                  {formatStealthCurrency(dripData[dripData.length - 1].withoutDrip, baseCurrency, stealthMode)}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ── Ex-Dividend Calendar ── */}
       <Suspense fallback={null}>
         <ExDividendCalendar />
       </Suspense>
 
-      {/* ── Income sub-view: dividends vs. capital gains (last 12 months) ── */}      {hasIncomeData && (
+      {/* ── Income sub-view: dividends vs. capital gains (last 12 months) ── */}
+      {hasIncomeData && (
         <div className="card" aria-label={t("incomeSubviewLabel")}>
           <div className="flex items-center gap-3 mb-4">
             <p className="text-xs font-semibold text-gray-900 dark:text-white flex-1">{t("incomeSubviewLabel")}</p>

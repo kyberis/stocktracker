@@ -1,7 +1,52 @@
 import { describe, expect, it } from "vitest";
-import { calculatePortfolioTotals } from "./portfolio-summary";
-import type { Holding, QuoteData } from "./types";
+import {
+  calculatePortfolioTotals,
+  computeAllocationByType,
+} from "./portfolio-summary";
+import type { CashEntry, Holding, QuoteData } from "./types";
 import { convertToEUR } from "./utils";
+
+const emptyRates = {};
+const eurRates = { EURUSD: 1.08, EURGBP: 0.86 };
+
+function holding(overrides: Partial<Holding> = {}): Holding {
+  return {
+    id: "1",
+    name: "Test",
+    ticker: "TEST",
+    isin: "",
+    shares: 10,
+    purchasePrice: 100,
+    displayCurrency: "EUR",
+    exchange: "",
+    valueInEUR: 1000,
+    ...overrides,
+  };
+}
+
+function quote(overrides: Partial<QuoteData> = {}): QuoteData {
+  return {
+    symbol: "TEST",
+    shortName: "Test",
+    regularMarketPrice: 100,
+    regularMarketChange: 0,
+    regularMarketChangePercent: 0,
+    currency: "EUR",
+    regularMarketPreviousClose: 0,
+    fiftyTwoWeekHigh: 0,
+    fiftyTwoWeekLow: 0,
+    ...overrides,
+  };
+}
+
+function cashEntry(overrides: Partial<CashEntry> = {}): CashEntry {
+  return {
+    id: "c1",
+    name: "Cash",
+    amountEUR: 100,
+    ...overrides,
+  };
+}
 
 describe("calculatePortfolioTotals", () => {
   it("handles GBX holdings when provider labels quote currency as GBP", () => {
@@ -216,5 +261,132 @@ describe("calculatePortfolioTotals", () => {
     expect(totals.totalCurrentEUR).toBeCloseTo(552.93, 2);
     expect(totals.totalCostEUR).toBeCloseTo(552.93, 2);
     expect(totals.totalGainLoss).toBeCloseTo(0, 6);
+  });
+
+  it("returns all zeros for empty holdings and empty cash", () => {
+    const totals = calculatePortfolioTotals([], [], {}, emptyRates);
+    expect(totals.totalCurrentEUR).toBe(0);
+    expect(totals.totalCostEUR).toBe(0);
+    expect(totals.totalGainLoss).toBe(0);
+    expect(totals.totalGainLossPercent).toBe(0);
+    expect(totals.dayGainLossEUR).toBe(0);
+  });
+
+  it("falls back to valueInEUR when holding has no matching quote", () => {
+    const h = holding({
+      ticker: "MISSING",
+      shares: 10,
+      purchasePrice: 50,
+      valueInEUR: 500,
+      displayCurrency: "EUR",
+    });
+    const totals = calculatePortfolioTotals([h], [], {}, emptyRates);
+    expect(totals.totalCurrentEUR).toBe(500);
+    expect(totals.totalCostEUR).toBe(500);
+    expect(totals.totalGainLoss).toBe(0);
+  });
+
+  it("calculates day gain/loss from regularMarketChange", () => {
+    const h = holding({ ticker: "AAPL", shares: 100, valueInEUR: 15000 });
+    const q = quote({
+      symbol: "AAPL",
+      regularMarketPrice: 150,
+      regularMarketChange: 2,
+      currency: "USD",
+    });
+    const totals = calculatePortfolioTotals([h], [], { AAPL: q }, eurRates);
+    // Day delta: 100 * 2 = 200 USD -> 200/1.08 ≈ 185.19 EUR
+    expect(totals.dayGainLossEUR).toBeCloseTo(200 / 1.08, 0);
+  });
+});
+
+describe("computeAllocationByType", () => {
+  it("returns empty array for empty inputs (no holdings, no cash)", () => {
+    const result = computeAllocationByType([], [], {}, emptyRates);
+    expect(result).toEqual([]);
+  });
+
+  it("returns correct allocation for single stock holding with quote", () => {
+    const h = holding({ ticker: "AAPL", shares: 10, valueInEUR: 1500, assetType: "stock" });
+    const q = quote({ symbol: "AAPL", regularMarketPrice: 150, currency: "USD" });
+    const result = computeAllocationByType([h], [], { AAPL: q }, eurRates);
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({
+      key: "stock",
+      label: "Stocks",
+      valueEUR: expect.any(Number),
+      percent: 100,
+      color: "#6366f1",
+    });
+    expect(result[0].valueEUR).toBeCloseTo((10 * 150) / 1.08, 0);
+  });
+
+  it("returns correct slices with percentages summing to 100 for mixed stocks + ETFs + cash", () => {
+    const holdings: Holding[] = [
+      holding({ ticker: "STK", shares: 10, valueInEUR: 500, assetType: "stock" }),
+      holding({ ticker: "ETF", shares: 5, valueInEUR: 300, assetType: "etf" }),
+    ];
+    const quotes: Record<string, QuoteData> = {
+      STK: quote({ symbol: "STK", regularMarketPrice: 50, currency: "EUR" }),
+      ETF: quote({ symbol: "ETF", regularMarketPrice: 60, currency: "EUR" }),
+    };
+    const cashEntries: CashEntry[] = [cashEntry({ amountEUR: 100, type: "cash" })];
+    const result = computeAllocationByType(holdings, cashEntries, quotes, emptyRates);
+    expect(result).toHaveLength(3);
+    const totalPercent = result.reduce((s, r) => s + r.percent, 0);
+    expect(totalPercent).toBeCloseTo(100, 5);
+    const stockSlice = result.find((r) => r.key === "stock");
+    const etfSlice = result.find((r) => r.key === "etf");
+    const cashSlice = result.find((r) => r.key === "cash");
+    expect(stockSlice).toBeDefined();
+    expect(etfSlice).toBeDefined();
+    expect(cashSlice).toBeDefined();
+    expect(stockSlice!.valueEUR).toBe(500);
+    expect(etfSlice!.valueEUR).toBe(300);
+    expect(cashSlice!.valueEUR).toBe(100);
+  });
+
+  it("falls back to valueInEUR when holding has no quote", () => {
+    const h = holding({ ticker: "NOQUOTE", valueInEUR: 750, assetType: "stock" });
+    const result = computeAllocationByType([h], [], {}, emptyRates);
+    expect(result).toHaveLength(1);
+    expect(result[0].valueEUR).toBe(750);
+    expect(result[0].percent).toBe(100);
+  });
+
+  it("buckets cash entries by type (real_estate, savings, pension)", () => {
+    const cashEntries: CashEntry[] = [
+      cashEntry({ id: "c1", amountEUR: 100, type: "real_estate" }),
+      cashEntry({ id: "c2", amountEUR: 200, type: "savings" }),
+      cashEntry({ id: "c3", amountEUR: 150, type: "pension" }),
+    ];
+    const result = computeAllocationByType([], cashEntries, {}, emptyRates);
+    expect(result).toHaveLength(3);
+    const re = result.find((r) => r.key === "real_estate");
+    const sav = result.find((r) => r.key === "savings");
+    const pen = result.find((r) => r.key === "pension");
+    expect(re?.valueEUR).toBe(100);
+    expect(sav?.valueEUR).toBe(200);
+    expect(pen?.valueEUR).toBe(150);
+    expect(re?.label).toBe("Real Estate");
+    expect(sav?.label).toBe("Savings");
+    expect(pen?.label).toBe("Pension");
+    const totalPercent = result.reduce((s, r) => s + r.percent, 0);
+    expect(totalPercent).toBeCloseTo(100, 5);
+  });
+
+  it("defaults cash entry type to cash when type is omitted", () => {
+    const cashEntries: CashEntry[] = [cashEntry({ amountEUR: 500 })];
+    const result = computeAllocationByType([], cashEntries, {}, emptyRates);
+    expect(result).toHaveLength(1);
+    expect(result[0].key).toBe("cash");
+    expect(result[0].valueEUR).toBe(500);
+  });
+
+  it("defaults holding assetType to stock when omitted", () => {
+    const h = holding({ ticker: "X", valueInEUR: 100, assetType: undefined });
+    const result = computeAllocationByType([h], [], {}, emptyRates);
+    expect(result).toHaveLength(1);
+    expect(result[0].key).toBe("stock");
   });
 });

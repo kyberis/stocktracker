@@ -3,6 +3,7 @@ import {
   getConnectionsAllDisabledOver24h,
   deleteSnapTradeConnection,
   trackEvent,
+  pruneOldSnapTradeLogs,
 } from "@/lib/db";
 import { deleteUser } from "@/lib/snaptrade-client";
 import { withCronLogging } from "@/lib/cron-logging";
@@ -56,9 +57,13 @@ export const GET = withCronLogging("snaptrade-cleanup", async () => {
     deletedStale++;
   }
 
+  // Prune SnapTrade API logs older than 30 days
+  const prunedLogs = await pruneOldSnapTradeLogs(30);
+
   return {
     deletedDowngrade,
     deletedStale,
     deleted: deletedDowngrade + deletedStale,
+    prunedLogs,
   };
 });

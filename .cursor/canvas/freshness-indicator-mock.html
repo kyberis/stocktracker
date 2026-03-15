@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data Freshness Indicator — Mock</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f1117;
+    --surface: #181c27;
+    --surface2: #1e2333;
+    --border: rgba(255,255,255,0.07);
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --accent: #3b82f6;
+    --green: #22c55e;
+    --yellow: #f59e0b;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 40px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .page-title { font-size: 20px; font-weight: 600; }
+  .page-sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+  h2 {
+    font-size: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  /* ─── TOOLBAR ─── */
+  .toolbar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.45);
+  }
+
+  .toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .portfolio-switcher {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .portfolio-switcher svg { width: 14px; height: 14px; color: var(--muted); flex-shrink: 0; }
+
+  /* ── Freshness cluster ── */
+  .freshness-cluster {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .freshness-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-family: 'IBM Plex Mono', monospace;
+    white-space: nowrap;
+  }
+
+  .fdot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    transition: background 0.3s, box-shadow 0.3s;
+  }
+  .fdot-green  { background: var(--green);  box-shadow: 0 0 5px var(--green); }
+  .fdot-yellow { background: var(--yellow); box-shadow: 0 0 5px var(--yellow); }
+  .fdot-gray   { background: var(--muted); }
+
+  .flabel { color: #475569; }
+  .fvalue { color: #94a3b8; font-weight: 500; transition: color 0.3s; }
+  .fvalue.stale { color: var(--yellow); }
+
+  .fsep {
+    width: 1px;
+    height: 12px;
+    background: var(--border);
+  }
+
+  /* ── Action buttons ── */
+  .toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .icon-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .icon-btn:hover { background: var(--surface2); color: var(--text); }
+  .icon-btn svg { width: 16px; height: 16px; }
+  .icon-btn.spinning svg { animation: spin 0.6s linear; }
+
+  .btn-add {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-add svg { width: 14px; height: 14px; }
+
+  /* ─── CONTROLS ─── */
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .sim-btn {
+    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    cursor: pointer;
+    font-family: 'IBM Plex Mono', monospace;
+    transition: background 0.15s;
+  }
+  .sim-btn:hover { background: #252b3d; }
+  .sim-btn.danger { color: var(--yellow); border-color: rgba(245,158,11,0.3); }
+
+  /* ─── VARIANTS ─── */
+  .variant { margin-bottom: 20px; }
+  .variant-label {
+    font-size: 11px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--muted);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+  }
+
+  /* ─── CALLOUT ─── */
+  .callout {
+    background: rgba(59,130,246,0.07);
+    border: 1px solid rgba(59,130,246,0.22);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 12px;
+    color: #93c5fd;
+    line-height: 1.7;
+  }
+  .callout strong { color: #bfdbfe; }
+  .callout code {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    background: rgba(255,255,255,0.06);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div>
+  <p class="page-title">Data Freshness Indicator</p>
+  <p class="page-sub">Dashboard toolbar mock — interactive simulation</p>
+</div>
+
+<!-- ── LIVE MOCK ── -->
+<div>
+  <h2>Live interactive mock</h2>
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <div class="portfolio-switcher">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+        My Portfolio
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+      </div>
+
+      <div class="freshness-cluster" id="live-cluster">
+        <div class="freshness-item">
+          <span class="fdot fdot-green" id="dot-q"></span>
+          <span class="flabel">Quotes as of</span>
+          <span class="fvalue" id="val-q">—</span>
+        </div>
+        <div class="fsep"></div>
+        <div class="freshness-item">
+          <span class="fdot fdot-green" id="dot-h"></span>
+          <span class="flabel">Holdings synced</span>
+          <span class="fvalue" id="val-h">—</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="toolbar-right">
+      <button class="icon-btn" title="Settings">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      </button>
+      <button class="icon-btn" id="refresh-btn" title="Refresh quotes" onclick="onRefreshQuotes()">
+        <svg id="refresh-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+      </button>
+      <button class="icon-btn" title="Import">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+      </button>
+      <button class="btn-add">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+        Add stock
+      </button>
+    </div>
+  </div>
+
+  <div class="controls" style="margin-top:14px;">
+    <button class="sim-btn" onclick="onRefreshQuotes()">↻ Refresh quotes</button>
+    <button class="sim-btn" onclick="onRefreshHoldings()">↻ Refresh holdings</button>
+    <button class="sim-btn danger" onclick="onMakeStale()">⏰ Make stale (45 min)</button>
+    <button class="sim-btn" onclick="onReset()">✕ Reset</button>
+  </div>
+</div>
+
+<!-- ── STATIC VARIANTS ── -->
+<div>
+  <h2>State variants</h2>
+
+  <!-- Fresh -->
+  <div class="variant">
+    <div class="variant-label">Fresh — both just refreshed</div>
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <div class="portfolio-switcher">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+          My Portfolio
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+        </div>
+        <div class="freshness-cluster">
+          <div class="freshness-item">
+            <span class="fdot fdot-green"></span>
+            <span class="flabel">Quotes as of</span>
+            <span class="fvalue">14:32:01</span>
+          </div>
+          <div class="fsep"></div>
+          <div class="freshness-item">
+            <span class="fdot fdot-green"></span>
+            <span class="flabel">Holdings synced</span>
+            <span class="fvalue">just now</span>
+          </div>
+        </div>
+      </div>
+      <div class="toolbar-right">
+        <button class="icon-btn"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg></button>
+        <button class="btn-add"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>Add stock</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quotes stale -->
+  <div class="variant">
+    <div class="variant-label">Quotes stale (45 min old) — yellow warning on quotes only</div>
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <div class="portfolio-switcher">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+          My Portfolio
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+        </div>
+        <div class="freshness-cluster">
+          <div class="freshness-item">
+            <span class="fdot fdot-yellow"></span>
+            <span class="flabel">Quotes as of</span>
+            <span class="fvalue stale">13:47:00</span>
+          </div>
+          <div class="fsep"></div>
+          <div class="freshness-item">
+            <span class="fdot fdot-green"></span>
+            <span class="flabel">Holdings synced</span>
+            <span class="fvalue">2m ago</span>
+          </div>
+        </div>
+      </div>
+      <div class="toolbar-right">
+        <button class="icon-btn"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg></button>
+        <button class="btn-add"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>Add stock</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Holdings aged -->
+  <div class="variant">
+    <div class="variant-label">Holdings aged (5 min) — relative time ticking</div>
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <div class="portfolio-switcher">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+          My Portfolio
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+        </div>
+        <div class="freshness-cluster">
+          <div class="freshness-item">
+            <span class="fdot fdot-green"></span>
+            <span class="flabel">Quotes as of</span>
+            <span class="fvalue">14:27:15</span>
+          </div>
+          <div class="fsep"></div>
+          <div class="freshness-item">
+            <span class="fdot fdot-green"></span>
+            <span class="flabel">Holdings synced</span>
+            <span class="fvalue">5m ago</span>
+          </div>
+        </div>
+      </div>
+      <div class="toolbar-right">
+        <button class="icon-btn"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg></button>
+        <button class="btn-add"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>Add stock</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Initial load -->
+  <div class="variant">
+    <div class="variant-label">Initial load — timestamps not yet available (cluster hidden)</div>
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <div class="portfolio-switcher">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+          My Portfolio
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+        </div>
+        <!-- no freshness cluster when both timestamps are null -->
+      </div>
+      <div class="toolbar-right">
+        <button class="icon-btn"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg></button>
+        <button class="btn-add"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>Add stock</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── DESIGN NOTES ── -->
+<div class="callout">
+  <strong>Design decisions:</strong><br>
+  • Quotes use <strong>absolute time</strong> (<code>HH:MM:SS</code>) — consistent with existing <code>lastUpdated</code> pattern in toolbar.<br>
+  • Holdings use <strong>relative time</strong> ("just now", "5m ago") — consistent with <code>BrokerSyncDot</code> in PortfolioSummary.<br>
+  • Green dot = fresh (&lt; 30 min). Yellow dot + yellow text = stale (≥ 30 min).<br>
+  • Cluster hides entirely if both timestamps are <code>null</code> (initial load before any fetch completes).<br>
+  • Hidden on mobile (<code>hidden sm:flex</code>) — toolbar already uses this pattern for <code>lastUpdated</code>.<br>
+  • No new API calls or DB schema changes — <code>holdingsLastFetchedAt</code> is in-memory only.
+</div>
+
+<script>
+  let quotesTime = new Date();
+  let holdingsTime = new Date();
+
+  function formatAgo(date) {
+    const s = Math.floor((Date.now() - date.getTime()) / 1000);
+    if (s < 10)  return 'just now';
+    if (s < 60)  return s + 's ago';
+    const m = Math.floor(s / 60);
+    if (m < 60)  return m + 'm ago';
+    return Math.floor(m / 60) + 'h ago';
+  }
+
+  function isStale(date) {
+    return Date.now() - date.getTime() > 30 * 60 * 1000;
+  }
+
+  function render() {
+    const vq = document.getElementById('val-q');
+    const vh = document.getElementById('val-h');
+    const dq = document.getElementById('dot-q');
+    const dh = document.getElementById('dot-h');
+
+    vq.textContent = quotesTime.toLocaleTimeString();
+    vh.textContent = formatAgo(holdingsTime);
+
+    if (isStale(quotesTime)) {
+      dq.className = 'fdot fdot-yellow';
+      vq.classList.add('stale');
+    } else {
+      dq.className = 'fdot fdot-green';
+      vq.classList.remove('stale');
+    }
+
+    if (isStale(holdingsTime)) {
+      dh.className = 'fdot fdot-yellow';
+      vh.classList.add('stale');
+    } else {
+      dh.className = 'fdot fdot-green';
+      vh.classList.remove('stale');
+    }
+  }
+
+  function onRefreshQuotes() {
+    quotesTime = new Date();
+    const btn = document.getElementById('refresh-btn');
+    btn.classList.add('spinning');
+    setTimeout(() => btn.classList.remove('spinning'), 650);
+    render();
+  }
+
+  function onRefreshHoldings() {
+    holdingsTime = new Date();
+    render();
+  }
+
+  function onMakeStale() {
+    quotesTime  = new Date(Date.now() - 45 * 60 * 1000);
+    holdingsTime = new Date(Date.now() - 45 * 60 * 1000);
+    render();
+  }
+
+  function onReset() {
+    quotesTime  = new Date();
+    holdingsTime = new Date();
+    render();
+  }
+
+  setInterval(render, 1000);
+  render();
+</script>
+</body>
+</html>

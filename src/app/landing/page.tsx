@@ -111,7 +111,7 @@ function getFeatureCards(t: T) {
     { icon: "chart", title: t("landingCardPerfTitle"), desc: t("landingCardPerfDesc") },
     { icon: "beaker", title: t("landingCardSimulatorTitle"), desc: t("landingCardSimulatorDesc"), badge: "Pro" },
     { icon: "calendar", title: t("landingCardEventsTitle"), desc: t("landingCardEventsDesc") },
-    { icon: "globe", title: "35 Languages", desc: "The most multilingual portfolio tracker on the market. AI insights delivered in your native language.", badge: "#1" },
+    { icon: "globe", title: "35 Languages", desc: "35 languages — more than any major portfolio tracker. AI insights delivered in your native language.", badge: "35 langs" },
   ];
 }
 
@@ -889,7 +889,7 @@ function WhySection() {
             </tbody>
           </table>
           <p className="text-center text-xs text-slate-500 mt-6">
-            <span className="text-emerald-400 font-semibold">Bold rows</span> = features exclusive to trefolio or where trefolio significantly leads the market.
+            <span className="text-emerald-400 font-semibold">Bold rows</span> = trefolio specialty features or where trefolio significantly leads the market.
           </p>
         </div>
       </div>

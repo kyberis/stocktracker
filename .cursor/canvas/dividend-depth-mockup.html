@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Dividend Tab — YOC & DRIP Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..800;1,9..40,300..800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0b1120;
+    --card: #111827;
+    --card-border: #1e293b;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --dim: #64748b;
+    --violet: #8b5cf6;
+    --violet-bg: rgba(139, 92, 246, 0.10);
+    --violet-text: #c4b5fd;
+    --emerald: #10b981;
+    --emerald-bg: rgba(16, 185, 129, 0.10);
+    --emerald-text: #6ee7b7;
+    --blue: #3b82f6;
+    --blue-bg: rgba(59, 130, 246, 0.10);
+    --blue-text: #93c5fd;
+    --amber: #f59e0b;
+    --amber-bg: rgba(245, 158, 11, 0.10);
+    --amber-text: #fcd34d;
+    --indigo: #6366f1;
+    --indigo-bg: rgba(99, 102, 241, 0.10);
+    --indigo-text: #a5b4fc;
+    --bar-track: #1e293b;
+    --font: 'DM Sans', system-ui, -apple-system, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    padding: 24px;
+    max-width: 840px;
+    margin: 0 auto;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 99px;
+    margin-bottom: 16px;
+  }
+  .badge-new { background: rgba(16,185,129,.15); color: var(--emerald); border: 1px solid rgba(16,185,129,.25); }
+  .badge-feature { background: rgba(139,92,246,.12); color: var(--violet); border: 1px solid rgba(139,92,246,.25); }
+
+  .page-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 4px;
+    letter-spacing: -0.02em;
+  }
+  .page-sub {
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 28px;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+
+  .card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+  .card-subtitle {
+    font-size: 11px;
+    color: var(--dim);
+    margin-bottom: 16px;
+  }
+
+  .tag {
+    font-size: 10px;
+    color: var(--dim);
+    background: var(--bar-track);
+    padding: 2px 8px;
+    border-radius: 99px;
+    font-weight: 500;
+  }
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  /* ── Metric grid ── */
+  .metric-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  @media (max-width: 600px) { .metric-grid { grid-template-columns: repeat(2, 1fr); } }
+
+  .metric-card {
+    border-radius: 14px;
+    padding: 14px;
+    text-align: center;
+  }
+  .metric-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+  }
+  .metric-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    font-family: var(--mono);
+  }
+
+  .metric-card.violet  { background: var(--violet-bg); }
+  .metric-card.violet .metric-label { color: var(--violet); }
+  .metric-card.violet .metric-value { color: var(--violet-text); }
+
+  .metric-card.emerald { background: var(--emerald-bg); }
+  .metric-card.emerald .metric-label { color: var(--emerald); }
+  .metric-card.emerald .metric-value { color: var(--emerald-text); }
+
+  .metric-card.blue    { background: var(--blue-bg); }
+  .metric-card.blue .metric-label { color: var(--blue); }
+  .metric-card.blue .metric-value { color: var(--blue-text); }
+
+  .metric-card.amber   { background: var(--amber-bg); }
+  .metric-card.amber .metric-label { color: var(--amber); }
+  .metric-card.amber .metric-value { color: var(--amber-text); }
+
+  /* ── Stock table ── */
+  .stock-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    font-size: 12px;
+  }
+  .stock-row + .stock-row { border-top: 1px solid rgba(30,41,59,.5); }
+  .stock-idx { color: var(--dim); width: 18px; text-align: right; font-size: 11px; }
+  .stock-ticker { font-family: var(--mono); font-weight: 600; color: var(--text); min-width: 60px; }
+  .stock-yield { color: var(--dim); font-size: 11px; min-width: 40px; }
+  .stock-yoc {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--amber);
+    min-width: 50px;
+    text-align: right;
+  }
+  .stock-bar-wrap { flex: 1; height: 8px; background: var(--bar-track); border-radius: 99px; overflow: hidden; min-width: 80px; }
+  .stock-bar { height: 100%; background: var(--violet); border-radius: 99px; transition: width 0.6s ease; }
+  .stock-amount { font-family: var(--mono); color: #fff; min-width: 72px; text-align: right; font-size: 12px; }
+  .yoc-legend {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding-top: 10px;
+    margin-top: 10px;
+    border-top: 1px solid rgba(30,41,59,.5);
+    font-size: 10px;
+  }
+  .yoc-legend .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--amber); }
+  .yoc-legend span:first-of-type { color: var(--amber); font-weight: 600; }
+  .yoc-legend span:last-of-type { color: var(--dim); }
+
+  /* ── DRIP controls ── */
+  .drip-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .drip-controls label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .drip-controls select {
+    background: var(--bg);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    color: #fff;
+    padding: 5px 10px;
+    font-size: 12px;
+    font-family: var(--font);
+    cursor: pointer;
+  }
+  .drip-controls select:focus { outline: 1px solid var(--violet); border-color: var(--violet); }
+
+  /* ── DRIP summary ── */
+  .drip-summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  /* ── Chart ── */
+  .chart-wrap { height: 260px; margin-top: 4px; }
+
+  /* ── Section divider ── */
+  .section-gap { height: 8px; }
+
+  /* ── New badge pulse ── */
+  .new-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--emerald);
+    animation: pulse 2s infinite;
+    display: inline-block;
+  }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+</style>
+</head>
+<body>
+
+<div class="badge badge-feature"><span class="new-dot"></span> v1.38 Mockup — Dividend Depth</div>
+<h1 class="page-title">Dividends</h1>
+<p class="page-sub">Estimated dividend income from your current holdings</p>
+
+<!-- ═══ Estimated Dividend Income ═══ -->
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">Estimated Dividend Income</span>
+    <span class="tag">Based on current holdings</span>
+  </div>
+  <div class="metric-grid">
+    <div class="metric-card violet">
+      <div class="metric-label">Est. Annual Income</div>
+      <div class="metric-value">€2,847</div>
+    </div>
+    <div class="metric-card emerald">
+      <div class="metric-label">Est. Monthly Income</div>
+      <div class="metric-value">€237</div>
+    </div>
+    <div class="metric-card blue">
+      <div class="metric-label">Div. Yield</div>
+      <div class="metric-value">2.84%</div>
+    </div>
+    <div class="metric-card amber">
+      <div class="metric-label">Yield on Cost</div>
+      <div class="metric-value" title="Annual dividend income as % of what you originally paid">3.61%</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Per-Stock Breakdown ═══ -->
+<div class="card">
+  <div class="card-title">Annual Dividend by Stock</div>
+  <div class="card-subtitle" style="margin-bottom:12px">Sorted by estimated annual income · <span style="color:var(--amber)">YOC</span> = Yield on Cost</div>
+
+  <div id="stock-list"></div>
+
+  <div class="yoc-legend">
+    <span class="dot"></span>
+    <span>YOC</span>
+    <span>= Annual dividend income as a % of what you originally paid, not the current price.</span>
+  </div>
+</div>
+
+<div class="section-gap"></div>
+
+<!-- ═══ DRIP Simulation ═══ -->
+<div class="card">
+  <div class="card-header">
+    <div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="card-title">DRIP Simulation</span>
+        <span class="badge badge-new" style="margin:0;font-size:9px">New</span>
+      </div>
+      <div class="card-subtitle" style="margin:2px 0 0">Projected dividend income if you reinvest all dividends vs. taking cash</div>
+    </div>
+  </div>
+
+  <div class="drip-controls">
+    <label>
+      Div. Growth Rate
+      <select id="growthRate">
+        <option value="0">0%</option>
+        <option value="2">2%</option>
+        <option value="3">3%</option>
+        <option value="5" selected>5%</option>
+        <option value="7">7%</option>
+        <option value="10">10%</option>
+        <option value="15">15%</option>
+      </select>
+    </label>
+    <label>
+      Projection Years
+      <select id="projYears">
+        <option value="5">5</option>
+        <option value="10" selected>10</option>
+        <option value="15">15</option>
+        <option value="20">20</option>
+        <option value="25">25</option>
+        <option value="30">30</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="chart-wrap">
+    <canvas id="dripChart"></canvas>
+  </div>
+
+  <div class="drip-summary">
+    <div class="metric-card violet">
+      <div class="metric-label">With Reinvestment (Yr <span id="drip-yr-label1">10</span>)</div>
+      <div class="metric-value" id="drip-with-val">€4,639</div>
+    </div>
+    <div class="metric-card" style="background:var(--indigo-bg)">
+      <div class="metric-label" style="color:var(--indigo)">Cash Dividends (Yr <span id="drip-yr-label2">10</span>)</div>
+      <div class="metric-value" style="color:var(--indigo-text)" id="drip-without-val">€4,188</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Mock stock data ──
+const stocks = [
+  { ticker: "ASML.AS", yield: 0.9, yoc: 1.4, income: 612, pct: 100 },
+  { ticker: "NOVO-B.CO", yield: 1.2, yoc: 2.1, income: 489, pct: 80 },
+  { ticker: "SAP.DE", yield: 0.7, yoc: 1.8, income: 378, pct: 62 },
+  { ticker: "MSFT", yield: 0.8, yoc: 1.5, income: 341, pct: 56 },
+  { ticker: "JNJ", yield: 3.1, yoc: 4.8, income: 298, pct: 49 },
+  { ticker: "UNA.AS", yield: 3.4, yoc: 5.2, income: 264, pct: 43 },
+  { ticker: "AAPL", yield: 0.5, yoc: 2.9, income: 198, pct: 32 },
+  { ticker: "O", yield: 5.6, yoc: 6.1, income: 156, pct: 25 },
+  { ticker: "ALV.DE", yield: 4.2, yoc: 5.7, income: 111, pct: 18 },
+];
+
+const list = document.getElementById("stock-list");
+stocks.forEach((s, i) => {
+  const row = document.createElement("div");
+  row.className = "stock-row";
+  row.innerHTML = `
+    <span class="stock-idx">${i + 1}.</span>
+    <span class="stock-ticker">${s.ticker}</span>
+    <span class="stock-yield">${s.yield.toFixed(1)}%</span>
+    <span class="stock-yoc">${s.yoc.toFixed(1)}%</span>
+    <div class="stock-bar-wrap"><div class="stock-bar" style="width:${s.pct}%"></div></div>
+    <span class="stock-amount">€${s.income.toLocaleString()}</span>
+  `;
+  list.appendChild(row);
+});
+
+// ── DRIP chart ──
+const baseIncome = 2847;
+const avgPrice = 145;
+
+function computeDrip(growthPct, years) {
+  const g = growthPct / 100;
+  const withoutDrip = [];
+  const withDrip = [];
+  const labels = [];
+  let dripShares = 1; // normalized
+
+  for (let y = 0; y <= years; y++) {
+    const mult = Math.pow(1 + g, y);
+    const wo = baseIncome * mult;
+    const wd = baseIncome * dripShares * mult;
+    withoutDrip.push(Math.round(wo));
+    withDrip.push(Math.round(wd));
+    labels.push(`Yr ${y}`);
+    if (y < years) {
+      const divThisYear = dripShares * baseIncome * mult;
+      dripShares += (divThisYear / (100000)); // ~€100k portfolio value
+    }
+  }
+  return { labels, withoutDrip, withDrip };
+}
+
+let chart;
+
+function renderChart() {
+  const gRate = parseInt(document.getElementById("growthRate").value);
+  const yrs = parseInt(document.getElementById("projYears").value);
+  const data = computeDrip(gRate, yrs);
+
+  document.getElementById("drip-yr-label1").textContent = yrs;
+  document.getElementById("drip-yr-label2").textContent = yrs;
+  document.getElementById("drip-with-val").textContent = `€${data.withDrip[data.withDrip.length - 1].toLocaleString()}`;
+  document.getElementById("drip-without-val").textContent = `€${data.withoutDrip[data.withoutDrip.length - 1].toLocaleString()}`;
+
+  if (chart) chart.destroy();
+
+  const ctx = document.getElementById("dripChart").getContext("2d");
+  chart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: data.labels,
+      datasets: [
+        {
+          label: "With Reinvestment",
+          data: data.withDrip,
+          borderColor: "#8b5cf6",
+          backgroundColor: "rgba(139,92,246,.12)",
+          fill: true,
+          tension: 0.3,
+          borderWidth: 2.5,
+          pointRadius: 0,
+          pointHoverRadius: 5,
+          pointHoverBackgroundColor: "#8b5cf6",
+        },
+        {
+          label: "Cash Dividends",
+          data: data.withoutDrip,
+          borderColor: "#6366f1",
+          backgroundColor: "rgba(99,102,241,.06)",
+          fill: true,
+          tension: 0.3,
+          borderWidth: 2,
+          borderDash: [6, 3],
+          pointRadius: 0,
+          pointHoverRadius: 5,
+          pointHoverBackgroundColor: "#6366f1",
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { intersect: false, mode: "index" },
+      plugins: {
+        legend: {
+          position: "top",
+          align: "start",
+          labels: {
+            color: "#94a3b8",
+            font: { family: "'DM Sans'", size: 11 },
+            boxWidth: 12,
+            boxHeight: 12,
+            borderRadius: 6,
+            useBorderRadius: true,
+            padding: 16,
+          },
+        },
+        tooltip: {
+          backgroundColor: "#1e293b",
+          titleColor: "#e2e8f0",
+          bodyColor: "#94a3b8",
+          borderColor: "#334155",
+          borderWidth: 1,
+          cornerRadius: 10,
+          titleFont: { family: "'DM Sans'", size: 12, weight: "600" },
+          bodyFont: { family: "'JetBrains Mono'", size: 11 },
+          padding: 12,
+          callbacks: {
+            label: (ctx) => ` ${ctx.dataset.label}: €${ctx.raw.toLocaleString()}`,
+          },
+        },
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { color: "#64748b", font: { size: 11, family: "'DM Sans'" } },
+          border: { color: "#1e293b" },
+        },
+        y: {
+          grid: { color: "rgba(30,41,59,.5)", lineWidth: 0.5 },
+          ticks: {
+            color: "#64748b",
+            font: { size: 11, family: "'JetBrains Mono'" },
+            callback: (v) => `€${(v / 1000).toFixed(1)}k`,
+          },
+          border: { display: false },
+        },
+      },
+    },
+  });
+}
+
+document.getElementById("growthRate").addEventListener("change", renderChart);
+document.getElementById("projYears").addEventListener("change", renderChart);
+
+renderChart();
+</script>
+
+</body>
+</html>

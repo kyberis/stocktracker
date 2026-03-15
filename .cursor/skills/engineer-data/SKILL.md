@@ -103,6 +103,41 @@ if (!colNames.has("my_column")) {
 ```
 Import `str` from `src/lib/db/helpers.ts` for safe row string extraction.
 
+## Quality Gates (Mandatory)
+
+Every data/schema change MUST pass all gates below before delivery.
+
+### Gate 1: E2E Tests (Playwright)
+
+- If the schema change supports a user-visible feature, **ensure the corresponding E2E spec** covers the new data flow end-to-end.
+- For migrations that alter existing data (backfills, column renames), add a unit test validating the migration logic.
+- If adding a new data access function used by an API route, verify the API behavior via E2E.
+- Run `npx playwright test` locally before marking done.
+
+### Gate 2: All Themes (Downstream)
+
+Schema changes themselves are theme-agnostic, but:
+
+- If the change adds new fields displayed in the dashboard, verify that consuming components render correctly in **all four themes** (Default, Canvas, Terminal, Studio).
+- Coordinate with the consuming engineer skill to ensure theme parity is tested.
+
+### Gate 3: Responsive Design (Downstream)
+
+- If new data fields appear in tables, cards, or summaries, verify the consuming UI at mobile (375px), tablet (768px), and desktop (1280px).
+- Coordinate with the consuming engineer skill for responsive verification.
+
+### Gate 4: Mobile Native (Downstream)
+
+- If new data drives UI that appears inside Capacitor WebView, ensure the consuming feature is tested on native.
+- Schema changes that affect session, auth, or cookie-stored data must be validated in Capacitor context.
+
+### Gate 5: Code Coverage ≥ 80%
+
+- New and modified files must maintain **≥ 80% line coverage**.
+- Run `npx vitest run --coverage` and check the report for touched files.
+- Data access functions (`src/lib/db/*`) and migration logic must have unit tests covering all branches.
+- Never reduce existing coverage on a file.
+
 ## Checklist
 
 ```
@@ -116,6 +151,9 @@ DB Change Checklist
 - [ ] Sensitive columns encrypted with encrypt() before write
 - [ ] Backfill logic included if new column needs derived values
 - [ ] Migration is idempotent (safe to run twice)
+- [ ] Code coverage ≥ 80% on new/modified files (`npx vitest run --coverage`)
+- [ ] E2E spec covers the data flow for user-visible features
+- [ ] Downstream UI verified in all 4 themes, responsive, and native (coordinate with consuming skill)
 ```
 
 ## Coordination
@@ -124,3 +162,5 @@ DB Change Checklist
 - For user-visible effects and feature scope: `product-manager`
 - For payment/subscription fields: `engineer-payments-subscriptions`
 - For regression confidence: `qa-tester`
+- For theme parity of consuming UI: invoke `theme-parity` skill
+- For native mobile verification of consuming UI: `engineer-mobile`

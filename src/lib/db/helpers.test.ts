@@ -1,11 +1,25 @@
 import { describe, expect, it } from "vitest";
+import type { Row } from "@libsql/client";
 import {
   str,
   num,
+  holdingAssetType,
+  txType,
+  alertCondition,
+  alertType,
+  percentBasis,
+  parseAlertChannels,
+  feedbackStatus,
+  feedbackType,
+  parseRefreshInterval,
   normalizeTickerForExchange,
   EXCHANGE_SUFFIX_MAP,
   rowToDbUser,
+  rowToPortfolio,
   mapUser,
+  monthWindowKey,
+  shouldResetAiWindow,
+  shouldResetDailyAiWindow,
 } from "./helpers";
 
 describe("str", () => {
@@ -69,6 +83,174 @@ describe("num", () => {
   it("handles boolean (truthy/falsy)", () => {
     expect(num(true)).toBe(1);
     expect(num(false)).toBe(0);
+  });
+});
+
+describe("holdingAssetType", () => {
+  it("returns etf for etf", () => {
+    expect(holdingAssetType("etf")).toBe("etf");
+  });
+
+  it("returns crypto for crypto", () => {
+    expect(holdingAssetType("crypto")).toBe("crypto");
+  });
+
+  it("returns stock for stock", () => {
+    expect(holdingAssetType("stock")).toBe("stock");
+  });
+
+  it("returns stock for unknown values", () => {
+    expect(holdingAssetType("")).toBe("stock");
+    expect(holdingAssetType("unknown")).toBe("stock");
+    expect(holdingAssetType(null)).toBe("stock");
+    expect(holdingAssetType(undefined)).toBe("stock");
+    expect(holdingAssetType(123)).toBe("stock");
+  });
+});
+
+describe("txType", () => {
+  it("returns buy for buy", () => {
+    expect(txType("buy")).toBe("buy");
+  });
+
+  it("returns sell for sell", () => {
+    expect(txType("sell")).toBe("sell");
+  });
+
+  it("returns dividend for dividend", () => {
+    expect(txType("dividend")).toBe("dividend");
+  });
+
+  it("returns fee for fee", () => {
+    expect(txType("fee")).toBe("fee");
+  });
+
+  it("returns buy for unknown values", () => {
+    expect(txType("unknown")).toBe("buy");
+    expect(txType("")).toBe("buy");
+    expect(txType(null)).toBe("buy");
+    expect(txType(undefined)).toBe("buy");
+  });
+});
+
+describe("alertCondition", () => {
+  it("returns below for below", () => {
+    expect(alertCondition("below")).toBe("below");
+  });
+
+  it("returns above for above and other values", () => {
+    expect(alertCondition("above")).toBe("above");
+    expect(alertCondition("")).toBe("above");
+    expect(alertCondition("unknown")).toBe("above");
+    expect(alertCondition(null)).toBe("above");
+  });
+});
+
+describe("alertType", () => {
+  it("returns percent_change for percent_change", () => {
+    expect(alertType("percent_change")).toBe("percent_change");
+  });
+
+  it("returns threshold for threshold and other values", () => {
+    expect(alertType("threshold")).toBe("threshold");
+    expect(alertType("")).toBe("threshold");
+    expect(alertType("unknown")).toBe("threshold");
+    expect(alertType(null)).toBe("threshold");
+  });
+});
+
+describe("percentBasis", () => {
+  it("returns daily for daily", () => {
+    expect(percentBasis("daily")).toBe("daily");
+  });
+
+  it("returns purchase for purchase", () => {
+    expect(percentBasis("purchase")).toBe("purchase");
+  });
+
+  it("returns empty string for unknown values", () => {
+    expect(percentBasis("")).toBe("");
+    expect(percentBasis("unknown")).toBe("");
+    expect(percentBasis(null)).toBe("");
+  });
+});
+
+describe("parseAlertChannels", () => {
+  it("parses single channel", () => {
+    expect(parseAlertChannels("email")).toEqual(["email"]);
+    expect(parseAlertChannels("push")).toEqual(["push"]);
+    expect(parseAlertChannels("whatsapp")).toEqual(["whatsapp"]);
+    expect(parseAlertChannels("device")).toEqual(["device"]);
+  });
+
+  it("parses comma-separated channels", () => {
+    expect(parseAlertChannels("email,push")).toEqual(["email", "push"]);
+    expect(parseAlertChannels("email,push,whatsapp,device")).toEqual([
+      "email",
+      "push",
+      "whatsapp",
+      "device",
+    ]);
+  });
+
+  it("filters invalid channels", () => {
+    expect(parseAlertChannels("email,invalid,sms,push")).toEqual(["email", "push"]);
+    expect(parseAlertChannels("foo,bar")).toEqual([]);
+  });
+
+  it("defaults to email when val is null/undefined", () => {
+    expect(parseAlertChannels(null)).toEqual(["email"]);
+    expect(parseAlertChannels(undefined)).toEqual(["email"]);
+  });
+});
+
+describe("feedbackStatus", () => {
+  it("returns answered for answered", () => {
+    expect(feedbackStatus("answered")).toBe("answered");
+  });
+
+  it("returns closed for closed", () => {
+    expect(feedbackStatus("closed")).toBe("closed");
+  });
+
+  it("returns open for other values", () => {
+    expect(feedbackStatus("open")).toBe("open");
+    expect(feedbackStatus("")).toBe("open");
+    expect(feedbackStatus("unknown")).toBe("open");
+    expect(feedbackStatus(null)).toBe("open");
+  });
+});
+
+describe("feedbackType", () => {
+  it("returns bug for bug", () => {
+    expect(feedbackType("bug")).toBe("bug");
+  });
+
+  it("returns feedback for feedback and other values", () => {
+    expect(feedbackType("feedback")).toBe("feedback");
+    expect(feedbackType("")).toBe("feedback");
+    expect(feedbackType("unknown")).toBe("feedback");
+    expect(feedbackType(null)).toBe("feedback");
+  });
+});
+
+describe("parseRefreshInterval", () => {
+  it("returns 30 for 30", () => {
+    expect(parseRefreshInterval(30)).toBe(30);
+    expect(parseRefreshInterval("30")).toBe(30);
+  });
+
+  it("returns 60 for 60", () => {
+    expect(parseRefreshInterval(60)).toBe(60);
+    expect(parseRefreshInterval("60")).toBe(60);
+  });
+
+  it("returns 15 for other values", () => {
+    expect(parseRefreshInterval(15)).toBe(15);
+    expect(parseRefreshInterval(45)).toBe(15);
+    expect(parseRefreshInterval(0)).toBe(15);
+    expect(parseRefreshInterval("invalid")).toBe(15);
+    expect(parseRefreshInterval(null)).toBe(15);
   });
 });
 
@@ -161,30 +343,48 @@ describe("EXCHANGE_SUFFIX_MAP", () => {
   });
 });
 
-describe("rowToDbUser", () => {
-  it("maps a mock libsql Row to DbUser", () => {
-    const row = {
-      id: "user-123",
-      username: "johndoe",
-      password_hash: "hashed-secret",
-      role: "user",
-      must_change_password: 0,
-      created_at: "2025-01-15T10:00:00Z",
-      email: "john@example.com",
-      display_name: "John Doe",
-      avatar_url: "https://example.com/avatar.png",
-      plan: "free",
-      stripe_customer_id: "cus_abc",
-      stripe_subscription_id: "",
-      plan_expires_at: "2026-01-15",
-      ai_calls_this_month: 5,
-      ai_calls_reset_at: "2025-01-01",
-      ai_calls_today: 2,
-      ai_daily_reset_at: "2025-01-15",
-      email_verified: 1,
-    } as Record<string, unknown>;
+function mockRow(overrides: Record<string, unknown> = {}): Row {
+  return {
+    id: "user-123",
+    username: "johndoe",
+    password_hash: "hashed-secret",
+    role: "user",
+    must_change_password: 0,
+    created_at: "2025-01-15T10:00:00Z",
+    email: "john@example.com",
+    display_name: "John Doe",
+    avatar_url: "https://example.com/avatar.png",
+    plan: "free",
+    stripe_customer_id: "cus_abc",
+    stripe_subscription_id: "",
+    plan_expires_at: "2026-01-15",
+    ai_calls_this_month: 5,
+    ai_calls_reset_at: "2025-01-01",
+    ai_calls_today: 2,
+    ai_daily_reset_at: "2025-01-15",
+    email_verified: 1,
+    auth_provider: "credentials",
+    google_id: "",
+    apple_id: "",
+    portfolio_review_count: 0,
+    portfolio_review_reset_at: "",
+    widget_token_hash: "",
+    device_passkey_hash: "",
+    device_template_id: "classic-dark",
+    device_linked_at: "",
+    device_pro_redeemed_at: "",
+    device_portfolio_id: "",
+    last_active_at: "2025-03-10T12:00:00Z",
+    tax_residency: "DE",
+    onboarding_completed: 1,
+    ...overrides,
+  } as Row;
+}
 
-    const user = rowToDbUser(row as Parameters<typeof rowToDbUser>[0]);
+describe("rowToDbUser", () => {
+  it("maps a full mock Row to DbUser with all fields", () => {
+    const row = mockRow();
+    const user = rowToDbUser(row);
 
     expect(user).toEqual({
       id: "user-123",
@@ -216,64 +416,76 @@ describe("rowToDbUser", () => {
       device_linked_at: "",
       device_pro_redeemed_at: "",
       device_portfolio_id: "",
-      last_active_at: "",
-      tax_residency: "",
-      onboarding_completed: 0,
+      last_active_at: "2025-03-10T12:00:00Z",
+      tax_residency: "DE",
+      onboarding_completed: 1,
     });
   });
 
-  it("maps admin role and pro plan correctly", () => {
-    const row = {
-      id: "admin-1",
-      username: "admin",
-      password_hash: "hash",
-      role: "admin",
-      must_change_password: 1,
-      created_at: "2024-01-01",
-      email: "admin@example.com",
-      display_name: "Admin",
-      avatar_url: "",
-      plan: "pro",
-      stripe_customer_id: "cus_pro",
-      stripe_subscription_id: "sub_123",
-      plan_expires_at: "2026-12-31",
-      ai_calls_this_month: 100,
-      ai_calls_reset_at: "2025-01-01",
-      ai_calls_today: 10,
-      ai_daily_reset_at: "2025-03-05",
-      email_verified: 1,
-    } as Record<string, unknown>;
-
-    const user = rowToDbUser(row as Parameters<typeof rowToDbUser>[0]);
-
+  it("maps admin role correctly", () => {
+    const user = rowToDbUser(mockRow({ role: "admin" }));
     expect(user.role).toBe("admin");
+  });
+
+  it("maps user role for non-admin", () => {
+    const user = rowToDbUser(mockRow({ role: "user" }));
+    expect(user.role).toBe("user");
+  });
+
+  it("maps invalid role to user", () => {
+    const user = rowToDbUser(mockRow({ role: "invalid" }));
+    expect(user.role).toBe("user");
+  });
+
+  it("maps pro plan correctly", () => {
+    const user = rowToDbUser(mockRow({ plan: "pro" }));
     expect(user.plan).toBe("pro");
-    expect(user.must_change_password).toBe(1);
+  });
+
+  it("maps starter plan correctly", () => {
+    const user = rowToDbUser(mockRow({ plan: "starter" }));
+    expect(user.plan).toBe("starter");
+  });
+
+  it("maps free plan for invalid plan", () => {
+    const user = rowToDbUser(mockRow({ plan: "invalid" }));
+    expect(user.plan).toBe("free");
+  });
+
+  it("maps google auth_provider correctly", () => {
+    const user = rowToDbUser(mockRow({ auth_provider: "google", google_id: "g-123" }));
+    expect(user.auth_provider).toBe("google");
+    expect(user.google_id).toBe("g-123");
+  });
+
+  it("maps apple auth_provider correctly", () => {
+    const user = rowToDbUser(mockRow({ auth_provider: "apple", apple_id: "a-456" }));
+    expect(user.auth_provider).toBe("apple");
+    expect(user.apple_id).toBe("a-456");
+  });
+
+  it("maps credentials auth_provider for invalid provider", () => {
+    const user = rowToDbUser(mockRow({ auth_provider: "saml" }));
+    expect(user.auth_provider).toBe("credentials");
+  });
+
+  it("defaults device_template_id to classic-dark when empty", () => {
+    const user = rowToDbUser(mockRow({ device_template_id: "" }));
+    expect(user.device_template_id).toBe("classic-dark");
   });
 
   it("handles null/undefined values from DB (str/num coercion)", () => {
-    const row = {
+    const row = mockRow({
       id: 999,
       username: null,
       password_hash: undefined,
       role: "invalid",
       must_change_password: null,
-      created_at: "",
-      email: undefined,
-      display_name: null,
-      avatar_url: "",
-      plan: "invalid",
-      stripe_customer_id: null,
-      stripe_subscription_id: undefined,
-      plan_expires_at: "",
       ai_calls_this_month: "10",
       ai_calls_reset_at: null,
-      ai_calls_today: undefined,
-      ai_daily_reset_at: "",
       email_verified: 0,
-    } as Record<string, unknown>;
-
-    const user = rowToDbUser(row as Parameters<typeof rowToDbUser>[0]);
+    });
+    const user = rowToDbUser(row);
 
     expect(user.id).toBe("999");
     expect(user.username).toBe("");
@@ -285,44 +497,123 @@ describe("rowToDbUser", () => {
   });
 });
 
-describe("mapUser", () => {
-  it("maps DbUser to PublicUser (strips password, converts snake_case to camelCase)", () => {
-    const dbUser = {
-      id: "user-456",
-      username: "janedoe",
-      password_hash: "secret-hash",
-      role: "user" as const,
-      must_change_password: 0,
-      created_at: "2025-02-20T12:00:00Z",
-      email: "jane@example.com",
-      display_name: "Jane Doe",
-      avatar_url: "https://example.com/jane.png",
-      plan: "pro" as const,
-      stripe_customer_id: "cus_xyz",
-      stripe_subscription_id: "sub_456",
-      plan_expires_at: "2026-02-20",
-      ai_calls_this_month: 50,
-      ai_calls_reset_at: "2025-02-01",
-      ai_calls_today: 3,
-      ai_daily_reset_at: "2025-03-05",
-      email_verified: 1,
-      auth_provider: "credentials" as const,
-      google_id: "",
-      apple_id: "",
-      portfolio_review_count: 0,
-      portfolio_review_reset_at: "",
-      widget_token_hash: "",
-      device_passkey_hash: "",
-      device_template_id: "classic-dark",
-      device_linked_at: "",
-      device_pro_redeemed_at: "",
-      device_portfolio_id: "",
-      last_active_at: "",
-      tax_residency: "",
-      onboarding_completed: 0,
-    };
+describe("rowToPortfolio", () => {
+  it("maps Row to Portfolio with supported currency", () => {
+    const row = {
+      id: "p-1",
+      user_id: "u-1",
+      name: "Main",
+      is_default: 1,
+      sort_order: 0,
+      currency: "USD",
+      created_at: "2025-01-01",
+    } as Row;
 
-    const publicUser = mapUser(dbUser);
+    const portfolio = rowToPortfolio(row);
+
+    expect(portfolio).toEqual({
+      id: "p-1",
+      userId: "u-1",
+      name: "Main",
+      isDefault: true,
+      sortOrder: 0,
+      currency: "USD",
+      createdAt: "2025-01-01",
+    });
+  });
+
+  it("falls back to EUR for unsupported currency", () => {
+    const row = {
+      id: "p-2",
+      user_id: "u-2",
+      name: "Crypto",
+      is_default: 0,
+      sort_order: 1,
+      currency: "XYZ",
+      created_at: "2025-02-01",
+    } as Row;
+
+    const portfolio = rowToPortfolio(row);
+
+    expect(portfolio.currency).toBe("EUR");
+    expect(portfolio.id).toBe("p-2");
+    expect(portfolio.userId).toBe("u-2");
+    expect(portfolio.name).toBe("Crypto");
+    expect(portfolio.isDefault).toBe(false);
+    expect(portfolio.sortOrder).toBe(1);
+  });
+
+  it("handles empty currency as EUR fallback", () => {
+    const row = {
+      id: "p-3",
+      user_id: "u-3",
+      name: "Empty",
+      is_default: 0,
+      sort_order: 0,
+      currency: "",
+      created_at: "2025-03-01",
+    } as Row;
+
+    const portfolio = rowToPortfolio(row);
+
+    expect(portfolio.currency).toBe("EUR");
+  });
+
+  it("handles GBP, CHF, CAD and other supported currencies", () => {
+    for (const curr of ["GBP", "CHF", "CAD", "JPY", "AUD"]) {
+      const row = {
+        id: "p",
+        user_id: "u",
+        name: "Test",
+        is_default: 0,
+        sort_order: 0,
+        currency: curr,
+        created_at: "2025-01-01",
+      } as Row;
+      const portfolio = rowToPortfolio(row);
+      expect(portfolio.currency).toBe(curr);
+    }
+  });
+});
+
+describe("mapUser", () => {
+  const baseDbUser = {
+    id: "user-456",
+    username: "janedoe",
+    password_hash: "secret-hash",
+    role: "user" as const,
+    must_change_password: 0,
+    created_at: "2025-02-20T12:00:00Z",
+    email: "jane@example.com",
+    display_name: "Jane Doe",
+    avatar_url: "https://example.com/jane.png",
+    plan: "pro" as const,
+    stripe_customer_id: "cus_xyz",
+    stripe_subscription_id: "sub_456",
+    plan_expires_at: "2026-02-20",
+    ai_calls_this_month: 50,
+    ai_calls_reset_at: "2025-02-01",
+    ai_calls_today: 3,
+    ai_daily_reset_at: "2025-03-05",
+    email_verified: 1,
+    auth_provider: "credentials" as const,
+    google_id: "",
+    apple_id: "",
+    portfolio_review_count: 0,
+    portfolio_review_reset_at: "",
+    widget_token_hash: "",
+    device_passkey_hash: "",
+    device_template_id: "classic-dark",
+    device_linked_at: "",
+    device_pro_redeemed_at: "",
+    device_portfolio_id: "",
+    last_active_at: "2025-03-10",
+    tax_residency: "",
+    onboarding_completed: 0,
+  };
+
+  it("maps DbUser to PublicUser with correct field mapping", () => {
+    const publicUser = mapUser(baseDbUser);
 
     expect(publicUser).toEqual({
       id: "user-456",
@@ -347,132 +638,164 @@ describe("mapUser", () => {
       hasDevicePasskey: false,
       deviceProEligible: false,
       devicePortfolioId: "",
-      lastActiveAt: "",
+      lastActiveAt: "2025-03-10",
     });
   });
 
-  it("does not include password_hash, stripe_customer_id, stripe_subscription_id", () => {
+  it("deviceProEligible is true when device_linked_at set, device_pro_redeemed_at empty, plan free", () => {
     const dbUser = {
-      id: "x",
-      username: "u",
-      password_hash: "secret",
-      role: "user" as const,
-      must_change_password: 0,
-      created_at: "",
-      email: "",
-      display_name: "",
-      avatar_url: "",
+      ...baseDbUser,
       plan: "free" as const,
-      stripe_customer_id: "cus_secret",
-      stripe_subscription_id: "sub_secret",
-      plan_expires_at: "",
-      ai_calls_this_month: 0,
-      ai_calls_reset_at: "",
-      ai_calls_today: 0,
-      ai_daily_reset_at: "",
-      email_verified: 0,
-      auth_provider: "credentials" as const,
-      google_id: "",
-      apple_id: "",
-      portfolio_review_count: 0,
-      portfolio_review_reset_at: "",
-      widget_token_hash: "",
-      device_passkey_hash: "",
-      device_template_id: "classic-dark",
+      device_linked_at: "2025-03-01T00:00:00Z",
+      device_pro_redeemed_at: "",
+    };
+    const publicUser = mapUser(dbUser);
+    expect(publicUser.deviceProEligible).toBe(true);
+  });
+
+  it("deviceProEligible is true when plan is starter", () => {
+    const dbUser = {
+      ...baseDbUser,
+      plan: "starter" as const,
+      device_linked_at: "2025-03-01T00:00:00Z",
+      device_pro_redeemed_at: "",
+    };
+    const publicUser = mapUser(dbUser);
+    expect(publicUser.deviceProEligible).toBe(true);
+  });
+
+  it("deviceProEligible is false when device_pro_redeemed_at is set", () => {
+    const dbUser = {
+      ...baseDbUser,
+      plan: "free" as const,
+      device_linked_at: "2025-03-01T00:00:00Z",
+      device_pro_redeemed_at: "2025-03-05T00:00:00Z",
+    };
+    const publicUser = mapUser(dbUser);
+    expect(publicUser.deviceProEligible).toBe(false);
+  });
+
+  it("deviceProEligible is false when device_linked_at is empty", () => {
+    const dbUser = {
+      ...baseDbUser,
+      plan: "free" as const,
       device_linked_at: "",
       device_pro_redeemed_at: "",
-      device_portfolio_id: "",
-      last_active_at: "",
-      tax_residency: "",
-      onboarding_completed: 0,
     };
-
     const publicUser = mapUser(dbUser);
+    expect(publicUser.deviceProEligible).toBe(false);
+  });
 
+  it("deviceProEligible is false when plan is pro", () => {
+    const dbUser = {
+      ...baseDbUser,
+      plan: "pro" as const,
+      device_linked_at: "2025-03-01T00:00:00Z",
+      device_pro_redeemed_at: "",
+    };
+    const publicUser = mapUser(dbUser);
+    expect(publicUser.deviceProEligible).toBe(false);
+  });
+
+  it("hasWidgetToken is true when widget_token_hash is non-empty", () => {
+    const dbUser = { ...baseDbUser, widget_token_hash: "hash123" };
+    const publicUser = mapUser(dbUser);
+    expect(publicUser.hasWidgetToken).toBe(true);
+  });
+
+  it("hasDevicePasskey is true when device_passkey_hash is non-empty", () => {
+    const dbUser = { ...baseDbUser, device_passkey_hash: "passkey-hash" };
+    const publicUser = mapUser(dbUser);
+    expect(publicUser.hasDevicePasskey).toBe(true);
+  });
+
+  it("does not include password_hash, stripe_customer_id, stripe_subscription_id", () => {
+    const publicUser = mapUser(baseDbUser);
     expect("password_hash" in publicUser).toBe(false);
     expect("stripe_customer_id" in publicUser).toBe(false);
     expect("stripe_subscription_id" in publicUser).toBe(false);
   });
 
   it("converts must_change_password 1 to mustChangePassword true", () => {
-    const dbUser = {
-      id: "x",
-      username: "u",
-      password_hash: "",
-      role: "user" as const,
-      must_change_password: 1,
-      created_at: "",
-      email: "",
-      display_name: "",
-      avatar_url: "",
-      plan: "free" as const,
-      stripe_customer_id: "",
-      stripe_subscription_id: "",
-      plan_expires_at: "",
-      ai_calls_this_month: 0,
-      ai_calls_reset_at: "",
-      ai_calls_today: 0,
-      ai_daily_reset_at: "",
-      email_verified: 0,
-      auth_provider: "credentials" as const,
-      google_id: "",
-      apple_id: "",
-      portfolio_review_count: 0,
-      portfolio_review_reset_at: "",
-      widget_token_hash: "",
-      device_passkey_hash: "",
-      device_template_id: "classic-dark",
-      device_linked_at: "",
-      device_pro_redeemed_at: "",
-      device_portfolio_id: "",
-      last_active_at: "",
-      tax_residency: "",
-      onboarding_completed: 0,
-    };
-
+    const dbUser = { ...baseDbUser, must_change_password: 1 };
     const publicUser = mapUser(dbUser);
-
     expect(publicUser.mustChangePassword).toBe(true);
   });
 
   it("converts email_verified 1 to emailVerified true", () => {
-    const dbUser = {
-      id: "x",
-      username: "u",
-      password_hash: "",
-      role: "user" as const,
-      must_change_password: 0,
-      created_at: "",
-      email: "",
-      display_name: "",
-      avatar_url: "",
-      plan: "free" as const,
-      stripe_customer_id: "",
-      stripe_subscription_id: "",
-      plan_expires_at: "",
-      ai_calls_this_month: 0,
-      ai_calls_reset_at: "",
-      ai_calls_today: 0,
-      ai_daily_reset_at: "",
-      email_verified: 1,
-      auth_provider: "credentials" as const,
-      google_id: "",
-      apple_id: "",
-      portfolio_review_count: 0,
-      portfolio_review_reset_at: "",
-      widget_token_hash: "",
-      device_passkey_hash: "",
-      device_template_id: "classic-dark",
-      device_linked_at: "",
-      device_pro_redeemed_at: "",
-      device_portfolio_id: "",
-      last_active_at: "",
-      tax_residency: "",
-      onboarding_completed: 0,
-    };
-
+    const dbUser = { ...baseDbUser, email_verified: 1 };
     const publicUser = mapUser(dbUser);
-
     expect(publicUser.emailVerified).toBe(true);
+  });
+
+  it("maps authProvider google and apple", () => {
+    expect(mapUser({ ...baseDbUser, auth_provider: "google" }).authProvider).toBe("google");
+    expect(mapUser({ ...baseDbUser, auth_provider: "apple" }).authProvider).toBe("apple");
+  });
+});
+
+describe("monthWindowKey", () => {
+  it("returns YYYY-MM format for UTC date", () => {
+    expect(monthWindowKey(new Date(Date.UTC(2025, 0, 15)))).toBe("2025-01");
+    expect(monthWindowKey(new Date(Date.UTC(2025, 8, 1)))).toBe("2025-09");
+    expect(monthWindowKey(new Date(Date.UTC(2024, 11, 31)))).toBe("2024-12");
+  });
+
+  it("pads month with leading zero", () => {
+    expect(monthWindowKey(new Date(Date.UTC(2025, 0, 1)))).toBe("2025-01");
+    expect(monthWindowKey(new Date(Date.UTC(2025, 8, 1)))).toBe("2025-09");
+  });
+});
+
+describe("shouldResetAiWindow", () => {
+  it("returns true when lastResetAt is empty", () => {
+    expect(shouldResetAiWindow("")).toBe(true);
+  });
+
+  it("returns true when lastResetAt is invalid date", () => {
+    expect(shouldResetAiWindow("invalid-date")).toBe(true);
+    expect(shouldResetAiWindow("not-a-date")).toBe(true);
+  });
+
+  it("returns false when lastResetAt is in current month", () => {
+    const now = new Date();
+    const thisMonth = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}`;
+    const dateInMonth = new Date(now.getUTCFullYear(), now.getUTCMonth(), 15);
+    expect(monthWindowKey(dateInMonth)).toBe(thisMonth);
+    expect(shouldResetAiWindow(dateInMonth.toISOString())).toBe(false);
+  });
+
+  it("returns true when lastResetAt is in a different month", () => {
+    const now = new Date();
+    const prevMonth = new Date(now.getUTCFullYear(), now.getUTCMonth() - 1, 15);
+    expect(shouldResetAiWindow(prevMonth.toISOString())).toBe(true);
+  });
+});
+
+describe("shouldResetDailyAiWindow", () => {
+  it("returns true when resetAt is empty", () => {
+    expect(shouldResetDailyAiWindow("")).toBe(true);
+  });
+
+  it("returns false when resetAt is today", () => {
+    const today = new Date();
+    expect(shouldResetDailyAiWindow(today.toISOString())).toBe(false);
+  });
+
+  it("returns true when resetAt is yesterday", () => {
+    const yesterday = new Date();
+    yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+    expect(shouldResetDailyAiWindow(yesterday.toISOString())).toBe(true);
+  });
+
+  it("returns true when resetAt is different year", () => {
+    const lastYear = new Date(new Date().getUTCFullYear() - 1, 5, 15);
+    expect(shouldResetDailyAiWindow(lastYear.toISOString())).toBe(true);
+  });
+
+  it("returns true when resetAt is different month", () => {
+    const lastMonth = new Date();
+    lastMonth.setUTCMonth(lastMonth.getUTCMonth() - 1);
+    expect(shouldResetDailyAiWindow(lastMonth.toISOString())).toBe(true);
   });
 });

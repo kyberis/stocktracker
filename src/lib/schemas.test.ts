@@ -198,7 +198,7 @@ describe("createHoldingSchema", () => {
     const result = createHoldingSchema.safeParse({
       ticker: "AAPL",
       name: "Apple",
-      assetType: "crypto",
+      assetType: "bond_invalid",
     });
     expect(result.success).toBe(false);
   });
@@ -345,8 +345,8 @@ describe("userSettingsSchema", () => {
     expect(userSettingsSchema.safeParse({ refreshInterval: 60 }).success).toBe(true);
   });
 
-  it("fails when provider is invalid", () => {
-    const result = userSettingsSchema.safeParse({ provider: "google" });
+  it("fails when dashboardTheme is invalid", () => {
+    const result = userSettingsSchema.safeParse({ dashboardTheme: "nonexistent" });
     expect(result.success).toBe(false);
   });
 
