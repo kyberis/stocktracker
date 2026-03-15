@@ -398,7 +398,6 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
   if (action === "import") {
     const jobId = crypto.randomUUID();
     const userId = session.userId;
-
     submitJob(jobId, async () => {
       return importTransactions(
         userId,

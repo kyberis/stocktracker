@@ -347,23 +347,30 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
 
       let cashImported = 0;
       if (holdingsResult.cashBalances.length > 0) {
+        const aggregated = new Map<string, number>();
+        for (const b of holdingsResult.cashBalances) {
+          aggregated.set(b.currency, (aggregated.get(b.currency) || 0) + b.amount);
+        }
+
         await removeCashEntriesBySource(session.userId, "snaptrade", portfolioId);
 
         const yahoo = new YahooProvider();
-        for (const balance of holdingsResult.cashBalances) {
-          let amountEUR = balance.amount;
-          if (balance.currency !== "EUR") {
+        for (const [currency, displayAmount] of aggregated) {
+          let amountEUR = displayAmount;
+          if (currency !== "EUR") {
             try {
-              const rate = await yahoo.getExchangeRate(balance.currency, "EUR");
-              if (rate > 0) amountEUR = +(balance.amount * rate).toFixed(2);
+              const rate = await yahoo.getExchangeRate(currency, "EUR");
+              if (rate > 0) amountEUR = +(displayAmount * rate).toFixed(2);
             } catch {
               // keep original amount if FX conversion fails
             }
           }
           await addCashEntry(session.userId, {
-            name: `Cash ${balance.currency}`,
+            name: `Cash ${currency}`,
             amountEUR,
             source: "snaptrade",
+            displayCurrency: currency,
+            displayAmount,
           }, portfolioId);
           cashImported++;
         }

@@ -25,16 +25,16 @@ export const releaseNotes: ReleaseEntry[] = [
     changes: [
       {
         type: "fix",
-        text: "Fixed Degiro broker import not storing cash balances — cash is now correctly imported and displayed in Assets & Accounts, including on re-imports when all transactions are already present.",
+        text: "Fixed broker sync (SnapTrade) not displaying the correct cash balance — when multiple accounts shared the same currency, only the last account's balance was kept. Cash is now correctly aggregated across all accounts.",
         translations: {
-          es: "Corregido el error en la importación de Degiro que no guardaba los saldos de efectivo — ahora se importan y muestran correctamente en Activos y Cuentas, incluso al reimportar cuando todas las transacciones ya existen.",
+          es: "Corregido el error en la sincronización de broker (SnapTrade) que no mostraba el saldo correcto de efectivo — cuando varias cuentas compartían la misma moneda, solo se conservaba el saldo de la última cuenta. Ahora el efectivo se agrega correctamente entre todas las cuentas.",
         },
       },
       {
         type: "fix",
-        text: "Non-EUR cash balances from broker imports now display in their original currency instead of defaulting to EUR.",
+        text: "Cash balances from broker imports now display in their original currency instead of defaulting to EUR.",
         translations: {
-          es: "Los saldos de efectivo en monedas distintas al EUR de las importaciones de broker ahora se muestran en su moneda original en lugar de EUR por defecto.",
+          es: "Los saldos de efectivo de las importaciones de broker ahora se muestran en su moneda original en lugar de EUR por defecto.",
         },
       },
       {
