@@ -148,7 +148,7 @@ Everything in Bifolio, plus:
 - All 4 dashboard themes (Default, Canvas, Terminal, Studio)
 - Unlimited SnapTrade broker sync connections
 - IPO calendar
-- Up to 3 portfolios
+- Up to 5 portfolios
 - Unlimited price alerts + all notification channels
 - trefolio Leaf device support
 - Priority support

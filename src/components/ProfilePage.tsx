@@ -588,7 +588,7 @@ function PortfolioManagementSection() {
 
       {!isPro && portfolios.length >= limit && (
         <p className="text-xs text-gray-500 dark:text-slate-400">
-          Upgrade to Trefolio to create up to 3 portfolios.
+          Upgrade to Trefolio to create up to 5 portfolios.
         </p>
       )}
 
@@ -1598,7 +1598,7 @@ export default function ProfilePage() {
         <div className="card p-6 space-y-4">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Portfolios</h2>
           <p className="text-sm text-gray-500 dark:text-slate-400">
-            Manage your portfolios. Pro users can create up to 3 portfolios.
+            Manage your portfolios. Pro users can create up to 5 portfolios.
           </p>
           <PortfolioManagementSection />
         </div>

@@ -35,7 +35,7 @@ trefolio is a portfolio tracker for European investors. It tracks stocks, ETFs, 
 - Unlimited holdings
 - 30 AI analysis calls/day
 - Unlimited alerts with WhatsApp, push, email, and device notifications
-- Up to 3 portfolios
+- Up to 5 portfolios
 - Everything in Starter, plus:
 - Company fundamentals (income, balance sheet, cash flow)
 - Stock intelligence (news, insider trades, institutional holdings)

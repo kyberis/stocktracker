@@ -72,7 +72,7 @@ export const PLATFORM_LIMITS = {
   STARTER_PORTFOLIO_LIMIT: 1,
 
   /** Max portfolios for Pro users. */
-  PRO_PORTFOLIO_LIMIT: 3,
+  PRO_PORTFOLIO_LIMIT: 5,
 
   /** Max SnapTrade broker connections per tier. Free: 0 (no access). */
   FREE_SNAPTRADE_LIMIT: 0,

@@ -328,7 +328,7 @@ const de: TranslationStrings = {
   notifBifolioUpgradeMessage: "Herzlichen Glückwunsch zum Upgrade! Freigeschaltet: Portfolio-Sharing, CSV-Export, E-Mail- & Push-Alarme (bis zu 10), 50 Positionen, 20 KI-Aufrufe/Monat, Vermögensverfolgung und Wirtschaftskalender.",
   notifBifolioUpgradeCta: "Ersten Alarm einrichten",
   notifTrefolioUpgradeTitle: "Willkommen bei Trefolio Pro!",
-  notifTrefolioUpgradeMessage: "Du hast jetzt vollen Zugang: Fundamentaldaten & Finanzberichte, Alpha Intelligence (News, Insider, Institutionen), WhatsApp- & Geräte-Alarme, unbegrenzte Positionen & Alarme, Aktien-Screener, Krypto-Portfolio, bis zu 3 Portfolios und 30 KI-Aufrufe/Tag.",
+  notifTrefolioUpgradeMessage: "Du hast jetzt vollen Zugang: Fundamentaldaten & Finanzberichte, Alpha Intelligence (News, Insider, Institutionen), WhatsApp- & Geräte-Alarme, unbegrenzte Positionen & Alarme, Aktien-Screener, Krypto-Portfolio, bis zu 5 Portfolios und 30 KI-Aufrufe/Tag.",
   notifTrefolioUpgradeCta: "AI Insights entdecken",
   notifDowngradeTitle: "Dein Abonnement ändert sich",
   notifDowngradeMessage: "Dein aktueller Plan bleibt bis zum {0} voll aktiv. Danach wird dein Konto auf den kostenlosen Folio-Plan zurückgestuft. Du kannst dich jederzeit über dein Profil erneut abonnieren.",

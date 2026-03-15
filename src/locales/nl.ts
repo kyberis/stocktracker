@@ -328,7 +328,7 @@ const nl: TranslationStrings = {
   notifBifolioUpgradeMessage: "Gefeliciteerd met je upgrade! Ontgrendeld: Portfolio delen, CSV-export, E-mail- & Push-meldingen (tot 10), 50 posities, 20 AI-oproepen/maand, Vermogenstracking en Economische kalender.",
   notifBifolioUpgradeCta: "Stel je eerste alert in",
   notifTrefolioUpgradeTitle: "Welkom bij Trefolio Pro!",
-  notifTrefolioUpgradeMessage: "Je hebt nu volledige toegang: Fundamenten & financiële overzichten, Alpha Intelligence (nieuws, insiders, instellingen), WhatsApp- & apparaat-meldingen, Onbeperkte posities & alerts, Aandelen-screener, Crypto-portfolio, tot 3 portfolios en 30 AI-oproepen/dag.",
+  notifTrefolioUpgradeMessage: "Je hebt nu volledige toegang: Fundamenten & financiële overzichten, Alpha Intelligence (nieuws, insiders, instellingen), WhatsApp- & apparaat-meldingen, Onbeperkte posities & alerts, Aandelen-screener, Crypto-portfolio, tot 5 portfolios en 30 AI-oproepen/dag.",
   notifTrefolioUpgradeCta: "AI Insights verkennen",
   notifDowngradeTitle: "Je abonnement verandert",
   notifDowngradeMessage: "Je huidige plan blijft volledig actief tot {0}. Daarna keert je account terug naar het gratis Folio-plan. Je kunt je op elk moment opnieuw abonneren via je profiel.",

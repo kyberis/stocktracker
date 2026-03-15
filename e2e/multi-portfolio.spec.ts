@@ -30,7 +30,7 @@ test.describe("Multi-Portfolio API", () => {
     expect(errBody.error).toContain("Portfolio limit");
   });
 
-  test("Pro user can create up to 3 portfolios", async ({ request }) => {
+  test("Pro user can create up to 5 portfolios", async ({ request }) => {
     // Upgrade to pro via admin
     const adminOk = await loginAsAdmin(request);
     if (!adminOk) {
