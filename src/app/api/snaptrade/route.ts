@@ -261,7 +261,8 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
 
       const accounts = await listAccounts(conn.snapTradeUserId, userSecret);
       const activeBrokerIds = new Set(brokerageConns.filter((c) => !c.disabled).map((c) => c.id));
-      let activeAccounts = accounts.filter((a) => activeBrokerIds.has(a.brokerageAuthorizationId));
+      const allActiveAccounts = accounts.filter((a) => activeBrokerIds.has(a.brokerageAuthorizationId));
+      let activeAccounts = allActiveAccounts;
       if (brokerConnectionId) {
         activeAccounts = activeAccounts.filter((a) => a.brokerageAuthorizationId === brokerConnectionId);
       }
@@ -331,8 +332,9 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
         (tx) => !tx.sourceRef || !existingRefs.has(tx.sourceRef),
       );
 
-      const activeAccountIds = new Set(activeAccounts.map((a) => a.id));
-      const holdingsResult = await fetchAllHoldings(conn.snapTradeUserId, userSecret, activeAccountIds);
+      const allActiveAccountIds = new Set(allActiveAccounts.map((a) => a.id));
+      const institutionMap = new Map(allActiveAccounts.map((a) => [a.id, a.institution]));
+      const holdingsResult = await fetchAllHoldings(conn.snapTradeUserId, userSecret, allActiveAccountIds, institutionMap);
 
       const summary = {
         total: deduped.length,

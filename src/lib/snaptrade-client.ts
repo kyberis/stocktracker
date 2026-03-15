@@ -374,6 +374,7 @@ export async function fetchAllHoldings(
   userId: string,
   userSecret: string,
   filterAccountIds?: Set<string>,
+  accountInstitutionMap?: Map<string, string>,
 ): Promise<SnapTradeHoldingsResult> {
   return logSnapTradeCall("fetchAllHoldings", userId, { userId }, async () => {
     const client = getClient();
@@ -411,11 +412,13 @@ export async function fetchAllHoldings(
       const acctId = String(acct?.id || "");
       if (filterAccountIds && acctId && !filterAccountIds.has(acctId)) continue;
 
+      const institution = String(acct?.institution_name || "") || accountInstitutionMap?.get(acctId) || "";
+
       if (acct) {
         accounts.push({
           id: acctId,
           name: String(acct.name || "Unknown Account"),
-          institution: String(acct.institution_name || ""),
+          institution,
         });
       }
 
@@ -440,7 +443,7 @@ export async function fetchAllHoldings(
             cashBalances.push({
               currency: bal.currency.code,
               amount: bal.cash,
-              broker: String(acct?.institution_name || ""),
+              broker: institution,
             });
           }
         }

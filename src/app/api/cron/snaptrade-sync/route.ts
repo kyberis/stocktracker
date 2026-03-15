@@ -143,7 +143,8 @@ const runSync = withCronLogging("snaptrade-sync", async () => {
 
       // Update cash balances (per broker)
       try {
-        const holdingsResult = await fetchAllHoldings(conn.snapTradeUserId, userSecret);
+        const institutionMap = new Map(activeAccounts.map((a) => [a.id, a.institution]));
+        const holdingsResult = await fetchAllHoldings(conn.snapTradeUserId, userSecret, undefined, institutionMap);
         if (holdingsResult.cashBalances.length > 0) {
           const aggregated = new Map<string, { broker: string; currency: string; amount: number }>();
           for (const b of holdingsResult.cashBalances) {
