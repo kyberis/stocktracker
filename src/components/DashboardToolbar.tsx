@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useAuth } from "@/lib/auth-context";
@@ -94,6 +94,20 @@ function AddMenu({ onAddStock, onAddCrypto, onAddAsset }: { onAddStock: () => vo
   );
 }
 
+function formatDateAgo(date: Date): string {
+  const diffMs = Date.now() - date.getTime();
+  const minutes = Math.floor(diffMs / 60000);
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
+}
+
+function isStale(date: Date): boolean {
+  return Date.now() - date.getTime() > 30 * 60 * 1000;
+}
+
 interface DashboardToolbarProps {
   onAddStock: () => void;
   onAddCrypto?: () => void;
@@ -112,7 +126,7 @@ export default function DashboardToolbar({
 }: DashboardToolbarProps) {
   const router = useRouter();
   const { user } = useAuth();
-  const { isLoading, refreshQuotes, lastUpdated, portfolios, activePortfolioId, setActivePortfolio, refreshPortfolios } = usePortfolio();
+  const { isLoading, refreshQuotes, lastUpdated, holdingsLastFetchedAt, portfolios, activePortfolioId, setActivePortfolio, refreshPortfolios } = usePortfolio();
   const { t } = useI18n();
   const { layoutTheme } = useTheme();
   const { defaultCurrency } = useSettings();
@@ -123,8 +137,17 @@ export default function DashboardToolbar({
   const [newCurrency, setNewCurrency] = useState(defaultCurrency);
   const [creating, setCreating] = useState(false);
   const [settingDefault, setSettingDefault] = useState<string | null>(null);
+  const [, setTick] = useState(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const id = setInterval(() => setTick((n) => n + 1), 30_000);
+    return () => clearInterval(id);
+  }, []);
+
+  const quotesStale = useMemo(() => lastUpdated ? isStale(lastUpdated) : false, [lastUpdated]);
+  const holdingsStale = useMemo(() => holdingsLastFetchedAt ? isStale(holdingsLastFetchedAt) : false, [holdingsLastFetchedAt]);
 
   const plan = user?.plan ?? "free";
   const limit = getPortfolioLimit(plan);
@@ -376,10 +399,26 @@ export default function DashboardToolbar({
             </div>
           )}
 
-          {lastUpdated && (
-            <span className="hidden sm:inline text-[11px] text-gray-500 dark:text-slate-500 truncate">
-              {t("lastUpdated")}: {lastUpdated.toLocaleTimeString()}
-            </span>
+          {(lastUpdated || holdingsLastFetchedAt) && (
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/5 dark:bg-white/5 border border-black/[0.06] dark:border-white/[0.06] shrink-0">
+              {lastUpdated && (
+                <span className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-slate-500 font-mono">
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${quotesStale ? "bg-amber-400" : "bg-emerald-400"}`} />
+                  <span className="text-gray-400 dark:text-slate-600">{t("quotesAsOf")}</span>
+                  <span className={quotesStale ? "text-amber-400" : ""}>{lastUpdated.toLocaleTimeString()}</span>
+                </span>
+              )}
+              {lastUpdated && holdingsLastFetchedAt && (
+                <span className="w-px h-3 bg-gray-200 dark:bg-slate-700 shrink-0" aria-hidden="true" />
+              )}
+              {holdingsLastFetchedAt && (
+                <span className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-slate-500 font-mono">
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${holdingsStale ? "bg-amber-400" : "bg-emerald-400"}`} />
+                  <span className="text-gray-400 dark:text-slate-600">{t("holdingsSynced")}</span>
+                  <span className={holdingsStale ? "text-amber-400" : ""}>{formatDateAgo(holdingsLastFetchedAt)}</span>
+                </span>
+              )}
+            </div>
           )}
         </div>
 

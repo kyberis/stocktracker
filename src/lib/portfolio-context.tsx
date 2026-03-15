@@ -67,6 +67,7 @@ interface PortfolioContextType {
   refreshSingleQuote: (ticker: string) => Promise<void>;
   refreshAlertedTickers: () => Promise<void>;
   lastUpdated: Date | null;
+  holdingsLastFetchedAt: Date | null;
   demoMode: boolean;
   goals: Goal[];
   /** Primary goal (highest priority) — convenience alias for dashboard widgets */
@@ -151,6 +152,9 @@ export function PortfolioProvider({
   const [isLoading, setIsLoading] = useState(!demoMode);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(demoMode ? new Date() : null);
+  const [holdingsLastFetchedAt, setHoldingsLastFetchedAt] = useState<Date | null>(
+    (demoMode || initialHoldings) ? new Date() : null
+  );
   const [alertedTickers, setAlertedTickers] = useState<Set<string>>(new Set());
   const [goals, setGoals] = useState<Goal[]>(initialGoal ? [initialGoal] : []);
   const fetchingRef = useRef(false);
@@ -172,6 +176,7 @@ export function PortfolioProvider({
       if (!res.ok) throw new Error("Failed to fetch holdings");
       const loaded = (await res.json()) as Holding[];
       setHoldings(loaded);
+      setHoldingsLastFetchedAt(new Date());
       return loaded;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch holdings");
@@ -304,6 +309,7 @@ export function PortfolioProvider({
 
         setHoldings(holdingsData);
         setCashEntries(cashData);
+        setHoldingsLastFetchedAt(new Date());
         setIsLoading(false);
 
         const tickers = [...new Set(holdingsData.map((h) => h.ticker))];
@@ -719,6 +725,7 @@ export function PortfolioProvider({
       refreshSingleQuote: demoMode ? noop : refreshSingleQuote,
       refreshAlertedTickers: demoMode ? noop : refreshAlertedTickers,
       lastUpdated,
+      holdingsLastFetchedAt,
       demoMode: !!demoMode,
       goals,
       goal: goals[0] ?? null,
@@ -732,7 +739,7 @@ export function PortfolioProvider({
       isLoading, error, portfolios, activePortfolioId, activePortfolioCurrency, alertedTickers, setActivePortfolio, fetchPortfolios,
       addHolding, removeHolding, updateHolding, addCashEntry,
       removeCashEntry, updateCashEntry, refreshHoldings, refreshQuotes, refreshSingleQuote,
-      refreshAlertedTickers, lastUpdated, demoMode, noop, noopGoal,
+      refreshAlertedTickers, lastUpdated, holdingsLastFetchedAt, demoMode, noop, noopGoal,
       goals, saveGoalCb, deleteGoalCb, fetchGoals,
     ]
   );

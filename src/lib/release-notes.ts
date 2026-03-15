@@ -14,9 +14,45 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "1.37.0";
+export const CURRENT_VERSION = "1.38.0";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "1.38.0",
+    date: "2026-03-15",
+    title: "Dividend Depth: Yield-on-Cost & DRIP Simulation",
+    titleTranslations: { es: "Profundidad de Dividendos: Rendimiento sobre Coste y Simulación DRIP" },
+    changes: [
+      {
+        type: "feature",
+        text: "Yield-on-Cost (YOC) is now displayed per holding and at the portfolio level in the dividend tab, showing your dividend income relative to your original purchase price.",
+        translations: {
+          es: "El rendimiento sobre coste (YOC) ahora se muestra por posición y a nivel de cartera en la pestaña de dividendos, mostrando tus ingresos por dividendos en relación al precio original de compra.",
+        },
+      },
+      {
+        type: "feature",
+        text: "Interactive DRIP simulation chart in the dividend tab projects your dividend income over 5–30 years with and without reinvestment, with adjustable dividend growth rate.",
+        translations: {
+          es: "Gráfico interactivo de simulación DRIP en la pestaña de dividendos que proyecta tus ingresos por dividendos a 5–30 años con y sin reinversión, con tasa de crecimiento ajustable.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Dividend calculations refactored to use a shared service layer, improving consistency and testability.",
+        translations: {
+          es: "Los cálculos de dividendos se refactorizaron para usar una capa de servicio compartida, mejorando la consistencia y la capacidad de prueba.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Dashboard toolbar now shows two data-freshness indicators: \"Quotes as of [time]\" (absolute time, turns amber when >30 min old) and \"Holdings synced [X ago]\" (relative time). Both update automatically without page refresh.",
+        translations: {
+          es: "La barra del panel ahora muestra dos indicadores de actualidad de datos: \"Cotizaciones a las [hora]\" (hora absoluta, se vuelve ámbar si tiene >30 min) y \"Cartera sincronizada [hace X]\" (tiempo relativo). Ambos se actualizan automáticamente sin recargar la página.",
+        },
+      },
+    ],
+  },
   {
     version: "1.37.0",
     date: "2026-03-14",
@@ -28,6 +64,13 @@ export const releaseNotes: ReleaseEntry[] = [
         text: "After a SnapTrade sync, a dismissible banner now confirms how many positions and new transactions were imported, or notifies you when the background auto-sync has refreshed your portfolio.",
         translations: {
           es: "Tras una sincronización de SnapTrade, un banner descartable confirma cuántas posiciones y nuevas transacciones se importaron, o te avisa cuando la sincronización automática en segundo plano ha actualizado tu cartera.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Refined landing page marketing claims to use verifiable, evidence-based language instead of unsubstantiated superlatives.",
+        translations: {
+          es: "Se refinaron las afirmaciones de marketing en la página de inicio para usar lenguaje verificable y basado en evidencia en lugar de superlativos no fundamentados.",
         },
       },
       {

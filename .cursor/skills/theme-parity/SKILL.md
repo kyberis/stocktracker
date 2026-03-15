@@ -53,6 +53,7 @@ Every item below MUST be present in ALL three themes. When modifying the dashboa
 ### Dashboard Toolbar
 
 - [ ] **Portfolio switcher** — Dropdown with portfolio list, create new, set default
+- [ ] **Quotes as of / Holdings synced** — Freshness cluster with green/amber dots; "Quotes as of [HH:MM:SS]" and "Holdings synced [X ago]"; hidden on mobile (xs screens); turns amber when data is >30 min old
 - [ ] **Last updated** — Timestamp of last quote refresh
 - [ ] **Refresh button** — Manual quote refresh
 - [ ] **Settings button** — Opens SettingsModal
