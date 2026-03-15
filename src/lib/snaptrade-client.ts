@@ -437,7 +437,11 @@ export async function fetchAllHoldings(
       if (acctHoldings.balances) {
         for (const bal of acctHoldings.balances) {
           if (bal.currency?.code && bal.cash != null) {
-            cashBalances.push({ currency: bal.currency.code, amount: bal.cash });
+            cashBalances.push({
+              currency: bal.currency.code,
+              amount: bal.cash,
+              broker: String(acct?.institution_name || ""),
+            });
           }
         }
       }

@@ -141,19 +141,27 @@ const runSync = withCronLogging("snaptrade-sync", async () => {
         }
       }
 
-      // Update cash balances
+      // Update cash balances (per broker)
       try {
         const holdingsResult = await fetchAllHoldings(conn.snapTradeUserId, userSecret);
         if (holdingsResult.cashBalances.length > 0) {
-          const aggregated = new Map<string, number>();
+          const aggregated = new Map<string, { broker: string; currency: string; amount: number }>();
           for (const b of holdingsResult.cashBalances) {
-            aggregated.set(b.currency, (aggregated.get(b.currency) || 0) + b.amount);
+            const key = `${b.broker || ""}::${b.currency}`;
+            const existing = aggregated.get(key);
+            if (existing) {
+              existing.amount += b.amount;
+            } else {
+              aggregated.set(key, { broker: b.broker || "", currency: b.currency, amount: b.amount });
+            }
           }
 
           await removeCashEntriesBySource(conn.userId, "snaptrade");
 
           const yahoo = new YahooProvider();
-          for (const [currency, displayAmount] of aggregated) {
+          for (const entry of aggregated.values()) {
+            const { broker, currency } = entry;
+            let displayAmount = entry.amount;
             let amountEUR = displayAmount;
             if (currency !== "EUR") {
               try {
@@ -163,8 +171,9 @@ const runSync = withCronLogging("snaptrade-sync", async () => {
                 // keep original amount
               }
             }
+            const label = broker ? `${broker.toUpperCase()} \u2013 ${currency}` : `Cash ${currency}`;
             await addCashEntry(conn.userId, {
-              name: `Cash ${currency}`,
+              name: label,
               amountEUR,
               source: "snaptrade",
               displayCurrency: currency,

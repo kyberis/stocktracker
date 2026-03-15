@@ -42,6 +42,7 @@ export interface ExtractedHolding {
 export interface CashBalance {
   currency: string;
   amount: number;
+  broker?: string;
 }
 
 export interface BrokerageConnection {
