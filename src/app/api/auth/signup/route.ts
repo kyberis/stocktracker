@@ -38,7 +38,7 @@ export const POST = withMetrics("/api/auth/signup", async (req: NextRequest) => 
 
   const result = await parseBody(req, signupSchema);
   if (!result.success) return result.error;
-  const { email, password, displayName, seedWithData } = result.data;
+  const { email, password, displayName } = result.data;
   const normalizedEmail = email.trim().toLowerCase();
 
   const cfToken = (result.data as Record<string, unknown>).turnstileToken as string | undefined;
@@ -65,7 +65,7 @@ export const POST = withMetrics("/api/auth/signup", async (req: NextRequest) => 
       email: normalizedEmail,
       displayName: displayName || "",
       authProvider: "credentials",
-      seedWithData: Boolean(seedWithData),
+      seedWithData: false,
     });
 
     await ensureDefaultPortfolio(user.id);

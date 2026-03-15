@@ -53,14 +53,23 @@ export const GET = withMetrics("/api/portfolio/summary", async (req: NextRequest
 
   const userId = authContext.userId;
   // Portfolio scope:
-  // - Explicit ?portfolio= always wins.
-  // - Device passkey defaults to device_portfolio_id when no explicit portfolio is set.
-  // - Session/widget token default to all portfolios when no explicit portfolio is set.
+  // - Widget token always uses the user's configured device_portfolio_id (dynamic server-side control).
+  // - Device passkey allows explicit ?portfolio= override, otherwise uses device_portfolio_id.
+  // - Session requests only use explicit ?portfolio= (otherwise all portfolios).
   const portfolioParam = req.nextUrl.searchParams.get("portfolio");
   const explicitPortfolioId = portfolioParam && portfolioParam.trim() ? portfolioParam : undefined;
-  const shouldUseDeviceDefault = !explicitPortfolioId && authContext.method === "device_passkey";
-  const dbUser = shouldUseDeviceDefault ? await findUserById(userId) : null;
-  const portfolioId = explicitPortfolioId || dbUser?.device_portfolio_id || undefined;
+  const shouldLoadUserConfig =
+    authContext.method === "widget_token" || authContext.method === "device_passkey";
+  const dbUser = shouldLoadUserConfig ? await findUserById(userId) : null;
+
+  let portfolioId: string | undefined;
+  if (authContext.method === "widget_token") {
+    portfolioId = dbUser?.device_portfolio_id || undefined;
+  } else if (authContext.method === "device_passkey") {
+    portfolioId = explicitPortfolioId || dbUser?.device_portfolio_id || undefined;
+  } else {
+    portfolioId = explicitPortfolioId;
+  }
 
   const [holdings, cashEntries] = await Promise.all([
     listHoldings(userId, portfolioId),

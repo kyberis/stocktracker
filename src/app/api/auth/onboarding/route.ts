@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { completeOnboarding, resetUserHoldings, ensureDefaultPortfolio, trackEvent } from "@/lib/db";
+import { completeOnboarding, trackEvent } from "@/lib/db";
 import { updateUserSettings } from "@/lib/db/settings";
 import { createSessionToken, getSessionCookieConfig } from "@/lib/auth/session";
 import { withMetrics } from "@/lib/with-metrics";
 import { parseBody } from "@/lib/api-response";
 import { onboardingSchema } from "@/lib/schemas";
-import { countHoldings } from "@/lib/db/holdings";
 
 export const POST = withMetrics("/api/auth/onboarding", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
@@ -23,14 +22,6 @@ export const POST = withMetrics("/api/auth/onboarding", async (req: NextRequest)
 
   if (defaultCurrency) {
     await updateUserSettings(session.userId, { defaultCurrency: defaultCurrency as "EUR" });
-  }
-
-  const portfolioId = await ensureDefaultPortfolio(session.userId);
-  const holdingsCount = await countHoldings(session.userId, portfolioId);
-
-  if (holdingsCount === 0 && importMethod !== "csv" && importMethod !== "broker_sync" && importMethod !== "skip") {
-    await resetUserHoldings(session.userId, true, portfolioId);
-    trackEvent(session.userId, "onboarding_auto_seeded");
   }
 
   if (importMethod) {

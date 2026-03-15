@@ -78,7 +78,6 @@ export const signupSchema = z.object({
   email: safeEmail,
   password: z.string().min(6, "Password must be at least 6 characters"),
   displayName: z.string().max(100).optional(),
-  seedWithData: z.boolean().optional(),
   turnstileToken: z.string().optional(),
 });
 
@@ -357,7 +356,7 @@ export const checkoutSchema = z.object({
 /* ── Reset Portfolio ───────────────────────────────────────── */
 
 export const resetPortfolioSchema = z.object({
-  mode: z.enum(["empty", "seed"]).optional().default("empty"),
+  mode: z.literal("empty").optional().default("empty"),
 });
 
 /* ── Analytics ─────────────────────────────────────────────── */

@@ -866,7 +866,7 @@ registerPost({
   slug: "auto-sync-broker-snaptrade",
   title: "Auto-Sync Your Broker Portfolio: Connect 20+ Brokerages With One Click",
   description:
-    "Connect your brokerage account to trefolio via SnapTrade and auto-sync your portfolio every 6 hours. No more CSV exports — just one-click OAuth.",
+    "Connect your brokerage account to trefolio via SnapTrade and auto-sync your portfolio every hour. No more CSV exports — just one-click OAuth.",
   date: "2026-03-13",
   readingTime: "6 min read",
   keywords: [
@@ -880,7 +880,7 @@ registerPost({
   content: /* html */ `
 <h2>The Problem with Manual Imports</h2>
 <p>CSV imports work. They're reliable and they get your data into trefolio accurately. But they're also tedious. Every time you make a trade, you need to re-export your CSV, upload it, and wait for the import to process. For active traders making several trades a week, this adds up fast. For passive investors, it's an inconvenience you'd rather not deal with every quarter.</p>
-<p>trefolio's broker sync solves this. Connect your brokerage account once via SnapTrade, and your portfolio syncs automatically every 6 hours. No CSV exports, no manual uploads, no missed transactions.</p>
+<p>trefolio's broker sync solves this. Connect your brokerage account once via SnapTrade, and your portfolio syncs automatically every hour. No CSV exports, no manual uploads, no missed transactions.</p>
 
 <h2>How Broker Sync Works</h2>
 <p>trefolio uses SnapTrade — a secure, regulated broker aggregation platform — to connect directly to your brokerage account. The process is simple:</p>
@@ -889,7 +889,7 @@ registerPost({
 <li>Choose your broker from the list of 20+ supported brokerages.</li>
 <li>Authenticate via OAuth — you log in to your broker directly. trefolio never sees your broker password.</li>
 <li>trefolio pulls your current positions, transaction history, and cash balances.</li>
-<li>Your portfolio updates automatically every 6 hours. No action needed.</li>
+<li>Your portfolio updates automatically every hour. No action needed.</li>
 </ol>
 <p><img src="/screenshots/dashboard-overview.png" alt="trefolio broker sync" width="800" height="450" /></p>
 
@@ -912,7 +912,7 @@ registerPost({
 </thead>
 <tbody>
 <tr><td>Setup effort</td><td>One-time OAuth</td><td>Export + upload each time</td></tr>
-<tr><td>Updates</td><td>Automatic every 6 hours</td><td>Manual</td></tr>
+<tr><td>Updates</td><td>Automatic every hour</td><td>Manual</td></tr>
 <tr><td>Supported brokers</td><td>20+ (growing)</td><td>14+ (DEGIRO, IBKR, Trading 212, Revolut, etc.)</td></tr>
 <tr><td>Historical data</td><td>Depends on broker API</td><td>Full history from CSV</td></tr>
 <tr><td>Best for</td><td>Active traders, convenience</td><td>Full history import, unsupported brokers</td></tr>

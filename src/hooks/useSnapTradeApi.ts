@@ -500,6 +500,22 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
       setErrorMsg("Import failed.");
       setStep("error");
     } else {
+      // Persist sync result so SyncConfidenceBanner can display it after navigation
+      const brokerNames = [...new Set(
+        transactions.map((tx) => tx.brokerName).filter(Boolean) as string[]
+      )];
+      const positionCount = [...new Set(
+        transactions.filter((tx) => tx.type === "buy" || tx.type === "sell").map((tx) => tx.ticker)
+      )].length;
+      try {
+        sessionStorage.setItem("syncConfidenceResult", JSON.stringify({
+          variant: "manual",
+          positions: positionCount,
+          newTx: txCount,
+          brokerNames,
+          ts: new Date().toISOString(),
+        }));
+      } catch { /* private browsing or storage quota exceeded */ }
       setStep("done");
     }
   }, [transactions]);

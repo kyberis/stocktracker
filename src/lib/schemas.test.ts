@@ -65,19 +65,6 @@ describe("signupSchema", () => {
     if (result.success) {
       expect(result.data.email).toBe("john@example.com");
       expect(result.data.password).toBe("secret123");
-      expect(result.data.seedWithData).toBeUndefined();
-    }
-  });
-
-  it("accepts optional seedWithData", () => {
-    const result = signupSchema.safeParse({
-      email: "john@example.com",
-      password: "secret123",
-      seedWithData: true,
-    });
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.seedWithData).toBe(true);
     }
   });
 

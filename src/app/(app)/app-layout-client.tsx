@@ -19,6 +19,7 @@ import DeviceInterestEnroller from "@/components/DeviceInterestEnroller";
 import ThemeWizard from "@/components/ThemeWizard";
 import EmailVerificationBanner from "@/components/EmailVerificationBanner";
 import NativeShell from "@/components/NativeShell";
+import SyncConfidenceBanner from "@/components/SyncConfidenceBanner";
 import { CURRENT_VERSION } from "@/lib/release-notes";
 import Link from "next/link";
 import type { LayoutTheme } from "@/lib/types";
@@ -58,6 +59,7 @@ function AppShell({ children }: { children: React.ReactNode }) {
         <SidebarNav />
         <div className="flex-1 min-h-screen bg-[#18181b] pb-14 sm:pb-0">
           <EmailVerificationBanner />
+          <SyncConfidenceBanner />
           <MarketTickerBar />
           <main id="main-content">{children}</main>
           <AppFooter />
@@ -75,6 +77,7 @@ function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen pb-14 sm:pb-0" style={{ background: "var(--background)", fontFamily: "var(--font-primary, inherit)" }}>
       <EmailVerificationBanner />
+      <SyncConfidenceBanner />
       <MarketTickerBar />
       <AppNav />
       <main id="main-content">{children}</main>

@@ -581,16 +581,6 @@ function HeroSection() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
             </Link>
-            <Link
-              href="/demo"
-              onClick={() => trackLanding("landing_cta_click", { cta: "hero_try_demo" })}
-              className="inline-flex items-center gap-2 text-slate-300 hover:text-white font-medium px-6 py-4 rounded-xl border border-slate-700 hover:border-slate-500 transition-all"
-            >
-              Try Interactive Demo
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-            </Link>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 mb-16 max-w-2xl mx-auto">

@@ -443,13 +443,13 @@ export default function ImportPageContent() {
                   {t("brokerSyncGateTitle") || "Automatic Broker Sync"}
                 </h3>
                 <p className="text-sm text-gray-500 dark:text-slate-400 max-w-md mx-auto mb-5">
-                  {t("brokerSyncGateDesc") || "Connect your broker and your portfolio syncs automatically every 6 hours. No more manual CSV uploads."}
+                  {t("brokerSyncGateDesc") || "Connect your broker and your portfolio syncs automatically every hour. No more manual CSV uploads."}
                 </p>
 
                 <div className="flex gap-3 justify-center flex-wrap mb-5">
                   {[
                     t("brokerSyncGateBenefit1") || "Auto-import holdings",
-                    t("brokerSyncGateBenefit2") || "Syncs every 6 hours",
+                    t("brokerSyncGateBenefit2") || "Syncs every hour",
                     t("brokerSyncGateBenefit3") || "20+ brokers",
                   ].map((label) => (
                     <div key={label} className="flex items-center gap-1.5">
@@ -682,7 +682,7 @@ export default function ImportPageContent() {
                           <div className="text-[10px] text-gray-400 dark:text-slate-500 flex items-center gap-3">
                             <span>{t("brokerSyncLastSynced") || "Last synced"}: {new Date(snapTradeApi.connection.lastSyncedAt).toLocaleString()}</span>
                             <span>•</span>
-                            <span>{t("brokerSyncAutoSyncDesc") || "Syncs every 6h"}</span>
+                            <span>{t("brokerSyncAutoSyncDesc") || "Syncs every hour"}</span>
                           </div>
                         </div>
                       )}
@@ -775,7 +775,7 @@ export default function ImportPageContent() {
                       {t("brokerSyncEmptyTitle") || "Connect your broker"}
                     </h3>
                     <p className="text-sm text-gray-500 dark:text-slate-400 max-w-md mx-auto mb-6">
-                      {t("brokerSyncEmptyDesc") || "Automatically import your holdings, transactions, and dividends. Your portfolio syncs every 6 hours — no manual uploads needed."}
+                      {t("brokerSyncEmptyDesc") || "Automatically import your holdings, transactions, and dividends. Your portfolio syncs every hour — no manual uploads needed."}
                     </p>
 
                     {/* 3-step "How it works" */}
@@ -783,7 +783,7 @@ export default function ImportPageContent() {
                       {[
                         { step: "1", title: t("brokerSyncStep1") || "Select your broker", sub: t("brokerSyncStep1Sub") || "from 20+ supported" },
                         { step: "2", title: t("brokerSyncStep2") || "Log in securely", sub: t("brokerSyncStep2Sub") || "via SnapTrade portal" },
-                        { step: "3", title: t("brokerSyncStep3") || "Auto-sync starts", sub: t("brokerSyncStep3Sub") || "every 6 hours" },
+                        { step: "3", title: t("brokerSyncStep3") || "Auto-sync starts", sub: t("brokerSyncStep3Sub") || "every hour" },
                       ].map((s) => (
                         <div key={s.step} className="text-center max-w-[140px]">
                           <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 inline-flex items-center justify-center mb-1.5">

@@ -63,17 +63,10 @@ import { HeroSkeleton, TableSkeleton, ChartSkeleton } from "./Skeleton";
 
 type DashboardTab = "portfolio" | "crypto" | "diversification" | "dividends" | "metrics" | "growth" | "events" | "news";
 
-function EmptyPortfolio({ onAddStock, onSeedData }: { onAddStock: () => void; onSeedData: () => void }) {
+function EmptyPortfolio({ onAddStock }: { onAddStock: () => void }) {
   const { t } = useI18n();
   const { user, isLoading: authLoading } = useAuth();
-  const [seeding, setSeeding] = useState(false);
   const isPro = user?.plan === "pro";
-
-  const handleSeed = async () => {
-    setSeeding(true);
-    await onSeedData();
-    setSeeding(false);
-  };
 
   return (
     <div className="space-y-6">
@@ -87,7 +80,7 @@ function EmptyPortfolio({ onAddStock, onSeedData }: { onAddStock: () => void; on
         <p className="text-sm text-gray-500 dark:text-slate-400 max-w-md mx-auto">{t("emptyStateSubtitle")}</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {/* Import from broker CSV */}
         <a
           href="/import"
@@ -116,24 +109,6 @@ function EmptyPortfolio({ onAddStock, onSeedData }: { onAddStock: () => void; on
           <p className="text-xs text-gray-500 dark:text-slate-400">{t("emptyStateAddDesc")}</p>
         </button>
 
-        {/* Try with sample data */}
-        <button
-          onClick={handleSeed}
-          disabled={seeding}
-          className="group card p-5 flex flex-col items-center text-center hover:border-amber-400 dark:hover:border-amber-500/40 transition-all hover:shadow-md disabled:opacity-60"
-        >
-          <div className="w-12 h-12 mb-3 rounded-2xl bg-amber-100 dark:bg-amber-500/15 flex items-center justify-center group-hover:scale-110 transition-transform">
-            {seeding ? (
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-amber-500" />
-            ) : (
-              <svg className="w-6 h-6 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5" />
-              </svg>
-            )}
-          </div>
-          <p className="text-sm font-semibold text-gray-900 dark:text-white mb-1">{t("emptyStateSample")}</p>
-          <p className="text-xs text-gray-500 dark:text-slate-400">{t("emptyStateSampleDesc")}</p>
-        </button>
       </div>
 
       {/* Broker API sync upsell for non-Pro users */}
@@ -383,17 +358,6 @@ function DesktopDashboard() {
             ) : holdingsCount === 0 ? (
               <EmptyPortfolio
                 onAddStock={() => setShowAddModal(true)}
-                onSeedData={async () => {
-                  try {
-                    const qp = activePortfolioId ? `?portfolioId=${encodeURIComponent(activePortfolioId)}` : "";
-                    const res = await fetch(`/api/reset-portfolio${qp}`, {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ mode: "seed" }),
-                    });
-                    if (res.ok) refreshHoldings();
-                  } catch { /* ignore */ }
-                }}
               />
             ) : (
               <>

@@ -17,7 +17,7 @@ export default function ResetPortfolioModal({ isOpen, onClose }: ResetPortfolioM
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleReset = async (mode: "empty" | "seed") => {
+  const handleReset = async () => {
     setLoading(true);
     setError(null);
     try {
@@ -25,7 +25,7 @@ export default function ResetPortfolioModal({ isOpen, onClose }: ResetPortfolioM
       const res = await fetch(`/api/reset-portfolio${qp}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode }),
+        body: JSON.stringify({ mode: "empty" }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -77,18 +77,11 @@ export default function ResetPortfolioModal({ isOpen, onClose }: ResetPortfolioM
 
             <div className="space-y-2 mb-5">
               <button
-                onClick={() => handleReset("empty")}
+                onClick={() => handleReset()}
                 disabled={loading}
                 className="w-full btn-danger text-sm py-2.5 disabled:opacity-50"
               >
                 {loading ? "Resetting..." : t("resetPortfolioEmpty")}
-              </button>
-              <button
-                onClick={() => handleReset("seed")}
-                disabled={loading}
-                className="w-full btn-secondary text-sm py-2.5 disabled:opacity-50"
-              >
-                {loading ? "Resetting..." : t("resetPortfolioSeed")}
               </button>
             </div>
 

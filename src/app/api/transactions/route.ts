@@ -14,7 +14,23 @@ export const GET = withMetrics("/api/transactions", async (req: NextRequest) => 
 
   const holdingId = req.nextUrl.searchParams.get("holdingId") || undefined;
   const portfolioId = req.nextUrl.searchParams.get("portfolioId") || undefined;
-  const txs = await listTransactions(session.userId, holdingId, portfolioId);
+  const source = req.nextUrl.searchParams.get("source") || undefined; // e.g. "snaptrade"
+  const since = req.nextUrl.searchParams.get("since") || undefined;   // ISO timestamp
+  let txs = await listTransactions(session.userId, holdingId, portfolioId);
+
+  if (source === "snaptrade") {
+    txs = txs.filter((tx) =>
+      tx.notes?.toLowerCase().includes("snaptrade") ||
+      tx.brokerName != null
+    );
+  }
+  if (since) {
+    const sinceMs = new Date(since).getTime();
+    if (!isNaN(sinceMs)) {
+      txs = txs.filter((tx) => tx.createdAt && new Date(tx.createdAt).getTime() >= sinceMs);
+    }
+  }
+
   transactionsOpsTotal.inc({ operation: "list" });
   return NextResponse.json(txs);
 });

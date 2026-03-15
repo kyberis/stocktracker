@@ -223,8 +223,12 @@ function StepImport({
                 <path strokeLinecap="round" strokeLinejoin="round" d={opt.icon} />
               </svg>
             </div>
-            <p className="text-sm font-semibold text-gray-900 dark:text-white">{t(`onboardingImport_${opt.key}` as never)}</p>
-            <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">{t(`onboardingImport_${opt.key}_desc` as never)}</p>
+            <p className="text-sm font-semibold text-gray-900 dark:text-white">
+              {opt.key === "skip" ? t("onboardingSkip") : t(`onboardingImport_${opt.key}` as never)}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
+              {opt.key === "skip" ? t("onboardingSkipSetup") : t(`onboardingImport_${opt.key}_desc` as never)}
+            </p>
           </button>
         ))}
       </div>
@@ -274,9 +278,6 @@ function OnboardingContent() {
       });
       if (res.ok) {
         await refreshUser();
-        if (!importMethod || importMethod === "skip") {
-          try { localStorage.setItem("trefolio_onboarding_auto_seeded", "1"); } catch { /* SSR safe */ }
-        }
         const dest = importMethod ? IMPORT_REDIRECTS[importMethod] : "/";
         router.replace(dest);
       }

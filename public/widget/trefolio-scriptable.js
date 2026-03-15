@@ -3,7 +3,6 @@
 // Set your widget token below (generate one at trefolio.com → Profile → Widget Access).
 
 const TOKEN = "YOUR_TOKEN_HERE";
-const PORTFOLIO_ID = ""; // Leave empty for all portfolios, or paste a portfolio ID
 const API_URL = "https://trefolio.com/api/portfolio/summary";
 const ICON_URL = "https://trefolio.com/favicon.png";
 const APP_URL = "https://trefolio.com";
@@ -23,8 +22,7 @@ const CURRENCY_SYMBOLS = {
 };
 
 async function fetchData() {
-  const url = PORTFOLIO_ID ? `${API_URL}?portfolio=${PORTFOLIO_ID}` : API_URL;
-  const req = new Request(url);
+  const req = new Request(API_URL);
   req.headers = { Authorization: `Bearer ${TOKEN}` };
   req.timeoutInterval = 15;
   const body = await req.loadString();

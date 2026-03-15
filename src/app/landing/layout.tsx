@@ -212,7 +212,7 @@ const FAQ_SCHEMA = {
       name: "What CSV formats are supported?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "14 broker CSV formats: DEGIRO, IBKR, Trading 212, Revolut, Schwab, Fidelity, Nordnet, Tastytrade, Freetrade, eToro, Wealthsimple, Questrade, Firstrade, and Simple CSV. For any other format, use AI Import — upload or paste your file and AI will parse it. Bifolio and Trefolio users can also connect 20+ brokerages via SnapTrade for automatic syncing every 6 hours.",
+        text: "14 broker CSV formats: DEGIRO, IBKR, Trading 212, Revolut, Schwab, Fidelity, Nordnet, Tastytrade, Freetrade, eToro, Wealthsimple, Questrade, Firstrade, and Simple CSV. For any other format, use AI Import — upload or paste your file and AI will parse it. Bifolio and Trefolio users can also connect 20+ brokerages via SnapTrade for automatic syncing every hour.",
       },
     },
     {

@@ -5,18 +5,12 @@ import { useSearchParams } from "next/navigation";
 import { Copy, Check, Smartphone, Apple, MonitorSmartphone, RefreshCw, Trash2, KeyRound, Briefcase } from "lucide-react";
 import Link from "next/link";
 
-interface PortfolioOption {
-  id: string;
-  name: string;
-}
-
 const SCRIPT_URL = "https://trefolio.com/widget/trefolio-scriptable.js";
 
 const SCRIPTABLE_TEMPLATE = `// trefolio — Portfolio Widget for Scriptable (iOS)
 // Paste this script in the Scriptable app, then add a Scriptable widget to your home screen.
 
 const TOKEN = "__TOKEN__";
-const PORTFOLIO_ID = "__PORTFOLIO_ID__"; // Leave empty for all portfolios
 const API_URL = "https://trefolio.com/api/portfolio/summary";
 const ICON_URL = "https://trefolio.com/favicon.png";
 const APP_URL = "https://trefolio.com";
@@ -36,8 +30,7 @@ const CURRENCY_SYMBOLS = {
 };
 
 async function fetchData() {
-  const url = PORTFOLIO_ID ? \`\${API_URL}?portfolio=\${PORTFOLIO_ID}\` : API_URL;
-  const req = new Request(url);
+  const req = new Request(API_URL);
   req.headers = { Authorization: \`Bearer \${TOKEN}\` };
   req.timeoutInterval = 15;
   const body = await req.loadString();
@@ -275,10 +268,9 @@ async function run() {
 
 await run();`;
 
-function buildScript(token: string, portfolioId: string) {
+function buildScript(token: string) {
   return SCRIPTABLE_TEMPLATE
-    .replace("__TOKEN__", token || "YOUR_TOKEN_HERE")
-    .replace("__PORTFOLIO_ID__", portfolioId);
+    .replace("__TOKEN__", token || "YOUR_TOKEN_HERE");
 }
 
 export default function WidgetSetupPage() {
@@ -296,8 +288,6 @@ function WidgetSetupContent() {
   const [widgetToken, setWidgetToken] = useState("");
   const [widgetHasToken, setWidgetHasToken] = useState(false);
   const [widgetLoading, setWidgetLoading] = useState(false);
-  const [portfolios, setPortfolios] = useState<PortfolioOption[]>([]);
-  const [selectedPortfolio, setSelectedPortfolio] = useState("");
 
   useEffect(() => {
     const tokenFromUrl = searchParams.get("token");
@@ -310,12 +300,6 @@ function WidgetSetupContent() {
         .then((d) => setWidgetHasToken(!!d.hasToken))
         .catch(() => {});
     }
-    fetch("/api/portfolios")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.portfolios) setPortfolios(d.portfolios.map((p: { id: string; name: string }) => ({ id: p.id, name: p.name })));
-      })
-      .catch(() => {});
   }, [searchParams]);
 
   const handleGenerateToken = useCallback(async () => {
@@ -342,7 +326,7 @@ function WidgetSetupContent() {
   }, []);
 
   const handleCopyScript = () => {
-    const script = buildScript(widgetToken, selectedPortfolio);
+    const script = buildScript(widgetToken);
     navigator.clipboard.writeText(script).then(() => {
       setCopiedScript(true);
       setTimeout(() => setCopiedScript(false), 2000);
@@ -486,27 +470,15 @@ function WidgetSetupContent() {
                 </div>
               </div>
 
-              {portfolios.length > 1 && (
-                <div className="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-4 border border-slate-200 dark:border-slate-700 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Briefcase className="w-4 h-4 text-emerald-500" />
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">Portfolio</span>
-                  </div>
-                  <p className="text-xs text-gray-500 dark:text-slate-400">
-                    Choose which portfolio to display on the widget. &quot;All Portfolios&quot; shows the combined total.
-                  </p>
-                  <select
-                    value={selectedPortfolio}
-                    onChange={(e) => setSelectedPortfolio(e.target.value)}
-                    className="text-sm bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2 w-full focus:ring-1 focus:ring-emerald-500 focus:outline-none"
-                  >
-                    <option value="">All Portfolios</option>
-                    {portfolios.map((p) => (
-                      <option key={p.id} value={p.id}>{p.name}</option>
-                    ))}
-                  </select>
+              <div className="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-4 border border-slate-200 dark:border-slate-700 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Briefcase className="w-4 h-4 text-emerald-500" />
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">Portfolio source</span>
                 </div>
-              )}
+                <p className="text-xs text-gray-500 dark:text-slate-400">
+                  The widget uses your configured portfolio from Profile settings. Change it there anytime and the widget updates automatically.
+                </p>
+              </div>
 
               <ol className="space-y-3 text-sm text-gray-700 dark:text-slate-300">
                 <li className="flex gap-3">
@@ -539,7 +511,7 @@ function WidgetSetupContent() {
                   </button>
                 </div>
                 <pre className="text-[10px] leading-relaxed text-slate-600 dark:text-slate-400 font-mono overflow-x-auto max-h-40 scrollbar-thin">
-                  {buildScript(widgetToken, selectedPortfolio).split("\n").slice(0, 9).join("\n")}
+                  {buildScript(widgetToken).split("\n").slice(0, 9).join("\n")}
                   {"\n// ..."}
                 </pre>
               </div>

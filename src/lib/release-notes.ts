@@ -24,6 +24,13 @@ export const releaseNotes: ReleaseEntry[] = [
     titleTranslations: { es: "Corrección de Efectivo Multi-Broker" },
     changes: [
       {
+        type: "improvement",
+        text: "After a SnapTrade sync, a dismissible banner now confirms how many positions and new transactions were imported, or notifies you when the background auto-sync has refreshed your portfolio.",
+        translations: {
+          es: "Tras una sincronización de SnapTrade, un banner descartable confirma cuántas posiciones y nuevas transacciones se importaron, o te avisa cuando la sincronización automática en segundo plano ha actualizado tu cartera.",
+        },
+      },
+      {
         type: "fix",
         text: "Importing from a new broker no longer deletes cash entries from other brokers. Cash is now tracked per source so Degiro, Interactive Brokers, SnapTrade, and manual entries coexist safely.",
         translations: {
@@ -35,6 +42,20 @@ export const releaseNotes: ReleaseEntry[] = [
         text: "Widget portfolio totals now respect the selected scope: Scriptable and Widget View default to all portfolios unless a specific portfolio is chosen, and values render with the correct portfolio currency.",
         translations: {
           es: "Los totales del widget ahora respetan el alcance seleccionado: Scriptable y Vista Widget usan todos los portafolios por defecto salvo que se elija uno específico, y los valores se muestran con la moneda correcta del portafolio.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Sample portfolio seeding is no longer available for real accounts: signup, onboarding, and dashboard empty-state actions now require importing or adding real holdings. Sample data remains available only in /demo.",
+        translations: {
+          es: "La carga de datos de ejemplo ya no está disponible para cuentas reales: el registro, onboarding y acciones del estado vacío del dashboard ahora requieren importar o añadir posiciones reales. Los datos de ejemplo quedan disponibles solo en /demo.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Scriptable widget scripts no longer hardcode a portfolio ID. Widget scope is now resolved on the backend from your profile configuration, so portfolio changes apply dynamically without re-copying scripts.",
+        translations: {
+          es: "Los scripts del widget de Scriptable ya no fijan un ID de portafolio. El alcance del widget ahora se resuelve en el backend según tu configuración de perfil, por lo que los cambios de portafolio se aplican dinámicamente sin volver a copiar el script.",
         },
       },
     ],
@@ -608,7 +629,7 @@ export const releaseNotes: ReleaseEntry[] = [
       },
       {
         type: "feature",
-        text: "Automatic portfolio sync every 6 hours — your holdings stay up-to-date without manual imports",
+        text: "Automatic portfolio sync every hour — your holdings stay up-to-date without manual imports",
         translations: { es: "Sincronización automática de cartera cada 6 horas — tus posiciones se mantienen actualizadas sin importaciones manuales" },
       },
       {

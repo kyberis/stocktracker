@@ -34,7 +34,6 @@ function SignupForm() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
-  const [seedWithData, setSeedWithData] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
@@ -79,7 +78,7 @@ function SignupForm() {
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, displayName: displayName || undefined, seedWithData, turnstileToken: turnstileToken || undefined }),
+        body: JSON.stringify({ email, password, displayName: displayName || undefined, turnstileToken: turnstileToken || undefined }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -211,16 +210,6 @@ function SignupForm() {
                 required
               />
             </div>
-
-            <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-slate-300">
-              <input
-                type="checkbox"
-                checked={seedWithData}
-                onChange={(e) => setSeedWithData(e.target.checked)}
-                className="rounded border-gray-300 dark:border-slate-600 text-emerald-500 focus:ring-emerald-500"
-              />
-              Start with sample portfolio data
-            </label>
 
             <TurnstileWidget onToken={onTurnstileToken} />
 

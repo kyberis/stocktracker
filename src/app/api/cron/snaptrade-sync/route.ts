@@ -193,7 +193,7 @@ const runSync = withCronLogging("snaptrade-sync", async () => {
 });
 
 /**
- * Cron: auto-sync all active SnapTrade connections every 6 hours.
+ * Cron: auto-sync all active SnapTrade connections every 1 hour.
  * For each user with an active connection, fetches new activities
  * since their last sync, imports transactions, updates cash balances,
  * and flags connections that need attention (expired credentials).
