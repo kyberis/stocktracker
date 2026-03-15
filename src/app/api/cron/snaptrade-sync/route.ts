@@ -152,10 +152,17 @@ const runSync = withCronLogging("snaptrade-sync", async () => {
       try {
         holdingsResult = await fetchAllHoldings(conn.snapTradeUserId, userSecret, undefined, institutionMap);
 
-        // Fallback: import synthetic transactions for positions with no activities
+        // Fallback: import synthetic transactions for positions with no activities.
+        // Skip brokers that have ever returned real activities to avoid duplicating
+        // holdings on incremental syncs where the startDate filter causes zero
+        // activities to be returned for that broker.
         const existingRefsForFallback = await listTransactionSourceRefs(conn.userId);
+        const brokersWithActivityHistory = new Set(
+          brokerSyncs.filter((s) => s.transactionCount > 0).map((s) => s.brokerageName),
+        );
         const fallbackTx = holdingsResult.transactions.filter(
           (tx) => !allActivityTickers.has(tx.ticker) &&
+            !brokersWithActivityHistory.has(tx.brokerName || "") &&
             (!tx.sourceRef || !existingRefsForFallback.has(tx.sourceRef)),
         );
         if (fallbackTx.length > 0) {
