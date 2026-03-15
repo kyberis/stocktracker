@@ -73,6 +73,7 @@ export {
   resetUserHoldings,
   rebuildHoldings,
   deleteAllHoldings,
+  countHoldings,
 } from "./holdings";
 
 export {

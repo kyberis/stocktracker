@@ -24,6 +24,13 @@ export const releaseNotes: ReleaseEntry[] = [
     titleTranslations: { es: "Profundidad de Dividendos: Rendimiento sobre Coste y Simulación DRIP" },
     changes: [
       {
+        type: "improvement",
+        text: "Admin email notifications for new signups, subscriptions, and plan changes, including user details and portfolio size.",
+        translations: {
+          es: "Notificaciones por email al admin para nuevos registros, suscripciones y cambios de plan, incluyendo detalles del usuario y tamaño de cartera.",
+        },
+      },
+      {
         type: "fix",
         text: "Fixed broker sync (SnapTrade) not displaying the correct cash balance — when multiple accounts shared the same currency, only the last account's balance was kept. Cash is now correctly aggregated across all accounts.",
         translations: {

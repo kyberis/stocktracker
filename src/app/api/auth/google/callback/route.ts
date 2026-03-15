@@ -15,7 +15,7 @@ import {
   getSessionCookieConfig,
   verifySessionToken,
 } from "@/lib/auth/session";
-import { sendWelcomeEmail } from "@/lib/email";
+import { sendWelcomeEmail, sendAdminNewCustomerNotification } from "@/lib/email";
 import { ensureSessionSecret } from "@/lib/auth/session-secret";
 import { authEventsTotal } from "@/lib/metrics";
 import { isBlockedEmailDomain } from "@/lib/schemas";
@@ -282,6 +282,9 @@ async function handleLoginFlow(
       );
       createNotification(publicUser.id, welcomeNotification()).catch((err) =>
         console.error("Welcome notification failed:", err),
+      );
+      sendAdminNewCustomerNotification(googleUser.email.toLowerCase(), googleUser.name || "", "google").catch((err) =>
+        console.error("Admin new customer notification failed:", err),
       );
     }
 

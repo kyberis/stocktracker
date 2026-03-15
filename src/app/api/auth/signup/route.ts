@@ -10,7 +10,7 @@ import { withMetrics } from "@/lib/with-metrics";
 import { authEventsTotal } from "@/lib/metrics";
 import { parseBody } from "@/lib/api-response";
 import { signupSchema } from "@/lib/schemas";
-import { createVerificationToken, sendVerificationEmail, sendWelcomeEmail } from "@/lib/email";
+import { createVerificationToken, sendVerificationEmail, sendWelcomeEmail, sendAdminNewCustomerNotification } from "@/lib/email";
 import { checkSignupRateLimit, getClientIp } from "@/lib/rate-limit";
 import { verifyTurnstileToken } from "@/lib/turnstile";
 import { createNotification } from "@/lib/db";
@@ -93,6 +93,9 @@ export const POST = withMetrics("/api/auth/signup", async (req: NextRequest) => 
     );
     createNotification(user.id, welcomeNotification()).catch((err) =>
       console.error("Welcome notification failed:", err),
+    );
+    sendAdminNewCustomerNotification(normalizedEmail, displayName || "", "credentials").catch((err) =>
+      console.error("Admin new customer notification failed:", err),
     );
 
     const response = NextResponse.json({ user }, { status: 201 });

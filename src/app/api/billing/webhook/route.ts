@@ -15,7 +15,7 @@ import {
   updateUserSettings,
 } from "@/lib/db";
 import { canAccessTheme } from "@/lib/subscription";
-import { sendBifolioUpgradeEmail, sendTrefolioUpgradeEmail } from "@/lib/email";
+import { sendBifolioUpgradeEmail, sendTrefolioUpgradeEmail, sendAdminSubscriptionNotification } from "@/lib/email";
 import { billingEventsTotal } from "@/lib/metrics";
 import { getStripeClient } from "@/lib/stripe";
 import { withMetrics } from "@/lib/with-metrics";
@@ -133,6 +133,9 @@ export const POST = withMetrics("/api/billing/webhook", async (req: NextRequest)
             createNotification(user.id, upgradeNotif).catch((err) =>
               console.error("Upgrade notification failed:", err),
             );
+            sendAdminSubscriptionNotification(
+              user.id, user.email, user.display_name || "", checkoutPlan, "new_subscription",
+            ).catch((err) => console.error("Admin subscription notification failed:", err));
           }
         }
         break;
@@ -157,6 +160,12 @@ export const POST = withMetrics("/api/billing/webhook", async (req: NextRequest)
           createNotification(user.id, downgradeNotification(nextExpiresAt)).catch((err) =>
             console.error("Downgrade notification failed:", err),
           );
+        }
+        const fullUser = await findUserById(user.id);
+        if (fullUser) {
+          sendAdminSubscriptionNotification(
+            fullUser.id, fullUser.email, fullUser.display_name || "", nextPlan, "plan_change",
+          ).catch((err) => console.error("Admin subscription notification failed:", err));
         }
         await reconcileSnapTrade(user.id, nextPlan);
         await reconcileTheme(user.id, nextPlan);

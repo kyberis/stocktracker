@@ -1,6 +1,6 @@
 import { Resend } from "resend";
 import { SignJWT, jwtVerify } from "jose";
-import { getGlobalResendApiKey } from "@/lib/db";
+import { getGlobalResendApiKey, countHoldings } from "@/lib/db";
 
 const VERIFICATION_TOKEN_TTL = 60 * 60 * 24; // 24 hours
 
@@ -636,5 +636,99 @@ export async function sendTrefolioUpgradeEmail(
     const msg = err instanceof Error ? err.message : String(err);
     console.error("Failed to send Trefolio upgrade email:", msg);
     return { success: false, error: msg };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 4. Admin new customer notification (production only)
+// ---------------------------------------------------------------------------
+
+const ADMIN_NOTIFICATION_EMAIL = "info@trefolio.com";
+
+export async function sendAdminNewCustomerNotification(
+  userEmail: string,
+  displayName: string,
+  authProvider: string,
+): Promise<void> {
+  if (process.env.NODE_ENV !== "production") return;
+
+  const resend = await getResendClient();
+  if (!resend) return;
+
+  const providerLabel = authProvider.charAt(0).toUpperCase() + authProvider.slice(1);
+
+  const html = `
+    <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 0;">
+      <h2 style="color:#10b981;margin:0 0 16px;">trefolio — New Customer</h2>
+      <table style="width:100%;border-collapse:collapse;font-size:15px;">
+        <tr><td style="padding:8px 0;color:#64748b;">Name</td><td style="padding:8px 0;font-weight:600;">${displayName || "—"}</td></tr>
+        <tr><td style="padding:8px 0;color:#64748b;">Email</td><td style="padding:8px 0;">${userEmail}</td></tr>
+        <tr><td style="padding:8px 0;color:#64748b;">Auth Provider</td><td style="padding:8px 0;">${providerLabel}</td></tr>
+      </table>
+    </div>`;
+
+  try {
+    await resend.emails.send({
+      from: getFromAddress(),
+      to: ADMIN_NOTIFICATION_EMAIL,
+      subject: `[trefolio] New Customer: ${displayName || userEmail}`,
+      html,
+    });
+  } catch (err) {
+    console.error("Failed to send admin new customer notification:", err instanceof Error ? err.message : err);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 5. Admin subscription notification (production only)
+// ---------------------------------------------------------------------------
+
+export async function sendAdminSubscriptionNotification(
+  userId: string,
+  userEmail: string,
+  displayName: string,
+  newPlan: string,
+  eventType: "new_subscription" | "plan_change",
+): Promise<void> {
+  if (process.env.NODE_ENV !== "production") return;
+
+  const resend = await getResendClient();
+  if (!resend) return;
+
+  let holdingCount = 0;
+  try {
+    holdingCount = await countHoldings(userId);
+  } catch {
+    // non-critical — send notification even if count lookup fails
+  }
+
+  const hasPortfolio = holdingCount > 0;
+  const portfolioLine = hasPortfolio
+    ? `<strong>${holdingCount}</strong> holding${holdingCount === 1 ? "" : "s"} in portfolio`
+    : "No holdings yet";
+
+  const eventLabel = eventType === "new_subscription" ? "New Subscription" : "Plan Change";
+  const planLabel = newPlan.charAt(0).toUpperCase() + newPlan.slice(1);
+
+  const html = `
+    <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 0;">
+      <h2 style="color:#10b981;margin:0 0 16px;">trefolio — ${eventLabel}</h2>
+      <table style="width:100%;border-collapse:collapse;font-size:15px;">
+        <tr><td style="padding:8px 0;color:#64748b;">User</td><td style="padding:8px 0;font-weight:600;">${displayName || "—"}</td></tr>
+        <tr><td style="padding:8px 0;color:#64748b;">Email</td><td style="padding:8px 0;">${userEmail}</td></tr>
+        <tr><td style="padding:8px 0;color:#64748b;">New Plan</td><td style="padding:8px 0;font-weight:600;">${planLabel}</td></tr>
+        <tr><td style="padding:8px 0;color:#64748b;">Portfolio</td><td style="padding:8px 0;">${portfolioLine}</td></tr>
+      </table>
+    </div>`;
+
+  try {
+    await resend.emails.send({
+      from: getFromAddress(),
+      to: ADMIN_NOTIFICATION_EMAIL,
+      subject: `[trefolio] ${eventLabel}: ${displayName || userEmail} → ${planLabel}`,
+      html,
+    });
+  } catch (err) {
+    console.error("Failed to send admin subscription notification:", err instanceof Error ? err.message : err);
   }
 }
