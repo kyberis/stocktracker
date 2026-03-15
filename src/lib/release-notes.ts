@@ -38,10 +38,17 @@ export const releaseNotes: ReleaseEntry[] = [
         },
       },
       {
-        type: "fix",
-        text: "Fixed broker sync not importing holdings from Interactive Brokers when the broker doesn't return transaction history — positions are now used as a fallback.",
+        type: "improvement",
+        text: "Broker sync now uses position data directly for holdings instead of converting positions into synthetic transactions. This eliminates duplicate holdings on re-sync and ensures all brokers (including Interactive Brokers) show accurate portfolio data from the first sync.",
         translations: {
-          es: "Corregido que la sincronización de bróker no importaba posiciones de Interactive Brokers cuando el bróker no devuelve historial de transacciones — ahora se usan las posiciones como respaldo.",
+          es: "La sincronización de brókers ahora usa los datos de posiciones directamente para las tenencias en vez de convertir posiciones en transacciones sintéticas. Esto elimina tenencias duplicadas al re-sincronizar y asegura que todos los brókers (incluido Interactive Brokers) muestren datos precisos del portafolio desde la primera sincronización.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Tax report now warns when holdings were imported from broker positions without full transaction history, with a direct link to upload a CSV for accurate tax calculations.",
+        translations: {
+          es: "El informe fiscal ahora avisa cuando las posiciones fueron importadas sin historial completo de transacciones, con un enlace directo para subir un CSV y obtener cálculos fiscales precisos.",
         },
       },
       {

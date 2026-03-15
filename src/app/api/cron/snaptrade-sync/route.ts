@@ -11,6 +11,7 @@ import {
   listTransactionSourceRefs,
   addCashEntry,
   removeCashEntriesBySourceAndBrokers,
+  upsertHoldingsFromPositions,
   trackEvent,
 } from "@/lib/db";
 import {
@@ -73,8 +74,6 @@ const runSync = withCronLogging("snaptrade-sync", async () => {
       let totalNewTx = 0;
       const fetchedBrokers: { id: string; name: string }[] = [];
       const seenBrokerIds = new Set<string>();
-      const allActivityTickers = new Set<string>();
-
       for (const acct of activeAccounts) {
         const startDate = syncMap.get(acct.brokerageAuthorizationId) || undefined;
         const result = await fetchActivities({
@@ -87,10 +86,6 @@ const runSync = withCronLogging("snaptrade-sync", async () => {
         if (!seenBrokerIds.has(acct.brokerageAuthorizationId)) {
           seenBrokerIds.add(acct.brokerageAuthorizationId);
           fetchedBrokers.push({ id: acct.brokerageAuthorizationId, name: acct.institution });
-        }
-
-        for (const tx of result.transactions) {
-          allActivityTickers.add(tx.ticker);
         }
 
         const existingRefs = await listTransactionSourceRefs(conn.userId);
@@ -138,7 +133,7 @@ const runSync = withCronLogging("snaptrade-sync", async () => {
             await fetch(`${baseUrl}/api/transactions/bulk`, {
               method: "POST",
               headers: cronHeaders,
-              body: JSON.stringify({ transactions: bulkPayload, finalize: true }),
+              body: JSON.stringify({ transactions: bulkPayload, finalize: true, skipRebuild: true }),
             });
           } catch (err) {
             console.error(`[snaptrade-sync] Bulk import failed for user ${conn.userId}:`, err instanceof Error ? err.message : err);
@@ -152,62 +147,9 @@ const runSync = withCronLogging("snaptrade-sync", async () => {
       try {
         holdingsResult = await fetchAllHoldings(conn.snapTradeUserId, userSecret, undefined, institutionMap);
 
-        // Fallback: import synthetic transactions for positions with no activities.
-        // Skip brokers that have ever returned real activities to avoid duplicating
-        // holdings on incremental syncs where the startDate filter causes zero
-        // activities to be returned for that broker.
-        const existingRefsForFallback = await listTransactionSourceRefs(conn.userId);
-        const brokersWithActivityHistory = new Set(
-          brokerSyncs.filter((s) => s.transactionCount > 0).map((s) => s.brokerageName),
-        );
-        const fallbackTx = holdingsResult.transactions.filter(
-          (tx) => !allActivityTickers.has(tx.ticker) &&
-            !brokersWithActivityHistory.has(tx.brokerName || "") &&
-            (!tx.sourceRef || !existingRefsForFallback.has(tx.sourceRef)),
-        );
-        if (fallbackTx.length > 0) {
-          const bulkPayload = fallbackTx.map((tx) => ({
-            holdingId: "",
-            ticker: tx.ticker,
-            name: tx.name,
-            exchange: "",
-            isin: "",
-            assetType:
-              tx.name.toUpperCase().includes("ETF") || tx.name.toUpperCase().includes("UCITS")
-                ? "etf"
-                : "stock",
-            accountId: "",
-            type: tx.type,
-            date: tx.date,
-            shares: tx.shares,
-            pricePerShare: tx.pricePerShare,
-            totalAmount: tx.totalAmount || tx.shares * tx.pricePerShare,
-            fees: tx.fees,
-            currency: tx.currency,
-            displayCurrency: tx.currency,
-            notes: "Auto-sync (position fallback)",
-            sourceRef: tx.sourceRef || "",
-          }));
-          try {
-            const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || (process.env.VERCEL_URL
-              ? `https://${process.env.VERCEL_URL}`
-              : "http://localhost:3000");
-            const cronHeaders: Record<string, string> = {
-              "Content-Type": "application/json",
-              "x-cron-user-id": conn.userId,
-            };
-            if (process.env.CRON_SECRET) {
-              cronHeaders["Authorization"] = `Bearer ${process.env.CRON_SECRET}`;
-            }
-            await fetch(`${baseUrl}/api/transactions/bulk`, {
-              method: "POST",
-              headers: cronHeaders,
-              body: JSON.stringify({ transactions: bulkPayload, finalize: true }),
-            });
-            totalNewTx += fallbackTx.length;
-          } catch (err) {
-            console.error(`[snaptrade-sync] Position fallback import failed for user ${conn.userId}:`, err instanceof Error ? err.message : err);
-          }
+        // Upsert holdings directly from broker positions
+        if (holdingsResult.holdings.length > 0) {
+          await upsertHoldingsFromPositions(conn.userId, holdingsResult.holdings);
         }
 
         if (holdingsResult.cashBalances.length > 0) {

@@ -428,7 +428,7 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
         const res = await fetch(bulkUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ transactions: payload, finalize: isLastChunk }),
+          body: JSON.stringify({ transactions: payload, finalize: isLastChunk, skipRebuild: true }),
         });
         if (res.ok) {
           const data = await res.json();

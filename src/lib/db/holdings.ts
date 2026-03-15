@@ -271,6 +271,108 @@ export async function resetUserHoldings(
   return 0;
 }
 
+/**
+ * Upsert holdings directly from SnapTrade position data.
+ * Updates shares/price for existing holdings, inserts new ones, and removes
+ * stale `source='snaptrade'` holdings that are no longer in the broker's positions.
+ * Preserves enrichment metadata (sector, region, assetClass) on existing rows.
+ */
+export async function upsertHoldingsFromPositions(
+  userId: string,
+  positions: { name: string; ticker: string; shares: number; purchasePrice: number; displayCurrency: string; exchange: string; assetType: string }[],
+  portfolioId?: string,
+): Promise<Holding[]> {
+  const client = await ensureInitialized();
+  const resolved = await resolvePortfolioId(userId, portfolioId);
+
+  const existingRows = await client.execute({
+    sql: `SELECT id, ticker, exchange, name, isin, asset_type, sector, region, asset_class, account_id, source
+          FROM holdings WHERE user_id = ? AND portfolio_id = ?`,
+    args: [userId, resolved],
+  });
+  const existingByKey = new Map<string, {
+    id: string; name: string; isin: string; sector: string; region: string;
+    assetClass: string; accountId: string; source: string;
+  }>();
+  for (const row of existingRows.rows) {
+    const key = `${str(row.ticker).toUpperCase()}|${str(row.exchange).toUpperCase()}`;
+    existingByKey.set(key, {
+      id: str(row.id), name: str(row.name), isin: str(row.isin),
+      sector: str(row.sector), region: str(row.region),
+      assetClass: str(row.asset_class), accountId: str(row.account_id),
+      source: str(row.source) || "transaction",
+    });
+  }
+
+  const upserted: Holding[] = [];
+  const touchedKeys = new Set<string>();
+
+  for (const pos of positions) {
+    if (pos.shares <= 0) continue;
+    const ticker = normalizeTickerForExchange(pos.ticker, pos.exchange);
+    const key = `${ticker.toUpperCase()}|${pos.exchange.toUpperCase()}`;
+    touchedKeys.add(key);
+    const existing = existingByKey.get(key);
+
+    if (existing) {
+      await client.execute({
+        sql: `UPDATE holdings SET shares = ?, purchase_price = ?, display_currency = ?,
+              name = CASE WHEN name = ticker THEN ? ELSE name END,
+              source = 'snaptrade'
+              WHERE id = ? AND user_id = ?`,
+        args: [pos.shares, pos.purchasePrice, pos.displayCurrency, pos.name, existing.id, userId],
+      });
+      upserted.push({
+        id: existing.id, name: existing.name === ticker ? pos.name : existing.name,
+        ticker, isin: existing.isin, assetType: holdingAssetType(pos.assetType),
+        shares: pos.shares, purchasePrice: pos.purchasePrice,
+        displayCurrency: pos.displayCurrency, exchange: pos.exchange,
+        valueInEUR: 0, sector: existing.sector, region: existing.region,
+        assetClass: existing.assetClass, accountId: existing.accountId,
+      });
+    } else {
+      const id = randomUUID();
+      await client.execute({
+        sql: `INSERT INTO holdings (id, user_id, name, ticker, isin, asset_type, shares, purchase_price,
+              display_currency, exchange, value_in_eur, portfolio_id, source)
+              VALUES (?, ?, ?, ?, '', ?, ?, ?, ?, ?, 0, ?, 'snaptrade')`,
+        args: [id, userId, pos.name, ticker, pos.assetType || "stock",
+               pos.shares, pos.purchasePrice, pos.displayCurrency, pos.exchange, resolved],
+      });
+      upserted.push({
+        id, name: pos.name, ticker, isin: "", assetType: holdingAssetType(pos.assetType),
+        shares: pos.shares, purchasePrice: pos.purchasePrice,
+        displayCurrency: pos.displayCurrency, exchange: pos.exchange, valueInEUR: 0,
+      });
+    }
+  }
+
+  // Remove stale snaptrade holdings that no longer appear in broker positions
+  for (const [key, meta] of existingByKey) {
+    if (meta.source === "snaptrade" && !touchedKeys.has(key)) {
+      await client.execute({
+        sql: "DELETE FROM holdings WHERE id = ? AND user_id = ?",
+        args: [meta.id, userId],
+      });
+    }
+  }
+
+  await enrichValueInEUR(upserted).catch((err) =>
+    console.warn("[upsertHoldingsFromPositions] quote enrichment failed:", err)
+  );
+
+  for (const h of upserted) {
+    if (h.valueInEUR > 0) {
+      await client.execute({
+        sql: "UPDATE holdings SET value_in_eur = ? WHERE id = ? AND user_id = ?",
+        args: [h.valueInEUR, h.id, userId],
+      });
+    }
+  }
+
+  return upserted;
+}
+
 export async function rebuildHoldings(userId: string, portfolioId?: string): Promise<Holding[]> {
   const client = await ensureInitialized();
   const resolved = await resolvePortfolioId(userId, portfolioId);
@@ -333,15 +435,16 @@ export async function rebuildHoldings(userId: string, portfolioId?: string): Pro
     console.warn("[rebuildHoldings] quote enrichment failed, using valueInEUR=0:", err)
   );
 
-  await client.execute({ sql: `DELETE FROM holdings WHERE user_id = ?${portfolioFilter}`, args: [userId, ...portfolioArgs] });
+  await client.execute({ sql: `DELETE FROM holdings WHERE user_id = ? AND source != 'snaptrade'${portfolioFilter}`, args: [userId, ...portfolioArgs] });
 
   for (const h of derived) {
     const key = `${h.ticker.toUpperCase()}|${h.exchange.toUpperCase()}`;
     const existingId = metadataByKey.get(key)?.id;
     const id = existingId || randomUUID();
     await client.execute({
-      sql: `INSERT INTO holdings (id, user_id, name, ticker, isin, asset_type, shares, purchase_price, display_currency, exchange, value_in_eur, sector, region, asset_class, account_id, portfolio_id)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      sql: `INSERT INTO holdings (id, user_id, name, ticker, isin, asset_type, shares, purchase_price, display_currency, exchange, value_in_eur, sector, region, asset_class, account_id, portfolio_id, source)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'transaction')
+            ON CONFLICT(id) DO UPDATE SET shares = excluded.shares, purchase_price = excluded.purchase_price, value_in_eur = excluded.value_in_eur`,
       args: [id, userId, h.name, h.ticker, h.isin || "", h.assetType || "stock", h.shares, h.purchasePrice, h.displayCurrency, h.exchange, h.valueInEUR || 0, h.sector || "", h.region || "", h.assetClass || "", h.accountId || "", resolved],
     });
   }

@@ -10,6 +10,7 @@ import {
   listTransactionSourceRefs,
   addCashEntry,
   removeCashEntriesBySourceAndBrokers,
+  upsertHoldingsFromPositions,
   trackEvent,
   getSnapTradeBrokerSyncs,
   upsertSnapTradeBrokerSync,
@@ -333,25 +334,11 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
       const institutionMap = new Map(allActiveAccounts.map((a) => [a.id, a.institution]));
       const holdingsResult = await fetchAllHoldings(conn.snapTradeUserId, userSecret, allActiveAccountIds, institutionMap);
 
-      // Fallback: some brokers (e.g. Interactive Brokers) don't return activity
-      // history via SnapTrade but DO return current positions. For tickers that
-      // have positions but zero activity-based transactions, add synthetic "buy"
-      // transactions from the position data so holdings aren't silently dropped.
-      // Skip brokers that have ever returned real activities (transactionCount > 0)
-      // to avoid duplicating holdings on incremental syncs where the startDate
-      // filter causes zero activities to be returned for that broker.
-      const activityTickers = new Set(allTransactions.map((tx) => tx.ticker));
-      const brokersWithActivityHistory = new Set(
-        brokerSyncs.filter((s) => s.transactionCount > 0).map((s) => s.brokerageName),
-      );
-      for (const syntheticTx of holdingsResult.transactions) {
-        if (
-          !activityTickers.has(syntheticTx.ticker) &&
-          !brokersWithActivityHistory.has(syntheticTx.brokerName || "") &&
-          (!syntheticTx.sourceRef || !existingRefs.has(syntheticTx.sourceRef))
-        ) {
-          deduped.push(syntheticTx);
-        }
+      // Upsert holdings directly from broker positions — this is the source of
+      // truth for what the user currently owns. Transactions are imported
+      // separately for tax/performance but don't drive the holdings table.
+      if (holdingsResult.holdings.length > 0) {
+        await upsertHoldingsFromPositions(session.userId, holdingsResult.holdings, portfolioId);
       }
 
       const summary = {

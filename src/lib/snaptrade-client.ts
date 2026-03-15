@@ -335,37 +335,8 @@ function positionToHolding(pos: Position): ExtractedHolding | null {
   };
 }
 
-function positionToTransaction(pos: Position): ExtractedTransaction | null {
-  const sym = pos.symbol?.symbol;
-  if (!sym) return null;
-  const rawTicker = sym.symbol || "";
-  if (!rawTicker) return null;
-
-  const exchangeMic = sym.exchange?.mic_code || "";
-  const { ticker } = normalizeSnapTradeTicker(rawTicker, exchangeMic);
-  if (!ticker) return null;
-
-  const shares = pos.units ?? 0;
-  const price = pos.average_purchase_price ?? pos.price ?? 0;
-  const currency = sym.currency?.code || "USD";
-
-  return {
-    date: new Date().toISOString().split("T")[0],
-    type: "buy",
-    ticker,
-    name: sym.description || ticker,
-    shares: Math.abs(shares),
-    pricePerShare: price,
-    totalAmount: Math.abs(shares) * price,
-    fees: 0,
-    currency,
-    sourceRef: `snaptrade:${ticker}:${shares}`,
-  };
-}
-
 export interface SnapTradeHoldingsResult {
   holdings: ExtractedHolding[];
-  transactions: ExtractedTransaction[];
   cashBalances: CashBalance[];
   accounts: { id: string; name: string; institution: string }[];
 }
@@ -402,7 +373,6 @@ export async function fetchAllHoldings(
     }).catch(() => {});
 
     const holdings: ExtractedHolding[] = [];
-    const transactions: ExtractedTransaction[] = [];
     const cashBalances: CashBalance[] = [];
     const accounts: { id: string; name: string; institution: string }[] = [];
     const seenTickers = new Set<string>();
@@ -431,12 +401,6 @@ export async function fetchAllHoldings(
             seenTickers.add(holding.ticker);
             holdings.push(holding);
           }
-
-          const tx = positionToTransaction(pos);
-          if (tx) {
-            tx.brokerName = institution;
-            transactions.push(tx);
-          }
         }
       }
 
@@ -453,7 +417,7 @@ export async function fetchAllHoldings(
       }
     }
 
-    return { holdings, transactions, cashBalances, accounts };
+    return { holdings, cashBalances, accounts };
   });
 }
 

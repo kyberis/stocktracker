@@ -1373,6 +1373,20 @@ const MIGRATIONS: Migration[] = [
       `);
     },
   },
+  {
+    version: 46,
+    description: "Add source column to holdings for position-synced vs transaction-derived distinction",
+    up: async (client: Client) => {
+      const cols = await client.execute("PRAGMA table_info(holdings)");
+      const colNames = new Set(cols.rows.map((r) => str(r.name)));
+      if (!colNames.has("source")) {
+        await client.execute({
+          sql: "ALTER TABLE holdings ADD COLUMN source TEXT NOT NULL DEFAULT 'transaction'",
+          args: [],
+        });
+      }
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

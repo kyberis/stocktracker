@@ -35,6 +35,7 @@ const bulkTransactionSchema = z.object({
     })
   ).min(1).max(200),
   finalize: z.boolean().optional().default(false),
+  skipRebuild: z.boolean().optional().default(false),
 });
 
 export const POST = withMetrics("/api/transactions/bulk", async (req: NextRequest) => {
@@ -58,7 +59,7 @@ export const POST = withMetrics("/api/transactions/bulk", async (req: NextReques
   const result = await parseBody(req, bulkTransactionSchema);
   if (!result.success) return result.error;
 
-  const { transactions, finalize } = result.data;
+  const { transactions, finalize, skipRebuild } = result.data;
 
   const user = await findUserById(userId);
   const plan = (user?.plan ?? "free");
@@ -124,7 +125,7 @@ export const POST = withMetrics("/api/transactions/bulk", async (req: NextReques
   const skippedByLimit = transactions.length - filtered.length;
   const { inserted, skipped } = await addTransactionsBulk(userId, enriched, portfolioId);
 
-  if (finalize && inserted > 0) {
+  if (finalize && inserted > 0 && !skipRebuild) {
     await rebuildHoldings(userId, portfolioId);
     enrichHoldingClassifications(userId).catch((err) =>
       console.warn("[bulk] auto-classification failed:", err)
