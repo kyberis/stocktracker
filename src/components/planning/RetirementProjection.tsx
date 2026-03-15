@@ -66,11 +66,14 @@ export default function RetirementProjection() {
     [holdings, cashEntries, quotes, exchangeRates]
   );
 
+  const safeRetirementAge = Math.max(retirementAge, currentAge + 1);
+  const safeLifeExpectancy = Math.max(lifeExpectancy, safeRetirementAge + 1);
+
   const params: RetirementParams = useMemo(
     () => ({
       currentAge,
-      retirementAge,
-      lifeExpectancy,
+      retirementAge: safeRetirementAge,
+      lifeExpectancy: safeLifeExpectancy,
       currentPortfolioValue: totalCurrentEUR,
       monthlyContribution,
       preRetirementReturn: preRetirementReturn / 100,
@@ -80,8 +83,8 @@ export default function RetirementProjection() {
     }),
     [
       currentAge,
-      retirementAge,
-      lifeExpectancy,
+      safeRetirementAge,
+      safeLifeExpectancy,
       totalCurrentEUR,
       monthlyContribution,
       preRetirementReturn,
@@ -102,8 +105,8 @@ export default function RetirementProjection() {
     const points: ChartPoint[] = [];
     for (let i = 0; i < projection.length; i++) {
       const p = projection[i];
-      const acc = p.age <= retirementAge ? p.nominalValue : 0;
-      const dist = p.age >= retirementAge ? p.nominalValue : 0;
+      const acc = p.age <= safeRetirementAge ? p.nominalValue : 0;
+      const dist = p.age >= safeRetirementAge ? p.nominalValue : 0;
       const base: ChartPoint = {
         age: p.age,
         acc,
@@ -123,7 +126,7 @@ export default function RetirementProjection() {
       points.push(base);
     }
     return points;
-  }, [projection, retirementAge, monteCarlo]);
+  }, [projection, safeRetirementAge, monteCarlo]);
 
   const tickFill = isDark ? "#94a3b8" : "#9ca3af";
   const axisStroke = isDark ? "#334155" : "#e5e7eb";
@@ -146,8 +149,12 @@ export default function RetirementProjection() {
                 min={18}
                 max={100}
                 value={currentAge}
-                onChange={(e) =>
-                  setCurrentAge(Math.min(100, Math.max(18, Number(e.target.value))))
+                onChange={(e) => {
+                  const v = Number(e.target.value);
+                  if (!Number.isNaN(v)) setCurrentAge(v);
+                }}
+                onBlur={() =>
+                  setCurrentAge((v) => Math.min(100, Math.max(18, v)))
                 }
                 className="mt-1 w-full px-3 py-1.5 text-sm font-mono rounded-lg border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
               />
@@ -161,8 +168,12 @@ export default function RetirementProjection() {
                 min={18}
                 max={100}
                 value={retirementAge}
-                onChange={(e) =>
-                  setRetirementAge(Math.min(100, Math.max(18, Number(e.target.value))))
+                onChange={(e) => {
+                  const v = Number(e.target.value);
+                  if (!Number.isNaN(v)) setRetirementAge(v);
+                }}
+                onBlur={() =>
+                  setRetirementAge((v) => Math.min(100, Math.max(18, v)))
                 }
                 className="mt-1 w-full px-3 py-1.5 text-sm font-mono rounded-lg border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
               />
@@ -176,8 +187,12 @@ export default function RetirementProjection() {
                 min={50}
                 max={120}
                 value={lifeExpectancy}
-                onChange={(e) =>
-                  setLifeExpectancy(Math.min(120, Math.max(50, Number(e.target.value))))
+                onChange={(e) => {
+                  const v = Number(e.target.value);
+                  if (!Number.isNaN(v)) setLifeExpectancy(v);
+                }}
+                onBlur={() =>
+                  setLifeExpectancy((v) => Math.min(120, Math.max(50, v)))
                 }
                 className="mt-1 w-full px-3 py-1.5 text-sm font-mono rounded-lg border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
               />
@@ -502,7 +517,7 @@ export default function RetirementProjection() {
                   name="Distribution phase"
                 />
                 <ReferenceLine
-                  x={retirementAge}
+                  x={safeRetirementAge}
                   stroke={isDark ? "#64748b" : "#94a3b8"}
                   strokeWidth={1.5}
                   strokeDasharray="6 4"

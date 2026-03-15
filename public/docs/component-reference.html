@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>trefolio — Component Reference Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --surface-hover: #1a1a24;
+    --border: #2a2a3a;
+    --border-accent: #4f46e5;
+    --text: #e4e4eb;
+    --text-muted: #8888a0;
+    --accent: #6366f1;
+    --accent-light: #818cf8;
+    --green: #22c55e;
+    --amber: #f59e0b;
+    --red: #ef4444;
+    --cyan: #06b6d4;
+    --pink: #ec4899;
+    --tag-feature: #6366f1;
+    --tag-nav: #06b6d4;
+    --tag-modal: #f59e0b;
+    --tag-card: #22c55e;
+    --tag-pro: #ec4899;
+    --tag-banner: #f97316;
+    --tag-page: #8b5cf6;
+    --tag-chart: #14b8a6;
+    --tag-table: #3b82f6;
+    --tag-form: #a855f7;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .container { max-width: 1400px; margin: 0 auto; padding: 0 2rem; }
+
+  /* Header */
+  header {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(10,10,15,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 1rem 0;
+  }
+  header .container {
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  header h1 {
+    font-size: 1.25rem; font-weight: 700;
+    background: linear-gradient(135deg, var(--accent-light), var(--cyan));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  header .subtitle { color: var(--text-muted); font-size: 0.85rem; }
+
+  /* Filter bar */
+  .filter-bar {
+    display: flex; gap: 0.5rem; flex-wrap: wrap;
+    padding: 1.5rem 0; position: sticky; top: 60px; z-index: 90;
+    background: rgba(10,10,15,0.9); backdrop-filter: blur(12px);
+  }
+  .filter-btn {
+    padding: 0.4rem 0.9rem; border-radius: 99px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--text-muted); font-size: 0.8rem;
+    cursor: pointer; transition: all 0.2s; font-family: inherit;
+  }
+  .filter-btn:hover { border-color: var(--accent); color: var(--text); }
+  .filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .filter-count {
+    display: inline-block; background: rgba(255,255,255,0.15);
+    border-radius: 99px; padding: 0 0.45rem; margin-left: 0.3rem;
+    font-size: 0.7rem; font-weight: 600;
+  }
+
+  /* Screen sections */
+  .screen-section {
+    margin-bottom: 4rem; padding-top: 1rem;
+  }
+  .screen-title {
+    font-size: 1.5rem; font-weight: 700; margin-bottom: 0.3rem;
+    display: flex; align-items: center; gap: 0.6rem;
+  }
+  .screen-title .route {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;
+    color: var(--accent-light); background: rgba(99,102,241,0.1);
+    padding: 0.2rem 0.6rem; border-radius: 6px;
+  }
+  .screen-desc { color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.95rem; }
+
+  /* Wireframe container */
+  .wireframe {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+  }
+  .wireframe-inner {
+    padding: 1.5rem;
+    display: flex; flex-direction: column; gap: 1rem;
+  }
+  .wireframe-row {
+    display: flex; gap: 1rem;
+  }
+
+  /* Component boxes inside wireframes */
+  .cbox {
+    border: 2px dashed var(--border);
+    border-radius: 10px;
+    padding: 0.8rem;
+    position: relative;
+    transition: all 0.25s;
+    cursor: default;
+    min-height: 48px;
+    display: flex; flex-direction: column;
+  }
+  .cbox:hover {
+    border-color: var(--accent);
+    background: rgba(99,102,241,0.04);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(99,102,241,0.1);
+  }
+  .cbox .label {
+    font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--accent-light);
+    display: flex; align-items: center; gap: 0.4rem;
+    margin-bottom: 0.3rem; white-space: nowrap;
+  }
+  .cbox .label .tag {
+    font-size: 0.6rem; padding: 0.1rem 0.4rem; border-radius: 4px;
+    font-weight: 600; text-transform: capitalize; letter-spacing: 0;
+  }
+  .tag-nav { background: rgba(6,182,212,0.15); color: var(--tag-nav); }
+  .tag-card { background: rgba(34,197,94,0.15); color: var(--tag-card); }
+  .tag-table { background: rgba(59,130,246,0.15); color: var(--tag-table); }
+  .tag-chart { background: rgba(20,184,166,0.15); color: var(--tag-chart); }
+  .tag-modal { background: rgba(245,158,11,0.15); color: var(--tag-modal); }
+  .tag-pro { background: rgba(236,72,153,0.15); color: var(--tag-pro); }
+  .tag-banner { background: rgba(249,115,22,0.15); color: var(--tag-banner); }
+  .tag-page { background: rgba(139,92,246,0.15); color: var(--tag-page); }
+  .tag-form { background: rgba(168,85,247,0.15); color: var(--tag-form); }
+  .tag-feature { background: rgba(99,102,241,0.15); color: var(--tag-feature); }
+
+  .cbox .file {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem; color: var(--text-muted);
+    margin-top: auto; padding-top: 0.3rem;
+    opacity: 0.6;
+  }
+  .cbox .desc {
+    font-size: 0.78rem; color: var(--text-muted); line-height: 1.4;
+  }
+
+  /* Sizing helpers */
+  .flex-1 { flex: 1; }
+  .flex-2 { flex: 2; }
+  .flex-3 { flex: 3; }
+  .w-full { width: 100%; }
+  .h-sm { min-height: 50px; }
+  .h-md { min-height: 80px; }
+  .h-lg { min-height: 140px; }
+  .h-xl { min-height: 200px; }
+  .gap-sm { gap: 0.6rem; }
+
+  /* Nested wireframe */
+  .nested { gap: 0.7rem; }
+
+  /* Table component */
+  .table-component {
+    padding: 0;
+    overflow: hidden;
+  }
+  .table-header {
+    background: rgba(99,102,241,0.05);
+    padding: 0.5rem 0.8rem;
+    display: flex; justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.65rem; color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .table-rows { padding: 0.3rem 0; }
+  .table-row-mock {
+    padding: 0.35rem 0.8rem;
+    display: flex; justify-content: space-between;
+    font-size: 0.7rem; color: var(--text-muted);
+    border-bottom: 1px solid rgba(42,42,58,0.5);
+  }
+  .table-row-mock:last-child { border: none; }
+
+  /* Summary grid */
+  .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.8rem; }
+
+  /* Mini chart mock */
+  .chart-mock {
+    height: 100px;
+    background: linear-gradient(180deg, rgba(99,102,241,0.08) 0%, transparent 100%);
+    border-radius: 8px;
+    display: flex; align-items: flex-end; justify-content: center;
+    padding-bottom: 0.5rem;
+  }
+  .chart-mock svg { opacity: 0.4; }
+
+  /* Tabs mock */
+  .tabs-mock {
+    display: flex; gap: 0; border-bottom: 1px solid var(--border);
+    padding: 0 0.5rem; margin-bottom: 0.5rem;
+  }
+  .tab-mock {
+    padding: 0.5rem 1rem; font-size: 0.72rem; color: var(--text-muted);
+    border-bottom: 2px solid transparent; font-weight: 500;
+  }
+  .tab-mock.active { color: var(--accent-light); border-color: var(--accent); }
+
+  /* Standalone component list */
+  .component-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 1rem;
+  }
+  .component-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem 1.2rem;
+    transition: all 0.2s;
+    display: flex; flex-direction: column; gap: 0.4rem;
+  }
+  .component-card:hover {
+    border-color: var(--accent);
+    background: var(--surface-hover);
+  }
+  .component-card .name {
+    font-weight: 700; font-size: 0.95rem;
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .component-card .desc { font-size: 0.82rem; color: var(--text-muted); }
+  .component-card .file {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem; color: var(--text-muted); opacity: 0.6;
+  }
+
+  /* Search */
+  .search-wrapper {
+    position: relative; flex: 1; max-width: 320px;
+  }
+  .search-input {
+    width: 100%; padding: 0.5rem 1rem 0.5rem 2.2rem;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 99px; color: var(--text);
+    font-family: inherit; font-size: 0.85rem;
+    outline: none; transition: border-color 0.2s;
+  }
+  .search-input:focus { border-color: var(--accent); }
+  .search-icon {
+    position: absolute; left: 0.75rem; top: 50%;
+    transform: translateY(-50%); color: var(--text-muted);
+    font-size: 0.85rem; pointer-events: none;
+  }
+
+  /* ToC */
+  .toc {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1.5rem; margin: 2rem 0;
+  }
+  .toc h2 { font-size: 1.1rem; margin-bottom: 0.8rem; }
+  .toc-list { columns: 2; column-gap: 2rem; list-style: none; }
+  .toc-list li { break-inside: avoid; margin-bottom: 0.3rem; }
+  .toc-list a {
+    color: var(--text-muted); text-decoration: none;
+    font-size: 0.85rem; transition: color 0.2s;
+  }
+  .toc-list a:hover { color: var(--accent-light); }
+  .toc-list .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem; color: var(--accent); margin-right: 0.4rem;
+  }
+
+  @media (max-width: 768px) {
+    .wireframe-row { flex-direction: column; }
+    .toc-list { columns: 1; }
+    .component-grid { grid-template-columns: 1fr; }
+    .summary-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <div>
+      <h1>trefolio Component Reference</h1>
+      <div class="subtitle">Shared vocabulary for discussing the UI</div>
+    </div>
+    <div class="search-wrapper">
+      <span class="search-icon">⌕</span>
+      <input type="text" class="search-input" id="search" placeholder="Search components...">
+    </div>
+  </div>
+</header>
+
+<main class="container">
+
+<!-- Table of Contents -->
+<nav class="toc">
+  <h2>Screens & Areas</h2>
+  <ol class="toc-list">
+    <li><a href="#dashboard"><span class="num">01</span>Dashboard (Home)</a></li>
+    <li><a href="#import"><span class="num">02</span>Import Page</a></li>
+    <li><a href="#tools"><span class="num">03</span>Tools Page</a></li>
+    <li><a href="#planning"><span class="num">04</span>Financial Planner</a></li>
+    <li><a href="#simulator"><span class="num">05</span>Portfolio Simulator</a></li>
+    <li><a href="#stock-detail"><span class="num">06</span>Stock Detail</a></li>
+    <li><a href="#crypto"><span class="num">07</span>Crypto</a></li>
+    <li><a href="#profile"><span class="num">08</span>Profile &amp; Settings</a></li>
+    <li><a href="#landing"><span class="num">09</span>Landing Page</a></li>
+    <li><a href="#modals"><span class="num">10</span>Modals &amp; Dialogs</a></li>
+    <li><a href="#banners"><span class="num">11</span>Banners &amp; Toasts</a></li>
+    <li><a href="#navigation"><span class="num">12</span>Navigation &amp; Shell</a></li>
+  </ol>
+</nav>
+
+<!-- Filter bar -->
+<div class="filter-bar" id="filters">
+  <button class="filter-btn active" data-filter="all">All</button>
+  <button class="filter-btn" data-filter="nav">Navigation</button>
+  <button class="filter-btn" data-filter="card">Cards</button>
+  <button class="filter-btn" data-filter="table">Tables</button>
+  <button class="filter-btn" data-filter="chart">Charts</button>
+  <button class="filter-btn" data-filter="modal">Modals</button>
+  <button class="filter-btn" data-filter="form">Forms</button>
+  <button class="filter-btn" data-filter="banner">Banners</button>
+  <button class="filter-btn" data-filter="pro">Pro-only</button>
+  <button class="filter-btn" data-filter="page">Pages</button>
+</div>
+
+<!-- ============================================ -->
+<!-- 1. DASHBOARD -->
+<!-- ============================================ -->
+<section class="screen-section" id="dashboard" data-categories="page">
+  <h2 class="screen-title">Dashboard <span class="route">/</span></h2>
+  <p class="screen-desc">The home screen. Shows portfolio overview, holdings, and tabbed content areas.</p>
+
+  <div class="wireframe">
+    <!-- App Header -->
+    <div class="cbox w-full" style="border-radius: 0; border-top:none; border-left:none; border-right:none;" data-categories="nav" data-name="App Header">
+      <div class="label"><span class="tag tag-nav">nav</span> App Header</div>
+      <div class="desc">Top bar: logo, nav links (Portfolio · Import · Tools · Crypto · Indicators), theme toggle, language, stealth mode, notification bell, user menu</div>
+      <div class="file">AppNav.tsx</div>
+    </div>
+
+    <!-- Market Ticker Bar -->
+    <div class="cbox w-full" style="border-radius: 0; border-left:none; border-right:none; min-height:36px;" data-categories="nav" data-name="Market Ticker Bar">
+      <div class="label"><span class="tag tag-nav">nav</span> Market Ticker Bar</div>
+      <div class="desc">Scrolling ticker strip showing major index prices (S&P 500, NASDAQ, etc.)</div>
+      <div class="file">MarketTickerBar.tsx</div>
+    </div>
+
+    <div class="wireframe-inner">
+      <!-- Banners row -->
+      <div class="wireframe-row" data-categories="banner">
+        <div class="cbox flex-1" data-categories="banner" data-name="Email Verification Banner">
+          <div class="label"><span class="tag tag-banner">banner</span> Email Verification Banner</div>
+          <div class="desc">Prompts user to verify email</div>
+          <div class="file">EmailVerificationBanner.tsx</div>
+        </div>
+        <div class="cbox flex-1" data-categories="banner" data-name="Sample Data Banner">
+          <div class="label"><span class="tag tag-banner">banner</span> Sample Data Banner</div>
+          <div class="desc">Notice that the portfolio contains sample data</div>
+          <div class="file">SampleDataBanner.tsx</div>
+        </div>
+        <div class="cbox flex-1" data-categories="banner" data-name="SnapTrade Reconnect Banner">
+          <div class="label"><span class="tag tag-banner">banner</span> SnapTrade Reconnect Banner</div>
+          <div class="desc">Warns when broker sync needs reconnection</div>
+          <div class="file">SnapTradeReconnectBanner.tsx</div>
+        </div>
+      </div>
+
+      <!-- Dashboard Toolbar -->
+      <div class="cbox w-full" data-categories="nav" data-name="Dashboard Toolbar">
+        <div class="label"><span class="tag tag-nav">nav</span> Dashboard Toolbar</div>
+        <div class="desc">Portfolio switcher dropdown, Refresh button, Import button, Add Asset button, Reset, Settings gear</div>
+        <div class="file">DashboardToolbar.tsx</div>
+      </div>
+
+      <!-- Goal Banner -->
+      <div class="cbox w-full" data-categories="card" data-name="Goal Progress Banner">
+        <div class="label"><span class="tag tag-card">card</span> Goal Progress Banner</div>
+        <div class="desc">Horizontal bar showing progress toward active financial goal (e.g. "€50,000 / €100,000 — 50%")</div>
+        <div class="file">GoalProgressBanner.tsx</div>
+      </div>
+
+      <!-- Summary Cards row -->
+      <div class="summary-grid" data-categories="card">
+        <div class="cbox" data-categories="card" data-name="Summary Card – Total Value">
+          <div class="label"><span class="tag tag-card">card</span> Summary Card – Total Value</div>
+          <div class="desc">Main portfolio value in base currency</div>
+          <div class="file">PortfolioSummary.tsx</div>
+        </div>
+        <div class="cbox" data-categories="card" data-name="Summary Card – Day Change">
+          <div class="label"><span class="tag tag-card">card</span> Summary Card – Day Change</div>
+          <div class="desc">Today's gain/loss amount and percentage (green/red)</div>
+          <div class="file">PortfolioSummary.tsx</div>
+        </div>
+        <div class="cbox" data-categories="card" data-name="Summary Card – Total Gain">
+          <div class="label"><span class="tag tag-card">card</span> Summary Card – Total Gain</div>
+          <div class="desc">All-time unrealized gain/loss</div>
+          <div class="file">PortfolioSummary.tsx</div>
+        </div>
+        <div class="cbox" data-categories="card" data-name="Summary Card – Dividend Yield">
+          <div class="label"><span class="tag tag-card">card</span> Summary Card – Dividend Yield</div>
+          <div class="desc">Estimated annual dividend yield and income</div>
+          <div class="file">PortfolioSummary.tsx</div>
+        </div>
+      </div>
+
+      <!-- Net Worth + Market & Cash -->
+      <div class="wireframe-row">
+        <div class="cbox flex-1" data-categories="card" data-name="Net Worth Summary">
+          <div class="label"><span class="tag tag-card">card</span> Net Worth Summary</div>
+          <div class="desc">Combined value: stocks + crypto + cash + manual assets</div>
+          <div class="file">NetWorthSummary.tsx</div>
+        </div>
+        <div class="cbox flex-1" data-categories="card" data-name="Market & Cash Card">
+          <div class="label"><span class="tag tag-card">card</span> Market &amp; Cash Card</div>
+          <div class="desc">Cash balances by currency and market status indicator</div>
+          <div class="file">MarketAndCash.tsx</div>
+        </div>
+      </div>
+
+      <!-- Broker Filter -->
+      <div class="cbox w-full" data-categories="nav" data-name="Broker Filter">
+        <div class="label"><span class="tag tag-nav">nav</span> Broker Filter</div>
+        <div class="desc">Horizontal pill buttons to filter holdings by broker/account</div>
+        <div class="file">BrokerFilter.tsx</div>
+      </div>
+
+      <!-- Dashboard Tabs -->
+      <div class="cbox w-full" data-categories="nav" data-name="Dashboard Tabs">
+        <div class="tabs-mock">
+          <div class="tab-mock active">Portfolio</div>
+          <div class="tab-mock">Crypto</div>
+          <div class="tab-mock">Diversification</div>
+          <div class="tab-mock">Dividends</div>
+          <div class="tab-mock">Metrics</div>
+          <div class="tab-mock">Growth</div>
+          <div class="tab-mock">Events</div>
+          <div class="tab-mock">News</div>
+        </div>
+        <div class="label" style="padding: 0 0.5rem;"><span class="tag tag-nav">nav</span> Dashboard Tabs</div>
+        <div class="desc" style="padding: 0 0.5rem;">Tabbed sections within the dashboard. Each tab shows a different view of portfolio data.</div>
+        <div class="file" style="padding: 0 0.5rem;">Dashboard.tsx</div>
+      </div>
+
+      <!-- Holdings Table -->
+      <div class="cbox w-full table-component" data-categories="table" data-name="Holdings Table">
+        <div style="padding: 0.6rem 0.8rem;">
+          <div class="label"><span class="tag tag-table">table</span> Holdings Table</div>
+          <div class="desc">Sortable, filterable table of all holdings. Click row to open Stock Detail Drawer.</div>
+        </div>
+        <div class="table-header">
+          <span>TICKER</span><span>NAME</span><span>SHARES</span><span>PRICE</span><span>VALUE</span><span>DAY Δ</span><span>GAIN</span><span>WEIGHT</span>
+        </div>
+        <div class="table-rows">
+          <div class="table-row-mock"><span>AAPL</span><span>Apple Inc</span><span>50</span><span>$189.50</span><span>$9,475</span><span style="color:var(--green)">+1.2%</span><span style="color:var(--green)">+$2,340</span><span>12.3%</span></div>
+          <div class="table-row-mock"><span>MSFT</span><span>Microsoft Corp</span><span>30</span><span>$378.20</span><span>$11,346</span><span style="color:var(--red)">−0.4%</span><span style="color:var(--green)">+$4,120</span><span>14.7%</span></div>
+          <div class="table-row-mock"><span>VWCE</span><span>Vanguard FTSE</span><span>100</span><span>€109.50</span><span>€10,950</span><span style="color:var(--green)">+0.3%</span><span style="color:var(--green)">+€1,800</span><span>14.2%</span></div>
+        </div>
+        <div class="file" style="padding: 0.4rem 0.8rem;">PortfolioTable.tsx → StockRow.tsx</div>
+      </div>
+
+      <!-- Below-table cards row -->
+      <div class="wireframe-row">
+        <div class="cbox flex-1" data-categories="card,pro" data-name="Portfolio Growth Periods">
+          <div class="label"><span class="tag tag-chart">chart</span><span class="tag tag-pro">pro</span> Portfolio Growth Periods</div>
+          <div class="desc">YTD, 1M, 3M, 6M, 1Y growth with sparklines</div>
+          <div class="file">PortfolioGrowthPeriods.tsx</div>
+        </div>
+        <div class="cbox flex-1" data-categories="card,pro" data-name="Performance Metrics">
+          <div class="label"><span class="tag tag-card">card</span><span class="tag tag-pro">pro</span> Performance Metrics</div>
+          <div class="desc">TTWROR, XIRR, Sharpe Ratio, Max Drawdown</div>
+          <div class="file">PerformanceMetrics.tsx</div>
+        </div>
+      </div>
+
+      <!-- Projection Chart -->
+      <div class="cbox w-full h-lg" data-categories="chart,pro" data-name="Portfolio Projection Chart">
+        <div class="label"><span class="tag tag-chart">chart</span><span class="tag tag-pro">pro</span> Portfolio Projection Chart</div>
+        <div class="desc">Projected future portfolio value line chart with confidence bands</div>
+        <div class="chart-mock">
+          <svg width="300" height="60" viewBox="0 0 300 60"><polyline points="0,55 30,50 60,45 90,40 120,35 150,28 180,22 210,18 240,12 270,8 300,3" fill="none" stroke="var(--accent)" stroke-width="2"/></svg>
+        </div>
+        <div class="file">PortfolioProjection.tsx</div>
+      </div>
+
+      <!-- Pro Compare Card -->
+      <div class="cbox w-full" data-categories="card,pro" data-name="Pro Upgrade Card">
+        <div class="label"><span class="tag tag-pro">pro</span> Pro Upgrade Card</div>
+        <div class="desc">Side-by-side Free vs Pro comparison with upgrade CTA</div>
+        <div class="file">ProCompareCard.tsx</div>
+      </div>
+
+      <!-- AI Review Card -->
+      <div class="cbox w-full" data-categories="card,pro" data-name="Portfolio Review Card">
+        <div class="label"><span class="tag tag-card">card</span><span class="tag tag-pro">pro</span> Portfolio Review Card</div>
+        <div class="desc">AI-generated portfolio analysis and recommendations</div>
+        <div class="file">PortfolioReviewCard.tsx</div>
+      </div>
+
+      <!-- Events + Earnings row -->
+      <div class="wireframe-row">
+        <div class="cbox flex-1" data-categories="card" data-name="Event Calendar">
+          <div class="label"><span class="tag tag-card">card</span> Event Calendar</div>
+          <div class="desc">IPOs, economic events, earnings for your holdings</div>
+          <div class="file">EventCalendar.tsx</div>
+        </div>
+        <div class="cbox flex-1" data-categories="card" data-name="Upcoming Earnings">
+          <div class="label"><span class="tag tag-card">card</span> Upcoming Earnings</div>
+          <div class="desc">Next earnings dates for portfolio companies</div>
+          <div class="file">UpcomingEarnings.tsx</div>
+        </div>
+      </div>
+
+      <!-- News -->
+      <div class="cbox w-full" data-categories="card,pro" data-name="Portfolio News Feed">
+        <div class="label"><span class="tag tag-card">card</span><span class="tag tag-pro">pro</span> Portfolio News Feed</div>
+        <div class="desc">Curated news articles for stocks in your portfolio</div>
+        <div class="file">PortfolioNewsFeed.tsx</div>
+      </div>
+
+    </div><!-- /wireframe-inner -->
+
+    <!-- Mobile Tab Bar -->
+    <div class="cbox w-full" style="border-radius: 0; border-bottom:none; border-left:none; border-right:none; min-height:42px;" data-categories="nav" data-name="Mobile Tab Bar">
+      <div class="label"><span class="tag tag-nav">nav</span> Mobile Tab Bar</div>
+      <div class="desc">Bottom navigation bar (mobile only): Portfolio · Import · Tools · Crypto · Profile</div>
+      <div class="file">MobileTabBar.tsx</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================ -->
+<!-- 2. STOCK DETAIL DRAWER -->
+<!-- ============================================ -->
+<section class="screen-section" id="stock-detail" data-categories="page">
+  <h2 class="screen-title">Stock Detail Drawer</h2>
+  <p class="screen-desc">Slides in from the right when you click a holding row. Shows full detail for one stock.</p>
+
+  <div class="wireframe">
+    <div class="wireframe-inner">
+      <div class="cbox w-full" data-categories="card" data-name="Stock Detail Drawer">
+        <div class="label"><span class="tag tag-card">card</span> Stock Detail Drawer</div>
+        <div class="desc">Right-side slide-out panel with tabs: Overview, Chart, Edit, Trade, Alerts</div>
+        <div class="file">StockDetailDrawer.tsx</div>
+      </div>
+
+      <div class="wireframe-row">
+        <div class="cbox flex-1" data-categories="card" data-name="Stock Overview Section">
+          <div class="label"><span class="tag tag-card">card</span> Stock Overview</div>
+          <div class="desc">Company info, sector, market cap, PE ratio, 52-week range, dividend data</div>
+          <div class="file">stock-row/OverviewSection.tsx</div>
+        </div>
+        <div class="cbox flex-1" data-categories="chart" data-name="Stock Chart">
+          <div class="label"><span class="tag tag-chart">chart</span> Stock Chart</div>
+          <div class="desc">Interactive price chart with 1D/1W/1M/3M/1Y/5Y/All ranges</div>
+          <div class="file">StockChart.tsx</div>
+        </div>
+      </div>
+
+      <div class="wireframe-row">
+        <div class="cbox flex-1" data-categories="form" data-name="Edit Holding Form">
+          <div class="label"><span class="tag tag-form">form</span> Edit Holding Form</div>
+          <div class="desc">Edit shares, avg price, purchase date, broker for a holding</div>
+          <div class="file">stock-row/EditForm.tsx</div>
+        </div>
+        <div class="cbox flex-1" data-categories="card,pro" data-name="Trade Panel">
+          <div class="label"><span class="tag tag-card">card</span><span class="tag tag-pro">pro</span> Trade Panel</div>
+          <div class="desc">Simulated buy/sell order panel</div>
+          <div class="file">stock-row/TradePanel.tsx</div>
+        </div>
+      </div>
+
+      <div class="wireframe-row">
+        <div class="cbox flex-1" data-categories="form" data-name="Alert Form">
+          <div class="label"><span class="tag tag-form">form</span> Alert Form</div>
+          <div class="desc">Create/edit price alerts for this stock (above/below target)</div>
+          <div class="file">AlertForm.tsx</div>
+        </div>
+        <div class="cbox flex-1" data-categories="card" data-name="Holding Health Badge">
+          <div class="label"><span class="tag tag-card">card</span> Holding Health Badge</div>
+          <div class="desc">Visual indicator of holding diversification health</div>
+          <div class="file">HoldingHealthBadge.tsx</div>
+        </div>
+      </div>
+
+      <div class="cbox w-full" data-categories="card,pro" data-name="Stock Intelligence">
+        <div class="label"><span class="tag tag-card">card</span><span class="tag tag-pro">pro</span> Stock Intelligence</div>
+        <div class="desc">AI-powered analysis: sentiment, risk assessment, fair value estimate</div>
+        <div class="file">StockIntelligence.tsx</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================ -->
+<!-- 3. IMPORT PAGE -->
+<!-- ============================================ -->
+<section class="screen-section" id="import" data-categories="page">
+  <h2 class="screen-title">Import Page <span class="route">/import</span></h2>
+  <p class="screen-desc">All import methods on one screen: broker CSV, SnapTrade API sync, AI import, and manual entry.</p>
+
+  <div class="wireframe">
+    <div class="wireframe-inner">
+      <div class="cbox w-full" data-categories="nav" data-name="Import Method Tabs">
+        <div class="tabs-mock">
+          <div class="tab-mock active">Broker CSV</div>
+          <div class="tab-mock">SnapTrade API</div>
+          <div class="tab-mock">AI Import</div>
+          <div class="tab-mock">Manual</div>
+        </div>
+        <div class="label" style="padding: 0 0.5rem;"><span class="tag tag-nav">nav</span> Import Method Tabs</div>
+        <div class="desc" style="padding: 0 0.5rem;">Toggle between different import methods</div>
+        <div class="file" style="padding: 0 0.5rem;">import-page-content.tsx</div>
+      </div>
+
+      <div class="wireframe-row">
+        <div class="cbox flex-1" data-categories="form" data-name="Broker Selector">
+          <div class="label"><span class="tag tag-form">form</span> Broker Selector</div>
+          <div class="desc">Dropdown to choose broker format (DEGIRO, IBKR, Trading 212, etc.)</div>
+          <div class="file">import-page-content.tsx</div>
+        </div>
+        <div class="cbox flex-1" data-categories="card" data-name="Inline Guide">
+          <div class="label"><span class="tag tag-card">card</span> Inline Guide</div>
+          <div class="desc">Step-by-step instructions for exporting CSV from the selected broker</div>
+          <div class="file">import-page-content.tsx</div>
+        </div>
+      </div>
+
+      <div class="cbox w-full h-md" data-categories="form" data-name="File Drop Zone">
+        <div class="label"><span class="tag tag-form">form</span> File Drop Zone</div>
+        <div class="desc">Drag-and-drop area or click to upload a CSV/XLSX file</div>
+        <div class="file">import-page-content.tsx</div>
+      </div>
+
+      <div class="cbox w-full table-component" data-categories="table" data-name="Import Preview Table">
+        <div style="padding: 0.6rem 0.8rem;">
+          <div class="label"><span class="tag tag-table">table</span> Import Preview Table</div>
+          <div class="desc">Preview of parsed transactions before confirming import</div>
+        </div>
+        <div class="table-header">
+          <span>TICKER</span><span>ACTION</span><span>SHARES</span><span>PRICE</span><span>DATE</span><span>STATUS</span>
+        </div>
+        <div class="table-rows">
+          <div class="table-row-mock"><span>AAPL</span><span>BUY</span><span>50</span><span>$142.00</span><span>2024-01-15</span><span style="color:var(--green)">✓ matched</span></div>
+          <div class="table-row-mock"><span>VWCE.DE</span><span>BUY</span><span>100</span><span>€98.50</span><span>2024-02-20</span><span style="color:var(--green)">✓ matched</span></div>
+        </div>
+        <div class="file" style="padding: 0.4rem 0.8rem;">import-page-content.tsx</div>
+      </div>
+
+      <div class="cbox w-full" data-categories="form" data-name="Broker Import (legacy)">
+        <div class="label"><span class="tag tag-form">form</span> Broker Import</div>
+        <div class="desc">Legacy broker-specific import component</div>
+        <div class="file">BrokerImport.tsx</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================ -->
+<!-- 4. TOOLS PAGE -->
+<!-- ============================================ -->
+<section class="screen-section" id="tools" data-categories="page">
+  <h2 class="screen-title">Tools Page <span class="route">/tools</span></h2>
+  <p class="screen-desc">Tabbed page with portfolio analysis tools, each in its own sub-tab.</p>
+
+  <div class="wireframe">
+    <div class="wireframe-inner">
+      <div class="cbox w-full" data-categories="nav" data-name="Tools Tabs">
+        <div class="tabs-mock">
+          <div class="tab-mock active">Transactions</div>
+          <div class="tab-mock">Dividends</div>
+          <div class="tab-mock">Performance</div>
+          <div class="tab-mock">Taxonomy</div>
+          <div class="tab-mock">Rebalancing</div>
+          <div class="tab-mock">Accounts</div>
+          <div class="tab-mock">Watchlist</div>
+          <div class="tab-mock">Alerts</div>
+          <div class="tab-mock">Screener</div>
+          <div class="tab-mock">Tax</div>
+          <div class="tab-mock">Simulator</div>
+          <div class="tab-mock">Planning</div>
+        </div>
+        <div class="label" style="padding: 0 0.5rem;"><span class="tag tag-nav">nav</span> Tools Tabs</div>
+        <div class="file" style="padding: 0 0.5rem;">PortfolioTools.tsx</div>
+      </div>
+
+      <div class="component-grid">
+        <div class="cbox" data-categories="table" data-name="Transaction History">
+          <div class="label"><span class="tag tag-table">table</span> Transaction History</div>
+          <div class="desc">Full list of all buy/sell/dividend transactions with filters and export</div>
+          <div class="file">TransactionHistory.tsx</div>
+        </div>
+        <div class="cbox" data-categories="card" data-name="Dividend Summary">
+          <div class="label"><span class="tag tag-card">card</span> Dividend Summary</div>
+          <div class="desc">Dividend income breakdown, monthly chart, calendar view</div>
+          <div class="file">DividendSummary.tsx</div>
+        </div>
+        <div class="cbox" data-categories="chart" data-name="Taxonomy View">
+          <div class="label"><span class="tag tag-chart">chart</span> Taxonomy View</div>
+          <div class="desc">Sector, geography, and asset class allocation pie/treemap charts</div>
+          <div class="file">TaxonomyView.tsx</div>
+        </div>
+        <div class="cbox" data-categories="card" data-name="Rebalancing View">
+          <div class="label"><span class="tag tag-card">card</span> Rebalancing View</div>
+          <div class="desc">Target vs actual allocation with rebalance suggestions</div>
+          <div class="file">RebalancingView.tsx</div>
+        </div>
+        <div class="cbox" data-categories="table" data-name="Accounts Manager">
+          <div class="label"><span class="tag tag-table">table</span> Accounts Manager</div>
+          <div class="desc">Manage broker accounts, rename, assign colors</div>
+          <div class="file">AccountsManager.tsx</div>
+        </div>
+        <div class="cbox" data-categories="table" data-name="Watchlist">
+          <div class="label"><span class="tag tag-table">table</span> Watchlist</div>
+          <div class="desc">Track stocks you don't own yet, with price and change columns</div>
+          <div class="file">Watchlist.tsx</div>
+        </div>
+        <div class="cbox" data-categories="table" data-name="Price Alerts">
+          <div class="label"><span class="tag tag-table">table</span> Price Alerts</div>
+          <div class="desc">Manage price alerts: ticker, condition, target, status</div>
+          <div class="file">PriceAlerts.tsx</div>
+        </div>
+        <div class="cbox" data-categories="table,pro" data-name="Stock Screener">
+          <div class="label"><span class="tag tag-table">table</span><span class="tag tag-pro">pro</span> Stock Screener</div>
+          <div class="desc">Filter stocks by fundamentals (PE, yield, sector, market cap). Includes Screener Filters, Results, and Stats.</div>
+          <div class="file">StockScreener.tsx</div>
+        </div>
+        <div class="cbox" data-categories="table,pro" data-name="Tax Report">
+          <div class="label"><span class="tag tag-table">table</span><span class="tag tag-pro">pro</span> Tax Report</div>
+          <div class="desc">Capital gains/losses report for tax filing</div>
+          <div class="file">TaxReport.tsx</div>
+        </div>
+        <div class="cbox" data-categories="card" data-name="Ex-Dividend Calendar">
+          <div class="label"><span class="tag tag-card">card</span> Ex-Dividend Calendar</div>
+          <div class="desc">Calendar showing upcoming ex-dividend dates for your holdings</div>
+          <div class="file">ExDividendCalendar.tsx</div>
+        </div>
+        <div class="cbox" data-categories="chart" data-name="Portfolio Benchmark Chart">
+          <div class="label"><span class="tag tag-chart">chart</span> Portfolio Benchmark Chart</div>
+          <div class="desc">Compare portfolio performance vs benchmark index</div>
+          <div class="file">PortfolioBenchmarkChart.tsx</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================ -->
+<!-- 5. FINANCIAL PLANNER -->
+<!-- ============================================ -->
+<section class="screen-section" id="planning" data-categories="page,pro">
+  <h2 class="screen-title">Financial Planner <span class="route">/tools/planning</span></h2>
+  <p class="screen-desc">Pro feature. FIRE calculator, retirement projection, and multi-goal tracker.</p>
+
+  <div class="wireframe">
+    <div class="wireframe-inner">
+      <div class="cbox w-full" data-categories="nav,pro" data-name="Planner Tabs">
+        <div class="tabs-mock">
+          <div class="tab-mock active">FIRE Calculator</div>
+          <div class="tab-mock">Retirement Projection</div>
+          <div class="tab-mock">Goals</div>
+        </div>
+        <div class="label" style="padding: 0 0.5rem;"><span class="tag tag-nav">nav</span><span class="tag tag-pro">pro</span> Planner Tabs</div>
+        <div class="file" style="padding: 0 0.5rem;">planning/FinancialPlanner.tsx</div>
+      </div>
+
+      <div class="cbox w-full" data-categories="form,pro" data-name="FIRE Calculator">
+        <div class="label"><span class="tag tag-form">form</span><span class="tag tag-pro">pro</span> FIRE Calculator</div>
+        <div class="desc">Input: age, expenses, savings rate, return rate. Output: Lean/Regular/Fat/Coast/Barista FIRE numbers and target dates.</div>
+        <div class="file">planning/FireCalculator.tsx</div>
+      </div>
+
+      <div class="cbox w-full h-lg" data-categories="chart,pro" data-name="Retirement Projection">
+        <div class="label"><span class="tag tag-chart">chart</span><span class="tag tag-pro">pro</span> Retirement Projection</div>
+        <div class="desc">Monte Carlo simulation chart showing projected wealth with probability bands (10th/50th/90th percentile).</div>
+        <div class="chart-mock">
+          <svg width="300" height="60" viewBox="0 0 300 60">
+            <polyline points="0,55 40,48 80,38 120,30 160,22 200,15 240,10 280,5" fill="none" stroke="var(--green)" stroke-width="2" opacity="0.3"/>
+            <polyline points="0,55 40,50 80,42 120,36 160,30 200,25 240,20 280,16" fill="none" stroke="var(--green)" stroke-width="2"/>
+            <polyline points="0,55 40,52 80,48 120,44 160,40 200,38 240,36 280,34" fill="none" stroke="var(--green)" stroke-width="2" opacity="0.3"/>
+          </svg>
+        </div>
+        <div class="file">planning/RetirementProjection.tsx</div>
+      </div>
+
+      <div class="wireframe-row">
+        <div class="cbox flex-1" data-categories="card,pro" data-name="Goal Manager">
+          <div class="label"><span class="tag tag-card">card</span><span class="tag tag-pro">pro</span> Goal Manager</div>
+          <div class="desc">List of financial goals (house, education, emergency fund, custom)</div>
+          <div class="file">planning/GoalManager.tsx</div>
+        </div>
+        <div class="cbox flex-1" data-categories="card,pro" data-name="Goal Card">
+          <div class="label"><span class="tag tag-card">card</span><span class="tag tag-pro">pro</span> Goal Card</div>
+          <div class="desc">Individual goal with target amount, current progress, and projected date</div>
+          <div class="file">planning/GoalCard.tsx</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================ -->
+<!-- 6. PORTFOLIO SIMULATOR -->
+<!-- ============================================ -->
+<section class="screen-section" id="simulator" data-categories="page,pro">
+  <h2 class="screen-title">Portfolio Simulator <span class="route">/tools/simulator</span></h2>
+  <p class="screen-desc">Pro feature. Backtest historical scenarios, run what-if analysis, and stress-test your portfolio.</p>
+
+  <div class="wireframe">
+    <div class="wireframe-inner">
+      <div class="cbox w-full" data-categories="nav,pro" data-name="Simulator Tabs">
+        <div class="tabs-mock">
+          <div class="tab-mock active">Backtest</div>
+          <div class="tab-mock">What-If</div>
+          <div class="tab-mock">Stress Test</div>
+        </div>
+        <div class="label" style="padding: 0 0.5rem;"><span class="tag tag-nav">nav</span><span class="tag tag-pro">pro</span> Simulator Tabs</div>
+        <div class="file" style="padding: 0 0.5rem;">PortfolioSimulator.tsx</div>
+      </div>
+
+      <div class="cbox w-full" data-categories="chart,pro" data-name="Backtest Panel">
+        <div class="label"><span class="tag tag-chart">chart</span><span class="tag tag-pro">pro</span> Backtest Panel</div>
+        <div class="desc">Run a historical backtest with custom date range. Shows portfolio vs benchmark chart.</div>
+        <div class="file">simulator/BacktestPanel.tsx</div>
+      </div>
+      <div class="cbox w-full" data-categories="form,pro" data-name="What-If Panel">
+        <div class="label"><span class="tag tag-form">form</span><span class="tag tag-pro">pro</span> What-If Panel</div>
+        <div class="desc">"What if I had bought X instead of Y?" scenario builder with comparison chart.</div>
+        <div class="file">simulator/WhatIfPanel.tsx</div>
+      </div>
+      <div class="cbox w-full" data-categories="card,pro" data-name="Stress Test Panel">
+        <div class="label"><span class="tag tag-card">card</span><span class="tag tag-pro">pro</span> Stress Test Panel</div>
+        <div class="desc">Simulate market crash scenarios (2008, COVID, dot-com) on your current portfolio.</div>
+        <div class="file">simulator/StressTestPanel.tsx</div>
+      </div>
+      <div class="cbox w-full" data-categories="banner" data-name="Simulator Disclaimer">
+        <div class="label"><span class="tag tag-banner">banner</span> Simulator Disclaimer</div>
+        <div class="desc">Legal disclaimer: past performance is not indicative of future results.</div>
+        <div class="file">simulator/SimulatorDisclaimer.tsx</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================ -->
+<!-- 7. CRYPTO -->
+<!-- ============================================ -->
+<section class="screen-section" id="crypto" data-categories="page,pro">
+  <h2 class="screen-title">Crypto <span class="route">/crypto</span></h2>
+  <p class="screen-desc">Pro feature. Crypto market overview and crypto portfolio tracking.</p>
+
+  <div class="wireframe">
+    <div class="wireframe-inner">
+      <div class="cbox w-full" data-categories="table,pro" data-name="Crypto Market">
+        <div class="label"><span class="tag tag-table">table</span><span class="tag tag-pro">pro</span> Crypto Market</div>
+        <div class="desc">Market overview: top coins by market cap with price, 24h change, volume, sparkline</div>
+        <div class="file">CryptoMarket.tsx</div>
+      </div>
+      <div class="cbox w-full" data-categories="table,pro" data-name="Crypto Portfolio Tab">
+        <div class="label"><span class="tag tag-table">table</span><span class="tag tag-pro">pro</span> Crypto Portfolio Tab</div>
+        <div class="desc">Your crypto holdings with value, gain/loss. Also accessible via Dashboard > Crypto tab.</div>
+        <div class="file">CryptoPortfolioTab.tsx</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================ -->
+<!-- 8. PROFILE -->
+<!-- ============================================ -->
+<section class="screen-section" id="profile" data-categories="page">
+  <h2 class="screen-title">Profile &amp; Settings <span class="route">/profile</span></h2>
+  <p class="screen-desc">Account settings, subscription management, notifications, portfolios, and devices.</p>
+
+  <div class="wireframe">
+    <div class="wireframe-inner">
+      <div class="cbox w-full" data-categories="nav" data-name="Profile Tabs">
+        <div class="tabs-mock">
+          <div class="tab-mock active">Account</div>
+          <div class="tab-mock">Subscription</div>
+          <div class="tab-mock">Notifications</div>
+          <div class="tab-mock">Portfolios</div>
+          <div class="tab-mock">Devices</div>
+        </div>
+        <div class="label" style="padding: 0 0.5rem;"><span class="tag tag-nav">nav</span> Profile Tabs</div>
+        <div class="file" style="padding: 0 0.5rem;">ProfilePage.tsx</div>
+      </div>
+
+      <div class="wireframe-row">
+        <div class="cbox flex-1" data-categories="form" data-name="Account Settings">
+          <div class="label"><span class="tag tag-form">form</span> Account Settings</div>
+          <div class="desc">Display name, email, tax residency, base currency, change password link</div>
+          <div class="file">ProfilePage.tsx</div>
+        </div>
+        <div class="cbox flex-1" data-categories="card" data-name="Subscription Card">
+          <div class="label"><span class="tag tag-card">card</span> Subscription Card</div>
+          <div class="desc">Current plan, billing period, next renewal, upgrade/manage buttons</div>
+          <div class="file">ProfilePage.tsx</div>
+        </div>
+      </div>
+
+      <div class="cbox w-full" data-categories="form" data-name="Notification Channels">
+        <div class="label"><span class="tag tag-form">form</span> Notification Channels</div>
+        <div class="desc">Toggle email, push, WhatsApp, and device notifications per event type</div>
+        <div class="file">NotificationChannels.tsx</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================ -->
+<!-- 9. LANDING PAGE -->
+<!-- ============================================ -->
+<section class="screen-section" id="landing" data-categories="page">
+  <h2 class="screen-title">Landing Page <span class="route">/landing</span></h2>
+  <p class="screen-desc">Public marketing page with features, pricing, testimonials, and CTAs.</p>
+
+  <div class="wireframe">
+    <div class="wireframe-inner" style="gap: 0.7rem;">
+      <div class="cbox w-full" data-categories="nav" data-name="Landing Nav Bar">
+        <div class="label"><span class="tag tag-nav">nav</span> Landing Nav Bar</div>
+        <div class="desc">Fixed top: logo, Features, Pricing, FAQ links, Language, Login, Sign Up</div>
+        <div class="file">landing/page.tsx (NavBar)</div>
+      </div>
+      <div class="cbox w-full h-md" data-categories="card" data-name="Hero Section">
+        <div class="label"><span class="tag tag-feature">section</span> Hero Section</div>
+        <div class="desc">Headline, value props, CTA button, and Hero Dashboard Mock (animated preview)</div>
+        <div class="file">landing/page.tsx (HeroSection + HeroDashboardMock)</div>
+      </div>
+      <div class="cbox w-full" data-categories="card" data-name="Stats Bar">
+        <div class="label"><span class="tag tag-feature">section</span> Stats Bar</div>
+        <div class="desc">Key numbers: "Real-time data", "60+ exchanges", "AI-powered", "Free forever"</div>
+        <div class="file">landing/page.tsx (StatsBar)</div>
+      </div>
+      <div class="cbox w-full" data-categories="card" data-name="Features Section">
+        <div class="label"><span class="tag tag-feature">section</span> Features Section</div>
+        <div class="desc">Hero feature cards with screenshots and descriptions</div>
+        <div class="file">landing/page.tsx (FeaturesSection)</div>
+      </div>
+      <div class="cbox w-full" data-categories="card" data-name="Themes Showcase">
+        <div class="label"><span class="tag tag-feature">section</span> Themes Showcase</div>
+        <div class="desc">Preview cards for Default, Canvas, Terminal, Studio themes</div>
+        <div class="file">landing/page.tsx (ThemesShowcase)</div>
+      </div>
+      <div class="wireframe-row">
+        <div class="cbox flex-1" data-categories="card" data-name="Why Trefolio Section">
+          <div class="label"><span class="tag tag-feature">section</span> Why Trefolio</div>
+          <div class="desc">Comparison table: trefolio vs other trackers</div>
+          <div class="file">landing/page.tsx (WhySection)</div>
+        </div>
+        <div class="cbox flex-1" data-categories="card" data-name="Testimonials Section">
+          <div class="label"><span class="tag tag-feature">section</span> Testimonials</div>
+          <div class="desc">User testimonial cards</div>
+          <div class="file">landing/page.tsx (TestimonialsSection)</div>
+        </div>
+      </div>
+      <div class="cbox w-full" data-categories="card" data-name="Pricing Section">
+        <div class="label"><span class="tag tag-feature">section</span> Pricing Section</div>
+        <div class="desc">Folio (Free), Bifolio (Starter), Trefolio (Pro) tier cards with feature lists and billing toggle</div>
+        <div class="file">landing/page.tsx (PricingSection)</div>
+      </div>
+      <div class="wireframe-row">
+        <div class="cbox flex-1" data-categories="card" data-name="FAQ Section">
+          <div class="label"><span class="tag tag-feature">section</span> FAQ Section</div>
+          <div class="desc">Accordion Q&A</div>
+          <div class="file">landing/page.tsx (FAQSection)</div>
+        </div>
+        <div class="cbox flex-1" data-categories="card" data-name="Getting Started Section">
+          <div class="label"><span class="tag tag-feature">section</span> Getting Started</div>
+          <div class="desc">Step-by-step onboarding guide</div>
+          <div class="file">landing/page.tsx (GettingStartedSection)</div>
+        </div>
+      </div>
+      <div class="cbox w-full" data-categories="card" data-name="CTA Section">
+        <div class="label"><span class="tag tag-feature">section</span> CTA Section</div>
+        <div class="desc">Final call-to-action with signup button</div>
+        <div class="file">landing/page.tsx (CTASection)</div>
+      </div>
+      <div class="cbox w-full" data-categories="nav" data-name="Public Footer">
+        <div class="label"><span class="tag tag-nav">nav</span> Public Footer</div>
+        <div class="desc">Links: Privacy, Terms, Contact, Blog, Release Notes</div>
+        <div class="file">PublicFooter.tsx</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================ -->
+<!-- 10. MODALS & DIALOGS -->
+<!-- ============================================ -->
+<section class="screen-section" id="modals" data-categories="modal">
+  <h2 class="screen-title">Modals &amp; Dialogs</h2>
+  <p class="screen-desc">Overlay dialogs that appear on top of any screen.</p>
+
+  <div class="component-grid">
+    <div class="component-card" data-categories="modal" data-name="Add Stock Modal">
+      <div class="name"><span class="tag tag-modal">modal</span> Add Stock Modal</div>
+      <div class="desc">Search for a stock/ETF, enter shares, average price, purchase date, and broker. Main way to manually add a holding.</div>
+      <div class="file">AddStockModal.tsx</div>
+    </div>
+    <div class="component-card" data-categories="modal,pro" data-name="Add Crypto Modal">
+      <div class="name"><span class="tag tag-modal">modal</span><span class="tag tag-pro" style="margin-left:0.3rem">pro</span> Add Crypto Modal</div>
+      <div class="desc">Search for a cryptocurrency, enter amount and average price.</div>
+      <div class="file">AddCryptoModal.tsx</div>
+    </div>
+    <div class="component-card" data-categories="modal" data-name="Add Manual Asset Modal">
+      <div class="name"><span class="tag tag-modal">modal</span> Add Manual Asset Modal</div>
+      <div class="desc">Add non-tradeable assets: real estate, savings accounts, pensions, etc.</div>
+      <div class="file">AddManualAssetModal.tsx</div>
+    </div>
+    <div class="component-card" data-categories="modal" data-name="Import Portfolio Modal">
+      <div class="name"><span class="tag tag-modal">modal</span> Import Portfolio Modal</div>
+      <div class="desc">Quick CSV import dialog (also accessible from Import page).</div>
+      <div class="file">ImportPortfolioModal.tsx</div>
+    </div>
+    <div class="component-card" data-categories="modal" data-name="Settings Modal">
+      <div class="name"><span class="tag tag-modal">modal</span> Settings Modal</div>
+      <div class="desc">Quick settings: theme, base currency, plan badge, language.</div>
+      <div class="file">SettingsModal.tsx</div>
+    </div>
+    <div class="component-card" data-categories="modal" data-name="Reset Portfolio Modal">
+      <div class="name"><span class="tag tag-modal">modal</span> Reset Portfolio Modal</div>
+      <div class="desc">Confirm dialog to reset/delete all portfolio data.</div>
+      <div class="file">ResetPortfolioModal.tsx</div>
+    </div>
+    <div class="component-card" data-categories="modal" data-name="Feedback Modal">
+      <div class="name"><span class="tag tag-modal">modal</span> Feedback Modal</div>
+      <div class="desc">User feedback form with category selection and free text.</div>
+      <div class="file">FeedbackModal.tsx</div>
+    </div>
+    <div class="component-card" data-categories="modal" data-name="What's New Modal">
+      <div class="name"><span class="tag tag-modal">modal</span> What's New Modal</div>
+      <div class="desc">Release notes popup shown after app updates.</div>
+      <div class="file">WhatsNewModal.tsx</div>
+    </div>
+    <div class="component-card" data-categories="modal,pro" data-name="Performance Explainer Modal">
+      <div class="name"><span class="tag tag-modal">modal</span> Performance Explainer</div>
+      <div class="desc">Educational dialog explaining TTWROR, XIRR, and other performance metrics.</div>
+      <div class="file">PerformanceExplainerModal.tsx</div>
+    </div>
+    <div class="component-card" data-categories="modal" data-name="Theme Wizard">
+      <div class="name"><span class="tag tag-modal">modal</span> Theme Wizard</div>
+      <div class="desc">First-time theme selection wizard with live previews.</div>
+      <div class="file">ThemeWizard.tsx</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================ -->
+<!-- 11. BANNERS & TOASTS -->
+<!-- ============================================ -->
+<section class="screen-section" id="banners" data-categories="banner">
+  <h2 class="screen-title">Banners &amp; Toasts</h2>
+  <p class="screen-desc">Contextual messages that appear at the top of the page or as floating notifications.</p>
+
+  <div class="component-grid">
+    <div class="component-card" data-categories="banner" data-name="Sample Data Banner">
+      <div class="name"><span class="tag tag-banner">banner</span> Sample Data Banner</div>
+      <div class="desc">Shown when the portfolio contains sample data. "You're viewing sample data — import your real portfolio."</div>
+      <div class="file">SampleDataBanner.tsx</div>
+    </div>
+    <div class="component-card" data-categories="banner" data-name="Email Verification Banner">
+      <div class="name"><span class="tag tag-banner">banner</span> Email Verification Banner</div>
+      <div class="desc">Prompts user to verify their email address.</div>
+      <div class="file">EmailVerificationBanner.tsx</div>
+    </div>
+    <div class="component-card" data-categories="banner" data-name="Secure Account Prompt">
+      <div class="name"><span class="tag tag-banner">banner</span> Secure Account Prompt</div>
+      <div class="desc">Prompts anonymous/guest users to secure their account with email.</div>
+      <div class="file">SecureAccountPrompt.tsx</div>
+    </div>
+    <div class="component-card" data-categories="banner" data-name="SnapTrade Reconnect Banner">
+      <div class="name"><span class="tag tag-banner">banner</span> SnapTrade Reconnect Banner</div>
+      <div class="desc">Warns when a broker connection has expired and needs re-authentication.</div>
+      <div class="file">SnapTradeReconnectBanner.tsx</div>
+    </div>
+    <div class="component-card" data-categories="banner" data-name="Sync Confidence Banner">
+      <div class="name"><span class="tag tag-banner">banner</span> Sync Confidence Banner</div>
+      <div class="desc">Shows sync status and data freshness indicator.</div>
+      <div class="file">SyncConfidenceBanner.tsx</div>
+    </div>
+    <div class="component-card" data-categories="banner" data-name="Leaf Promo Banner">
+      <div class="name"><span class="tag tag-banner">banner</span> Leaf Promo Banner</div>
+      <div class="desc">Promotional banner for the trefolio Leaf physical device.</div>
+      <div class="file">LeafPromoBanner.tsx</div>
+    </div>
+    <div class="component-card" data-categories="banner" data-name="Market Move Toast">
+      <div class="name"><span class="tag tag-banner">banner</span> Market Move Toast</div>
+      <div class="desc">Floating notification when a holding has a significant price move.</div>
+      <div class="file">MarketMoveToast.tsx</div>
+    </div>
+    <div class="component-card" data-categories="banner" data-name="Cookie Consent">
+      <div class="name"><span class="tag tag-banner">banner</span> Cookie Consent</div>
+      <div class="desc">GDPR cookie consent bar at the bottom of the page.</div>
+      <div class="file">CookieConsent.tsx</div>
+    </div>
+    <div class="component-card" data-categories="banner" data-name="Install Prompt">
+      <div class="name"><span class="tag tag-banner">banner</span> Install Prompt</div>
+      <div class="desc">PWA install prompt: "Add trefolio to your home screen".</div>
+      <div class="file">InstallPrompt.tsx</div>
+    </div>
+    <div class="component-card" data-categories="banner" data-name="Goal Celebration">
+      <div class="name"><span class="tag tag-banner">banner</span> Goal Celebration</div>
+      <div class="desc">Confetti/celebration overlay when a financial goal milestone is reached.</div>
+      <div class="file">GoalCelebration.tsx</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================ -->
+<!-- 12. NAVIGATION & SHELL -->
+<!-- ============================================ -->
+<section class="screen-section" id="navigation" data-categories="nav">
+  <h2 class="screen-title">Navigation &amp; Shell</h2>
+  <p class="screen-desc">Global navigation and layout components that wrap all pages.</p>
+
+  <div class="component-grid">
+    <div class="component-card" data-categories="nav" data-name="App Header">
+      <div class="name"><span class="tag tag-nav">nav</span> App Header</div>
+      <div class="desc">Top bar: logo, nav links (Portfolio, Import, Tools, Crypto, Indicators), theme/stealth toggles, language, notification bell, user dropdown.</div>
+      <div class="file">AppNav.tsx</div>
+    </div>
+    <div class="component-card" data-categories="nav" data-name="Sidebar Navigation">
+      <div class="name"><span class="tag tag-nav">nav</span> Sidebar Navigation</div>
+      <div class="desc">Left sidebar (Studio theme only): main nav, account links, user area with avatar and plan badge.</div>
+      <div class="file">SidebarNav.tsx</div>
+    </div>
+    <div class="component-card" data-categories="nav" data-name="Mobile Tab Bar">
+      <div class="name"><span class="tag tag-nav">nav</span> Mobile Tab Bar</div>
+      <div class="desc">Bottom tab bar (mobile): Portfolio, Import, Tools, Crypto, Profile icons.</div>
+      <div class="file">MobileTabBar.tsx</div>
+    </div>
+    <div class="component-card" data-categories="nav" data-name="Dashboard Toolbar">
+      <div class="name"><span class="tag tag-nav">nav</span> Dashboard Toolbar</div>
+      <div class="desc">Action bar below header: portfolio switcher, refresh, import, add asset, settings buttons.</div>
+      <div class="file">DashboardToolbar.tsx</div>
+    </div>
+    <div class="component-card" data-categories="nav" data-name="Market Ticker Bar">
+      <div class="name"><span class="tag tag-nav">nav</span> Market Ticker Bar</div>
+      <div class="desc">Scrolling horizontal ticker with major index prices.</div>
+      <div class="file">MarketTickerBar.tsx</div>
+    </div>
+    <div class="component-card" data-categories="nav" data-name="User Menu">
+      <div class="name"><span class="tag tag-nav">nav</span> User Menu</div>
+      <div class="desc">Dropdown from avatar: profile link, plan badge, sign out.</div>
+      <div class="file">UserDropdown.tsx</div>
+    </div>
+    <div class="component-card" data-categories="nav" data-name="Language Switcher">
+      <div class="name"><span class="tag tag-nav">nav</span> Language Switcher</div>
+      <div class="desc">Dropdown to select display language (25+ languages).</div>
+      <div class="file">LanguageSwitcher.tsx</div>
+    </div>
+    <div class="component-card" data-categories="nav" data-name="Theme Selector">
+      <div class="name"><span class="tag tag-nav">nav</span> Theme Selector</div>
+      <div class="desc">Switch between Default, Canvas, Terminal, Studio themes.</div>
+      <div class="file">ThemeSelector.tsx</div>
+    </div>
+    <div class="component-card" data-categories="nav" data-name="Notification Bell">
+      <div class="name"><span class="tag tag-nav">nav</span> Notification Bell</div>
+      <div class="desc">Bell icon with unread count badge. Opens Notification Center.</div>
+      <div class="file">NotificationBell.tsx</div>
+    </div>
+    <div class="component-card" data-categories="card" data-name="Notification Center">
+      <div class="name"><span class="tag tag-card">card</span> Notification Center</div>
+      <div class="desc">Slide-out panel listing all notifications (price alerts, dividends, system).</div>
+      <div class="file">NotificationCenter.tsx</div>
+    </div>
+    <div class="component-card" data-categories="card" data-name="Support Chat Widget">
+      <div class="name"><span class="tag tag-card">card</span> Support Chat Widget</div>
+      <div class="desc">Floating chat bubble for support questions.</div>
+      <div class="file">SupportChatWidget.tsx</div>
+    </div>
+    <div class="component-card" data-categories="card,pro" data-name="Blurred Pro Section">
+      <div class="name"><span class="tag tag-card">card</span><span class="tag tag-pro" style="margin-left:0.3rem">pro</span> Blurred Pro Section</div>
+      <div class="desc">Wrapper that blurs content and shows an "Upgrade to Pro" CTA overlay.</div>
+      <div class="file">BlurredProSection.tsx</div>
+    </div>
+    <div class="component-card" data-categories="card" data-name="Tier Badge">
+      <div class="name"><span class="tag tag-card">card</span> Tier Badge</div>
+      <div class="desc">Small badge showing Starter/Pro next to gated features.</div>
+      <div class="file">TierFeatureBadge.tsx</div>
+    </div>
+  </div>
+</section>
+
+<div style="height:4rem"></div>
+
+</main>
+
+<script>
+const searchInput = document.getElementById('search');
+const filterBtns = document.querySelectorAll('.filter-btn');
+let activeFilter = 'all';
+
+function getAllItems() {
+  return document.querySelectorAll('.cbox, .component-card');
+}
+
+function getAllSections() {
+  return document.querySelectorAll('.screen-section');
+}
+
+function applyFilters() {
+  const query = searchInput.value.toLowerCase().trim();
+  const items = getAllItems();
+  const sections = getAllSections();
+
+  items.forEach(item => {
+    const name = (item.dataset.name || '').toLowerCase();
+    const cats = (item.dataset.categories || '').toLowerCase();
+    const text = item.textContent.toLowerCase();
+
+    const matchesFilter = activeFilter === 'all' || cats.includes(activeFilter);
+    const matchesSearch = !query || name.includes(query) || text.includes(query);
+
+    item.style.display = (matchesFilter && matchesSearch) ? '' : 'none';
+  });
+
+  sections.forEach(sec => {
+    const visibleItems = sec.querySelectorAll('.cbox:not([style*="display: none"]), .component-card:not([style*="display: none"])');
+    sec.style.display = visibleItems.length > 0 ? '' : 'none';
+  });
+}
+
+filterBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    filterBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeFilter = btn.dataset.filter;
+    applyFilters();
+  });
+});
+
+searchInput.addEventListener('input', applyFilters);
+</script>
+
+</body>
+</html>

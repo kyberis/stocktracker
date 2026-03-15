@@ -174,7 +174,137 @@ export default function ProCompareCard({
   const atCapacity = capacity !== null && !capacity.available;
   const currentPlan = isPro ? "pro" : isStarter ? "starter" : "free";
 
-  const visibleTiers = TIERS;
+  const currentTier = TIERS.find((t) => t.plan === currentPlan)!;
+  const upgradeTiers = TIERS.filter((t) => {
+    if (t.plan === currentPlan) return false;
+    if (isFree) return t.plan === "starter" || t.plan === "pro";
+    if (isStarter) return t.plan === "pro";
+    return false;
+  }).sort((a, b) => (b.highlighted ? 1 : 0) - (a.highlighted ? 1 : 0));
+
+  const renderTierCard = (tier: TierInfo, options: { isCurrent: boolean; mobilePill?: string }) => {
+    const { isCurrent } = options;
+    const isHighlighted = tier.highlighted && !isCurrent;
+    const canUpgradeTo = !isCurrent && (
+      (isFree && (tier.plan === "starter" || tier.plan === "pro")) ||
+      (isStarter && tier.plan === "pro")
+    );
+    const displayPrice = tier.isFree ? "€0" : isAnnual ? tier.annualMonthly : tier.monthlyPrice;
+    const regularPrice = isAnnual ? tier.regularAnnualMonthly : tier.regularMonthly;
+
+    return (
+      <div
+        key={tier.plan}
+        className={`relative rounded-xl p-4 flex flex-col transition-all ${
+          isHighlighted
+            ? "bg-emerald-50/50 dark:bg-emerald-500/5 border-2 border-emerald-400 dark:border-emerald-500/40 shadow-lg shadow-emerald-500/5 dark:shadow-emerald-500/10"
+            : isCurrent
+              ? "bg-gray-50 dark:bg-slate-800/60 border-2 border-gray-300 dark:border-slate-500"
+              : "bg-white dark:bg-slate-800/40 border border-gray-200 dark:border-slate-700"
+        }`}
+      >
+        {isHighlighted && (
+          <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-500 text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-md shadow-emerald-500/25 whitespace-nowrap">
+            {options.mobilePill || t("landingPricingMostPopular")}
+          </div>
+        )}
+        {!isHighlighted && !isCurrent && canUpgradeTo && options.mobilePill && (
+          <div className={`absolute -top-3 left-1/2 -translate-x-1/2 text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-md whitespace-nowrap ${
+            tier.plan === "starter" ? "bg-blue-500 shadow-blue-500/25" : "bg-gray-600 dark:bg-slate-500"
+          }`}>
+            {options.mobilePill}
+          </div>
+        )}
+        {isCurrent && (
+          <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gray-600 dark:bg-slate-500 text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-md whitespace-nowrap">
+            {t("upsellCurrentPlan")}
+          </div>
+        )}
+        <div className="flex items-center gap-1.5 mb-2 mt-1">
+          <TierIcon
+            plan={tier.plan}
+            size={18}
+            className={
+              tier.plan === "pro" ? "text-emerald-500" :
+              tier.plan === "starter" ? "text-blue-500" :
+              "text-gray-500 dark:text-slate-400"
+            }
+          />
+          <h4 className="text-sm font-bold text-gray-900 dark:text-white">{tier.name}</h4>
+          {!tier.isFree && tier.launchDiscountPct > 0 && (
+            <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 rounded-full border border-amber-200 dark:border-amber-500/20">
+              -{tier.launchDiscountPct}%
+            </span>
+          )}
+        </div>
+        <div className="flex items-baseline gap-1.5 mb-1">
+          {!tier.isFree && (
+            <span className="text-sm text-gray-400 dark:text-slate-500 line-through">{regularPrice}</span>
+          )}
+          <span className="text-2xl font-extrabold text-gray-900 dark:text-white">{displayPrice}</span>
+          <span className="text-xs text-gray-400 dark:text-slate-500">
+            {tier.isFree ? "forever" : "/mo"}
+          </span>
+        </div>
+        {!tier.isFree && isAnnual && (
+          <div className="flex items-center gap-1.5 mb-2">
+            <span className="text-[11px] text-gray-400 dark:text-slate-500 line-through">{tier.regularAnnual}/yr</span>
+            <span className="text-[11px] text-gray-600 dark:text-slate-400">{tier.annualPrice}/yr</span>
+            <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
+              Save {tier.annualSavePct}%
+            </span>
+          </div>
+        )}
+        <p className="text-[11px] text-gray-500 dark:text-slate-400 mb-3">
+          {t(tier.descriptionKey)}
+        </p>
+        <ul className="space-y-1.5 mb-4 flex-1">
+          {tier.featureKeys.map((key) => (
+            <li key={key} className="flex items-start gap-2 text-[11px]">
+              <svg className="w-3.5 h-3.5 text-emerald-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+              <span className="text-gray-600 dark:text-slate-300">{t(key)}</span>
+            </li>
+          ))}
+        </ul>
+        {isCurrent ? (
+          isPro ? (
+            <button
+              onClick={openPortal}
+              disabled={billingLoading !== ""}
+              className="w-full text-xs font-semibold py-2.5 rounded-lg bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors disabled:opacity-60"
+            >
+              {billingLoading === "portal" ? t("billingRedirecting") : t("manageSubscription")}
+            </button>
+          ) : (
+            <div className="w-full text-xs font-semibold py-2.5 rounded-lg bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-slate-400 text-center">
+              {t("upsellCurrentPlan")}
+            </div>
+          )
+        ) : canUpgradeTo && !atCapacity ? (
+          <button
+            onClick={() => startCheckout(tier.plan as "starter" | "pro", billingPeriod)}
+            disabled={billingLoading !== ""}
+            className={`w-full text-xs font-semibold py-2.5 rounded-lg transition-all disabled:opacity-60 ${
+              tier.highlighted
+                ? "bg-emerald-500 hover:bg-emerald-600 text-white shadow-md shadow-emerald-500/20"
+                : tier.plan === "starter"
+                  ? "bg-blue-500 hover:bg-blue-600 text-white shadow-md shadow-blue-500/20"
+                  : "bg-gray-800 dark:bg-slate-600 hover:bg-gray-700 dark:hover:bg-slate-500 text-white"
+            }`}
+          >
+            {billingLoading === `${tier.plan}_${billingPeriod}`
+              ? t("billingRedirecting")
+              : isAnnual
+                ? `${tier.name} — ${tier.annualPrice}/yr`
+                : `${tier.name} — ${tier.monthlyPrice}/mo`
+            }
+          </button>
+        ) : null}
+      </div>
+    );
+  };
 
   return (
     <div className={`rounded-2xl border border-gray-200 dark:border-slate-700/60 bg-white dark:bg-slate-900/80 p-5 sm:p-6 ${className}`}>
@@ -257,142 +387,35 @@ export default function ProCompareCard({
         </p>
       )}
 
-      {/* Pricing cards */}
-      <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
-        {visibleTiers.map((tier) => {
-          const isCurrent = tier.plan === currentPlan;
-          const isHighlighted = tier.highlighted && !isCurrent;
-          const canUpgradeTo = !isCurrent && (
-            (isFree && (tier.plan === "starter" || tier.plan === "pro")) ||
-            (isStarter && tier.plan === "pro")
-          );
+      {/* Mobile: collapsed current plan + focused upgrade cards */}
+      <div className="sm:hidden space-y-3">
+        {/* Current plan one-liner */}
+        <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700">
+          <TierIcon
+            plan={currentTier.plan}
+            size={14}
+            className="text-gray-400 dark:text-slate-500"
+          />
+          <span className="text-[11px] text-gray-500 dark:text-slate-400">{t("upsellYourPlan")}</span>
+          <span className="text-[11px] font-bold text-gray-500 dark:text-slate-400 ml-auto">
+            {currentTier.name} ({currentTier.isFree ? "Free" : isAnnual ? currentTier.annualMonthly + "/mo" : currentTier.monthlyPrice + "/mo"})
+          </span>
+        </div>
 
-          const displayPrice = tier.isFree
-            ? "€0"
-            : isAnnual ? tier.annualMonthly : tier.monthlyPrice;
-          const regularPrice = isAnnual ? tier.regularAnnualMonthly : tier.regularMonthly;
+        {/* Upgrade target cards */}
+        {upgradeTiers.map((tier, i) =>
+          renderTierCard(tier, {
+            isCurrent: false,
+            mobilePill: i === 0 ? t("upsellRecommended") : t("upsellBudgetPick"),
+          })
+        )}
+      </div>
 
-          return (
-            <div
-              key={tier.plan}
-              className={`relative rounded-xl p-4 flex flex-col transition-all ${
-                isHighlighted
-                  ? "bg-emerald-50/50 dark:bg-emerald-500/5 border-2 border-emerald-400 dark:border-emerald-500/40 shadow-lg shadow-emerald-500/5 dark:shadow-emerald-500/10"
-                  : isCurrent
-                    ? "bg-gray-50 dark:bg-slate-800/60 border-2 border-gray-300 dark:border-slate-500"
-                    : "bg-white dark:bg-slate-800/40 border border-gray-200 dark:border-slate-700"
-              }`}
-            >
-              {/* "Most Popular" badge */}
-              {isHighlighted && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-500 text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-md shadow-emerald-500/25 whitespace-nowrap">
-                  {t("landingPricingMostPopular")}
-                </div>
-              )}
-
-              {/* Current plan badge */}
-              {isCurrent && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gray-600 dark:bg-slate-500 text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-md whitespace-nowrap">
-                  {t("upsellCurrentPlan")}
-                </div>
-              )}
-
-              {/* Tier name + icon */}
-              <div className="flex items-center gap-1.5 mb-2 mt-1">
-                <TierIcon
-                  plan={tier.plan}
-                  size={18}
-                  className={
-                    tier.plan === "pro" ? "text-emerald-500" :
-                    tier.plan === "starter" ? "text-blue-500" :
-                    "text-gray-500 dark:text-slate-400"
-                  }
-                />
-                <h4 className="text-sm font-bold text-gray-900 dark:text-white">{tier.name}</h4>
-                {!tier.isFree && tier.launchDiscountPct > 0 && (
-                  <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 rounded-full border border-amber-200 dark:border-amber-500/20">
-                    -{tier.launchDiscountPct}%
-                  </span>
-                )}
-              </div>
-
-              {/* Price */}
-              <div className="flex items-baseline gap-1.5 mb-1">
-                {!tier.isFree && (
-                  <span className="text-sm text-gray-400 dark:text-slate-500 line-through">{regularPrice}</span>
-                )}
-                <span className="text-2xl font-extrabold text-gray-900 dark:text-white">{displayPrice}</span>
-                <span className="text-xs text-gray-400 dark:text-slate-500">
-                  {tier.isFree ? "forever" : "/mo"}
-                </span>
-              </div>
-
-              {/* Annual savings */}
-              {!tier.isFree && isAnnual && (
-                <div className="flex items-center gap-1.5 mb-2">
-                  <span className="text-[11px] text-gray-400 dark:text-slate-500 line-through">{tier.regularAnnual}/yr</span>
-                  <span className="text-[11px] text-gray-600 dark:text-slate-400">{tier.annualPrice}/yr</span>
-                  <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
-                    Save {tier.annualSavePct}%
-                  </span>
-                </div>
-              )}
-
-              {/* Description */}
-              <p className="text-[11px] text-gray-500 dark:text-slate-400 mb-3">
-                {t(tier.descriptionKey)}
-              </p>
-
-              {/* Features */}
-              <ul className="space-y-1.5 mb-4 flex-1">
-                {tier.featureKeys.map((key) => (
-                  <li key={key} className="flex items-start gap-2 text-[11px]">
-                    <svg className="w-3.5 h-3.5 text-emerald-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span className="text-gray-600 dark:text-slate-300">{t(key)}</span>
-                  </li>
-                ))}
-              </ul>
-
-              {/* CTA button */}
-              {isCurrent ? (
-                isPro ? (
-                  <button
-                    onClick={openPortal}
-                    disabled={billingLoading !== ""}
-                    className="w-full text-xs font-semibold py-2.5 rounded-lg bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors disabled:opacity-60"
-                  >
-                    {billingLoading === "portal" ? t("billingRedirecting") : t("manageSubscription")}
-                  </button>
-                ) : (
-                  <div className="w-full text-xs font-semibold py-2.5 rounded-lg bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-slate-400 text-center">
-                    {t("upsellCurrentPlan")}
-                  </div>
-                )
-              ) : canUpgradeTo && !atCapacity ? (
-                <button
-                  onClick={() => startCheckout(tier.plan as "starter" | "pro", billingPeriod)}
-                  disabled={billingLoading !== ""}
-                  className={`w-full text-xs font-semibold py-2.5 rounded-lg transition-all disabled:opacity-60 ${
-                    tier.highlighted
-                      ? "bg-emerald-500 hover:bg-emerald-600 text-white shadow-md shadow-emerald-500/20"
-                      : tier.plan === "starter"
-                        ? "bg-blue-500 hover:bg-blue-600 text-white shadow-md shadow-blue-500/20"
-                        : "bg-gray-800 dark:bg-slate-600 hover:bg-gray-700 dark:hover:bg-slate-500 text-white"
-                  }`}
-                >
-                  {billingLoading === `${tier.plan}_${billingPeriod}`
-                    ? t("billingRedirecting")
-                    : isAnnual
-                      ? `${tier.name} — ${tier.annualPrice}/yr`
-                      : `${tier.name} — ${tier.monthlyPrice}/mo`
-                  }
-                </button>
-              ) : null}
-            </div>
-          );
-        })}
+      {/* Desktop: full 3-column grid */}
+      <div className="hidden sm:grid gap-3 sm:grid-cols-3">
+        {TIERS.map((tier) =>
+          renderTierCard(tier, { isCurrent: tier.plan === currentPlan })
+        )}
       </div>
 
       {/* Billing error */}

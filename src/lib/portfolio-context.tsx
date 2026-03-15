@@ -56,7 +56,7 @@ interface PortfolioContextType {
   alertedTickers: Set<string>;
   setActivePortfolio: (id: string | null) => void;
   refreshPortfolios: () => Promise<void | PortfolioInfo[]>;
-  addHolding: (holding: Omit<Holding, "id">) => Promise<void>;
+  addHolding: (holding: Omit<Holding, "id"> & { purchaseDate?: string }) => Promise<void>;
   removeHolding: (id: string) => Promise<void>;
   updateHolding: (id: string, updates: Partial<Holding>) => Promise<void>;
   addCashEntry: (entry: Omit<CashEntry, "id">) => Promise<void>;
@@ -498,7 +498,7 @@ export function PortfolioProvider({
     }
   }, [getApiHeaders, buildFetchUrl, fetchExchangeRates]);
 
-  const addHolding = useCallback(async (holding: Omit<Holding, "id">) => {
+  const addHolding = useCallback(async (holding: Omit<Holding, "id"> & { purchaseDate?: string }) => {
     const tempId = generateId();
     const optimistic = { ...holding, id: tempId };
     setHoldings((prev) => [...prev, optimistic]);

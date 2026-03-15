@@ -34,6 +34,10 @@ export function projectRetirement(params: RetirementParams): RetirementProjectio
     inflationRate, annualPensionIncome,
   } = params;
 
+  if (!Number.isFinite(currentAge) || !Number.isFinite(lifeExpectancy) || currentAge > lifeExpectancy) {
+    return [];
+  }
+
   const points: RetirementProjectionPoint[] = [];
   let value = currentPortfolioValue;
   const annualContrib = monthlyContribution * 12;
@@ -93,6 +97,17 @@ export function summarizeRetirement(
   params: RetirementParams,
   projection: RetirementProjectionPoint[]
 ): RetirementSummary {
+  if (projection.length === 0) {
+    return {
+      peakValue: 0,
+      peakAge: params.currentAge,
+      sustainableMonthlyWithdrawal: 0,
+      incomeReplacement: 0,
+      runsOutOfMoney: false,
+      depletionAge: null,
+    };
+  }
+
   const peak = projection.reduce((a, b) => (b.nominalValue > a.nominalValue ? b : a), projection[0]);
   const annualContrib = params.monthlyContribution * 12;
 
@@ -141,6 +156,11 @@ export function monteCarloSimulation(
 ): MonteCarloResult {
   const { currentAge, retirementAge, lifeExpectancy, currentPortfolioValue, monthlyContribution } = params;
   const totalYears = lifeExpectancy - currentAge;
+
+  if (!Number.isFinite(totalYears) || totalYears <= 0) {
+    return { median: [], p10: [], p25: [], p75: [], p90: [], successRate: 0 };
+  }
+
   const annualContrib = monthlyContribution * 12;
 
   const allPaths: number[][] = [];

@@ -25,7 +25,7 @@ export const POST = withMetrics("/api/holdings", async (req: NextRequest) => {
   const portfolioId = req.nextUrl.searchParams.get("portfolioId") || undefined;
   const result = await parseBody(req, createHoldingSchema);
   if (!result.success) return result.error;
-  const { ticker, name, shares, purchasePrice, displayCurrency, exchange, isin, assetType, accountId } = result.data;
+  const { ticker, name, shares, purchasePrice, purchaseDate, displayCurrency, exchange, isin, assetType, accountId } = result.data;
 
   const user = await findUserById(session.userId);
   const plan = (user?.plan || session.plan) ?? "free";
@@ -57,7 +57,7 @@ export const POST = withMetrics("/api/holdings", async (req: NextRequest) => {
     assetType,
     accountId,
     type: "buy",
-    date: new Date().toISOString().slice(0, 10),
+    date: purchaseDate || new Date().toISOString().slice(0, 10),
     shares,
     pricePerShare: purchasePrice,
     totalAmount: shares * purchasePrice,

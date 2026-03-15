@@ -112,6 +112,7 @@ export const createHoldingSchema = z.object({
   name: z.string().min(1, "Name is required"),
   shares: z.number().optional().default(0),
   purchasePrice: z.number().optional().default(0),
+  purchaseDate: z.string().optional(),
   displayCurrency: z.string().optional().default("EUR"),
   exchange: z.string().optional().default(""),
   isin: z.string().optional().default(""),

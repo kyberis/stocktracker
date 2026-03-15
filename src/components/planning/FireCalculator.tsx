@@ -210,8 +210,12 @@ export default function FireCalculator() {
                   min={18}
                   max={100}
                   value={currentAge}
-                  onChange={(e) =>
-                    setCurrentAge(Math.min(100, Math.max(18, Number(e.target.value) || 18)))
+                  onChange={(e) => {
+                    const v = Number(e.target.value);
+                    if (!Number.isNaN(v)) setCurrentAge(v);
+                  }}
+                  onBlur={() =>
+                    setCurrentAge((v) => Math.min(100, Math.max(18, v)))
                   }
                   className="mt-1 w-full bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white"
                 />
@@ -225,8 +229,12 @@ export default function FireCalculator() {
                   min={18}
                   max={100}
                   value={targetAge}
-                  onChange={(e) =>
-                    setTargetAge(Math.min(100, Math.max(18, Number(e.target.value) || 18)))
+                  onChange={(e) => {
+                    const v = Number(e.target.value);
+                    if (!Number.isNaN(v)) setTargetAge(v);
+                  }}
+                  onBlur={() =>
+                    setTargetAge((v) => Math.min(100, Math.max(18, v)))
                   }
                   className="mt-1 w-full bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white"
                 />
