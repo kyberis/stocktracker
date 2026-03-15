@@ -27,7 +27,6 @@ export interface UseSnapTradeApiReturn {
   activeBrokerCount: number;
   connectionLimit: number;
   isFetching: boolean;
-  syncingBrokerId: string | null;
   transactions: ExtractedTransaction[];
   step: "idle" | "connecting" | "reconnecting" | "fetching" | "preview" | "importing" | "done" | "error";
   importedCount: number;
@@ -43,7 +42,6 @@ export interface UseSnapTradeApiReturn {
   connect: () => Promise<void>;
   reconnect: (connectionId: string) => Promise<void>;
   fetchPortfolio: (portfolioId?: string | null, startDate?: string | null, brokerStartDates?: Record<string, string> | null) => Promise<void>;
-  fetchBroker: (brokerConnectionId: string, portfolioId?: string | null, startDate?: string | null) => Promise<void>;
   resync: () => Promise<void>;
   disconnect: () => Promise<void>;
   disconnectBroker: (brokerConnectionId: string) => Promise<void>;
@@ -128,7 +126,6 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
   const [activeBrokerCount, setActiveBrokerCount] = useState(0);
   const [connectionLimit, setConnectionLimit] = useState(0);
   const [isFetching, setIsFetching] = useState(false);
-  const [syncingBrokerId, setSyncingBrokerId] = useState<string | null>(null);
   const [transactions, setTransactions] = useState<ExtractedTransaction[]>([]);
   const [step, setStep] = useState<UseSnapTradeApiReturn["step"]>("idle");
   const [importedCount, setImportedCount] = useState(0);
@@ -330,48 +327,6 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
     }
   }, [brokerSyncs]);
 
-  const fetchBroker = useCallback(async (brokerConnectionId: string, portfolioId?: string | null, startDate?: string | null) => {
-    setErrorMsg("");
-    setIsFetching(true);
-    setSyncingBrokerId(brokerConnectionId);
-    setStep("fetching");
-    setLastFetchHadDateFilter(!!startDate);
-
-    try {
-      const form = new FormData();
-      form.append("action", "fetch");
-      form.append("brokerConnectionId", brokerConnectionId);
-      if (portfolioId) form.append("portfolioId", portfolioId);
-      if (startDate) form.append("startDate", startDate);
-      const res = await fetch("/api/snaptrade", { method: "POST", body: form });
-      const data = await res.json();
-
-      if (!res.ok) {
-        setErrorMsg(data.error || "Failed to fetch portfolio.");
-        if (data.needsReconnect && data.disabledConnections?.length > 0) {
-          setNeedsReconnect(true);
-          setDisabledConnections(data.disabledConnections);
-        }
-        setStep("error");
-        return;
-      }
-
-      const normalized = (data.transactions || []).map((tx: Record<string, unknown>) =>
-        normalizeTransaction(tx),
-      );
-      setTransactions(normalized);
-      setLastFetchSummary(data.summary ?? null);
-      setLastFetchSyncTriggered(!!data.syncTriggered);
-      setStep("preview");
-    } catch {
-      setErrorMsg("Failed to fetch portfolio.");
-      setStep("error");
-    } finally {
-      setIsFetching(false);
-      setSyncingBrokerId(null);
-    }
-  }, []);
-
   const resync = useCallback(async () => {
     await fetchPortfolio();
   }, [fetchPortfolio]);
@@ -527,7 +482,6 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
     activeBrokerCount,
     connectionLimit,
     isFetching,
-    syncingBrokerId,
     transactions,
     step,
     importedCount,
@@ -543,7 +497,6 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
     connect,
     reconnect,
     fetchPortfolio,
-    fetchBroker,
     resync,
     disconnect,
     disconnectBroker,

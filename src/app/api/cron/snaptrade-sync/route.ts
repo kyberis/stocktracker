@@ -10,7 +10,7 @@ import {
   clearAllDisabledSince,
   listTransactionSourceRefs,
   addCashEntry,
-  removeCashEntriesBySource,
+  removeCashEntriesBySourceAndBrokers,
   trackEvent,
 } from "@/lib/db";
 import {
@@ -215,7 +215,10 @@ const runSync = withCronLogging("snaptrade-sync", async () => {
             }
           }
 
-          await removeCashEntriesBySource(conn.userId, "snaptrade");
+          const fetchedBrokerPrefixes = [...new Set(
+            [...aggregated.values()].map((e) => e.broker ? e.broker.toUpperCase() : "Cash"),
+          )];
+          await removeCashEntriesBySourceAndBrokers(conn.userId, "snaptrade", fetchedBrokerPrefixes);
 
           const yahoo = new YahooProvider();
           for (const entry of aggregated.values()) {

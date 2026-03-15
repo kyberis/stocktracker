@@ -144,6 +144,31 @@ export async function removeCashEntriesBySource(
   return result.rowsAffected ?? 0;
 }
 
+/**
+ * Delete snaptrade cash entries only for the given broker name prefixes.
+ * Each cash entry name looks like "INTERACTIVE BROKERS – USD", so we match
+ * using `name LIKE '<prefix>%'` for each fetched broker.
+ * Entries from brokers NOT in the list (e.g. disabled ones) are preserved.
+ */
+export async function removeCashEntriesBySourceAndBrokers(
+  userId: string,
+  source: string,
+  brokerPrefixes: string[],
+  portfolioId?: string,
+): Promise<number> {
+  if (brokerPrefixes.length === 0) return 0;
+  const client = await ensureInitialized();
+  const portfolioFilter = portfolioId ? " AND portfolio_id = ?" : "";
+  const portfolioArgs = portfolioId ? [portfolioId] : [];
+  const likeClauses = brokerPrefixes.map(() => "name LIKE ?").join(" OR ");
+  const likeArgs = brokerPrefixes.map((p) => `${p}%`);
+  const result = await client.execute({
+    sql: `DELETE FROM cash_entries WHERE user_id = ? AND source = ?${portfolioFilter} AND (${likeClauses})`,
+    args: [userId, source, ...portfolioArgs, ...likeArgs],
+  });
+  return result.rowsAffected ?? 0;
+}
+
 export async function getManualAssetCount(userId: string, portfolioId?: string): Promise<number> {
   const client = await ensureInitialized();
   const portfolioFilter = portfolioId ? " AND portfolio_id = ?" : "";

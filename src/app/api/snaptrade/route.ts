@@ -9,7 +9,7 @@ import {
   deleteSnapTradeConnection,
   listTransactionSourceRefs,
   addCashEntry,
-  removeCashEntriesBySource,
+  removeCashEntriesBySourceAndBrokers,
   trackEvent,
   getSnapTradeBrokerSyncs,
   upsertSnapTradeBrokerSync,
@@ -228,7 +228,6 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
     const userSecret = conn ? await getSnapTradeConnectionSecret(session.userId) : null;
     const portfolioId = (formData.get("portfolioId") as string) || undefined;
     const customStartDate = (formData.get("startDate") as string) || undefined;
-    const brokerConnectionId = (formData.get("brokerConnectionId") as string) || undefined;
     let brokerDateOverrides: Record<string, string> = {};
     try {
       const raw = formData.get("brokerStartDates") as string;
@@ -262,10 +261,7 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
       const accounts = await listAccounts(conn.snapTradeUserId, userSecret);
       const activeBrokerIds = new Set(brokerageConns.filter((c) => !c.disabled).map((c) => c.id));
       const allActiveAccounts = accounts.filter((a) => activeBrokerIds.has(a.brokerageAuthorizationId));
-      let activeAccounts = allActiveAccounts;
-      if (brokerConnectionId) {
-        activeAccounts = activeAccounts.filter((a) => a.brokerageAuthorizationId === brokerConnectionId);
-      }
+      const activeAccounts = allActiveAccounts;
 
       const brokerSyncs = await getSnapTradeBrokerSyncs(session.userId);
       const syncMap = new Map(
@@ -376,7 +372,10 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
           }
         }
 
-        await removeCashEntriesBySource(session.userId, "snaptrade", portfolioId);
+        const fetchedBrokerPrefixes = [...new Set(
+          [...aggregated.values()].map((e) => e.broker ? e.broker.toUpperCase() : "Cash"),
+        )];
+        await removeCashEntriesBySourceAndBrokers(session.userId, "snaptrade", fetchedBrokerPrefixes, portfolioId);
 
         const yahoo = new YahooProvider();
         for (const entry of aggregated.values()) {

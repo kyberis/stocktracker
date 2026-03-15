@@ -25,6 +25,20 @@ export const releaseNotes: ReleaseEntry[] = [
     changes: [
       {
         type: "fix",
+        text: "Fixed cash balances disappearing when one broker's token expires — syncing now only updates cash from active brokers, leaving expired brokers' cash untouched.",
+        translations: {
+          es: "Corregido que los saldos en efectivo desaparecían cuando el token de un bróker expiraba — la sincronización ahora solo actualiza el efectivo de los brókers activos, dejando intacto el de los expirados.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Simplified broker sync UI: removed misleading per-broker sync buttons (the API always fetches all brokers at once). Use the single \"Sync All\" button instead; individual broker cards now only show Reconnect and Disconnect.",
+        translations: {
+          es: "Interfaz de sincronización de brókers simplificada: eliminados los botones de sincronización individual engañosos (la API siempre obtiene todos los brókers a la vez). Usa el botón \"Sincronizar Todo\"; las tarjetas individuales ahora solo muestran Reconectar y Desconectar.",
+        },
+      },
+      {
+        type: "fix",
         text: "Fixed broker sync not importing holdings from Interactive Brokers when the broker doesn't return transaction history — positions are now used as a fallback.",
         translations: {
           es: "Corregido que la sincronización de bróker no importaba posiciones de Interactive Brokers cuando el bróker no devuelve historial de transacciones — ahora se usan las posiciones como respaldo.",

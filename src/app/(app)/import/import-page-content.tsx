@@ -893,7 +893,6 @@ function SnapTradeContent({
                     const txCount = bs.transactionCount ?? 0;
                     const neverSynced = !bs.hasSyncRecord;
                     const expiredDate = bs.disabledDate ? new Date(bs.disabledDate).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : null;
-                    const isSyncingThis = snapTradeApi.isFetching && snapTradeApi.syncingBrokerId === dateKey;
 
                     return (
                       <div key={dateKey} className={`border rounded-xl p-4 ${isDisabled ? "bg-white dark:bg-slate-800/50 border-amber-300/60 dark:border-amber-500/30" : neverSynced ? "bg-white dark:bg-slate-800/60 border-blue-200 dark:border-blue-500/30" : "bg-white dark:bg-slate-800/60 border-gray-200 dark:border-slate-700"}`}>
@@ -936,54 +935,25 @@ function SnapTradeContent({
                               {t("brokerSyncReconnect")}
                             </button>
                           </div>
-                        ) : neverSynced ? (
-                          <>
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <p className="text-[10px] text-gray-400 dark:text-slate-500">{t("brokerSyncLastImported")}</p>
-                                <p className="text-xs font-medium text-blue-600 dark:text-blue-400">{t("brokerSyncNeverSynced") || "Never synced"}</p>
-                              </div>
-                              <div className="text-right">
-                                <p className="text-[10px] text-gray-400 dark:text-slate-500">{t("brokerSyncTransactions") || "Transactions"}</p>
-                                <p className="text-xs font-medium text-gray-700 dark:text-slate-300">—</p>
-                              </div>
-                            </div>
-                            <button
-                              onClick={() => snapTradeApi.fetchBroker(dateKey, activePortfolioId, snapTradeStartDate[dateKey] || null)}
-                              disabled={snapTradeApi.isFetching}
-                              className="mt-3 w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-xs font-semibold transition-colors min-h-[36px]"
-                            >
-                              <svg className={`w-3.5 h-3.5 ${isSyncingThis ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><polyline points="23 4 23 10 17 10" /><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10" /></svg>
-                              {isSyncingThis ? t("brokerSyncFetching") : t("brokerSyncSyncBroker") || "Sync"}
-                            </button>
-                          </>
                         ) : (
                           <>
                             <div className="flex items-center justify-between">
                               <div>
                                 <p className="text-[10px] text-gray-400 dark:text-slate-500">{t("brokerSyncLastImported")}</p>
-                                <p className="text-xs font-medium text-gray-700 dark:text-slate-300">{lastImportDate || t("brokerSyncNeverImported")}</p>
+                                <p className="text-xs font-medium text-gray-700 dark:text-slate-300">{neverSynced ? <span className="text-blue-600 dark:text-blue-400">{t("brokerSyncNeverSynced") || "Never synced"}</span> : (lastImportDate || t("brokerSyncNeverImported"))}</p>
                               </div>
                               <div className="text-right">
                                 <p className="text-[10px] text-gray-400 dark:text-slate-500">{t("brokerSyncTransactions") || "Transactions"}</p>
                                 <p className="text-xs font-medium text-gray-700 dark:text-slate-300">{txCount > 0 ? `${txCount} synced` : "—"}</p>
                               </div>
                             </div>
-                            {!snapTradeApi.needsReconnect && (
+                            {!snapTradeApi.needsReconnect && !neverSynced && (
                               <div className="flex items-center gap-2 mt-3 pt-2.5 border-t border-gray-100 dark:border-slate-700/50">
                                 <label className="text-[10px] text-gray-400 dark:text-slate-500 whitespace-nowrap">{t("brokerSyncStartDate")}:</label>
                                 <input type="date" value={displayDate} onChange={(e) => setSnapTradeStartDate((prev) => ({ ...prev, [dateKey]: e.target.value }))} className="text-xs px-2 py-1 border border-gray-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white min-h-[32px]" />
                                 {displayDate && (
                                   <button onClick={() => setSnapTradeStartDate((prev) => ({ ...prev, [dateKey]: "" }))} className="text-[10px] text-gray-400 hover:text-gray-600 dark:hover:text-slate-300" aria-label="Clear date">✕</button>
                                 )}
-                                <button
-                                  onClick={() => snapTradeApi.fetchBroker(dateKey, activePortfolioId, snapTradeStartDate[dateKey] || null)}
-                                  disabled={snapTradeApi.isFetching}
-                                  className="ml-auto shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-slate-700 dark:hover:bg-slate-600 disabled:opacity-50 text-gray-700 dark:text-slate-300 text-[11px] font-medium transition-colors min-h-[32px]"
-                                >
-                                  <svg className={`w-3 h-3 ${isSyncingThis ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><polyline points="23 4 23 10 17 10" /><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10" /></svg>
-                                  {isSyncingThis ? t("brokerSyncFetching") : t("brokerSyncSyncBroker") || "Sync"}
-                                </button>
                               </div>
                             )}
                           </>
