@@ -24,6 +24,20 @@ export const releaseNotes: ReleaseEntry[] = [
     titleTranslations: { es: "Profundidad de Dividendos: Rendimiento sobre Coste y Simulación DRIP" },
     changes: [
       {
+        type: "fix",
+        text: "Fixed broker sync not importing holdings from Interactive Brokers when the broker doesn't return transaction history — positions are now used as a fallback.",
+        translations: {
+          es: "Corregido que la sincronización de bróker no importaba posiciones de Interactive Brokers cuando el bróker no devuelve historial de transacciones — ahora se usan las posiciones como respaldo.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Trefolio Pro portfolio limit increased from 3 to 5 — organize your investments across more independent portfolios.",
+        translations: {
+          es: "Límite de portafolios de Trefolio Pro aumentado de 3 a 5 — organiza tus inversiones en más portafolios independientes.",
+        },
+      },
+      {
         type: "improvement",
         text: "Import page redesigned as a step-by-step wizard: pick your method, select your broker, follow the guide, upload, review, and import — one decision per screen for a smoother mobile experience.",
         translations: {
@@ -1000,8 +1014,8 @@ export const releaseNotes: ReleaseEntry[] = [
     changes: [
       {
         type: "feature",
-        text: "Create up to 3 independent portfolios with separate holdings and performance tracking (Trefolio)",
-        translations: { es: "Crea hasta 3 portafolios independientes con posiciones y rendimiento separados (Trefolio)" },
+        text: "Create up to 5 independent portfolios with separate holdings and performance tracking (Trefolio)",
+        translations: { es: "Crea hasta 5 portafolios independientes con posiciones y rendimiento separados (Trefolio)" },
       },
       {
         type: "feature",

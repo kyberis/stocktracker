@@ -433,7 +433,10 @@ export async function fetchAllHoldings(
           }
 
           const tx = positionToTransaction(pos);
-          if (tx) transactions.push(tx);
+          if (tx) {
+            tx.brokerName = institution;
+            transactions.push(tx);
+          }
         }
       }
 

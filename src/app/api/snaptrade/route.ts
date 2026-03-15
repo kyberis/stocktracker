@@ -313,18 +313,19 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
         }
       }
 
-      // If a broker returned 0 activities and has no sync record at all,
-      // trigger a one-time refresh so SnapTrade starts pulling transaction history.
+      // Per-broker refresh: if a broker returned 0 activities across all its
+      // accounts and has no sync record yet, trigger a one-time refresh so
+      // SnapTrade starts pulling transaction history for that broker.
       const refreshedBrokerIds: string[] = [];
-      if (allTransactions.length === 0) {
-        const allSyncedIds = new Set(brokerSyncs.map((s) => s.brokerageAuthorizationId));
-        const neverSyncedBrokerIds = [...seenBrokerIds].filter((id) => !allSyncedIds.has(id));
-        for (const bId of neverSyncedBrokerIds) {
-          const brokerInfo = fetchedBrokers.find((b) => b.id === bId);
-          await refreshBrokerageConnection(conn.snapTradeUserId, userSecret, bId);
-          await upsertSnapTradeBrokerSync(session.userId, bId, brokerInfo?.name || "Unknown");
-          refreshedBrokerIds.push(bId);
-        }
+      const allSyncedIds = new Set(brokerSyncs.map((s) => s.brokerageAuthorizationId));
+      const brokersWithActivities = new Set(allTransactions.map((tx) => tx.brokerName));
+      for (const bId of seenBrokerIds) {
+        if (allSyncedIds.has(bId)) continue;
+        const brokerInfo = fetchedBrokers.find((b) => b.id === bId);
+        if (brokerInfo && brokersWithActivities.has(brokerInfo.name)) continue;
+        await refreshBrokerageConnection(conn.snapTradeUserId, userSecret, bId);
+        await upsertSnapTradeBrokerSync(session.userId, bId, brokerInfo?.name || "Unknown");
+        refreshedBrokerIds.push(bId);
       }
 
       const existingRefs = await listTransactionSourceRefs(session.userId);
@@ -335,6 +336,20 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
       const allActiveAccountIds = new Set(allActiveAccounts.map((a) => a.id));
       const institutionMap = new Map(allActiveAccounts.map((a) => [a.id, a.institution]));
       const holdingsResult = await fetchAllHoldings(conn.snapTradeUserId, userSecret, allActiveAccountIds, institutionMap);
+
+      // Fallback: some brokers (e.g. Interactive Brokers) don't return activity
+      // history via SnapTrade but DO return current positions. For tickers that
+      // have positions but zero activity-based transactions, add synthetic "buy"
+      // transactions from the position data so holdings aren't silently dropped.
+      const activityTickers = new Set(allTransactions.map((tx) => tx.ticker));
+      for (const syntheticTx of holdingsResult.transactions) {
+        if (
+          !activityTickers.has(syntheticTx.ticker) &&
+          (!syntheticTx.sourceRef || !existingRefs.has(syntheticTx.sourceRef))
+        ) {
+          deduped.push(syntheticTx);
+        }
+      }
 
       const summary = {
         total: deduped.length,
