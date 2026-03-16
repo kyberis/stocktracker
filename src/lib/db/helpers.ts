@@ -209,6 +209,23 @@ export function parseRefreshInterval(val: unknown): RefreshInterval {
  * Only appends the suffix when the ticker doesn't already contain a dot
  * and the exchange is one we know needs a suffix.
  */
+const YAHOO_EXCHANGE_MAP: Record<string, string> = {
+  NMS: "NASDAQ",
+  NGM: "NASDAQ",
+  NCM: "NASDAQ",
+  NYQ: "NYSE",
+  PCX: "NYSE",
+  BTS: "NYSE",
+  GER: "XET",
+  MCE: "MAD",
+  EBS: "SWX",
+};
+
+export function normalizeYahooExchange(yahooExchange: string): string {
+  const upper = yahooExchange.toUpperCase();
+  return YAHOO_EXCHANGE_MAP[upper] || upper;
+}
+
 export function normalizeTickerForExchange(ticker: string, exchange: string): string {
   if (ticker.includes(".")) return ticker;
   const suffix = EXCHANGE_SUFFIX_MAP[exchange.toUpperCase()];

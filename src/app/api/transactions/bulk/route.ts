@@ -7,6 +7,7 @@ import { transactionsOpsTotal } from "@/lib/metrics";
 import { parseBody } from "@/lib/api-response";
 import { getHoldingsLimit } from "@/lib/subscription";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
+import { normalizeYahooExchange } from "@/lib/db/helpers";
 import { enrichHoldingClassifications } from "@/lib/enrich-classifications";
 
 const bulkTransactionSchema = z.object({
@@ -61,6 +62,34 @@ export const POST = withMetrics("/api/transactions/bulk", async (req: NextReques
 
   const { transactions, finalize, skipRebuild } = result.data;
 
+  const yahoo = new YahooProvider();
+
+  // Resolve missing exchanges via Yahoo search
+  const tickersWithoutExchange = [
+    ...new Set(
+      transactions
+        .filter((tx) => !tx.exchange)
+        .map((tx) => tx.ticker.toUpperCase()),
+    ),
+  ];
+
+  const resolvedExchanges: Record<string, string> = {};
+  if (tickersWithoutExchange.length > 0) {
+    await Promise.all(
+      tickersWithoutExchange.map(async (ticker) => {
+        try {
+          const results = await yahoo.search(ticker);
+          if (results.length > 0) {
+            resolvedExchanges[ticker] = normalizeYahooExchange(results[0].exchange);
+          }
+        } catch { /* non-critical */ }
+      }),
+    );
+  }
+
+  const getExchange = (tx: { ticker: string; exchange: string }) =>
+    tx.exchange || resolvedExchanges[tx.ticker.toUpperCase()] || "";
+
   const user = await findUserById(userId);
   const plan = (user?.plan ?? "free");
   const holdingsLimit = getHoldingsLimit(plan);
@@ -76,7 +105,7 @@ export const POST = withMetrics("/api/transactions/bulk", async (req: NextReques
     const newTickers = new Set<string>();
     for (const tx of transactions) {
       if (tx.type === "buy") {
-        const key = `${tx.ticker.toUpperCase()}|${(tx.exchange || "").toUpperCase()}`;
+        const key = `${tx.ticker.toUpperCase()}|${getExchange(tx).toUpperCase()}`;
         if (!existingTickers.has(key)) newTickers.add(key);
       }
     }
@@ -89,6 +118,7 @@ export const POST = withMetrics("/api/transactions/bulk", async (req: NextReques
     }
   }
 
+  // Fetch FX rates for non-EUR currencies
   const uniqueCurrencies = new Set(
     transactions
       .filter((tx) => !tx.exchangeRateEur && tx.currency && tx.currency !== "EUR")
@@ -97,7 +127,6 @@ export const POST = withMetrics("/api/transactions/bulk", async (req: NextReques
 
   const fxRates: Record<string, number> = {};
   if (uniqueCurrencies.size > 0) {
-    const yahoo = new YahooProvider();
     await Promise.all(
       [...uniqueCurrencies].map(async (cur) => {
         try {
@@ -111,7 +140,7 @@ export const POST = withMetrics("/api/transactions/bulk", async (req: NextReques
   let filtered = transactions;
   if (allowedTickers) {
     filtered = transactions.filter((tx) => {
-      const key = `${tx.ticker.toUpperCase()}|${(tx.exchange || "").toUpperCase()}`;
+      const key = `${tx.ticker.toUpperCase()}|${getExchange(tx).toUpperCase()}`;
       return allowedTickers!.has(key);
     });
   }
@@ -119,7 +148,7 @@ export const POST = withMetrics("/api/transactions/bulk", async (req: NextReques
   const enriched = filtered.map((tx) => {
     const cur = (tx.currency || "EUR").toUpperCase();
     const exchangeRateEur = tx.exchangeRateEur ?? fxRates[cur];
-    return { ...tx, exchangeRateEur };
+    return { ...tx, exchange: getExchange(tx), exchangeRateEur };
   });
 
   const skippedByLimit = transactions.length - filtered.length;
