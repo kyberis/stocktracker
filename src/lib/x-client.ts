@@ -81,8 +81,14 @@ export async function postTweet(text: string): Promise<PostTweetResult> {
   const creds = await getXCredentials();
   if (!creds) return { success: false, error: "X API credentials not configured" };
 
-  // Use api.twitter.com — OAuth 1.0a signs the exact URL and api.x.com
-  // can redirect to api.twitter.com, invalidating the signature (→ 401).
+  const mask = (s: string) => s.length > 8 ? `${s.slice(0, 4)}…${s.slice(-4)}` : "***";
+  console.log("[x-client] Credentials loaded:",
+    `apiKey=${mask(creds.apiKey)} (${creds.apiKey.length}ch)`,
+    `apiSecret=(${creds.apiSecret.length}ch)`,
+    `token=${mask(creds.accessToken)} (${creds.accessToken.length}ch)`,
+    `tokenSecret=(${creds.accessTokenSecret.length}ch)`,
+  );
+
   const url = "https://api.twitter.com/2/tweets";
   const authHeader = buildOAuthHeader(creds, "POST", url);
 
@@ -94,13 +100,14 @@ export async function postTweet(text: string): Promise<PostTweetResult> {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ text }),
-      redirect: "error",
     });
 
     if (!res.ok) {
       const body = await res.text();
+      const wwwAuth = res.headers.get("www-authenticate") || "";
       console.error("[x-client] Tweet failed:", res.status, body);
-      return { success: false, error: `HTTP ${res.status}: ${body.slice(0, 200)}` };
+      if (wwwAuth) console.error("[x-client] WWW-Authenticate:", wwwAuth);
+      return { success: false, error: `HTTP ${res.status}: ${body.slice(0, 300)}` };
     }
 
     const data = await res.json();
