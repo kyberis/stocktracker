@@ -78,12 +78,23 @@ async function enrichValueInEUR(derived: Holding[]): Promise<void> {
 
   for (const h of derived) {
     const q = quotes[h.ticker];
-    if (!q) continue;
-    const quoteCurrency = resolveQuoteCurrency(h.displayCurrency, q.currency);
-    const valueInQuoteCurrency = h.shares * q.price;
-    const valueEUR = convertToEUR(valueInQuoteCurrency, quoteCurrency, exchangeRates);
-    if (Number.isFinite(valueEUR) && valueEUR > 0) {
-      h.valueInEUR = valueEUR;
+    if (q) {
+      const quoteCurrency = resolveQuoteCurrency(h.displayCurrency, q.currency);
+      const valueInQuoteCurrency = h.shares * q.price;
+      const valueEUR = convertToEUR(valueInQuoteCurrency, quoteCurrency, exchangeRates);
+      if (Number.isFinite(valueEUR) && valueEUR > 0) {
+        h.valueInEUR = valueEUR;
+        continue;
+      }
+    }
+
+    // Cost-basis fallback: shares * purchasePrice converted to EUR
+    if (h.valueInEUR <= 0 && h.shares > 0 && h.purchasePrice > 0) {
+      const costValue = h.shares * h.purchasePrice;
+      const costEUR = convertToEUR(costValue, h.displayCurrency, exchangeRates);
+      if (Number.isFinite(costEUR) && costEUR > 0) {
+        h.valueInEUR = costEUR;
+      }
     }
   }
 }
@@ -306,6 +317,7 @@ export async function upsertHoldingsFromPositions(
   userId: string,
   positions: { name: string; ticker: string; shares: number; purchasePrice: number; displayCurrency: string; exchange: string; assetType: string }[],
   portfolioId?: string,
+  options?: { skipStaleCleanup?: boolean },
 ): Promise<Holding[]> {
   const client = await ensureInitialized();
   const resolved = await resolvePortfolioId(userId, portfolioId);
@@ -372,13 +384,17 @@ export async function upsertHoldingsFromPositions(
     }
   }
 
-  // Remove stale snaptrade holdings that no longer appear in broker positions
-  for (const [key, meta] of existingByKey) {
-    if (meta.source === "snaptrade" && !touchedKeys.has(key)) {
-      await client.execute({
-        sql: "DELETE FROM holdings WHERE id = ? AND user_id = ?",
-        args: [meta.id, userId],
-      });
+  // Remove stale snaptrade holdings that no longer appear in broker positions.
+  // Skip when data may be incomplete (e.g. a broker connection is disabled/expired)
+  // to avoid deleting legitimate holdings we simply couldn't fetch.
+  if (!options?.skipStaleCleanup) {
+    for (const [key, meta] of existingByKey) {
+      if (meta.source === "snaptrade" && !touchedKeys.has(key)) {
+        await client.execute({
+          sql: "DELETE FROM holdings WHERE id = ? AND user_id = ?",
+          args: [meta.id, userId],
+        });
+      }
     }
   }
 
@@ -389,7 +405,11 @@ export async function upsertHoldingsFromPositions(
   for (const h of upserted) {
     const key = `${h.ticker.toUpperCase()}|${h.exchange.toUpperCase()}`;
     const prevVal = existingByKey.get(key)?.valueInEUR || 0;
-    const finalVal = h.valueInEUR > 0 ? h.valueInEUR : prevVal;
+    let finalVal = h.valueInEUR > 0 ? h.valueInEUR : prevVal;
+    // Last-resort cost-basis estimate so the total is never 0 when data exists
+    if (finalVal <= 0 && h.shares > 0 && h.purchasePrice > 0) {
+      finalVal = h.shares * h.purchasePrice;
+    }
     if (finalVal > 0) {
       h.valueInEUR = finalVal;
       await client.execute({
@@ -473,7 +493,11 @@ export async function rebuildHoldings(userId: string, portfolioId?: string): Pro
     const key = `${h.ticker.toUpperCase()}|${h.exchange.toUpperCase()}`;
     const existingId = metadataByKey.get(key)?.id;
     const id = existingId || randomUUID();
-    const valueEUR = h.valueInEUR > 0 ? h.valueInEUR : (prevValueByKey.get(key) || 0);
+    let valueEUR = h.valueInEUR > 0 ? h.valueInEUR : (prevValueByKey.get(key) || 0);
+    // Last-resort cost-basis estimate so the total is never 0 when data exists
+    if (valueEUR <= 0 && h.shares > 0 && h.purchasePrice > 0) {
+      valueEUR = h.shares * h.purchasePrice;
+    }
     h.valueInEUR = valueEUR;
     await client.execute({
       sql: `INSERT INTO holdings (id, user_id, name, ticker, isin, asset_type, shares, purchase_price, display_currency, exchange, value_in_eur, sector, region, asset_class, account_id, portfolio_id, source)

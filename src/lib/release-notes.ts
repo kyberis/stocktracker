@@ -24,6 +24,13 @@ export const releaseNotes: ReleaseEntry[] = [
     titleTranslations: { es: "Profundidad de Dividendos: Rendimiento sobre Coste y Simulación DRIP" },
     changes: [
       {
+        type: "improvement",
+        text: "Added a 'Post Now' button for scheduled X posts, allowing admins to manually publish any pending or failed post without waiting for the cron schedule.",
+        translations: {
+          es: "Añadido botón 'Post Now' para publicaciones programadas de X, permitiendo a los administradores publicar manualmente cualquier post pendiente o fallido sin esperar al cron.",
+        },
+      },
+      {
         type: "feature",
         text: "Transaction history now supports filtering by ticker, type, and source, plus sortable column headers for quick navigation through large transaction lists.",
         translations: {

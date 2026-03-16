@@ -42,6 +42,16 @@ function rowToPost(row: Record<string, unknown>): ScheduledXPost {
 
 const COLS = "id, content, image_url, hashtags, scheduled_at, status, posted_at, x_post_id, error_message, created_at";
 
+export async function getXPostById(id: string): Promise<ScheduledXPost | null> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: `SELECT ${COLS} FROM scheduled_x_posts WHERE id = ?`,
+    args: [id],
+  });
+  if (result.rows.length === 0) return null;
+  return rowToPost(result.rows[0] as unknown as Record<string, unknown>);
+}
+
 export async function listXPosts(): Promise<ScheduledXPost[]> {
   const client = await ensureInitialized();
   const result = await client.execute({

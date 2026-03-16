@@ -339,8 +339,12 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
       // Upsert holdings directly from broker positions — this is the source of
       // truth for what the user currently owns. Transactions are imported
       // separately for tax/performance but don't drive the holdings table.
+      // When any connection is disabled, positions data is incomplete — skip
+      // stale cleanup so we don't delete holdings we simply couldn't fetch.
       if (holdingsResult.holdings.length > 0) {
-        await upsertHoldingsFromPositions(session.userId, holdingsResult.holdings, portfolioId);
+        await upsertHoldingsFromPositions(session.userId, holdingsResult.holdings, portfolioId, {
+          skipStaleCleanup: disabledConns.length > 0,
+        });
       }
 
       const summary = {

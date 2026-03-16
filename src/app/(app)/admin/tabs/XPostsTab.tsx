@@ -28,6 +28,7 @@ function XPostsTab() {
   const [seeding, setSeeding] = useState(false);
   const [filter, setFilter] = useState<"all" | "pending" | "posted" | "failed">("all");
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [postingId, setPostingId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -99,6 +100,23 @@ function XPostsTab() {
       if (res.ok) await load();
     } catch { /* ignore */ }
     setSeeding(false);
+  };
+
+  const handlePostNow = async (id: string) => {
+    setPostingId(id);
+    try {
+      const res = await fetch("/api/admin/x-posts/post", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(`Post failed: ${data.error || res.statusText}`);
+      }
+      await load();
+    } catch { /* ignore */ }
+    setPostingId(null);
   };
 
   const filtered = filter === "all" ? posts : posts.filter((p) => p.status === filter);
@@ -196,12 +214,14 @@ function XPostsTab() {
               key={post.id}
               post={post}
               isEditing={editingId === post.id}
+              isPosting={postingId === post.id}
               onEdit={() => setEditingId(post.id)}
               onCancelEdit={() => setEditingId(null)}
               onSaveEdit={handleSaveEdit}
               onDelete={handleDelete}
               onCancel={handleCancel}
               onReschedule={handleReschedule}
+              onPostNow={handlePostNow}
               statusBadge={statusBadge}
             />
           ))}
@@ -214,22 +234,26 @@ function XPostsTab() {
 function XPostCard({
   post,
   isEditing,
+  isPosting,
   onEdit,
   onCancelEdit,
   onSaveEdit,
   onDelete,
   onCancel,
   onReschedule,
+  onPostNow,
   statusBadge,
 }: {
   post: XPost;
   isEditing: boolean;
+  isPosting: boolean;
   onEdit: () => void;
   onCancelEdit: () => void;
   onSaveEdit: (id: string, content: string, hashtags: string, scheduledAt: string) => void;
   onDelete: (id: string) => void;
   onCancel: (id: string) => void;
   onReschedule: (id: string) => void;
+  onPostNow: (id: string) => void;
   statusBadge: (status: string) => React.ReactNode;
 }) {
   const [editContent, setEditContent] = useState(post.content);
@@ -282,6 +306,15 @@ function XPostCard({
 
         {!isEditing && (
           <div className="flex flex-col gap-1 shrink-0">
+            {(post.status === "pending" || post.status === "failed") && (
+              <button
+                onClick={() => onPostNow(post.id)}
+                disabled={isPosting}
+                className="btn-primary text-xs px-2 py-1 disabled:opacity-40"
+              >
+                {isPosting ? "Posting..." : "Post Now"}
+              </button>
+            )}
             {post.status === "pending" && (
               <>
                 <button onClick={onEdit} className="btn-secondary text-xs px-2 py-1">Edit</button>

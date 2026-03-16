@@ -300,6 +300,7 @@ export {
 
 export type { ScheduledXPost, XPostStatus, CreateXPostInput } from "./x-posts";
 export {
+  getXPostById,
   listXPosts,
   listDueXPosts,
   createXPost,

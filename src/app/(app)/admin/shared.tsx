@@ -91,8 +91,6 @@ export interface AnalyticsSummary {
   notificationStats?: NotificationUserStats[];
 }
 
-export type Tab = "users" | "settings" | "analytics" | "feedback" | "support-chat" | "waitlist" | "docs" | "notifications" | "snaptrade-logs" | "x-posts";
-
 /* ── Shared Components ────────────────────────────────────── */
 
 export function StatCard({ label, value }: { label: string; value: string | number }) {

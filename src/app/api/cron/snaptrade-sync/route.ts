@@ -147,9 +147,13 @@ const runSync = withCronLogging("snaptrade-sync", async () => {
       try {
         holdingsResult = await fetchAllHoldings(conn.snapTradeUserId, userSecret, undefined, institutionMap);
 
-        // Upsert holdings directly from broker positions
+        // Upsert holdings directly from broker positions.
+        // When any connection is disabled, positions data is incomplete — skip
+        // stale cleanup so we don't delete holdings we simply couldn't fetch.
         if (holdingsResult.holdings.length > 0) {
-          await upsertHoldingsFromPositions(conn.userId, holdingsResult.holdings);
+          await upsertHoldingsFromPositions(conn.userId, holdingsResult.holdings, undefined, {
+            skipStaleCleanup: disabledConns.length > 0,
+          });
         }
 
         if (holdingsResult.cashBalances.length > 0) {
