@@ -57,7 +57,7 @@ Apple-like unboxing experience — the box should feel like a gift.
   4. trefolio sticker
 - **Quick-start card text:**
   - Side 1: "Welcome to trefolio" with emerald accent, device illustration
-  - Side 2: "1. Plug in via USB-C → 2. Connect to WiFi → 3. Enter your passkey from trefolio.app"
+  - Side 2: "1. Plug in via USB-C → 2. Connect to WiFi → 3. Enter your passkey from trefolio.com"
 
 ---
 
@@ -296,7 +296,7 @@ The device is a hardware anchor — its primary purpose is to drive Pro subscrip
 >
 > Thank you,
 > [Your name]
-> trefolio — trefolio.app
+> trefolio — trefolio.com
 
 ### Alibaba Inquiry Tips
 

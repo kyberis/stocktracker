@@ -163,7 +163,7 @@ Security headers in `next.config.mjs` apply to all responses. Do not remove them
 
 ```md
 SEO Change Checklist
-- [ ] All URLs use https://trefolio.com (not trefolio.app or other domains)
+- [ ] All URLs use https://trefolio.com (not trefolio.com or other domains)
 - [ ] Meta descriptions follow entity + differentiator + action pattern
 - [ ] Canonical URLs are absolute and correct
 - [ ] sitemap.ts includes all public pages

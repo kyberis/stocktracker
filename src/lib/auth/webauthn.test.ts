@@ -7,11 +7,11 @@ describe("getWebAuthnConfig", () => {
   });
 
   it("uses APP_BASE_URL env var when set", () => {
-    process.env.APP_BASE_URL = "https://trefolio.app";
+    process.env.APP_BASE_URL = "https://trefolio.com";
     const config = getWebAuthnConfig();
     expect(config.rpName).toBe("trefolio");
-    expect(config.rpID).toBe("trefolio.app");
-    expect(config.origin).toBe("https://trefolio.app");
+    expect(config.rpID).toBe("trefolio.com");
+    expect(config.origin).toBe("https://trefolio.com");
   });
 
   it("falls back to localhost when no env or request", () => {

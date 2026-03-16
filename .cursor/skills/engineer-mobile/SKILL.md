@@ -11,7 +11,7 @@ Own the Capacitor native shell wrapping the trefolio web app for iOS and Android
 
 ## Architecture
 
-The native apps are thin Capacitor shells that load the hosted web app (`https://trefolio.app`) in a native WebView. All business logic, SSR, API routes, and auth remain on the server — the native layer provides splash screen, status bar, push notifications, and hardware back button handling.
+The native apps are thin Capacitor shells that load the hosted web app (`https://trefolio.com`) in a native WebView. All business logic, SSR, API routes, and auth remain on the server — the native layer provides splash screen, status bar, push notifications, and hardware back button handling.
 
 ```
 ┌──────────────────────────────────┐
@@ -21,7 +21,7 @@ The native apps are thin Capacitor shells that load the hosted web app (`https:/
 │  └────────────┘ └──────────────┘ │
 │  ┌─────────────────────────────┐ │
 │  │ WKWebView / Android WebView │ │
-│  │   loads trefolio.app        │ │
+│  │   loads trefolio.com        │ │
 │  └─────────────────────────────┘ │
 │  ┌────────────┐ ┌──────────────┐ │
 │  │ Native Push│ │  Back Button │ │
@@ -111,7 +111,7 @@ npm run cap:prod      # copies with production URL
 ## Capacitor Config Rules
 
 - **Server URL toggle**: use `CAPACITOR_SERVER_URL` env var; never hardcode `localhost` in committed config
-- **Production default**: config falls back to `https://trefolio.app` when no env var is set
+- **Production default**: config falls back to `https://trefolio.com` when no env var is set
 - **cleartext**: must be `false` in production; only `true` when CAPACITOR_SERVER_URL starts with `http://`
 - **webDir**: set to `public` (Capacitor requires a webDir even in hosted mode; the actual content comes from the server URL)
 - **Plugin config**: splash screen and status bar are configured in `capacitor.config.ts` under `plugins`

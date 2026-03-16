@@ -463,7 +463,7 @@ The product was rebranded from StockTracker to **trefolio** in v0.26.1. Domain a
 
 | Domain | TLD | Why It Works | GoDaddy Link |
 |---|---|---|---|
-| `trefolio.app` | .app | Modern, implies software, HTTPS-only by default | [Check](https://www.godaddy.com/domainsearch/find?domainToCheck=trefolio.app) |
+| `trefolio.com` | .app | Modern, implies software, HTTPS-only by default | [Check](https://www.godaddy.com/domainsearch/find?domainToCheck=trefolio.com) |
 | `trefolio.eu` | .eu | Perfect brand + EU positioning | [Check](https://www.godaddy.com/domainsearch/find?domainToCheck=trefolio.eu) |
 | `trefolio.io` | .io | Modern SaaS TLD, widely recognized | [Check](https://www.godaddy.com/domainsearch/find?domainToCheck=trefolio.io) |
 | `trefolio.co` | .co | Short, professional, common for startups | [Check](https://www.godaddy.com/domainsearch/find?domainToCheck=trefolio.co) |
@@ -472,11 +472,11 @@ The product was rebranded from StockTracker to **trefolio** in v0.26.1. Domain a
 
 **Top 3 Recommendations:**
 
-1. **trefolio.app** — Best overall: .app is modern, implies software, enforces HTTPS, and matches the product perfectly
+1. **trefolio.com** — Best overall: .app is modern, implies software, enforces HTTPS, and matches the product perfectly
 2. **trefolio.eu** — Best for EU positioning: signals European identity, matches the target audience, affordable
 3. **trefolio.io** — Best for developer/SaaS credibility: widely recognized in the tech community
 
-**Strategy:** Register `trefolio.app` as the primary domain and `trefolio.eu` as a redirect. Also grab `trefolio.io` to protect the brand. Total cost: ~30-50 EUR/year for all three.
+**Strategy:** Register `trefolio.com` as the primary domain and `trefolio.eu` as a redirect. Also grab `trefolio.io` to protect the brand. Total cost: ~30-50 EUR/year for all three.
 
 ### Typography
 
@@ -537,7 +537,7 @@ Anonymous tracking implemented with IntersectionObserver for section views and c
 
 | Content Type | Topics | Distribution |
 |---|---|---|
-| **SEO blog posts** | "Best portfolio trackers for European investors 2026", "How to import your DEGIRO/IBKR/T212 portfolio", "Understanding TTWROR vs IRR" | Blog on trefolio.app, cross-post to Medium |
+| **SEO blog posts** | "Best portfolio trackers for European investors 2026", "How to import your DEGIRO/IBKR/T212 portfolio", "Understanding TTWROR vs IRR" | Blog on trefolio.com, cross-post to Medium |
 | **YouTube tutorials** | "Import your broker portfolio in 30 seconds" (one per broker), "AI stock analysis demo" | YouTube + embed on landing page |
 | **TikTok/Reels** | 15-30s clips: before/after import, AI analysis demo, "5 EUR vs 20 USD" competitor comparison | TikTok, Instagram Reels, YouTube Shorts |
 | **LinkedIn articles** | "Why I built a portfolio tracker from 2.99 EUR/month", "35 languages for 50M+ European investors" | LinkedIn + European finance groups |
@@ -639,7 +639,7 @@ Anonymous tracking implemented with IntersectionObserver for section views and c
 
 ### Marketing — REMAINING
 
-- [ ] Domain purchased (trefolio.app recommended)
+- [ ] Domain purchased (trefolio.com recommended)
 - [ ] DNS setup + SSL configuration
 - [ ] Product Hunt listing prepared
 - [ ] Reddit posts drafted
@@ -661,7 +661,7 @@ Anonymous tracking implemented with IntersectionObserver for section views and c
 | # | Decision | Status |
 |---|---|---|
 | 1 | **Product name** | DECIDED: **trefolio** (v0.26.1) |
-| 2 | **Domain name** | trefolio.app, .eu, .io all AVAILABLE — see Section 6 |
+| 2 | **Domain name** | trefolio.com, .eu, .io all AVAILABLE — see Section 6 |
 | 3 | **Legal entity** | Still pending — recommend sole proprietor to start |
 | 4 | **Email provider** | DECIDED: **Resend** (implemented, admin-managed key) |
 | 5 | **Free tier AI limit** | DECIDED: **5/month** (implemented) |
@@ -671,7 +671,7 @@ Anonymous tracking implemented with IntersectionObserver for section views and c
 | 9 | **Landing page** | DECIDED: **Same repo** — root `/` route, professionally redesigned |
 | 10 | **Logo** | Partially done — rebranded in app, needs external-use assets |
 | 11 | **Country of operation** | Still pending — affects VAT, Imprint, legal entity |
-| 12 | **Contact email** | Still pending — need domain first (e.g., support@trefolio.app) |
+| 12 | **Contact email** | Still pending — need domain first (e.g., support@trefolio.com) |
 | 13 | **Analytics** | DECIDED: **Vercel Analytics + internal event tracking** (implemented) |
 | 14 | **Pricing** | DECIDED: **3-tier: Bifolio 2.99-3.99 EUR/month, Trefolio 7.99-9.99 EUR/month** (v0.27.0, updated v1.9.0) |
 | 15 | **Free tier limits** | DECIDED: **15 holdings, 2 alerts, 5 AI/month** (v0.27.0) |
@@ -679,7 +679,7 @@ Anonymous tracking implemented with IntersectionObserver for section views and c
 | 17 | **Legal documents** | DECIDED: **Privacy Policy + Terms of Service live** (v0.28.0) |
 
 **Remaining decisions that need your input:**
-- Domain name (recommend trefolio.app)
+- Domain name (recommend trefolio.com)
 - Legal entity (sole proprietor vs Ltd/GmbH/SL)
 - Country of operation (affects VAT + Imprint)
 - Contact email (once domain is purchased)
@@ -709,7 +709,7 @@ Revenue per user after Stripe fees: Bifolio ~2.70 EUR/month, Trefolio ~7.62 EUR/
 
 ## Next Steps (Priority Order)
 
-1. **Purchase domain** — trefolio.app (primary) + trefolio.eu (redirect) + trefolio.io (brand protection)
+1. **Purchase domain** — trefolio.com (primary) + trefolio.eu (redirect) + trefolio.io (brand protection)
 2. **Decide legal entity and country of operation** — affects VAT, Imprint, contact email
 3. **Verify Stripe is in production mode** — test vs live keys
 4. **Increase MAX_PRO_SUBSCRIBERS** — raise cap from 10 when ready for public launch

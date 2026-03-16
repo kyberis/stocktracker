@@ -32,7 +32,7 @@ Every device launch follows this 3-phase framework:
 | Week | Activity | Channel | Asset Needed |
 |------|----------|---------|--------------|
 | -4 | Teaser: "Something is coming to your desk" | X, Instagram | Close-up AMOLED photo (no product context) |
-| -4 | Waitlist page live on trefolio.app | Web | `/leaf` or `/device-name` landing page |
+| -4 | Waitlist page live on trefolio.com | Web | `/leaf` or `/device-name` landing page |
 | -3 | Build log #1: enclosure design & materials | X thread, Blog | Photos of 3D print process, material samples |
 | -3 | Instagram Reel: screen cycling through themes | Instagram | 15s screen recording |
 | -2 | Build log #2: firmware & OTA architecture | X thread, Blog | Code screenshots, OTA flow diagram |
@@ -53,7 +53,7 @@ Every device launch follows this 3-phase framework:
 
 | Day | Activity | Channel | KPI |
 |-----|----------|---------|-----|
-| D-Day | Product page live + buy button | trefolio.app | Page views |
+| D-Day | Product page live + buy button | trefolio.com | Page views |
 | D-Day | Launch email blast (Pro subscribers first) | Email | Open rate > 40% |
 | D-Day | "Show HN" post | Hacker News | Front page / 100+ points |
 | D-Day | Reddit cross-posts (3 subs) | Reddit | Top 10 in each sub |
@@ -193,7 +193,7 @@ Interested? I'll ship one to you this week.
 
 Best,
 [Name]
-trefolio.app
+trefolio.com
 ```
 
 ### Seed Timeline
@@ -204,7 +204,7 @@ trefolio.app
   - Display quality (vivid AMOLED, not an LED matrix)
   - AI summary feature (tap button)
   - Limited edition framing
-  - trefolio.app link
+  - trefolio.com link
 
 ## Content Formats
 
@@ -303,7 +303,7 @@ When building a waitlist/pre-launch page:
 - Product strategy and pricing → `pm-device` (owns roadmap, pricing, feature scope)
 - Creative assets and photography → `designer-device` (owns physical design, packaging visuals)
 - Device firmware and demo prep → `engineer-device` (owns what the screen shows)
-- Landing page implementation → `engineer-dashboard` (builds trefolio.app pages)
+- Landing page implementation → `engineer-dashboard` (builds trefolio.com pages)
 - Email and analytics setup → `analytics-instrumentation` (tracking, Resend integration)
 - Legal review of claims → `legal-advisor` (disclaimers, compliance)
 - Campaign reference document → `docs/device-lab-review.html` (Campaign tab)

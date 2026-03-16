@@ -58,7 +58,7 @@ This is the start of what I hope will be a long-term partnership — we plan to 
 
 Thank you,
 [Your name]
-trefolio — [https://trefolio.app](https://trefolio.app)
+trefolio — [https://trefolio.com](https://trefolio.com)
 
 ---
 
@@ -96,7 +96,7 @@ We are a European startup building a premium fintech device. The T4-S3 is the he
 
 Thank you,
 [Your name]
-trefolio — [https://trefolio.app](https://trefolio.app)
+trefolio — [https://trefolio.com](https://trefolio.com)
 
 ---
 
@@ -138,7 +138,7 @@ We're targeting a premium retail price of 149-199 EUR per device in the European
 
 Thank you,
 [Your name]
-trefolio — [https://trefolio.app](https://trefolio.app)
+trefolio — [https://trefolio.com](https://trefolio.com)
 
 ---
 
@@ -181,7 +181,7 @@ I can provide our logo files (SVG/AI), exact device dimensions, and Pantone/hex 
 
 Thank you,
 [Your name]
-trefolio — [https://trefolio.app](https://trefolio.app)
+trefolio — [https://trefolio.com](https://trefolio.com)
 
 ---
 
@@ -222,7 +222,7 @@ I'll provide logo files (SVG/AI format), exact device CAD dimensions for the ins
 
 Thank you,
 [Your name]
-trefolio — [https://trefolio.app](https://trefolio.app)
+trefolio — [https://trefolio.com](https://trefolio.com)
 
 ---
 

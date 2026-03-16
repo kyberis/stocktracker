@@ -1170,7 +1170,7 @@ function ErrorCard({
             <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><polyline points="23 4 23 10 17 10" /><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10" /></svg>
             {t("brokerSyncRetryNow") || "Retry Now"}
           </button>
-          <a href="mailto:support@trefolio.app" className="inline-flex items-center px-3 py-1.5 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-xs font-medium text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors min-h-[32px]">{t("brokerSyncContactSupport") || "Contact Support"}</a>
+          <a href="mailto:support@trefolio.com" className="inline-flex items-center px-3 py-1.5 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-xs font-medium text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors min-h-[32px]">{t("brokerSyncContactSupport") || "Contact Support"}</a>
           {onTryAi && (
             <button onClick={onTryAi} className="text-xs text-violet-600 dark:text-violet-400 hover:text-violet-800 dark:hover:text-violet-300 underline underline-offset-2 transition-colors ml-1 min-h-[32px]">{t("aiImportLabel")}</button>
           )}

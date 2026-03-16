@@ -64,10 +64,10 @@ describe("Stripe chaos", () => {
 
   describe("getBillingBaseUrl", () => {
     it("uses APP_BASE_URL when set", async () => {
-      process.env.APP_BASE_URL = "https://trefolio.app";
+      process.env.APP_BASE_URL = "https://trefolio.com";
       vi.resetModules();
       const { getBillingBaseUrl } = await import("@/lib/stripe");
-      expect(getBillingBaseUrl()).toBe("https://trefolio.app");
+      expect(getBillingBaseUrl()).toBe("https://trefolio.com");
     });
 
     it("falls back to fallbackOrigin", async () => {

@@ -138,7 +138,7 @@ Markup targets by volume:
 
 ### Phase 4: Launch
 
-- [ ] Product page on trefolio.app with photos, specs, pricing
+- [ ] Product page on trefolio.com with photos, specs, pricing
 - [ ] Launch announcement (same channels as app: PH, HN, Reddit, Twitter)
 - [ ] "Device + Pro" bundle promotion
 - [ ] Post-launch: collect feedback, plan v2 iteration

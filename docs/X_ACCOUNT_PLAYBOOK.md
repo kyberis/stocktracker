@@ -12,7 +12,7 @@ Ready-to-use profile data and first 14 posts to activate the account before runn
 | **Handle** | `@trefolio_app` (fallbacks: `@trefolioHQ`, `@get_trefolio`) |
 | **Bio** | Your portfolio. Understood. 📊 AI portfolio tracker for European investors · 14 broker imports · 35 languages · Free to start ↓ |
 | **Location** | Europe 🇪🇺 |
-| **Website** | `https://trefolio.app` (or current domain) |
+| **Website** | `https://trefolio.com` (or current domain) |
 | **Category** | Business & Finance |
 | **Professional account** | Yes — select "Business" → "Software" |
 
@@ -25,7 +25,7 @@ Use the trefolio clover icon (`public/trefolio-icon-foil.svg`) on a `#0f172a` (d
 Dark banner with:
 - Left: trefolio logo (`public/trefolio-logo-foil.svg`) in emerald (#10b981)
 - Center/right: a clean dashboard screenshot (dark mode, showing portfolio with gains)
-- Bottom-right text: "Track smarter, not harder. trefolio.app"
+- Bottom-right text: "Track smarter, not harder. trefolio.com"
 - Background: `#0f172a` with a subtle gradient to `#1e293b`
 
 ### Pinned Tweet
@@ -104,7 +104,7 @@ trefolio fixes all three:
 ✓ AI-powered analysis
 ✓ From 2.99 EUR/month — free tier available
 
-trefolio.app
+trefolio.com
 ```
 
 **Image:** Dashboard screenshot (dark mode, portfolio showing green gains)
@@ -311,7 +311,7 @@ Something doesn't add up.
 
 6/ 14 brokers. 0 column mapping. Drag, drop, done.
 
-If you use DEGIRO, IBKR, Trading 212, Revolut, Nordnet, Schwab, Fidelity, eToro, or others — try it free at trefolio.app
+If you use DEGIRO, IBKR, Trading 212, Revolut, Nordnet, Schwab, Fidelity, eToro, or others — try it free at trefolio.com
 ```
 
 **Image (tweet 1):** Diagram showing broker CSVs → unified pipeline → dashboard
@@ -424,7 +424,7 @@ No infinite scroll. No notification anxiety. No "just one more article."
 
 Your portfolio, understood.
 
-Try it free → trefolio.app
+Try it free → trefolio.com
 ```
 
 **Image:** Clean, minimal screenshot of the dashboard with morning light desk vibes
@@ -479,7 +479,7 @@ After the first 14 posts, rotate through these themes:
 | Followers | 100+ | Profile |
 | Average impressions per tweet | 500+ | X Analytics |
 | Profile visits per week | 200+ | X Analytics |
-| Link clicks (to trefolio.app) | 30+ per week | X Analytics + UTM params |
+| Link clicks (to trefolio.com) | 30+ per week | X Analytics + UTM params |
 | Engagement rate | > 2% | X Analytics |
 | Replies received | 5+ per post (for engagement posts) | Manual |
 | DM conversations | 3+ per week | Manual |
@@ -488,17 +488,17 @@ After the first 14 posts, rotate through these themes:
 
 ## 7. UTM Parameters
 
-Always use UTM tracking when linking to trefolio.app:
+Always use UTM tracking when linking to trefolio.com:
 
 ```
-https://trefolio.app?utm_source=x&utm_medium=organic&utm_campaign=buildinpublic
+https://trefolio.com?utm_source=x&utm_medium=organic&utm_campaign=buildinpublic
 ```
 
 For specific posts:
 
 ```
-https://trefolio.app?utm_source=x&utm_medium=organic&utm_campaign=post-01-intro
-https://trefolio.app?utm_source=x&utm_medium=organic&utm_campaign=post-08-pricing
+https://trefolio.com?utm_source=x&utm_medium=organic&utm_campaign=post-01-intro
+https://trefolio.com?utm_source=x&utm_medium=organic&utm_campaign=post-08-pricing
 ```
 
 ---

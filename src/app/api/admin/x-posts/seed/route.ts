@@ -28,7 +28,7 @@ trefolio fixes all three:
 ✓ AI-powered analysis
 ✓ From 2.99 EUR/month — free tier available
 
-trefolio.app`,
+trefolio.com`,
   },
   {
     dayOffset: 1,
@@ -255,7 +255,7 @@ No infinite scroll. No notification anxiety. No "just one more article."
 
 Your portfolio, understood.
 
-Try it free → trefolio.app`,
+Try it free → trefolio.com`,
   },
 ];
 

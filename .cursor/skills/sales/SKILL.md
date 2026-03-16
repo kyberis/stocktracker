@@ -140,7 +140,7 @@ Use these responses when writing FAQ sections, support replies, or sales copy:
 | "What if I cancel my subscription?" | "The device works perfectly on the free tier — you see your portfolio value, top holdings, and daily changes. Trefolio adds AI insights, which you can unlock anytime for just 7.99 EUR/month." |
 | "Why not just use a Raspberry Pi?" | "You could — and spend a weekend setting it up. trefolio works in 60 seconds out of the box: plug in, connect WiFi, enter your passkey. Plus it looks like it belongs on an executive desk, not a maker bench." |
 | "Is my data safe?" | "Your portfolio data is encrypted at rest, transmitted over HTTPS, and stored on EU-compliant servers. The device only displays data — it stores nothing except your login passkey, locally on the chip." |
-| "Does it work with my broker?" | "trefolio imports from DEGIRO, Interactive Brokers, Trading 212, and Revolut. You can also add holdings manually or via CSV. Once your portfolio is on trefolio.app, the device shows it instantly." |
+| "Does it work with my broker?" | "trefolio imports from DEGIRO, Interactive Brokers, Trading 212, and Revolut. You can also add holdings manually or via CSV. Once your portfolio is on trefolio.com, the device shows it instantly." |
 
 ## Channel Strategy
 
@@ -148,7 +148,7 @@ Use these responses when writing FAQ sections, support replies, or sales copy:
 
 | Channel | Tactic |
 |---------|--------|
-| **trefolio.app/device** | Dedicated device landing section with hero image, specs, pricing cards, and "Order Now" button |
+| **trefolio.com/device** | Dedicated device landing section with hero image, specs, pricing cards, and "Order Now" button |
 | **Email list** | Announce device to existing Pro subscribers first (highest conversion) |
 | **Checkout** | Stripe checkout with shipping address collection |
 
@@ -201,13 +201,13 @@ Starting at 149 EUR →
 **Instagram/TikTok:**
 > Plug in. Connect. Glance. That's it.
 > trefolio shows your portfolio on a vivid AMOLED display — always on, always beautiful.
-> 149 EUR at trefolio.app
+> 149 EUR at trefolio.com
 
 **Twitter/X:**
 > Built a dedicated portfolio display for my desk.
 > 2.41" AMOLED, real-time data, AI insights with one tap.
 > No phone, no browser, no distractions.
-> trefolio.app
+> trefolio.com
 
 **Reddit (r/investing):**
 > I got tired of checking my phone 10 times a day, so I built a dedicated portfolio display. It sits on my desk and shows my total value, top holdings, and daily changes on a 2.41" AMOLED screen. Plug in USB-C, connect to WiFi, enter your passkey — done. AMA.

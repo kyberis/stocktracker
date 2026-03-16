@@ -41,7 +41,7 @@ export async function sendWhatsAppAlert(
     alert.changeDescription,
     `Current price: ${alert.currency} ${alert.currentPrice.toFixed(2)}`,
     ``,
-    `Open your dashboard: ${process.env.APP_BASE_URL || "https://trefolio.app"}`,
+    `Open your dashboard: ${process.env.APP_BASE_URL || "https://trefolio.com"}`,
   ].join("\n");
 
   try {
