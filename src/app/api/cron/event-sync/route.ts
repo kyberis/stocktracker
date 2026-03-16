@@ -8,7 +8,7 @@ import {
   type FmpEconomicEvent,
   type FmpIpoEvent,
 } from "@/lib/api-providers/fmp";
-import { withCronLogging } from "@/lib/cron-logging";
+import { withCronLogging, verifyCronAuth } from "@/lib/cron-logging";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -219,11 +219,8 @@ const runEventSync = withCronLogging("event-sync", async () => {
  * Runs daily at 6 AM UTC. Stores 30 days of future events, removes stale entries.
  */
 export async function GET(req: NextRequest) {
-  const authHeader = req.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const denied = verifyCronAuth("event-sync", req.headers.get("authorization"));
+  if (denied) return denied;
   return runEventSync();
 }
 

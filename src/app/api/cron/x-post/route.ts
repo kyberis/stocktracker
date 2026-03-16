@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { listDueXPosts, updateXPostStatus } from "@/lib/db";
 import { postTweet } from "@/lib/x-client";
-import { withCronLogging } from "@/lib/cron-logging";
+import { withCronLogging, verifyCronAuth } from "@/lib/cron-logging";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
@@ -35,10 +35,7 @@ async function runPostDueTweets(): Promise<Record<string, unknown>> {
 const handler = withCronLogging("x-post", runPostDueTweets);
 
 export async function GET(req: NextRequest) {
-  const authHeader = req.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const denied = verifyCronAuth("x-post", req.headers.get("authorization"));
+  if (denied) return denied;
   return handler();
 }

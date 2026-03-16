@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withCronLogging } from "@/lib/cron-logging";
+import { withCronLogging, verifyCronAuth } from "@/lib/cron-logging";
 import { ensureInitialized } from "@/lib/db/client";
 import { str } from "@/lib/db/helpers";
 import { createNotification } from "@/lib/db/notifications";
@@ -417,10 +417,7 @@ const runCheck = withCronLogging("tax-rules-review", async () => {
 });
 
 export async function GET(req: NextRequest) {
-  const authHeader = req.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const denied = verifyCronAuth("tax-rules-review", req.headers.get("authorization"));
+  if (denied) return denied;
   return runCheck();
 }

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import {
   listActiveAlertsForCron,
   markAlertTriggered,
@@ -11,7 +11,7 @@ import type { CronAlert } from "@/lib/db";
 import { dispatchAlert } from "@/lib/alert-dispatcher";
 import type { AlertDispatchContext, AlertPayload } from "@/lib/alert-dispatcher";
 import type { SubscriptionPlan } from "@/lib/types";
-import { withCronLogging } from "@/lib/cron-logging";
+import { withCronLogging, verifyCronAuth } from "@/lib/cron-logging";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
@@ -206,28 +206,7 @@ const runCheckAlerts = withCronLogging("check-alerts", async () => {
 });
 
 export async function GET(req: NextRequest) {
-  const authHeader = req.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    const mask = (s: string | null) =>
-      s ? `${s.slice(0, 8)}…${s.slice(-4)} (len=${s.length})` : "(empty)";
-    console.error("[check-alerts] 401 auth mismatch", {
-      secretSet: !!cronSecret,
-      secretPreview: mask(cronSecret),
-      headerPresent: !!authHeader,
-      headerPreview: mask(authHeader),
-    });
-    return NextResponse.json(
-      {
-        error: "Unauthorized",
-        reason: !authHeader
-          ? "missing_authorization_header"
-          : "secret_mismatch",
-        secretConfigured: !!cronSecret,
-        headerPresent: !!authHeader,
-      },
-      { status: 401 },
-    );
-  }
+  const denied = verifyCronAuth("check-alerts", req.headers.get("authorization"));
+  if (denied) return denied;
   return runCheckAlerts();
 }

@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { getMetricsSnapshot, purgeOldAnalyticsEvents, purgeSupportChatConversations, recordRateLimitUsage } from "@/lib/db";
 import { pushGauges } from "@/lib/grafana-push";
 import { getRedisClient } from "@/lib/upstash";
-import { withCronLogging } from "@/lib/cron-logging";
+import { withCronLogging, verifyCronAuth } from "@/lib/cron-logging";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
@@ -96,29 +96,7 @@ const runPushGauges = withCronLogging("push-gauges", async () => {
 });
 
 export async function GET(req: NextRequest) {
-  const authHeader = req.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
-
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    const mask = (s: string | null) =>
-      s ? `${s.slice(0, 8)}…${s.slice(-4)} (len=${s.length})` : "(empty)";
-    console.error("[push-gauges] 401 auth mismatch", {
-      secretSet: !!cronSecret,
-      secretPreview: mask(cronSecret),
-      headerPresent: !!authHeader,
-      headerPreview: mask(authHeader),
-    });
-    return NextResponse.json(
-      {
-        error: "Unauthorized",
-        reason: !authHeader
-          ? "missing_authorization_header"
-          : "secret_mismatch",
-        secretConfigured: !!cronSecret,
-        headerPresent: !!authHeader,
-      },
-      { status: 401 },
-    );
-  }
+  const denied = verifyCronAuth("push-gauges", req.headers.get("authorization"));
+  if (denied) return denied;
   return runPushGauges();
 }

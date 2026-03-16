@@ -36,18 +36,20 @@ export function withCronLogging(
   return async () => {
     const execId = randomUUID();
     const start = Date.now();
+    console.info(`[cron:${jobName}] Starting (exec=${execId})`);
     try {
       await insertCronExecution(execId, jobName);
     } catch (err) {
-      console.error(`[${jobName}] Failed to insert cron execution log:`, err);
+      console.error(`[cron:${jobName}] Failed to insert cron execution log:`, err);
     }
     try {
       const result = await handler();
       const elapsed = Date.now() - start;
+      console.info(`[cron:${jobName}] OK ${elapsed}ms`, JSON.stringify(result));
       try {
         await finishCronExecution(execId, "success", result, elapsed);
       } catch (logErr) {
-        console.error(`[${jobName}] Failed to finish cron execution log:`, logErr);
+        console.error(`[cron:${jobName}] Failed to finish cron execution log:`, logErr);
       }
       return NextResponse.json(result);
     } catch (err) {
@@ -56,12 +58,25 @@ export function withCronLogging(
       try {
         await finishCronExecution(execId, "error", {}, elapsed, msg);
       } catch (logErr) {
-        console.error(`[${jobName}] Failed to log cron error:`, logErr);
+        console.error(`[cron:${jobName}] Failed to log cron error:`, logErr);
       }
-      console.error(`[${jobName}] FAILED:`, msg);
+      console.error(`[cron:${jobName}] FAILED ${elapsed}ms:`, msg);
       return NextResponse.json({ error: msg }, { status: 500 });
     }
   };
+}
+
+/* ── Auth helper for cron routes ── */
+
+export function verifyCronAuth(jobName: string, authHeader: string | null): NextResponse | null {
+  const cronSecret = process.env.CRON_SECRET;
+  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    console.warn(
+      `[cron:${jobName}] 401 — ${!authHeader ? "missing Authorization header" : "secret mismatch"}`,
+    );
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  return null;
 }
 
 /* ── Admin: query cron execution stats ── */

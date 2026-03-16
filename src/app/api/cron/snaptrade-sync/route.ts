@@ -21,7 +21,7 @@ import {
   fetchAllHoldings,
 } from "@/lib/snaptrade-client";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
-import { withCronLogging } from "@/lib/cron-logging";
+import { withCronLogging, verifyCronAuth } from "@/lib/cron-logging";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -230,10 +230,7 @@ const runSync = withCronLogging("snaptrade-sync", async () => {
  * and flags connections that need attention (expired credentials).
  */
 export async function GET(req: NextRequest) {
-  const authHeader = req.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const denied = verifyCronAuth("snaptrade-sync", req.headers.get("authorization"));
+  if (denied) return denied;
   return runSync();
 }

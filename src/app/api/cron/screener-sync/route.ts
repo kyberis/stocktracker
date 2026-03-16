@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { upsertScreenerCache } from "@/lib/db";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
-import { withCronLogging } from "@/lib/cron-logging";
+import { withCronLogging, verifyCronAuth } from "@/lib/cron-logging";
 import screenerUniverse from "@/../data/screener-universe.json";
 
 export const dynamic = "force-dynamic";
@@ -85,11 +85,8 @@ function createSync(offset = 0, limit = 0) {
 }
 
 export async function GET(request: NextRequest) {
-  const authHeader = request.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    return new Response("Unauthorized", { status: 401 });
-  }
+  const denied = verifyCronAuth("screener-sync", request.headers.get("authorization"));
+  if (denied) return denied;
 
   const url = new URL(request.url);
   const offset = parseInt(url.searchParams.get("offset") || "0", 10);
