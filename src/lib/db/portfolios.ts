@@ -92,6 +92,12 @@ export async function deletePortfolio(userId: string, portfolioId: string): Prom
   if (defaultResult.rows.length === 0) return false;
   const defaultId = str(defaultResult.rows[0].id);
 
+  // Remove transaction-portfolio mapping entries for the deleted portfolio
+  await client.execute({
+    sql: "DELETE FROM transaction_portfolio_map WHERE portfolio_id = ? AND user_id = ?",
+    args: [portfolioId, userId],
+  });
+
   // Move all data to the default portfolio
   for (const table of ["holdings", "transactions", "cash_entries", "portfolio_snapshots", "portfolio_shares"]) {
     await client.execute({
@@ -176,6 +182,15 @@ export async function moveHoldingToPortfolio(
     sql: `UPDATE transactions SET portfolio_id = ?
           WHERE user_id = ? AND portfolio_id = ? AND UPPER(ticker) = UPPER(?) AND UPPER(exchange) = UPPER(?)`,
     args: [toPortfolioId, userId, fromPortfolioId, ticker, exchange],
+  });
+
+  // Remove stale mapping entries for the old portfolio on moved transactions
+  await client.execute({
+    sql: `DELETE FROM transaction_portfolio_map WHERE user_id = ? AND portfolio_id = ?
+          AND transaction_id IN (
+            SELECT id FROM transactions WHERE user_id = ? AND UPPER(ticker) = UPPER(?) AND UPPER(exchange) = UPPER(?)
+          )`,
+    args: [userId, fromPortfolioId, userId, ticker, exchange],
   });
 
   return (hResult.rowsAffected ?? 0) > 0;

@@ -261,3 +261,75 @@ export async function upsertSnapTradeBrokerSync(
     });
   }
 }
+
+/* ── Broker ↔ Portfolio mapping (multi-portfolio sync) ── */
+
+export async function addBrokerPortfolioMapping(
+  userId: string,
+  brokerageAuthorizationId: string,
+  portfolioId: string,
+): Promise<void> {
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: `INSERT OR IGNORE INTO snaptrade_broker_portfolio_map
+            (user_id, brokerage_authorization_id, portfolio_id)
+          VALUES (?, ?, ?)`,
+    args: [userId, brokerageAuthorizationId, portfolioId],
+  });
+}
+
+export async function getBrokerPortfolioIds(
+  userId: string,
+  brokerageAuthorizationId: string,
+): Promise<string[]> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: "SELECT portfolio_id FROM snaptrade_broker_portfolio_map WHERE user_id = ? AND brokerage_authorization_id = ?",
+    args: [userId, brokerageAuthorizationId],
+  });
+  return result.rows.map((r) => str(r.portfolio_id));
+}
+
+/**
+ * Returns all broker→portfolio mappings for a user, grouped by brokerage.
+ * Used by the auto-sync cron to know which portfolios to update per broker.
+ */
+export async function getAllBrokerPortfolioMappings(
+  userId: string,
+): Promise<Map<string, string[]>> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: "SELECT brokerage_authorization_id, portfolio_id FROM snaptrade_broker_portfolio_map WHERE user_id = ?",
+    args: [userId],
+  });
+  const map = new Map<string, string[]>();
+  for (const r of result.rows) {
+    const brokerId = str(r.brokerage_authorization_id);
+    const pId = str(r.portfolio_id);
+    const existing = map.get(brokerId);
+    if (existing) existing.push(pId);
+    else map.set(brokerId, [pId]);
+  }
+  return map;
+}
+
+export async function removeBrokerPortfolioMappings(
+  userId: string,
+  brokerageAuthorizationId: string,
+): Promise<void> {
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: "DELETE FROM snaptrade_broker_portfolio_map WHERE user_id = ? AND brokerage_authorization_id = ?",
+    args: [userId, brokerageAuthorizationId],
+  });
+}
+
+export async function removeAllBrokerPortfolioMappings(
+  userId: string,
+): Promise<void> {
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: "DELETE FROM snaptrade_broker_portfolio_map WHERE user_id = ?",
+    args: [userId],
+  });
+}

@@ -205,6 +205,7 @@ export async function POST(req: NextRequest) {
         last_active_at: "",
         tax_residency: "",
         onboarding_completed: 0,
+        experience_level: "",
       };
       trackEvent(publicUser.id, "signup");
       authEventsTotal.inc({ event: "signup" });

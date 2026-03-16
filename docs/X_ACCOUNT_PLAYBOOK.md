@@ -10,7 +10,7 @@ Ready-to-use profile data and first 14 posts to activate the account before runn
 |-------|-------|
 | **Display name** | trefolio |
 | **Handle** | `@trefolio_app` (fallbacks: `@trefolioHQ`, `@get_trefolio`) |
-| **Bio** | Your portfolio. Understood. 📊 AI portfolio tracker for European investors · 14 broker imports · 35 languages · Free to start ↓ |
+| **Bio** | The extra leaf for your portfolio 🍀 AI-powered tracker for European investors · 14 broker imports · 35 languages · Free to start ↓ |
 | **Location** | Europe 🇪🇺 |
 | **Website** | `https://trefolio.com` (or current domain) |
 | **Category** | Business & Finance |
@@ -25,7 +25,7 @@ Use the trefolio clover icon (`public/trefolio-icon-foil.svg`) on a `#0f172a` (d
 Dark banner with:
 - Left: trefolio logo (`public/trefolio-logo-foil.svg`) in emerald (#10b981)
 - Center/right: a clean dashboard screenshot (dark mode, showing portfolio with gains)
-- Bottom-right text: "Track smarter, not harder. trefolio.com"
+- Bottom-right text: "Every portfolio deserves a bit of luck. trefolio.com"
 - Background: `#0f172a` with a subtle gradient to `#1e293b`
 
 ### Pinned Tweet
@@ -91,7 +91,9 @@ Each post includes the text, suggested image, and best posting time (CET).
 **Post at:** Any day, 10:00 CET
 
 ```
-I built a portfolio tracker for European investors.
+I built a portfolio tracker for European investors. 🍀
+
+The name? trefolio — a clover. But ours has four leaves: the rare lucky kind. Green like the dollar. Green like gains. Green like growth.
 
 Why? Because most trackers are either:
 → Too expensive ($10-20/mo)
@@ -101,8 +103,10 @@ Why? Because most trackers are either:
 trefolio fixes all three:
 ✓ 14 broker imports (DEGIRO, IBKR, T212, Revolut, and more)
 ✓ 35 European languages
-✓ AI-powered analysis
+✓ AI-powered analysis in your language
 ✓ From 2.99 EUR/month — free tier available
+
+Every portfolio deserves a bit of luck.
 
 trefolio.com
 ```
@@ -422,7 +426,7 @@ Open trefolio → see total value, daily change, top movers, dividend income →
 
 No infinite scroll. No notification anxiety. No "just one more article."
 
-Your portfolio, understood.
+Every portfolio deserves a bit of luck. 🍀
 
 Try it free → trefolio.com
 ```
@@ -432,7 +436,33 @@ Try it free → trefolio.com
 
 ---
 
-## 4. Content Themes (Rotating Weekly)
+## 4. Brand Voice & Identity
+
+### The Four-Leaf Clover
+
+trefolio's brand is built on the four-leaf clover — the rare, lucky kind:
+
+- **"trefolio"** comes from "trébol" (Spanish for clover). A standard clover has three leaves; ours has four — the lucky variant.
+- **Green** represents three things: the color of money, positive market moves, and growth.
+- **The extra leaf** is what trefolio adds to your investing journey — better data, smarter tools, a bit of good fortune.
+
+### How to Use It on X
+
+- Use 🍀 (not ☘️) — the four-leaf clover emoji — in key posts (pinned, milestones, CTAs). Don't overuse it; once per post max.
+- The brand tagline is: **"Every portfolio deserves a bit of luck."** Use it as a closer on high-intent posts (pinned, pricing, CTA).
+- Reference the color green naturally when talking about gains, growth, or the dashboard aesthetic.
+- Don't explain the clover concept in every post — let it live in the bio and pinned post, then surface naturally.
+
+### Tone Rules
+
+- Confident but never pushy. Second person ("you/your"), present tense.
+- Honest about what the product does. No hype, no financial advice.
+- Serious about investing, friendly about everything else.
+- 80% value, 20% product. Never lead with a pitch.
+
+---
+
+## 5. Content Themes (Rotating Weekly)
 
 After the first 14 posts, rotate through these themes:
 
@@ -448,7 +478,7 @@ After the first 14 posts, rotate through these themes:
 
 ---
 
-## 5. Hashtag Strategy
+## 6. Hashtag Strategy
 
 ### Primary (use 1-2 per post)
 
@@ -472,7 +502,7 @@ After the first 14 posts, rotate through these themes:
 
 ---
 
-## 6. Key Metrics to Track (First 30 Days)
+## 7. Key Metrics to Track (First 30 Days)
 
 | Metric | Target | How to Check |
 |--------|--------|--------------|
@@ -486,7 +516,7 @@ After the first 14 posts, rotate through these themes:
 
 ---
 
-## 7. UTM Parameters
+## 8. UTM Parameters
 
 Always use UTM tracking when linking to trefolio.com:
 

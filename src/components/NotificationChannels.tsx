@@ -19,6 +19,7 @@ interface NotificationPrefs {
   whatsappPhone: string;
   whatsappVerified: boolean;
   alertDeviceEnabled: boolean;
+  emailNotificationsEnabled: boolean;
   whatsappQuota?: WhatsAppQuotaInfo;
 }
 
@@ -184,6 +185,41 @@ export default function NotificationChannels() {
   return (
     <div className="card p-6 space-y-4">
       <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t("notificationChannels")}</h2>
+
+      {/* Master email notifications toggle */}
+      <div className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-slate-700">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-slate-700 flex items-center justify-center">
+            <svg className="w-4 h-4 text-gray-600 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-gray-900 dark:text-white">{t("emailNotificationsLabel")}</p>
+            <p className="text-[10px] text-gray-400 dark:text-slate-500">{t("emailNotificationsDesc")}</p>
+          </div>
+        </div>
+        <label className="relative inline-flex items-center cursor-pointer">
+          <input
+            type="checkbox"
+            checked={prefs?.emailNotificationsEnabled ?? true}
+            onChange={async (e) => {
+              const enabled = e.target.checked;
+              try {
+                const res = await fetch("/api/notifications/preferences", {
+                  method: "PUT",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ emailNotificationsEnabled: enabled }),
+                });
+                if (res.ok) {
+                  const data = await res.json();
+                  setPrefs(data);
+                }
+              } catch { /* ignore */ }
+            }}
+            className="sr-only peer"
+          />
+          <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-emerald-300 dark:peer-focus:ring-emerald-800 rounded-full peer dark:bg-slate-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500" />
+        </label>
+      </div>
 
       {/* Email */}
       <div className="flex items-center justify-between py-2">

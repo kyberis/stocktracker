@@ -8,6 +8,7 @@ import {
   listPortfolios,
   findUserById,
   listAccounts,
+  getUserSettings,
 } from "@/lib/db";
 import { withMetrics } from "@/lib/with-metrics";
 
@@ -27,13 +28,14 @@ export const GET = withMetrics("/api/admin/users/[userId]/data", async (
 
   const portfolioId = req.nextUrl.searchParams.get("portfolioId") || undefined;
 
-  const [detail, portfolios, holdings, transactions, cash, accounts] = await Promise.all([
+  const [detail, portfolios, holdings, transactions, cash, accounts, settings] = await Promise.all([
     getUserDetailData(userId),
     listPortfolios(userId),
     listHoldings(userId, portfolioId),
     listTransactions(userId, undefined, portfolioId),
     listCashEntries(userId, portfolioId),
     listAccounts(userId),
+    getUserSettings(userId),
   ]);
 
   const user = {
@@ -54,6 +56,8 @@ export const GET = withMetrics("/api/admin/users/[userId]/data", async (
     taxResidency: dbUser.tax_residency,
     onboardingCompleted: dbUser.onboarding_completed === 1,
     aiCallsThisMonth: dbUser.ai_calls_this_month,
+    experienceLevel: dbUser.experience_level,
+    language: settings.language,
   };
 
   return NextResponse.json({

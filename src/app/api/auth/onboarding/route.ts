@@ -13,11 +13,12 @@ export const POST = withMetrics("/api/auth/onboarding", async (req: NextRequest)
 
   const result = await parseBody(req, onboardingSchema);
   if (!result.success) return result.error;
-  const { displayName, defaultCurrency, taxResidency, importMethod } = result.data;
+  const { displayName, defaultCurrency, taxResidency, experienceLevel, importMethod } = result.data;
 
   await completeOnboarding(session.userId, {
     displayName: displayName || undefined,
     taxResidency: taxResidency || undefined,
+    experienceLevel: experienceLevel || undefined,
   });
 
   if (defaultCurrency) {

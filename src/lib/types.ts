@@ -378,6 +378,8 @@ export type Language =
   | "nb" | "uk" | "tr" | "sr" | "is" | "sq" | "bs" | "mk"
   | "be" | "ca" | "cy";
 
+export type ExperienceLevel = "" | "beginner" | "intermediate" | "experienced" | "professional";
+
 export type RefreshInterval = 15 | 30 | 60;
 
 /* ── Alpha Intelligence types ──────────────────────────────── */

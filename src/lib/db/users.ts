@@ -158,7 +158,7 @@ export async function updateUserProfile(
 
 export async function completeOnboarding(
   userId: string,
-  data: { displayName?: string; taxResidency?: string }
+  data: { displayName?: string; taxResidency?: string; experienceLevel?: string }
 ): Promise<void> {
   const client = await ensureInitialized();
   const sets: string[] = ["onboarding_completed = 1"];
@@ -171,6 +171,10 @@ export async function completeOnboarding(
   if (data.taxResidency !== undefined) {
     sets.push("tax_residency = ?");
     args.push(data.taxResidency);
+  }
+  if (data.experienceLevel !== undefined) {
+    sets.push("experience_level = ?");
+    args.push(data.experienceLevel);
   }
   args.push(userId);
 
@@ -504,6 +508,8 @@ export interface AdminUserWithStats {
   taxResidency: string;
   onboardingCompleted: boolean;
   aiCallsThisMonth: number;
+  experienceLevel: string;
+  language: string;
   portfolioCount: number;
   holdingCount: number;
   totalHoldingsEur: number;
@@ -533,6 +539,8 @@ function mapUserRow(r: import("@libsql/client").Row): AdminUserWithStats {
     taxResidency: str(r.tax_residency),
     onboardingCompleted: num(r.onboarding_completed) === 1,
     aiCallsThisMonth: num(r.ai_calls_this_month),
+    experienceLevel: str(r.experience_level),
+    language: str(r.language),
     portfolioCount: num(r.portfolio_count),
     holdingCount: num(r.holding_count),
     totalHoldingsEur: Number(r.total_holdings_eur ?? 0),
@@ -551,6 +559,8 @@ const USER_STATS_SELECT = `
     u.created_at, u.last_active_at, u.plan_expires_at,
     u.stripe_customer_id, u.stripe_subscription_id,
     u.tax_residency, u.onboarding_completed, u.ai_calls_this_month,
+    u.experience_level,
+    COALESCE((SELECT us.language FROM user_settings us WHERE us.user_id = u.id), 'en') AS language,
     (SELECT COUNT(*) FROM portfolios WHERE user_id = u.id) AS portfolio_count,
     (SELECT COUNT(*) FROM holdings WHERE user_id = u.id) AS holding_count,
     (SELECT COALESCE(SUM(value_in_eur), 0) FROM holdings WHERE user_id = u.id) AS total_holdings_eur,

@@ -41,6 +41,12 @@ function getFromAddress(): string {
   return process.env.RESEND_FROM_ADDRESS || "trefolio <noreply@trefolio.com>";
 }
 
+export { getFromAddress };
+
+export async function getResendClientForAdmin(): Promise<Resend | null> {
+  return getResendClient();
+}
+
 export async function createVerificationToken(userId: string, email: string): Promise<string> {
   if (isTreefolioTestEmail(email)) return TEST_VERIFICATION_TOKEN;
   const secret = new TextEncoder().encode(getSessionSecret());
@@ -128,7 +134,7 @@ function verificationEmailHtml(verifyUrl: string): string {
       </table>
       <!-- Copyright -->
       <p style="margin:24px 0 0;font-size:11px;color:#94a3b8;text-align:center;">
-        &copy; ${new Date().getFullYear()} trefolio &mdash; Portfolio tracking with clear insights
+        &copy; ${new Date().getFullYear()} trefolio &mdash; Every portfolio deserves a bit of luck &#x1F340;
       </p>
     </td></tr>
   </table>
@@ -258,6 +264,32 @@ export async function sendPercentAlertEmail(
 }
 
 // ---------------------------------------------------------------------------
+// Unsubscribe token
+// ---------------------------------------------------------------------------
+
+const UNSUBSCRIBE_TOKEN_TTL = 60 * 60 * 24 * 365; // 1 year
+
+export async function createUnsubscribeToken(userId: string): Promise<string> {
+  const secret = new TextEncoder().encode(getSessionSecret());
+  return new SignJWT({ userId, purpose: "email_unsubscribe" })
+    .setProtectedHeader({ alg: "HS256", typ: "JWT" })
+    .setIssuedAt()
+    .setExpirationTime(`${UNSUBSCRIBE_TOKEN_TTL}s`)
+    .sign(secret);
+}
+
+export async function verifyUnsubscribeToken(token: string): Promise<string | null> {
+  try {
+    const secret = new TextEncoder().encode(getSessionSecret());
+    const { payload } = await jwtVerify(token, secret, { algorithms: ["HS256"] });
+    if (payload.purpose !== "email_unsubscribe") return null;
+    return String(payload.userId);
+  } catch {
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Shared email layout helpers
 // ---------------------------------------------------------------------------
 
@@ -286,16 +318,21 @@ function emailHeader(tierBadge?: string): string {
         </td></tr>`;
 }
 
-function emailFooter(footerText: string, manageUrl: string, manageLabel: string): string {
+function emailFooter(footerText: string, manageUrl: string, manageLabel: string, unsubscribeUrl?: string): string {
+  const unsubLink = unsubscribeUrl
+    ? `<p style="margin:8px 0 0;font-size:11px;color:#94a3b8;text-align:center;line-height:1.5;">
+            <a href="${unsubscribeUrl}" style="color:#94a3b8;text-decoration:underline;">Unsubscribe</a> from email notifications
+          </p>`
+    : "";
   return `        <tr><td style="padding:0 32px;"><div style="border-top:1px solid #e2e8f0;margin:24px 0;"></div></td></tr>
         <tr><td style="padding:0 32px 32px;">
           <p style="margin:0;font-size:12px;color:#94a3b8;text-align:center;line-height:1.5;">
             ${footerText} <a href="${manageUrl}" style="color:#94a3b8;text-decoration:underline;">${manageLabel}</a>
-          </p>
+          </p>${unsubLink}
         </td></tr>
       </table>
       <p style="margin:24px 0 0;font-size:11px;color:#94a3b8;text-align:center;">
-        &copy; ${new Date().getFullYear()} trefolio &mdash; Portfolio tracking with clear insights
+        &copy; ${new Date().getFullYear()} trefolio &mdash; Every portfolio deserves a bit of luck &#x1F340;
       </p>
     </td></tr>
   </table>
@@ -348,7 +385,7 @@ const welcomeCopy = {
     subject: "Welcome to trefolio!",
     heading: "Welcome aboard!",
     intro: (name: string) =>
-      `Hi <strong>${name}</strong>, thanks for joining trefolio! Your free Folio account is ready. Here&rsquo;s what you can do right away:`,
+      `Hi <strong>${name}</strong>, welcome to trefolio &mdash; the extra leaf for your portfolio. Your free Folio account is ready. Here&rsquo;s what you can do right away:`,
     f1: ["Real-time Quotes", "Live prices from Yahoo Finance across 5+ exchanges worldwide."],
     f2: ["Dividend Tracking", "See annual income, per-stock yields, and monthly dividend projections."],
     f3: ["AI-Powered Insights", "Get 5 free AI analysis calls per month to understand your holdings."],
@@ -364,7 +401,7 @@ const welcomeCopy = {
     subject: "\u00A1Bienvenido a trefolio!",
     heading: "\u00A1Bienvenido!",
     intro: (name: string) =>
-      `Hola <strong>${name}</strong>, gracias por unirte a trefolio. Tu cuenta Folio gratuita est&aacute; lista. Esto es lo que puedes hacer:`,
+      `Hola <strong>${name}</strong>, bienvenido a trefolio &mdash; la hoja extra para tu cartera. Tu cuenta Folio gratuita est&aacute; lista. Esto es lo que puedes hacer:`,
     f1: ["Cotizaciones en Tiempo Real", "Precios en vivo de Yahoo Finance en m&aacute;s de 5 bolsas mundiales."],
     f2: ["Seguimiento de Dividendos", "Ingresos anuales, rendimientos por acci&oacute;n y proyecciones mensuales."],
     f3: ["An&aacute;lisis con IA", "5 consultas de IA gratuitas al mes para entender tus inversiones."],

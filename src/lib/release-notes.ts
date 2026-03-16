@@ -14,15 +14,72 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "1.38.0";
+export const CURRENT_VERSION = "1.39.0";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "1.39.0",
+    date: "2026-03-16",
+    title: "Email System, Experience Personalization & Notification Preferences",
+    titleTranslations: { es: "Sistema de Email, Personalización por Experiencia y Preferencias de Notificación" },
+    changes: [
+      {
+        type: "feature",
+        text: "New investment experience level selection during onboarding — choose between beginner, intermediate, experienced, or professional to personalize your trefolio experience.",
+        translations: {
+          es: "Nueva selección de nivel de experiencia en inversiones durante el onboarding — elige entre principiante, intermedio, experimentado o profesional para personalizar tu experiencia en trefolio.",
+        },
+      },
+      {
+        type: "feature",
+        text: "Admin email template system with create, edit, preview (HTML and plain text), and send capabilities. Templates support English and Spanish with per-experience-level targeting.",
+        translations: {
+          es: "Sistema de plantillas de email para administradores con creación, edición, vista previa (HTML y texto plano) y envío. Las plantillas soportan inglés y español con segmentación por nivel de experiencia.",
+        },
+      },
+      {
+        type: "feature",
+        text: "Email tracking via Resend webhooks — track delivery, opens, clicks, and bounces for all sent emails with detailed history visible in the admin user detail page.",
+        translations: {
+          es: "Seguimiento de emails vía webhooks de Resend — rastrea entregas, aperturas, clics y rebotes de todos los emails enviados con historial detallado visible en la página de detalle del usuario admin.",
+        },
+      },
+      {
+        type: "feature",
+        text: "Email notification preferences — users can now disable marketing and template emails from their profile notification settings. All emails include an unsubscribe link.",
+        translations: {
+          es: "Preferencias de notificación por email — los usuarios ahora pueden desactivar emails de marketing y plantillas desde sus ajustes de notificación. Todos los emails incluyen un enlace de cancelación de suscripción.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "User language and experience level are now visible in the admin user detail page, making it easier to understand each customer's profile.",
+        translations: {
+          es: "El idioma y nivel de experiencia del usuario ahora son visibles en la página de detalle del usuario admin, facilitando la comprensión del perfil de cada cliente.",
+        },
+      },
+    ],
+  },
   {
     version: "1.38.0",
     date: "2026-03-15",
     title: "Dividend Depth: Yield-on-Cost & DRIP Simulation",
     titleTranslations: { es: "Profundidad de Dividendos: Rendimiento sobre Coste y Simulación DRIP" },
     changes: [
+      {
+        type: "feature",
+        text: "Added a Broker Sync CTA section on the landing page showcasing one-click auto-sync with 20+ brokerages.",
+        translations: {
+          es: "Añadida sección de sincronización de broker en la página de inicio mostrando la sincronización automática con más de 20 brokers.",
+        },
+      },
+      {
+        type: "feature",
+        text: "Broker sync now updates all portfolios linked to a broker — transactions are mapped (not duplicated) across portfolios, so auto-sync and manual re-sync push holdings, cash, and transactions to every linked portfolio.",
+        translations: {
+          es: "La sincronización de broker ahora actualiza todas las carteras vinculadas — las transacciones se mapean (sin duplicar) entre carteras, de modo que la sincronización automática y manual envía posiciones, efectivo y transacciones a cada cartera vinculada.",
+        },
+      },
       {
         type: "improvement",
         text: "Added a 'Post Now' button for scheduled X posts, allowing admins to manually publish any pending or failed post without waiting for the cron schedule.",

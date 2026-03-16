@@ -17,6 +17,7 @@ export async function GET(req: NextRequest) {
     whatsappPhone: settings.whatsappPhone,
     whatsappVerified: settings.whatsappVerified,
     alertDeviceEnabled: settings.alertDeviceEnabled,
+    emailNotificationsEnabled: settings.emailNotificationsEnabled,
     whatsappQuota: {
       remainingToday: Math.max(0, waQuota.userDailyLimit - waQuota.userToday),
       remainingMonth: Math.max(0, waQuota.userMonthlyLimit - waQuota.userMonth),
@@ -36,7 +37,7 @@ export async function PUT(req: NextRequest) {
   const user = await findUserById(session.userId);
   if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-  const updates: Partial<{ alertChannels: NotificationChannel[]; alertDeviceEnabled: boolean }> = {};
+  const updates: Partial<{ alertChannels: NotificationChannel[]; alertDeviceEnabled: boolean; emailNotificationsEnabled: boolean }> = {};
 
   if (result.data.alertChannels !== undefined) {
     const requested = result.data.alertChannels.split(",").filter(Boolean) as NotificationChannel[];
@@ -63,11 +64,16 @@ export async function PUT(req: NextRequest) {
     updates.alertDeviceEnabled = result.data.alertDeviceEnabled;
   }
 
+  if (result.data.emailNotificationsEnabled !== undefined) {
+    updates.emailNotificationsEnabled = result.data.emailNotificationsEnabled;
+  }
+
   const settings = await updateUserSettings(session.userId, updates);
   return NextResponse.json({
     alertChannels: settings.alertChannels,
     whatsappPhone: settings.whatsappPhone,
     whatsappVerified: settings.whatsappVerified,
     alertDeviceEnabled: settings.alertDeviceEnabled,
+    emailNotificationsEnabled: settings.emailNotificationsEnabled,
   });
 }

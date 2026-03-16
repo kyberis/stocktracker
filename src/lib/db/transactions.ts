@@ -25,17 +25,24 @@ export async function listTransactions(userId: string, holdingId?: string, portf
     }
   }
 
+  const mapSub = "(SELECT transaction_id FROM transaction_portfolio_map WHERE user_id = ? AND portfolio_id = ?)";
+
   if (holdingId && portfolioId && holdingTicker) {
-    sql = `SELECT * FROM transactions WHERE user_id = ? AND portfolio_id = ?
+    sql = `SELECT * FROM transactions WHERE user_id = ?
+           AND (portfolio_id = ? OR id IN ${mapSub})
            AND (holding_id = ? OR (holding_id = '' AND ticker = ? AND UPPER(COALESCE(exchange,'')) = ?))
            ORDER BY date DESC, created_at DESC`;
-    args = [userId, portfolioId, holdingId, holdingTicker, (holdingExchange || "").toUpperCase()];
+    args = [userId, portfolioId, userId, portfolioId, holdingId, holdingTicker, (holdingExchange || "").toUpperCase()];
   } else if (holdingId && portfolioId) {
-    sql = "SELECT * FROM transactions WHERE user_id = ? AND holding_id = ? AND portfolio_id = ? ORDER BY date DESC, created_at DESC";
-    args = [userId, holdingId, portfolioId];
+    sql = `SELECT * FROM transactions WHERE user_id = ? AND holding_id = ?
+           AND (portfolio_id = ? OR id IN ${mapSub})
+           ORDER BY date DESC, created_at DESC`;
+    args = [userId, holdingId, portfolioId, userId, portfolioId];
   } else if (portfolioId) {
-    sql = "SELECT * FROM transactions WHERE user_id = ? AND portfolio_id = ? ORDER BY date DESC, created_at DESC";
-    args = [userId, portfolioId];
+    sql = `SELECT * FROM transactions WHERE user_id = ?
+           AND (portfolio_id = ? OR id IN ${mapSub})
+           ORDER BY date DESC, created_at DESC`;
+    args = [userId, portfolioId, userId, portfolioId];
   } else if (holdingId && holdingTicker) {
     sql = `SELECT * FROM transactions WHERE user_id = ?
            AND (holding_id = ? OR (holding_id = '' AND ticker = ? AND UPPER(COALESCE(exchange,'')) = ?))
@@ -362,33 +369,127 @@ export async function deleteTransactionsForPosition(
 ): Promise<number> {
   const client = await ensureInitialized();
   const normalizedTicker = normalizeTickerForExchange(ticker, exchange);
-  const portfolioFilter = portfolioId ? " AND portfolio_id = ?" : "";
-  const portfolioArgs = portfolioId ? [portfolioId] : [];
+
+  if (portfolioId) {
+    // Remove mapping entries for this portfolio + ticker
+    await client.execute({
+      sql: `DELETE FROM transaction_portfolio_map WHERE user_id = ? AND portfolio_id = ?
+            AND transaction_id IN (
+              SELECT id FROM transactions WHERE user_id = ? AND UPPER(ticker) = UPPER(?) AND UPPER(exchange) = UPPER(?)
+            )`,
+      args: [userId, portfolioId, userId, normalizedTicker, exchange],
+    });
+
+    // Only delete the actual rows if they belong to this portfolio and aren't mapped elsewhere
+    const result = await client.execute({
+      sql: `DELETE FROM transactions WHERE user_id = ? AND portfolio_id = ?
+            AND UPPER(ticker) = UPPER(?) AND UPPER(exchange) = UPPER(?)
+            AND id NOT IN (SELECT transaction_id FROM transaction_portfolio_map WHERE user_id = ?)`,
+      args: [userId, portfolioId, normalizedTicker, exchange, userId],
+    });
+    return Number(result.rowsAffected ?? 0);
+  }
+
   const result = await client.execute({
-    sql: `DELETE FROM transactions WHERE user_id = ? AND UPPER(ticker) = UPPER(?) AND UPPER(exchange) = UPPER(?)${portfolioFilter}`,
-    args: [userId, normalizedTicker, exchange, ...portfolioArgs],
+    sql: `DELETE FROM transactions WHERE user_id = ? AND UPPER(ticker) = UPPER(?) AND UPPER(exchange) = UPPER(?)`,
+    args: [userId, normalizedTicker, exchange],
   });
   return Number(result.rowsAffected ?? 0);
 }
 
 export async function deleteAllTransactions(userId: string, portfolioId?: string): Promise<number> {
   const client = await ensureInitialized();
-  const portfolioFilter = portfolioId ? " AND portfolio_id = ?" : "";
-  const portfolioArgs = portfolioId ? [portfolioId] : [];
+
+  if (portfolioId) {
+    // Remove mapping entries for this portfolio
+    await client.execute({
+      sql: "DELETE FROM transaction_portfolio_map WHERE user_id = ? AND portfolio_id = ?",
+      args: [userId, portfolioId],
+    });
+
+    // Only delete actual rows that belong to this portfolio and aren't mapped elsewhere
+    const result = await client.execute({
+      sql: `DELETE FROM transactions WHERE user_id = ? AND portfolio_id = ?
+            AND id NOT IN (SELECT transaction_id FROM transaction_portfolio_map WHERE user_id = ?)`,
+      args: [userId, portfolioId, userId],
+    });
+    return Number(result.rowsAffected ?? 0);
+  }
+
   const result = await client.execute({
-    sql: `DELETE FROM transactions WHERE user_id = ?${portfolioFilter}`,
-    args: [userId, ...portfolioArgs],
+    sql: "DELETE FROM transactions WHERE user_id = ?",
+    args: [userId],
   });
   return Number(result.rowsAffected ?? 0);
 }
 
 export async function listTransactionSourceRefs(userId: string, portfolioId?: string): Promise<Set<string>> {
   const client = await ensureInitialized();
-  const portfolioFilter = portfolioId ? " AND portfolio_id = ?" : "";
-  const portfolioArgs = portfolioId ? [portfolioId] : [];
-  const result = await client.execute({
-    sql: `SELECT source_ref FROM transactions WHERE user_id = ? AND source_ref != ''${portfolioFilter}`,
-    args: [userId, ...portfolioArgs],
-  });
+  let sql: string;
+  let args: string[];
+  if (portfolioId) {
+    sql = `SELECT source_ref FROM transactions WHERE user_id = ? AND source_ref != ''
+           AND (portfolio_id = ? OR id IN (SELECT transaction_id FROM transaction_portfolio_map WHERE user_id = ? AND portfolio_id = ?))`;
+    args = [userId, portfolioId, userId, portfolioId];
+  } else {
+    sql = "SELECT source_ref FROM transactions WHERE user_id = ? AND source_ref != ''";
+    args = [userId];
+  }
+  const result = await client.execute({ sql, args });
   return new Set(result.rows.map((r) => str(r.source_ref)));
+}
+
+/* ── Transaction ↔ Portfolio mapping (multi-portfolio sync) ── */
+
+export async function mapTransactionsToPortfolio(
+  userId: string,
+  transactionIds: string[],
+  portfolioId: string,
+): Promise<void> {
+  if (transactionIds.length === 0) return;
+  const client = await ensureInitialized();
+  const BATCH = 50;
+  for (let i = 0; i < transactionIds.length; i += BATCH) {
+    const batch = transactionIds.slice(i, i + BATCH);
+    await client.batch(
+      batch.map((txId) => ({
+        sql: `INSERT OR IGNORE INTO transaction_portfolio_map (transaction_id, portfolio_id, user_id) VALUES (?, ?, ?)`,
+        args: [txId, portfolioId, userId],
+      })),
+      "write",
+    );
+  }
+}
+
+export async function mapTransactionsBySourceRef(
+  userId: string,
+  sourceRefs: string[],
+  portfolioId: string,
+): Promise<void> {
+  if (sourceRefs.length === 0) return;
+  const client = await ensureInitialized();
+  const BATCH = 50;
+  for (let i = 0; i < sourceRefs.length; i += BATCH) {
+    const batch = sourceRefs.slice(i, i + BATCH);
+    const placeholders = batch.map(() => "?").join(",");
+    const rows = await client.execute({
+      sql: `SELECT id FROM transactions WHERE user_id = ? AND source_ref IN (${placeholders})`,
+      args: [userId, ...batch],
+    });
+    const txIds = rows.rows.map((r) => str(r.id));
+    if (txIds.length > 0) {
+      await mapTransactionsToPortfolio(userId, txIds, portfolioId);
+    }
+  }
+}
+
+export async function removeTransactionPortfolioMappings(
+  userId: string,
+  portfolioId: string,
+): Promise<void> {
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: "DELETE FROM transaction_portfolio_map WHERE user_id = ? AND portfolio_id = ?",
+    args: [userId, portfolioId],
+  });
 }

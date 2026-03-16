@@ -13,6 +13,8 @@ import {
   removeCashEntriesBySourceAndBrokers,
   upsertHoldingsFromPositions,
   trackEvent,
+  getAllBrokerPortfolioMappings,
+  mapTransactionsBySourceRef,
 } from "@/lib/db";
 import {
   listBrokerageConnections,
@@ -71,9 +73,22 @@ const runSync = withCronLogging("snaptrade-sync", async () => {
           .map((s) => [s.brokerageAuthorizationId, s.lastImportedAt]),
       );
 
+      // Load broker→portfolio mappings so we can sync to all linked portfolios.
+      // If no mappings exist (legacy users), undefined falls back to default portfolio.
+      const brokerPortfolioMap = await getAllBrokerPortfolioMappings(conn.userId);
+      const allMappedPortfolioIds = new Set<string>();
+      for (const pIds of brokerPortfolioMap.values()) {
+        for (const pId of pIds) allMappedPortfolioIds.add(pId);
+      }
+      const targetPortfolios: (string | undefined)[] =
+        allMappedPortfolioIds.size > 0 ? [...allMappedPortfolioIds] : [undefined];
+
       let totalNewTx = 0;
       const fetchedBrokers: { id: string; name: string }[] = [];
       const seenBrokerIds = new Set<string>();
+
+      // Collect all new transactions across all accounts
+      const allNewTx: Awaited<ReturnType<typeof fetchActivities>>["transactions"][] = [];
       for (const acct of activeAccounts) {
         const startDate = syncMap.get(acct.brokerageAuthorizationId) || undefined;
         const result = await fetchActivities({
@@ -95,48 +110,70 @@ const runSync = withCronLogging("snaptrade-sync", async () => {
         totalNewTx += newTx.length;
 
         if (newTx.length > 0) {
-          const bulkPayload = newTx.map((tx) => ({
-            holdingId: "",
-            ticker: tx.ticker || (tx.type === "fee" ? "FEE" : "UNKNOWN"),
-            name: tx.name,
-            exchange: "",
-            isin: tx.isin || "",
-            assetType:
-              tx.name.toUpperCase().includes("ETF") || tx.name.toUpperCase().includes("UCITS")
-                ? "etf"
-                : "stock",
-            accountId: "",
-            type: tx.type,
-            date: tx.date,
-            shares: tx.shares,
-            pricePerShare: tx.pricePerShare,
-            totalAmount: tx.totalAmount || tx.shares * tx.pricePerShare,
-            fees: tx.fees,
-            taxes: 0,
-            currency: tx.currency,
-            displayCurrency: tx.currency,
-            notes: "Auto-sync",
-            sourceRef: tx.sourceRef || "",
-          }));
+          allNewTx.push(newTx);
+        }
+      }
 
-          try {
-            const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || (process.env.VERCEL_URL
-              ? `https://${process.env.VERCEL_URL}`
-              : "http://localhost:3000");
-            const cronHeaders: Record<string, string> = {
-              "Content-Type": "application/json",
-              "x-cron-user-id": conn.userId,
-            };
-            if (process.env.CRON_SECRET) {
-              cronHeaders["Authorization"] = `Bearer ${process.env.CRON_SECRET}`;
+      // Import transactions to the first portfolio, then map to additional ones
+      if (allNewTx.length > 0) {
+        const flatTx = allNewTx.flat();
+        const bulkPayload = flatTx.map((tx) => ({
+          holdingId: "",
+          ticker: tx.ticker || (tx.type === "fee" ? "FEE" : "UNKNOWN"),
+          name: tx.name,
+          exchange: "",
+          isin: tx.isin || "",
+          assetType:
+            tx.name.toUpperCase().includes("ETF") || tx.name.toUpperCase().includes("UCITS")
+              ? "etf"
+              : "stock",
+          accountId: "",
+          type: tx.type,
+          date: tx.date,
+          shares: tx.shares,
+          pricePerShare: tx.pricePerShare,
+          totalAmount: tx.totalAmount || tx.shares * tx.pricePerShare,
+          fees: tx.fees,
+          taxes: 0,
+          currency: tx.currency,
+          displayCurrency: tx.currency,
+          notes: "Auto-sync",
+          sourceRef: tx.sourceRef || "",
+        }));
+
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || (process.env.VERCEL_URL
+          ? `https://${process.env.VERCEL_URL}`
+          : "http://localhost:3000");
+        const cronHeaders: Record<string, string> = {
+          "Content-Type": "application/json",
+          "x-cron-user-id": conn.userId,
+        };
+        if (process.env.CRON_SECRET) {
+          cronHeaders["Authorization"] = `Bearer ${process.env.CRON_SECRET}`;
+        }
+
+        // Insert into the first target portfolio only
+        const primaryPId = targetPortfolios[0];
+        try {
+          const bulkUrl = primaryPId
+            ? `${baseUrl}/api/transactions/bulk?portfolioId=${encodeURIComponent(primaryPId)}`
+            : `${baseUrl}/api/transactions/bulk`;
+          await fetch(bulkUrl, {
+            method: "POST",
+            headers: cronHeaders,
+            body: JSON.stringify({ transactions: bulkPayload, finalize: true, skipRebuild: true }),
+          });
+        } catch (err) {
+          console.error(`[snaptrade-sync] Bulk import failed for user ${conn.userId} portfolio ${primaryPId || "default"}:`, err instanceof Error ? err.message : err);
+        }
+
+        // Map the imported transactions to additional portfolios
+        const sourceRefs = flatTx.map((tx) => tx.sourceRef || "").filter(Boolean);
+        if (sourceRefs.length > 0) {
+          for (const additionalPId of targetPortfolios.slice(1)) {
+            if (additionalPId) {
+              await mapTransactionsBySourceRef(conn.userId, sourceRefs, additionalPId);
             }
-            await fetch(`${baseUrl}/api/transactions/bulk`, {
-              method: "POST",
-              headers: cronHeaders,
-              body: JSON.stringify({ transactions: bulkPayload, finalize: true, skipRebuild: true }),
-            });
-          } catch (err) {
-            console.error(`[snaptrade-sync] Bulk import failed for user ${conn.userId}:`, err instanceof Error ? err.message : err);
           }
         }
       }
@@ -147,13 +184,15 @@ const runSync = withCronLogging("snaptrade-sync", async () => {
       try {
         holdingsResult = await fetchAllHoldings(conn.snapTradeUserId, userSecret, undefined, institutionMap);
 
-        // Upsert holdings directly from broker positions.
+        // Upsert holdings to all mapped portfolios.
         // When any connection is disabled, positions data is incomplete — skip
         // stale cleanup so we don't delete holdings we simply couldn't fetch.
         if (holdingsResult.holdings.length > 0) {
-          await upsertHoldingsFromPositions(conn.userId, holdingsResult.holdings, undefined, {
-            skipStaleCleanup: disabledConns.length > 0,
-          });
+          for (const targetPId of targetPortfolios) {
+            await upsertHoldingsFromPositions(conn.userId, holdingsResult.holdings, targetPId, {
+              skipStaleCleanup: disabledConns.length > 0,
+            });
+          }
         }
 
         if (holdingsResult.cashBalances.length > 0) {
@@ -171,9 +210,9 @@ const runSync = withCronLogging("snaptrade-sync", async () => {
           const fetchedBrokerPrefixes = [...new Set(
             [...aggregated.values()].map((e) => e.broker ? e.broker.toUpperCase() : "Cash"),
           )];
-          await removeCashEntriesBySourceAndBrokers(conn.userId, "snaptrade", fetchedBrokerPrefixes);
 
           const yahoo = new YahooProvider();
+          const cashEntries: { name: string; amountEUR: number; displayCurrency: string; displayAmount: number }[] = [];
           for (const entry of aggregated.values()) {
             const { broker, currency } = entry;
             let displayAmount = entry.amount;
@@ -187,13 +226,20 @@ const runSync = withCronLogging("snaptrade-sync", async () => {
               }
             }
             const label = broker ? `${broker.toUpperCase()} \u2013 ${currency}` : `Cash ${currency}`;
-            await addCashEntry(conn.userId, {
-              name: label,
-              amountEUR,
-              source: "snaptrade",
-              displayCurrency: currency,
-              displayAmount,
-            });
+            cashEntries.push({ name: label, amountEUR, displayCurrency: currency, displayAmount });
+          }
+
+          for (const targetPId of targetPortfolios) {
+            await removeCashEntriesBySourceAndBrokers(conn.userId, "snaptrade", fetchedBrokerPrefixes, targetPId);
+            for (const ce of cashEntries) {
+              await addCashEntry(conn.userId, {
+                name: ce.name,
+                amountEUR: ce.amountEUR,
+                source: "snaptrade",
+                displayCurrency: ce.displayCurrency,
+                displayAmount: ce.displayAmount,
+              }, targetPId);
+            }
           }
         }
       } catch (err) {

@@ -111,7 +111,7 @@ function getFeatureCards(t: T) {
     { icon: "chart", title: t("landingCardPerfTitle"), desc: t("landingCardPerfDesc") },
     { icon: "beaker", title: t("landingCardSimulatorTitle"), desc: t("landingCardSimulatorDesc"), badge: "Pro" },
     { icon: "calendar", title: t("landingCardEventsTitle"), desc: t("landingCardEventsDesc") },
-    { icon: "globe", title: "35 Languages", desc: "35 languages — more than any major portfolio tracker. AI insights delivered in your native language.", badge: "35 langs" },
+    { icon: "globe", title: t("landingCardLangsTitle"), desc: t("landingCardLangsDesc"), badge: t("landingCardLangsBadge") },
   ];
 }
 
@@ -188,9 +188,9 @@ function getFaqItems(t: T) {
 
 function getTestimonials(t: T) {
   return [
-    { quote: t("landingTestimonial1Quote"), name: t("landingTestimonial1Name"), role: t("landingTestimonial1Role") },
-    { quote: t("landingTestimonial2Quote"), name: t("landingTestimonial2Name"), role: t("landingTestimonial2Role") },
-    { quote: t("landingTestimonial3Quote"), name: t("landingTestimonial3Name"), role: t("landingTestimonial3Role") },
+    { quote: t("landingTestimonial1Quote"), name: t("landingTestimonial1Name"), role: t("landingTestimonial1Role"), detail: t("landingTestimonial1Detail") },
+    { quote: t("landingTestimonial2Quote"), name: t("landingTestimonial2Name"), role: t("landingTestimonial2Role"), detail: t("landingTestimonial2Detail") },
+    { quote: t("landingTestimonial3Quote"), name: t("landingTestimonial3Name"), role: t("landingTestimonial3Role"), detail: t("landingTestimonial3Detail") },
   ];
 }
 
@@ -505,7 +505,7 @@ function HeroDashboardMock() {
       <div className="absolute -right-2 sm:-right-6 top-16 sm:top-20 w-48 sm:w-56 bg-slate-800/95 backdrop-blur-sm border border-slate-700/60 rounded-xl p-3 shadow-xl hidden md:block">
         <div className="text-[10px] font-semibold text-slate-400 mb-1.5">AI Portfolio Review</div>
         <p className="text-[11px] text-slate-300 leading-relaxed mb-2">
-          Your tech allocation is <span className="text-emerald-400 font-semibold">well-balanced</span>. Consider adding...
+          Your tech allocation is <span className="text-emerald-400 font-semibold">well-diversified</span>. Here&apos;s what we found...
         </p>
         <span className="inline-flex items-center gap-1 text-[10px] font-bold text-violet-400 bg-violet-500/10 px-2 py-0.5 rounded-full border border-violet-500/20">
           <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" /></svg>
@@ -548,12 +548,15 @@ function HeroSection() {
             <span className="text-sm font-medium text-emerald-400">{t("landingHeroBadge")}</span>
           </div>
 
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-[1.1] mb-6">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-[1.1] mb-4">
             {t("landingHeroTitle")}{" "}
             <span className="bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 bg-clip-text text-transparent">
               {t("landingHeroTitleAccent")}
             </span>
           </h1>
+          <p className="text-lg sm:text-xl text-emerald-400/80 font-medium italic mb-6">
+            {t("landingBrandTagline")}
+          </p>
 
           <div className="flex flex-col items-center gap-3 mb-8">
             {valuePropItems.map((item) => (
@@ -779,6 +782,9 @@ function TestimonialsSection() {
               <div>
                 <div className="text-sm font-semibold text-white">{tm.name}</div>
                 <div className="text-xs text-slate-500">{tm.role}</div>
+                {tm.detail && (
+                  <div className="text-[10px] text-emerald-400/70 mt-1">{tm.detail}</div>
+                )}
               </div>
             </div>
           ))}
@@ -854,7 +860,7 @@ function WhySection() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
-            Feature by feature
+            {t("landingWhyEyebrow")}
           </span>
           <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4 mt-4">
             {t("landingWhyHeading")}{" "}
@@ -889,7 +895,7 @@ function WhySection() {
             </tbody>
           </table>
           <p className="text-center text-xs text-slate-500 mt-6">
-            <span className="text-emerald-400 font-semibold">Bold rows</span> = trefolio specialty features or where trefolio significantly leads the market.
+            {t("landingWhyTableFootnote")}
           </p>
         </div>
       </div>
@@ -1135,7 +1141,7 @@ function MobileAppSection() {
               <GooglePlayBadge />
             </div>
             <p className="text-xs text-slate-500">
-              Free to download. Same account works on web, iOS, and Android.
+              {t("landingMobileAppFreeNote")}
             </p>
           </div>
         </div>
@@ -1296,6 +1302,140 @@ function DeviceSection() {
 
             <p className="text-xs text-slate-500">
               {t("landingDeviceDisclaimer")}
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ─── broker sync CTA ─── */
+
+function BrokerSyncCTA() {
+  const { t } = useI18n();
+  const sectionCb = useCallback(() => trackLanding("landing_section_view", { section: "sync_cta" }), []);
+  const sectionRef = useInViewOnce(sectionCb);
+
+  const points = useMemo(() => [
+    t("landingSyncCtaPoint1" as TranslationKey),
+    t("landingSyncCtaPoint2" as TranslationKey),
+    t("landingSyncCtaPoint3" as TranslationKey),
+    t("landingSyncCtaPoint4" as TranslationKey),
+  ], [t]);
+
+  return (
+    <section className="py-20 sm:py-28 border-t border-slate-800/50 relative overflow-hidden" ref={sectionRef as React.RefObject<HTMLElement>}>
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-500/[0.07] rounded-full blur-3xl" />
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+          {/* Visual side */}
+          <div className="relative flex justify-center">
+            <div className="absolute -inset-6 bg-gradient-to-br from-emerald-500/10 via-teal-500/10 to-cyan-500/10 rounded-3xl blur-2xl" />
+            <div className="relative w-full max-w-sm">
+              {/* Sync animation card */}
+              <div className="rounded-2xl border border-slate-700/50 bg-slate-900/90 backdrop-blur-sm p-6 shadow-2xl shadow-black/40">
+                {/* Sync header */}
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-2">
+                    <span className="relative flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+                    </span>
+                    <span className="text-xs font-semibold text-emerald-400">Auto-sync active</span>
+                  </div>
+                  <span className="text-[10px] text-slate-500">Last synced 2m ago</span>
+                </div>
+
+                {/* Broker rows */}
+                {[
+                  { name: "Interactive Brokers", positions: "24 positions", synced: true },
+                  { name: "Charles Schwab", positions: "12 positions", synced: true },
+                  { name: "Fidelity", positions: "8 positions", synced: true },
+                ].map((broker) => (
+                  <div key={broker.name} className="flex items-center justify-between py-3 border-b border-slate-800/60 last:border-0">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                        <svg className="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016A3.001 3.001 0 0021 9.349m-18 0a2.997 2.997 0 00.845-2.097A3 3 0 016.845 4.5h10.31a3 3 0 012.999 2.752 2.997 2.997 0 00.845 2.097" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="text-xs font-semibold text-white">{broker.name}</div>
+                        <div className="text-[10px] text-slate-500">{broker.positions}</div>
+                      </div>
+                    </div>
+                    <svg className="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                ))}
+
+                {/* Sync summary */}
+                <div className="mt-4 flex items-center justify-between bg-emerald-500/[0.08] rounded-lg px-3 py-2.5">
+                  <div className="flex items-center gap-2">
+                    <svg className="w-4 h-4 text-emerald-400 animate-spin" style={{ animationDuration: "3s" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
+                    </svg>
+                    <span className="text-xs font-semibold text-emerald-400">44 positions synced</span>
+                  </div>
+                  <span className="text-[10px] text-slate-500">3 brokers</span>
+                </div>
+              </div>
+
+              {/* Floating badge */}
+              <div className="absolute -right-3 -top-3 bg-emerald-500 text-white text-[10px] font-bold px-3 py-1.5 rounded-full shadow-lg shadow-emerald-500/30">
+                20+ brokerages
+              </div>
+            </div>
+          </div>
+
+          {/* Text side */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+                {t("landingSyncCtaEyebrow" as TranslationKey)}
+              </span>
+              <span className="text-xs font-bold uppercase tracking-wider text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/20">
+                Auto
+              </span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white leading-tight">
+              {t("landingSyncCtaHeading" as TranslationKey)}{" "}
+              <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
+                {t("landingSyncCtaHeadingAccent" as TranslationKey)}
+              </span>
+            </h2>
+            <p className="text-lg text-slate-400 leading-relaxed">
+              {t("landingSyncCtaDesc" as TranslationKey)}
+            </p>
+            <ul className="space-y-3">
+              {points.map((point) => (
+                <li key={point} className="flex items-center gap-3 text-sm">
+                  <svg className="w-5 h-5 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className="text-slate-300">{point}</span>
+                </li>
+              ))}
+            </ul>
+
+            <Link
+              href="/signup"
+              onClick={() => trackLanding("landing_cta_click", { cta: "sync_now" })}
+              className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-white font-semibold px-8 py-4 rounded-xl text-lg transition-all shadow-xl shadow-emerald-500/25 hover:shadow-emerald-400/30 hover:-translate-y-0.5"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
+              </svg>
+              {t("landingSyncCtaButton" as TranslationKey)}
+            </Link>
+
+            <p className="text-xs text-slate-500">
+              {t("landingSyncCtaBrokers" as TranslationKey)}
             </p>
           </div>
         </div>
@@ -1754,12 +1894,15 @@ function PricingSection() {
           </div>
         </div>
 
-        <div className="mb-12">
+        <div className="mb-8">
           <BillingToggle period={billingPeriod} onChange={(p) => {
             setBillingPeriod(p);
             trackLanding("landing_pricing_toggle", { period: p });
           }} />
         </div>
+        <p className="text-center text-sm text-slate-400 mb-12">
+          {t("landingPricingTierExplainer")}
+        </p>
 
         <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
           {pricing.map((tier) => {
@@ -1928,16 +2071,17 @@ export default function LandingPage() {
       <HeroSection />
       <StatsBar />
       <FeaturesSection />
+      <BrokerSyncCTA />
+      <VideoTutorialSection />
       <ThemesShowcase />
       <ValuePropsSection />
       <WhySection />
       <TestimonialsSection />
       <TrustSection />
+      <GettingStartedSection />
       <MidFunnelCTA />
       <PricingSection />
       <FAQSection />
-      <GettingStartedSection />
-      <VideoTutorialSection />
       <InstallAppSection />
       <MobileAppSection />
       <DeviceSection />

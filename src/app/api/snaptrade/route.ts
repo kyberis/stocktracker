@@ -18,6 +18,11 @@ import {
   deleteSnapTradeBrokerSync,
   setSnapTradeNeedsAttention,
   getSnapTradeNeedsAttention,
+  addBrokerPortfolioMapping,
+  getAllBrokerPortfolioMappings,
+  removeBrokerPortfolioMappings,
+  removeAllBrokerPortfolioMappings,
+  mapTransactionsBySourceRef,
 } from "@/lib/db";
 import {
   registerUser,
@@ -336,15 +341,37 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
       const institutionMap = new Map(allActiveAccounts.map((a) => [a.id, a.institution]));
       const holdingsResult = await fetchAllHoldings(conn.snapTradeUserId, userSecret, allActiveAccountIds, institutionMap);
 
+      // Record broker↔portfolio mapping for the current portfolio so
+      // future auto-syncs and manual re-syncs update all linked portfolios.
+      if (portfolioId) {
+        for (const brokerId of seenBrokerIds) {
+          await addBrokerPortfolioMapping(session.userId, brokerId, portfolioId);
+        }
+      }
+
+      // Collect all portfolios that should receive holdings/cash updates.
+      // This includes the current portfolio plus any previously mapped ones.
+      const brokerPortfolioMap = await getAllBrokerPortfolioMappings(session.userId);
+      const allTargetPortfolioIds = new Set<string>();
+      if (portfolioId) allTargetPortfolioIds.add(portfolioId);
+      for (const pIds of brokerPortfolioMap.values()) {
+        for (const pId of pIds) allTargetPortfolioIds.add(pId);
+      }
+      const targetPortfolios = allTargetPortfolioIds.size > 0
+        ? [...allTargetPortfolioIds]
+        : [portfolioId]; // fallback to current/default
+
       // Upsert holdings directly from broker positions — this is the source of
       // truth for what the user currently owns. Transactions are imported
       // separately for tax/performance but don't drive the holdings table.
       // When any connection is disabled, positions data is incomplete — skip
       // stale cleanup so we don't delete holdings we simply couldn't fetch.
       if (holdingsResult.holdings.length > 0) {
-        await upsertHoldingsFromPositions(session.userId, holdingsResult.holdings, portfolioId, {
-          skipStaleCleanup: disabledConns.length > 0,
-        });
+        for (const targetPId of targetPortfolios) {
+          await upsertHoldingsFromPositions(session.userId, holdingsResult.holdings, targetPId, {
+            skipStaleCleanup: disabledConns.length > 0,
+          });
+        }
       }
 
       const summary = {
@@ -375,9 +402,9 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
         const fetchedBrokerPrefixes = [...new Set(
           [...aggregated.values()].map((e) => e.broker ? e.broker.toUpperCase() : "Cash"),
         )];
-        await removeCashEntriesBySourceAndBrokers(session.userId, "snaptrade", fetchedBrokerPrefixes, portfolioId);
 
         const yahoo = new YahooProvider();
+        const cashEntries: { name: string; amountEUR: number; displayCurrency: string; displayAmount: number }[] = [];
         for (const entry of aggregated.values()) {
           const { broker, currency } = entry;
           let displayAmount = entry.amount;
@@ -391,14 +418,21 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
             }
           }
           const label = broker ? `${broker.toUpperCase()} \u2013 ${currency}` : `Cash ${currency}`;
-          await addCashEntry(session.userId, {
-            name: label,
-            amountEUR,
-            source: "snaptrade",
-            displayCurrency: currency,
-            displayAmount,
-          }, portfolioId);
-          cashImported++;
+          cashEntries.push({ name: label, amountEUR, displayCurrency: currency, displayAmount });
+        }
+
+        for (const targetPId of targetPortfolios) {
+          await removeCashEntriesBySourceAndBrokers(session.userId, "snaptrade", fetchedBrokerPrefixes, targetPId);
+          for (const ce of cashEntries) {
+            await addCashEntry(session.userId, {
+              name: ce.name,
+              amountEUR: ce.amountEUR,
+              source: "snaptrade",
+              displayCurrency: ce.displayCurrency,
+              displayAmount: ce.displayAmount,
+            }, targetPId);
+            cashImported++;
+          }
         }
       }
 
@@ -460,6 +494,39 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
     }
   }
 
+  /* ── Map imported transactions to additional portfolios ── */
+  if (action === "map-transactions") {
+    const portfolioId = (formData.get("portfolioId") as string) || undefined;
+    const sourceRefsRaw = formData.get("sourceRefs") as string;
+
+    if (!portfolioId || !sourceRefsRaw) {
+      return NextResponse.json({ error: "Missing portfolioId or sourceRefs." }, { status: 400 });
+    }
+
+    let sourceRefs: string[];
+    try {
+      sourceRefs = JSON.parse(sourceRefsRaw);
+    } catch {
+      return NextResponse.json({ error: "Invalid sourceRefs format." }, { status: 400 });
+    }
+
+    const brokerPortfolioMap = await getAllBrokerPortfolioMappings(session.userId);
+    const additionalPortfolioIds = new Set<string>();
+    for (const pIds of brokerPortfolioMap.values()) {
+      for (const pId of pIds) {
+        if (pId !== portfolioId) additionalPortfolioIds.add(pId);
+      }
+    }
+
+    let mapped = 0;
+    for (const additionalPId of additionalPortfolioIds) {
+      await mapTransactionsBySourceRef(session.userId, sourceRefs, additionalPId);
+      mapped++;
+    }
+
+    return NextResponse.json({ mapped, portfolios: [...additionalPortfolioIds] });
+  }
+
   /* ── Disconnect single broker ── */
   if (action === "disconnect-broker") {
     const brokerConnectionId = formData.get("brokerConnectionId") as string;
@@ -493,6 +560,7 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
         console.warn("[SnapTrade] removeBrokerageConnection failed after retries:", brokerConnectionId);
       }
       await deleteSnapTradeBrokerSync(userId, brokerConnectionId);
+      await removeBrokerPortfolioMappings(userId, brokerConnectionId);
       trackEvent(userId, "snaptrade_disconnect_broker", { brokerConnectionId });
     });
 
@@ -514,6 +582,7 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
         }
         await deleteSnapTradeConnection(userId);
       }
+      await removeAllBrokerPortfolioMappings(userId);
     });
 
     return NextResponse.json({ disconnected: true });

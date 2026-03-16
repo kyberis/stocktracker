@@ -1,6 +1,6 @@
 "use client";
 
-import React, { FormEvent, useCallback, useEffect, useState } from "react";
+import React, { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import type { Holding, Transaction, CashEntry, Account } from "@/lib/types";
 import type { UserPortfolio, ImportEvent } from "../../shared";
@@ -24,6 +24,8 @@ interface UserInfo {
   taxResidency: string;
   onboardingCompleted: boolean;
   aiCallsThisMonth: number;
+  experienceLevel: string;
+  language: string;
 }
 
 interface AllPortfolio {
@@ -214,6 +216,203 @@ function CashTable({ cash }: { cash: CashEntry[] }) {
   );
 }
 
+/* ── Email Status Badge ──────────────────────────────────────── */
+
+function EmailStatusBadge({ status }: { status: string }) {
+  const styles: Record<string, string> = {
+    sent: "bg-gray-100 dark:bg-slate-700/50 text-gray-500 dark:text-slate-400",
+    delivered: "bg-emerald-500/10 text-emerald-500",
+    opened: "bg-sky-500/10 text-sky-400",
+    clicked: "bg-violet-500/10 text-violet-400",
+    bounced: "bg-red-500/10 text-red-400",
+    failed: "bg-red-500/10 text-red-400",
+    suppressed: "bg-amber-500/10 text-amber-400",
+  };
+  return (
+    <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-semibold ${styles[status] || styles.sent}`}>
+      {status}
+    </span>
+  );
+}
+
+/* ── Send Email Section ──────────────────────────────────────── */
+
+interface EmailSendRecord {
+  id: string;
+  subject: string;
+  status: string;
+  sentAt: string;
+  openedAt: string;
+  openCount: number;
+  clickedAt: string;
+}
+
+interface TemplateOption {
+  id: string;
+  name: string;
+  slug: string;
+  subject: string;
+  subjectEs: string;
+  bodyHtml: string;
+  bodyHtmlEs: string;
+  bodyText: string;
+  bodyTextEs: string;
+}
+
+function SendEmailSection({ userId, userEmail, userLanguage }: { userId: string; userEmail: string; userLanguage: string }) {
+  const [templates, setTemplates] = useState<TemplateOption[]>([]);
+  const [sends, setSends] = useState<EmailSendRecord[]>([]);
+  const [selectedTemplate, setSelectedTemplate] = useState("");
+  const [subject, setSubject] = useState("");
+  const [bodyHtml, setBodyHtml] = useState("");
+  const [bodyText, setBodyText] = useState("");
+  const [sending, setSending] = useState(false);
+  const [sendMsg, setSendMsg] = useState("");
+  const [showCompose, setShowCompose] = useState(false);
+  const previewRef = useRef<HTMLIFrameElement>(null);
+
+  const fetchData = useCallback(async () => {
+    const [tRes, sRes] = await Promise.all([
+      fetch("/api/admin/email-templates"),
+      fetch(`/api/admin/email-sends?userId=${encodeURIComponent(userId)}`),
+    ]);
+    if (tRes.ok) setTemplates(await tRes.json());
+    if (sRes.ok) setSends(await sRes.json());
+  }, [userId]);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  const handleTemplateSelect = (templateId: string) => {
+    setSelectedTemplate(templateId);
+    if (!templateId) { setSubject(""); setBodyHtml(""); setBodyText(""); return; }
+    const t = templates.find((tp) => tp.id === templateId);
+    if (!t) return;
+    const isEs = userLanguage === "es";
+    setSubject(isEs && t.subjectEs ? t.subjectEs : t.subject);
+    setBodyHtml(isEs && t.bodyHtmlEs ? t.bodyHtmlEs : t.bodyHtml);
+    setBodyText(isEs && t.bodyTextEs ? t.bodyTextEs : t.bodyText);
+  };
+
+  useEffect(() => {
+    if (previewRef.current && bodyHtml) {
+      const doc = previewRef.current.contentDocument;
+      if (doc) { doc.open(); doc.write(bodyHtml); doc.close(); }
+    }
+  }, [bodyHtml]);
+
+  const handleSend = async () => {
+    if (!subject || !bodyHtml) return;
+    setSending(true);
+    setSendMsg("");
+    try {
+      const res = await fetch("/api/admin/email-templates/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          templateId: selectedTemplate || undefined,
+          userId,
+          subject,
+          bodyHtml,
+          bodyText: bodyText || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSendMsg("Sent!");
+        setShowCompose(false);
+        setSubject(""); setBodyHtml(""); setBodyText(""); setSelectedTemplate("");
+        fetchData();
+      } else {
+        setSendMsg(data.error || "Send failed");
+      }
+    } catch {
+      setSendMsg("Send failed");
+    }
+    setSending(false);
+    setTimeout(() => setSendMsg(""), 4000);
+  };
+
+  return (
+    <div className="card p-4 space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">
+          Email ({userEmail || "no email"})
+        </h3>
+        <div className="flex items-center gap-2">
+          {sendMsg && <span className={`text-xs font-medium ${sendMsg === "Sent!" ? "text-emerald-500" : "text-red-400"}`}>{sendMsg}</span>}
+          <button onClick={() => setShowCompose(!showCompose)} className="px-3 py-1 text-xs font-medium text-indigo-500 hover:text-indigo-400 border border-indigo-500/30 rounded-lg">
+            {showCompose ? "Cancel" : "Compose Email"}
+          </button>
+        </div>
+      </div>
+
+      {showCompose && (
+        <div className="space-y-3 border-t border-gray-100 dark:border-slate-700 pt-3">
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <label className="block text-[10px] font-medium text-gray-500 dark:text-slate-400 mb-1">Template</label>
+              <select value={selectedTemplate} onChange={(e) => handleTemplateSelect(e.target.value)} className="w-full text-xs px-2 py-1.5 rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white">
+                <option value="">No template (custom)</option>
+                {templates.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="block text-[10px] font-medium text-gray-500 dark:text-slate-400 mb-1">Subject</label>
+            <input value={subject} onChange={(e) => setSubject(e.target.value)} className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white" />
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[10px] font-medium text-gray-500 dark:text-slate-400 mb-1">HTML Body</label>
+              <textarea value={bodyHtml} onChange={(e) => setBodyHtml(e.target.value)} rows={10} className="w-full text-[11px] font-mono px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white resize-y" />
+            </div>
+            <div>
+              <div className="text-[10px] font-medium text-gray-500 dark:text-slate-400 mb-1">Preview</div>
+              <iframe ref={previewRef} className="w-full h-[240px] rounded-lg border border-gray-200 dark:border-slate-600 bg-white" sandbox="allow-same-origin" title="Email preview" />
+            </div>
+          </div>
+          <div className="flex justify-end">
+            <button onClick={handleSend} disabled={sending || !subject || !bodyHtml} className="px-4 py-1.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg disabled:opacity-50">
+              {sending ? "Sending..." : "Send Email"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Email History */}
+      {sends.length > 0 && (
+        <div className="border-t border-gray-100 dark:border-slate-700 pt-3">
+          <div className="text-[10px] font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400 mb-2">Email History</div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="text-gray-500 dark:text-slate-400">
+                  <th className="text-left pb-1 font-medium text-[10px] uppercase">Subject</th>
+                  <th className="text-left pb-1 font-medium text-[10px] uppercase">Status</th>
+                  <th className="text-left pb-1 font-medium text-[10px] uppercase">Sent</th>
+                  <th className="text-right pb-1 font-medium text-[10px] uppercase">Opens</th>
+                  <th className="text-left pb-1 font-medium text-[10px] uppercase">Clicked</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sends.map((s) => (
+                  <tr key={s.id} className="border-t border-gray-100 dark:border-slate-700/50">
+                    <td className="py-1.5 font-medium text-gray-900 dark:text-white max-w-[200px] truncate">{s.subject}</td>
+                    <td className="py-1.5"><EmailStatusBadge status={s.status} /></td>
+                    <td className="py-1.5 text-gray-400 dark:text-slate-500">{new Date(s.sentAt).toLocaleDateString()}</td>
+                    <td className="py-1.5 text-right tabular-nums">{s.openCount > 0 ? s.openCount : "—"}</td>
+                    <td className="py-1.5 text-gray-400 dark:text-slate-500">{s.clickedAt ? new Date(s.clickedAt).toLocaleDateString() : "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ── Main page ──────────────────────────────────────────────── */
 
 export default function AdminUserDetailPage() {
@@ -356,6 +555,12 @@ export default function AdminUserDetailPage() {
               ) : (
                 <span className="text-[11px] text-amber-400 font-medium">Onboarding pending</span>
               )}
+              {user.language && (
+                <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold bg-sky-500/10 text-sky-400">{user.language.toUpperCase()}</span>
+              )}
+              {user.experienceLevel && (
+                <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold bg-violet-500/10 text-violet-400">{user.experienceLevel}</span>
+              )}
             </div>
           </div>
           <div className="text-right text-xs text-gray-400 dark:text-slate-500 shrink-0">
@@ -379,6 +584,8 @@ export default function AdminUserDetailPage() {
               ["Plan Expires", user.planExpiresAt ? new Date(user.planExpiresAt).toLocaleDateString() : "—"],
               ["Stripe Customer", user.stripeCustomerId ? <span key="sc" className="font-mono text-[11px]">{user.stripeCustomerId}</span> : "—"],
               ["Tax Residency", user.taxResidency || "—"],
+              ["Language", user.language ? user.language.toUpperCase() : "—"],
+              ["Experience", user.experienceLevel || "—"],
               ["AI Calls (month)", String(user.aiCallsThisMonth)],
             ] as [string, React.ReactNode][]).map(([label, value]) => (
               <div key={label} className="flex justify-between items-center text-xs gap-2">
@@ -491,6 +698,9 @@ export default function AdminUserDetailPage() {
             </div>
           </div>
         </div>
+
+        {/* Send Email */}
+        <SendEmailSection userId={userId} userEmail={user.email} userLanguage={user.language || "en"} />
 
         {/* Data section */}
         <div className="card p-0 overflow-hidden">

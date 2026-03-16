@@ -2,6 +2,7 @@ import type { Row } from "@libsql/client";
 import type {
   AlertCondition,
   AlertType,
+  ExperienceLevel,
   HoldingAssetType,
   Language,
   NotificationChannel,
@@ -48,6 +49,7 @@ export interface DbUser {
   last_active_at: string;
   tax_residency: string;
   onboarding_completed: number;
+  experience_level: ExperienceLevel;
 }
 
 export type PortfolioCurrency =
@@ -105,6 +107,7 @@ export interface PublicUser {
   deviceProEligible: boolean;
   devicePortfolioId: string;
   lastActiveAt: string;
+  experienceLevel: ExperienceLevel;
 }
 
 export interface UserSettings {
@@ -116,6 +119,7 @@ export interface UserSettings {
   alertDeviceEnabled: boolean;
   dashboardTheme: import("@/lib/types").LayoutTheme;
   defaultCurrency: PortfolioCurrency;
+  emailNotificationsEnabled: boolean;
 }
 
 export const ADMIN_DEFAULT_USERNAME = "admin";
@@ -176,6 +180,12 @@ export function alertType(val: unknown): AlertType {
 export function percentBasis(val: unknown): PercentBasis | "" {
   const v = String(val);
   if (v === "daily" || v === "purchase") return v;
+  return "";
+}
+
+export function parseExperienceLevel(val: unknown): ExperienceLevel {
+  const v = String(val || "");
+  if (v === "beginner" || v === "intermediate" || v === "experienced" || v === "professional") return v;
   return "";
 }
 
@@ -268,6 +278,7 @@ export function rowToDbUser(row: Row): DbUser {
     last_active_at: str(row.last_active_at),
     tax_residency: str(row.tax_residency),
     onboarding_completed: num(row.onboarding_completed),
+    experience_level: parseExperienceLevel(row.experience_level),
   };
 }
 
@@ -310,6 +321,7 @@ export function mapUser(user: DbUser): PublicUser {
     deviceProEligible: !!user.device_linked_at && !user.device_pro_redeemed_at && (user.plan === "free" || user.plan === "starter"),
     devicePortfolioId: user.device_portfolio_id,
     lastActiveAt: user.last_active_at,
+    experienceLevel: user.experience_level,
   };
 }
 

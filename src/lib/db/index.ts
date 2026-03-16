@@ -91,6 +91,9 @@ export {
   deleteTransactionsForPosition,
   deleteAllTransactions,
   listTransactionSourceRefs,
+  mapTransactionsToPortfolio,
+  mapTransactionsBySourceRef,
+  removeTransactionPortfolioMappings,
 } from "./transactions";
 
 export {
@@ -211,6 +214,11 @@ export {
   setAllDisabledSince,
   clearAllDisabledSince,
   getConnectionsAllDisabledOver24h,
+  addBrokerPortfolioMapping,
+  getBrokerPortfolioIds,
+  getAllBrokerPortfolioMappings,
+  removeBrokerPortfolioMappings,
+  removeAllBrokerPortfolioMappings,
 } from "./snaptrade-connections";
 
 export type { DeviceInterestEntry } from "./device-interest";
@@ -315,3 +323,19 @@ export {
   getRecentSnapTradeLogs,
   pruneOldSnapTradeLogs,
 } from "./snaptrade-logs";
+
+export type { EmailTemplate, EmailSend } from "./email-templates";
+export {
+  listEmailTemplates,
+  getEmailTemplate,
+  getEmailTemplateBySlug,
+  createEmailTemplate,
+  updateEmailTemplate,
+  deleteEmailTemplate,
+  logEmailSend,
+  listEmailSendsForUser,
+  listEmailSends,
+  getEmailSendByResendId,
+  updateEmailSendStatus,
+  getTemplateStats,
+} from "./email-templates";

@@ -10,7 +10,9 @@ import { SUPPORTED_PORTFOLIO_CURRENCIES } from "@/lib/db/helpers";
 import { COUNTRIES } from "@/lib/countries";
 import { getBrokersForCountry } from "@/lib/country-brokers";
 
-const TOTAL_STEPS = 3;
+const TOTAL_STEPS = 4;
+
+type ExperienceOption = "beginner" | "intermediate" | "experienced" | "professional";
 
 function StepIndicator({ current }: { current: number }) {
   const { t } = useI18n();
@@ -85,6 +87,74 @@ function StepProfile({
       <button onClick={onNext} className="btn-primary w-full">
         {t("onboardingContinue")}
       </button>
+    </div>
+  );
+}
+
+const EXPERIENCE_OPTIONS: { key: ExperienceOption; icon: string; color: string; bgColor: string }[] = [
+  { key: "beginner", icon: "M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25", color: "text-sky-600 dark:text-sky-400", bgColor: "bg-sky-100 dark:bg-sky-500/15" },
+  { key: "intermediate", icon: "M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z", color: "text-emerald-600 dark:text-emerald-400", bgColor: "bg-emerald-100 dark:bg-emerald-500/15" },
+  { key: "experienced", icon: "M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941", color: "text-violet-600 dark:text-violet-400", bgColor: "bg-violet-100 dark:bg-violet-500/15" },
+  { key: "professional", icon: "M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0M12 12.75h.008v.008H12v-.008z", color: "text-amber-600 dark:text-amber-400", bgColor: "bg-amber-100 dark:bg-amber-500/15" },
+];
+
+function StepExperience({
+  selected,
+  setSelected,
+  onNext,
+  onSkip,
+}: {
+  selected: ExperienceOption | "";
+  setSelected: (v: ExperienceOption) => void;
+  onNext: () => void;
+  onSkip: () => void;
+}) {
+  const { t } = useI18n();
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-gray-500 dark:text-slate-400">{t("onboardingExperienceHint")}</p>
+      <div className="grid grid-cols-1 gap-2.5">
+        {EXPERIENCE_OPTIONS.map((opt) => (
+          <button
+            key={opt.key}
+            type="button"
+            onClick={() => setSelected(opt.key)}
+            className={`group flex items-center gap-3 rounded-xl border p-3.5 text-left transition-all ${
+              selected === opt.key
+                ? "border-emerald-400 dark:border-emerald-500/50 bg-emerald-50/50 dark:bg-emerald-500/5 shadow-sm"
+                : "border-gray-200 dark:border-slate-600 hover:border-emerald-300 dark:hover:border-emerald-500/30 hover:shadow-sm"
+            }`}
+          >
+            <div className={`w-9 h-9 rounded-lg ${opt.bgColor} flex items-center justify-center shrink-0`}>
+              <svg className={`w-4.5 h-4.5 ${opt.color}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d={opt.icon} />
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                {t(`onboardingExperience_${opt.key}` as never)}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
+                {t(`onboardingExperience_${opt.key}_desc` as never)}
+              </p>
+            </div>
+            {selected === opt.key && (
+              <svg className="w-5 h-5 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+            )}
+          </button>
+        ))}
+      </div>
+      <div className="flex gap-3">
+        <button onClick={onSkip} className="btn-secondary flex-1">
+          {t("onboardingSkip")}
+        </button>
+        <button onClick={onNext} disabled={!selected} className="btn-primary flex-1 disabled:opacity-40">
+          {t("onboardingContinue")}
+        </button>
+      </div>
     </div>
   );
 }
@@ -250,6 +320,7 @@ function OnboardingContent() {
   const [step, setStep] = useState(0);
   const [displayName, setDisplayName] = useState("");
   const [currency, setCurrency] = useState("EUR");
+  const [experienceLevel, setExperienceLevel] = useState<ExperienceOption | "">("");
   const [taxResidency, setTaxResidency] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -273,6 +344,7 @@ function OnboardingContent() {
           displayName,
           defaultCurrency: currency,
           taxResidency: taxResidency || undefined,
+          experienceLevel: experienceLevel || undefined,
           importMethod: importMethod || "skip",
         }),
       });
@@ -285,10 +357,11 @@ function OnboardingContent() {
       // Allow retry
     }
     setSaving(false);
-  }, [displayName, currency, taxResidency, refreshUser, router]);
+  }, [displayName, currency, taxResidency, experienceLevel, refreshUser, router]);
 
   const stepTitles = [
     t("onboardingStep1Title"),
+    t("onboardingStepExperienceTitle"),
     t("onboardingStep2Title"),
     t("onboardingStep3ImportTitle"),
   ];
@@ -334,14 +407,22 @@ function OnboardingContent() {
             />
           )}
           {step === 1 && (
-            <StepTaxResidency
-              selected={taxResidency}
-              setSelected={setTaxResidency}
+            <StepExperience
+              selected={experienceLevel}
+              setSelected={setExperienceLevel}
               onNext={() => setStep(2)}
               onSkip={() => setStep(2)}
             />
           )}
           {step === 2 && (
+            <StepTaxResidency
+              selected={taxResidency}
+              setSelected={setTaxResidency}
+              onNext={() => setStep(3)}
+              onSkip={() => setStep(3)}
+            />
+          )}
+          {step === 3 && (
             <StepImport
               country={taxResidency}
               onFinish={handleFinish}

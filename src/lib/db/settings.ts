@@ -45,12 +45,13 @@ const DEFAULT_SETTINGS: UserSettings = {
   alertDeviceEnabled: false,
   dashboardTheme: "default",
   defaultCurrency: "EUR",
+  emailNotificationsEnabled: true,
 };
 
 export async function getUserSettings(userId: string): Promise<UserSettings> {
   const client = await ensureInitialized();
   const result = await client.execute({
-    sql: "SELECT language, refresh_interval, alert_channels, whatsapp_phone, whatsapp_verified, alert_device_enabled, dashboard_theme, default_currency FROM user_settings WHERE user_id = ?",
+    sql: "SELECT language, refresh_interval, alert_channels, whatsapp_phone, whatsapp_verified, alert_device_enabled, dashboard_theme, default_currency, email_notifications_enabled FROM user_settings WHERE user_id = ?",
     args: [userId],
   });
 
@@ -73,6 +74,7 @@ export async function getUserSettings(userId: string): Promise<UserSettings> {
     alertDeviceEnabled: num(row.alert_device_enabled) === 1,
     dashboardTheme: parseTheme(row.dashboard_theme),
     defaultCurrency: parseCurrency(row.default_currency),
+    emailNotificationsEnabled: row.email_notifications_enabled === undefined ? true : num(row.email_notifications_enabled) !== 0,
   };
 }
 
@@ -90,18 +92,20 @@ export async function updateUserSettings(
     alertDeviceEnabled: updates.alertDeviceEnabled ?? current.alertDeviceEnabled,
     dashboardTheme: updates.dashboardTheme ?? current.dashboardTheme,
     defaultCurrency: updates.defaultCurrency ?? current.defaultCurrency,
+    emailNotificationsEnabled: updates.emailNotificationsEnabled ?? current.emailNotificationsEnabled,
   };
 
   const client = await ensureInitialized();
   await client.execute({
     sql: `UPDATE user_settings SET language = ?, refresh_interval = ?,
           alert_channels = ?, whatsapp_phone = ?, whatsapp_verified = ?, alert_device_enabled = ?,
-          dashboard_theme = ?, default_currency = ?
+          dashboard_theme = ?, default_currency = ?, email_notifications_enabled = ?
           WHERE user_id = ?`,
     args: [
       next.language, next.refreshInterval,
       next.alertChannels.join(","), next.whatsappPhone, next.whatsappVerified ? 1 : 0,
-      next.alertDeviceEnabled ? 1 : 0, next.dashboardTheme, next.defaultCurrency, userId,
+      next.alertDeviceEnabled ? 1 : 0, next.dashboardTheme, next.defaultCurrency,
+      next.emailNotificationsEnabled ? 1 : 0, userId,
     ],
   });
 

@@ -1,4 +1,5 @@
 import type { Client } from "@libsql/client";
+import { randomUUID } from "crypto";
 import { encrypt, tryDecryptOrPlaintext } from "@/lib/crypto";
 import { str, EXCHANGE_SUFFIX_MAP } from "./helpers";
 
@@ -1429,6 +1430,137 @@ const MIGRATIONS: Migration[] = [
         CREATE INDEX IF NOT EXISTS idx_scheduled_x_posts_status ON scheduled_x_posts(status);
         CREATE INDEX IF NOT EXISTS idx_scheduled_x_posts_scheduled ON scheduled_x_posts(scheduled_at);
       `);
+    },
+  },
+  {
+    version: 49,
+    description: "Add experience_level to users table",
+    up: async (client: Client) => {
+      const cols = await client.execute("PRAGMA table_info(users)");
+      const colNames = new Set(cols.rows.map((r) => str(r.name)));
+      if (!colNames.has("experience_level")) {
+        await client.execute({
+          sql: "ALTER TABLE users ADD COLUMN experience_level TEXT NOT NULL DEFAULT ''",
+          args: [],
+        });
+      }
+    },
+  },
+  {
+    version: 50,
+    description: "Create email_templates and email_sends tables",
+    up: async (client: Client) => {
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS email_templates (
+          id TEXT PRIMARY KEY,
+          slug TEXT NOT NULL UNIQUE,
+          name TEXT NOT NULL,
+          subject TEXT NOT NULL,
+          subject_es TEXT NOT NULL DEFAULT '',
+          body_html TEXT NOT NULL,
+          body_html_es TEXT NOT NULL DEFAULT '',
+          body_text TEXT NOT NULL DEFAULT '',
+          body_text_es TEXT NOT NULL DEFAULT '',
+          category TEXT NOT NULL DEFAULT 'general',
+          experience_level TEXT NOT NULL DEFAULT '',
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+
+        CREATE TABLE IF NOT EXISTS email_sends (
+          id TEXT PRIMARY KEY,
+          resend_id TEXT NOT NULL DEFAULT '',
+          template_id TEXT NOT NULL DEFAULT '',
+          user_id TEXT NOT NULL,
+          email_to TEXT NOT NULL DEFAULT '',
+          subject TEXT NOT NULL,
+          body_html TEXT NOT NULL,
+          body_text TEXT NOT NULL DEFAULT '',
+          sent_at TEXT NOT NULL DEFAULT (datetime('now')),
+          status TEXT NOT NULL DEFAULT 'sent',
+          delivered_at TEXT NOT NULL DEFAULT '',
+          opened_at TEXT NOT NULL DEFAULT '',
+          open_count INTEGER NOT NULL DEFAULT 0,
+          clicked_at TEXT NOT NULL DEFAULT '',
+          bounced_at TEXT NOT NULL DEFAULT '',
+          failed_at TEXT NOT NULL DEFAULT '',
+          FOREIGN KEY (user_id) REFERENCES users(id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_email_sends_resend_id ON email_sends(resend_id);
+        CREATE INDEX IF NOT EXISTS idx_email_sends_user_id ON email_sends(user_id);
+      `);
+    },
+  },
+  {
+    version: 51,
+    description: "Add email_notifications_enabled to user_settings",
+    up: async (client: Client) => {
+      const cols = await client.execute("PRAGMA table_info(user_settings)");
+      const colNames = new Set(cols.rows.map((r) => str(r.name)));
+      if (!colNames.has("email_notifications_enabled")) {
+        await client.execute({
+          sql: "ALTER TABLE user_settings ADD COLUMN email_notifications_enabled INTEGER NOT NULL DEFAULT 1",
+          args: [],
+        });
+      }
+    },
+  },
+  {
+    version: 53,
+    description: "Add snaptrade_broker_portfolio_map for multi-portfolio sync",
+    up: async (client: Client) => {
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS snaptrade_broker_portfolio_map (
+          user_id TEXT NOT NULL,
+          brokerage_authorization_id TEXT NOT NULL,
+          portfolio_id TEXT NOT NULL,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          PRIMARY KEY (user_id, brokerage_authorization_id, portfolio_id),
+          FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
+          FOREIGN KEY(portfolio_id) REFERENCES portfolios(id) ON DELETE CASCADE
+        );
+      `);
+    },
+  },
+  {
+    version: 54,
+    description: "Add transaction_portfolio_map for multi-portfolio transaction mapping",
+    up: async (client: Client) => {
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS transaction_portfolio_map (
+          transaction_id TEXT NOT NULL,
+          portfolio_id TEXT NOT NULL,
+          user_id TEXT NOT NULL,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          PRIMARY KEY (transaction_id, portfolio_id),
+          FOREIGN KEY(transaction_id) REFERENCES transactions(id) ON DELETE CASCADE,
+          FOREIGN KEY(portfolio_id) REFERENCES portfolios(id) ON DELETE CASCADE,
+          FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_tx_portfolio_map_user_portfolio
+          ON transaction_portfolio_map(user_id, portfolio_id);
+      `);
+    },
+  },
+  {
+    version: 55,
+    description: "Seed email templates",
+    up: async (client: Client) => {
+      const { EMAIL_TEMPLATE_SEEDS } = await import("./email-template-seeds");
+      const existing = await client.execute("SELECT COUNT(*) as cnt FROM email_templates");
+      if (Number(existing.rows[0]?.cnt) > 0) return;
+
+      for (const t of EMAIL_TEMPLATE_SEEDS) {
+        await client.execute({
+          sql: `INSERT INTO email_templates (id, slug, name, subject, subject_es, body_html, body_html_es, body_text, body_text_es, category, experience_level)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          args: [
+            randomUUID(), t.slug, t.name, t.subject, t.subjectEs,
+            t.bodyHtml, t.bodyHtmlEs, t.bodyText, t.bodyTextEs,
+            t.category, t.experienceLevel,
+          ],
+        });
+      }
     },
   },
 ];

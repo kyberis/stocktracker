@@ -451,6 +451,22 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
     setHoldingsCapped(totalHoldingsCapped);
     setImportedCount(txCount);
 
+    // Map imported transactions to additional broker-linked portfolios
+    if (txCount > 0 && portfolioId) {
+      const sourceRefs = validTransactions
+        .map((tx) => tx.sourceRef || "")
+        .filter(Boolean);
+      if (sourceRefs.length > 0) {
+        try {
+          const mapForm = new FormData();
+          mapForm.append("action", "map-transactions");
+          mapForm.append("portfolioId", portfolioId);
+          mapForm.append("sourceRefs", JSON.stringify(sourceRefs));
+          await fetch("/api/snaptrade", { method: "POST", body: mapForm });
+        } catch { /* mapping is best-effort; auto-sync will catch up */ }
+      }
+    }
+
     if (errorCount > 0 && txCount === 0) {
       setErrorMsg("Import failed.");
       setStep("error");

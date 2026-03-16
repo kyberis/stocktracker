@@ -55,6 +55,7 @@
     "resend": "^6.4.2",
     "snaptrade-typescript-sdk": "^9.0.172",
     "stripe": "^20.4.0",
+    "svix": "^1.88.0",
     "swr": "^2.4.1",
     "twilio": "^5.12.2",
     "web-push": "^3.6.7",

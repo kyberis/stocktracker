@@ -14,6 +14,7 @@ const TABS = [
   { slug: "notifications", label: "Notifications" },
   { slug: "snaptrade-logs", label: "SnapTrade Logs" },
   { slug: "x-posts", label: "X Posts" },
+  { slug: "email-templates", label: "Email Templates" },
 ] as const;
 
 export function AdminNav() {

@@ -152,10 +152,12 @@ export async function listHoldings(userId: string, portfolioId?: string): Promis
       .sort((a, b) => a.name.localeCompare(b.name));
   }
 
-  const txCount = await client.execute({
-    sql: `SELECT COUNT(*) as cnt FROM transactions WHERE user_id = ?${portfolioFilter}`,
-    args: [userId, ...portfolioArgs],
-  });
+  const txSql = portfolioId
+    ? `SELECT COUNT(*) as cnt FROM transactions WHERE user_id = ?
+       AND (portfolio_id = ? OR id IN (SELECT transaction_id FROM transaction_portfolio_map WHERE user_id = ? AND portfolio_id = ?))`
+    : `SELECT COUNT(*) as cnt FROM transactions WHERE user_id = ?`;
+  const txArgs = portfolioId ? [userId, portfolioId, userId, portfolioId] : [userId];
+  const txCount = await client.execute({ sql: txSql, args: txArgs });
   if (num(txCount.rows[0]?.cnt) > 0) {
     return rebuildHoldings(userId, portfolioId);
   }
@@ -297,7 +299,18 @@ export async function resetUserHoldings(
   const portfolioArgs = [resolved];
   await client.execute({ sql: `DELETE FROM holdings WHERE user_id = ?${portfolioFilter}`, args: [userId, ...portfolioArgs] });
   await client.execute({ sql: `DELETE FROM cash_entries WHERE user_id = ?${portfolioFilter}`, args: [userId, ...portfolioArgs] });
-  await client.execute({ sql: `DELETE FROM transactions WHERE user_id = ?${portfolioFilter}`, args: [userId, ...portfolioArgs] });
+
+  // Remove mapping entries for this portfolio, then delete orphaned transaction rows
+  await client.execute({
+    sql: "DELETE FROM transaction_portfolio_map WHERE user_id = ? AND portfolio_id = ?",
+    args: [userId, resolved],
+  });
+  await client.execute({
+    sql: `DELETE FROM transactions WHERE user_id = ? AND portfolio_id = ?
+          AND id NOT IN (SELECT transaction_id FROM transaction_portfolio_map WHERE user_id = ?)`,
+    args: [userId, resolved, userId],
+  });
+
   if (useSeedData) {
     const holdingsCount = await seedHoldingsForUser(client, userId, resolved);
     const cashCount = await seedCashForUser(client, userId, resolved);
