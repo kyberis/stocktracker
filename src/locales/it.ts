@@ -54,6 +54,7 @@ const it: TranslationStrings = {
   close: "Chiudi",
   addToPortfolio: "Aggiungi al portafoglio",
   enterShares: "Numero di azioni",
+  sharesMustBePositive: "Shares must be greater than 0",
   enterPrice: "Prezzo di acquisto per azione",
   selectCurrency: "Seleziona valuta",
   importCSV: "Importa CSV",

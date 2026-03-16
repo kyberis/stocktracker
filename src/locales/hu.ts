@@ -52,6 +52,7 @@ const hu: TranslationStrings = {
   close: "Bezárás",
   addToPortfolio: "Hozzáadás a portfólióhoz",
   enterShares: "Darabszám",
+  sharesMustBePositive: "Shares must be greater than 0",
   enterPrice: "Vételár részvényenként",
   selectCurrency: "Valuta kiválasztása",
   importCSV: "CSV importálás",

@@ -24,6 +24,13 @@ export const releaseNotes: ReleaseEntry[] = [
     titleTranslations: { es: "Profundidad de Dividendos: Rendimiento sobre Coste y Simulación DRIP" },
     changes: [
       {
+        type: "feature",
+        text: "Transaction history now supports filtering by ticker, type, and source, plus sortable column headers for quick navigation through large transaction lists.",
+        translations: {
+          es: "El historial de transacciones ahora permite filtrar por ticker, tipo y origen, además de columnas ordenables para navegar rápidamente en listas grandes de transacciones.",
+        },
+      },
+      {
         type: "fix",
         text: "Fixed cash balances disappearing when one broker's token expires — syncing now only updates cash from active brokers, leaving expired brokers' cash untouched.",
         translations: {

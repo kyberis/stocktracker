@@ -52,6 +52,7 @@ const lt: TranslationStrings = {
   close: "Uždaryti",
   addToPortfolio: "Pridėti į portfelį",
   enterShares: "Akcijų skaičius",
+  sharesMustBePositive: "Shares must be greater than 0",
   enterPrice: "Pirkimo kaina už akciją",
   selectCurrency: "Pasirinkite valiutą",
   importCSV: "Importuoti CSV",

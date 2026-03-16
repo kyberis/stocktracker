@@ -110,7 +110,7 @@ export const onboardingSchema = z.object({
 export const createHoldingSchema = z.object({
   ticker: z.string().min(1, "Ticker is required"),
   name: z.string().min(1, "Name is required"),
-  shares: z.number().optional().default(0),
+  shares: z.number().positive("Shares must be greater than 0"),
   purchasePrice: z.number().optional().default(0),
   purchaseDate: z.string().optional(),
   displayCurrency: z.string().optional().default("EUR"),

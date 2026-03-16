@@ -514,28 +514,8 @@ export interface AdminUserWithStats {
   brokerImports: string;
 }
 
-export async function listUsersWithStats(): Promise<AdminUserWithStats[]> {
-  const client = await ensureInitialized();
-  const result = await client.execute(`
-    SELECT
-      u.id, u.username, u.role, u.plan, u.email, u.display_name,
-      u.auth_provider, u.email_verified, u.must_change_password,
-      u.created_at, u.last_active_at, u.plan_expires_at,
-      u.stripe_customer_id, u.stripe_subscription_id,
-      u.tax_residency, u.onboarding_completed, u.ai_calls_this_month,
-      (SELECT COUNT(*) FROM portfolios WHERE user_id = u.id) AS portfolio_count,
-      (SELECT COUNT(*) FROM holdings WHERE user_id = u.id) AS holding_count,
-      (SELECT COALESCE(SUM(value_in_eur), 0) FROM holdings WHERE user_id = u.id) AS total_holdings_eur,
-      (SELECT COUNT(*) FROM cash_entries WHERE user_id = u.id) AS cash_count,
-      (SELECT COALESCE(SUM(amount_eur), 0) FROM cash_entries WHERE user_id = u.id) AS total_cash_eur,
-      (SELECT COUNT(*) FROM transactions WHERE user_id = u.id) AS transaction_count,
-      (SELECT GROUP_CONCAT(DISTINCT broker) FROM accounts WHERE user_id = u.id) AS broker_accounts,
-      (SELECT GROUP_CONCAT(DISTINCT broker_name) FROM transactions WHERE user_id = u.id AND broker_name != '') AS broker_imports
-    FROM users u
-    ORDER BY u.created_at DESC
-  `);
-
-  return result.rows.map((r) => ({
+function mapUserRow(r: import("@libsql/client").Row): AdminUserWithStats {
+  return {
     id: str(r.id),
     username: str(r.username),
     role: str(r.role) as UserRole,
@@ -561,7 +541,126 @@ export async function listUsersWithStats(): Promise<AdminUserWithStats[]> {
     transactionCount: num(r.transaction_count),
     brokerAccounts: str(r.broker_accounts),
     brokerImports: str(r.broker_imports),
-  }));
+  };
+}
+
+const USER_STATS_SELECT = `
+  SELECT
+    u.id, u.username, u.role, u.plan, u.email, u.display_name,
+    u.auth_provider, u.email_verified, u.must_change_password,
+    u.created_at, u.last_active_at, u.plan_expires_at,
+    u.stripe_customer_id, u.stripe_subscription_id,
+    u.tax_residency, u.onboarding_completed, u.ai_calls_this_month,
+    (SELECT COUNT(*) FROM portfolios WHERE user_id = u.id) AS portfolio_count,
+    (SELECT COUNT(*) FROM holdings WHERE user_id = u.id) AS holding_count,
+    (SELECT COALESCE(SUM(value_in_eur), 0) FROM holdings WHERE user_id = u.id) AS total_holdings_eur,
+    (SELECT COUNT(*) FROM cash_entries WHERE user_id = u.id) AS cash_count,
+    (SELECT COALESCE(SUM(amount_eur), 0) FROM cash_entries WHERE user_id = u.id) AS total_cash_eur,
+    (SELECT COUNT(*) FROM transactions WHERE user_id = u.id) AS transaction_count,
+    (SELECT GROUP_CONCAT(DISTINCT broker) FROM accounts WHERE user_id = u.id) AS broker_accounts,
+    (SELECT GROUP_CONCAT(DISTINCT broker_name) FROM transactions WHERE user_id = u.id AND broker_name != '') AS broker_imports
+  FROM users u`;
+
+export async function listUsersWithStats(): Promise<AdminUserWithStats[]> {
+  const client = await ensureInitialized();
+  const result = await client.execute(`${USER_STATS_SELECT} ORDER BY u.created_at DESC`);
+  return result.rows.map(mapUserRow);
+}
+
+type AdminSortKey = "username" | "authProvider" | "plan" | "holdingCount" | "totalHoldingsEur" | "lastActiveAt" | "createdAt";
+
+const SORT_COLUMN_MAP: Record<AdminSortKey, string> = {
+  username: "u.username",
+  authProvider: "u.auth_provider",
+  plan: "u.plan",
+  holdingCount: "holding_count",
+  totalHoldingsEur: "total_holdings_eur",
+  lastActiveAt: "u.last_active_at",
+  createdAt: "u.created_at",
+};
+
+export async function listUsersWithStatsPaginated(opts: {
+  page: number;
+  pageSize: number;
+  search?: string;
+  sortKey?: AdminSortKey;
+  sortDir?: "asc" | "desc";
+  filterPlan?: string;
+  filterAuth?: string;
+  filterImport?: string;
+}): Promise<{ users: AdminUserWithStats[]; total: number }> {
+  const client = await ensureInitialized();
+  const { page, pageSize, search, sortKey = "createdAt", sortDir = "desc", filterPlan, filterAuth, filterImport } = opts;
+
+  const whereClauses: string[] = [];
+  const args: (string | number)[] = [];
+
+  if (search) {
+    whereClauses.push("(u.username LIKE ? OR u.email LIKE ? OR u.display_name LIKE ?)");
+    const like = `%${search}%`;
+    args.push(like, like, like);
+  }
+  if (filterPlan && filterPlan !== "all") {
+    whereClauses.push("u.plan = ?");
+    args.push(filterPlan);
+  }
+  if (filterAuth && filterAuth !== "all") {
+    whereClauses.push("u.auth_provider = ?");
+    args.push(filterAuth);
+  }
+
+  const whereStr = whereClauses.length > 0 ? ` WHERE ${whereClauses.join(" AND ")}` : "";
+
+  const col = SORT_COLUMN_MAP[sortKey] || "u.created_at";
+  const dir = sortDir === "asc" ? "ASC" : "DESC";
+  const offset = page * pageSize;
+
+  const DIRECT_COLUMNS = new Set(["u.username", "u.auth_provider", "u.plan", "u.last_active_at", "u.created_at"]);
+  const isDirectSort = DIRECT_COLUMNS.has(col);
+  const needsImportFilter = filterImport === "imported" || filterImport === "not-imported";
+
+  if (isDirectSort && !needsImportFilter) {
+    // Two-phase approach: paginate on users table first, then compute stats for page only
+    const countResult = await client.execute({ sql: `SELECT COUNT(*) as cnt FROM users u${whereStr}`, args });
+    const total = num(countResult.rows[0]?.cnt);
+
+    const idResult = await client.execute({
+      sql: `SELECT u.id FROM users u${whereStr} ORDER BY ${col} ${dir} LIMIT ? OFFSET ?`,
+      args: [...args, pageSize, offset],
+    });
+    const pageIds = idResult.rows.map((r) => str(r.id));
+
+    if (pageIds.length === 0) {
+      return { users: [], total };
+    }
+
+    const placeholders = pageIds.map(() => "?").join(",");
+    const statsSql = `${USER_STATS_SELECT} WHERE u.id IN (${placeholders}) ORDER BY ${col} ${dir}`;
+
+    const result = await client.execute({ sql: statsSql, args: pageIds });
+
+    return { users: result.rows.map(mapUserRow), total };
+  }
+
+  // Fallback: computed-column sort or import filter needs full scan
+  const countResult = await client.execute({ sql: `SELECT COUNT(*) as cnt FROM users u${whereStr}`, args });
+
+  let fullSql = `${USER_STATS_SELECT}${whereStr} ORDER BY ${col} ${dir} LIMIT ? OFFSET ?`;
+  const fullArgs = [...args, pageSize, offset];
+
+  if (needsImportFilter) {
+    const havingSql = filterImport === "imported"
+      ? " HAVING broker_accounts IS NOT NULL OR broker_imports IS NOT NULL"
+      : " HAVING broker_accounts IS NULL AND broker_imports IS NULL";
+    fullSql = `SELECT * FROM (${USER_STATS_SELECT}${whereStr})${havingSql} ORDER BY ${col} ${dir} LIMIT ? OFFSET ?`;
+  }
+
+  const result = await client.execute({ sql: fullSql, args: fullArgs });
+
+  return {
+    users: result.rows.map(mapUserRow),
+    total: num(countResult.rows[0]?.cnt),
+  };
 }
 
 export async function getUserDetailData(userId: string): Promise<{

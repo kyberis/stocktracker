@@ -52,6 +52,7 @@ const uk: TranslationStrings = {
   close: "Закрити",
   addToPortfolio: "Додати до портфеля",
   enterShares: "Кількість акцій",
+  sharesMustBePositive: "Shares must be greater than 0",
   enterPrice: "Ціна купівлі за акцію",
   selectCurrency: "Оберіть валюту",
   importCSV: "Імпорт CSV",

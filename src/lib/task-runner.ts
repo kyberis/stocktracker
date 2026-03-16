@@ -76,3 +76,23 @@ export function submitJob<T>(
 export function getJobStatus(id: string): JobStatus | null {
   return jobs.get(id) ?? null;
 }
+
+/**
+ * Retry an async function with exponential backoff.
+ * Delays between attempts: baseDelayMs, baseDelayMs*2, baseDelayMs*4, ...
+ * Throws the last error if all attempts fail.
+ */
+export async function retryAsync<T>(
+  fn: () => Promise<T>,
+  { attempts = 3, baseDelayMs = 1000 } = {},
+): Promise<T> {
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      if (i === attempts - 1) throw err;
+      await new Promise((r) => setTimeout(r, baseDelayMs * 2 ** i));
+    }
+  }
+  throw new Error("retryAsync: unreachable");
+}

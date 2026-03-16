@@ -35,6 +35,25 @@ export async function listDeviceInterest(): Promise<DeviceInterestEntry[]> {
   }));
 }
 
+export async function listDeviceInterestPaginated(page: number, pageSize: number): Promise<{ entries: DeviceInterestEntry[]; total: number }> {
+  const client = await ensureInitialized();
+  const [countResult, result] = await Promise.all([
+    client.execute("SELECT COUNT(*) as c FROM device_interest"),
+    client.execute({
+      sql: "SELECT id, email, created_at FROM device_interest ORDER BY created_at DESC LIMIT ? OFFSET ?",
+      args: [pageSize, page * pageSize],
+    }),
+  ]);
+  return {
+    entries: result.rows.map((r) => ({
+      id: str(r.id),
+      email: str(r.email),
+      createdAt: str(r.created_at),
+    })),
+    total: Number(countResult.rows[0]?.c) || 0,
+  };
+}
+
 export async function countDeviceInterest(): Promise<number> {
   const client = await ensureInitialized();
   const result = await client.execute("SELECT COUNT(*) as c FROM device_interest");

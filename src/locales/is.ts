@@ -52,6 +52,7 @@ const is: TranslationStrings = {
   close: "Loka",
   addToPortfolio: "Bæta við eignasafn",
   enterShares: "Fjöldi hluta",
+  sharesMustBePositive: "Shares must be greater than 0",
   enterPrice: "Kaupverð á hlut",
   selectCurrency: "Veldu gjaldmiðil",
   importCSV: "Flytja inn CSV",

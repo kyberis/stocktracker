@@ -52,6 +52,7 @@ const be: TranslationStrings = {
   close: "Закрыць",
   addToPortfolio: "Дадаць у партфель",
   enterShares: "Колькасць акцый",
+  sharesMustBePositive: "Shares must be greater than 0",
   enterPrice: "Цана за акцыю пры набыцці",
   selectCurrency: "Выберыце валюту",
   importCSV: "Імпартаваць CSV",

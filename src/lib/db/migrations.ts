@@ -1375,6 +1375,28 @@ const MIGRATIONS: Migration[] = [
   },
   {
     version: 46,
+    description: "Create scheduled_x_posts table for automated X/Twitter posting",
+    up: async (client: Client) => {
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS scheduled_x_posts (
+          id TEXT PRIMARY KEY,
+          content TEXT NOT NULL,
+          image_url TEXT NOT NULL DEFAULT '',
+          hashtags TEXT NOT NULL DEFAULT '',
+          scheduled_at TEXT NOT NULL,
+          status TEXT NOT NULL DEFAULT 'pending',
+          posted_at TEXT NOT NULL DEFAULT '',
+          x_post_id TEXT NOT NULL DEFAULT '',
+          error_message TEXT NOT NULL DEFAULT '',
+          created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_scheduled_x_posts_status ON scheduled_x_posts(status);
+        CREATE INDEX IF NOT EXISTS idx_scheduled_x_posts_scheduled ON scheduled_x_posts(scheduled_at);
+      `);
+    },
+  },
+  {
+    version: 47,
     description: "Add source column to holdings for position-synced vs transaction-derived distinction",
     up: async (client: Client) => {
       const cols = await client.execute("PRAGMA table_info(holdings)");
@@ -1385,6 +1407,28 @@ const MIGRATIONS: Migration[] = [
           args: [],
         });
       }
+    },
+  },
+  {
+    version: 48,
+    description: "Ensure scheduled_x_posts table exists (re-apply skipped migration 46)",
+    up: async (client: Client) => {
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS scheduled_x_posts (
+          id TEXT PRIMARY KEY,
+          content TEXT NOT NULL,
+          image_url TEXT NOT NULL DEFAULT '',
+          hashtags TEXT NOT NULL DEFAULT '',
+          scheduled_at TEXT NOT NULL,
+          status TEXT NOT NULL DEFAULT 'pending',
+          posted_at TEXT NOT NULL DEFAULT '',
+          x_post_id TEXT NOT NULL DEFAULT '',
+          error_message TEXT NOT NULL DEFAULT '',
+          created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_scheduled_x_posts_status ON scheduled_x_posts(status);
+        CREATE INDEX IF NOT EXISTS idx_scheduled_x_posts_scheduled ON scheduled_x_posts(scheduled_at);
+      `);
     },
   },
 ];

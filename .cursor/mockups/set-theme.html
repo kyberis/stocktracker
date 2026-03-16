@@ -1,0 +1,6 @@
+<!DOCTYPE html><html><head><script>
+const params = new URLSearchParams(window.location.search);
+const theme = params.get('theme') || 'default';
+document.cookie = 'trefolio_layout_theme=' + theme + ';path=/;max-age=34560000;SameSite=Lax';
+window.location.href = 'http://localhost:3001/import';
+</script></head><body>Setting theme to: <span id="t"></span><script>document.getElementById('t').textContent=new URLSearchParams(window.location.search).get('theme')</script></body></html>

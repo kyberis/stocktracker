@@ -52,6 +52,7 @@ const bg: TranslationStrings = {
   close: "Затвори",
   addToPortfolio: "Добави към портфейла",
   enterShares: "Брой акции",
+  sharesMustBePositive: "Shares must be greater than 0",
   enterPrice: "Покупна цена на акция",
   selectCurrency: "Избери валута",
   importCSV: "Импорт CSV",

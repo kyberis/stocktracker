@@ -52,6 +52,7 @@ const sr: TranslationStrings = {
   close: "Затвори",
   addToPortfolio: "Додај у портфељ",
   enterShares: "Број акција",
+  sharesMustBePositive: "Shares must be greater than 0",
   enterPrice: "Цена по акцији при куповини",
   selectCurrency: "Изаберите валуту",
   importCSV: "Увези CSV",

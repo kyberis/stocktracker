@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
 import { ensureInitialized } from "./client";
-import { str, num, holdingAssetType, normalizeTickerForExchange } from "./helpers";
+import { str, num, holdingAssetType, normalizeTickerForExchange, EXCHANGE_SUFFIX_MAP } from "./helpers";
 import type { Holding, HoldingAssetType, ExchangeRates } from "@/lib/types";
 import { deriveHoldingsFromTransactions } from "@/lib/derive-holdings";
 import { seedHoldingsForUser, seedCashForUser, seedTransactionsForUser } from "./seed";
@@ -12,16 +12,41 @@ import { convertToEUR, resolveQuoteCurrency } from "@/lib/utils";
 
 const FX_PAIRS = ["EURUSD", "EURGBP", "EURDKK", "EURCAD"];
 
+/**
+ * Build a Yahoo-compatible ticker from a holding's ticker + exchange.
+ * Handles bare tickers like "AALLON" that need a suffix (".HE") based on
+ * the exchange field, and tickers that already carry the suffix.
+ */
+function yahooTickerForHolding(h: { ticker: string; exchange: string }): string {
+  if (h.ticker.includes(".")) return h.ticker;
+  if (h.exchange) {
+    const suffix = EXCHANGE_SUFFIX_MAP[h.exchange.toUpperCase()];
+    if (suffix) return `${h.ticker}${suffix}`;
+  }
+  return h.ticker;
+}
+
 async function enrichValueInEUR(derived: Holding[]): Promise<void> {
   if (derived.length === 0) return;
 
   const yahoo = new YahooProvider();
-  const tickers = [...new Set(derived.map((h) => h.ticker))];
+
+  // Map each original ticker to the Yahoo-compatible version
+  const tickerToYahoo = new Map<string, string>();
+  const yahooToOriginal = new Map<string, string>();
+  for (const h of derived) {
+    if (tickerToYahoo.has(h.ticker)) continue;
+    const yt = yahooTickerForHolding(h);
+    tickerToYahoo.set(h.ticker, yt);
+    yahooToOriginal.set(yt, h.ticker);
+  }
+
+  const yahooTickers = [...new Set(tickerToYahoo.values())];
 
   const quotes: Record<string, { price: number; currency: string }> = {};
   const BATCH = 10;
-  for (let i = 0; i < tickers.length; i += BATCH) {
-    const chunk = tickers.slice(i, i + BATCH);
+  for (let i = 0; i < yahooTickers.length; i += BATCH) {
+    const chunk = yahooTickers.slice(i, i + BATCH);
     const results = await Promise.allSettled(
       chunk.map(async (t) => {
         const q = await yahoo.getQuote(t);
@@ -30,7 +55,8 @@ async function enrichValueInEUR(derived: Holding[]): Promise<void> {
     );
     for (const r of results) {
       if (r.status === "fulfilled" && r.value.price > 0) {
-        quotes[r.value.ticker] = { price: r.value.price, currency: r.value.currency };
+        const origTicker = yahooToOriginal.get(r.value.ticker) || r.value.ticker;
+        quotes[origTicker] = { price: r.value.price, currency: r.value.currency };
       }
     }
   }
@@ -97,7 +123,6 @@ export async function listHoldings(userId: string, portfolioId?: string): Promis
       assetClass: str(row.asset_class),
       accountId: str(row.account_id),
     }));
-
     const byTicker = new Map<string, Holding>();
     for (const h of rows) {
       const key = h.ticker.toUpperCase();
@@ -286,13 +311,13 @@ export async function upsertHoldingsFromPositions(
   const resolved = await resolvePortfolioId(userId, portfolioId);
 
   const existingRows = await client.execute({
-    sql: `SELECT id, ticker, exchange, name, isin, asset_type, sector, region, asset_class, account_id, source
+    sql: `SELECT id, ticker, exchange, name, isin, asset_type, sector, region, asset_class, account_id, source, value_in_eur
           FROM holdings WHERE user_id = ? AND portfolio_id = ?`,
     args: [userId, resolved],
   });
   const existingByKey = new Map<string, {
     id: string; name: string; isin: string; sector: string; region: string;
-    assetClass: string; accountId: string; source: string;
+    assetClass: string; accountId: string; source: string; valueInEUR: number;
   }>();
   for (const row of existingRows.rows) {
     const key = `${str(row.ticker).toUpperCase()}|${str(row.exchange).toUpperCase()}`;
@@ -301,9 +326,9 @@ export async function upsertHoldingsFromPositions(
       sector: str(row.sector), region: str(row.region),
       assetClass: str(row.asset_class), accountId: str(row.account_id),
       source: str(row.source) || "transaction",
+      valueInEUR: num(row.value_in_eur),
     });
   }
-
   const upserted: Holding[] = [];
   const touchedKeys = new Set<string>();
 
@@ -362,10 +387,14 @@ export async function upsertHoldingsFromPositions(
   );
 
   for (const h of upserted) {
-    if (h.valueInEUR > 0) {
+    const key = `${h.ticker.toUpperCase()}|${h.exchange.toUpperCase()}`;
+    const prevVal = existingByKey.get(key)?.valueInEUR || 0;
+    const finalVal = h.valueInEUR > 0 ? h.valueInEUR : prevVal;
+    if (finalVal > 0) {
+      h.valueInEUR = finalVal;
       await client.execute({
         sql: "UPDATE holdings SET value_in_eur = ? WHERE id = ? AND user_id = ?",
-        args: [h.valueInEUR, h.id, userId],
+        args: [finalVal, h.id, userId],
       });
     }
   }
@@ -380,7 +409,7 @@ export async function rebuildHoldings(userId: string, portfolioId?: string): Pro
   const portfolioArgs = [resolved];
 
   const metadataRows = await client.execute({
-    sql: `SELECT id, name, ticker, isin, asset_type, display_currency, exchange, sector, region, asset_class, account_id
+    sql: `SELECT id, name, ticker, isin, asset_type, display_currency, exchange, sector, region, asset_class, account_id, value_in_eur
           FROM holdings WHERE user_id = ?${portfolioFilter}`,
     args: [userId, ...portfolioArgs],
   });
@@ -389,6 +418,7 @@ export async function rebuildHoldings(userId: string, portfolioId?: string): Pro
     id: string; name: string; isin: string; assetType: HoldingAssetType;
     displayCurrency: string; sector: string; region: string; assetClass: string; accountId: string;
   }>();
+  const prevValueByKey = new Map<string, number>();
   for (const row of metadataRows.rows) {
     const key = `${str(row.ticker).toUpperCase()}|${str(row.exchange).toUpperCase()}`;
     if (!metadataByKey.has(key)) {
@@ -399,6 +429,8 @@ export async function rebuildHoldings(userId: string, portfolioId?: string): Pro
         accountId: str(row.account_id),
       });
     }
+    const val = num(row.value_in_eur);
+    if (val > 0 && !prevValueByKey.has(key)) prevValueByKey.set(key, val);
   }
 
   const transactions = await listTransactions(userId, undefined, portfolioId);
@@ -441,15 +473,76 @@ export async function rebuildHoldings(userId: string, portfolioId?: string): Pro
     const key = `${h.ticker.toUpperCase()}|${h.exchange.toUpperCase()}`;
     const existingId = metadataByKey.get(key)?.id;
     const id = existingId || randomUUID();
+    const valueEUR = h.valueInEUR > 0 ? h.valueInEUR : (prevValueByKey.get(key) || 0);
+    h.valueInEUR = valueEUR;
     await client.execute({
       sql: `INSERT INTO holdings (id, user_id, name, ticker, isin, asset_type, shares, purchase_price, display_currency, exchange, value_in_eur, sector, region, asset_class, account_id, portfolio_id, source)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'transaction')
             ON CONFLICT(id) DO UPDATE SET shares = excluded.shares, purchase_price = excluded.purchase_price, value_in_eur = excluded.value_in_eur`,
-      args: [id, userId, h.name, h.ticker, h.isin || "", h.assetType || "stock", h.shares, h.purchasePrice, h.displayCurrency, h.exchange, h.valueInEUR || 0, h.sector || "", h.region || "", h.assetClass || "", h.accountId || "", resolved],
+      args: [id, userId, h.name, h.ticker, h.isin || "", h.assetType || "stock", h.shares, h.purchasePrice, h.displayCurrency, h.exchange, valueEUR, h.sector || "", h.region || "", h.assetClass || "", h.accountId || "", resolved],
     });
   }
 
   return derived;
+}
+
+/**
+ * Convert all `source='snaptrade'` holdings to `source='transaction'` so they
+ * are preserved after a broker disconnect and won't be deleted by the stale-
+ * position cleanup in {@link upsertHoldingsFromPositions}.
+ */
+export async function detachSnapTradeHoldings(userId: string, portfolioId?: string): Promise<number> {
+  const client = await ensureInitialized();
+  const portfolioFilter = portfolioId ? " AND portfolio_id = ?" : "";
+  const portfolioArgs = portfolioId ? [portfolioId] : [];
+  const result = await client.execute({
+    sql: `UPDATE holdings SET source = 'transaction' WHERE user_id = ? AND source = 'snaptrade'${portfolioFilter}`,
+    args: [userId, ...portfolioArgs],
+  });
+  return Number(result.rowsAffected ?? 0);
+}
+
+export interface DistinctHoldingTicker {
+  ticker: string;
+  displayCurrency: string;
+}
+
+/**
+ * Returns all distinct (ticker, display_currency) pairs across all users' holdings.
+ * Used by the refresh-holdings cron to batch-fetch quotes per ticker instead of per user.
+ */
+export async function listDistinctHoldingTickers(): Promise<DistinctHoldingTicker[]> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: `SELECT DISTINCT ticker, display_currency FROM holdings WHERE shares > 0 AND ticker != ''`,
+    args: [],
+  });
+  return result.rows.map((r) => ({
+    ticker: str(r.ticker),
+    displayCurrency: str(r.display_currency),
+  }));
+}
+
+/**
+ * Batch-update value_in_eur for all holdings matching a given ticker.
+ * price × shares × EUR conversion is done in the caller; we store the per-share EUR value
+ * so the update is: value_in_eur = shares * pricePerShareEur.
+ */
+export async function batchUpdateValueInEur(
+  updates: { ticker: string; pricePerShareEur: Record<string, number> }[],
+): Promise<number> {
+  const client = await ensureInitialized();
+  let totalUpdated = 0;
+  for (const { ticker, pricePerShareEur } of updates) {
+    for (const [displayCurrency, eurPerShare] of Object.entries(pricePerShareEur)) {
+      const result = await client.execute({
+        sql: `UPDATE holdings SET value_in_eur = shares * ? WHERE ticker = ? AND display_currency = ? AND shares > 0`,
+        args: [eurPerShare, ticker, displayCurrency],
+      });
+      totalUpdated += Number(result.rowsAffected ?? 0);
+    }
+  }
+  return totalUpdated;
 }
 
 export async function deleteAllHoldings(userId: string, portfolioId?: string): Promise<number> {

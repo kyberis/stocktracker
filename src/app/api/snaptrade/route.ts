@@ -11,6 +11,7 @@ import {
   addCashEntry,
   removeCashEntriesBySourceAndBrokers,
   upsertHoldingsFromPositions,
+  detachSnapTradeHoldings,
   trackEvent,
   getSnapTradeBrokerSyncs,
   upsertSnapTradeBrokerSync,
@@ -36,6 +37,7 @@ import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { withMetrics } from "@/lib/with-metrics";
 import { portfolioImportsTotal } from "@/lib/metrics";
 import { getSnapTradeConnectionLimit } from "@/lib/subscription";
+import { deferTask, retryAsync } from "@/lib/task-runner";
 import type { SubscriptionPlan } from "@/lib/types";
 
 /**
@@ -474,30 +476,42 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
       );
     }
 
-    try {
-      await removeBrokerageConnection(conn.snapTradeUserId, userSecret, brokerConnectionId);
-    } catch {
-      // Connection may already be removed on SnapTrade side; continue with local cleanup
-    }
+    const userId = session.userId;
+    const snapTradeUserId = conn.snapTradeUserId;
 
-    await deleteSnapTradeBrokerSync(session.userId, brokerConnectionId);
-
-    trackEvent(session.userId, "snaptrade_disconnect_broker", { brokerConnectionId });
+    deferTask(async () => {
+      await detachSnapTradeHoldings(userId);
+      try {
+        await retryAsync(() =>
+          removeBrokerageConnection(snapTradeUserId, userSecret, brokerConnectionId),
+        );
+      } catch {
+        console.warn("[SnapTrade] removeBrokerageConnection failed after retries:", brokerConnectionId);
+      }
+      await deleteSnapTradeBrokerSync(userId, brokerConnectionId);
+      trackEvent(userId, "snaptrade_disconnect_broker", { brokerConnectionId });
+    });
 
     return NextResponse.json({ disconnected: true, brokerConnectionId });
   }
 
   /* ── Disconnect all ── */
   if (action === "disconnect") {
-    const conn = await getSnapTradeConnection(session.userId);
-    if (conn) {
-      try {
-        await deleteUser(conn.snapTradeUserId);
-      } catch {
-        // SnapTrade user may already be deleted; continue with local cleanup
+    const userId = session.userId;
+
+    deferTask(async () => {
+      await detachSnapTradeHoldings(userId);
+      const conn = await getSnapTradeConnection(userId);
+      if (conn) {
+        try {
+          await retryAsync(() => deleteUser(conn.snapTradeUserId));
+        } catch {
+          console.warn("[SnapTrade] deleteUser failed after retries:", conn.snapTradeUserId);
+        }
+        await deleteSnapTradeConnection(userId);
       }
-      await deleteSnapTradeConnection(session.userId);
-    }
+    });
+
     return NextResponse.json({ disconnected: true });
   }
 

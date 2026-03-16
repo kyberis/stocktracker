@@ -52,6 +52,7 @@ const sv: TranslationStrings = {
   close: "Stäng",
   addToPortfolio: "Lägg till i portfölj",
   enterShares: "Antal aktier",
+  sharesMustBePositive: "Shares must be greater than 0",
   enterPrice: "Köpkurs per aktie",
   selectCurrency: "Välj valuta",
   importCSV: "Importera CSV",

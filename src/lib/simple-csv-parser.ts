@@ -11,6 +11,7 @@ import { deduplicateSourceRefs } from "./broker-parsers/utils";
 type TxType = DegiroTransaction["type"];
 
 const VALID_TYPES = new Set<TxType>(["buy", "sell", "dividend", "fee"]);
+const SUPPORTED_CURRENCIES = new Set(["USD", "EUR", "GBP", "GBX", "DKK", "CAD", "CHF", "JPY"]);
 
 function parseNumber(raw: string): number {
   if (!raw) return 0;
@@ -92,9 +93,13 @@ export function parseSimpleCSV(csv: string): DegiroTransaction[] {
 
     const price = cols.price >= 0 ? parseNumber(fields[cols.price]) : 0;
     const shares = cols.amount >= 0 ? parseNumber(fields[cols.amount]) : 0;
-    const currency = cols.currency >= 0
+
+    if (rawType !== "fee" && shares <= 0) continue;
+
+    const rawCurrency = cols.currency >= 0
       ? (fields[cols.currency] || "EUR").toUpperCase().trim()
       : "EUR";
+    const currency = SUPPORTED_CURRENCIES.has(rawCurrency) ? rawCurrency : "EUR";
     const date = cols.date >= 0 ? (fields[cols.date] || today).trim() : today;
     const name = cols.name >= 0 ? (fields[cols.name] || ticker).trim() : ticker;
 

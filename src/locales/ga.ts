@@ -52,6 +52,7 @@ const ga: TranslationStrings = {
   close: "Dún",
   addToPortfolio: "Cuir leis an bPortafóilió",
   enterShares: "Líon na scaireanna",
+  sharesMustBePositive: "Shares must be greater than 0",
   enterPrice: "Praghas ceannaigh in aghaidh na scaire",
   selectCurrency: "Roghnaigh airgeadra",
   importCSV: "Iompórtáil CSV",

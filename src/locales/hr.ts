@@ -52,6 +52,7 @@ const hr: TranslationStrings = {
   close: "Zatvori",
   addToPortfolio: "Dodaj u portfelj",
   enterShares: "Broj dionica",
+  sharesMustBePositive: "Shares must be greater than 0",
   enterPrice: "Nabavna cijena po dionici",
   selectCurrency: "Odaberi valutu",
   importCSV: "Uvezi CSV",

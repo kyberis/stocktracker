@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Import Wizard — Mobile Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --card-hover: #334155;
+    --border: #334155;
+    --border-light: #475569;
+    --text: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --emerald: #10b981;
+    --emerald-light: #d1fae5;
+    --emerald-bg: rgba(16, 185, 129, 0.1);
+    --emerald-bg2: rgba(16, 185, 129, 0.15);
+    --violet: #8b5cf6;
+    --violet-bg: rgba(139, 92, 246, 0.1);
+    --blue-bg: rgba(59, 130, 246, 0.1);
+    --blue: #60a5fa;
+    --blue-text: #93c5fd;
+    --amber: #fbbf24;
+    --red: #f87171;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .mockup-frame {
+    max-width: 390px;
+    margin: 0 auto;
+    min-height: 100vh;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .mockup-label {
+    position: fixed;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--violet);
+    color: white;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 999px;
+    z-index: 100;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  /* Progress bar */
+  .wizard-progress {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 20px;
+    margin: 44px 0 0;
+  }
+  .progress-step {
+    flex: 1;
+    height: 3px;
+    border-radius: 999px;
+    background: var(--border);
+    transition: background 0.3s ease;
+  }
+  .progress-step.active { background: var(--emerald); }
+  .progress-step.completed { background: var(--emerald); }
+
+  /* Header */
+  .wizard-header {
+    padding: 16px 20px 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .back-btn {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .back-btn:hover { background: var(--card-hover); }
+  .back-btn svg { width: 18px; height: 18px; stroke: var(--text-secondary); }
+
+  .wizard-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .wizard-subtitle {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+
+  /* Step container */
+  .step {
+    display: none;
+    padding: 20px;
+    animation: fadeUp 0.3s ease-out;
+  }
+  .step.active { display: block; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Method cards - Step 1 */
+  .method-card {
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .method-card:hover { border-color: var(--border-light); background: var(--card-hover); }
+  .method-card:active { transform: scale(0.98); }
+  .method-card.selected { border-color: var(--emerald); background: var(--emerald-bg); }
+
+  .method-icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .method-icon svg { width: 22px; height: 22px; }
+  .method-icon.csv { background: var(--emerald-bg2); }
+  .method-icon.csv svg { stroke: var(--emerald); }
+  .method-icon.sync { background: rgba(59, 130, 246, 0.15); }
+  .method-icon.sync svg { stroke: var(--blue); }
+  .method-icon.ai { background: var(--violet-bg); }
+  .method-icon.ai svg { stroke: var(--violet); }
+  .method-icon.manual { background: rgba(251, 191, 36, 0.15); }
+  .method-icon.manual svg { stroke: var(--amber); }
+
+  .method-info { flex: 1; min-width: 0; }
+  .method-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .method-desc {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-top: 3px;
+    line-height: 1.4;
+  }
+
+  .tier-badge {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 999px;
+    letter-spacing: 0.3px;
+  }
+  .tier-badge.starter { background: rgba(59,130,246,0.15); color: var(--blue); }
+  .tier-badge.pro { background: var(--violet-bg); color: var(--violet); }
+
+  .method-arrow {
+    flex-shrink: 0;
+    width: 20px; height: 20px;
+    stroke: var(--text-muted);
+  }
+
+  /* Broker grid - Step 2 for CSV */
+  .broker-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .broker-chip {
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .broker-chip:hover { border-color: var(--border-light); }
+  .broker-chip:active { transform: scale(0.97); }
+  .broker-chip.selected { border-color: var(--emerald); background: var(--emerald-bg); }
+  .broker-chip span {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  /* Guide box */
+  .guide-box {
+    background: var(--blue-bg);
+    border-radius: 14px;
+    padding: 14px;
+    margin: 16px 0;
+  }
+  .guide-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--blue-text);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .guide-title svg { width: 14px; height: 14px; stroke: var(--blue); }
+  .guide-steps {
+    list-style: none;
+    counter-reset: guide;
+  }
+  .guide-steps li {
+    counter-increment: guide;
+    font-size: 11px;
+    color: var(--blue);
+    line-height: 1.5;
+    padding-left: 22px;
+    position: relative;
+    margin-bottom: 4px;
+  }
+  .guide-steps li::before {
+    content: counter(guide);
+    position: absolute;
+    left: 0;
+    width: 16px; height: 16px;
+    border-radius: 999px;
+    background: rgba(59,130,246,0.2);
+    color: var(--blue);
+    font-size: 9px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    top: 1px;
+  }
+
+  /* Upload zone */
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: 20px;
+    padding: 32px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 12px;
+  }
+  .upload-zone:hover { border-color: var(--emerald); background: var(--emerald-bg); }
+  .upload-icon {
+    width: 52px; height: 52px;
+    margin: 0 auto 12px;
+    border-radius: 16px;
+    background: var(--emerald-bg2);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .upload-icon svg { width: 26px; height: 26px; stroke: var(--emerald); }
+  .upload-text { font-size: 14px; font-weight: 600; color: var(--text-secondary); }
+  .upload-hint { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+  /* Preview */
+  .preview-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .preview-stats {
+    display: flex;
+    gap: 12px;
+  }
+  .stat-pill {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--emerald-bg);
+    color: #34d399;
+  }
+  .stat-pill.tx { background: rgba(59,130,246,0.12); color: var(--blue); }
+
+  .preview-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .preview-table th {
+    text-align: left;
+    padding: 8px 10px;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: rgba(30,41,59,0.7);
+    border-bottom: 1px solid var(--border);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .preview-table th:last-child { text-align: right; }
+  .preview-table td {
+    padding: 10px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-secondary);
+  }
+  .preview-table td:last-child { text-align: right; }
+  .preview-table .ticker { font-weight: 600; color: var(--text); font-family: 'Inter', monospace; }
+  .preview-table .amount { font-weight: 600; color: var(--text); font-family: 'Inter', monospace; }
+
+  .tx-badge {
+    display: inline-flex;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 600;
+  }
+  .tx-badge.buy { background: rgba(16,185,129,0.1); color: #34d399; }
+  .tx-badge.sell { background: rgba(239,68,68,0.1); color: var(--red); }
+  .tx-badge.div { background: rgba(139,92,246,0.1); color: var(--violet); }
+
+  .dupes-banner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--blue-bg);
+    border: 1px solid rgba(59,130,246,0.2);
+    border-radius: 12px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+  }
+  .dupes-banner svg { width: 16px; height: 16px; stroke: var(--blue); flex-shrink: 0; }
+  .dupes-banner span { font-size: 11px; color: var(--blue-text); }
+
+  /* Success screen */
+  .success-screen {
+    text-align: center;
+    padding: 40px 20px;
+  }
+  .success-icon {
+    width: 64px; height: 64px;
+    margin: 0 auto 16px;
+    border-radius: 999px;
+    background: var(--emerald-bg2);
+    display: flex; align-items: center; justify-content: center;
+    animation: scaleIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  @keyframes scaleIn {
+    from { transform: scale(0); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  .success-icon svg { width: 32px; height: 32px; stroke: var(--emerald); stroke-width: 2.5; }
+  .success-title { font-size: 20px; font-weight: 700; color: var(--text); }
+  .success-subtitle { font-size: 13px; color: var(--text-secondary); margin-top: 6px; }
+  .success-stat {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 16px;
+    padding: 8px 16px;
+    border-radius: 12px;
+    background: var(--emerald-bg);
+    font-size: 13px;
+    font-weight: 600;
+    color: #34d399;
+  }
+
+  /* Bottom CTA */
+  .bottom-cta {
+    position: fixed;
+    bottom: 0;
+    left: 0; right: 0;
+    padding: 12px 20px;
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+    background: linear-gradient(to top, var(--bg) 80%, transparent);
+    z-index: 50;
+  }
+  .bottom-cta .inner {
+    max-width: 390px;
+    margin: 0 auto;
+  }
+  .btn-primary {
+    width: 100%;
+    padding: 14px 24px;
+    border-radius: 14px;
+    background: var(--emerald);
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s;
+    min-height: 52px;
+  }
+  .btn-primary:hover { background: #059669; }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-primary svg { width: 18px; height: 18px; }
+
+  .btn-secondary {
+    width: 100%;
+    padding: 14px 24px;
+    border-radius: 14px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s;
+    min-height: 52px;
+    margin-top: 8px;
+  }
+  .btn-secondary:hover { background: var(--card-hover); }
+
+  /* Portfolio badge */
+  .portfolio-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 10px;
+    background: var(--emerald-bg);
+    border: 1px solid rgba(16,185,129,0.2);
+    margin: 12px 20px 0;
+  }
+  .portfolio-badge svg { width: 14px; height: 14px; stroke: #34d399; }
+  .portfolio-badge span { font-size: 11px; font-weight: 600; color: #34d399; }
+
+  /* Manual form */
+  .form-group { margin-bottom: 12px; }
+  .form-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .form-input {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1.5px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
+    min-height: 44px;
+  }
+  .form-input:focus { border-color: var(--emerald); }
+  .form-input::placeholder { color: var(--text-muted); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .search-result {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-top: 6px;
+    overflow: hidden;
+  }
+  .search-item {
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: background 0.15s;
+    min-height: 44px;
+  }
+  .search-item:hover { background: var(--card-hover); }
+  .search-item .ticker { font-weight: 600; color: var(--text); font-size: 13px; }
+  .search-item .name { color: var(--text-secondary); font-size: 12px; margin-left: 8px; }
+  .search-item .exchange { font-size: 10px; color: var(--text-muted); }
+
+  .selected-stock {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: var(--emerald-bg);
+    border: 1px solid rgba(16,185,129,0.2);
+    margin-bottom: 12px;
+  }
+  .selected-stock .ticker { font-weight: 700; color: #34d399; font-size: 13px; }
+  .selected-stock .name { color: var(--text-secondary); font-size: 12px; }
+
+  /* Scrollable area padding for fixed bottom */
+  .scroll-content { padding-bottom: 100px; }
+
+  /* Annotation callout */
+  .annotation {
+    position: relative;
+    margin: 16px 0;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: rgba(139, 92, 246, 0.08);
+    border: 1px dashed rgba(139, 92, 246, 0.3);
+  }
+  .annotation::before {
+    content: "DESIGN NOTE";
+    display: block;
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--violet);
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .annotation p {
+    font-size: 11px;
+    color: rgba(139, 92, 246, 0.8);
+    line-height: 1.5;
+  }
+
+  /* Step navigation tabs for demo */
+  .demo-nav {
+    position: fixed;
+    top: 0;
+    left: 0; right: 0;
+    display: flex;
+    background: #020617;
+    border-bottom: 1px solid var(--border);
+    z-index: 200;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .demo-nav button {
+    flex-shrink: 0;
+    padding: 8px 14px;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: none;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  .demo-nav button.active {
+    color: var(--emerald);
+    border-bottom-color: var(--emerald);
+  }
+  .demo-nav button:hover { color: var(--text-secondary); }
+</style>
+</head>
+<body>
+
+<!-- Demo navigation to switch between wizard steps -->
+<nav class="demo-nav" id="demoNav">
+  <button class="active" onclick="showStep(1)">1. Method</button>
+  <button onclick="showStep(2)">2. Broker</button>
+  <button onclick="showStep(3)">3. Upload</button>
+  <button onclick="showStep(4)">4. Preview</button>
+  <button onclick="showStep(5)">5. Done</button>
+  <button onclick="showStep(6)">Manual</button>
+</nav>
+
+<div class="mockup-frame scroll-content">
+
+  <!-- STEP 1: Choose Import Method -->
+  <div class="step active" id="step1">
+    <div class="wizard-progress" style="margin-top: 48px;">
+      <div class="progress-step active"></div>
+      <div class="progress-step"></div>
+      <div class="progress-step"></div>
+      <div class="progress-step"></div>
+    </div>
+
+    <div class="wizard-header">
+      <div>
+        <div class="wizard-title">Import Portfolio</div>
+        <div class="wizard-subtitle">Choose how you want to import</div>
+      </div>
+    </div>
+
+    <div class="portfolio-badge" style="margin-left: 0; margin-right: 0; margin-top: 14px; display: inline-flex;">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z"/></svg>
+      <span>Importing to: My Portfolio</span>
+    </div>
+
+    <div style="margin-top: 20px;">
+      <div class="method-card selected" onclick="showStep(2)">
+        <div class="method-icon csv">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+        </div>
+        <div class="method-info">
+          <div class="method-name">Broker CSV</div>
+          <div class="method-desc">Upload a CSV export from DEGIRO, IBKR, Trading 212, and more</div>
+        </div>
+        <svg class="method-arrow" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+      </div>
+
+      <div class="method-card" onclick="showStep(2)">
+        <div class="method-icon sync">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75"/></svg>
+        </div>
+        <div class="method-info">
+          <div class="method-name">Broker Sync <span class="tier-badge starter">Bifolio</span></div>
+          <div class="method-desc">Connect your broker and auto-sync every hour</div>
+        </div>
+        <svg class="method-arrow" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+      </div>
+
+      <div class="method-card" onclick="showStep(3)">
+        <div class="method-icon ai">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>
+        </div>
+        <div class="method-info">
+          <div class="method-name">AI Import <span class="tier-badge pro">Trefolio</span></div>
+          <div class="method-desc">Upload a screenshot or any CSV — AI extracts holdings</div>
+        </div>
+        <svg class="method-arrow" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+      </div>
+
+      <div class="method-card" onclick="showStep(6)">
+        <div class="method-icon manual">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+        </div>
+        <div class="method-info">
+          <div class="method-name">Manual Add</div>
+          <div class="method-desc">Search and add stocks one by one</div>
+        </div>
+        <svg class="method-arrow" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+      </div>
+    </div>
+
+    <div class="annotation">
+      <p>Full-screen method cards with large tap areas (44px+). Each card leads to its own focused flow. Single visible choice per screen = less cognitive load on mobile.</p>
+    </div>
+  </div>
+
+  <!-- STEP 2: Select Broker (CSV path) -->
+  <div class="step" id="step2">
+    <div class="wizard-progress" style="margin-top: 48px;">
+      <div class="progress-step completed"></div>
+      <div class="progress-step active"></div>
+      <div class="progress-step"></div>
+      <div class="progress-step"></div>
+    </div>
+
+    <div class="wizard-header">
+      <button class="back-btn" onclick="showStep(1)">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+      </button>
+      <div>
+        <div class="wizard-title">Select Broker</div>
+        <div class="wizard-subtitle">Which broker did you export from?</div>
+      </div>
+    </div>
+
+    <div style="margin-top: 20px;">
+      <div class="broker-grid">
+        <div class="broker-chip selected" onclick="this.parentElement.querySelectorAll('.broker-chip').forEach(c=>c.classList.remove('selected'));this.classList.add('selected');"><span>DEGIRO</span></div>
+        <div class="broker-chip" onclick="this.parentElement.querySelectorAll('.broker-chip').forEach(c=>c.classList.remove('selected'));this.classList.add('selected');"><span>Interactive Brokers</span></div>
+        <div class="broker-chip" onclick="this.parentElement.querySelectorAll('.broker-chip').forEach(c=>c.classList.remove('selected'));this.classList.add('selected');"><span>Trading 212</span></div>
+        <div class="broker-chip" onclick="this.parentElement.querySelectorAll('.broker-chip').forEach(c=>c.classList.remove('selected'));this.classList.add('selected');"><span>Revolut</span></div>
+        <div class="broker-chip" onclick="this.parentElement.querySelectorAll('.broker-chip').forEach(c=>c.classList.remove('selected'));this.classList.add('selected');"><span>Charles Schwab</span></div>
+        <div class="broker-chip" onclick="this.parentElement.querySelectorAll('.broker-chip').forEach(c=>c.classList.remove('selected'));this.classList.add('selected');"><span>Fidelity</span></div>
+        <div class="broker-chip" onclick="this.parentElement.querySelectorAll('.broker-chip').forEach(c=>c.classList.remove('selected'));this.classList.add('selected');"><span>Nordnet</span></div>
+        <div class="broker-chip" onclick="this.parentElement.querySelectorAll('.broker-chip').forEach(c=>c.classList.remove('selected'));this.classList.add('selected');"><span>Tastytrade</span></div>
+        <div class="broker-chip" onclick="this.parentElement.querySelectorAll('.broker-chip').forEach(c=>c.classList.remove('selected'));this.classList.add('selected');"><span>Freetrade</span></div>
+        <div class="broker-chip" onclick="this.parentElement.querySelectorAll('.broker-chip').forEach(c=>c.classList.remove('selected'));this.classList.add('selected');"><span>eToro</span></div>
+        <div class="broker-chip" onclick="this.parentElement.querySelectorAll('.broker-chip').forEach(c=>c.classList.remove('selected'));this.classList.add('selected');"><span>Wealthsimple</span></div>
+        <div class="broker-chip" onclick="this.parentElement.querySelectorAll('.broker-chip').forEach(c=>c.classList.remove('selected'));this.classList.add('selected');"><span>Simple CSV</span></div>
+      </div>
+    </div>
+
+    <div class="annotation">
+      <p>Broker selection is its own step instead of a cramped grid above the upload zone. Tapping a broker shows the guide + upload on the next screen.</p>
+    </div>
+
+    <div class="bottom-cta">
+      <div class="inner">
+        <button class="btn-primary" onclick="showStep(3)">
+          Continue
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3: How-to Guide + Upload -->
+  <div class="step" id="step3">
+    <div class="wizard-progress" style="margin-top: 48px;">
+      <div class="progress-step completed"></div>
+      <div class="progress-step completed"></div>
+      <div class="progress-step active"></div>
+      <div class="progress-step"></div>
+    </div>
+
+    <div class="wizard-header">
+      <button class="back-btn" onclick="showStep(2)">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+      </button>
+      <div>
+        <div class="wizard-title">Upload DEGIRO CSV</div>
+        <div class="wizard-subtitle">Follow the steps, then upload your file</div>
+      </div>
+    </div>
+
+    <div style="margin-top: 16px;">
+      <div class="guide-box">
+        <div class="guide-title">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"/></svg>
+          How to export from DEGIRO
+        </div>
+        <ol class="guide-steps">
+          <li>Log in to DEGIRO on your computer</li>
+          <li>Go to Activity → Transactions</li>
+          <li>Set the date range you want to import</li>
+          <li>Click "Export" and select CSV format</li>
+          <li>Upload the downloaded file below</li>
+        </ol>
+      </div>
+
+      <div class="upload-zone">
+        <div class="upload-icon">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
+        </div>
+        <div class="upload-text">Tap to choose file</div>
+        <div class="upload-hint">CSV files accepted</div>
+      </div>
+    </div>
+
+    <div class="annotation">
+      <p>Guide is visible by default — no collapsed accordion. The upload zone is large and tappable. On mobile, "drag and drop" text is replaced with "Tap to choose file" since there's no drag on mobile.</p>
+    </div>
+  </div>
+
+  <!-- STEP 4: Preview -->
+  <div class="step" id="step4">
+    <div class="wizard-progress" style="margin-top: 48px;">
+      <div class="progress-step completed"></div>
+      <div class="progress-step completed"></div>
+      <div class="progress-step completed"></div>
+      <div class="progress-step active"></div>
+    </div>
+
+    <div class="wizard-header">
+      <button class="back-btn" onclick="showStep(3)">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+      </button>
+      <div>
+        <div class="wizard-title">Review Import</div>
+        <div class="wizard-subtitle">Check your data before importing</div>
+      </div>
+    </div>
+
+    <div style="margin-top: 16px;">
+      <div class="dupes-banner">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"/></svg>
+        <span>3 duplicate transactions removed automatically</span>
+      </div>
+
+      <div class="preview-header">
+        <div class="preview-stats">
+          <span class="stat-pill">4 holdings</span>
+          <span class="stat-pill tx">12 transactions</span>
+        </div>
+      </div>
+
+      <div style="background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden;">
+        <table class="preview-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Ticker</th>
+              <th>Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>2025-12-15</td>
+              <td><span class="tx-badge buy">Buy</span></td>
+              <td class="ticker">AAPL</td>
+              <td class="amount">€2,450.00</td>
+            </tr>
+            <tr>
+              <td>2025-12-12</td>
+              <td><span class="tx-badge buy">Buy</span></td>
+              <td class="ticker">VWCE.DE</td>
+              <td class="amount">€1,800.00</td>
+            </tr>
+            <tr>
+              <td>2025-11-28</td>
+              <td><span class="tx-badge div">Div</span></td>
+              <td class="ticker">MSFT</td>
+              <td class="amount">€24.50</td>
+            </tr>
+            <tr>
+              <td>2025-11-15</td>
+              <td><span class="tx-badge sell">Sell</span></td>
+              <td class="ticker">TSLA</td>
+              <td class="amount">€890.00</td>
+            </tr>
+            <tr>
+              <td>2025-11-03</td>
+              <td><span class="tx-badge buy">Buy</span></td>
+              <td class="ticker">ASML.AS</td>
+              <td class="amount">€3,200.00</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="text-align: center; margin-top: 8px;">
+        <span style="font-size: 11px; color: var(--text-muted);">Showing 5 of 12 transactions</span>
+      </div>
+    </div>
+
+    <div class="annotation">
+      <p>Preview step shows data summary pills + scrollable table. Swipe-to-delete on individual rows (not shown in static mockup). Fixed "Import All" button at bottom.</p>
+    </div>
+
+    <div class="bottom-cta">
+      <div class="inner">
+        <button class="btn-primary" onclick="showStep(5)">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+          Import All (16)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 5: Success -->
+  <div class="step" id="step5">
+    <div class="wizard-progress" style="margin-top: 48px;">
+      <div class="progress-step completed"></div>
+      <div class="progress-step completed"></div>
+      <div class="progress-step completed"></div>
+      <div class="progress-step completed"></div>
+    </div>
+
+    <div class="success-screen">
+      <div class="success-icon">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+      </div>
+      <div class="success-title">Import Complete</div>
+      <div class="success-subtitle">Your DEGIRO transactions are now in your portfolio</div>
+      <div class="success-stat">
+        <svg style="width:16px;height:16px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+        12 transactions imported
+      </div>
+    </div>
+
+    <div style="padding: 0 20px;">
+      <button class="btn-primary" onclick="showStep(1)">
+        View Portfolio
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
+      </button>
+      <button class="btn-secondary" onclick="showStep(1)">Import More</button>
+    </div>
+
+    <div class="annotation" style="margin: 16px 20px;">
+      <p>Clean success state with animated checkmark. Two clear CTAs: view portfolio (primary) or import more (secondary).</p>
+    </div>
+  </div>
+
+  <!-- STEP 6: Manual Add (separate flow) -->
+  <div class="step" id="step6">
+    <div class="wizard-progress" style="margin-top: 48px;">
+      <div class="progress-step active"></div>
+      <div class="progress-step"></div>
+    </div>
+
+    <div class="wizard-header">
+      <button class="back-btn" onclick="showStep(1)">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+      </button>
+      <div>
+        <div class="wizard-title">Add Stock</div>
+        <div class="wizard-subtitle">Search for a stock or ETF to add</div>
+      </div>
+    </div>
+
+    <div style="margin-top: 20px;">
+      <div class="form-group">
+        <label class="form-label">Search stocks</label>
+        <input class="form-input" type="text" placeholder="e.g. Apple, AAPL, VWCE..." value="Apple">
+      </div>
+
+      <div class="search-result">
+        <div class="search-item" style="background: var(--emerald-bg);">
+          <div>
+            <span class="ticker">AAPL</span>
+            <span class="name">Apple Inc.</span>
+          </div>
+          <span class="exchange">NASDAQ</span>
+        </div>
+        <div class="search-item">
+          <div>
+            <span class="ticker">APC.F</span>
+            <span class="name">Apple Inc. (Frankfurt)</span>
+          </div>
+          <span class="exchange">FRA</span>
+        </div>
+      </div>
+
+      <div style="height: 16px;"></div>
+
+      <div class="selected-stock">
+        <span class="ticker">AAPL</span>
+        <span class="name">Apple Inc. — NASDAQ</span>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Shares</label>
+          <input class="form-input" type="number" placeholder="0" value="10">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Avg. Price</label>
+          <input class="form-input" type="number" placeholder="0.00" value="178.50">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Currency</label>
+          <input class="form-input" type="text" value="USD" readonly style="color: var(--text-muted);">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Type</label>
+          <input class="form-input" type="text" value="Stock" readonly style="color: var(--text-muted);">
+        </div>
+      </div>
+    </div>
+
+    <div class="annotation">
+      <p>Manual flow is 2 steps: search + fill details. Exchange and type auto-fill from search result. Large inputs with clear labels. Currency and type are pre-populated from the selected stock.</p>
+    </div>
+
+    <div class="bottom-cta">
+      <div class="inner">
+        <button class="btn-primary">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+          Add to Portfolio
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function showStep(n) {
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  document.getElementById('step' + n).classList.add('active');
+  document.querySelectorAll('.demo-nav button').forEach((b, i) => {
+    b.classList.toggle('active', i === n - 1);
+  });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+
+</body>
+</html>

@@ -14,8 +14,8 @@ const COLUMN_NOTES: Record<string, string> = {
   ticker: "Required — Stock symbol (e.g. AAPL, MSFT)",
   type: "Required — buy, sell, dividend, or fee",
   price: "Price per share (default: 0)",
-  amount: "Number of shares (default: 0)",
-  currency: "3-letter code like USD, EUR (default: EUR)",
+  amount: "Number of shares (must be greater than 0 for buy/sell/dividend)",
+  currency: "Supported: USD, EUR, GBP, GBX, DKK, CAD, CHF, JPY (default: EUR)",
   date: "YYYY-MM-DD format (default: today)",
   name: "Security name (default: same as ticker)",
 };

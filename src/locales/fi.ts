@@ -52,6 +52,7 @@ const fi: TranslationStrings = {
   close: "Sulje",
   addToPortfolio: "Lisää salkkuun",
   enterShares: "Osakkeiden määrä",
+  sharesMustBePositive: "Shares must be greater than 0",
   enterPrice: "Ostohinta per osake",
   selectCurrency: "Valitse valuutta",
   importCSV: "Tuo CSV",

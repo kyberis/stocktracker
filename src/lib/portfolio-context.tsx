@@ -238,13 +238,14 @@ export function PortfolioProvider({
       // Fetch holdings/cash if no server data OR if a specific portfolio is selected
       // (server data is unscoped; we need scoped data for a saved portfolio selection)
       const needsFetch = !hasServerData || resolvedPortfolioId != null;
+      let holdingsData: Holding[] = initialHoldings ?? [];
       if (needsFetch) {
         const qp = resolvedPortfolioId ? `?portfolioId=${encodeURIComponent(resolvedPortfolioId)}` : "";
         const [holdingsRes, cashRes] = await Promise.all([
           fetch(`/api/holdings${qp}`, { cache: "no-store" }),
           fetch(`/api/cash${qp}`, { cache: "no-store" }),
         ]);
-        const holdingsData: Holding[] = holdingsRes.ok ? await holdingsRes.json() : [];
+        holdingsData = holdingsRes.ok ? await holdingsRes.json() : [];
         const cashData: CashEntry[] = cashRes.ok ? await cashRes.json() : [];
         setHoldings(holdingsData);
         setCashEntries(cashData);
@@ -277,8 +278,17 @@ export function PortfolioProvider({
         .then((d) => setGoals(d.goals ?? (d.goal ? [d.goal] : [])))
         .catch(() => {});
 
-      setIsLoading(false);
       mountedRef.current = true;
+
+      // Kick off a fresh quote fetch so newly imported or uncached tickers
+      // get live prices immediately. Keep isLoading true – fetchQuotes will
+      // clear it when done.
+      const allTickers = [...new Set(holdingsData.map((h: Holding) => h.ticker))];
+      if (allTickers.length > 0) {
+        fetchQuotes(allTickers);
+      } else {
+        setIsLoading(false);
+      }
     };
 
     init();

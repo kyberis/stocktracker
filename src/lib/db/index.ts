@@ -61,10 +61,12 @@ export {
   getLastActive,
   completeOnboarding,
   listUsersWithStats,
+  listUsersWithStatsPaginated,
   getUserDetailData,
 } from "./users";
 export type { AdminUserWithStats } from "./users";
 
+export type { DistinctHoldingTicker } from "./holdings";
 export {
   listHoldings,
   addHolding,
@@ -73,8 +75,11 @@ export {
   resetUserHoldings,
   rebuildHoldings,
   upsertHoldingsFromPositions,
+  detachSnapTradeHoldings,
   deleteAllHoldings,
   countHoldings,
+  listDistinctHoldingTickers,
+  batchUpdateValueInEur,
 } from "./holdings";
 
 export {
@@ -98,7 +103,7 @@ export {
   getManualAssetCount,
 } from "./cash";
 
-export type { PlatformFeature, WhatsAppQuota, StripePriceKey, PromoBannerConfig, AdConfig, AdSlotConfig } from "./settings";
+export type { PlatformFeature, WhatsAppQuota, StripePriceKey, PromoBannerConfig, AdConfig, AdSlotConfig, XKeyName } from "./settings";
 export {
   getUserSettings,
   updateUserSettings,
@@ -123,6 +128,8 @@ export {
   setGaMeasurementId,
   getAdConfig,
   setAdConfig,
+  getXKeys,
+  setXKey,
 } from "./settings";
 
 export {
@@ -158,6 +165,7 @@ export {
   createFeedback,
   getFeedbackByUser,
   getAllFeedback,
+  getAllFeedbackPaginated,
   replyToFeedback,
 } from "./feedback";
 
@@ -209,6 +217,7 @@ export type { DeviceInterestEntry } from "./device-interest";
 export {
   addDeviceInterest,
   listDeviceInterest,
+  listDeviceInterestPaginated,
   countDeviceInterest,
 } from "./device-interest";
 
@@ -288,6 +297,16 @@ export {
   getScreenerDistinctCountries,
   getScreenerDistinctExchanges,
 } from "./screener";
+
+export type { ScheduledXPost, XPostStatus, CreateXPostInput } from "./x-posts";
+export {
+  listXPosts,
+  listDueXPosts,
+  createXPost,
+  updateXPostStatus,
+  updateXPost,
+  deleteXPost,
+} from "./x-posts";
 
 export type { SnapTradeLogEntry, InsertSnapTradeLogParams, GetSnapTradeLogsOptions } from "./snaptrade-logs";
 export {

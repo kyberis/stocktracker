@@ -2,6 +2,7 @@ import {
   getSnapTradeConnectionsPendingDeletion,
   getConnectionsAllDisabledOver24h,
   deleteSnapTradeConnection,
+  detachSnapTradeHoldings,
   trackEvent,
   pruneOldSnapTradeLogs,
 } from "@/lib/db";
@@ -28,6 +29,7 @@ export const GET = withCronLogging("snaptrade-cleanup", async () => {
   // Path 1: scheduled end-of-month deletions (downgrade to free)
   const pending = await getSnapTradeConnectionsPendingDeletion();
   for (const conn of pending) {
+    await detachSnapTradeHoldings(conn.userId);
     try {
       await deleteUser(conn.snapTradeUserId);
     } catch (err) {
@@ -44,6 +46,7 @@ export const GET = withCronLogging("snaptrade-cleanup", async () => {
   // Path 2: paid users with all brokers disabled for >24 h
   const stale = await getConnectionsAllDisabledOver24h();
   for (const conn of stale) {
+    await detachSnapTradeHoldings(conn.userId);
     try {
       await deleteUser(conn.snapTradeUserId);
     } catch (err) {

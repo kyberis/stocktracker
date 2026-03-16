@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
+import Link from "next/link";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth-context";
 import { usePortfolio } from "@/lib/portfolio-context";
@@ -892,6 +893,14 @@ function DataQualitySection({ checks }: { checks: DataQualityCheck[] }) {
             </span>
             <span className={c.status === "ok" ? "text-gray-600 dark:text-slate-400" : c.status === "warning" ? "text-amber-700 dark:text-amber-400" : "text-red-600 dark:text-red-400"}>
               {c.message}
+              {c.actionUrl && c.actionLabel && (
+                <>
+                  {" "}
+                  <Link href={c.actionUrl} className="underline font-medium hover:opacity-80">
+                    {c.actionLabel} →
+                  </Link>
+                </>
+              )}
             </span>
           </div>
         ))}

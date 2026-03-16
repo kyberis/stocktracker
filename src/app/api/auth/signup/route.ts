@@ -36,6 +36,10 @@ export const POST = withMetrics("/api/auth/signup", async (req: NextRequest) => 
     }
   }
 
+  let rawJson: Record<string, unknown> = {};
+  try { rawJson = await req.clone().json(); } catch {}
+  const seedWithData = isDev && rawJson.seedWithData === true;
+
   const result = await parseBody(req, signupSchema);
   if (!result.success) return result.error;
   const { email, password, displayName } = result.data;
@@ -65,7 +69,7 @@ export const POST = withMetrics("/api/auth/signup", async (req: NextRequest) => 
       email: normalizedEmail,
       displayName: displayName || "",
       authProvider: "credentials",
-      seedWithData: false,
+      seedWithData,
     });
 
     await ensureDefaultPortfolio(user.id);

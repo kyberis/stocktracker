@@ -52,6 +52,7 @@ const el: TranslationStrings = {
   close: "Κλείσιμο",
   addToPortfolio: "Προσθήκη στο χαρτοφυλάκιο",
   enterShares: "Αριθμός μετοχών",
+  sharesMustBePositive: "Shares must be greater than 0",
   enterPrice: "Τιμή αγοράς ανά μετοχή",
   selectCurrency: "Επιλογή νομίσματος",
   importCSV: "Εισαγωγή CSV",

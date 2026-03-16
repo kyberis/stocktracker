@@ -71,14 +71,8 @@ export async function getFeedbackByUser(userId: string): Promise<FeedbackEntry[]
   }));
 }
 
-export async function getAllFeedback(): Promise<FeedbackEntry[]> {
-  const client = await ensureInitialized();
-  const result = await client.execute(
-    `SELECT f.*, u.username FROM feedback f
-     JOIN users u ON u.id = f.user_id
-     ORDER BY f.created_at DESC`
-  );
-  return result.rows.map((r) => ({
+function mapFeedbackRow(r: import("@libsql/client").Row): FeedbackEntry {
+  return {
     id: str(r.id),
     userId: str(r.user_id),
     username: str(r.username),
@@ -90,7 +84,34 @@ export async function getAllFeedback(): Promise<FeedbackEntry[]> {
     createdAt: str(r.created_at),
     repliedAt: str(r.replied_at),
     userContext: str(r.user_context),
-  }));
+  };
+}
+
+export async function getAllFeedback(): Promise<FeedbackEntry[]> {
+  const client = await ensureInitialized();
+  const result = await client.execute(
+    `SELECT f.*, u.username FROM feedback f
+     JOIN users u ON u.id = f.user_id
+     ORDER BY f.created_at DESC`
+  );
+  return result.rows.map(mapFeedbackRow);
+}
+
+export async function getAllFeedbackPaginated(page: number, pageSize: number): Promise<{ items: FeedbackEntry[]; total: number }> {
+  const client = await ensureInitialized();
+  const [countResult, result] = await Promise.all([
+    client.execute("SELECT COUNT(*) as cnt FROM feedback"),
+    client.execute({
+      sql: `SELECT f.*, u.username FROM feedback f
+            JOIN users u ON u.id = f.user_id
+            ORDER BY f.created_at DESC LIMIT ? OFFSET ?`,
+      args: [pageSize, page * pageSize],
+    }),
+  ]);
+  return {
+    items: result.rows.map(mapFeedbackRow),
+    total: Number(countResult.rows[0]?.cnt) || 0,
+  };
 }
 
 export async function replyToFeedback(

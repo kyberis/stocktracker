@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { createPortal } from "react-dom";
 import dynamic from "next/dynamic";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useI18n } from "@/lib/i18n";
@@ -157,9 +158,12 @@ export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: P
     />
   );
 
-  const drawer = selectedHolding && (
-    <StockDetailDrawer key={selectedHolding.id} holding={selectedHolding} onClose={() => setSelectedHolding(null)} />
-  );
+  const drawer = selectedHolding && typeof document !== "undefined"
+    ? createPortal(
+        <StockDetailDrawer key={selectedHolding.id} holding={selectedHolding} onClose={() => setSelectedHolding(null)} />,
+        document.body,
+      )
+    : null;
 
   const noResultsCTA = (
     <div className={`flex flex-col items-center justify-center py-10 px-4 text-center ${layoutTheme === "terminal" ? "font-mono" : ""}`}>

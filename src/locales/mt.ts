@@ -52,6 +52,7 @@ const mt: TranslationStrings = {
   close: "Agħlaq",
   addToPortfolio: "Żid mal-Portafoll",
   enterShares: "Numru ta' sehem",
+  sharesMustBePositive: "Shares must be greater than 0",
   enterPrice: "Prezz tal-xiri għal kull sehem",
   selectCurrency: "Agħżel valuta",
   importCSV: "Importa CSV",

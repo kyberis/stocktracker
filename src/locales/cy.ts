@@ -52,6 +52,7 @@ const cy: TranslationStrings = {
   close: "Cau",
   addToPortfolio: "Ychwanegu at Portffolio",
   enterShares: "Nifer o gyfranddaliadau",
+  sharesMustBePositive: "Shares must be greater than 0",
   enterPrice: "Pris prynnu fesul cyfranddaliad",
   selectCurrency: "Dewiswch arian cyfred",
   importCSV: "Mewnforio CSV",

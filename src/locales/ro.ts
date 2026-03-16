@@ -52,6 +52,7 @@ const ro: TranslationStrings = {
   close: "Închide",
   addToPortfolio: "Adaugă la Portofoliu",
   enterShares: "Număr de acțiuni",
+  sharesMustBePositive: "Shares must be greater than 0",
   enterPrice: "Preț de cumpărare per acțiune",
   selectCurrency: "Selectează moneda",
   importCSV: "Importă CSV",

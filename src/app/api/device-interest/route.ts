@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { addDeviceInterest, listDeviceInterest, countDeviceInterest } from "@/lib/db";
+import { addDeviceInterest, listDeviceInterest, listDeviceInterestPaginated, countDeviceInterest } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth/guards";
 import { isFeatureEnabled } from "@/lib/db";
 import { withMetrics } from "@/lib/with-metrics";
@@ -33,6 +33,14 @@ export const POST = withMetrics("/api/device-interest", async (req: NextRequest)
 export const GET = withMetrics("/api/device-interest", async (req: NextRequest) => {
   const { error } = await requireAdmin(req);
   if (error) return error;
+
+  const pageParam = req.nextUrl.searchParams.get("page");
+  if (pageParam !== null) {
+    const page = Math.max(0, parseInt(pageParam, 10) || 0);
+    const pageSize = Math.min(100, Math.max(1, parseInt(req.nextUrl.searchParams.get("pageSize") || "25", 10)));
+    const result = await listDeviceInterestPaginated(page, pageSize);
+    return NextResponse.json(result);
+  }
 
   const [entries, total] = await Promise.all([
     listDeviceInterest(),

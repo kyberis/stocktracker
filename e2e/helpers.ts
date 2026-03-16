@@ -26,7 +26,11 @@ export async function loginViaUI(page: Page, identifier: string, password: strin
   await page.locator('input[autocomplete="username"]').fill(identifier);
   await page.locator('input[autocomplete="current-password"]').fill(password);
   await page.click('button[type="submit"]');
-  await expect(page.getByText(/No holdings yet|Portfolio Performance|holdings/i).first()).toBeVisible({ timeout: 15000 });
+  await page.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 15000 });
+  await dismissOverlays(page);
+  await expect(
+    page.getByText(/Welcome to trefolio|Portfolio Value|Total Net Worth|Portfolio Performance|Import Portfolio/i).first()
+  ).toBeVisible({ timeout: 20000 });
 }
 
 export async function dismissOverlays(page: Page) {

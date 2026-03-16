@@ -296,6 +296,29 @@ export async function setGlobalResendApiKey(key: string): Promise<void> {
   await setPlatformSetting("resend_api_key", key ? encrypt(key) : "");
 }
 
+/* ─── X / Twitter API Keys ─── */
+
+export type XKeyName = "x_api_key" | "x_api_secret" | "x_access_token" | "x_access_token_secret";
+
+const X_KEY_NAMES: XKeyName[] = ["x_api_key", "x_api_secret", "x_access_token", "x_access_token_secret"];
+
+export async function getXKeys(): Promise<Record<XKeyName, { hasKey: boolean; maskedKey: string }>> {
+  const result = {} as Record<XKeyName, { hasKey: boolean; maskedKey: string }>;
+  for (const name of X_KEY_NAMES) {
+    const raw = await getPlatformSetting(name);
+    const val = raw ? tryDecryptOrPlaintext(raw) : "";
+    result[name] = {
+      hasKey: val.length > 0,
+      maskedKey: val ? `${val.slice(0, 4)}...${val.slice(-4)}` : "",
+    };
+  }
+  return result;
+}
+
+export async function setXKey(name: XKeyName, value: string): Promise<void> {
+  await setPlatformSetting(name, value ? encrypt(value) : "");
+}
+
 export type StripePriceKey =
   | "stripe_price_starter_monthly"
   | "stripe_price_starter_annual"

@@ -1,0 +1,543 @@
+"use client";
+
+import React, { FormEvent, useCallback, useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import type { Holding, Transaction, CashEntry, Account } from "@/lib/types";
+import type { UserPortfolio, ImportEvent } from "../../shared";
+import { relativeTime, formatEur } from "../../shared";
+
+interface UserInfo {
+  id: string;
+  username: string;
+  role: "admin" | "user";
+  plan: "free" | "starter" | "pro";
+  email: string;
+  displayName: string;
+  authProvider: "credentials" | "google" | "apple";
+  emailVerified: boolean;
+  mustChangePassword: boolean;
+  createdAt: string;
+  lastActiveAt: string;
+  planExpiresAt: string;
+  stripeCustomerId: string;
+  stripeSubscriptionId: string;
+  taxResidency: string;
+  onboardingCompleted: boolean;
+  aiCallsThisMonth: number;
+}
+
+interface AllPortfolio {
+  id: string;
+  name: string;
+  currency: string;
+  isDefault: boolean;
+}
+
+interface PageData {
+  user: UserInfo;
+  portfolios: UserPortfolio[];
+  importEvents: ImportEvent[];
+  holdings: Holding[];
+  transactions: Transaction[];
+  cash: CashEntry[];
+  accounts: Account[];
+  allPortfolios: AllPortfolio[];
+}
+
+type DataTab = "holdings" | "transactions" | "cash";
+
+/* ── Badge helpers ──────────────────────────────────────────── */
+
+function AuthBadge({ provider }: { provider: string }) {
+  if (provider === "google")
+    return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-red-500/10 text-red-400">G Google</span>;
+  if (provider === "apple")
+    return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-white/5 text-slate-300"> Apple</span>;
+  return <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold bg-gray-100 dark:bg-slate-700/50 text-gray-500 dark:text-slate-400">Credentials</span>;
+}
+
+function PlanBadge({ plan }: { plan: string }) {
+  if (plan === "pro") return <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-500">Trefolio</span>;
+  if (plan === "starter") return <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-500/10 text-blue-400">Bifolio</span>;
+  return <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold bg-gray-100 dark:bg-slate-700/50 text-gray-500 dark:text-slate-400">Folio</span>;
+}
+
+/* ── Data table sub-components ──────────────────────────────── */
+
+function HoldingsTable({ holdings }: { holdings: Holding[] }) {
+  if (holdings.length === 0) return <p className="text-xs text-gray-400 dark:text-slate-500 py-4 text-center">No holdings</p>;
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-xs">
+        <thead>
+          <tr className="text-gray-500 dark:text-slate-400 border-b border-gray-100 dark:border-slate-700">
+            <th className="text-left p-2 font-medium text-[10px] uppercase">Ticker</th>
+            <th className="text-left p-2 font-medium text-[10px] uppercase">Name</th>
+            <th className="text-left p-2 font-medium text-[10px] uppercase">ISIN</th>
+            <th className="text-left p-2 font-medium text-[10px] uppercase">Type</th>
+            <th className="text-right p-2 font-medium text-[10px] uppercase">Shares</th>
+            <th className="text-right p-2 font-medium text-[10px] uppercase">Avg Price</th>
+            <th className="text-left p-2 font-medium text-[10px] uppercase">Currency</th>
+            <th className="text-left p-2 font-medium text-[10px] uppercase">Exchange</th>
+            <th className="text-right p-2 font-medium text-[10px] uppercase">Value (EUR)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {holdings.map((h) => (
+            <tr key={h.id} className="border-b border-gray-50 dark:border-slate-800 hover:bg-gray-50 dark:hover:bg-slate-800/30">
+              <td className="p-2 font-mono font-semibold text-gray-900 dark:text-white">{h.ticker}</td>
+              <td className="p-2 text-gray-700 dark:text-slate-300 max-w-[200px] truncate">{h.name || "—"}</td>
+              <td className="p-2 font-mono text-gray-500 dark:text-slate-400 text-[11px]">{h.isin || "—"}</td>
+              <td className="p-2">
+                {h.assetType && h.assetType !== "stock" ? (
+                  <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-500/10 text-amber-500">{h.assetType}</span>
+                ) : (
+                  <span className="text-gray-400 dark:text-slate-500">stock</span>
+                )}
+              </td>
+              <td className="p-2 text-right tabular-nums font-medium">{h.shares.toLocaleString(undefined, { maximumFractionDigits: 4 })}</td>
+              <td className="p-2 text-right tabular-nums">{h.purchasePrice > 0 ? h.purchasePrice.toFixed(2) : "—"}</td>
+              <td className="p-2">{h.displayCurrency || "—"}</td>
+              <td className="p-2">{h.exchange || "—"}</td>
+              <td className="p-2 text-right tabular-nums text-emerald-500 font-medium">{h.valueInEUR > 0 ? formatEur(h.valueInEUR) : "—"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function TransactionsTable({ transactions }: { transactions: Transaction[] }) {
+  if (transactions.length === 0) return <p className="text-xs text-gray-400 dark:text-slate-500 py-4 text-center">No transactions</p>;
+
+  const [visibleCount, setVisibleCount] = useState(100);
+  const visible = transactions.slice(0, visibleCount);
+
+  return (
+    <div className="space-y-2">
+      <div className="overflow-x-auto">
+        <table className="w-full text-xs">
+          <thead>
+            <tr className="text-gray-500 dark:text-slate-400 border-b border-gray-100 dark:border-slate-700">
+              <th className="text-left p-2 font-medium text-[10px] uppercase">Date</th>
+              <th className="text-left p-2 font-medium text-[10px] uppercase">Type</th>
+              <th className="text-left p-2 font-medium text-[10px] uppercase">Ticker</th>
+              <th className="text-left p-2 font-medium text-[10px] uppercase">Name</th>
+              <th className="text-right p-2 font-medium text-[10px] uppercase">Shares</th>
+              <th className="text-right p-2 font-medium text-[10px] uppercase">Price</th>
+              <th className="text-right p-2 font-medium text-[10px] uppercase">Total</th>
+              <th className="text-right p-2 font-medium text-[10px] uppercase">Fees</th>
+              <th className="text-left p-2 font-medium text-[10px] uppercase">Currency</th>
+              <th className="text-left p-2 font-medium text-[10px] uppercase">Broker</th>
+              <th className="text-left p-2 font-medium text-[10px] uppercase">Source</th>
+            </tr>
+          </thead>
+          <tbody>
+            {visible.map((t) => (
+              <tr key={t.id} className="border-b border-gray-50 dark:border-slate-800 hover:bg-gray-50 dark:hover:bg-slate-800/30">
+                <td className="p-2 tabular-nums whitespace-nowrap">{t.date}</td>
+                <td className="p-2">
+                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+                    t.type === "buy" ? "bg-emerald-500/10 text-emerald-500" :
+                    t.type === "sell" ? "bg-red-500/10 text-red-400" :
+                    t.type === "dividend" ? "bg-blue-500/10 text-blue-400" :
+                    "bg-gray-100 dark:bg-slate-700/50 text-gray-500 dark:text-slate-400"
+                  }`}>{t.type}</span>
+                </td>
+                <td className="p-2 font-mono font-semibold text-gray-900 dark:text-white">{t.ticker}</td>
+                <td className="p-2 text-gray-700 dark:text-slate-300 max-w-[150px] truncate">{t.name || "—"}</td>
+                <td className="p-2 text-right tabular-nums">{t.shares.toLocaleString(undefined, { maximumFractionDigits: 4 })}</td>
+                <td className="p-2 text-right tabular-nums">{t.pricePerShare > 0 ? t.pricePerShare.toFixed(2) : "—"}</td>
+                <td className="p-2 text-right tabular-nums font-medium">{t.totalAmount > 0 ? t.totalAmount.toFixed(2) : "—"}</td>
+                <td className="p-2 text-right tabular-nums text-gray-400">{t.fees > 0 ? t.fees.toFixed(2) : "—"}</td>
+                <td className="p-2">{t.currency || "—"}</td>
+                <td className="p-2">{t.brokerName || "—"}</td>
+                <td className="p-2 text-gray-400 dark:text-slate-500 text-[11px]">{t.sourceRef || "—"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {visibleCount < transactions.length && (
+        <div className="text-center pb-2">
+          <button
+            onClick={() => setVisibleCount((c) => c + 200)}
+            className="text-xs text-indigo-500 hover:text-indigo-400 font-medium"
+          >
+            Show more ({transactions.length - visibleCount} remaining)
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CashTable({ cash }: { cash: CashEntry[] }) {
+  if (cash.length === 0) return <p className="text-xs text-gray-400 dark:text-slate-500 py-4 text-center">No cash / manual assets</p>;
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-xs">
+        <thead>
+          <tr className="text-gray-500 dark:text-slate-400 border-b border-gray-100 dark:border-slate-700">
+            <th className="text-left p-2 font-medium text-[10px] uppercase">Name</th>
+            <th className="text-left p-2 font-medium text-[10px] uppercase">Type</th>
+            <th className="text-left p-2 font-medium text-[10px] uppercase">Source</th>
+            <th className="text-right p-2 font-medium text-[10px] uppercase">Amount</th>
+            <th className="text-left p-2 font-medium text-[10px] uppercase">Currency</th>
+            <th className="text-right p-2 font-medium text-[10px] uppercase">EUR Value</th>
+            <th className="text-left p-2 font-medium text-[10px] uppercase">Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          {cash.map((c) => (
+            <tr key={c.id} className="border-b border-gray-50 dark:border-slate-800 hover:bg-gray-50 dark:hover:bg-slate-800/30">
+              <td className="p-2 font-medium text-gray-900 dark:text-white">{c.name}</td>
+              <td className="p-2">
+                <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+                  c.type === "cash" ? "bg-emerald-500/10 text-emerald-500" :
+                  c.type === "real_estate" ? "bg-amber-500/10 text-amber-500" :
+                  c.type === "savings" ? "bg-blue-500/10 text-blue-400" :
+                  "bg-purple-500/10 text-purple-400"
+                }`}>{c.type || "cash"}</span>
+              </td>
+              <td className="p-2 text-gray-500 dark:text-slate-400">{c.source || "manual"}</td>
+              <td className="p-2 text-right tabular-nums font-medium">{c.displayAmount?.toLocaleString(undefined, { maximumFractionDigits: 2 }) ?? "—"}</td>
+              <td className="p-2">{c.displayCurrency || "EUR"}</td>
+              <td className="p-2 text-right tabular-nums text-emerald-500 font-medium">{formatEur(c.amountEUR)}</td>
+              <td className="p-2 text-gray-400 dark:text-slate-500 max-w-[200px] truncate">{c.notes || "—"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+/* ── Main page ──────────────────────────────────────────────── */
+
+export default function AdminUserDetailPage() {
+  const params = useParams();
+  const router = useRouter();
+  const userId = params.userId as string;
+
+  const [data, setData] = useState<PageData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const [selectedPortfolio, setSelectedPortfolio] = useState<string>("all");
+  const [dataTab, setDataTab] = useState<DataTab>("holdings");
+
+  const [resetPwd, setResetPwd] = useState("");
+  const [actionMsg, setActionMsg] = useState("");
+
+  const fetchData = useCallback(async (portfolioId?: string) => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (portfolioId && portfolioId !== "all") params.set("portfolioId", portfolioId);
+      const res = await fetch(`/api/admin/users/${encodeURIComponent(userId)}/data?${params}`, { cache: "no-store" });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        setError(body.error || "Failed to load user data");
+        return;
+      }
+      setData(await res.json());
+    } catch {
+      setError("Failed to load user data");
+    } finally {
+      setLoading(false);
+    }
+  }, [userId]);
+
+  useEffect(() => { fetchData(selectedPortfolio); }, [fetchData, selectedPortfolio]);
+
+  const handlePwdReset = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!resetPwd) return;
+    const res = await fetch("/api/admin/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, newPassword: resetPwd }),
+    });
+    if (res.ok) { setResetPwd(""); setActionMsg("Password reset"); setTimeout(() => setActionMsg(""), 2000); }
+  };
+
+  const handleResetData = async (mode: "seed" | "empty") => {
+    await fetch("/api/admin/reset-data", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, mode }),
+    });
+    setActionMsg(mode === "seed" ? "Seeded" : "Emptied");
+    setTimeout(() => setActionMsg(""), 2000);
+    fetchData(selectedPortfolio);
+  };
+
+  const handleDelete = async () => {
+    if (!confirm(`Delete this user? This cannot be undone.`)) return;
+    const res = await fetch(`/api/admin/users?id=${encodeURIComponent(userId)}`, { method: "DELETE" });
+    if (res.ok) router.push("/admin");
+  };
+
+  const handleRoleChange = async (newRole: "admin" | "user") => {
+    const res = await fetch("/api/admin/users", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, action: "setRole", role: newRole }),
+    });
+    if (res.ok && data) setData({ ...data, user: { ...data.user, role: newRole } });
+  };
+
+  const handlePlanChange = async (newPlan: "free" | "starter" | "pro") => {
+    const res = await fetch("/api/admin/users", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, action: "setPlan", plan: newPlan }),
+    });
+    if (res.ok && data) setData({ ...data, user: { ...data.user, plan: newPlan } });
+  };
+
+  const parseImportMeta = (metadata: string): { broker?: string; method?: string; count?: string } => {
+    try { return JSON.parse(metadata); } catch { return {}; }
+  };
+
+  if (loading && !data) {
+    return (
+      <main className="px-4 py-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="animate-pulse space-y-4">
+            <div className="h-8 w-48 bg-gray-200 dark:bg-slate-700 rounded" />
+            <div className="h-40 bg-gray-200 dark:bg-slate-700 rounded-lg" />
+            <div className="h-60 bg-gray-200 dark:bg-slate-700 rounded-lg" />
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="px-4 py-8">
+        <div className="max-w-6xl mx-auto">
+          <button onClick={() => router.push("/admin")} className="text-xs text-indigo-500 hover:text-indigo-400 mb-4 flex items-center gap-1">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="m15 19-7-7 7-7" /></svg>
+            Back to Admin
+          </button>
+          <p className="text-red-500">{error}</p>
+        </div>
+      </main>
+    );
+  }
+
+  if (!data) return null;
+  const { user } = data;
+
+  const dataTabs: { key: DataTab; label: string; count: number }[] = [
+    { key: "holdings", label: "Holdings", count: data.holdings.length },
+    { key: "transactions", label: "Transactions", count: data.transactions.length },
+    { key: "cash", label: "Cash & Assets", count: data.cash.length },
+  ];
+
+  return (
+    <main className="px-4 py-8">
+      <div className="max-w-6xl mx-auto space-y-6">
+
+        {/* Back + Title */}
+        <div className="flex items-center gap-3">
+          <button onClick={() => router.push("/admin")} className="text-gray-400 hover:text-gray-600 dark:hover:text-slate-300 transition-colors">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="m15 19-7-7 7-7" /></svg>
+          </button>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white truncate">{user.username}</h1>
+            <div className="flex items-center gap-2 mt-0.5">
+              <AuthBadge provider={user.authProvider} />
+              <PlanBadge plan={user.plan} />
+              {user.onboardingCompleted ? (
+                <span className="text-[11px] text-emerald-500 font-medium">Onboarded</span>
+              ) : (
+                <span className="text-[11px] text-amber-400 font-medium">Onboarding pending</span>
+              )}
+            </div>
+          </div>
+          <div className="text-right text-xs text-gray-400 dark:text-slate-500 shrink-0">
+            <div>Created {new Date(user.createdAt).toLocaleDateString()}</div>
+            <div>Last active {relativeTime(user.lastActiveAt)}</div>
+          </div>
+        </div>
+
+        {/* Top info grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+          {/* User Info */}
+          <div className="card p-4 space-y-1.5">
+            <h3 className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400 mb-2">User Information</h3>
+            {([
+              ["User ID", <span key="id" className="font-mono text-[11px] select-all">{user.id}</span>],
+              ["Email", user.email || "—"],
+              ["Display Name", user.displayName || "—"],
+              ["Email Verified", user.emailVerified ? <span key="v" className="text-emerald-500">Yes</span> : <span key="v" className="text-gray-400">No</span>],
+              ["Plan", `${user.plan === "pro" ? "Trefolio" : user.plan === "starter" ? "Bifolio" : "Folio"} (${user.plan})`],
+              ["Plan Expires", user.planExpiresAt ? new Date(user.planExpiresAt).toLocaleDateString() : "—"],
+              ["Stripe Customer", user.stripeCustomerId ? <span key="sc" className="font-mono text-[11px]">{user.stripeCustomerId}</span> : "—"],
+              ["Tax Residency", user.taxResidency || "—"],
+              ["AI Calls (month)", String(user.aiCallsThisMonth)],
+            ] as [string, React.ReactNode][]).map(([label, value]) => (
+              <div key={label} className="flex justify-between items-center text-xs gap-2">
+                <span className="text-gray-500 dark:text-slate-400 shrink-0">{label}</span>
+                <span className="text-gray-900 dark:text-white font-medium text-right truncate">{value}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Portfolios */}
+          <div className="card p-4">
+            <h3 className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400 mb-2">
+              Portfolios ({data.portfolios.length})
+            </h3>
+            {data.portfolios.length > 0 ? (
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="text-gray-500 dark:text-slate-400">
+                    <th className="text-left pb-1 font-medium text-[10px] uppercase">Name</th>
+                    <th className="text-left pb-1 font-medium text-[10px] uppercase">Cur</th>
+                    <th className="text-right pb-1 font-medium text-[10px] uppercase">Holdings</th>
+                    <th className="text-right pb-1 font-medium text-[10px] uppercase">Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.portfolios.map((p) => (
+                    <tr key={p.id} className="border-t border-gray-100 dark:border-slate-700/50">
+                      <td className="py-1.5 font-medium text-gray-900 dark:text-white">
+                        {p.name} {p.isDefault && <span className="text-[9px] text-gray-400 ml-1">Default</span>}
+                      </td>
+                      <td className="py-1.5 text-gray-500 dark:text-slate-400">{p.currency}</td>
+                      <td className="py-1.5 text-right tabular-nums">{p.holdingCount}</td>
+                      <td className="py-1.5 text-right tabular-nums text-emerald-500 font-medium">{formatEur(p.totalValueEur)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <p className="text-xs text-gray-400">No portfolios</p>
+            )}
+          </div>
+
+          {/* Import History + Actions */}
+          <div className="card p-4 space-y-3">
+            <div>
+              <h3 className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400 mb-2">
+                Broker Accounts ({data.accounts.length})
+              </h3>
+              {data.accounts.length > 0 ? (
+                <div className="flex flex-wrap gap-1">
+                  {data.accounts.map((a) => (
+                    <span key={a.id} className="inline-flex px-1.5 py-0.5 rounded text-[10px] font-semibold bg-indigo-500/10 text-indigo-300">
+                      {a.broker || a.name}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <span className="text-xs text-gray-400 dark:text-slate-600">No broker accounts</span>
+              )}
+            </div>
+
+            {data.importEvents.length > 0 && (
+              <div>
+                <div className="text-[10px] font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400 mb-1">Import Events</div>
+                <div className="space-y-0.5 max-h-[120px] overflow-y-auto">
+                  {data.importEvents.map((ev, i) => {
+                    const meta = parseImportMeta(ev.metadata);
+                    const label = meta.broker ? `${meta.broker} CSV` : meta.method === "file" ? "AI Import (file)" : meta.method || ev.event;
+                    return (
+                      <div key={i} className="flex items-center gap-2 text-xs py-1 border-b border-gray-100 dark:border-slate-700/30 last:border-b-0">
+                        <span className="text-gray-900 dark:text-white font-medium">{label}</span>
+                        {meta.count && <span className="text-emerald-500 text-[11px] font-semibold">+{meta.count} txns</span>}
+                        <span className="text-gray-400 dark:text-slate-500 text-[11px] ml-auto">{new Date(ev.createdAt).toLocaleDateString()}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="pt-2 border-t border-gray-200 dark:border-slate-700 space-y-2">
+              <div className="flex flex-wrap gap-2 items-center">
+                {user.username === "admin" ? (
+                  <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400">admin (protected)</span>
+                ) : (
+                  <select value={user.role} onChange={(e) => handleRoleChange(e.target.value as "admin" | "user")} className="text-xs px-2 py-1 rounded-lg">
+                    <option value="user">Role: user</option>
+                    <option value="admin">Role: admin</option>
+                  </select>
+                )}
+                <select value={user.plan} onChange={(e) => handlePlanChange(e.target.value as "free" | "starter" | "pro")} className="text-xs px-2 py-1 rounded-lg">
+                  <option value="free">Folio (free)</option>
+                  <option value="starter">Bifolio (starter)</option>
+                  <option value="pro">Trefolio (pro)</option>
+                </select>
+              </div>
+              <form className="flex items-center gap-2" onSubmit={handlePwdReset}>
+                <input type="password" placeholder="New password" value={resetPwd} onChange={(e) => setResetPwd(e.target.value)} className="text-xs px-2 py-1.5 rounded-lg flex-1" />
+                <button type="submit" className="btn-secondary text-xs px-2 py-1">Reset pwd</button>
+              </form>
+              <div className="flex flex-wrap gap-2">
+                <button onClick={() => handleResetData("seed")} className="btn-secondary text-xs px-2 py-1">Seed data</button>
+                <button onClick={() => handleResetData("empty")} className="btn-secondary text-xs px-2 py-1">Empty data</button>
+                {user.username !== "admin" && (
+                  <button onClick={handleDelete} className="btn-danger text-xs px-2 py-1">Delete user</button>
+                )}
+                {actionMsg && <span className="text-xs text-emerald-500 self-center">{actionMsg}</span>}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Data section */}
+        <div className="card p-0 overflow-hidden">
+          {/* Data toolbar */}
+          <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 dark:border-slate-700 bg-gray-50/50 dark:bg-slate-800/30">
+            <div className="flex gap-1">
+              {dataTabs.map((t) => (
+                <button
+                  key={t.key}
+                  onClick={() => setDataTab(t.key)}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                    dataTab === t.key
+                      ? "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400"
+                      : "text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700/50"
+                  }`}
+                >
+                  {t.label}
+                  <span className="ml-1.5 text-[10px] font-semibold tabular-nums opacity-60">{t.count}</span>
+                </button>
+              ))}
+            </div>
+
+            <div className="ml-auto flex items-center gap-2">
+              <label className="text-[11px] text-gray-500 dark:text-slate-400">Portfolio:</label>
+              <select
+                value={selectedPortfolio}
+                onChange={(e) => setSelectedPortfolio(e.target.value)}
+                className="text-xs px-2 py-1 rounded-lg"
+              >
+                <option value="all">All portfolios</option>
+                {data.allPortfolios.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name} ({p.currency})</option>
+                ))}
+              </select>
+              {loading && <span className="text-[11px] text-indigo-400">Loading...</span>}
+            </div>
+          </div>
+
+          {/* Data content */}
+          <div className="min-h-[200px]">
+            {dataTab === "holdings" && <HoldingsTable holdings={data.holdings} />}
+            {dataTab === "transactions" && <TransactionsTable transactions={data.transactions} />}
+            {dataTab === "cash" && <CashTable cash={data.cash} />}
+          </div>
+        </div>
+
+      </div>
+    </main>
+  );
+}

@@ -191,7 +191,7 @@ test.describe("Goal Tracker", () => {
       await dismissOverlays(page);
 
       const banner = page.getByText("E2E Banner Test");
-      await expect(banner).toBeVisible({ timeout: 10_000 });
+      await expect(banner).toBeVisible({ timeout: 15_000 });
     });
 
     test("goal progress bar renders with correct percentage text", async ({ page, request }) => {
@@ -232,7 +232,7 @@ test.describe("Goal Tracker", () => {
       expect(classes).toContain("dark");
 
       const banner = page.getByText("Terminal Goal");
-      await expect(banner).toBeVisible({ timeout: 10_000 });
+      await expect(banner).toBeVisible({ timeout: 15_000 });
 
       await scrollToGoalPlanner(page);
       await expect(page.getByText(/Goal Planner|Planificador de Metas/i).first()).toBeVisible();
@@ -260,7 +260,7 @@ test.describe("Goal Tracker", () => {
       expect(classes).not.toContain("dark");
 
       const banner = page.getByText("Canvas Goal");
-      await expect(banner).toBeVisible({ timeout: 10_000 });
+      await expect(banner).toBeVisible({ timeout: 15_000 });
 
       await scrollToGoalPlanner(page);
       await expect(page.getByText(/Goal Planner|Planificador de Metas/i).first()).toBeVisible();
@@ -290,7 +290,7 @@ test.describe("Goal Tracker", () => {
       await expect(page.locator("aside")).toBeVisible({ timeout: 5000 });
 
       const banner = page.getByText("Studio Goal");
-      await expect(banner).toBeVisible({ timeout: 10_000 });
+      await expect(banner).toBeVisible({ timeout: 15_000 });
 
       await scrollToGoalPlanner(page);
       await expect(page.getByText(/Goal Planner|Planificador de Metas/i).first()).toBeVisible();

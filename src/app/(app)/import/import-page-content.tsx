@@ -121,7 +121,7 @@ const t_static_back = "Back";
 export default function ImportPageContent() {
   const { t, language: locale } = useI18n();
   const { user, isLoading: authLoading } = useAuth();
-  const { refreshHoldings, activePortfolioId, portfolios } = usePortfolio();
+  const { refreshHoldings, refreshQuotes, activePortfolioId, portfolios } = usePortfolio();
   const track = useTrack();
 
   const activePortfolioName = activePortfolioId
@@ -158,8 +158,16 @@ export default function ImportPageContent() {
       setMethod(urlMethod);
       if (urlMethod === "manual") {
         setShowAddStockModal(true);
+      } else if (urlMethod === "broker_csv") {
+        const urlBroker = urlParams.get("broker") as BrokerFormat | null;
+        if (urlBroker && BROKER_OPTIONS.some((b) => b.id === urlBroker)) {
+          setBroker(urlBroker);
+          setStep("upload");
+        } else {
+          setStep("broker");
+        }
       } else {
-        setStep(urlMethod === "broker_csv" ? "broker" : "upload");
+        setStep("upload");
       }
       localStorage.setItem("trefolio_last_import_method", urlMethod);
     }
@@ -277,19 +285,22 @@ export default function ImportPageContent() {
   const handleBrokerImportAll = async () => {
     await brokerCSV.importAll(broker, false, activePortfolioId);
     track("import_completed", { method: "broker_csv", broker, txCount: String(brokerCSV.transactions.length) });
-    refreshHoldings();
+    await refreshHoldings();
+    refreshQuotes();
   };
 
   const handleAiImportAll = async () => {
     await aiImport.importAll(activePortfolioId);
     track("import_completed", { method: "ai_import", holdingsCount: String(aiImport.holdings.length), txCount: String(aiImport.transactions.length) });
-    refreshHoldings();
+    await refreshHoldings();
+    refreshQuotes();
   };
 
   const handleSnapTradeImportAll = async () => {
     await snapTradeApi.importAll(activePortfolioId);
     track("import_completed", { method: "snaptrade_api", txCount: String(snapTradeApi.transactions.length) });
-    refreshHoldings();
+    await refreshHoldings();
+    refreshQuotes();
   };
 
   const methodLabel = (key: ImportMethod): string => {

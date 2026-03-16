@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Import Tabs — Mobile Mockups</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --surface-hover: #334155;
+    --border: #334155;
+    --text: #f8fafc;
+    --text-muted: #94a3b8;
+    --emerald: #34d399;
+    --emerald-bg: rgba(16,185,129,0.1);
+    --emerald-border: #10b981;
+    --blue: #60a5fa;
+    --blue-bg: rgba(96,165,250,0.1);
+    --blue-border: #3b82f6;
+    --amber: #fbbf24;
+    --amber-bg: rgba(251,191,36,0.15);
+    --amber-text: #fbbf24;
+    --radius: 12px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family:'DM Sans',system-ui,sans-serif;
+    background:#020617; color:var(--text);
+    padding:40px 24px;
+    display:flex; flex-direction:column; align-items:center; gap:48px;
+  }
+  h1 { font-size:28px; font-weight:700; letter-spacing:-.5px; text-align:center; color:#e2e8f0; }
+  h1 span { color:var(--emerald); }
+  .subtitle { text-align:center; color:var(--text-muted); font-size:15px; margin-top:8px; max-width:540px; }
+  .section-title {
+    font-size:14px; font-weight:700; color:var(--text-muted); text-transform:uppercase;
+    letter-spacing:2px; margin-bottom:12px; text-align:center;
+  }
+  .mockups { display:flex; gap:48px; flex-wrap:wrap; justify-content:center; align-items:flex-start; }
+  .mockup-wrapper { display:flex; flex-direction:column; align-items:center; gap:16px; }
+  .option-label { font-size:18px; font-weight:700; color:#e2e8f0; display:flex; align-items:center; gap:10px; }
+  .option-label .tag {
+    font-size:11px; font-weight:600; padding:3px 10px; border-radius:20px;
+    background:var(--emerald-bg); color:var(--emerald); border:1px solid rgba(16,185,129,0.2);
+  }
+  .phone-frame {
+    width:375px; background:var(--bg); border-radius:24px;
+    border:2px solid #1e293b; overflow:hidden;
+    box-shadow:0 25px 60px rgba(0,0,0,0.5); position:relative;
+  }
+  .phone-frame::before {
+    content:''; display:block; width:120px; height:28px;
+    background:#020617; border-radius:0 0 16px 16px; margin:0 auto;
+  }
+  .screen { padding:8px 16px 24px; }
+
+  /* ═══ Page header ═══ */
+  .page-header h2 { font-size:18px; font-weight:700; color:var(--text); margin-bottom:4px; }
+  .page-header p { font-size:12px; color:var(--text-muted); margin-bottom:10px; }
+  .portfolio-badge {
+    display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:8px;
+    background:var(--emerald-bg); border:1px solid rgba(16,185,129,0.2);
+    font-size:11px; font-weight:500; color:#6ee7b7; margin-bottom:16px;
+  }
+  .portfolio-badge svg { width:14px; height:14px; stroke:#6ee7b7; fill:none; }
+
+  /* ═══ Option A: 2×2 Grid ═══ */
+  .grid-tabs { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:16px; }
+  .grid-tab {
+    display:flex; align-items:center; gap:7px; padding:10px 12px;
+    border-radius:var(--radius); border:2px solid var(--border); background:var(--surface);
+    font-size:11.5px; font-weight:500; color:var(--text-muted);
+    cursor:pointer; transition:all .15s; min-height:44px; white-space:nowrap;
+  }
+  .grid-tab:hover { border-color:#475569; }
+  .grid-tab.active {
+    background:var(--emerald-bg); border-color:var(--emerald-border); color:var(--emerald);
+  }
+  .grid-tab svg { width:15px; height:15px; flex-shrink:0; stroke:currentColor; fill:none; stroke-width:2; }
+  .badge {
+    font-size:9px; font-weight:600; padding:2px 6px; border-radius:20px;
+    background:var(--amber-bg); color:var(--amber-text); margin-left:auto; flex-shrink:0;
+  }
+
+  /* ═══ Option B: Vertical Cards ═══ */
+  .card-tabs { display:flex; flex-direction:column; gap:6px; margin-bottom:16px; }
+  .card-tab {
+    display:flex; align-items:center; gap:12px; padding:12px 14px;
+    border-radius:var(--radius); border:2px solid var(--border); background:var(--surface);
+    cursor:pointer; transition:all .15s; min-height:52px;
+  }
+  .card-tab:hover { border-color:#475569; }
+  .card-tab.active { background:var(--emerald-bg); border-color:var(--emerald-border); }
+  .card-tab svg { width:20px; height:20px; flex-shrink:0; stroke:currentColor; fill:none; stroke-width:1.8; }
+  .card-tab .card-text { flex:1; min-width:0; }
+  .card-tab .card-label { font-size:12.5px; font-weight:600; color:var(--text); display:flex; align-items:center; gap:6px; }
+  .card-tab.active .card-label { color:var(--emerald); }
+  .card-tab .card-desc { font-size:10.5px; color:var(--text-muted); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .card-tab .icon-circle {
+    width:36px; height:36px; border-radius:10px;
+    background:rgba(148,163,184,0.08);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0; color:var(--text-muted);
+  }
+  .card-tab.active .icon-circle { background:rgba(16,185,129,0.15); color:var(--emerald); }
+
+  /* ═══ Upgrade section ═══ */
+  .upgrade-section {
+    border-radius:16px; border:1px solid var(--border); background:rgba(30,41,59,0.5);
+    padding:16px; margin-top:8px;
+  }
+  .upgrade-header { text-align:center; margin-bottom:12px; }
+  .upgrade-header h3 {
+    font-size:15px; font-weight:700; color:var(--text);
+    display:inline-flex; align-items:center; gap:8px;
+  }
+  .upgrade-badge {
+    font-size:10px; font-weight:600; padding:3px 8px; border-radius:20px;
+    background:rgba(251,191,36,0.1); border:1px solid rgba(251,191,36,0.2);
+    color:#fbbf24;
+  }
+  .upgrade-subtitle { font-size:11px; color:var(--text-muted); margin-top:4px; }
+  .upgrade-tried { font-size:10px; color:var(--text-muted); margin-top:4px; }
+  .upgrade-tried strong { color:#cbd5e1; }
+
+  /* Billing toggle */
+  .billing-toggle {
+    display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:14px;
+  }
+  .billing-toggle span { font-size:11px; font-weight:500; color:var(--text-muted); }
+  .billing-toggle span.active-period { color:var(--text); }
+  .toggle-track {
+    width:36px; height:20px; border-radius:10px; background:#475569;
+    position:relative; cursor:pointer; transition:background .2s;
+  }
+  .toggle-track.on { background:var(--emerald-border); }
+  .toggle-knob {
+    width:16px; height:16px; border-radius:50%; background:#fff;
+    position:absolute; top:2px; left:2px; transition:transform .2s;
+  }
+  .toggle-track.on .toggle-knob { transform:translateX(16px); }
+  .save-badge {
+    font-size:9px; font-weight:700; padding:2px 6px; border-radius:10px;
+    background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.2); color:var(--emerald);
+  }
+
+  /* ═══ Option A pricing: horizontal scroll cards ═══ */
+  .tier-scroll {
+    display:flex; gap:8px; overflow-x:auto; padding-bottom:4px;
+    scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
+  .tier-scroll::-webkit-scrollbar { display:none; }
+  .tier-scroll-card {
+    min-width:240px; flex-shrink:0; scroll-snap-align:center;
+    border-radius:var(--radius); padding:14px; display:flex; flex-direction:column;
+    border:1px solid var(--border); background:var(--surface);
+  }
+  .tier-scroll-card.current {
+    border:2px solid #475569; background:rgba(30,41,59,0.6); opacity:0.7;
+  }
+  .tier-scroll-card.highlighted {
+    border:2px solid rgba(16,185,129,0.4); background:rgba(16,185,129,0.05);
+    box-shadow:0 4px 20px rgba(16,185,129,0.1);
+  }
+  .tier-scroll-card.starter-hl {
+    border:2px solid rgba(96,165,250,0.4); background:rgba(96,165,250,0.05);
+    box-shadow:0 4px 20px rgba(96,165,250,0.1);
+  }
+  .tier-name-row { display:flex; align-items:center; gap:6px; margin-bottom:6px; }
+  .tier-icon { width:16px; height:16px; }
+  .tier-name { font-size:13px; font-weight:700; color:var(--text); }
+  .tier-discount {
+    font-size:9px; font-weight:700; padding:2px 5px; border-radius:8px;
+    background:var(--amber-bg); color:var(--amber-text);
+    border:1px solid rgba(251,191,36,0.2);
+  }
+  .tier-price-row { display:flex; align-items:baseline; gap:4px; margin-bottom:4px; }
+  .tier-price-old { font-size:12px; color:#64748b; text-decoration:line-through; }
+  .tier-price { font-size:22px; font-weight:800; color:var(--text); }
+  .tier-price-unit { font-size:10px; color:#64748b; }
+  .tier-desc { font-size:10px; color:var(--text-muted); margin-bottom:8px; }
+  .tier-features { list-style:none; margin-bottom:10px; flex:1; }
+  .tier-features li {
+    font-size:10px; color:#cbd5e1; padding:2px 0;
+    display:flex; align-items:flex-start; gap:5px;
+  }
+  .tier-features li::before { content:'✓'; color:var(--emerald); font-weight:700; font-size:10px; flex-shrink:0; }
+  .tier-cta {
+    width:100%; padding:9px 0; border-radius:8px; border:none;
+    font-size:11px; font-weight:600; cursor:pointer; transition:all .15s;
+  }
+  .tier-cta.cta-emerald { background:var(--emerald-border); color:#fff; }
+  .tier-cta.cta-blue { background:#3b82f6; color:#fff; }
+  .tier-cta.cta-current { background:#334155; color:#64748b; cursor:default; }
+
+  /* Scroll indicators */
+  .scroll-dots { display:flex; gap:6px; justify-content:center; margin-top:10px; }
+  .scroll-dot { width:6px; height:6px; border-radius:50%; background:#334155; }
+  .scroll-dot.active { background:var(--emerald); }
+
+  /* ═══ Option B pricing: collapsed current + upgrade target ═══ */
+  .current-plan-collapsed {
+    display:flex; align-items:center; gap:10px;
+    padding:10px 14px; border-radius:var(--radius);
+    background:rgba(30,41,59,0.6); border:1px solid #334155;
+    margin-bottom:10px;
+  }
+  .current-plan-collapsed .cp-icon { width:14px; height:14px; color:#64748b; }
+  .current-plan-collapsed .cp-label { font-size:11px; color:#64748b; font-weight:500; }
+  .current-plan-collapsed .cp-name { font-size:11px; font-weight:700; color:#94a3b8; margin-left:auto; }
+
+  .upgrade-target-card {
+    border-radius:var(--radius); padding:16px; display:flex; flex-direction:column;
+    border:2px solid rgba(16,185,129,0.4); background:rgba(16,185,129,0.05);
+    position:relative; margin-bottom:10px;
+  }
+  .upgrade-target-card.blue-target {
+    border-color:rgba(96,165,250,0.4); background:rgba(96,165,250,0.05);
+  }
+  .popular-pill {
+    position:absolute; top:-10px; left:50%; transform:translateX(-50%);
+    font-size:9px; font-weight:700; padding:3px 10px; border-radius:20px;
+    background:var(--emerald-border); color:#fff; white-space:nowrap;
+    box-shadow:0 2px 8px rgba(16,185,129,0.25);
+  }
+  .popular-pill.blue-pill { background:#3b82f6; }
+  .upgrade-target-card .tier-features { max-height:none; }
+  .see-all-btn {
+    display:block; width:100%; text-align:center; padding:8px;
+    font-size:10px; font-weight:600; color:var(--text-muted); cursor:pointer;
+    border:1px dashed #334155; border-radius:8px; background:transparent; margin-top:6px;
+  }
+
+  /* Content placeholder */
+  .content-placeholder {
+    border-radius:var(--radius); border:2px dashed #1e293b;
+    padding:24px 16px; text-align:center; color:#475569; font-size:12px;
+  }
+  .content-placeholder .dots { display:flex; gap:6px; justify-content:center; margin-bottom:8px; }
+  .content-placeholder .dot { width:6px; height:6px; border-radius:50%; background:#334155; }
+
+  .pros-list {
+    list-style:none; margin-top:12px; font-size:13px; color:var(--text-muted); text-align:left; max-width:375px;
+  }
+  .pros-list li { padding:5px 0; display:flex; align-items:flex-start; gap:8px; }
+  .pros-list li::before { content:'✓'; color:var(--emerald); font-weight:700; flex-shrink:0; }
+
+  .divider {
+    width:100%; max-width:840px; border:none; border-top:1px solid #1e293b; margin:8px 0;
+  }
+</style>
+</head>
+<body>
+
+<div>
+  <h1>Import Tabs — <span>Mobile Mockups</span></h1>
+  <p class="subtitle">Two layout options: method tabs + upgrade value proposition. Everything visible on mobile without hidden scrolling.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!--                 TABS SECTION               -->
+<!-- ═══════════════════════════════════════════ -->
+<p class="section-title">1 &mdash; Import Method Tabs</p>
+
+<div class="mockups">
+
+  <!-- OPTION A: 2×2 Grid -->
+  <div class="mockup-wrapper">
+    <div class="option-label">Option A — 2×2 Grid <span class="tag">Compact</span></div>
+    <div class="phone-frame">
+      <div class="screen">
+        <div class="page-header">
+          <h2>Import Your Portfolio</h2>
+          <p>All import methods in one place.</p>
+          <div class="portfolio-badge">
+            <svg viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z"/></svg>
+            Importing to: My Portfolio
+          </div>
+        </div>
+        <div class="grid-tabs" id="gridTabs">
+          <button class="grid-tab active" onclick="selectGridTab(this)">
+            <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+            Broker CSV
+          </button>
+          <button class="grid-tab" onclick="selectGridTab(this)">
+            <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75"/></svg>
+            Broker Sync
+            <span class="badge">Bifolio</span>
+          </button>
+          <button class="grid-tab" onclick="selectGridTab(this)">
+            <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z"/></svg>
+            AI Import
+            <span class="badge">Trefolio</span>
+          </button>
+          <button class="grid-tab" onclick="selectGridTab(this)">
+            <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+            Manual
+          </button>
+        </div>
+        <div class="content-placeholder">
+          <div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+          Broker selector / import content here
+        </div>
+      </div>
+    </div>
+    <ul class="pros-list">
+      <li>All 4 methods visible — zero scrolling</li>
+      <li>Compact: ~100px vertical, max room for content</li>
+      <li>Minimal code change (grid-cols-2 swap)</li>
+      <li>Reverts to horizontal row on tablet+</li>
+    </ul>
+  </div>
+
+  <!-- OPTION B: Vertical Cards -->
+  <div class="mockup-wrapper">
+    <div class="option-label">Option B — Vertical Cards <span class="tag">Descriptive</span></div>
+    <div class="phone-frame">
+      <div class="screen">
+        <div class="page-header">
+          <h2>Import Your Portfolio</h2>
+          <p>All import methods in one place.</p>
+          <div class="portfolio-badge">
+            <svg viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z"/></svg>
+            Importing to: My Portfolio
+          </div>
+        </div>
+        <div class="card-tabs" id="cardTabs">
+          <button class="card-tab active" onclick="selectCardTab(this)">
+            <div class="icon-circle"><svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg></div>
+            <div class="card-text">
+              <div class="card-label">Broker CSV</div>
+              <div class="card-desc">Upload CSV from 14 supported brokers</div>
+            </div>
+          </button>
+          <button class="card-tab" onclick="selectCardTab(this)">
+            <div class="icon-circle"><svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75"/></svg></div>
+            <div class="card-text">
+              <div class="card-label">Broker Sync <span class="badge">Bifolio</span></div>
+              <div class="card-desc">Connect your broker account directly</div>
+            </div>
+          </button>
+          <button class="card-tab" onclick="selectCardTab(this)">
+            <div class="icon-circle"><svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z"/></svg></div>
+            <div class="card-text">
+              <div class="card-label">AI Import <span class="badge">Trefolio</span></div>
+              <div class="card-desc">AI reads any statement or screenshot</div>
+            </div>
+          </button>
+          <button class="card-tab" onclick="selectCardTab(this)">
+            <div class="icon-circle"><svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg></div>
+            <div class="card-text">
+              <div class="card-label">Manual</div>
+              <div class="card-desc">Add a single stock manually</div>
+            </div>
+          </button>
+        </div>
+        <div class="content-placeholder">
+          <div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+          Broker selector / import content here
+        </div>
+      </div>
+    </div>
+    <ul class="pros-list">
+      <li>Maximum discoverability with descriptions</li>
+      <li>Premium features more prominent</li>
+      <li>Taller: ~240px before content</li>
+      <li>Collapses to horizontal tabs on tablet+</li>
+    </ul>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ═══════════════════════════════════════════ -->
+<!--           UPGRADE / PRICING SECTION        -->
+<!-- ═══════════════════════════════════════════ -->
+<p class="section-title">2 &mdash; Upgrade Value Proposition (when user taps AI Import)</p>
+
+<div class="mockups">
+
+  <!-- OPTION A pricing: horizontal swipe cards -->
+  <div class="mockup-wrapper">
+    <div class="option-label">Option A — Swipeable Cards <span class="tag">Scannable</span></div>
+    <div class="phone-frame" style="min-height:auto">
+      <div class="screen">
+        <!-- Upgrade header -->
+        <div class="upgrade-section">
+          <div class="upgrade-header">
+            <h3>Compare Plans <span class="upgrade-badge">Upgrade required</span></h3>
+            <p class="upgrade-subtitle">Upgrade right here to continue AI analysis without limits.</p>
+            <p class="upgrade-tried"><strong>You tried to:</strong> Run an AI analysis for this data.</p>
+          </div>
+
+          <div class="billing-toggle">
+            <span class="active-period">Monthly</span>
+            <div class="toggle-track" id="toggleA" onclick="toggleBillingA()"><div class="toggle-knob"></div></div>
+            <span>Annually</span>
+            <span class="save-badge">Save 37%</span>
+          </div>
+
+          <!-- Horizontal scroll cards — starts scrolled to recommended -->
+          <div class="tier-scroll" id="tierScrollA">
+            <!-- Folio (current, dimmed) -->
+            <div class="tier-scroll-card current">
+              <div class="tier-name-row">
+                <svg class="tier-icon" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2m0 14v2m-7-9H3m18 0h-2M5.636 5.636l1.414 1.414m9.9 9.9l1.414 1.414M5.636 18.364l1.414-1.414m9.9-9.9l1.414-1.414"/></svg>
+                <span class="tier-name" style="color:#64748b">Folio</span>
+              </div>
+              <div class="tier-price-row">
+                <span class="tier-price" style="color:#64748b">€0</span>
+                <span class="tier-price-unit">forever</span>
+              </div>
+              <div class="tier-desc">Your current plan</div>
+              <button class="tier-cta cta-current">Current plan</button>
+            </div>
+
+            <!-- Bifolio -->
+            <div class="tier-scroll-card starter-hl">
+              <div class="tier-name-row">
+                <svg class="tier-icon" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2m0 14v2m-7-9H3m18 0h-2M5.636 5.636l1.414 1.414m9.9 9.9l1.414 1.414M5.636 18.364l1.414-1.414m9.9-9.9l1.414-1.414"/></svg>
+                <span class="tier-name">Bifolio</span>
+                <span class="tier-discount">-25%</span>
+              </div>
+              <div class="tier-price-row">
+                <span class="tier-price-old">€3.99</span>
+                <span class="tier-price">€2.99</span>
+                <span class="tier-price-unit">/mo</span>
+              </div>
+              <div class="tier-desc">For active investors tracking multiple brokers.</div>
+              <ul class="tier-features">
+                <li>Unlimited stocks & ETFs</li>
+                <li>Broker Sync (auto-import)</li>
+                <li>Multiple portfolios</li>
+                <li>10 AI analyses/month</li>
+              </ul>
+              <button class="tier-cta cta-blue">Bifolio — €2.99/mo</button>
+            </div>
+
+            <!-- Trefolio -->
+            <div class="tier-scroll-card highlighted">
+              <div class="tier-name-row">
+                <svg class="tier-icon" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2m0 14v2m-7-9H3m18 0h-2M5.636 5.636l1.414 1.414m9.9 9.9l1.414 1.414M5.636 18.364l1.414-1.414m9.9-9.9l1.414-1.414"/></svg>
+                <span class="tier-name">Trefolio</span>
+                <span class="tier-discount">-20%</span>
+              </div>
+              <div class="tier-price-row">
+                <span class="tier-price-old">€9.99</span>
+                <span class="tier-price">€7.99</span>
+                <span class="tier-price-unit">/mo</span>
+              </div>
+              <div class="tier-desc">Full power — unlimited AI, advanced tools.</div>
+              <ul class="tier-features">
+                <li>Everything in Bifolio</li>
+                <li>Unlimited AI analyses</li>
+                <li>Smart alerts & notifications</li>
+                <li>Priority support</li>
+              </ul>
+              <button class="tier-cta cta-emerald">Trefolio — €7.99/mo</button>
+            </div>
+          </div>
+
+          <div class="scroll-dots">
+            <span class="scroll-dot"></span>
+            <span class="scroll-dot active"></span>
+            <span class="scroll-dot"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ul class="pros-list">
+      <li>Horizontal swipe — recommended plan visible first</li>
+      <li>Current plan dimmed, upgrade plans prominent</li>
+      <li>Compact: shows one full card + peek of next</li>
+      <li>Scroll dots hint at more options</li>
+    </ul>
+  </div>
+
+  <!-- OPTION B pricing: collapsed current + upgrade focus -->
+  <div class="mockup-wrapper">
+    <div class="option-label">Option B — Focused Upgrade <span class="tag">Conversion</span></div>
+    <div class="phone-frame" style="min-height:auto">
+      <div class="screen">
+        <div class="upgrade-section">
+          <div class="upgrade-header">
+            <h3>Compare Plans <span class="upgrade-badge">Upgrade required</span></h3>
+            <p class="upgrade-subtitle">Upgrade right here to continue AI analysis without limits.</p>
+            <p class="upgrade-tried"><strong>You tried to:</strong> Run an AI analysis for this data.</p>
+          </div>
+
+          <div class="billing-toggle">
+            <span class="active-period">Monthly</span>
+            <div class="toggle-track" id="toggleB" onclick="toggleBillingB()"><div class="toggle-knob"></div></div>
+            <span>Annually</span>
+            <span class="save-badge">Save 37%</span>
+          </div>
+
+          <!-- Current plan: collapsed one-liner -->
+          <div class="current-plan-collapsed">
+            <svg class="cp-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2m0 14v2m-7-9H3m18 0h-2M5.636 5.636l1.414 1.414m9.9 9.9l1.414 1.414M5.636 18.364l1.414-1.414m9.9-9.9l1.414-1.414"/></svg>
+            <span class="cp-label">Your plan: </span>
+            <span class="cp-name">Folio (Free)</span>
+          </div>
+
+          <!-- Recommended upgrade: Trefolio, fully expanded -->
+          <div class="upgrade-target-card" style="margin-top:14px;">
+            <div class="popular-pill">Recommended</div>
+            <div class="tier-name-row" style="margin-top:6px;">
+              <svg class="tier-icon" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2m0 14v2m-7-9H3m18 0h-2M5.636 5.636l1.414 1.414m9.9 9.9l1.414 1.414M5.636 18.364l1.414-1.414m9.9-9.9l1.414-1.414"/></svg>
+              <span class="tier-name">Trefolio</span>
+              <span class="tier-discount">-20%</span>
+            </div>
+            <div class="tier-price-row">
+              <span class="tier-price-old">€9.99</span>
+              <span class="tier-price">€7.99</span>
+              <span class="tier-price-unit">/mo</span>
+            </div>
+            <div class="tier-desc">Full power — unlimited AI, advanced analytics, and priority support.</div>
+            <ul class="tier-features">
+              <li>Unlimited stocks & ETFs</li>
+              <li>Unlimited AI analyses</li>
+              <li>Broker Sync (auto-import)</li>
+              <li>Multiple portfolios</li>
+              <li>Smart alerts & notifications</li>
+              <li>Priority support</li>
+            </ul>
+            <button class="tier-cta cta-emerald">Upgrade to Trefolio — €7.99/mo</button>
+          </div>
+
+          <!-- Bifolio: secondary option -->
+          <div class="upgrade-target-card blue-target">
+            <div class="popular-pill blue-pill">Budget pick</div>
+            <div class="tier-name-row" style="margin-top:6px;">
+              <svg class="tier-icon" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2m0 14v2m-7-9H3m18 0h-2M5.636 5.636l1.414 1.414m9.9 9.9l1.414 1.414M5.636 18.364l1.414-1.414m9.9-9.9l1.414-1.414"/></svg>
+              <span class="tier-name">Bifolio</span>
+              <span class="tier-discount">-25%</span>
+            </div>
+            <div class="tier-price-row">
+              <span class="tier-price-old">€3.99</span>
+              <span class="tier-price">€2.99</span>
+              <span class="tier-price-unit">/mo</span>
+            </div>
+            <div class="tier-desc">For active investors tracking multiple brokers.</div>
+            <ul class="tier-features">
+              <li>Unlimited stocks & ETFs</li>
+              <li>Broker Sync (auto-import)</li>
+              <li>Multiple portfolios</li>
+              <li>10 AI analyses/month</li>
+            </ul>
+            <button class="tier-cta cta-blue">Upgrade to Bifolio — €2.99/mo</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ul class="pros-list">
+      <li>Current plan collapsed to one line — no wasted space</li>
+      <li>Recommended upgrade immediately visible with full features</li>
+      <li>Secondary option shown below, not hidden</li>
+      <li>Strongest conversion focus: CTA above the fold</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+function selectGridTab(el) {
+  el.parentElement.querySelectorAll('.grid-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+function selectCardTab(el) {
+  el.parentElement.querySelectorAll('.card-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+function toggleBillingA() {
+  document.getElementById('toggleA').classList.toggle('on');
+}
+function toggleBillingB() {
+  document.getElementById('toggleB').classList.toggle('on');
+}
+
+// Auto-scroll tier carousel to recommended (Bifolio)
+document.addEventListener('DOMContentLoaded', () => {
+  const scroll = document.getElementById('tierScrollA');
+  if (scroll) {
+    setTimeout(() => {
+      scroll.scrollTo({ left: 200, behavior: 'smooth' });
+    }, 600);
+  }
+});
+</script>
+
+</body>
+</html>

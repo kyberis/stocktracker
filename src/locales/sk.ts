@@ -52,6 +52,7 @@ const sk: TranslationStrings = {
   close: "Zavrieť",
   addToPortfolio: "Pridať do portfólia",
   enterShares: "Počet akcií",
+  sharesMustBePositive: "Shares must be greater than 0",
   enterPrice: "Nákupná cena za akciu",
   selectCurrency: "Vybrať menu",
   importCSV: "Importovať CSV",

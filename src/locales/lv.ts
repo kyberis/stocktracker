@@ -52,6 +52,7 @@ const lv: TranslationStrings = {
   close: "Aizvērt",
   addToPortfolio: "Pievienot portfelim",
   enterShares: "Akciju skaits",
+  sharesMustBePositive: "Shares must be greater than 0",
   enterPrice: "Pirkuma cena par akciju",
   selectCurrency: "Izvēlies valūtu",
   importCSV: "Importēt CSV",

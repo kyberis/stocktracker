@@ -52,6 +52,7 @@ const tr: TranslationStrings = {
   close: "Kapat",
   addToPortfolio: "Portföye Ekle",
   enterShares: "Hisse adedi",
+  sharesMustBePositive: "Shares must be greater than 0",
   enterPrice: "Hisse başına alış fiyatı",
   selectCurrency: "Para birimi seçin",
   importCSV: "CSV İçe Aktar",

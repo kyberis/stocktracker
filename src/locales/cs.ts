@@ -52,6 +52,7 @@ const cs: TranslationStrings = {
   close: "Zavřít",
   addToPortfolio: "Přidat do portfolia",
   enterShares: "Počet akcií",
+  sharesMustBePositive: "Shares must be greater than 0",
   enterPrice: "Nákupní cena za akcii",
   selectCurrency: "Vybrat měnu",
   importCSV: "Importovat CSV",

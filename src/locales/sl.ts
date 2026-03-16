@@ -52,6 +52,7 @@ const sl: TranslationStrings = {
   close: "Zapri",
   addToPortfolio: "Dodaj v portfelj",
   enterShares: "Število delnic",
+  sharesMustBePositive: "Shares must be greater than 0",
   enterPrice: "Nabavna cena na delnico",
   selectCurrency: "Izberi valuto",
   importCSV: "Uvozi CSV",

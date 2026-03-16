@@ -52,6 +52,7 @@ const da: TranslationStrings = {
   close: "Luk",
   addToPortfolio: "Tilføj til portefølje",
   enterShares: "Antal aktier",
+  sharesMustBePositive: "Shares must be greater than 0",
   enterPrice: "Købskurs pr. aktie",
   selectCurrency: "Vælg valuta",
   importCSV: "Importer CSV",

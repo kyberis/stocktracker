@@ -300,6 +300,27 @@ export function runDataQualityChecks(
   const checks: DataQualityCheck[] = [];
   const yearTxs = filterByTaxYear(allTransactions, taxYear);
 
+  // Position-only imports: synthetic buys from broker positions lack real
+  // dates, per-lot cost basis, dividends, and sell history.
+  const syntheticTickers = [
+    ...new Set(
+      allTransactions
+        .filter((t) => t.sourceRef?.startsWith("snaptrade:") && !t.sourceRef.startsWith("snaptrade-activity:"))
+        .map((t) => t.ticker),
+    ),
+  ];
+  if (syntheticTickers.length === 0) {
+    checks.push({ status: "ok", message: "All holdings have full transaction history" });
+  } else {
+    const list = syntheticTickers.slice(0, 5).join(", ") + (syntheticTickers.length > 5 ? ", ..." : "");
+    checks.push({
+      status: "warning",
+      message: `${syntheticTickers.length} holding(s) (${list}) were imported from broker positions without full transaction history — purchase dates, cost basis, dividends, and capital gains may be inaccurate. Upload a CSV with your complete transaction history for accurate tax reporting.`,
+      actionUrl: "/import?method=broker_csv&broker=simple",
+      actionLabel: "Import via CSV",
+    });
+  }
+
   const sellsWithNoLots = gains.filter((g) => g.sharesSold === 0);
   if (sellsWithNoLots.length === 0) {
     checks.push({ status: "ok", message: "All sell transactions have matching buy lots" });

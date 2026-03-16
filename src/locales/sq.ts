@@ -52,6 +52,7 @@ const sq: TranslationStrings = {
   close: "Mbyll",
   addToPortfolio: "Shto në portofol",
   enterShares: "Numri i aksioneve",
+  sharesMustBePositive: "Shares must be greater than 0",
   enterPrice: "Çmimi i blerjes për aksion",
   selectCurrency: "Zgjidhni valutën",
   importCSV: "Importo CSV",

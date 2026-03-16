@@ -253,6 +253,8 @@ export interface TaxOptimization {
 export interface DataQualityCheck {
   status: "ok" | "warning" | "error";
   message: string;
+  actionUrl?: string;
+  actionLabel?: string;
 }
 
 /* ── Main Tax Report ───────────────────────────────────────── */

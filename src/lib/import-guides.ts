@@ -97,13 +97,15 @@ export const IMPORT_GUIDES: ImportGuide[] = [
     titleEs: "CSV Simple — Formato Personalizado",
     stepsEn: [
       "Create a spreadsheet with columns: ticker, type (buy/sell/dividend/fee), price, amount, currency.",
-      "Optional columns: date (YYYY-MM-DD), name.",
+      "Supported currencies: USD, EUR, GBP, GBX, DKK, CAD, CHF, JPY. Default: EUR.",
+      "Optional columns: date (YYYY-MM-DD), name. Shares must be greater than 0.",
       "Fill in your transactions — one row per transaction.",
       "Save as CSV and upload here.",
     ],
     stepsEs: [
       "Crea una hoja de cálculo con columnas: ticker, type (buy/sell/dividend/fee), price, amount, currency.",
-      "Columnas opcionales: date (YYYY-MM-DD), name.",
+      "Divisas soportadas: USD, EUR, GBP, GBX, DKK, CAD, CHF, JPY. Por defecto: EUR.",
+      "Columnas opcionales: date (YYYY-MM-DD), name. Las acciones deben ser mayor que 0.",
       "Rellena tus transacciones — una fila por transacción.",
       "Guarda como CSV y sube aquí.",
     ],

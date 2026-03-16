@@ -54,6 +54,7 @@ const nl: TranslationStrings = {
   close: "Sluiten",
   addToPortfolio: "Toevoegen aan portfolio",
   enterShares: "Aantal aandelen",
+  sharesMustBePositive: "Shares must be greater than 0",
   enterPrice: "Aankoopprijs per aandeel",
   selectCurrency: "Selecteer valuta",
   importCSV: "CSV importeren",

@@ -97,6 +97,7 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
 
   const handleSubmit = () => {
     if (!stockName.trim() || !ticker.trim() || !exchange.trim() || !shares || !price || !assetType) return;
+    if (parseFloat(shares) <= 0) return;
 
     track("stock_added");
     addHolding({
@@ -183,6 +184,19 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
               </div>
             )}
 
+            {/* Name */}
+            <div>
+              <label htmlFor="addstock-name" className="block text-xs font-medium text-gray-500 dark:text-slate-400 mb-1">{t("name")}</label>
+              <input
+                id="addstock-name"
+                type="text"
+                value={stockName}
+                onChange={(e) => setStockName(e.target.value)}
+                placeholder={t("name")}
+                className="w-full"
+              />
+            </div>
+
             {/* Ticker + Exchange row */}
             <div className="grid grid-cols-2 gap-2.5">
               <div>
@@ -234,10 +248,13 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
                   value={shares}
                   onChange={(e) => setShares(e.target.value)}
                   placeholder={t("enterShares")}
-                  min="0"
+                  min="0.0001"
                   step="any"
                   className="w-full"
                 />
+                {shares && parseFloat(shares) <= 0 && (
+                  <p className="text-xs text-red-500 dark:text-red-400 mt-0.5">{t("sharesMustBePositive")}</p>
+                )}
               </div>
               <div>
                 <label htmlFor="addstock-price" className="block text-xs font-medium text-gray-500 dark:text-slate-400 mb-1">{t("purchasePrice")}</label>
@@ -295,7 +312,7 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
           </button>
           <button
             onClick={handleSubmit}
-            disabled={!stockName.trim() || !ticker.trim() || !exchange.trim() || !shares || !price || !assetType}
+            disabled={!stockName.trim() || !ticker.trim() || !exchange.trim() || !shares || parseFloat(shares) <= 0 || !price || !assetType}
             className="btn-primary flex-1 sm:flex-none sm:ml-auto disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {t("addToPortfolio")}

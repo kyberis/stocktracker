@@ -52,6 +52,7 @@ const ca: TranslationStrings = {
   close: "Tancar",
   addToPortfolio: "Afegir a la Cartera",
   enterShares: "Nombre d'accions",
+  sharesMustBePositive: "Shares must be greater than 0",
   enterPrice: "Preu de compra per acció",
   selectCurrency: "Seleccionar moneda",
   importCSV: "Importar CSV",

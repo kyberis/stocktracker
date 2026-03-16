@@ -28,6 +28,25 @@ const TYPE_COLORS: Record<TransactionType, string> = {
   fee: "bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400",
 };
 
+type SortField = "date" | "ticker" | "type" | "source";
+type SortDir = "asc" | "desc";
+
+function SortIcon({ active, dir }: { active: boolean; dir: SortDir }) {
+  return (
+    <svg className={`inline-block w-3 h-3 ml-0.5 ${active ? "text-emerald-500 dark:text-emerald-400" : "text-gray-300 dark:text-slate-600"}`} viewBox="0 0 16 16" fill="currentColor">
+      {dir === "asc" ? (
+        <path d="M8 4l4 5H4z" />
+      ) : (
+        <path d="M8 12l4-5H4z" />
+      )}
+    </svg>
+  );
+}
+
+function getSourceLabel(tx: Transaction): string {
+  return tx.brokerName || (tx.notes && tx.notes !== "SnapTrade import" ? tx.notes : "") || "manual";
+}
+
 export default function TransactionHistory({ holdingId, ticker, exchange: holdingExchange, assetType: holdingAssetType, currency: holdingCurrency, name: holdingName }: Props) {
   const { t } = useI18n();
   const { refreshHoldings, exchangeRates, activePortfolioCurrency, activePortfolioId } = usePortfolio();
@@ -42,10 +61,64 @@ export default function TransactionHistory({ holdingId, ticker, exchange: holdin
     [txs, exchangeRates, baseCurrency, hasSells],
   );
 
+  /* ── Filters ──────────────────────────────────────────── */
+  const [filterTicker, setFilterTicker] = useState("");
+  const [filterType, setFilterType] = useState("");
+  const [filterSource, setFilterSource] = useState("");
+
+  const uniqueTickers = useMemo(() => [...new Set(txs.map((tx) => tx.ticker))].filter(Boolean).sort(), [txs]);
+  const uniqueTypes = useMemo(() => [...new Set(txs.map((tx) => tx.type))].sort(), [txs]);
+  const uniqueSources = useMemo(() => [...new Set(txs.map(getSourceLabel))].sort(), [txs]);
+
+  /* ── Sorting ──────────────────────────────────────────── */
+  const [sortField, setSortField] = useState<SortField>("date");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+
+  const toggleSort = useCallback((field: SortField) => {
+    setSortField((prev) => {
+      if (prev === field) {
+        setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+        return prev;
+      }
+      setSortDir(field === "date" ? "desc" : "asc");
+      return field;
+    });
+  }, []);
+
+  /* ── Filtered + sorted list ───────────────────────────── */
+  const processedTxs = useMemo(() => {
+    let list = txs;
+    if (filterTicker) list = list.filter((tx) => tx.ticker === filterTicker);
+    if (filterType) list = list.filter((tx) => tx.type === filterType);
+    if (filterSource) list = list.filter((tx) => getSourceLabel(tx) === filterSource);
+
+    if (sortField !== "date" || sortDir !== "desc") {
+      list = [...list].sort((a, b) => {
+        let cmp = 0;
+        switch (sortField) {
+          case "date":
+            cmp = a.date.localeCompare(b.date);
+            break;
+          case "ticker":
+            cmp = (a.ticker || "").localeCompare(b.ticker || "");
+            break;
+          case "type":
+            cmp = a.type.localeCompare(b.type);
+            break;
+          case "source":
+            cmp = getSourceLabel(a).localeCompare(getSourceLabel(b));
+            break;
+        }
+        return sortDir === "asc" ? cmp : -cmp;
+      });
+    }
+    return list;
+  }, [txs, filterTicker, filterType, filterSource, sortField, sortDir]);
+
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
-  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [txs]);
-  const visibleTxs = useMemo(() => txs.slice(0, visibleCount), [txs, visibleCount]);
-  const hasMore = visibleCount < txs.length;
+  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [processedTxs]);
+  const visibleTxs = useMemo(() => processedTxs.slice(0, visibleCount), [processedTxs, visibleCount]);
+  const hasMore = visibleCount < processedTxs.length;
   const showMore = useCallback(() => setVisibleCount((v) => v + PAGE_SIZE), []);
 
   useEffect(() => {
@@ -215,19 +288,97 @@ export default function TransactionHistory({ holdingId, ticker, exchange: holdin
         <p className="text-sm text-gray-400 dark:text-slate-500">{t("noTransactions")}</p>
       ) : (
         <div className="overflow-x-auto">
+          {/* ── Filter bar ──────────────────────────────────── */}
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            {!holdingId && uniqueTickers.length > 1 && (
+              <select
+                value={filterTicker}
+                onChange={(e) => setFilterTicker(e.target.value)}
+                className="text-xs rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-700 dark:text-slate-300 px-2 py-1"
+                aria-label={t("filterByTicker")}
+              >
+                <option value="">{t("filterByTicker")}</option>
+                {uniqueTickers.map((tk) => (
+                  <option key={tk} value={tk}>{tk}</option>
+                ))}
+              </select>
+            )}
+            {uniqueTypes.length > 1 && (
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+                className="text-xs rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-700 dark:text-slate-300 px-2 py-1"
+                aria-label={t("filterByType")}
+              >
+                <option value="">{t("filterByType")}</option>
+                {uniqueTypes.map((tp) => (
+                  <option key={tp} value={tp}>{typeLabel(tp)}</option>
+                ))}
+              </select>
+            )}
+            {uniqueSources.length > 0 && (
+              <select
+                value={filterSource}
+                onChange={(e) => setFilterSource(e.target.value)}
+                className="text-xs rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-700 dark:text-slate-300 px-2 py-1"
+                aria-label={t("filterBySource")}
+              >
+                <option value="">{t("filterBySource")}</option>
+                {uniqueSources.map((s) => (
+                  <option key={s} value={s}>{s === "manual" ? t("manualHoldings") : s}</option>
+                ))}
+              </select>
+            )}
+            {(filterTicker || filterType || filterSource) && (
+              <button
+                onClick={() => { setFilterTicker(""); setFilterType(""); setFilterSource(""); }}
+                className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-slate-300 transition-colors"
+              >
+                ✕ {t("filterAll")}
+              </button>
+            )}
+            {(filterTicker || filterType || filterSource) && (
+              <span className="text-[10px] text-gray-400 dark:text-slate-500 ml-auto">
+                {processedTxs.length} / {txs.length}
+              </span>
+            )}
+          </div>
+
           <table className="w-full text-xs">
             <caption className="sr-only">Transaction history</caption>
             <thead className="text-gray-500 dark:text-slate-400">
               <tr>
-                <th scope="col" className="text-left p-2 font-medium">{t("transactionDate")}</th>
-                <th scope="col" className="text-left p-2 font-medium">{t("transactionType")}</th>
-                {!holdingId && <th scope="col" className="text-left p-2 font-medium">{t("ticker")}</th>}
+                <th scope="col" className="text-left p-2 font-medium">
+                  <button type="button" onClick={() => toggleSort("date")} className="inline-flex items-center hover:text-gray-700 dark:hover:text-slate-200 transition-colors">
+                    {t("transactionDate")}
+                    <SortIcon active={sortField === "date"} dir={sortField === "date" ? sortDir : "desc"} />
+                  </button>
+                </th>
+                <th scope="col" className="text-left p-2 font-medium">
+                  <button type="button" onClick={() => toggleSort("type")} className="inline-flex items-center hover:text-gray-700 dark:hover:text-slate-200 transition-colors">
+                    {t("transactionType")}
+                    <SortIcon active={sortField === "type"} dir={sortField === "type" ? sortDir : "asc"} />
+                  </button>
+                </th>
+                {!holdingId && (
+                  <th scope="col" className="text-left p-2 font-medium">
+                    <button type="button" onClick={() => toggleSort("ticker")} className="inline-flex items-center hover:text-gray-700 dark:hover:text-slate-200 transition-colors">
+                      {t("ticker")}
+                      <SortIcon active={sortField === "ticker"} dir={sortField === "ticker" ? sortDir : "asc"} />
+                    </button>
+                  </th>
+                )}
                 <th scope="col" className="text-right p-2 font-medium">{t("transactionShares")}</th>
                 <th scope="col" className="text-right p-2 font-medium">{t("transactionPrice")}</th>
                 <th scope="col" className="text-right p-2 font-medium">{t("transactionTotal")}</th>
                 <th scope="col" className="text-right p-2 font-medium">{t("transactionFees")}</th>
                 {hasSells && <th scope="col" className="text-right p-2 font-medium">{t("realizedPl")}</th>}
-                <th scope="col" className="text-left p-2 font-medium hidden sm:table-cell">{t("transactionSource")}</th>
+                <th scope="col" className="text-left p-2 font-medium hidden sm:table-cell">
+                  <button type="button" onClick={() => toggleSort("source")} className="inline-flex items-center hover:text-gray-700 dark:hover:text-slate-200 transition-colors">
+                    {t("transactionSource")}
+                    <SortIcon active={sortField === "source"} dir={sortField === "source" ? sortDir : "asc"} />
+                  </button>
+                </th>
                 <th scope="col" className="p-2"><span className="sr-only">Actions</span></th>
               </tr>
             </thead>
@@ -344,7 +495,9 @@ export default function TransactionHistory({ holdingId, ticker, exchange: holdin
                         </span>
                       ) : tx.notes && tx.notes !== "SnapTrade import" ? (
                         <span className="text-[10px] text-gray-400 dark:text-slate-500 truncate max-w-[80px] block" title={tx.notes}>{tx.notes}</span>
-                      ) : null}
+                      ) : (
+                        <span className="text-[10px] text-gray-400 dark:text-slate-500">{t("manualHoldings")}</span>
+                      )}
                     </td>
                     <td className="p-2">
                       <div className="flex items-center gap-1">
@@ -379,7 +532,7 @@ export default function TransactionHistory({ holdingId, ticker, exchange: holdin
                 onClick={showMore}
                 className="text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
               >
-                {t("showMore")} ({txs.length - visibleCount} {t("remaining")})
+                {t("showMore")} ({processedTxs.length - visibleCount} {t("remaining")})
               </button>
             </div>
           )}
