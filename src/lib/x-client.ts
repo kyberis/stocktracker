@@ -81,7 +81,9 @@ export async function postTweet(text: string): Promise<PostTweetResult> {
   const creds = await getXCredentials();
   if (!creds) return { success: false, error: "X API credentials not configured" };
 
-  const url = "https://api.x.com/2/tweets";
+  // Use api.twitter.com — OAuth 1.0a signs the exact URL and api.x.com
+  // can redirect to api.twitter.com, invalidating the signature (→ 401).
+  const url = "https://api.twitter.com/2/tweets";
   const authHeader = buildOAuthHeader(creds, "POST", url);
 
   try {
@@ -92,6 +94,7 @@ export async function postTweet(text: string): Promise<PostTweetResult> {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ text }),
+      redirect: "error",
     });
 
     if (!res.ok) {
