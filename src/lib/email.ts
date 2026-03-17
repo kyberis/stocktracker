@@ -505,7 +505,7 @@ export async function sendBifolioUpgradeEmail(
     return { success: true };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    console.error("Failed to send Bifolio upgrade email:", msg);
+    console.error("Failed to send Bifolio upgrade email:", err);
     return { success: false, error: msg };
   }
 }
