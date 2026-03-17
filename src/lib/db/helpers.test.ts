@@ -377,8 +377,9 @@ function mockRow(overrides: Record<string, unknown> = {}): Row {
     last_active_at: "2025-03-10T12:00:00Z",
     tax_residency: "DE",
     onboarding_completed: 1,
+    experience_level: "" as const,
     ...overrides,
-  } as Row;
+  } as unknown as Row;
 }
 
 describe("rowToDbUser", () => {
@@ -507,7 +508,7 @@ describe("rowToPortfolio", () => {
       sort_order: 0,
       currency: "USD",
       created_at: "2025-01-01",
-    } as Row;
+    } as unknown as Row;
 
     const portfolio = rowToPortfolio(row);
 
@@ -531,7 +532,7 @@ describe("rowToPortfolio", () => {
       sort_order: 1,
       currency: "XYZ",
       created_at: "2025-02-01",
-    } as Row;
+    } as unknown as Row;
 
     const portfolio = rowToPortfolio(row);
 
@@ -552,7 +553,7 @@ describe("rowToPortfolio", () => {
       sort_order: 0,
       currency: "",
       created_at: "2025-03-01",
-    } as Row;
+    } as unknown as Row;
 
     const portfolio = rowToPortfolio(row);
 
@@ -569,7 +570,7 @@ describe("rowToPortfolio", () => {
         sort_order: 0,
         currency: curr,
         created_at: "2025-01-01",
-      } as Row;
+      } as unknown as Row;
       const portfolio = rowToPortfolio(row);
       expect(portfolio.currency).toBe(curr);
     }
@@ -610,6 +611,7 @@ describe("mapUser", () => {
     last_active_at: "2025-03-10",
     tax_residency: "",
     onboarding_completed: 0,
+    experience_level: "" as const,
   };
 
   it("maps DbUser to PublicUser with correct field mapping", () => {

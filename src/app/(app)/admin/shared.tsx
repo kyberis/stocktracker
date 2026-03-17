@@ -89,6 +89,41 @@ export interface AnalyticsSummary {
   landing: LandingAnalytics;
   funnel: FunnelStage[];
   notificationStats?: NotificationUserStats[];
+  attributionBySource?: {
+    source: string;
+    signups: number;
+    paidConversions: number;
+    conversionRate: number;
+  }[];
+  attributionByMedium?: {
+    medium: string;
+    signups: number;
+    paidConversions: number;
+    conversionRate: number;
+  }[];
+  utmValidation?: {
+    approved: {
+      sources: string[];
+      mediums: string[];
+    };
+    unknown: {
+      sourcesSignups: number;
+      mediumsSignups: number;
+    };
+    nonApproved: {
+      sources: { value: string; signups: number }[];
+      mediums: { value: string; signups: number }[];
+    };
+  };
+  conversionParity?: {
+    overallMatchRate: number;
+    byEvent: {
+      event: "signup_completed" | "checkout_started" | "checkout_completed";
+      internalCount: number;
+      adDispatchedCount: number;
+      matchRate: number;
+    }[];
+  };
 }
 
 /* ── Shared Components ────────────────────────────────────── */

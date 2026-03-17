@@ -50,7 +50,7 @@ export default function PrivacyPolicyPage() {
             Privacy Policy
           </h1>
           <p className="text-slate-400">
-            Last updated: March 8, 2026
+            Last updated: March 17, 2026
           </p>
         </header>
 
@@ -147,6 +147,12 @@ export default function PrivacyPolicyPage() {
                 customer support purposes. Submissions are sent to support@trefolio.com
                 via Resend and are subject to IP-based rate limiting (5 per hour).
               </li>
+              <li>
+                <strong className="text-slate-200">Broker integration requests</strong> —
+                if you request support for a missing broker, we store your account
+                identifier, requested broker name, optional notes, and request
+                timestamp so our team can evaluate demand and notify you about your request.
+              </li>
             </ul>
 
             <h3>Notification Data</h3>
@@ -177,6 +183,15 @@ export default function PrivacyPolicyPage() {
                 anonymous, aggregated page-view data via Vercel Analytics to
                 understand product usage. No personal identifiers are stored.
               </li>
+              <li>
+                <strong className="text-slate-200">Attribution parameters (UTM/referrer)</strong> —
+                when you first visit trefolio, we may store first-touch attribution
+                fields such as <code className="text-xs text-slate-300 bg-slate-800 px-1 py-0.5 rounded">utm_source</code>,{" "}
+                <code className="text-xs text-slate-300 bg-slate-800 px-1 py-0.5 rounded">utm_medium</code>,{" "}
+                <code className="text-xs text-slate-300 bg-slate-800 px-1 py-0.5 rounded">utm_campaign</code>,
+                referrer, and landing path. These fields are used to measure signup
+                and subscription conversion by acquisition source.
+              </li>
             </ul>
           </section>
 
@@ -191,11 +206,16 @@ export default function PrivacyPolicyPage() {
               <li>Process subscription payments through Stripe (see Section 5).</li>
               <li>Send essential service communications (e.g., password resets, critical security notices).</li>
               <li>Respond to customer support inquiries submitted via the contact form.</li>
+              <li>Evaluate and prioritize broker integration requests submitted by users.</li>
+              <li>Measure acquisition performance (signup and paid conversion rates by source).</li>
             </ul>
             <p>
               We do <strong className="text-white">not</strong> sell, rent, or
               share your personal data with third parties for advertising or
-              marketing purposes.
+              marketing purposes. If you grant optional cookie consent, we may
+              send pseudonymous conversion signals (for example signup and
+              checkout completion events) to analytics/advertising platforms to
+              measure campaign performance.
             </p>
           </section>
 
@@ -303,6 +323,16 @@ export default function PrivacyPolicyPage() {
                     <td className="py-3">Phone number (E.164 format) for WhatsApp message delivery and verification; messages contain stock ticker and price data only</td>
                   </tr>
                   <tr>
+                    <td className="py-3 pr-6">Google Analytics / Google Ads tags (Google LLC)</td>
+                    <td className="py-3 pr-6">Consent-based analytics and conversion attribution</td>
+                    <td className="py-3">Pseudonymous cookie identifiers, page events, and conversion events (signup/checkout milestones) only after consent</td>
+                  </tr>
+                  <tr>
+                    <td className="py-3 pr-6">Meta Pixel / Meta Conversions API (Meta Platforms, Inc.)</td>
+                    <td className="py-3 pr-6">Optional consent-based conversion attribution (when enabled)</td>
+                    <td className="py-3">Pseudonymous conversion events and hashed identifiers (e.g., hashed email) for signup/checkout attribution, only after consent</td>
+                  </tr>
+                  <tr>
                     <td className="py-3 pr-6">Google AdSense (Google LLC)</td>
                     <td className="py-3 pr-6">Display advertising (free plan only)</td>
                     <td className="py-3">Advertising cookies and browser signals for ad personalization (only with user consent); paid plan users are never shown ads</td>
@@ -349,6 +379,10 @@ export default function PrivacyPolicyPage() {
               <li>
                 <strong className="text-slate-200">Contact form submissions</strong> — 
                 retained until the inquiry is resolved, then purged within 90 days.
+              </li>
+              <li>
+                <strong className="text-slate-200">Broker integration requests</strong> —
+                retained for product planning and support follow-up, then periodically reviewed and deleted when no longer needed.
               </li>
               <li>
                 <strong className="text-slate-200">Support chat conversations</strong> — 
@@ -468,7 +502,9 @@ export default function PrivacyPolicyPage() {
               These cookies are only set after you give explicit consent.
               You can withdraw consent at any time by clearing your browser cookies
               and revisiting the site. We use Google Analytics with IP anonymization
-              enabled. Data collected by Google Analytics
+              enabled. If consent is granted, we may also send conversion events
+              (signup/checkout milestones) through Google tags for campaign
+              attribution. Data collected by Google Analytics
               is processed by Google LLC under their{" "}
               <a
                 href="https://privacy.google.com/businesses/processorterms/"

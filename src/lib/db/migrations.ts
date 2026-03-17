@@ -47,7 +47,15 @@ async function bootstrapSchema(client: Client): Promise<void> {
       stripe_subscription_id TEXT NOT NULL DEFAULT '',
       plan_expires_at TEXT NOT NULL DEFAULT '',
       ai_calls_this_month INTEGER NOT NULL DEFAULT 0,
-      ai_calls_reset_at TEXT NOT NULL DEFAULT (datetime('now'))
+      ai_calls_reset_at TEXT NOT NULL DEFAULT (datetime('now')),
+      utm_source TEXT NOT NULL DEFAULT '',
+      utm_medium TEXT NOT NULL DEFAULT '',
+      utm_campaign TEXT NOT NULL DEFAULT '',
+      utm_term TEXT NOT NULL DEFAULT '',
+      utm_content TEXT NOT NULL DEFAULT '',
+      attribution_landing_path TEXT NOT NULL DEFAULT '',
+      attribution_referrer TEXT NOT NULL DEFAULT '',
+      attribution_captured_at TEXT NOT NULL DEFAULT ''
     );
 
     CREATE TABLE IF NOT EXISTS holdings (
@@ -155,6 +163,30 @@ async function bootstrapSchema(client: Client): Promise<void> {
   }
   if (!userCols.has("ai_calls_reset_at")) {
     await client.execute({ sql: "ALTER TABLE users ADD COLUMN ai_calls_reset_at TEXT NOT NULL DEFAULT ''" });
+  }
+  if (!userCols.has("utm_source")) {
+    await client.execute({ sql: "ALTER TABLE users ADD COLUMN utm_source TEXT NOT NULL DEFAULT ''" });
+  }
+  if (!userCols.has("utm_medium")) {
+    await client.execute({ sql: "ALTER TABLE users ADD COLUMN utm_medium TEXT NOT NULL DEFAULT ''" });
+  }
+  if (!userCols.has("utm_campaign")) {
+    await client.execute({ sql: "ALTER TABLE users ADD COLUMN utm_campaign TEXT NOT NULL DEFAULT ''" });
+  }
+  if (!userCols.has("utm_term")) {
+    await client.execute({ sql: "ALTER TABLE users ADD COLUMN utm_term TEXT NOT NULL DEFAULT ''" });
+  }
+  if (!userCols.has("utm_content")) {
+    await client.execute({ sql: "ALTER TABLE users ADD COLUMN utm_content TEXT NOT NULL DEFAULT ''" });
+  }
+  if (!userCols.has("attribution_landing_path")) {
+    await client.execute({ sql: "ALTER TABLE users ADD COLUMN attribution_landing_path TEXT NOT NULL DEFAULT ''" });
+  }
+  if (!userCols.has("attribution_referrer")) {
+    await client.execute({ sql: "ALTER TABLE users ADD COLUMN attribution_referrer TEXT NOT NULL DEFAULT ''" });
+  }
+  if (!userCols.has("attribution_captured_at")) {
+    await client.execute({ sql: "ALTER TABLE users ADD COLUMN attribution_captured_at TEXT NOT NULL DEFAULT ''" });
   }
   await client.execute({ sql: "UPDATE users SET ai_calls_reset_at = datetime('now') WHERE ai_calls_reset_at = '' OR ai_calls_reset_at IS NULL" });
 
@@ -1574,6 +1606,150 @@ const MIGRATIONS: Migration[] = [
           sql: "ALTER TABLE holdings ADD COLUMN figi_share_class TEXT NOT NULL DEFAULT ''",
         });
       }
+    },
+  },
+  {
+    version: 57,
+    description: "Add first-touch attribution columns to users",
+    up: async (client: Client) => {
+      const statements = [
+        "ALTER TABLE users ADD COLUMN utm_source TEXT NOT NULL DEFAULT ''",
+        "ALTER TABLE users ADD COLUMN utm_medium TEXT NOT NULL DEFAULT ''",
+        "ALTER TABLE users ADD COLUMN utm_campaign TEXT NOT NULL DEFAULT ''",
+        "ALTER TABLE users ADD COLUMN utm_term TEXT NOT NULL DEFAULT ''",
+        "ALTER TABLE users ADD COLUMN utm_content TEXT NOT NULL DEFAULT ''",
+        "ALTER TABLE users ADD COLUMN attribution_landing_path TEXT NOT NULL DEFAULT ''",
+        "ALTER TABLE users ADD COLUMN attribution_referrer TEXT NOT NULL DEFAULT ''",
+        "ALTER TABLE users ADD COLUMN attribution_captured_at TEXT NOT NULL DEFAULT ''",
+      ] as const;
+      for (const sql of statements) {
+        try {
+          await client.execute({ sql });
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : String(e);
+          if (!msg.includes("duplicate column")) throw e;
+        }
+      }
+    },
+  },
+  {
+    version: 58,
+    description: "Create broker integration requests table and seed confirmation email template",
+    up: async (client: Client) => {
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS broker_integration_requests (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          broker_name TEXT NOT NULL,
+          note TEXT NOT NULL DEFAULT '',
+          status TEXT NOT NULL DEFAULT 'requested'
+            CHECK(status IN ('requested', 'reviewing', 'planned', 'done', 'rejected')),
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_broker_integration_requests_user
+          ON broker_integration_requests(user_id);
+        CREATE INDEX IF NOT EXISTS idx_broker_integration_requests_created
+          ON broker_integration_requests(created_at);
+      `);
+
+      const slug = "broker-integration-request-received";
+      const existing = await client.execute({
+        sql: "SELECT id FROM email_templates WHERE slug = ? LIMIT 1",
+        args: [slug],
+      });
+      if (existing.rows.length > 0) return;
+
+      await client.execute({
+        sql: `INSERT INTO email_templates
+              (id, slug, name, subject, subject_es, body_html, body_html_es, body_text, body_text_es, category, experience_level)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        args: [
+          randomUUID(),
+          slug,
+          "Broker Integration Request Received",
+          "We received your broker integration request",
+          "Recibimos tu solicitud de integración de bróker",
+          `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px;">
+    <tr><td align="center">
+      <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="width:100%;max-width:480px;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e2e8f0;">
+        <tr><td style="padding:28px 28px 8px;">
+          <h1 style="margin:0 0 10px;font-size:22px;color:#0f172a;">Thanks, {{display_name}}</h1>
+          <p style="margin:0 0 12px;font-size:14px;line-height:1.6;color:#475569;">
+            We received your request to add <strong>{{broker_name}}</strong> to trefolio.
+          </p>
+          <p style="margin:0 0 16px;font-size:14px;line-height:1.6;color:#475569;">
+            Our team reviews broker requests regularly based on demand, data quality, and integration feasibility.
+          </p>
+          <p style="margin:0 0 20px;font-size:13px;color:#64748b;">
+            Request ID: <strong>{{request_id}}</strong>
+          </p>
+          <a href="{{base_url}}/import" style="display:inline-block;padding:10px 16px;background:#10b981;color:#ffffff;text-decoration:none;border-radius:8px;font-size:13px;font-weight:600;">Open Import Center</a>
+        </td></tr>
+        <tr><td style="padding:18px 28px 26px;border-top:1px solid #e2e8f0;">
+          <p style="margin:0;font-size:11px;line-height:1.5;color:#94a3b8;">
+            You received this email from trefolio. <a href="{{unsubscribe_url}}" style="color:#94a3b8;text-decoration:underline;">Unsubscribe</a>
+          </p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
+          `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px;">
+    <tr><td align="center">
+      <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="width:100%;max-width:480px;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e2e8f0;">
+        <tr><td style="padding:28px 28px 8px;">
+          <h1 style="margin:0 0 10px;font-size:22px;color:#0f172a;">Gracias, {{display_name}}</h1>
+          <p style="margin:0 0 12px;font-size:14px;line-height:1.6;color:#475569;">
+            Recibimos tu solicitud para agregar <strong>{{broker_name}}</strong> a trefolio.
+          </p>
+          <p style="margin:0 0 16px;font-size:14px;line-height:1.6;color:#475569;">
+            Nuestro equipo revisa estas solicitudes regularmente según demanda, calidad de datos y viabilidad técnica.
+          </p>
+          <p style="margin:0 0 20px;font-size:13px;color:#64748b;">
+            ID de solicitud: <strong>{{request_id}}</strong>
+          </p>
+          <a href="{{base_url}}/import" style="display:inline-block;padding:10px 16px;background:#10b981;color:#ffffff;text-decoration:none;border-radius:8px;font-size:13px;font-weight:600;">Abrir Centro de Importación</a>
+        </td></tr>
+        <tr><td style="padding:18px 28px 26px;border-top:1px solid #e2e8f0;">
+          <p style="margin:0;font-size:11px;line-height:1.5;color:#94a3b8;">
+            Recibiste este email de trefolio. <a href="{{unsubscribe_url}}" style="color:#94a3b8;text-decoration:underline;">Cancelar suscripción</a>
+          </p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
+          `Hi {{display_name}},
+
+We received your request to add {{broker_name}} to trefolio.
+Our team will evaluate it based on demand, data quality, and integration feasibility.
+
+Request ID: {{request_id}}
+
+Open Import Center: {{base_url}}/import`,
+          `Hola {{display_name}},
+
+Recibimos tu solicitud para agregar {{broker_name}} a trefolio.
+Nuestro equipo la evaluará según demanda, calidad de datos y viabilidad técnica.
+
+ID de solicitud: {{request_id}}
+
+Abrir Centro de Importación: {{base_url}}/import`,
+          "lifecycle",
+          "",
+        ],
+      });
     },
   },
 ];

@@ -10,6 +10,7 @@ import {
   getPromoBannerConfig,
   getGaMeasurementId,
   getAdConfig,
+  getUtmTaxonomyConfig,
   countProSubscribers,
   getRateLimitStats,
 } from "@/lib/db";
@@ -45,6 +46,7 @@ export const GET = withMetrics("/api/admin/settings", async (req: NextRequest) =
     promoBanner,
     gaConfig,
     adConfig,
+    utmTaxonomy,
     cronData,
     proCount,
     rateLimits,
@@ -64,6 +66,7 @@ export const GET = withMetrics("/api/admin/settings", async (req: NextRequest) =
       source: gaId === (process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || "") ? "env" as const : "database" as const,
     })),
     getAdConfig(),
+    getUtmTaxonomyConfig(),
     getCronStats(),
     countProSubscribers(),
     getRateLimitStats(),
@@ -97,6 +100,7 @@ export const GET = withMetrics("/api/admin/settings", async (req: NextRequest) =
     promoBanner: { config: promoBanner },
     gaConfig,
     adConfig,
+    utmTaxonomy: { config: utmTaxonomy },
     cronStats: cronData,
     grafana: {
       url: cloudUrl || localUrl,

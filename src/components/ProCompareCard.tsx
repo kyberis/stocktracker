@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n";
 import { useTrack } from "@/lib/use-track";
+import { trackCanonicalConversion } from "@/lib/ad-tracking";
 import { getUpsellConfig, getUpsellReasonKey, getUpgradeTarget } from "@/lib/upsell";
 import type { UpsellReason, UpsellSurface } from "@/lib/upsell";
 import type { TranslationKey } from "@/lib/i18n";
@@ -145,6 +146,11 @@ export default function ProCompareCard({
       reason: reason || "upgrade_required",
     });
     track("billing_checkout_started", { interval, source: "compare_card", plan });
+    await trackCanonicalConversion("checkout_started", {
+      plan,
+      interval,
+      source: "compare_card",
+    });
     try {
       const res = await fetch("/api/billing/checkout", {
         method: "POST",

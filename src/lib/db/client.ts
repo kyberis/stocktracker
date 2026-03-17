@@ -49,21 +49,27 @@ async function ensureAdminUser(client: Client) {
   const isNew = existing.rows.length === 0;
   const adminId = (existing.rows[0]?.id as string) || randomUUID();
 
-  await client.batch(
-    [
-      {
-        sql: `INSERT OR IGNORE INTO users (id, username, password_hash, role, must_change_password, ai_calls_reset_at)
-              VALUES (?, ?, ?, 'admin', 1, datetime('now'))`,
-        args: [adminId, ADMIN_DEFAULT_USERNAME, passwordHash],
-      },
-      {
-        sql: `INSERT OR IGNORE INTO user_settings (user_id, provider, alpha_vantage_api_key, language)
-              VALUES (?, 'yahoo', '', 'en')`,
-        args: [adminId],
-      },
-    ],
-    "write"
-  );
+  const stmts = [
+    {
+      sql: `INSERT OR IGNORE INTO users (id, username, password_hash, role, must_change_password, ai_calls_reset_at)
+            VALUES (?, ?, ?, 'admin', 1, datetime('now'))`,
+      args: [adminId, ADMIN_DEFAULT_USERNAME, passwordHash],
+    },
+    {
+      sql: `INSERT OR IGNORE INTO user_settings (user_id, provider, alpha_vantage_api_key, language)
+            VALUES (?, 'yahoo', '', 'en')`,
+      args: [adminId],
+    },
+  ];
+
+  if (!isNew && (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test")) {
+    stmts.push({
+      sql: "UPDATE users SET password_hash = ? WHERE id = ?",
+      args: [passwordHash, adminId],
+    });
+  }
+
+  await client.batch(stmts, "write");
 
   if (isNew) {
     const pId = randomUUID();

@@ -5,6 +5,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useState, useEffect, useCallback, Suspense } from "react";
 import { ThemeProvider } from "@/lib/theme-context";
 import TurnstileWidget from "@/components/TurnstileWidget";
+import {
+  captureFirstTouchAttributionFromWindow,
+  getStoredFirstTouchAttribution,
+} from "@/lib/attribution";
+import { trackCanonicalConversion } from "@/lib/ad-tracking";
 
 function GoogleIcon() {
   return (
@@ -46,6 +51,10 @@ function SignupForm() {
     }
   }, [deviceRef]);
 
+  useEffect(() => {
+    captureFirstTouchAttributionFromWindow();
+  }, []);
+
   const [nativePlatform, setNativePlatform] = useState<"ios" | "android" | "web">("web");
 
   useEffect(() => {
@@ -75,16 +84,30 @@ function SignupForm() {
     setError(null);
 
     try {
+      const attribution = getStoredFirstTouchAttribution();
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, displayName: displayName || undefined, turnstileToken: turnstileToken || undefined }),
+        body: JSON.stringify({
+          email,
+          password,
+          displayName: displayName || undefined,
+          turnstileToken: turnstileToken || undefined,
+          attribution: attribution || undefined,
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
         setError(data.error || "Signup failed.");
         return;
       }
+
+      await trackCanonicalConversion("signup_completed", {
+        method: "credentials",
+        source: attribution?.source || "unknown",
+        medium: attribution?.medium || "unknown",
+        campaign: attribution?.campaign || "none",
+      });
 
       router.replace("/onboarding");
       router.refresh();

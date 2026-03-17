@@ -15,6 +15,7 @@ import {
 } from "./helpers";
 import { seedHoldingsForUser, seedCashForUser, seedTransactionsForUser } from "./seed";
 import { resolvePortfolioId } from "./portfolios";
+import { normalizeAttribution, type FirstTouchAttribution } from "@/lib/attribution";
 
 export async function findUserByUsername(username: string): Promise<DbUser | null> {
   const client = await ensureInitialized();
@@ -83,21 +84,32 @@ export async function createUser(params: {
   avatarUrl?: string;
   emailVerified?: boolean;
   seedWithData: boolean;
+  attribution?: FirstTouchAttribution;
 }): Promise<PublicUser> {
   const client = await ensureInitialized();
   const id = randomUUID();
+  const attribution = normalizeAttribution(params.attribution);
 
   await client.batch(
     [
       {
         sql: `INSERT INTO users (id, username, password_hash, role, must_change_password,
-              ai_calls_reset_at, email, display_name, avatar_url, auth_provider, google_id, apple_id, email_verified)
-              VALUES (?, ?, ?, 'user', 0, datetime('now'), ?, ?, ?, ?, ?, ?, ?)`,
+              ai_calls_reset_at, email, display_name, avatar_url, auth_provider, google_id, apple_id, email_verified,
+              utm_source, utm_medium, utm_campaign, utm_term, utm_content, attribution_landing_path, attribution_referrer, attribution_captured_at)
+              VALUES (?, ?, ?, 'user', 0, datetime('now'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         args: [
           id, params.username, params.passwordHash,
           params.email || "", params.displayName || "", params.avatarUrl || "",
           params.authProvider || "credentials", params.googleId || "", params.appleId || "",
           params.emailVerified ? 1 : 0,
+          attribution.source,
+          attribution.medium,
+          attribution.campaign,
+          attribution.term,
+          attribution.content,
+          attribution.landingPath,
+          attribution.referrer,
+          attribution.capturedAt,
         ],
       },
       {

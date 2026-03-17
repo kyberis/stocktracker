@@ -15,6 +15,7 @@ import { checkSignupRateLimit, getClientIp } from "@/lib/rate-limit";
 import { verifyTurnstileToken } from "@/lib/turnstile";
 import { createNotification } from "@/lib/db";
 import { welcomeNotification } from "@/lib/notification-templates";
+import { normalizeAttribution, parseFirstTouchAttributionCookie, FIRST_TOUCH_ATTRIBUTION_COOKIE } from "@/lib/attribution";
 
 function deriveUsername(email: string): string {
   const prefix = email.split("@")[0].replace(/[^a-zA-Z0-9._-]/g, "");
@@ -42,8 +43,12 @@ export const POST = withMetrics("/api/auth/signup", async (req: NextRequest) => 
 
   const result = await parseBody(req, signupSchema);
   if (!result.success) return result.error;
-  const { email, password, displayName } = result.data;
+  const { email, password, displayName, attribution: attributionFromBody } = result.data;
   const normalizedEmail = email.trim().toLowerCase();
+  const attributionFromCookie = parseFirstTouchAttributionCookie(
+    req.cookies.get(FIRST_TOUCH_ATTRIBUTION_COOKIE)?.value
+  );
+  const attribution = normalizeAttribution(attributionFromBody ?? attributionFromCookie ?? undefined);
 
   const cfToken = (result.data as Record<string, unknown>).turnstileToken as string | undefined;
   const captchaOk = await verifyTurnstileToken(cfToken, ip);
@@ -70,6 +75,7 @@ export const POST = withMetrics("/api/auth/signup", async (req: NextRequest) => 
       displayName: displayName || "",
       authProvider: "credentials",
       seedWithData,
+      attribution,
     });
 
     await ensureDefaultPortfolio(user.id);
@@ -85,7 +91,17 @@ export const POST = withMetrics("/api/auth/signup", async (req: NextRequest) => 
       onboardingCompleted: false,
     });
 
-    trackEvent(user.id, "signup");
+    trackEvent(user.id, "signup", {
+      source: attribution.source,
+      medium: attribution.medium,
+      campaign: attribution.campaign || "none",
+    });
+    trackEvent(user.id, "signup_completed", {
+      method: "credentials",
+      source: attribution.source,
+      medium: attribution.medium,
+      campaign: attribution.campaign || "none",
+    });
     authEventsTotal.inc({ event: "signup" });
 
     const verificationToken = await createVerificationToken(user.id, normalizedEmail);

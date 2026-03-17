@@ -61,7 +61,7 @@ describe("accounts", () => {
 
     it("uses default broker and currency when omitted", async () => {
       mockExecute.mockResolvedValue({ rows: [] });
-      const acct = { name: "Manual" };
+      const acct = { name: "Manual", broker: "", currency: "EUR" };
       const result = await accounts.addAccount("user-1", acct);
       expect(mockExecute).toHaveBeenCalledWith({
         sql: "INSERT INTO accounts (id, user_id, name, broker, currency) VALUES (?, ?, ?, ?, ?)",

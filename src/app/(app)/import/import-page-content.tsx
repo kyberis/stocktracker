@@ -137,6 +137,11 @@ export default function ImportPageContent() {
   const [isDragOver, setIsDragOver] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const [showAddStockModal, setShowAddStockModal] = useState(false);
+  const [missingBrokerName, setMissingBrokerName] = useState("");
+  const [missingBrokerNote, setMissingBrokerNote] = useState("");
+  const [missingBrokerSubmitting, setMissingBrokerSubmitting] = useState(false);
+  const [missingBrokerMessage, setMissingBrokerMessage] = useState("");
+  const [missingBrokerError, setMissingBrokerError] = useState("");
 
   // Import hooks
   const brokerCSV = useImportBrokerCSV();
@@ -220,6 +225,37 @@ export default function ImportPageContent() {
   const handleBrokerContinue = () => {
     setStep("upload");
   };
+
+  const submitMissingBrokerRequest = useCallback(async () => {
+    const brokerName = missingBrokerName.trim();
+    if (!brokerName || missingBrokerSubmitting) return;
+    setMissingBrokerSubmitting(true);
+    setMissingBrokerError("");
+    setMissingBrokerMessage("");
+    try {
+      const res = await fetch("/api/broker-integration-requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          brokerName,
+          note: missingBrokerNote.trim(),
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setMissingBrokerError(data.error || t("importMissingBrokerError"));
+        return;
+      }
+      setMissingBrokerName("");
+      setMissingBrokerNote("");
+      setMissingBrokerMessage(t("importMissingBrokerSuccess"));
+      track("missing_broker_requested", { brokerName });
+    } catch {
+      setMissingBrokerError(t("importMissingBrokerError"));
+    } finally {
+      setMissingBrokerSubmitting(false);
+    }
+  }, [missingBrokerName, missingBrokerNote, missingBrokerSubmitting, t, track]);
 
   const goBack = () => {
     if (step === "broker") {
@@ -400,6 +436,46 @@ export default function ImportPageContent() {
                 <p className="text-xs font-semibold text-gray-900 dark:text-white">{b.label}</p>
               </button>
             ))}
+          </div>
+
+          <div className="mt-4 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/40 p-3.5 space-y-2.5">
+            <p className="text-xs font-semibold text-gray-800 dark:text-slate-200">
+              {t("importMissingBrokerTitle")}
+            </p>
+            <p className="text-[11px] text-gray-500 dark:text-slate-400">
+              {t("importMissingBrokerDesc")}
+            </p>
+            <input
+              value={missingBrokerName}
+              onChange={(e) => setMissingBrokerName(e.target.value)}
+              placeholder={t("importMissingBrokerNamePlaceholder")}
+              className="w-full px-3 py-2 text-xs rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+              maxLength={100}
+            />
+            <textarea
+              value={missingBrokerNote}
+              onChange={(e) => setMissingBrokerNote(e.target.value)}
+              placeholder={t("importMissingBrokerNotePlaceholder")}
+              className="w-full px-3 py-2 text-xs rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white resize-y"
+              rows={2}
+              maxLength={800}
+            />
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={submitMissingBrokerRequest}
+                disabled={missingBrokerSubmitting || !missingBrokerName.trim()}
+                className="px-3 py-2 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-50 min-h-[44px]"
+              >
+                {missingBrokerSubmitting ? t("loading") : t("importMissingBrokerSubmit")}
+              </button>
+              {missingBrokerMessage && (
+                <span className="text-[11px] text-emerald-600 dark:text-emerald-400">{missingBrokerMessage}</span>
+              )}
+              {missingBrokerError && (
+                <span className="text-[11px] text-red-600 dark:text-red-400">{missingBrokerError}</span>
+              )}
+            </div>
           </div>
 
           {/* Fixed bottom CTA */}

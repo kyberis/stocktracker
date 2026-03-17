@@ -107,7 +107,7 @@ export {
   getManualAssetCount,
 } from "./cash";
 
-export type { PlatformFeature, WhatsAppQuota, StripePriceKey, PromoBannerConfig, AdConfig, AdSlotConfig, XKeyName } from "./settings";
+export type { PlatformFeature, WhatsAppQuota, StripePriceKey, PromoBannerConfig, AdConfig, AdSlotConfig, XKeyName, UtmTaxonomyConfig } from "./settings";
 export {
   getUserSettings,
   updateUserSettings,
@@ -130,6 +130,9 @@ export {
   setPromoBannerConfig,
   getGaMeasurementId,
   setGaMeasurementId,
+  getUtmTaxonomyConfig,
+  setUtmTaxonomyConfig,
+  resetUtmTaxonomyConfig,
   getAdConfig,
   setAdConfig,
   getXKeys,
@@ -229,6 +232,18 @@ export {
   listDeviceInterestPaginated,
   countDeviceInterest,
 } from "./device-interest";
+
+export type {
+  BrokerIntegrationRequest,
+  BrokerIntegrationRequestStatus,
+  BrokerIntegrationRequestWithUser,
+} from "./broker-integration-requests";
+export {
+  createBrokerIntegrationRequest,
+  getBrokerIntegrationRequestById,
+  listBrokerIntegrationRequestsForAdmin,
+  updateBrokerIntegrationRequestStatus,
+} from "./broker-integration-requests";
 
 export {
   savePushSubscription,

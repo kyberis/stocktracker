@@ -406,6 +406,92 @@ export async function setGaMeasurementId(id: string): Promise<void> {
   await setPlatformSetting(GA_SETTING_KEY, id.trim());
 }
 
+/* ─── UTM Taxonomy Config ─── */
+
+export interface UtmTaxonomyConfig {
+  sources: string[];
+  mediums: string[];
+  campaigns: string[];
+  notes: string;
+}
+
+const UTM_TAXONOMY_KEY = "utm_taxonomy_config";
+
+const DEFAULT_UTM_TAXONOMY_CONFIG: UtmTaxonomyConfig = {
+  sources: ["google", "meta", "linkedin", "newsletter", "referral"],
+  mediums: ["cpc", "paid_social", "email", "affiliate"],
+  campaigns: ["launch_q2_2026", "retargeting_q2_2026", "onboarding_nurture_q2_2026"],
+  notes: "Use lowercase tokens and snake_case. Recommended campaign format: objective_audience_offer_yyyymm. Keep source/medium fixed and only vary campaign/content intentionally.",
+};
+
+function normalizeUtmToken(value: string, maxLength: number): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "_")
+    .replace(/[^a-z0-9._-]/g, "")
+    .slice(0, maxLength);
+}
+
+function normalizeUtmList(values: unknown, maxItems: number, maxLength: number): string[] {
+  if (!Array.isArray(values)) return [];
+  const next: string[] = [];
+  const seen = new Set<string>();
+  for (const raw of values) {
+    const normalized = normalizeUtmToken(String(raw || ""), maxLength);
+    if (!normalized || seen.has(normalized)) continue;
+    seen.add(normalized);
+    next.push(normalized);
+    if (next.length >= maxItems) break;
+  }
+  return next;
+}
+
+export async function getUtmTaxonomyConfig(): Promise<UtmTaxonomyConfig> {
+  const raw = await getPlatformSetting(UTM_TAXONOMY_KEY);
+  if (!raw) return { ...DEFAULT_UTM_TAXONOMY_CONFIG };
+  try {
+    const parsed = JSON.parse(raw) as Partial<UtmTaxonomyConfig>;
+    return {
+      sources: normalizeUtmList(parsed.sources, 30, 64).length > 0
+        ? normalizeUtmList(parsed.sources, 30, 64)
+        : [...DEFAULT_UTM_TAXONOMY_CONFIG.sources],
+      mediums: normalizeUtmList(parsed.mediums, 30, 64).length > 0
+        ? normalizeUtmList(parsed.mediums, 30, 64)
+        : [...DEFAULT_UTM_TAXONOMY_CONFIG.mediums],
+      campaigns: normalizeUtmList(parsed.campaigns, 50, 96).length > 0
+        ? normalizeUtmList(parsed.campaigns, 50, 96)
+        : [...DEFAULT_UTM_TAXONOMY_CONFIG.campaigns],
+      notes: String(parsed.notes || DEFAULT_UTM_TAXONOMY_CONFIG.notes).slice(0, 800),
+    };
+  } catch {
+    return { ...DEFAULT_UTM_TAXONOMY_CONFIG };
+  }
+}
+
+export async function setUtmTaxonomyConfig(config: Partial<UtmTaxonomyConfig>): Promise<UtmTaxonomyConfig> {
+  const current = await getUtmTaxonomyConfig();
+  const next: UtmTaxonomyConfig = {
+    sources: config.sources ? normalizeUtmList(config.sources, 30, 64) : current.sources,
+    mediums: config.mediums ? normalizeUtmList(config.mediums, 30, 64) : current.mediums,
+    campaigns: config.campaigns ? normalizeUtmList(config.campaigns, 50, 96) : current.campaigns,
+    notes: config.notes !== undefined ? String(config.notes).slice(0, 800).trim() : current.notes,
+  };
+
+  if (next.sources.length === 0) next.sources = [...DEFAULT_UTM_TAXONOMY_CONFIG.sources];
+  if (next.mediums.length === 0) next.mediums = [...DEFAULT_UTM_TAXONOMY_CONFIG.mediums];
+  if (next.campaigns.length === 0) next.campaigns = [...DEFAULT_UTM_TAXONOMY_CONFIG.campaigns];
+  if (!next.notes) next.notes = DEFAULT_UTM_TAXONOMY_CONFIG.notes;
+
+  await setPlatformSetting(UTM_TAXONOMY_KEY, JSON.stringify(next));
+  return next;
+}
+
+export async function resetUtmTaxonomyConfig(): Promise<UtmTaxonomyConfig> {
+  await setPlatformSetting(UTM_TAXONOMY_KEY, JSON.stringify(DEFAULT_UTM_TAXONOMY_CONFIG));
+  return { ...DEFAULT_UTM_TAXONOMY_CONFIG };
+}
+
 /* ─── Ad Config ─── */
 
 export interface AdSlotConfig {

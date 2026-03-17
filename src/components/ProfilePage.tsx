@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useSettings } from "@/lib/settings-context";
 import { useI18n, type TranslationKey } from "@/lib/i18n";
 import { useIsNative } from "@/lib/use-native";
+import { trackCanonicalConversion } from "@/lib/ad-tracking";
 import ProCompareCard from "@/components/ProCompareCard";
 import TierIcon from "@/components/TierIcon";
 import TierFeatureBadge from "@/components/TierFeatureBadge";
@@ -663,6 +664,7 @@ export default function ProfilePage() {
 
   const [billingSync, setBillingSync] = useState<"idle" | "syncing" | "done" | "timeout">("idle");
   const billingSyncRan = useRef(false);
+  const checkoutTrackedRef = useRef(false);
   const [deviceGrantLoading, setDeviceGrantLoading] = useState(false);
 
   const [unlinking, setUnlinking] = useState(false);
@@ -695,6 +697,13 @@ export default function ProfilePage() {
   const googleJustLinked = searchParams.get("googleLinked") === "true";
   const linkError = searchParams.get("linkError");
   const needsSync = user && user.plan === "free";
+
+  useEffect(() => {
+    if (!returnedFromCheckout) return;
+    if (checkoutTrackedRef.current) return;
+    checkoutTrackedRef.current = true;
+    trackCanonicalConversion("checkout_completed", { source: "stripe_success_url" });
+  }, [returnedFromCheckout]);
 
   useEffect(() => {
     if (!needsSync) return;

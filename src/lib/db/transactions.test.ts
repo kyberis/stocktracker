@@ -54,6 +54,7 @@ const txRow = (overrides: Partial<Record<string, unknown>> = {}) => ({
 });
 
 const buyTx = {
+  holdingId: "",
   ticker: "AAPL",
   exchange: "",
   name: "Apple Inc",
@@ -64,7 +65,10 @@ const buyTx = {
   shares: 10,
   pricePerShare: 100,
   totalAmount: 1000,
+  fees: 0,
+  taxes: 0,
   currency: "USD",
+  notes: "",
 };
 
 describe("transactions", () => {

@@ -6,7 +6,6 @@ import {
   createUser,
   linkGoogleAccount,
   trackEvent,
-  toPublicUser,
   ensureDefaultPortfolio,
 } from "@/lib/db";
 import type { DbUser } from "@/lib/db";
@@ -21,6 +20,7 @@ import { authEventsTotal } from "@/lib/metrics";
 import { isBlockedEmailDomain } from "@/lib/schemas";
 import { createNotification } from "@/lib/db";
 import { welcomeNotification } from "@/lib/notification-templates";
+import { FIRST_TOUCH_ATTRIBUTION_COOKIE, normalizeAttribution, parseFirstTouchAttributionCookie } from "@/lib/attribution";
 
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo";
@@ -198,6 +198,9 @@ async function handleLoginFlow(
   clientSecret: string,
 ): Promise<NextResponse> {
   try {
+    const attribution = normalizeAttribution(
+      parseFirstTouchAttributionCookie(req.cookies.get(FIRST_TOUCH_ATTRIBUTION_COOKIE)?.value) ?? undefined
+    );
     const googleUser = await exchangeCodeForGoogleUser(
       code, clientId, clientSecret, getRedirectUri(req),
     );
@@ -239,6 +242,7 @@ async function handleLoginFlow(
         googleId: googleUser.sub,
         emailVerified: googleUser.email_verified,
         seedWithData: false,
+        attribution,
       });
       await ensureDefaultPortfolio(publicUser.id);
       dbUser = {
@@ -276,7 +280,17 @@ async function handleLoginFlow(
         onboarding_completed: 0,
         experience_level: "",
       };
-      trackEvent(publicUser.id, "signup");
+      trackEvent(publicUser.id, "signup", {
+        source: attribution.source,
+        medium: attribution.medium,
+        campaign: attribution.campaign || "none",
+      });
+      trackEvent(publicUser.id, "signup_completed", {
+        method: "google",
+        source: attribution.source,
+        medium: attribution.medium,
+        campaign: attribution.campaign || "none",
+      });
       authEventsTotal.inc({ event: "signup" });
       sendWelcomeEmail(googleUser.email.toLowerCase(), googleUser.name || "").catch((err) =>
         console.error("Welcome email failed:", err),

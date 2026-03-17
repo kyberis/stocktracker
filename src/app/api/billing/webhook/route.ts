@@ -123,6 +123,11 @@ export const POST = withMetrics("/api/billing/webhook", async (req: NextRequest)
               plan: checkoutPlan,
               mode: session.metadata?.deviceGrant === "true" ? "device_grant" : "subscription",
             });
+            trackEvent(user.id, "checkout_completed", {
+              source: "stripe_webhook",
+              plan: checkoutPlan,
+              mode: session.metadata?.deviceGrant === "true" ? "device_grant" : "subscription",
+            });
             const sendUpgradeEmail =
               checkoutPlan === "starter" ? sendBifolioUpgradeEmail : sendTrefolioUpgradeEmail;
             sendUpgradeEmail(user.email, user.display_name || "").catch((err) =>

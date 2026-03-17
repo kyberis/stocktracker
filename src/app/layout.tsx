@@ -7,6 +7,7 @@ import { cookies } from "next/headers";
 import CookieConsent from "@/components/CookieConsent";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import AdSenseScript from "@/components/AdSenseScript";
+import MetaPixel from "@/components/MetaPixel";
 import ServiceWorkerUpdater from "@/components/ServiceWorkerUpdater";
 import NativeSplashGate from "@/components/NativeSplashGate";
 import { getGaMeasurementId, getAdConfig } from "@/lib/db";
@@ -65,6 +66,7 @@ export default async function RootLayout({
 }) {
   const [gaId, adConfig] = await Promise.all([getGaMeasurementId(), getAdConfig()]);
   const adsClientId = adConfig.globalEnabled ? adConfig.clientId : "";
+  const metaPixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID || "";
 
   const cookieStore = cookies();
   const layoutCookie = cookieStore.get("trefolio_layout_theme")?.value;
@@ -110,6 +112,7 @@ export default async function RootLayout({
         <NativeSplashGate />
         <CookieConsent />
         <GoogleAnalytics gaId={gaId} />
+        <MetaPixel pixelId={metaPixelId} />
         <AdSenseScript clientId={adsClientId} />
         <Analytics />
         <SpeedInsights />

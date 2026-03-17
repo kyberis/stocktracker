@@ -265,6 +265,7 @@ describe("holdings", () => {
         purchasePrice: 150,
         displayCurrency: "USD",
         exchange: "",
+        valueInEUR: 0,
       };
 
       const result = await holdings.addHolding("user-1", holding);
@@ -312,6 +313,7 @@ describe("holdings", () => {
         purchasePrice: 120,
         displayCurrency: "USD",
         exchange: "",
+        valueInEUR: 0,
       };
 
       const result = await holdings.addHolding("user-1", holding);
@@ -341,6 +343,7 @@ describe("holdings", () => {
         purchasePrice: 10,
         displayCurrency: "EUR",
         exchange: "",
+        valueInEUR: 0,
       }, "portfolio-2");
 
       expect(resolvePortfolioId).toHaveBeenCalledWith("user-1", "portfolio-2");

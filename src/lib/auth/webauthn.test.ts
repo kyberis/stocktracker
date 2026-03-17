@@ -43,11 +43,11 @@ describe("getChallengeCookieConfig", () => {
 
   it("sets secure flag based on NODE_ENV", () => {
     const origEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = "production";
+    vi.stubEnv("NODE_ENV", "production");
     expect(getChallengeCookieConfig("x").secure).toBe(true);
-    process.env.NODE_ENV = "test";
+    vi.stubEnv("NODE_ENV", "test");
     expect(getChallengeCookieConfig("x").secure).toBe(false);
-    process.env.NODE_ENV = origEnv;
+    vi.stubEnv("NODE_ENV", origEnv ?? "");
   });
 });
 

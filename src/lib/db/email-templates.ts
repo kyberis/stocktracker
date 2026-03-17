@@ -271,7 +271,7 @@ export async function getTemplateStats(templateId: string): Promise<{
   const result = await client.execute({
     sql: `SELECT
             COUNT(*) as total,
-            SUM(CASE WHEN status IN ('delivered','opened','clicked') THEN 1 ELSE 0 END) as delivered,
+            SUM(CASE WHEN status IN ('sent','delivered','opened','clicked') THEN 1 ELSE 0 END) as delivered,
             SUM(CASE WHEN status IN ('opened','clicked') THEN 1 ELSE 0 END) as opened,
             SUM(CASE WHEN status = 'clicked' THEN 1 ELSE 0 END) as clicked,
             SUM(CASE WHEN status = 'bounced' THEN 1 ELSE 0 END) as bounced

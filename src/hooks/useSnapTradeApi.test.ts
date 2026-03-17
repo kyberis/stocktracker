@@ -40,7 +40,7 @@ describe("useSnapTradeApi", () => {
     });
 
     expect(result.current.connection).not.toBeNull();
-    expect(result.current.connection?.registered).toBe(true);
+    expect(result.current.connection?.connected).toBe(true);
   });
 
   it("loadConnection with no connection sets null", async () => {

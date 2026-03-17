@@ -8,6 +8,7 @@ import type { SubscriptionPlan } from "@/lib/types";
 import { LandingI18nProvider, useI18n, type TranslationKey } from "@/lib/i18n";
 import { SUPPORTED_LANGUAGES } from "@/lib/languages";
 import { event as gtagEvent } from "@/lib/gtag";
+import { captureFirstTouchAttributionFromWindow } from "@/lib/attribution";
 
 /* ─── anonymous analytics helper ─── */
 
@@ -1068,6 +1069,12 @@ function MobileAppSection() {
   const [visible, setVisible] = useState(false);
   const sectionCb = useCallback(() => trackLanding("landing_section_view", { section: "mobile_app" }), []);
   const sectionRef = useInViewOnce(sectionCb);
+  const points = useMemo(() => [
+    t("landingInstallPoint1" as TranslationKey),
+    t("landingInstallPoint2" as TranslationKey),
+    t("landingInstallPoint3" as TranslationKey),
+    t("landingInstallPoint4" as TranslationKey),
+  ], [t]);
 
   useEffect(() => {
     fetch("/api/feature-flags")
@@ -1077,13 +1084,6 @@ function MobileAppSection() {
   }, []);
 
   if (!visible) return null;
-
-  const points = useMemo(() => [
-    t("landingInstallPoint1" as TranslationKey),
-    t("landingInstallPoint2" as TranslationKey),
-    t("landingInstallPoint3" as TranslationKey),
-    t("landingInstallPoint4" as TranslationKey),
-  ], [t]);
 
   return (
     <section className="py-20 sm:py-28 border-t border-slate-800/50" ref={sectionRef as React.RefObject<HTMLElement>}>
@@ -2063,6 +2063,10 @@ function NativeRedirect() {
 }
 
 export default function LandingPage() {
+  useEffect(() => {
+    captureFirstTouchAttributionFromWindow();
+  }, []);
+
   return (
     <LandingI18nProvider>
     <NativeRedirect />

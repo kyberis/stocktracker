@@ -111,6 +111,11 @@ export const POST = withMetrics("/api/billing/checkout", async (req: NextRequest
       interval,
       source: deviceGrant ? "device_grant" : "billing_api",
     });
+    trackEvent(user.id, "checkout_started", {
+      plan: targetPlan,
+      interval,
+      source: deviceGrant ? "device_grant" : "billing_api",
+    });
 
     billingEventsTotal.inc({ event: deviceGrant ? "device_grant_checkout_started" : "checkout_started" });
     return NextResponse.json({ url: checkout.url });

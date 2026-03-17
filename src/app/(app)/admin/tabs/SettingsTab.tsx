@@ -20,6 +20,7 @@ interface BatchSettingsData {
   promoBanner?: { config: { enabled: boolean; title: string; badge: string; description: string; ctaText: string; ctaLink: string } };
   gaConfig?: { gaId: string; source: "env" | "database" };
   adConfig?: { clientId: string; globalEnabled: boolean; slots: Record<string, { enabled: boolean; slotId: string }> };
+  utmTaxonomy?: { config: { sources: string[]; mediums: string[]; campaigns: string[]; notes: string } };
   cronStats?: { stats: any[]; recent: any[] };
   grafana?: { url: string; source: "cloud" | "local" | "none"; cloudConfigured: boolean };
   capacity?: { available: boolean; currentCount: number; maxCount: number; remaining: number };
@@ -685,6 +686,26 @@ function ExternalServicesCard() {
             </svg>
           </a>
         ))}
+      </div>
+
+      <div className="mt-4 rounded-lg border border-indigo-200 dark:border-indigo-500/30 bg-indigo-50/70 dark:bg-indigo-500/10 p-3">
+        <p className="text-xs font-semibold text-indigo-800 dark:text-indigo-300 mb-1">
+          Meta tracking (optional, disabled by default)
+        </p>
+        <p className="text-[11px] text-indigo-700 dark:text-indigo-300/90 mb-2">
+          To enable Meta Pixel + CAPI, configure these environment variables:
+        </p>
+        <ul className="space-y-1 text-[11px] text-indigo-700 dark:text-indigo-200 font-mono">
+          <li>
+            <code>NEXT_PUBLIC_META_PIXEL_ID</code> (browser pixel)
+          </li>
+          <li>
+            <code>META_CAPI_ACCESS_TOKEN</code> (server CAPI token)
+          </li>
+          <li>
+            <code>META_CAPI_PIXEL_ID</code> (optional, falls back to <code>NEXT_PUBLIC_META_PIXEL_ID</code>)
+          </li>
+        </ul>
       </div>
     </div>
   );
@@ -1697,6 +1718,182 @@ function GaConfigCard() {
   );
 }
 
+function UtmTaxonomyCard() {
+  const batch = useBatchSettings();
+  const loadedRef = useRef(false);
+  const [config, setConfig] = useState<{ sources: string[]; mediums: string[]; campaigns: string[]; notes: string } | null>(null);
+  const [draft, setDraft] = useState<{ sources: string[]; mediums: string[]; campaigns: string[]; notes: string } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (loadedRef.current || batch === undefined) return;
+    loadedRef.current = true;
+    if (batch?.utmTaxonomy?.config) {
+      setConfig(batch.utmTaxonomy.config);
+      setDraft(JSON.parse(JSON.stringify(batch.utmTaxonomy.config)));
+      setLoading(false);
+      return;
+    }
+    fetch("/api/admin/utm-taxonomy", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => {
+        setConfig(d.config);
+        setDraft(JSON.parse(JSON.stringify(d.config)));
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [batch]);
+
+  const hasChanges = JSON.stringify(config) !== JSON.stringify(draft);
+
+  const parseList = (value: string): string[] =>
+    value
+      .split(/\r?\n|,/)
+      .map((v) => v.trim())
+      .filter(Boolean);
+
+  const listToInput = (value: string[]): string => value.join("\n");
+
+  const updateList = (key: "sources" | "mediums" | "campaigns", value: string) => {
+    if (!draft) return;
+    setDraft({ ...draft, [key]: parseList(value) });
+    setError("");
+  };
+
+  const handleSave = async () => {
+    if (!draft) return;
+    setSaving(true);
+    setSaved(false);
+    setError("");
+    try {
+      const res = await fetch("/api/admin/utm-taxonomy", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(draft),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Failed to save.");
+        setSaving(false);
+        return;
+      }
+      setConfig(data.config);
+      setDraft(JSON.parse(JSON.stringify(data.config)));
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch {
+      setError("Failed to save.");
+    }
+    setSaving(false);
+  };
+
+  const handleReset = async () => {
+    setSaving(true);
+    setSaved(false);
+    setError("");
+    try {
+      const res = await fetch("/api/admin/utm-taxonomy", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reset: true }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Failed to reset.");
+        setSaving(false);
+        return;
+      }
+      setConfig(data.config);
+      setDraft(JSON.parse(JSON.stringify(data.config)));
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch {
+      setError("Failed to reset.");
+    }
+    setSaving(false);
+  };
+
+  if (loading || !draft) {
+    return (
+      <div className="card p-6">
+        <div className="h-4 w-40 bg-gray-200 dark:bg-slate-700 rounded animate-pulse" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="card p-6">
+      <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">UTM Taxonomy</h3>
+      <p className="text-xs text-gray-500 dark:text-slate-400 mb-4">
+        Standardize campaign naming for clean attribution reports. Save your approved UTM values so marketing and admin use one source of truth.
+      </p>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div>
+          <label className="block text-xs font-medium text-gray-700 dark:text-slate-300 mb-1">utm_source</label>
+          <textarea
+            rows={5}
+            value={listToInput(draft.sources)}
+            onChange={(e) => updateList("sources", e.target.value)}
+            placeholder={"google\nmeta\nlinkedin"}
+            className="w-full text-sm font-mono"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-700 dark:text-slate-300 mb-1">utm_medium</label>
+          <textarea
+            rows={5}
+            value={listToInput(draft.mediums)}
+            onChange={(e) => updateList("mediums", e.target.value)}
+            placeholder={"cpc\npaid_social\nemail"}
+            className="w-full text-sm font-mono"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-700 dark:text-slate-300 mb-1">utm_campaign examples</label>
+          <textarea
+            rows={5}
+            value={listToInput(draft.campaigns)}
+            onChange={(e) => updateList("campaigns", e.target.value)}
+            placeholder={"launch_q2_2026\nretargeting_q2_2026"}
+            className="w-full text-sm font-mono"
+          />
+        </div>
+      </div>
+
+      <div className="mt-3">
+        <label className="block text-xs font-medium text-gray-700 dark:text-slate-300 mb-1">Naming rule notes</label>
+        <textarea
+          rows={3}
+          value={draft.notes}
+          onChange={(e) => { setDraft({ ...draft, notes: e.target.value }); setError(""); }}
+          placeholder="Use lowercase and snake_case. Keep source/medium fixed."
+          className="w-full text-sm"
+        />
+      </div>
+
+      <div className="mt-3 text-[11px] text-gray-500 dark:text-slate-400">
+        Example URL: <code className="font-mono">?utm_source={draft.sources[0] || "google"}&amp;utm_medium={draft.mediums[0] || "cpc"}&amp;utm_campaign={draft.campaigns[0] || "launch_q2_2026"}</code>
+      </div>
+
+      <div className="flex items-center gap-3 mt-4">
+        <button onClick={handleSave} disabled={saving || !hasChanges} className="btn-primary text-xs px-4 py-2 disabled:opacity-40">
+          {saving ? "Saving..." : "Save UTM Taxonomy"}
+        </button>
+        <button onClick={handleReset} disabled={saving} className="btn-secondary text-xs px-3 py-2">
+          Reset to defaults
+        </button>
+        {saved && <span className="text-xs text-emerald-600 dark:text-emerald-400">Saved successfully.</span>}
+      </div>
+
+      {error && <p className="text-xs text-red-500 dark:text-red-400 mt-2">{error}</p>}
+    </div>
+  );
+}
+
 const AD_SLOT_META: Record<string, { label: string; page: string; format: string; size: string; desc: string; color: string }> = {
   "dashboard-summary": {
     label: "Below Portfolio Summary",
@@ -2333,6 +2530,7 @@ export default function SettingsTab() {
       <div className="space-y-6">
         <ExternalServicesCard />
         <PromoBannerCard />
+        <UtmTaxonomyCard />
         <FeatureTogglesCard />
         <SupportChatConfigCard />
         <GaConfigCard />

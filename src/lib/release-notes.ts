@@ -24,6 +24,27 @@ export const releaseNotes: ReleaseEntry[] = [
     changes: [
       {
         type: "feature",
+        text: "Users can now request missing broker integrations directly from Import, admins get a dedicated Broker Requests queue with requester details, and trefolio sends an automatic confirmation email using a new editable Email Template.",
+        translations: {
+          es: "Los usuarios ahora pueden solicitar integraciones de bróker faltantes directamente desde Importar, los administradores tienen una cola dedicada de Solicitudes de Bróker con datos del solicitante, y trefolio envía un email de confirmación automático usando una nueva plantilla editable de Email.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Admins can now update each broker request status inline (requested, reviewing, planned, done, rejected), and broker request messages are now localized for Portuguese, German, French, and Italian users.",
+        translations: {
+          es: "Los administradores ahora pueden actualizar en línea el estado de cada solicitud de bróker (requested, reviewing, planned, done, rejected), y los mensajes de solicitud de bróker ahora están localizados para usuarios de portugués, alemán, francés e italiano.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Fixed Admin Email Template send stats where Delivered could show 0 even after successful sends by including sent records until webhook delivery events arrive.",
+        translations: {
+          es: "Corregidas las estadísticas de envío en Plantillas de Email (Admin), donde Entregados podía mostrar 0 incluso tras envíos correctos, incluyendo los envíos en estado sent hasta que lleguen los webhooks de entrega.",
+        },
+      },
+      {
+        type: "feature",
         text: "All transactional emails — verification, price alerts, welcome, upgrade, and 11 feature emails — are now fully localized in 35 European languages. Users receive emails in their preferred language automatically.",
         translations: {
           es: "Todos los emails transaccionales — verificación, alertas de precio, bienvenida, upgrade y 11 emails de características — están ahora completamente localizados en 35 idiomas europeos. Los usuarios reciben emails en su idioma preferido automáticamente.",
@@ -41,6 +62,34 @@ export const releaseNotes: ReleaseEntry[] = [
         text: "Release notes now ship in two tracks: a curated public changelog for customers and a full internal changelog available only to admins.",
         translations: {
           es: "Las notas de versión ahora se publican en dos canales: un changelog público curado para clientes y un changelog interno completo disponible solo para administradores.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Added first-touch attribution tracking (UTM/referrer) from landing to signup, persisted it on user profiles, and expanded Admin Analytics with signup and paid conversion performance by source.",
+        translations: {
+          es: "Añadido seguimiento de atribución de primer contacto (UTM/referente) desde la landing hasta el registro, guardado en el perfil del usuario, y ampliadas las analíticas de Admin con rendimiento de registros y conversiones de pago por fuente.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Added a new Admin UTM Taxonomy tool to define approved sources, mediums, and campaign naming conventions in one place for cleaner attribution reporting.",
+        translations: {
+          es: "Añadida una nueva herramienta de Taxonomía UTM en Admin para definir fuentes, medios y convenciones de naming de campañas en un solo lugar y mejorar la calidad de los reportes de atribución.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Admin Analytics now validates source and medium values against the approved UTM taxonomy, highlighting unknown and non-approved campaign tags with signup impact.",
+        translations: {
+          es: "Las Analíticas de Admin ahora validan los valores de source y medium contra la taxonomía UTM aprobada, destacando etiquetas desconocidas y no aprobadas junto con su impacto en registros.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Implemented canonical conversion tracking for signup and checkout, added consent-safe ad dispatch logging, and introduced parity monitoring in Admin Analytics to track internal-vs-ad event match rate.",
+        translations: {
+          es: "Implementado el tracking canónico de conversiones para registro y checkout, añadido el registro de envío a plataformas publicitarias con respeto de consentimiento, e incorporado monitoreo de paridad en Analíticas de Admin para seguir la tasa de coincidencia entre eventos internos y publicitarios.",
         },
       },
     ],

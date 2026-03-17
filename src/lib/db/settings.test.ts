@@ -748,7 +748,7 @@ describe("settings", () => {
 
       const result = await settings.setAdConfig({
         globalEnabled: true,
-        slots: { "dashboard-summary": { slotId: "new-slot" } },
+        slots: { "dashboard-summary": { enabled: true, slotId: "new-slot" } },
       });
 
       expect(mockExecute).toHaveBeenCalledTimes(2);

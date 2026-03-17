@@ -28,6 +28,20 @@ export interface NotificationUserStats {
   total: number;
 }
 
+export interface AttributionSourceStats {
+  source: string;
+  signups: number;
+  paidConversions: number;
+  conversionRate: number;
+}
+
+export interface AttributionMediumStats {
+  medium: string;
+  signups: number;
+  paidConversions: number;
+  conversionRate: number;
+}
+
 export interface AnalyticsSummary {
   totalUsers: number;
   activeUsers7d: number;
@@ -40,6 +54,17 @@ export interface AnalyticsSummary {
   landing: LandingAnalytics;
   funnel: FunnelStage[];
   notificationStats: NotificationUserStats[];
+  attributionBySource: AttributionSourceStats[];
+  attributionByMedium: AttributionMediumStats[];
+  conversionParity: {
+    overallMatchRate: number;
+    byEvent: {
+      event: "signup_completed" | "checkout_started" | "checkout_completed";
+      internalCount: number;
+      adDispatchedCount: number;
+      matchRate: number;
+    }[];
+  };
 }
 
 export async function trackEvent(
@@ -82,7 +107,7 @@ export async function getAnalyticsSummary(days = 30): Promise<AnalyticsSummary> 
   const [
     usersResult, activeUsers, totalEvents, eventsByType, topStocks, dailyActivity, signupsByDay,
     landingCounts, landingEventsByType, landingCtaBreakdown, landingDailyViews,
-    funnelResult,
+    funnelResult, attributionBySource, attributionByMedium, internalConversions, adDispatchedConversions,
   ] = await Promise.all([
       client.execute("SELECT COUNT(*) as cnt FROM users"),
       client.execute({
@@ -161,6 +186,58 @@ export async function getAnalyticsSummary(days = 30): Promise<AnalyticsSummary> 
               GROUP BY event`,
         args: [daysArg],
       }),
+      client.execute({
+        sql: `SELECT
+                CASE
+                  WHEN u.utm_source IS NULL OR TRIM(u.utm_source) = '' THEN 'unknown'
+                  ELSE LOWER(TRIM(u.utm_source))
+                END AS source,
+                COUNT(*) AS signups,
+                COUNT(DISTINCT CASE WHEN ae.user_id IS NOT NULL THEN u.id END) AS paid_conversions
+              FROM users u
+              LEFT JOIN analytics_events ae
+                ON ae.user_id = u.id
+               AND ae.event = 'billing_checkout_completed'
+               AND ae.created_at >= datetime('now', ?)
+              WHERE u.created_at >= datetime('now', ?)
+              GROUP BY source
+              ORDER BY signups DESC, paid_conversions DESC`,
+        args: [daysArg, daysArg],
+      }),
+      client.execute({
+        sql: `SELECT
+                CASE
+                  WHEN u.utm_medium IS NULL OR TRIM(u.utm_medium) = '' THEN 'unknown'
+                  ELSE LOWER(TRIM(u.utm_medium))
+                END AS medium,
+                COUNT(*) AS signups,
+                COUNT(DISTINCT CASE WHEN ae.user_id IS NOT NULL THEN u.id END) AS paid_conversions
+              FROM users u
+              LEFT JOIN analytics_events ae
+                ON ae.user_id = u.id
+               AND ae.event = 'billing_checkout_completed'
+               AND ae.created_at >= datetime('now', ?)
+              WHERE u.created_at >= datetime('now', ?)
+              GROUP BY medium
+              ORDER BY signups DESC, paid_conversions DESC`,
+        args: [daysArg, daysArg],
+      }),
+      client.execute({
+        sql: `SELECT event, COUNT(*) AS cnt
+              FROM analytics_events
+              WHERE event IN ('signup_completed', 'checkout_started', 'checkout_completed')
+                AND created_at >= datetime('now', ?)
+              GROUP BY event`,
+        args: [daysArg],
+      }),
+      client.execute({
+        sql: `SELECT json_extract(metadata, '$.event') AS event, COUNT(*) AS cnt
+              FROM analytics_events
+              WHERE event = 'ad_conversion_dispatched'
+                AND created_at >= datetime('now', ?)
+              GROUP BY json_extract(metadata, '$.event')`,
+        args: [daysArg],
+      }),
     ]);
 
   const notifResult = await client.execute({
@@ -187,6 +264,28 @@ export async function getAnalyticsSummary(days = 30): Promise<AnalyticsSummary> 
   for (const r of funnelResult.rows) {
     funnelMap.set(str(r.event), num(r.cnt));
   }
+  const internalMap = new Map<string, number>();
+  for (const r of internalConversions.rows) {
+    internalMap.set(str(r.event), num(r.cnt));
+  }
+  const dispatchedMap = new Map<string, number>();
+  for (const r of adDispatchedConversions.rows) {
+    dispatchedMap.set(str(r.event), num(r.cnt));
+  }
+  const conversionEvents = ["signup_completed", "checkout_started", "checkout_completed"] as const;
+  const parityByEvent = conversionEvents.map((event) => {
+    const internalCount = internalMap.get(event) ?? 0;
+    const adDispatchedCount = dispatchedMap.get(event) ?? 0;
+    const matchRate = internalCount > 0
+      ? Number(((adDispatchedCount / internalCount) * 100).toFixed(1))
+      : 0;
+    return { event, internalCount, adDispatchedCount, matchRate };
+  });
+  const totalInternal = parityByEvent.reduce((sum, row) => sum + row.internalCount, 0);
+  const totalDispatched = parityByEvent.reduce((sum, row) => sum + row.adDispatchedCount, 0);
+  const overallMatchRate = totalInternal > 0
+    ? Number(((totalDispatched / totalInternal) * 100).toFixed(1))
+    : 0;
 
   return {
     totalUsers: num(usersResult.rows[0]?.cnt),
@@ -226,6 +325,30 @@ export async function getAnalyticsSummary(days = 30): Promise<AnalyticsSummary> 
       deviceSent: num(r.device_sent),
       total: num(r.total),
     })),
+    attributionBySource: attributionBySource.rows.map((r) => {
+      const signups = num(r.signups);
+      const paidConversions = num(r.paid_conversions);
+      return {
+        source: str(r.source),
+        signups,
+        paidConversions,
+        conversionRate: signups > 0 ? Number(((paidConversions / signups) * 100).toFixed(1)) : 0,
+      };
+    }),
+    attributionByMedium: attributionByMedium.rows.map((r) => {
+      const signups = num(r.signups);
+      const paidConversions = num(r.paid_conversions);
+      return {
+        medium: str(r.medium),
+        signups,
+        paidConversions,
+        conversionRate: signups > 0 ? Number(((paidConversions / signups) * 100).toFixed(1)) : 0,
+      };
+    }),
+    conversionParity: {
+      overallMatchRate,
+      byEvent: parityByEvent,
+    },
   };
 }
 

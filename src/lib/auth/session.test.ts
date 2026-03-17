@@ -6,11 +6,12 @@ vi.stubGlobal("crypto", webcrypto);
 const origEnv = { ...process.env };
 
 beforeEach(() => {
-  process.env.APP_SESSION_SECRET = "test-secret-that-is-long-enough-for-hs256-jwt";
-  process.env.NODE_ENV = "test";
+  vi.stubEnv("APP_SESSION_SECRET", "test-secret-that-is-long-enough-for-hs256-jwt");
+  vi.stubEnv("NODE_ENV", "test");
 });
 
 afterEach(() => {
+  vi.unstubAllEnvs();
   process.env = { ...origEnv };
 });
 
@@ -133,7 +134,7 @@ describe("getSessionCookieConfig", () => {
   });
 
   it("sets secure in production", () => {
-    process.env.NODE_ENV = "production";
+    vi.stubEnv("NODE_ENV", "production");
     expect(getSessionCookieConfig("t").secure).toBe(true);
   });
 });

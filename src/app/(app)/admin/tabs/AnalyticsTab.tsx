@@ -20,6 +20,41 @@ import { StatCard, AnalyticsSummary, FunnelStage } from "../shared";
 
 const FUNNEL_COLORS = ["#6366f1", "#8b5cf6", "#a78bfa", "#c4b5fd", "#10b981"];
 
+function normalizeToken(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function suggestApprovedValue(
+  rawValue: string,
+  approved: string[],
+  aliases: Record<string, string>
+): string | null {
+  if (!rawValue || approved.length === 0) return null;
+  const normalizedRaw = normalizeToken(rawValue);
+  const approvedSet = new Set(approved.map((v) => v.toLowerCase()));
+
+  // Direct alias map first for common campaign naming drift.
+  if (aliases[normalizedRaw] && approvedSet.has(aliases[normalizedRaw])) {
+    return aliases[normalizedRaw];
+  }
+
+  // Exact normalize match against approved list.
+  for (const candidate of approved) {
+    if (normalizeToken(candidate) === normalizedRaw) return candidate;
+  }
+
+  // Contains/starts-with heuristics for close variants.
+  for (const candidate of approved) {
+    const normalizedCandidate = normalizeToken(candidate);
+    if (!normalizedCandidate) continue;
+    if (normalizedRaw.includes(normalizedCandidate) || normalizedCandidate.includes(normalizedRaw)) {
+      return candidate;
+    }
+  }
+
+  return null;
+}
+
 function ConversionFunnel({ stages }: { stages: FunnelStage[] }) {
   const hasData = stages.some((s) => s.count > 0);
   if (!hasData) return null;
@@ -140,9 +175,9 @@ export default function AnalyticsTab() {
   const [data, setData] = useState<AnalyticsSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [days, setDays] = useState(30);
+  const [copiedSuggestionKey, setCopiedSuggestionKey] = useState<string | null>(null);
 
   useEffect(() => {
-    setLoading(true);
     fetch(`/api/admin/analytics?days=${days}`, { cache: "no-store" })
       .then((r) => r.json())
       .then((d) => setData(d))
@@ -158,6 +193,112 @@ export default function AnalyticsTab() {
     users: d.users,
     events: d.events,
   }));
+  const attributionRows = data.attributionBySource ?? [];
+  const attributionMediumRows = data.attributionByMedium ?? [];
+  const totalAttributedSignups = attributionRows.reduce((sum, row) => sum + row.signups, 0);
+  const knownAttributedSignups = attributionRows
+    .filter((row) => row.source !== "unknown")
+    .reduce((sum, row) => sum + row.signups, 0);
+  const attributionCoverage = totalAttributedSignups > 0
+    ? ((knownAttributedSignups / totalAttributedSignups) * 100).toFixed(1)
+    : "0.0";
+
+  const validation = data.utmValidation;
+  const hasUtmWarnings =
+    !!validation && (
+      validation.unknown.sourcesSignups > 0 ||
+      validation.unknown.mediumsSignups > 0 ||
+      validation.nonApproved.sources.length > 0 ||
+      validation.nonApproved.mediums.length > 0
+    );
+
+  const sourceAliases: Record<string, string> = {
+    facebook: "meta",
+    fb: "meta",
+    metaads: "meta",
+    metaad: "meta",
+    instagram: "meta",
+    googleads: "google",
+    adwords: "google",
+    gads: "google",
+    linkedinads: "linkedin",
+    linkedinin: "linkedin",
+    newsletteremail: "newsletter",
+  };
+  const mediumAliases: Record<string, string> = {
+    paidsocial: "paid_social",
+    paidsocials: "paid_social",
+    socialpaid: "paid_social",
+    paidsocialmedia: "paid_social",
+    ppc: "cpc",
+    paidsearch: "cpc",
+    emailmarketing: "email",
+    mail: "email",
+    referraltraffic: "affiliate",
+    partner: "affiliate",
+  };
+
+  const getSourceSuggestion = (value: string): string | null =>
+    validation
+      ? suggestApprovedValue(value, validation.approved.sources, sourceAliases)
+      : null;
+
+  const getMediumSuggestion = (value: string): string | null =>
+    validation
+      ? suggestApprovedValue(value, validation.approved.mediums, mediumAliases)
+      : null;
+
+  const copySuggestion = async (
+    kind: "source" | "medium",
+    fromValue: string,
+    toValue: string
+  ) => {
+    const text = `Use utm_${kind}=${toValue} (instead of ${fromValue})`;
+    try {
+      await navigator.clipboard.writeText(text);
+      const key = `${kind}:${fromValue}`;
+      setCopiedSuggestionKey(key);
+      window.setTimeout(() => {
+        setCopiedSuggestionKey((prev) => (prev === key ? null : prev));
+      }, 1800);
+    } catch {
+      // no-op if clipboard access is blocked
+    }
+  };
+
+  const allSuggestionLines = validation
+    ? [
+        ...validation.nonApproved.sources
+          .map((row) => {
+            const suggestion = getSourceSuggestion(row.value);
+            return suggestion
+              ? `Use utm_source=${suggestion} (instead of ${row.value})`
+              : null;
+          })
+          .filter((line): line is string => Boolean(line)),
+        ...validation.nonApproved.mediums
+          .map((row) => {
+            const suggestion = getMediumSuggestion(row.value);
+            return suggestion
+              ? `Use utm_medium=${suggestion} (instead of ${row.value})`
+              : null;
+          })
+          .filter((line): line is string => Boolean(line)),
+      ]
+    : [];
+
+  const copyAllSuggestions = async () => {
+    if (allSuggestionLines.length === 0) return;
+    try {
+      await navigator.clipboard.writeText(allSuggestionLines.join("\n"));
+      setCopiedSuggestionKey("all");
+      window.setTimeout(() => {
+        setCopiedSuggestionKey((prev) => (prev === "all" ? null : prev));
+      }, 1800);
+    } catch {
+      // no-op if clipboard access is blocked
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -166,7 +307,11 @@ export default function AnalyticsTab() {
         {[7, 30, 90].map((d) => (
           <button
             key={d}
-            onClick={() => setDays(d)}
+            onClick={() => {
+              if (days === d) return;
+              setLoading(true);
+              setDays(d);
+            }}
             className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors ${
               days === d
                 ? "bg-indigo-600 text-white"
@@ -185,6 +330,53 @@ export default function AnalyticsTab() {
         <StatCard label="Active (30d)" value={data.activeUsers30d} />
         <StatCard label="Events" value={data.totalEvents} />
       </div>
+
+      {/* Conversion parity */}
+      {data.conversionParity && (
+        <div className="card p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Ad Conversion Parity</h3>
+            <span className={`text-xs px-2 py-1 rounded-full font-semibold ${
+              data.conversionParity.overallMatchRate >= 85
+                ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400"
+                : "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400"
+            }`}>
+              {data.conversionParity.overallMatchRate.toFixed(1)}% overall
+            </span>
+          </div>
+          <p className="text-xs text-gray-500 dark:text-slate-400 mb-3">
+            Match rate compares internal canonical conversions vs consent-safe ad-dispatched events.
+          </p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-gray-500 dark:text-slate-400 border-b border-gray-100 dark:border-slate-700">
+                  <th className="px-3 py-2 font-medium">Event</th>
+                  <th className="px-3 py-2 font-medium text-right">Internal</th>
+                  <th className="px-3 py-2 font-medium text-right">Ad Dispatched</th>
+                  <th className="px-3 py-2 font-medium text-right">Match Rate</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.conversionParity.byEvent.map((row) => (
+                  <tr key={row.event} className="border-b border-gray-50 dark:border-slate-700/50">
+                    <td className="px-3 py-2.5 font-medium text-gray-900 dark:text-white">{row.event}</td>
+                    <td className="px-3 py-2.5 text-right tabular-nums text-gray-700 dark:text-slate-300">{row.internalCount}</td>
+                    <td className="px-3 py-2.5 text-right tabular-nums text-gray-700 dark:text-slate-300">{row.adDispatchedCount}</td>
+                    <td className={`px-3 py-2.5 text-right tabular-nums font-semibold ${
+                      row.matchRate >= 85
+                        ? "text-emerald-600 dark:text-emerald-400"
+                        : "text-amber-600 dark:text-amber-400"
+                    }`}>
+                      {row.matchRate.toFixed(1)}%
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* Daily activity chart */}
       {activityData.length > 0 && (
@@ -254,6 +446,198 @@ export default function AnalyticsTab() {
               <Bar dataKey="count" name="Signups" fill="#10b981" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Attribution by source */}
+      {attributionRows.length > 0 && (
+        <div className="card p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Attribution by Source</h3>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-500 dark:text-slate-400">Known source coverage</span>
+              <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                Number(attributionCoverage) >= 90
+                  ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400"
+                  : "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400"
+              }`}>
+                {attributionCoverage}%
+              </span>
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-gray-500 dark:text-slate-400 border-b border-gray-100 dark:border-slate-700">
+                  <th className="px-3 py-2 font-medium">Source</th>
+                  <th className="px-3 py-2 font-medium text-right">Signups</th>
+                  <th className="px-3 py-2 font-medium text-right">Paid Conversions</th>
+                  <th className="px-3 py-2 font-medium text-right">Conversion Rate</th>
+                </tr>
+              </thead>
+              <tbody>
+                {attributionRows.map((row) => (
+                  <tr key={row.source} className="border-b border-gray-50 dark:border-slate-700/50">
+                    <td className="px-3 py-2.5 font-medium text-gray-900 dark:text-white">{row.source}</td>
+                    <td className="px-3 py-2.5 text-right tabular-nums text-gray-700 dark:text-slate-300">{row.signups}</td>
+                    <td className="px-3 py-2.5 text-right tabular-nums text-gray-700 dark:text-slate-300">{row.paidConversions}</td>
+                    <td className="px-3 py-2.5 text-right tabular-nums font-semibold text-indigo-600 dark:text-indigo-400">
+                      {row.conversionRate.toFixed(1)}%
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Attribution by medium */}
+      {attributionMediumRows.length > 0 && (
+        <div className="card p-4">
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">Attribution by Medium</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-gray-500 dark:text-slate-400 border-b border-gray-100 dark:border-slate-700">
+                  <th className="px-3 py-2 font-medium">Medium</th>
+                  <th className="px-3 py-2 font-medium text-right">Signups</th>
+                  <th className="px-3 py-2 font-medium text-right">Paid Conversions</th>
+                  <th className="px-3 py-2 font-medium text-right">Conversion Rate</th>
+                </tr>
+              </thead>
+              <tbody>
+                {attributionMediumRows.map((row) => (
+                  <tr key={row.medium} className="border-b border-gray-50 dark:border-slate-700/50">
+                    <td className="px-3 py-2.5 font-medium text-gray-900 dark:text-white">{row.medium}</td>
+                    <td className="px-3 py-2.5 text-right tabular-nums text-gray-700 dark:text-slate-300">{row.signups}</td>
+                    <td className="px-3 py-2.5 text-right tabular-nums text-gray-700 dark:text-slate-300">{row.paidConversions}</td>
+                    <td className="px-3 py-2.5 text-right tabular-nums font-semibold text-indigo-600 dark:text-indigo-400">
+                      {row.conversionRate.toFixed(1)}%
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* UTM quality warnings */}
+      {validation && (
+        <div className={`card p-4 ${hasUtmWarnings ? "border border-amber-200 dark:border-amber-500/30" : ""}`}>
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">UTM Quality</h3>
+            <div className="flex items-center gap-2">
+              {allSuggestionLines.length > 0 && (
+                <button
+                  onClick={copyAllSuggestions}
+                  className="text-xs px-2 py-1 rounded border border-amber-300/70 dark:border-amber-500/40 bg-white dark:bg-slate-800 text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-slate-700"
+                >
+                  {copiedSuggestionKey === "all" ? "Copied all" : "Copy all fixes"}
+                </button>
+              )}
+              <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                hasUtmWarnings
+                  ? "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400"
+                  : "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400"
+              }`}>
+                {hasUtmWarnings ? "Warnings detected" : "All clear"}
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+            <div className="rounded-lg bg-gray-50 dark:bg-slate-800/60 p-3">
+              <p className="text-xs text-gray-500 dark:text-slate-400 mb-1">Unknown values</p>
+              <p className="text-gray-900 dark:text-white">
+                Source: <span className="font-semibold tabular-nums">{validation.unknown.sourcesSignups}</span> signups
+              </p>
+              <p className="text-gray-900 dark:text-white">
+                Medium: <span className="font-semibold tabular-nums">{validation.unknown.mediumsSignups}</span> signups
+              </p>
+            </div>
+            <div className="rounded-lg bg-gray-50 dark:bg-slate-800/60 p-3">
+              <p className="text-xs text-gray-500 dark:text-slate-400 mb-1">Approved taxonomy</p>
+              <p className="text-gray-900 dark:text-white text-xs">
+                Sources: {validation.approved.sources.join(", ")}
+              </p>
+              <p className="text-gray-900 dark:text-white text-xs mt-1">
+                Mediums: {validation.approved.mediums.join(", ")}
+              </p>
+            </div>
+          </div>
+
+          {(validation.nonApproved.sources.length > 0 || validation.nonApproved.mediums.length > 0) && (
+            <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+              <div className="rounded-lg bg-amber-50 dark:bg-amber-500/10 p-3">
+                <p className="font-semibold text-amber-700 dark:text-amber-400 mb-1">Non-approved sources</p>
+                {validation.nonApproved.sources.length === 0 ? (
+                  <p className="text-amber-700/80 dark:text-amber-400/80">None</p>
+                ) : (
+                  <div className="space-y-1">
+                    {validation.nonApproved.sources.slice(0, 8).map((row) => {
+                      const suggestion = getSourceSuggestion(row.value);
+                      const itemKey = `source:${row.value}`;
+                      return (
+                        <div key={row.value} className="flex items-center justify-between gap-2">
+                          <p className="text-amber-700 dark:text-amber-300">
+                            {row.value} <span className="font-semibold">({row.signups})</span>
+                            {suggestion && (
+                              <span className="ml-2 text-[11px] text-amber-800 dark:text-amber-200">
+                                → {suggestion}
+                              </span>
+                            )}
+                          </p>
+                          {suggestion && (
+                            <button
+                              onClick={() => copySuggestion("source", row.value, suggestion)}
+                              className="text-[10px] px-2 py-0.5 rounded bg-white/70 dark:bg-slate-800 text-amber-700 dark:text-amber-300 border border-amber-300/60 dark:border-amber-500/30 hover:bg-white dark:hover:bg-slate-700"
+                            >
+                              {copiedSuggestionKey === itemKey ? "Copied" : "Copy fix"}
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+              <div className="rounded-lg bg-amber-50 dark:bg-amber-500/10 p-3">
+                <p className="font-semibold text-amber-700 dark:text-amber-400 mb-1">Non-approved mediums</p>
+                {validation.nonApproved.mediums.length === 0 ? (
+                  <p className="text-amber-700/80 dark:text-amber-400/80">None</p>
+                ) : (
+                  <div className="space-y-1">
+                    {validation.nonApproved.mediums.slice(0, 8).map((row) => {
+                      const suggestion = getMediumSuggestion(row.value);
+                      const itemKey = `medium:${row.value}`;
+                      return (
+                        <div key={row.value} className="flex items-center justify-between gap-2">
+                          <p className="text-amber-700 dark:text-amber-300">
+                            {row.value} <span className="font-semibold">({row.signups})</span>
+                            {suggestion && (
+                              <span className="ml-2 text-[11px] text-amber-800 dark:text-amber-200">
+                                → {suggestion}
+                              </span>
+                            )}
+                          </p>
+                          {suggestion && (
+                            <button
+                              onClick={() => copySuggestion("medium", row.value, suggestion)}
+                              className="text-[10px] px-2 py-0.5 rounded bg-white/70 dark:bg-slate-800 text-amber-700 dark:text-amber-300 border border-amber-300/60 dark:border-amber-500/30 hover:bg-white dark:hover:bg-slate-700"
+                            >
+                              {copiedSuggestionKey === itemKey ? "Copied" : "Copy fix"}
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
