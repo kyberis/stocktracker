@@ -62,6 +62,7 @@ export const POST = withMetrics("/api/admin/email-templates/send", async (req: N
   const resend = await getResendClientForAdmin();
   if (!resend) {
     return NextResponse.json({ error: "Resend not configured" }, { status: 500 });
+  }
 
   try {
     const { data, error: sendError } = await resend.emails.send({
