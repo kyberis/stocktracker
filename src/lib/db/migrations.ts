@@ -333,7 +333,1249 @@ const MIGRATIONS: Migration[] = [
     description: "Bootstrap: full schema creation and legacy data migrations",
     up: bootstrapSchema,
   },
-  ...
+  {
+    version: 2,
+    description: "Remove restrictive language CHECK constraint from user_settings",
+    up: async (client: Client) => {
+      const cols = await client.execute("PRAGMA table_info(user_settings)");
+      const colNames = cols.rows.map((r) => str(r.name));
+      if (!colNames.includes("language")) return;
+
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS user_settings_new (
+          user_id TEXT PRIMARY KEY,
+          provider TEXT NOT NULL DEFAULT 'yahoo' CHECK(provider IN ('yahoo', 'alphavantage')),
+          alpha_vantage_api_key TEXT NOT NULL DEFAULT '',
+          language TEXT NOT NULL DEFAULT 'en',
+          refresh_interval INTEGER NOT NULL DEFAULT 15,
+          openai_api_key TEXT NOT NULL DEFAULT '',
+          FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        INSERT OR IGNORE INTO user_settings_new
+          SELECT user_id, provider, alpha_vantage_api_key, language, refresh_interval, openai_api_key
+          FROM user_settings;
+        DROP TABLE user_settings;
+        ALTER TABLE user_settings_new RENAME TO user_settings;
+      `);
+    },
+  },
+  {
+    version: 3,
+    description: "Add exchange_rate_eur to transactions for historical FX accuracy",
+    up: async (client: Client) => {
+      const cols = await client.execute("PRAGMA table_info(transactions)");
+      const colNames = new Set(cols.rows.map((r) => str(r.name)));
+      if (!colNames.has("exchange_rate_eur")) {
+        await client.execute({ sql: "ALTER TABLE transactions ADD COLUMN exchange_rate_eur REAL" });
+      }
+    },
+  },
+  {
+    version: 4,
+    description: "Deduplicate existing source_refs and add unique partial index",
+    up: async (client: Client) => {
+      await client.execute({
+        sql: `DELETE FROM transactions
+              WHERE source_ref != ''
+                AND id NOT IN (
+                  SELECT MIN(id) FROM transactions
+                  WHERE source_ref != ''
+                  GROUP BY user_id, source_ref
+                )`,
+      });
+
+      await client.execute({
+        sql: `CREATE UNIQUE INDEX IF NOT EXISTS idx_transactions_user_source_ref
+              ON transactions(user_id, source_ref)
+              WHERE source_ref != ''`,
+      });
+    },
+  },
+  {
+    version: 5,
+    description: "Add auth_provider and google_id columns for OAuth support",
+    up: async (client: Client) => {
+      for (const stmt of [
+        "ALTER TABLE users ADD COLUMN auth_provider TEXT NOT NULL DEFAULT 'credentials'",
+        "ALTER TABLE users ADD COLUMN google_id TEXT NOT NULL DEFAULT ''",
+      ]) {
+        try { await client.execute({ sql: stmt }); }
+        catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : String(e);
+          if (!msg.includes("duplicate column")) throw e;
+        }
+      }
+
+      await client.execute({
+        sql: `CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_unique
+              ON users(email) WHERE email != ''`,
+      });
+      await client.execute({
+        sql: `CREATE UNIQUE INDEX IF NOT EXISTS idx_users_google_id_unique
+              ON users(google_id) WHERE google_id != ''`,
+      });
+    },
+  },
+  {
+    version: 6,
+    description: "Add portfolio_review_count and portfolio_review_reset_at columns",
+    up: async (client: Client) => {
+      for (const stmt of [
+        "ALTER TABLE users ADD COLUMN portfolio_review_count INTEGER NOT NULL DEFAULT 0",
+        "ALTER TABLE users ADD COLUMN portfolio_review_reset_at TEXT NOT NULL DEFAULT ''",
+      ]) {
+        try { await client.execute({ sql: stmt }); }
+        catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : String(e);
+          if (!msg.includes("duplicate column")) throw e;
+        }
+      }
+    },
+  },
+  {
+    version: 7,
+    description: "Create ibkr_connections table for Flex Web Service API credentials",
+    up: async (client: Client) => {
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS ibkr_connections (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          token_encrypted TEXT NOT NULL,
+          query_id TEXT NOT NULL,
+          label TEXT NOT NULL DEFAULT '',
+          last_synced_at TEXT NOT NULL DEFAULT '',
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_ibkr_connections_user ON ibkr_connections(user_id);
+      `);
+    },
+  },
+  {
+    version: 8,
+    description: "Add apple_id column for Apple OAuth support",
+    up: async (client: Client) => {
+      try {
+        await client.execute({
+          sql: "ALTER TABLE users ADD COLUMN apple_id TEXT NOT NULL DEFAULT ''",
+        });
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("duplicate column")) throw e;
+      }
+
+      await client.execute({
+        sql: `CREATE UNIQUE INDEX IF NOT EXISTS idx_users_apple_id_unique
+              ON users(apple_id) WHERE apple_id != ''`,
+      });
+    },
+  },
+  {
+    version: 9,
+    description: "Add widget_token_hash column for PWA widget API auth",
+    up: async (client: Client) => {
+      try {
+        await client.execute({
+          sql: "ALTER TABLE users ADD COLUMN widget_token_hash TEXT NOT NULL DEFAULT ''",
+        });
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("duplicate column")) throw e;
+      }
+    },
+  },
+  {
+    version: 10,
+    description: "Create passkeys table for WebAuthn passkey authentication",
+    up: async (client: Client) => {
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS passkeys (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          credential_public_key TEXT NOT NULL,
+          counter INTEGER NOT NULL DEFAULT 0,
+          device_type TEXT NOT NULL DEFAULT '',
+          backed_up INTEGER NOT NULL DEFAULT 0,
+          transports TEXT NOT NULL DEFAULT '[]',
+          name TEXT NOT NULL DEFAULT 'Passkey',
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          last_used_at TEXT NOT NULL DEFAULT '',
+          FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_passkeys_user ON passkeys(user_id);
+      `);
+    },
+  },
+  {
+    version: 11,
+    description: "Add device_passkey_hash column for T4-S3 device auth",
+    up: async (client: Client) => {
+      try {
+        await client.execute({
+          sql: "ALTER TABLE users ADD COLUMN device_passkey_hash TEXT NOT NULL DEFAULT ''",
+        });
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("duplicate column")) throw e;
+      }
+    },
+  },
+  {
+    version: 12,
+    description: "Add device_template_id column for T4-S3 display themes",
+    up: async (client: Client) => {
+      try {
+        await client.execute({
+          sql: "ALTER TABLE users ADD COLUMN device_template_id TEXT NOT NULL DEFAULT 'classic-dark'",
+        });
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("duplicate column")) throw e;
+      }
+    },
+  },
+  {
+    version: 13,
+    description: "Add device_linked_at to track when a physical device first connects",
+    up: async (client: Client) => {
+      try {
+        await client.execute({
+          sql: "ALTER TABLE users ADD COLUMN device_linked_at TEXT NOT NULL DEFAULT ''",
+        });
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("duplicate column")) throw e;
+      }
+    },
+  },
+  {
+    version: 14,
+    description: "Add device_pro_redeemed_at to prevent duplicate device free-year grants",
+    up: async (client: Client) => {
+      try {
+        await client.execute({
+          sql: "ALTER TABLE users ADD COLUMN device_pro_redeemed_at TEXT NOT NULL DEFAULT ''",
+        });
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("duplicate column")) throw e;
+      }
+    },
+  },
+  {
+    version: 15,
+    description: "Create device_interest table for hardware waitlist",
+    up: async (client: Client) => {
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS device_interest (
+          id TEXT PRIMARY KEY,
+          email TEXT NOT NULL,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          UNIQUE(email)
+        )
+      `);
+    },
+  },
+  // NOTE: Original v13 for portfolio_snapshots/portfolio_shares was placed here
+  // (after v14/v15 in the array) with a duplicate version number, so it never ran.
+  // Fixed by v19 (portfolio_shares) and v20 (portfolio_snapshots).
+  {
+    version: 16,
+    description: "Allow 'starter' plan value in users table CHECK constraint",
+    up: async (client: Client) => {
+      const cols = await client.execute("PRAGMA table_info(users)");
+      const colDefs = cols.rows.map((r) => ({
+        name: str(r.name),
+        type: str(r.type),
+        notnull: Number(r.notnull),
+        dflt: r.dflt_value,
+        pk: Number(r.pk),
+      }));
+
+      const planCol = colDefs.find((c) => c.name === "plan");
+      if (!planCol) return;
+
+      const columnDefs = colDefs
+        .map((c) => {
+          let def = `${c.name} ${c.type}`;
+          if (c.pk) def += " PRIMARY KEY";
+          if (c.notnull && !c.pk) def += " NOT NULL";
+          if (c.dflt != null) {
+            const d = String(c.dflt);
+            if (d.startsWith("(") || d.startsWith("'") || /^-?\d/.test(d)) {
+              def += ` DEFAULT ${d}`;
+            } else if (/\(/.test(d)) {
+              def += ` DEFAULT (${d})`;
+            } else {
+              def += ` DEFAULT '${d}'`;
+            }
+          }
+          if (c.name === "plan") def += " CHECK(plan IN ('free', 'starter', 'pro'))";
+          if (c.name === "role") def += " CHECK(role IN ('admin', 'user'))";
+          return def;
+        })
+        .join(", ");
+
+      const colNames = colDefs.map((c) => c.name).join(", ");
+
+      await client.executeMultiple(`
+        CREATE TABLE users_new (${columnDefs});
+        INSERT INTO users_new (${colNames}) SELECT ${colNames} FROM users;
+        DROP TABLE users;
+        ALTER TABLE users_new RENAME TO users;
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_unique ON users(email) WHERE email != '';
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_users_google_id_unique ON users(google_id) WHERE google_id != '';
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_users_apple_id_unique ON users(apple_id) WHERE apple_id != '';
+      `);
+    },
+  },
+  {
+    version: 17,
+    description: "Create snaptrade_connections table for SnapTrade brokerage aggregator",
+    up: async (client: Client) => {
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS snaptrade_connections (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          snaptrade_user_id TEXT NOT NULL,
+          user_secret_encrypted TEXT NOT NULL,
+          label TEXT NOT NULL DEFAULT '',
+          last_synced_at TEXT NOT NULL DEFAULT '',
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_snaptrade_connections_user ON snaptrade_connections(user_id);
+      `);
+    },
+  },
+  {
+    version: 18,
+    description: "Fix SnapTrade MIC-suffixed tickers to Yahoo Finance format",
+    up: async (client: Client) => {
+      const micToYahoo: Record<string, string> = {
+        XGAT: ".DE", XETR: ".DE", XFRA: ".F",
+        XLON: ".L",  XAMS: ".AS", XBRU: ".BR", XPAR: ".PA",
+        XMAD: ".MC", XMIL: ".MI", XLIS: ".LS",
+        XCSE: ".CO", XHEL: ".HE", XSTO: ".ST", XOSL: ".OL", XICE: ".IC",
+        XSWX: ".SW", XWBO: ".VI",
+        XTSE: ".TO", XTSX: ".TO", XASX: ".AX",
+        XHKG: ".HK", XSES: ".SI", XTKS: ".T",
+        XNAS: "",    XNYS: "",    XASE: "",    BATS: "",    ARCX: "",
+      };
+
+      for (const [mic, suffix] of Object.entries(micToYahoo)) {
+        const pattern = `%.${mic}`;
+        for (const table of ["holdings", "transactions"] as const) {
+          if (suffix) {
+            await client.execute({
+              sql: `UPDATE ${table} SET ticker = SUBSTR(ticker, 1, LENGTH(ticker) - ${mic.length + 1}) || ? WHERE ticker LIKE ?`,
+              args: [suffix, pattern],
+            });
+          } else {
+            await client.execute({
+              sql: `UPDATE ${table} SET ticker = SUBSTR(ticker, 1, LENGTH(ticker) - ${mic.length + 1}) WHERE ticker LIKE ?`,
+              args: [pattern],
+            });
+          }
+        }
+      }
+
+      // Fix space-separated share classes imported as-is: "NOVO B" → "NOVO-B"
+      for (const table of ["holdings", "transactions"] as const) {
+        await client.execute({
+          sql: `UPDATE ${table} SET ticker = REPLACE(ticker, ' ', '-') WHERE ticker LIKE '% %'`,
+        });
+      }
+
+      // Fix BRK.B → BRK-B (US dot-separated share classes)
+      await client.execute({ sql: "UPDATE holdings SET ticker = 'BRK-B' WHERE ticker = 'BRK.B'" });
+      await client.execute({ sql: "UPDATE transactions SET ticker = 'BRK-B' WHERE ticker = 'BRK.B'" });
+      await client.execute({ sql: "UPDATE holdings SET ticker = 'BRK-A' WHERE ticker = 'BRK.A'" });
+      await client.execute({ sql: "UPDATE transactions SET ticker = 'BRK-A' WHERE ticker = 'BRK.A'" });
+    },
+  },
+  {
+    version: 19,
+    description: "Ensure portfolio_shares table exists (v13 fix — missing semicolon)",
+    up: async (client: Client) => {
+      await client.execute({
+        sql: `CREATE TABLE IF NOT EXISTS portfolio_shares (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          is_active INTEGER NOT NULL DEFAULT 1,
+          show_values INTEGER NOT NULL DEFAULT 0,
+          excluded_tickers TEXT,
+          UNIQUE(user_id)
+        )`,
+      });
+    },
+  },
+  {
+    version: 20,
+    description: "Create portfolios table and add portfolio_id to data tables for multi-portfolio support",
+    up: async (client: Client) => {
+      // 1. Create portfolios table
+      await client.execute({
+        sql: `CREATE TABLE IF NOT EXISTS portfolios (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        name TEXT NOT NULL DEFAULT 'My Portfolio',
+        is_default INTEGER NOT NULL DEFAULT 0,
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        UNIQUE(user_id, name)
+      )`,
+      });
+      await client.execute({
+        sql: "CREATE INDEX IF NOT EXISTS idx_portfolios_user ON portfolios(user_id)",
+      });
+
+      // 2. Create a default portfolio for every existing user
+      const users = await client.execute("SELECT id FROM users");
+      for (const row of users.rows) {
+        const userId = str(row.id);
+        const existing = await client.execute({
+          sql: "SELECT id FROM portfolios WHERE user_id = ? AND is_default = 1",
+          args: [userId],
+        });
+        if (existing.rows.length === 0) {
+          const { randomUUID } = await import("crypto");
+          const portfolioId = randomUUID();
+          await client.execute({
+            sql: "INSERT INTO portfolios (id, user_id, name, is_default, sort_order) VALUES (?, ?, 'My Portfolio', 1, 0)",
+            args: [portfolioId, userId],
+          });
+        }
+      }
+
+      // 3a. Ensure portfolio_snapshots exists (original v13 entry was a duplicate and never ran)
+      await client.execute({
+        sql: `CREATE TABLE IF NOT EXISTS portfolio_snapshots (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          date TEXT NOT NULL,
+          total_value_eur REAL NOT NULL,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          UNIQUE(user_id, date)
+        )`,
+      });
+
+      // 3b. Add portfolio_id column to data tables
+      for (const table of ["holdings", "transactions", "cash_entries", "portfolio_snapshots", "portfolio_shares"]) {
+        try {
+          await client.execute({ sql: `ALTER TABLE ${table} ADD COLUMN portfolio_id TEXT NOT NULL DEFAULT ''` });
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : String(e);
+          if (!msg.includes("duplicate column")) throw e;
+        }
+      }
+
+      // 4. Backfill portfolio_id for all existing rows
+      for (const table of ["holdings", "transactions", "cash_entries", "portfolio_snapshots", "portfolio_shares"]) {
+        await client.execute({
+          sql: `UPDATE ${table} SET portfolio_id = (
+          SELECT p.id FROM portfolios p WHERE p.user_id = ${table}.user_id AND p.is_default = 1
+        ) WHERE portfolio_id = ''`,
+        });
+      }
+
+      // 5. Add device_portfolio_id to users table
+      try {
+        await client.execute({ sql: "ALTER TABLE users ADD COLUMN device_portfolio_id TEXT NOT NULL DEFAULT ''" });
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("duplicate column")) throw e;
+      }
+    },
+  },
+  {
+    version: 21,
+    description: "Ensure portfolio_snapshots table exists (v13 ordering fix)",
+    up: async (client: Client) => {
+      await client.execute({
+        sql: `CREATE TABLE IF NOT EXISTS portfolio_snapshots (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          date TEXT NOT NULL,
+          total_value_eur REAL NOT NULL,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          UNIQUE(user_id, date)
+        )`,
+      });
+
+      // Also ensure portfolio_id column exists on the table
+      try {
+        await client.execute({
+          sql: "ALTER TABLE portfolio_snapshots ADD COLUMN portfolio_id TEXT NOT NULL DEFAULT ''",
+        });
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("duplicate column")) throw e;
+      }
+
+      // Backfill portfolio_id if any rows have it empty
+      await client.execute({
+        sql: `UPDATE portfolio_snapshots SET portfolio_id = (
+          SELECT p.id FROM portfolios p WHERE p.user_id = portfolio_snapshots.user_id AND p.is_default = 1
+        ) WHERE portfolio_id = ''`,
+      });
+    },
+  },
+  {
+    version: 22,
+    description: "Backfill empty portfolio_id rows to default portfolio (post-import fix)",
+    up: async (client: Client) => {
+      for (const table of ["holdings", "transactions", "cash_entries", "portfolio_snapshots", "portfolio_shares"]) {
+        try {
+          await client.execute({
+            sql: `UPDATE ${table} SET portfolio_id = (
+              SELECT p.id FROM portfolios p WHERE p.user_id = ${table}.user_id AND p.is_default = 1
+            ) WHERE portfolio_id = '' OR portfolio_id IS NULL`,
+          });
+        } catch { /* table may not exist yet */ }
+      }
+    },
+  },
+  {
+    version: 23,
+    description: "Multi-channel percentage-based price alerts: extend price_alerts, add notification prefs, push subscriptions, device notifications",
+    up: async (client: Client) => {
+      const alertCols = await client.execute("PRAGMA table_info(price_alerts)");
+      const alertColNames = new Set(alertCols.rows.map((r) => str(r.name)));
+      for (const [col, def] of [
+        ["alert_type", "ALTER TABLE price_alerts ADD COLUMN alert_type TEXT NOT NULL DEFAULT 'threshold'"],
+        ["percent_basis", "ALTER TABLE price_alerts ADD COLUMN percent_basis TEXT NOT NULL DEFAULT ''"],
+        ["percent_value", "ALTER TABLE price_alerts ADD COLUMN percent_value REAL NOT NULL DEFAULT 0"],
+        ["is_portfolio_wide", "ALTER TABLE price_alerts ADD COLUMN is_portfolio_wide INTEGER NOT NULL DEFAULT 0"],
+        ["portfolio_id", "ALTER TABLE price_alerts ADD COLUMN portfolio_id TEXT NOT NULL DEFAULT ''"],
+        ["last_notified_ticker", "ALTER TABLE price_alerts ADD COLUMN last_notified_ticker TEXT NOT NULL DEFAULT ''"],
+        ["last_notified_at", "ALTER TABLE price_alerts ADD COLUMN last_notified_at TEXT NOT NULL DEFAULT ''"],
+      ] as const) {
+        if (!alertColNames.has(col)) {
+          await client.execute({ sql: def });
+        }
+      }
+
+      const settingsCols = await client.execute("PRAGMA table_info(user_settings)");
+      const settingsColNames = new Set(settingsCols.rows.map((r) => str(r.name)));
+      for (const [col, def] of [
+        ["alert_channels", "ALTER TABLE user_settings ADD COLUMN alert_channels TEXT NOT NULL DEFAULT 'email'"],
+        ["whatsapp_phone", "ALTER TABLE user_settings ADD COLUMN whatsapp_phone TEXT NOT NULL DEFAULT ''"],
+        ["whatsapp_verified", "ALTER TABLE user_settings ADD COLUMN whatsapp_verified INTEGER NOT NULL DEFAULT 0"],
+        ["alert_device_enabled", "ALTER TABLE user_settings ADD COLUMN alert_device_enabled INTEGER NOT NULL DEFAULT 0"],
+      ] as const) {
+        if (!settingsColNames.has(col)) {
+          await client.execute({ sql: def });
+        }
+      }
+
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS push_subscriptions (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          endpoint TEXT NOT NULL,
+          p256dh TEXT NOT NULL,
+          auth TEXT NOT NULL,
+          user_agent TEXT NOT NULL DEFAULT '',
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_push_subs_user ON push_subscriptions(user_id);
+
+        CREATE TABLE IF NOT EXISTS device_notifications (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          title TEXT NOT NULL,
+          message TEXT NOT NULL,
+          ticker TEXT NOT NULL DEFAULT '',
+          read INTEGER NOT NULL DEFAULT 0,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_device_notif_user ON device_notifications(user_id, read);
+      `);
+    },
+  },
+  {
+    version: 24,
+    description: "WhatsApp message rate-limit counters on user_settings",
+    up: async (client: Client) => {
+      const cols = await client.execute("PRAGMA table_info(user_settings)");
+      const existing = new Set(cols.rows.map((r) => str(r.name)));
+      for (const [col, def] of [
+        ["wa_msgs_today", "ALTER TABLE user_settings ADD COLUMN wa_msgs_today INTEGER NOT NULL DEFAULT 0"],
+        ["wa_daily_reset_at", "ALTER TABLE user_settings ADD COLUMN wa_daily_reset_at TEXT NOT NULL DEFAULT ''"],
+        ["wa_msgs_month", "ALTER TABLE user_settings ADD COLUMN wa_msgs_month INTEGER NOT NULL DEFAULT 0"],
+        ["wa_monthly_reset_at", "ALTER TABLE user_settings ADD COLUMN wa_monthly_reset_at TEXT NOT NULL DEFAULT ''"],
+      ] as const) {
+        if (!existing.has(col)) {
+          await client.execute({ sql: def });
+        }
+      }
+    },
+  },
+  {
+    version: 25,
+    description: "Per-broker sync tracking for incremental SnapTrade imports",
+    up: async (client: Client) => {
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS snaptrade_broker_syncs (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          brokerage_authorization_id TEXT NOT NULL,
+          brokerage_name TEXT NOT NULL DEFAULT '',
+          last_imported_at TEXT NOT NULL DEFAULT '',
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_snaptrade_broker_syncs_user_broker
+          ON snaptrade_broker_syncs(user_id, brokerage_authorization_id);
+      `);
+    },
+  },
+  {
+    version: 26,
+    description: "Add pending_delete_at to snaptrade_connections for deferred cleanup on downgrade",
+    up: async (client: Client) => {
+      await client.execute(
+        `ALTER TABLE snaptrade_connections ADD COLUMN pending_delete_at TEXT NOT NULL DEFAULT ''`
+      );
+    },
+  },
+  {
+    version: 27,
+    description: "Add currency column to portfolios for per-portfolio base currency (EUR or USD)",
+    up: async (client: Client) => {
+      const cols = await client.execute("PRAGMA table_info(portfolios)");
+      const colNames = new Set(cols.rows.map((r) => str(r.name)));
+      if (!colNames.has("currency")) {
+        await client.execute(
+          `ALTER TABLE portfolios ADD COLUMN currency TEXT NOT NULL DEFAULT 'EUR'`
+        );
+      }
+    },
+  },
+  {
+    version: 28,
+    description: "Widen cash_entries unique constraint to include portfolio_id",
+    up: async (client: Client) => {
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS cash_entries_new (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          name TEXT NOT NULL,
+          amount_eur REAL NOT NULL DEFAULT 0,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+          portfolio_id TEXT NOT NULL DEFAULT '',
+          FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
+          UNIQUE(user_id, name, portfolio_id)
+        );
+        INSERT OR IGNORE INTO cash_entries_new (id, user_id, name, amount_eur, created_at, updated_at, portfolio_id)
+          SELECT id, user_id, name, amount_eur, created_at, updated_at, COALESCE(portfolio_id, '') FROM cash_entries;
+        DROP TABLE cash_entries;
+        ALTER TABLE cash_entries_new RENAME TO cash_entries;
+      `);
+    },
+  },
+  {
+    version: 29,
+    description: "Add type and user_context columns to feedback table",
+    up: async (client: Client) => {
+      for (const [col, sql] of [
+        ["type", `ALTER TABLE feedback ADD COLUMN type TEXT NOT NULL DEFAULT 'feedback'`],
+        ["user_context", `ALTER TABLE feedback ADD COLUMN user_context TEXT NOT NULL DEFAULT ''`],
+      ] as const) {
+        try {
+          const cols = await client.execute("PRAGMA table_info(feedback)");
+          const colNames = new Set(cols.rows.map((r) => str(r.name)));
+          if (!colNames.has(col)) await client.execute(sql);
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : String(e);
+          if (!msg.includes("duplicate column")) throw e;
+        }
+      }
+    },
+  },
+  {
+    version: 30,
+    description: "Add needs_attention flag to snaptrade_connections for surfacing credential issues",
+    up: async (client: Client) => {
+      try {
+        const cols = await client.execute("PRAGMA table_info(snaptrade_connections)");
+        const colNames = new Set(cols.rows.map((r) => str(r.name)));
+        if (!colNames.has("needs_attention")) {
+          await client.execute(
+            `ALTER TABLE snaptrade_connections ADD COLUMN needs_attention INTEGER NOT NULL DEFAULT 0`
+          );
+        }
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("duplicate column")) throw e;
+      }
+    },
+  },
+  {
+    version: 31,
+    description: "Create calendar_events table for earnings, economic, and IPO event calendar",
+    up: async (client: Client) => {
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS calendar_events (
+          id TEXT PRIMARY KEY,
+          event_type TEXT NOT NULL,
+          symbol TEXT,
+          name TEXT NOT NULL,
+          event_date TEXT NOT NULL,
+          event_time TEXT,
+          details TEXT,
+          created_at TEXT DEFAULT (datetime('now')),
+          updated_at TEXT DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_calendar_events_type_date ON calendar_events(event_type, event_date);
+        CREATE INDEX IF NOT EXISTS idx_calendar_events_symbol ON calendar_events(symbol);
+      `);
+    },
+  },
+  {
+    version: 32,
+    description: "Add all_disabled_since to snaptrade_connections, last_active_at to users, create cron_executions table",
+    up: async (client: Client) => {
+      try {
+        await client.execute({ sql: "ALTER TABLE snaptrade_connections ADD COLUMN all_disabled_since TEXT NOT NULL DEFAULT ''", args: [] });
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("duplicate column")) throw e;
+      }
+      try {
+        await client.execute({ sql: "ALTER TABLE users ADD COLUMN last_active_at TEXT NOT NULL DEFAULT ''", args: [] });
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("duplicate column")) throw e;
+      }
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS cron_executions (
+          id TEXT PRIMARY KEY,
+          job_name TEXT NOT NULL,
+          started_at TEXT NOT NULL DEFAULT (datetime('now')),
+          finished_at TEXT NOT NULL DEFAULT '',
+          status TEXT NOT NULL DEFAULT 'running',
+          result TEXT NOT NULL DEFAULT '',
+          error_message TEXT NOT NULL DEFAULT '',
+          duration_ms INTEGER NOT NULL DEFAULT 0
+        );
+        CREATE INDEX IF NOT EXISTS idx_cron_executions_job ON cron_executions(job_name, started_at);
+      `);
+    },
+  },
+  {
+    version: 33,
+    description: "Add dashboard_theme column to user_settings for layout theme selection",
+    up: async (client: Client) => {
+      try {
+        await client.execute({
+          sql: "ALTER TABLE user_settings ADD COLUMN dashboard_theme TEXT NOT NULL DEFAULT 'default'",
+          args: [],
+        });
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("duplicate column")) throw e;
+      }
+    },
+  },
+  {
+    version: 34,
+    description: "Add default_currency column to user_settings for multi-currency support",
+    up: async (client: Client) => {
+      try {
+        await client.execute({
+          sql: "ALTER TABLE user_settings ADD COLUMN default_currency TEXT NOT NULL DEFAULT 'EUR'",
+          args: [],
+        });
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("duplicate column")) throw e;
+      }
+    },
+  },
+  {
+    version: 35,
+    description: "Add type, display_currency, display_amount, notes, valuation_date to cash_entries for net worth tracking",
+    up: async (client: Client) => {
+      for (const ddl of [
+        "ALTER TABLE cash_entries ADD COLUMN type TEXT NOT NULL DEFAULT 'cash'",
+        "ALTER TABLE cash_entries ADD COLUMN display_currency TEXT NOT NULL DEFAULT 'EUR'",
+        "ALTER TABLE cash_entries ADD COLUMN display_amount REAL NOT NULL DEFAULT 0",
+        "ALTER TABLE cash_entries ADD COLUMN notes TEXT NOT NULL DEFAULT ''",
+        "ALTER TABLE cash_entries ADD COLUMN valuation_date TEXT NOT NULL DEFAULT ''",
+      ]) {
+        try {
+          await client.execute({ sql: ddl });
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : String(e);
+          if (!msg.includes("duplicate column")) throw e;
+        }
+      }
+      await client.execute({
+        sql: "UPDATE cash_entries SET display_currency = 'EUR', display_amount = amount_eur WHERE type = 'cash' AND display_amount = 0",
+      });
+    },
+  },
+  {
+    version: 36,
+    description: "Add transaction_count to snaptrade_broker_syncs, broker_name to transactions",
+    up: async (client: Client) => {
+      for (const ddl of [
+        "ALTER TABLE snaptrade_broker_syncs ADD COLUMN transaction_count INTEGER NOT NULL DEFAULT 0",
+        "ALTER TABLE transactions ADD COLUMN broker_name TEXT NOT NULL DEFAULT ''",
+      ]) {
+        try {
+          await client.execute({ sql: ddl });
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : String(e);
+          if (!msg.includes("duplicate column")) throw e;
+        }
+      }
+    },
+  },
+  {
+    version: 37,
+    description: "Add tax_residency column to users for future tax support",
+    up: async (client: Client) => {
+      try {
+        await client.execute({
+          sql: "ALTER TABLE users ADD COLUMN tax_residency TEXT NOT NULL DEFAULT ''",
+          args: [],
+        });
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("duplicate column")) throw e;
+      }
+    },
+  },
+  {
+    version: 38,
+    description: "Add onboarding_completed column to users",
+    up: async (client: Client) => {
+      try {
+        await client.execute({
+          sql: "ALTER TABLE users ADD COLUMN onboarding_completed INTEGER NOT NULL DEFAULT 0",
+          args: [],
+        });
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("duplicate column")) throw e;
+      }
+      await client.execute({
+        sql: "UPDATE users SET onboarding_completed = 1 WHERE email_verified = 1",
+      });
+    },
+  },
+  {
+    version: 39,
+    description: "Create screener_cache table for stock screener feature",
+    up: async (client: Client) => {
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS screener_cache (
+          symbol TEXT PRIMARY KEY,
+          short_name TEXT,
+          sector TEXT,
+          industry TEXT,
+          country TEXT,
+          exchange TEXT,
+          currency TEXT,
+          market_cap REAL,
+          pe_ratio REAL,
+          forward_pe REAL,
+          dividend_yield REAL,
+          dividend_per_share REAL,
+          eps REAL,
+          beta REAL,
+          profit_margin REAL,
+          return_on_equity REAL,
+          fifty_two_week_high REAL,
+          fifty_two_week_low REAL,
+          regular_market_price REAL,
+          regular_market_change_percent REAL,
+          analyst_strong_buy INTEGER,
+          analyst_buy INTEGER,
+          analyst_hold INTEGER,
+          analyst_sell INTEGER,
+          analyst_strong_sell INTEGER,
+          updated_at TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_screener_cache_sector ON screener_cache(sector);
+        CREATE INDEX IF NOT EXISTS idx_screener_cache_dividend_yield ON screener_cache(dividend_yield);
+        CREATE INDEX IF NOT EXISTS idx_screener_cache_pe_ratio ON screener_cache(pe_ratio);
+        CREATE INDEX IF NOT EXISTS idx_screener_cache_market_cap ON screener_cache(market_cap);
+      `);
+    },
+  },
+  {
+    version: 40,
+    description: "Create notifications table for in-app notification platform",
+    up: async (client: Client) => {
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS notifications (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          type TEXT NOT NULL DEFAULT 'info',
+          title TEXT NOT NULL,
+          title_es TEXT NOT NULL DEFAULT '',
+          message TEXT NOT NULL,
+          message_es TEXT NOT NULL DEFAULT '',
+          link TEXT NOT NULL DEFAULT '',
+          link_label TEXT NOT NULL DEFAULT '',
+          link_label_es TEXT NOT NULL DEFAULT '',
+          read INTEGER NOT NULL DEFAULT 0,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, read, created_at);
+      `);
+    },
+  },
+  {
+    version: 41,
+    description: "Create goals table for persistent portfolio goal tracking",
+    up: async (client: Client) => {
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS goals (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          portfolio_id TEXT NOT NULL DEFAULT '',
+          name TEXT NOT NULL DEFAULT 'My Goal',
+          target_amount REAL NOT NULL,
+          currency TEXT NOT NULL DEFAULT 'EUR',
+          growth_rate REAL NOT NULL DEFAULT 7,
+          yearly_contribution REAL NOT NULL DEFAULT 0,
+          contribution_mode TEXT NOT NULL DEFAULT 'monthly',
+          reinvest_dividends INTEGER NOT NULL DEFAULT 1,
+          horizon INTEGER NOT NULL DEFAULT 20,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+          FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_goals_user ON goals(user_id);
+      `);
+    },
+  },
+  {
+    version: 42,
+    description: "Create support_chat_conversations table",
+    up: async (client: Client) => {
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS support_chat_conversations (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          messages TEXT NOT NULL DEFAULT '[]',
+          status TEXT NOT NULL DEFAULT 'active'
+            CHECK(status IN ('active', 'resolved', 'escalated')),
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+          FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_support_chat_user ON support_chat_conversations(user_id);
+        CREATE INDEX IF NOT EXISTS idx_support_chat_status ON support_chat_conversations(status);
+        CREATE INDEX IF NOT EXISTS idx_support_chat_created ON support_chat_conversations(created_at);
+      `);
+    },
+  },
+  {
+    version: 43,
+    description: "Expand goals table for multi-goal and financial planning",
+    up: async (client: Client) => {
+      await client.execute({ sql: "ALTER TABLE goals ADD COLUMN goal_type TEXT NOT NULL DEFAULT 'custom'", args: [] });
+      await client.execute({ sql: "ALTER TABLE goals ADD COLUMN target_date TEXT", args: [] });
+      await client.execute({ sql: "ALTER TABLE goals ADD COLUMN priority INTEGER NOT NULL DEFAULT 0", args: [] });
+      await client.execute({ sql: "ALTER TABLE goals ADD COLUMN milestones TEXT NOT NULL DEFAULT '[]'", args: [] });
+      await client.execute({ sql: "ALTER TABLE goals ADD COLUMN monthly_contribution REAL NOT NULL DEFAULT 0", args: [] });
+      await client.execute({ sql: "ALTER TABLE goals ADD COLUMN notes TEXT NOT NULL DEFAULT ''", args: [] });
+      await client.execute({ sql: "ALTER TABLE goals ADD COLUMN icon TEXT NOT NULL DEFAULT ''", args: [] });
+      await client.execute({ sql: "ALTER TABLE goals ADD COLUMN color TEXT NOT NULL DEFAULT ''", args: [] });
+    },
+  },
+  {
+    version: 44,
+    description: "Add source column to cash_entries and widen unique constraint to include it",
+    up: async (client: Client) => {
+      try {
+        await client.execute({ sql: "ALTER TABLE cash_entries ADD COLUMN source TEXT NOT NULL DEFAULT 'manual'", args: [] });
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("duplicate column")) throw e;
+      }
+
+      // Backfill source from name patterns
+      await client.execute({
+        sql: "UPDATE cash_entries SET source = 'snaptrade' WHERE source = 'manual' AND UPPER(name) LIKE 'CASH %'",
+      });
+      await client.execute({
+        sql: "UPDATE cash_entries SET source = 'degiro' WHERE source = 'manual' AND UPPER(name) LIKE 'DEGIRO%'",
+      });
+      await client.execute({
+        sql: "UPDATE cash_entries SET source = 'interactive_brokers' WHERE source = 'manual' AND UPPER(name) LIKE 'INTERACTIVE BROKERS%'",
+      });
+      await client.execute({
+        sql: "UPDATE cash_entries SET source = 'trading_212' WHERE source = 'manual' AND UPPER(name) LIKE 'TRADING 212%'",
+      });
+      await client.execute({
+        sql: "UPDATE cash_entries SET source = 'revolut' WHERE source = 'manual' AND UPPER(name) LIKE 'REVOLUT%'",
+      });
+
+      // Rebuild table to widen unique constraint: (user_id, name, portfolio_id, source)
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS cash_entries_v2 (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          name TEXT NOT NULL,
+          amount_eur REAL NOT NULL DEFAULT 0,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+          portfolio_id TEXT NOT NULL DEFAULT '',
+          type TEXT NOT NULL DEFAULT 'cash',
+          display_currency TEXT NOT NULL DEFAULT 'EUR',
+          display_amount REAL NOT NULL DEFAULT 0,
+          notes TEXT NOT NULL DEFAULT '',
+          valuation_date TEXT NOT NULL DEFAULT '',
+          source TEXT NOT NULL DEFAULT 'manual',
+          FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
+          UNIQUE(user_id, name, portfolio_id, source)
+        );
+        INSERT OR IGNORE INTO cash_entries_v2
+          (id, user_id, name, amount_eur, created_at, updated_at, portfolio_id,
+           type, display_currency, display_amount, notes, valuation_date, source)
+          SELECT id, user_id, name, amount_eur, created_at, updated_at, portfolio_id,
+                 type, display_currency, display_amount, notes, valuation_date, source
+          FROM cash_entries;
+        DROP TABLE cash_entries;
+        ALTER TABLE cash_entries_v2 RENAME TO cash_entries;
+      `);
+    },
+  },
+  {
+    version: 45,
+    description: "Create snaptrade_api_logs table for admin response inspection",
+    up: async (client: Client) => {
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS snaptrade_api_logs (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL DEFAULT '',
+          action TEXT NOT NULL,
+          status TEXT NOT NULL DEFAULT 'success',
+          request_summary TEXT NOT NULL DEFAULT '',
+          response_body TEXT NOT NULL DEFAULT '{}',
+          error_message TEXT NOT NULL DEFAULT '',
+          duration_ms INTEGER NOT NULL DEFAULT 0,
+          created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_snaptrade_api_logs_user ON snaptrade_api_logs(user_id);
+        CREATE INDEX IF NOT EXISTS idx_snaptrade_api_logs_created ON snaptrade_api_logs(created_at);
+      `);
+    },
+  },
+  {
+    version: 46,
+    description: "Create scheduled_x_posts table for automated X/Twitter posting",
+    up: async (client: Client) => {
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS scheduled_x_posts (
+          id TEXT PRIMARY KEY,
+          content TEXT NOT NULL,
+          image_url TEXT NOT NULL DEFAULT '',
+          hashtags TEXT NOT NULL DEFAULT '',
+          scheduled_at TEXT NOT NULL,
+          status TEXT NOT NULL DEFAULT 'pending',
+          posted_at TEXT NOT NULL DEFAULT '',
+          x_post_id TEXT NOT NULL DEFAULT '',
+          error_message TEXT NOT NULL DEFAULT '',
+          created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_scheduled_x_posts_status ON scheduled_x_posts(status);
+        CREATE INDEX IF NOT EXISTS idx_scheduled_x_posts_scheduled ON scheduled_x_posts(scheduled_at);
+      `);
+    },
+  },
+  {
+    version: 47,
+    description: "Add source column to holdings for position-synced vs transaction-derived distinction",
+    up: async (client: Client) => {
+      const cols = await client.execute("PRAGMA table_info(holdings)");
+      const colNames = new Set(cols.rows.map((r) => str(r.name)));
+      if (!colNames.has("source")) {
+        await client.execute({
+          sql: "ALTER TABLE holdings ADD COLUMN source TEXT NOT NULL DEFAULT 'transaction'",
+          args: [],
+        });
+      }
+    },
+  },
+  {
+    version: 48,
+    description: "Ensure scheduled_x_posts table exists (re-apply skipped migration 46)",
+    up: async (client: Client) => {
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS scheduled_x_posts (
+          id TEXT PRIMARY KEY,
+          content TEXT NOT NULL,
+          image_url TEXT NOT NULL DEFAULT '',
+          hashtags TEXT NOT NULL DEFAULT '',
+          scheduled_at TEXT NOT NULL,
+          status TEXT NOT NULL DEFAULT 'pending',
+          posted_at TEXT NOT NULL DEFAULT '',
+          x_post_id TEXT NOT NULL DEFAULT '',
+          error_message TEXT NOT NULL DEFAULT '',
+          created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_scheduled_x_posts_status ON scheduled_x_posts(status);
+        CREATE INDEX IF NOT EXISTS idx_scheduled_x_posts_scheduled ON scheduled_x_posts(scheduled_at);
+      `);
+    },
+  },
+  {
+    version: 49,
+    description: "Add experience_level to users table",
+    up: async (client: Client) => {
+      const cols = await client.execute("PRAGMA table_info(users)");
+      const colNames = new Set(cols.rows.map((r) => str(r.name)));
+      if (!colNames.has("experience_level")) {
+        await client.execute({
+          sql: "ALTER TABLE users ADD COLUMN experience_level TEXT NOT NULL DEFAULT ''",
+          args: [],
+        });
+      }
+    },
+  },
+  {
+    version: 50,
+    description: "Create email_templates and email_sends tables",
+    up: async (client: Client) => {
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS email_templates (
+          id TEXT PRIMARY KEY,
+          slug TEXT NOT NULL UNIQUE,
+          name TEXT NOT NULL,
+          subject TEXT NOT NULL,
+          subject_es TEXT NOT NULL DEFAULT '',
+          body_html TEXT NOT NULL,
+          body_html_es TEXT NOT NULL DEFAULT '',
+          body_text TEXT NOT NULL DEFAULT '',
+          body_text_es TEXT NOT NULL DEFAULT '',
+          category TEXT NOT NULL DEFAULT 'general',
+          experience_level TEXT NOT NULL DEFAULT '',
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+
+        CREATE TABLE IF NOT EXISTS email_sends (
+          id TEXT PRIMARY KEY,
+          resend_id TEXT NOT NULL DEFAULT '',
+          template_id TEXT NOT NULL DEFAULT '',
+          user_id TEXT NOT NULL,
+          email_to TEXT NOT NULL DEFAULT '',
+          subject TEXT NOT NULL,
+          body_html TEXT NOT NULL,
+          body_text TEXT NOT NULL DEFAULT '',
+          sent_at TEXT NOT NULL DEFAULT (datetime('now')),
+          status TEXT NOT NULL DEFAULT 'sent',
+          delivered_at TEXT NOT NULL DEFAULT '',
+          opened_at TEXT NOT NULL DEFAULT '',
+          open_count INTEGER NOT NULL DEFAULT 0,
+          clicked_at TEXT NOT NULL DEFAULT '',
+          bounced_at TEXT NOT NULL DEFAULT '',
+          failed_at TEXT NOT NULL DEFAULT '',
+          FOREIGN KEY(user_id) REFERENCES users(id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_email_sends_resend_id ON email_sends(resend_id);
+        CREATE INDEX IF NOT EXISTS idx_email_sends_user_id ON email_sends(user_id);
+      `);
+    },
+  },
+  {
+    version: 51,
+    description: "Add email_notifications_enabled to user_settings",
+    up: async (client: Client) => {
+      const cols = await client.execute("PRAGMA table_info(user_settings)");
+      const colNames = new Set(cols.rows.map((r) => str(r.name)));
+      if (!colNames.has("email_notifications_enabled")) {
+        await client.execute({
+          sql: "ALTER TABLE user_settings ADD COLUMN email_notifications_enabled INTEGER NOT NULL DEFAULT 1",
+          args: [],
+        });
+      }
+    },
+  },
+  {
+    version: 53,
+    description: "Add snaptrade_broker_portfolio_map for multi-portfolio sync",
+    up: async (client: Client) => {
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS snaptrade_broker_portfolio_map (
+          user_id TEXT NOT NULL,
+          brokerage_authorization_id TEXT NOT NULL,
+          portfolio_id TEXT NOT NULL,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          PRIMARY KEY (user_id, brokerage_authorization_id, portfolio_id),
+          FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
+          FOREIGN KEY(portfolio_id) REFERENCES portfolios(id) ON DELETE CASCADE
+        );
+      `);
+    },
+  },
+  {
+    version: 54,
+    description: "Add transaction_portfolio_map for multi-portfolio transaction mapping",
+    up: async (client: Client) => {
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS transaction_portfolio_map (
+          transaction_id TEXT NOT NULL,
+          portfolio_id TEXT NOT NULL,
+          user_id TEXT NOT NULL,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          PRIMARY KEY (transaction_id, portfolio_id),
+          FOREIGN KEY(transaction_id) REFERENCES transactions(id) ON DELETE CASCADE,
+          FOREIGN KEY(portfolio_id) REFERENCES portfolios(id) ON DELETE CASCADE,
+          FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_tx_portfolio_map_user_portfolio
+          ON transaction_portfolio_map(user_id, portfolio_id);
+      `);
+    },
+  },
+  {
+    version: 55,
+    description: "Seed email templates",
+    up: async (client: Client) => {
+      const { EMAIL_TEMPLATE_SEEDS } = await import("./email-template-seeds");
+      const existing = await client.execute("SELECT COUNT(*) as cnt FROM email_templates");
+      if (Number(existing.rows[0]?.cnt) > 0) return;
+
+      for (const t of EMAIL_TEMPLATE_SEEDS) {
+        await client.execute({
+          sql: `INSERT INTO email_templates (id, slug, name, subject, subject_es, body_html, body_html_es, body_text, body_text_es, category, experience_level)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          args: [
+            randomUUID(), t.slug, t.name, t.subject, t.subjectEs,
+            t.bodyHtml, t.bodyHtmlEs, t.bodyText, t.bodyTextEs,
+            t.category, t.experienceLevel,
+          ],
+        });
+      }
+    },
+  },
+  {
+    version: 56,
+    description: "Add figi_share_class to holdings for stable security identity across ticker renames",
+    up: async (client: Client) => {
+      const cols = await client.execute("PRAGMA table_info(holdings)");
+      const colNames = new Set(cols.rows.map((r) => str(r.name)));
+      if (!colNames.has("figi_share_class")) {
+        await client.execute({
+          sql: "ALTER TABLE holdings ADD COLUMN figi_share_class TEXT NOT NULL DEFAULT ''",
+        });
+      }
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {
