@@ -196,3 +196,5 @@ export function getTemplateSubject(
 }
 
 export { seedSubjects };
+
+export { getLocalizedTemplateHtml } from "./template-lookup";
