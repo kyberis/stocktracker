@@ -77,15 +77,15 @@ export async function verifyVerificationToken(
   }
 }
 
-function verificationEmailHtml(verifyUrl: string): string {
+function verificationEmailHtml(verifyUrl: string, locale: EmailLocale = "en"): string {
+  const s = verificationStrings[locale] ?? verificationStrings.en;
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="${locale}">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
 <body style="margin:0;padding:0;background-color:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f1f5f9;padding:40px 16px;">
     <tr><td align="center">
       <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="max-width:480px;width:100%;background-color:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
-        <!-- Header -->
         <tr><td style="background:linear-gradient(135deg,#059669 0%,#10b981 100%);padding:32px 32px 28px;text-align:center;">
           <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;">
             <tr>
@@ -96,43 +96,25 @@ function verificationEmailHtml(verifyUrl: string): string {
             </tr>
           </table>
         </td></tr>
-        <!-- Body -->
         <tr><td style="padding:36px 32px 16px;">
-          <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#0f172a;text-align:center;">Verify your email address</h1>
-          <p style="margin:0 0 28px;font-size:15px;color:#475569;text-align:center;line-height:1.6;">
-            Thanks for signing up! Please confirm your email to activate your account and start tracking your portfolio.
-          </p>
-          <!-- CTA Button -->
+          <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#0f172a;text-align:center;">${s.heading}</h1>
+          <p style="margin:0 0 28px;font-size:15px;color:#475569;text-align:center;line-height:1.6;">${s.body}</p>
           <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
             <tr><td align="center">
-              <a href="${verifyUrl}" target="_blank" style="display:inline-block;padding:14px 36px;background-color:#10b981;color:#ffffff;font-size:16px;font-weight:600;text-decoration:none;border-radius:10px;letter-spacing:0.2px;">
-                Verify Email
-              </a>
+              <a href="${verifyUrl}" target="_blank" style="display:inline-block;padding:14px 36px;background-color:#10b981;color:#ffffff;font-size:16px;font-weight:600;text-decoration:none;border-radius:10px;letter-spacing:0.2px;">${s.ctaLabel}</a>
             </td></tr>
           </table>
-          <!-- Fallback link -->
-          <p style="margin:24px 0 0;font-size:12px;color:#94a3b8;text-align:center;line-height:1.5;">
-            Or copy and paste this link into your browser:
-          </p>
+          <p style="margin:24px 0 0;font-size:12px;color:#94a3b8;text-align:center;line-height:1.5;">${s.fallbackLink}</p>
           <p style="margin:6px 0 0;font-size:12px;color:#10b981;text-align:center;word-break:break-all;line-height:1.5;">
             <a href="${verifyUrl}" style="color:#10b981;text-decoration:underline;">${verifyUrl}</a>
           </p>
         </td></tr>
-        <!-- Divider -->
-        <tr><td style="padding:0 32px;">
-          <div style="border-top:1px solid #e2e8f0;margin:24px 0;"></div>
-        </td></tr>
-        <!-- Footer -->
+        <tr><td style="padding:0 32px;"><div style="border-top:1px solid #e2e8f0;margin:24px 0;"></div></td></tr>
         <tr><td style="padding:0 32px 32px;">
-          <p style="margin:0 0 4px;font-size:12px;color:#94a3b8;text-align:center;line-height:1.5;">
-            This link expires in 24 hours.
-          </p>
-          <p style="margin:0;font-size:12px;color:#94a3b8;text-align:center;line-height:1.5;">
-            If you didn&rsquo;t create an account on trefolio, you can safely ignore this email.
-          </p>
+          <p style="margin:0 0 4px;font-size:12px;color:#94a3b8;text-align:center;line-height:1.5;">${s.expiry}</p>
+          <p style="margin:0;font-size:12px;color:#94a3b8;text-align:center;line-height:1.5;">${s.ignore}</p>
         </td></tr>
       </table>
-      <!-- Copyright -->
       <p style="margin:24px 0 0;font-size:11px;color:#94a3b8;text-align:center;">
         &copy; ${new Date().getFullYear()} trefolio &mdash; Every portfolio deserves a bit of luck &#x1F340;
       </p>
@@ -144,7 +126,8 @@ function verificationEmailHtml(verifyUrl: string): string {
 
 export async function sendVerificationEmail(
   email: string,
-  token: string
+  token: string,
+  locale: EmailLocale = "en",
 ): Promise<{ success: boolean; error?: string }> {
   if (isTestEmail(email)) return { success: true };
 
@@ -155,13 +138,14 @@ export async function sendVerificationEmail(
   }
 
   const verifyUrl = `${getBaseUrl()}/api/auth/verify-email?token=${encodeURIComponent(token)}`;
+  const s = verificationStrings[locale] ?? verificationStrings.en;
 
   try {
     await resend.emails.send({
       from: getFromAddress(),
       to: email,
-      subject: "Verify your email — trefolio",
-      html: verificationEmailHtml(verifyUrl),
+      subject: s.subject,
+      html: verificationEmailHtml(verifyUrl, locale),
     });
     return { success: true };
   } catch (err) {
@@ -173,7 +157,8 @@ export async function sendVerificationEmail(
 
 export async function sendAlertEmail(
   email: string,
-  alert: { ticker: string; name: string; condition: string; threshold: number; currentPrice: number; currency: string }
+  alert: { ticker: string; name: string; condition: string; threshold: number; currentPrice: number; currency: string },
+  locale: EmailLocale = "en",
 ): Promise<{ success: boolean; error?: string }> {
   if (isTestEmail(email)) return { success: true };
 
@@ -183,8 +168,15 @@ export async function sendAlertEmail(
     return { success: true };
   }
 
-  const direction = alert.condition === "above" ? "rose above" : "dropped below";
+  const s = thresholdAlertStrings[locale] ?? thresholdAlertStrings.en;
+  const direction = alert.condition === "above" ? s.roseAbove : s.droppedBelow;
   const dashboardUrl = `${getBaseUrl()}/`;
+  const body = s.bodyTemplate
+    .replace("{{name}}", `<strong>${alert.name || alert.ticker}</strong>`)
+    .replace("{{ticker}}", alert.ticker)
+    .replace("{{direction}}", direction)
+    .replace("{{currency}}", alert.currency)
+    .replace("{{threshold}}", `<strong>${alert.currency} ${alert.threshold.toFixed(2)}</strong>`);
 
   try {
     await resend.emails.send({
@@ -193,11 +185,11 @@ export async function sendAlertEmail(
       subject: `Price Alert: ${alert.ticker} ${direction} ${alert.currency} ${alert.threshold}`,
       html: `
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 0;">
-          <h2 style="color: #10b981;">trefolio — Price Alert</h2>
-          <p style="font-size: 16px;"><strong>${alert.name || alert.ticker}</strong> (${alert.ticker}) has ${direction} your target of <strong>${alert.currency} ${alert.threshold.toFixed(2)}</strong>.</p>
-          <p style="font-size: 18px; padding: 16px; background: #f0fdf4; border-radius: 8px; text-align: center;">Current price: <strong>${alert.currency} ${alert.currentPrice.toFixed(2)}</strong></p>
-          <a href="${dashboardUrl}" style="display: inline-block; margin-top: 16px; padding: 12px 24px; background: #10b981; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600;">Open Dashboard</a>
-          <p style="margin-top: 24px; font-size: 13px; color: #64748b;">This alert has been automatically deactivated. Re-enable it from your Tools page.</p>
+          <h2 style="color: #10b981;">${s.heading}</h2>
+          <p style="font-size: 16px;">${body}</p>
+          <p style="font-size: 18px; padding: 16px; background: #f0fdf4; border-radius: 8px; text-align: center;">${s.currentPriceLabel} <strong>${alert.currency} ${alert.currentPrice.toFixed(2)}</strong></p>
+          <a href="${dashboardUrl}" style="display: inline-block; margin-top: 16px; padding: 12px 24px; background: #10b981; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600;">${s.ctaLabel}</a>
+          <p style="margin-top: 24px; font-size: 13px; color: #64748b;">${s.deactivatedNotice}</p>
         </div>
       `,
     });
@@ -219,7 +211,8 @@ export async function sendPercentAlertEmail(
     percentChange: number;
     percentBasis: "daily" | "purchase";
     isPortfolioWide: boolean;
-  }
+  },
+  locale: EmailLocale = "en",
 ): Promise<{ success: boolean; error?: string }> {
   if (isTestEmail(email)) return { success: true };
 
@@ -229,13 +222,20 @@ export async function sendPercentAlertEmail(
     return { success: true };
   }
 
-  const direction = alert.percentChange >= 0 ? "up" : "down";
+  const s = percentAlertStrings[locale] ?? percentAlertStrings.en;
+  const direction = alert.percentChange >= 0 ? s.up : s.down;
   const absPercent = Math.abs(alert.percentChange).toFixed(2);
-  const basisLabel = alert.percentBasis === "daily" ? "today" : "since purchase";
+  const basisLabel = alert.percentBasis === "daily" ? s.today : s.sincePurchase;
   const dashboardUrl = `${getBaseUrl()}/`;
 
   const bgColor = alert.percentChange >= 0 ? "#f0fdf4" : "#fef2f2";
   const textColor = alert.percentChange >= 0 ? "#16a34a" : "#dc2626";
+  const directionWithPercent = `<span style="color: ${textColor}; font-weight: 700;">${direction} ${absPercent}%</span>`;
+  const body = s.bodyTemplate
+    .replace("{{name}}", `<strong>${alert.name || alert.ticker}</strong>`)
+    .replace("{{ticker}}", alert.ticker)
+    .replace("{{directionWithPercent}}", directionWithPercent)
+    .replace("{{basis}}", basisLabel);
 
   try {
     await resend.emails.send({
@@ -244,14 +244,14 @@ export async function sendPercentAlertEmail(
       subject: `Price Alert: ${alert.ticker} ${direction} ${absPercent}% ${basisLabel}`,
       html: `
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 0;">
-          <h2 style="color: #10b981;">trefolio — Price Alert</h2>
-          <p style="font-size: 16px;"><strong>${alert.name || alert.ticker}</strong> (${alert.ticker}) moved <span style="color: ${textColor}; font-weight: 700;">${direction} ${absPercent}%</span> ${basisLabel}.</p>
+          <h2 style="color: #10b981;">${s.heading}</h2>
+          <p style="font-size: 16px;">${body}</p>
           <p style="font-size: 18px; padding: 16px; background: ${bgColor}; border-radius: 8px; text-align: center;">
-            Current price: <strong>${alert.currency} ${alert.currentPrice.toFixed(2)}</strong>
+            ${s.currentPriceLabel} <strong>${alert.currency} ${alert.currentPrice.toFixed(2)}</strong>
           </p>
-          ${alert.isPortfolioWide ? '<p style="font-size: 13px; color: #64748b;">This is a portfolio-wide alert.</p>' : ""}
-          <a href="${dashboardUrl}" style="display: inline-block; margin-top: 16px; padding: 12px 24px; background: #10b981; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600;">Open Dashboard</a>
-          <p style="margin-top: 24px; font-size: 13px; color: #64748b;">${alert.isPortfolioWide ? "This alert remains active and will continue monitoring your portfolio." : "This alert has been automatically deactivated."}</p>
+          ${alert.isPortfolioWide ? `<p style="font-size: 13px; color: #64748b;">${s.portfolioWideNotice}</p>` : ""}
+          <a href="${dashboardUrl}" style="display: inline-block; margin-top: 16px; padding: 12px 24px; background: #10b981; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600;">${s.ctaLabel}</a>
+          <p style="margin-top: 24px; font-size: 13px; color: #64748b;">${alert.isPortfolioWide ? s.activeNotice : s.deactivatedNotice}</p>
         </div>
       `,
     });
@@ -301,6 +301,11 @@ import {
   resolveIntro,
   getEmailLocale,
 } from "./email-i18n";
+import {
+  verificationStrings,
+  thresholdAlertStrings,
+  percentAlertStrings,
+} from "./email-i18n/alert-strings";
 export type { EmailLocale } from "./email-i18n";
 export { getEmailLocale } from "./email-i18n";
 
