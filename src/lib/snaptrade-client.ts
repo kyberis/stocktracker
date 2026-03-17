@@ -425,7 +425,7 @@ export async function fetchAllHoldings(
   });
 }
 
-/* ── Activities (real transaction history) ── */
+/* —— Activities (real transaction history) —— */
 
 const ACTIVITY_TYPE_MAP: Record<string, ExtractedTransaction["type"] | null> = {
   BUY: "buy",
