@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/guards";
 import { findUserById, getEmailTemplate, getUserSettings, logEmailSend } from "@/lib/db";
+import { ensureReferralCode } from "@/lib/db/referrals";
 import { withMetrics } from "@/lib/with-metrics";
 import { sendEmail, htmlToPlainText } from "@/lib/email";
 import { getTemplateSubject, getLocalizedTemplateHtml } from "@/lib/email-i18n";
@@ -57,6 +58,24 @@ export const POST = withMetrics("/api/admin/email-templates/send", async (req: N
 
   if (!subject || !html) {
     return NextResponse.json({ error: "subject and bodyHtml are required" }, { status: 400 });
+  }
+
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://trefolio.app";
+
+  // Replace {{referral_link}} with user-specific referral link
+  if (html.includes("{{referral_link}}") || text.includes("{{referral_link}}")) {
+    const referralCode = await ensureReferralCode(userId);
+    const referralLink = `${baseUrl}/signup?ref=${referralCode}`;
+    html = html.replaceAll("{{referral_link}}", referralLink);
+    text = text.replaceAll("{{referral_link}}", referralLink);
+  }
+
+  // Replace common placeholders
+  html = html.replaceAll("{{base_url}}", baseUrl);
+  text = text.replaceAll("{{base_url}}", baseUrl);
+  if (user.display_name) {
+    html = html.replaceAll("{{name}}", user.display_name);
+    text = text.replaceAll("{{name}}", user.display_name);
   }
 
   const result = await sendEmail({

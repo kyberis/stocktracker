@@ -1794,6 +1794,31 @@ Abrir Centro de Importación: {{base_url}}/import`,
       }
     },
   },
+  {
+    version: 60,
+    description: "Seed referral program email template",
+    up: async (client: Client) => {
+      const existing = await client.execute({
+        sql: "SELECT COUNT(*) as cnt FROM email_templates WHERE slug = ?",
+        args: ["referral-program"],
+      });
+      if (Number(existing.rows[0]?.cnt) > 0) return;
+
+      const { EMAIL_TEMPLATE_SEEDS } = await import("./email-template-seeds");
+      const t = EMAIL_TEMPLATE_SEEDS.find((s) => s.slug === "referral-program");
+      if (!t) return;
+
+      await client.execute({
+        sql: `INSERT INTO email_templates (id, slug, name, subject, subject_es, body_html, body_html_es, body_text, body_text_es, category, experience_level)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        args: [
+          randomUUID(), t.slug, t.name, t.subject, t.subjectEs,
+          t.bodyHtml, t.bodyHtmlEs, t.bodyText, t.bodyTextEs,
+          t.category, t.experienceLevel,
+        ],
+      });
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

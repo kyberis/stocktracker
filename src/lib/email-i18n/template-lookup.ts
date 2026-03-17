@@ -12,11 +12,13 @@ import {
   generateWelcomeFreeStocks,
   generateBifolioUpgrade,
   generateTrefolioUpgrade,
+  generateReferralProgram,
 } from "./template-html";
 import type {
   FeatureTemplateStrings,
   TemplateFooterStrings,
 } from "./template-types";
+import { referralStrings } from "./referral-strings";
 
 const FEATURE_META: Record<string, { emoji: string; ctaUrl: string }> = {
   "feature-real-time-quotes": {
@@ -104,6 +106,13 @@ export async function getLocalizedTemplateHtml(
   locale: string,
 ): Promise<string | null> {
   if (locale === "en" || locale === "es") return null;
+
+  // Referral program template
+  if (slug === "referral-program") {
+    const data = referralStrings[locale];
+    if (!data) return null;
+    return generateReferralProgram(data.referral, data.footer);
+  }
 
   // Feature templates
   const featureMeta = FEATURE_META[slug];

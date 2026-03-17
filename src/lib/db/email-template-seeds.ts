@@ -734,6 +734,56 @@ const featureTemplates: TemplateSeed[] = [
   },
 ];
 
+/* ── 6. Referral Program ── */
+
+const referralProgramHtml = `${HEADER}
+        <tr><td style="padding:36px 32px 16px;">
+          <p style="margin:0 0 8px;font-size:48px;text-align:center;">&#x1F91D;</p>
+          ${heading("Share trefolio, earn free Pro time")}
+          ${intro("Love using trefolio? Now you can share it with friends and earn <strong>30 days of Pro</strong> for every friend who signs up and verifies their account.")}
+          ${intro("<strong>How it works:</strong>")}
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+            ${feature("&#x1F517;", "Share your personal link", "Send your unique referral link to friends, family, or your investing community. They get a great portfolio tool, you get rewarded.", true)}
+            ${feature("&#x1F4E7;", "They sign up and verify", "Your friend creates a trefolio account using your link and verifies their email. That&rsquo;s it &mdash; no purchase required.", true)}
+            ${feature("&#x1F381;", "You earn 30 days of Pro", "Once they verify, you automatically get 30 days of Trefolio Pro added to your account. Stack up to 365 days!", true)}
+          </table>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0;">
+            <tr><td style="padding:20px 24px;background:linear-gradient(135deg,#ecfdf5 0%,#d1fae5 100%);border-radius:12px;border:2px solid #10b981;text-align:center;">
+              <p style="margin:0 0 4px;font-size:12px;font-weight:600;color:#065f46;text-transform:uppercase;letter-spacing:1px;">Your referral link</p>
+              <p style="margin:0 0 12px;font-size:16px;font-weight:700;color:#0f172a;word-break:break-all;font-family:monospace;">{{referral_link}}</p>
+              <p style="margin:0;font-size:12px;color:#065f46;">Share this link with friends to start earning</p>
+            </td></tr>
+          </table>
+          ${cta("Share Your Link", "{{base_url}}/profile?section=referrals&utm_source=email&utm_medium=referral&utm_campaign=referral_program")}
+        </td></tr>
+        ${divider()}
+        ${tip("&#x1F4A1; <strong>Pro tip:</strong> Share on WhatsApp, Telegram, or X for maximum reach. The more friends join, the more free Pro time you earn!")}
+${FOOTER}`;
+
+const referralProgramHtmlEs = `${HEADER}
+        <tr><td style="padding:36px 32px 16px;">
+          <p style="margin:0 0 8px;font-size:48px;text-align:center;">&#x1F91D;</p>
+          ${heading("Comparte trefolio, gana tiempo Pro gratis")}
+          ${intro("&iquest;Te encanta trefolio? Ahora puedes compartirlo con amigos y ganar <strong>30 d&iacute;as de Pro</strong> por cada amigo que se registre y verifique su cuenta.")}
+          ${intro("<strong>C&oacute;mo funciona:</strong>")}
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+            ${feature("&#x1F517;", "Comparte tu enlace personal", "Env&iacute;a tu enlace &uacute;nico de referido a amigos, familia o tu comunidad de inversores. Ellos obtienen una gran herramienta, t&uacute; ganas.", true)}
+            ${feature("&#x1F4E7;", "Se registran y verifican", "Tu amigo crea una cuenta en trefolio usando tu enlace y verifica su email. Eso es todo &mdash; no necesitan comprar nada.", true)}
+            ${feature("&#x1F381;", "Ganas 30 d&iacute;as de Pro", "Cuando verifican, autom&aacute;ticamente recibes 30 d&iacute;as de Trefolio Pro en tu cuenta. &iexcl;Acumula hasta 365 d&iacute;as!", true)}
+          </table>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0;">
+            <tr><td style="padding:20px 24px;background:linear-gradient(135deg,#ecfdf5 0%,#d1fae5 100%);border-radius:12px;border:2px solid #10b981;text-align:center;">
+              <p style="margin:0 0 4px;font-size:12px;font-weight:600;color:#065f46;text-transform:uppercase;letter-spacing:1px;">Tu enlace de referido</p>
+              <p style="margin:0 0 12px;font-size:16px;font-weight:700;color:#0f172a;word-break:break-all;font-family:monospace;">{{referral_link}}</p>
+              <p style="margin:0;font-size:12px;color:#065f46;">Comparte este enlace con amigos para empezar a ganar</p>
+            </td></tr>
+          </table>
+          ${cta("Compartir Tu Enlace", "{{base_url}}/profile?section=referrals&utm_source=email&utm_medium=referral&utm_campaign=referral_program")}
+        </td></tr>
+        ${divider()}
+        ${tip("&#x1F4A1; <strong>Consejo:</strong> Comparte en WhatsApp, Telegram o X para m&aacute;ximo alcance. &iexcl;Cuantos m&aacute;s amigos se unan, m&aacute;s tiempo Pro gratis ganas!")}
+${FOOTER_ES}`;
+
 /* ── All templates ── */
 
 export const EMAIL_TEMPLATE_SEEDS: TemplateSeed[] = [
@@ -786,4 +836,16 @@ export const EMAIL_TEMPLATE_SEEDS: TemplateSeed[] = [
     experienceLevel: "",
   },
   ...featureTemplates,
+  {
+    slug: "referral-program",
+    name: "Referral Program — Share & Earn",
+    subject: "Share trefolio with friends \u2014 earn 30 days of Pro",
+    subjectEs: "Comparte trefolio con amigos \u2014 gana 30 d\u00edas de Pro",
+    bodyHtml: referralProgramHtml,
+    bodyHtmlEs: referralProgramHtmlEs,
+    bodyText: "Share trefolio, earn free Pro time\n\nLove using trefolio? Share it with friends and earn 30 days of Pro for every friend who signs up and verifies.\n\nHow it works:\n1. Share your personal referral link\n2. Your friend signs up and verifies their email\n3. You earn 30 days of Trefolio Pro (up to 365 days total)\n\nYour referral link: {{referral_link}}\n\nShare now: {{base_url}}/profile?section=referrals\n\nPro tip: Share on WhatsApp, Telegram, or X for maximum reach!",
+    bodyTextEs: "Comparte trefolio, gana tiempo Pro gratis\n\n\u00bfTe encanta trefolio? Comp\u00e1rtelo con amigos y gana 30 d\u00edas de Pro por cada amigo que se registre y verifique.\n\nC\u00f3mo funciona:\n1. Comparte tu enlace personal de referido\n2. Tu amigo se registra y verifica su email\n3. Ganas 30 d\u00edas de Trefolio Pro (hasta 365 d\u00edas en total)\n\nTu enlace de referido: {{referral_link}}\n\nCompartir: {{base_url}}/profile?section=referrals\n\nConsejo: \u00a1Comparte en WhatsApp, Telegram o X para m\u00e1ximo alcance!",
+    category: "feature",
+    experienceLevel: "",
+  },
 ];

@@ -10,6 +10,7 @@ import type {
   WelcomeFreeStocksStrings,
   BifolioUpgradeStrings,
   TrefolioUpgradeStrings,
+  ReferralProgramStrings,
   TemplateFooterStrings,
 } from "./template-types";
 
@@ -405,5 +406,43 @@ export function generateTrefolioUpgrade(
         </td></tr>
         ${divider()}
         ${tip(strings.communityText)}
+${foot}`;
+}
+
+const REFERRAL_STEP_EMOJIS = ["&#x1F517;", "&#x1F4E7;", "&#x1F381;"];
+
+export function generateReferralProgram(
+  strings: ReferralProgramStrings,
+  footer: TemplateFooterStrings,
+): string {
+  const baseUrl = "{{base_url}}";
+  const stepRows = strings.steps
+    .map((s, i) =>
+      feature(REFERRAL_STEP_EMOJIS[i] ?? "&#x2022;", s.title, s.desc, true),
+    )
+    .join("\n            ");
+
+  const foot = footerForLocale(footer.receivedText, footer.unsubscribeLabel);
+
+  return `${HEADER}
+        <tr><td style="padding:36px 32px 16px;">
+          <p style="margin:0 0 8px;font-size:48px;text-align:center;">&#x1F91D;</p>
+          ${heading(strings.heading)}
+          ${intro(strings.intro)}
+          ${intro(strings.howItWorks)}
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+            ${stepRows}
+          </table>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0;">
+            <tr><td style="padding:20px 24px;background:linear-gradient(135deg,#ecfdf5 0%,#d1fae5 100%);border-radius:12px;border:2px solid #10b981;text-align:center;">
+              <p style="margin:0 0 4px;font-size:12px;font-weight:600;color:#065f46;text-transform:uppercase;letter-spacing:1px;">${strings.referralLinkLabel}</p>
+              <p style="margin:0 0 12px;font-size:16px;font-weight:700;color:#0f172a;word-break:break-all;font-family:monospace;">{{referral_link}}</p>
+              <p style="margin:0;font-size:12px;color:#065f46;">${strings.referralLinkHint}</p>
+            </td></tr>
+          </table>
+          ${cta(strings.ctaLabel, `${baseUrl}/profile?section=referrals&utm_source=email&utm_medium=referral&utm_campaign=referral_program`)}
+        </td></tr>
+        ${divider()}
+        ${tip(strings.tipText)}
 ${foot}`;
 }

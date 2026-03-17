@@ -57,6 +57,18 @@ export interface TrefolioUpgradeStrings {
   communityText: string;
 }
 
+/** Referral Program: heading, intro, howItWorks, 3 steps, referral link box labels, CTA, tip */
+export interface ReferralProgramStrings {
+  heading: string;
+  intro: string;
+  howItWorks: string;
+  steps: { title: string; desc: string }[];
+  referralLinkLabel: string;
+  referralLinkHint: string;
+  ctaLabel: string;
+  tipText: string;
+}
+
 /** Footer strings shared across all templates */
 export interface TemplateFooterStrings {
   receivedText: string;

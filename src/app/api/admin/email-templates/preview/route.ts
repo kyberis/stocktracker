@@ -34,5 +34,12 @@ export async function GET(req: NextRequest) {
     bodyHtml = template.bodyHtml;
   }
 
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://trefolio.app";
+  bodyHtml = bodyHtml
+    .replaceAll("{{base_url}}", baseUrl)
+    .replaceAll("{{referral_link}}", `${baseUrl}/signup?ref=EXAMPLE1`)
+    .replaceAll("{{name}}", "John")
+    .replaceAll("{{unsubscribe_url}}", "#");
+
   return NextResponse.json({ subject, bodyHtml });
 }

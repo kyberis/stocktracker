@@ -36,6 +36,13 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "Protecciones anti-abuso para el programa de referidos: prevención de auto-referencia, bloqueo de emails desechables, límites de velocidad por referidor (5 por 30 días), y un tope de recompensa de 365 días.",
         },
       },
+      {
+        type: "feature",
+        text: "New referral program email template with personalized referral link — available in 18 European languages. When sent from the admin panel, each user's unique referral link is automatically inserted.",
+        translations: {
+          es: "Nueva plantilla de email del programa de referidos con enlace personalizado — disponible en 18 idiomas europeos. Al enviar desde el panel de admin, el enlace único de referido de cada usuario se inserta automáticamente.",
+        },
+      },
     ],
   },
   {
