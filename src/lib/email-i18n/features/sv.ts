@@ -42,7 +42,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
       },
       {
         title: "Avkastning p&aring; kostnad",
-        desc: "Sp&aring;ra din verkliga avkastning baserad p&aring; k&ouml;pkurs — inte bara den nuvarande dividendr&aacute;ntan."
+        desc: "Sp&aring;ra din verkliga avkastning baserad p&aring; k&ouml;pkurs — inte bara den nuvarande dividendr&auml;ntan."
       },
       {
         title: "DRIP-simulering",

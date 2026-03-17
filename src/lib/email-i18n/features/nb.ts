@@ -192,7 +192,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
       },
       {
         title: "Utdelingsinntekt",
-        desc: "Bruttoutbytter, kildeskatt og nettoinkomst etter opprinnelsesland."
+        desc: "Bruttoutbytter, kildeskatt og nettoinntekt etter opprinnelsesland."
       },
       {
         title: "AI Skatteassistent",
@@ -246,7 +246,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
       }
     ],
     tierText: "Bifolio: Opp til 10 eiendeler | Trefolio: Opp til 999 eiendeler",
-    ctaLabel: "Lägg til manuelle eiendeler"
+    ctaLabel: "Legg til manuelle eiendeler"
   },
   "feature-crypto": {
     heading: "Krypto portefølje",

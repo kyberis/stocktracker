@@ -185,5 +185,5 @@ export const trefolioUpgrade: TrefolioUpgradeStrings = {
   ],
   ctaPrimary: "Esplora l-Insights AI",
   ctaSecondary: "Ara l-Fundamentali",
-  communityText: "&#x1F31F; <strong>Int wa&#x0127;ed mill-ewwel 500 membru Pro tag&#x0127;na.</strong> Grazzi talli emmen f&#x27;trefolio. Il-feedback tieg&#x0127;ek jifforma dak li nibnu jmiss."
+  communityText: "&#x1F31F; <strong>Int wa&#x0127;ed mill-ewwel 500 membru Pro tag&#x0127;na.</strong> Grazzi talli temmen f&#x27;trefolio. Il-feedback tieg&#x0127;ek jifforma dak li nibnu jmiss."
 };

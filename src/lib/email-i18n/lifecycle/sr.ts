@@ -78,7 +78,7 @@ export const welcomeFreeStocks: WelcomeFreeStocksStrings = {
   voucherTitle: "Ексклузивна понуда",
   voucherDiscountDisplay: "75% ПОПУСТ",
   voucherApply: "Користите код при плаћању:",
-  voucherValid: "Вреди за Bifolio и Trefolio — месечно или годишно",
+  voucherValid: "Вреди за Bifolio и Trefolio — месечно или годишње",
   ctaPrimary: "Надоградите сада — 75% попуста",
   ctaSecondary: "Наставите са Folio",
   tipText: "&#x1F4A1; <strong>Ваш Folio план</strong> укључује до 15 позиција, 1 портфељ и 5 AI позива/месец. Надоградите за више."

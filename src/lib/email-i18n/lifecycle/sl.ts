@@ -127,7 +127,7 @@ export const bifolioUpgrade: BifolioUpgradeStrings = {
   ],
   ctaPrimary: "Nastavite svoje prvo opozorilo",
   ctaSecondary: "Delite svoj portfelj",
-  upsellText: "<strong>&#381;elite &#353;e ve&#269;?</strong> Trefolio odkleni fundamentalne podatke podjetij, filtar delnic, davčna poročila, WhatsApp opozorila in neomejene pozicije. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Izvedete ve&#269;</a>"
+  upsellText: "<strong>&#381;elite &#353;e ve&#269;?</strong> Trefolio odkleni fundamentalne podatke podjetij, filtar delnic, davčna poročila, WhatsApp opozorila in neomejene pozicije. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Izvedite ve&#269;</a>"
 };
 
 export const trefolioUpgrade: TrefolioUpgradeStrings = {

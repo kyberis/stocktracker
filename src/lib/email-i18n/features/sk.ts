@@ -267,7 +267,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
       },
       {
         title: "Krypto anal&yacute;za IA",
-        desc: "Op&iacute;tajte sa na&scaron;ej IA na ak&uacute;koľvek krypto — fundamenty, trendy a trhov&uacute; anal&yacute;zu."
+        desc: "Op&yacute;tajte sa na&scaron;ej IA na ak&uacute;koľvek krypto — fundamenty, trendy a trhov&uacute; anal&yacute;zu."
       }
     ],
     tierText: "Folio: Prehľad trhu | Trefolio: Pln&eacute; sledovanie portf&oacute;lia a IA",

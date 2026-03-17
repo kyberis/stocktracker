@@ -179,7 +179,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
   },
   "feature-tax-reports": {
     heading: "Данъчни отчети",
-    intro: "Данъчните декларации не трябва да са болезнени. trefolio генерира отчети, специфични за държавата, и включва poreznog asistenta IA за вашите въпроси.",
+    intro: "Данъчните декларации не трябва да са болезнени. trefolio генерира отчети, специфични за държавата, и включва AI Данъчен асистент за вашите въпроси.",
     sectionLabel: "Какво получавате:",
     features: [
       {
@@ -238,7 +238,7 @@ export const features: Record<string, FeatureTemplateStrings> = {
       },
       {
         title: "Пенсии и застраховки",
-        desc: "Incluzioni пенсионни фондове и застраховки живот в нетната си стойност."
+        desc: "Включете пенсионни фондове и застраховки живот в нетната си стойност."
       },
       {
         title: "Обща нетна стойност",

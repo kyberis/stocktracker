@@ -2,7 +2,7 @@ import type { WelcomeNoStocksStrings, WelcomeFreeStocksStrings, BifolioUpgradeSt
 
 export const welcomeNoStocks: WelcomeNoStocksStrings = {
   heading: "Croeso i trefolio!",
-  paragraph: "Mae eich cyfrif yn barod. trefolio yw'r dail ychwanegol ar gyfer eich portffolio &mdash; popeth sydd ei angen arnoch i olrhain, deall a gwella eich buddsoddiadau mewn un lle.",
+  paragraph: "Mae eich cyfrif yn barod. trefolio yw&rsquo;r dail ychwanegol ar gyfer eich portffolio &mdash; popeth sydd ei angen arnoch i olrhain, deall a gwella eich buddsoddiadau mewn un lle.",
   features: [
     {
       title: "Prisiau amser real",
@@ -13,8 +13,8 @@ export const welcomeNoStocks: WelcomeNoStocksStrings = {
       desc: "Canfod dividendau awtomatig, prognoses incwm blynyddol, cynhyrchiant ar gost a chalendr talu misol."
     },
     {
-      title: "Dadansoddiad wedi'u hysgogi gan AI",
-      desc: "Gofynnwch i'n AI ni am unrhyw stoc &mdash; cael dadansoddiad o ganlyniadau, cymariaethau cystadleuwyr ac asesiadau risg. 5 galwad am ddim/mis."
+      title: "Dadansoddiad wedi&rsquo;u hysgogi gan AI",
+      desc: "Gofynnwch i&apos;n AI ni am unrhyw stoc &mdash; cael dadansoddiad o ganlyniadau, cymariaethau cystadleuwyr ac asesiadau risg. 5 galwad am ddim/mis."
     },
     {
       title: "Mewnforio hawdd",
@@ -39,7 +39,7 @@ export const welcomeNoStocks: WelcomeNoStocksStrings = {
   ],
   ctaPrimary: "Ychwanegwch eich stoc cyntaf",
   ctaSecondary: "Archwiliwch y bwrdd gwaith",
-  tipText: "&#x1F4A1; <strong>Mae dechrau'n hawdd:</strong> Ychwanegwch ddim ond un stoc i weld eich bwrdd gwaith yn dod yn fyw gyda data amser real, siartiau ac mewnwelediadau AI."
+  tipText: "&#x1F4A1; <strong>Mae dechrau&rsquo;n hawdd:</strong> Ychwanegwch ddim ond un stoc i weld eich bwrdd gwaith yn dod yn fyw gyda data amser real, siartiau ac mewnwelediadau AI."
 };
 
 export const welcomeFreeStocks: WelcomeFreeStocksStrings = {
@@ -48,7 +48,7 @@ export const welcomeFreeStocks: WelcomeFreeStocksStrings = {
   features: [
     {
       title: "Bwrdd gwaith amser real",
-      desc: "Gwerth portffolio, newidiadau dyddiol, dosraniad alocadu a siartiau perfformiad &mdash; popeth yn diweddaru'n fyw."
+      desc: "Gwerth portffolio, newidiadau dyddiol, dosraniad alocadu a siartiau perfformiad &mdash; popeth yn diweddaru&rsquo;n fyw."
     },
     {
       title: "Mewnwelediadau dividendau",
@@ -56,7 +56,7 @@ export const welcomeFreeStocks: WelcomeFreeStocksStrings = {
     },
     {
       title: "Dadansoddiad stociau AI",
-      desc: "Gofynnwch i'n AI ni unrhyw beth am eich stociau. Cael dadansoddiad o ganlyniadau, asesiadau risg a mewnwelediadau cystadleuol."
+      desc: "Gofynnwch i&apos;n AI ni unrhyw beth am eich stociau. Cael dadansoddiad o ganlyniadau, asesiadau risg a mewnwelediadau cystadleuol."
     },
     {
       title: "Rhybuddion prisiau",
@@ -185,5 +185,5 @@ export const trefolioUpgrade: TrefolioUpgradeStrings = {
   ],
   ctaPrimary: "Archwiliwch mewnwelediadau AI",
   ctaSecondary: "Gweld y sylfeini",
-  communityText: "&#x1F31F; <strong>Rydych chi'n un o'n 500 aelod Pro cyntaf.</strong> Diolch am gredu yn trefolio. Mae eich adborth yn llunio beth rydym yn ei adeiladu nesaf."
+  communityText: "&#x1F31F; <strong>Rydych chi&rsquo;n un o&rsquo;n 500 aelod Pro cyntaf.</strong> Diolch am gredu yn trefolio. Mae eich adborth yn llunio beth rydym yn ei adeiladu nesaf."
 };

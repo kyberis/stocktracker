@@ -39,7 +39,7 @@ export const welcomeNoStocks: WelcomeNoStocksStrings = {
   ],
   ctaPrimary: "Pievienojiet savu pirmo akciju",
   ctaSecondary: "Izpētiet paneli",
-  tipText: "&#x1F4A1; <strong>Sākt ir viegli:</strong> Pievienojiet tikai vienu akciju, lai redzētu savu paneli atdzīvoties ar reāllaika datiem, diagramām un AI ieskatiem."
+  tipText: "&#x1F4A1; <strong>Sākt ir viegli:</strong> Pievienojiet tikai vienu akciju, lai redzētu savu paneli atdzīvoties ar reāllaika datiem, diagrammām un AI ieskatiem."
 };
 
 export const welcomeFreeStocks: WelcomeFreeStocksStrings = {

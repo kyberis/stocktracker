@@ -52,7 +52,7 @@ export const welcomeFreeStocks: WelcomeFreeStocksStrings = {
     },
     {
       title: "L&eacute;argas ar Chuidithe",
-      desc: "R&eacute;amh-mheastach&aacute;in ioncaim bliant&uacute;il, rian&uacute; toradh agus f&eacute;ilire cuidithe m&iacute;os&uacute;l do do shealbhuithe."
+      desc: "R&eacute;amh-mheastach&aacute;in ioncaim bliant&uacute;il, rian&uacute; toradh agus f&eacute;ilire cuidithe m&iacute;os&uacute;il do do shealbhuithe."
     },
     {
       title: "Anail&iacute;s Stoc AI",

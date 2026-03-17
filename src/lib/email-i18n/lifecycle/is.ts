@@ -38,7 +38,7 @@ export const welcomeNoStocks: WelcomeNoStocksStrings = {
     }
   ],
   ctaPrimary: "B&aelig;ttu vi&eth; fyrsta hlutabréf &thorn;&iacute;n",
-  ctaSecondary: "Kanna&eth;u yfirlitsskj&a225;linn",
+  ctaSecondary: "Kanna&eth;u yfirlitsskj&aacute;linn",
   tipText: "&#x1F4A1; <strong>A&eth; byrja er au&eth;velt:</strong> B&aelige;ttu bara vi&eth; eitt hlutabr&eacute;f til a&eth; sj&aacute; yfirlitsskj&aacute;linn &thorn;&iacute;n koma til l&iacute;fi me&eth; raunt&iacute;ma g&ouml;gnum, t&oacute;lurit og AI inns&aelig;&eth;i."
 };
 
@@ -127,7 +127,7 @@ export const bifolioUpgrade: BifolioUpgradeStrings = {
   ],
   ctaPrimary: "Settu upp fyrstu &aacute;varp &thorn;&iacute;n",
   ctaSecondary: "Deildu eignasafni &thorn;&iacute;nu",
-  upsellText: "<strong>Viltu enn meira?</strong> Trefolio opnar fyrirt&aelig;kis grundvallaratri&eth;i, hlutabréf skr&a225;, skattask&yacute;rslur, WhatsApp &aacute;varpanir og &oacute;takmarkaðar eignir. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Frekari uppl&yacute;singu</a>"
+  upsellText: "<strong>Viltu enn meira?</strong> Trefolio opnar fyrirt&aelig;kis grundvallaratri&eth;i, hlutabréf skr&aacute;, skattask&yacute;rslur, WhatsApp &aacute;varpanir og &oacute;takmarkaðar eignir. <a href=\"{{base_url}}/profile?utm_source=email&utm_medium=lifecycle&utm_campaign=bifolio_upgrade\" style=\"color:#b45309;text-decoration:underline;font-weight:600;\">Frekari uppl&yacute;singu</a>"
 };
 
 export const trefolioUpgrade: TrefolioUpgradeStrings = {
