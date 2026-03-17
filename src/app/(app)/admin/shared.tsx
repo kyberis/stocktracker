@@ -115,6 +115,16 @@ export interface AnalyticsSummary {
       mediums: { value: string; signups: number }[];
     };
   };
+  referralFunnel?: {
+    linkViews: number;
+    linkCopiesOrShares: number;
+    signups: number;
+    accepted: number;
+    rewarded: number;
+    rejected: number;
+    topReferrers: { userId: string; displayName: string; email: string; count: number; rewardDays: number }[];
+    rejectionReasons: { reason: string; count: number }[];
+  };
   conversionParity?: {
     overallMatchRate: number;
     byEvent: {

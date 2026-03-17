@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createUser, findUserByEmail, trackEvent, ensureDefaultPortfolio } from "@/lib/db";
+import { createUser, findUserByEmail, trackEvent, ensureDefaultPortfolio, findUserByReferralCode, createReferral } from "@/lib/db";
 import { hashPassword } from "@/lib/auth/password";
 import {
   createSessionToken,
@@ -43,7 +43,7 @@ export const POST = withMetrics("/api/auth/signup", async (req: NextRequest) => 
 
   const result = await parseBody(req, signupSchema);
   if (!result.success) return result.error;
-  const { email, password, displayName, attribution: attributionFromBody } = result.data;
+  const { email, password, displayName, referralCode, attribution: attributionFromBody } = result.data;
   const normalizedEmail = email.trim().toLowerCase();
   const attributionFromCookie = parseFirstTouchAttributionCookie(
     req.cookies.get(FIRST_TOUCH_ATTRIBUTION_COOKIE)?.value
@@ -79,6 +79,18 @@ export const POST = withMetrics("/api/auth/signup", async (req: NextRequest) => 
     });
 
     await ensureDefaultPortfolio(user.id);
+
+    // Handle referral code from body or cookie
+    const refCode = referralCode || req.cookies.get("trefolio_ref")?.value || "";
+    if (refCode) {
+      const referrer = await findUserByReferralCode(refCode);
+      if (referrer && referrer.id !== user.id) {
+        createReferral(referrer.id, user.id).catch((err) =>
+          console.error("Failed to create referral:", err),
+        );
+        trackEvent(user.id, "referral_signup", { referrerId: referrer.id });
+      }
+    }
 
     const token = await createSessionToken({
       userId: user.id,

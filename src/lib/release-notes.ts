@@ -17,6 +17,28 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.40.0",
+    date: "2026-03-17",
+    title: "Referral Program",
+    titleTranslations: { es: "Programa de Referidos" },
+    changes: [
+      {
+        type: "feature",
+        text: "Refer friends with your unique link and earn 30 days of free Pro access for each one who signs up and verifies their email. Track your referral stats, share your link from the new Referrals tab in your profile, and see the referral funnel in Admin Analytics.",
+        translations: {
+          es: "Refiere amigos con tu enlace único y gana 30 días de acceso Pro gratuito por cada uno que se registre y verifique su email. Rastrea tus estadísticas de referidos, comparte tu enlace desde la nueva pestaña Referidos en tu perfil, y consulta el embudo de referidos en Analytics de Admin.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Anti-abuse guardrails protect the referral program: self-referral prevention, disposable email blocking, per-referrer velocity limits (5 per 30 days), and a 365-day reward cap.",
+        translations: {
+          es: "Protecciones anti-abuso para el programa de referidos: prevención de auto-referencia, bloqueo de emails desechables, límites de velocidad por referidor (5 por 30 días), y un tope de recompensa de 365 días.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.39.3",
     date: "2026-03-17",
     title: "Full Email Localization",

@@ -109,6 +109,22 @@ export default function PrivacyPolicyPage() {
               </li>
             </ul>
 
+            <h3>Referral Data</h3>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>
+                <strong className="text-slate-200">Referral code</strong> — a unique
+                8-character code is generated for each user to enable referral link
+                sharing. This code is not derived from personal information.
+              </li>
+              <li>
+                <strong className="text-slate-200">Referral relationships</strong> — when
+                a new user signs up via a referral link, we store the connection
+                between the referring user and the referred user to credit rewards.
+                This data includes the referral status, timestamps, and any
+                anti-abuse rejection reasons.
+              </li>
+            </ul>
+
             <h3>Portfolio Data</h3>
             <ul className="list-disc pl-6 space-y-2">
               <li>

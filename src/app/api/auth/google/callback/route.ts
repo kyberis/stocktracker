@@ -7,6 +7,8 @@ import {
   linkGoogleAccount,
   trackEvent,
   ensureDefaultPortfolio,
+  findUserByReferralCode,
+  createReferral,
 } from "@/lib/db";
 import type { DbUser } from "@/lib/db";
 import {
@@ -245,6 +247,18 @@ async function handleLoginFlow(
         attribution,
       });
       await ensureDefaultPortfolio(publicUser.id);
+
+      const refCode = req.cookies.get("trefolio_ref")?.value || "";
+      if (refCode) {
+        const referrer = await findUserByReferralCode(refCode);
+        if (referrer && referrer.id !== publicUser.id) {
+          createReferral(referrer.id, publicUser.id).catch((err) =>
+            console.error("Failed to create referral:", err),
+          );
+          trackEvent(publicUser.id, "referral_signup", { referrerId: referrer.id });
+        }
+      }
+
       dbUser = {
         id: publicUser.id,
         username: publicUser.username,
@@ -279,6 +293,9 @@ async function handleLoginFlow(
         tax_residency: "",
         onboarding_completed: 0,
         experience_level: "",
+        referral_code: "",
+        referred_by: "",
+        referral_reward_days: 0,
       };
       trackEvent(publicUser.id, "signup", {
         source: attribution.source,

@@ -167,6 +167,17 @@ export {
   purgeOldAnalyticsEvents,
 } from "./analytics";
 
+export type { ReferralStatus, Referral, ReferralStats, ReferralFunnelStats } from "./referrals";
+export {
+  generateReferralCode,
+  ensureReferralCode,
+  findUserByReferralCode,
+  createReferral,
+  acceptReferral,
+  getReferralStats,
+  getReferralFunnelStats,
+} from "./referrals";
+
 export type { FeedbackEntry, FeedbackType } from "./feedback";
 export {
   createFeedback,

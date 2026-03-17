@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { findUserById, setEmailVerified, trackEvent, getUserSettings } from "@/lib/db";
+import { findUserById, setEmailVerified, trackEvent, getUserSettings, acceptReferral } from "@/lib/db";
 import {
   createVerificationToken,
   sendVerificationEmail,
@@ -86,6 +86,10 @@ export const GET = withMetrics("/api/auth/verify-email", async (req: NextRequest
 
   await setEmailVerified(userId, true);
   trackEvent(userId, "email_verification_completed");
+
+  acceptReferral(userId).catch((err) =>
+    console.error("Referral acceptance failed:", err),
+  );
 
   const existingToken = req.cookies.get("trefolio_session")?.value;
   const existingSession = existingToken ? await verifySessionToken(existingToken) : null;

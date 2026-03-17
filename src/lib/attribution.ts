@@ -1,5 +1,7 @@
 export const FIRST_TOUCH_ATTRIBUTION_KEY = "trefolio_first_touch_utm";
 export const FIRST_TOUCH_ATTRIBUTION_COOKIE = "trefolio_first_touch_utm";
+export const REFERRAL_CODE_SESSION_KEY = "trefolio_referral_code";
+export const REFERRAL_CODE_COOKIE = "trefolio_ref";
 
 export interface FirstTouchAttribution {
   source: string;
@@ -132,7 +134,33 @@ export function captureFirstTouchAttributionFromWindow(): FirstTouchAttribution 
   });
 
   persistFirstTouchAttribution(attribution);
+
+  captureReferralCode();
+
   return attribution;
+}
+
+function captureReferralCode(): void {
+  if (typeof window === "undefined") return;
+  const params = new URLSearchParams(window.location.search);
+  const ref = params.get("ref");
+  if (!ref || ref.length > 16) return;
+  try {
+    window.sessionStorage.setItem(REFERRAL_CODE_SESSION_KEY, ref);
+  } catch { /* private browsing */ }
+  if (typeof document !== "undefined") {
+    const secure = window.location.protocol === "https:" ? "; Secure" : "";
+    document.cookie = `${REFERRAL_CODE_COOKIE}=${encodeURIComponent(ref)}; Path=/; Max-Age=604800; SameSite=Lax${secure}`;
+  }
+}
+
+export function getStoredReferralCode(): string {
+  if (typeof window === "undefined") return "";
+  try {
+    return window.sessionStorage.getItem(REFERRAL_CODE_SESSION_KEY) || "";
+  } catch {
+    return "";
+  }
 }
 
 export function parseFirstTouchAttributionCookie(cookieValue?: string): FirstTouchAttribution | null {

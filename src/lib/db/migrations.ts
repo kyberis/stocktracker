@@ -1,5 +1,5 @@
 import type { Client } from "@libsql/client";
-import { randomUUID } from "crypto";
+import { randomUUID, randomBytes } from "crypto";
 import { encrypt, tryDecryptOrPlaintext } from "@/lib/crypto";
 import { str, EXCHANGE_SUFFIX_MAP } from "./helpers";
 
@@ -1750,6 +1750,48 @@ Abrir Centro de Importación: {{base_url}}/import`,
           "",
         ],
       });
+    },
+  },
+  {
+    version: 59,
+    description: "Add referral program: referral_code, referred_by, referral_reward_days on users; create referrals table; backfill codes",
+    up: async (client: Client) => {
+      const addCol = async (col: string, def: string) => {
+        try { await client.execute(`ALTER TABLE users ADD COLUMN ${col} ${def}`); } catch { /* duplicate column */ }
+      };
+      await addCol("referral_code", "TEXT");
+      await addCol("referred_by", "TEXT NOT NULL DEFAULT ''");
+      await addCol("referral_reward_days", "INTEGER NOT NULL DEFAULT 0");
+
+      await client.executeMultiple(`
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_users_referral_code ON users(referral_code);
+
+        CREATE TABLE IF NOT EXISTS referrals (
+          id TEXT PRIMARY KEY,
+          referrer_id TEXT NOT NULL,
+          referee_id TEXT NOT NULL,
+          status TEXT NOT NULL DEFAULT 'pending'
+            CHECK(status IN ('pending','accepted','rewarded','rejected')),
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          accepted_at TEXT,
+          rewarded_at TEXT,
+          reject_reason TEXT,
+          FOREIGN KEY(referrer_id) REFERENCES users(id) ON DELETE CASCADE,
+          FOREIGN KEY(referee_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_referrals_referee ON referrals(referee_id);
+        CREATE INDEX IF NOT EXISTS idx_referrals_referrer ON referrals(referrer_id);
+      `);
+
+      // Backfill referral codes for existing users
+      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+      const users = await client.execute("SELECT id FROM users WHERE referral_code IS NULL");
+      for (const row of users.rows) {
+        let code = "";
+        const bytes = randomBytes(8);
+        for (let i = 0; i < 8; i++) code += chars[bytes[i] % chars.length];
+        await client.execute({ sql: "UPDATE users SET referral_code = ? WHERE id = ?", args: [code, str(row.id)] });
+      }
     },
   },
 ];

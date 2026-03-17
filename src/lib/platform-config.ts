@@ -87,6 +87,15 @@ export const PLATFORM_LIMITS = {
   /** Default support chat message limits per day (overridable by admin). */
   SUPPORT_CHAT_STARTER_DAILY_DEFAULT: 10,
   SUPPORT_CHAT_PRO_DAILY_DEFAULT: 50,
+
+  /** Max total reward days a single referrer can accumulate (12 months). */
+  REFERRAL_MAX_REWARD_DAYS: 365,
+
+  /** Max successful referrals per referrer in a rolling 30-day window. */
+  REFERRAL_VELOCITY_PER_30D: 5,
+
+  /** Days of Pro access granted per successful referral. */
+  REFERRAL_REWARD_DAYS: 30,
 } as const;
 
 export type RateLimitProvider = "alphavantage" | "openai" | "openai_import" | "support_chat";

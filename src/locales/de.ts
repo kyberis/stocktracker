@@ -300,6 +300,9 @@ const de: TranslationStrings = {
   econ10year: "10 Jahre",
   econ30year: "30 Jahre",
   profile: "Profil",
+  profileTabPortfolios: "Portfolios",
+  profileTabReferrals: "Empfehlungen",
+  profileTabDevices: "Geräte",
   profileSettings: "Profileinstellungen",
   displayNamePlaceholder: "Ihr Name",
   emailPlaceholder: "sie@beispiel.de",
@@ -866,6 +869,27 @@ const de: TranslationStrings = {
   supportChatError: "Something went wrong. Please try again.",
   landingCardSimulatorTitle: "Portfolio Simulator",
   landingCardSimulatorDesc: "Backtest with up to 30 years of data, what-if scenarios, and crisis stress testing",
+
+  referralTitle: "Freunde Einladen",
+  referralSubtitle: "Verdiene 30 Tage Pro für jeden Freund, der beitritt",
+  referralDescription: "Teile deinen einzigartigen Link mit Freunden und Kollegen. Wenn sie sich anmelden und ihre E-Mail verifizieren, profitiert ihr beide — du erhältst 30 Tage kostenlosen Pro-Zugang pro Empfehlung.",
+  referralCopy: "Link kopieren",
+  referralShare: "Teilen",
+  referralShareTitle: "Tritt trefolio bei",
+  referralShareText: "Verfolge dein Investmentportfolio kostenlos mit trefolio. Melde dich mit meinem Link an:",
+  referralStats: "Deine Empfehlungsstatistiken",
+  referralStatTotal: "Gesamt Gesendet",
+  referralStatPending: "Ausstehend",
+  referralStatRewarded: "Belohnt",
+  referralStatDaysEarned: "Tage Verdient",
+  referralRewardProgress: "Belohnungsfortschritt",
+  referralDays: "Tage",
+  referralDaysRemaining: "{days} Belohnungstage verbleibend",
+  referralCta: "Kennst du jemanden, der das lieben würde? Verdiene kostenlose Pro-Zeit!",
+  referralPostCheckoutTitle: "Teile die Freude",
+  referralPostCheckoutDesc: "Empfehle Freunde und verdiene mehr kostenlose Pro-Zeit",
+
+  desktopOnly: "Nur Desktop",
 };
 
 export default de;

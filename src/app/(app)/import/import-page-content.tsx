@@ -1470,6 +1470,17 @@ function DoneCard({ txCount, holdingsCapped, onReset, t }: { txCount: number; ho
         </a>
         <button onClick={onReset} className="btn-secondary text-xs min-h-[44px]">{t("importMore") || "Import More"}</button>
       </div>
+      <div className="pt-3">
+        <a
+          href="/profile?section=referrals"
+          className="inline-flex items-center gap-1.5 text-xs text-gray-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+          </svg>
+          {t("referralCta") || "Know someone who'd love this? Earn free Pro time!"}
+        </a>
+      </div>
     </div>
   );
 }

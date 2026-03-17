@@ -300,6 +300,9 @@ const pt: TranslationStrings = {
   econ10year: "10 anos",
   econ30year: "30 anos",
   profile: "Perfil",
+  profileTabPortfolios: "Carteiras",
+  profileTabReferrals: "Indicações",
+  profileTabDevices: "Dispositivos",
   profileSettings: "Definições do perfil",
   displayNamePlaceholder: "O seu nome",
   emailPlaceholder: "voce@exemplo.com",
@@ -857,6 +860,27 @@ const pt: TranslationStrings = {
   crisisEuroDebt2010: "Euro Debt Crisis",
   landingCardSimulatorTitle: "Portfolio Simulator",
   landingCardSimulatorDesc: "Backtest with up to 30 years of data, what-if scenarios, and crisis stress testing",
+
+  referralTitle: "Indique um Amigo",
+  referralSubtitle: "Ganhe 30 dias de Pro para cada amigo que entrar",
+  referralDescription: "Compartilhe seu link único com amigos e colegas. Quando eles se cadastrarem e verificarem o email, ambos se beneficiam — você ganha 30 dias de acesso Pro gratuito por indicação.",
+  referralCopy: "Copiar link",
+  referralShare: "Compartilhar",
+  referralShareTitle: "Entre no trefolio",
+  referralShareText: "Acompanhe seu portfólio de investimentos gratuitamente com o trefolio. Cadastre-se com meu link:",
+  referralStats: "Suas Estatísticas de Indicação",
+  referralStatTotal: "Total Enviados",
+  referralStatPending: "Pendentes",
+  referralStatRewarded: "Recompensados",
+  referralStatDaysEarned: "Dias Ganhos",
+  referralRewardProgress: "Progresso da recompensa",
+  referralDays: "dias",
+  referralDaysRemaining: "{days} dias de recompensa restantes",
+  referralCta: "Conhece alguém que adoraria isso? Ganhe tempo Pro grátis!",
+  referralPostCheckoutTitle: "Compartilhe o amor",
+  referralPostCheckoutDesc: "Indique amigos e ganhe mais tempo Pro grátis",
+
+  desktopOnly: "Apenas desktop",
 };
 
 export default pt;

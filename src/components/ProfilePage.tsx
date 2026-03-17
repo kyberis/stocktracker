@@ -11,11 +11,11 @@ import { trackCanonicalConversion } from "@/lib/ad-tracking";
 import ProCompareCard from "@/components/ProCompareCard";
 import TierIcon from "@/components/TierIcon";
 import TierFeatureBadge from "@/components/TierFeatureBadge";
-import { Smartphone, Monitor, Copy, Check, Trash2, User, CreditCard, Bell, FolderOpen } from "lucide-react";
+import { Smartphone, Monitor, Copy, Check, Trash2, User, CreditCard, Bell, FolderOpen, Gift, Share2 } from "lucide-react";
 import NotificationChannels from "@/components/NotificationChannels";
 import { COUNTRIES } from "@/lib/countries";
 
-const PROFILE_TABS = ["account", "subscription", "notifications", "portfolios", "devices"] as const;
+const PROFILE_TABS = ["account", "subscription", "notifications", "portfolios", "referrals", "devices"] as const;
 type ProfileTab = (typeof PROFILE_TABS)[number];
 
 const TAB_ICONS: Record<ProfileTab, typeof User> = {
@@ -23,6 +23,7 @@ const TAB_ICONS: Record<ProfileTab, typeof User> = {
   subscription: CreditCard,
   notifications: Bell,
   portfolios: FolderOpen,
+  referrals: Gift,
   devices: Monitor,
 };
 
@@ -31,6 +32,7 @@ const TAB_LABEL_KEYS: Record<ProfileTab, string> = {
   subscription: "profileTabSubscription",
   notifications: "profileTabNotifications",
   portfolios: "profileTabPortfolios",
+  referrals: "profileTabReferrals",
   devices: "profileTabDevices",
 };
 
@@ -1442,11 +1444,26 @@ export default function ProfilePage() {
             </div>
           )}
           {billingSync === "done" && (
-            <div className="rounded-xl border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50/60 dark:bg-emerald-500/10 p-4 flex items-center gap-3">
-              <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
-              <p className="text-sm text-emerald-700 dark:text-emerald-300">{t("billingVerified")}</p>
+            <div className="space-y-3">
+              <div className="rounded-xl border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50/60 dark:bg-emerald-500/10 p-4 flex items-center gap-3">
+                <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                <p className="text-sm text-emerald-700 dark:text-emerald-300">{t("billingVerified")}</p>
+              </div>
+              <button
+                onClick={() => handleTabChange("referrals")}
+                className="w-full flex items-center gap-3 p-3 rounded-xl border border-emerald-200 dark:border-emerald-500/20 bg-emerald-50/40 dark:bg-emerald-500/5 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors"
+              >
+                <Gift className="w-5 h-5 text-emerald-500 shrink-0" />
+                <div className="text-left flex-1">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">{t("referralPostCheckoutTitle")}</p>
+                  <p className="text-xs text-gray-500 dark:text-slate-400">{t("referralPostCheckoutDesc")}</p>
+                </div>
+                <svg className="w-4 h-4 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                </svg>
+              </button>
             </div>
           )}
           {billingSync === "timeout" && (
@@ -1626,6 +1643,9 @@ export default function ProfilePage() {
           </div>
         )}
         </>}
+
+        {/* === Referrals Tab === */}
+        {effectiveTab === "referrals" && <ReferralTab />}
 
         {/* === Devices Tab === */}
         {effectiveTab === "devices" && <>
@@ -1834,6 +1854,165 @@ export default function ProfilePage() {
 
       <SignOutSection />
     </main>
+  );
+}
+
+interface ReferralData {
+  code: string;
+  link: string;
+  stats: {
+    total: number;
+    pending: number;
+    accepted: number;
+    rewarded: number;
+    rejected: number;
+    rewardDaysEarned: number;
+    rewardDaysCap: number;
+  };
+}
+
+function ReferralTab() {
+  const { t } = useI18n();
+  const [data, setData] = useState<ReferralData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
+  const [shared, setShared] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/referral/code")
+      .then((r) => r.json())
+      .then(setData)
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const trackReferralEvent = useCallback((event: string) => {
+    fetch("/api/analytics/track", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ event }),
+    }).catch(() => {});
+  }, []);
+
+  const handleCopy = useCallback(async () => {
+    if (!data?.link) return;
+    try {
+      await navigator.clipboard.writeText(data.link);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      trackReferralEvent("referral_link_copied");
+    } catch {}
+  }, [data?.link, trackReferralEvent]);
+
+  const handleShare = useCallback(async () => {
+    if (!data?.link) return;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: t("referralShareTitle"),
+          text: t("referralShareText"),
+          url: data.link,
+        });
+        setShared(true);
+        setTimeout(() => setShared(false), 2000);
+        trackReferralEvent("referral_link_shared");
+      } catch {}
+    } else {
+      handleCopy();
+    }
+  }, [data?.link, t, handleCopy, trackReferralEvent]);
+
+  if (loading) {
+    return (
+      <div className="card p-6 animate-pulse">
+        <div className="h-6 bg-gray-200 dark:bg-slate-700 rounded w-1/3 mb-4" />
+        <div className="h-4 bg-gray-200 dark:bg-slate-700 rounded w-full mb-3" />
+        <div className="h-10 bg-gray-200 dark:bg-slate-700 rounded w-full" />
+      </div>
+    );
+  }
+
+  if (!data) return null;
+
+  const daysRemaining = data.stats.rewardDaysCap - data.stats.rewardDaysEarned;
+  const progressPct = Math.min(100, (data.stats.rewardDaysEarned / data.stats.rewardDaysCap) * 100);
+
+  return (
+    <>
+      {/* Referral Link Card */}
+      <div className="card p-6 space-y-5">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-500/15 flex items-center justify-center">
+            <Gift className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t("referralTitle")}</h2>
+            <p className="text-xs text-gray-500 dark:text-slate-400">{t("referralSubtitle")}</p>
+          </div>
+        </div>
+
+        <p className="text-sm text-gray-600 dark:text-slate-300">{t("referralDescription")}</p>
+
+        {/* Link display */}
+        <div className="flex items-center gap-2">
+          <div className="flex-1 bg-gray-50 dark:bg-slate-700/50 border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2.5 text-sm text-gray-700 dark:text-slate-300 font-mono truncate select-all">
+            {data.link}
+          </div>
+          <button
+            onClick={handleCopy}
+            className="shrink-0 p-2.5 rounded-lg border border-gray-200 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
+            aria-label={t("referralCopy")}
+          >
+            {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4 text-gray-500 dark:text-slate-400" />}
+          </button>
+          <button
+            onClick={handleShare}
+            className="shrink-0 p-2.5 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-colors"
+            aria-label={t("referralShare")}
+          >
+            {shared ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
+          </button>
+        </div>
+      </div>
+
+      {/* Stats Card */}
+      <div className="card p-6 space-y-5">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t("referralStats")}</h2>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[
+            { label: t("referralStatTotal"), value: data.stats.total },
+            { label: t("referralStatPending"), value: data.stats.pending },
+            { label: t("referralStatRewarded"), value: data.stats.rewarded },
+            { label: t("referralStatDaysEarned"), value: data.stats.rewardDaysEarned },
+          ].map(({ label, value }) => (
+            <div key={label} className="bg-gray-50 dark:bg-slate-700/50 rounded-xl p-3 text-center">
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
+              <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">{label}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Progress bar */}
+        <div>
+          <div className="flex justify-between text-xs text-gray-500 dark:text-slate-400 mb-1.5">
+            <span>{t("referralRewardProgress")}</span>
+            <span>{data.stats.rewardDaysEarned} / {data.stats.rewardDaysCap} {t("referralDays")}</span>
+          </div>
+          <div className="h-2 bg-gray-100 dark:bg-slate-700 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-emerald-500 rounded-full transition-all"
+              style={{ width: `${progressPct}%` }}
+            />
+          </div>
+          {daysRemaining > 0 && (
+            <p className="text-xs text-gray-500 dark:text-slate-400 mt-1.5">
+              {t("referralDaysRemaining").replace("{days}", String(daysRemaining))}
+            </p>
+          )}
+        </div>
+      </div>
+    </>
   );
 }
 

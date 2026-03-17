@@ -8,6 +8,7 @@ import TurnstileWidget from "@/components/TurnstileWidget";
 import {
   captureFirstTouchAttributionFromWindow,
   getStoredFirstTouchAttribution,
+  getStoredReferralCode,
 } from "@/lib/attribution";
 import { trackCanonicalConversion } from "@/lib/ad-tracking";
 
@@ -44,6 +45,8 @@ function SignupForm() {
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const onTurnstileToken = useCallback((token: string) => setTurnstileToken(token), []);
   const [appleEnabled, setAppleEnabled] = useState(false);
+  const [referrerName, setReferrerName] = useState("");
+  const refParam = searchParams.get("ref") ?? "";
 
   useEffect(() => {
     if (deviceRef) {
@@ -54,6 +57,19 @@ function SignupForm() {
   useEffect(() => {
     captureFirstTouchAttributionFromWindow();
   }, []);
+
+  useEffect(() => {
+    const code = refParam || getStoredReferralCode();
+    if (!code || code === "device") return;
+    fetch("/api/referral/validate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code }),
+    })
+      .then((r) => r.json())
+      .then((d) => { if (d.valid) setReferrerName(d.referrerDisplayName); })
+      .catch(() => {});
+  }, [refParam]);
 
   const [nativePlatform, setNativePlatform] = useState<"ios" | "android" | "web">("web");
 
@@ -85,6 +101,7 @@ function SignupForm() {
 
     try {
       const attribution = getStoredFirstTouchAttribution();
+      const referralCode = refParam || getStoredReferralCode() || undefined;
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -93,6 +110,7 @@ function SignupForm() {
           password,
           displayName: displayName || undefined,
           turnstileToken: turnstileToken || undefined,
+          referralCode: referralCode || undefined,
           attribution: attribution || undefined,
         }),
       });
@@ -145,6 +163,17 @@ function SignupForm() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Create your account</h1>
           <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">Start tracking your portfolio for free</p>
         </div>
+
+        {referrerName && (
+          <div className="flex items-center justify-center gap-2 mb-4 px-4 py-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
+            <svg className="w-4 h-4 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+            </svg>
+            <span className="text-sm text-emerald-700 dark:text-emerald-300 font-medium">
+              Referred by {referrerName}
+            </span>
+          </div>
+        )}
 
         <div className="card p-6">
           {/* OAuth sign-up */}

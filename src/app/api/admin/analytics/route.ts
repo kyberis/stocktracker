@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/guards";
-import { getAnalyticsSummary, getUtmTaxonomyConfig } from "@/lib/db";
+import { getAnalyticsSummary, getUtmTaxonomyConfig, getReferralFunnelStats } from "@/lib/db";
 import { withMetrics } from "@/lib/with-metrics";
 
 export const GET = withMetrics("/api/admin/analytics", async (req: NextRequest) => {
@@ -10,9 +10,10 @@ export const GET = withMetrics("/api/admin/analytics", async (req: NextRequest) 
   const url = new URL(req.url);
   const days = Math.min(Math.max(Number(url.searchParams.get("days")) || 30, 1), 365);
 
-  const [summary, utmTaxonomy] = await Promise.all([
+  const [summary, utmTaxonomy, referralFunnel] = await Promise.all([
     getAnalyticsSummary(days),
     getUtmTaxonomyConfig(),
+    getReferralFunnelStats(days),
   ]);
 
   const approvedSources = new Set(utmTaxonomy.sources.map((s) => s.toLowerCase()));
@@ -35,6 +36,7 @@ export const GET = withMetrics("/api/admin/analytics", async (req: NextRequest) 
 
   return NextResponse.json({
     ...summary,
+    referralFunnel,
     utmValidation: {
       approved: {
         sources: utmTaxonomy.sources,

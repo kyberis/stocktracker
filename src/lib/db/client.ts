@@ -112,8 +112,9 @@ export async function ensureInitialized(): Promise<Client> {
     const client = getClient();
     try {
       await initWithRetry(client);
-    } catch {
+    } catch (err) {
       _initPromise = null;
+      console.error("Database initialization failed:", err);
       throw new Error("Database initialization failed after retries");
     }
     return client;

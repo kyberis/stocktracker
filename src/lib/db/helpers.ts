@@ -50,6 +50,9 @@ export interface DbUser {
   tax_residency: string;
   onboarding_completed: number;
   experience_level: ExperienceLevel;
+  referral_code: string;
+  referred_by: string;
+  referral_reward_days: number;
 }
 
 export type PortfolioCurrency =
@@ -108,6 +111,8 @@ export interface PublicUser {
   devicePortfolioId: string;
   lastActiveAt: string;
   experienceLevel: ExperienceLevel;
+  referralCode: string;
+  referralRewardDays: number;
 }
 
 export interface UserSettings {
@@ -279,6 +284,9 @@ export function rowToDbUser(row: Row): DbUser {
     tax_residency: str(row.tax_residency),
     onboarding_completed: num(row.onboarding_completed),
     experience_level: parseExperienceLevel(row.experience_level),
+    referral_code: str(row.referral_code),
+    referred_by: str(row.referred_by),
+    referral_reward_days: num(row.referral_reward_days),
   };
 }
 
@@ -322,6 +330,8 @@ export function mapUser(user: DbUser): PublicUser {
     devicePortfolioId: user.device_portfolio_id,
     lastActiveAt: user.last_active_at,
     experienceLevel: user.experience_level,
+    referralCode: user.referral_code,
+    referralRewardDays: user.referral_reward_days,
   };
 }
 

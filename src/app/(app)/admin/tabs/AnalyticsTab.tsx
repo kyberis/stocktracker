@@ -698,6 +698,92 @@ export default function AnalyticsTab() {
         </>
       )}
 
+      {/* Referral Funnel */}
+      {data.referralFunnel && (data.referralFunnel.signups > 0 || data.referralFunnel.linkViews > 0) && (
+        <>
+          <h3 className="text-base font-bold text-gray-900 dark:text-white mt-8 mb-4">Referral Funnel</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            {[
+              { label: "Link Views", value: data.referralFunnel.linkViews },
+              { label: "Copies / Shares", value: data.referralFunnel.linkCopiesOrShares },
+              { label: "Signups", value: data.referralFunnel.signups },
+              { label: "Accepted", value: data.referralFunnel.accepted },
+              { label: "Rewarded", value: data.referralFunnel.rewarded },
+              { label: "Rejected", value: data.referralFunnel.rejected },
+            ].map(({ label, value }) => (
+              <StatCard key={label} label={label} value={value} />
+            ))}
+          </div>
+
+          {/* Stage-to-stage conversion rates */}
+          {data.referralFunnel.linkViews > 0 && (
+            <div className="card p-4 mt-3">
+              <h4 className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide mb-3">Stage Conversion Rates</h4>
+              <div className="flex flex-wrap gap-4 text-sm">
+                {(() => {
+                  const rf = data.referralFunnel;
+                  const stages = [
+                    { from: "Views", to: "Copies", rate: rf.linkViews > 0 ? ((rf.linkCopiesOrShares / rf.linkViews) * 100).toFixed(1) : "0" },
+                    { from: "Copies", to: "Signups", rate: rf.linkCopiesOrShares > 0 ? ((rf.signups / rf.linkCopiesOrShares) * 100).toFixed(1) : "0" },
+                    { from: "Signups", to: "Accepted", rate: rf.signups > 0 ? (((rf.accepted + rf.rewarded) / rf.signups) * 100).toFixed(1) : "0" },
+                    { from: "Accepted", to: "Rewarded", rate: (rf.accepted + rf.rewarded) > 0 ? ((rf.rewarded / (rf.accepted + rf.rewarded)) * 100).toFixed(1) : "0" },
+                  ];
+                  return stages.map(({ from, to, rate }) => (
+                    <div key={`${from}-${to}`} className="flex items-center gap-1.5">
+                      <span className="text-gray-500 dark:text-slate-400">{from}</span>
+                      <svg className="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg>
+                      <span className="text-gray-500 dark:text-slate-400">{to}</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">{rate}%</span>
+                    </div>
+                  ));
+                })()}
+              </div>
+            </div>
+          )}
+
+          {/* Top Referrers */}
+          {data.referralFunnel.topReferrers.length > 0 && (
+            <div className="card overflow-x-auto mt-3">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-gray-500 dark:text-slate-400 border-b border-gray-100 dark:border-slate-700">
+                    <th className="px-4 py-2.5 font-medium">Referrer</th>
+                    <th className="px-4 py-2.5 font-medium">Email</th>
+                    <th className="px-4 py-2.5 font-medium text-right">Referrals</th>
+                    <th className="px-4 py-2.5 font-medium text-right">Reward Days</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.referralFunnel.topReferrers.map((r) => (
+                    <tr key={r.userId} className="border-b border-gray-50 dark:border-slate-700/50">
+                      <td className="px-4 py-2.5 font-medium text-gray-900 dark:text-white">{r.displayName || "—"}</td>
+                      <td className="px-4 py-2.5 text-gray-600 dark:text-slate-300 truncate max-w-[200px]">{r.email}</td>
+                      <td className="px-4 py-2.5 text-right tabular-nums font-semibold text-gray-900 dark:text-white">{r.count}</td>
+                      <td className="px-4 py-2.5 text-right tabular-nums text-gray-700 dark:text-slate-300">{r.rewardDays}d</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Rejection Reasons */}
+          {data.referralFunnel.rejectionReasons.length > 0 && (
+            <div className="card p-4 mt-3">
+              <h4 className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide mb-3">Rejection Reasons</h4>
+              <div className="space-y-2">
+                {data.referralFunnel.rejectionReasons.map((r) => (
+                  <div key={r.reason} className="flex items-center justify-between text-sm">
+                    <span className="text-gray-700 dark:text-slate-200">{r.reason.replace(/_/g, " ")}</span>
+                    <span className="font-medium text-gray-900 dark:text-white">{r.count}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
       {/* Notifications per Customer */}
       {data.notificationStats && data.notificationStats.length > 0 && (
         <>

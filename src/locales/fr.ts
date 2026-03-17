@@ -300,6 +300,9 @@ const fr: TranslationStrings = {
   econ10year: "10 ans",
   econ30year: "30 ans",
   profile: "Profil",
+  profileTabPortfolios: "Portefeuilles",
+  profileTabReferrals: "Parrainages",
+  profileTabDevices: "Appareils",
   profileSettings: "Paramètres du profil",
   displayNamePlaceholder: "Votre nom",
   emailPlaceholder: "vous@exemple.com",
@@ -866,6 +869,27 @@ const fr: TranslationStrings = {
   supportChatError: "Something went wrong. Please try again.",
   landingCardSimulatorTitle: "Portfolio Simulator",
   landingCardSimulatorDesc: "Backtest with up to 30 years of data, what-if scenarios, and crisis stress testing",
+
+  referralTitle: "Parrainez un Ami",
+  referralSubtitle: "Gagnez 30 jours de Pro pour chaque ami qui s'inscrit",
+  referralDescription: "Partagez votre lien unique avec vos amis et collègues. Quand ils s'inscrivent et vérifient leur email, vous en bénéficiez tous les deux — vous obtenez 30 jours d'accès Pro gratuit par parrainage.",
+  referralCopy: "Copier le lien",
+  referralShare: "Partager",
+  referralShareTitle: "Rejoignez trefolio",
+  referralShareText: "Suivez votre portefeuille d'investissement gratuitement avec trefolio. Inscrivez-vous avec mon lien :",
+  referralStats: "Vos Statistiques de Parrainage",
+  referralStatTotal: "Total Envoyés",
+  referralStatPending: "En attente",
+  referralStatRewarded: "Récompensés",
+  referralStatDaysEarned: "Jours Gagnés",
+  referralRewardProgress: "Progression des récompenses",
+  referralDays: "jours",
+  referralDaysRemaining: "{days} jours de récompense restants",
+  referralCta: "Connaissez-vous quelqu'un qui aimerait ça ? Gagnez du temps Pro gratuit !",
+  referralPostCheckoutTitle: "Partagez l'amour",
+  referralPostCheckoutDesc: "Parrainez des amis et gagnez plus de temps Pro gratuit",
+
+  desktopOnly: "Bureau uniquement",
 };
 
 export default fr;

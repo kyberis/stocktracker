@@ -79,6 +79,7 @@ export const signupSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
   displayName: z.string().max(100).optional(),
   turnstileToken: z.string().optional(),
+  referralCode: z.string().max(16).optional(),
   attribution: z.object({
     source: z.string().max(64).optional(),
     medium: z.string().max(64).optional(),

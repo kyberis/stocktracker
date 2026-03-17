@@ -378,6 +378,9 @@ function mockRow(overrides: Record<string, unknown> = {}): Row {
     tax_residency: "DE",
     onboarding_completed: 1,
     experience_level: "" as const,
+    referral_code: "XYZ98765",
+    referred_by: "",
+    referral_reward_days: 0,
     ...overrides,
   } as unknown as Row;
 }
@@ -420,6 +423,10 @@ describe("rowToDbUser", () => {
       last_active_at: "2025-03-10T12:00:00Z",
       tax_residency: "DE",
       onboarding_completed: 1,
+      experience_level: "",
+      referral_code: "XYZ98765",
+      referred_by: "",
+      referral_reward_days: 0,
     });
   });
 
@@ -612,6 +619,9 @@ describe("mapUser", () => {
     tax_residency: "",
     onboarding_completed: 0,
     experience_level: "" as const,
+    referral_code: "ABC12345",
+    referred_by: "",
+    referral_reward_days: 0,
   };
 
   it("maps DbUser to PublicUser with correct field mapping", () => {
@@ -641,6 +651,9 @@ describe("mapUser", () => {
       deviceProEligible: false,
       devicePortfolioId: "",
       lastActiveAt: "2025-03-10",
+      experienceLevel: "",
+      referralCode: "ABC12345",
+      referralRewardDays: 0,
     });
   });
 
