@@ -293,7 +293,16 @@ export async function verifyUnsubscribeToken(token: string): Promise<string | nu
 // Shared email layout helpers
 // ---------------------------------------------------------------------------
 
-type EmailLocale = "en" | "es";
+import type { EmailLocale } from "./email-i18n";
+import {
+  welcomeCopy as i18nWelcome,
+  bifolioCopy as i18nBifolio,
+  trefolioCopy as i18nTrefolio,
+  resolveIntro,
+  getEmailLocale,
+} from "./email-i18n";
+export type { EmailLocale } from "./email-i18n";
+export { getEmailLocale } from "./email-i18n";
 
 function emailHeader(tierBadge?: string): string {
   const badge = tierBadge
@@ -377,57 +386,22 @@ function utm(path: string, campaign: string): string {
 }
 
 // ---------------------------------------------------------------------------
-// 1. Welcome email
+// 1. Welcome email (35 European languages via email-i18n)
 // ---------------------------------------------------------------------------
 
-const welcomeCopy = {
-  en: {
-    subject: "Welcome to trefolio!",
-    heading: "Welcome aboard!",
-    intro: (name: string) =>
-      `Hi <strong>${name}</strong>, welcome to trefolio &mdash; the extra leaf for your portfolio. Your free Folio account is ready. Here&rsquo;s what you can do right away:`,
-    f1: ["Real-time Quotes", "Live prices from Yahoo Finance across 5+ exchanges worldwide."],
-    f2: ["Dividend Tracking", "See annual income, per-stock yields, and monthly dividend projections."],
-    f3: ["AI-Powered Insights", "Get 5 free AI analysis calls per month to understand your holdings."],
-    f4: ["Import in Seconds", "Bring your portfolio from 13+ brokers via CSV, Broker Sync, or AI Import."],
-    ctaPrimary: "Import Your Portfolio",
-    ctaSecondary: "Explore the Dashboard",
-    tip: 'Your Folio plan includes up to 15 holdings and 1 portfolio. Need more?',
-    tipLink: "Explore Bifolio &amp; Trefolio",
-    footer: "You received this email because you signed up for trefolio.",
-    manage: "Manage email preferences",
-  },
-  es: {
-    subject: "\u00A1Bienvenido a trefolio!",
-    heading: "\u00A1Bienvenido!",
-    intro: (name: string) =>
-      `Hola <strong>${name}</strong>, bienvenido a trefolio &mdash; la hoja extra para tu cartera. Tu cuenta Folio gratuita est&aacute; lista. Esto es lo que puedes hacer:`,
-    f1: ["Cotizaciones en Tiempo Real", "Precios en vivo de Yahoo Finance en m&aacute;s de 5 bolsas mundiales."],
-    f2: ["Seguimiento de Dividendos", "Ingresos anuales, rendimientos por acci&oacute;n y proyecciones mensuales."],
-    f3: ["An&aacute;lisis con IA", "5 consultas de IA gratuitas al mes para entender tus inversiones."],
-    f4: ["Importa en Segundos", "Trae tu cartera desde 13+ br&oacute;kers v&iacute;a CSV, Broker Sync o IA."],
-    ctaPrimary: "Importar Cartera",
-    ctaSecondary: "Explorar el Dashboard",
-    tip: "Tu plan Folio incluye hasta 15 posiciones y 1 cartera. &iquest;Necesitas m&aacute;s?",
-    tipLink: "Explora Bifolio y Trefolio",
-    footer: "Recibiste este email porque te registraste en trefolio.",
-    manage: "Gestionar preferencias",
-  },
-} as const;
-
 function welcomeEmailHtml(displayName: string, locale: EmailLocale): string {
-  const c = welcomeCopy[locale];
-  const name = displayName || (locale === "es" ? "all&iacute;" : "there");
+  const c = i18nWelcome[locale] ?? i18nWelcome.en;
+  const name = displayName || c.fallbackName;
   const campaign = "welcome";
   return `${emailHeader()}
         <tr><td style="padding:36px 32px 16px;">
           <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#0f172a;text-align:center;">${c.heading}</h1>
-          <p style="margin:0 0 24px;font-size:15px;color:#475569;text-align:center;line-height:1.6;">${c.intro(name)}</p>
+          <p style="margin:0 0 24px;font-size:15px;color:#475569;text-align:center;line-height:1.6;">${resolveIntro(c.intro, name)}</p>
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
-            ${featureRow("&#x1F4C8;", c.f1[0], c.f1[1])}
-            ${featureRow("&#x1F4B0;", c.f2[0], c.f2[1])}
-            ${featureRow("&#x1F916;", c.f3[0], c.f3[1])}
-            ${featureRow("&#x1F4E5;", c.f4[0], c.f4[1])}
+            ${featureRow("&#x1F4C8;", c.f1Title, c.f1Desc)}
+            ${featureRow("&#x1F4B0;", c.f2Title, c.f2Desc)}
+            ${featureRow("&#x1F916;", c.f3Title, c.f3Desc)}
+            ${featureRow("&#x1F4E5;", c.f4Title, c.f4Desc)}
           </table>
           ${primaryCta(c.ctaPrimary, utm("/import", campaign))}
           ${secondaryCta(c.ctaSecondary, utm("/", campaign))}
@@ -435,7 +409,7 @@ function welcomeEmailHtml(displayName: string, locale: EmailLocale): string {
         <tr><td style="padding:0 32px;"><div style="border-top:1px solid #e2e8f0;margin:24px 0;"></div></td></tr>
         <tr><td style="padding:0 32px 12px;">
           <p style="margin:0;font-size:13px;color:#64748b;text-align:center;line-height:1.5;">
-            <strong style="color:#475569;">${locale === "es" ? "Consejo:" : "Tip:"}</strong> ${c.tip} <a href="${utm("/profile", campaign)}" style="color:#10b981;text-decoration:underline;">${c.tipLink}</a>.
+            <strong style="color:#475569;">${c.tipLabel}</strong> ${c.tip} <a href="${utm("/profile", campaign)}" style="color:#10b981;text-decoration:underline;">${c.tipLink}</a>.
           </p>
         </td></tr>
 ${emailFooter(c.footer, utm("/profile", campaign), c.manage)}`;
@@ -454,7 +428,7 @@ export async function sendWelcomeEmail(
     return { success: true };
   }
 
-  const c = welcomeCopy[locale];
+  const c = i18nWelcome[locale] ?? i18nWelcome.en;
   try {
     await resend.emails.send({
       from: getFromAddress(),
@@ -471,59 +445,22 @@ export async function sendWelcomeEmail(
 }
 
 // ---------------------------------------------------------------------------
-// 2. Bifolio (starter) upgrade email
+// 2. Bifolio (starter) upgrade email (35 European languages)
 // ---------------------------------------------------------------------------
 
-const bifolioCopy = {
-  en: {
-    subject: "Welcome to Bifolio!",
-    heading: "You\u2019ve upgraded!",
-    intro: (name: string) =>
-      `Congrats, <strong>${name}</strong>! Your Bifolio plan is now active. Here&rsquo;s everything you just unlocked:`,
-    f1: ["Portfolio Sharing", "Generate a public link to share your portfolio with anyone."],
-    f2: ["CSV Export", "Download your holdings and transactions as CSV files."],
-    f3: ["Email &amp; Push Alerts", "Set up to 10 price alerts with email and push notifications."],
-    f4: ["Expanded Limits", "Track up to 50 holdings (up from 15) and 20 AI calls/month (up from 5)."],
-    ctaPrimary: "Set Up Your First Alert",
-    ctaSecondary: "Share Your Portfolio",
-    upsell:
-      "<strong>Want even more?</strong> Trefolio unlocks fundamentals, advanced metrics, WhatsApp alerts, and unlimited holdings.",
-    upsellLink: "Learn more",
-    footer: "You received this email because you upgraded your trefolio account.",
-    manage: "Manage email preferences",
-  },
-  es: {
-    subject: "\u00A1Bienvenido a Bifolio!",
-    heading: "\u00A1Has mejorado tu plan!",
-    intro: (name: string) =>
-      `Felicidades, <strong>${name}</strong>. Tu plan Bifolio ya est&aacute; activo. Esto es lo que has desbloqueado:`,
-    f1: ["Compartir Cartera", "Genera un enlace p&uacute;blico para compartir tu cartera con cualquiera."],
-    f2: ["Exportar CSV", "Descarga tus posiciones y transacciones en archivos CSV."],
-    f3: ["Alertas Email y Push", "Configura hasta 10 alertas de precio con notificaciones por email y push."],
-    f4: ["L&iacute;mites Ampliados", "Hasta 50 posiciones (antes 15) y 20 consultas IA/mes (antes 5)."],
-    ctaPrimary: "Configura Tu Primera Alerta",
-    ctaSecondary: "Compartir Cartera",
-    upsell:
-      "<strong>&iquest;Quieres a&uacute;n m&aacute;s?</strong> Trefolio desbloquea fundamentales, m&eacute;tricas avanzadas, alertas WhatsApp y posiciones ilimitadas.",
-    upsellLink: "Saber m&aacute;s",
-    footer: "Recibiste este email porque mejoraste tu cuenta de trefolio.",
-    manage: "Gestionar preferencias",
-  },
-} as const;
-
 function bifolioUpgradeHtml(displayName: string, locale: EmailLocale): string {
-  const c = bifolioCopy[locale];
-  const name = displayName || (locale === "es" ? "all&iacute;" : "there");
+  const c = i18nBifolio[locale] ?? i18nBifolio.en;
+  const name = displayName || c.fallbackName;
   const campaign = "bifolio_upgrade";
   return `${emailHeader("Bifolio")}
         <tr><td style="padding:36px 32px 16px;">
           <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#0f172a;text-align:center;">${c.heading}</h1>
-          <p style="margin:0 0 28px;font-size:15px;color:#475569;text-align:center;line-height:1.6;">${c.intro(name)}</p>
+          <p style="margin:0 0 28px;font-size:15px;color:#475569;text-align:center;line-height:1.6;">${resolveIntro(c.intro, name)}</p>
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
-            ${featureRow("&#x1F517;", c.f1[0], c.f1[1], true)}
-            ${featureRow("&#x1F4CA;", c.f2[0], c.f2[1], true)}
-            ${featureRow("&#x1F514;", c.f3[0], c.f3[1], true)}
-            ${featureRow("&#x1F4C8;", c.f4[0], c.f4[1], true)}
+            ${featureRow("&#x1F517;", c.f1Title, c.f1Desc, true)}
+            ${featureRow("&#x1F4CA;", c.f2Title, c.f2Desc, true)}
+            ${featureRow("&#x1F514;", c.f3Title, c.f3Desc, true)}
+            ${featureRow("&#x1F4C8;", c.f4Title, c.f4Desc, true)}
           </table>
           ${primaryCta(c.ctaPrimary, utm("/tools/alerts", campaign))}
           ${secondaryCta(c.ctaSecondary, utm("/profile", campaign))}
@@ -552,7 +489,7 @@ export async function sendBifolioUpgradeEmail(
     return { success: true };
   }
 
-  const c = bifolioCopy[locale];
+  const c = i18nBifolio[locale] ?? i18nBifolio.en;
   try {
     await resend.emails.send({
       from: getFromAddress(),
@@ -581,56 +518,25 @@ function proFeatureGroup(label: string, items: string[]): string {
           <tr><td style="height:12px;"></td></tr>`;
 }
 
-const trefolioCopy = {
-  en: {
-    subject: "Welcome to Trefolio Pro!",
-    heading: "Welcome to Pro!",
-    intro: (name: string) =>
-      `<strong>${name}</strong>, you now have full access to every feature trefolio offers. Here&rsquo;s your complete toolkit:`,
-    groups: [
-      ["Data &amp; Analysis", ["Alpha Vantage premium data", "Fundamentals: income, balance sheet, cash flow", "Economic indicators dashboard"]],
-      ["Intelligence", ["News feed with sentiment analysis", "Insider trades &amp; institutional holdings", "AI analysis: 30 calls/day (unlimited monthly)"]],
-      ["Advanced Metrics", ["Sharpe ratio, max drawdown, volatility", "Full portfolio performance history"]],
-      ["Crypto Pro", ["Crypto charts, exchange rates, AI analysis", "Dedicated crypto portfolio tab"]],
-      ["Alerts &amp; Limits", ["WhatsApp &amp; device notifications", "Unlimited price alerts &amp; holdings", "Up to 5 portfolios"]],
-    ] as [string, string[]][],
-    ctaPrimary: "Explore AI Insights",
-    ctaSecondary: "View Fundamentals",
-    community:
-      "&#x1F31F; <strong>You\u2019re one of our first 500 Pro members.</strong> Thank you for believing in trefolio early on. Your feedback shapes what we build next.",
-    footer: "You received this email because you upgraded to Trefolio Pro.",
-    manage: "Manage email preferences",
-  },
-  es: {
-    subject: "\u00A1Bienvenido a Trefolio Pro!",
-    heading: "\u00A1Bienvenido a Pro!",
-    intro: (name: string) =>
-      `<strong>${name}</strong>, ahora tienes acceso completo a todas las funciones de trefolio. Aqu&iacute; tienes tu kit completo:`,
-    groups: [
-      ["Datos y An&aacute;lisis", ["Datos premium de Alpha Vantage", "Fundamentales: ingresos, balance, flujo de caja", "Panel de indicadores econ&oacute;micos"]],
-      ["Inteligencia", ["Noticias con an&aacute;lisis de sentimiento", "Operaciones de insiders y posiciones institucionales", "An&aacute;lisis IA: 30 consultas/d&iacute;a (ilimitado mensual)"]],
-      ["M&eacute;tricas Avanzadas", ["Ratio Sharpe, drawdown m&aacute;ximo, volatilidad", "Historial completo de rendimiento"]],
-      ["Crypto Pro", ["Gr&aacute;ficos crypto, tipos de cambio, an&aacute;lisis IA", "Pesta&ntilde;a dedicada de cartera crypto"]],
-      ["Alertas y L&iacute;mites", ["Notificaciones WhatsApp y dispositivo", "Alertas y posiciones ilimitadas", "Hasta 5 carteras"]],
-    ] as [string, string[]][],
-    ctaPrimary: "Explorar IA Insights",
-    ctaSecondary: "Ver Fundamentales",
-    community:
-      "&#x1F31F; <strong>Eres uno de nuestros primeros 500 miembros Pro.</strong> Gracias por creer en trefolio desde el principio. Tu feedback da forma a lo que construimos.",
-    footer: "Recibiste este email porque mejoraste a Trefolio Pro.",
-    manage: "Gestionar preferencias",
-  },
-} as const;
+// ---------------------------------------------------------------------------
+// 3. Trefolio Pro upgrade email (35 European languages)
+// ---------------------------------------------------------------------------
 
 function trefolioUpgradeHtml(displayName: string, locale: EmailLocale): string {
-  const c = trefolioCopy[locale];
-  const name = displayName || (locale === "es" ? "all&iacute;" : "there");
+  const c = i18nTrefolio[locale] ?? i18nTrefolio.en;
+  const name = displayName || c.fallbackName;
   const campaign = "trefolio_upgrade";
-  const groups = c.groups.map(([label, items]) => proFeatureGroup(label, items)).join("");
+  const groups = [
+    [c.g1Label, c.g1Items],
+    [c.g2Label, c.g2Items],
+    [c.g3Label, c.g3Items],
+    [c.g4Label, c.g4Items],
+    [c.g5Label, c.g5Items],
+  ].map(([label, items]) => proFeatureGroup(label as string, items as string[])).join("");
   return `${emailHeader("&#x2B50; Trefolio Pro &#x2B50;")}
         <tr><td style="padding:36px 32px 16px;">
           <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#0f172a;text-align:center;">${c.heading}</h1>
-          <p style="margin:0 0 28px;font-size:15px;color:#475569;text-align:center;line-height:1.6;">${c.intro(name)}</p>
+          <p style="margin:0 0 28px;font-size:15px;color:#475569;text-align:center;line-height:1.6;">${resolveIntro(c.intro, name)}</p>
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:8px;">
             ${groups}
           </table>
@@ -660,7 +566,7 @@ export async function sendTrefolioUpgradeEmail(
     return { success: true };
   }
 
-  const c = trefolioCopy[locale];
+  const c = i18nTrefolio[locale] ?? i18nTrefolio.en;
   try {
     await resend.emails.send({
       from: getFromAddress(),

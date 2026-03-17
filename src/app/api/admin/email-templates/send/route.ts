@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/auth/guards";
 import { findUserById, getEmailTemplate, getUserSettings, logEmailSend } from "@/lib/db";
 import { withMetrics } from "@/lib/with-metrics";
 import { getResendClientForAdmin, getFromAddress } from "@/lib/email";
+import { getTemplateSubject } from "@/lib/email-i18n";
 
 export const POST = withMetrics("/api/admin/email-templates/send", async (req: NextRequest) => {
   const { error } = await requireAdmin(req);
@@ -35,7 +36,8 @@ export const POST = withMetrics("/api/admin/email-templates/send", async (req: N
     return NextResponse.json({ error: "User has disabled email notifications", suppressed: true }, { status: 422 });
   }
 
-  const isSpanish = settings.language === "es";
+  const userLang = settings.language || "en";
+  const isSpanish = userLang === "es";
   let subject = overrideSubject || "";
   let html = overrideHtml || "";
   let text = overrideText || "";
@@ -45,7 +47,7 @@ export const POST = withMetrics("/api/admin/email-templates/send", async (req: N
     if (!template) {
       return NextResponse.json({ error: "Template not found" }, { status: 404 });
     }
-    if (!subject) subject = isSpanish && template.subjectEs ? template.subjectEs : template.subject;
+    if (!subject) subject = getTemplateSubject(template.slug, userLang, template.subject, template.subjectEs);
     if (!html) html = isSpanish && template.bodyHtmlEs ? template.bodyHtmlEs : template.bodyHtml;
     if (!text) text = isSpanish && template.bodyTextEs ? template.bodyTextEs : template.bodyText;
   }

@@ -179,10 +179,11 @@ const runSync = withCronLogging("snaptrade-sync", async () => {
       }
 
       // Fetch current positions + cash balances
+      const allActiveAccountIds = new Set(activeAccounts.map((a) => a.id));
       const institutionMap = new Map(activeAccounts.map((a) => [a.id, a.institution]));
       let holdingsResult: Awaited<ReturnType<typeof fetchAllHoldings>> | null = null;
       try {
-        holdingsResult = await fetchAllHoldings(conn.snapTradeUserId, userSecret, undefined, institutionMap);
+        holdingsResult = await fetchAllHoldings(conn.snapTradeUserId, userSecret, allActiveAccountIds, institutionMap);
 
         // Upsert holdings to all mapped portfolios.
         // When any connection is disabled, positions data is incomplete — skip

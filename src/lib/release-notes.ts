@@ -14,9 +14,24 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "1.39.0";
+export const CURRENT_VERSION = "1.39.1";
 
 export const releaseNotes: ReleaseEntry[] = [
+  {
+    version: "1.39.1",
+    date: "2026-03-17",
+    title: "Broker Sync Fix",
+    titleTranslations: { es: "Corrección de Sincronización de Broker" },
+    changes: [
+      {
+        type: "fix",
+        text: "Fixed a critical bug where broker-synced holdings (e.g. DEGIRO) could be deleted when the broker connection required re-authentication. The hourly auto-sync now correctly preserves holdings when position data is incomplete or the connection is degraded.",
+        translations: {
+          es: "Corrección de un error crítico donde las posiciones sincronizadas del broker (ej. DEGIRO) podían eliminarse cuando la conexión del broker requería re-autenticación. La sincronización automática por hora ahora preserva correctamente las posiciones cuando los datos son incompletos o la conexión está degradada.",
+        },
+      },
+    ],
+  },
   {
     version: "1.39.0",
     date: "2026-03-16",

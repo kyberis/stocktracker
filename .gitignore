@@ -59,3 +59,4 @@ android/capacitor-cordova-android-plugins/build/
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+.env*.local

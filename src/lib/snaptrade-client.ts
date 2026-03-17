@@ -395,9 +395,10 @@ export async function fetchAllHoldings(
       if (acctHoldings.positions) {
         for (const pos of acctHoldings.positions) {
           if (pos.cash_equivalent) continue;
+          if ((pos.units ?? 0) <= 0) continue;
 
           const holding = positionToHolding(pos);
-          if (holding && !seenTickers.has(holding.ticker)) {
+          if (holding && holding.shares > 0 && !seenTickers.has(holding.ticker)) {
             seenTickers.add(holding.ticker);
             holdings.push(holding);
           }

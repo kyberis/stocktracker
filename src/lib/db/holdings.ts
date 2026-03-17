@@ -398,9 +398,11 @@ export async function upsertHoldingsFromPositions(
   }
 
   // Remove stale snaptrade holdings that no longer appear in broker positions.
-  // Skip when data may be incomplete (e.g. a broker connection is disabled/expired)
-  // to avoid deleting legitimate holdings we simply couldn't fetch.
-  if (!options?.skipStaleCleanup) {
+  // Skip when data may be incomplete (e.g. a broker connection is disabled/expired,
+  // or the API returned 0 actionable positions — likely an auth expiry returning
+  // null units) to avoid deleting legitimate holdings we simply couldn't fetch.
+  const snaptradeHoldingCount = [...existingByKey.values()].filter((m) => m.source === "snaptrade").length;
+  if (!options?.skipStaleCleanup && touchedKeys.size > 0 && touchedKeys.size >= snaptradeHoldingCount * 0.5) {
     for (const [key, meta] of existingByKey) {
       if (meta.source === "snaptrade" && !touchedKeys.has(key)) {
         await client.execute({
