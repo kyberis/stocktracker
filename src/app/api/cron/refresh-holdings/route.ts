@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { listDistinctHoldingTickers, batchUpdateValueInEur, resolveStaleTickersViaFigi } from "@/lib/db";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { convertToEUR, resolveQuoteCurrency } from "@/lib/utils";
