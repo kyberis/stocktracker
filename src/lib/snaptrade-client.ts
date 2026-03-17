@@ -324,6 +324,8 @@ function positionToHolding(pos: Position): ExtractedHolding | null {
   const { ticker, exchange } = normalizeSnapTradeTicker(rawTicker, exchangeMic);
   if (!ticker) return null;
 
+  const figiShareClass = sym.figi_instrument?.figi_share_class || "";
+
   return {
     name: sym.description || ticker,
     ticker,
@@ -332,6 +334,7 @@ function positionToHolding(pos: Position): ExtractedHolding | null {
     displayCurrency: sym.currency?.code || "USD",
     exchange: exchange || sym.exchange?.code || "",
     assetType: inferAssetType(sym.description, sym.type?.code),
+    ...(figiShareClass ? { figiShareClass } : {}),
   };
 }
 
