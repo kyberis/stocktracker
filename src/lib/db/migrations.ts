@@ -1484,7 +1484,7 @@ const MIGRATIONS: Migration[] = [
           clicked_at TEXT NOT NULL DEFAULT '',
           bounced_at TEXT NOT NULL DEFAULT '',
           failed_at TEXT NOT NULL DEFAULT '',
-          FOREIGN KEY(user_id) REFERENCES users(id)
+          FOREIGN KEY (user_id) REFERENCES users(id)
         );
         CREATE INDEX IF NOT EXISTS idx_email_sends_resend_id ON email_sends(resend_id);
         CREATE INDEX IF NOT EXISTS idx_email_sends_user_id ON email_sends(user_id);
