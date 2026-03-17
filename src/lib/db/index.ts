@@ -80,6 +80,7 @@ export {
   countHoldings,
   listDistinctHoldingTickers,
   batchUpdateValueInEur,
+  resolveStaleTickersViaFigi,
 } from "./holdings";
 
 export {

@@ -325,10 +325,14 @@ export async function resetUserHoldings(
  * Updates shares/price for existing holdings, inserts new ones, and removes
  * stale `source='snaptrade'` holdings that are no longer in the broker's positions.
  * Preserves enrichment metadata (sector, region, assetClass) on existing rows.
+ *
+ * Uses FIGI share class as a stable identifier to detect ticker renames:
+ * when a position's FIGI matches an existing holding but the ticker differs,
+ * the holding is updated in-place and transactions are re-linked to the new ticker.
  */
 export async function upsertHoldingsFromPositions(
   userId: string,
-  positions: { name: string; ticker: string; shares: number; purchasePrice: number; displayCurrency: string; exchange: string; assetType: string }[],
+  positions: { name: string; ticker: string; shares: number; purchasePrice: number; displayCurrency: string; exchange: string; assetType: string; figiShareClass?: string }[],
   portfolioId?: string,
   options?: { skipStaleCleanup?: boolean },
 ): Promise<Holding[]> {
@@ -336,23 +340,34 @@ export async function upsertHoldingsFromPositions(
   const resolved = await resolvePortfolioId(userId, portfolioId);
 
   const existingRows = await client.execute({
-    sql: `SELECT id, ticker, exchange, name, isin, asset_type, sector, region, asset_class, account_id, source, value_in_eur
+    sql: `SELECT id, ticker, exchange, name, isin, asset_type, sector, region, asset_class, account_id, source, value_in_eur, figi_share_class
           FROM holdings WHERE user_id = ? AND portfolio_id = ?`,
     args: [userId, resolved],
   });
-  const existingByKey = new Map<string, {
+
+  interface ExistingMeta {
     id: string; name: string; isin: string; sector: string; region: string;
     assetClass: string; accountId: string; source: string; valueInEUR: number;
-  }>();
+    ticker: string; exchange: string; figiShareClass: string;
+  }
+
+  const existingByKey = new Map<string, ExistingMeta>();
+  const existingByFigi = new Map<string, ExistingMeta>();
   for (const row of existingRows.rows) {
-    const key = `${str(row.ticker).toUpperCase()}|${str(row.exchange).toUpperCase()}`;
-    existingByKey.set(key, {
+    const meta: ExistingMeta = {
       id: str(row.id), name: str(row.name), isin: str(row.isin),
       sector: str(row.sector), region: str(row.region),
       assetClass: str(row.asset_class), accountId: str(row.account_id),
       source: str(row.source) || "transaction",
       valueInEUR: num(row.value_in_eur),
-    });
+      ticker: str(row.ticker), exchange: str(row.exchange),
+      figiShareClass: str(row.figi_share_class),
+    };
+    const key = `${meta.ticker.toUpperCase()}|${meta.exchange.toUpperCase()}`;
+    existingByKey.set(key, meta);
+    if (meta.figiShareClass) {
+      existingByFigi.set(meta.figiShareClass, meta);
+    }
   }
   const upserted: Holding[] = [];
   const touchedKeys = new Set<string>();
@@ -362,15 +377,57 @@ export async function upsertHoldingsFromPositions(
     const ticker = normalizeTickerForExchange(pos.ticker, pos.exchange);
     const key = `${ticker.toUpperCase()}|${pos.exchange.toUpperCase()}`;
     touchedKeys.add(key);
-    const existing = existingByKey.get(key);
+
+    let existing = existingByKey.get(key);
+
+    // FIGI-based ticker rename detection: if no direct match but the FIGI
+    // matches an existing holding, the security was renamed (e.g. VG → VGn).
+    // Update the holding's ticker in-place and propagate to transactions.
+    if (!existing && pos.figiShareClass) {
+      const figiMatch = existingByFigi.get(pos.figiShareClass);
+      if (figiMatch) {
+        const oldTicker = figiMatch.ticker;
+        const oldExchange = figiMatch.exchange;
+        console.log(`[upsertHoldingsFromPositions] Ticker rename detected via FIGI ${pos.figiShareClass}: ${oldTicker} → ${ticker} (user ${userId})`);
+
+        await client.execute({
+          sql: `UPDATE holdings SET ticker = ?, exchange = ? WHERE id = ? AND user_id = ?`,
+          args: [ticker, pos.exchange, figiMatch.id, userId],
+        });
+        await client.execute({
+          sql: `UPDATE transactions SET ticker = ?, exchange = ?, name = CASE WHEN name = ? THEN ? ELSE name END
+                WHERE user_id = ? AND UPPER(ticker) = UPPER(?) AND portfolio_id = ?`,
+          args: [ticker, pos.exchange, oldTicker, pos.name, userId, oldTicker, resolved],
+        });
+
+        // Update maps so stale cleanup sees the new key
+        const oldKey = `${oldTicker.toUpperCase()}|${oldExchange.toUpperCase()}`;
+        existingByKey.delete(oldKey);
+        figiMatch.ticker = ticker;
+        figiMatch.exchange = pos.exchange;
+        existingByKey.set(key, figiMatch);
+        touchedKeys.add(key);
+
+        existing = figiMatch;
+      }
+    }
 
     if (existing) {
+      const figi = pos.figiShareClass || "";
+      const updateFigi = figi && figi !== existing.figiShareClass;
       await client.execute({
-        sql: `UPDATE holdings SET shares = ?, purchase_price = ?, display_currency = ?,
+        sql: updateFigi
+          ? `UPDATE holdings SET shares = ?, purchase_price = ?, display_currency = ?,
+              name = CASE WHEN name = ticker THEN ? ELSE name END,
+              source = 'snaptrade', figi_share_class = ?
+              WHERE id = ? AND user_id = ?`
+          : `UPDATE holdings SET shares = ?, purchase_price = ?, display_currency = ?,
               name = CASE WHEN name = ticker THEN ? ELSE name END,
               source = 'snaptrade'
               WHERE id = ? AND user_id = ?`,
-        args: [pos.shares, pos.purchasePrice, pos.displayCurrency, pos.name, existing.id, userId],
+        args: updateFigi
+          ? [pos.shares, pos.purchasePrice, pos.displayCurrency, pos.name, figi, existing.id, userId]
+          : [pos.shares, pos.purchasePrice, pos.displayCurrency, pos.name, existing.id, userId],
       });
       upserted.push({
         id: existing.id, name: existing.name === ticker ? pos.name : existing.name,
@@ -384,10 +441,11 @@ export async function upsertHoldingsFromPositions(
       const id = randomUUID();
       await client.execute({
         sql: `INSERT INTO holdings (id, user_id, name, ticker, isin, asset_type, shares, purchase_price,
-              display_currency, exchange, value_in_eur, portfolio_id, source)
-              VALUES (?, ?, ?, ?, '', ?, ?, ?, ?, ?, 0, ?, 'snaptrade')`,
+              display_currency, exchange, value_in_eur, portfolio_id, source, figi_share_class)
+              VALUES (?, ?, ?, ?, '', ?, ?, ?, ?, ?, 0, ?, 'snaptrade', ?)`,
         args: [id, userId, pos.name, ticker, pos.assetType || "stock",
-               pos.shares, pos.purchasePrice, pos.displayCurrency, pos.exchange, resolved],
+               pos.shares, pos.purchasePrice, pos.displayCurrency, pos.exchange, resolved,
+               pos.figiShareClass || ""],
       });
       upserted.push({
         id, name: pos.name, ticker, isin: "", assetType: holdingAssetType(pos.assetType),
@@ -544,22 +602,78 @@ export async function detachSnapTradeHoldings(userId: string, portfolioId?: stri
 export interface DistinctHoldingTicker {
   ticker: string;
   displayCurrency: string;
+  exchange: string;
+  figiShareClass: string;
 }
 
 /**
  * Returns all distinct (ticker, display_currency) pairs across all users' holdings.
  * Used by the refresh-holdings cron to batch-fetch quotes per ticker instead of per user.
+ * Includes exchange and figi_share_class for stale-ticker resolution via OpenFIGI.
  */
 export async function listDistinctHoldingTickers(): Promise<DistinctHoldingTicker[]> {
   const client = await ensureInitialized();
   const result = await client.execute({
-    sql: `SELECT DISTINCT ticker, display_currency FROM holdings WHERE shares > 0 AND ticker != ''`,
+    sql: `SELECT DISTINCT ticker, display_currency, exchange, figi_share_class FROM holdings WHERE shares > 0 AND ticker != ''`,
     args: [],
   });
   return result.rows.map((r) => ({
     ticker: str(r.ticker),
     displayCurrency: str(r.display_currency),
+    exchange: str(r.exchange),
+    figiShareClass: str(r.figi_share_class),
   }));
+}
+
+/**
+ * For tickers where Yahoo returned no quote, attempt to resolve the new ticker
+ * via OpenFIGI using the stored figi_share_class. Updates holdings and
+ * transactions in-place so subsequent cron runs use the correct ticker.
+ *
+ * @returns Array of { oldTicker, newTicker } for tickers that were resolved.
+ */
+export async function resolveStaleTickersViaFigi(
+  staleTickers: { ticker: string; exchange: string; figiShareClass: string }[],
+): Promise<{ oldTicker: string; newTicker: string }[]> {
+  const withFigi = staleTickers.filter((t) => t.figiShareClass);
+  if (withFigi.length === 0) return [];
+
+  const { batchResolveFigi } = await import("@/lib/api-providers/openfigi");
+  const { EXCHANGE_SUFFIX_MAP } = await import("@/lib/db/helpers");
+
+  const items = withFigi.map((t) => {
+    const suffix = EXCHANGE_SUFFIX_MAP[t.exchange.toUpperCase()] || "";
+    return { figiShareClass: t.figiShareClass, preferredYahooSuffix: suffix };
+  });
+
+  const resolved = await batchResolveFigi(items);
+  if (resolved.size === 0) return [];
+
+  const client = await ensureInitialized();
+  const renames: { oldTicker: string; newTicker: string }[] = [];
+
+  for (const stale of withFigi) {
+    const resolution = resolved.get(stale.figiShareClass);
+    if (!resolution) continue;
+
+    const newTicker = resolution.ticker;
+    if (newTicker.toUpperCase() === stale.ticker.toUpperCase()) continue;
+
+    console.log(`[resolveStaleTickersViaFigi] Renaming ${stale.ticker} → ${newTicker} via FIGI ${stale.figiShareClass}`);
+
+    await client.execute({
+      sql: `UPDATE holdings SET ticker = ? WHERE UPPER(ticker) = UPPER(?) AND shares > 0`,
+      args: [newTicker, stale.ticker],
+    });
+    await client.execute({
+      sql: `UPDATE transactions SET ticker = ? WHERE UPPER(ticker) = UPPER(?)`,
+      args: [newTicker, stale.ticker],
+    });
+
+    renames.push({ oldTicker: stale.ticker, newTicker });
+  }
+
+  return renames;
 }
 
 /**

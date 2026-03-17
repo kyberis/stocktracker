@@ -121,6 +121,7 @@ export interface CronAlert extends PriceAlert {
   alertDeviceEnabled: boolean;
   lastNotifiedTicker: string;
   lastNotifiedAt: string;
+  language: string;
 }
 
 export async function listActiveAlertsForCron(): Promise<CronAlert[]> {
@@ -130,7 +131,8 @@ export async function listActiveAlertsForCron(): Promise<CronAlert[]> {
             COALESCE(us.alert_channels, 'email') as alert_channels,
             COALESCE(us.whatsapp_phone, '') as whatsapp_phone,
             COALESCE(us.whatsapp_verified, 0) as whatsapp_verified,
-            COALESCE(us.alert_device_enabled, 0) as alert_device_enabled
+            COALESCE(us.alert_device_enabled, 0) as alert_device_enabled,
+            COALESCE(us.language, 'en') as language
      FROM price_alerts pa
      JOIN users u ON u.id = pa.user_id
      LEFT JOIN user_settings us ON us.user_id = pa.user_id
@@ -148,6 +150,7 @@ export async function listActiveAlertsForCron(): Promise<CronAlert[]> {
     alertDeviceEnabled: num(r.alert_device_enabled) === 1,
     lastNotifiedTicker: str(r.last_notified_ticker),
     lastNotifiedAt: str(r.last_notified_at),
+    language: str(r.language) || "en",
   }));
 }
 
