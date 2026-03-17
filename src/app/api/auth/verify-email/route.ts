@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { findUserById, setEmailVerified, trackEvent } from "@/lib/db";
+import { findUserById, setEmailVerified, trackEvent, getUserSettings } from "@/lib/db";
 import {
   createVerificationToken,
   sendVerificationEmail,
   verifyVerificationToken,
   isTestVerificationToken,
   isTreefolioTestEmail,
+  getEmailLocale,
 } from "@/lib/email";
 import {
   createSessionToken,
@@ -30,8 +31,10 @@ export const POST = withMetrics("/api/auth/verify-email", async (req: NextReques
     return NextResponse.json({ error: "Email already verified" }, { status: 400 });
   }
 
+  const settings = await getUserSettings(session.userId);
+  const locale = getEmailLocale(settings.language || "en");
   const token = await createVerificationToken(session.userId, user.email);
-  const result = await sendVerificationEmail(user.email, token);
+  const result = await sendVerificationEmail(user.email, token, locale);
 
   if (!result.success) {
     return NextResponse.json({ error: "Failed to send verification email" }, { status: 500 });

@@ -37,6 +37,7 @@ export interface ExtractedHolding {
   displayCurrency: string;
   exchange: string;
   assetType: "stock" | "etf";
+  figiShareClass?: string;
 }
 
 export interface CashBalance {

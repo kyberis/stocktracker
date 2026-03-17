@@ -1,4 +1,4 @@
-import { sendAlertEmail, sendPercentAlertEmail } from "@/lib/email";
+import { sendAlertEmail, sendPercentAlertEmail, type EmailLocale } from "@/lib/email";
 import { sendWhatsAppAlert } from "@/lib/whatsapp";
 import { sendPushNotification } from "@/lib/web-push";
 import {
@@ -21,6 +21,7 @@ export interface AlertDispatchContext {
   alertChannels: NotificationChannel[];
   whatsappPhone: string;
   whatsappVerified: boolean;
+  locale?: EmailLocale;
 }
 
 export interface ThresholdAlertPayload {
@@ -97,7 +98,7 @@ export async function dispatchAlert(
             threshold: payload.threshold,
             currentPrice: payload.currentPrice,
             currency: payload.currency,
-          });
+          }, ctx.locale);
         } else {
           await sendPercentAlertEmail(ctx.email, {
             ticker: payload.ticker,
@@ -107,7 +108,7 @@ export async function dispatchAlert(
             percentChange: payload.percentChange,
             percentBasis: payload.percentBasis,
             isPortfolioWide: payload.isPortfolioWide,
-          });
+          }, ctx.locale);
         }
         sent.push("email");
         trackEvent(ctx.userId, "alert_email_sent", { ticker: payload.ticker });

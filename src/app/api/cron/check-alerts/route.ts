@@ -11,6 +11,7 @@ import type { CronAlert } from "@/lib/db";
 import { dispatchAlert } from "@/lib/alert-dispatcher";
 import type { AlertDispatchContext, AlertPayload } from "@/lib/alert-dispatcher";
 import type { SubscriptionPlan } from "@/lib/types";
+import { getEmailLocale } from "@/lib/email-i18n";
 import { withCronLogging, verifyCronAuth } from "@/lib/cron-logging";
 
 export const dynamic = "force-dynamic";
@@ -40,6 +41,7 @@ function buildContext(alert: CronAlert): AlertDispatchContext {
     alertChannels: alert.alertChannels,
     whatsappPhone: alert.whatsappPhone,
     whatsappVerified: alert.whatsappVerified,
+    locale: getEmailLocale(alert.language),
   };
 }
 

@@ -10,7 +10,7 @@ import { withMetrics } from "@/lib/with-metrics";
 import { authEventsTotal } from "@/lib/metrics";
 import { parseBody } from "@/lib/api-response";
 import { signupSchema } from "@/lib/schemas";
-import { createVerificationToken, sendVerificationEmail, sendWelcomeEmail, sendAdminNewCustomerNotification } from "@/lib/email";
+import { createVerificationToken, sendVerificationEmail, sendWelcomeEmail, sendAdminNewCustomerNotification, getEmailLocale } from "@/lib/email";
 import { checkSignupRateLimit, getClientIp } from "@/lib/rate-limit";
 import { verifyTurnstileToken } from "@/lib/turnstile";
 import { createNotification } from "@/lib/db";
@@ -89,7 +89,9 @@ export const POST = withMetrics("/api/auth/signup", async (req: NextRequest) => 
     authEventsTotal.inc({ event: "signup" });
 
     const verificationToken = await createVerificationToken(user.id, normalizedEmail);
-    sendVerificationEmail(normalizedEmail, verificationToken).then((result) => {
+    const browserLang = req.headers.get("accept-language")?.split(",")[0]?.split("-")[0] ?? "en";
+    const emailLocale = getEmailLocale(browserLang);
+    sendVerificationEmail(normalizedEmail, verificationToken, emailLocale).then((result) => {
       if (result.success) trackEvent(user.id, "email_verification_sent");
     });
     sendWelcomeEmail(normalizedEmail, displayName || "").catch((err) =>

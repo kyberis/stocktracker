@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
-import { listDistinctHoldingTickers, batchUpdateValueInEur } from "@/lib/db";
+import { NextRequest } from "next/server";
+import { listDistinctHoldingTickers, batchUpdateValueInEur, resolveStaleTickersViaFigi } from "@/lib/db";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { convertToEUR, resolveQuoteCurrency } from "@/lib/utils";
 import type { ExchangeRates } from "@/lib/types";
@@ -60,6 +60,7 @@ const runRefreshHoldings = withCronLogging("refresh-holdings", async () => {
   // 2. Fetch quotes in batches
   const quotes: Record<string, { price: number; currency: string }> = {};
   let errorCount = 0;
+  const failedTickers = new Set<string>();
 
   for (let i = 0; i < uniqueTickers.length; i += QUOTE_BATCH_SIZE) {
     const batch = uniqueTickers.slice(i, i + QUOTE_BATCH_SIZE);
@@ -74,6 +75,51 @@ const runRefreshHoldings = withCronLogging("refresh-holdings", async () => {
         quotes[r.value.ticker] = { price: r.value.price, currency: r.value.currency };
       } else {
         errorCount++;
+        if (r.status === "fulfilled") failedTickers.add(r.value.ticker);
+      }
+    }
+  }
+
+  // 2b. For failed tickers with a FIGI, attempt to resolve the new ticker via OpenFIGI.
+  // This is a self-healing mechanism: once resolved, the holding's ticker is updated
+  // in DB so the next cron run fetches the correct ticker from Yahoo directly.
+  let figiResolved = 0;
+  if (failedTickers.size > 0) {
+    const staleWithFigi = distinctTickers
+      .filter((h) => failedTickers.has(h.ticker) && h.figiShareClass)
+      .reduce((acc, h) => {
+        if (!acc.some((a) => a.figiShareClass === h.figiShareClass)) {
+          acc.push({ ticker: h.ticker, exchange: h.exchange, figiShareClass: h.figiShareClass });
+        }
+        return acc;
+      }, [] as { ticker: string; exchange: string; figiShareClass: string }[]);
+
+    if (staleWithFigi.length > 0) {
+      try {
+        const renames = await resolveStaleTickersViaFigi(staleWithFigi);
+        figiResolved = renames.length;
+
+        // Patch the in-memory ticker list so step 3 uses the new tickers
+        for (const { oldTicker, newTicker } of renames) {
+          for (const h of distinctTickers) {
+            if (h.ticker.toUpperCase() === oldTicker.toUpperCase()) {
+              h.ticker = newTicker;
+            }
+          }
+        }
+
+        // Re-fetch quotes for the corrected tickers
+        for (const { newTicker } of renames) {
+          try {
+            const q = await yahoo.getQuote(newTicker);
+            if (q.regularMarketPrice > 0) {
+              quotes[newTicker] = { price: q.regularMarketPrice, currency: q.currency };
+              errorCount--;
+            }
+          } catch { /* quote still fails — leave as error */ }
+        }
+      } catch (err) {
+        console.warn("[refresh-holdings] OpenFIGI fallback failed:", err instanceof Error ? err.message : err);
       }
     }
   }
@@ -120,6 +166,7 @@ const runRefreshHoldings = withCronLogging("refresh-holdings", async () => {
     fxPairs: Object.keys(exchangeRates).length,
     updated: totalUpdated,
     errors: errorCount,
+    figiResolved,
   };
 });
 
