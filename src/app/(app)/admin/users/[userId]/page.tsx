@@ -259,16 +259,29 @@ interface TemplateOption {
   bodyTextEs: string;
 }
 
+const LOCALE_LABELS: Record<string, string> = {
+  en: "English", es: "Español", fr: "Français", de: "Deutsch", it: "Italiano",
+  pt: "Português", nl: "Nederlands", pl: "Polski", cs: "Čeština", sk: "Slovenčina",
+  hu: "Magyar", ro: "Română", bg: "Български", hr: "Hrvatski", sl: "Slovenščina",
+  el: "Ελληνικά", sv: "Svenska", da: "Dansk", fi: "Suomi", et: "Eesti",
+  lv: "Latviešu", lt: "Lietuvių", ga: "Gaeilge", mt: "Malti", nb: "Norsk bokmål",
+  uk: "Українська", tr: "Türkçe", sr: "Српски", is: "Íslenska", sq: "Shqip",
+  bs: "Bosanski", mk: "Македонски", be: "Беларуская", ca: "Català", cy: "Cymraeg",
+};
+const ALL_LOCALES = Object.keys(LOCALE_LABELS);
+
 function SendEmailSection({ userId, userEmail, userLanguage }: { userId: string; userEmail: string; userLanguage: string }) {
   const [templates, setTemplates] = useState<TemplateOption[]>([]);
   const [sends, setSends] = useState<EmailSendRecord[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState("");
+  const [locale, setLocale] = useState(userLanguage || "en");
   const [subject, setSubject] = useState("");
   const [bodyHtml, setBodyHtml] = useState("");
   const [bodyText, setBodyText] = useState("");
   const [sending, setSending] = useState(false);
   const [sendMsg, setSendMsg] = useState("");
   const [showCompose, setShowCompose] = useState(false);
+  const [loadingPreview, setLoadingPreview] = useState(false);
   const previewRef = useRef<HTMLIFrameElement>(null);
 
   const fetchData = useCallback(async () => {
@@ -282,15 +295,31 @@ function SendEmailSection({ userId, userEmail, userLanguage }: { userId: string;
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
+  const fetchLocalePreview = useCallback(async (templateId: string, loc: string) => {
+    if (!templateId) return;
+    setLoadingPreview(true);
+    try {
+      const res = await fetch(`/api/admin/email-templates/preview?templateId=${encodeURIComponent(templateId)}&locale=${encodeURIComponent(loc)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setSubject(data.subject);
+        setBodyHtml(data.bodyHtml);
+      }
+    } catch { /* ignore */ }
+    setLoadingPreview(false);
+  }, []);
+
   const handleTemplateSelect = (templateId: string) => {
     setSelectedTemplate(templateId);
     if (!templateId) { setSubject(""); setBodyHtml(""); setBodyText(""); return; }
-    const t = templates.find((tp) => tp.id === templateId);
-    if (!t) return;
-    const isEs = userLanguage === "es";
-    setSubject(isEs && t.subjectEs ? t.subjectEs : t.subject);
-    setBodyHtml(isEs && t.bodyHtmlEs ? t.bodyHtmlEs : t.bodyHtml);
-    setBodyText(isEs && t.bodyTextEs ? t.bodyTextEs : t.bodyText);
+    fetchLocalePreview(templateId, locale);
+  };
+
+  const handleLocaleChange = (newLocale: string) => {
+    setLocale(newLocale);
+    if (selectedTemplate) {
+      fetchLocalePreview(selectedTemplate, newLocale);
+    }
   };
 
   useEffect(() => {
@@ -311,6 +340,7 @@ function SendEmailSection({ userId, userEmail, userLanguage }: { userId: string;
         body: JSON.stringify({
           templateId: selectedTemplate || undefined,
           userId,
+          locale,
           subject,
           bodyHtml,
           bodyText: bodyText || undefined,
@@ -356,6 +386,18 @@ function SendEmailSection({ userId, userEmail, userLanguage }: { userId: string;
                 {templates.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
               </select>
             </div>
+            <div className="w-48">
+              <label className="block text-[10px] font-medium text-gray-500 dark:text-slate-400 mb-1">
+                Locale {locale === userLanguage && <span className="text-emerald-500">(user default)</span>}
+              </label>
+              <select value={locale} onChange={(e) => handleLocaleChange(e.target.value)} className="w-full text-xs px-2 py-1.5 rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white">
+                {ALL_LOCALES.map((loc) => (
+                  <option key={loc} value={loc}>
+                    {loc.toUpperCase()} — {LOCALE_LABELS[loc]}{loc === userLanguage ? " *" : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
           <div>
             <label className="block text-[10px] font-medium text-gray-500 dark:text-slate-400 mb-1">Subject</label>
@@ -367,11 +409,17 @@ function SendEmailSection({ userId, userEmail, userLanguage }: { userId: string;
               <textarea value={bodyHtml} onChange={(e) => setBodyHtml(e.target.value)} rows={10} className="w-full text-[11px] font-mono px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white resize-y" />
             </div>
             <div>
-              <div className="text-[10px] font-medium text-gray-500 dark:text-slate-400 mb-1">Preview</div>
+              <div className="flex items-center gap-2 text-[10px] font-medium text-gray-500 dark:text-slate-400 mb-1">
+                Preview
+                {loadingPreview && <span className="text-indigo-400 animate-pulse">Loading...</span>}
+              </div>
               <iframe ref={previewRef} className="w-full h-[240px] rounded-lg border border-gray-200 dark:border-slate-600 bg-white" sandbox="allow-same-origin" title="Email preview" />
             </div>
           </div>
-          <div className="flex justify-end">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] text-gray-400 dark:text-slate-500">
+              Sending as <strong>{LOCALE_LABELS[locale]}</strong> to {userEmail}
+            </span>
             <button onClick={handleSend} disabled={sending || !subject || !bodyHtml} className="px-4 py-1.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg disabled:opacity-50">
               {sending ? "Sending..." : "Send Email"}
             </button>

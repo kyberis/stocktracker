@@ -10,7 +10,7 @@ export const POST = withMetrics("/api/admin/email-templates/send", async (req: N
   if (error) return error;
 
   const body = await req.json();
-  const { templateId, userId, subject: overrideSubject, bodyHtml: overrideHtml, bodyText: overrideText } = body;
+  const { templateId, userId, locale: localeOverride, subject: overrideSubject, bodyHtml: overrideHtml, bodyText: overrideText } = body;
 
   if (!userId) {
     return NextResponse.json({ error: "userId is required" }, { status: 400 });
@@ -36,7 +36,7 @@ export const POST = withMetrics("/api/admin/email-templates/send", async (req: N
     return NextResponse.json({ error: "User has disabled email notifications", suppressed: true }, { status: 422 });
   }
 
-  const userLang = settings.language || "en";
+  const userLang = typeof localeOverride === "string" && localeOverride ? localeOverride : (settings.language || "en");
   const isSpanish = userLang === "es";
   let subject = overrideSubject || "";
   let html = overrideHtml || "";
