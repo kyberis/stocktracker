@@ -49,7 +49,7 @@ export const POST = withMetrics("/api/admin/email-templates/send", async (req: N
     }
     if (!subject) subject = getTemplateSubject(template.slug, userLang, template.subject, template.subjectEs);
     if (!html) {
-      const localized = getLocalizedTemplateHtml(template.slug, userLang);
+      const localized = await getLocalizedTemplateHtml(template.slug, userLang);
       html = localized ?? (isSpanish && template.bodyHtmlEs ? template.bodyHtmlEs : template.bodyHtml);
     }
     if (!text) text = isSpanish && template.bodyTextEs ? template.bodyTextEs : template.bodyText;
@@ -62,7 +62,6 @@ export const POST = withMetrics("/api/admin/email-templates/send", async (req: N
   const resend = await getResendClientForAdmin();
   if (!resend) {
     return NextResponse.json({ error: "Resend not configured" }, { status: 500 });
-  }
 
   try {
     const { data, error: sendError } = await resend.emails.send({
