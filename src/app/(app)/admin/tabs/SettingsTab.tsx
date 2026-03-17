@@ -596,6 +596,66 @@ const EXTERNAL_SERVICES = [
       </svg>
     ),
   },
+  {
+    name: "Resend",
+    url: "https://resend.com/emails",
+    color: "bg-[#0f172a]",
+    icon: (
+      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M3 6a2 2 0 012-2h14a2 2 0 012 2v.4l-9 5.4-9-5.4V6zm0 3.72l8.49 5.1a1 1 0 001.02 0L21 9.72V18a2 2 0 01-2 2H5a2 2 0 01-2-2V9.72z" />
+      </svg>
+    ),
+  },
+  {
+    name: "SnapTrade",
+    url: "https://dashboard.snaptrade.com",
+    color: "bg-[#2563eb]",
+    icon: (
+      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M4 5h7a3 3 0 013 3v11H7a3 3 0 01-3-3V5zm10 0h3a3 3 0 013 3v11h-6V5zm-8 5h6v2H6v-2zm0 4h6v2H6v-2z" />
+      </svg>
+    ),
+  },
+  {
+    name: "OpenFIGI",
+    url: "https://www.openfigi.com/api",
+    color: "bg-[#0ea5e9]",
+    icon: (
+      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 2l8 4.5v11L12 22 4 17.5v-11L12 2zm0 2.3L6 7.3v9.4l6 3.4 6-3.4V7.3l-6-3zM8.8 9H15v2H8.8V9zm0 4H15v2H8.8v-2z" />
+      </svg>
+    ),
+  },
+  {
+    name: "Finnhub",
+    url: "https://finnhub.io/dashboard",
+    color: "bg-[#0f766e]",
+    icon: (
+      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M5 4h14v3H5V4zm0 5h9v3H5V9zm0 5h14v3H5v-3zm0 5h9v1H5v-1z" />
+      </svg>
+    ),
+  },
+  {
+    name: "FMP",
+    url: "https://site.financialmodelingprep.com/developer/docs",
+    color: "bg-[#9333ea]",
+    icon: (
+      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M4 5h16v2H4V5zm0 4h10v2H4V9zm0 4h16v2H4v-2zm0 4h10v2H4v-2z" />
+      </svg>
+    ),
+  },
+  {
+    name: "Twilio",
+    url: "https://console.twilio.com",
+    color: "bg-[#f22f46]",
+    icon: (
+      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 2a10 10 0 1010 10A10.01 10.01 0 0012 2zm-3.25 6.25a1.75 1.75 0 111.75 1.75 1.75 1.75 0 01-1.75-1.75zm0 7.5a1.75 1.75 0 111.75-1.75 1.75 1.75 0 01-1.75 1.75zm4.5-7.5A1.75 1.75 0 1115 10a1.75 1.75 0 01-1.75-1.75zm0 7.5A1.75 1.75 0 1115 14a1.75 1.75 0 01-1.75 1.75z" />
+      </svg>
+    ),
+  },
 ] as const;
 
 function ExternalServicesCard() {

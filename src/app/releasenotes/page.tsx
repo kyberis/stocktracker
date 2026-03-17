@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import PublicFooter from "@/components/PublicFooter";
-import { releaseNotes, type ChangeType } from "@/lib/release-notes";
+import { publicReleaseNotes, type ChangeType } from "@/lib/release-notes-public";
 
 export const metadata: Metadata = {
   title: "Release Notes — trefolio",
@@ -75,7 +75,7 @@ export default function ReleaseNotesPage() {
           <div className="absolute left-[7px] top-2 bottom-0 w-px bg-slate-800" aria-hidden="true" />
 
           <div className="space-y-12">
-            {releaseNotes.map((release, idx) => (
+            {publicReleaseNotes.map((release, idx) => (
               <article key={release.version} className="relative pl-8">
                 <div
                   className={`absolute left-0 top-1.5 w-[15px] h-[15px] rounded-full border-2 ${

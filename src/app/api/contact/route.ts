@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Resend } from "resend";
-import { getGlobalResendApiKey } from "@/lib/db";
 import { verifyTurnstileToken } from "@/lib/turnstile";
 import { withMetrics } from "@/lib/with-metrics";
 import { isBlockedEmailDomain } from "@/lib/schemas";
+import { sendEmail } from "@/lib/email";
 
 const MAX_NAME_LENGTH = 100;
 const MAX_EMAIL_LENGTH = 200;
@@ -26,10 +25,6 @@ function checkIpRateLimit(ip: string): boolean {
   if (entry.count >= RATE_LIMIT_MAX) return false;
   entry.count++;
   return true;
-}
-
-function getFromAddress(): string {
-  return process.env.RESEND_FROM_ADDRESS || "trefolio <noreply@trefolio.com>";
 }
 
 function isValidEmail(email: string): boolean {
@@ -76,52 +71,43 @@ export const POST = withMetrics("/api/contact", async (req: NextRequest) => {
     return NextResponse.json({ error: "CAPTCHA verification failed. Please try again." }, { status: 400 });
   }
 
-  const dbKey = await getGlobalResendApiKey();
-  const resendKey = dbKey || process.env.RESEND_API_KEY;
-  if (!resendKey) {
-    console.error("[contact] Resend API key not configured");
-    return NextResponse.json({ error: "Email service is not configured. Please email support@trefolio.com directly." }, { status: 503 });
-  }
+  const html = `
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px;">
+      <h2 style="color: #0f172a; margin-bottom: 16px;">New Contact Form Submission</h2>
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+        <tr>
+          <td style="padding: 8px 12px; border: 1px solid #e2e8f0; background: #f8fafc; font-weight: 600; width: 100px;">Name</td>
+          <td style="padding: 8px 12px; border: 1px solid #e2e8f0;">${escapeHtml(name)}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 12px; border: 1px solid #e2e8f0; background: #f8fafc; font-weight: 600;">Email</td>
+          <td style="padding: 8px 12px; border: 1px solid #e2e8f0;"><a href="mailto:${escapeHtml(email)}">${escapeHtml(email)}</a></td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 12px; border: 1px solid #e2e8f0; background: #f8fafc; font-weight: 600;">Subject</td>
+          <td style="padding: 8px 12px; border: 1px solid #e2e8f0;">${escapeHtml(subject)}</td>
+        </tr>
+      </table>
+      <div style="padding: 16px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+        <p style="margin: 0; white-space: pre-wrap; font-size: 14px; line-height: 1.6; color: #334155;">${escapeHtml(message)}</p>
+      </div>
+      <p style="margin-top: 16px; font-size: 12px; color: #94a3b8;">Sent from the trefolio contact form &bull; IP: ${escapeHtml(ip)}</p>
+    </div>`;
 
-  const resend = new Resend(resendKey);
+  const result = await sendEmail({
+    to: "support@trefolio.com",
+    subject: `[Contact Form] ${subject}`,
+    html,
+    replyTo: email,
+    internal: true,
+  });
 
-  try {
-    await resend.emails.send({
-      from: getFromAddress(),
-      to: "support@trefolio.com",
-      replyTo: email,
-      subject: `[Contact Form] ${subject}`,
-      html: `
-        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px;">
-          <h2 style="color: #0f172a; margin-bottom: 16px;">New Contact Form Submission</h2>
-          <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-            <tr>
-              <td style="padding: 8px 12px; border: 1px solid #e2e8f0; background: #f8fafc; font-weight: 600; width: 100px;">Name</td>
-              <td style="padding: 8px 12px; border: 1px solid #e2e8f0;">${escapeHtml(name)}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px 12px; border: 1px solid #e2e8f0; background: #f8fafc; font-weight: 600;">Email</td>
-              <td style="padding: 8px 12px; border: 1px solid #e2e8f0;"><a href="mailto:${escapeHtml(email)}">${escapeHtml(email)}</a></td>
-            </tr>
-            <tr>
-              <td style="padding: 8px 12px; border: 1px solid #e2e8f0; background: #f8fafc; font-weight: 600;">Subject</td>
-              <td style="padding: 8px 12px; border: 1px solid #e2e8f0;">${escapeHtml(subject)}</td>
-            </tr>
-          </table>
-          <div style="padding: 16px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
-            <p style="margin: 0; white-space: pre-wrap; font-size: 14px; line-height: 1.6; color: #334155;">${escapeHtml(message)}</p>
-          </div>
-          <p style="margin-top: 16px; font-size: 12px; color: #94a3b8;">Sent from the trefolio contact form &bull; IP: ${escapeHtml(ip)}</p>
-        </div>
-      `,
-    });
-
-    return NextResponse.json({ success: true });
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.error("[contact] Failed to send email:", msg);
+  if (!result.success) {
+    console.error("[contact] Failed to send email:", result.error);
     return NextResponse.json({ error: "Failed to send message. Please try again or email support@trefolio.com directly." }, { status: 500 });
   }
+
+  return NextResponse.json({ success: true });
 });
 
 function escapeHtml(str: string): string {

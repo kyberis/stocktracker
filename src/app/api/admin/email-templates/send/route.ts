@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/guards";
 import { findUserById, getEmailTemplate, getUserSettings, logEmailSend } from "@/lib/db";
 import { withMetrics } from "@/lib/with-metrics";
-import { getResendClientForAdmin, getFromAddress } from "@/lib/email";
+import { sendEmail, htmlToPlainText } from "@/lib/email";
 import { getTemplateSubject, getLocalizedTemplateHtml } from "@/lib/email-i18n";
 
 export const POST = withMetrics("/api/admin/email-templates/send", async (req: NextRequest) => {
@@ -59,41 +59,28 @@ export const POST = withMetrics("/api/admin/email-templates/send", async (req: N
     return NextResponse.json({ error: "subject and bodyHtml are required" }, { status: 400 });
   }
 
-  const resend = await getResendClientForAdmin();
-  if (!resend) {
-    return NextResponse.json({ error: "Resend not configured" }, { status: 500 });
+  const result = await sendEmail({
+    to: user.email,
+    subject,
+    html,
+    text: text || htmlToPlainText(html),
+    userId,
+  });
+
+  if (!result.success) {
+    return NextResponse.json({ error: result.error }, { status: 500 });
   }
 
-  try {
-    const { data, error: sendError } = await resend.emails.send({
-      from: getFromAddress(),
-      to: user.email,
-      subject,
-      html,
-      text: text || undefined,
-      headers: {
-        "List-Unsubscribe": `<${process.env.APP_BASE_URL || "https://trefolio.com"}/unsubscribe?userId=${userId}>`,
-      },
-    });
+  const sendId = await logEmailSend({
+    resendId: result.messageId || "",
+    templateId: templateId || "",
+    userId,
+    emailTo: user.email,
+    subject,
+    bodyHtml: html,
+    bodyText: text,
+    status: "sent",
+  });
 
-    if (sendError) {
-      return NextResponse.json({ error: sendError.message }, { status: 500 });
-    }
-
-    const sendId = await logEmailSend({
-      resendId: data?.id || "",
-      templateId: templateId || "",
-      userId,
-      emailTo: user.email,
-      subject,
-      bodyHtml: html,
-      bodyText: text,
-      status: "sent",
-    });
-
-    return NextResponse.json({ ok: true, sendId, resendId: data?.id });
-  } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : "Send failed";
-    return NextResponse.json({ error: msg }, { status: 500 });
-  }
+  return NextResponse.json({ ok: true, sendId, resendId: result.messageId });
 });

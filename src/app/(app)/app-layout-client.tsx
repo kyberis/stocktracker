@@ -20,7 +20,7 @@ import ThemeWizard from "@/components/ThemeWizard";
 import EmailVerificationBanner from "@/components/EmailVerificationBanner";
 import NativeShell from "@/components/NativeShell";
 import SyncConfidenceBanner from "@/components/SyncConfidenceBanner";
-import { CURRENT_VERSION } from "@/lib/release-notes";
+import { CURRENT_VERSION } from "@/lib/release-version";
 import Link from "next/link";
 import type { LayoutTheme } from "@/lib/types";
 

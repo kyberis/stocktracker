@@ -5,7 +5,7 @@ import {
   Gauge,
   collectDefaultMetrics,
 } from "prom-client";
-import { CURRENT_VERSION } from "@/lib/release-notes";
+import { CURRENT_VERSION } from "@/lib/release-version";
 
 const globalForMetrics = globalThis as typeof globalThis & {
   __metricsRegistry?: Registry;

@@ -1,4 +1,5 @@
 export type ChangeType = "feature" | "improvement" | "fix";
+export { CURRENT_VERSION } from "@/lib/release-version";
 
 export interface ReleaseChange {
   type: ChangeType;
@@ -14,8 +15,6 @@ export interface ReleaseEntry {
   changes: ReleaseChange[];
 }
 
-export const CURRENT_VERSION = "1.39.3";
-
 export const releaseNotes: ReleaseEntry[] = [
   {
     version: "1.39.3",
@@ -28,6 +27,20 @@ export const releaseNotes: ReleaseEntry[] = [
         text: "All transactional emails — verification, price alerts, welcome, upgrade, and 11 feature emails — are now fully localized in 35 European languages. Users receive emails in their preferred language automatically.",
         translations: {
           es: "Todos los emails transaccionales — verificación, alertas de precio, bienvenida, upgrade y 11 emails de características — están ahora completamente localizados en 35 idiomas europeos. Los usuarios reciben emails en su idioma preferido automáticamente.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Updated the Admin Settings external services shortcuts with the latest active integrations, including Resend, SnapTrade, OpenFIGI, Finnhub, FMP, and Twilio.",
+        translations: {
+          es: "Actualizados los accesos directos de servicios externos en Ajustes de Admin con las integraciones activas más recientes, incluyendo Resend, SnapTrade, OpenFIGI, Finnhub, FMP y Twilio.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Release notes now ship in two tracks: a curated public changelog for customers and a full internal changelog available only to admins.",
+        translations: {
+          es: "Las notas de versión ahora se publican en dos canales: un changelog público curado para clientes y un changelog interno completo disponible solo para administradores.",
         },
       },
     ],

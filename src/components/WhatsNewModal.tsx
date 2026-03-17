@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { releaseNotes, CURRENT_VERSION, type ChangeType } from "@/lib/release-notes";
+import { publicReleaseNotes, PUBLIC_RELEASE_NOTES_VERSION, type ChangeType } from "@/lib/release-notes-public";
 import { useI18n } from "@/lib/i18n";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 
@@ -68,7 +68,7 @@ export function useWhatsNewAutoShow() {
   useEffect(() => {
     try {
       const seen = localStorage.getItem(SEEN_VERSION_KEY);
-      if (seen !== CURRENT_VERSION) {
+      if (seen !== PUBLIC_RELEASE_NOTES_VERSION) {
         setShow(true);
       }
     } catch {
@@ -79,7 +79,7 @@ export function useWhatsNewAutoShow() {
   const dismiss = () => {
     setShow(false);
     try {
-      localStorage.setItem(SEEN_VERSION_KEY, CURRENT_VERSION);
+      localStorage.setItem(SEEN_VERSION_KEY, PUBLIC_RELEASE_NOTES_VERSION);
     } catch {
       // ignore
     }
@@ -94,7 +94,7 @@ export default function WhatsNewModal({ isOpen, onClose }: WhatsNewModalProps) {
 
   const handleClose = () => {
     try {
-      localStorage.setItem(SEEN_VERSION_KEY, CURRENT_VERSION);
+      localStorage.setItem(SEEN_VERSION_KEY, PUBLIC_RELEASE_NOTES_VERSION);
     } catch {
       // ignore
     }
@@ -139,7 +139,7 @@ export default function WhatsNewModal({ isOpen, onClose }: WhatsNewModalProps) {
 
         {/* Release entries */}
         <div className="overflow-y-auto flex-1 px-6 py-4 space-y-6">
-          {releaseNotes.map((release, idx) => (
+          {publicReleaseNotes.map((release, idx) => (
             <div key={release.version}>
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
@@ -176,7 +176,7 @@ export default function WhatsNewModal({ isOpen, onClose }: WhatsNewModalProps) {
                   </li>
                 ))}
               </ul>
-              {idx < releaseNotes.length - 1 && (
+              {idx < publicReleaseNotes.length - 1 && (
                 <div className="mt-4 border-t border-gray-100 dark:border-slate-700/50" />
               )}
             </div>

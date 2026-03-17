@@ -43,8 +43,92 @@ function getFromAddress(): string {
 
 export { getFromAddress };
 
-export async function getResendClientForAdmin(): Promise<Resend | null> {
-  return getResendClient();
+const SUPPORT_EMAIL = "support@trefolio.com";
+
+export function htmlToPlainText(html: string): string {
+  return html
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/p>/gi, "\n\n")
+    .replace(/<\/tr>/gi, "\n")
+    .replace(/<\/h[1-6]>/gi, "\n\n")
+    .replace(/<li>/gi, "- ")
+    .replace(/<a[^>]+href="([^"]*)"[^>]*>([^<]*)<\/a>/gi, "$2 ($1)")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#x27;/g, "'")
+    .replace(/&mdash;/g, "—")
+    .replace(/&copy;/g, "(c)")
+    .replace(/&#x1F340;/g, "")
+    .replace(/&#x[0-9A-Fa-f]+;/g, "")
+    .replace(/&#\d+;/g, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+// ---------------------------------------------------------------------------
+// Centralized send — ALL outbound email goes through this function.
+// It guarantees: Reply-To, List-Unsubscribe (RFC 8058), plain-text part.
+// ---------------------------------------------------------------------------
+
+export interface SendEmailOptions {
+  to: string;
+  subject: string;
+  html: string;
+  text?: string;
+  userId?: string;
+  replyTo?: string;
+  headers?: Record<string, string>;
+  /** Skip List-Unsubscribe headers (e.g. verification or internal emails). */
+  internal?: boolean;
+}
+
+export async function sendEmail(
+  opts: SendEmailOptions,
+): Promise<{ success: boolean; messageId?: string; error?: string }> {
+  const resend = await getResendClient();
+  if (!resend) {
+    console.warn("Resend API key not configured; skipping email.");
+    return { success: true };
+  }
+
+  const plainText = opts.text || htmlToPlainText(opts.html);
+
+  const headers: Record<string, string> = {
+    "Reply-To": opts.replyTo || SUPPORT_EMAIL,
+    ...opts.headers,
+  };
+
+  if (!opts.internal) {
+    const base = process.env.APP_BASE_URL || "https://trefolio.com";
+    const unsubUrl = opts.userId
+      ? `${base}/unsubscribe?userId=${opts.userId}`
+      : `${base}/unsubscribe`;
+    headers["List-Unsubscribe"] = `<${unsubUrl}>`;
+    headers["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click";
+  }
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: getFromAddress(),
+      to: opts.to,
+      subject: opts.subject,
+      html: opts.html,
+      text: plainText,
+      headers,
+    });
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, messageId: data?.id };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { success: false, error: msg };
+  }
 }
 
 export async function createVerificationToken(userId: string, email: string): Promise<string> {
@@ -131,28 +215,17 @@ export async function sendVerificationEmail(
 ): Promise<{ success: boolean; error?: string }> {
   if (isTestEmail(email)) return { success: true };
 
-  const resend = await getResendClient();
-  if (!resend) {
-    console.warn("Resend API key not configured; skipping verification email.");
-    return { success: true };
-  }
-
   const verifyUrl = `${getBaseUrl()}/api/auth/verify-email?token=${encodeURIComponent(token)}`;
   const s = verificationStrings[locale] ?? verificationStrings.en;
 
-  try {
-    await resend.emails.send({
-      from: getFromAddress(),
-      to: email,
-      subject: s.subject,
-      html: verificationEmailHtml(verifyUrl, locale),
-    });
-    return { success: true };
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.error("Failed to send verification email:", msg);
-    return { success: false, error: msg };
-  }
+  const result = await sendEmail({
+    to: email,
+    subject: s.subject,
+    html: verificationEmailHtml(verifyUrl, locale),
+    internal: true,
+  });
+  if (!result.success) console.error("Failed to send verification email:", result.error);
+  return result;
 }
 
 export async function sendAlertEmail(
@@ -161,12 +234,6 @@ export async function sendAlertEmail(
   locale: EmailLocale = "en",
 ): Promise<{ success: boolean; error?: string }> {
   if (isTestEmail(email)) return { success: true };
-
-  const resend = await getResendClient();
-  if (!resend) {
-    console.warn("Resend API key not configured; skipping alert email.");
-    return { success: true };
-  }
 
   const s = thresholdAlertStrings[locale] ?? thresholdAlertStrings.en;
   const direction = alert.condition === "above" ? s.roseAbove : s.droppedBelow;
@@ -178,27 +245,22 @@ export async function sendAlertEmail(
     .replace("{{currency}}", alert.currency)
     .replace("{{threshold}}", `<strong>${alert.currency} ${alert.threshold.toFixed(2)}</strong>`);
 
-  try {
-    await resend.emails.send({
-      from: getFromAddress(),
-      to: email,
-      subject: `Price Alert: ${alert.ticker} ${direction} ${alert.currency} ${alert.threshold}`,
-      html: `
-        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 0;">
-          <h2 style="color: #10b981;">${s.heading}</h2>
-          <p style="font-size: 16px;">${body}</p>
-          <p style="font-size: 18px; padding: 16px; background: #f0fdf4; border-radius: 8px; text-align: center;">${s.currentPriceLabel} <strong>${alert.currency} ${alert.currentPrice.toFixed(2)}</strong></p>
-          <a href="${dashboardUrl}" style="display: inline-block; margin-top: 16px; padding: 12px 24px; background: #10b981; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600;">${s.ctaLabel}</a>
-          <p style="margin-top: 24px; font-size: 13px; color: #64748b;">${s.deactivatedNotice}</p>
-        </div>
-      `,
-    });
-    return { success: true };
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.error("Failed to send alert email:", msg);
-    return { success: false, error: msg };
-  }
+  const html = `
+      <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 0;">
+        <h2 style="color: #10b981;">${s.heading}</h2>
+        <p style="font-size: 16px;">${body}</p>
+        <p style="font-size: 18px; padding: 16px; background: #f0fdf4; border-radius: 8px; text-align: center;">${s.currentPriceLabel} <strong>${alert.currency} ${alert.currentPrice.toFixed(2)}</strong></p>
+        <a href="${dashboardUrl}" style="display: inline-block; margin-top: 16px; padding: 12px 24px; background: #10b981; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600;">${s.ctaLabel}</a>
+        <p style="margin-top: 24px; font-size: 13px; color: #64748b;">${s.deactivatedNotice}</p>
+      </div>`;
+
+  const result = await sendEmail({
+    to: email,
+    subject: `Price Alert: ${alert.ticker} ${direction} ${alert.currency} ${alert.threshold}`,
+    html,
+  });
+  if (!result.success) console.error("Failed to send alert email:", result.error);
+  return result;
 }
 
 export async function sendPercentAlertEmail(
@@ -216,12 +278,6 @@ export async function sendPercentAlertEmail(
 ): Promise<{ success: boolean; error?: string }> {
   if (isTestEmail(email)) return { success: true };
 
-  const resend = await getResendClient();
-  if (!resend) {
-    console.warn("Resend API key not configured; skipping percent alert email.");
-    return { success: true };
-  }
-
   const s = percentAlertStrings[locale] ?? percentAlertStrings.en;
   const direction = alert.percentChange >= 0 ? s.up : s.down;
   const absPercent = Math.abs(alert.percentChange).toFixed(2);
@@ -237,30 +293,25 @@ export async function sendPercentAlertEmail(
     .replace("{{directionWithPercent}}", directionWithPercent)
     .replace("{{basis}}", basisLabel);
 
-  try {
-    await resend.emails.send({
-      from: getFromAddress(),
-      to: email,
-      subject: `Price Alert: ${alert.ticker} ${direction} ${absPercent}% ${basisLabel}`,
-      html: `
-        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 0;">
-          <h2 style="color: #10b981;">${s.heading}</h2>
-          <p style="font-size: 16px;">${body}</p>
-          <p style="font-size: 18px; padding: 16px; background: ${bgColor}; border-radius: 8px; text-align: center;">
-            ${s.currentPriceLabel} <strong>${alert.currency} ${alert.currentPrice.toFixed(2)}</strong>
-          </p>
-          ${alert.isPortfolioWide ? `<p style="font-size: 13px; color: #64748b;">${s.portfolioWideNotice}</p>` : ""}
-          <a href="${dashboardUrl}" style="display: inline-block; margin-top: 16px; padding: 12px 24px; background: #10b981; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600;">${s.ctaLabel}</a>
-          <p style="margin-top: 24px; font-size: 13px; color: #64748b;">${alert.isPortfolioWide ? s.activeNotice : s.deactivatedNotice}</p>
-        </div>
-      `,
-    });
-    return { success: true };
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.error("Failed to send percent alert email:", msg);
-    return { success: false, error: msg };
-  }
+  const html = `
+      <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 0;">
+        <h2 style="color: #10b981;">${s.heading}</h2>
+        <p style="font-size: 16px;">${body}</p>
+        <p style="font-size: 18px; padding: 16px; background: ${bgColor}; border-radius: 8px; text-align: center;">
+          ${s.currentPriceLabel} <strong>${alert.currency} ${alert.currentPrice.toFixed(2)}</strong>
+        </p>
+        ${alert.isPortfolioWide ? `<p style="font-size: 13px; color: #64748b;">${s.portfolioWideNotice}</p>` : ""}
+        <a href="${dashboardUrl}" style="display: inline-block; margin-top: 16px; padding: 12px 24px; background: #10b981; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600;">${s.ctaLabel}</a>
+        <p style="margin-top: 24px; font-size: 13px; color: #64748b;">${alert.isPortfolioWide ? s.activeNotice : s.deactivatedNotice}</p>
+      </div>`;
+
+  const result = await sendEmail({
+    to: email,
+    subject: `Price Alert: ${alert.ticker} ${direction} ${absPercent}% ${basisLabel}`,
+    html,
+  });
+  if (!result.success) console.error("Failed to send percent alert email:", result.error);
+  return result;
 }
 
 // ---------------------------------------------------------------------------
@@ -427,26 +478,14 @@ export async function sendWelcomeEmail(
 ): Promise<{ success: boolean; error?: string }> {
   if (isTestEmail(email)) return { success: true };
 
-  const resend = await getResendClient();
-  if (!resend) {
-    console.warn("Resend API key not configured; skipping welcome email.");
-    return { success: true };
-  }
-
   const c = i18nWelcome[locale] ?? i18nWelcome.en;
-  try {
-    await resend.emails.send({
-      from: getFromAddress(),
-      to: email,
-      subject: c.subject,
-      html: welcomeEmailHtml(displayName, locale),
-    });
-    return { success: true };
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.error("Failed to send welcome email:", msg);
-    return { success: false, error: msg };
-  }
+  const result = await sendEmail({
+    to: email,
+    subject: c.subject,
+    html: welcomeEmailHtml(displayName, locale),
+  });
+  if (!result.success) console.error("Failed to send welcome email:", result.error);
+  return result;
 }
 
 // ---------------------------------------------------------------------------
@@ -488,26 +527,14 @@ export async function sendBifolioUpgradeEmail(
 ): Promise<{ success: boolean; error?: string }> {
   if (isTestEmail(email)) return { success: true };
 
-  const resend = await getResendClient();
-  if (!resend) {
-    console.warn("Resend API key not configured; skipping Bifolio upgrade email.");
-    return { success: true };
-  }
-
   const c = i18nBifolio[locale] ?? i18nBifolio.en;
-  try {
-    await resend.emails.send({
-      from: getFromAddress(),
-      to: email,
-      subject: c.subject,
-      html: bifolioUpgradeHtml(displayName, locale),
-    });
-    return { success: true };
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.error("Failed to send Bifolio upgrade email:", err);
-    return { success: false, error: msg };
-  }
+  const result = await sendEmail({
+    to: email,
+    subject: c.subject,
+    html: bifolioUpgradeHtml(displayName, locale),
+  });
+  if (!result.success) console.error("Failed to send Bifolio upgrade email:", result.error);
+  return result;
 }
 
 // ---------------------------------------------------------------------------
@@ -565,26 +592,14 @@ export async function sendTrefolioUpgradeEmail(
 ): Promise<{ success: boolean; error?: string }> {
   if (isTestEmail(email)) return { success: true };
 
-  const resend = await getResendClient();
-  if (!resend) {
-    console.warn("Resend API key not configured; skipping Trefolio upgrade email.");
-    return { success: true };
-  }
-
   const c = i18nTrefolio[locale] ?? i18nTrefolio.en;
-  try {
-    await resend.emails.send({
-      from: getFromAddress(),
-      to: email,
-      subject: c.subject,
-      html: trefolioUpgradeHtml(displayName, locale),
-    });
-    return { success: true };
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.error("Failed to send Trefolio upgrade email:", msg);
-    return { success: false, error: msg };
-  }
+  const result = await sendEmail({
+    to: email,
+    subject: c.subject,
+    html: trefolioUpgradeHtml(displayName, locale),
+  });
+  if (!result.success) console.error("Failed to send Trefolio upgrade email:", result.error);
+  return result;
 }
 
 // ---------------------------------------------------------------------------
@@ -600,9 +615,6 @@ export async function sendAdminNewCustomerNotification(
 ): Promise<void> {
   if (process.env.NODE_ENV !== "production") return;
 
-  const resend = await getResendClient();
-  if (!resend) return;
-
   const providerLabel = authProvider.charAt(0).toUpperCase() + authProvider.slice(1);
 
   const html = `
@@ -615,16 +627,13 @@ export async function sendAdminNewCustomerNotification(
       </table>
     </div>`;
 
-  try {
-    await resend.emails.send({
-      from: getFromAddress(),
-      to: ADMIN_NOTIFICATION_EMAIL,
-      subject: `[trefolio] New Customer: ${displayName || userEmail}`,
-      html,
-    });
-  } catch (err) {
-    console.error("Failed to send admin new customer notification:", err instanceof Error ? err.message : err);
-  }
+  const result = await sendEmail({
+    to: ADMIN_NOTIFICATION_EMAIL,
+    subject: `[trefolio] New Customer: ${displayName || userEmail}`,
+    html,
+    internal: true,
+  });
+  if (!result.success) console.error("Failed to send admin new customer notification:", result.error);
 }
 
 // ---------------------------------------------------------------------------
@@ -639,9 +648,6 @@ export async function sendAdminSubscriptionNotification(
   eventType: "new_subscription" | "plan_change",
 ): Promise<void> {
   if (process.env.NODE_ENV !== "production") return;
-
-  const resend = await getResendClient();
-  if (!resend) return;
 
   let holdingCount = 0;
   try {
@@ -669,14 +675,11 @@ export async function sendAdminSubscriptionNotification(
       </table>
     </div>`;
 
-  try {
-    await resend.emails.send({
-      from: getFromAddress(),
-      to: ADMIN_NOTIFICATION_EMAIL,
-      subject: `[trefolio] ${eventLabel}: ${displayName || userEmail} → ${planLabel}`,
-      html,
-    });
-  } catch (err) {
-    console.error("Failed to send admin subscription notification:", err instanceof Error ? err.message : err);
-  }
+  const result = await sendEmail({
+    to: ADMIN_NOTIFICATION_EMAIL,
+    subject: `[trefolio] ${eventLabel}: ${displayName || userEmail} → ${planLabel}`,
+    html,
+    internal: true,
+  });
+  if (!result.success) console.error("Failed to send admin subscription notification:", result.error);
 }
