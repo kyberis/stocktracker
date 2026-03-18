@@ -60,7 +60,7 @@ export const POST = withMetrics("/api/admin/email-templates/send", async (req: N
     return NextResponse.json({ error: "subject and bodyHtml are required" }, { status: 400 });
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://trefolio.app";
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://trefolio.com";
 
   // Replace {{referral_link}} with user-specific referral link
   if (html.includes("{{referral_link}}") || text.includes("{{referral_link}}")) {
