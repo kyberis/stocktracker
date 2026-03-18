@@ -7,7 +7,7 @@ import type {
 export type { ExtractedTransaction, ExtractedHolding };
 
 export interface UseImportAIReturn {
-  step: "idle" | "extracting" | "preview" | "importing" | "done" | "error";
+  step: "idle" | "extracting" | "preview" | "importing" | "backfilling" | "done" | "error";
   holdings: ExtractedHolding[];
   transactions: ExtractedTransaction[];
   previewImage: string | null;
@@ -245,7 +245,10 @@ export function useImportAI(): UseImportAIReturn {
       setErrorMsg("Import failed.");
       setStep("error");
     } else {
-      setStep("done");
+      setStep("backfilling");
+      fetch("/api/portfolio/backfill-snapshots", { method: "POST" })
+        .catch(() => {})
+        .finally(() => setStep("done"));
     }
   }, [transactions, holdings]);
 

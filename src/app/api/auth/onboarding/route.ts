@@ -13,12 +13,14 @@ export const POST = withMetrics("/api/auth/onboarding", async (req: NextRequest)
 
   const result = await parseBody(req, onboardingSchema);
   if (!result.success) return result.error;
-  const { displayName, defaultCurrency, taxResidency, experienceLevel, importMethod } = result.data;
+  const { displayName, defaultCurrency, taxResidency, experienceLevel, importMethod, useCase, referralSource } = result.data;
 
   await completeOnboarding(session.userId, {
     displayName: displayName || undefined,
     taxResidency: taxResidency || undefined,
     experienceLevel: experienceLevel || undefined,
+    useCase: useCase && useCase.length > 0 ? useCase : undefined,
+    referralSource: referralSource || undefined,
   });
 
   if (defaultCurrency) {
@@ -27,6 +29,12 @@ export const POST = withMetrics("/api/auth/onboarding", async (req: NextRequest)
 
   if (importMethod) {
     trackEvent(session.userId, "onboarding_import_method", { method: importMethod });
+  }
+  if (useCase && useCase.length > 0) {
+    trackEvent(session.userId, "onboarding_use_case", { use_cases: useCase.join(",") });
+  }
+  if (referralSource) {
+    trackEvent(session.userId, "onboarding_referral_source", { source: referralSource });
   }
 
   const newSessionToken = await createSessionToken({

@@ -17,6 +17,50 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.42.0",
+    date: "2026-03-18",
+    title: "Portfolio Evolution Chart",
+    titleTranslations: { es: "Gráfico de Evolución de Cartera" },
+    changes: [
+      {
+        type: "feature",
+        text: "New portfolio evolution chart on the dashboard shows your portfolio value over time with 1W, 1M, 3M, 6M, YTD, and 1Y time ranges.",
+        translations: {
+          es: "Nuevo gráfico de evolución de cartera en el dashboard que muestra el valor de tu cartera a lo largo del tiempo con rangos de 1S, 1M, 3M, 6M, YTD y 1A.",
+        },
+      },
+      {
+        type: "feature",
+        text: "Automatic portfolio history backfill reconstructs historical portfolio values from your transactions, so you get a complete chart from day one.",
+        translations: {
+          es: "El relleno automático del historial de cartera reconstruye los valores históricos a partir de tus transacciones, proporcionando un gráfico completo desde el primer día.",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.41.0",
+    date: "2026-03-18",
+    title: "Onboarding Survey Steps",
+    titleTranslations: { es: "Pasos de Encuesta en el Onboarding" },
+    changes: [
+      {
+        type: "feature",
+        text: "New onboarding survey steps ask what you want to use trefolio for and how you heard about us, helping us tailor your experience. Both steps are skippable.",
+        translations: {
+          es: "Nuevos pasos de encuesta en el onboarding preguntan para qué quieres usar trefolio y cómo nos conociste, ayudándonos a personalizar tu experiencia. Ambos pasos se pueden omitir.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Streamlined onboarding flow combines profile, experience level, and tax residency into a single step for a faster setup.",
+        translations: {
+          es: "Flujo de onboarding optimizado que combina perfil, nivel de experiencia y residencia fiscal en un solo paso para una configuración más rápida.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.40.0",
     date: "2026-03-17",
     title: "Referral Program",

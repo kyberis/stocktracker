@@ -13,6 +13,8 @@ import { getBrokersForCountry } from "@/lib/country-brokers";
 const TOTAL_STEPS = 4;
 
 type ExperienceOption = "beginner" | "intermediate" | "experienced" | "professional";
+type UseCaseOption = "track_portfolio" | "dividend_income" | "tax_reporting" | "research_stocks";
+type ReferralSourceOption = "google" | "social_media" | "twitter" | "youtube" | "reddit" | "friend" | "other";
 
 function StepIndicator({ current }: { current: number }) {
   const { t } = useI18n();
@@ -37,22 +39,58 @@ function StepIndicator({ current }: { current: number }) {
   );
 }
 
+/* ── Step 0: Combined Profile + Experience + Tax Residency ── */
+
+const EXPERIENCE_OPTIONS: { key: ExperienceOption; icon: string; color: string; bgColor: string }[] = [
+  { key: "beginner", icon: "M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25", color: "text-sky-600 dark:text-sky-400", bgColor: "bg-sky-100 dark:bg-sky-500/15" },
+  { key: "intermediate", icon: "M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z", color: "text-emerald-600 dark:text-emerald-400", bgColor: "bg-emerald-100 dark:bg-emerald-500/15" },
+  { key: "experienced", icon: "M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941", color: "text-violet-600 dark:text-violet-400", bgColor: "bg-violet-100 dark:bg-violet-500/15" },
+  { key: "professional", icon: "M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0M12 12.75h.008v.008H12v-.008z", color: "text-amber-600 dark:text-amber-400", bgColor: "bg-amber-100 dark:bg-amber-500/15" },
+];
+
 function StepProfile({
   displayName,
   setDisplayName,
   currency,
   setCurrency,
+  experienceLevel,
+  setExperienceLevel,
+  taxResidency,
+  setTaxResidency,
   onNext,
 }: {
   displayName: string;
   setDisplayName: (v: string) => void;
   currency: string;
   setCurrency: (v: string) => void;
+  experienceLevel: ExperienceOption | "";
+  setExperienceLevel: (v: ExperienceOption) => void;
+  taxResidency: string;
+  setTaxResidency: (v: string) => void;
   onNext: () => void;
 }) {
   const { t } = useI18n();
+  const [countrySearch, setCountrySearch] = useState("");
+  const listRef = useRef<HTMLDivElement>(null);
+
+  const filteredCountries = useMemo(() => {
+    if (!countrySearch.trim()) return COUNTRIES;
+    const q = countrySearch.toLowerCase();
+    return COUNTRIES.filter(
+      (c) => c.name.toLowerCase().includes(q) || c.code.toLowerCase().includes(q)
+    );
+  }, [countrySearch]);
+
+  useEffect(() => {
+    if (taxResidency && listRef.current) {
+      const el = listRef.current.querySelector(`[data-code="${taxResidency}"]`);
+      if (el) el.scrollIntoView({ block: "nearest" });
+    }
+  }, [taxResidency]);
+
   return (
     <div className="space-y-5">
+      {/* Name & Currency */}
       <div>
         <label htmlFor="ob-name" className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">
           {t("onboardingDisplayNameLabel")}
@@ -84,6 +122,98 @@ function StepProfile({
         </select>
         <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">{t("onboardingDefaultCurrencyHint")}</p>
       </div>
+
+      {/* Experience Level (optional) */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">
+          {t("onboardingStepExperienceTitle")}
+          <span className="ml-1.5 text-xs font-normal text-gray-400 dark:text-slate-500">({t("onboardingSkip").toLowerCase()})</span>
+        </label>
+        <p className="text-xs text-gray-400 dark:text-slate-500 mb-2">{t("onboardingExperienceHint")}</p>
+        <div className="grid grid-cols-2 gap-2">
+          {EXPERIENCE_OPTIONS.map((opt) => (
+            <button
+              key={opt.key}
+              type="button"
+              onClick={() => setExperienceLevel(opt.key)}
+              className={`group flex items-center gap-2 rounded-lg border p-2.5 text-left transition-all ${
+                experienceLevel === opt.key
+                  ? "border-emerald-400 dark:border-emerald-500/50 bg-emerald-50/50 dark:bg-emerald-500/5"
+                  : "border-gray-200 dark:border-slate-600 hover:border-emerald-300 dark:hover:border-emerald-500/30"
+              }`}
+            >
+              <div className={`w-7 h-7 rounded-md ${opt.bgColor} flex items-center justify-center shrink-0`}>
+                <svg className={`w-3.5 h-3.5 ${opt.color}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d={opt.icon} />
+                </svg>
+              </div>
+              <span className="text-xs font-medium text-gray-900 dark:text-white leading-tight">
+                {t(`onboardingExperience_${opt.key}` as never)}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Tax Residency (optional) */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">
+          {t("onboardingStep2Title")}
+          <span className="ml-1.5 text-xs font-normal text-gray-400 dark:text-slate-500">({t("onboardingSkip").toLowerCase()})</span>
+        </label>
+        <p className="text-xs text-gray-400 dark:text-slate-500 mb-2">{t("onboardingTaxResidencyHint")}</p>
+
+        {taxResidency && !countrySearch && (
+          <div className="flex items-center gap-2 mb-2 px-3 py-2 rounded-lg border border-emerald-300 dark:border-emerald-500/40 bg-emerald-50/50 dark:bg-emerald-500/5">
+            <span className="text-base leading-none">{COUNTRIES.find((c) => c.code === taxResidency)?.flag}</span>
+            <span className="flex-1 text-sm text-emerald-700 dark:text-emerald-300">{COUNTRIES.find((c) => c.code === taxResidency)?.name}</span>
+            <button type="button" onClick={() => setTaxResidency("")} className="text-gray-400 hover:text-gray-600 dark:hover:text-slate-300">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        )}
+
+        <div className="relative">
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+          </svg>
+          <input
+            type="text"
+            value={countrySearch}
+            onChange={(e) => setCountrySearch(e.target.value)}
+            placeholder={t("onboardingSearchCountry")}
+            className="w-full pl-9 pr-3 py-2 rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 placeholder:text-gray-400 dark:placeholder:text-slate-500"
+          />
+        </div>
+
+        {countrySearch.trim() && (
+          <div ref={listRef} className="mt-2 rounded-lg border border-gray-200 dark:border-slate-600 divide-y divide-gray-100 dark:divide-slate-700">
+            {filteredCountries.length === 0 ? (
+              <p className="text-sm text-gray-400 dark:text-slate-500 text-center py-3">No results</p>
+            ) : (
+              filteredCountries.slice(0, 5).map((c) => (
+                <button
+                  key={c.code}
+                  data-code={c.code}
+                  type="button"
+                  onClick={() => { setTaxResidency(c.code); setCountrySearch(""); }}
+                  className={`w-full flex items-center gap-3 px-3 py-2 text-left text-sm transition-colors ${
+                    taxResidency === c.code
+                      ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                      : "text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700/50"
+                  }`}
+                >
+                  <span className="text-base leading-none">{c.flag}</span>
+                  <span className="flex-1 text-xs">{c.name}</span>
+                </button>
+              ))
+            )}
+          </div>
+        )}
+      </div>
+
       <button onClick={onNext} className="btn-primary w-full">
         {t("onboardingContinue")}
       </button>
@@ -91,37 +221,50 @@ function StepProfile({
   );
 }
 
-const EXPERIENCE_OPTIONS: { key: ExperienceOption; icon: string; color: string; bgColor: string }[] = [
-  { key: "beginner", icon: "M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25", color: "text-sky-600 dark:text-sky-400", bgColor: "bg-sky-100 dark:bg-sky-500/15" },
-  { key: "intermediate", icon: "M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z", color: "text-emerald-600 dark:text-emerald-400", bgColor: "bg-emerald-100 dark:bg-emerald-500/15" },
-  { key: "experienced", icon: "M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941", color: "text-violet-600 dark:text-violet-400", bgColor: "bg-violet-100 dark:bg-violet-500/15" },
-  { key: "professional", icon: "M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0M12 12.75h.008v.008H12v-.008z", color: "text-amber-600 dark:text-amber-400", bgColor: "bg-amber-100 dark:bg-amber-500/15" },
+/* ── Step 1: Use Case (multi-select) ── */
+
+const USE_CASE_OPTIONS: { key: UseCaseOption; icon: string; color: string; bgColor: string }[] = [
+  { key: "track_portfolio", icon: "M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z", color: "text-emerald-600 dark:text-emerald-400", bgColor: "bg-emerald-100 dark:bg-emerald-500/15" },
+  { key: "dividend_income", icon: "M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z", color: "text-sky-600 dark:text-sky-400", bgColor: "bg-sky-100 dark:bg-sky-500/15" },
+  { key: "tax_reporting", icon: "M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z", color: "text-violet-600 dark:text-violet-400", bgColor: "bg-violet-100 dark:bg-violet-500/15" },
+  { key: "research_stocks", icon: "M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z", color: "text-amber-600 dark:text-amber-400", bgColor: "bg-amber-100 dark:bg-amber-500/15" },
 ];
 
-function StepExperience({
+function StepUseCase({
   selected,
   setSelected,
   onNext,
   onSkip,
 }: {
-  selected: ExperienceOption | "";
-  setSelected: (v: ExperienceOption) => void;
+  selected: UseCaseOption[];
+  setSelected: (v: UseCaseOption[]) => void;
   onNext: () => void;
   onSkip: () => void;
 }) {
   const { t } = useI18n();
 
+  const toggle = (key: UseCaseOption) => {
+    setSelected(
+      selected.includes(key) ? selected.filter((k) => k !== key) : [...selected, key]
+    );
+  };
+
   return (
     <div className="space-y-4">
-      <p className="text-sm text-gray-500 dark:text-slate-400">{t("onboardingExperienceHint")}</p>
+      <div className="flex items-center gap-2">
+        <p className="text-sm text-gray-500 dark:text-slate-400">{t("onboardingUseCaseHint")}</p>
+        <span className="shrink-0 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 rounded px-1.5 py-0.5">
+          {t("onboardingUseCaseBadge")}
+        </span>
+      </div>
       <div className="grid grid-cols-1 gap-2.5">
-        {EXPERIENCE_OPTIONS.map((opt) => (
+        {USE_CASE_OPTIONS.map((opt) => (
           <button
             key={opt.key}
             type="button"
-            onClick={() => setSelected(opt.key)}
+            onClick={() => toggle(opt.key)}
             className={`group flex items-center gap-3 rounded-xl border p-3.5 text-left transition-all ${
-              selected === opt.key
+              selected.includes(opt.key)
                 ? "border-emerald-400 dark:border-emerald-500/50 bg-emerald-50/50 dark:bg-emerald-500/5 shadow-sm"
                 : "border-gray-200 dark:border-slate-600 hover:border-emerald-300 dark:hover:border-emerald-500/30 hover:shadow-sm"
             }`}
@@ -133,17 +276,93 @@ function StepExperience({
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                {t(`onboardingExperience_${opt.key}` as never)}
+                {t(`onboardingUseCase_${opt.key}` as never)}
               </p>
               <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
-                {t(`onboardingExperience_${opt.key}_desc` as never)}
+                {t(`onboardingUseCase_${opt.key}_desc` as never)}
               </p>
             </div>
-            {selected === opt.key && (
-              <svg className="w-5 h-5 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+            <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all ${
+              selected.includes(opt.key)
+                ? "bg-emerald-500 border-emerald-500"
+                : "border-gray-300 dark:border-slate-500"
+            }`}>
+              {selected.includes(opt.key) && (
+                <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+              )}
+            </div>
+          </button>
+        ))}
+      </div>
+      <div className="flex gap-3">
+        <button onClick={onSkip} className="btn-secondary flex-1">
+          {t("onboardingSkip")}
+        </button>
+        <button onClick={onNext} disabled={selected.length === 0} className="btn-primary flex-1 disabled:opacity-40">
+          {t("onboardingContinue")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ── Step 2: Referral Source (single-select) ── */
+
+const REFERRAL_SOURCE_OPTIONS: { key: ReferralSourceOption; icon: string; color: string; bgColor: string }[] = [
+  { key: "google", icon: "M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z", color: "text-sky-600 dark:text-sky-400", bgColor: "bg-sky-100 dark:bg-sky-500/15" },
+  { key: "social_media", icon: "M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z", color: "text-violet-600 dark:text-violet-400", bgColor: "bg-violet-100 dark:bg-violet-500/15" },
+  { key: "twitter", icon: "M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z", color: "text-indigo-600 dark:text-indigo-400", bgColor: "bg-indigo-100 dark:bg-indigo-500/15" },
+  { key: "youtube", icon: "M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z", color: "text-rose-600 dark:text-rose-400", bgColor: "bg-rose-100 dark:bg-rose-500/15" },
+  { key: "reddit", icon: "M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418", color: "text-orange-600 dark:text-orange-400", bgColor: "bg-orange-100 dark:bg-orange-500/15" },
+  { key: "friend", icon: "M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z", color: "text-teal-600 dark:text-teal-400", bgColor: "bg-teal-100 dark:bg-teal-500/15" },
+  { key: "other", icon: "M6.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM12.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM18.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0z", color: "text-gray-600 dark:text-gray-400", bgColor: "bg-gray-100 dark:bg-slate-700" },
+];
+
+function StepReferralSource({
+  selected,
+  setSelected,
+  onNext,
+  onSkip,
+}: {
+  selected: ReferralSourceOption | "";
+  setSelected: (v: ReferralSourceOption) => void;
+  onNext: () => void;
+  onSkip: () => void;
+}) {
+  const { t } = useI18n();
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-gray-500 dark:text-slate-400">{t("onboardingReferralSourceHint")}</p>
+      <div className="grid grid-cols-1 gap-2.5">
+        {REFERRAL_SOURCE_OPTIONS.map((opt) => (
+          <button
+            key={opt.key}
+            type="button"
+            onClick={() => setSelected(opt.key)}
+            className={`group flex items-center gap-3 rounded-xl border p-3 text-left transition-all ${
+              selected === opt.key
+                ? "border-emerald-400 dark:border-emerald-500/50 bg-emerald-50/50 dark:bg-emerald-500/5 shadow-sm"
+                : "border-gray-200 dark:border-slate-600 hover:border-emerald-300 dark:hover:border-emerald-500/30 hover:shadow-sm"
+            }`}
+          >
+            <div className={`w-8 h-8 rounded-lg ${opt.bgColor} flex items-center justify-center shrink-0`}>
+              <svg className={`w-4 h-4 ${opt.color}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d={opt.icon} />
               </svg>
-            )}
+            </div>
+            <p className="text-sm font-medium text-gray-900 dark:text-white flex-1">
+              {t(`onboardingReferralSource_${opt.key}` as never)}
+            </p>
+            <div className={`w-4.5 h-4.5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
+              selected === opt.key ? "border-emerald-500" : "border-gray-300 dark:border-slate-500"
+            }`}>
+              {selected === opt.key && (
+                <div className="w-2 h-2 rounded-full bg-emerald-500" />
+              )}
+            </div>
           </button>
         ))}
       </div>
@@ -159,90 +378,7 @@ function StepExperience({
   );
 }
 
-function StepTaxResidency({
-  selected,
-  setSelected,
-  onNext,
-  onSkip,
-}: {
-  selected: string;
-  setSelected: (v: string) => void;
-  onNext: () => void;
-  onSkip: () => void;
-}) {
-  const { t } = useI18n();
-  const [search, setSearch] = useState("");
-  const listRef = useRef<HTMLDivElement>(null);
-
-  const filtered = useMemo(() => {
-    if (!search.trim()) return COUNTRIES;
-    const q = search.toLowerCase();
-    return COUNTRIES.filter(
-      (c) => c.name.toLowerCase().includes(q) || c.code.toLowerCase().includes(q)
-    );
-  }, [search]);
-
-  useEffect(() => {
-    if (selected && listRef.current) {
-      const el = listRef.current.querySelector(`[data-code="${selected}"]`);
-      if (el) el.scrollIntoView({ block: "nearest" });
-    }
-  }, [selected]);
-
-  return (
-    <div className="space-y-4">
-      <p className="text-sm text-gray-500 dark:text-slate-400">{t("onboardingTaxResidencyHint")}</p>
-      <div className="relative">
-        <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-        </svg>
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder={t("onboardingSearchCountry")}
-          className="w-full pl-9 pr-3 py-2.5 rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 placeholder:text-gray-400 dark:placeholder:text-slate-500"
-          autoFocus
-        />
-      </div>
-      <div ref={listRef} className="max-h-56 overflow-y-auto rounded-lg border border-gray-200 dark:border-slate-600 divide-y divide-gray-100 dark:divide-slate-700">
-        {filtered.length === 0 ? (
-          <p className="text-sm text-gray-400 dark:text-slate-500 text-center py-4">No results</p>
-        ) : (
-          filtered.map((c) => (
-            <button
-              key={c.code}
-              data-code={c.code}
-              type="button"
-              onClick={() => setSelected(c.code)}
-              className={`w-full flex items-center gap-3 px-3 py-2 text-left text-sm transition-colors ${
-                selected === c.code
-                  ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-                  : "text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700/50"
-              }`}
-            >
-              <span className="text-lg leading-none">{c.flag}</span>
-              <span className="flex-1">{c.name}</span>
-              {selected === c.code && (
-                <svg className="w-4 h-4 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                </svg>
-              )}
-            </button>
-          ))
-        )}
-      </div>
-      <div className="flex gap-3">
-        <button onClick={onSkip} className="btn-secondary flex-1">
-          {t("onboardingSkip")}
-        </button>
-        <button onClick={onNext} disabled={!selected} className="btn-primary flex-1 disabled:opacity-40">
-          {t("onboardingContinue")}
-        </button>
-      </div>
-    </div>
-  );
-}
+/* ── Step 3: Import ── */
 
 type ImportChoice = "broker_sync" | "csv" | "ai" | "skip";
 
@@ -322,6 +458,8 @@ function OnboardingContent() {
   const [currency, setCurrency] = useState("EUR");
   const [experienceLevel, setExperienceLevel] = useState<ExperienceOption | "">("");
   const [taxResidency, setTaxResidency] = useState("");
+  const [useCase, setUseCase] = useState<UseCaseOption[]>([]);
+  const [referralSource, setReferralSource] = useState<ReferralSourceOption | "">("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -346,6 +484,8 @@ function OnboardingContent() {
           taxResidency: taxResidency || undefined,
           experienceLevel: experienceLevel || undefined,
           importMethod: importMethod || "skip",
+          useCase: useCase.length > 0 ? useCase : undefined,
+          referralSource: referralSource || undefined,
         }),
       });
       if (res.ok) {
@@ -357,18 +497,18 @@ function OnboardingContent() {
       // Allow retry
     }
     setSaving(false);
-  }, [displayName, currency, taxResidency, experienceLevel, refreshUser, router]);
+  }, [displayName, currency, taxResidency, experienceLevel, useCase, referralSource, refreshUser, router]);
 
   const stepTitles = [
     t("onboardingStep1Title"),
-    t("onboardingStepExperienceTitle"),
-    t("onboardingStep2Title"),
+    t("onboardingStepUseCaseTitle"),
+    t("onboardingStepReferralSourceTitle"),
     t("onboardingStep3ImportTitle"),
   ];
 
   return (
-    <main className="flex-1 flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md">
+    <main className="flex-1 flex px-4 py-12">
+      <div className="w-full max-w-md m-auto">
         <div className="text-center mb-6">
           <Link href="/landing" className="inline-flex items-center gap-2.5 mb-3">
             <svg className="w-10 h-10 rounded-xl shadow-lg shadow-emerald-500/20" viewBox="0 0 32 32">
@@ -403,21 +543,25 @@ function OnboardingContent() {
               setDisplayName={setDisplayName}
               currency={currency}
               setCurrency={setCurrency}
+              experienceLevel={experienceLevel}
+              setExperienceLevel={setExperienceLevel}
+              taxResidency={taxResidency}
+              setTaxResidency={setTaxResidency}
               onNext={() => setStep(1)}
             />
           )}
           {step === 1 && (
-            <StepExperience
-              selected={experienceLevel}
-              setSelected={setExperienceLevel}
+            <StepUseCase
+              selected={useCase}
+              setSelected={setUseCase}
               onNext={() => setStep(2)}
               onSkip={() => setStep(2)}
             />
           )}
           {step === 2 && (
-            <StepTaxResidency
-              selected={taxResidency}
-              setSelected={setTaxResidency}
+            <StepReferralSource
+              selected={referralSource}
+              setSelected={setReferralSource}
               onNext={() => setStep(3)}
               onSkip={() => setStep(3)}
             />

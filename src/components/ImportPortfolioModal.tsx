@@ -44,7 +44,7 @@ interface CashBalance {
   amount: number;
 }
 
-type Step = "upload" | "extracting" | "preview" | "importing" | "done" | "error";
+type Step = "upload" | "extracting" | "preview" | "importing" | "backfilling" | "done" | "error";
 type PreviewTab = "holdings" | "transactions";
 const TX_TYPE_COLORS: Record<string, string> = {
   buy: "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
@@ -114,7 +114,7 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
     rawCsvRef.current = "";
   };
 
-  const isBusy = step === "extracting" || step === "importing";
+  const isBusy = step === "extracting" || step === "importing" || step === "backfilling";
 
   const handleClose = () => {
     if (isBusy) return;
@@ -409,7 +409,10 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
       setErrorMsg(t("importError"));
       setStep("error");
     } else {
-      setStep("done");
+      setStep("backfilling");
+      fetch("/api/portfolio/backfill-snapshots", { method: "POST" })
+        .catch(() => {})
+        .finally(() => setStep("done"));
     }
   };
 
@@ -852,6 +855,22 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
                   </p>
                 )}
               </div>
+            </div>
+          )}
+
+          {step === "backfilling" && (
+            <div className="py-16 text-center space-y-5">
+              <div className="w-14 h-14 mx-auto rounded-full bg-violet-100 dark:bg-violet-500/15 flex items-center justify-center">
+                <svg className="w-7 h-7 text-violet-600 dark:text-violet-400 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182M2.985 19.644l3.181-3.182" />
+                </svg>
+              </div>
+              <p className="text-sm font-medium text-gray-700 dark:text-slate-200" aria-live="polite">
+                {t("calculatingHistory")}
+              </p>
+              <p className="text-xs text-gray-400 dark:text-slate-500 max-w-xs mx-auto">
+                {t("calculatingHistoryDesc")}
+              </p>
             </div>
           )}
 

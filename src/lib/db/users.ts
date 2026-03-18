@@ -170,7 +170,7 @@ export async function updateUserProfile(
 
 export async function completeOnboarding(
   userId: string,
-  data: { displayName?: string; taxResidency?: string; experienceLevel?: string }
+  data: { displayName?: string; taxResidency?: string; experienceLevel?: string; useCase?: string[]; referralSource?: string }
 ): Promise<void> {
   const client = await ensureInitialized();
   const sets: string[] = ["onboarding_completed = 1"];
@@ -187,6 +187,14 @@ export async function completeOnboarding(
   if (data.experienceLevel !== undefined) {
     sets.push("experience_level = ?");
     args.push(data.experienceLevel);
+  }
+  if (data.useCase !== undefined && data.useCase.length > 0) {
+    sets.push("use_case = ?");
+    args.push(JSON.stringify(data.useCase));
+  }
+  if (data.referralSource !== undefined) {
+    sets.push("referral_source = ?");
+    args.push(data.referralSource);
   }
   args.push(userId);
 

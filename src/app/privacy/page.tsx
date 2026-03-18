@@ -133,7 +133,8 @@ export default function PrivacyPolicyPage() {
               </li>
               <li>
                 User preferences (language, theme, display currency, selected
-                benchmarks).
+                benchmarks, product usage interests, and referral source
+                selected during onboarding).
               </li>
               <li>
                 <strong className="text-slate-200">Broker connection credentials (optional)</strong> —

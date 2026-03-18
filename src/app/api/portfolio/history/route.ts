@@ -26,14 +26,23 @@ export const GET = withMetrics("/api/portfolio/history", async (req: NextRequest
   let sql: string;
   let args: (string | number)[];
 
-  if (range === "all" || range === "1y" || range === "6m" || range === "3m") {
+  const paidRanges = new Set(["all", "1y", "6m", "3m", "ytd"]);
+  const freeRanges = new Set(["1m", "1w"]);
+
+  if (paidRanges.has(range)) {
     if (!canViewFull) {
-      // Free users: max 30 days regardless of requested range
       sql = `SELECT date, total_value_eur as value
              FROM portfolio_snapshots
              WHERE user_id = ? AND (? = '' OR portfolio_id = ?) AND date >= date('now', '-30 days')
              ORDER BY date ASC`;
       args = [session.userId, portfolioId, portfolioId];
+    } else if (range === "ytd") {
+      const year = new Date().getFullYear();
+      sql = `SELECT date, total_value_eur as value
+             FROM portfolio_snapshots
+             WHERE user_id = ? AND (? = '' OR portfolio_id = ?) AND date >= ?
+             ORDER BY date ASC`;
+      args = [session.userId, portfolioId, portfolioId, `${year}-01-01`];
     } else {
       const dayMap: Record<string, string> = {
         all: "-100 years",
@@ -47,8 +56,13 @@ export const GET = withMetrics("/api/portfolio/history", async (req: NextRequest
              ORDER BY date ASC`;
       args = [session.userId, portfolioId, portfolioId, dayMap[range]];
     }
+  } else if (range === "1w") {
+    sql = `SELECT date, total_value_eur as value
+           FROM portfolio_snapshots
+           WHERE user_id = ? AND (? = '' OR portfolio_id = ?) AND date >= date('now', '-7 days')
+           ORDER BY date ASC`;
+    args = [session.userId, portfolioId, portfolioId];
   } else {
-    // Default: 1m
     sql = `SELECT date, total_value_eur as value
            FROM portfolio_snapshots
            WHERE user_id = ? AND (? = '' OR portfolio_id = ?) AND date >= date('now', '-30 days')

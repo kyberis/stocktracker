@@ -20,6 +20,7 @@ import SampleDataBanner from "@/components/SampleDataBanner";
 import { HeroSkeleton, ChartSkeleton } from "@/components/Skeleton";
 import type { Account } from "@/lib/types";
 
+const PortfolioEvolutionChart = dynamic(() => import("@/components/PortfolioEvolutionChart"), { ssr: false });
 const GoalProgressBanner = dynamic(() => import("@/components/GoalProgressBanner"), { ssr: false });
 const PortfolioNewsFeed = dynamic(() => import("@/components/PortfolioNewsFeed"), { ssr: false });
 const TaxonomyView = dynamic(() => import("@/components/TaxonomyView"), { ssr: false });
@@ -237,6 +238,7 @@ export default function MobileDashboard() {
             ) : (
               <>
                 <PortfolioSummary holdings={filteredHoldings} cashEntries={investmentCashEntries} allCashEntries={cashEntries} />
+                <PortfolioEvolutionChart />
                 <GoalProgressBanner holdings={filteredHoldings} cashEntries={investmentCashEntries} />
                 <PortfolioCards holdings={filteredHoldings} />
                 <UpcomingEarnings onNavigateToEvents={() => handleTabChange("events")} />

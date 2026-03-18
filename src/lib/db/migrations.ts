@@ -1819,6 +1819,26 @@ Abrir Centro de Importación: {{base_url}}/import`,
       });
     },
   },
+  {
+    version: 61,
+    description: "Add use_case and referral_source columns to users",
+    up: async (client: Client) => {
+      await client.execute("ALTER TABLE users ADD COLUMN use_case TEXT");
+      await client.execute("ALTER TABLE users ADD COLUMN referral_source TEXT");
+    },
+  },
+  {
+    version: 62,
+    description: "Add snapshots_backfilled_at to users for portfolio history backfill tracking",
+    up: async (client: Client) => {
+      try {
+        await client.execute("ALTER TABLE users ADD COLUMN snapshots_backfilled_at TEXT");
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("duplicate column")) throw e;
+      }
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

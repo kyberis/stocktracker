@@ -31,6 +31,7 @@ const MobileDashboard = dynamic(() => import("./mobile/MobileDashboard"), {
 
 const GoalProgressBanner = dynamic(() => import("./GoalProgressBanner"), { ssr: false });
 const GoalCelebration = dynamic(() => import("./GoalCelebration"), { ssr: false });
+const PortfolioEvolutionChart = dynamic(() => import("./PortfolioEvolutionChart"), { ssr: false });
 const PortfolioGrowthPeriods = dynamic(() => import("./PortfolioGrowthPeriods"), { ssr: false });
 const PerformanceMetrics = dynamic(() => import("./PerformanceMetrics"), { ssr: false });
 const PortfolioProjection = dynamic(() => import("./PortfolioProjection"), { ssr: false });
@@ -382,6 +383,7 @@ function DesktopDashboard() {
                 />
 
                 <PortfolioSummary holdings={filteredHoldings} cashEntries={investmentCashEntries} allCashEntries={filteredCashEntries} />
+                <PortfolioEvolutionChart />
                 <GoalProgressBanner holdings={filteredHoldings} cashEntries={investmentCashEntries} />
                 <GoalCelebration holdings={filteredHoldings} cashEntries={investmentCashEntries} />
                 <AdSlot slot="dashboard-summary" format="horizontal" />

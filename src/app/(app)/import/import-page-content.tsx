@@ -20,7 +20,7 @@ import type { BrokerFormat } from "@/hooks/import-types";
 
 type ImportMethod = "broker_csv" | "snaptrade_api" | "ai_import" | "manual";
 
-type WizardStep = "method" | "broker" | "upload" | "preview" | "done";
+type WizardStep = "method" | "broker" | "upload" | "preview" | "backfilling" | "done";
 
 const TX_TYPE_COLORS: Record<string, string> = {
   buy: "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
@@ -185,18 +185,21 @@ export default function ImportPageContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Auto-advance to preview/done when hook state changes
+  // Auto-advance to preview/done/backfilling when hook state changes
   useEffect(() => {
     if (method === "broker_csv") {
       if (brokerCSV.step === "preview") setStep("preview");
+      if (brokerCSV.step === "backfilling") setStep("backfilling");
       if (brokerCSV.step === "done") setStep("done");
     }
     if (method === "ai_import") {
       if (aiImport.step === "preview") setStep("preview");
+      if (aiImport.step === "backfilling") setStep("backfilling");
       if (aiImport.step === "done") setStep("done");
     }
     if (method === "snaptrade_api") {
       if (snapTradeApi.step === "preview" && snapTradeApi.transactions.length > 0) setStep("preview");
+      if (snapTradeApi.step === "backfilling") setStep("backfilling");
       if (snapTradeApi.step === "done") setStep("done");
     }
   }, [method, brokerCSV.step, aiImport.step, snapTradeApi.step, snapTradeApi.transactions.length]);
@@ -706,6 +709,25 @@ export default function ImportPageContent() {
           {brokerCSV.step === "importing" && <ImportingProgress progress={brokerCSV.importProgress} t={t} />}
           {aiImport.step === "importing" && <ImportingProgress progress={aiImport.importProgress} t={t} />}
           {snapTradeApi.step === "importing" && <ImportingProgress progress={snapTradeApi.importProgress} t={t} />}
+        </div>
+      )}
+
+      {/* ═══════════ STEP: Backfilling ═══════════ */}
+      {step === "backfilling" && (
+        <div className="animate-slide-up">
+          <div className="card p-8 text-center space-y-4 max-w-md mx-auto">
+            <div className="w-14 h-14 mx-auto rounded-full bg-violet-100 dark:bg-violet-500/15 flex items-center justify-center">
+              <svg className="w-7 h-7 text-violet-600 dark:text-violet-400 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182M2.985 19.644l3.181-3.182" />
+              </svg>
+            </div>
+            <p className="text-sm font-medium text-gray-700 dark:text-slate-200" aria-live="polite">
+              {t("calculatingHistory")}
+            </p>
+            <p className="text-xs text-gray-400 dark:text-slate-500">
+              {t("calculatingHistoryDesc")}
+            </p>
+          </div>
         </div>
       )}
 

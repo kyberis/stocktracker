@@ -42,7 +42,7 @@ function normalizeTransaction(tx: Record<string, unknown>): ExtractedTransaction
 }
 
 export interface UseImportBrokerCSVReturn {
-  step: "idle" | "parsing" | "preview" | "importing" | "done" | "error";
+  step: "idle" | "parsing" | "preview" | "importing" | "backfilling" | "done" | "error";
   transactions: ExtractedTransaction[];
   holdings: ExtractedHolding[];
   cashBalances: CashBalance[];
@@ -319,7 +319,10 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
         setErrorMsg("Import failed.");
         setStep("error");
       } else {
-        setStep("done");
+        setStep("backfilling");
+        fetch("/api/portfolio/backfill-snapshots", { method: "POST" })
+          .catch(() => {})
+          .finally(() => setStep("done"));
       }
     },
     [transactions, holdings, cashBalances]

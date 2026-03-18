@@ -28,7 +28,7 @@ export interface UseSnapTradeApiReturn {
   connectionLimit: number;
   isFetching: boolean;
   transactions: ExtractedTransaction[];
-  step: "idle" | "connecting" | "reconnecting" | "fetching" | "preview" | "importing" | "done" | "error";
+  step: "idle" | "connecting" | "reconnecting" | "fetching" | "preview" | "importing" | "backfilling" | "done" | "error";
   importedCount: number;
   errorMsg: string;
   needsReconnect: boolean;
@@ -487,7 +487,10 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
           ts: new Date().toISOString(),
         }));
       } catch { /* private browsing or storage quota exceeded */ }
-      setStep("done");
+      setStep("backfilling");
+      fetch("/api/portfolio/backfill-snapshots", { method: "POST" })
+        .catch(() => {})
+        .finally(() => setStep("done"));
     }
   }, [transactions]);
 
