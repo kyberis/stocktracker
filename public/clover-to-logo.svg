@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="400" height="400">
+  <defs>
+    <linearGradient id="cla" x1=".5" y1="0" x2=".5" y2="1">
+      <stop offset="0%" stop-color="#6ee7b7"/><stop offset="100%" stop-color="#10b981"/>
+    </linearGradient>
+    <linearGradient id="clb" x1="0" y1=".3" x2="1" y2=".7">
+      <stop offset="0%" stop-color="#34d399"/><stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+    <linearGradient id="clc" x1=".5" y1="1" x2=".5" y2="0">
+      <stop offset="0%" stop-color="#10b981"/><stop offset="100%" stop-color="#047857"/>
+    </linearGradient>
+    <linearGradient id="cld" x1="1" y1=".3" x2="0" y2=".7">
+      <stop offset="0%" stop-color="#a7f3d0"/><stop offset="100%" stop-color="#34d399"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background rounded rect -->
+  <rect x="30" y="30" width="140" height="140" rx="30" fill="#0f172a" opacity="0">
+    <animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;0.25;0.5;0.75;1" dur="8s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0 0 1 1;0.42 0 0.58 1;0 0 1 1"/>
+  </rect>
+
+  <!-- Stem -->
+  <g opacity="1">
+    <animate attributeName="opacity" values="1;0;0;1;1" keyTimes="0;0.25;0.5;0.75;1" dur="8s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0 0 1 1;0.42 0 0.58 1;0 0 1 1"/>
+    <path d="M100,96 Q99,118 96,142 Q94,153 92,160" stroke="#059669" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M92,160 Q90,163 87,166" stroke="#059669" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+    <ellipse cx="95" cy="126" rx="5" ry="3.2" fill="#16a34a" transform="rotate(-28 95 126)" opacity="0.5"/>
+  </g>
+
+  <!-- Leaf group: outer translates, inner rotates -->
+  <g>
+    <animateTransform attributeName="transform" type="translate" values="100 90;100 100;100 100;100 90;100 90" keyTimes="0;0.25;0.5;0.75;1" dur="8s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0 0 1 1;0.42 0 0.58 1;0 0 1 1"/>
+    <g>
+      <animateTransform attributeName="transform" type="rotate" values="0;45;45;0;0" keyTimes="0;0.25;0.5;0.75;1" dur="8s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0 0 1 1;0.42 0 0.58 1;0 0 1 1"/>
+
+      <!-- Leaf 1 (top) solid -->
+      <ellipse cx="0" cy="-36" rx="17" ry="26" fill="#22c55e" opacity="1">
+        <animate attributeName="cy" values="-36;-30;-30;-36;-36" keyTimes="0;0.25;0.5;0.75;1" dur="8s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0 0 1 1;0.42 0 0.58 1;0 0 1 1"/>
+        <animate attributeName="rx" values="17;25;25;17;17" keyTimes="0;0.25;0.5;0.75;1" dur="8s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0 0 1 1;0.42 0 0.58 1;0 0 1 1"/>
+        <animate attributeName="ry" values="26;36;36;26;26" keyTimes="0;0.25;0.5;0.75;1" dur="8s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0 0 1 1;0.42 0 0.58 1;0 0 1 1"/>
+        <animate attributeName="opacity" values="1;0;0;1;1" keyTimes="0;0.25;0.5;0.75;1" dur="8s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0 0 1 1;0.42 0 0.58 1;0 0 1 1"/>
+      </ellipse>
+      <!-- Leaf 1 (top) gradient -->
+      <ellipse cx="0" cy="-36" rx="17" ry="26" fill="url(#cla)" opacity="0">
+        <animate attributeName="cy" values="-36;-30;-30;-36;-36" keyTimes="0;0.25;0.5;0.75;1" dur="8s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0 0 1 1;0.42 0 0.58 1;0 0 1 1"/>
+        <animate attributeName="rx" values="17;25;25;17;17" keyTimes="0;0.25;0.5;0.75;1" dur="8s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0 0 1 1;0.42 0 0.58 1;0 0 1 1"/>
+        <animate attributeName="ry" values="26;36;36;26;26" keyTimes="0;0.25;0.5;0.75;1" dur="8s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0 0 1 1;0.42 0 0.58 1;0 0 1 1"/>
+        <animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;0.25;0.5;0.75;1" dur="8s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0 0 1 1;0.42 0 0.58 1;0 0 1 1"/>
+      </ellipse>
+
+      <!-- Leaf 2 (right) solid -->
+      <g transform="rotate(90)">
+        <ellipse cx="0" cy="-36" rx="17" ry="26" fill="#16a34a" opacity="1">
+          <animate attributeName="cy" values="-36;-30;-30;-36;-36" keyTimes="0;0.25;0.5;0.75;1" dur="8s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0 0 1 1;0.42 0 0.58 1;0 0 1 1"/>
+          <animate attributeName="rx" values="17;25;25;17;17" keyTimes="0;0.25;0.5;0.75;1" dur="8s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0 0 1 1;0.42 0 0.58 1;0 0 1 1"/>
+          <animate attributeName="ry" values="26;36;36;26;26" keyTimes="0;0.25;0.5;0.75;1" dur="8s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0 0 1 1;0.42 0 0.58 1;0 0 1 1"/>
+          <animate attributeName="opacity" values="1;0;0;1;1" keyTimes="0;0.25;0.5;0.75;1" dur="8s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0 0 1 1;0.42 0 0.58 1;0 0 1 1"/>
+        </ellipse>
+        <ellipse cx="0" cy="-36" rx="17" ry="26" fill="url(#clb)" opacity="0">
+          <animate attributeName="cy" values="-36;-30;-30;-36;-36" keyTimes="0;0.25;0.5;0.75;1" dur="8s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0 0 1 1;0.42 0 0.58 1;0 0 1 1"/>
+          <animate attributeName="rx" values="17;25;25;17;17" keyTimes="0;0.25;0.5;0.75;1" dur="8s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0 0 1 1;0.42 0 0.58 1;0 0 1 1"/>
+          <animate attributeName="ry" values="26;36;36;26;26" keyTimes="0;0.25;0.5;0.75;1" dur="8s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0 0 1 1;0.42 0 0.58 1;0 0 1 1"/>
+          <animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;0.25;0.5;0.75;1" dur="8s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0 0 1 1;0.42 0 0.58 1;0 0 1 1"/>
+        </ellipse>
+      </g>
+
+      <!-- Leaf 3 (bottom) solid -->
+      <g transform="rotate(180)">
+        <ellipse cx="0" cy="-36" rx="17" ry="26" fill="#15803d" opacity="1">
+          <animate attributeName="cy" values="-36;-30;-30;-36;-36" keyTimes="0;0.25;0.5;0.75;1" dur="8s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0 0 1 1;0.42 0 0.58 1;0 0 1 1"/>
+          <animate attributeName="rx" values="17;25;25;17;17" keyTimes="0;0.25;0.5;0.75;1" dur="8s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0 0 1 1;0.42 0 0.58 1;0 0 1 1"/>
+          <animate attributeName="ry" values="26;36;36;26;26" keyTimes="0;0.25;0.5;0.75;1" dur="8s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0 0 1 1;0.42 0 0.58 1;0 0 1 1"/>
+          <animate attributeName="opacity" values="1;0;0;1;1" keyTimes="0;0.25;0.5;0.75;1" dur="8s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0 0 1 1;0.42 0 0.58 1;0 0 1 1"/>
+        </ellipse>
+        <ellipse cx="0" cy="-36" rx="17" ry="26" fill="url(#clc)" opacity="0">
+          <animate attributeName="cy" values="-36;-30;-30;-36;-36" keyTimes="0;0.25;0.5;0.75;1" dur="8s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0 0 1 1;0.42 0 0.58 1;0 0 1 1"/>
+          <animate attributeName="rx" values="17;25;25;17;17" keyTimes="0;0.25;0.5;0.75;1" dur="8s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0 0 1 1;0.42 0 0.58 1;0 0 1 1"/>
+          <animate attributeName="ry" values="26;36;36;26;26" keyTimes="0;0.25;0.5;0.75;1" dur="8s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0 0 1 1;0.42 0 0.58 1;0 0 1 1"/>
+          <animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;0.25;0.5;0.75;1" dur="8s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0 0 1 1;0.42 0 0.58 1;0 0 1 1"/>
+        </ellipse>
+      </g>
+
+      <!-- Leaf 4 (left) solid -->
+      <g transform="rotate(270)">
+        <ellipse cx="0" cy="-36" rx="17" ry="26" fill="#4ade80" opacity="1">
+          <animate attributeName="cy" values="-36;-30;-30;-36;-36" keyTimes="0;0.25;0.5;0.75;1" dur="8s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0 0 1 1;0.42 0 0.58 1;0 0 1 1"/>
+          <animate attributeName="rx" values="17;25;25;17;17" keyTimes="0;0.25;0.5;0.75;1" dur="8s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0 0 1 1;0.42 0 0.58 1;0 0 1 1"/>
+          <animate attributeName="ry" values="26;36;36;26;26" keyTimes="0;0.25;0.5;0.75;1" dur="8s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0 0 1 1;0.42 0 0.58 1;0 0 1 1"/>
+          <animate attributeName="opacity" values="1;0;0;1;1" keyTimes="0;0.25;0.5;0.75;1" dur="8s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0 0 1 1;0.42 0 0.58 1;0 0 1 1"/>
+        </ellipse>
+        <ellipse cx="0" cy="-36" rx="17" ry="26" fill="url(#cld)" opacity="0">
+          <animate attributeName="cy" values="-36;-30;-30;-36;-36" keyTimes="0;0.25;0.5;0.75;1" dur="8s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0 0 1 1;0.42 0 0.58 1;0 0 1 1"/>
+          <animate attributeName="rx" values="17;25;25;17;17" keyTimes="0;0.25;0.5;0.75;1" dur="8s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0 0 1 1;0.42 0 0.58 1;0 0 1 1"/>
+          <animate attributeName="ry" values="26;36;36;26;26" keyTimes="0;0.25;0.5;0.75;1" dur="8s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0 0 1 1;0.42 0 0.58 1;0 0 1 1"/>
+          <animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;0.25;0.5;0.75;1" dur="8s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0 0 1 1;0.42 0 0.58 1;0 0 1 1"/>
+        </ellipse>
+      </g>
+
+      <!-- Center dot -->
+      <circle cx="0" cy="0" r="7" fill="#0f172a" opacity="0">
+        <animate attributeName="opacity" values="0;0.35;0.35;0;0" keyTimes="0;0.25;0.5;0.75;1" dur="8s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0 0 1 1;0.42 0 0.58 1;0 0 1 1"/>
+      </circle>
+    </g>
+  </g>
+
+  <!-- Leaf veins (match leaf group transform) -->
+  <g opacity="0.25">
+    <animate attributeName="opacity" values="0.25;0;0;0.25;0.25" keyTimes="0;0.25;0.5;0.75;1" dur="8s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0 0 1 1;0.42 0 0.58 1;0 0 1 1"/>
+    <g>
+      <animateTransform attributeName="transform" type="translate" values="100 90;100 100;100 100;100 90;100 90" keyTimes="0;0.25;0.5;0.75;1" dur="8s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0 0 1 1;0.42 0 0.58 1;0 0 1 1"/>
+      <g>
+        <animateTransform attributeName="transform" type="rotate" values="0;45;45;0;0" keyTimes="0;0.25;0.5;0.75;1" dur="8s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0 0 1 1;0.42 0 0.58 1;0 0 1 1"/>
+        <g>
+          <line x1="0" y1="-6" x2="0" y2="-52" stroke="#fff" stroke-width="0.7" stroke-linecap="round"/>
+          <line x1="0" y1="-16" x2="-6" y2="-38" stroke="#fff" stroke-width="0.5" stroke-linecap="round" opacity="0.6"/>
+          <line x1="0" y1="-16" x2="6" y2="-38" stroke="#fff" stroke-width="0.5" stroke-linecap="round" opacity="0.6"/>
+        </g>
+        <g transform="rotate(90)">
+          <line x1="0" y1="-6" x2="0" y2="-52" stroke="#fff" stroke-width="0.7" stroke-linecap="round"/>
+          <line x1="0" y1="-16" x2="-6" y2="-38" stroke="#fff" stroke-width="0.5" stroke-linecap="round" opacity="0.6"/>
+          <line x1="0" y1="-16" x2="6" y2="-38" stroke="#fff" stroke-width="0.5" stroke-linecap="round" opacity="0.6"/>
+        </g>
+        <g transform="rotate(180)">
+          <line x1="0" y1="-6" x2="0" y2="-52" stroke="#fff" stroke-width="0.7" stroke-linecap="round"/>
+          <line x1="0" y1="-16" x2="-6" y2="-38" stroke="#fff" stroke-width="0.5" stroke-linecap="round" opacity="0.6"/>
+          <line x1="0" y1="-16" x2="6" y2="-38" stroke="#fff" stroke-width="0.5" stroke-linecap="round" opacity="0.6"/>
+        </g>
+        <g transform="rotate(270)">
+          <line x1="0" y1="-6" x2="0" y2="-52" stroke="#fff" stroke-width="0.7" stroke-linecap="round"/>
+          <line x1="0" y1="-16" x2="-6" y2="-38" stroke="#fff" stroke-width="0.5" stroke-linecap="round" opacity="0.6"/>
+          <line x1="0" y1="-16" x2="6" y2="-38" stroke="#fff" stroke-width="0.5" stroke-linecap="round" opacity="0.6"/>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

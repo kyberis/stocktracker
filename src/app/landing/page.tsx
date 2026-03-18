@@ -9,6 +9,7 @@ import { LandingI18nProvider, useI18n, type TranslationKey } from "@/lib/i18n";
 import { SUPPORTED_LANGUAGES } from "@/lib/languages";
 import { event as gtagEvent } from "@/lib/gtag";
 import { captureFirstTouchAttributionFromWindow } from "@/lib/attribution";
+import CloverToLogo from "@/components/CloverToLogo";
 
 /* ─── anonymous analytics helper ─── */
 
@@ -535,7 +536,7 @@ function HeroSection() {
   ], [t]);
 
   return (
-    <section className="relative pt-28 pb-16 sm:pt-36 sm:pb-24 overflow-hidden">
+    <section className="relative pt-20 pb-12 sm:pt-28 sm:pb-24 overflow-hidden">
       <div className="absolute inset-0 -z-10">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl" />
         <div className="absolute top-20 right-1/4 w-80 h-80 bg-teal-500/15 rounded-full blur-3xl" />
@@ -544,41 +545,48 @@ function HeroSection() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-4 py-1.5 mb-8">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-sm font-medium text-emerald-400">{t("landingHeroBadge")}</span>
+          {/* Animation + badge — inline row */}
+          <div className="flex items-center justify-center gap-3 mb-3 sm:mb-5">
+            <CloverToLogo once delay={400} transitionMs={2000} className="w-10 h-10 sm:w-14 sm:h-14 lg:w-20 lg:h-20 drop-shadow-[0_0_24px_rgba(16,185,129,0.3)]" />
+            <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-3 py-1 sm:px-4 sm:py-1.5">
+              <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-xs sm:text-sm font-medium text-emerald-400">{t("landingHeroBadge")}</span>
+            </div>
           </div>
 
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-[1.1] mb-4">
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-[1.1] mb-2 sm:mb-3">
             {t("landingHeroTitle")}{" "}
             <span className="bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 bg-clip-text text-transparent">
               {t("landingHeroTitleAccent")}
             </span>
           </h1>
-          <p className="text-lg sm:text-xl text-emerald-400/80 font-medium italic mb-6">
+          <p className="text-base sm:text-lg text-emerald-400/80 font-medium italic mb-3 sm:mb-5">
             {t("landingBrandTagline")}
           </p>
 
-          <div className="flex flex-col items-center gap-3 mb-8">
+          {/* Value props — inline flow */}
+          <div className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 sm:gap-x-6 sm:gap-y-2 mb-4 sm:mb-6">
             {valuePropItems.map((item) => (
-              <div key={item} className="flex items-center gap-3">
-                <svg className="w-5 h-5 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <div key={item} className="flex items-center gap-1.5 sm:gap-2">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
-                <span className="text-lg text-slate-300">{item}</span>
+                <span className="text-sm sm:text-base text-slate-300">{item}</span>
               </div>
             ))}
           </div>
 
-          <p className="text-base sm:text-lg text-slate-400 max-w-xl mx-auto mb-10 leading-relaxed">
+          {/* Long paragraph — only on large screens */}
+          <p className="hidden md:block text-base lg:text-lg text-slate-400 max-w-xl mx-auto mb-8 leading-relaxed">
             {t("landingHeroParagraph")}
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
+          {/* CTA */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-5 sm:mb-8">
             <Link
               href="/signup"
               onClick={() => trackLanding("landing_cta_click", { cta: "hero_signup" })}
-              className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-white font-semibold px-8 py-4 rounded-xl text-lg transition-all shadow-xl shadow-emerald-500/25 hover:shadow-emerald-400/30 hover:-translate-y-0.5"
+              className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-white font-semibold px-6 py-3 sm:px-8 sm:py-3.5 rounded-xl text-base sm:text-lg transition-all shadow-xl shadow-emerald-500/25 hover:shadow-emerald-400/30 hover:-translate-y-0.5 w-full sm:w-auto justify-center"
             >
               {t("landingHeroCtaSignup")}
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -587,7 +595,8 @@ function HeroSection() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 mb-16 max-w-2xl mx-auto">
+          {/* Stats — 4 cols on all sizes */}
+          <div className="grid grid-cols-4 gap-3 sm:gap-6 mb-10 sm:mb-14 max-w-2xl mx-auto">
             {[
               { value: t("landingHeroProof1Value"), label: t("landingHeroProof1Label") },
               { value: t("landingHeroProof2Value"), label: t("landingHeroProof2Label") },
@@ -595,8 +604,8 @@ function HeroSection() {
               { value: t("landingHeroProof4Value"), label: t("landingHeroProof4Label") },
             ].map((s) => (
               <div key={s.label} className="text-center">
-                <div className="text-2xl font-extrabold text-white tracking-tight">{s.value}</div>
-                <div className="text-xs text-slate-400 mt-1">{s.label}</div>
+                <div className="text-lg sm:text-2xl font-extrabold text-white tracking-tight">{s.value}</div>
+                <div className="text-[10px] sm:text-xs text-slate-400 mt-0.5 sm:mt-1">{s.label}</div>
               </div>
             ))}
           </div>
