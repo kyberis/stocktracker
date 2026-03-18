@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>trefolio — Ad Creatives Gallery</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: #0a0a0f;
+    color: #e2e8f0;
+    padding: 40px 20px;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, #34d399, #2dd4bf);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: #64748b;
+    font-size: 14px;
+    margin-bottom: 48px;
+  }
+
+  .ad-set-header {
+    max-width: 1280px;
+    margin: 48px auto 24px;
+    padding: 16px 24px;
+    background: rgba(16, 185, 129, 0.06);
+    border: 1px solid rgba(16, 185, 129, 0.15);
+    border-radius: 12px;
+  }
+
+  .ad-set-header h2 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+
+  .ad-set-header p {
+    font-size: 12px;
+    color: #64748b;
+  }
+
+  .ad-set-header:first-of-type { margin-top: 0; }
+
+  .creative-wrapper {
+    max-width: 1280px;
+    margin: 0 auto 40px;
+  }
+
+  .creative-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .creative-label .id {
+    font-size: 11px;
+    font-weight: 700;
+    color: #10b981;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    padding: 3px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .creative-label .angle {
+    font-size: 11px;
+    font-weight: 600;
+    color: #94a3b8;
+  }
+
+  .creative-label .dims {
+    font-size: 10px;
+    color: #475569;
+    margin-left: auto;
+  }
+
+  /* ─── The ad frame (1200×628 at 50% for display) ─── */
+  .ad-frame {
+    width: 1200px;
+    height: 628px;
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+    transform-origin: top left;
+    transform: scale(0.52);
+    margin-bottom: -300px; /* compensate for scale */
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.06), 0 20px 60px rgba(0,0,0,0.5);
+  }
+
+  @media (max-width: 700px) {
+    .ad-frame {
+      transform: scale(0.3);
+      margin-bottom: -440px;
+    }
+  }
+
+  /* ─── Shared ad styles ─── */
+  .ad {
+    width: 1200px;
+    height: 628px;
+    position: relative;
+    overflow: hidden;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .ad-bg {
+    position: absolute;
+    inset: 0;
+    background: #0f172a;
+  }
+
+  .ad-gradient-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.4;
+  }
+
+  /* ─── Logo watermark ─── */
+  .ad .logo-area {
+    position: absolute;
+    bottom: 24px;
+    right: 32px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 10;
+  }
+
+  .ad .logo-area .logo-icon {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #10b981, #059669);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  }
+
+  .ad .logo-area .logo-icon svg { width: 18px; height: 18px; }
+
+  .ad .logo-area .logo-text {
+    font-size: 18px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.3px;
+  }
+
+  .ad .cta-pill {
+    position: absolute;
+    bottom: 24px;
+    left: 32px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #10b981;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 10px 24px;
+    border-radius: 10px;
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35);
+    z-index: 10;
+  }
+
+  .ad .cta-pill svg { width: 16px; height: 16px; }
+
+  /* ─── Copy metadata below ad ─── */
+  .copy-block {
+    margin-top: 16px;
+    padding: 16px 20px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    max-width: 640px;
+  }
+
+  .copy-block .field { margin-bottom: 8px; }
+  .copy-block .field:last-child { margin-bottom: 0; }
+
+  .copy-block .field-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+  }
+
+  .copy-block .field-value {
+    font-size: 13px;
+    color: #cbd5e1;
+    line-height: 1.5;
+  }
+
+  /* ─── Dashboard mockup elements ─── */
+  .mock-dashboard {
+    position: absolute;
+    right: 40px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 560px;
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid rgba(148, 163, 184, 0.12);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    z-index: 5;
+  }
+
+  .mock-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .mock-tab {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 8px;
+    color: #64748b;
+  }
+
+  .mock-tab.active {
+    background: rgba(16, 185, 129, 0.12);
+    color: #34d399;
+  }
+
+  .mock-value {
+    font-size: 36px;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: -1px;
+    line-height: 1;
+  }
+
+  .mock-change {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #34d399;
+    background: rgba(16, 185, 129, 0.1);
+    padding: 3px 10px;
+    border-radius: 6px;
+    margin-top: 6px;
+  }
+
+  .mock-meta {
+    font-size: 11px;
+    color: #475569;
+    margin-top: 4px;
+  }
+
+  .mock-chart {
+    width: 100%;
+    height: 56px;
+    margin: 12px 0;
+  }
+
+  .mock-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin: 12px 0;
+  }
+
+  .mock-metric {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    padding: 10px;
+  }
+
+  .mock-metric-label {
+    font-size: 9px;
+    color: #475569;
+    margin-bottom: 2px;
+  }
+
+  .mock-metric-value {
+    font-size: 14px;
+    font-weight: 800;
+    color: #34d399;
+  }
+
+  .mock-holdings {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .mock-holding {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 6px;
+  }
+
+  .mock-holding-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .mock-holding-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+  }
+
+  .mock-holding-ticker {
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .mock-holding-shares {
+    font-size: 10px;
+    color: #475569;
+  }
+
+  .mock-holding-gain {
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .gain-pos { color: #34d399; }
+  .gain-neg { color: #f87171; }
+
+  /* ─── Text overlay area ─── */
+  .ad-text-area {
+    position: absolute;
+    left: 48px;
+    top: 50%;
+    transform: translateY(-50%);
+    max-width: 480px;
+    z-index: 8;
+  }
+
+  .ad-headline {
+    font-size: 40px;
+    font-weight: 900;
+    color: #fff;
+    line-height: 1.1;
+    letter-spacing: -1px;
+    margin-bottom: 16px;
+  }
+
+  .ad-headline .accent {
+    background: linear-gradient(135deg, #34d399, #2dd4bf);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .ad-body {
+    font-size: 16px;
+    color: #94a3b8;
+    line-height: 1.6;
+    max-width: 400px;
+  }
+
+  .ad-body strong {
+    color: #e2e8f0;
+    font-weight: 600;
+  }
+
+  /* ─── Specific creative styles ─── */
+
+  /* A3 / B3 split/pain-point */
+  .split-left {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 45%;
+    background: #1a0a0a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3;
+  }
+
+  .split-right {
+    position: absolute;
+    right: 0; top: 0; bottom: 0;
+    width: 55%;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .split-divider {
+    position: absolute;
+    left: 45%;
+    top: 0; bottom: 0;
+    width: 3px;
+    background: linear-gradient(180deg, transparent, #10b981, transparent);
+    z-index: 6;
+  }
+
+  .spreadsheet-mock {
+    width: 380px;
+    background: #1e1e2e;
+    border: 1px solid #333;
+    border-radius: 8px;
+    overflow: hidden;
+    opacity: 0.7;
+    transform: rotate(-2deg);
+  }
+
+  .spreadsheet-header {
+    display: flex;
+    background: #2a2a3a;
+    padding: 6px 10px;
+    gap: 8px;
+  }
+
+  .spreadsheet-header span {
+    font-size: 9px;
+    font-weight: 600;
+    color: #666;
+    padding: 3px 8px;
+    background: #1e1e2e;
+    border-radius: 4px;
+  }
+
+  .spreadsheet-grid {
+    padding: 4px;
+  }
+
+  .spreadsheet-row {
+    display: grid;
+    grid-template-columns: 60px 80px 60px 70px 60px;
+    gap: 1px;
+    margin-bottom: 1px;
+  }
+
+  .spreadsheet-cell {
+    font-size: 8px;
+    font-family: monospace;
+    padding: 4px 6px;
+    background: #1a1a28;
+    color: #777;
+    border: 1px solid #2a2a38;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  .spreadsheet-cell.header {
+    background: #252535;
+    color: #999;
+    font-weight: 700;
+  }
+
+  .spreadsheet-cell.error {
+    color: #f87171;
+    background: rgba(248, 113, 113, 0.05);
+  }
+
+  .spreadsheet-label {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px;
+    font-weight: 700;
+    color: #f87171;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    z-index: 4;
+  }
+
+  .trefolio-label {
+    position: absolute;
+    top: 20px;
+    right: 27.5%;
+    transform: translateX(50%);
+    font-size: 11px;
+    font-weight: 700;
+    color: #34d399;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    z-index: 7;
+  }
+
+  /* ─── AI card ─── */
+  .ai-card {
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: 16px;
+    padding: 28px;
+    width: 480px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+
+  .ai-card-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(139, 92, 246, 0.1);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    color: #a78bfa;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 16px;
+  }
+
+  .ai-card-badge svg { width: 14px; height: 14px; }
+
+  .ai-card-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 12px;
+  }
+
+  .ai-card-text {
+    font-size: 13px;
+    color: #94a3b8;
+    line-height: 1.7;
+    margin-bottom: 16px;
+  }
+
+  .ai-card-text .highlight {
+    color: #34d399;
+    font-weight: 600;
+  }
+
+  .ai-sectors {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .ai-sector {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.05);
+    color: #cbd5e1;
+  }
+
+  /* ─── Feature checklist ─── */
+  .feature-checklist {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .feature-check-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .feature-check-icon {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: rgba(16, 185, 129, 0.15);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .feature-check-icon svg { width: 14px; height: 14px; stroke: #34d399; fill: none; stroke-width: 2.5; }
+
+  .feature-check-text {
+    font-size: 16px;
+    font-weight: 600;
+    color: #e2e8f0;
+  }
+
+  /* ─── Import mockup ─── */
+  .import-mockup {
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid rgba(148, 163, 184, 0.12);
+    border-radius: 16px;
+    padding: 24px;
+    width: 460px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+
+  .import-dropzone {
+    border: 2px dashed rgba(16, 185, 129, 0.3);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    margin-bottom: 16px;
+  }
+
+  .import-dropzone-icon {
+    width: 40px; height: 40px;
+    margin: 0 auto 8px;
+    border-radius: 10px;
+    background: rgba(16, 185, 129, 0.1);
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .import-dropzone-icon svg { width: 20px; height: 20px; stroke: #34d399; fill: none; stroke-width: 1.5; }
+
+  .import-dropzone-text {
+    font-size: 12px;
+    color: #64748b;
+  }
+
+  .import-brokers {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .import-broker {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 8px;
+  }
+
+  .import-broker-icon {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    background: rgba(16, 185, 129, 0.1);
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .import-broker-icon svg { width: 14px; height: 14px; stroke: #34d399; fill: none; stroke-width: 2; }
+
+  .import-broker-name { font-size: 11px; font-weight: 600; color: #e2e8f0; }
+  .import-broker-status { font-size: 9px; color: #34d399; font-weight: 600; }
+
+  /* ─── Free badge ─── */
+  .free-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(16, 185, 129, 0.12);
+    border: 2px solid rgba(16, 185, 129, 0.3);
+    color: #34d399;
+    font-size: 16px;
+    font-weight: 800;
+    padding: 8px 20px;
+    border-radius: 10px;
+    margin-top: 16px;
+  }
+
+  /* ─── Currency badges ─── */
+  .currency-badges {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .currency-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.06);
+    color: #94a3b8;
+  }
+
+  .currency-badge.primary {
+    background: rgba(16, 185, 129, 0.12);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+  }
+</style>
+</head>
+<body>
+
+<h1>trefolio Ad Creatives</h1>
+<p class="subtitle">9 feed creatives (1200×628) for Meta Ads · 3 ad sets × 3 variations</p>
+
+<!-- ════════════════════════ AD SET A ════════════════════════ -->
+
+<div class="ad-set-header">
+  <h2>Ad Set A — ETF / Index Investors</h2>
+  <p>Interests: ETFs, Vanguard, iShares, index investing, MSCI World · Age 25–54 · EU-wide</p>
+</div>
+
+<!-- A1: Dashboard Hero -->
+<div class="creative-wrapper">
+  <div class="creative-label">
+    <span class="id">A1</span>
+    <span class="angle">Product showcase — Dashboard hero</span>
+    <span class="dims">1200 × 628 · Feed</span>
+  </div>
+  <div class="ad-frame">
+    <div class="ad">
+      <div class="ad-bg"></div>
+      <div class="ad-gradient-orb" style="width:500px;height:500px;top:-150px;left:-100px;background:#10b981;"></div>
+      <div class="ad-gradient-orb" style="width:400px;height:400px;bottom:-100px;right:200px;background:#0d9488;opacity:0.25;"></div>
+
+      <div class="ad-text-area" style="max-width:440px;">
+        <div class="ad-headline">Your ETF portfolio.<br><span class="accent">One dashboard.</span></div>
+        <div class="ad-body">Track VWCE, IWDA, and <strong>600+ ETFs</strong> with real-time quotes and dividend projections. Free for European investors.</div>
+      </div>
+
+      <div class="mock-dashboard" style="width:520px;right:32px;">
+        <div class="mock-tabs">
+          <span class="mock-tab active">Portfolio</span>
+          <span class="mock-tab">Dividends</span>
+          <span class="mock-tab">Metrics</span>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:10px;">
+          <span class="mock-value">€47,284</span>
+          <span class="mock-change">+€1,247 (+2.71%)</span>
+        </div>
+        <div class="mock-meta">Total Value · 12 holdings · EUR</div>
+        <div class="mock-chart">
+          <svg viewBox="0 0 500 60" preserveAspectRatio="none" style="width:100%;height:100%;">
+            <defs><linearGradient id="cg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="rgba(16,185,129,0.3)"/><stop offset="100%" stop-color="rgba(16,185,129,0)"/></linearGradient></defs>
+            <path d="M0,50 C30,46 60,42 90,35 C120,28 150,32 180,25 C210,18 240,22 270,16 C300,10 330,14 360,9 C390,5 420,8 450,4 L500,3 L500,60 L0,60Z" fill="url(#cg1)"/>
+            <path d="M0,50 C30,46 60,42 90,35 C120,28 150,32 180,25 C210,18 240,22 270,16 C300,10 330,14 360,9 C390,5 420,8 450,4 L500,3" fill="none" stroke="#10b981" stroke-width="2"/>
+          </svg>
+        </div>
+        <div class="mock-metrics">
+          <div class="mock-metric"><div class="mock-metric-label">Day Gain</div><div class="mock-metric-value">+€347</div></div>
+          <div class="mock-metric"><div class="mock-metric-label">Total Gain</div><div class="mock-metric-value">+€8,241</div></div>
+          <div class="mock-metric"><div class="mock-metric-label">Dividends</div><div class="mock-metric-value">€1,420</div></div>
+        </div>
+        <div class="mock-holdings">
+          <div class="mock-holding"><div class="mock-holding-left"><span class="mock-holding-dot" style="background:#3b82f6;"></span><span class="mock-holding-ticker">VWCE</span><span class="mock-holding-shares">42 shares</span></div><span class="mock-holding-gain gain-pos">+12.05%</span></div>
+          <div class="mock-holding"><div class="mock-holding-left"><span class="mock-holding-dot" style="background:#10b981;"></span><span class="mock-holding-ticker">IWDA</span><span class="mock-holding-shares">18 shares</span></div><span class="mock-holding-gain gain-pos">+9.82%</span></div>
+          <div class="mock-holding"><div class="mock-holding-left"><span class="mock-holding-dot" style="background:#f59e0b;"></span><span class="mock-holding-ticker">CSPX</span><span class="mock-holding-shares">25 shares</span></div><span class="mock-holding-gain gain-pos">+14.37%</span></div>
+        </div>
+      </div>
+
+      <div class="cta-pill">Sign Up Free <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></div>
+      <div class="logo-area">
+        <div class="logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+        <span class="logo-text">trefolio</span>
+      </div>
+    </div>
+  </div>
+  <div class="copy-block">
+    <div class="field"><div class="field-label">Headline</div><div class="field-value">Your ETF portfolio. One dashboard.</div></div>
+    <div class="field"><div class="field-label">Primary Text</div><div class="field-value">Track VWCE, IWDA, and 600+ ETFs with real-time quotes and dividend projections. Free for European investors.</div></div>
+    <div class="field"><div class="field-label">Description</div><div class="field-value">Free portfolio tracker for EU</div></div>
+  </div>
+</div>
+
+<!-- A2: Dividend Calendar -->
+<div class="creative-wrapper">
+  <div class="creative-label">
+    <span class="id">A2</span>
+    <span class="angle">Feature callout — Dividend tracking</span>
+    <span class="dims">1200 × 628 · Feed</span>
+  </div>
+  <div class="ad-frame">
+    <div class="ad">
+      <div class="ad-bg"></div>
+      <div class="ad-gradient-orb" style="width:400px;height:400px;top:-80px;right:-60px;background:#10b981;"></div>
+      <div class="ad-gradient-orb" style="width:350px;height:350px;bottom:-80px;left:100px;background:#0d9488;opacity:0.2;"></div>
+
+      <div class="ad-text-area" style="max-width:460px;">
+        <div class="ad-headline">Know when your<br>next <span class="accent">dividend hits.</span></div>
+        <div class="ad-body">trefolio tracks ex-dates, payment dates, and projected annual income for every holding — <strong>automatically</strong>.</div>
+      </div>
+
+      <div style="position:absolute;right:48px;top:50%;transform:translateY(-50%);width:480px;z-index:5;">
+        <div style="background:rgba(15,23,42,0.95);border:1px solid rgba(148,163,184,0.12);border-radius:16px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,0.4);">
+          <div style="font-size:12px;font-weight:700;color:#64748b;margin-bottom:12px;">Upcoming Dividends</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.12);border-radius:10px;">
+              <div><div style="font-size:13px;font-weight:700;color:#fff;">VWCE</div><div style="font-size:10px;color:#64748b;">Ex-date: Apr 15</div></div>
+              <div style="text-align:right;"><div style="font-size:16px;font-weight:800;color:#34d399;">€82.40</div><div style="font-size:9px;color:#64748b;">42 shares × €1.96</div></div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:rgba(255,255,255,0.02);border-radius:10px;">
+              <div><div style="font-size:13px;font-weight:700;color:#fff;">ASML</div><div style="font-size:10px;color:#64748b;">Ex-date: Apr 28</div></div>
+              <div style="text-align:right;"><div style="font-size:16px;font-weight:800;color:#34d399;">€46.80</div><div style="font-size:9px;color:#64748b;">8 shares × €5.85</div></div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:rgba(255,255,255,0.02);border-radius:10px;">
+              <div><div style="font-size:13px;font-weight:700;color:#fff;">AAPL</div><div style="font-size:10px;color:#64748b;">Ex-date: May 10</div></div>
+              <div style="text-align:right;"><div style="font-size:16px;font-weight:800;color:#34d399;">€11.25</div><div style="font-size:9px;color:#64748b;">15 shares × $0.82</div></div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding:12px;background:rgba(16,185,129,0.08);border-radius:10px;">
+            <div style="font-size:11px;font-weight:700;color:#34d399;">Estimated Annual Income</div>
+            <div style="font-size:20px;font-weight:900;color:#34d399;">€1,420</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cta-pill">Learn More <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></div>
+      <div class="logo-area"><div class="logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div><span class="logo-text">trefolio</span></div>
+    </div>
+  </div>
+  <div class="copy-block">
+    <div class="field"><div class="field-label">Headline</div><div class="field-value">Know when your next dividend hits.</div></div>
+    <div class="field"><div class="field-label">Primary Text</div><div class="field-value">trefolio tracks ex-dates, payment dates, and projected annual dividend income for every holding — automatically.</div></div>
+    <div class="field"><div class="field-label">Description</div><div class="field-value">Automatic dividend tracking</div></div>
+  </div>
+</div>
+
+<!-- A3: Spreadsheet vs trefolio -->
+<div class="creative-wrapper">
+  <div class="creative-label">
+    <span class="id">A3</span>
+    <span class="angle">Pain point — Before/after</span>
+    <span class="dims">1200 × 628 · Feed</span>
+  </div>
+  <div class="ad-frame">
+    <div class="ad">
+      <div class="ad-bg" style="background:#0a0a12;"></div>
+
+      <div class="split-left">
+        <div class="spreadsheet-label">Before</div>
+        <div class="spreadsheet-mock">
+          <div class="spreadsheet-header"><span>Sheet1</span><span>Portfolio</span></div>
+          <div class="spreadsheet-grid">
+            <div class="spreadsheet-row"><span class="spreadsheet-cell header">Ticker</span><span class="spreadsheet-cell header">Shares</span><span class="spreadsheet-cell header">Price</span><span class="spreadsheet-cell header">Value</span><span class="spreadsheet-cell header">Gain</span></div>
+            <div class="spreadsheet-row"><span class="spreadsheet-cell">VWCE</span><span class="spreadsheet-cell">42</span><span class="spreadsheet-cell error">???</span><span class="spreadsheet-cell error">#REF!</span><span class="spreadsheet-cell error">#REF!</span></div>
+            <div class="spreadsheet-row"><span class="spreadsheet-cell">IWDA</span><span class="spreadsheet-cell">18</span><span class="spreadsheet-cell">78.20</span><span class="spreadsheet-cell">1407.6</span><span class="spreadsheet-cell error">-</span></div>
+            <div class="spreadsheet-row"><span class="spreadsheet-cell">AAPL</span><span class="spreadsheet-cell">15</span><span class="spreadsheet-cell error">old</span><span class="spreadsheet-cell error">#N/A</span><span class="spreadsheet-cell error">#N/A</span></div>
+            <div class="spreadsheet-row"><span class="spreadsheet-cell">ASML</span><span class="spreadsheet-cell">8</span><span class="spreadsheet-cell error">???</span><span class="spreadsheet-cell error">#REF!</span><span class="spreadsheet-cell error">#REF!</span></div>
+            <div class="spreadsheet-row"><span class="spreadsheet-cell">CSPX</span><span class="spreadsheet-cell">25</span><span class="spreadsheet-cell">510.5</span><span class="spreadsheet-cell">12762</span><span class="spreadsheet-cell error">??%</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="split-divider"></div>
+
+      <div class="split-right" style="background:#0f172a;">
+        <div class="trefolio-label">After</div>
+        <div style="width:380px;background:rgba(15,23,42,0.95);border:1px solid rgba(148,163,184,0.12);border-radius:14px;padding:20px;box-shadow:0 16px 48px rgba(0,0,0,0.3);transform:rotate(1deg);">
+          <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:4px;">
+            <span style="font-size:28px;font-weight:900;color:#fff;">€47,284</span>
+            <span style="font-size:12px;font-weight:700;color:#34d399;background:rgba(16,185,129,0.1);padding:2px 8px;border-radius:4px;">+2.71%</span>
+          </div>
+          <div style="font-size:10px;color:#475569;margin-bottom:10px;">12 holdings · EUR · Live</div>
+          <svg viewBox="0 0 340 40" style="width:100%;height:36px;margin-bottom:10px;">
+            <defs><linearGradient id="cgA3" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="rgba(16,185,129,0.25)"/><stop offset="100%" stop-color="rgba(16,185,129,0)"/></linearGradient></defs>
+            <path d="M0,32 C40,28 80,22 120,18 C160,14 200,16 240,10 C280,6 310,8 340,4 L340,40 L0,40Z" fill="url(#cgA3)"/>
+            <path d="M0,32 C40,28 80,22 120,18 C160,14 200,16 240,10 C280,6 310,8 340,4" fill="none" stroke="#10b981" stroke-width="1.5"/>
+          </svg>
+          <div style="display:flex;flex-direction:column;gap:3px;">
+            <div class="mock-holding"><div class="mock-holding-left"><span class="mock-holding-dot" style="background:#3b82f6;"></span><span class="mock-holding-ticker">VWCE</span></div><span class="mock-holding-gain gain-pos">+12.05%</span></div>
+            <div class="mock-holding"><div class="mock-holding-left"><span class="mock-holding-dot" style="background:#10b981;"></span><span class="mock-holding-ticker">IWDA</span></div><span class="mock-holding-gain gain-pos">+9.82%</span></div>
+            <div class="mock-holding"><div class="mock-holding-left"><span class="mock-holding-dot" style="background:#f59e0b;"></span><span class="mock-holding-ticker">AAPL</span></div><span class="mock-holding-gain gain-pos">+8.73%</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="position:absolute;bottom:20px;left:50%;transform:translateX(-50%);z-index:10;text-align:center;">
+        <div style="font-size:22px;font-weight:900;color:#fff;margin-bottom:4px;">Ditch the spreadsheet.</div>
+        <div style="font-size:13px;color:#94a3b8;">Real-time quotes, dividends, AI insights — <span style="color:#34d399;font-weight:700;">free.</span></div>
+      </div>
+
+      <div class="logo-area"><div class="logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div><span class="logo-text">trefolio</span></div>
+    </div>
+  </div>
+  <div class="copy-block">
+    <div class="field"><div class="field-label">Headline</div><div class="field-value">Ditch the spreadsheet.</div></div>
+    <div class="field"><div class="field-label">Primary Text</div><div class="field-value">Still tracking your ETF portfolio in Google Sheets? trefolio gives you real-time quotes, dividends, and AI insights — free.</div></div>
+    <div class="field"><div class="field-label">Description</div><div class="field-value">Upgrade from spreadsheets</div></div>
+  </div>
+</div>
+
+<!-- ════════════════════════ AD SET B ════════════════════════ -->
+
+<div class="ad-set-header">
+  <h2>Ad Set B — Active Stock Investors</h2>
+  <p>Interests: Stock market, dividend investing, stock trading, Yahoo Finance, TradingView · Age 25–54 · EU-wide</p>
+</div>
+
+<!-- B1: Stock Gains Dashboard -->
+<div class="creative-wrapper">
+  <div class="creative-label">
+    <span class="id">B1</span>
+    <span class="angle">Product showcase — Stock gains</span>
+    <span class="dims">1200 × 628 · Feed</span>
+  </div>
+  <div class="ad-frame">
+    <div class="ad">
+      <div class="ad-bg"></div>
+      <div class="ad-gradient-orb" style="width:500px;height:500px;top:-180px;right:-120px;background:#10b981;"></div>
+      <div class="ad-gradient-orb" style="width:300px;height:300px;bottom:-60px;left:200px;background:#0ea5e9;opacity:0.2;"></div>
+
+      <div class="ad-text-area" style="max-width:420px;">
+        <div class="ad-headline">See all your gains<br><span class="accent">at a glance.</span></div>
+        <div class="ad-body">Real-time portfolio tracking with per-holding P&L, day gains, and total returns. <strong>Built for serious investors.</strong></div>
+      </div>
+
+      <div class="mock-dashboard" style="width:540px;right:28px;">
+        <div class="mock-tabs">
+          <span class="mock-tab active">Portfolio</span>
+          <span class="mock-tab">Dividends</span>
+          <span class="mock-tab">Metrics</span>
+          <span class="mock-tab">Events</span>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:10px;">
+          <span class="mock-value">€63,418</span>
+          <span class="mock-change">+€2,187 (+3.57%)</span>
+        </div>
+        <div class="mock-meta">Total Value · 18 holdings · EUR</div>
+        <div class="mock-chart">
+          <svg viewBox="0 0 500 60" preserveAspectRatio="none" style="width:100%;height:100%;">
+            <defs><linearGradient id="cg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="rgba(16,185,129,0.3)"/><stop offset="100%" stop-color="rgba(16,185,129,0)"/></linearGradient></defs>
+            <path d="M0,45 C50,42 80,38 130,30 C180,22 220,28 270,18 C320,12 370,15 420,8 L500,5 L500,60 L0,60Z" fill="url(#cg2)"/>
+            <path d="M0,45 C50,42 80,38 130,30 C180,22 220,28 270,18 C320,12 370,15 420,8 L500,5" fill="none" stroke="#10b981" stroke-width="2"/>
+          </svg>
+        </div>
+        <div class="mock-holdings">
+          <div class="mock-holding"><div class="mock-holding-left"><span class="mock-holding-dot" style="background:#3b82f6;"></span><span class="mock-holding-ticker">ASML</span><span class="mock-holding-shares">8 shares</span></div><span class="mock-holding-gain gain-pos">+18.42%</span></div>
+          <div class="mock-holding"><div class="mock-holding-left"><span class="mock-holding-dot" style="background:#10b981;"></span><span class="mock-holding-ticker">MSFT</span><span class="mock-holding-shares">12 shares</span></div><span class="mock-holding-gain gain-pos">+15.89%</span></div>
+          <div class="mock-holding"><div class="mock-holding-left"><span class="mock-holding-dot" style="background:#f59e0b;"></span><span class="mock-holding-ticker">AAPL</span><span class="mock-holding-shares">15 shares</span></div><span class="mock-holding-gain gain-pos">+8.73%</span></div>
+          <div class="mock-holding"><div class="mock-holding-left"><span class="mock-holding-dot" style="background:#8b5cf6;"></span><span class="mock-holding-ticker">NOVO-B</span><span class="mock-holding-shares">30 shares</span></div><span class="mock-holding-gain gain-pos">+22.14%</span></div>
+        </div>
+      </div>
+
+      <div class="cta-pill">Sign Up Free <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></div>
+      <div class="logo-area"><div class="logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div><span class="logo-text">trefolio</span></div>
+    </div>
+  </div>
+  <div class="copy-block">
+    <div class="field"><div class="field-label">Headline</div><div class="field-value">See all your gains at a glance.</div></div>
+    <div class="field"><div class="field-label">Primary Text</div><div class="field-value">Real-time portfolio tracking with per-holding P&L, day gains, and total returns. Built for serious investors.</div></div>
+    <div class="field"><div class="field-label">Description</div><div class="field-value">Real-time portfolio tracker</div></div>
+  </div>
+</div>
+
+<!-- B2: AI Portfolio Review -->
+<div class="creative-wrapper">
+  <div class="creative-label">
+    <span class="id">B2</span>
+    <span class="angle">Feature callout — AI analysis</span>
+    <span class="dims">1200 × 628 · Feed</span>
+  </div>
+  <div class="ad-frame">
+    <div class="ad">
+      <div class="ad-bg" style="background:linear-gradient(135deg, #0f172a, #0c0f1a);"></div>
+      <div class="ad-gradient-orb" style="width:400px;height:400px;top:-80px;left:300px;background:#8b5cf6;opacity:0.3;"></div>
+      <div class="ad-gradient-orb" style="width:350px;height:350px;bottom:-100px;right:100px;background:#10b981;opacity:0.2;"></div>
+
+      <div class="ad-text-area" style="max-width:420px;">
+        <div class="ad-headline">AI portfolio<br>analysis.<br><span class="accent">Free to try.</span></div>
+        <div class="ad-body">Get sector allocation, risk insights, and stock analysis — <strong>powered by AI</strong>. Ask about any holding in plain language.</div>
+      </div>
+
+      <div style="position:absolute;right:56px;top:50%;transform:translateY(-50%);z-index:5;">
+        <div class="ai-card">
+          <div class="ai-card-badge">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>
+            Trefolio AI
+          </div>
+          <div class="ai-card-title">Portfolio Health Review</div>
+          <div class="ai-card-text">
+            Your portfolio is <span class="highlight">well-diversified</span> across 4 sectors. Technology allocation (38%) is within healthy range.
+            Estimated dividend yield: <span class="highlight">2.3%</span> annually. Consider adding more defensive positions for better risk balance.
+          </div>
+          <div style="font-size:10px;font-weight:700;color:#64748b;margin-bottom:8px;">SECTOR BREAKDOWN</div>
+          <div class="ai-sectors">
+            <span class="ai-sector" style="background:rgba(59,130,246,0.12);color:#60a5fa;">Tech 38%</span>
+            <span class="ai-sector" style="background:rgba(16,185,129,0.12);color:#34d399;">Healthcare 22%</span>
+            <span class="ai-sector" style="background:rgba(245,158,11,0.12);color:#fbbf24;">Finance 18%</span>
+            <span class="ai-sector" style="background:rgba(139,92,246,0.12);color:#a78bfa;">Industrial 12%</span>
+            <span class="ai-sector">Other 10%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="cta-pill">Sign Up Free <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></div>
+      <div class="logo-area"><div class="logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div><span class="logo-text">trefolio</span></div>
+    </div>
+  </div>
+  <div class="copy-block">
+    <div class="field"><div class="field-label">Headline</div><div class="field-value">AI portfolio analysis. Free to try.</div></div>
+    <div class="field"><div class="field-label">Primary Text</div><div class="field-value">Get sector allocation, risk insights, and stock analysis — powered by AI. Ask about any holding in plain language.</div></div>
+    <div class="field"><div class="field-label">Description</div><div class="field-value">AI-powered stock insights</div></div>
+  </div>
+</div>
+
+<!-- B3: Pain Point -->
+<div class="creative-wrapper">
+  <div class="creative-label">
+    <span class="id">B3</span>
+    <span class="angle">Pain point — Bold text</span>
+    <span class="dims">1200 × 628 · Feed</span>
+  </div>
+  <div class="ad-frame">
+    <div class="ad">
+      <div class="ad-bg" style="background:linear-gradient(160deg, #0a0e1a, #0f172a, #0a1628);"></div>
+      <div class="ad-gradient-orb" style="width:600px;height:400px;top:-120px;left:50%;transform:translateX(-50%);background:#10b981;opacity:0.15;"></div>
+
+      <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:5;text-align:center;padding:0 60px;">
+        <div style="font-size:46px;font-weight:900;color:#fff;line-height:1.1;letter-spacing:-1.5px;margin-bottom:16px;">
+          Still tracking your portfolio<br>
+          <span style="color:#475569;">in a spreadsheet?</span>
+        </div>
+        <div style="font-size:18px;color:#94a3b8;margin-bottom:32px;max-width:600px;">
+          There's a better way. Real-time quotes, AI insights, dividend tracking.<br>
+          <span style="color:#34d399;font-weight:700;">Free for European investors.</span>
+        </div>
+
+        <div style="display:flex;gap:16px;align-items:center;">
+          <div style="display:inline-flex;align-items:center;gap:8px;background:#10b981;color:#fff;font-size:16px;font-weight:700;padding:12px 28px;border-radius:12px;box-shadow:0 4px 20px rgba(16,185,129,0.35);">
+            Sign Up Free
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mini dashboard teaser at bottom -->
+      <div style="position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);width:700px;opacity:0.35;z-index:2;">
+        <div style="background:rgba(15,23,42,0.9);border:1px solid rgba(148,163,184,0.08);border-radius:12px 12px 0 0;padding:16px 20px;">
+          <div style="display:flex;align-items:baseline;gap:8px;">
+            <span style="font-size:22px;font-weight:900;color:#fff;">€47,284</span>
+            <span style="font-size:10px;font-weight:700;color:#34d399;">+2.71%</span>
+          </div>
+          <svg viewBox="0 0 600 30" style="width:100%;height:24px;margin-top:6px;">
+            <path d="M0,24 C60,20 120,16 180,12 C240,8 300,10 360,6 C420,3 480,5 540,2 L600,1" fill="none" stroke="#10b981" stroke-width="1.5" opacity="0.5"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="logo-area"><div class="logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div><span class="logo-text">trefolio</span></div>
+    </div>
+  </div>
+  <div class="copy-block">
+    <div class="field"><div class="field-label">Headline</div><div class="field-value">There's a better way.</div></div>
+    <div class="field"><div class="field-label">Primary Text</div><div class="field-value">Still tracking your portfolio in a spreadsheet? trefolio: real-time quotes, AI insights, dividend tracking. Free for European investors.</div></div>
+    <div class="field"><div class="field-label">Description</div><div class="field-value">Free for EU investors</div></div>
+  </div>
+</div>
+
+<!-- ════════════════════════ AD SET C ════════════════════════ -->
+
+<div class="ad-set-header">
+  <h2>Ad Set C — Personal Finance / Expats</h2>
+  <p>Interests: Personal finance, FIRE movement, expat communities, financial independence · Age 25–45 · EU-wide</p>
+</div>
+
+<!-- C1: Multi-Currency Dashboard -->
+<div class="creative-wrapper">
+  <div class="creative-label">
+    <span class="id">C1</span>
+    <span class="angle">Product showcase — Multi-currency</span>
+    <span class="dims">1200 × 628 · Feed</span>
+  </div>
+  <div class="ad-frame">
+    <div class="ad">
+      <div class="ad-bg"></div>
+      <div class="ad-gradient-orb" style="width:450px;height:450px;top:-130px;left:-80px;background:#10b981;"></div>
+      <div class="ad-gradient-orb" style="width:350px;height:350px;bottom:-80px;right:150px;background:#0ea5e9;opacity:0.2;"></div>
+
+      <div class="ad-text-area" style="max-width:430px;">
+        <div class="ad-headline"><span class="accent">Built for</span><br>European investors.</div>
+        <div class="ad-body">Track US, UK, and EU stocks in one dashboard. <strong>Automatic EUR conversion.</strong> Import from DEGIRO, IBKR, Trading 212, Revolut.</div>
+      </div>
+
+      <div class="mock-dashboard" style="width:530px;right:32px;">
+        <div class="mock-tabs">
+          <span class="mock-tab active">Portfolio</span>
+          <span class="mock-tab">Dividends</span>
+          <span class="mock-tab">Tools</span>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:10px;">
+          <span class="mock-value">€52,710</span>
+          <span class="mock-change">+€1,893 (+3.72%)</span>
+        </div>
+        <div class="mock-meta">Total Value · 14 holdings · EUR base</div>
+        <div class="currency-badges">
+          <span class="currency-badge primary">EUR</span>
+          <span class="currency-badge">USD → EUR</span>
+          <span class="currency-badge">GBP → EUR</span>
+          <span class="currency-badge">DKK → EUR</span>
+        </div>
+        <div class="mock-chart" style="margin-top:8px;">
+          <svg viewBox="0 0 500 50" preserveAspectRatio="none" style="width:100%;height:100%;">
+            <defs><linearGradient id="cg3" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="rgba(16,185,129,0.25)"/><stop offset="100%" stop-color="rgba(16,185,129,0)"/></linearGradient></defs>
+            <path d="M0,40 C50,36 100,30 150,24 C200,18 250,22 300,14 C350,8 400,12 450,6 L500,4 L500,50 L0,50Z" fill="url(#cg3)"/>
+            <path d="M0,40 C50,36 100,30 150,24 C200,18 250,22 300,14 C350,8 400,12 450,6 L500,4" fill="none" stroke="#10b981" stroke-width="1.5"/>
+          </svg>
+        </div>
+        <div class="mock-holdings" style="margin-top:8px;">
+          <div class="mock-holding"><div class="mock-holding-left"><span class="mock-holding-dot" style="background:#3b82f6;"></span><span class="mock-holding-ticker">ASML</span><span class="mock-holding-shares" style="color:#64748b;">XAMS · EUR</span></div><span class="mock-holding-gain gain-pos">+18.42%</span></div>
+          <div class="mock-holding"><div class="mock-holding-left"><span class="mock-holding-dot" style="background:#f59e0b;"></span><span class="mock-holding-ticker">AAPL</span><span class="mock-holding-shares" style="color:#64748b;">NASDAQ · USD</span></div><span class="mock-holding-gain gain-pos">+8.73%</span></div>
+          <div class="mock-holding"><div class="mock-holding-left"><span class="mock-holding-dot" style="background:#8b5cf6;"></span><span class="mock-holding-ticker">SHEL</span><span class="mock-holding-shares" style="color:#64748b;">LSE · GBP</span></div><span class="mock-holding-gain gain-pos">+5.14%</span></div>
+          <div class="mock-holding"><div class="mock-holding-left"><span class="mock-holding-dot" style="background:#ec4899;"></span><span class="mock-holding-ticker">NOVO-B</span><span class="mock-holding-shares" style="color:#64748b;">CPH · DKK</span></div><span class="mock-holding-gain gain-pos">+22.14%</span></div>
+        </div>
+      </div>
+
+      <div class="cta-pill">Sign Up Free <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></div>
+      <div class="logo-area"><div class="logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div><span class="logo-text">trefolio</span></div>
+    </div>
+  </div>
+  <div class="copy-block">
+    <div class="field"><div class="field-label">Headline</div><div class="field-value">Built for European investors.</div></div>
+    <div class="field"><div class="field-label">Primary Text</div><div class="field-value">Track US, UK, and EU stocks in one dashboard. Automatic EUR conversion. Import from DEGIRO, IBKR, Trading 212, Revolut.</div></div>
+    <div class="field"><div class="field-label">Description</div><div class="field-value">Multi-currency, auto-convert</div></div>
+  </div>
+</div>
+
+<!-- C2: Broker Import -->
+<div class="creative-wrapper">
+  <div class="creative-label">
+    <span class="id">C2</span>
+    <span class="angle">Feature callout — Broker import</span>
+    <span class="dims">1200 × 628 · Feed</span>
+  </div>
+  <div class="ad-frame">
+    <div class="ad">
+      <div class="ad-bg"></div>
+      <div class="ad-gradient-orb" style="width:400px;height:400px;top:-100px;right:-50px;background:#10b981;"></div>
+      <div class="ad-gradient-orb" style="width:300px;height:300px;bottom:-60px;left:100px;background:#2dd4bf;opacity:0.2;"></div>
+
+      <div class="ad-text-area" style="max-width:430px;">
+        <div class="ad-headline">Import your portfolio<br><span class="accent">in seconds.</span></div>
+        <div class="ad-body">One-click CSV import from <strong>DEGIRO, Interactive Brokers, Trading 212, and Revolut</strong>. No manual entry. No column mapping.</div>
+      </div>
+
+      <div style="position:absolute;right:56px;top:50%;transform:translateY(-50%);z-index:5;">
+        <div class="import-mockup">
+          <div class="import-dropzone">
+            <div class="import-dropzone-icon">
+              <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
+            </div>
+            <div class="import-dropzone-text">Drop your CSV file here</div>
+          </div>
+
+          <div class="import-brokers">
+            <div class="import-broker">
+              <div class="import-broker-icon"><svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
+              <div><div class="import-broker-name">DEGIRO</div><div class="import-broker-status">24 positions</div></div>
+            </div>
+            <div class="import-broker">
+              <div class="import-broker-icon"><svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
+              <div><div class="import-broker-name">Interactive Brokers</div><div class="import-broker-status">18 positions</div></div>
+            </div>
+            <div class="import-broker">
+              <div class="import-broker-icon"><svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
+              <div><div class="import-broker-name">Trading 212</div><div class="import-broker-status">12 positions</div></div>
+            </div>
+            <div class="import-broker">
+              <div class="import-broker-icon"><svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
+              <div><div class="import-broker-name">Revolut</div><div class="import-broker-status">8 positions</div></div>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding:12px;background:rgba(16,185,129,0.08);border-radius:10px;">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#34d399" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              <span style="font-size:11px;font-weight:700;color:#34d399;">62 positions imported</span>
+            </div>
+            <span style="font-size:9px;color:#64748b;">4 brokers</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="cta-pill">Sign Up Free <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></div>
+      <div class="logo-area"><div class="logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div><span class="logo-text">trefolio</span></div>
+    </div>
+  </div>
+  <div class="copy-block">
+    <div class="field"><div class="field-label">Headline</div><div class="field-value">Import your portfolio in seconds.</div></div>
+    <div class="field"><div class="field-label">Primary Text</div><div class="field-value">One-click CSV import from DEGIRO, Interactive Brokers, Trading 212, and Revolut. No manual entry. No column mapping.</div></div>
+    <div class="field"><div class="field-label">Description</div><div class="field-value">4 brokers, one click</div></div>
+  </div>
+</div>
+
+<!-- C3: Free Value -->
+<div class="creative-wrapper">
+  <div class="creative-label">
+    <span class="id">C3</span>
+    <span class="angle">Free value — Feature checklist</span>
+    <span class="dims">1200 × 628 · Feed</span>
+  </div>
+  <div class="ad-frame">
+    <div class="ad">
+      <div class="ad-bg" style="background:linear-gradient(160deg, #0a1628, #0f172a, #0a1220);"></div>
+      <div class="ad-gradient-orb" style="width:500px;height:500px;top:-160px;left:50%;transform:translateX(-50%);background:#10b981;opacity:0.18;"></div>
+
+      <div style="position:absolute;left:64px;top:50%;transform:translateY(-50%);z-index:5;">
+        <div style="font-size:42px;font-weight:900;color:#fff;line-height:1.1;letter-spacing:-1px;margin-bottom:8px;">
+          Free portfolio<br>tracker.
+        </div>
+        <div style="font-size:16px;color:#64748b;margin-bottom:24px;">No credit card. No catch. Free forever.</div>
+        <div class="free-badge">FREE FOREVER</div>
+      </div>
+
+      <div style="position:absolute;right:64px;top:50%;transform:translateY(-50%);z-index:5;">
+        <div class="feature-checklist">
+          <div class="feature-check-item">
+            <div class="feature-check-icon"><svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
+            <span class="feature-check-text">15 holdings</span>
+          </div>
+          <div class="feature-check-item">
+            <div class="feature-check-icon"><svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
+            <span class="feature-check-text">Real-time quotes</span>
+          </div>
+          <div class="feature-check-item">
+            <div class="feature-check-icon"><svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
+            <span class="feature-check-text">AI-powered insights</span>
+          </div>
+          <div class="feature-check-item">
+            <div class="feature-check-icon"><svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
+            <span class="feature-check-text">Dividend tracking</span>
+          </div>
+          <div class="feature-check-item">
+            <div class="feature-check-icon"><svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
+            <span class="feature-check-text">Broker CSV import</span>
+          </div>
+          <div class="feature-check-item">
+            <div class="feature-check-icon"><svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
+            <span class="feature-check-text">35 languages</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="cta-pill">Sign Up Free <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></div>
+      <div class="logo-area"><div class="logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div><span class="logo-text">trefolio</span></div>
+    </div>
+  </div>
+  <div class="copy-block">
+    <div class="field"><div class="field-label">Headline</div><div class="field-value">Free portfolio tracker.</div></div>
+    <div class="field"><div class="field-label">Primary Text</div><div class="field-value">15 holdings, real-time quotes, AI insights, dividend tracking, 35 languages. No credit card. Free forever.</div></div>
+    <div class="field"><div class="field-label">Description</div><div class="field-value">No credit card required</div></div>
+  </div>
+</div>
+
+<div style="height:80px;"></div>
+
+</body>
+</html>
