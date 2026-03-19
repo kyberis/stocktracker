@@ -47,6 +47,7 @@ const tr: TranslationStrings = {
   sortReturnPct: "Return %",
   sortReturnAbs: "Return €",
   sortSize: "Position size",
+  sortDayChange: "Daily move",
   week52High: "52H Yüksek",
   week52Low: "52H Düşük",
   marketCap: "Piyasa Değeri",

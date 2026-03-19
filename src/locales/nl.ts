@@ -47,6 +47,7 @@ const nl: TranslationStrings = {
   sortReturnPct: "Return %",
   sortReturnAbs: "Return €",
   sortSize: "Position size",
+  sortDayChange: "Daily move",
   week52High: "52W Hoog",
   week52Low: "52W Laag",
   marketCap: "Marktkapitalisatie",

@@ -47,6 +47,7 @@ const ga: TranslationStrings = {
   sortReturnPct: "Return %",
   sortReturnAbs: "Return €",
   sortSize: "Position size",
+  sortDayChange: "Daily move",
   week52High: "52S Arda",
   week52Low: "52S Íseal",
   marketCap: "Caipitilocht an Mhargaidh",

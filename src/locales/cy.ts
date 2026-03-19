@@ -47,6 +47,7 @@ const cy: TranslationStrings = {
   sortReturnPct: "Return %",
   sortReturnAbs: "Return €",
   sortSize: "Position size",
+  sortDayChange: "Daily move",
   week52High: "52W Uchaf",
   week52Low: "52W Isaf",
   marketCap: "Cyfradd Marchnad",

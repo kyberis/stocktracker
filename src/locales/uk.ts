@@ -47,6 +47,7 @@ const uk: TranslationStrings = {
   sortReturnPct: "Return %",
   sortReturnAbs: "Return €",
   sortSize: "Position size",
+  sortDayChange: "Daily move",
   week52High: "52Т макс",
   week52Low: "52Т мін",
   marketCap: "Капіталізація",

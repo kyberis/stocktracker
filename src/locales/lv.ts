@@ -47,6 +47,7 @@ const lv: TranslationStrings = {
   sortReturnPct: "Return %",
   sortReturnAbs: "Return €",
   sortSize: "Position size",
+  sortDayChange: "Daily move",
   week52High: "52N augstākā",
   week52Low: "52N zemākā",
   marketCap: "Tirgus kapitalizācija",

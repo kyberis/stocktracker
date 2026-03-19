@@ -15,7 +15,7 @@ const StockDetailDrawer = dynamic(() => import("./StockDetailDrawer"), { ssr: fa
 
 const COLLAPSED_COUNT = 7;
 
-type SortField = "name" | "returnPct" | "returnAbs" | "size";
+type SortField = "name" | "returnPct" | "returnAbs" | "size" | "dayChange";
 type SortDir = "asc" | "desc";
 
 export type ReturnDisplayMode = "pct" | "abs";
@@ -101,6 +101,11 @@ export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: P
             : 0;
           return mul * (aGain - bGain);
         }
+        case "dayChange": {
+          const aDay = quotes[a.ticker]?.regularMarketChangePercent ?? 0;
+          const bDay = quotes[b.ticker]?.regularMarketChangePercent ?? 0;
+          return mul * (aDay - bDay);
+        }
         default:
           return 0;
       }
@@ -115,6 +120,7 @@ export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: P
   const sortOptions: { value: SortField; label: string }[] = [
     { value: "returnPct", label: t("sortReturnPct") },
     { value: "returnAbs", label: t("sortReturnAbs") },
+    { value: "dayChange", label: t("sortDayChange") },
     { value: "size", label: t("sortSize") },
     { value: "name", label: t("name") },
   ];

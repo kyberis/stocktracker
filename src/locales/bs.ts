@@ -47,6 +47,7 @@ const bs: TranslationStrings = {
   sortReturnPct: "Return %",
   sortReturnAbs: "Return €",
   sortSize: "Position size",
+  sortDayChange: "Daily move",
   week52High: "52N maksimum",
   week52Low: "52N minimum",
   marketCap: "Tržišna kapitalizacija",

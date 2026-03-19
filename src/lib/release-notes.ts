@@ -38,6 +38,13 @@ export const releaseNotes: ReleaseEntry[] = [
       },
       {
         type: "improvement",
+        text: "Sort holdings by daily move to quickly see today's biggest movers.",
+        translations: {
+          es: "Ordena los activos por movimiento diario para ver rápidamente los mayores movimientos del día.",
+        },
+      },
+      {
+        type: "improvement",
         text: "Asset type badges (ETF, CRYPTO) now appear next to holding names for quick identification.",
         translations: {
           es: "Las etiquetas de tipo de activo (ETF, CRYPTO) ahora aparecen junto al nombre del activo para identificación rápida.",

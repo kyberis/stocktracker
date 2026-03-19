@@ -19,7 +19,7 @@ import { hapticImpact, hapticSelectionChanged } from "@/lib/native-haptics";
 
 const COLLAPSED_COUNT = 7;
 
-type SortField = "returnPct" | "returnAbs" | "size";
+type SortField = "returnPct" | "returnAbs" | "size" | "dayChange";
 type ReturnDisplayMode = "pct" | "abs";
 
 interface PortfolioCardsProps {
@@ -155,6 +155,11 @@ export default function PortfolioCards({ holdings }: PortfolioCardsProps) {
             : b.valueInEUR;
           return bVal - aVal;
         }
+        case "dayChange": {
+          const aDay = aq?.regularMarketChangePercent ?? 0;
+          const bDay = bq?.regularMarketChangePercent ?? 0;
+          return bDay - aDay;
+        }
         default:
           return 0;
       }
@@ -175,6 +180,7 @@ export default function PortfolioCards({ holdings }: PortfolioCardsProps) {
   const sortOptions: { key: SortField; label: string }[] = [
     { key: "returnPct", label: t("sortReturnPct") },
     { key: "returnAbs", label: t("sortReturnAbs") },
+    { key: "dayChange", label: t("sortDayChange") },
     { key: "size", label: t("sortSize") },
   ];
 

@@ -47,6 +47,7 @@ const hu: TranslationStrings = {
   sortReturnPct: "Return %",
   sortReturnAbs: "Return €",
   sortSize: "Position size",
+  sortDayChange: "Daily move",
   week52High: "52H magas",
   week52Low: "52H alacsony",
   marketCap: "Piaci érték",
