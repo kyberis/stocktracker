@@ -21,6 +21,9 @@ vi.mock("crypto", () => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // Reset queued mockResolvedValueOnce implementations (clearAllMocks alone does not).
+  mockExecute.mockReset();
+  mockBatch.mockReset();
 });
 
 const portfolioRow = (overrides: Partial<Record<string, unknown>> = {}) => ({
@@ -142,10 +145,15 @@ describe("portfolios", () => {
       expect(result).toBe(false);
     });
 
-    it("moves data to default and deletes when not default", async () => {
+    it("deletes all scoped data and the portfolio row when not default", async () => {
       mockExecute
         .mockResolvedValueOnce({ rows: [{ is_default: 0 }] })
-        .mockResolvedValueOnce({ rows: [{ id: "default-id" }] })
+        .mockResolvedValueOnce({ rowsAffected: 0 })
+        .mockResolvedValueOnce({ rowsAffected: 0 })
+        .mockResolvedValueOnce({ rowsAffected: 0 })
+        .mockResolvedValueOnce({ rowsAffected: 0 })
+        .mockResolvedValueOnce({ rowsAffected: 0 })
+        .mockResolvedValueOnce({ rowsAffected: 0 })
         .mockResolvedValueOnce({ rowsAffected: 0 })
         .mockResolvedValueOnce({ rowsAffected: 0 })
         .mockResolvedValueOnce({ rowsAffected: 0 })
@@ -158,6 +166,10 @@ describe("portfolios", () => {
       expect(mockExecute).toHaveBeenCalledWith({
         sql: expect.stringContaining("DELETE FROM portfolios"),
         args: ["non-default-id", "user-1"],
+      });
+      expect(mockExecute).toHaveBeenCalledWith({
+        sql: expect.stringContaining("DELETE FROM portfolio_snapshots"),
+        args: ["user-1", "non-default-id"],
       });
     });
   });

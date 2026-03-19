@@ -9,6 +9,9 @@ import { getHoldingsLimit } from "@/lib/subscription";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { normalizeYahooExchange } from "@/lib/db/helpers";
 import { enrichHoldingClassifications } from "@/lib/enrich-classifications";
+import { deferTask } from "@/lib/task-runner";
+import { runBackfillForUser } from "@/lib/backfill-snapshots";
+import { materializeCurrentSnapshotsForUser } from "@/lib/cron-portfolio-snapshots";
 
 const bulkTransactionSchema = z.object({
   transactions: z.array(
@@ -159,6 +162,31 @@ export const POST = withMetrics("/api/transactions/bulk", async (req: NextReques
     enrichHoldingClassifications(userId).catch((err) =>
       console.warn("[bulk] auto-classification failed:", err)
     );
+  }
+
+  if (finalize && inserted > 0 && !skipRebuild) {
+    deferTask(async () => {
+      try {
+        await runBackfillForUser(userId);
+        await materializeCurrentSnapshotsForUser(userId);
+      } catch (err) {
+        console.warn("[bulk] portfolio snapshot pipeline failed:", err);
+      }
+    });
+  }
+
+  /* Chunked import (skipRebuild): rebuild holdings on the server, then same snapshot pipeline */
+  if (finalize && inserted > 0 && skipRebuild) {
+    deferTask(async () => {
+      try {
+        await rebuildHoldings(userId, portfolioId);
+        await enrichHoldingClassifications(userId).catch(() => {});
+        await runBackfillForUser(userId);
+        await materializeCurrentSnapshotsForUser(userId);
+      } catch (err) {
+        console.warn("[bulk] portfolio snapshot pipeline (skipRebuild) failed:", err);
+      }
+    });
   }
 
   transactionsOpsTotal.inc({ operation: "add" }, inserted);

@@ -487,10 +487,8 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
           ts: new Date().toISOString(),
         }));
       } catch { /* private browsing or storage quota exceeded */ }
-      setStep("backfilling");
-      fetch("/api/portfolio/backfill-snapshots", { method: "POST" })
-        .catch(() => {})
-        .finally(() => setStep("done"));
+      /* Snapshot pipeline runs server-side after last bulk chunk (rebuild + historical + live) */
+      setStep("done");
     }
   }, [transactions]);
 

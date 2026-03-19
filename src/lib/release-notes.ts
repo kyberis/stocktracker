@@ -17,6 +17,187 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.50.0",
+    date: "2026-03-19",
+    title: "Chart AI assistant",
+    titleTranslations: { es: "Asistente de IA en el gráfico" },
+    changes: [
+      {
+        type: "feature",
+        text: "Ask the portfolio evolution chart an AI assistant: open “Ask about this chart” under the graph to question moves in value or invested capital using your current range, markers, and downsampled points (same AI usage limits as other AI tools).",
+        translations: {
+          es: "Pregunta a un asistente de IA en el gráfico de evolución: abre «Preguntar sobre este gráfico» bajo el gráfico para consultar movimientos de valor o capital invertido con tu rango actual, marcadores y puntos resumidos (mismos límites de uso de IA que el resto de herramientas).",
+        },
+      },
+      {
+        type: "improvement",
+        text: "The evolution chart now shows every ledger transaction in range as a marker (buy, sell, dividend, fee) with color-coded dots and amounts in the tooltip — not only aggregated buys and sells.",
+        translations: {
+          es: "El gráfico de evolución muestra ahora cada transacción del rango como marcador (compra, venta, dividendos, comisiones) con puntos por color e importes en el tooltip — no solo compras y ventas agregadas.",
+        },
+      },
+      {
+        type: "fix",
+        text: "AI chat (chart assistant and support) no longer scrolls the whole page while the reply streams — only the message panel scrolls so you can read the answer as it appears.",
+        translations: {
+          es: "El chat de IA (asistente del gráfico y soporte) ya no desplaza toda la página mientras llega la respuesta: solo se desplaza el panel de mensajes para poder leer en directo.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "AI chat replies render Markdown (headings, lists, bold) instead of raw characters.",
+        translations: {
+          es: "Las respuestas del chat de IA muestran Markdown (títulos, listas, negrita) en lugar del texto crudo.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Portfolio evolution: hourly filler points no longer linearly interpolate invested capital between snapshots (only total value is smoothed), so the gray invested line doesn’t show a misleading day-to-day ramp when cost basis only changes at real snapshot times.",
+        translations: {
+          es: "Evolución del portafolio: los puntos de relleno horarios ya no interpolan linealmente el capital invertido entre instantáneas (solo se suaviza el valor total), para que la línea gris no muestre una falsa rampa día a día cuando el coste solo cambia en instantáneas reales.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Deleting a secondary portfolio now removes all data for that portfolio (including evolution chart snapshots and alerts), instead of merging it into your default portfolio.",
+        translations: {
+          es: "Al eliminar un portafolio secundario se borran todos sus datos (incluido el historial del gráfico de evolución y las alertas), en lugar de fusionarlos con el portafolio predeterminado.",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.49.0",
+    date: "2026-03-19",
+    title: "Referral Share Popup",
+    titleTranslations: { es: "Popup para Compartir Referidos" },
+    changes: [
+      {
+        type: "feature",
+        text: "Share your referral link from a new popup on the dashboard. See how it works, what Pro unlocks, and track your referral stats — all in one place.",
+        translations: {
+          es: "Comparte tu enlace de referido desde un nuevo popup en el dashboard. Mira cómo funciona, qué desbloquea Pro y sigue tus estadísticas de referidos — todo en un solo lugar.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Portfolio history: 1M uses a full calendar month (not 30 rolling days), 1M / YTD / 1Y use hourly points when available, MAX is available on the chart, and all-time ranges longer than a year downsample to weekly points.",
+        translations: {
+          es: "Historial del portafolio: 1M usa un mes calendario completo (no 30 días rodantes), 1M / YTD / 1Y usan puntos horarios cuando hay datos, MAX está en el gráfico, y rangos de todo el tiempo de más de un año se muestran con puntos semanales.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "While the dashboard is open, portfolio snapshots are saved every 15 minutes (15-minute buckets) so evolution charts can show real intraday detail. Days when you do not open the app still have no intermediate points.",
+        translations: {
+          es: "Con el dashboard abierto, se guardan instantáneas del portafolio cada 15 minutos (bloques de 15 min) para que el gráfico de evolución muestre detalle intradía real. Los días en que no abres la app siguen sin puntos intermedios.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "A scheduled server job now writes portfolio history snapshots hourly (using live prices) so your evolution chart fills in over time even when you are not logged in.",
+        translations: {
+          es: "Un trabajo programado en el servidor ahora guarda instantáneas del historial del portafolio cada hora (con precios en vivo) para que el gráfico de evolución se complete con el tiempo aunque no hayas iniciado sesión.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Operators can materialize current portfolio snapshots for all users on demand (cron POST, admin API, or npm run materialize:portfolio-snapshots) — see docs/PORTFOLIO_SNAPSHOT_MATERIALIZE.md.",
+        translations: {
+          es: "Los operadores pueden materializar instantáneas actuales del portafolio para todos los usuarios bajo demanda (POST del cron, API de admin o npm run materialize:portfolio-snapshots) — ver docs/PORTFOLIO_SNAPSHOT_MATERIALIZE.md.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "After portfolio imports, the server now rebuilds history from transactions (daily or weekly sampling) and writes a live snapshot row in the background; manual backfill also refreshes live quotes with a longer timeout.",
+        translations: {
+          es: "Tras importar el portafolio, el servidor reconstruye el historial desde transacciones (muestreo diario o semanal) y escribe una instantánea en vivo en segundo plano; el backfill manual también actualiza cotizaciones en vivo con más tiempo de espera.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Reconstructed portfolio history now samples every recent weekday (~14 months) even for long-held portfolios, so short chart ranges aren’t stuck with only two weekly points. The dashboard only shows “Calculating portfolio history…” when you tap Recalculate; background refresh stays on the normal loading state.",
+        translations: {
+          es: "El historial reconstruido ahora muestrea cada día hábil reciente (~14 meses) incluso con portafolios de muchos años, para que rangos cortos no queden con solo dos puntos semanales. El dashboard solo muestra “Calculando historial del portafolio…” al pulsar Recalcular; la actualización en segundo plano usa el estado de carga habitual.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Portfolio evolution charts in hourly mode (1W, 1M, YTD, 1Y) now add hourly interpolated points between sparse snapshots so the line moves smoothly across the whole range; denser real data (e.g. while the app is open) is unchanged.",
+        translations: {
+          es: "Los gráficos de evolución en modo horario (1S, 1M, YTD, 1A) añaden puntos horarios interpolados entre instantáneas dispersas para que la línea se mueva con suavidad en todo el rango; los datos reales más densos (p. ej. con la app abierta) no se sustituyen.",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.48.0",
+    date: "2026-03-19",
+    title: "Portfolio Event Markers",
+    titleTranslations: { es: "Marcadores de Eventos del Portafolio" },
+    changes: [
+      {
+        type: "feature",
+        text: "The portfolio chart now shows milestone markers for buy and sell events. Hover over the colored dots to see what happened — like when you sold a position or added new shares — so you can understand why the value changed.",
+        translations: {
+          es: "El gráfico del portafolio ahora muestra marcadores para eventos de compra y venta. Pasa el cursor sobre los puntos de colores para ver qué ocurrió — como cuando vendiste una posición o compraste nuevas acciones — para entender por qué cambió el valor.",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.47.0",
+    date: "2026-03-19",
+    title: "Value vs Performance Chart",
+    titleTranslations: { es: "Gráfico de Valor vs Rendimiento" },
+    changes: [
+      {
+        type: "feature",
+        text: "The portfolio chart now lets you toggle between Value and Performance views. Value shows your total portfolio worth (including deposits), while Performance shows your actual investment returns with deposits factored out.",
+        translations: {
+          es: "El gráfico del portafolio ahora permite alternar entre las vistas de Valor y Rendimiento. Valor muestra el patrimonio total (incluyendo depósitos), mientras que Rendimiento muestra tus retornos reales de inversión excluyendo depósitos.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "You can now manually recalculate your portfolio history from the chart header. Admins can also trigger backfill for any user from the admin panel.",
+        translations: {
+          es: "Ahora puedes recalcular manualmente el historial de tu portafolio desde el encabezado del gráfico. Los administradores también pueden ejecutar el backfill para cualquier usuario desde el panel de administración.",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.46.0",
+    date: "2026-03-19",
+    title: "Refund Requests",
+    titleTranslations: { es: "Solicitudes de Reembolso" },
+    changes: [
+      {
+        type: "feature",
+        text: "Paid subscribers can now request a refund directly from their profile. You'll receive an email confirmation and a follow-up once we've reviewed your request.",
+        translations: {
+          es: "Los suscriptores de pago ahora pueden solicitar un reembolso directamente desde su perfil. Recibirás una confirmación por email y un seguimiento una vez que hayamos revisado tu solicitud.",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.45.0",
+    date: "2026-03-19",
+    title: "Holding Big Movers in Market Alert",
+    titleTranslations: { es: "Grandes Movimientos de tus Acciones en Alerta de Mercado" },
+    changes: [
+      {
+        type: "feature",
+        text: "Market Alert now highlights your own holdings with intraday moves above 2%, so you catch big swings in your portfolio at a glance.",
+        translations: {
+          es: "La Alerta de Mercado ahora destaca tus propias acciones con movimientos intradía superiores al 2%, para que detectes grandes movimientos en tu portafolio de un vistazo.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.44.0",
     date: "2026-03-19",
     title: "One-Click Email Unsubscribe",

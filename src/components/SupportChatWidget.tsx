@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useLayoutEffect } from "react";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth-context";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { useTrack } from "@/lib/use-track";
+import AiMarkdown from "@/components/AiMarkdown";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -39,7 +40,7 @@ export default function SupportChatWidget({
   const [error, setError] = useState("");
   const [shareContext, setShareContext] = useState(false);
   const [conversationId] = useState(() => generateId());
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesScrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const openedRef = useRef(false);
 
@@ -55,8 +56,10 @@ export default function SupportChatWidget({
     }
   }, [isOpen, track]);
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  useLayoutEffect(() => {
+    const el = messagesScrollRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
   }, [messages]);
 
   useEffect(() => {
@@ -184,7 +187,11 @@ export default function SupportChatWidget({
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-[200px]" aria-live="polite">
+        <div
+          ref={messagesScrollRef}
+          className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-4 py-3 space-y-3 min-h-[200px]"
+          aria-live="polite"
+        >
           {messages.length === 0 && (
             <div className="text-sm text-gray-500 dark:text-slate-400 text-center py-4">
               {greeting}
@@ -193,23 +200,30 @@ export default function SupportChatWidget({
           {messages.map((msg, i) => (
             <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
               <div
-                className={`max-w-[85%] rounded-xl px-3 py-2 text-sm whitespace-pre-wrap ${
+                className={`max-w-[85%] rounded-xl px-3 py-2 text-sm ${
+                  msg.role === "user" ? "whitespace-pre-wrap" : ""
+                } ${
                   msg.role === "user"
                     ? "bg-emerald-600 text-white rounded-br-sm"
                     : "bg-gray-100 dark:bg-slate-700 text-gray-900 dark:text-slate-100 rounded-bl-sm"
                 }`}
               >
-                {msg.content || (
-                  <span className="inline-flex gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-current animate-bounce" style={{ animationDelay: "0ms" }} />
-                    <span className="w-1.5 h-1.5 rounded-full bg-current animate-bounce" style={{ animationDelay: "150ms" }} />
-                    <span className="w-1.5 h-1.5 rounded-full bg-current animate-bounce" style={{ animationDelay: "300ms" }} />
-                  </span>
+                {msg.role === "assistant" ? (
+                  msg.content ? (
+                    <AiMarkdown text={msg.content} />
+                  ) : (
+                    <span className="inline-flex gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-current animate-bounce" style={{ animationDelay: "0ms" }} />
+                      <span className="w-1.5 h-1.5 rounded-full bg-current animate-bounce" style={{ animationDelay: "150ms" }} />
+                      <span className="w-1.5 h-1.5 rounded-full bg-current animate-bounce" style={{ animationDelay: "300ms" }} />
+                    </span>
+                  )
+                ) : (
+                  msg.content
                 )}
               </div>
             </div>
           ))}
-          <div ref={messagesEndRef} />
         </div>
 
         {/* Error */}

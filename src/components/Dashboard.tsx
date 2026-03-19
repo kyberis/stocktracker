@@ -55,6 +55,9 @@ const EventCalendar = dynamic(() => import("./EventCalendar"), { ssr: false });
 const UpcomingEarnings = dynamic(() => import("./UpcomingEarnings"), { ssr: false });
 const AddManualAssetModal = dynamic(() => import("./AddManualAssetModal"), { ssr: false });
 const SupportChatWidget = dynamic(() => import("./SupportChatWidget"), { ssr: false });
+const ReferralShareModal = dynamic(() => import("./ReferralShareModal"), { ssr: false });
+const ReferralBanner = dynamic(() => import("./ReferralBanner"), { ssr: false });
+import { usePortfolioSnapshotSync } from "@/lib/use-portfolio-snapshot-sync";
 import TierFeatureBadge from "./TierFeatureBadge";
 import SampleDataBanner from "./SampleDataBanner";
 import SecureAccountPrompt from "./SecureAccountPrompt";
@@ -134,13 +137,16 @@ function DesktopDashboard() {
   const [showReset, setShowReset] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [showSupportChat, setShowSupportChat] = useState(false);
+  const [showReferralModal, setShowReferralModal] = useState(false);
   const [supportChatEnabled, setSupportChatEnabled] = useState(false);
   const [supportChatWelcome, setSupportChatWelcome] = useState("");
   const [activeTab, setActiveTab] = useState<DashboardTab>("portfolio");
   const [brokerFilter, setBrokerFilter] = useState<string>("all");
   const [accounts, setAccounts] = useState<Account[]>([]);
   const { t } = useI18n();
-  const { holdings, cashEntries, isLoading, refreshHoldings, refreshQuotes, activePortfolioId } = usePortfolio();
+  const { holdings, cashEntries, isLoading, refreshHoldings, refreshQuotes, activePortfolioId, demoMode } =
+    usePortfolio();
+  usePortfolioSnapshotSync({ demoMode });
   const { user, isLoading: authLoading } = useAuth();
   const track = useTrack();
   const { layoutTheme } = useTheme();
@@ -330,6 +336,7 @@ function DesktopDashboard() {
         <LeafPromoBanner />
         <SampleDataBanner />
         <SecureAccountPrompt />
+        <ReferralBanner onShare={() => setShowReferralModal(true)} />
 
         {activeTab === "portfolio" && (
           <div
@@ -550,6 +557,13 @@ function DesktopDashboard() {
             setShowFeedback(true);
           }}
           welcomeMessage={supportChatWelcome}
+        />
+      )}
+
+      {showReferralModal && (
+        <ReferralShareModal
+          isOpen={showReferralModal}
+          onClose={() => setShowReferralModal(false)}
         />
       )}
 

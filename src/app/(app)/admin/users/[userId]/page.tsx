@@ -521,6 +521,29 @@ export default function AdminUserDetailPage() {
     fetchData(selectedPortfolio);
   };
 
+  const [backfilling, setBackfilling] = useState(false);
+  const handleBackfill = async () => {
+    setBackfilling(true);
+    setActionMsg("Backfilling…");
+    try {
+      const res = await fetch("/api/admin/backfill-snapshots", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId }),
+      });
+      const json = await res.json();
+      if (res.ok) {
+        setActionMsg(`Backfilled ${json.snapshotsCreated} snapshots`);
+      } else {
+        setActionMsg(`Backfill failed: ${json.error}`);
+      }
+    } catch {
+      setActionMsg("Backfill failed");
+    }
+    setBackfilling(false);
+    setTimeout(() => setActionMsg(""), 4000);
+  };
+
   const handleDelete = async () => {
     if (!confirm(`Delete this user? This cannot be undone.`)) return;
     const res = await fetch(`/api/admin/users?id=${encodeURIComponent(userId)}`, { method: "DELETE" });
@@ -738,6 +761,9 @@ export default function AdminUserDetailPage() {
               <div className="flex flex-wrap gap-2">
                 <button onClick={() => handleResetData("seed")} className="btn-secondary text-xs px-2 py-1">Seed data</button>
                 <button onClick={() => handleResetData("empty")} className="btn-secondary text-xs px-2 py-1">Empty data</button>
+                <button onClick={handleBackfill} disabled={backfilling} className="btn-secondary text-xs px-2 py-1">
+                  {backfilling ? "Backfilling…" : "Backfill snapshots"}
+                </button>
                 {user.username !== "admin" && (
                   <button onClick={handleDelete} className="btn-danger text-xs px-2 py-1">Delete user</button>
                 )}

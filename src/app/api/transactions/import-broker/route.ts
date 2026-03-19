@@ -9,6 +9,8 @@ import { getBrokerParser, type ParsedTransaction } from "@/lib/broker-parsers";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { enrichHoldingClassifications } from "@/lib/enrich-classifications";
 import { deferTask, submitJob, getJobStatus } from "@/lib/task-runner";
+import { runBackfillForUser } from "@/lib/backfill-snapshots";
+import { materializeCurrentSnapshotsForUser } from "@/lib/cron-portfolio-snapshots";
 import { getHoldingsLimit } from "@/lib/subscription";
 
 const KNOWN_ISINS: Record<string, string> = {
@@ -233,6 +235,17 @@ async function importTransactions(
   portfolioImportsTotal.inc({ source: "broker", status: "success" });
 
   await enrichHoldingClassifications(userId).catch(() => {});
+
+  if (imported > 0 || cashImported > 0) {
+    deferTask(async () => {
+      try {
+        await runBackfillForUser(userId);
+        await materializeCurrentSnapshotsForUser(userId);
+      } catch (err) {
+        console.error("[import-broker] snapshot pipeline failed:", err);
+      }
+    });
+  }
 
   return { imported, cashImported, ...(holdingsCapped > 0 ? { holdingsCapped } : {}) };
 }

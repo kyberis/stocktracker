@@ -9,6 +9,7 @@ import {
   Tooltip,
   ResponsiveContainer,
   CartesianGrid,
+  ReferenceLine,
 } from "recharts";
 import { useI18n } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/portfolio-context";
@@ -17,12 +18,14 @@ import { useTheme } from "@/lib/theme-context";
 import { useStealthMode } from "@/lib/stealth-context";
 import { useTrack } from "@/lib/use-track";
 import { formatCurrency, formatPercent } from "@/lib/utils";
-import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
 import TierFeatureBadge from "./TierFeatureBadge";
+import ChartAiChatPanel from "./ChartAiChatPanel";
 
-type EvolutionRange = "1w" | "1m" | "3m" | "6m" | "ytd" | "1y";
+type ChartMode = "value" | "performance";
 
-const RANGE_KEYS: EvolutionRange[] = ["1w", "1m", "3m", "6m", "ytd", "1y"];
+type EvolutionRange = "1w" | "1m" | "3m" | "6m" | "ytd" | "1y" | "all";
+
+const RANGE_KEYS: EvolutionRange[] = ["1w", "1m", "3m", "6m", "ytd", "1y", "all"];
 const RANGE_LABELS: Record<EvolutionRange, string> = {
   "1w": "1W",
   "1m": "1M",
@@ -30,35 +33,183 @@ const RANGE_LABELS: Record<EvolutionRange, string> = {
   "6m": "6M",
   ytd: "YTD",
   "1y": "1Y",
+  all: "MAX",
 };
 const FREE_RANGES = new Set<EvolutionRange>(["1w", "1m"]);
 
 interface SnapshotPoint {
   date: string;
   value: number;
+  invested: number;
+}
+
+interface PerfPoint {
+  date: string;
+  pct: number;
+}
+
+interface EventMarker {
+  id?: string;
+  date: string;
+  type: string;
+  ticker: string;
+  name: string;
+  shares: number;
+  totalAmount?: number;
+  currency?: string;
 }
 
 interface ChartTooltipProps {
   active?: boolean;
-  payload?: Array<{ payload: SnapshotPoint }>;
+  payload?: Array<{ payload: (SnapshotPoint | PerfPoint) & { events?: EventMarker[] } }>;
   baseCurrency: string;
   stealthMode: boolean;
+  mode: ChartMode;
+  t: (key: string) => string;
 }
 
-function ChartTooltip({ active, payload, baseCurrency, stealthMode }: ChartTooltipProps) {
+function formatEventShares(shares: number): string {
+  if (Number.isInteger(shares)) return shares.toLocaleString();
+  return shares.toLocaleString(undefined, { maximumFractionDigits: 2 });
+}
+
+function eventMarkerFill(type: string): string {
+  switch (type) {
+    case "sell":
+      return "#ef4444";
+    case "buy":
+      return "#10b981";
+    case "dividend":
+      return "#f59e0b";
+    case "fee":
+      return "#8b5cf6";
+    default:
+      return "#64748b";
+  }
+}
+
+function eventMarkerDotClass(type: string): string {
+  switch (type) {
+    case "sell":
+      return "bg-red-500";
+    case "buy":
+      return "bg-emerald-500";
+    case "dividend":
+      return "bg-amber-500";
+    case "fee":
+      return "bg-violet-500";
+    default:
+      return "bg-slate-500";
+  }
+}
+
+function formatEventLine(
+  e: EventMarker,
+  t: (key: string) => string,
+  stealthMode: boolean,
+  baseCurrency: string,
+): string {
+  const label =
+    e.type === "sell"
+      ? t("eventSold")
+      : e.type === "buy"
+        ? t("eventBought")
+        : e.type === "dividend"
+          ? t("txDividend")
+          : e.type === "fee"
+            ? t("txFee")
+            : e.type;
+  const qtyPart =
+    e.type === "buy" || e.type === "sell"
+      ? `${formatEventShares(e.shares)} ${e.ticker}`
+      : e.ticker;
+  let line = `${label} ${qtyPart}`;
+  if (
+    !stealthMode &&
+    e.totalAmount != null &&
+    Number.isFinite(e.totalAmount) &&
+    Math.abs(e.totalAmount) > 1e-9
+  ) {
+    const ccy = e.currency || baseCurrency;
+    line += ` · ${formatCurrency(e.totalAmount, ccy)}`;
+  }
+  return line;
+}
+
+function EventsTooltipSection({
+  events,
+  t,
+  stealthMode,
+  baseCurrency,
+}: {
+  events?: EventMarker[];
+  t: (key: string) => string;
+  stealthMode: boolean;
+  baseCurrency: string;
+}) {
+  if (!events?.length) return null;
+  return (
+    <div className="border-t border-gray-200 dark:border-slate-600 mt-1.5 pt-1.5 space-y-0.5 max-h-40 overflow-y-auto">
+      {events.map((e, i) => (
+        <div key={e.id || `${e.type}-${e.date}-${e.ticker}-${i}`} className="flex items-start gap-1">
+          <span className={`w-1.5 h-1.5 rounded-full shrink-0 mt-0.5 ${eventMarkerDotClass(e.type)}`} />
+          <span className="text-[10px] text-gray-600 dark:text-slate-300 leading-snug">
+            {formatEventLine(e, t, stealthMode, baseCurrency)}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ChartTooltip({ active, payload, baseCurrency, stealthMode, mode, t }: ChartTooltipProps) {
   if (!active || !payload?.length) return null;
   const point = payload[0].payload;
+  const events = point.events;
+  if (mode === "performance") {
+    const p = point as PerfPoint;
+    const isPos = p.pct >= 0;
+    return (
+      <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2 shadow-lg">
+        <p className="text-xs text-gray-400 dark:text-slate-500">{formatDateLabel(p.date)}</p>
+        <p className={`text-sm font-semibold tabular-nums ${isPos ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
+          {isPos ? "+" : ""}{formatPercent(p.pct)}
+        </p>
+        <EventsTooltipSection events={events} t={t} stealthMode={stealthMode} baseCurrency={baseCurrency} />
+      </div>
+    );
+  }
+  const sp = point as SnapshotPoint;
   return (
     <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2 shadow-lg">
-      <p className="text-xs text-gray-400 dark:text-slate-500">{formatDateLabel(point.date)}</p>
-      <p className="text-sm font-semibold text-gray-900 dark:text-white tabular-nums">
-        {stealthMode ? "•••••" : formatCurrency(point.value, baseCurrency)}
-      </p>
+      <p className="text-xs text-gray-400 dark:text-slate-500">{formatDateLabel(sp.date)}</p>
+      <div className="flex items-center gap-1.5 mt-1">
+        <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+        <span className="text-xs text-gray-500 dark:text-slate-400">{t("portfolioValueLabel")}</span>
+        <span className="text-sm font-semibold text-gray-900 dark:text-white tabular-nums ml-auto">
+          {stealthMode ? "•••••" : formatCurrency(sp.value, baseCurrency)}
+        </span>
+      </div>
+      {sp.invested > 0 && (
+        <div className="flex items-center gap-1.5 mt-0.5">
+          <span className="w-2 h-2 rounded-full bg-gray-400 dark:bg-slate-500 shrink-0" />
+          <span className="text-xs text-gray-500 dark:text-slate-400">{t("investedCapital")}</span>
+          <span className="text-sm font-semibold text-gray-900 dark:text-white tabular-nums ml-auto">
+            {stealthMode ? "•••••" : formatCurrency(sp.invested, baseCurrency)}
+          </span>
+        </div>
+      )}
+      <EventsTooltipSection events={events} t={t} stealthMode={stealthMode} baseCurrency={baseCurrency} />
     </div>
   );
 }
 
 function formatDateLabel(dateStr: string): string {
+  const hasTime = dateStr.includes(" ") || dateStr.includes("T");
+  if (hasTime) {
+    const d = new Date(dateStr.replace(" ", "T"));
+    return d.toLocaleString("en-GB", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" });
+  }
   const d = new Date(dateStr);
   return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
@@ -66,15 +217,113 @@ function formatDateLabel(dateStr: string): string {
 const DEMO_POINTS: SnapshotPoint[] = (() => {
   const pts: SnapshotPoint[] = [];
   let val = 38500;
+  let invested = 35000;
   for (let i = 90; i >= 0; i--) {
     const d = new Date();
     d.setDate(d.getDate() - i);
     if (d.getDay() === 0 || d.getDay() === 6) continue;
-    val += (Math.random() - 0.42) * val * 0.006 + val * 0.0003;
-    pts.push({ date: d.toISOString().slice(0, 10), value: Math.round(val * 100) / 100 });
+    if (i === 60) invested += 2000;
+    if (i === 30) invested += 1500;
+    if (i <= 7) {
+      for (let h = 9; h <= 17; h += 2) {
+        val += (Math.random() - 0.42) * val * 0.001 + val * 0.00005;
+        const hd = new Date(d);
+        hd.setHours(h, 0, 0, 0);
+        const dateStr = hd.toISOString().slice(0, 13).replace("T", " ") + ":00";
+        pts.push({ date: dateStr, value: Math.round(val * 100) / 100, invested: Math.round(invested * 100) / 100 });
+      }
+    } else {
+      val += (Math.random() - 0.42) * val * 0.006 + val * 0.0003;
+      pts.push({ date: d.toISOString().slice(0, 10), value: Math.round(val * 100) / 100, invested: Math.round(invested * 100) / 100 });
+    }
   }
   return pts;
 })();
+
+const DEMO_EVENTS: EventMarker[] = (() => {
+  const evts: EventMarker[] = [];
+  const d60 = new Date(); d60.setDate(d60.getDate() - 60);
+  evts.push({
+    id: "demo-1",
+    date: d60.toISOString().slice(0, 10),
+    type: "buy",
+    ticker: "AAPL",
+    name: "Apple Inc.",
+    shares: 10,
+    totalAmount: 1850,
+    currency: "USD",
+  });
+  const d45 = new Date(); d45.setDate(d45.getDate() - 45);
+  evts.push({
+    id: "demo-2",
+    date: d45.toISOString().slice(0, 10),
+    type: "sell",
+    ticker: "TSLA",
+    name: "Tesla Inc.",
+    shares: 15,
+    totalAmount: 3200,
+    currency: "USD",
+  });
+  const d30 = new Date(); d30.setDate(d30.getDate() - 30);
+  evts.push({
+    id: "demo-3",
+    date: d30.toISOString().slice(0, 10),
+    type: "buy",
+    ticker: "MSFT",
+    name: "Microsoft Corp.",
+    shares: 5,
+    totalAmount: 2100,
+    currency: "USD",
+  });
+  const d25 = new Date(); d25.setDate(d25.getDate() - 25);
+  evts.push({
+    id: "demo-4",
+    date: d25.toISOString().slice(0, 10),
+    type: "dividend",
+    ticker: "AAPL",
+    name: "Apple Inc.",
+    shares: 0,
+    totalAmount: 12.5,
+    currency: "USD",
+  });
+  const d20 = new Date(); d20.setDate(d20.getDate() - 20);
+  evts.push({
+    id: "demo-5",
+    date: d20.toISOString().slice(0, 10),
+    type: "fee",
+    ticker: "BROKER",
+    name: "Custody",
+    shares: 0,
+    totalAmount: -4.99,
+    currency: "EUR",
+  });
+  return evts;
+})();
+
+function attachEventsToPoints<T extends { date: string }>(
+  pts: T[],
+  evts: EventMarker[],
+): (T & { events?: EventMarker[] })[] {
+  if (!evts.length || !pts.length) return pts;
+  const result = pts.map(p => ({ ...p } as T & { events?: EventMarker[] }));
+
+  for (const evt of evts) {
+    const evtMs = new Date(evt.date).getTime();
+    let bestIdx = 0;
+    let bestDiff = Infinity;
+    for (let i = 0; i < result.length; i++) {
+      const ptMs = new Date(result[i].date.slice(0, 10)).getTime();
+      const diff = Math.abs(ptMs - evtMs);
+      if (diff < bestDiff) { bestDiff = diff; bestIdx = i; }
+    }
+    if (bestDiff <= 3 * 86400000) {
+      if (!result[bestIdx].events) result[bestIdx].events = [];
+      result[bestIdx].events!.push(evt);
+    }
+  }
+
+  return result;
+}
 
 export default function PortfolioEvolutionChart() {
   const { t } = useI18n();
@@ -89,55 +338,24 @@ export default function PortfolioEvolutionChart() {
   const isPaid = user?.plan === "starter" || user?.plan === "pro";
 
   const [range, setRange] = useState<EvolutionRange>("1m");
+  const [chartMode, setChartMode] = useState<ChartMode>("value");
   const [points, setPoints] = useState<SnapshotPoint[]>([]);
+  const [events, setEvents] = useState<EventMarker[]>([]);
   const [loading, setLoading] = useState(true);
   const [backfilling, setBackfilling] = useState(false);
-  const backfillingRef = useRef(false);
+  const [showExplainer, setShowExplainer] = useState(false);
+  /** Any POST /backfill-snapshots in flight (manual or silent). */
+  const backfillInFlightRef = useRef(false);
+  /** Only one automatic sparse-history backfill attempt per portfolio (pts &lt; 2). */
+  const sparseBackfillAttemptedRef = useRef(false);
   const prevHoldingsCount = useRef(holdings.length);
-
-  // Upsert today's snapshot
-  useEffect(() => {
-    if (demoMode) return;
-    const allHaveValue = holdings.every(
-      (h) => (quotes[h.ticker]?.regularMarketPrice ?? 0) > 0 || h.valueInEUR > 0,
-    );
-    if (!allHaveValue || holdings.length === 0) return;
-
-    const totals = calculatePortfolioTotals(holdings, cashEntries, quotes, exchangeRates, baseCurrency);
-    if (totals.totalCurrentEUR <= 0) return;
-    fetch("/api/portfolio/snapshot", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ totalValueEUR: totals.totalCurrentEUR, portfolioId: activePortfolioId || "" }),
-    }).catch(() => {});
-  // activePortfolioId intentionally excluded — the effect must only fire when
-  // holdings/quotes change (after the context fetches data for the new portfolio).
-  // Including it causes a race: portfolioId updates before holdings, writing
-  // stale totals under the new portfolio's ID.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [holdings, cashEntries, quotes, exchangeRates, baseCurrency, demoMode]);
-
-  const triggerBackfill = useCallback(() => {
-    if (backfillingRef.current || demoMode) return;
-    backfillingRef.current = true;
-    setBackfilling(true);
-    fetch("/api/portfolio/backfill-snapshots", { method: "POST" })
-      .then(() => {
-        backfillingRef.current = false;
-        setBackfilling(false);
-        fetchHistory(range);
-      })
-      .catch(() => {
-        backfillingRef.current = false;
-        setBackfilling(false);
-      });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [demoMode, range]);
+  const fetchHistoryRef = useRef<(r: EvolutionRange) => void>(() => {});
 
   const fetchHistory = useCallback(
     (r: EvolutionRange) => {
       if (demoMode) {
         setPoints(DEMO_POINTS);
+        setEvents(DEMO_EVENTS);
         setLoading(false);
         return;
       }
@@ -146,30 +364,60 @@ export default function PortfolioEvolutionChart() {
       fetch(`/api/portfolio/history?range=${r}&portfolioId=${encodeURIComponent(pid)}`)
         .then((res) => (res.ok ? res.json() : { points: [] }))
         .then((data) => {
-          const pts: SnapshotPoint[] = Array.isArray(data.points) ? data.points : [];
+          const raw = Array.isArray(data.points) ? data.points : [];
+          const pts: SnapshotPoint[] = raw.map((p: { date: string; value: number; invested?: number }) => ({
+            date: p.date,
+            value: p.value,
+            invested: p.invested || 0,
+          }));
           setPoints(pts);
+          setEvents(Array.isArray(data.events) ? data.events : []);
           setLoading(false);
-          // Auto-backfill when insufficient history for this portfolio
-          if (pts.length < 2 && !backfillingRef.current) {
-            triggerBackfill();
+          // Auto-backfill once when insufficient history — silent (no “Calculating…” overlay).
+          if (
+            pts.length < 2 &&
+            !sparseBackfillAttemptedRef.current &&
+            !backfillInFlightRef.current
+          ) {
+            sparseBackfillAttemptedRef.current = true;
+            backfillInFlightRef.current = true;
+            fetch("/api/portfolio/backfill-snapshots", { method: "POST" })
+              .finally(() => {
+                backfillInFlightRef.current = false;
+                fetchHistoryRef.current(r);
+              });
           }
         })
         .catch(() => setLoading(false));
     },
-    [demoMode, activePortfolioId, triggerBackfill],
+    [demoMode, activePortfolioId],
   );
 
-  // Lazy backfill check on first mount
   useEffect(() => {
-    if (demoMode) return;
-    fetch("/api/portfolio/backfill-snapshots?check=true")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (data?.needsBackfill) triggerBackfill();
+    fetchHistoryRef.current = fetchHistory;
+  }, [fetchHistory]);
+
+  /** User-triggered recalculate — shows “Calculating portfolio history…”. */
+  const triggerBackfill = useCallback(() => {
+    if (backfillInFlightRef.current || demoMode) return;
+    backfillInFlightRef.current = true;
+    setBackfilling(true);
+    fetch("/api/portfolio/backfill-snapshots", { method: "POST" })
+      .then(() => {
+        backfillInFlightRef.current = false;
+        setBackfilling(false);
+        fetchHistoryRef.current(range);
       })
-      .catch(() => {});
+      .catch(() => {
+        backfillInFlightRef.current = false;
+        setBackfilling(false);
+      });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [demoMode]);
+  }, [demoMode, range]);
+
+  useEffect(() => {
+    sparseBackfillAttemptedRef.current = false;
+  }, [activePortfolioId]);
 
   useEffect(() => {
     if (!isPaid && !FREE_RANGES.has(range)) {
@@ -179,15 +427,20 @@ export default function PortfolioEvolutionChart() {
     fetchHistory(range);
   }, [range, isPaid, fetchHistory, activePortfolioId]);
 
-  // Re-backfill when holdings count changes (stock added/removed from dashboard)
+  // Re-backfill when holdings count changes (stock added/removed) — silent refresh, no blocking overlay.
   useEffect(() => {
     if (demoMode) return;
     const prev = prevHoldingsCount.current;
     prevHoldingsCount.current = holdings.length;
-    if (prev !== 0 && holdings.length !== prev) {
-      triggerBackfill();
+    if (prev !== 0 && holdings.length !== prev && !backfillInFlightRef.current) {
+      backfillInFlightRef.current = true;
+      fetch("/api/portfolio/backfill-snapshots", { method: "POST" })
+        .finally(() => {
+          backfillInFlightRef.current = false;
+          fetchHistoryRef.current(range);
+        });
     }
-  }, [holdings.length, demoMode, triggerBackfill]);
+  }, [holdings.length, demoMode, range]);
 
   function handleRangeChange(r: EvolutionRange) {
     if (!isPaid && !FREE_RANGES.has(r)) return;
@@ -195,10 +448,67 @@ export default function PortfolioEvolutionChart() {
     track("evolution_range_changed", { range: r });
   }
 
+  function handleModeChange(m: ChartMode) {
+    setChartMode(m);
+    track("chart_mode_changed", { mode: m });
+  }
+
+  const hasInvestedData = points.some((p) => p.invested > 0);
+
+  // Performance data: gain/loss % at each date relative to cost basis,
+  // rebased so the first point in the selected range is 0%.
+  const rawPerfPoints: PerfPoint[] = points.map((p) => ({
+    date: p.date,
+    pct: p.invested > 0 ? ((p.value - p.invested) / p.invested) * 100 : 0,
+  }));
+  const basePct = rawPerfPoints[0]?.pct ?? 0;
+  const perfPoints: PerfPoint[] = rawPerfPoints.map((p) => ({
+    date: p.date,
+    pct: p.pct - basePct,
+  }));
+
+  const isPerf = chartMode === "performance" && hasInvestedData;
+
+  const enrichedPoints = attachEventsToPoints(points, events);
+  const enrichedPerfPoints = attachEventsToPoints(perfPoints, events);
+
   const firstValue = points[0]?.value ?? 0;
   const lastValue = points[points.length - 1]?.value ?? 0;
-  const periodReturn = firstValue > 0 ? ((lastValue - firstValue) / firstValue) * 100 : null;
+
+  let periodReturn: number | null;
+  if (isPerf) {
+    const firstPct = perfPoints[0]?.pct ?? 0;
+    const lastPct = perfPoints[perfPoints.length - 1]?.pct ?? 0;
+    periodReturn = lastPct - firstPct;
+  } else {
+    periodReturn = firstValue > 0 ? ((lastValue - firstValue) / firstValue) * 100 : null;
+  }
   const isPositive = (periodReturn ?? 0) >= 0;
+
+  const chartChatLayout: "default" | "terminal" | "canvas" | "studio" =
+    layoutTheme === "terminal"
+      ? "terminal"
+      : layoutTheme === "canvas"
+        ? "canvas"
+        : layoutTheme === "studio"
+          ? "studio"
+          : "default";
+
+  const chartAiPanel = (
+    <ChartAiChatPanel
+      layoutTheme={chartChatLayout}
+      range={range}
+      chartMode={chartMode}
+      baseCurrency={baseCurrency}
+      portfolioId={activePortfolioId}
+      points={points}
+      perfPoints={perfPoints}
+      events={events}
+      periodReturnPct={periodReturn}
+      demoMode={demoMode}
+      stealthMode={stealthMode}
+    />
+  );
 
   const accentColor = isPositive ? "#10b981" : "#ef4444";
   const tickFill = isDark ? "#94a3b8" : "#9ca3af";
@@ -276,6 +586,52 @@ export default function PortfolioEvolutionChart() {
     </div>
   );
 
+  const modePills = hasInvestedData ? (
+    <div className="flex rounded-lg overflow-hidden border border-gray-200 dark:border-slate-700" role="group" aria-label="Chart mode">
+      {(["value", "performance"] as ChartMode[]).map((m) => {
+        const isActive = chartMode === m;
+        let cls: string;
+        if (layoutTheme === "terminal") {
+          cls = `px-2 py-0.5 text-[10px] font-mono transition-colors ${
+            isActive ? "text-green-400 bg-zinc-800" : "text-zinc-500 hover:text-zinc-300"
+          }`;
+        } else if (layoutTheme === "canvas") {
+          cls = `px-2.5 py-1 text-[10px] font-medium transition-colors ${
+            isActive ? "bg-slate-900 text-white" : "bg-white text-slate-500 hover:bg-slate-50"
+          }`;
+        } else if (layoutTheme === "studio") {
+          cls = `px-2.5 py-1 text-[10px] font-medium transition-colors ${
+            isActive ? "bg-emerald-500 text-white" : "text-white/50 hover:text-white/80"
+          }`;
+        } else {
+          cls = `px-2.5 py-1 text-[10px] font-medium transition-colors ${
+            isActive
+              ? "bg-emerald-500 text-white"
+              : "bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700"
+          }`;
+        }
+        return (
+          <button key={m} onClick={() => handleModeChange(m)} className={cls} aria-pressed={isActive}>
+            {t(m === "value" ? "chartModeValue" : "chartModePerformance")}
+          </button>
+        );
+      })}
+    </div>
+  ) : null;
+
+  const explainerPanel = showExplainer ? (
+    <div className="rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/60 p-3 space-y-2 text-xs animate-in fade-in slide-in-from-top-1 duration-150">
+      <div>
+        <p className="font-semibold text-gray-800 dark:text-slate-200">{t("chartModeValue")}</p>
+        <p className="text-gray-600 dark:text-slate-400 mt-0.5 leading-relaxed text-[11px]">{t("chartValueExplainer")}</p>
+      </div>
+      <div>
+        <p className="font-semibold text-gray-800 dark:text-slate-200">{t("chartModePerformance")}</p>
+        <p className="text-gray-600 dark:text-slate-400 mt-0.5 leading-relaxed text-[11px]">{t("chartPerformanceExplainer")}</p>
+      </div>
+    </div>
+  ) : null;
+
   const periodReturnEl =
     points.length >= 2 && periodReturn !== null ? (
       <div className="flex items-center gap-2">
@@ -293,21 +649,23 @@ export default function PortfolioEvolutionChart() {
           {isPositive ? "+" : ""}
           {formatPercent(periodReturn)}
         </span>
-        <span
-          className={`text-xs tabular-nums ${
-            layoutTheme === "terminal"
-              ? "text-zinc-600"
-              : layoutTheme === "canvas"
-                ? "text-slate-400"
-                : layoutTheme === "studio"
-                  ? "text-white/40"
-                  : "text-gray-400 dark:text-slate-500"
-          }`}
-        >
-          {stealthMode
-            ? "••••• → •••••"
-            : `${formatCurrency(firstValue, baseCurrency)} → ${formatCurrency(lastValue, baseCurrency)}`}
-        </span>
+        {!isPerf && (
+          <span
+            className={`text-xs tabular-nums ${
+              layoutTheme === "terminal"
+                ? "text-zinc-600"
+                : layoutTheme === "canvas"
+                  ? "text-slate-400"
+                  : layoutTheme === "studio"
+                    ? "text-white/40"
+                    : "text-gray-400 dark:text-slate-500"
+            }`}
+          >
+            {stealthMode
+              ? "••••• → •••••"
+              : `${formatCurrency(firstValue, baseCurrency)} → ${formatCurrency(lastValue, baseCurrency)}`}
+          </span>
+        )}
       </div>
     ) : null;
 
@@ -317,7 +675,7 @@ export default function PortfolioEvolutionChart() {
       <span>{backfilling ? t("calculatingHistory") : t("loading")}</span>
     </div>
   ) : points.length < 2 ? (
-    <div className="py-12 text-center">
+    <div className="py-12 text-center space-y-3">
       <p
         className={`text-sm ${
           layoutTheme === "terminal"
@@ -331,15 +689,38 @@ export default function PortfolioEvolutionChart() {
       >
         {t("evolutionEmpty")}
       </p>
+      {!demoMode && (
+        <button
+          onClick={triggerBackfill}
+          className={`inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-colors ${
+            layoutTheme === "terminal"
+              ? "text-green-400 border border-green-900 hover:bg-green-950"
+              : layoutTheme === "canvas"
+                ? "text-slate-600 border border-slate-300 hover:bg-slate-50"
+                : layoutTheme === "studio"
+                  ? "text-white/60 border border-white/20 hover:bg-white/10"
+                  : "text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-900/30"
+          }`}
+        >
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          {t("recalculateHistory")}
+        </button>
+      )}
     </div>
   ) : (
-    <div className="h-48" role="img" aria-label="Portfolio value evolution chart">
+    <div className="h-48" role="img" aria-label={isPerf ? "Portfolio performance chart" : "Portfolio value evolution chart"}>
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={points} margin={{ top: 4, right: 4, left: 4, bottom: 4 }}>
+        <AreaChart data={isPerf ? enrichedPerfPoints : enrichedPoints} margin={{ top: 4, right: 4, left: 4, bottom: 4 }}>
           <defs>
             <linearGradient id="evolutionGrad" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor={accentColor} stopOpacity={0.2} />
               <stop offset="95%" stopColor={accentColor} stopOpacity={0} />
+            </linearGradient>
+            <linearGradient id="investedGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={isDark ? "#64748b" : "#9ca3af"} stopOpacity={0.15} />
+              <stop offset="95%" stopColor={isDark ? "#64748b" : "#9ca3af"} stopOpacity={0} />
             </linearGradient>
           </defs>
           <CartesianGrid
@@ -367,22 +748,84 @@ export default function PortfolioEvolutionChart() {
               ...(layoutTheme === "terminal" ? { fontFamily: "monospace" } : {}),
             }}
             tickFormatter={(v: number) =>
-              stealthMode ? "•••" : formatCurrency(v, baseCurrency)
+              isPerf
+                ? `${v >= 0 ? "+" : ""}${v.toFixed(1)}%`
+                : stealthMode ? "•••" : formatCurrency(v, baseCurrency)
             }
             width={70}
             axisLine={false}
             tickLine={false}
           />
+          {isPerf && (
+            <ReferenceLine
+              y={0}
+              stroke={isDark ? "#475569" : "#d1d5db"}
+              strokeDasharray="3 3"
+            />
+          )}
           <Tooltip
-            content={<ChartTooltip baseCurrency={baseCurrency} stealthMode={stealthMode} />}
+            content={<ChartTooltip baseCurrency={baseCurrency} stealthMode={stealthMode} mode={chartMode} t={t} />}
           />
+          {!isPerf && hasInvestedData && (
+            <Area
+              type="monotone"
+              dataKey="invested"
+              stroke={isDark ? "#64748b" : "#9ca3af"}
+              strokeWidth={1.5}
+              strokeDasharray="4 3"
+              fill="url(#investedGrad)"
+              dot={false}
+              animationDuration={600}
+            />
+          )}
           <Area
             type="monotone"
-            dataKey="value"
+            dataKey={isPerf ? "pct" : "value"}
             stroke={accentColor}
             strokeWidth={2}
             fill="url(#evolutionGrad)"
-            dot={false}
+            dot={(props: Record<string, unknown>) => {
+              const { cx, cy, index, payload } = props as {
+                cx: number;
+                cy: number;
+                index: number;
+                payload: { events?: EventMarker[] };
+              };
+              const evts = payload?.events;
+              if (!evts?.length) return <g key={`ed-${index}`} />;
+              const MAX = 6;
+              const show = evts.slice(0, MAX);
+              const extra = evts.length - MAX;
+              return (
+                <g key={`ed-${index}`}>
+                  {show.map((e, i) => (
+                    <circle
+                      key={e.id || `${e.type}-${e.ticker}-${i}`}
+                      cx={cx + (i - (show.length - 1) / 2) * 5.5}
+                      cy={cy}
+                      r={3.2}
+                      fill={eventMarkerFill(e.type)}
+                      stroke={isDark ? "#1e293b" : "#ffffff"}
+                      strokeWidth={1.5}
+                      style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.15))" }}
+                    />
+                  ))}
+                  {extra > 0 && (
+                    <text
+                      x={cx}
+                      y={cy - 9}
+                      textAnchor="middle"
+                      fontSize={9}
+                      fill={isDark ? "#94a3b8" : "#64748b"}
+                      fontWeight={600}
+                    >
+                      +
+                      {extra}
+                    </text>
+                  )}
+                </g>
+              );
+            }}
             animationDuration={600}
           />
         </AreaChart>
@@ -390,21 +833,74 @@ export default function PortfolioEvolutionChart() {
     </div>
   );
 
+  const subtitle = isPerf ? t("chartPerformanceSubtitle") : t("chartValueSubtitle");
+
+  const infoButton = (
+    <button
+      onClick={() => setShowExplainer((v) => !v)}
+      className={`p-1 rounded-full transition-colors ${
+        layoutTheme === "terminal"
+          ? "text-zinc-600 hover:text-green-400"
+          : layoutTheme === "canvas"
+            ? "text-slate-400 hover:text-slate-600"
+            : layoutTheme === "studio"
+              ? "text-white/30 hover:text-white/60"
+              : "text-gray-400 dark:text-slate-500 hover:text-emerald-500 dark:hover:text-emerald-400"
+      }`}
+      aria-label="Chart info"
+    >
+      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    </button>
+  );
+
+  const recalcButton = !demoMode ? (
+    <button
+      onClick={triggerBackfill}
+      disabled={backfilling}
+      title={t("recalculateHistoryDesc")}
+      className={`p-1 rounded-full transition-colors ${
+        backfilling ? "animate-spin" : ""
+      } ${
+        layoutTheme === "terminal"
+          ? "text-zinc-600 hover:text-green-400"
+          : layoutTheme === "canvas"
+            ? "text-slate-400 hover:text-slate-600"
+            : layoutTheme === "studio"
+              ? "text-white/30 hover:text-white/60"
+              : "text-gray-400 dark:text-slate-500 hover:text-emerald-500 dark:hover:text-emerald-400"
+      }`}
+      aria-label={t("recalculateHistory")}
+    >
+      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+      </svg>
+    </button>
+  ) : null;
+
   /* ── TERMINAL ── */
   if (layoutTheme === "terminal") {
     return (
       <div className="border-b border-zinc-800 py-3 space-y-2" data-testid="evolution-chart-terminal">
         <div className="flex items-center justify-between font-mono">
-          <div>
+          <div className="flex items-center gap-2">
             <span className="text-[10px] uppercase tracking-wider text-zinc-600">
               {t("performance")}
             </span>
-            <p className="text-[9px] text-zinc-700 mt-0.5">{t("performanceSubtitle")}</p>
+            {infoButton}
+            {recalcButton}
           </div>
-          {rangePills}
+          <div className="flex items-center gap-2">
+            {modePills}
+            {rangePills}
+          </div>
         </div>
+        <p className="text-[9px] text-zinc-700 font-mono">{subtitle}</p>
+        {explainerPanel}
         {periodReturnEl}
         {chartContent}
+        {chartAiPanel}
       </div>
     );
   }
@@ -417,16 +913,23 @@ export default function PortfolioEvolutionChart() {
         data-testid="evolution-chart-canvas"
       >
         <div className="flex items-center justify-between">
-          <div>
+          <div className="flex items-center gap-2">
             <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">
               {t("performance")}
             </h3>
-            <p className="text-[10px] text-slate-400 mt-0.5">{t("performanceSubtitle")}</p>
+            {infoButton}
+            {recalcButton}
           </div>
-          {rangePills}
+          <div className="flex items-center gap-2">
+            {modePills}
+            {rangePills}
+          </div>
         </div>
+        <p className="text-[10px] text-slate-400">{subtitle}</p>
+        {explainerPanel}
         {periodReturnEl}
         {chartContent}
+        {chartAiPanel}
       </div>
     );
   }
@@ -440,16 +943,23 @@ export default function PortfolioEvolutionChart() {
       >
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-500/40 to-transparent" />
         <div className="flex items-center justify-between">
-          <div>
+          <div className="flex items-center gap-2">
             <h3 className="text-xs font-semibold text-white/50 uppercase tracking-wider">
               {t("performance")}
             </h3>
-            <p className="text-[9px] text-white/30 mt-0.5">{t("performanceSubtitle")}</p>
+            {infoButton}
+            {recalcButton}
           </div>
-          {rangePills}
+          <div className="flex items-center gap-2">
+            {modePills}
+            {rangePills}
+          </div>
         </div>
+        <p className="text-[9px] text-white/30">{subtitle}</p>
+        {explainerPanel}
         {periodReturnEl}
         {chartContent}
+        {chartAiPanel}
       </div>
     );
   }
@@ -458,7 +968,7 @@ export default function PortfolioEvolutionChart() {
   return (
     <div className="card px-5 py-4 space-y-3" data-testid="evolution-chart">
       <div className="flex items-center justify-between">
-        <div>
+        <div className="flex items-center gap-1.5">
           <h3
             className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-1.5"
             style={{ fontSize: "var(--text-body)" }}
@@ -466,12 +976,19 @@ export default function PortfolioEvolutionChart() {
             {t("performance")}
             <TierFeatureBadge requiredPlan="starter" size="sm" />
           </h3>
-          <p className="text-[10px] text-gray-400 dark:text-slate-500 mt-0.5">{t("performanceSubtitle")}</p>
+          {infoButton}
+          {recalcButton}
         </div>
-        {rangePills}
+        <div className="flex items-center gap-2">
+          {modePills}
+          {rangePills}
+        </div>
       </div>
+      <p className="text-[10px] text-gray-400 dark:text-slate-500">{subtitle}</p>
+      {explainerPanel}
       {periodReturnEl}
       {chartContent}
+      {chartAiPanel}
     </div>
   );
 }

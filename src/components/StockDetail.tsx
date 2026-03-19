@@ -26,6 +26,7 @@ import TierFeatureBadge from "./TierFeatureBadge";
 import TransactionHistory from "./TransactionHistory";
 import type { UpsellReason } from "@/lib/upsell";
 import StockChart from "./StockChart";
+import AiMarkdown from "@/components/AiMarkdown";
 import type {
   Holding,
   QuoteData,
@@ -772,52 +773,6 @@ function AiAnalysisSection({
       )}
     </div>
   );
-}
-
-function AiMarkdown({ text }: { text: string }) {
-  const lines = text.split("\n");
-  const elements: React.ReactNode[] = [];
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    if (line.startsWith("## ")) {
-      elements.push(
-        <h3 key={i} className="text-sm font-semibold text-gray-800 dark:text-slate-100 mt-3 mb-1">
-          {line.slice(3)}
-        </h3>
-      );
-    } else if (line.startsWith("**") && line.endsWith("**")) {
-      elements.push(
-        <p key={i} className="text-sm font-semibold text-gray-800 dark:text-slate-100 mt-2">
-          {line.slice(2, -2)}
-        </p>
-      );
-    } else if (line.startsWith("- ")) {
-      elements.push(
-        <p key={i} className="text-sm pl-3 before:content-['•'] before:mr-2 before:text-emerald-500">
-          {renderInlineBold(line.slice(2))}
-        </p>
-      );
-    } else if (line.trim() === "") {
-      elements.push(<div key={i} className="h-2" />);
-    } else {
-      elements.push(
-        <p key={i} className="text-sm">{renderInlineBold(line)}</p>
-      );
-    }
-  }
-
-  return <>{elements}</>;
-}
-
-function renderInlineBold(text: string): React.ReactNode {
-  const parts = text.split(/(\*\*[^*]+\*\*)/g);
-  return parts.map((part, i) => {
-    if (part.startsWith("**") && part.endsWith("**")) {
-      return <strong key={i} className="font-semibold text-gray-800 dark:text-slate-100">{part.slice(2, -2)}</strong>;
-    }
-    return part;
-  });
 }
 
 /* ── Sub-components ──────────────────────────────────────────── */

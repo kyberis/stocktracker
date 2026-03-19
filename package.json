@@ -18,6 +18,7 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "pre-deploy": "bash scripts/pre-deploy.sh",
+    "materialize:portfolio-snapshots": "bash scripts/materialize-portfolio-snapshots.sh",
     "cap:dev": "CAPACITOR_SERVER_URL=http://localhost:3000 npx cap copy",
     "cap:ios": "CAPACITOR_SERVER_URL=http://localhost:3000 npx cap copy ios && npx cap open ios",
     "cap:android": "CAPACITOR_SERVER_URL=http://10.0.2.2:3000 npx cap copy android && npx cap open android",

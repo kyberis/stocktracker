@@ -9,6 +9,7 @@
     { "path": "/api/cron/screener-sync", "schedule": "0 3 * * *" },
     { "path": "/api/cron/tax-rules-review", "schedule": "0 9 2 1 *" },
     { "path": "/api/cron/x-post", "schedule": "*/15 * * * *" },
-    { "path": "/api/cron/refresh-holdings", "schedule": "*/15 * * * *" }
+    { "path": "/api/cron/refresh-holdings", "schedule": "*/15 * * * *" },
+    { "path": "/api/cron/portfolio-snapshots", "schedule": "10 * * * *" }
   ]
 }

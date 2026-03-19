@@ -205,14 +205,15 @@ export default function TermsOfServicePage() {
               Under EU consumer protection law, you have a 14-day right of
               withdrawal from the date of purchase. If you request a refund
               within this period and have not substantially used paid tier features,
-              we will issue a full refund. Contact{" "}
+              we will issue a full refund. You can submit a refund request
+              from your profile settings or contact{" "}
               <a
                 href="mailto:support@trefolio.com"
                 className="text-emerald-400 hover:text-emerald-300 underline underline-offset-2"
               >
                 support@trefolio.com
-              </a>{" "}
-              to request a refund.
+              </a>
+              . Refund requests are typically reviewed within 1–3 business days.
             </p>
           </section>
 

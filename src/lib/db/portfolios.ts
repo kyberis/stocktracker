@@ -70,7 +70,11 @@ export async function updatePortfolioCurrency(userId: string, portfolioId: strin
 }
 
 /**
- * Deletes a non-default portfolio and moves all its data to the default portfolio.
+ * Deletes a non-default portfolio and **permanently removes** all data scoped to it:
+ * holdings, transactions (including multi-portfolio map rows), cash, evolution snapshots,
+ * share links, price alerts, goals, broker↔portfolio mappings, and clears
+ * `users.device_portfolio_id` when it pointed at this portfolio.
+ *
  * Returns false if the portfolio is the default or doesn't exist.
  */
 export async function deletePortfolio(userId: string, portfolioId: string): Promise<boolean> {
@@ -84,29 +88,44 @@ export async function deletePortfolio(userId: string, portfolioId: string): Prom
   if (check.rows.length === 0) return false;
   if (num(check.rows[0].is_default) === 1) return false;
 
-  // Find the default portfolio
-  const defaultResult = await client.execute({
-    sql: "SELECT id FROM portfolios WHERE user_id = ? AND is_default = 1",
-    args: [userId],
-  });
-  if (defaultResult.rows.length === 0) return false;
-  const defaultId = str(defaultResult.rows[0].id);
-
-  // Remove transaction-portfolio mapping entries for the deleted portfolio
+  // Multi-portfolio transactions: remove map rows first, then delete tx rows that
+  // belong only to this portfolio (same rules as deleteAllTransactions — avoids
+  // importing transactions.ts and a circular dependency with resolvePortfolioId).
   await client.execute({
-    sql: "DELETE FROM transaction_portfolio_map WHERE portfolio_id = ? AND user_id = ?",
-    args: [portfolioId, userId],
+    sql: "DELETE FROM transaction_portfolio_map WHERE user_id = ? AND portfolio_id = ?",
+    args: [userId, portfolioId],
+  });
+  await client.execute({
+    sql: `DELETE FROM transactions WHERE user_id = ? AND portfolio_id = ?
+          AND id NOT IN (SELECT transaction_id FROM transaction_portfolio_map WHERE user_id = ?)`,
+    args: [userId, portfolioId, userId],
   });
 
-  // Move all data to the default portfolio
-  for (const table of ["holdings", "transactions", "cash_entries", "portfolio_snapshots", "portfolio_shares"]) {
+  for (const table of ["holdings", "cash_entries", "portfolio_snapshots", "portfolio_shares"] as const) {
     await client.execute({
-      sql: `UPDATE ${table} SET portfolio_id = ? WHERE portfolio_id = ? AND user_id = ?`,
-      args: [defaultId, portfolioId, userId],
+      sql: `DELETE FROM ${table} WHERE user_id = ? AND portfolio_id = ?`,
+      args: [userId, portfolioId],
     });
   }
 
-  // Delete the portfolio
+  await client.execute({
+    sql: "DELETE FROM price_alerts WHERE user_id = ? AND portfolio_id = ?",
+    args: [userId, portfolioId],
+  });
+  await client.execute({
+    sql: "DELETE FROM goals WHERE user_id = ? AND portfolio_id = ?",
+    args: [userId, portfolioId],
+  });
+  await client.execute({
+    sql: "DELETE FROM snaptrade_broker_portfolio_map WHERE user_id = ? AND portfolio_id = ?",
+    args: [userId, portfolioId],
+  });
+
+  await client.execute({
+    sql: "UPDATE users SET device_portfolio_id = '' WHERE id = ? AND device_portfolio_id = ?",
+    args: [userId, portfolioId],
+  });
+
   await client.execute({
     sql: "DELETE FROM portfolios WHERE id = ? AND user_id = ?",
     args: [portfolioId, userId],

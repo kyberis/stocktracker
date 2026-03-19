@@ -1898,6 +1898,314 @@ Abrir Centro de Importación: {{base_url}}/import`,
       );
     },
   },
+  {
+    version: 66,
+    description: "Create refund_requests table and seed refund email templates",
+    up: async (client: Client) => {
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS refund_requests (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          reason TEXT NOT NULL DEFAULT '',
+          status TEXT NOT NULL DEFAULT 'pending'
+            CHECK(status IN ('pending', 'approved', 'rejected')),
+          admin_note TEXT NOT NULL DEFAULT '',
+          resolved_at TEXT NOT NULL DEFAULT '',
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_refund_requests_user ON refund_requests(user_id);
+        CREATE INDEX IF NOT EXISTS idx_refund_requests_created ON refund_requests(created_at);
+      `);
+
+      const templates: Array<{
+        slug: string;
+        name: string;
+        subject: string;
+        subjectEs: string;
+        bodyHtml: string;
+        bodyHtmlEs: string;
+        bodyText: string;
+        bodyTextEs: string;
+      }> = [
+        {
+          slug: "refund-request-received",
+          name: "Refund Request Received",
+          subject: "We received your refund request",
+          subjectEs: "Recibimos tu solicitud de reembolso",
+          bodyHtml: `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px;">
+    <tr><td align="center">
+      <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="width:100%;max-width:480px;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e2e8f0;">
+        <tr><td style="padding:28px 28px 8px;">
+          <h1 style="margin:0 0 10px;font-size:22px;color:#0f172a;">Hi {{display_name}},</h1>
+          <p style="margin:0 0 12px;font-size:14px;line-height:1.6;color:#475569;">
+            We received your refund request and our team will review it shortly.
+          </p>
+          <p style="margin:0 0 16px;font-size:14px;line-height:1.6;color:#475569;">
+            We'll get back to you via email once we've reviewed your request. This usually takes 1–3 business days.
+          </p>
+          <p style="margin:0 0 20px;font-size:13px;color:#64748b;">
+            Request ID: <strong>{{request_id}}</strong>
+          </p>
+        </td></tr>
+        <tr><td style="padding:18px 28px 26px;border-top:1px solid #e2e8f0;">
+          <p style="margin:0;font-size:11px;line-height:1.5;color:#94a3b8;">
+            You received this email from trefolio. <a href="{{unsubscribe_url}}" style="color:#94a3b8;text-decoration:underline;">Unsubscribe</a>
+          </p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
+          bodyHtmlEs: `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px;">
+    <tr><td align="center">
+      <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="width:100%;max-width:480px;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e2e8f0;">
+        <tr><td style="padding:28px 28px 8px;">
+          <h1 style="margin:0 0 10px;font-size:22px;color:#0f172a;">Hola {{display_name}},</h1>
+          <p style="margin:0 0 12px;font-size:14px;line-height:1.6;color:#475569;">
+            Recibimos tu solicitud de reembolso y nuestro equipo la revisará en breve.
+          </p>
+          <p style="margin:0 0 16px;font-size:14px;line-height:1.6;color:#475569;">
+            Te responderemos por email una vez que hayamos revisado tu solicitud. Esto normalmente toma de 1 a 3 días hábiles.
+          </p>
+          <p style="margin:0 0 20px;font-size:13px;color:#64748b;">
+            ID de solicitud: <strong>{{request_id}}</strong>
+          </p>
+        </td></tr>
+        <tr><td style="padding:18px 28px 26px;border-top:1px solid #e2e8f0;">
+          <p style="margin:0;font-size:11px;line-height:1.5;color:#94a3b8;">
+            Recibiste este email de trefolio. <a href="{{unsubscribe_url}}" style="color:#94a3b8;text-decoration:underline;">Cancelar suscripción</a>
+          </p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
+          bodyText: `Hi {{display_name}},
+
+We received your refund request and our team will review it shortly.
+
+We'll get back to you via email once we've reviewed your request. This usually takes 1–3 business days.
+
+Request ID: {{request_id}}`,
+          bodyTextEs: `Hola {{display_name}},
+
+Recibimos tu solicitud de reembolso y nuestro equipo la revisará en breve.
+
+Te responderemos por email una vez que hayamos revisado tu solicitud. Esto normalmente toma de 1 a 3 días hábiles.
+
+ID de solicitud: {{request_id}}`,
+        },
+        {
+          slug: "refund-request-approved",
+          name: "Refund Request Approved",
+          subject: "Your refund request has been approved",
+          subjectEs: "Tu solicitud de reembolso ha sido aprobada",
+          bodyHtml: `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px;">
+    <tr><td align="center">
+      <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="width:100%;max-width:480px;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e2e8f0;">
+        <tr><td style="padding:28px 28px 8px;">
+          <h1 style="margin:0 0 10px;font-size:22px;color:#0f172a;">Good news, {{display_name}}</h1>
+          <p style="margin:0 0 12px;font-size:14px;line-height:1.6;color:#475569;">
+            Your refund request has been approved. The refund will be processed and should appear on your original payment method within 5–10 business days.
+          </p>
+          <p style="margin:0 0 20px;font-size:13px;color:#64748b;">
+            Request ID: <strong>{{request_id}}</strong>
+          </p>
+          <p style="margin:0 0 16px;font-size:14px;line-height:1.6;color:#475569;">
+            If you have any questions, feel free to reach out to us at <a href="mailto:support@trefolio.com" style="color:#6366f1;">support@trefolio.com</a>.
+          </p>
+        </td></tr>
+        <tr><td style="padding:18px 28px 26px;border-top:1px solid #e2e8f0;">
+          <p style="margin:0;font-size:11px;line-height:1.5;color:#94a3b8;">
+            You received this email from trefolio. <a href="{{unsubscribe_url}}" style="color:#94a3b8;text-decoration:underline;">Unsubscribe</a>
+          </p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
+          bodyHtmlEs: `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px;">
+    <tr><td align="center">
+      <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="width:100%;max-width:480px;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e2e8f0;">
+        <tr><td style="padding:28px 28px 8px;">
+          <h1 style="margin:0 0 10px;font-size:22px;color:#0f172a;">Buenas noticias, {{display_name}}</h1>
+          <p style="margin:0 0 12px;font-size:14px;line-height:1.6;color:#475569;">
+            Tu solicitud de reembolso ha sido aprobada. El reembolso se procesará y debería aparecer en tu método de pago original dentro de 5 a 10 días hábiles.
+          </p>
+          <p style="margin:0 0 20px;font-size:13px;color:#64748b;">
+            ID de solicitud: <strong>{{request_id}}</strong>
+          </p>
+          <p style="margin:0 0 16px;font-size:14px;line-height:1.6;color:#475569;">
+            Si tienes alguna pregunta, no dudes en escribirnos a <a href="mailto:support@trefolio.com" style="color:#6366f1;">support@trefolio.com</a>.
+          </p>
+        </td></tr>
+        <tr><td style="padding:18px 28px 26px;border-top:1px solid #e2e8f0;">
+          <p style="margin:0;font-size:11px;line-height:1.5;color:#94a3b8;">
+            Recibiste este email de trefolio. <a href="{{unsubscribe_url}}" style="color:#94a3b8;text-decoration:underline;">Cancelar suscripción</a>
+          </p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
+          bodyText: `Hi {{display_name}},
+
+Your refund request has been approved. The refund will be processed and should appear on your original payment method within 5–10 business days.
+
+Request ID: {{request_id}}
+
+If you have any questions, feel free to reach out to us at support@trefolio.com.`,
+          bodyTextEs: `Hola {{display_name}},
+
+Tu solicitud de reembolso ha sido aprobada. El reembolso se procesará y debería aparecer en tu método de pago original dentro de 5 a 10 días hábiles.
+
+ID de solicitud: {{request_id}}
+
+Si tienes alguna pregunta, no dudes en escribirnos a support@trefolio.com.`,
+        },
+        {
+          slug: "refund-request-rejected",
+          name: "Refund Request Rejected",
+          subject: "Update on your refund request",
+          subjectEs: "Actualización sobre tu solicitud de reembolso",
+          bodyHtml: `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px;">
+    <tr><td align="center">
+      <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="width:100%;max-width:480px;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e2e8f0;">
+        <tr><td style="padding:28px 28px 8px;">
+          <h1 style="margin:0 0 10px;font-size:22px;color:#0f172a;">Hi {{display_name}},</h1>
+          <p style="margin:0 0 12px;font-size:14px;line-height:1.6;color:#475569;">
+            After reviewing your refund request, we're unable to process a refund at this time. This may be because the request falls outside our refund policy.
+          </p>
+          <p style="margin:0 0 20px;font-size:13px;color:#64748b;">
+            Request ID: <strong>{{request_id}}</strong>
+          </p>
+          <p style="margin:0 0 16px;font-size:14px;line-height:1.6;color:#475569;">
+            If you believe this was made in error or have further questions, please contact us at <a href="mailto:support@trefolio.com" style="color:#6366f1;">support@trefolio.com</a>.
+          </p>
+        </td></tr>
+        <tr><td style="padding:18px 28px 26px;border-top:1px solid #e2e8f0;">
+          <p style="margin:0;font-size:11px;line-height:1.5;color:#94a3b8;">
+            You received this email from trefolio. <a href="{{unsubscribe_url}}" style="color:#94a3b8;text-decoration:underline;">Unsubscribe</a>
+          </p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
+          bodyHtmlEs: `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px;">
+    <tr><td align="center">
+      <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="width:100%;max-width:480px;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e2e8f0;">
+        <tr><td style="padding:28px 28px 8px;">
+          <h1 style="margin:0 0 10px;font-size:22px;color:#0f172a;">Hola {{display_name}},</h1>
+          <p style="margin:0 0 12px;font-size:14px;line-height:1.6;color:#475569;">
+            Después de revisar tu solicitud de reembolso, no podemos procesar un reembolso en este momento. Esto puede deberse a que la solicitud no cumple con nuestra política de reembolsos.
+          </p>
+          <p style="margin:0 0 20px;font-size:13px;color:#64748b;">
+            ID de solicitud: <strong>{{request_id}}</strong>
+          </p>
+          <p style="margin:0 0 16px;font-size:14px;line-height:1.6;color:#475569;">
+            Si crees que esto fue un error o tienes más preguntas, contáctanos en <a href="mailto:support@trefolio.com" style="color:#6366f1;">support@trefolio.com</a>.
+          </p>
+        </td></tr>
+        <tr><td style="padding:18px 28px 26px;border-top:1px solid #e2e8f0;">
+          <p style="margin:0;font-size:11px;line-height:1.5;color:#94a3b8;">
+            Recibiste este email de trefolio. <a href="{{unsubscribe_url}}" style="color:#94a3b8;text-decoration:underline;">Cancelar suscripción</a>
+          </p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
+          bodyText: `Hi {{display_name}},
+
+After reviewing your refund request, we're unable to process a refund at this time. This may be because the request falls outside our refund policy.
+
+Request ID: {{request_id}}
+
+If you believe this was made in error or have further questions, please contact us at support@trefolio.com.`,
+          bodyTextEs: `Hola {{display_name}},
+
+Después de revisar tu solicitud de reembolso, no podemos procesar un reembolso en este momento. Esto puede deberse a que la solicitud no cumple con nuestra política de reembolsos.
+
+ID de solicitud: {{request_id}}
+
+Si crees que esto fue un error o tienes más preguntas, contáctanos en support@trefolio.com.`,
+        },
+      ];
+
+      for (const tpl of templates) {
+        const existing = await client.execute({
+          sql: "SELECT id FROM email_templates WHERE slug = ? LIMIT 1",
+          args: [tpl.slug],
+        });
+        if (existing.rows.length > 0) continue;
+
+        await client.execute({
+          sql: `INSERT INTO email_templates
+                (id, slug, name, subject, subject_es, body_html, body_html_es, body_text, body_text_es, category, experience_level)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          args: [
+            randomUUID(),
+            tpl.slug,
+            tpl.name,
+            tpl.subject,
+            tpl.subjectEs,
+            tpl.bodyHtml,
+            tpl.bodyHtmlEs,
+            tpl.bodyText,
+            tpl.bodyTextEs,
+            "lifecycle",
+            "",
+          ],
+        });
+      }
+    },
+  },
+  {
+    version: 66,
+    description: "Add total_invested_eur column to portfolio_snapshots for performance tracking",
+    up: async (client: Client) => {
+      try {
+        await client.execute(
+          "ALTER TABLE portfolio_snapshots ADD COLUMN total_invested_eur REAL NOT NULL DEFAULT 0"
+        );
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("duplicate column")) throw e;
+      }
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

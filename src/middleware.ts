@@ -26,6 +26,7 @@ const PUBLIC_API_ROUTES = new Set([
   "/api/cron/screener-sync",
   "/api/cron/tax-rules-review",
   "/api/cron/refresh-holdings",
+  "/api/cron/portfolio-snapshots",
   "/api/cron/x-post",
   "/api/portfolio/summary",
   "/api/device/ai-summary",

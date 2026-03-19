@@ -15,6 +15,7 @@ import { useTrack } from "@/lib/use-track";
 import { initNudgeTracking, shouldShowPaywallNudge, recordPaywallNudgeShown, recordPaywallNudgeDismiss } from "@/lib/paywall-nudge";
 import { hapticImpact, hapticSelectionChanged } from "@/lib/native-haptics";
 import { hideNativeSplash } from "@/lib/native-splash";
+import { usePortfolioSnapshotSync } from "@/lib/use-portfolio-snapshot-sync";
 import TierFeatureBadge from "@/components/TierFeatureBadge";
 import SampleDataBanner from "@/components/SampleDataBanner";
 import { HeroSkeleton, ChartSkeleton } from "@/components/Skeleton";
@@ -31,17 +32,22 @@ const AddStockModal = dynamic(() => import("@/components/AddStockModal"), { ssr:
 const ProCompareCard = dynamic(() => import("@/components/ProCompareCard"), { ssr: false });
 const EventCalendar = dynamic(() => import("@/components/EventCalendar"), { ssr: false });
 const UpcomingEarnings = dynamic(() => import("@/components/UpcomingEarnings"), { ssr: false });
+const ReferralShareModal = dynamic(() => import("@/components/ReferralShareModal"), { ssr: false });
+const ReferralBanner = dynamic(() => import("@/components/ReferralBanner"), { ssr: false });
 
 type DashboardTab = "portfolio" | "diversification" | "dividends" | "metrics" | "growth" | "events" | "news";
 
 export default function MobileDashboard() {
   const [activeTab, setActiveTab] = useState<DashboardTab>("portfolio");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showReferralModal, setShowReferralModal] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
   const [paywallSurface, setPaywallSurface] = useState<string>("tab_gate");
   const [showPortfolioPicker, setShowPortfolioPicker] = useState(false);
   const { t } = useI18n();
-  const { holdings, cashEntries, quotes, isLoading, refreshHoldings, refreshQuotes, activePortfolioId, portfolios, setActivePortfolio } = usePortfolio();
+  const { holdings, cashEntries, quotes, isLoading, refreshHoldings, refreshQuotes, activePortfolioId, portfolios, setActivePortfolio, demoMode } =
+    usePortfolio();
+  usePortfolioSnapshotSync({ demoMode });
   const { user, isLoading: authLoading } = useAuth();
   const track = useTrack();
 
@@ -216,6 +222,7 @@ export default function MobileDashboard() {
         </div>
 
         <SampleDataBanner />
+        <ReferralBanner onShare={() => setShowReferralModal(true)} />
 
         {/* Portfolio tab */}
         {activeTab === "portfolio" && (
@@ -311,6 +318,13 @@ export default function MobileDashboard() {
             recordPaywallNudgeDismiss();
             setShowPaywall(false);
           }}
+        />
+      )}
+
+      {showReferralModal && (
+        <ReferralShareModal
+          isOpen={showReferralModal}
+          onClose={() => setShowReferralModal(false)}
         />
       )}
 

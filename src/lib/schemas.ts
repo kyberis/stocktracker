@@ -416,3 +416,63 @@ export const supportChatMessageSchema = z.object({
     plan: z.string().max(10),
   }).optional(),
 });
+
+/** Portfolio chart Q&A — context is rebuilt client-side each request; keep samples bounded. */
+export const chartChatRequestSchema = z.object({
+  messages: z.array(
+    z.object({
+      role: z.enum(["user", "assistant"]),
+      content: z.string().min(1).max(4000),
+    }),
+  ).min(1).max(24),
+  language: z.string().max(5).optional(),
+  context: z.object({
+    range: z.string().max(16),
+    chartMode: z.enum(["value", "performance"]),
+    baseCurrency: z.string().max(8),
+    portfolioId: z.string().max(64).optional(),
+    displayNoteInterpolated: z.boolean().optional(),
+    samples: z
+      .array(
+        z.object({
+          date: z.string().max(40),
+          value: z.number(),
+          invested: z.number(),
+          performancePct: z.number().optional(),
+        }),
+      )
+      .max(96),
+    events: z
+      .array(
+        z.object({
+          id: z.string().max(40).optional(),
+          date: z.string().max(16),
+          type: z.string().max(12),
+          ticker: z.string().max(32),
+          shares: z.number(),
+          totalAmount: z.number().optional(),
+          currency: z.string().max(8).optional(),
+        }),
+      )
+      .max(120),
+    stats: z.object({
+      firstDate: z.string().max(40),
+      lastDate: z.string().max(40),
+      startValue: z.number(),
+      endValue: z.number(),
+      startInvested: z.number(),
+      endInvested: z.number(),
+      periodReturnPct: z.number().optional(),
+      investedDeltas: z
+        .array(
+          z.object({
+            fromDate: z.string().max(40),
+            toDate: z.string().max(40),
+            delta: z.number(),
+          }),
+        )
+        .max(24)
+        .optional(),
+    }),
+  }),
+});

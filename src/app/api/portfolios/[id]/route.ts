@@ -82,7 +82,8 @@ export const PUT = withMetrics("/api/portfolios/[id] PUT", async (req: NextReque
 });
 
 /**
- * DELETE /api/portfolios/[id] — delete a portfolio (data moves to default)
+ * DELETE /api/portfolios/[id] — delete a non-default portfolio and all data tied to it
+ * (holdings, transactions, cash, evolution snapshots, alerts, goals, etc.)
  */
 export const DELETE = withMetrics("/api/portfolios/[id] DELETE", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);

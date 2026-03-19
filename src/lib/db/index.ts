@@ -79,6 +79,9 @@ export {
   deleteAllHoldings,
   countHoldings,
   listDistinctHoldingTickers,
+  listUserIdsWithHoldings,
+  listDistinctPortfolioIdsForUser,
+  listDistinctHoldingTickersForUser,
   batchUpdateValueInEur,
   resolveStaleTickersViaFigi,
 } from "./holdings";
@@ -367,8 +370,23 @@ export {
   getTemplateStats,
 } from "./email-templates";
 
+export type {
+  RefundRequest,
+  RefundRequestStatus,
+  RefundRequestWithUser,
+} from "./refund-requests";
+export {
+  createRefundRequest,
+  getRefundRequestById,
+  getActiveRefundRequestForUser,
+  listRefundRequestsForAdmin,
+  updateRefundRequestStatus,
+} from "./refund-requests";
+
+export type { UnsubscribeEvent } from "./unsubscribe-tokens";
 export {
   generateUnsubscribeToken,
   consumeUnsubscribeToken,
   purgeExpiredUnsubscribeTokens,
+  listUnsubscribeEvents,
 } from "./unsubscribe-tokens";

@@ -249,6 +249,26 @@ export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: P
     </div>
   );
 
+  const addTransactionBtn = onAddStock && (
+    <button
+      onClick={onAddStock}
+      className={`inline-flex items-center gap-1.5 text-xs font-medium rounded-lg px-2.5 py-1 transition-colors shrink-0 ${
+        layoutTheme === "terminal"
+          ? "bg-green-500/10 text-green-400 border border-green-500/30 hover:bg-green-500/20 font-mono"
+          : layoutTheme === "canvas"
+          ? "bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
+          : layoutTheme === "studio"
+          ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20"
+          : "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/20"
+      }`}
+    >
+      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+      </svg>
+      <span className="hidden sm:inline">{t("addTransaction")}</span>
+    </button>
+  );
+
   /* ── TERMINAL: Dense compact list, no card, monospace header ── */
   if (layoutTheme === "terminal") {
     return (
@@ -257,6 +277,7 @@ export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: P
           <div className="px-3 py-2 border-b border-zinc-800 flex items-center justify-between gap-3">
             {searchInput}
             <div className="flex items-center gap-2 shrink-0">
+              {addTransactionBtn}
               <select
                 value={sortField}
                 onChange={handleSortChange}
@@ -294,6 +315,7 @@ export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: P
           <div className="bg-white border border-slate-200 rounded-2xl p-4 mb-4 flex items-center justify-between gap-3">
             {searchInput}
             <div className="flex items-center gap-2 shrink-0">
+              {addTransactionBtn}
               <select
                 value={sortField}
                 onChange={handleSortChange}
@@ -330,6 +352,7 @@ export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: P
           <div className="p-4 border-b border-white/5 flex items-center justify-between gap-3">
             {searchInput}
             <div className="flex items-center gap-2 shrink-0">
+              {addTransactionBtn}
               <select
                 value={sortField}
                 onChange={handleSortChange}
@@ -365,6 +388,7 @@ export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: P
         <div className="p-4 border-b border-gray-100 dark:border-slate-700 flex items-center justify-between gap-3 flex-wrap">
           {searchInput}
           <div className="flex items-center gap-2 shrink-0">
+            {addTransactionBtn}
             <select
               value={sortField}
               onChange={handleSortChange}

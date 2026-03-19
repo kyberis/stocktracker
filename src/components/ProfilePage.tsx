@@ -450,7 +450,12 @@ function PortfolioManagementSection() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("Delete this portfolio? All its holdings and transactions will be moved to your default portfolio.")) return;
+    if (
+      !confirm(
+        "Delete this portfolio permanently? All holdings, transactions, cash, chart history, alerts, and goals for this portfolio will be removed. This cannot be undone.",
+      )
+    )
+      return;
     try {
       const res = await fetch(`/api/portfolios/${encodeURIComponent(id)}`, { method: "DELETE" });
       if (res.ok) await fetchPortfolios();
@@ -668,6 +673,12 @@ export default function ProfilePage() {
   const billingSyncRan = useRef(false);
   const checkoutTrackedRef = useRef(false);
   const [deviceGrantLoading, setDeviceGrantLoading] = useState(false);
+
+  const [refundFormOpen, setRefundFormOpen] = useState(false);
+  const [refundReason, setRefundReason] = useState("");
+  const [refundLoading, setRefundLoading] = useState(false);
+  const [refundStatus, setRefundStatus] = useState<"idle" | "pending" | "submitted" | "error">("idle");
+  const refundChecked = useRef(false);
 
   const [unlinking, setUnlinking] = useState(false);
   const [googleMsg, setGoogleMsg] = useState("");
@@ -1077,6 +1088,40 @@ export default function ProfilePage() {
     setDeviceGrantLoading(false);
   }, []);
   const aiLimit = 5;
+
+  useEffect(() => {
+    if (refundChecked.current) return;
+    if (!isPaid) return;
+    refundChecked.current = true;
+    fetch("/api/refund-requests")
+      .then((r) => r.json())
+      .then((d) => { if (d.pending) setRefundStatus("pending"); })
+      .catch(() => {});
+  }, [isPaid]);
+
+  const handleRefundSubmit = useCallback(async () => {
+    if (refundLoading || refundReason.trim().length < 10) return;
+    setRefundLoading(true);
+    try {
+      const res = await fetch("/api/refund-requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason: refundReason.trim() }),
+      });
+      if (res.ok) {
+        setRefundStatus("submitted");
+        setRefundFormOpen(false);
+      } else if (res.status === 409) {
+        setRefundStatus("pending");
+      } else {
+        setRefundStatus("error");
+      }
+    } catch {
+      setRefundStatus("error");
+    } finally {
+      setRefundLoading(false);
+    }
+  }, [refundLoading, refundReason]);
 
   const visibleTabs = deviceEnabled
     ? PROFILE_TABS
@@ -1552,6 +1597,81 @@ export default function ProfilePage() {
             />
           )}
         </div>
+
+        {isPaid && (
+          <div className="card p-6 space-y-4">
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{t("refundRequest")}</h3>
+
+            {refundStatus === "submitted" && (
+              <div className="rounded-xl border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50/60 dark:bg-emerald-500/10 p-4 flex items-center gap-3">
+                <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                <p className="text-sm text-emerald-700 dark:text-emerald-300">{t("refundRequestSuccess")}</p>
+              </div>
+            )}
+
+            {refundStatus === "pending" && (
+              <div className="rounded-xl border border-amber-200 dark:border-amber-500/30 bg-amber-50/60 dark:bg-amber-500/10 p-4 flex items-center gap-3">
+                <svg className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-sm text-amber-700 dark:text-amber-300">{t("refundRequestPending")}</p>
+              </div>
+            )}
+
+            {refundStatus === "error" && (
+              <div className="rounded-xl border border-red-200 dark:border-red-500/30 bg-red-50/60 dark:bg-red-500/10 p-4">
+                <p className="text-sm text-red-700 dark:text-red-300">{t("refundRequestError")}</p>
+              </div>
+            )}
+
+            {refundStatus === "idle" && !refundFormOpen && (
+              <>
+                <p className="text-sm text-gray-500 dark:text-slate-400">{t("refundRequestDescription")}</p>
+                <button
+                  onClick={() => setRefundFormOpen(true)}
+                  className="btn-secondary text-sm w-full"
+                >
+                  {t("refundRequest")}
+                </button>
+              </>
+            )}
+
+            {refundStatus === "idle" && refundFormOpen && (
+              <div className="space-y-3">
+                <p className="text-sm text-gray-500 dark:text-slate-400">{t("refundRequestDescription")}</p>
+                <label className="block">
+                  <span className="text-sm font-medium text-gray-700 dark:text-slate-300">{t("refundRequestReason")}</span>
+                  <textarea
+                    value={refundReason}
+                    onChange={(e) => setRefundReason(e.target.value)}
+                    placeholder={t("refundRequestReasonPlaceholder")}
+                    rows={4}
+                    maxLength={800}
+                    className="mt-1 block w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                  />
+                </label>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleRefundSubmit}
+                    disabled={refundLoading || refundReason.trim().length < 10}
+                    className="btn-primary text-sm flex-1 disabled:opacity-40"
+                  >
+                    {refundLoading ? t("refundRequestSubmitting") : t("refundRequestSubmit")}
+                  </button>
+                  <button
+                    onClick={() => { setRefundFormOpen(false); setRefundReason(""); }}
+                    className="btn-secondary text-sm"
+                    disabled={refundLoading}
+                  >
+                    {t("cancel")}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
         </>}
 
         {/* === Notifications Tab === */}

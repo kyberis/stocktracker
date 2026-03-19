@@ -18,6 +18,7 @@ import type { EconDataPoint } from "@/lib/types";
 import ProCompareCard from "@/components/ProCompareCard";
 import type { UpsellReason } from "@/lib/upsell";
 import TierFeatureBadge from "./TierFeatureBadge";
+import AiMarkdown from "@/components/AiMarkdown";
 
 type AiStatus = "idle" | "loading" | "done" | "error" | "no-key" | "ai-limit" | "upgrade";
 
@@ -615,40 +616,6 @@ function AiSection({
           )}
         </div>
       )}
-    </div>
-  );
-}
-
-function AiMarkdown({ text }: { text: string }) {
-  const lines = text.split("\n");
-  return (
-    <div className="space-y-2">
-      {lines.map((line, i) => {
-        if (line.startsWith("## "))
-          return (
-            <h3 key={i} className="text-base font-semibold text-gray-900 dark:text-white mt-4">
-              {line.slice(3)}
-            </h3>
-          );
-        if (line.startsWith("### "))
-          return (
-            <h4 key={i} className="text-sm font-semibold text-gray-800 dark:text-slate-200 mt-3">
-              {line.slice(4)}
-            </h4>
-          );
-        if (line.startsWith("- "))
-          return (
-            <li key={i} className="ml-4 text-sm text-gray-700 dark:text-slate-300 list-disc">
-              {line.slice(2)}
-            </li>
-          );
-        if (line.trim() === "") return <div key={i} className="h-1" />;
-        return (
-          <p key={i} className="text-sm text-gray-700 dark:text-slate-300 leading-relaxed">
-            {line}
-          </p>
-        );
-      })}
     </div>
   );
 }

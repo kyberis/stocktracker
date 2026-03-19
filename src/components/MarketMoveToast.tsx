@@ -1,14 +1,55 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useTickerBar, type BigMover } from "@/lib/hooks/use-ticker-bar";
 import { useI18n } from "@/lib/i18n";
+import type { QuoteData } from "@/lib/types";
 
 const DISMISS_KEY = "market_move_toast_dismissed";
 const PUSH_SENT_KEY = "market_move_push_sent";
 const AUTO_DISMISS_MS = 15_000;
+const HOLDING_MOVE_THRESHOLD = 2;
+const MAX_HOLDING_MOVERS = 5;
+const QUOTES_CACHE_KEY = "trefolio-quotes-v3";
 
-function sendBrowserNotification(movers: BigMover[], title: string) {
+interface HoldingMover {
+  ticker: string;
+  name: string;
+  changePercent: number;
+}
+
+function readHoldingMovers(): HoldingMover[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(QUOTES_CACHE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    const quotes: Record<string, QuoteData> = parsed?.data ?? parsed;
+    if (!quotes || typeof quotes !== "object") return [];
+
+    const movers: HoldingMover[] = [];
+    for (const [symbol, q] of Object.entries(quotes)) {
+      if (!q || typeof q.regularMarketChangePercent !== "number") continue;
+      if (Math.abs(q.regularMarketChangePercent) >= HOLDING_MOVE_THRESHOLD) {
+        movers.push({
+          ticker: symbol,
+          name: q.shortName || symbol,
+          changePercent: q.regularMarketChangePercent,
+        });
+      }
+    }
+    movers.sort((a, b) => Math.abs(b.changePercent) - Math.abs(a.changePercent));
+    return movers.slice(0, MAX_HOLDING_MOVERS);
+  } catch {
+    return [];
+  }
+}
+
+function sendBrowserNotification(
+  marketMovers: BigMover[],
+  holdingMovers: HoldingMover[],
+  title: string,
+) {
   if (typeof window === "undefined") return;
   if (!("Notification" in window) || Notification.permission !== "granted") return;
 
@@ -18,9 +59,13 @@ function sendBrowserNotification(movers: BigMover[], title: string) {
     sessionStorage.setItem(PUSH_SENT_KEY, "1");
   } catch { /* private browsing */ }
 
-  const lines = movers.map(
-    (m) => `${m.label}: ${m.changePercent >= 0 ? "+" : ""}${m.changePercent.toFixed(2)}%`,
-  );
+  const fmt = (label: string, pct: number) =>
+    `${label}: ${pct >= 0 ? "+" : ""}${pct.toFixed(2)}%`;
+
+  const lines = [
+    ...marketMovers.map((m) => fmt(m.label, m.changePercent)),
+    ...holdingMovers.map((h) => fmt(h.ticker, h.changePercent)),
+  ];
   const body = lines.join(" · ");
 
   if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
@@ -52,6 +97,10 @@ export default function MarketMoveToast({ demoMode = false }: Props) {
   const [visible, setVisible] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
+  const holdingMovers = useMemo(() => (demoMode ? [] : readHoldingMovers()), [loading]);
+
+  const hasAlerts = bigMovers.length > 0 || holdingMovers.length > 0;
+
   useEffect(() => {
     try {
       if (sessionStorage.getItem(DISMISS_KEY)) {
@@ -63,13 +112,13 @@ export default function MarketMoveToast({ demoMode = false }: Props) {
 
   useEffect(() => {
     if (loading || dismissed) return;
-    if (bigMovers.length > 0) {
+    if (hasAlerts) {
       setVisible(true);
       timerRef.current = setTimeout(() => setVisible(false), AUTO_DISMISS_MS);
-      sendBrowserNotification(bigMovers, t("marketAlertTitle") || "Market Alert");
+      sendBrowserNotification(bigMovers, holdingMovers, t("marketAlertTitle") || "Market Alert");
     }
     return () => { if (timerRef.current) clearTimeout(timerRef.current); };
-  }, [bigMovers, loading, dismissed, t]);
+  }, [bigMovers, holdingMovers, hasAlerts, loading, dismissed, t]);
 
   function dismiss() {
     setVisible(false);
@@ -78,7 +127,7 @@ export default function MarketMoveToast({ demoMode = false }: Props) {
     if (timerRef.current) clearTimeout(timerRef.current);
   }
 
-  if (!visible || bigMovers.length === 0) return null;
+  if (!visible || !hasAlerts) return null;
 
   return (
     <div
@@ -108,19 +157,47 @@ export default function MarketMoveToast({ demoMode = false }: Props) {
           </button>
         </div>
 
-        <div className="flex flex-col gap-1.5">
-          {bigMovers.map((m: BigMover) => (
-            <div
-              key={m.label}
-              className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-gray-50 dark:bg-slate-900/50 font-mono text-xs"
-            >
-              <span className="text-gray-600 dark:text-slate-400 font-medium">{m.label}</span>
-              <span className={`font-semibold tabular-nums ${m.changePercent >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
-                {m.changePercent >= 0 ? "+" : ""}{m.changePercent.toFixed(2)}%
-              </span>
+        {bigMovers.length > 0 && (
+          <div className="flex flex-col gap-1.5">
+            {bigMovers.map((m: BigMover) => (
+              <div
+                key={m.label}
+                className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-gray-50 dark:bg-slate-900/50 font-mono text-xs"
+              >
+                <span className="text-gray-600 dark:text-slate-400 font-medium">{m.label}</span>
+                <span className={`font-semibold tabular-nums ${m.changePercent >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
+                  {m.changePercent >= 0 ? "+" : ""}{m.changePercent.toFixed(2)}%
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {holdingMovers.length > 0 && (
+          <>
+            <div className={`flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-slate-500 ${bigMovers.length > 0 ? "mt-2.5" : ""} mb-1.5`}>
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+              </svg>
+              {t("marketAlertYourHoldings")}
             </div>
-          ))}
-        </div>
+            <div className="flex flex-col gap-1.5">
+              {holdingMovers.map((h) => (
+                <div
+                  key={h.ticker}
+                  className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-gray-50 dark:bg-slate-900/50 font-mono text-xs"
+                >
+                  <span className="text-gray-600 dark:text-slate-400 font-medium truncate mr-2" title={h.name}>
+                    {h.ticker}
+                  </span>
+                  <span className={`font-semibold tabular-nums ${h.changePercent >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
+                    {h.changePercent >= 0 ? "+" : ""}{h.changePercent.toFixed(2)}%
+                  </span>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </div>
 
       <div className="h-0.5 bg-gray-100 dark:bg-slate-700 rounded-b-xl overflow-hidden">

@@ -625,6 +625,41 @@ export async function listDistinctHoldingTickers(): Promise<DistinctHoldingTicke
   }));
 }
 
+/** Distinct users that have at least one open holding (for portfolio snapshot cron). */
+export async function listUserIdsWithHoldings(): Promise<string[]> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: `SELECT DISTINCT user_id FROM holdings WHERE shares > 0 AND ticker != ''`,
+    args: [],
+  });
+  return result.rows.map((r) => str(r.user_id));
+}
+
+/** Non-empty portfolio IDs that have holdings for this user. */
+export async function listDistinctPortfolioIdsForUser(userId: string): Promise<string[]> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: `SELECT DISTINCT portfolio_id FROM holdings WHERE user_id = ? AND shares > 0 AND portfolio_id != ''`,
+    args: [userId],
+  });
+  return result.rows.map((r) => str(r.portfolio_id));
+}
+
+/** Distinct (ticker, …) pairs for one user — for targeted quote fetch when materializing snapshots. */
+export async function listDistinctHoldingTickersForUser(userId: string): Promise<DistinctHoldingTicker[]> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: `SELECT DISTINCT ticker, display_currency, exchange, figi_share_class FROM holdings WHERE user_id = ? AND shares > 0 AND ticker != ''`,
+    args: [userId],
+  });
+  return result.rows.map((r) => ({
+    ticker: str(r.ticker),
+    displayCurrency: str(r.display_currency),
+    exchange: str(r.exchange),
+    figiShareClass: str(r.figi_share_class),
+  }));
+}
+
 /**
  * For tickers where Yahoo returned no quote, attempt to resolve the new ticker
  * via OpenFIGI using the stored figi_share_class. Updates holdings and
