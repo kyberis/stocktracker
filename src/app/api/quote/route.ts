@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
-import { DE_FALLBACK_SUFFIXES } from "@/lib/api-providers/market-data-helpers";
+import { DE_FALLBACK_SUFFIXES, PA_FALLBACK_SUFFIXES } from "@/lib/api-providers/market-data-helpers";
 import { withMetrics } from "@/lib/with-metrics";
 
 export const dynamic = "force-dynamic";
@@ -24,13 +24,26 @@ function errorQuote(symbol: string) {
   };
 }
 
-async function tryGermanFallback(
+async function tryExchangeFallback(
   yahoo: YahooProvider,
   symbol: string
 ): Promise<{ quote: Awaited<ReturnType<YahooProvider["getQuote"]>>; usedSymbol: string } | null> {
-  if (!symbol.toUpperCase().endsWith(".DE")) return null;
-  const base = symbol.slice(0, -3);
-  for (const suffix of DE_FALLBACK_SUFFIXES) {
+  const upper = symbol.toUpperCase();
+  let suffixes: string[] | null = null;
+  let baseLen = 0;
+
+  if (upper.endsWith(".DE")) {
+    suffixes = DE_FALLBACK_SUFFIXES;
+    baseLen = 3;
+  } else if (upper.endsWith(".PA")) {
+    suffixes = PA_FALLBACK_SUFFIXES;
+    baseLen = 3;
+  }
+
+  if (!suffixes) return null;
+
+  const base = symbol.slice(0, -baseLen);
+  for (const suffix of suffixes) {
     try {
       const q = await yahoo.getQuote(`${base}${suffix}`);
       if (q.regularMarketPrice > 0) {
@@ -61,13 +74,13 @@ export const GET = withMetrics("/api/quote", async (request: NextRequest) => {
       if (quote.regularMarketPrice > 0) {
         results[symbol] = { ...quote, providerUsed: "yahoo" };
       } else {
-        const fb = await tryGermanFallback(yahoo, symbol);
+        const fb = await tryExchangeFallback(yahoo, symbol);
         results[symbol] = fb
           ? { ...fb.quote, symbol, providerUsed: "yahoo" }
           : { ...quote, providerUsed: "yahoo" };
       }
     } catch (err) {
-      const fb = await tryGermanFallback(yahoo, symbol).catch(() => null);
+      const fb = await tryExchangeFallback(yahoo, symbol).catch(() => null);
       if (fb) {
         results[symbol] = { ...fb.quote, symbol, providerUsed: "yahoo" };
       } else {

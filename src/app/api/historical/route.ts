@@ -1,19 +1,32 @@
 import { NextRequest } from "next/server";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 import type { TimePeriod } from "@/lib/api-providers/types";
-import { DE_FALLBACK_SUFFIXES } from "@/lib/api-providers/market-data-helpers";
+import { DE_FALLBACK_SUFFIXES, PA_FALLBACK_SUFFIXES } from "@/lib/api-providers/market-data-helpers";
 import { withMetrics } from "@/lib/with-metrics";
 
 export const dynamic = "force-dynamic";
 
-async function tryGermanHistoricalFallback(
+async function tryExchangeHistoricalFallback(
   yahoo: YahooProvider,
   symbol: string,
   period: TimePeriod
 ) {
-  if (!symbol.toUpperCase().endsWith(".DE")) return null;
-  const base = symbol.slice(0, -3);
-  for (const suffix of DE_FALLBACK_SUFFIXES) {
+  const upper = symbol.toUpperCase();
+  let suffixes: string[] | null = null;
+  let baseLen = 0;
+
+  if (upper.endsWith(".DE")) {
+    suffixes = DE_FALLBACK_SUFFIXES;
+    baseLen = 3;
+  } else if (upper.endsWith(".PA")) {
+    suffixes = PA_FALLBACK_SUFFIXES;
+    baseLen = 3;
+  }
+
+  if (!suffixes) return null;
+
+  const base = symbol.slice(0, -baseLen);
+  for (const suffix of suffixes) {
     try {
       const data = await yahoo.getHistorical(`${base}${suffix}`, period);
       if (data.length > 0) return data;
@@ -40,11 +53,11 @@ export const GET = withMetrics("/api/historical", async (request: NextRequest) =
     if (data.length > 0) {
       return Response.json({ data, providerUsed: "yahoo" });
     }
-    const fb = await tryGermanHistoricalFallback(yahoo, symbol, period);
+    const fb = await tryExchangeHistoricalFallback(yahoo, symbol, period);
     if (fb) return Response.json({ data: fb, providerUsed: "yahoo" });
     return Response.json({ data, providerUsed: "yahoo" });
   } catch (err) {
-    const fb = await tryGermanHistoricalFallback(yahoo, symbol, period);
+    const fb = await tryExchangeHistoricalFallback(yahoo, symbol, period);
     if (fb) return Response.json({ data: fb, providerUsed: "yahoo" });
 
     console.error(`Failed to fetch historical data for ${symbol}:`, err instanceof Error ? err.message : err);
