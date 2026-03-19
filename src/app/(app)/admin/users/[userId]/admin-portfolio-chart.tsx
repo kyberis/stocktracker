@@ -32,7 +32,7 @@ function formatDateLabel(dateStr: string): string {
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
-function MiniChart({ userId, portfolio }: { userId: string; portfolio: PortfolioInfo }) {
+function MiniChart({ userId, portfolio, refreshKey }: { userId: string; portfolio: PortfolioInfo; refreshKey: number }) {
   const [points, setPoints] = useState<SnapshotPoint[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -50,7 +50,7 @@ function MiniChart({ userId, portfolio }: { userId: string; portfolio: Portfolio
     setLoading(false);
   }, [userId, portfolio.id]);
 
-  useEffect(() => { fetchHistory(); }, [fetchHistory]);
+  useEffect(() => { fetchHistory(); }, [fetchHistory, refreshKey]);
 
   const latest = points.length > 0 ? points[points.length - 1].value : portfolio.totalValueEur;
   const first = points.length > 0 ? points[0].value : latest;
@@ -157,16 +157,74 @@ function MiniChart({ userId, portfolio }: { userId: string; portfolio: Portfolio
 }
 
 export default function AdminPortfolioCharts({ userId, portfolios }: { userId: string; portfolios: PortfolioInfo[] }) {
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [backfilling, setBackfilling] = useState(false);
+  const [backfillMsg, setBackfillMsg] = useState("");
+
+  const handleBackfill = async () => {
+    setBackfilling(true);
+    setBackfillMsg("Backfilling…");
+    try {
+      const res = await fetch("/api/admin/backfill-snapshots", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId }),
+      });
+      const json = await res.json();
+      if (res.ok) {
+        setBackfillMsg(`Backfilled ${json.snapshotsCreated} snapshots`);
+        setRefreshKey((k) => k + 1);
+      } else {
+        setBackfillMsg(`Failed: ${json.error}`);
+      }
+    } catch {
+      setBackfillMsg("Backfill failed");
+    }
+    setBackfilling(false);
+    setTimeout(() => setBackfillMsg(""), 5000);
+  };
+
   if (portfolios.length === 0) return null;
 
   return (
     <div className="space-y-3">
-      <h3 className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">
-        Portfolio History ({portfolios.length})
-      </h3>
+      <div className="flex items-center justify-between">
+        <h3 className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">
+          Portfolio History ({portfolios.length})
+        </h3>
+        <div className="flex items-center gap-2">
+          {backfillMsg && (
+            <span className={`text-xs font-medium ${backfillMsg.startsWith("Failed") ? "text-red-400" : "text-emerald-500"}`}>
+              {backfillMsg}
+            </span>
+          )}
+          <button
+            onClick={handleBackfill}
+            disabled={backfilling}
+            className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium text-indigo-500 hover:text-indigo-400 border border-indigo-500/30 rounded-lg disabled:opacity-50 transition-colors"
+          >
+            {backfilling ? (
+              <>
+                <svg className="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                Backfilling…
+              </>
+            ) : (
+              <>
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Backfill snapshots
+              </>
+            )}
+          </button>
+        </div>
+      </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {portfolios.map((p) => (
-          <MiniChart key={p.id} userId={userId} portfolio={p} />
+          <MiniChart key={p.id} userId={userId} portfolio={p} refreshKey={refreshKey} />
         ))}
       </div>
     </div>

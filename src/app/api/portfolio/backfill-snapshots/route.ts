@@ -71,13 +71,44 @@ export const GET = withMetrics("/api/portfolio/backfill-snapshots", async (req: 
 
 /**
  * POST /api/portfolio/backfill-snapshots
- * Reconstructs historical portfolio value from transactions + Yahoo price data.
+ * Reconstructs historical portfolio value from transactions + Yahoo price data,
+ * then repairs any intraday snapshots whose invested capital diverges from the
+ * backfill's historical-rate values.
  */
 export const POST = withMetrics("/api/portfolio/backfill-snapshots", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
   if (error || !session) return error!;
 
   const result = await runBackfillForUser(session.userId);
+
+  // Repair intraday (15-min) snapshots: carry forward invested capital from the
+  // nearest preceding daily snapshot written by the backfill so the invested line
+  // stays flat between real transactions. Intraday rows have a space in the date
+  // column (e.g. "2026-03-19 22:15:00") vs daily rows ("2026-03-19").
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: `UPDATE portfolio_snapshots
+          SET total_invested_eur = (
+            SELECT ps2.total_invested_eur
+            FROM portfolio_snapshots ps2
+            WHERE ps2.user_id = portfolio_snapshots.user_id
+              AND ps2.portfolio_id = portfolio_snapshots.portfolio_id
+              AND ps2.date <= substr(portfolio_snapshots.date, 1, 10)
+              AND ps2.date NOT LIKE '% %'
+            ORDER BY ps2.date DESC
+            LIMIT 1
+          )
+          WHERE user_id = ?
+            AND date LIKE '% %'
+            AND EXISTS (
+              SELECT 1 FROM portfolio_snapshots ps3
+              WHERE ps3.user_id = portfolio_snapshots.user_id
+                AND ps3.portfolio_id = portfolio_snapshots.portfolio_id
+                AND ps3.date <= substr(portfolio_snapshots.date, 1, 10)
+                AND ps3.date NOT LIKE '% %'
+            )`,
+    args: [session.userId],
+  });
 
   let liveSnapshots = 0;
   try {
