@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import type { Holding, Transaction, CashEntry, Account } from "@/lib/types";
 import type { UserPortfolio, ImportEvent } from "../../shared";
 import { relativeTime, formatEur } from "../../shared";
+import AdminPortfolioCharts from "./admin-portfolio-chart";
 
 interface UserInfo {
   id: string;
@@ -775,6 +776,9 @@ export default function AdminUserDetailPage() {
 
         {/* Send Email */}
         <SendEmailSection userId={userId} userEmail={user.email} userLanguage={user.language || "en"} />
+
+        {/* Portfolio Charts */}
+        <AdminPortfolioCharts userId={userId} portfolios={data.portfolios} />
 
         {/* Data section */}
         <div className="card p-0 overflow-hidden">

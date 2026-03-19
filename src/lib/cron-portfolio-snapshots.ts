@@ -52,15 +52,26 @@ async function upsertPortfolioSnapshotRow(
   portfolioId: string,
   dateBucket: string,
   totalValueEUR: number,
-  totalInvestedEUR: number,
+  callerInvestedEUR: number,
 ): Promise<void> {
   const client = await ensureInitialized();
+
+  // Carry forward invested from the most recent snapshot so the invested line stays
+  // flat between real transactions. Only the backfill writes new invested values.
+  const prevResult = await client.execute({
+    sql: `SELECT total_invested_eur FROM portfolio_snapshots
+          WHERE user_id = ? AND portfolio_id = ?
+          ORDER BY date DESC LIMIT 1`,
+    args: [userId, portfolioId],
+  });
+  const prevInvested = prevResult.rows.length > 0 ? Number(prevResult.rows[0].total_invested_eur) : 0;
+  const totalInvestedEUR = prevInvested > 0 ? prevInvested : callerInvestedEUR;
+
   await client.execute({
     sql: `INSERT INTO portfolio_snapshots (id, user_id, portfolio_id, date, total_value_eur, total_invested_eur)
           VALUES (?, ?, ?, ?, ?, ?)
           ON CONFLICT(user_id, portfolio_id, date) DO UPDATE SET
-            total_value_eur = excluded.total_value_eur,
-            total_invested_eur = excluded.total_invested_eur`,
+            total_value_eur = excluded.total_value_eur`,
     args: [generateId(), userId, portfolioId, dateBucket, totalValueEUR, totalInvestedEUR],
   });
 }

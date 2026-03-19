@@ -14,7 +14,7 @@ const SNAPSHOT_INTERVAL_MS = 15 * 60 * 1000;
  */
 export function usePortfolioSnapshotSync(options: { demoMode: boolean }) {
   const { demoMode } = options;
-  const { holdings, cashEntries, quotes, exchangeRates, activePortfolioCurrency, activePortfolioId } =
+  const { holdings, cashEntries, quotes, exchangeRates, activePortfolioId } =
     usePortfolio();
   const portfolioIdRef = useRef(activePortfolioId);
   portfolioIdRef.current = activePortfolioId;
@@ -26,7 +26,8 @@ export function usePortfolioSnapshotSync(options: { demoMode: boolean }) {
     );
     if (!allHaveValue || holdings.length === 0) return;
 
-    const totals = calculatePortfolioTotals(holdings, cashEntries, quotes, exchangeRates, activePortfolioCurrency);
+    // Always compute in EUR — the DB columns are total_value_eur / total_invested_eur.
+    const totals = calculatePortfolioTotals(holdings, cashEntries, quotes, exchangeRates, "EUR");
     if (totals.totalCurrentEUR <= 0) return;
 
     fetch("/api/portfolio/snapshot", {
@@ -40,7 +41,7 @@ export function usePortfolioSnapshotSync(options: { demoMode: boolean }) {
     }).catch(() => {});
     // activePortfolioId omitted from deps — portfolioIdRef avoids race when id updates before holdings.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [holdings, cashEntries, quotes, exchangeRates, activePortfolioCurrency, demoMode]);
+  }, [holdings, cashEntries, quotes, exchangeRates, demoMode]);
 
   useEffect(() => {
     postSnapshot();
