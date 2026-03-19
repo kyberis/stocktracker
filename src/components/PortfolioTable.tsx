@@ -23,7 +23,8 @@ export type ReturnDisplayMode = "pct" | "abs";
 export const ReturnDisplayContext = createContext<{
   mode: ReturnDisplayMode;
   toggle: () => void;
-}>({ mode: "pct", toggle: () => {} });
+  showDayChange: boolean;
+}>({ mode: "pct", toggle: () => {}, showDayChange: false });
 
 export function useReturnDisplay() {
   return useContext(ReturnDisplayContext);
@@ -135,7 +136,8 @@ export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: P
   const returnDisplayCtx = useMemo(() => ({
     mode: returnMode,
     toggle: toggleReturnMode,
-  }), [returnMode]);
+    showDayChange: sortField === "dayChange",
+  }), [returnMode, sortField]);
 
   if (holdings.length === 0) {
     return (

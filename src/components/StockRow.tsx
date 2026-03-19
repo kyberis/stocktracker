@@ -111,7 +111,10 @@ function StockRow({ holding, onSelect }: StockRowProps) {
   const returnColor = totalReturnIsPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400";
   const cur = holding.displayCurrency;
 
-  const { mode: returnMode, toggle: toggleReturnMode } = useReturnDisplay();
+  const { mode: returnMode, toggle: toggleReturnMode, showDayChange } = useReturnDisplay();
+
+  const displayIsPositive = showDayChange ? dayIsPositive : totalReturnIsPositive;
+  const displayColor = displayIsPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400";
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 60_000);
@@ -134,9 +137,13 @@ function StockRow({ holding, onSelect }: StockRowProps) {
   const priceInfo = `${holding.exchange ? `${holding.exchange} | ` : ""}${holding.ticker} | ${hasQuote ? formatCurrency(currentPriceInDisplay, cur) : formatCurrency(holding.purchasePrice, cur)} × ${holding.shares}`;
   const dayText = hasQuote ? `${dayIsPositive ? "+" : ""}${formatCurrency(dayChangeAmountEUR, "EUR")} (${formatPercent(dayChangePercent)})` : "--";
   const returnText = hasQuote
-    ? returnMode === "pct"
-      ? `${totalReturnIsPositive ? "+" : ""}${formatPercent(totalReturnPct)}`
-      : `${totalReturnIsPositive ? "+" : ""}${formatCurrency(totalReturnAbsEUR, "EUR")}`
+    ? showDayChange
+      ? returnMode === "pct"
+        ? `${dayIsPositive ? "+" : ""}${formatPercent(dayChangePercent)}`
+        : `${dayIsPositive ? "+" : ""}${formatCurrency(dayChangeAmountEUR, "EUR")}`
+      : returnMode === "pct"
+        ? `${totalReturnIsPositive ? "+" : ""}${formatPercent(totalReturnPct)}`
+        : `${totalReturnIsPositive ? "+" : ""}${formatCurrency(totalReturnAbsEUR, "EUR")}`
     : "--";
   const rowLabel = `${holding.name}, ${formatCurrency(totalValueEUR, "EUR")}, ${dayText}`;
   const assetTypeBadge = holding.assetType === "crypto" ? (
@@ -182,7 +189,7 @@ function StockRow({ holding, onSelect }: StockRowProps) {
               tabIndex={0}
               onClick={(e) => { e.stopPropagation(); toggleReturnMode(); }}
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); toggleReturnMode(); } }}
-              className={`w-24 text-right cursor-pointer hover:underline ${hasQuote ? (totalReturnIsPositive ? "text-green-400" : "text-red-400") : "text-zinc-600"}`}
+              className={`w-24 text-right cursor-pointer hover:underline ${hasQuote ? (displayIsPositive ? "text-green-400" : "text-red-400") : "text-zinc-600"}`}
               title={returnMode === "pct" ? "Click for absolute" : "Click for %"}
             >
               {awaitingQuote ? dayShimmer : returnText}
@@ -226,7 +233,7 @@ function StockRow({ holding, onSelect }: StockRowProps) {
               tabIndex={0}
               onClick={(e) => { e.stopPropagation(); toggleReturnMode(); }}
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); toggleReturnMode(); } }}
-              className={`text-sm font-semibold px-2.5 py-1 rounded-xl cursor-pointer ${hasQuote ? (totalReturnIsPositive ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600") : "bg-slate-50 text-slate-400"}`}
+              className={`text-sm font-semibold px-2.5 py-1 rounded-xl cursor-pointer ${hasQuote ? (displayIsPositive ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600") : "bg-slate-50 text-slate-400"}`}
               title={returnMode === "pct" ? "Click for absolute" : "Click for %"}
             >
               {awaitingQuote ? dayShimmer : returnText}
@@ -263,7 +270,7 @@ function StockRow({ holding, onSelect }: StockRowProps) {
               tabIndex={0}
               onClick={(e) => { e.stopPropagation(); toggleReturnMode(); }}
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); toggleReturnMode(); } }}
-              className={`text-xs font-mono mt-0.5 cursor-pointer hover:underline ${hasQuote ? (totalReturnIsPositive ? "text-emerald-400" : "text-red-400") : "text-zinc-600"}`}
+              className={`text-xs font-mono mt-0.5 cursor-pointer hover:underline ${hasQuote ? (displayIsPositive ? "text-emerald-400" : "text-red-400") : "text-zinc-600"}`}
               title={returnMode === "pct" ? "Click for absolute" : "Click for %"}
             >
               {awaitingQuote ? dayShimmer : returnText}
@@ -316,7 +323,7 @@ function StockRow({ holding, onSelect }: StockRowProps) {
                 tabIndex={0}
                 onClick={(e) => { e.stopPropagation(); toggleReturnMode(); }}
                 onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); toggleReturnMode(); } }}
-                className={`text-xs mt-0.5 flex items-center justify-end gap-1 cursor-pointer hover:underline ${returnColor}`}
+                className={`text-xs mt-0.5 flex items-center justify-end gap-1 cursor-pointer hover:underline ${displayColor}`}
                 title={returnMode === "pct" ? "Click for absolute" : "Click for %"}
               >
                 {marketDot}

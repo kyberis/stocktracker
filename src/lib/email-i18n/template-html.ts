@@ -26,8 +26,8 @@ const HEADER = `<!DOCTYPE html>
         <tr><td style="background:linear-gradient(135deg,#059669 0%,#10b981 100%);padding:32px 32px 28px;text-align:center;">
           <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;">
             <tr>
-              <td style="width:36px;height:36px;background:#0f172a;border-radius:8px;text-align:center;vertical-align:middle;">
-                <span style="color:#10b981;font-size:18px;font-weight:800;line-height:36px;">t</span>
+              <td style="width:36px;height:36px;vertical-align:middle;">
+                <img src="{{base_url}}/email-logo@2x.png" alt="" width="36" height="36" style="display:block;width:36px;height:36px;border-radius:8px;" />
               </td>
               <td style="padding-left:10px;color:#ffffff;font-size:20px;font-weight:700;letter-spacing:-0.3px;">trefolio</td>
             </tr>

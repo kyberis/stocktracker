@@ -26,7 +26,7 @@ interface PortfolioCardsProps {
   holdings: Holding[];
 }
 
-const HoldingCard = memo(function HoldingCard({ holding, returnMode, onToggleReturn }: { holding: Holding; returnMode: ReturnDisplayMode; onToggleReturn: () => void }) {
+const HoldingCard = memo(function HoldingCard({ holding, returnMode, onToggleReturn, showDayChange }: { holding: Holding; returnMode: ReturnDisplayMode; onToggleReturn: () => void; showDayChange: boolean }) {
   const router = useRouter();
   const { quotes, exchangeRates, alertedTickers, activePortfolioCurrency } = usePortfolio();
   const baseCurrency = activePortfolioCurrency;
@@ -46,16 +46,24 @@ const HoldingCard = memo(function HoldingCard({ holding, returnMode, onToggleRet
   const totalCost = costInBase * holding.shares;
   const gainLoss = totalValue - totalCost;
   const gainLossPercent = totalCost > 0 ? ((totalValue - totalCost) / totalCost) * 100 : 0;
-  const dayChange = quote?.regularMarketChangePercent ?? 0;
+  const dayChangePct = quote?.regularMarketChangePercent ?? 0;
+  const dayChangeAbs = hasRate && quote
+    ? convertCurrency(holding.shares * (quote.regularMarketChange ?? 0), normalizedQuoteCurrency, baseCurrency, exchangeRates)
+    : 0;
   const isPositive = gainLoss >= 0;
-  const dayPositive = dayChange >= 0;
+  const dayPositive = dayChangePct >= 0;
+  const displayPositive = showDayChange ? dayPositive : isPositive;
   const isAlerted = alertedTickers.has(holding.ticker);
   const isCrypto = holding.assetType === "crypto";
   const typeLabel = isCrypto ? "CRYPTO" : holding.assetType === "etf" ? "ETF" : "";
 
-  const returnText = returnMode === "pct"
-    ? formatPercent(gainLossPercent)
-    : `${isPositive ? "+" : ""}${hasRate ? formatCurrency(gainLoss, baseCurrency) : "--"}`;
+  const returnText = showDayChange
+    ? returnMode === "pct"
+      ? `${dayPositive ? "+" : ""}${formatPercent(dayChangePct)}`
+      : `${dayPositive ? "+" : ""}${hasRate ? formatCurrency(dayChangeAbs, baseCurrency) : "--"}`
+    : returnMode === "pct"
+      ? formatPercent(gainLossPercent)
+      : `${isPositive ? "+" : ""}${hasRate ? formatCurrency(gainLoss, baseCurrency) : "--"}`;
 
   return (
     <button
@@ -87,8 +95,10 @@ const HoldingCard = memo(function HoldingCard({ holding, returnMode, onToggleRet
           <p className="text-sm font-semibold text-gray-900 dark:text-white tabular-nums">
             {hasRate ? formatCurrency(totalValue, baseCurrency) : "--"}
           </p>
-          <p className={`text-xs font-medium tabular-nums ${isPositive ? "text-green-600 dark:text-green-400" : "text-red-500 dark:text-red-400"}`}>
-            {isPositive ? "+" : ""}{hasRate ? formatCurrency(gainLoss, baseCurrency) : "--"}
+          <p className={`text-xs font-medium tabular-nums ${displayPositive ? "text-green-600 dark:text-green-400" : "text-red-500 dark:text-red-400"}`}>
+            {showDayChange
+              ? `${dayPositive ? "+" : ""}${hasRate ? formatCurrency(dayChangeAbs, baseCurrency) : "--"}`
+              : `${isPositive ? "+" : ""}${hasRate ? formatCurrency(gainLoss, baseCurrency) : "--"}`}
           </p>
         </div>
       </div>
@@ -102,13 +112,19 @@ const HoldingCard = memo(function HoldingCard({ holding, returnMode, onToggleRet
           <span
             role="button"
             onClick={(e) => { e.stopPropagation(); hapticSelectionChanged(); onToggleReturn(); }}
-            className={`text-xs font-medium tabular-nums cursor-pointer active:opacity-70 ${isPositive ? "text-green-600 dark:text-green-400" : "text-red-500 dark:text-red-400"}`}
+            className={`text-xs font-medium tabular-nums cursor-pointer active:opacity-70 ${displayPositive ? "text-green-600 dark:text-green-400" : "text-red-500 dark:text-red-400"}`}
           >
             {returnText}
           </span>
-          <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium tabular-nums ${dayPositive ? "bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-400" : "bg-red-50 text-red-500 dark:bg-red-500/10 dark:text-red-400"}`}>
-            {dayPositive ? "▲" : "▼"} {Math.abs(dayChange).toFixed(2)}%
-          </span>
+          {showDayChange ? (
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium tabular-nums ${isPositive ? "bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-400" : "bg-red-50 text-red-500 dark:bg-red-500/10 dark:text-red-400"}`}>
+              {isPositive ? "+" : ""}{formatPercent(gainLossPercent)}
+            </span>
+          ) : (
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium tabular-nums ${dayPositive ? "bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-400" : "bg-red-50 text-red-500 dark:bg-red-500/10 dark:text-red-400"}`}>
+              {dayPositive ? "▲" : "▼"} {Math.abs(dayChangePct).toFixed(2)}%
+            </span>
+          )}
         </div>
       </div>
     </button>
@@ -198,7 +214,7 @@ export default function PortfolioCards({ holdings }: PortfolioCardsProps) {
         <span className="text-xs text-gray-400 dark:text-slate-500">{sorted.length} {t("holdings").toLowerCase()}</span>
       </div>
       {visible.map((h) => (
-        <HoldingCard key={h.id} holding={h} returnMode={returnMode} onToggleReturn={toggleReturnMode} />
+        <HoldingCard key={h.id} holding={h} returnMode={returnMode} onToggleReturn={toggleReturnMode} showDayChange={sortField === "dayChange"} />
       ))}
       {canExpand && (
         <button
