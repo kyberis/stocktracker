@@ -71,14 +71,30 @@ export const GET = withMetrics("/api/portfolio/history", async (req: NextRequest
   }
 
   const result = await client.execute({ sql, args });
-  const points = result.rows.map((row) => ({
+  let points = result.rows.map((row) => ({
     date: row.date as string,
     value: row.value as number,
   }));
+
+  // Fall back to aggregate data when a specific portfolio has insufficient history
+  let aggregateFallback = false;
+  if (points.length < 2 && portfolioId !== "") {
+    const fallbackArgs = args.map((a) => (a === portfolioId ? "" : a));
+    const fallbackResult = await client.execute({ sql, args: fallbackArgs });
+    const fallbackPoints = fallbackResult.rows.map((row) => ({
+      date: row.date as string,
+      value: row.value as number,
+    }));
+    if (fallbackPoints.length >= 2) {
+      points = fallbackPoints;
+      aggregateFallback = true;
+    }
+  }
 
   return NextResponse.json({
     points,
     isPro,
     canViewFull,
+    aggregateFallback,
   });
 });
