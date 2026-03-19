@@ -180,20 +180,16 @@ export default function PortfolioCards({ holdings }: PortfolioCardsProps) {
 
   return (
     <div className="space-y-2">
-      <div className="flex gap-1.5 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
-        {sortOptions.map((opt) => (
-          <button
-            key={opt.key}
-            onClick={() => { hapticSelectionChanged(); setSortField(opt.key); }}
-            className={`shrink-0 px-2.5 py-1 text-[11px] font-medium rounded-lg transition-colors ${
-              sortField === opt.key
-                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
-                : "bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-slate-400 border border-transparent"
-            }`}
-          >
-            {opt.label}
-          </button>
-        ))}
+      <div className="flex items-center justify-between pb-1">
+        <select
+          value={sortField}
+          onChange={(e) => { hapticSelectionChanged(); setSortField(e.target.value as SortField); }}
+          className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-slate-300 text-xs font-medium rounded-lg px-2.5 py-1.5 focus:ring-2 focus:ring-emerald-500 focus:outline-none cursor-pointer"
+          aria-label={t("sortBy")}
+        >
+          {sortOptions.map((opt) => <option key={opt.key} value={opt.key}>{opt.label}</option>)}
+        </select>
+        <span className="text-xs text-gray-400 dark:text-slate-500">{sorted.length} {t("holdings").toLowerCase()}</span>
       </div>
       {visible.map((h) => (
         <HoldingCard key={h.id} holding={h} returnMode={returnMode} onToggleReturn={toggleReturnMode} />

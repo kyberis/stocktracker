@@ -52,16 +52,6 @@ export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: P
     track("portfolio_return_mode_toggled");
   };
 
-  const toggleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-    } else {
-      setSortField(field);
-      setSortDir(field === "name" ? "asc" : "desc");
-    }
-    track("portfolio_sort_changed");
-  };
-
   const sortedHoldings = useMemo(() => {
     let filtered = holdings;
     if (filter) {
@@ -122,21 +112,19 @@ export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: P
   const canExpand = sortedHoldings.length > COLLAPSED_COUNT && !hasFilter;
   const noResults = hasFilter && sortedHoldings.length === 0;
 
-  const renderSortButton = (field: SortField, label: string) => (
-    <button
-      onClick={() => toggleSort(field)}
-      className={`text-xs font-medium transition-colors ${
-        sortField === field
-          ? "text-emerald-600 dark:text-emerald-400"
-          : "text-gray-400 hover:text-gray-700 dark:text-slate-500 dark:hover:text-slate-200"
-      }`}
-    >
-      {label}
-      {sortField === field && (
-        <span className="ml-1">{sortDir === "asc" ? "↑" : "↓"}</span>
-      )}
-    </button>
-  );
+  const sortOptions: { value: SortField; label: string }[] = [
+    { value: "returnPct", label: t("sortReturnPct") },
+    { value: "returnAbs", label: t("sortReturnAbs") },
+    { value: "size", label: t("sortSize") },
+    { value: "name", label: t("name") },
+  ];
+
+  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const field = e.target.value as SortField;
+    setSortField(field);
+    setSortDir(field === "name" ? "asc" : "desc");
+    track("portfolio_sort_changed");
+  };
 
   const returnDisplayCtx = useMemo(() => ({
     mode: returnMode,
@@ -260,18 +248,19 @@ export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: P
         <div className="border border-zinc-800 rounded-none overflow-hidden" data-testid="portfolio-table-terminal" data-tour="holdings">
           <div className="px-3 py-2 border-b border-zinc-800 flex items-center justify-between gap-3">
             {searchInput}
-            <span className="text-[10px] font-mono text-zinc-600 shrink-0">{t("holdings")} ({sortedHoldings.length})</span>
-          </div>
-          <div className="hidden sm:flex items-center justify-between px-3 py-1.5 bg-zinc-900/50 border-b border-zinc-800 font-mono text-[10px] uppercase tracking-widest text-zinc-600">
-            <div className="flex items-center gap-3">
-              {renderSortButton("name", "SYMBOL")}
-            </div>
-            <div className="flex items-center gap-4">
-              {renderSortButton("size", "SIZE")}
-              <span className="w-1" />
-              {renderSortButton("returnPct", "RET %")}
-              <span className="w-1" />
-              {renderSortButton("returnAbs", "RET €")}
+            <div className="flex items-center gap-2 shrink-0">
+              <select
+                value={sortField}
+                onChange={handleSortChange}
+                className="bg-zinc-900 border border-zinc-700 text-green-400 text-[10px] font-mono rounded px-1.5 py-0.5 focus:ring-1 focus:ring-green-500 focus:outline-none cursor-pointer"
+                aria-label={t("sortBy")}
+              >
+                {sortOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+              </select>
+              <button onClick={() => setSortDir((d) => d === "asc" ? "desc" : "asc")} className="text-[10px] font-mono text-zinc-500 hover:text-green-400 transition-colors px-1">
+                {sortDir === "asc" ? "↑" : "↓"}
+              </button>
+              <span className="text-[10px] font-mono text-zinc-600">{sortedHoldings.length}</span>
             </div>
           </div>
           <div className={expanded ? "overflow-y-auto" : ""}>
@@ -296,16 +285,19 @@ export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: P
         <div data-testid="portfolio-table-canvas" data-tour="holdings">
           <div className="bg-white border border-slate-200 rounded-2xl p-4 mb-4 flex items-center justify-between gap-3">
             {searchInput}
-            <span className="text-xs text-slate-400 shrink-0">{t("holdings")} ({sortedHoldings.length})</span>
-          </div>
-          <div className="flex items-center gap-3 mb-3 flex-wrap">
-            {renderSortButton("name", t("priceTimesCount"))}
-            <span className="text-slate-300">·</span>
-            {renderSortButton("size", t("sortSize"))}
-            <span className="text-slate-300">·</span>
-            {renderSortButton("returnPct", t("sortReturnPct"))}
-            <span className="text-slate-300">·</span>
-            {renderSortButton("returnAbs", t("sortReturnAbs"))}
+            <div className="flex items-center gap-2 shrink-0">
+              <select
+                value={sortField}
+                onChange={handleSortChange}
+                className="bg-white border border-slate-200 text-slate-700 text-xs font-medium rounded-lg px-2 py-1 focus:ring-2 focus:ring-green-500 focus:outline-none cursor-pointer"
+                aria-label={t("sortBy")}
+              >
+                {sortOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+              </select>
+              <button onClick={() => setSortDir((d) => d === "asc" ? "desc" : "asc")} className="text-xs text-slate-400 hover:text-slate-700 transition-colors px-1">
+                {sortDir === "asc" ? "↑" : "↓"}
+              </button>
+            </div>
           </div>
           {noResults && noResultsCTA}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -329,16 +321,18 @@ export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: P
         <div className="rounded-[20px] border border-white/5 bg-white/[0.02] backdrop-blur-sm overflow-hidden" data-testid="portfolio-table-studio" data-tour="holdings">
           <div className="p-4 border-b border-white/5 flex items-center justify-between gap-3">
             {searchInput}
-            <span className="text-xs text-zinc-500 shrink-0">{t("holdings")} ({sortedHoldings.length})</span>
-          </div>
-          <div className="hidden sm:flex items-center justify-between px-4 py-2.5 bg-white/[0.02] border-b border-white/5">
-            <div className="flex items-center gap-3">{renderSortButton("name", t("priceTimesCount"))}</div>
-            <div className="flex items-center gap-3">
-              {renderSortButton("size", t("sortSize"))}
-              <span className="text-zinc-700">·</span>
-              {renderSortButton("returnPct", t("sortReturnPct"))}
-              <span className="text-zinc-700">·</span>
-              {renderSortButton("returnAbs", t("sortReturnAbs"))}
+            <div className="flex items-center gap-2 shrink-0">
+              <select
+                value={sortField}
+                onChange={handleSortChange}
+                className="bg-transparent border border-white/10 text-zinc-300 text-xs font-medium rounded-lg px-2 py-1 focus:ring-2 focus:ring-emerald-500 focus:outline-none cursor-pointer"
+                aria-label={t("sortBy")}
+              >
+                {sortOptions.map((o) => <option key={o.value} value={o.value} className="bg-zinc-900">{o.label}</option>)}
+              </select>
+              <button onClick={() => setSortDir((d) => d === "asc" ? "desc" : "asc")} className="text-xs text-zinc-500 hover:text-white transition-colors px-1">
+                {sortDir === "asc" ? "↑" : "↓"}
+              </button>
             </div>
           </div>
           <div className={expanded ? "overflow-y-auto" : ""}>
@@ -362,16 +356,19 @@ export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: P
       <div className="card p-0 overflow-hidden" data-testid="portfolio-table-default" data-tour="holdings">
         <div className="p-4 border-b border-gray-100 dark:border-slate-700 flex items-center justify-between gap-3 flex-wrap">
           {searchInput}
-          <span className="text-xs text-gray-400 dark:text-slate-500 shrink-0">{t("holdings")} ({sortedHoldings.length})</span>
-        </div>
-        <div className="hidden sm:flex sm:items-center sm:justify-between px-4 py-2.5 bg-gray-50 dark:bg-slate-800/50 border-b border-gray-100 dark:border-slate-700">
-          <div className="flex items-center gap-3">{renderSortButton("name", t("priceTimesCount"))}</div>
-          <div className="flex items-center gap-3">
-            {renderSortButton("size", t("sortSize"))}
-            <span className="text-gray-300 dark:text-slate-600">·</span>
-            {renderSortButton("returnPct", t("sortReturnPct"))}
-            <span className="text-gray-300 dark:text-slate-600">·</span>
-            {renderSortButton("returnAbs", t("sortReturnAbs"))}
+          <div className="flex items-center gap-2 shrink-0">
+            <select
+              value={sortField}
+              onChange={handleSortChange}
+              className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 text-gray-700 dark:text-slate-300 text-xs font-medium rounded-lg px-2 py-1 focus:ring-2 focus:ring-emerald-500 focus:outline-none cursor-pointer"
+              aria-label={t("sortBy")}
+            >
+              {sortOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+            <button onClick={() => setSortDir((d) => d === "asc" ? "desc" : "asc")} className="text-xs text-gray-400 dark:text-slate-500 hover:text-gray-700 dark:hover:text-slate-200 transition-colors px-1" aria-label={sortDir === "asc" ? "Sort descending" : "Sort ascending"}>
+              {sortDir === "asc" ? "↑" : "↓"}
+            </button>
+            <span className="text-xs text-gray-400 dark:text-slate-500">{sortedHoldings.length}</span>
           </div>
         </div>
         <div className={expanded ? "overflow-y-auto" : ""}>

@@ -1861,6 +1861,25 @@ Abrir Centro de Importación: {{base_url}}/import`,
       await client.execute("ALTER TABLE portfolio_snapshots_new RENAME TO portfolio_snapshots");
     },
   },
+  {
+    version: 64,
+    description: "Create aggregate (portfolio_id='') snapshot rows from existing per-portfolio data",
+    up: async (client: Client) => {
+      await client.execute(`
+        INSERT OR IGNORE INTO portfolio_snapshots (id, user_id, date, total_value_eur, created_at, portfolio_id)
+        SELECT
+          lower(hex(randomblob(16))),
+          user_id,
+          date,
+          SUM(total_value_eur),
+          MIN(created_at),
+          ''
+        FROM portfolio_snapshots
+        WHERE portfolio_id != ''
+        GROUP BY user_id, date
+      `);
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {
