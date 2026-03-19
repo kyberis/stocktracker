@@ -80,7 +80,6 @@ export async function sendBrokerIntegrationRequestReceivedEmail(input: {
     broker_name: input.brokerName,
     request_id: input.requestId,
     base_url: baseUrl,
-    unsubscribe_url: `${baseUrl}/unsubscribe?userId=${encodeURIComponent(input.userId)}`,
   };
 
   const fallback = locale !== "en" && locale !== "es" ? LOCALIZED_FALLBACKS[locale] : null;

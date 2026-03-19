@@ -41,7 +41,7 @@ export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: P
   const { t } = useI18n();
   const { layoutTheme } = useTheme();
   const track = useTrack();
-  const [sortField, setSortField] = useState<SortField>("returnPct");
+  const [sortField, setSortField] = useState<SortField>("dayChange");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [filter, setFilter] = useState("");
   const [selectedHolding, setSelectedHolding] = useState<Holding | null>(null);

@@ -130,7 +130,7 @@ export const POST = withMetrics("/api/billing/webhook", async (req: NextRequest)
             });
             const sendUpgradeEmail =
               checkoutPlan === "starter" ? sendBifolioUpgradeEmail : sendTrefolioUpgradeEmail;
-            sendUpgradeEmail(user.email, user.display_name || "").catch((err) =>
+            sendUpgradeEmail(user.email, user.display_name || "", "en", user.id).catch((err) =>
               console.error("Upgrade email failed:", err),
             );
             const upgradeNotif =

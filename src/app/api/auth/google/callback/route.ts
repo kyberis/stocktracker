@@ -309,7 +309,7 @@ async function handleLoginFlow(
         campaign: attribution.campaign || "none",
       });
       authEventsTotal.inc({ event: "signup" });
-      sendWelcomeEmail(googleUser.email.toLowerCase(), googleUser.name || "").catch((err) =>
+      sendWelcomeEmail(googleUser.email.toLowerCase(), googleUser.name || "", "en", publicUser.id).catch((err) =>
         console.error("Welcome email failed:", err),
       );
       createNotification(publicUser.id, welcomeNotification()).catch((err) =>

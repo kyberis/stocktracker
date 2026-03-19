@@ -366,3 +366,9 @@ export {
   updateEmailSendStatus,
   getTemplateStats,
 } from "./email-templates";
+
+export {
+  generateUnsubscribeToken,
+  consumeUnsubscribeToken,
+  purgeExpiredUnsubscribeTokens,
+} from "./unsubscribe-tokens";

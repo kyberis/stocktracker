@@ -122,7 +122,7 @@ export const POST = withMetrics("/api/auth/signup", async (req: NextRequest) => 
     sendVerificationEmail(normalizedEmail, verificationToken, emailLocale).then((result) => {
       if (result.success) trackEvent(user.id, "email_verification_sent");
     });
-    sendWelcomeEmail(normalizedEmail, displayName || "").catch((err) =>
+    sendWelcomeEmail(normalizedEmail, displayName || "", emailLocale, user.id).catch((err) =>
       console.error("Welcome email failed:", err),
     );
     createNotification(user.id, welcomeNotification()).catch((err) =>

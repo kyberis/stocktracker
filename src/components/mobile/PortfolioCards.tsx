@@ -135,7 +135,7 @@ export default function PortfolioCards({ holdings }: PortfolioCardsProps) {
   const { t } = useI18n();
   const { quotes, exchangeRates } = usePortfolio();
   const [expanded, setExpanded] = useState(false);
-  const [sortField, setSortField] = useState<SortField>("returnPct");
+  const [sortField, setSortField] = useState<SortField>("dayChange");
   const [returnMode, setReturnMode] = useState<ReturnDisplayMode>("pct");
 
   const toggleReturnMode = () => {

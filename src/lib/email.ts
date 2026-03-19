@@ -1,6 +1,6 @@
 import { Resend } from "resend";
 import { SignJWT, jwtVerify } from "jose";
-import { getGlobalResendApiKey, countHoldings } from "@/lib/db";
+import { getGlobalResendApiKey, countHoldings, generateUnsubscribeToken } from "@/lib/db";
 
 const VERIFICATION_TOKEN_TTL = 60 * 60 * 24; // 24 hours
 
@@ -94,28 +94,34 @@ export async function sendEmail(
     return { success: true };
   }
 
-  const plainText = opts.text || htmlToPlainText(opts.html);
+  let html = opts.html;
+  let text = opts.text || "";
 
   const headers: Record<string, string> = {
     "Reply-To": opts.replyTo || SUPPORT_EMAIL,
     ...opts.headers,
   };
 
-  if (!opts.internal) {
-    const base = process.env.APP_BASE_URL || "https://trefolio.com";
-    const unsubUrl = opts.userId
-      ? `${base}/unsubscribe?userId=${opts.userId}`
-      : `${base}/unsubscribe`;
+  if (!opts.internal && opts.userId) {
+    const unsubUrl = await generateUnsubscribeUrl(opts.userId);
     headers["List-Unsubscribe"] = `<${unsubUrl}>`;
     headers["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click";
+    html = html.replaceAll("{{unsubscribe_url}}", unsubUrl);
+    if (text) text = text.replaceAll("{{unsubscribe_url}}", unsubUrl);
+  } else if (!opts.internal) {
+    const base = process.env.APP_BASE_URL || "https://trefolio.com";
+    headers["List-Unsubscribe"] = `<${base}/unsubscribe>`;
+    headers["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click";
   }
+
+  const plainText = text || htmlToPlainText(html);
 
   try {
     const { data, error } = await resend.emails.send({
       from: getFromAddress(),
       to: opts.to,
       subject: opts.subject,
-      html: opts.html,
+      html,
       text: plainText,
       headers,
     });
@@ -230,6 +236,7 @@ export async function sendAlertEmail(
   email: string,
   alert: { ticker: string; name: string; condition: string; threshold: number; currentPrice: number; currency: string },
   locale: EmailLocale = "en",
+  userId?: string,
 ): Promise<{ success: boolean; error?: string }> {
   if (isTestEmail(email)) return { success: true };
 
@@ -250,12 +257,16 @@ export async function sendAlertEmail(
         <p style="font-size: 18px; padding: 16px; background: #f0fdf4; border-radius: 8px; text-align: center;">${s.currentPriceLabel} <strong>${alert.currency} ${alert.currentPrice.toFixed(2)}</strong></p>
         <a href="${dashboardUrl}" style="display: inline-block; margin-top: 16px; padding: 12px 24px; background: #10b981; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600;">${s.ctaLabel}</a>
         <p style="margin-top: 24px; font-size: 13px; color: #64748b;">${s.deactivatedNotice}</p>
+        <p style="margin-top: 16px; font-size: 11px; color: #94a3b8; text-align: center;">
+          <a href="{{unsubscribe_url}}" style="color:#94a3b8;text-decoration:underline;">Unsubscribe</a> from email notifications
+        </p>
       </div>`;
 
   const result = await sendEmail({
     to: email,
     subject: `Price Alert: ${alert.ticker} ${direction} ${alert.currency} ${alert.threshold}`,
     html,
+    userId,
   });
   if (!result.success) console.error("Failed to send alert email:", result.error);
   return result;
@@ -273,6 +284,7 @@ export async function sendPercentAlertEmail(
     isPortfolioWide: boolean;
   },
   locale: EmailLocale = "en",
+  userId?: string,
 ): Promise<{ success: boolean; error?: string }> {
   if (isTestEmail(email)) return { success: true };
 
@@ -301,41 +313,29 @@ export async function sendPercentAlertEmail(
         ${alert.isPortfolioWide ? `<p style="font-size: 13px; color: #64748b;">${s.portfolioWideNotice}</p>` : ""}
         <a href="${dashboardUrl}" style="display: inline-block; margin-top: 16px; padding: 12px 24px; background: #10b981; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600;">${s.ctaLabel}</a>
         <p style="margin-top: 24px; font-size: 13px; color: #64748b;">${alert.isPortfolioWide ? s.activeNotice : s.deactivatedNotice}</p>
+        <p style="margin-top: 16px; font-size: 11px; color: #94a3b8; text-align: center;">
+          <a href="{{unsubscribe_url}}" style="color:#94a3b8;text-decoration:underline;">Unsubscribe</a> from email notifications
+        </p>
       </div>`;
 
   const result = await sendEmail({
     to: email,
     subject: `Price Alert: ${alert.ticker} ${direction} ${absPercent}% ${basisLabel}`,
     html,
+    userId,
   });
   if (!result.success) console.error("Failed to send percent alert email:", result.error);
   return result;
 }
 
 // ---------------------------------------------------------------------------
-// Unsubscribe token
+// Unsubscribe URL
 // ---------------------------------------------------------------------------
 
-const UNSUBSCRIBE_TOKEN_TTL = 60 * 60 * 24 * 365; // 1 year
-
-export async function createUnsubscribeToken(userId: string): Promise<string> {
-  const secret = new TextEncoder().encode(getSessionSecret());
-  return new SignJWT({ userId, purpose: "email_unsubscribe" })
-    .setProtectedHeader({ alg: "HS256", typ: "JWT" })
-    .setIssuedAt()
-    .setExpirationTime(`${UNSUBSCRIBE_TOKEN_TTL}s`)
-    .sign(secret);
-}
-
-export async function verifyUnsubscribeToken(token: string): Promise<string | null> {
-  try {
-    const secret = new TextEncoder().encode(getSessionSecret());
-    const { payload } = await jwtVerify(token, secret, { algorithms: ["HS256"] });
-    if (payload.purpose !== "email_unsubscribe") return null;
-    return String(payload.userId);
-  } catch {
-    return null;
-  }
+export async function generateUnsubscribeUrl(userId: string): Promise<string> {
+  const base = process.env.APP_BASE_URL || "https://trefolio.com";
+  const token = await generateUnsubscribeToken(userId);
+  return `${base}/unsubscribe?token=${encodeURIComponent(token)}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -471,13 +471,14 @@ function welcomeEmailHtml(displayName: string, locale: EmailLocale): string {
             <strong style="color:#475569;">${c.tipLabel}</strong> ${c.tip} <a href="${utm("/profile", campaign)}" style="color:#10b981;text-decoration:underline;">${c.tipLink}</a>.
           </p>
         </td></tr>
-${emailFooter(c.footer, utm("/profile", campaign), c.manage)}`;
+${emailFooter(c.footer, utm("/profile", campaign), c.manage, "{{unsubscribe_url}}")}`;
 }
 
 export async function sendWelcomeEmail(
   email: string,
   displayName: string,
   locale: EmailLocale = "en",
+  userId?: string,
 ): Promise<{ success: boolean; error?: string }> {
   if (isTestEmail(email)) return { success: true };
 
@@ -486,6 +487,7 @@ export async function sendWelcomeEmail(
     to: email,
     subject: c.subject,
     html: welcomeEmailHtml(displayName, locale),
+    userId,
   });
   if (!result.success) console.error("Failed to send welcome email:", result.error);
   return result;
@@ -520,13 +522,14 @@ function bifolioUpgradeHtml(displayName: string, locale: EmailLocale): string {
             </p>
           </td></tr></table>
         </td></tr>
-${emailFooter(c.footer, utm("/profile", campaign), c.manage)}`;
+${emailFooter(c.footer, utm("/profile", campaign), c.manage, "{{unsubscribe_url}}")}`;
 }
 
 export async function sendBifolioUpgradeEmail(
   email: string,
   displayName: string,
   locale: EmailLocale = "en",
+  userId?: string,
 ): Promise<{ success: boolean; error?: string }> {
   if (isTestEmail(email)) return { success: true };
 
@@ -535,6 +538,7 @@ export async function sendBifolioUpgradeEmail(
     to: email,
     subject: c.subject,
     html: bifolioUpgradeHtml(displayName, locale),
+    userId,
   });
   if (!result.success) console.error("Failed to send Bifolio upgrade email:", result.error);
   return result;
@@ -585,13 +589,14 @@ function trefolioUpgradeHtml(displayName: string, locale: EmailLocale): string {
             <p style="margin:0;font-size:13px;color:#1e40af;text-align:center;line-height:1.5;">${c.community}</p>
           </td></tr></table>
         </td></tr>
-${emailFooter(c.footer, utm("/profile", campaign), c.manage)}`;
+${emailFooter(c.footer, utm("/profile", campaign), c.manage, "{{unsubscribe_url}}")}`;
 }
 
 export async function sendTrefolioUpgradeEmail(
   email: string,
   displayName: string,
   locale: EmailLocale = "en",
+  userId?: string,
 ): Promise<{ success: boolean; error?: string }> {
   if (isTestEmail(email)) return { success: true };
 
@@ -600,6 +605,7 @@ export async function sendTrefolioUpgradeEmail(
     to: email,
     subject: c.subject,
     html: trefolioUpgradeHtml(displayName, locale),
+    userId,
   });
   if (!result.success) console.error("Failed to send Trefolio upgrade email:", result.error);
   return result;

@@ -1880,6 +1880,24 @@ Abrir Centro de Importación: {{base_url}}/import`,
       `);
     },
   },
+  {
+    version: 65,
+    description: "Create unsubscribe_tokens table for one-time email unsubscribe links",
+    up: async (client: Client) => {
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS unsubscribe_tokens (
+          token TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          used_at TEXT,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          expires_at TEXT NOT NULL
+        )
+      `);
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_unsub_tokens_user ON unsubscribe_tokens(user_id)"
+      );
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

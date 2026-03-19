@@ -17,6 +17,21 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.44.0",
+    date: "2026-03-19",
+    title: "One-Click Email Unsubscribe",
+    titleTranslations: { es: "Desuscripción de Email con Un Clic" },
+    changes: [
+      {
+        type: "feature",
+        text: "All emails now include a working one-click unsubscribe link using unique, single-use tokens. Re-subscribe anytime from your profile notification settings.",
+        translations: {
+          es: "Todos los emails ahora incluyen un enlace de desuscripción funcional con tokens únicos de un solo uso. Puedes volver a suscribirte en cualquier momento desde la configuración de notificaciones de tu perfil.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.43.0",
     date: "2026-03-18",
     title: "Unified Holdings List",

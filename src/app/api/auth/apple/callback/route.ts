@@ -241,7 +241,7 @@ export async function POST(req: NextRequest) {
       });
       authEventsTotal.inc({ event: "signup" });
       if (appleEmail) {
-        sendWelcomeEmail(appleEmail.toLowerCase(), appleUserName || "").catch((err) =>
+        sendWelcomeEmail(appleEmail.toLowerCase(), appleUserName || "", "en", publicUser.id).catch((err) =>
           console.error("Welcome email failed:", err),
         );
       }

@@ -98,7 +98,7 @@ export async function dispatchAlert(
             threshold: payload.threshold,
             currentPrice: payload.currentPrice,
             currency: payload.currency,
-          }, ctx.locale);
+          }, ctx.locale, ctx.userId);
         } else {
           await sendPercentAlertEmail(ctx.email, {
             ticker: payload.ticker,
@@ -108,7 +108,7 @@ export async function dispatchAlert(
             percentChange: payload.percentChange,
             percentBasis: payload.percentBasis,
             isPortfolioWide: payload.isPortfolioWide,
-          }, ctx.locale);
+          }, ctx.locale, ctx.userId);
         }
         sent.push("email");
         trackEvent(ctx.userId, "alert_email_sent", { ticker: payload.ticker });

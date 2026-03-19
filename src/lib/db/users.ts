@@ -328,6 +328,7 @@ export async function countProSubscribers(): Promise<number> {
 
 export async function deleteUser(userId: string) {
   const client = await ensureInitialized();
+  await client.execute({ sql: "DELETE FROM unsubscribe_tokens WHERE user_id = ?", args: [userId] });
   await client.execute({ sql: "DELETE FROM users WHERE id = ?", args: [userId] });
 }
 
