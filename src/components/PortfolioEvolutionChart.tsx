@@ -92,7 +92,8 @@ export default function PortfolioEvolutionChart() {
   const [points, setPoints] = useState<SnapshotPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [backfilling, setBackfilling] = useState(false);
-  const backfillChecked = useRef(false);
+  const backfillingRef = useRef(false);
+  const prevHoldingsCount = useRef(holdings.length);
 
   // Upsert today's snapshot
   useEffect(() => {
@@ -116,26 +117,22 @@ export default function PortfolioEvolutionChart() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [holdings, cashEntries, quotes, exchangeRates, baseCurrency, demoMode]);
 
-  // Lazy backfill check for existing users
-  useEffect(() => {
-    if (demoMode || backfillChecked.current) return;
-    backfillChecked.current = true;
-
-    fetch("/api/portfolio/backfill-snapshots?check=true")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (data?.needsBackfill) {
-          setBackfilling(true);
-          fetch("/api/portfolio/backfill-snapshots", { method: "POST" })
-            .then(() => {
-              setBackfilling(false);
-              fetchHistory(range);
-            })
-            .catch(() => setBackfilling(false));
-        }
+  const triggerBackfill = useCallback(() => {
+    if (backfillingRef.current || demoMode) return;
+    backfillingRef.current = true;
+    setBackfilling(true);
+    fetch("/api/portfolio/backfill-snapshots", { method: "POST" })
+      .then(() => {
+        backfillingRef.current = false;
+        setBackfilling(false);
+        fetchHistory(range);
       })
-      .catch(() => {});
-  }, [demoMode]); // eslint-disable-line react-hooks/exhaustive-deps
+      .catch(() => {
+        backfillingRef.current = false;
+        setBackfilling(false);
+      });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [demoMode, range]);
 
   const fetchHistory = useCallback(
     (r: EvolutionRange) => {
@@ -149,13 +146,30 @@ export default function PortfolioEvolutionChart() {
       fetch(`/api/portfolio/history?range=${r}&portfolioId=${encodeURIComponent(pid)}`)
         .then((res) => (res.ok ? res.json() : { points: [] }))
         .then((data) => {
-          setPoints(Array.isArray(data.points) ? data.points : []);
+          const pts: SnapshotPoint[] = Array.isArray(data.points) ? data.points : [];
+          setPoints(pts);
           setLoading(false);
+          // Auto-backfill when insufficient history for this portfolio
+          if (pts.length < 2 && !backfillingRef.current) {
+            triggerBackfill();
+          }
         })
         .catch(() => setLoading(false));
     },
-    [demoMode, activePortfolioId],
+    [demoMode, activePortfolioId, triggerBackfill],
   );
+
+  // Lazy backfill check on first mount
+  useEffect(() => {
+    if (demoMode) return;
+    fetch("/api/portfolio/backfill-snapshots?check=true")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data?.needsBackfill) triggerBackfill();
+      })
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [demoMode]);
 
   useEffect(() => {
     if (!isPaid && !FREE_RANGES.has(range)) {
@@ -164,6 +178,16 @@ export default function PortfolioEvolutionChart() {
     }
     fetchHistory(range);
   }, [range, isPaid, fetchHistory, activePortfolioId]);
+
+  // Re-backfill when holdings count changes (stock added/removed from dashboard)
+  useEffect(() => {
+    if (demoMode) return;
+    const prev = prevHoldingsCount.current;
+    prevHoldingsCount.current = holdings.length;
+    if (prev !== 0 && holdings.length !== prev) {
+      triggerBackfill();
+    }
+  }, [holdings.length, demoMode, triggerBackfill]);
 
   function handleRangeChange(r: EvolutionRange) {
     if (!isPaid && !FREE_RANGES.has(r)) return;
