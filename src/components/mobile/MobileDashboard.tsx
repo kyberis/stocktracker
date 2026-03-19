@@ -29,11 +29,10 @@ const MetricsTab = dynamic(() => import("@/components/MetricsTab"), { ssr: false
 const GrowthTab = dynamic(() => import("@/components/GrowthTab"), { ssr: false });
 const AddStockModal = dynamic(() => import("@/components/AddStockModal"), { ssr: false });
 const ProCompareCard = dynamic(() => import("@/components/ProCompareCard"), { ssr: false });
-const CryptoPortfolioTab = dynamic(() => import("@/components/CryptoPortfolioTab"), { ssr: false });
 const EventCalendar = dynamic(() => import("@/components/EventCalendar"), { ssr: false });
 const UpcomingEarnings = dynamic(() => import("@/components/UpcomingEarnings"), { ssr: false });
 
-type DashboardTab = "portfolio" | "crypto" | "diversification" | "dividends" | "metrics" | "growth" | "events" | "news";
+type DashboardTab = "portfolio" | "diversification" | "dividends" | "metrics" | "growth" | "events" | "news";
 
 export default function MobileDashboard() {
   const [activeTab, setActiveTab] = useState<DashboardTab>("portfolio");
@@ -74,19 +73,13 @@ export default function MobileDashboard() {
     [cashEntries],
   );
 
-  const hasCryptoHoldings = holdings.some((h) => h.assetType === "crypto");
-
   const TIER_GATE: Partial<Record<DashboardTab, "starter" | "pro">> = {
     metrics: "starter",
     growth: "starter",
-    crypto: "pro",
   };
 
   const dashboardTabs: { key: DashboardTab; label: string; tierBadge?: "starter" | "pro" }[] = [
     { key: "portfolio", label: t("portfolioTab") },
-    ...(isPro || hasCryptoHoldings
-      ? [{ key: "crypto" as const, label: t("cryptoTab"), tierBadge: "pro" as const }]
-      : []),
     { key: "diversification", label: t("diversificationTab") },
     { key: "dividends", label: t("dividendsTab") },
     { key: "metrics", label: t("metricsTab"), tierBadge: "starter" as const },
@@ -249,15 +242,6 @@ export default function MobileDashboard() {
                 )}
               </>
             )}
-          </div>
-        )}
-
-        {/* Crypto tab */}
-        {activeTab === "crypto" && (
-          <div role="tabpanel" id="mtabpanel-crypto" aria-labelledby="mtab-crypto" tabIndex={0} className="focus-visible:outline-none animate-tab-fade">
-            <Suspense fallback={<ChartSkeleton />}>
-              <CryptoPortfolioTab holdings={filteredHoldings} />
-            </Suspense>
           </div>
         )}
 

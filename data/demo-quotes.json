@@ -345,5 +345,31 @@
     "fiftyTwoWeekLow": 3.85,
     "trailingAnnualDividendRate": 0.09,
     "trailingAnnualDividendYield": 0.0157
+  },
+  "BTC-USD": {
+    "symbol": "BTC-USD",
+    "shortName": "Bitcoin USD",
+    "regularMarketPrice": 67240.00,
+    "regularMarketChange": 1200.00,
+    "regularMarketChangePercent": 1.82,
+    "currency": "USD",
+    "regularMarketPreviousClose": 66040.00,
+    "fiftyTwoWeekHigh": 73800.00,
+    "fiftyTwoWeekLow": 38500.00,
+    "trailingAnnualDividendRate": 0,
+    "trailingAnnualDividendYield": 0
+  },
+  "ETH-USD": {
+    "symbol": "ETH-USD",
+    "shortName": "Ethereum USD",
+    "regularMarketPrice": 3420.00,
+    "regularMarketChange": -48.00,
+    "regularMarketChangePercent": -1.38,
+    "currency": "USD",
+    "regularMarketPreviousClose": 3468.00,
+    "fiftyTwoWeekHigh": 4090.00,
+    "fiftyTwoWeekLow": 1520.00,
+    "trailingAnnualDividendRate": 0,
+    "trailingAnnualDividendYield": 0
   }
 }

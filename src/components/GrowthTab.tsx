@@ -31,7 +31,7 @@ interface SnapshotPoint {
 
 export default function GrowthTab() {
   const { t } = useI18n();
-  const { holdings, cashEntries, quotes, exchangeRates, activePortfolioCurrency } = usePortfolio();
+  const { holdings, cashEntries, quotes, exchangeRates, activePortfolioCurrency, activePortfolioId } = usePortfolio();
   const baseCurrency = activePortfolioCurrency;
   const { user } = useAuth();
   const track = useTrack();
@@ -56,8 +56,11 @@ export default function GrowthTab() {
     fetch("/api/portfolio/snapshot", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ totalValueEUR: totals.totalCurrentEUR }),
+      body: JSON.stringify({ totalValueEUR: totals.totalCurrentEUR, portfolioId: activePortfolioId || "" }),
     }).catch(() => {});
+  // activePortfolioId intentionally excluded — must only fire when holdings/quotes
+  // change (after context fetches data for the new portfolio), not on portfolio switch.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [holdings, cashEntries, quotes, exchangeRates]);
 
   useEffect(() => {
@@ -68,7 +71,8 @@ export default function GrowthTab() {
     }
     setShowPaywall(false);
     setLoading(true);
-    fetch(`/api/portfolio/history?range=${range}`)
+    const pid = activePortfolioId || "";
+    fetch(`/api/portfolio/history?range=${range}&portfolioId=${encodeURIComponent(pid)}`)
       .then((r) => r.ok ? r.json() : { points: [] })
       .then((data) => {
         setPoints(Array.isArray(data.points) ? data.points : []);
@@ -76,7 +80,7 @@ export default function GrowthTab() {
       })
       .catch(() => setLoading(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [range, isPaid]);
+  }, [range, isPaid, activePortfolioId]);
 
   function handleRangeChange(r: Range) {
     setRange(r);

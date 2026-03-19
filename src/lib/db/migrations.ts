@@ -1839,6 +1839,28 @@ Abrir Centro de Importación: {{base_url}}/import`,
       }
     },
   },
+  {
+    version: 63,
+    description: "Widen portfolio_snapshots unique constraint to (user_id, portfolio_id, date)",
+    up: async (client: Client) => {
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS portfolio_snapshots_new (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          date TEXT NOT NULL,
+          total_value_eur REAL NOT NULL,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          portfolio_id TEXT NOT NULL DEFAULT '',
+          UNIQUE(user_id, portfolio_id, date)
+        )
+      `);
+      await client.execute(
+        "INSERT OR IGNORE INTO portfolio_snapshots_new SELECT id, user_id, date, total_value_eur, created_at, portfolio_id FROM portfolio_snapshots"
+      );
+      await client.execute("DROP TABLE portfolio_snapshots");
+      await client.execute("ALTER TABLE portfolio_snapshots_new RENAME TO portfolio_snapshots");
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

@@ -33,16 +33,16 @@ export const GET = withMetrics("/api/portfolio/history", async (req: NextRequest
     if (!canViewFull) {
       sql = `SELECT date, total_value_eur as value
              FROM portfolio_snapshots
-             WHERE user_id = ? AND (? = '' OR portfolio_id = ?) AND date >= date('now', '-30 days')
+             WHERE user_id = ? AND portfolio_id = ? AND date >= date('now', '-30 days')
              ORDER BY date ASC`;
-      args = [session.userId, portfolioId, portfolioId];
+      args = [session.userId, portfolioId];
     } else if (range === "ytd") {
       const year = new Date().getFullYear();
       sql = `SELECT date, total_value_eur as value
              FROM portfolio_snapshots
-             WHERE user_id = ? AND (? = '' OR portfolio_id = ?) AND date >= ?
+             WHERE user_id = ? AND portfolio_id = ? AND date >= ?
              ORDER BY date ASC`;
-      args = [session.userId, portfolioId, portfolioId, `${year}-01-01`];
+      args = [session.userId, portfolioId, `${year}-01-01`];
     } else {
       const dayMap: Record<string, string> = {
         all: "-100 years",
@@ -52,22 +52,22 @@ export const GET = withMetrics("/api/portfolio/history", async (req: NextRequest
       };
       sql = `SELECT date, total_value_eur as value
              FROM portfolio_snapshots
-             WHERE user_id = ? AND (? = '' OR portfolio_id = ?) AND date >= date('now', ?)
+             WHERE user_id = ? AND portfolio_id = ? AND date >= date('now', ?)
              ORDER BY date ASC`;
-      args = [session.userId, portfolioId, portfolioId, dayMap[range]];
+      args = [session.userId, portfolioId, dayMap[range]];
     }
   } else if (range === "1w") {
     sql = `SELECT date, total_value_eur as value
            FROM portfolio_snapshots
-           WHERE user_id = ? AND (? = '' OR portfolio_id = ?) AND date >= date('now', '-7 days')
+           WHERE user_id = ? AND portfolio_id = ? AND date >= date('now', '-7 days')
            ORDER BY date ASC`;
-    args = [session.userId, portfolioId, portfolioId];
+    args = [session.userId, portfolioId];
   } else {
     sql = `SELECT date, total_value_eur as value
            FROM portfolio_snapshots
-           WHERE user_id = ? AND (? = '' OR portfolio_id = ?) AND date >= date('now', '-30 days')
+           WHERE user_id = ? AND portfolio_id = ? AND date >= date('now', '-30 days')
            ORDER BY date ASC`;
-    args = [session.userId, portfolioId, portfolioId];
+    args = [session.userId, portfolioId];
   }
 
   const result = await client.execute({ sql, args });

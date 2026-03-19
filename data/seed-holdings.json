@@ -251,5 +251,27 @@
     "displayCurrency": "EUR",
     "exchange": "XET",
     "valueInEUR": 1071.00
+  },
+  {
+    "name": "Bitcoin",
+    "ticker": "BTC-USD",
+    "isin": "",
+    "assetType": "crypto",
+    "shares": 0.45,
+    "purchasePrice": 52000.00,
+    "displayCurrency": "USD",
+    "exchange": "CRYPTO",
+    "valueInEUR": 27812.00
+  },
+  {
+    "name": "Ethereum",
+    "ticker": "ETH-USD",
+    "isin": "",
+    "assetType": "crypto",
+    "shares": 3.2,
+    "purchasePrice": 2800.00,
+    "displayCurrency": "USD",
+    "exchange": "CRYPTO",
+    "valueInEUR": 9520.00
   }
 ]

@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unified Holdings List — Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-page: #0f1117;
+    --bg-card: #171a23;
+    --bg-card-hover: #1d2130;
+    --bg-header: #13151d;
+    --border: #232738;
+    --border-subtle: #1e2233;
+    --text-primary: #f0f1f5;
+    --text-secondary: #8b8fa3;
+    --text-muted: #575c72;
+    --emerald-bright: #34d399;
+    --emerald-dim: rgba(52, 211, 153, 0.12);
+    --red-bright: #f87171;
+    --red-dim: rgba(248, 113, 113, 0.12);
+    --badge-etf-bg: rgba(139, 92, 246, 0.14);
+    --badge-etf-text: #a78bfa;
+    --badge-crypto-bg: rgba(251, 191, 36, 0.14);
+    --badge-crypto-text: #fbbf24;
+    --accent: #3b82f6;
+    --radius: 14px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background: var(--bg-page);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 720px;
+  }
+
+  .mockup-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .mockup-label::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+  }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    animation: card-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  @keyframes card-in {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Header */
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-header);
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .header-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-primary);
+  }
+
+  .header-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    background: rgba(255,255,255,0.04);
+    padding: 2px 7px;
+    border-radius: 6px;
+  }
+
+  .sort-dropdown {
+    position: relative;
+  }
+
+  .sort-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 5px 10px;
+    color: var(--text-secondary);
+    font-family: 'DM Sans', system-ui;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .sort-btn:hover {
+    background: rgba(255,255,255,0.07);
+    color: var(--text-primary);
+  }
+
+  .sort-btn .sort-label {
+    color: var(--text-muted);
+    font-size: 11px;
+  }
+
+  .sort-btn svg { width: 12px; height: 12px; opacity: 0.5; }
+
+  .sort-menu {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 4px);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 4px;
+    min-width: 170px;
+    z-index: 50;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+    display: none;
+  }
+
+  .sort-menu.open { display: block; }
+
+  .sort-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 10px;
+    border-radius: 7px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.1s;
+  }
+
+  .sort-option:hover {
+    background: rgba(255,255,255,0.05);
+    color: var(--text-primary);
+  }
+
+  .sort-option.active {
+    color: var(--emerald-bright);
+    font-weight: 500;
+  }
+
+  .sort-option .check { font-size: 13px; }
+
+  /* Search bar */
+  .search-bar {
+    padding: 10px 18px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .search-input {
+    width: 100%;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 7px 12px 7px 32px;
+    color: var(--text-primary);
+    font-family: 'DM Sans', system-ui;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.15s;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='none' stroke='%23575c72' stroke-width='1.5'%3E%3Ccircle cx='6.5' cy='6.5' r='4.5'/%3E%3Cpath d='m10 10 3 3'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: 10px center;
+  }
+
+  .search-input::placeholder { color: var(--text-muted); }
+  .search-input:focus { border-color: var(--accent); }
+
+  /* Rows */
+  .holdings-list {
+    overflow: hidden;
+  }
+
+  .holding-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border-subtle);
+    cursor: pointer;
+    transition: background 0.12s;
+    animation: row-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .holding-row:last-child { border-bottom: none; }
+  .holding-row:hover { background: var(--bg-card-hover); }
+
+  .row-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    flex: 1;
+    margin-right: 16px;
+  }
+
+  .market-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .market-dot.open {
+    background: var(--emerald-bright);
+    box-shadow: 0 0 6px rgba(52, 211, 153, 0.4);
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+
+  .market-dot.closed { background: var(--text-muted); }
+
+  .row-info { min-width: 0; flex: 1; }
+
+  .row-name-line {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .row-name {
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    padding: 1px 5px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    text-transform: uppercase;
+  }
+
+  .badge-etf {
+    background: var(--badge-etf-bg);
+    color: var(--badge-etf-text);
+  }
+
+  .badge-crypto {
+    background: var(--badge-crypto-bg);
+    color: var(--badge-crypto-text);
+  }
+
+  .row-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .row-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-shrink: 0;
+  }
+
+  .sparkline-container {
+    width: 56px;
+    height: 22px;
+    flex-shrink: 0;
+  }
+
+  .sparkline-container svg {
+    display: block;
+  }
+
+  .row-values {
+    text-align: right;
+    min-width: 110px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .row-value {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .row-change {
+    font-size: 11px;
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+  }
+
+  .row-change.positive { color: var(--emerald-bright); }
+  .row-change.negative { color: var(--red-bright); }
+
+  .row-change .day-pill {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+
+  .row-change.positive .day-pill {
+    background: var(--emerald-dim);
+  }
+
+  .row-change.negative .day-pill {
+    background: var(--red-dim);
+  }
+
+  /* Display all button */
+  .display-all-bar {
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .display-all-btn {
+    width: 100%;
+    padding: 12px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-family: 'DM Sans', system-ui;
+    font-size: 12.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .display-all-btn:hover {
+    background: rgba(255,255,255,0.03);
+    color: var(--text-primary);
+  }
+
+  .display-all-btn svg {
+    width: 14px;
+    height: 14px;
+    transition: transform 0.25s;
+  }
+
+  .display-all-btn.expanded svg {
+    transform: rotate(180deg);
+  }
+
+  /* Row animation stagger */
+  .holding-row:nth-child(1) { animation-delay: 0.04s; }
+  .holding-row:nth-child(2) { animation-delay: 0.08s; }
+  .holding-row:nth-child(3) { animation-delay: 0.12s; }
+  .holding-row:nth-child(4) { animation-delay: 0.16s; }
+  .holding-row:nth-child(5) { animation-delay: 0.20s; }
+  .holding-row:nth-child(6) { animation-delay: 0.24s; }
+  .holding-row:nth-child(7) { animation-delay: 0.28s; }
+
+  @keyframes row-in {
+    from { opacity: 0; transform: translateX(-8px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  /* Summary footer */
+  .summary-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 18px;
+    background: var(--bg-header);
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+  }
+
+  .summary-label { color: var(--text-muted); }
+  .summary-value { font-weight: 600; color: var(--text-primary); }
+  .summary-change { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+  .summary-change.positive { color: var(--emerald-bright); }
+  .summary-change.negative { color: var(--red-bright); }
+
+  @media (max-width: 560px) {
+    .sparkline-container { display: none; }
+    .row-values { min-width: 90px; }
+    .holding-row { padding: 10px 14px; }
+    .card-header, .search-bar { padding-left: 14px; padding-right: 14px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="mockup-label">Mockup — Unified Holdings List</div>
+  <div class="card" id="holdingsCard">
+    <div class="card-header">
+      <div class="header-left">
+        <span class="header-title">Holdings</span>
+        <span class="header-count" id="headerCount">25</span>
+      </div>
+      <div class="sort-dropdown" id="sortDropdown">
+        <button class="sort-btn" id="sortBtn">
+          <span class="sort-label">Sort:</span>
+          <span id="sortLabel">Winners</span>
+          <svg viewBox="0 0 12 12"><path d="M3 5l3 3 3-3" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="sort-menu" id="sortMenu">
+          <div class="sort-option active" data-sort="gainDesc">Winners first <span class="check">✓</span></div>
+          <div class="sort-option" data-sort="gainAsc">Losers first</div>
+          <div class="sort-option" data-sort="valueDesc">Highest value</div>
+          <div class="sort-option" data-sort="nameAsc">A → Z</div>
+          <div class="sort-option" data-sort="dayDesc">Best day</div>
+        </div>
+      </div>
+    </div>
+    <div class="search-bar">
+      <input class="search-input" type="text" placeholder="Search holdings…" id="searchInput" />
+    </div>
+    <div class="holdings-list" id="holdingsList"></div>
+    <div class="display-all-bar" id="displayAllBar">
+      <button class="display-all-btn" id="displayAllBtn">
+        <span id="displayAllText">Display all (25 holdings)</span>
+        <svg viewBox="0 0 14 14"><path d="M3.5 5.5l3.5 3.5 3.5-3.5" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+    <div class="summary-bar" id="summaryBar"></div>
+  </div>
+</div>
+
+<script>
+const FX = { EURUSD: 1.08, EURGBP: 0.86, EURDKK: 7.46, EURCAD: 1.47 };
+
+const holdings = [
+  { name: "Adobe Inc", ticker: "ADBE", shares: 7, purchasePrice: 225.00, displayCurrency: "USD", exchange: "NDQ", assetType: "stock" },
+  { name: "ADR on Novo Nordisk A/S", ticker: "NVO", shares: 9, purchasePrice: 31.50, displayCurrency: "USD", exchange: "NSY", assetType: "stock" },
+  { name: "ADR on Taiwan Semiconductor", ticker: "TSM", shares: 4, purchasePrice: 185.00, displayCurrency: "USD", exchange: "NDQ", assetType: "stock" },
+  { name: "Alphabet Inc Class A", ticker: "GOOGL", shares: 17, purchasePrice: 145.00, displayCurrency: "USD", exchange: "NDQ", assetType: "stock" },
+  { name: "Amazon.com Inc", ticker: "AMZN", shares: 11, purchasePrice: 170.00, displayCurrency: "USD", exchange: "NDQ", assetType: "stock" },
+  { name: "Berkshire Hathaway Inc Class B", ticker: "BRK-B", shares: 5, purchasePrice: 390.00, displayCurrency: "USD", exchange: "NSY", assetType: "stock" },
+  { name: "Chevron Corp", ticker: "CVX", shares: 10, purchasePrice: 148.75, displayCurrency: "USD", exchange: "NSY", assetType: "stock" },
+  { name: "Constellation Software Inc", ticker: "W9C", shares: 2, purchasePrice: 1400.00, displayCurrency: "EUR", exchange: "TGD", assetType: "stock" },
+  { name: "Essential Utilities Inc", ticker: "WTRG", shares: 23, purchasePrice: 32.00, displayCurrency: "USD", exchange: "NSY", assetType: "stock" },
+  { name: "Industria de Diseño Textil SA", ticker: "ITX.MC", shares: 42, purchasePrice: 38.50, displayCurrency: "EUR", exchange: "MAD", assetType: "stock" },
+  { name: "Kraft Heinz Co", ticker: "KHC", shares: 50, purchasePrice: 19.50, displayCurrency: "USD", exchange: "NDQ", assetType: "stock" },
+  { name: "Main Street Capital Corp", ticker: "MAIN", shares: 7, purchasePrice: 45.00, displayCurrency: "USD", exchange: "NSY", assetType: "stock" },
+  { name: "Nagarro SE", ticker: "NA9.DE", shares: 44, purchasePrice: 42.00, displayCurrency: "EUR", exchange: "XET", assetType: "stock" },
+  { name: "NNN REIT Inc", ticker: "NNN", shares: 9, purchasePrice: 36.00, displayCurrency: "USD", exchange: "NSY", assetType: "stock" },
+  { name: "Novo Nordisk A/S Class B", ticker: "NOVO-B.CO", shares: 102, purchasePrice: 200.00, displayCurrency: "DKK", exchange: "OMK", assetType: "stock" },
+  { name: "Occidental Petroleum Corp", ticker: "OXY", shares: 80, purchasePrice: 40.00, displayCurrency: "USD", exchange: "NSY", assetType: "stock" },
+  { name: "Pfizer Inc", ticker: "PFE", shares: 58, purchasePrice: 21.50, displayCurrency: "USD", exchange: "NSY", assetType: "stock" },
+  { name: "Realty Income Corp", ticker: "O", shares: 49, purchasePrice: 50.00, displayCurrency: "USD", exchange: "NSY", assetType: "stock" },
+  { name: "Serabi Gold PLC", ticker: "SRB.L", shares: 1275, purchasePrice: 120.00, displayCurrency: "GBX", exchange: "LSE", assetType: "stock" },
+  { name: "Sila Realty Trust Inc", ticker: "SILA", shares: 217, purchasePrice: 20.00, displayCurrency: "USD", exchange: "NSY", assetType: "stock" },
+  { name: "Sirius XM Holdings Inc", ticker: "SIRI", shares: 60, purchasePrice: 18.00, displayCurrency: "USD", exchange: "NDQ", assetType: "stock" },
+  { name: "Verizon Communications Inc", ticker: "VZ", shares: 10, purchasePrice: 38.00, displayCurrency: "USD", exchange: "NSY", assetType: "stock" },
+  { name: "iShares USD Treasury Bond 0-1yr UCITS ETF Dist", ticker: "IB01", shares: 69, purchasePrice: 100.00, displayCurrency: "USD", exchange: "LSE", assetType: "etf" },
+  { name: "iShares Gold Producers UCITS ETF USD Acc", ticker: "IS0E", shares: 6, purchasePrice: 25.00, displayCurrency: "EUR", exchange: "TDG", assetType: "etf" },
+  { name: "iShares MSCI China UCITS ETF USD Acc", ticker: "ICGA", shares: 238, purchasePrice: 4.50, displayCurrency: "EUR", exchange: "XET", assetType: "etf" },
+  { name: "Bitcoin", ticker: "BTC-USD", shares: 0.45, purchasePrice: 42500.00, displayCurrency: "USD", exchange: "CCC", assetType: "crypto" },
+  { name: "Ethereum", ticker: "ETH-USD", shares: 3.2, purchasePrice: 2200.00, displayCurrency: "USD", exchange: "CCC", assetType: "crypto" },
+  { name: "Solana", ticker: "SOL-USD", shares: 28, purchasePrice: 95.00, displayCurrency: "USD", exchange: "CCC", assetType: "crypto" },
+];
+
+const quotes = {
+  ADBE:    { price: 472.35, change: 5.82, changePct: 1.25, currency: "USD" },
+  NVO:     { price: 68.42, change: -0.93, changePct: -1.34, currency: "USD" },
+  TSM:     { price: 186.72, change: 3.14, changePct: 1.71, currency: "USD" },
+  GOOGL:   { price: 167.54, change: 2.08, changePct: 1.26, currency: "USD" },
+  AMZN:    { price: 201.83, change: 1.47, changePct: 0.73, currency: "USD" },
+  "BRK-B": { price: 524.30, change: -1.20, changePct: -0.23, currency: "USD" },
+  CVX:     { price: 155.28, change: 0.63, changePct: 0.41, currency: "USD" },
+  W9C:     { price: 4250.00, change: 35.00, changePct: 0.83, currency: "EUR" },
+  WTRG:    { price: 38.52, change: 0.18, changePct: 0.47, currency: "USD" },
+  "ITX.MC":{ price: 46.85, change: 0.72, changePct: 1.56, currency: "EUR" },
+  KHC:     { price: 28.93, change: -0.32, changePct: -1.09, currency: "USD" },
+  MAIN:    { price: 52.85, change: 0.42, changePct: 0.80, currency: "USD" },
+  "NA9.DE":{ price: 73.20, change: -1.15, changePct: -1.55, currency: "EUR" },
+  NNN:     { price: 43.67, change: 0.24, changePct: 0.55, currency: "USD" },
+  "NOVO-B.CO": { price: 508.30, change: -7.20, changePct: -1.40, currency: "DKK" },
+  OXY:     { price: 43.16, change: 0.87, changePct: 2.06, currency: "USD" },
+  PFE:     { price: 24.36, change: 0.11, changePct: 0.45, currency: "USD" },
+  O:       { price: 55.72, change: 0.38, changePct: 0.69, currency: "USD" },
+  "SRB.L": { price: 148.00, change: 3.50, changePct: 2.42, currency: "GBX" },
+  SILA:    { price: 25.84, change: 0.09, changePct: 0.35, currency: "USD" },
+  SIRI:    { price: 22.15, change: -0.45, changePct: -1.99, currency: "USD" },
+  VZ:      { price: 43.85, change: 0.22, changePct: 0.50, currency: "USD" },
+  IB01:    { price: 101.42, change: 0.02, changePct: 0.02, currency: "USD" },
+  IS0E:    { price: 28.43, change: 0.68, changePct: 2.45, currency: "EUR" },
+  ICGA:    { price: 5.74, change: 0.09, changePct: 1.59, currency: "EUR" },
+  "BTC-USD": { price: 67240.00, change: 1205.00, changePct: 1.82, currency: "USD" },
+  "ETH-USD": { price: 3520.00, change: -48.00, changePct: -1.35, currency: "USD" },
+  "SOL-USD": { price: 142.50, change: 5.30, changePct: 3.86, currency: "USD" },
+};
+
+function toEUR(amount, currency) {
+  if (currency === "EUR") return amount;
+  if (currency === "USD") return amount / FX.EURUSD;
+  if (currency === "GBX") return (amount / 100) / FX.EURGBP;
+  if (currency === "GBP") return amount / FX.EURGBP;
+  if (currency === "DKK") return amount / FX.EURDKK;
+  if (currency === "CAD") return amount / FX.EURCAD;
+  return amount;
+}
+
+function fmt(val, currency) {
+  const symbols = { EUR: "€", USD: "$", GBP: "£", GBX: "GBX ", DKK: "DKK " };
+  const sym = symbols[currency] || currency + " ";
+  if (Math.abs(val) >= 1000) return sym + val.toLocaleString("en", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  return sym + val.toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function fmtEUR(val) {
+  if (Math.abs(val) >= 1000) return "€" + val.toLocaleString("en", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  return "€" + val.toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function fmtPct(val) { return (val >= 0 ? "+" : "") + val.toFixed(2) + "%"; }
+
+function enrichHolding(h) {
+  const q = quotes[h.ticker];
+  if (!q) return null;
+  const currentPrice = q.price;
+  const totalValue = h.shares * currentPrice;
+  const totalValueEUR = toEUR(totalValue, h.displayCurrency);
+  const totalCost = h.shares * h.purchasePrice;
+  const totalCostEUR = toEUR(totalCost, h.displayCurrency);
+  const gainLossEUR = totalValueEUR - totalCostEUR;
+  const gainLossPct = totalCostEUR > 0 ? ((totalValueEUR - totalCostEUR) / totalCostEUR) * 100 : 0;
+  const dayChangeEUR = toEUR(h.shares * q.change, q.currency);
+  const dayChangePct = q.changePct;
+  return { ...h, currentPrice, totalValue, totalValueEUR, gainLossEUR, gainLossPct, dayChangeEUR, dayChangePct };
+}
+
+function generateSparkline(positive, seed) {
+  const points = [];
+  let y = 50;
+  const rng = mulberry32(seed);
+  for (let i = 0; i < 20; i++) {
+    const drift = positive ? 0.3 : -0.3;
+    y += (rng() - 0.5 + drift) * 8;
+    y = Math.max(5, Math.min(95, y));
+    points.push(y);
+  }
+  const min = Math.min(...points);
+  const max = Math.max(...points);
+  const range = max - min || 1;
+  const normalized = points.map(p => ((p - min) / range) * 18 + 2);
+  const pathParts = normalized.map((y, i) => {
+    const x = (i / (normalized.length - 1)) * 56;
+    return (i === 0 ? "M" : "L") + x.toFixed(1) + "," + y.toFixed(1);
+  });
+  const color = positive ? "var(--emerald-bright)" : "var(--red-bright)";
+  return `<svg width="56" height="22" viewBox="0 0 56 22" fill="none"><path d="${pathParts.join(" ")}" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/></svg>`;
+}
+
+function mulberry32(a) {
+  return function() {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+function hashCode(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) { hash = ((hash << 5) - hash) + str.charCodeAt(i); hash |= 0; }
+  return Math.abs(hash);
+}
+
+let currentSort = "gainDesc";
+let expanded = false;
+let searchQuery = "";
+const MAX_VISIBLE = 7;
+
+const sortLabels = {
+  gainDesc: "Winners",
+  gainAsc: "Losers",
+  valueDesc: "Value",
+  nameAsc: "A → Z",
+  dayDesc: "Best day",
+};
+
+function sortHoldings(enriched, mode) {
+  const sorted = [...enriched];
+  switch (mode) {
+    case "gainDesc": sorted.sort((a, b) => b.gainLossPct - a.gainLossPct); break;
+    case "gainAsc": sorted.sort((a, b) => a.gainLossPct - b.gainLossPct); break;
+    case "valueDesc": sorted.sort((a, b) => b.totalValueEUR - a.totalValueEUR); break;
+    case "nameAsc": sorted.sort((a, b) => a.name.localeCompare(b.name)); break;
+    case "dayDesc": sorted.sort((a, b) => b.dayChangePct - a.dayChangePct); break;
+  }
+  return sorted;
+}
+
+function render() {
+  const enriched = holdings.map(enrichHolding).filter(Boolean);
+  let filtered = enriched;
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    filtered = enriched.filter(h => h.name.toLowerCase().includes(q) || h.ticker.toLowerCase().includes(q));
+  }
+
+  const sorted = sortHoldings(filtered, currentSort);
+  const visible = expanded ? sorted : sorted.slice(0, MAX_VISIBLE);
+  const totalCount = sorted.length;
+
+  document.getElementById("headerCount").textContent = totalCount;
+  document.getElementById("sortLabel").textContent = sortLabels[currentSort];
+
+  const list = document.getElementById("holdingsList");
+  list.innerHTML = "";
+
+  visible.forEach(h => {
+    const positive = h.dayChangePct >= 0;
+    const gainPositive = h.gainLossPct >= 0;
+    const badgeHTML = h.assetType === "etf"
+      ? `<span class="badge badge-etf">ETF</span>`
+      : h.assetType === "crypto"
+      ? `<span class="badge badge-crypto">Crypto</span>`
+      : "";
+
+    const sparkHTML = generateSparkline(positive, hashCode(h.ticker));
+    const sharesStr = h.shares % 1 === 0 ? h.shares : h.shares.toFixed(4);
+    const priceStr = h.currentPrice >= 1000
+      ? h.currentPrice.toLocaleString("en", { maximumFractionDigits: 0 })
+      : h.currentPrice.toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    const row = document.createElement("div");
+    row.className = "holding-row";
+    row.innerHTML = `
+      <div class="row-left">
+        <div class="market-dot ${positive ? 'open' : 'closed'}"></div>
+        <div class="row-info">
+          <div class="row-name-line">
+            <span class="row-name">${h.name}</span>
+            ${badgeHTML}
+          </div>
+          <div class="row-meta">${h.exchange} · ${h.ticker} · ${priceStr} ${h.displayCurrency} × ${sharesStr}</div>
+        </div>
+      </div>
+      <div class="row-right">
+        <div class="sparkline-container">${sparkHTML}</div>
+        <div class="row-values">
+          <div class="row-value">${fmtEUR(h.totalValueEUR)}</div>
+          <div class="row-change ${positive ? 'positive' : 'negative'}">
+            ${positive ? "+" : ""}${fmtEUR(h.dayChangeEUR)}
+            <span class="day-pill">${fmtPct(h.dayChangePct)}</span>
+          </div>
+        </div>
+      </div>
+    `;
+    list.appendChild(row);
+  });
+
+  const bar = document.getElementById("displayAllBar");
+  const btn = document.getElementById("displayAllBtn");
+  const text = document.getElementById("displayAllText");
+  if (totalCount <= MAX_VISIBLE) {
+    bar.style.display = "none";
+  } else {
+    bar.style.display = "flex";
+    text.textContent = expanded
+      ? `Show top ${MAX_VISIBLE}`
+      : `Display all (${totalCount} holdings)`;
+    btn.className = expanded ? "display-all-btn expanded" : "display-all-btn";
+  }
+
+  const totalValueEUR = sorted.reduce((s, h) => s + h.totalValueEUR, 0);
+  const totalDayEUR = sorted.reduce((s, h) => s + h.dayChangeEUR, 0);
+  const totalDayPct = totalValueEUR > 0 ? (totalDayEUR / (totalValueEUR - totalDayEUR)) * 100 : 0;
+  const dayPositive = totalDayEUR >= 0;
+
+  document.getElementById("summaryBar").innerHTML = `
+    <div>
+      <span class="summary-label">Total</span>
+      <span class="summary-value" style="margin-left:6px">${fmtEUR(totalValueEUR)}</span>
+    </div>
+    <div class="summary-change ${dayPositive ? 'positive' : 'negative'}">
+      ${dayPositive ? "+" : ""}${fmtEUR(totalDayEUR)} (${fmtPct(totalDayPct)})
+    </div>
+  `;
+}
+
+document.getElementById("sortBtn").addEventListener("click", (e) => {
+  e.stopPropagation();
+  document.getElementById("sortMenu").classList.toggle("open");
+});
+
+document.addEventListener("click", () => {
+  document.getElementById("sortMenu").classList.remove("open");
+});
+
+document.querySelectorAll(".sort-option").forEach(opt => {
+  opt.addEventListener("click", (e) => {
+    e.stopPropagation();
+    currentSort = opt.dataset.sort;
+    document.querySelectorAll(".sort-option").forEach(o => o.classList.remove("active"));
+    opt.classList.add("active");
+    document.getElementById("sortMenu").classList.remove("open");
+    render();
+  });
+});
+
+document.getElementById("displayAllBtn").addEventListener("click", () => {
+  expanded = !expanded;
+  render();
+});
+
+document.getElementById("searchInput").addEventListener("input", (e) => {
+  searchQuery = e.target.value;
+  render();
+});
+
+render();
+</script>
+</body>
+</html>

@@ -19,6 +19,7 @@ import AlertBadge from "./AlertBadge";
 import Sparkline from "./Sparkline";
 import HoldingHealthBadge from "./HoldingHealthBadge";
 import { useTheme } from "@/lib/theme-context";
+import { useReturnDisplay } from "./PortfolioTable";
 
 const MOBILE_BREAKPOINT = 768;
 
@@ -99,9 +100,18 @@ function StockRow({ holding, onSelect }: StockRowProps) {
     ? totalGainEUR - stockGainEUR
     : null;
 
+  const totalReturnPct = hasQuote && holding.purchasePrice > 0
+    ? ((currentPriceInDisplay - holding.purchasePrice) / holding.purchasePrice) * 100
+    : 0;
+  const totalReturnAbsEUR = totalValueEUR - convertToEUR(totalCost, holding.displayCurrency, exchangeRates);
+  const totalReturnIsPositive = totalReturnAbsEUR >= 0;
+
   const dayIsPositive = dayChangeAmountEUR >= 0;
   const dayColor = dayIsPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400";
+  const returnColor = totalReturnIsPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400";
   const cur = holding.displayCurrency;
+
+  const { mode: returnMode, toggle: toggleReturnMode } = useReturnDisplay();
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 60_000);
@@ -123,7 +133,17 @@ function StockRow({ holding, onSelect }: StockRowProps) {
   const awaitingQuote = !hasQuote && !isCashHolding;
   const priceInfo = `${holding.exchange ? `${holding.exchange} | ` : ""}${holding.ticker} | ${hasQuote ? formatCurrency(currentPriceInDisplay, cur) : formatCurrency(holding.purchasePrice, cur)} × ${holding.shares}`;
   const dayText = hasQuote ? `${dayIsPositive ? "+" : ""}${formatCurrency(dayChangeAmountEUR, "EUR")} (${formatPercent(dayChangePercent)})` : "--";
+  const returnText = hasQuote
+    ? returnMode === "pct"
+      ? `${totalReturnIsPositive ? "+" : ""}${formatPercent(totalReturnPct)}`
+      : `${totalReturnIsPositive ? "+" : ""}${formatCurrency(totalReturnAbsEUR, "EUR")}`
+    : "--";
   const rowLabel = `${holding.name}, ${formatCurrency(totalValueEUR, "EUR")}, ${dayText}`;
+  const assetTypeBadge = holding.assetType === "crypto" ? (
+    <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400 shrink-0">CRYPTO</span>
+  ) : holding.assetType === "etf" ? (
+    <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-500/15 text-blue-700 dark:text-blue-400 shrink-0">ETF</span>
+  ) : null;
   const showSpinner = isRefreshing || awaitingQuote;
   const refreshSpinner = showSpinner && (
     <svg className="w-3.5 h-3.5 animate-spin flex-shrink-0 text-gray-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
@@ -149,15 +169,24 @@ function StockRow({ holding, onSelect }: StockRowProps) {
             {marketDot}
             <span className="text-xs text-zinc-500 w-16 shrink-0">{holding.ticker}</span>
             <span className="text-xs text-zinc-400 truncate">{holding.name}</span>
+            {assetTypeBadge}
             <AlertBadge ticker={holding.ticker} />
             {refreshSpinner}
           </div>
           <div className="flex items-center gap-4 text-xs shrink-0 tabular-nums">
             <HoldingHealthBadge holding={holding} size={22} />
-            <span className="text-zinc-500 w-12 text-right">{holding.shares}</span>
             <Sparkline ticker={holding.ticker} width={48} height={16} positive={hasQuote ? dayIsPositive : undefined} className="hidden sm:block shrink-0" />
             <span className="text-zinc-300 w-20 text-right font-semibold">{awaitingQuote ? valueShimmer : formatCurrency(totalValueEUR, "EUR")}</span>
-            <span className={`w-24 text-right ${hasQuote ? (dayIsPositive ? "text-green-400" : "text-red-400") : "text-zinc-600"}`}>{awaitingQuote ? dayShimmer : dayText}</span>
+            <span
+              role="button"
+              tabIndex={0}
+              onClick={(e) => { e.stopPropagation(); toggleReturnMode(); }}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); toggleReturnMode(); } }}
+              className={`w-24 text-right cursor-pointer hover:underline ${hasQuote ? (totalReturnIsPositive ? "text-green-400" : "text-red-400") : "text-zinc-600"}`}
+              title={returnMode === "pct" ? "Click for absolute" : "Click for %"}
+            >
+              {awaitingQuote ? dayShimmer : returnText}
+            </span>
           </div>
         </div>
       </div>
@@ -175,7 +204,10 @@ function StockRow({ holding, onSelect }: StockRowProps) {
               <AlertBadge ticker={holding.ticker} />
               {refreshSpinner}
             </div>
-            <p className="text-xs text-slate-400 mt-0.5">{holding.ticker}{holding.exchange ? ` · ${holding.exchange}` : ""}</p>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <p className="text-xs text-slate-400">{holding.ticker}{holding.exchange ? ` · ${holding.exchange}` : ""}</p>
+              {assetTypeBadge}
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <HoldingHealthBadge holding={holding} size={28} />
@@ -189,8 +221,15 @@ function StockRow({ holding, onSelect }: StockRowProps) {
           </div>
           <div className="flex items-center gap-2">
             <Sparkline ticker={holding.ticker} width={56} height={20} positive={hasQuote ? dayIsPositive : undefined} className="shrink-0" />
-            <span className={`text-sm font-semibold px-2.5 py-1 rounded-xl ${hasQuote ? (dayIsPositive ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600") : "bg-slate-50 text-slate-400"}`}>
-              {awaitingQuote ? dayShimmer : (hasQuote ? `${dayIsPositive ? "+" : ""}${formatPercent(dayChangePercent)}` : "--")}
+            <span
+              role="button"
+              tabIndex={0}
+              onClick={(e) => { e.stopPropagation(); toggleReturnMode(); }}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); toggleReturnMode(); } }}
+              className={`text-sm font-semibold px-2.5 py-1 rounded-xl cursor-pointer ${hasQuote ? (totalReturnIsPositive ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600") : "bg-slate-50 text-slate-400"}`}
+              title={returnMode === "pct" ? "Click for absolute" : "Click for %"}
+            >
+              {awaitingQuote ? dayShimmer : returnText}
             </span>
           </div>
         </div>
@@ -210,13 +249,25 @@ function StockRow({ holding, onSelect }: StockRowProps) {
               <AlertBadge ticker={holding.ticker} />
               {refreshSpinner}
             </div>
-            <p className="text-xs text-zinc-500 mt-0.5">{holding.ticker}{holding.exchange ? ` · ${holding.exchange}` : ""}</p>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <p className="text-xs text-zinc-500">{holding.ticker}{holding.exchange ? ` · ${holding.exchange}` : ""}</p>
+              {assetTypeBadge}
+            </div>
           </div>
           <HoldingHealthBadge holding={holding} size={26} />
           <Sparkline ticker={holding.ticker} width={64} height={24} positive={hasQuote ? dayIsPositive : undefined} className="mx-2 shrink-0" />
           <div className="text-right shrink-0">
             <p className="text-sm font-bold font-mono text-white">{awaitingQuote ? valueShimmer : formatCurrency(totalValueEUR, "EUR")}</p>
-            <p className={`text-xs font-mono mt-0.5 ${hasQuote ? (dayIsPositive ? "text-emerald-400" : "text-red-400") : "text-zinc-600"}`}>{awaitingQuote ? dayShimmer : dayText}</p>
+            <p
+              role="button"
+              tabIndex={0}
+              onClick={(e) => { e.stopPropagation(); toggleReturnMode(); }}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); toggleReturnMode(); } }}
+              className={`text-xs font-mono mt-0.5 cursor-pointer hover:underline ${hasQuote ? (totalReturnIsPositive ? "text-emerald-400" : "text-red-400") : "text-zinc-600"}`}
+              title={returnMode === "pct" ? "Click for absolute" : "Click for %"}
+            >
+              {awaitingQuote ? dayShimmer : returnText}
+            </p>
           </div>
         </div>
       </div>
@@ -246,6 +297,7 @@ function StockRow({ holding, onSelect }: StockRowProps) {
         <div className="min-w-0 flex-1 mr-4">
           <div className="flex items-center gap-1.5">
             <p className="font-medium text-gray-900 dark:text-white text-sm truncate">{holding.name}</p>
+            {assetTypeBadge}
             <AlertBadge ticker={holding.ticker} />
             {refreshSpinner}
           </div>
@@ -259,9 +311,16 @@ function StockRow({ holding, onSelect }: StockRowProps) {
             {awaitingQuote ? (
               <div className="mt-1 flex justify-end">{dayShimmer}</div>
             ) : hasQuote ? (
-              <p className={`text-xs mt-0.5 flex items-center justify-end gap-1 ${dayColor}`}>
+              <p
+                role="button"
+                tabIndex={0}
+                onClick={(e) => { e.stopPropagation(); toggleReturnMode(); }}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); toggleReturnMode(); } }}
+                className={`text-xs mt-0.5 flex items-center justify-end gap-1 cursor-pointer hover:underline ${returnColor}`}
+                title={returnMode === "pct" ? "Click for absolute" : "Click for %"}
+              >
                 {marketDot}
-                {dayIsPositive ? "+" : ""}{formatCurrency(dayChangeAmountEUR, "EUR")} ({formatPercent(dayChangePercent)})
+                {returnText}
                 {fxTag}
               </p>
             ) : (

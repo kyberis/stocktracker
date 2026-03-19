@@ -78,7 +78,7 @@ const DEMO_POINTS: SnapshotPoint[] = (() => {
 
 export default function PortfolioEvolutionChart() {
   const { t } = useI18n();
-  const { holdings, cashEntries, quotes, exchangeRates, activePortfolioCurrency, demoMode } =
+  const { holdings, cashEntries, quotes, exchangeRates, activePortfolioCurrency, activePortfolioId, demoMode } =
     usePortfolio();
   const { user } = useAuth();
   const { layoutTheme, isDark } = useTheme();
@@ -107,8 +107,13 @@ export default function PortfolioEvolutionChart() {
     fetch("/api/portfolio/snapshot", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ totalValueEUR: totals.totalCurrentEUR }),
+      body: JSON.stringify({ totalValueEUR: totals.totalCurrentEUR, portfolioId: activePortfolioId || "" }),
     }).catch(() => {});
+  // activePortfolioId intentionally excluded — the effect must only fire when
+  // holdings/quotes change (after the context fetches data for the new portfolio).
+  // Including it causes a race: portfolioId updates before holdings, writing
+  // stale totals under the new portfolio's ID.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [holdings, cashEntries, quotes, exchangeRates, baseCurrency, demoMode]);
 
   // Lazy backfill check for existing users
@@ -140,7 +145,8 @@ export default function PortfolioEvolutionChart() {
         return;
       }
       setLoading(true);
-      fetch(`/api/portfolio/history?range=${r}`)
+      const pid = activePortfolioId || "";
+      fetch(`/api/portfolio/history?range=${r}&portfolioId=${encodeURIComponent(pid)}`)
         .then((res) => (res.ok ? res.json() : { points: [] }))
         .then((data) => {
           setPoints(Array.isArray(data.points) ? data.points : []);
@@ -148,7 +154,7 @@ export default function PortfolioEvolutionChart() {
         })
         .catch(() => setLoading(false));
     },
-    [demoMode],
+    [demoMode, activePortfolioId],
   );
 
   useEffect(() => {
@@ -157,7 +163,7 @@ export default function PortfolioEvolutionChart() {
       return;
     }
     fetchHistory(range);
-  }, [range, isPaid, fetchHistory]);
+  }, [range, isPaid, fetchHistory, activePortfolioId]);
 
   function handleRangeChange(r: EvolutionRange) {
     if (!isPaid && !FREE_RANGES.has(r)) return;
@@ -365,9 +371,12 @@ export default function PortfolioEvolutionChart() {
     return (
       <div className="border-b border-zinc-800 py-3 space-y-2" data-testid="evolution-chart-terminal">
         <div className="flex items-center justify-between font-mono">
-          <span className="text-[10px] uppercase tracking-wider text-zinc-600">
-            {t("performance")}
-          </span>
+          <div>
+            <span className="text-[10px] uppercase tracking-wider text-zinc-600">
+              {t("performance")}
+            </span>
+            <p className="text-[9px] text-zinc-700 mt-0.5">{t("performanceSubtitle")}</p>
+          </div>
           {rangePills}
         </div>
         {periodReturnEl}
@@ -384,9 +393,12 @@ export default function PortfolioEvolutionChart() {
         data-testid="evolution-chart-canvas"
       >
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">
-            {t("performance")}
-          </h3>
+          <div>
+            <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">
+              {t("performance")}
+            </h3>
+            <p className="text-[10px] text-slate-400 mt-0.5">{t("performanceSubtitle")}</p>
+          </div>
           {rangePills}
         </div>
         {periodReturnEl}
@@ -404,9 +416,12 @@ export default function PortfolioEvolutionChart() {
       >
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-500/40 to-transparent" />
         <div className="flex items-center justify-between">
-          <h3 className="text-xs font-semibold text-white/50 uppercase tracking-wider">
-            {t("performance")}
-          </h3>
+          <div>
+            <h3 className="text-xs font-semibold text-white/50 uppercase tracking-wider">
+              {t("performance")}
+            </h3>
+            <p className="text-[9px] text-white/30 mt-0.5">{t("performanceSubtitle")}</p>
+          </div>
           {rangePills}
         </div>
         {periodReturnEl}
@@ -419,13 +434,16 @@ export default function PortfolioEvolutionChart() {
   return (
     <div className="card px-5 py-4 space-y-3" data-testid="evolution-chart">
       <div className="flex items-center justify-between">
-        <h3
-          className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-1.5"
-          style={{ fontSize: "var(--text-body)" }}
-        >
-          {t("performance")}
-          <TierFeatureBadge requiredPlan="starter" size="sm" />
-        </h3>
+        <div>
+          <h3
+            className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-1.5"
+            style={{ fontSize: "var(--text-body)" }}
+          >
+            {t("performance")}
+            <TierFeatureBadge requiredPlan="starter" size="sm" />
+          </h3>
+          <p className="text-[10px] text-gray-400 dark:text-slate-500 mt-0.5">{t("performanceSubtitle")}</p>
+        </div>
         {rangePills}
       </div>
       {periodReturnEl}

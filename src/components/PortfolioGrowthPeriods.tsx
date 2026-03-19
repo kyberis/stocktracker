@@ -152,9 +152,12 @@ export default function PortfolioGrowthPeriods({ holdings: holdingsProp }: Props
   if (!isPaid) {
     return (
       <div className="card">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-1.5">
-          {t("portfolioGrowth")} <TierFeatureBadge requiredPlan="starter" size="sm" />
-        </h3>
+        <div className="mb-3">
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-1.5">
+            {t("portfolioGrowth")} <TierFeatureBadge requiredPlan="starter" size="sm" />
+          </h3>
+          <p className="text-[10px] text-gray-400 dark:text-slate-500 mt-0.5">{t("portfolioGrowthSubtitle")}</p>
+        </div>
         <BlurredProSection blurb="Upgrade to Bifolio for YTD, 1M, and 1Y portfolio growth tracking." ctaLabel="Upgrade to Bifolio">
           <div className="grid grid-cols-3 gap-3">
             {["YTD", "1M", "1Y"].map((label) => (
@@ -171,10 +174,11 @@ export default function PortfolioGrowthPeriods({ holdings: holdingsProp }: Props
 
   return (
     <div className="card">
-      <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-1.5">
-        {t("portfolioGrowth")}
-        <TierFeatureBadge requiredPlan="starter" size="sm" />
-        <button
+      <div className="mb-3">
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-1.5">
+          {t("portfolioGrowth")}
+          <TierFeatureBadge requiredPlan="starter" size="sm" />
+          <button
           onClick={() => setShowHelp((v) => !v)}
           className="ml-auto p-1 rounded-full text-gray-400 dark:text-slate-500 hover:text-emerald-500 dark:hover:text-emerald-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
           aria-label={t("portfolioGrowth")}
@@ -185,6 +189,8 @@ export default function PortfolioGrowthPeriods({ holdings: holdingsProp }: Props
           </svg>
         </button>
       </h3>
+        <p className="text-[10px] text-gray-400 dark:text-slate-500 mt-0.5">{t("portfolioGrowthSubtitle")}</p>
+      </div>
 
       {showHelp && (
         <div className="mb-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/60 p-3 space-y-2.5 text-xs">

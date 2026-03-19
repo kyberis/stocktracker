@@ -17,13 +17,20 @@ interface TickerState {
   exchange: string;
   shares: number;
   displayCurrency: string;
+  portfolioId: string;
+}
+
+interface TxWithPortfolio extends Transaction {
+  portfolioId: string;
 }
 
 function replayTransactionsUpToDate(
-  sorted: Transaction[],
+  sorted: TxWithPortfolio[],
   date: string,
   holdingCurrencyMap: Map<string, string>,
 ): TickerState[] {
+  // Key by ticker+portfolioId so the same ticker in different portfolios
+  // produces separate TickerState entries.
   const agg = new Map<string, TickerState>();
 
   for (const tx of sorted) {
@@ -31,14 +38,12 @@ function replayTransactionsUpToDate(
     const ticker = (tx.ticker || "").toUpperCase().trim();
     if (!ticker || ticker === "FEE" || ticker === "UNKNOWN") continue;
 
-    const key = ticker;
-    // Prefer the holdings table's displayCurrency (authoritative) over the
-    // transaction's, which may say "GBP" for stocks actually priced in GBX.
+    const pid = tx.portfolioId || "";
+    const key = `${ticker}::${pid}`;
+
     let authoritativeCurrency =
       holdingCurrencyMap.get(ticker) || tx.displayCurrency || tx.currency || "EUR";
 
-    // Yahoo returns .L stock prices in GBX (pence) even when labelled "GBP".
-    // For sold stocks no longer in holdings, infer GBX from .L suffix + GBP.
     if (ticker.endsWith(".L") && normalizeCurrency(authoritativeCurrency) === "GBP") {
       authoritativeCurrency = "GBX";
     }
@@ -48,6 +53,7 @@ function replayTransactionsUpToDate(
       exchange: (tx.exchange || "").toUpperCase().trim(),
       shares: 0,
       displayCurrency: authoritativeCurrency,
+      portfolioId: pid,
     };
 
     if (tx.type === "buy" && tx.shares > 0) {
@@ -156,7 +162,7 @@ export const POST = withMetrics("/api/portfolio/backfill-snapshots", async (req:
     return NextResponse.json({ snapshotsCreated: 0, message: "No transactions found" });
   }
 
-  const transactions: Transaction[] = txResult.rows.map((r) => ({
+  const transactions: TxWithPortfolio[] = txResult.rows.map((r) => ({
     id: str(r.id),
     holdingId: str(r.holding_id),
     ticker: str(r.ticker),
@@ -179,6 +185,7 @@ export const POST = withMetrics("/api/portfolio/backfill-snapshots", async (req:
     sourceRef: str(r.source_ref),
     brokerName: str(r.broker_name),
     createdAt: str(r.created_at),
+    portfolioId: str(r.portfolio_id),
   }));
 
   const sorted = [...transactions].sort((a, b) => a.date.localeCompare(b.date));
@@ -295,11 +302,14 @@ export const POST = withMetrics("/api/portfolio/backfill-snapshots", async (req:
 
   let snapshotsCreated = 0;
   const BATCH_SIZE = 50;
-  let batch: { id: string; date: string; value: number }[] = [];
+  let batch: { id: string; portfolioId: string; date: string; value: number }[] = [];
 
   for (const date of dates) {
     const holdings = replayTransactionsUpToDate(sorted, date, holdingCurrencyMap);
-    let totalEUR = 0;
+
+    // Group holdings by portfolioId and compute value per portfolio
+    const portfolioTotals = new Map<string, number>();
+    let aggregateEUR = 0;
 
     for (const h of holdings) {
       const series = tickerSeries.get(h.ticker);
@@ -312,14 +322,23 @@ export const POST = withMetrics("/api/portfolio/backfill-snapshots", async (req:
       const fxRate = findFxRate(h.displayCurrency, date);
 
       if (fxRate && fxRate > 0) {
-        totalEUR += valueInLocal / fxRate;
+        const eurValue = valueInLocal / fxRate;
+        aggregateEUR += eurValue;
+        const pid = h.portfolioId || "";
+        portfolioTotals.set(pid, (portfolioTotals.get(pid) || 0) + eurValue);
       }
-      // When FX rate is unavailable, skip the holding rather than
-      // adding unconverted foreign-currency values as EUR.
     }
 
-    if (totalEUR > 0) {
-      batch.push({ id: generateId(), date, value: Math.round(totalEUR * 100) / 100 });
+    // Aggregate snapshot (portfolio_id = "")
+    if (aggregateEUR > 0) {
+      batch.push({ id: generateId(), portfolioId: "", date, value: Math.round(aggregateEUR * 100) / 100 });
+    }
+
+    // Per-portfolio snapshots
+    for (const [pid, total] of portfolioTotals) {
+      if (pid && total > 0) {
+        batch.push({ id: generateId(), portfolioId: pid, date, value: Math.round(total * 100) / 100 });
+      }
     }
 
     if (batch.length >= BATCH_SIZE) {
@@ -350,14 +369,14 @@ export const POST = withMetrics("/api/portfolio/backfill-snapshots", async (req:
 async function flushBatch(
   client: Awaited<ReturnType<typeof ensureInitialized>>,
   userId: string,
-  batch: { id: string; date: string; value: number }[],
+  batch: { id: string; portfolioId: string; date: string; value: number }[],
 ) {
   for (const row of batch) {
     await client.execute({
       sql: `INSERT INTO portfolio_snapshots (id, user_id, portfolio_id, date, total_value_eur)
-            VALUES (?, ?, '', ?, ?)
-            ON CONFLICT(user_id, date) DO UPDATE SET total_value_eur = excluded.total_value_eur`,
-      args: [row.id, userId, row.date, row.value],
+            VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(user_id, portfolio_id, date) DO UPDATE SET total_value_eur = excluded.total_value_eur`,
+      args: [row.id, userId, row.portfolioId, row.date, row.value],
     });
   }
 }

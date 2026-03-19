@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portfolio Evolution Chart — Mockup</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg: #0f172a;
+    --card-bg: #1e293b;
+    --card-border: #334155;
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --emerald: #10b981;
+    --emerald-dim: rgba(16, 185, 129, 0.15);
+    --red: #ef4444;
+    --red-dim: rgba(239, 68, 68, 0.15);
+    --pill-bg: #334155;
+    --pill-text: #cbd5e1;
+    --pill-hover: #475569;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    padding: 24px;
+    min-height: 100vh;
+  }
+
+  .mockup-badge {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    background: #7c3aed;
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 6px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    z-index: 100;
+  }
+
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  /* ── Portfolio Summary (context — existing component) ── */
+  .portfolio-summary {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+    position: relative;
+  }
+  .portfolio-summary::after {
+    content: 'Existing PortfolioSummary — shown for context';
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .summary-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .summary-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+  }
+  .day-change {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: 8px;
+  }
+  .day-change.positive {
+    background: var(--emerald-dim);
+    color: var(--emerald);
+  }
+  .summary-stats {
+    display: flex;
+    gap: 20px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--card-border);
+  }
+  .stat-label { font-size: 11px; color: var(--text-muted); margin-bottom: 2px; }
+  .stat-value { font-size: 13px; font-weight: 600; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+  .stat-value.gain { color: var(--emerald); }
+
+  /* ── NEW: Portfolio Evolution Chart ── */
+  .evolution-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 16px;
+    position: relative;
+  }
+  .new-badge {
+    position: absolute;
+    top: -8px;
+    left: 16px;
+    background: var(--emerald);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .chart-header h3 {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+
+  .range-pills {
+    display: flex;
+    gap: 4px;
+  }
+  .range-pill {
+    padding: 5px 11px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    border: none;
+    font-family: inherit;
+    user-select: none;
+  }
+  .range-pill.active {
+    background: var(--emerald);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
+  }
+  .range-pill:not(.active) {
+    background: var(--pill-bg);
+    color: var(--pill-text);
+  }
+  .range-pill:not(.active):hover {
+    background: var(--pill-hover);
+  }
+  .range-pill.locked {
+    color: var(--text-muted);
+    cursor: default;
+  }
+  .range-pill .lock-icon {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    margin-left: 2px;
+    vertical-align: -1px;
+  }
+
+  .period-return {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .period-percent {
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .period-percent.positive { color: var(--emerald); }
+  .period-percent.negative { color: var(--red); }
+  .period-range {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .chart-container {
+    width: 100%;
+    height: 200px;
+    position: relative;
+  }
+  .chart-container canvas {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Tooltip */
+  .chart-tooltip {
+    position: absolute;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    pointer-events: none;
+    display: none;
+    z-index: 10;
+  }
+  .tooltip-date { font-size: 11px; color: var(--text-muted); }
+  .tooltip-value { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-top: 2px; }
+
+  /* X-axis labels */
+  .x-labels {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 30px 0 50px;
+  }
+  .x-label {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  /* ── Goal Progress (context — existing component) ── */
+  .goal-banner {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 16px 20px;
+    opacity: 0.5;
+    position: relative;
+  }
+  .goal-banner::after {
+    content: 'Existing GoalProgressBanner — shown for context';
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .goal-text { font-size: 13px; color: var(--text-secondary); }
+
+  /* Theme toggle */
+  .theme-switcher {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    display: flex;
+    gap: 6px;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 6px;
+    z-index: 100;
+  }
+  .theme-btn {
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    font-family: inherit;
+    transition: all 0.15s;
+    color: var(--pill-text);
+    background: transparent;
+  }
+  .theme-btn.active {
+    background: var(--emerald);
+    color: white;
+  }
+
+  /* Light theme */
+  body.light {
+    --bg: #f8fafc;
+    --card-bg: #ffffff;
+    --card-border: #e2e8f0;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --pill-bg: #f1f5f9;
+    --pill-text: #64748b;
+    --pill-hover: #e2e8f0;
+  }
+</style>
+</head>
+<body>
+<div class="mockup-badge">Mockup</div>
+
+<div class="container">
+
+  <!-- Existing: PortfolioSummary (context) -->
+  <div class="portfolio-summary">
+    <div class="summary-label">Portfolio Value</div>
+    <div class="summary-value">&euro;47,128.43</div>
+    <div class="day-change positive">
+      <span>&#9650;</span> +&euro;234.50 (+0.50%)
+    </div>
+    <div class="summary-stats">
+      <div><div class="stat-label">Cost</div><div class="stat-value">&euro;38,450.00</div></div>
+      <div><div class="stat-label">Total Gain/Loss</div><div class="stat-value gain">+&euro;8,678.43</div></div>
+      <div><div class="stat-label">Holdings</div><div class="stat-value">14</div></div>
+    </div>
+  </div>
+
+  <!-- NEW: Portfolio Evolution Chart -->
+  <div class="evolution-card" id="evolutionCard">
+    <div class="new-badge">New</div>
+    <div class="chart-header">
+      <h3>Performance</h3>
+      <div class="range-pills" id="rangePills">
+        <button class="range-pill" data-range="1w">1W</button>
+        <button class="range-pill active" data-range="1m">1M</button>
+        <button class="range-pill" data-range="3m">3M</button>
+        <button class="range-pill" data-range="6m">6M</button>
+        <button class="range-pill" data-range="ytd">YTD</button>
+        <button class="range-pill" data-range="1y">1Y</button>
+      </div>
+    </div>
+
+    <div class="period-return" id="periodReturn">
+      <span class="period-percent positive" id="periodPercent">+4.82%</span>
+      <span class="period-range" id="periodRange">&euro;44,960 &rarr; &euro;47,128</span>
+    </div>
+
+    <div class="chart-container" id="chartContainer">
+      <canvas id="chartCanvas"></canvas>
+      <div class="chart-tooltip" id="tooltip">
+        <div class="tooltip-date" id="tooltipDate"></div>
+        <div class="tooltip-value" id="tooltipValue"></div>
+      </div>
+    </div>
+    <div class="x-labels" id="xLabels"></div>
+  </div>
+
+  <!-- Existing: GoalProgressBanner (context) -->
+  <div class="goal-banner">
+    <div class="goal-text">Goal: &euro;50,000 &mdash; 94.3% reached</div>
+  </div>
+
+</div>
+
+<div class="theme-switcher">
+  <button class="theme-btn active" onclick="setTheme('dark')">Dark</button>
+  <button class="theme-btn" onclick="setTheme('light')">Light</button>
+</div>
+
+<script>
+const RANGES = {
+  '1w': { days: 7, label: '1W' },
+  '1m': { days: 30, label: '1M' },
+  '3m': { days: 90, label: '3M' },
+  '6m': { days: 180, label: '6M' },
+  'ytd': { days: null, label: 'YTD' },
+  '1y': { days: 365, label: '1Y' },
+};
+
+let currentRange = '1m';
+let chartData = [];
+let animationProgress = 0;
+let animationFrame = null;
+
+function generateData(range) {
+  const config = RANGES[range];
+  let days;
+  if (range === 'ytd') {
+    const now = new Date();
+    const jan1 = new Date(now.getFullYear(), 0, 1);
+    days = Math.floor((now - jan1) / 86400000);
+  } else {
+    days = config.days;
+  }
+
+  const points = [];
+  const baseValue = 38500;
+  let value = baseValue;
+  const volatility = range === '1w' ? 0.004 : range === '1m' ? 0.006 : 0.008;
+  const trend = 0.0003;
+
+  for (let i = 0; i <= days; i++) {
+    const date = new Date();
+    date.setDate(date.getDate() - (days - i));
+    const change = (Math.random() - 0.45) * volatility * value;
+    value = Math.max(value * 0.9, value + change + value * trend);
+    points.push({
+      date: date.toISOString().slice(0, 10),
+      value: Math.round(value * 100) / 100,
+    });
+  }
+
+  // Ensure last point matches "current" value
+  points[points.length - 1].value = 47128.43;
+  return points;
+}
+
+function formatCurrency(v) {
+  return '\u20AC' + v.toLocaleString('de-DE', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+
+function formatDate(dateStr) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+}
+
+function getColor(isPositive) {
+  return isPositive ? '#10b981' : '#ef4444';
+}
+
+function drawChart(progress) {
+  const canvas = document.getElementById('chartCanvas');
+  const container = document.getElementById('chartContainer');
+  const dpr = window.devicePixelRatio || 1;
+
+  canvas.width = container.offsetWidth * dpr;
+  canvas.height = container.offsetHeight * dpr;
+  canvas.style.width = container.offsetWidth + 'px';
+  canvas.style.height = container.offsetHeight + 'px';
+
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  const w = container.offsetWidth;
+  const h = container.offsetHeight;
+  const padLeft = 55;
+  const padRight = 12;
+  const padTop = 8;
+  const padBottom = 4;
+
+  const chartW = w - padLeft - padRight;
+  const chartH = h - padTop - padBottom;
+
+  ctx.clearRect(0, 0, w, h);
+
+  if (chartData.length < 2) return;
+
+  const visibleCount = Math.max(2, Math.floor(chartData.length * progress));
+  const visible = chartData.slice(0, visibleCount);
+
+  const values = visible.map(p => p.value);
+  const minVal = Math.min(...values) * 0.998;
+  const maxVal = Math.max(...values) * 1.002;
+  const range = maxVal - minVal || 1;
+
+  const firstVal = visible[0].value;
+  const lastVal = visible[visible.length - 1].value;
+  const isPositive = lastVal >= firstVal;
+  const color = getColor(isPositive);
+
+  // Y-axis grid + labels
+  const yTicks = 4;
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'middle';
+  ctx.font = '11px Inter, sans-serif';
+  const isDark = !document.body.classList.contains('light');
+  ctx.fillStyle = isDark ? '#64748b' : '#94a3b8';
+  ctx.strokeStyle = isDark ? 'rgba(51,65,85,0.4)' : 'rgba(226,232,240,0.8)';
+  ctx.lineWidth = 1;
+
+  for (let i = 0; i <= yTicks; i++) {
+    const val = minVal + (range * i / yTicks);
+    const y = padTop + chartH - (chartH * i / yTicks);
+    ctx.fillText(formatCurrency(val), padLeft - 8, y);
+    ctx.beginPath();
+    ctx.setLineDash([4, 4]);
+    ctx.moveTo(padLeft, y);
+    ctx.lineTo(w - padRight, y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Build path
+  const points = visible.map((p, i) => ({
+    x: padLeft + (chartW * i / (visible.length - 1)),
+    y: padTop + chartH - ((p.value - minVal) / range * chartH),
+  }));
+
+  // Gradient fill
+  const grad = ctx.createLinearGradient(0, padTop, 0, padTop + chartH);
+  grad.addColorStop(0, isPositive ? 'rgba(16,185,129,0.20)' : 'rgba(239,68,68,0.20)');
+  grad.addColorStop(1, isPositive ? 'rgba(16,185,129,0)' : 'rgba(239,68,68,0)');
+
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, padTop + chartH);
+  ctx.lineTo(points[0].x, points[0].y);
+  for (let i = 1; i < points.length; i++) {
+    const cx = (points[i - 1].x + points[i].x) / 2;
+    ctx.bezierCurveTo(cx, points[i - 1].y, cx, points[i].y, points[i].x, points[i].y);
+  }
+  ctx.lineTo(points[points.length - 1].x, padTop + chartH);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Line stroke
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, points[0].y);
+  for (let i = 1; i < points.length; i++) {
+    const cx = (points[i - 1].x + points[i].x) / 2;
+    ctx.bezierCurveTo(cx, points[i - 1].y, cx, points[i].y, points[i].x, points[i].y);
+  }
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Store points for tooltip
+  canvas._points = points;
+  canvas._data = visible;
+  canvas._padLeft = padLeft;
+  canvas._padRight = padRight;
+  canvas._padTop = padTop;
+  canvas._chartW = chartW;
+  canvas._chartH = chartH;
+  canvas._minVal = minVal;
+  canvas._range = range;
+  canvas._isPositive = isPositive;
+}
+
+function animateChart() {
+  if (animationFrame) cancelAnimationFrame(animationFrame);
+  animationProgress = 0;
+  const duration = 600;
+  const start = performance.now();
+
+  function tick(now) {
+    animationProgress = Math.min(1, (now - start) / duration);
+    const eased = 1 - Math.pow(1 - animationProgress, 3);
+    drawChart(eased);
+    if (animationProgress < 1) {
+      animationFrame = requestAnimationFrame(tick);
+    }
+  }
+  animationFrame = requestAnimationFrame(tick);
+}
+
+function updatePeriodReturn() {
+  if (chartData.length < 2) return;
+  const first = chartData[0].value;
+  const last = chartData[chartData.length - 1].value;
+  const pct = ((last - first) / first * 100);
+  const isPos = pct >= 0;
+
+  const el = document.getElementById('periodPercent');
+  el.textContent = (isPos ? '+' : '') + pct.toFixed(2) + '%';
+  el.className = 'period-percent ' + (isPos ? 'positive' : 'negative');
+
+  document.getElementById('periodRange').innerHTML =
+    formatCurrency(first) + ' &rarr; ' + formatCurrency(last);
+}
+
+function updateXLabels() {
+  const container = document.getElementById('xLabels');
+  container.innerHTML = '';
+  if (chartData.length < 2) return;
+  const count = 5;
+  for (let i = 0; i < count; i++) {
+    const idx = Math.floor(i * (chartData.length - 1) / (count - 1));
+    const span = document.createElement('span');
+    span.className = 'x-label';
+    span.textContent = formatDate(chartData[idx].date);
+    container.appendChild(span);
+  }
+}
+
+function selectRange(range) {
+  currentRange = range;
+  document.querySelectorAll('.range-pill').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.range === range);
+  });
+  chartData = generateData(range);
+  updatePeriodReturn();
+  updateXLabels();
+  animateChart();
+}
+
+// Tooltip handling
+document.getElementById('chartCanvas').addEventListener('mousemove', function(e) {
+  const canvas = this;
+  if (!canvas._points || !canvas._data) return;
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+
+  let closest = 0;
+  let minDist = Infinity;
+  for (let i = 0; i < canvas._points.length; i++) {
+    const dist = Math.abs(canvas._points[i].x - x);
+    if (dist < minDist) { minDist = dist; closest = i; }
+  }
+
+  const pt = canvas._points[closest];
+  const d = canvas._data[closest];
+  const tooltip = document.getElementById('tooltip');
+  tooltip.style.display = 'block';
+  tooltip.style.left = Math.min(pt.x + 12, rect.width - 130) + 'px';
+  tooltip.style.top = (pt.y - 50) + 'px';
+  document.getElementById('tooltipDate').textContent = formatDate(d.date);
+  document.getElementById('tooltipValue').textContent = formatCurrency(d.value);
+
+  // Draw crosshair
+  drawChart(1);
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  ctx.save();
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.strokeStyle = 'rgba(148,163,184,0.3)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  ctx.moveTo(pt.x, canvas._padTop);
+  ctx.lineTo(pt.x, canvas._padTop + canvas._chartH);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Dot
+  ctx.beginPath();
+  ctx.arc(pt.x, pt.y, 4, 0, Math.PI * 2);
+  ctx.fillStyle = getColor(canvas._isPositive);
+  ctx.fill();
+  ctx.strokeStyle = '#0f172a';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.restore();
+});
+
+document.getElementById('chartCanvas').addEventListener('mouseleave', function() {
+  document.getElementById('tooltip').style.display = 'none';
+  drawChart(1);
+});
+
+// Range pill click
+document.getElementById('rangePills').addEventListener('click', function(e) {
+  const btn = e.target.closest('.range-pill');
+  if (!btn || btn.classList.contains('locked')) return;
+  selectRange(btn.dataset.range);
+});
+
+// Theme
+function setTheme(theme) {
+  document.body.classList.toggle('light', theme === 'light');
+  document.querySelectorAll('.theme-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent.toLowerCase() === theme);
+  });
+  drawChart(1);
+}
+
+// Resize
+window.addEventListener('resize', () => drawChart(1));
+
+// Init
+selectRange('1m');
+</script>
+</body>
+</html>

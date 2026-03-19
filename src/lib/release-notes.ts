@@ -17,6 +17,42 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.43.0",
+    date: "2026-03-18",
+    title: "Unified Holdings List",
+    titleTranslations: { es: "Lista Unificada de Activos" },
+    changes: [
+      {
+        type: "feature",
+        text: "Stocks, ETFs, and crypto are now shown in a single unified list on the Portfolio tab, sorted by winners first. The separate Crypto tab has been removed.",
+        translations: {
+          es: "Acciones, ETFs y criptomonedas ahora se muestran en una lista unificada en la pestaña Portafolio, ordenados por ganadores primero. Se ha eliminado la pestaña Cripto separada.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Holdings list shows top 7 by default with a 'View all' button to expand, keeping the dashboard focused.",
+        translations: {
+          es: "La lista de activos muestra los 7 principales por defecto con un botón 'Ver todo' para expandir, manteniendo el dashboard enfocado.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Asset type badges (ETF, CRYPTO) now appear next to holding names for quick identification.",
+        translations: {
+          es: "Las etiquetas de tipo de activo (ETF, CRYPTO) ahora aparecen junto al nombre del activo para identificación rápida.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Dashboard growth metrics now have clearer labels: 'Portfolio Value' (total return with all cash flows) vs 'Price Return' (current holdings price change only).",
+        translations: {
+          es: "Las métricas de crecimiento del dashboard ahora tienen etiquetas más claras: 'Valor del Portafolio' (retorno total con flujos de caja) vs 'Retorno por Precio' (solo cambio de precio de posiciones actuales).",
+        },
+      },
+    ],
+  },
+  {
     version: "1.42.0",
     date: "2026-03-18",
     title: "Portfolio Evolution Chart",

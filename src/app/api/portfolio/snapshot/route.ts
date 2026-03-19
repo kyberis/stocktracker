@@ -34,7 +34,7 @@ export const POST = withMetrics("/api/portfolio/snapshot", async (req: NextReque
   await client.execute({
     sql: `INSERT INTO portfolio_snapshots (id, user_id, portfolio_id, date, total_value_eur)
           VALUES (?, ?, ?, ?, ?)
-          ON CONFLICT(user_id, date) DO UPDATE SET total_value_eur = excluded.total_value_eur`,
+          ON CONFLICT(user_id, portfolio_id, date) DO UPDATE SET total_value_eur = excluded.total_value_eur`,
     args: [generateId(), session.userId, portfolioId, today, totalValueEUR],
   });
 

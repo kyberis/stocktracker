@@ -49,7 +49,6 @@ const FeedbackModal = dynamic(() => import("./FeedbackModal"), { ssr: false });
 const ProCompareCard = dynamic(() => import("./ProCompareCard"), { ssr: false });
 const LeafPromoBanner = dynamic(() => import("./LeafPromoBanner"), { ssr: false });
 const SnapTradeReconnectBanner = dynamic(() => import("./SnapTradeReconnectBanner"), { ssr: false });
-const CryptoPortfolioTab = dynamic(() => import("./CryptoPortfolioTab"), { ssr: false });
 const AddCryptoModal = dynamic(() => import("./AddCryptoModal"), { ssr: false });
 const AdSlot = dynamic(() => import("./AdSlot"), { ssr: false });
 const EventCalendar = dynamic(() => import("./EventCalendar"), { ssr: false });
@@ -62,7 +61,7 @@ import SecureAccountPrompt from "./SecureAccountPrompt";
 import { HeroSkeleton, TableSkeleton, ChartSkeleton } from "./Skeleton";
 
 
-type DashboardTab = "portfolio" | "crypto" | "diversification" | "dividends" | "metrics" | "growth" | "events" | "news";
+type DashboardTab = "portfolio" | "diversification" | "dividends" | "metrics" | "growth" | "events" | "news";
 
 function EmptyPortfolio({ onAddStock }: { onAddStock: () => void }) {
   const { t } = useI18n();
@@ -197,12 +196,8 @@ function DesktopDashboard() {
   const showHoldingsBanner = !authLoading && holdingsLimit !== Infinity && holdingsCount >= holdingsLimit - 2 && holdingsCount > 0;
   const holdingsAtLimit = !authLoading && holdingsLimit !== Infinity && holdingsCount >= holdingsLimit;
 
-  const hasCryptoHoldings = filteredHoldings.some((h) => h.assetType === "crypto");
   const dashboardTabs: { key: DashboardTab; label: string; tierBadge?: "starter" | "pro" }[] = [
     { key: "portfolio", label: t("portfolioTab") },
-    ...(isPro || hasCryptoHoldings
-      ? [{ key: "crypto" as const, label: t("cryptoTab"), tierBadge: "pro" as const }]
-      : []),
     { key: "diversification", label: t("diversificationTab") },
     { key: "dividends", label: t("dividendsTab") },
     { key: "metrics", label: t("metricsTab"), tierBadge: "starter" as const },
@@ -213,7 +208,6 @@ function DesktopDashboard() {
 
   function handleTabChange(tab: DashboardTab) {
     setActiveTab(tab);
-    if (tab === "crypto") track("crypto_tab_viewed");
     if (tab === "diversification") track("diversification_tab_viewed");
     if (tab === "dividends") track("dividends_tab_viewed");
     if (tab === "metrics") track("metrics_tab_viewed");
@@ -278,13 +272,7 @@ function DesktopDashboard() {
     <>
       <DashboardToolbar
         onAddStock={() => setShowAddModal(true)}
-        onAddCrypto={() => {
-          if (isPro) {
-            setShowAddCrypto(true);
-          } else {
-            setActiveTab("crypto");
-          }
-        }}
+        onAddCrypto={() => setShowAddCrypto(true)}
         onAddAsset={() => setShowAddAsset(true)}
         onOpenSettings={() => setShowSettings(true)}
         onResetPortfolio={() => setShowReset(true)}
@@ -402,20 +390,6 @@ function DesktopDashboard() {
                 )}
               </>
             )}
-          </div>
-        )}
-
-        {activeTab === "crypto" && (
-          <div
-            role="tabpanel"
-            id="tabpanel-crypto"
-            aria-labelledby="tab-crypto"
-            tabIndex={0}
-            className="focus-visible:outline-none animate-tab-fade"
-          >
-            <Suspense fallback={<ChartSkeleton />}>
-              <CryptoPortfolioTab holdings={filteredHoldings} />
-            </Suspense>
           </div>
         )}
 
