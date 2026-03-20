@@ -254,11 +254,27 @@ export const GET = withMetrics("/api/portfolio/history", async (req: NextRequest
     client.execute({ sql: eventsSql, args: eventsArgs }),
   ]);
 
-  const rawPoints: Point[] = result.rows.map((row) => ({
+  const allPoints: Point[] = result.rows.map((row) => ({
     date: row.date as string,
     value: row.value as number,
     invested: (row.invested as number) || 0,
   }));
+
+  // When a date has both a daily backfill snapshot ("2026-03-19") AND intraday
+  // live snapshots ("2026-03-19 14:15:00"), drop the daily one — the live
+  // snapshots use actual holdings + real-time quotes and are more accurate.
+  const datesWithIntraday = new Set<string>();
+  for (const p of allPoints) {
+    if (p.date.includes(" ") || p.date.includes("T")) {
+      datesWithIntraday.add(p.date.slice(0, 10));
+    }
+  }
+  const rawPoints = datesWithIntraday.size > 0
+    ? allPoints.filter((p) => {
+        const isDaily = !p.date.includes(" ") && !p.date.includes("T");
+        return !(isDaily && datesWithIntraday.has(p.date.slice(0, 10)));
+      })
+    : allPoints;
 
   const granularity = resolveGranularity(effectiveRange, rawPoints);
   let points = downsample(rawPoints, granularity);

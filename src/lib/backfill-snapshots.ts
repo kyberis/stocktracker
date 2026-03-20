@@ -171,7 +171,12 @@ export async function runBackfillForUser(userId: string): Promise<BackfillResult
 
   const sorted = [...transactions].sort((a, b) => a.date.localeCompare(b.date));
   const earliestDate = sorted[0].date;
-  const today = new Date().toISOString().slice(0, 10);
+  // Stop at yesterday — today's snapshot comes from live quotes + actual holdings
+  // (via materializeCurrentSnapshotsForUser / POST /api/portfolio/snapshot) which
+  // are more accurate than replaying transactions with stale close prices.
+  const now = new Date();
+  now.setDate(now.getDate() - 1);
+  const yesterday = now.toISOString().slice(0, 10);
 
   const holdingsResult = await client.execute({
     sql: "SELECT ticker, display_currency FROM holdings WHERE user_id = ?",
@@ -332,7 +337,7 @@ export async function runBackfillForUser(userId: string): Promise<BackfillResult
     return { aggregate, byPortfolio };
   }
 
-  const dates = generateDateList(earliestDate, today);
+  const dates = generateDateList(earliestDate, yesterday);
 
   let snapshotsCreated = 0;
   const BATCH_SIZE = 50;
@@ -405,7 +410,7 @@ export async function runBackfillForUser(userId: string): Promise<BackfillResult
 
   return {
     snapshotsCreated,
-    dateRange: { from: earliestDate, to: today },
+    dateRange: { from: earliestDate, to: yesterday },
     tickers: uniqueTickers.length,
     currencies: uniqueCurrencies.length,
   };

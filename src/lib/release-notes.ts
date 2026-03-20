@@ -36,6 +36,13 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "El gráfico de evolución del portafolio ahora se recalcula después de una importación por sincronización de bróker, asegurando que el gráfico refleje las transacciones recién importadas.",
         },
       },
+      {
+        type: "fix",
+        text: "Fixed portfolio value jump on the same day in the evolution chart caused by conflicting backfill and live snapshot data.",
+        translations: {
+          es: "Corregido el salto de valor del portafolio en el mismo día en el gráfico de evolución causado por conflictos entre datos de backfill y snapshots en vivo.",
+        },
+      },
     ],
   },
   {
