@@ -17,9 +17,10 @@ interface Props {
   holdings: Holding[];
   cashEntries: CashEntry[];
   onOpenAi?: () => void;
+  investedOverride?: number | null;
 }
 
-export default function CompactHeroChart({ holdings, cashEntries, onOpenAi }: Props) {
+export default function CompactHeroChart({ holdings, cashEntries, onOpenAi, investedOverride }: Props) {
   const { t } = useI18n();
   const { quotes, exchangeRates, activePortfolioCurrency, lastUpdated } = usePortfolio();
   const { stealthMode } = useStealthMode();
@@ -115,6 +116,7 @@ export default function CompactHeroChart({ holdings, cashEntries, onOpenAi }: Pr
         embedded
         benchmarks={benchmarks.length > 0 ? benchmarks : undefined}
         onRemoveBenchmark={handleRemoveBenchmark}
+        investedOverride={investedOverride}
       />
 
       {/* Footer: sync + compare + AI link */}
@@ -125,7 +127,7 @@ export default function CompactHeroChart({ holdings, cashEntries, onOpenAi }: Pr
               <span className="absolute inset-0 rounded-full bg-emerald-500 animate-ping opacity-40" />
               <span className="absolute inset-[1px] rounded-full bg-emerald-500" />
             </span>
-            {t("v2LastSynced")} {syncAgo} {t("v2AgoVia").toLowerCase()}
+            {t("v2LastSynced")} {syncAgo} {t("v2Ago").toLowerCase()}
           </div>
         )}
         <div className="flex items-center gap-2.5">

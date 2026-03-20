@@ -6,45 +6,74 @@ interface ExchangeSchedule {
   closeMinute: number;
 }
 
+const US_SCHEDULE: ExchangeSchedule = { tz: "America/New_York", openHour: 9, openMinute: 30, closeHour: 16, closeMinute: 0 };
+const XETRA_SCHEDULE: ExchangeSchedule = { tz: "Europe/Berlin", openHour: 9, openMinute: 0, closeHour: 17, closeMinute: 30 };
+const EURONEXT_SCHEDULE: ExchangeSchedule = { tz: "Europe/Paris", openHour: 9, openMinute: 0, closeHour: 17, closeMinute: 30 };
+
 const EXCHANGE_SCHEDULES: Record<string, ExchangeSchedule> = {
-  // US
-  NYSE: { tz: "America/New_York", openHour: 9, openMinute: 30, closeHour: 16, closeMinute: 0 },
-  NMS: { tz: "America/New_York", openHour: 9, openMinute: 30, closeHour: 16, closeMinute: 0 },
-  NGM: { tz: "America/New_York", openHour: 9, openMinute: 30, closeHour: 16, closeMinute: 0 },
-  NCM: { tz: "America/New_York", openHour: 9, openMinute: 30, closeHour: 16, closeMinute: 0 },
-  NYQ: { tz: "America/New_York", openHour: 9, openMinute: 30, closeHour: 16, closeMinute: 0 },
-  PCX: { tz: "America/New_York", openHour: 9, openMinute: 30, closeHour: 16, closeMinute: 0 },
-  PNK: { tz: "America/New_York", openHour: 9, openMinute: 30, closeHour: 16, closeMinute: 0 },
+  // US — Yahoo codes: NMS (NASDAQ), NYQ (NYSE), NGM, NCM, PCX (Arca), PNK, BATS, etc.
+  NYSE: US_SCHEDULE,
+  NMS: US_SCHEDULE,
+  NGM: US_SCHEDULE,
+  NCM: US_SCHEDULE,
+  NYQ: US_SCHEDULE,
+  PCX: US_SCHEDULE,
+  PNK: US_SCHEDULE,
+  BATS: US_SCHEDULE,
+  BTS: US_SCHEDULE,
+  ARCX: US_SCHEDULE,
+  OTC: US_SCHEDULE,
+  NASDAQ: US_SCHEDULE,
+  AMEX: US_SCHEDULE,
+  NYSEARCA: US_SCHEDULE,
+  NYSEAMERICAN: US_SCHEDULE,
+  CCC: US_SCHEDULE, // Yahoo crypto placeholder — 24/7 but US hours as fallback
 
   // Canada
   TSE: { tz: "America/Toronto", openHour: 9, openMinute: 30, closeHour: 16, closeMinute: 0 },
   TOR: { tz: "America/Toronto", openHour: 9, openMinute: 30, closeHour: 16, closeMinute: 0 },
+  CVE: { tz: "America/Toronto", openHour: 9, openMinute: 30, closeHour: 16, closeMinute: 0 },
+  NEO: { tz: "America/Toronto", openHour: 9, openMinute: 30, closeHour: 16, closeMinute: 0 },
 
   // UK
   LSE: { tz: "Europe/London", openHour: 8, openMinute: 0, closeHour: 16, closeMinute: 30 },
+  LON: { tz: "Europe/London", openHour: 8, openMinute: 0, closeHour: 16, closeMinute: 30 },
+  IOB: { tz: "Europe/London", openHour: 8, openMinute: 0, closeHour: 16, closeMinute: 30 },
 
-  // Germany - XETRA, Tradegate, Frankfurt
-  XET: { tz: "Europe/Berlin", openHour: 9, openMinute: 0, closeHour: 17, closeMinute: 30 },
+  // Germany
+  XET: XETRA_SCHEDULE,
+  GER: XETRA_SCHEDULE,
+  ETR: XETRA_SCHEDULE,
   TGD: { tz: "Europe/Berlin", openHour: 8, openMinute: 0, closeHour: 22, closeMinute: 0 },
   TDG: { tz: "Europe/Berlin", openHour: 8, openMinute: 0, closeHour: 22, closeMinute: 0 },
   FRA: { tz: "Europe/Berlin", openHour: 8, openMinute: 0, closeHour: 20, closeMinute: 0 },
-  GER: { tz: "Europe/Berlin", openHour: 9, openMinute: 0, closeHour: 17, closeMinute: 30 },
 
   // Spain
   MAD: { tz: "Europe/Madrid", openHour: 9, openMinute: 0, closeHour: 17, closeMinute: 30 },
   BME: { tz: "Europe/Madrid", openHour: 9, openMinute: 0, closeHour: 17, closeMinute: 30 },
+  MCE: { tz: "Europe/Madrid", openHour: 9, openMinute: 0, closeHour: 17, closeMinute: 30 },
 
   // France
-  PAR: { tz: "Europe/Paris", openHour: 9, openMinute: 0, closeHour: 17, closeMinute: 30 },
+  PAR: EURONEXT_SCHEDULE,
+  EPA: EURONEXT_SCHEDULE,
+  ENX: EURONEXT_SCHEDULE,
 
   // Netherlands
-  AMS: { tz: "Europe/Amsterdam", openHour: 9, openMinute: 0, closeHour: 17, closeMinute: 30 },
+  AMS: EURONEXT_SCHEDULE,
 
   // Belgium
-  BRU: { tz: "Europe/Brussels", openHour: 9, openMinute: 0, closeHour: 17, closeMinute: 30 },
+  BRU: EURONEXT_SCHEDULE,
+  EBR: EURONEXT_SCHEDULE,
+
+  // Portugal
+  LIS: EURONEXT_SCHEDULE,
+
+  // Ireland
+  ISE: { tz: "Europe/Dublin", openHour: 8, openMinute: 0, closeHour: 16, closeMinute: 28 },
 
   // Italy
   MIL: { tz: "Europe/Rome", openHour: 9, openMinute: 0, closeHour: 17, closeMinute: 30 },
+  BIT: { tz: "Europe/Rome", openHour: 9, openMinute: 0, closeHour: 17, closeMinute: 30 },
 
   // Switzerland
   SWX: { tz: "Europe/Zurich", openHour: 9, openMinute: 0, closeHour: 17, closeMinute: 30 },
@@ -60,9 +89,41 @@ const EXCHANGE_SCHEDULES: Record<string, ExchangeSchedule> = {
   // Austria
   VIE: { tz: "Europe/Vienna", openHour: 9, openMinute: 0, closeHour: 17, closeMinute: 30 },
 
+  // Poland
+  WAR: { tz: "Europe/Warsaw", openHour: 9, openMinute: 0, closeHour: 17, closeMinute: 5 },
+  WSE: { tz: "Europe/Warsaw", openHour: 9, openMinute: 0, closeHour: 17, closeMinute: 5 },
+
   // Japan
   JPX: { tz: "Asia/Tokyo", openHour: 9, openMinute: 0, closeHour: 15, closeMinute: 0 },
   TYO: { tz: "Asia/Tokyo", openHour: 9, openMinute: 0, closeHour: 15, closeMinute: 0 },
+
+  // Hong Kong
+  HKG: { tz: "Asia/Hong_Kong", openHour: 9, openMinute: 30, closeHour: 16, closeMinute: 0 },
+  HKSE: { tz: "Asia/Hong_Kong", openHour: 9, openMinute: 30, closeHour: 16, closeMinute: 0 },
+
+  // Australia
+  ASX: { tz: "Australia/Sydney", openHour: 10, openMinute: 0, closeHour: 16, closeMinute: 0 },
+  AX: { tz: "Australia/Sydney", openHour: 10, openMinute: 0, closeHour: 16, closeMinute: 0 },
+
+  // Singapore
+  SGX: { tz: "Asia/Singapore", openHour: 9, openMinute: 0, closeHour: 17, closeMinute: 0 },
+  SES: { tz: "Asia/Singapore", openHour: 9, openMinute: 0, closeHour: 17, closeMinute: 0 },
+
+  // South Korea
+  KSC: { tz: "Asia/Seoul", openHour: 9, openMinute: 0, closeHour: 15, closeMinute: 30 },
+  KRX: { tz: "Asia/Seoul", openHour: 9, openMinute: 0, closeHour: 15, closeMinute: 30 },
+
+  // India
+  NSE: { tz: "Asia/Kolkata", openHour: 9, openMinute: 15, closeHour: 15, closeMinute: 30 },
+  BSE: { tz: "Asia/Kolkata", openHour: 9, openMinute: 15, closeHour: 15, closeMinute: 30 },
+  NSI: { tz: "Asia/Kolkata", openHour: 9, openMinute: 15, closeHour: 15, closeMinute: 30 },
+  BOM: { tz: "Asia/Kolkata", openHour: 9, openMinute: 15, closeHour: 15, closeMinute: 30 },
+
+  // Brazil
+  SAO: { tz: "America/Sao_Paulo", openHour: 10, openMinute: 0, closeHour: 17, closeMinute: 0 },
+
+  // Mexico
+  MEX: { tz: "America/Mexico_City", openHour: 8, openMinute: 30, closeHour: 15, closeMinute: 0 },
 };
 
 function getLocalTime(tz: string, now: Date): { hours: number; minutes: number; dayOfWeek: number } {

@@ -2039,6 +2039,7 @@ const en: TranslationStrings = {
   v2UpcomingEarnings: "Upcoming Earnings",
   v2ViewAll: "View all",
   v2LastSynced: "Last synced",
+  v2Ago: "ago",
   v2AgoVia: "ago via",
   v2AskAiChart: "Ask AI about this chart",
   v2PortfolioAi: "Portfolio AI",

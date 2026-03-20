@@ -12,11 +12,13 @@ import { useTrack } from "@/lib/use-track";
 import { useTheme } from "@/lib/theme-context";
 import { useIsNative } from "@/lib/use-native";
 import type { Account } from "@/lib/types";
+import CloverToLogo from "./CloverToLogo";
 
 const MobileDashboard = dynamic(() => import("./mobile/MobileDashboard"), {
   ssr: false,
   loading: () => (
-    <div className="flex items-center justify-center min-h-[60vh]">
+    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-5">
+      <CloverToLogo className="w-16 h-16" once delay={200} transitionMs={1400} />
       <div className="flex gap-1.5">
         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-dot-bounce" />
         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-dot-bounce" style={{ animationDelay: "0.16s" }} />
@@ -246,22 +248,7 @@ function DesktopDashboard() {
   if (isInitializing && !hasLoadedOnce.current) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-5" role="status" aria-label={t("loading")}>
-        <svg className="animate-logo-breathe" width="72" height="72" viewBox="0 0 32 32" aria-hidden="true">
-          <rect width="32" height="32" rx="7" fill="#0f172a"/>
-          <g transform="translate(16,16) rotate(45)">
-            <ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="url(#lb-a)"/>
-            <ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="url(#lb-b)" transform="rotate(90)"/>
-            <ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="url(#lb-c)" transform="rotate(180)"/>
-            <ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="url(#lb-d)" transform="rotate(270)"/>
-            <circle cx="0" cy="0" r="1.2" fill="#0f172a" opacity=".35"/>
-          </g>
-          <defs>
-            <linearGradient id="lb-a" x1=".5" y1="0" x2=".5" y2="1"><stop offset="0%" stopColor="#6ee7b7"/><stop offset="100%" stopColor="#10b981"/></linearGradient>
-            <linearGradient id="lb-b" x1="0" y1=".3" x2="1" y2=".7"><stop offset="0%" stopColor="#34d399"/><stop offset="100%" stopColor="#059669"/></linearGradient>
-            <linearGradient id="lb-c" x1=".5" y1="1" x2=".5" y2="0"><stop offset="0%" stopColor="#10b981"/><stop offset="100%" stopColor="#047857"/></linearGradient>
-            <linearGradient id="lb-d" x1="1" y1=".3" x2="0" y2=".7"><stop offset="0%" stopColor="#a7f3d0"/><stop offset="100%" stopColor="#34d399"/></linearGradient>
-          </defs>
-        </svg>
+        <CloverToLogo className="w-20 h-20" once delay={200} transitionMs={1400} />
         <div className="flex gap-1.5">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-dot-bounce" />
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-dot-bounce" style={{ animationDelay: "0.16s" }} />

@@ -19,17 +19,17 @@ export interface PerformanceBreakdown {
 /**
  * Aggregate a full performance breakdown from transactions and current portfolio totals.
  *
- * - investedCapital: net capital deployed (buys - sell proceeds, before gains)
+ * - investedCapital: net capital deployed (buys - sell proceeds) — matches the chart's invested line
  * - priceGain: unrealized change in value of current holdings
  * - dividendIncome: sum of dividend payments received (net of withholding)
  * - realizedPL: FIFO-based realized profit/loss from sells
  * - totalFees/totalTaxes: aggregated across all transaction types
- * - totalReturn: currentValue - investedCapital (= priceGain + dividends + realizedPL - costs)
+ * - totalReturn: currentValue - investedCapital
  */
 export function aggregatePerformanceBreakdown(
   transactions: Transaction[],
   currentValue: number,
-  totalCost: number,
+  _totalCost: number,
   exchangeRates: ExchangeRates,
   baseCurrency: string = "EUR",
 ): PerformanceBreakdown {
@@ -70,11 +70,10 @@ export function aggregatePerformanceBreakdown(
   }
 
   const investedCapital = buyTotal - sellProceeds;
+  const priceGain = currentValue - investedCapital;
   const totalReturn = currentValue - investedCapital;
   const totalReturnPercent = investedCapital > 0 ? (totalReturn / investedCapital) * 100 : 0;
-
-  const priceGain = currentValue - totalCost;
-  const priceGainPercent = totalCost > 0 ? (priceGain / totalCost) * 100 : 0;
+  const priceGainPercent = investedCapital > 0 ? (priceGain / investedCapital) * 100 : 0;
   const dividendPercent = investedCapital > 0 ? (dividendIncome / investedCapital) * 100 : 0;
   const realizedPLPercent = investedCapital > 0 ? (realizedPL / investedCapital) * 100 : 0;
 

@@ -145,10 +145,7 @@ export function PortfolioProvider({
   const [holdings, setHoldings] = useState<Holding[]>(initialHoldings ?? []);
   const [cashEntries, setCashEntries] = useState<CashEntry[]>(initialCash ?? []);
   const [portfolios, setPortfolios] = useState<PortfolioInfo[]>(initialPortfolios ?? []);
-  const [activePortfolioId, setActivePortfolioId] = useState<string | null>(() => {
-    if (demoMode || typeof window === "undefined") return null;
-    return localStorage.getItem(ACTIVE_PORTFOLIO_KEY) || null;
-  });
+  const [activePortfolioId, setActivePortfolioId] = useState<string | null>(null);
   const [quotes, setQuotes] = useState<Record<string, QuoteData>>(initialQuotes ?? {});
   const [quoteUpdatedAt, setQuoteUpdatedAt] = useState<Record<string, number>>({});
   const [refreshingTickers, setRefreshingTickers] = useState<Set<string>>(new Set());
@@ -163,6 +160,13 @@ export function PortfolioProvider({
   );
   const [alertedTickers, setAlertedTickers] = useState<Set<string>>(new Set());
   const [goals, setGoals] = useState<Goal[]>(initialGoal ? [initialGoal] : []);
+  const restoredPortfolioRef = useRef(false);
+  useEffect(() => {
+    if (demoMode || restoredPortfolioRef.current) return;
+    restoredPortfolioRef.current = true;
+    const stored = localStorage.getItem(ACTIVE_PORTFOLIO_KEY);
+    if (stored) setActivePortfolioId(stored);
+  }, [demoMode]);
   const fetchingRef = useRef(false);
   const fetchPortfolios = useCallback(async (): Promise<PortfolioInfo[]> => {
     try {

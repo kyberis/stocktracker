@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
-import type { Holding, CashEntry } from "@/lib/types";
+import { usePortfolio } from "@/lib/portfolio-context";
+import { txAmountToBase } from "@/lib/performance";
+import type { Holding, CashEntry, Transaction } from "@/lib/types";
 
 import CompactHeroChart from "./CompactHeroChart";
 import StatsGrid from "./StatsGrid";
@@ -42,7 +44,32 @@ export default function DashboardPortfolioV2({
   onNavigateToDiversification,
   onShareReferral,
 }: Props) {
+  const { exchangeRates, activePortfolioCurrency, activePortfolioId, demoMode } = usePortfolio();
   const [aiDrawerOpen, setAiDrawerOpen] = useState(false);
+  const [txInvested, setTxInvested] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (demoMode) return;
+    const pid = activePortfolioId ? `?portfolioId=${encodeURIComponent(activePortfolioId)}` : "";
+    fetch(`/api/transactions${pid}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((txs: Transaction[] | null) => {
+        if (!txs || txs.length === 0) return;
+        const base = activePortfolioCurrency;
+        let buyTotal = 0;
+        let sellProceeds = 0;
+        for (const tx of txs) {
+          const amt = txAmountToBase(tx.totalAmount, tx, base, exchangeRates);
+          const fees = txAmountToBase(tx.fees || 0, tx, base, exchangeRates);
+          const taxes = txAmountToBase(tx.taxes || 0, tx, base, exchangeRates);
+          if (tx.type === "buy") buyTotal += amt + fees + taxes;
+          else if (tx.type === "sell") sellProceeds += amt - fees - taxes;
+        }
+        const invested = buyTotal - sellProceeds;
+        if (invested > 0) setTxInvested(invested);
+      })
+      .catch(() => {});
+  }, [activePortfolioId, demoMode, activePortfolioCurrency, exchangeRates]);
 
   return (
     <>
@@ -53,6 +80,7 @@ export default function DashboardPortfolioV2({
             holdings={holdings}
             cashEntries={cashEntries}
             onOpenAi={() => setAiDrawerOpen(true)}
+            investedOverride={txInvested}
           />
           <PortfolioTable holdings={holdings} onAddStock={onAddStock} />
           <MarketAndCash holdings={holdings} cashEntries={allCashEntries} />
@@ -64,7 +92,7 @@ export default function DashboardPortfolioV2({
         <div className="flex flex-col gap-3">
           <CompactReferralCard onShare={onShareReferral} />
           <GoalProgressCard holdings={holdings} cashEntries={cashEntries} />
-          <StatsGrid holdings={holdings} cashEntries={cashEntries} />
+          <StatsGrid holdings={holdings} cashEntries={cashEntries} snapshotInvested={txInvested} />
           <AllocationTabs
             holdings={holdings}
             cashEntries={allCashEntries}

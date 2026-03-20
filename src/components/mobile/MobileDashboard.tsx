@@ -18,6 +18,7 @@ import { hideNativeSplash } from "@/lib/native-splash";
 import { usePortfolioSnapshotSync } from "@/lib/use-portfolio-snapshot-sync";
 import TierFeatureBadge from "@/components/TierFeatureBadge";
 import SampleDataBanner from "@/components/SampleDataBanner";
+import CloverToLogo from "@/components/CloverToLogo";
 import { HeroSkeleton, ChartSkeleton } from "@/components/Skeleton";
 import type { Account } from "@/lib/types";
 
@@ -126,22 +127,7 @@ export default function MobileDashboard() {
   if ((isLoading || (!quotesAvailable && !timedOut)) && !hasLoadedOnce.current) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-5" role="status" aria-label={t("loading")}>
-        <svg className="animate-logo-breathe" width="56" height="56" viewBox="0 0 32 32" aria-hidden="true">
-          <rect width="32" height="32" rx="7" fill="#0f172a"/>
-          <g transform="translate(16,16) rotate(45)">
-            <ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="url(#mlb-a)"/>
-            <ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="url(#mlb-b)" transform="rotate(90)"/>
-            <ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="url(#mlb-c)" transform="rotate(180)"/>
-            <ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="url(#mlb-d)" transform="rotate(270)"/>
-            <circle cx="0" cy="0" r="1.2" fill="#0f172a" opacity=".35"/>
-          </g>
-          <defs>
-            <linearGradient id="mlb-a" x1=".5" y1="0" x2=".5" y2="1"><stop offset="0%" stopColor="#6ee7b7"/><stop offset="100%" stopColor="#10b981"/></linearGradient>
-            <linearGradient id="mlb-b" x1="0" y1=".3" x2="1" y2=".7"><stop offset="0%" stopColor="#34d399"/><stop offset="100%" stopColor="#059669"/></linearGradient>
-            <linearGradient id="mlb-c" x1=".5" y1="1" x2=".5" y2="0"><stop offset="0%" stopColor="#10b981"/><stop offset="100%" stopColor="#047857"/></linearGradient>
-            <linearGradient id="mlb-d" x1="1" y1=".3" x2="0" y2=".7"><stop offset="0%" stopColor="#a7f3d0"/><stop offset="100%" stopColor="#34d399"/></linearGradient>
-          </defs>
-        </svg>
+        <CloverToLogo className="w-16 h-16" once delay={200} transitionMs={1400} />
         <div className="flex gap-1.5">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-dot-bounce" />
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-dot-bounce" style={{ animationDelay: "0.16s" }} />

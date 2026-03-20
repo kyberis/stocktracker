@@ -35,7 +35,6 @@ export function usePortfolioSnapshotSync(options: { demoMode: boolean }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         totalValueEUR: totals.totalCurrentEUR,
-        totalInvestedEUR: totals.totalCostEUR,
         portfolioId: portfolioIdRef.current || "",
       }),
     }).catch(() => {});

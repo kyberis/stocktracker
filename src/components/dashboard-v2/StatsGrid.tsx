@@ -5,15 +5,16 @@ import { useI18n } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useStealthMode } from "@/lib/stealth-context";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
-import { formatCurrency, formatPercent } from "@/lib/utils";
+import { formatCurrency, formatPercent, resolveQuoteCurrency, convertCurrency } from "@/lib/utils";
 import type { Holding, CashEntry } from "@/lib/types";
 
 interface Props {
   holdings: Holding[];
   cashEntries: CashEntry[];
+  snapshotInvested?: number | null;
 }
 
-export default function StatsGrid({ holdings, cashEntries }: Props) {
+export default function StatsGrid({ holdings, cashEntries, snapshotInvested }: Props) {
   const { t } = useI18n();
   const { quotes, exchangeRates, activePortfolioCurrency } = usePortfolio();
   const { stealthMode } = useStealthMode();
@@ -23,31 +24,37 @@ export default function StatsGrid({ holdings, cashEntries }: Props) {
     [holdings, cashEntries, quotes, exchangeRates, activePortfolioCurrency],
   );
 
+  const investedCost = snapshotInvested ?? totals.totalCostEUR;
+  const gainLoss = totals.totalCurrentEUR - investedCost;
+
+  const cur = activePortfolioCurrency;
+
   const divYield = useMemo(() => {
     if (totals.totalCurrentEUR <= 0) return 0;
-    let annualDiv = 0;
+    let annualDivBase = 0;
     for (const h of holdings) {
       const q = quotes[h.ticker];
       if (q?.trailingAnnualDividendRate && q.trailingAnnualDividendRate > 0) {
-        annualDiv += q.trailingAnnualDividendRate * h.shares;
+        const divCurrency = resolveQuoteCurrency(h.displayCurrency, q.currency || h.displayCurrency);
+        const divLocal = q.trailingAnnualDividendRate * h.shares;
+        annualDivBase += convertCurrency(divLocal, divCurrency, cur, exchangeRates);
       }
     }
-    return totals.totalCurrentEUR > 0 ? (annualDiv / totals.totalCurrentEUR) * 100 : 0;
-  }, [holdings, quotes, totals.totalCurrentEUR]);
+    return (annualDivBase / totals.totalCurrentEUR) * 100;
+  }, [holdings, quotes, exchangeRates, cur, totals.totalCurrentEUR]);
 
-  const isGain = totals.totalGainLoss >= 0;
-  const cur = activePortfolioCurrency;
+  const isGain = gainLoss >= 0;
 
   const cells = [
-    { label: t("v2Cost"), value: stealthMode ? "•••••" : formatCurrency(totals.totalCostEUR, cur) },
+    { label: t("v2Cost"), value: stealthMode ? "•••••" : formatCurrency(investedCost, cur) },
     {
       label: t("v2GainLoss"),
-      value: stealthMode ? "•••••" : `${isGain ? "+" : ""}${formatCurrency(totals.totalGainLoss, cur)}`,
+      value: stealthMode ? "•••••" : `${isGain ? "+" : ""}${formatCurrency(gainLoss, cur)}`,
       accent: true,
       positive: isGain,
     },
     { label: t("v2Holdings"), value: String(holdings.length) },
-    { label: t("v2DivYield"), value: formatPercent(divYield) },
+    { label: t("v2DivYield"), value: `${divYield.toFixed(2)}%` },
   ];
 
   return (

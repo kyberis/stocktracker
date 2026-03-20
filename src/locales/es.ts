@@ -2025,6 +2025,7 @@ const es: TranslationStrings = {
   v2UpcomingEarnings: "Próximos Resultados",
   v2ViewAll: "Ver todos",
   v2LastSynced: "Última sincronización",
+  v2Ago: "hace",
   v2AgoVia: "hace vía",
   v2AskAiChart: "Pregunta a la IA sobre este gráfico",
   v2PortfolioAi: "IA de Portafolio",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import {
   AreaChart,
   Area,
@@ -366,6 +366,8 @@ interface EvolutionChartProps {
   embedded?: boolean;
   benchmarks?: BenchmarkOverlay[];
   onRemoveBenchmark?: (key: string) => void;
+  /** Transaction-based invested capital; overrides snapshot invested values when set. */
+  investedOverride?: number | null;
 }
 
 function normalizeBenchmarkSeries(values: number[]): number[] {
@@ -375,7 +377,7 @@ function normalizeBenchmarkSeries(values: number[]): number[] {
   return values.map((v) => ((v - first) / first) * 100);
 }
 
-export default function PortfolioEvolutionChart({ embedded, benchmarks, onRemoveBenchmark }: EvolutionChartProps = {}) {
+export default function PortfolioEvolutionChart({ embedded, benchmarks, onRemoveBenchmark, investedOverride }: EvolutionChartProps = {}) {
   const { t } = useI18n();
   const { holdings, cashEntries, quotes, exchangeRates, activePortfolioCurrency, activePortfolioId, demoMode } =
     usePortfolio();
@@ -557,11 +559,18 @@ export default function PortfolioEvolutionChart({ embedded, benchmarks, onRemove
     track("chart_mode_changed", { mode: m });
   }
 
-  const hasInvestedData = points.some((p) => p.invested > 0);
+  const effectivePoints = useMemo(() => {
+    if (investedOverride != null && investedOverride > 0) {
+      return points.map((p) => ({ ...p, invested: investedOverride }));
+    }
+    return points;
+  }, [points, investedOverride]);
+
+  const hasInvestedData = effectivePoints.some((p) => p.invested > 0);
 
   // Performance data: gain/loss % at each date relative to cost basis,
   // rebased so the first point in the selected range is 0%.
-  const rawPerfPoints: PerfPoint[] = points.map((p) => ({
+  const rawPerfPoints: PerfPoint[] = effectivePoints.map((p) => ({
     date: p.date,
     pct: p.invested > 0 ? ((p.value - p.invested) / p.invested) * 100 : 0,
   }));
@@ -573,7 +582,7 @@ export default function PortfolioEvolutionChart({ embedded, benchmarks, onRemove
 
   const isPerf = chartMode === "performance" && hasInvestedData;
 
-  const enrichedPoints = attachEventsToPoints(points, events);
+  const enrichedPoints = attachEventsToPoints(effectivePoints, events);
   const enrichedPerfPoints = attachEventsToPoints(perfPoints, events);
 
   const hasBenchmarks = benchmarks && benchmarks.length > 0 && Object.keys(benchmarkData).length > 0;
@@ -820,9 +829,9 @@ export default function PortfolioEvolutionChart({ embedded, benchmarks, onRemove
       const padding = (max - min) * 0.1 || 1;
       return [min - padding, max + padding];
     }
-    const vals = points.map(p => p.value);
+    const vals = effectivePoints.map(p => p.value);
     if (hasInvestedData) {
-      vals.push(...points.map(p => p.invested).filter(v => v > 0));
+      vals.push(...effectivePoints.map(p => p.invested).filter(v => v > 0));
     }
     const min = Math.min(...vals);
     const max = Math.max(...vals);
