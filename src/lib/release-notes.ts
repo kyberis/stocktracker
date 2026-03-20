@@ -17,6 +17,28 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.53.1",
+    date: "2026-03-20",
+    title: "Broker Sync Duplication Fix",
+    titleTranslations: { es: "Corrección de duplicación en sincronización de bróker" },
+    changes: [
+      {
+        type: "fix",
+        text: "Fixed holdings doubling after re-syncing a broker (e.g. DEGIRO) that required re-authentication. Transaction-derived holdings no longer duplicate positions already tracked by broker sync.",
+        translations: {
+          es: "Corregido el problema de duplicación de posiciones al re-sincronizar un bróker (ej. DEGIRO) que requería re-autenticación. Las posiciones derivadas de transacciones ya no duplican las posiciones rastreadas por la sincronización del bróker.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Portfolio history chart now recalculates after a broker sync import, ensuring the evolution graph reflects newly imported transactions.",
+        translations: {
+          es: "El gráfico de evolución del portafolio ahora se recalcula después de una importación por sincronización de bróker, asegurando que el gráfico refleje las transacciones recién importadas.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.53.0",
     date: "2026-03-20",
     title: "Performance Breakdown Page",

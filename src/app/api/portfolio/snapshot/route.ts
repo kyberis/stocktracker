@@ -42,24 +42,33 @@ export const POST = withMetrics("/api/portfolio/snapshot", async (req: NextReque
     floored.toISOString().slice(0, 16).replace("T", " ") + ":00";
   const client = await ensureInitialized();
 
-  // Carry forward invested capital from the most recent snapshot so the invested
-  // line doesn't jump when the live calculation differs from the backfill's
-  // historical-rate computation. Fall back to the caller's value only when no
-  // previous snapshot exists (brand-new portfolio).
-  const prevResult = await client.execute({
+  // Prefer invested capital from the most recent DAILY snapshot (written by the
+  // backfill with correct historical FX rates). Only fall back to the most recent
+  // intraday snapshot or the caller's value when no daily row exists yet.
+  const dailyResult = await client.execute({
     sql: `SELECT total_invested_eur FROM portfolio_snapshots
-          WHERE user_id = ? AND portfolio_id = ?
+          WHERE user_id = ? AND portfolio_id = ? AND date NOT LIKE '% %'
           ORDER BY date DESC LIMIT 1`,
     args: [session.userId, portfolioId],
   });
-  const prevInvested = prevResult.rows.length > 0 ? Number(prevResult.rows[0].total_invested_eur) : 0;
+  let prevInvested = dailyResult.rows.length > 0 ? Number(dailyResult.rows[0].total_invested_eur) : 0;
+  if (prevInvested <= 0) {
+    const anyResult = await client.execute({
+      sql: `SELECT total_invested_eur FROM portfolio_snapshots
+            WHERE user_id = ? AND portfolio_id = ?
+            ORDER BY date DESC LIMIT 1`,
+      args: [session.userId, portfolioId],
+    });
+    prevInvested = anyResult.rows.length > 0 ? Number(anyResult.rows[0].total_invested_eur) : 0;
+  }
   const totalInvestedEUR = prevInvested > 0 ? prevInvested : callerInvestedEUR;
 
   await client.execute({
     sql: `INSERT INTO portfolio_snapshots (id, user_id, portfolio_id, date, total_value_eur, total_invested_eur)
           VALUES (?, ?, ?, ?, ?, ?)
           ON CONFLICT(user_id, portfolio_id, date) DO UPDATE SET
-            total_value_eur = excluded.total_value_eur`,
+            total_value_eur = excluded.total_value_eur,
+            total_invested_eur = excluded.total_invested_eur`,
     args: [generateId(), session.userId, portfolioId, dateBucket, totalValueEUR, totalInvestedEUR],
   });
 

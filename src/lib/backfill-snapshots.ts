@@ -282,7 +282,8 @@ export async function runBackfillForUser(userId: string): Promise<BackfillResult
 
     for (const tx of txs) {
       if (tx.date > date) break;
-      const cur = tx.displayCurrency || tx.currency || "EUR";
+      // totalAmount, fees, and taxes are denominated in tx.currency (not displayCurrency)
+      const cur = tx.currency || "EUR";
       let amountEUR: number;
 
       if (cur === "EUR" || normalizeCurrency(cur) === "EUR") {

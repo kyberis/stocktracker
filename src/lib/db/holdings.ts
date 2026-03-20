@@ -502,7 +502,7 @@ export async function rebuildHoldings(userId: string, portfolioId?: string): Pro
   const portfolioArgs = [resolved];
 
   const metadataRows = await client.execute({
-    sql: `SELECT id, name, ticker, isin, asset_type, display_currency, exchange, sector, region, asset_class, account_id, value_in_eur
+    sql: `SELECT id, name, ticker, isin, asset_type, display_currency, exchange, sector, region, asset_class, account_id, value_in_eur, source
           FROM holdings WHERE user_id = ?${portfolioFilter}`,
     args: [userId, ...portfolioArgs],
   });
@@ -512,6 +512,9 @@ export async function rebuildHoldings(userId: string, portfolioId?: string): Pro
     displayCurrency: string; sector: string; region: string; assetClass: string; accountId: string;
   }>();
   const prevValueByKey = new Map<string, number>();
+  // Tickers owned by snaptrade positions — transaction-derived holdings for
+  // these tickers are redundant and would cause doubled shares in listHoldings.
+  const snapTradeTickers = new Set<string>();
   for (const row of metadataRows.rows) {
     const key = `${str(row.ticker).toUpperCase()}|${str(row.exchange).toUpperCase()}`;
     if (!metadataByKey.has(key)) {
@@ -524,6 +527,9 @@ export async function rebuildHoldings(userId: string, portfolioId?: string): Pro
     }
     const val = num(row.value_in_eur);
     if (val > 0 && !prevValueByKey.has(key)) prevValueByKey.set(key, val);
+    if (str(row.source) === "snaptrade") {
+      snapTradeTickers.add(str(row.ticker).toUpperCase());
+    }
   }
 
   const transactions = await listTransactions(userId, undefined, portfolioId);
@@ -554,7 +560,14 @@ export async function rebuildHoldings(userId: string, portfolioId?: string): Pro
     }
   }
 
-  const derived = deriveHoldingsFromTransactions(transactions, metadataByKey);
+  const allDerived = deriveHoldingsFromTransactions(transactions, metadataByKey);
+
+  // Skip transaction-derived holdings when a snaptrade position already covers
+  // that ticker — snaptrade positions are the source of truth and including
+  // both would double the shares/value in listHoldings.
+  const derived = snapTradeTickers.size > 0
+    ? allDerived.filter((h) => !snapTradeTickers.has(h.ticker.toUpperCase()))
+    : allDerived;
 
   await enrichValueInEUR(derived).catch((err) =>
     console.warn("[rebuildHoldings] quote enrichment failed, using valueInEUR=0:", err)

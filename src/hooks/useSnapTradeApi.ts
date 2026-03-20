@@ -487,8 +487,14 @@ export function useSnapTradeApi(): UseSnapTradeApiReturn {
           ts: new Date().toISOString(),
         }));
       } catch { /* private browsing or storage quota exceeded */ }
-      /* Snapshot pipeline runs server-side after last bulk chunk (rebuild + historical + live) */
-      setStep("done");
+      // Recalculate portfolio history from transactions so the evolution chart
+      // reflects the newly imported data. The server-side deferTask may not run
+      // (e.g. when inserted === 0 because sourceRefs already existed) so we
+      // trigger a client-side backfill as a reliable fallback.
+      setStep("backfilling");
+      fetch("/api/portfolio/backfill-snapshots", { method: "POST" })
+        .catch(() => {})
+        .finally(() => setStep("done"));
     }
   }, [transactions]);
 
