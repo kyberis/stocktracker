@@ -80,7 +80,6 @@ export default function DashboardPortfolioV2({
             holdings={holdings}
             cashEntries={cashEntries}
             onOpenAi={() => setAiDrawerOpen(true)}
-            investedOverride={txInvested}
           />
           <PortfolioTable holdings={holdings} onAddStock={onAddStock} />
           <MarketAndCash holdings={holdings} cashEntries={allCashEntries} />

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   AreaChart,
   Area,
@@ -366,8 +366,6 @@ interface EvolutionChartProps {
   embedded?: boolean;
   benchmarks?: BenchmarkOverlay[];
   onRemoveBenchmark?: (key: string) => void;
-  /** Transaction-based invested capital; overrides snapshot invested values when set. */
-  investedOverride?: number | null;
 }
 
 function normalizeBenchmarkSeries(values: number[]): number[] {
@@ -377,7 +375,7 @@ function normalizeBenchmarkSeries(values: number[]): number[] {
   return values.map((v) => ((v - first) / first) * 100);
 }
 
-export default function PortfolioEvolutionChart({ embedded, benchmarks, onRemoveBenchmark, investedOverride }: EvolutionChartProps = {}) {
+export default function PortfolioEvolutionChart({ embedded, benchmarks, onRemoveBenchmark }: EvolutionChartProps = {}) {
   const { t } = useI18n();
   const { holdings, cashEntries, quotes, exchangeRates, activePortfolioCurrency, activePortfolioId, demoMode } =
     usePortfolio();
@@ -398,8 +396,10 @@ export default function PortfolioEvolutionChart({ embedded, benchmarks, onRemove
   const [showExplainer, setShowExplainer] = useState(false);
   /** Any POST /backfill-snapshots in flight (manual or silent). */
   const backfillInFlightRef = useRef(false);
-  /** Only one automatic sparse-history backfill attempt per portfolio (pts &lt; 2). */
+  /** Only one automatic sparse-history backfill attempt per portfolio (pts < 2). */
   const sparseBackfillAttemptedRef = useRef(false);
+  /** Only one stale-invested auto-backfill per portfolio. */
+  const staleInvestedBackfillRef = useRef(false);
   const prevHoldingsCount = useRef(holdings.length);
   const fetchHistoryRef = useRef<(r: EvolutionRange) => void>(() => {});
 
@@ -444,6 +444,28 @@ export default function PortfolioEvolutionChart({ embedded, benchmarks, onRemove
                 fetchHistoryRef.current(r);
               });
           }
+          // Auto-backfill once when invested data looks stale (flat across >30 days).
+          if (
+            pts.length >= 10 &&
+            !staleInvestedBackfillRef.current &&
+            !backfillInFlightRef.current
+          ) {
+            const investedVals = pts.filter((p) => p.invested > 0).map((p) => p.invested);
+            if (investedVals.length >= 5) {
+              const first = investedVals[0];
+              const allSame = investedVals.every((v) => Math.abs(v - first) / first < 0.005);
+              const spanDays = (new Date(pts[pts.length - 1].date).getTime() - new Date(pts[0].date).getTime()) / 86400000;
+              if (allSame && spanDays > 30) {
+                staleInvestedBackfillRef.current = true;
+                backfillInFlightRef.current = true;
+                fetch("/api/portfolio/backfill-snapshots", { method: "POST" })
+                  .finally(() => {
+                    backfillInFlightRef.current = false;
+                    fetchHistoryRef.current(r);
+                  });
+              }
+            }
+          }
         })
         .catch(() => setLoading(false));
     },
@@ -474,6 +496,7 @@ export default function PortfolioEvolutionChart({ embedded, benchmarks, onRemove
 
   useEffect(() => {
     sparseBackfillAttemptedRef.current = false;
+    staleInvestedBackfillRef.current = false;
   }, [activePortfolioId]);
 
   useEffect(() => {
@@ -559,18 +582,11 @@ export default function PortfolioEvolutionChart({ embedded, benchmarks, onRemove
     track("chart_mode_changed", { mode: m });
   }
 
-  const effectivePoints = useMemo(() => {
-    if (investedOverride != null && investedOverride > 0) {
-      return points.map((p) => ({ ...p, invested: investedOverride }));
-    }
-    return points;
-  }, [points, investedOverride]);
-
-  const hasInvestedData = effectivePoints.some((p) => p.invested > 0);
+  const hasInvestedData = points.some((p) => p.invested > 0);
 
   // Performance data: gain/loss % at each date relative to cost basis,
   // rebased so the first point in the selected range is 0%.
-  const rawPerfPoints: PerfPoint[] = effectivePoints.map((p) => ({
+  const rawPerfPoints: PerfPoint[] = points.map((p) => ({
     date: p.date,
     pct: p.invested > 0 ? ((p.value - p.invested) / p.invested) * 100 : 0,
   }));
@@ -582,7 +598,7 @@ export default function PortfolioEvolutionChart({ embedded, benchmarks, onRemove
 
   const isPerf = chartMode === "performance" && hasInvestedData;
 
-  const enrichedPoints = attachEventsToPoints(effectivePoints, events);
+  const enrichedPoints = attachEventsToPoints(points, events);
   const enrichedPerfPoints = attachEventsToPoints(perfPoints, events);
 
   const hasBenchmarks = benchmarks && benchmarks.length > 0 && Object.keys(benchmarkData).length > 0;
@@ -829,9 +845,9 @@ export default function PortfolioEvolutionChart({ embedded, benchmarks, onRemove
       const padding = (max - min) * 0.1 || 1;
       return [min - padding, max + padding];
     }
-    const vals = effectivePoints.map(p => p.value);
+    const vals = points.map(p => p.value);
     if (hasInvestedData) {
-      vals.push(...effectivePoints.map(p => p.invested).filter(v => v > 0));
+      vals.push(...points.map(p => p.invested).filter(v => v > 0));
     }
     const min = Math.min(...vals);
     const max = Math.max(...vals);

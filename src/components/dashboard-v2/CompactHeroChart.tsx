@@ -17,10 +17,9 @@ interface Props {
   holdings: Holding[];
   cashEntries: CashEntry[];
   onOpenAi?: () => void;
-  investedOverride?: number | null;
 }
 
-export default function CompactHeroChart({ holdings, cashEntries, onOpenAi, investedOverride }: Props) {
+export default function CompactHeroChart({ holdings, cashEntries, onOpenAi }: Props) {
   const { t } = useI18n();
   const { quotes, exchangeRates, activePortfolioCurrency, lastUpdated } = usePortfolio();
   const { stealthMode } = useStealthMode();
@@ -116,7 +115,6 @@ export default function CompactHeroChart({ holdings, cashEntries, onOpenAi, inve
         embedded
         benchmarks={benchmarks.length > 0 ? benchmarks : undefined}
         onRemoveBenchmark={handleRemoveBenchmark}
-        investedOverride={investedOverride}
       />
 
       {/* Footer: sync + compare + AI link */}
