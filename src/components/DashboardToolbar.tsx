@@ -405,7 +405,7 @@ export default function DashboardToolbar({
                 <span className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-slate-500 font-mono">
                   <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${quotesStale ? "bg-amber-400" : "bg-emerald-400"}`} />
                   <span className="text-gray-400 dark:text-slate-600">{t("quotesAsOf")}</span>
-                  <span className={quotesStale ? "text-amber-400" : ""}>{lastUpdated.toLocaleTimeString()}</span>
+                  <span className={quotesStale ? "text-amber-400" : ""}>{`${String(lastUpdated.getHours()).padStart(2, "0")}:${String(lastUpdated.getMinutes()).padStart(2, "0")}`}</span>
                 </span>
               )}
               {lastUpdated && holdingsLastFetchedAt && (

@@ -4,8 +4,8 @@ import { useCallback, useEffect, useRef } from "react";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
 
-/** Match /api/portfolio/snapshot 15-minute UTC buckets — writes create new rows while the app stays open. */
-const SNAPSHOT_INTERVAL_MS = 15 * 60 * 1000;
+/** Match /api/portfolio/snapshot 5-minute UTC buckets — writes create new rows while the app stays open. */
+const SNAPSHOT_INTERVAL_MS = 5 * 60 * 1000;
 
 /**
  * Upserts portfolio_snapshots when totals change, and on a fixed interval while mounted.

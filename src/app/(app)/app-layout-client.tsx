@@ -57,7 +57,7 @@ function AppShell({ children }: { children: React.ReactNode }) {
     return (
       <div className="min-h-screen bg-[#09090b] flex" style={{ fontFamily: "var(--font-primary, inherit)" }}>
         <SidebarNav />
-        <div className="flex-1 min-h-screen bg-[#18181b] pb-14 sm:pb-0">
+        <div className="flex-1 min-h-screen bg-[#18181b] pb-14 sm:pb-0 overflow-x-hidden">
           <EmailVerificationBanner />
           <SyncConfidenceBanner />
           <MarketTickerBar />
@@ -75,7 +75,7 @@ function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen pb-14 sm:pb-0" style={{ background: "var(--background)", fontFamily: "var(--font-primary, inherit)" }}>
+    <div className="min-h-screen pb-14 sm:pb-0 overflow-x-hidden" style={{ background: "var(--background)", fontFamily: "var(--font-primary, inherit)" }}>
       <EmailVerificationBanner />
       <SyncConfidenceBanner />
       <MarketTickerBar />

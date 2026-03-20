@@ -525,7 +525,7 @@ export default function StockDetailDrawer({ holding, onClose }: StockDetailDrawe
           {/* Last updated */}
           {lastFetchedAt && (
             <p className="text-[10px] text-gray-400 dark:text-slate-600">
-              {t("lastUpdated")}: {new Date(lastFetchedAt).toLocaleTimeString()}
+              {t("lastUpdated")}: {(() => { const _d = new Date(lastFetchedAt); return `${String(_d.getHours()).padStart(2, "0")}:${String(_d.getMinutes()).padStart(2, "0")}`; })()}
             </p>
           )}
 

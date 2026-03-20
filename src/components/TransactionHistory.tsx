@@ -243,7 +243,7 @@ export default function TransactionHistory({ holdingId, ticker, exchange: holdin
   };
 
   return (
-    <div className="card">
+    <div className="card overflow-hidden">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{t("transactions")}</h3>
         <button onClick={() => setShowForm(!showForm)} className="btn-primary text-xs px-3 py-1.5">
@@ -293,7 +293,7 @@ export default function TransactionHistory({ holdingId, ticker, exchange: holdin
       {txs.length === 0 ? (
         <p className="text-sm text-gray-400 dark:text-slate-500">{t("noTransactions")}</p>
       ) : (
-        <div className="overflow-x-auto">
+        <div>
           {/* ── Filter bar ──────────────────────────────────── */}
           <div className="flex flex-wrap items-center gap-2 mb-3">
             {!holdingId && uniqueTickers.length > 1 && (
@@ -362,6 +362,7 @@ export default function TransactionHistory({ holdingId, ticker, exchange: holdin
             />
           )}
 
+          <div className="w-0 min-w-full overflow-x-auto">
           <table className="w-full text-xs">
             <caption className="sr-only">Transaction history</caption>
             <thead className="text-gray-500 dark:text-slate-400">
@@ -387,10 +388,10 @@ export default function TransactionHistory({ holdingId, ticker, exchange: holdin
                   </th>
                 )}
                 <th scope="col" className="text-right p-2 font-medium">{t("transactionShares")}</th>
-                <th scope="col" className="text-right p-2 font-medium">{t("transactionPrice")}</th>
+                <th scope="col" className="text-right p-2 font-medium hidden sm:table-cell">{t("transactionPrice")}</th>
                 <th scope="col" className="text-right p-2 font-medium">{t("transactionTotal")}</th>
-                <th scope="col" className="text-right p-2 font-medium">{t("transactionFees")}</th>
-                {hasSells && <th scope="col" className="text-right p-2 font-medium">{t("realizedPl")}</th>}
+                <th scope="col" className="text-right p-2 font-medium hidden sm:table-cell">{t("transactionFees")}</th>
+                {hasSells && <th scope="col" className="text-right p-2 font-medium hidden sm:table-cell">{t("realizedPl")}</th>}
                 <th scope="col" className="text-left p-2 font-medium hidden sm:table-cell">
                   <button type="button" onClick={() => toggleSort("source")} className="inline-flex items-center hover:text-gray-700 dark:hover:text-slate-200 transition-colors">
                     {t("transactionSource")}
@@ -424,16 +425,16 @@ export default function TransactionHistory({ holdingId, ticker, exchange: holdin
                     <td className="p-1.5">
                       <input type="number" value={editShares} onChange={(e) => setEditShares(e.target.value)} className="text-xs w-full text-right" step="any" aria-label={t("transactionShares")} />
                     </td>
-                    <td className="p-1.5">
+                    <td className="p-1.5 hidden sm:table-cell">
                       <input type="number" value={editPrice} onChange={(e) => setEditPrice(e.target.value)} className="text-xs w-full text-right" step="any" aria-label={t("transactionPrice")} />
                     </td>
                     <td className="p-1.5 text-right font-mono text-gray-400 text-[10px]">
                       {((parseFloat(editShares) || 0) * (parseFloat(editPrice) || 0)).toFixed(2)}
                     </td>
-                    <td className="p-1.5">
+                    <td className="p-1.5 hidden sm:table-cell">
                       <input type="number" value={editFees} onChange={(e) => setEditFees(e.target.value)} className="text-xs w-full text-right" step="any" aria-label={t("transactionFees")} />
                     </td>
-                    {hasSells && <td className="p-1.5" />}
+                    {hasSells && <td className="p-1.5 hidden sm:table-cell" />}
                     <td className="p-1.5 hidden sm:table-cell" />
                     <td className="p-1.5">
                       <div className="flex items-center gap-1">
@@ -469,7 +470,7 @@ export default function TransactionHistory({ holdingId, ticker, exchange: holdin
                     </td>
                     {!holdingId && <td className="p-2 font-mono font-medium text-gray-900 dark:text-white">{tx.ticker}</td>}
                     <td className="p-2 text-right font-mono">{tx.shares > 0 ? tx.shares : "—"}</td>
-                    <td className="p-2 text-right font-mono">
+                    <td className="p-2 text-right font-mono hidden sm:table-cell">
                       {tx.pricePerShare > 0
                         ? formatStealthCurrency(tx.pricePerShare, tx.currency || baseCurrency, stealthMode)
                         : "—"}
@@ -490,11 +491,11 @@ export default function TransactionHistory({ holdingId, ticker, exchange: holdin
                         {formatStealthCurrency(tx.totalAmount, tx.currency || baseCurrency, stealthMode)}
                       </span>
                     </td>
-                    <td className="p-2 text-right font-mono text-gray-400">
+                    <td className="p-2 text-right font-mono text-gray-400 hidden sm:table-cell">
                       {tx.fees > 0 ? formatStealthCurrency(tx.fees, tx.currency || baseCurrency, stealthMode) : "—"}
                     </td>
                     {hasSells && (
-                      <td className={`p-2 text-right font-mono font-medium ${
+                      <td className={`p-2 text-right font-mono font-medium hidden sm:table-cell ${
                         tx.type === "sell"
                           ? (fifoMap.get(tx.id)?.realizedGainBase ?? 0) >= 0
                             ? "text-emerald-600 dark:text-emerald-400"
@@ -544,6 +545,7 @@ export default function TransactionHistory({ holdingId, ticker, exchange: holdin
               )}
             </tbody>
           </table>
+          </div>
           {hasMore && (
             <div className="flex justify-center pt-3 pb-1">
               <button

@@ -24,10 +24,12 @@ import ChartAiChatPanel from "./ChartAiChatPanel";
 
 type ChartMode = "value" | "performance";
 
-type EvolutionRange = "1w" | "1m" | "3m" | "6m" | "ytd" | "1y" | "all";
+type EvolutionRange = "1d" | "1w" | "1m" | "3m" | "6m" | "ytd" | "1y" | "all";
 
-const RANGE_KEYS: EvolutionRange[] = ["1w", "1m", "3m", "6m", "ytd", "1y", "all"];
+const RANGE_KEYS: EvolutionRange[] = ["1d", "1w", "1m", "3m", "6m", "ytd", "1y", "all"];
+const COMPACT_RANGE_KEYS: EvolutionRange[] = ["1d", "1w", "1m"];
 const RANGE_LABELS: Record<EvolutionRange, string> = {
+  "1d": "1D",
   "1w": "1W",
   "1m": "1M",
   "3m": "3M",
@@ -36,7 +38,7 @@ const RANGE_LABELS: Record<EvolutionRange, string> = {
   "1y": "1Y",
   all: "MAX",
 };
-const FREE_RANGES = new Set<EvolutionRange>(["1w", "1m"]);
+const FREE_RANGES = new Set<EvolutionRange>(["1d", "1w", "1m"]);
 
 interface SnapshotPoint {
   date: string;
@@ -173,6 +175,8 @@ function EventsTooltipSection({
 function ChartTooltip({ active, payload, baseCurrency, stealthMode, mode, t, benchmarkEntries }: ChartTooltipProps) {
   if (!active || !payload?.length) return null;
   const point = payload[0].payload;
+  // Future padding slots (1D) have no value — skip tooltip
+  if (point.value == null && point.pct == null) return null;
   const events = point.events as EventMarker[] | undefined;
 
   const benchmarkRows = benchmarkEntries?.map((b) => {
@@ -234,10 +238,11 @@ function ChartTooltip({ active, payload, baseCurrency, stealthMode, mode, t, ben
   );
 }
 
-function formatDateLabel(dateStr: string): string {
+function formatDateLabel(dateStr: string, timeOnly = false): string {
   const hasTime = dateStr.includes(" ") || dateStr.includes("T");
   if (hasTime) {
     const d = new Date(dateStr.replace(" ", "T"));
+    if (timeOnly) return d.toLocaleString("en-GB", { hour: "2-digit", minute: "2-digit" });
     return d.toLocaleString("en-GB", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" });
   }
   const d = new Date(dateStr);
@@ -364,6 +369,8 @@ export interface BenchmarkOverlay {
 
 interface EvolutionChartProps {
   embedded?: boolean;
+  /** Show only 1D/1W/1M range pills and hide the Value/Performance toggle. */
+  compact?: boolean;
   benchmarks?: BenchmarkOverlay[];
   onRemoveBenchmark?: (key: string) => void;
 }
@@ -375,7 +382,7 @@ function normalizeBenchmarkSeries(values: number[]): number[] {
   return values.map((v) => ((v - first) / first) * 100);
 }
 
-export default function PortfolioEvolutionChart({ embedded, benchmarks, onRemoveBenchmark }: EvolutionChartProps = {}) {
+export default function PortfolioEvolutionChart({ embedded, compact, benchmarks, onRemoveBenchmark }: EvolutionChartProps = {}) {
   const { t } = useI18n();
   const { holdings, cashEntries, quotes, exchangeRates, activePortfolioCurrency, activePortfolioId, demoMode } =
     usePortfolio();
@@ -387,7 +394,7 @@ export default function PortfolioEvolutionChart({ embedded, benchmarks, onRemove
   const baseCurrency = activePortfolioCurrency;
   const isPaid = user?.plan === "starter" || user?.plan === "pro";
 
-  const [range, setRange] = useState<EvolutionRange>("1m");
+  const [range, setRange] = useState<EvolutionRange>("1d");
   const [chartMode, setChartMode] = useState<ChartMode>("value");
   const [points, setPoints] = useState<SnapshotPoint[]>([]);
   const [events, setEvents] = useState<EventMarker[]>([]);
@@ -402,6 +409,9 @@ export default function PortfolioEvolutionChart({ embedded, benchmarks, onRemove
   const staleInvestedBackfillRef = useRef(false);
   const prevHoldingsCount = useRef(holdings.length);
   const fetchHistoryRef = useRef<(r: EvolutionRange) => void>(() => {});
+  /** Timer for 1D poll when waiting for the first snapshot to appear. */
+  const dailyPollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [collectingDaily, setCollectingDaily] = useState(false);
 
   // Benchmark overlay data
   const [benchmarkData, setBenchmarkData] = useState<Record<string, number[]>>({});
@@ -430,8 +440,17 @@ export default function PortfolioEvolutionChart({ embedded, benchmarks, onRemove
           setPoints(pts);
           setEvents(Array.isArray(data.events) ? data.events : []);
           setLoading(false);
-          // Auto-backfill once when insufficient history — silent (no “Calculating…” overlay).
+          // 1D: poll after a short delay when < 2 points (waiting for snapshot sync).
+          if (r === "1d" && pts.length < 2) {
+            setCollectingDaily(true);
+            if (dailyPollRef.current) clearTimeout(dailyPollRef.current);
+            dailyPollRef.current = setTimeout(() => fetchHistoryRef.current(r), 20_000);
+            return;
+          }
+          setCollectingDaily(false);
+          // Auto-backfill once when insufficient history (non-1D) — silent (no “Calculating…” overlay).
           if (
+            r !== "1d" &&
             pts.length < 2 &&
             !sparseBackfillAttemptedRef.current &&
             !backfillInFlightRef.current
@@ -476,6 +495,12 @@ export default function PortfolioEvolutionChart({ embedded, benchmarks, onRemove
     fetchHistoryRef.current = fetchHistory;
   }, [fetchHistory]);
 
+  useEffect(() => {
+    return () => {
+      if (dailyPollRef.current) clearTimeout(dailyPollRef.current);
+    };
+  }, []);
+
   /** User-triggered recalculate — shows “Calculating portfolio history…”. */
   const triggerBackfill = useCallback(() => {
     if (backfillInFlightRef.current || demoMode) return;
@@ -500,6 +525,8 @@ export default function PortfolioEvolutionChart({ embedded, benchmarks, onRemove
   }, [activePortfolioId]);
 
   useEffect(() => {
+    if (dailyPollRef.current) clearTimeout(dailyPollRef.current);
+    if (range !== "1d") setCollectingDaily(false);
     if (!isPaid && !FREE_RANGES.has(range)) {
       setRange("1m");
       return;
@@ -630,6 +657,28 @@ export default function PortfolioEvolutionChart({ embedded, benchmarks, onRemove
     });
   })();
 
+  // For 1D, pad the timeline to end of day so the X-axis shows the full remaining day.
+  // Future slots have no value/pct — Recharts leaves them empty, signaling "still collecting".
+  const finalChartData = (() => {
+    if (range !== "1d" || mergedChartData.length === 0) return mergedChartData;
+    const lastDate = mergedChartData[mergedChartData.length - 1].date;
+    const todayStr = lastDate.slice(0, 10);
+    const lastMs = new Date(lastDate.replace(" ", "T")).getTime();
+    const endMs = new Date(`${todayStr}T23:45:00`).getTime();
+    if (!Number.isFinite(lastMs) || lastMs >= endMs) return mergedChartData;
+    const STEP = 5 * 60 * 1000;
+    const padding: { date: string }[] = [];
+    let t = lastMs + STEP;
+    while (t <= endMs) {
+      const d = new Date(t);
+      const hh = String(d.getHours()).padStart(2, "0");
+      const mm = String(d.getMinutes()).padStart(2, "0");
+      padding.push({ date: `${todayStr} ${hh}:${mm}:00` });
+      t += STEP;
+    }
+    return [...mergedChartData, ...padding];
+  })();
+
   const firstValue = points[0]?.value ?? 0;
   const lastValue = points[points.length - 1]?.value ?? 0;
 
@@ -672,9 +721,11 @@ export default function PortfolioEvolutionChart({ embedded, benchmarks, onRemove
   const tickFill = isDark ? "#94a3b8" : "#9ca3af";
   const gridStroke = isDark ? "#334155" : "#e5e7eb";
 
+  const visibleRanges = compact ? COMPACT_RANGE_KEYS : RANGE_KEYS;
+
   const rangePills = (
     <div className="flex gap-1" role="group" aria-label="Time range">
-      {RANGE_KEYS.map((r) => {
+      {visibleRanges.map((r) => {
         const isLocked = !FREE_RANGES.has(r) && !isPaid;
         const isActive = range === r;
 
@@ -744,7 +795,7 @@ export default function PortfolioEvolutionChart({ embedded, benchmarks, onRemove
     </div>
   );
 
-  const modePills = hasInvestedData ? (
+  const modePills = compact ? null : hasInvestedData ? (
     <div className="flex rounded-lg overflow-hidden border border-gray-200 dark:border-slate-700" role="group" aria-label="Chart mode">
       {(["value", "performance"] as ChartMode[]).map((m) => {
         const isActive = chartMode === m;
@@ -846,7 +897,7 @@ export default function PortfolioEvolutionChart({ embedded, benchmarks, onRemove
       return [min - padding, max + padding];
     }
     const vals = points.map(p => p.value);
-    if (hasInvestedData) {
+    if (hasInvestedData && range !== "1d") {
       vals.push(...points.map(p => p.invested).filter(v => v > 0));
     }
     const min = Math.min(...vals);
@@ -862,6 +913,12 @@ export default function PortfolioEvolutionChart({ embedded, benchmarks, onRemove
     </div>
   ) : points.length < 2 ? (
     <div className="py-12 text-center space-y-3">
+      {collectingDaily ? (
+        <div className="flex items-center justify-center gap-2 text-sm text-gray-400 dark:text-slate-500">
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-500" />
+          <span>{t("collectingDailyData")}</span>
+        </div>
+      ) : (
       <p
         className={`text-sm ${
           layoutTheme === "terminal"
@@ -875,6 +932,7 @@ export default function PortfolioEvolutionChart({ embedded, benchmarks, onRemove
       >
         {t("evolutionEmpty")}
       </p>
+      )}
       {!demoMode && (
         <button
           onClick={triggerBackfill}
@@ -898,7 +956,7 @@ export default function PortfolioEvolutionChart({ embedded, benchmarks, onRemove
   ) : (
     <div className="h-48" role="img" aria-label={isPerf ? "Portfolio performance chart" : "Portfolio value evolution chart"}>
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={mergedChartData} margin={{ top: 4, right: 4, left: 4, bottom: 4 }}>
+        <AreaChart data={finalChartData} margin={{ top: 4, right: 4, left: 4, bottom: 4 }}>
           <defs>
             <linearGradient id="evolutionGrad" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor={accentColor} stopOpacity={0.2} />
@@ -921,7 +979,7 @@ export default function PortfolioEvolutionChart({ embedded, benchmarks, onRemove
               fill: layoutTheme === "terminal" ? "#52525b" : layoutTheme === "canvas" ? "#94a3b8" : layoutTheme === "studio" ? "rgba(255,255,255,0.3)" : tickFill,
               ...(layoutTheme === "terminal" ? { fontFamily: "monospace" } : {}),
             }}
-            tickFormatter={(d: string) => formatDateLabel(d)}
+            tickFormatter={(d: string) => formatDateLabel(d, range === "1d")}
             tickLine={false}
             axisLine={false}
             interval="preserveStartEnd"
@@ -953,7 +1011,7 @@ export default function PortfolioEvolutionChart({ embedded, benchmarks, onRemove
           <Tooltip
             content={<ChartTooltip baseCurrency={baseCurrency} stealthMode={stealthMode} mode={chartMode} t={t} benchmarkEntries={benchmarkTooltipEntries} />}
           />
-          {!isPerf && !hasBenchmarks && hasInvestedData && (
+          {!isPerf && !hasBenchmarks && hasInvestedData && range !== "1d" && (
             <Area
               type="monotone"
               dataKey="invested"
@@ -1116,7 +1174,7 @@ export default function PortfolioEvolutionChart({ embedded, benchmarks, onRemove
   if (layoutTheme === "terminal") {
     return (
       <div className="border-b border-zinc-800 py-3 space-y-2" data-testid="evolution-chart-terminal">
-        <div className="flex items-center justify-between font-mono">
+        <div className="flex flex-wrap items-center justify-between gap-2 font-mono">
           <div className="flex items-center gap-2">
             <span className="text-[10px] uppercase tracking-wider text-zinc-600">
               {t("performance")}
@@ -1145,7 +1203,7 @@ export default function PortfolioEvolutionChart({ embedded, benchmarks, onRemove
         className="bg-white border border-slate-200 rounded-[20px] p-6 shadow-sm space-y-3"
         data-testid="evolution-chart-canvas"
       >
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">
               {t("performance")}
@@ -1175,7 +1233,7 @@ export default function PortfolioEvolutionChart({ embedded, benchmarks, onRemove
         data-testid="evolution-chart-studio"
       >
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-500/40 to-transparent" />
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <h3 className="text-xs font-semibold text-white/50 uppercase tracking-wider">
               {t("performance")}
@@ -1200,7 +1258,7 @@ export default function PortfolioEvolutionChart({ embedded, benchmarks, onRemove
   /* ── DEFAULT ── */
   return (
     <div className={embedded ? "px-5 pb-4 space-y-3" : "card px-5 py-4 space-y-3"} data-testid="evolution-chart">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-1.5">
           <h3
             className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-1.5"

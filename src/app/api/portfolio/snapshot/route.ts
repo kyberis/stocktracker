@@ -34,10 +34,10 @@ export const POST = withMetrics("/api/portfolio/snapshot", async (req: NextReque
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  /** 15-minute UTC buckets so repeated writes while the dashboard is open create distinct rows. */
+  /** 5-minute UTC buckets so repeated writes while the dashboard is open create distinct rows. */
   const now = new Date();
   const floored = new Date(now);
-  floored.setUTCMinutes(Math.floor(floored.getUTCMinutes() / 15) * 15, 0, 0);
+  floored.setUTCMinutes(Math.floor(floored.getUTCMinutes() / 5) * 5, 0, 0);
   const dateBucket =
     floored.toISOString().slice(0, 16).replace("T", " ") + ":00";
   const client = await ensureInitialized();

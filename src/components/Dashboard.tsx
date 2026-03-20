@@ -11,6 +11,7 @@ import { getHoldingsLimit } from "@/lib/subscription";
 import { useTrack } from "@/lib/use-track";
 import { useTheme } from "@/lib/theme-context";
 import { useIsNative } from "@/lib/use-native";
+import { useIsMobileViewport } from "@/lib/use-mobile-viewport";
 import type { Account } from "@/lib/types";
 import CloverToLogo from "./CloverToLogo";
 
@@ -116,7 +117,8 @@ function EmptyPortfolio({ onAddStock }: { onAddStock: () => void }) {
 
 export default function Dashboard() {
   const isNative = useIsNative();
-  if (isNative) return <MobileDashboard />;
+  const isMobileViewport = useIsMobileViewport();
+  if (isNative || isMobileViewport) return <MobileDashboard />;
   return <DesktopDashboard />;
 }
 

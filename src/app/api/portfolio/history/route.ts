@@ -22,9 +22,16 @@ function oneCalendarMonthAgoDateString(): string {
   return `${y}-${m}-${day}`;
 }
 
+function todayDateString(): string {
+  const d = new Date();
+  return d.toISOString().slice(0, 10);
+}
+
 function computeStartDate(range: string): string {
   const now = new Date();
   switch (range) {
+    case "1d":
+      return todayDateString();
     case "1w":
       now.setDate(now.getDate() - 7);
       break;
@@ -50,8 +57,9 @@ function computeStartDate(range: string): string {
   return now.toISOString().slice(0, 10);
 }
 
-type Granularity = "hourly" | "daily" | "weekly";
+type Granularity = "five-minute" | "hourly" | "daily" | "weekly";
 
+const FIVE_MIN_MS = 5 * 60 * 1000;
 const HOUR_MS = 60 * 60 * 1000;
 
 function parseSnapshotTime(dateStr: string): number {
@@ -106,7 +114,42 @@ function densifyHourlyTimeline(raw: Point[], windowStartMs: number, windowEndMs:
   return clipPointsToWindow(out, windowStartMs, windowEndMs);
 }
 
-/** 1M, YTD, 1Y → hourly. MAX (all): hourly if span ≤ ~1 year, else weekly. */
+/**
+ * Like densifyHourlyTimeline but with 5-minute steps for the 1D intraday view.
+ * Fills gaps > 5 min with linear interpolation on value; invested stays flat.
+ */
+function densifyFiveMinuteTimeline(raw: Point[], windowStartMs: number, windowEndMs: number): Point[] {
+  if (raw.length === 0) return [];
+  const sorted = [...raw].sort((a, b) => parseSnapshotTime(a.date) - parseSnapshotTime(b.date));
+  const out: Point[] = [];
+
+  for (let i = 0; i < sorted.length; i++) {
+    out.push(sorted[i]);
+    if (i === sorted.length - 1) break;
+    const t0 = parseSnapshotTime(sorted[i].date);
+    const t1 = parseSnapshotTime(sorted[i + 1].date);
+    if (!Number.isFinite(t0) || !Number.isFinite(t1) || t1 <= t0) continue;
+    const gap = t1 - t0;
+    if (gap <= FIVE_MIN_MS) continue;
+    const v0 = sorted[i].value;
+    const v1 = sorted[i + 1].value;
+    const inv0 = sorted[i].invested;
+    let t = t0 + FIVE_MIN_MS;
+    while (t < t1 - 0.5) {
+      const ratio = (t - t0) / (t1 - t0);
+      out.push({
+        date: new Date(t).toISOString(),
+        value: v0 + ratio * (v1 - v0),
+        invested: inv0,
+      });
+      t += FIVE_MIN_MS;
+    }
+  }
+
+  return clipPointsToWindow(out, windowStartMs, windowEndMs);
+}
+
+/** 1D → five-minute. 1W, 1M, YTD, 1Y → hourly. MAX (all): hourly if span ≤ ~1 year, else weekly. */
 function resolveGranularity(range: string, rawPoints: Point[]): Granularity {
   if (range === "all") {
     if (rawPoints.length < 2) return "hourly";
@@ -118,6 +161,8 @@ function resolveGranularity(range: string, rawPoints: Point[]): Granularity {
     return spanMs > ONE_YEAR_MS ? "weekly" : "hourly";
   }
   switch (range) {
+    case "1d":
+      return "five-minute";
     case "1w":
     case "1m":
     case "ytd":
@@ -135,7 +180,7 @@ function resolveGranularity(range: string, rawPoints: Point[]): Granularity {
  * - weekly: YYYY-Www (ISO week)
  */
 function bucketKey(dateStr: string, granularity: Granularity): string {
-  if (granularity === "hourly") return dateStr;
+  if (granularity === "five-minute" || granularity === "hourly") return dateStr;
   const day = dateStr.slice(0, 10);
   if (granularity === "daily") return day;
   const d = new Date(day);
@@ -149,7 +194,7 @@ function bucketKey(dateStr: string, granularity: Granularity): string {
  * per bucket (latest value for each day / week).
  */
 function downsample(points: Point[], granularity: Granularity): Point[] {
-  if (granularity === "hourly") return points;
+  if (granularity === "five-minute" || granularity === "hourly") return points;
 
   const buckets = new Map<string, Point>();
   for (const p of points) {
@@ -211,6 +256,13 @@ export const GET = withMetrics("/api/portfolio/history", async (req: NextRequest
              ORDER BY date ASC`;
       args = [session.userId, portfolioId, dayMap[range]];
     }
+  } else if (range === "1d") {
+    const today = todayDateString();
+    sql = `SELECT ${cols}
+           FROM portfolio_snapshots
+           WHERE user_id = ? AND portfolio_id = ? AND date >= ?
+           ORDER BY date ASC`;
+    args = [session.userId, portfolioId, today];
   } else if (range === "1w") {
     sql = `SELECT ${cols}
            FROM portfolio_snapshots
@@ -279,11 +331,13 @@ export const GET = withMetrics("/api/portfolio/history", async (req: NextRequest
   const granularity = resolveGranularity(effectiveRange, rawPoints);
   let points = downsample(rawPoints, granularity);
 
-  if (granularity === "hourly" && rawPoints.length >= 1) {
+  if ((granularity === "five-minute" || granularity === "hourly") && rawPoints.length >= 1) {
     const windowStartMs = Date.parse(`${eventsStartDate}T00:00:00.000Z`);
     const windowEndMs = Date.now();
     if (Number.isFinite(windowStartMs)) {
-      points = densifyHourlyTimeline(rawPoints, windowStartMs, windowEndMs);
+      points = granularity === "five-minute"
+        ? densifyFiveMinuteTimeline(rawPoints, windowStartMs, windowEndMs)
+        : densifyHourlyTimeline(rawPoints, windowStartMs, windowEndMs);
     }
   }
 
