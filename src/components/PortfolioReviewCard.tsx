@@ -17,10 +17,11 @@ export default function PortfolioReviewCard() {
   const [text, setText] = useState("");
   const abortRef = useRef<AbortController | null>(null);
 
-  const isPro = user?.plan === "pro";
+  const isAdmin = user?.role === "admin";
+  const isPro = user?.plan === "pro" || isAdmin;
   const limit = PLATFORM_LIMITS.PORTFOLIO_REVIEW_MONTHLY_LIMIT;
   const used = user?.portfolioReviewCount ?? 0;
-  const remaining = Math.max(0, limit - used);
+  const remaining = isAdmin ? Infinity : Math.max(0, limit - used);
 
   const runReview = useCallback(async () => {
     if (status === "loading" || status === "streaming") return;

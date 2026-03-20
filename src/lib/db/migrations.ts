@@ -2223,6 +2223,26 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       }
     },
   },
+  {
+    version: 68,
+    description: "Create portfolio_scores table for AI portfolio score caching",
+    up: async (client: Client) => {
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS portfolio_scores (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          portfolio_id TEXT NOT NULL DEFAULT '',
+          score_json TEXT NOT NULL DEFAULT '{}',
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          expires_at TEXT NOT NULL DEFAULT (datetime('now', '+24 hours')),
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+      `);
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_portfolio_scores_user_portfolio ON portfolio_scores(user_id, portfolio_id)"
+      );
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

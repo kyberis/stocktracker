@@ -15,6 +15,7 @@ import { useTrack } from "@/lib/use-track";
 import { initNudgeTracking, shouldShowPaywallNudge, recordPaywallNudgeShown, recordPaywallNudgeDismiss } from "@/lib/paywall-nudge";
 import { hapticImpact, hapticSelectionChanged } from "@/lib/native-haptics";
 import { hideNativeSplash } from "@/lib/native-splash";
+import { useIsNative } from "@/lib/use-native";
 import { usePortfolioSnapshotSync } from "@/lib/use-portfolio-snapshot-sync";
 import TierFeatureBadge from "@/components/TierFeatureBadge";
 import SampleDataBanner from "@/components/SampleDataBanner";
@@ -35,6 +36,8 @@ const EventCalendar = dynamic(() => import("@/components/EventCalendar"), { ssr:
 const UpcomingEarnings = dynamic(() => import("@/components/UpcomingEarnings"), { ssr: false });
 const ReferralShareModal = dynamic(() => import("@/components/ReferralShareModal"), { ssr: false });
 const ReferralBanner = dynamic(() => import("@/components/ReferralBanner"), { ssr: false });
+const FeedbackModal = dynamic(() => import("@/components/FeedbackModal"), { ssr: false });
+const PortfolioScoreCard = dynamic(() => import("@/components/dashboard-v2/PortfolioScoreCard"), { ssr: false });
 
 type DashboardTab = "portfolio" | "diversification" | "dividends" | "metrics" | "growth" | "events" | "news";
 
@@ -45,12 +48,14 @@ export default function MobileDashboard() {
   const [showPaywall, setShowPaywall] = useState(false);
   const [paywallSurface, setPaywallSurface] = useState<string>("tab_gate");
   const [showPortfolioPicker, setShowPortfolioPicker] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
   const { t } = useI18n();
   const { holdings, cashEntries, quotes, isLoading, refreshHoldings, refreshQuotes, activePortfolioId, portfolios, setActivePortfolio, demoMode } =
     usePortfolio();
   usePortfolioSnapshotSync({ demoMode });
   const { user, isLoading: authLoading } = useAuth();
   const track = useTrack();
+  const isNative = useIsNative();
 
   const userPlan = user?.plan ?? "free";
   const isPro = userPlan === "pro";
@@ -138,7 +143,7 @@ export default function MobileDashboard() {
   }
 
   return (
-    <>
+    <div className="overflow-x-hidden">
       {/* Mobile header with portfolio switcher + actions */}
       <div className="z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-gray-100 dark:border-slate-800 px-4 py-3">
         <div className="flex items-center justify-between">
@@ -224,10 +229,11 @@ export default function MobileDashboard() {
             ) : (
               <>
                 <PortfolioSummary holdings={filteredHoldings} cashEntries={investmentCashEntries} allCashEntries={cashEntries} />
-                <PortfolioEvolutionChart />
+                <PortfolioEvolutionChart compact />
                 <PortfolioCards holdings={filteredHoldings} />
                 <UpcomingEarnings onNavigateToEvents={() => handleTabChange("events")} />
                 <MarketAndCash holdings={filteredHoldings} cashEntries={cashEntries} />
+                <PortfolioScoreCard holdings={filteredHoldings} cashEntries={investmentCashEntries} />
 
                 {holdingsAtLimit && (
                   <ProCompareCard surface="holdings_limit" reason="holdings_limit_reached" />
@@ -328,6 +334,28 @@ export default function MobileDashboard() {
         </div>
       )}
 
+      {/* Floating feedback button — web mobile only */}
+      {!isNative && (
+        <div className="fixed bottom-20 right-4 z-30">
+          <button
+            onClick={() => setShowFeedback(true)}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium shadow-lg transition-colors"
+            title={t("feedback")}
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+            </svg>
+          </button>
+        </div>
+      )}
+
+      {showFeedback && (
+        <FeedbackModal
+          isOpen={showFeedback}
+          onClose={() => setShowFeedback(false)}
+        />
+      )}
+
       {/* Portfolio picker bottom sheet */}
       {showPortfolioPicker && (
         <div className="fixed inset-0 z-50 flex items-end justify-center">
@@ -414,7 +442,7 @@ export default function MobileDashboard() {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
 

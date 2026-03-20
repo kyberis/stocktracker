@@ -27,6 +27,7 @@ const DESKTOP_ONLY_TOOLS = [
   { labelKey: "taxReportsNav", tierBadge: "pro" as const },
   { labelKey: "simulatorNav", tierBadge: "pro" as const },
   { labelKey: "screenerNav", tierBadge: "pro" as const },
+  { labelKey: "portfolioScoreNav", tierBadge: "pro" as const },
   { labelKey: "accounts", tierBadge: undefined },
   { labelKey: "rebalancing", tierBadge: undefined },
 ];

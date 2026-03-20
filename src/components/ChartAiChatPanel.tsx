@@ -10,7 +10,7 @@ import {
 } from "@/lib/chart-chat-context";
 import AiMarkdown from "@/components/AiMarkdown";
 
-type EvolutionRange = "1w" | "1m" | "3m" | "6m" | "ytd" | "1y" | "all";
+type EvolutionRange = "1d" | "1w" | "1m" | "3m" | "6m" | "ytd" | "1y" | "all";
 type ChartMode = "value" | "performance";
 
 interface SnapshotPoint {

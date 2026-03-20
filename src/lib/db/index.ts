@@ -393,3 +393,11 @@ export {
   purgeExpiredUnsubscribeTokens,
   listUnsubscribeEvents,
 } from "./unsubscribe-tokens";
+
+export type { CachedPortfolioScore } from "./portfolio-scores";
+export {
+  getCachedPortfolioScore,
+  getPortfolioScoreHistory,
+  savePortfolioScore,
+  deleteExpiredPortfolioScores,
+} from "./portfolio-scores";

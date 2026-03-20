@@ -14,6 +14,7 @@ const AllocationTabs = dynamic(() => import("./AllocationTabs"), { ssr: false })
 const GoalProgressCard = dynamic(() => import("./GoalProgressCard"), { ssr: false });
 const CompactDividendCard = dynamic(() => import("./CompactDividendCard"), { ssr: false });
 const CompactEarningsCard = dynamic(() => import("./CompactEarningsCard"), { ssr: false });
+const PortfolioScoreCard = dynamic(() => import("./PortfolioScoreCard"), { ssr: false });
 const PortfolioAiTrigger = dynamic(() => import("./PortfolioAiTrigger"), { ssr: false });
 const PortfolioAiDrawer = dynamic(() => import("./PortfolioAiDrawer"), { ssr: false });
 const PortfolioTable = dynamic(() => import("../PortfolioTable"), { ssr: false });
@@ -90,6 +91,7 @@ export default function DashboardPortfolioV2({
         {/* Right sidebar */}
         <div className="flex flex-col gap-3">
           <CompactReferralCard onShare={onShareReferral} />
+          <PortfolioScoreCard holdings={holdings} cashEntries={cashEntries} />
           <GoalProgressCard holdings={holdings} cashEntries={cashEntries} />
           <StatsGrid holdings={holdings} cashEntries={cashEntries} snapshotInvested={txInvested} />
           <AllocationTabs

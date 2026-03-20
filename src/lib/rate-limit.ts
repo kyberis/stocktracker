@@ -133,7 +133,11 @@ export async function checkSupportChatRateLimit(
   userId: string,
   plan: string,
   configuredLimit?: number,
+  role?: string,
 ): Promise<RateLimitResult> {
+  if (role === "admin") {
+    return { allowed: true, remaining: Infinity, limit: Infinity, resetAt: "" };
+  }
   const limit =
     configuredLimit ??
     (plan === "pro"

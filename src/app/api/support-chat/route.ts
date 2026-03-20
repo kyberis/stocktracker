@@ -47,7 +47,7 @@ export const POST = withMetrics("/api/support-chat", async (request: NextRequest
     ? (proLimitStr ? parseInt(proLimitStr, 10) : PLATFORM_LIMITS.SUPPORT_CHAT_PRO_DAILY_DEFAULT)
     : (starterLimitStr ? parseInt(starterLimitStr, 10) : PLATFORM_LIMITS.SUPPORT_CHAT_STARTER_DAILY_DEFAULT);
 
-  const rl = await checkSupportChatRateLimit(session.userId, plan, configuredLimit);
+  const rl = await checkSupportChatRateLimit(session.userId, plan, configuredLimit, session.role);
   if (!rl.allowed) {
     rateLimitHitsTotal.inc({ provider: "support_chat" });
     return Response.json(

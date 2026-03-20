@@ -45,6 +45,7 @@ export async function requireAdmin(req: NextRequest) {
 export async function requirePro(req: NextRequest) {
   const { session, error } = await requireSession(req);
   if (error || !session) return { session: null, error: error! };
+  if (session.role === "admin") return { session, error: null };
   const user = await findUserById(session.userId);
   const plan = effectivePlan(user?.plan || session.plan || "free", user?.plan_expires_at || "");
   const isPro = plan === "pro";
@@ -63,6 +64,8 @@ export async function requirePro(req: NextRequest) {
 export async function requireFeatureAccess(req: NextRequest, feature: SubscriptionFeature) {
   const { session, error } = await requireSession(req);
   if (error || !session) return { session: null, error: error! };
+
+  if (session.role === "admin") return { session, error: null };
 
   const user = await findUserById(session.userId);
   if (!user) {
@@ -111,6 +114,10 @@ export async function requireRateLimit(
 ) {
   const { session, error } = await requireSession(req);
   if (error || !session) return { session: null, error: error! };
+
+  if (session.role === "admin") {
+    return { session, error: null, rateLimit: { allowed: true, remaining: Infinity, limit: Infinity, resetAt: "" } };
+  }
 
   let result: { allowed: boolean; remaining: number; limit: number; resetAt: string };
 

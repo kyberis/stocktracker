@@ -12,10 +12,11 @@ interface Props {
 export default function PortfolioAiTrigger({ onOpen }: Props) {
   const { t } = useI18n();
   const { user } = useAuth();
-  const isPro = user?.plan === "pro";
+  const isAdmin = user?.role === "admin";
+  const isPro = user?.plan === "pro" || isAdmin;
   const tokensUsed = user?.aiTokensThisMonth ?? 0;
   const tokenLimit = user?.aiTokenLimit ?? 25_000;
-  const pct = tokenLimit > 0 ? Math.min((tokensUsed / tokenLimit) * 100, 100) : 0;
+  const pct = isAdmin ? 0 : (tokenLimit > 0 ? Math.min((tokensUsed / tokenLimit) * 100, 100) : 0);
 
   return (
     <button
@@ -33,7 +34,7 @@ export default function PortfolioAiTrigger({ onOpen }: Props) {
             <span className="text-xs font-semibold text-violet-300">{t("v2PortfolioAi")}</span>
             {isPro && (
               <span className="text-[9px] font-semibold bg-violet-500/20 text-violet-300 px-1.5 py-0.5 rounded-full">
-                PRO
+                {isAdmin ? "ADMIN" : "PRO"}
               </span>
             )}
           </div>
@@ -43,14 +44,16 @@ export default function PortfolioAiTrigger({ onOpen }: Props) {
           <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
         </svg>
       </div>
-      <div className="flex items-center gap-2 mt-2">
-        <div className="flex-1 h-[3px] rounded-full bg-gray-200 dark:bg-white/[0.06] overflow-hidden">
-          <div className="h-full rounded-full bg-gradient-to-r from-violet-500 to-indigo-500" style={{ width: `${pct}%` }} />
+      {!isAdmin && (
+        <div className="flex items-center gap-2 mt-2">
+          <div className="flex-1 h-[3px] rounded-full bg-gray-200 dark:bg-white/[0.06] overflow-hidden">
+            <div className="h-full rounded-full bg-gradient-to-r from-violet-500 to-indigo-500" style={{ width: `${pct}%` }} />
+          </div>
+          <span className="text-[9px] text-gray-500 dark:text-slate-500 shrink-0 tabular-nums">
+            {Math.round(pct)}% · ~{Math.floor((tokenLimit - tokensUsed) / 3000)} {t("aiAnalysesRemaining").replace("~{count} ", "")}
+          </span>
         </div>
-        <span className="text-[9px] text-gray-500 dark:text-slate-500 shrink-0 tabular-nums">
-          {Math.round(pct)}% · ~{Math.floor((tokenLimit - tokensUsed) / 3000)} {t("aiAnalysesRemaining").replace("~{count} ", "")}
-        </span>
-      </div>
+      )}
     </button>
   );
 }

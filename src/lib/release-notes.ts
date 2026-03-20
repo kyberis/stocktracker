@@ -17,6 +17,58 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.55.0",
+    date: "2026-03-20",
+    title: "AI Portfolio Analysis — Full Details",
+    titleTranslations: { es: "Análisis del Portafolio con IA — Detalle Completo" },
+    changes: [
+      {
+        type: "improvement",
+        text: "AI Portfolio Score now shows sector-by-sector and region-by-region analysis, names specific stocks in recommendations and concentration risks, and includes a dedicated full-page view under Tools.",
+        translations: {
+          es: "La Puntuación del Portafolio con IA ahora muestra análisis sector por sector y región por región, nombra acciones específicas en recomendaciones y riesgos de concentración, e incluye una vista de página completa en Herramientas.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Portfolio scores are now stored permanently with timestamps, allowing you to track how your score evolves over time.",
+        translations: {
+          es: "Las puntuaciones del portafolio ahora se almacenan permanentemente con fecha, permitiéndote seguir cómo evoluciona tu puntuación.",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.54.0",
+    date: "2026-03-20",
+    title: "AI Portfolio Score",
+    titleTranslations: { es: "Puntuación del Portafolio con IA" },
+    changes: [
+      {
+        type: "feature",
+        text: "AI Portfolio Score: get a 0-100 score for your portfolio with sub-ratings for diversification, risk, costs, and macroeconomics, plus actionable recommendations — powered by AI structured output.",
+        translations: {
+          es: "Puntuación del Portafolio con IA: obtén una puntuación de 0-100 para tu portafolio con sub-puntuaciones de diversificación, riesgo, costes y macroeconomía, además de recomendaciones accionables — impulsado por IA.",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.53.3",
+    date: "2026-03-20",
+    title: "Daily Chart View",
+    titleTranslations: { es: "Vista diaria del gráfico" },
+    changes: [
+      {
+        type: "feature",
+        text: "Added 1D (Daily) time range to the portfolio evolution chart with 5-minute granularity. Shows intraday value and performance as snapshots are collected throughout the day.",
+        translations: {
+          es: "Añadido rango de tiempo 1D (Diario) al gráfico de evolución del portafolio con granularidad de 5 minutos. Muestra el valor y rendimiento intradía a medida que se recopilan datos durante el día.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.53.2",
     date: "2026-03-20",
     title: "Mobile Dashboard Reorder",

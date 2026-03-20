@@ -1,0 +1,190 @@
+export const dynamic = "force-dynamic";
+
+import { NextRequest } from "next/server";
+import { requirePro } from "@/lib/auth/guards";
+import {
+  getGlobalOpenAIApiKey,
+  getPortfolioReviewUsage,
+  incrementPortfolioReviewUsage,
+  incrementAiTokenUsage,
+  incrementDailyAiTokenUsage,
+  getCachedPortfolioScore,
+  getPortfolioScoreHistory,
+  savePortfolioScore,
+  trackEvent,
+} from "@/lib/db";
+import { PLATFORM_LIMITS } from "@/lib/platform-config";
+import { checkGlobalAiCap, incrementGlobalAiCalls, incrementGlobalAiTokens } from "@/lib/rate-limit";
+import { aiCallsTotal, aiRequestDuration } from "@/lib/metrics";
+import { languageCodeToName } from "@/lib/languages";
+import { withMetrics } from "@/lib/with-metrics";
+import {
+  buildScorePrompt,
+  PORTFOLIO_SCORE_JSON_SCHEMA,
+  type PortfolioScoreResponse,
+  type StoredScore,
+} from "@/lib/portfolio-score";
+
+export const GET = withMetrics("/api/portfolio/score", async (request: NextRequest) => {
+  const { session, error } = await requirePro(request);
+  if (error || !session) return error;
+
+  const portfolioId = request.nextUrl.searchParams.get("portfolioId") || "";
+  const history = request.nextUrl.searchParams.get("history") === "true";
+
+  if (history) {
+    const rows = await getPortfolioScoreHistory(session.userId, portfolioId, 20);
+    const scores: StoredScore[] = rows.map((r) => {
+      try {
+        return { id: r.id, score: JSON.parse(r.scoreJson), createdAt: r.createdAt };
+      } catch {
+        return null;
+      }
+    }).filter(Boolean) as StoredScore[];
+    return Response.json({ scores });
+  }
+
+  const cached = await getCachedPortfolioScore(session.userId, portfolioId);
+  if (!cached) {
+    return Response.json({ score: null }, { status: 200 });
+  }
+
+  try {
+    const score: PortfolioScoreResponse = JSON.parse(cached.scoreJson);
+    return Response.json({
+      score,
+      scoreId: cached.id,
+      cachedAt: cached.createdAt,
+    });
+  } catch {
+    return Response.json({ score: null }, { status: 200 });
+  }
+});
+
+export const POST = withMetrics("/api/portfolio/score", async (request: NextRequest) => {
+  const { session, error } = await requirePro(request);
+  if (error || !session) return error;
+
+  const isAdmin = session.role === "admin";
+  const isDev = process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test";
+  const usage = await getPortfolioReviewUsage(session.userId);
+  const limit = PLATFORM_LIMITS.PORTFOLIO_REVIEW_MONTHLY_LIMIT;
+  if (!isAdmin && !isDev && usage.count >= limit) {
+    trackEvent(session.userId, "portfolio_score_limit_reached", {
+      used: String(usage.count),
+      limit: String(limit),
+    });
+    return Response.json(
+      {
+        error: "Monthly portfolio score limit reached",
+        reason: "review_limit_reached",
+        limit,
+        used: usage.count,
+      },
+      { status: 429 },
+    );
+  }
+
+  const globalCap = await checkGlobalAiCap(session.role);
+  if (!globalCap.allowed) {
+    return Response.json(
+      { error: "Platform AI usage limit reached for this month. Please try again next month." },
+      { status: 429, headers: { "Retry-After": "86400" } },
+    );
+  }
+
+  const apiKey = getGlobalOpenAIApiKey();
+  if (!apiKey) {
+    return Response.json(
+      { error: "OpenAI API key not configured. Ask your admin to set it in the Admin panel." },
+      { status: 501 },
+    );
+  }
+
+  let body: { language?: string; portfolioId?: string; payload?: unknown };
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json({ error: "Invalid request body" }, { status: 400 });
+  }
+
+  if (!body.payload || typeof body.payload !== "object") {
+    return Response.json({ error: "Missing portfolio payload" }, { status: 400 });
+  }
+
+  const portfolioId = body.portfolioId || "";
+  const lang = languageCodeToName(body.language || "en");
+  const { system, user } = buildScorePrompt(body.payload as never, lang);
+
+  trackEvent(session.userId, "portfolio_score_requested", { portfolioId });
+
+  const endTimer = aiRequestDuration.startTimer({ analysis_type: "portfolio_score" });
+
+  try {
+    const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        max_tokens: 3000,
+        temperature: 0.2,
+        response_format: {
+          type: "json_schema",
+          json_schema: PORTFOLIO_SCORE_JSON_SCHEMA,
+        },
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content: user },
+        ],
+      }),
+    });
+
+    endTimer();
+
+    if (!openaiRes.ok) {
+      aiCallsTotal.inc({ status: "error", analysis_type: "portfolio_score" });
+      const errText = await openaiRes.text();
+      console.error("OpenAI portfolio score error:", openaiRes.status, errText);
+      return Response.json(
+        { error: "AI service returned an error. Check your API key and quota." },
+        { status: 502 },
+      );
+    }
+
+    aiCallsTotal.inc({ status: "success", analysis_type: "portfolio_score" });
+
+    const result = await openaiRes.json();
+    const totalTokens: number = result.usage?.total_tokens ?? 2500;
+    const content: string = result.choices?.[0]?.message?.content ?? "{}";
+
+    let score: PortfolioScoreResponse;
+    try {
+      score = JSON.parse(content);
+    } catch {
+      console.error("Failed to parse portfolio score response:", content.slice(0, 200));
+      return Response.json({ error: "AI returned invalid response" }, { status: 502 });
+    }
+
+    const [scoreId] = await Promise.all([
+      savePortfolioScore(session.userId, portfolioId, JSON.stringify(score)),
+      incrementPortfolioReviewUsage(session.userId),
+      incrementGlobalAiCalls(),
+      incrementAiTokenUsage(session.userId, totalTokens),
+      incrementDailyAiTokenUsage(session.userId, totalTokens),
+      incrementGlobalAiTokens(totalTokens),
+    ]);
+
+    trackEvent(session.userId, "portfolio_score_completed", {
+      overallScore: String(score.overallScore),
+      portfolioId,
+    });
+
+    return Response.json({ score, scoreId, cachedAt: new Date().toISOString() });
+  } catch (err) {
+    console.error("Portfolio score error:", err instanceof Error ? err.message : err);
+    return Response.json({ error: "Failed to contact AI service" }, { status: 500 });
+  }
+});
