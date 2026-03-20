@@ -239,12 +239,12 @@ describe("rate-limit", () => {
 
     it("over cap blocked", async () => {
       const monthKey = new Date().toISOString().slice(0, 7);
-      vi.mocked(getPlatformSetting).mockResolvedValue(`10000|${monthKey}`);
+      vi.mocked(getPlatformSetting).mockResolvedValue(`50000001|${monthKey}`);
 
       const result = await checkGlobalAiCap();
 
       expect(result.allowed).toBe(false);
-      expect(result.used).toBe(10000);
+      expect(result.used).toBe(50000001);
     });
   });
 

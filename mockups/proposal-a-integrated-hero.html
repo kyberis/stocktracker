@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proposal A — Integrated Hero (Summary + Chart merged)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --card-border: #334155;
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --gain: #10b981;
+    --gain-bg: rgba(16,185,129,0.1);
+    --loss: #ef4444;
+    --loss-bg: rgba(239,68,68,0.1);
+    --accent: #10b981;
+    --violet: #8b5cf6;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    padding: 24px;
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+
+  .annotation {
+    background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+    color: white;
+    padding: 16px 24px;
+    border-radius: 16px;
+    margin-bottom: 32px;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .annotation h1 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+  .annotation .tag {
+    display: inline-block;
+    background: rgba(255,255,255,0.2);
+    border-radius: 999px;
+    padding: 2px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 12px;
+  }
+
+  .callout {
+    position: relative;
+    border: 1px dashed rgba(139,92,246,0.4);
+    border-radius: 16px;
+    padding: 4px;
+  }
+  .callout::before {
+    content: attr(data-label);
+    position: absolute;
+    top: -10px;
+    left: 16px;
+    background: #8b5cf6;
+    color: white;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* ── Tab bar ─────────────────── */
+  .tabbar {
+    display: flex;
+    gap: 4px;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 6px;
+    margin-bottom: 24px;
+    overflow-x: auto;
+  }
+  .tabbar button {
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font: 500 13px/1 'Inter', sans-serif;
+    padding: 8px 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+  }
+  .tabbar button.active {
+    background: var(--accent);
+    color: white;
+    box-shadow: 0 1px 3px rgba(16,185,129,0.3);
+  }
+  .tabbar button:hover:not(.active) {
+    color: var(--text-secondary);
+    background: rgba(255,255,255,0.03);
+  }
+
+  /* ── Hero card (summary + chart merged) ─── */
+  .hero-card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+
+  .hero-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 20px 24px 0;
+    gap: 24px;
+  }
+
+  .hero-value-section {
+    flex-shrink: 0;
+  }
+  .hero-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+  .hero-value {
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+  }
+  .hero-badges {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+  .badge-loss {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--loss-bg);
+    color: #f87171;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 999px;
+  }
+  .badge-gain-text {
+    font-size: 13px;
+    font-weight: 500;
+    color: #34d399;
+  }
+
+  .hero-stats {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .hero-stat {
+    text-align: right;
+  }
+  .hero-stat-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+  }
+  .hero-stat-value {
+    font-size: 14px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-secondary);
+  }
+  .hero-stat-value.gain { color: #34d399; }
+
+  /* Allocation bar */
+  .alloc-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 24px;
+    border-top: 1px solid rgba(255,255,255,0.04);
+  }
+  .alloc-bar {
+    flex: 1;
+    height: 6px;
+    border-radius: 99px;
+    display: flex;
+    overflow: hidden;
+    background: rgba(255,255,255,0.03);
+  }
+  .alloc-bar span { display: block; height: 100%; }
+  .alloc-legend {
+    display: flex;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+  .alloc-legend span {
+    font-size: 11px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .alloc-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+  }
+
+  /* Chart zone — directly embedded */
+  .chart-zone {
+    padding: 0 24px 0;
+    position: relative;
+  }
+  .chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0 4px;
+  }
+  .chart-mode-tabs {
+    display: flex;
+    gap: 2px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 8px;
+    padding: 2px;
+  }
+  .chart-mode-tabs button {
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font: 500 11px/1 'Inter', sans-serif;
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .chart-mode-tabs button.active {
+    background: var(--accent);
+    color: white;
+  }
+  .chart-range-tabs {
+    display: flex;
+    gap: 2px;
+  }
+  .chart-range-tabs button {
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font: 600 11px/1 'Inter', sans-serif;
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .chart-range-tabs button.active {
+    background: rgba(16,185,129,0.15);
+    color: #34d399;
+  }
+
+  .chart-summary-line {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 4px 0 8px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .chart-summary-line .gain { color: #34d399; font-weight: 600; }
+
+  .chart-canvas {
+    width: 100%;
+    height: 180px;
+    position: relative;
+  }
+  .chart-canvas svg { width: 100%; height: 100%; }
+
+  .chart-ai-link {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 0 16px;
+    font-size: 12px;
+    color: var(--violet);
+    cursor: pointer;
+    border: none;
+    background: none;
+    font-family: inherit;
+  }
+  .chart-ai-link:hover { opacity: 0.8; }
+
+  /* ── Goal banner (compact) ──── */
+  .goal-banner {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .goal-banner:hover { border-color: var(--accent); }
+  .goal-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--loss-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .goal-info { flex: 1; min-width: 0; }
+  .goal-name { font-size: 13px; font-weight: 600; }
+  .goal-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .goal-progress-track {
+    height: 4px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 99px;
+    margin-top: 6px;
+    overflow: hidden;
+  }
+  .goal-progress-fill {
+    height: 100%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, #3b82f6, #10b981);
+  }
+  .goal-right {
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .goal-pct { font-size: 15px; font-weight: 700; color: var(--accent); }
+  .goal-eta { font-size: 10px; color: var(--text-muted); }
+  .goal-arrow { color: var(--text-muted); font-size: 18px; margin-left: 4px; }
+
+  /* ── Holdings table ─────────── */
+  .holdings-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .search-box {
+    flex: 1;
+    min-width: 200px;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 10px 14px;
+    color: var(--text-secondary);
+    font: 400 13px/1 'Inter', sans-serif;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .search-box:focus { border-color: var(--accent); }
+  .search-box::placeholder { color: var(--text-muted); }
+  .btn-add {
+    background: var(--accent);
+    color: white;
+    border: none;
+    font: 500 13px/1 'Inter', sans-serif;
+    padding: 10px 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-outline {
+    background: transparent;
+    border: 1px solid var(--card-border);
+    color: var(--text-secondary);
+    font: 500 12px/1 'Inter', sans-serif;
+    padding: 8px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .holding-row {
+    display: flex;
+    align-items: center;
+    padding: 14px 20px;
+    gap: 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    transition: background 0.1s;
+    cursor: pointer;
+  }
+  .holding-row:hover { background: rgba(255,255,255,0.02); }
+  .holding-name { font-size: 13px; font-weight: 600; }
+  .holding-meta { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+  .holding-info { flex: 1; min-width: 0; }
+  .holding-spark {
+    width: 80px;
+    height: 32px;
+    flex-shrink: 0;
+  }
+  .holding-value { text-align: right; flex-shrink: 0; }
+  .holding-amount { font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .holding-change { font-size: 11px; font-weight: 500; margin-top: 1px; }
+  .holding-change.up { color: #34d399; }
+  .holding-change.down { color: #f87171; }
+
+  .holdings-card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    overflow: hidden;
+  }
+
+  .view-all {
+    display: block;
+    text-align: center;
+    padding: 14px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--accent);
+    cursor: pointer;
+    border: none;
+    background: none;
+    width: 100%;
+    font-family: inherit;
+  }
+
+  /* ── Comparison ruler ────────── */
+  .ruler {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 40px 0 20px;
+    padding: 20px;
+    border: 1px dashed rgba(139,92,246,0.3);
+    border-radius: 12px;
+    background: rgba(139,92,246,0.04);
+  }
+  .ruler-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #a78bfa;
+    white-space: nowrap;
+  }
+  .ruler-bar {
+    flex: 1;
+    display: flex;
+    gap: 4px;
+    height: 32px;
+    align-items: stretch;
+  }
+  .ruler-seg {
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 600;
+    color: white;
+  }
+  .ruler-seg.current { background: rgba(239,68,68,0.3); color: #fca5a5; }
+  .ruler-seg.proposal { background: rgba(16,185,129,0.3); color: #6ee7b7; }
+</style>
+</head>
+<body>
+
+<div class="annotation">
+  <span class="tag">Proposal A</span>
+  <h1>Integrated Hero — Merge summary + chart into one card</h1>
+  <p>
+    Combines the portfolio summary and evolution chart into a single compact card, eliminating
+    the vertical gap between them. Stats move to the top-right corner. The chart sits directly
+    below the value with no separate card boundary. <strong>Saves ~200px of vertical space</strong>,
+    pushing holdings into the first viewport.
+  </p>
+</div>
+
+<!-- Vertical space comparison -->
+<div class="ruler">
+  <span class="ruler-label">Vertical space</span>
+  <div class="ruler-bar">
+    <div class="ruler-seg current" style="flex:6">Current (~660px)</div>
+    <div class="ruler-seg proposal" style="flex:4">Proposal A (~440px)</div>
+  </div>
+</div>
+
+<!-- Tab bar -->
+<div class="tabbar">
+  <button class="active">Portfolio</button>
+  <button>Diversification</button>
+  <button>Dividends</button>
+  <button>Metrics</button>
+  <button>Growth</button>
+  <button>Events</button>
+  <button>News</button>
+</div>
+
+<!-- HERO CARD: summary + chart merged -->
+<div class="callout" data-label="Merged: Summary + Chart">
+<div class="hero-card">
+  <div class="hero-top">
+    <div class="hero-value-section">
+      <div class="hero-label">Portfolio Value</div>
+      <div class="hero-value">&euro;53,685.75</div>
+      <div class="hero-badges">
+        <span class="badge-loss">-&euro;795.24 (-1.46%)</span>
+        <span class="badge-gain-text">+5.49% gain / loss</span>
+      </div>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hero-stat-label">Cost</div>
+        <div class="hero-stat-value">&euro;50,892.22</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-label">Gain / Loss</div>
+        <div class="hero-stat-value gain">+&euro;2,793.53</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-label">Holdings</div>
+        <div class="hero-stat-value">30</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="alloc-row">
+    <div class="alloc-bar">
+      <span style="width:82.87%;background:#6366f1"></span>
+      <span style="width:15.89%;background:#10b981"></span>
+      <span style="width:1.24%;background:#64748b"></span>
+    </div>
+    <div class="alloc-legend">
+      <span><span class="alloc-dot" style="background:#6366f1"></span> Stocks 82.87%</span>
+      <span><span class="alloc-dot" style="background:#10b981"></span> ETFs 15.89%</span>
+      <span><span class="alloc-dot" style="background:#64748b"></span> Cash 1.24%</span>
+    </div>
+  </div>
+
+  <div class="chart-zone">
+    <div class="chart-header">
+      <div class="chart-mode-tabs">
+        <button class="active">Value</button>
+        <button>Performance</button>
+      </div>
+      <div class="chart-range-tabs">
+        <button>1W</button>
+        <button class="active">1M</button>
+        <button>3M</button>
+        <button>6M</button>
+        <button>YTD</button>
+        <button>1Y</button>
+        <button>MAX</button>
+      </div>
+    </div>
+    <div class="chart-summary-line">
+      Portfolio value vs invested capital over time &middot;
+      <span class="gain">+2.64%</span> &euro;52,506.23 &rarr; &euro;53,891.18
+    </div>
+    <div class="chart-canvas">
+      <svg viewBox="0 0 800 180" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#10b981" stop-opacity="0.25"/>
+            <stop offset="100%" stop-color="#10b981" stop-opacity="0"/>
+          </linearGradient>
+          <linearGradient id="investGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.10"/>
+            <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <!-- Invested capital (flat-ish) -->
+        <path d="M0,120 L100,118 L200,115 L300,112 L400,110 L500,108 L600,106 L700,104 L800,102" fill="none" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="4,4" opacity="0.5"/>
+        <path d="M0,120 L100,118 L200,115 L300,112 L400,110 L500,108 L600,106 L700,104 L800,102 L800,180 L0,180Z" fill="url(#investGrad)"/>
+        <!-- Portfolio value -->
+        <path d="M0,95 L40,92 L80,88 L120,85 L160,80 L200,82 L240,78 L280,75 L320,72 L360,68 L400,65 L440,62 L480,58 L520,55 L560,50 L600,48 L640,52 L680,50 L720,48 L760,45 L800,42" fill="url(#areaGrad)" stroke="none"/>
+        <path d="M0,95 L40,92 L80,88 L120,85 L160,80 L200,82 L240,78 L280,75 L320,72 L360,68 L400,65 L440,62 L480,58 L520,55 L560,50 L600,48 L640,52 L680,50 L720,48 L760,45 L800,42" fill="none" stroke="#10b981" stroke-width="2"/>
+        <!-- Dot markers for events -->
+        <circle cx="160" cy="80" r="4" fill="#ef4444" opacity="0.7"/>
+        <circle cx="400" cy="65" r="4" fill="#ef4444" opacity="0.7"/>
+        <circle cx="640" cy="52" r="4" fill="#ef4444" opacity="0.7"/>
+      </svg>
+    </div>
+    <button class="chart-ai-link">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>
+      Ask about this chart
+    </button>
+  </div>
+</div>
+</div>
+
+<!-- Goal (compact, single row) -->
+<div class="callout" data-label="Compact goal">
+<div class="goal-banner">
+  <div class="goal-icon">🎯</div>
+  <div class="goal-info">
+    <div class="goal-name">My Goal</div>
+    <div class="goal-sub">&euro;53,685.75 of &euro;1,000,000.00</div>
+    <div class="goal-progress-track"><div class="goal-progress-fill" style="width:5.4%"></div></div>
+  </div>
+  <div class="goal-right">
+    <div class="goal-pct">5.4%</div>
+    <div class="goal-eta">~43y 3m remaining</div>
+  </div>
+  <span class="goal-arrow">&rsaquo;</span>
+</div>
+</div>
+
+<!-- Holdings table (visible in first viewport!) -->
+<div class="callout" data-label="Now visible above the fold">
+<div class="holdings-header">
+  <input class="search-box" type="text" placeholder="Search by ticker or name...">
+  <button class="btn-add">+ Add Transaction</button>
+  <button class="btn-outline">Daily move</button>
+  <button class="btn-outline">&darr; 27</button>
+</div>
+
+<div class="holdings-card">
+  <div class="holding-row">
+    <div class="holding-info">
+      <div class="holding-name">Occidental Petroleum Corp.</div>
+      <div class="holding-meta">NYSE | OXY | $69.58 &times; 80</div>
+    </div>
+    <div class="holding-spark">
+      <svg viewBox="0 0 80 32" fill="none"><path d="M0,20 L10,18 L20,16 L30,14 L40,12 L50,10 L60,8 L70,6 L80,4" stroke="#34d399" stroke-width="1.5"/></svg>
+    </div>
+    <div class="holding-value">
+      <div class="holding-amount">&euro;4,114.83</div>
+      <div class="holding-change up">+2.08%</div>
+    </div>
+  </div>
+  <div class="holding-row">
+    <div class="holding-info">
+      <div class="holding-name">Chevron Corp.</div>
+      <div class="holding-meta">NYSE | CVX | $201.44 &times; 10</div>
+    </div>
+    <div class="holding-spark">
+      <svg viewBox="0 0 80 32" fill="none"><path d="M0,22 L10,20 L20,18 L30,16 L40,14 L50,12 L60,10 L70,9 L80,8" stroke="#34d399" stroke-width="1.5"/></svg>
+    </div>
+    <div class="holding-value">
+      <div class="holding-amount">&euro;1,739.03</div>
+      <div class="holding-change up">+1.42%</div>
+    </div>
+  </div>
+  <div class="holding-row">
+    <div class="holding-info">
+      <div class="holding-name">Main Street Capital Corporation</div>
+      <div class="holding-meta">NYSE | MAIN | $55.69 &times; 7</div>
+    </div>
+    <div class="holding-spark">
+      <svg viewBox="0 0 80 32" fill="none"><path d="M0,18 L10,16 L20,15 L30,14 L40,13 L50,12 L60,11 L70,10 L80,10" stroke="#34d399" stroke-width="1.5"/></svg>
+    </div>
+    <div class="holding-value">
+      <div class="holding-amount">&euro;336.54</div>
+      <div class="holding-change up">+1.00%</div>
+    </div>
+  </div>
+  <div class="holding-row">
+    <div class="holding-info">
+      <div class="holding-name">iShares Treasury Bond 0-1yr UCITS ETF</div>
+      <div class="holding-meta">LSE | IB01L | $119.68 &times; 69 &nbsp;<span style="background:rgba(16,185,129,0.15);color:#34d399;font-size:10px;font-weight:600;padding:1px 6px;border-radius:4px;">ETF</span></div>
+    </div>
+    <div class="holding-spark">
+      <svg viewBox="0 0 80 32" fill="none"><path d="M0,16 L10,16 L20,16 L30,16 L40,16 L50,16 L60,16 L70,16 L80,16" stroke="#64748b" stroke-width="1.5"/></svg>
+    </div>
+    <div class="holding-value">
+      <div class="holding-amount">&euro;7,129.06</div>
+      <div class="holding-change down">-0.02%</div>
+    </div>
+  </div>
+
+  <button class="view-all">View all (27)</button>
+</div>
+</div>
+
+</body>
+</html>

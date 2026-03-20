@@ -49,6 +49,8 @@ interface PortfolioContextType {
   refreshingTickers: Set<string>;
   exchangeRates: ExchangeRates;
   isLoading: boolean;
+  isInitializing: boolean;
+  isRefreshing: boolean;
   error: string | null;
   portfolios: PortfolioInfo[];
   activePortfolioId: string | null;
@@ -130,17 +132,19 @@ export interface PortfolioProviderProps {
   initialQuotes?: Record<string, QuoteData>;
   initialExchangeRates?: ExchangeRates;
   initialGoal?: Goal | null;
+  initialPortfolios?: PortfolioInfo[];
 }
 
 export function PortfolioProvider({
   children, initialHoldings, initialCash,
   demoMode, initialQuotes, initialExchangeRates, initialGoal,
+  initialPortfolios,
 }: PortfolioProviderProps) {
   const { getApiHeaders } = useSettings();
   const hasServerData = !!(initialHoldings || initialCash);
   const [holdings, setHoldings] = useState<Holding[]>(initialHoldings ?? []);
   const [cashEntries, setCashEntries] = useState<CashEntry[]>(initialCash ?? []);
-  const [portfolios, setPortfolios] = useState<PortfolioInfo[]>([]);
+  const [portfolios, setPortfolios] = useState<PortfolioInfo[]>(initialPortfolios ?? []);
   const [activePortfolioId, setActivePortfolioId] = useState<string | null>(() => {
     if (demoMode || typeof window === "undefined") return null;
     return localStorage.getItem(ACTIVE_PORTFOLIO_KEY) || null;
@@ -149,7 +153,9 @@ export function PortfolioProvider({
   const [quoteUpdatedAt, setQuoteUpdatedAt] = useState<Record<string, number>>({});
   const [refreshingTickers, setRefreshingTickers] = useState<Set<string>>(new Set());
   const [exchangeRates, setExchangeRates] = useState<ExchangeRates>(initialExchangeRates ?? {});
-  const [isLoading, setIsLoading] = useState(!demoMode);
+  const hasInitialQuotes = !!(initialQuotes && Object.keys(initialQuotes).length > 0);
+  const [isInitializing, setIsInitializing] = useState(!demoMode && !hasInitialQuotes);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(demoMode ? new Date() : null);
   const [holdingsLastFetchedAt, setHoldingsLastFetchedAt] = useState<Date | null>(
@@ -217,17 +223,17 @@ export function PortfolioProvider({
     }
 
     const init = async () => {
-      setIsLoading(true);
       setError(null);
 
-      const loadedPortfolios = await fetchPortfolios();
+      const loadedPortfolios = initialPortfolios?.length
+        ? initialPortfolios
+        : await fetchPortfolios();
 
-      // Auto-select the default portfolio when no selection is stored
-      // or the stored selection doesn't belong to this user's portfolios
+      const defaultP = loadedPortfolios.find(p => p.isDefault) ?? loadedPortfolios[0];
+
       let resolvedPortfolioId = activePortfolioId;
       const storedIsValid = resolvedPortfolioId && loadedPortfolios.some((p) => p.id === resolvedPortfolioId);
       if ((!resolvedPortfolioId || !storedIsValid) && loadedPortfolios.length > 0) {
-        const defaultP = loadedPortfolios.find((p) => p.isDefault) ?? loadedPortfolios[0];
         resolvedPortfolioId = defaultP.id;
         setActivePortfolioId(resolvedPortfolioId);
         if (typeof window !== "undefined") {
@@ -235,9 +241,11 @@ export function PortfolioProvider({
         }
       }
 
-      // Fetch holdings/cash if no server data OR if a specific portfolio is selected
-      // (server data is unscoped; we need scoped data for a saved portfolio selection)
-      const needsFetch = !hasServerData || resolvedPortfolioId != null;
+      // page.tsx fetches unscoped holdings which covers the default portfolio.
+      // Only re-fetch when the resolved portfolio differs from the default.
+      const serverCoversResolved = hasServerData &&
+        (!resolvedPortfolioId || resolvedPortfolioId === defaultP?.id);
+      const needsFetch = !serverCoversResolved;
       let holdingsData: Holding[] = initialHoldings ?? [];
       if (needsFetch) {
         const qp = resolvedPortfolioId ? `?portfolioId=${encodeURIComponent(resolvedPortfolioId)}` : "";
@@ -251,21 +259,32 @@ export function PortfolioProvider({
         setCashEntries(cashData);
       }
 
-      const cachedQuotes = loadCacheEntry<Record<string, QuoteData>>(QUOTES_CACHE_KEY);
-      if (cachedQuotes?.data) {
-        setQuotes(cachedQuotes.data);
-        const nextUpdatedAt: Record<string, number> = {};
-        for (const [symbol, quote] of Object.entries(cachedQuotes.data)) {
-          if (typeof quote.fetchedAt === "number") {
-            nextUpdatedAt[symbol] = quote.fetchedAt;
+      const hasServerQuotes = initialQuotes && Object.keys(initialQuotes).length > 0;
+      const hasServerRates = initialExchangeRates && Object.keys(initialExchangeRates).length > 0;
+
+      let hasCachedQuotes = false;
+      if (!hasServerQuotes) {
+        const cachedQuotes = loadCacheEntry<Record<string, QuoteData>>(QUOTES_CACHE_KEY);
+        if (cachedQuotes?.data) {
+          hasCachedQuotes = true;
+          setQuotes(cachedQuotes.data);
+          const nextUpdatedAt: Record<string, number> = {};
+          for (const [symbol, quote] of Object.entries(cachedQuotes.data)) {
+            if (typeof quote.fetchedAt === "number") {
+              nextUpdatedAt[symbol] = quote.fetchedAt;
+            }
           }
+          setQuoteUpdatedAt(nextUpdatedAt);
+          setLastUpdated(new Date(cachedQuotes.timestamp));
         }
-        setQuoteUpdatedAt(nextUpdatedAt);
-        setLastUpdated(new Date(cachedQuotes.timestamp));
+      } else {
+        setLastUpdated(new Date());
       }
 
-      const cachedRates = loadCacheEntry<ExchangeRates>(RATES_CACHE_KEY);
-      if (cachedRates?.data) setExchangeRates(cachedRates.data);
+      if (!hasServerRates) {
+        const cachedRates = loadCacheEntry<ExchangeRates>(RATES_CACHE_KEY);
+        if (cachedRates?.data) setExchangeRates(cachedRates.data);
+      }
 
       fetch("/api/alerts/tickers", { cache: "no-store" })
         .then((r) => r.ok ? r.json() : { tickers: [] })
@@ -280,14 +299,17 @@ export function PortfolioProvider({
 
       mountedRef.current = true;
 
-      // Kick off a fresh quote fetch so newly imported or uncached tickers
-      // get live prices immediately. Keep isLoading true – fetchQuotes will
-      // clear it when done.
       const allTickers = [...new Set(holdingsData.map((h: Holding) => h.ticker))];
-      if (allTickers.length > 0) {
-        fetchQuotes(allTickers);
+      if (allTickers.length > 0 && !hasServerQuotes) {
+        if (hasCachedQuotes) setIsInitializing(false);
+        fetchQuotes(allTickers, { background: hasCachedQuotes });
       } else {
-        setIsLoading(false);
+        setIsInitializing(false);
+        if (hasServerQuotes && allTickers.length > 0) {
+          setTimeout(() => {
+            if (!fetchingRef.current) fetchQuotes(allTickers, { background: true });
+          }, 30_000);
+        }
       }
     };
 
@@ -301,7 +323,6 @@ export function PortfolioProvider({
   useEffect(() => {
     if (demoMode || !mountedRef.current) return;
     const version = ++switchVersionRef.current;
-    setIsLoading(true);
     setError(null);
 
     (async () => {
@@ -320,11 +341,10 @@ export function PortfolioProvider({
         setHoldings(holdingsData);
         setCashEntries(cashData);
         setHoldingsLastFetchedAt(new Date());
-        setIsLoading(false);
 
         const tickers = [...new Set(holdingsData.map((h) => h.ticker))];
         if (tickers.length > 0) {
-          fetchQuotes(tickers);
+          fetchQuotes(tickers, { background: true });
         }
 
         const goalQp = activePortfolioId ? `?portfolioId=${encodeURIComponent(activePortfolioId)}` : "?portfolioId=";
@@ -335,7 +355,6 @@ export function PortfolioProvider({
       } catch (err) {
         if (switchVersionRef.current !== version) return;
         setError(err instanceof Error ? err.message : "Failed to load portfolio");
-        setIsLoading(false);
       }
     })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -366,11 +385,12 @@ export function PortfolioProvider({
     return parseExchangeRatesFromApi(data);
   }, [holdings, getPortfolioCurrency]);
 
-  const fetchQuotes = useCallback(async (tickers: string[]) => {
+  const fetchQuotes = useCallback(async (tickers: string[], options?: { background?: boolean }) => {
     if (fetchingRef.current || tickers.length === 0) return;
+    const { background = false } = options ?? {};
     fetchingRef.current = true;
-    setIsLoading(true);
-    setError(null);
+    setIsRefreshing(true);
+    if (!background) setError(null);
 
     try {
       const allQuotes: Record<string, QuoteData> = {};
@@ -414,10 +434,13 @@ export function PortfolioProvider({
       saveToStorage(RATES_CACHE_KEY, rates);
       setLastUpdated(new Date());
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Failed to fetch quotes";
-      setError(msg === "rate_limited" ? "Rate limit reached. Retrying shortly..." : msg);
+      if (!background) {
+        const msg = err instanceof Error ? err.message : "Failed to fetch quotes";
+        setError(msg === "rate_limited" ? "Rate limit reached. Retrying shortly..." : msg);
+      }
     } finally {
-      setIsLoading(false);
+      setIsInitializing(false);
+      setIsRefreshing(false);
       fetchingRef.current = false;
     }
   }, [getApiHeaders, buildFetchUrl, fetchExchangeRates]);
@@ -434,7 +457,7 @@ export function PortfolioProvider({
     const ms = refreshInterval * 60 * 1000;
     const id = window.setInterval(() => {
       const tickers = [...new Set(holdings.map((h) => h.ticker))];
-      if (tickers.length > 0) fetchQuotes(tickers);
+      if (tickers.length > 0) fetchQuotes(tickers, { background: true });
     }, ms);
     return () => window.clearInterval(id);
   }, [holdings, refreshInterval, fetchQuotes]);
@@ -706,6 +729,8 @@ export function PortfolioProvider({
     return found?.currency ?? "EUR";
   }, [activePortfolioId, portfolios]);
 
+  const isLoading = isInitializing || isRefreshing;
+
   const noop = useCallback(async () => {}, []);
   const noopGoal = useCallback(async () => null as Goal | null, []);
   const value = useMemo(
@@ -717,6 +742,8 @@ export function PortfolioProvider({
       refreshingTickers,
       exchangeRates,
       isLoading,
+      isInitializing,
+      isRefreshing,
       error,
       portfolios,
       activePortfolioId,
@@ -746,7 +773,7 @@ export function PortfolioProvider({
     }),
     [
       holdings, cashEntries, quotes, quoteUpdatedAt, refreshingTickers, exchangeRates,
-      isLoading, error, portfolios, activePortfolioId, activePortfolioCurrency, alertedTickers, setActivePortfolio, fetchPortfolios,
+      isLoading, isInitializing, isRefreshing, error, portfolios, activePortfolioId, activePortfolioCurrency, alertedTickers, setActivePortfolio, fetchPortfolios,
       addHolding, removeHolding, updateHolding, addCashEntry,
       removeCashEntry, updateCashEntry, refreshHoldings, refreshQuotes, refreshSingleQuote,
       refreshAlertedTickers, lastUpdated, holdingsLastFetchedAt, demoMode, noop, noopGoal,

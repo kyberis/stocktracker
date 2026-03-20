@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { trackEvent, getGlobalOpenAIApiKey, listHoldings, findUserById } from "@/lib/db";
-import { checkAiImportRateLimit, checkGlobalAiCap, incrementGlobalAiCalls } from "@/lib/rate-limit";
+import { trackEvent, getGlobalOpenAIApiKey, listHoldings, findUserById, incrementAiTokenUsage, incrementDailyAiTokenUsage } from "@/lib/db";
+import { checkAiImportRateLimit, checkGlobalAiCap, incrementGlobalAiCalls, incrementGlobalAiTokens } from "@/lib/rate-limit";
 import { withMetrics } from "@/lib/with-metrics";
 import { portfolioImportsTotal, rateLimitHitsTotal } from "@/lib/metrics";
 import { getHoldingsLimit } from "@/lib/subscription";
@@ -187,6 +187,12 @@ export const POST = withMetrics("/api/import-portfolio", async (req: NextRequest
     }
 
     const data = await openaiRes.json();
+    const importTokens = data.usage?.total_tokens || 8000;
+    Promise.all([
+      incrementAiTokenUsage(session.userId, importTokens),
+      incrementDailyAiTokenUsage(session.userId, importTokens),
+      incrementGlobalAiTokens(importTokens),
+    ]).catch(() => {});
     let raw = data.choices?.[0]?.message?.content || "{}";
 
     raw = raw.replace(/```(?:json)?\s*/gi, "").replace(/```\s*/g, "");

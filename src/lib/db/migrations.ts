@@ -2206,6 +2206,23 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       }
     },
   },
+  {
+    version: 67,
+    description: "Add ai_tokens_this_month and ai_tokens_today columns for token-based AI limits",
+    up: async (client: Client) => {
+      for (const ddl of [
+        "ALTER TABLE users ADD COLUMN ai_tokens_this_month INTEGER NOT NULL DEFAULT 0",
+        "ALTER TABLE users ADD COLUMN ai_tokens_today INTEGER NOT NULL DEFAULT 0",
+      ]) {
+        try {
+          await client.execute({ sql: ddl });
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : String(e);
+          if (!msg.includes("duplicate column")) throw e;
+        }
+      }
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

@@ -1087,7 +1087,7 @@ export default function ProfilePage() {
     } catch { /* ignore */ }
     setDeviceGrantLoading(false);
   }, []);
-  const aiLimit = 5;
+  const aiLimit = user?.aiTokenLimit ?? 25_000;
 
   useEffect(() => {
     if (refundChecked.current) return;
@@ -1593,7 +1593,7 @@ export default function ProfilePage() {
             <ProCompareCard
               surface="profile_always_on"
               reason="upgrade_required"
-              aiUsage={{ used: user?.aiCallsThisMonth ?? 0, limit: aiLimit }}
+              aiUsage={{ used: user?.aiTokensThisMonth ?? 0, limit: aiLimit }}
             />
           )}
         </div>

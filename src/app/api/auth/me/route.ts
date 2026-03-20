@@ -11,7 +11,7 @@ import {
   scheduleSnapTradeDeletion,
   createNotification,
 } from "@/lib/db";
-import { effectivePlan, canAccessTheme } from "@/lib/subscription";
+import { effectivePlan, canAccessTheme, getAiTokenLimit } from "@/lib/subscription";
 import { planExpiredNotification } from "@/lib/notification-templates";
 import { withMetrics } from "@/lib/with-metrics";
 
@@ -68,6 +68,9 @@ export const GET = withMetrics("/api/auth/me", async (req: NextRequest) => {
       aiCallsResetAt: user?.ai_calls_reset_at || "",
       aiCallsToday: user?.ai_calls_today || 0,
       aiDailyResetAt: user?.ai_daily_reset_at || "",
+      aiTokensThisMonth: user?.ai_tokens_this_month || 0,
+      aiTokensToday: user?.ai_tokens_today || 0,
+      aiTokenLimit: getAiTokenLimit(resolvedPlan),
       emailVerified: user?.email_verified === 1,
       authProvider: user?.auth_provider || "credentials",
       googleLinked: !!user?.google_id,

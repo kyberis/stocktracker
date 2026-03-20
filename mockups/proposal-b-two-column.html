@@ -1,0 +1,1514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proposal B — Two-Column Overview (revised)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --card-border: #334155;
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --gain: #10b981;
+    --gain-bg: rgba(16,185,129,0.1);
+    --loss: #ef4444;
+    --loss-bg: rgba(239,68,68,0.1);
+    --accent: #10b981;
+    --violet: #8b5cf6;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    padding: 24px;
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+
+  .annotation {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+    padding: 16px 24px;
+    border-radius: 16px;
+    margin-bottom: 32px;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .annotation h1 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+  .annotation .tag {
+    display: inline-block;
+    background: rgba(255,255,255,0.2);
+    border-radius: 999px;
+    padding: 2px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 12px;
+  }
+  .annotation ul { margin: 8px 0 0 18px; font-size: 13px; }
+  .annotation li { margin-bottom: 4px; }
+
+  .callout {
+    position: relative;
+    border: 1px dashed rgba(245,158,11,0.4);
+    border-radius: 16px;
+    padding: 4px;
+  }
+  .callout::before {
+    content: attr(data-label);
+    position: absolute;
+    top: -10px;
+    left: 16px;
+    background: #d97706;
+    color: white;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    z-index: 2;
+  }
+
+  /* ── Tab bar ─────────────────── */
+  .tabbar {
+    display: flex;
+    gap: 4px;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 6px;
+    margin-bottom: 20px;
+    overflow-x: auto;
+  }
+  .tabbar button {
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font: 500 13px/1 'Inter', sans-serif;
+    padding: 8px 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+  }
+  .tabbar button.active {
+    background: var(--accent);
+    color: white;
+    box-shadow: 0 1px 3px rgba(16,185,129,0.3);
+  }
+
+  /* ── Two-column layout (persistent) ─── */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 16px;
+    align-items: start;
+  }
+
+  /* ── Left column ───────────────── */
+  .left-col {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+  }
+
+  .main-card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    overflow: hidden;
+  }
+
+  .main-header {
+    padding: 20px 24px 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .value-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+  .value-big {
+    font-size: 38px;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .value-change {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .badge-loss {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--loss-bg);
+    color: #f87171;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 999px;
+  }
+  .gain-text { font-size: 13px; font-weight: 500; color: #34d399; }
+
+  .range-tabs {
+    display: flex;
+    gap: 2px;
+    align-self: center;
+    flex-shrink: 0;
+  }
+  .range-tabs button {
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font: 600 11px/1 'Inter', sans-serif;
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .range-tabs button.active {
+    background: rgba(16,185,129,0.15);
+    color: #34d399;
+  }
+
+  /* Chart controls bar — ABOVE the chart */
+  .chart-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 24px 0;
+  }
+  .mode-toggle {
+    display: flex;
+    gap: 2px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 8px;
+    padding: 2px;
+  }
+  .mode-toggle button {
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font: 500 11px/1 'Inter', sans-serif;
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .mode-toggle button.active {
+    background: var(--accent);
+    color: white;
+  }
+
+  .chart-summary {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .chart-summary .green { color: #34d399; font-weight: 600; }
+
+  .chart-area { padding: 4px 24px 0; }
+  .chart-canvas { width: 100%; height: 160px; }
+  .chart-canvas svg { width: 100%; height: 100%; }
+
+  /* Sync + AI row below chart */
+  .chart-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 24px 14px;
+    border-top: 1px solid rgba(255,255,255,0.04);
+    margin-top: 4px;
+  }
+  .sync-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .sync-dot {
+    position: relative;
+    width: 8px;
+    height: 8px;
+  }
+  .sync-dot::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: ping 1.5s ease-in-out infinite;
+  }
+  .sync-dot::after {
+    content: '';
+    position: absolute;
+    inset: 1px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  @keyframes ping {
+    0% { opacity: 0.7; transform: scale(1); }
+    50% { opacity: 0; transform: scale(2); }
+    100% { opacity: 0; transform: scale(2); }
+  }
+  .chart-ai {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: var(--violet);
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  /* ── Holdings (inside left column) ────── */
+  .holdings-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 20px 0;
+    flex-wrap: wrap;
+  }
+  .search-box {
+    flex: 1;
+    min-width: 140px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    padding: 8px 12px;
+    color: var(--text-secondary);
+    font: 400 12px/1 'Inter', sans-serif;
+    outline: none;
+  }
+  .search-box::placeholder { color: var(--text-muted); }
+  .search-box:focus { border-color: var(--accent); }
+  .btn-add {
+    background: var(--accent);
+    color: white;
+    border: none;
+    font: 500 12px/1 'Inter', sans-serif;
+    padding: 8px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-outline {
+    background: transparent;
+    border: 1px solid var(--card-border);
+    color: var(--text-secondary);
+    font: 500 11px/1 'Inter', sans-serif;
+    padding: 7px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .holding-row {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    gap: 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+  .holding-row:hover { background: rgba(255,255,255,0.02); }
+  .holding-info { flex: 1; min-width: 0; }
+  .holding-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .holding-meta { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+  .holding-spark { width: 72px; height: 28px; flex-shrink: 0; }
+  .holding-value { text-align: right; flex-shrink: 0; }
+  .holding-amount { font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .holding-change { font-size: 11px; font-weight: 500; margin-top: 1px; }
+  .holding-change.up { color: #34d399; }
+  .holding-change.down { color: #f87171; }
+  .etf-badge {
+    background: rgba(16,185,129,0.15);
+    color: #34d399;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 6px;
+    border-radius: 4px;
+    margin-left: 4px;
+  }
+
+  .view-all {
+    display: block;
+    text-align: center;
+    padding: 12px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--accent);
+    cursor: pointer;
+    border: none;
+    background: none;
+    width: 100%;
+    font-family: inherit;
+  }
+
+  /* ── Sidebar (right) ───────── */
+  .sidebar { display: flex; flex-direction: column; gap: 12px; }
+
+  .side-card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    padding: 14px;
+  }
+  .side-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .side-card-title {
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .side-card-link {
+    font-size: 11px;
+    color: var(--accent);
+    cursor: pointer;
+    border: none;
+    background: none;
+    font-family: inherit;
+  }
+
+  /* Referral banner — compact in sidebar */
+  .referral-card {
+    background: linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(59,130,246,0.06) 100%);
+    border-color: rgba(16,185,129,0.2);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .referral-card:hover { border-color: var(--accent); }
+  .referral-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(16,185,129,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .referral-text { flex: 1; min-width: 0; }
+  .referral-title { font-size: 12px; font-weight: 600; color: var(--accent); }
+  .referral-sub { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+  .referral-arrow { color: var(--accent); font-size: 16px; flex-shrink: 0; }
+
+  /* Donut */
+  .donut-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .donut-container {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    margin-bottom: 10px;
+  }
+  .donut-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+  }
+  .donut-center-label {
+    font-size: 9px;
+    color: var(--text-muted);
+    margin-bottom: 1px;
+  }
+  .donut-center-value {
+    font-size: 14px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .alloc-tabs {
+    display: flex;
+    gap: 2px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 8px;
+    padding: 2px;
+  }
+  .alloc-tabs button {
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font: 500 10px/1 'Inter', sans-serif;
+    padding: 4px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .alloc-tabs button.active {
+    background: rgba(255,255,255,0.08);
+    color: var(--text-primary);
+  }
+
+  .alloc-list { width: 100%; }
+  .alloc-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 3px 0;
+    font-size: 11px;
+  }
+  .alloc-item-left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .alloc-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .alloc-item-label { color: var(--text-secondary); }
+  .alloc-item-pct { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  /* Allocation tab panels — hide/show */
+  .alloc-panel { display: none; }
+  .alloc-panel.active { display: block; }
+
+  /* Stats grid */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .stat-cell {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.04);
+    border-radius: 8px;
+    padding: 8px 10px;
+  }
+  .stat-cell-label {
+    font-size: 9px;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .stat-cell-value {
+    font-size: 13px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-cell-value.gain { color: #34d399; }
+
+  /* Goal */
+  .goal-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .goal-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    background: var(--loss-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .goal-text { flex: 1; min-width: 0; }
+  .goal-sub { font-size: 10px; color: var(--text-muted); }
+  .goal-track {
+    height: 3px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 99px;
+    margin-top: 6px;
+    overflow: hidden;
+  }
+  .goal-fill {
+    height: 100%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, #3b82f6, #10b981);
+  }
+
+  /* Upcoming Earnings */
+  .earnings-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .earnings-item:last-child { border-bottom: none; }
+  .earnings-date {
+    width: 36px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .earnings-date-day {
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+  .earnings-date-month {
+    font-size: 9px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .earnings-info { flex: 1; min-width: 0; }
+  .earnings-ticker {
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .earnings-name {
+    font-size: 10px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .earnings-tag {
+    font-size: 9px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+  .earnings-tag.bmo { background: rgba(245,158,11,0.15); color: #fbbf24; }
+  .earnings-tag.amc { background: rgba(99,102,241,0.15); color: #a5b4fc; }
+
+  /* AI trigger card in sidebar */
+  .ai-card {
+    background: linear-gradient(135deg, rgba(139,92,246,0.08) 0%, rgba(99,102,241,0.05) 100%);
+    border-color: rgba(139,92,246,0.2);
+  }
+  .ai-card .side-card-title { color: #c4b5fd; }
+  .ai-trigger {
+    cursor: pointer;
+    transition: border-color 0.15s, transform 0.15s;
+  }
+  .ai-trigger:hover {
+    border-color: rgba(139,92,246,0.4);
+    transform: translateY(-1px);
+  }
+  .ai-trigger-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    flex-shrink: 0;
+  }
+
+  .ai-uses {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .ai-uses-bar {
+    flex: 1;
+    height: 3px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .ai-uses-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #8b5cf6, #6366f1);
+    border-radius: 99px;
+  }
+  .ai-uses-label {
+    font-size: 9px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+
+  /* ── AI Drawer (slide-out panel) ──── */
+  .ai-drawer-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+  }
+  .ai-drawer-backdrop.open {
+    display: block;
+    opacity: 1;
+  }
+
+  .ai-drawer {
+    position: fixed;
+    top: 0;
+    right: -460px;
+    width: 440px;
+    max-width: calc(100vw - 2rem);
+    height: 100vh;
+    background: #151e2f;
+    border-left: 1px solid rgba(139,92,246,0.2);
+    z-index: 101;
+    display: flex;
+    flex-direction: column;
+    transition: right 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    box-shadow: -8px 0 40px rgba(0,0,0,0.4);
+  }
+  .ai-drawer.open {
+    right: 0;
+  }
+
+  .ai-drawer-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(139,92,246,0.12);
+    background: linear-gradient(135deg, rgba(139,92,246,0.06) 0%, transparent 100%);
+    flex-shrink: 0;
+  }
+  .ai-drawer-header-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    flex-shrink: 0;
+  }
+  .ai-drawer-header-text { flex: 1; }
+  .ai-drawer-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #e0d5ff;
+  }
+  .ai-drawer-subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 1px;
+  }
+  .ai-drawer-close {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.06);
+    background: rgba(255,255,255,0.04);
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+  .ai-drawer-close:hover {
+    background: rgba(255,255,255,0.08);
+    color: var(--text-primary);
+  }
+
+  .ai-context-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 20px;
+    font-size: 11px;
+    color: rgba(196,181,253,0.5);
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    flex-shrink: 0;
+  }
+  .ai-context-bar svg { flex-shrink: 0; }
+  .ai-context-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #8b5cf6;
+    flex-shrink: 0;
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .ai-drawer-messages {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .ai-msg {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .ai-msg.user { flex-direction: row-reverse; }
+  .ai-msg-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .ai-msg.assistant .ai-msg-avatar {
+    background: linear-gradient(135deg, rgba(139,92,246,0.2), rgba(99,102,241,0.15));
+    color: #c4b5fd;
+  }
+  .ai-msg.user .ai-msg-avatar {
+    background: rgba(16,185,129,0.15);
+    color: #6ee7b7;
+  }
+  .ai-msg-bubble {
+    font-size: 13px;
+    line-height: 1.6;
+    padding: 10px 14px;
+    border-radius: 14px;
+    max-width: 82%;
+  }
+  .ai-msg.assistant .ai-msg-bubble {
+    background: rgba(139,92,246,0.08);
+    color: #e0d5ff;
+    border-bottom-left-radius: 4px;
+  }
+  .ai-msg.user .ai-msg-bubble {
+    background: rgba(16,185,129,0.12);
+    color: #d1fae5;
+    border-bottom-right-radius: 4px;
+  }
+
+  .ai-suggestions-drawer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 0 20px 12px;
+    flex-shrink: 0;
+  }
+  .ai-chip {
+    font: 500 12px/1 'Inter', sans-serif;
+    color: #c4b5fd;
+    background: rgba(139,92,246,0.06);
+    border: 1px solid rgba(139,92,246,0.15);
+    border-radius: 99px;
+    padding: 7px 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .ai-chip:hover {
+    background: rgba(139,92,246,0.15);
+    border-color: rgba(139,92,246,0.3);
+  }
+
+  .ai-drawer-input-area {
+    padding: 12px 20px 16px;
+    border-top: 1px solid rgba(139,92,246,0.1);
+    background: rgba(139,92,246,0.03);
+    flex-shrink: 0;
+  }
+  .ai-input-row {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+  }
+  .ai-input {
+    flex: 1;
+    font: 400 13px/1.4 'Inter', sans-serif;
+    color: var(--text-primary);
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(139,92,246,0.15);
+    border-radius: 12px;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.15s;
+    resize: none;
+  }
+  .ai-input::placeholder { color: rgba(196,181,253,0.3); }
+  .ai-input:focus { border-color: rgba(139,92,246,0.4); }
+  .ai-send-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: none;
+    background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: opacity 0.15s;
+  }
+  .ai-send-btn:disabled { opacity: 0.3; cursor: default; }
+  .ai-send-btn:not(:disabled):hover { opacity: 0.85; }
+
+  .ai-drawer-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px 12px;
+  }
+  .ai-drawer-footer .ai-uses { flex: 1; }
+  .ai-disclaimer {
+    font-size: 10px;
+    color: rgba(148,163,184,0.4);
+    text-align: center;
+    padding: 0 20px 10px;
+  }
+
+  @media (max-width: 900px) {
+    .two-col { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="annotation">
+  <span class="tag">Proposal B — Revised</span>
+  <h1>Two-Column Overview with holdings inline</h1>
+  <ul>
+    <li><strong>Holdings inside the left column</strong> — the two-column layout persists, no full-width break</li>
+    <li><strong>Value / Performance toggle above the chart</strong> — makes it clear they control the graph</li>
+    <li><strong>Broker sync indicator</strong> below the chart ("Last synced 38m ago via Interactive Brokers, DEGIRO")</li>
+    <li><strong>Referral banner</strong> — compact card in the right sidebar</li>
+    <li><strong>Upcoming Earnings</strong> — compact list in the right sidebar</li>
+    <li><strong>Portfolio AI</strong> — replaces support chat; always-on assistant with full portfolio context (holdings, quotes, performance, allocations, dividends). Click the suggestion chips to try it!</li>
+  </ul>
+</div>
+
+<!-- Tab bar -->
+<div class="tabbar">
+  <button class="active">Portfolio</button>
+  <button>Diversification</button>
+  <button>Dividends</button>
+  <button>Metrics</button>
+  <button>Growth</button>
+  <button>Events</button>
+  <button>News</button>
+</div>
+
+<!-- Two-column layout (persistent — holdings stay in left col) -->
+<div class="callout" data-label="Two-column: everything stays in grid">
+<div class="two-col">
+
+  <!-- ═══ LEFT COLUMN ═══ -->
+  <div class="left-col">
+
+    <!-- Chart card -->
+    <div class="main-card">
+      <div class="main-header">
+        <div>
+          <div class="value-label">Portfolio Value</div>
+          <div class="value-big">&euro;53,685.75</div>
+          <div class="value-change">
+            <span class="badge-loss">-&euro;795.24 (-1.46%)</span>
+            <span class="gain-text">+5.49% gain / loss</span>
+          </div>
+        </div>
+        <div class="range-tabs">
+          <button>1W</button>
+          <button class="active">1M</button>
+          <button>3M</button>
+          <button>6M</button>
+          <button>YTD</button>
+          <button>1Y</button>
+          <button>MAX</button>
+        </div>
+      </div>
+
+      <!-- Controls ABOVE chart -->
+      <div class="chart-controls">
+        <div class="mode-toggle">
+          <button class="active">Value</button>
+          <button>Performance</button>
+        </div>
+        <div class="chart-summary">
+          <span class="green">+2.64%</span> &euro;52,506.23 &rarr; &euro;53,891.18
+        </div>
+      </div>
+
+      <div class="chart-area">
+        <div class="chart-canvas">
+          <svg viewBox="0 0 800 160" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="aG" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#10b981" stop-opacity="0.25"/>
+                <stop offset="100%" stop-color="#10b981" stop-opacity="0"/>
+              </linearGradient>
+              <linearGradient id="iG" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.10"/>
+                <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <path d="M0,115 L100,113 L200,110 L300,107 L400,105 L500,103 L600,101 L700,99 L800,97" fill="none" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="4,4" opacity="0.5"/>
+            <path d="M0,115 L100,113 L200,110 L300,107 L400,105 L500,103 L600,101 L700,99 L800,97 L800,160 L0,160Z" fill="url(#iG)"/>
+            <path d="M0,90 L40,87 L80,83 L120,80 L160,75 L200,77 L240,73 L280,70 L320,67 L360,63 L400,60 L440,57 L480,53 L520,50 L560,45 L600,43 L640,47 L680,45 L720,43 L760,40 L800,37" fill="url(#aG)" stroke="none"/>
+            <path d="M0,90 L40,87 L80,83 L120,80 L160,75 L200,77 L240,73 L280,70 L320,67 L360,63 L400,60 L440,57 L480,53 L520,50 L560,45 L600,43 L640,47 L680,45 L720,43 L760,40 L800,37" fill="none" stroke="#10b981" stroke-width="2"/>
+            <circle cx="160" cy="75" r="4" fill="#ef4444" opacity="0.7"/>
+            <circle cx="400" cy="60" r="4" fill="#ef4444" opacity="0.7"/>
+            <circle cx="640" cy="47" r="4" fill="#ef4444" opacity="0.7"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="chart-footer">
+        <div class="sync-indicator">
+          <span class="sync-dot"></span>
+          Last synced 38m ago via Interactive Brokers, DEGIRO
+        </div>
+        <button class="chart-ai" onclick="openAiDrawer()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>
+          Ask AI about this chart
+        </button>
+      </div>
+    </div>
+
+    <!-- Holdings — part of the left column -->
+    <div class="main-card">
+      <div class="holdings-toolbar">
+        <input class="search-box" type="text" placeholder="Search by ticker or name...">
+        <button class="btn-add">+ Add Transaction</button>
+        <button class="btn-outline">Daily move</button>
+        <button class="btn-outline">&darr; 27</button>
+      </div>
+
+      <div class="holding-row">
+        <div class="holding-info">
+          <div class="holding-name">Occidental Petroleum Corp.</div>
+          <div class="holding-meta">NYSE | OXY | $69.58 &times; 80</div>
+        </div>
+        <div class="holding-spark">
+          <svg viewBox="0 0 72 28" fill="none"><path d="M0,18 L9,16 L18,14 L27,12 L36,10 L45,8 L54,6 L63,5 L72,3" stroke="#34d399" stroke-width="1.5"/></svg>
+        </div>
+        <div class="holding-value">
+          <div class="holding-amount">&euro;4,114.83</div>
+          <div class="holding-change up">+2.08%</div>
+        </div>
+      </div>
+
+      <div class="holding-row">
+        <div class="holding-info">
+          <div class="holding-name">Chevron Corp.</div>
+          <div class="holding-meta">NYSE | CVX | $201.44 &times; 10</div>
+        </div>
+        <div class="holding-spark">
+          <svg viewBox="0 0 72 28" fill="none"><path d="M0,20 L9,18 L18,16 L27,14 L36,12 L45,10 L54,8 L63,7 L72,6" stroke="#34d399" stroke-width="1.5"/></svg>
+        </div>
+        <div class="holding-value">
+          <div class="holding-amount">&euro;1,739.03</div>
+          <div class="holding-change up">+1.42%</div>
+        </div>
+      </div>
+
+      <div class="holding-row">
+        <div class="holding-info">
+          <div class="holding-name">Main Street Capital Corporation</div>
+          <div class="holding-meta">NYSE | MAIN | $55.69 &times; 7</div>
+        </div>
+        <div class="holding-spark">
+          <svg viewBox="0 0 72 28" fill="none"><path d="M0,16 L9,15 L18,14 L27,13 L36,12 L45,11 L54,10 L63,9 L72,9" stroke="#34d399" stroke-width="1.5"/></svg>
+        </div>
+        <div class="holding-value">
+          <div class="holding-amount">&euro;336.54</div>
+          <div class="holding-change up">+1.00%</div>
+        </div>
+      </div>
+
+      <div class="holding-row">
+        <div class="holding-info">
+          <div class="holding-name">Pfizer Inc.</div>
+          <div class="holding-meta">NYSE | PFE | $27.41 &times; 58</div>
+        </div>
+        <div class="holding-spark">
+          <svg viewBox="0 0 72 28" fill="none"><path d="M0,14 L9,14 L18,13 L27,13 L36,12 L45,12 L54,12 L63,11 L72,11" stroke="#34d399" stroke-width="1.5"/></svg>
+        </div>
+        <div class="holding-value">
+          <div class="holding-amount">&euro;1,372.46</div>
+          <div class="holding-change up">+0.33%</div>
+        </div>
+      </div>
+
+      <div class="holding-row">
+        <div class="holding-info">
+          <div class="holding-name">Adobe Inc</div>
+          <div class="holding-meta">NASDAQ | ADBE | $245.99 &times; 7</div>
+        </div>
+        <div class="holding-spark">
+          <svg viewBox="0 0 72 28" fill="none"><path d="M0,14 L9,14 L18,14 L27,14 L36,14 L45,14 L54,14 L63,14 L72,14" stroke="#64748b" stroke-width="1.5"/></svg>
+        </div>
+        <div class="holding-value">
+          <div class="holding-amount">&euro;1,486.54</div>
+          <div class="holding-change down">-0.00%</div>
+        </div>
+      </div>
+
+      <div class="holding-row">
+        <div class="holding-info">
+          <div class="holding-name">iShares Treasury Bond 0-1yr UCITS ETF</div>
+          <div class="holding-meta">LSE | IB01L | $119.68 &times; 69 <span class="etf-badge">ETF</span></div>
+        </div>
+        <div class="holding-spark">
+          <svg viewBox="0 0 72 28" fill="none"><path d="M0,14 L9,14 L18,14 L27,14 L36,14 L45,14 L54,14 L63,14 L72,14" stroke="#64748b" stroke-width="1.5"/></svg>
+        </div>
+        <div class="holding-value">
+          <div class="holding-amount">&euro;7,129.06</div>
+          <div class="holding-change down">-0.02%</div>
+        </div>
+      </div>
+
+      <div class="holding-row">
+        <div class="holding-info">
+          <div class="holding-name">Alphabet Inc - Class A</div>
+          <div class="holding-meta">NASDAQ | GOOGL | $307.11 &times; 17</div>
+        </div>
+        <div class="holding-spark">
+          <svg viewBox="0 0 72 28" fill="none"><path d="M0,12 L9,13 L18,14 L27,14 L36,15 L45,15 L54,16 L63,16 L72,16" stroke="#f87171" stroke-width="1.5"/></svg>
+        </div>
+        <div class="holding-value">
+          <div class="holding-amount">&euro;4,507.47</div>
+          <div class="holding-change down">-0.18%</div>
+        </div>
+      </div>
+
+      <button class="view-all">View all (27)</button>
+    </div>
+
+  </div>
+
+  <!-- ═══ RIGHT SIDEBAR ═══ -->
+  <div class="sidebar">
+
+    <!-- Referral — compact banner -->
+    <div class="side-card referral-card">
+      <div class="referral-icon">🎁</div>
+      <div class="referral-text">
+        <div class="referral-title">Refer a Friend, Get Pro Free</div>
+        <div class="referral-sub">Earn 30 days of Pro for each friend who joins</div>
+      </div>
+      <span class="referral-arrow">&rsaquo;</span>
+    </div>
+
+    <!-- Allocation donut — with diversification tabs -->
+    <div class="side-card">
+      <div class="side-card-header">
+        <span class="side-card-title">Allocation</span>
+        <button class="side-card-link">Show more</button>
+      </div>
+      <div class="alloc-tabs" id="allocTabs">
+        <button class="active" data-tab="type">Type</button>
+        <button data-tab="sectors">Sectors</button>
+        <button data-tab="regions">Regions</button>
+      </div>
+
+      <!-- Panel: Type (default) -->
+      <div class="alloc-panel active" id="panel-type">
+        <div class="donut-wrap" style="margin-top:10px">
+          <div class="donut-container">
+            <svg viewBox="0 0 100 100" width="120" height="120">
+              <circle cx="50" cy="50" r="38" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="12"/>
+              <circle cx="50" cy="50" r="38" fill="none" stroke="#6366f1" stroke-width="12"
+                stroke-dasharray="198.5 240.5" stroke-dashoffset="60" stroke-linecap="round"/>
+              <circle cx="50" cy="50" r="38" fill="none" stroke="#10b981" stroke-width="12"
+                stroke-dasharray="38 201" stroke-dashoffset="-138" stroke-linecap="round"/>
+              <circle cx="50" cy="50" r="38" fill="none" stroke="#64748b" stroke-width="12"
+                stroke-dasharray="3 236" stroke-dashoffset="-175.5" stroke-linecap="round"/>
+            </svg>
+            <div class="donut-center">
+              <div class="donut-center-label">Net Worth</div>
+              <div class="donut-center-value">&euro;53,685</div>
+            </div>
+          </div>
+          <div class="alloc-list">
+            <div class="alloc-item">
+              <div class="alloc-item-left"><span class="alloc-dot" style="background:#6366f1"></span><span class="alloc-item-label">Stocks</span></div>
+              <span class="alloc-item-pct">82.87%</span>
+            </div>
+            <div class="alloc-item">
+              <div class="alloc-item-left"><span class="alloc-dot" style="background:#10b981"></span><span class="alloc-item-label">ETFs</span></div>
+              <span class="alloc-item-pct">15.89%</span>
+            </div>
+            <div class="alloc-item">
+              <div class="alloc-item-left"><span class="alloc-dot" style="background:#64748b"></span><span class="alloc-item-label">Cash</span></div>
+              <span class="alloc-item-pct">1.24%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel: Sectors -->
+      <div class="alloc-panel" id="panel-sectors">
+        <div class="donut-wrap" style="margin-top:10px">
+          <div class="donut-container">
+            <svg viewBox="0 0 100 100" width="120" height="120">
+              <circle cx="50" cy="50" r="38" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="12"/>
+              <circle cx="50" cy="50" r="38" fill="none" stroke="#6366f1" stroke-width="12"
+                stroke-dasharray="72 167" stroke-dashoffset="60" stroke-linecap="round"/>
+              <circle cx="50" cy="50" r="38" fill="none" stroke="#3b82f6" stroke-width="12"
+                stroke-dasharray="57 182" stroke-dashoffset="-12" stroke-linecap="round"/>
+              <circle cx="50" cy="50" r="38" fill="none" stroke="#10b981" stroke-width="12"
+                stroke-dasharray="43 196" stroke-dashoffset="-69" stroke-linecap="round"/>
+              <circle cx="50" cy="50" r="38" fill="none" stroke="#f59e0b" stroke-width="12"
+                stroke-dasharray="33 206" stroke-dashoffset="-112" stroke-linecap="round"/>
+              <circle cx="50" cy="50" r="38" fill="none" stroke="#ef4444" stroke-width="12"
+                stroke-dasharray="24 215" stroke-dashoffset="-145" stroke-linecap="round"/>
+              <circle cx="50" cy="50" r="38" fill="none" stroke="#64748b" stroke-width="12"
+                stroke-dasharray="10 229" stroke-dashoffset="-169" stroke-linecap="round"/>
+            </svg>
+            <div class="donut-center">
+              <div class="donut-center-label">Sectors</div>
+              <div class="donut-center-value">6</div>
+            </div>
+          </div>
+          <div class="alloc-list">
+            <div class="alloc-item">
+              <div class="alloc-item-left"><span class="alloc-dot" style="background:#6366f1"></span><span class="alloc-item-label">Technology</span></div>
+              <span class="alloc-item-pct">30.1%</span>
+            </div>
+            <div class="alloc-item">
+              <div class="alloc-item-left"><span class="alloc-dot" style="background:#3b82f6"></span><span class="alloc-item-label">Energy</span></div>
+              <span class="alloc-item-pct">23.8%</span>
+            </div>
+            <div class="alloc-item">
+              <div class="alloc-item-left"><span class="alloc-dot" style="background:#10b981"></span><span class="alloc-item-label">Healthcare</span></div>
+              <span class="alloc-item-pct">18.0%</span>
+            </div>
+            <div class="alloc-item">
+              <div class="alloc-item-left"><span class="alloc-dot" style="background:#f59e0b"></span><span class="alloc-item-label">Financials</span></div>
+              <span class="alloc-item-pct">13.8%</span>
+            </div>
+            <div class="alloc-item">
+              <div class="alloc-item-left"><span class="alloc-dot" style="background:#ef4444"></span><span class="alloc-item-label">Fixed Income</span></div>
+              <span class="alloc-item-pct">10.1%</span>
+            </div>
+            <div class="alloc-item">
+              <div class="alloc-item-left"><span class="alloc-dot" style="background:#64748b"></span><span class="alloc-item-label">Other</span></div>
+              <span class="alloc-item-pct">4.2%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel: Regions -->
+      <div class="alloc-panel" id="panel-regions">
+        <div class="donut-wrap" style="margin-top:10px">
+          <div class="donut-container">
+            <svg viewBox="0 0 100 100" width="120" height="120">
+              <circle cx="50" cy="50" r="38" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="12"/>
+              <circle cx="50" cy="50" r="38" fill="none" stroke="#3b82f6" stroke-width="12"
+                stroke-dasharray="168 71" stroke-dashoffset="60" stroke-linecap="round"/>
+              <circle cx="50" cy="50" r="38" fill="none" stroke="#10b981" stroke-width="12"
+                stroke-dasharray="48 191" stroke-dashoffset="-108" stroke-linecap="round"/>
+              <circle cx="50" cy="50" r="38" fill="none" stroke="#f59e0b" stroke-width="12"
+                stroke-dasharray="19 220" stroke-dashoffset="-156" stroke-linecap="round"/>
+            </svg>
+            <div class="donut-center">
+              <div class="donut-center-label">Regions</div>
+              <div class="donut-center-value">3</div>
+            </div>
+          </div>
+          <div class="alloc-list">
+            <div class="alloc-item">
+              <div class="alloc-item-left"><span class="alloc-dot" style="background:#3b82f6"></span><span class="alloc-item-label">North America</span></div>
+              <span class="alloc-item-pct">70.3%</span>
+            </div>
+            <div class="alloc-item">
+              <div class="alloc-item-left"><span class="alloc-dot" style="background:#10b981"></span><span class="alloc-item-label">Europe</span></div>
+              <span class="alloc-item-pct">21.5%</span>
+            </div>
+            <div class="alloc-item">
+              <div class="alloc-item-left"><span class="alloc-dot" style="background:#f59e0b"></span><span class="alloc-item-label">Global (ETFs)</span></div>
+              <span class="alloc-item-pct">8.2%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Key stats -->
+    <div class="side-card">
+      <div class="stats-grid">
+        <div class="stat-cell">
+          <div class="stat-cell-label">Cost</div>
+          <div class="stat-cell-value">&euro;50,892</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-cell-label">Gain / Loss</div>
+          <div class="stat-cell-value gain">+&euro;2,793</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-cell-label">Holdings</div>
+          <div class="stat-cell-value">30</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-cell-label">Div. Yield</div>
+          <div class="stat-cell-value">2.4%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Goal -->
+    <div class="side-card">
+      <div class="side-card-header">
+        <span class="side-card-title">My Goal</span>
+        <span style="font-size:13px;font-weight:700;color:var(--accent)">5.4%</span>
+      </div>
+      <div class="goal-row">
+        <div class="goal-icon">🎯</div>
+        <div class="goal-text">
+          <div class="goal-sub">&euro;53,685 of &euro;1,000,000</div>
+        </div>
+        <div style="font-size:10px;color:var(--text-muted);flex-shrink:0">~43y 3m</div>
+      </div>
+      <div class="goal-track"><div class="goal-fill" style="width:5.4%"></div></div>
+    </div>
+
+    <!-- Upcoming Earnings -->
+    <div class="side-card">
+      <div class="side-card-header">
+        <span class="side-card-title">Upcoming Earnings</span>
+        <button class="side-card-link">View all</button>
+      </div>
+      <div class="earnings-item">
+        <div class="earnings-date">
+          <div class="earnings-date-day">20</div>
+          <div class="earnings-date-month">Mar</div>
+        </div>
+        <div class="earnings-info">
+          <div class="earnings-ticker">ADBE</div>
+          <div class="earnings-name">Adobe Inc</div>
+        </div>
+        <span class="earnings-tag amc">AMC</span>
+      </div>
+      <div class="earnings-item">
+        <div class="earnings-date">
+          <div class="earnings-date-day">25</div>
+          <div class="earnings-date-month">Mar</div>
+        </div>
+        <div class="earnings-info">
+          <div class="earnings-ticker">GOOGL</div>
+          <div class="earnings-name">Alphabet Inc</div>
+        </div>
+        <span class="earnings-tag bmo">BMO</span>
+      </div>
+      <div class="earnings-item">
+        <div class="earnings-date">
+          <div class="earnings-date-day">27</div>
+          <div class="earnings-date-month">Mar</div>
+        </div>
+        <div class="earnings-info">
+          <div class="earnings-ticker">PFE</div>
+          <div class="earnings-name">Pfizer Inc</div>
+        </div>
+        <span class="earnings-tag bmo">BMO</span>
+      </div>
+    </div>
+
+    <!-- Portfolio AI — compact trigger card -->
+    <div class="side-card ai-card ai-trigger" id="aiTriggerCard" onclick="openAiDrawer()">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="ai-trigger-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <span class="side-card-title" style="color:#c4b5fd">Portfolio AI</span>
+            <span style="font-size:9px;font-weight:600;background:rgba(139,92,246,0.2);color:#c4b5fd;padding:2px 7px;border-radius:99px">PRO</span>
+          </div>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:2px">Ask anything about your portfolio</div>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" style="flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
+      </div>
+      <div class="ai-uses" style="margin-top:8px">
+        <div class="ai-uses-bar"><div class="ai-uses-fill" style="width:60%"></div></div>
+        <span class="ai-uses-label">3/5 today</span>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+</div>
+
+<!-- AI Drawer overlay -->
+<div class="ai-drawer-backdrop" id="aiBackdrop" onclick="closeAiDrawer()"></div>
+<div class="ai-drawer" id="aiDrawer">
+  <div class="ai-drawer-header">
+    <div class="ai-drawer-header-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>
+    </div>
+    <div class="ai-drawer-header-text">
+      <div class="ai-drawer-title">Portfolio AI</div>
+      <div class="ai-drawer-subtitle">Ask anything about your portfolio</div>
+    </div>
+    <button class="ai-drawer-close" onclick="closeAiDrawer()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+    </button>
+  </div>
+
+  <div class="ai-context-bar">
+    <span class="ai-context-dot"></span>
+    Connected to your portfolio — 30 holdings, €53,685.75, performance history, allocations &amp; dividends
+  </div>
+
+  <div class="ai-drawer-messages" id="aiMessages">
+    <div class="ai-msg assistant">
+      <div class="ai-msg-avatar">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>
+      </div>
+      <div class="ai-msg-bubble">Hi! I have access to your entire portfolio. Ask me about performance, risk, sectors, dividends, individual stocks — anything you'd like to understand better.</div>
+    </div>
+  </div>
+
+  <div class="ai-suggestions-drawer" id="aiSuggestions">
+    <button class="ai-chip" data-q="What's my best performing stock this month?">Best performer this month?</button>
+    <button class="ai-chip" data-q="Am I too concentrated in any sector?">Am I too concentrated?</button>
+    <button class="ai-chip" data-q="How much dividend income can I expect this year?">Expected dividend income?</button>
+    <button class="ai-chip" data-q="Which holdings have upcoming earnings?">Upcoming earnings?</button>
+    <button class="ai-chip" data-q="How does my portfolio compare to the S&P 500?">Compare to S&P 500</button>
+    <button class="ai-chip" data-q="What's my biggest risk right now?">Biggest risk?</button>
+  </div>
+
+  <div class="ai-drawer-input-area">
+    <div class="ai-input-row">
+      <input type="text" class="ai-input" id="aiInput" placeholder="Ask about your portfolio..." />
+      <button class="ai-send-btn" id="aiSendBtn" disabled>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19V5m0 0l-7 7m7-7l7 7"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="ai-drawer-footer">
+    <div class="ai-uses">
+      <div class="ai-uses-bar"><div class="ai-uses-fill" style="width:60%"></div></div>
+      <span class="ai-uses-label">3/5 messages today</span>
+    </div>
+  </div>
+  <div class="ai-disclaimer">AI-generated analysis. Not financial advice.</div>
+</div>
+
+<script>
+// Allocation tabs
+document.getElementById('allocTabs').addEventListener('click', function(e) {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  const tab = btn.dataset.tab;
+  this.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.alloc-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + tab).classList.add('active');
+});
+
+// AI Drawer open/close
+function openAiDrawer() {
+  document.getElementById('aiBackdrop').classList.add('open');
+  document.getElementById('aiDrawer').classList.add('open');
+  setTimeout(() => document.getElementById('aiInput').focus(), 300);
+}
+function closeAiDrawer() {
+  document.getElementById('aiBackdrop').classList.remove('open');
+  document.getElementById('aiDrawer').classList.remove('open');
+}
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeAiDrawer();
+});
+
+// AI chat demo
+const aiInput = document.getElementById('aiInput');
+const aiSendBtn = document.getElementById('aiSendBtn');
+const aiMessages = document.getElementById('aiMessages');
+const aiSuggestions = document.getElementById('aiSuggestions');
+
+const demoResponses = {
+  "What's my best performing stock this month?": "Your best performer this month is **Occidental Petroleum (OXY)** at **+2.08%**, followed by Chevron (CVX) at +1.42%.\n\nEnergy stocks are leading your portfolio — they represent 23.8% of your total allocation. Both OXY and CVX have been riding higher oil prices this month.",
+  "Am I too concentrated in any sector?": "Looking at your sector breakdown:\n\n• **Technology — 30.1%** (ADBE, GOOGL, etc.)\n• **Energy — 23.8%** (OXY, CVX)\n• Healthcare — 18.0%\n• Financials — 13.8%\n• Fixed Income — 10.1%\n\nTech + Energy together make up **53.9%** of your portfolio. That's a significant concentration risk. If you want to reduce it, consider adding defensive sectors like Consumer Staples or Utilities.",
+  "How much dividend income can I expect this year?": "Based on your current 30 holdings, here's your dividend outlook:\n\n**Estimated annual income: €1,288** (2.4% yield)\n\nYour top payers:\n• **Main Street Capital (MAIN)** — monthly dividends, ~€98/year\n• **Pfizer (PFE)** — quarterly, ~€96/year\n• **Chevron (CVX)** — quarterly, ~€126/year\n\nYour ETFs (IB01L) don't distribute — they're accumulating. Your overall yield is lower than average because ~30% of your portfolio is in growth stocks (ADBE, GOOGL) that pay no dividends.",
+  "Which holdings have upcoming earnings?": "Three of your holdings report earnings this week:\n\n📊 **ADBE** (Adobe) — **Mar 20** after market close\n📊 **GOOGL** (Alphabet) — **Mar 25** before market open\n📊 **PFE** (Pfizer) — **Mar 27** before market open\n\nAdobe and Alphabet together represent ~11.2% of your portfolio, so these reports could move your numbers. Want me to analyze what analysts expect?",
+  "How does my portfolio compare to the S&P 500?": "Over the past month, your portfolio returned **+2.64%** while the S&P 500 returned **+1.8%**.\n\n**You're outperforming by ~0.84 percentage points.** This is mainly driven by your overweight in Energy (OXY +2.08%, CVX +1.42%) which has beaten the broader market.\n\nHowever, your portfolio has **higher volatility** due to sector concentration. The S&P 500 is more diversified across 500 stocks vs your 30 holdings.",
+  "What's my biggest risk right now?": "Here are your top risk factors, ranked:\n\n1. **Sector concentration** — Tech (30.1%) + Energy (23.8%) = 54% of your portfolio in just 2 sectors\n2. **Geographic concentration** — 70.3% in North America, limited non-US diversification\n3. **Single-stock risk** — iShares ETF (IB01L) alone is 13.3% of your portfolio, and GOOGL is 8.4%\n4. **Currency risk** — Most holdings are USD-denominated but your base currency is EUR\n\nThe biggest immediate risk is an energy downturn — it would hit both OXY and CVX simultaneously (combined 10.9% of portfolio).",
+};
+const defaultResponse = "Based on your portfolio of **30 holdings** worth **€53,685.75**, your overall gain is **+5.49%** (+€2,793.53).\n\nYour portfolio is stock-heavy (82.87%) with strong US exposure (70.3% North America). You have a 2.4% dividend yield and your goal is 5.4% complete.\n\nWould you like me to dig deeper into any area — performance, risk, dividends, or individual holdings?";
+
+aiInput.addEventListener('input', () => {
+  aiSendBtn.disabled = !aiInput.value.trim();
+});
+
+function addMessage(role, text) {
+  const div = document.createElement('div');
+  div.className = 'ai-msg ' + role;
+  const icon = role === 'assistant'
+    ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>'
+    : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0"/></svg>';
+  const formatted = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+  div.innerHTML = '<div class="ai-msg-avatar">' + icon + '</div><div class="ai-msg-bubble">' + formatted + '</div>';
+  aiMessages.appendChild(div);
+  aiMessages.scrollTop = aiMessages.scrollHeight;
+}
+
+function sendAiMessage(text) {
+  if (!text.trim()) return;
+  addMessage('user', text);
+  aiInput.value = '';
+  aiSendBtn.disabled = true;
+  aiSuggestions.style.display = 'none';
+  setTimeout(() => {
+    const response = demoResponses[text] || defaultResponse;
+    addMessage('assistant', response);
+  }, 800);
+}
+
+aiSendBtn.addEventListener('click', () => sendAiMessage(aiInput.value));
+aiInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendAiMessage(aiInput.value);
+  }
+});
+
+aiSuggestions.addEventListener('click', (e) => {
+  const chip = e.target.closest('.ai-chip');
+  if (!chip) return;
+  sendAiMessage(chip.dataset.q);
+});
+</script>
+</body>
+</html>

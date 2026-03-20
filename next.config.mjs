@@ -28,6 +28,7 @@ const nextConfig = {
     ],
   },
   experimental: {
+    optimizePackageImports: ["lucide-react", "recharts"],
     serverComponentsExternalPackages: ["@libsql/client"],
     outputFileTracingIncludes: {
       "/api/admin/docs": [

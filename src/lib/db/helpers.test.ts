@@ -381,6 +381,8 @@ function mockRow(overrides: Record<string, unknown> = {}): Row {
     referral_code: "XYZ98765",
     referred_by: "",
     referral_reward_days: 0,
+    ai_tokens_this_month: 0,
+    ai_tokens_today: 0,
     ...overrides,
   } as unknown as Row;
 }
@@ -427,6 +429,8 @@ describe("rowToDbUser", () => {
       referral_code: "XYZ98765",
       referred_by: "",
       referral_reward_days: 0,
+      ai_tokens_this_month: 0,
+      ai_tokens_today: 0,
     });
   });
 
@@ -622,6 +626,8 @@ describe("mapUser", () => {
     referral_code: "ABC12345",
     referred_by: "",
     referral_reward_days: 0,
+    ai_tokens_this_month: 0,
+    ai_tokens_today: 0,
   };
 
   it("maps DbUser to PublicUser with correct field mapping", () => {
@@ -654,6 +660,8 @@ describe("mapUser", () => {
       experienceLevel: "",
       referralCode: "ABC12345",
       referralRewardDays: 0,
+      aiTokensThisMonth: 0,
+      aiTokensToday: 0,
     });
   });
 

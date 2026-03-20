@@ -13,6 +13,7 @@ import {
 } from "recharts";
 import { useI18n } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/portfolio-context";
+import DataUpgradeNudge from "./DataUpgradeNudge";
 import { formatCurrency, formatStealthCurrency } from "@/lib/utils";
 import type { Transaction } from "@/lib/types";
 import { useTrack } from "@/lib/use-track";
@@ -139,6 +140,16 @@ export default function DividendSummary() {
 
   return (
     <div className="space-y-6">
+      {hasEstimatedDividends && !hasDividendTxs && (
+        <DataUpgradeNudge
+          variant="amber"
+          titleKey="nudgeDividendsTitle"
+          descKey="nudgeDividendsDesc"
+          dismissKey="nudge_dividends_dismissed"
+          dismissMode="session"
+        />
+      )}
+
       {/* ── Estimated dividend income from holdings ── */}
       {hasEstimatedDividends && (
         <>
@@ -254,15 +265,27 @@ export default function DividendSummary() {
             <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
               {hasEstimatedDividends ? t("recordedDividends") : t("dividends")}
             </h3>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div className="bg-violet-50 dark:bg-violet-500/10 rounded-xl p-3 text-center">
                 <p className="text-[10px] text-violet-600 dark:text-violet-400 font-medium uppercase">{t("totalDividends")}</p>
-                <p className="text-lg font-bold text-violet-700 dark:text-violet-300">{formatCurrency(totalDividends, baseCurrency)}</p>
+                <p className="text-lg font-bold text-violet-700 dark:text-violet-300"
+                  aria-label={stealthMode ? formatCurrency(totalDividends, baseCurrency) : undefined}>
+                  {formatStealthCurrency(totalDividends, baseCurrency, stealthMode)}</p>
               </div>
               <div className="bg-emerald-50 dark:bg-emerald-500/10 rounded-xl p-3 text-center">
                 <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium uppercase">{t("annualDividendIncome")}</p>
-                <p className="text-lg font-bold text-emerald-700 dark:text-emerald-300">{formatCurrency(annualDividends, baseCurrency)}</p>
+                <p className="text-lg font-bold text-emerald-700 dark:text-emerald-300"
+                  aria-label={stealthMode ? formatCurrency(annualDividends, baseCurrency) : undefined}>
+                  {formatStealthCurrency(annualDividends, baseCurrency, stealthMode)}</p>
               </div>
+              {totalEstimatedEUR > 0 && (
+                <div className="bg-amber-50 dark:bg-amber-500/10 rounded-xl p-3 text-center">
+                  <p className="text-[10px] text-amber-600 dark:text-amber-400 font-medium uppercase">{t("estAnnualIncome")}</p>
+                  <p className="text-lg font-bold text-amber-700 dark:text-amber-300"
+                    aria-label={stealthMode ? formatCurrency(totalEstimatedEUR, baseCurrency) : undefined}>
+                    {formatStealthCurrency(totalEstimatedEUR, baseCurrency, stealthMode)}</p>
+                </div>
+              )}
               <div className="bg-blue-50 dark:bg-blue-500/10 rounded-xl p-3 text-center">
                 <p className="text-[10px] text-blue-600 dark:text-blue-400 font-medium uppercase">{t("dividendYield")}</p>
                 <p className="text-lg font-bold text-blue-700 dark:text-blue-300">{yieldPercent.toFixed(2)}%</p>

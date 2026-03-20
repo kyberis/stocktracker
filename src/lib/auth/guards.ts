@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getSessionFromRequest } from "./session";
-import { findUserById, getAiUsage, trackEvent, updateLastActive } from "@/lib/db";
+import { findUserById, getAiUsage, getAiTokenUsage, trackEvent, updateLastActive } from "@/lib/db";
 import { canAccessFeature, effectivePlan } from "@/lib/subscription";
 import type { SubscriptionFeature } from "@/lib/types";
 import { paywallHitsTotal, rateLimitHitsTotal } from "@/lib/metrics";
@@ -72,11 +72,15 @@ export async function requireFeatureAccess(req: NextRequest, feature: Subscripti
     };
   }
 
-  const usage = await getAiUsage(session.userId);
+  const [usage, tokenUsage] = await Promise.all([
+    getAiUsage(session.userId),
+    getAiTokenUsage(session.userId),
+  ]);
   const plan = effectivePlan(user.plan, user.plan_expires_at);
   const entitlement = canAccessFeature(feature, {
     plan,
     aiCallsThisMonth: usage.aiCallsThisMonth,
+    aiTokensThisMonth: tokenUsage.aiTokensThisMonth,
   });
   if (entitlement.allowed) return { session, error: null };
 

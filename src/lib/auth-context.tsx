@@ -21,6 +21,9 @@ interface AuthUser {
   aiCallsResetAt: string;
   aiCallsToday: number;
   aiDailyResetAt: string;
+  aiTokensThisMonth: number;
+  aiTokensToday: number;
+  aiTokenLimit: number;
   emailVerified: boolean;
   authProvider: AuthProvider;
   googleLinked: boolean;

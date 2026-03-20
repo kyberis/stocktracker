@@ -335,9 +335,25 @@ export default function ProCompareCard({
         </p>
 
         {aiUsage && (
-          <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">
-            {t("aiUsageThisMonth")}: {aiUsage.used}/{aiUsage.limit}
-          </p>
+          <div className="mt-2 space-y-1">
+            <div className="flex items-center gap-2">
+              <div className="flex-1 h-1.5 rounded-full bg-gray-200 dark:bg-slate-700 overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 transition-all"
+                  style={{ width: `${Math.min((aiUsage.used / aiUsage.limit) * 100, 100)}%` }}
+                />
+              </div>
+              <span className="text-[10px] text-gray-500 dark:text-slate-400 tabular-nums shrink-0">
+                {Math.round((aiUsage.used / aiUsage.limit) * 100)}%
+              </span>
+            </div>
+            <p className="text-[10px] text-gray-500 dark:text-slate-400">
+              {t("aiTokensUsed").replace("{used}", aiUsage.used.toLocaleString()).replace("{limit}", aiUsage.limit.toLocaleString())}
+              {aiUsage.limit > aiUsage.used && (
+                <> · {t("aiAnalysesRemaining").replace("{count}", String(Math.floor((aiUsage.limit - aiUsage.used) / 3000)))}</>
+              )}
+            </p>
+          </div>
         )}
       </div>
 

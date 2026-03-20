@@ -2,9 +2,10 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest } from "next/server";
 import { requireFeatureAccess } from "@/lib/auth/guards";
-import { getGlobalOpenAIApiKey, incrementAiUsage, incrementDailyAiUsage, findUserById } from "@/lib/db";
+import { getGlobalOpenAIApiKey, incrementAiUsage, incrementDailyAiUsage, incrementAiTokenUsage, incrementDailyAiTokenUsage, findUserById } from "@/lib/db";
 import { aiCallsTotal, aiRequestDuration, rateLimitHitsTotal } from "@/lib/metrics";
-import { checkAiRateLimit, checkGlobalAiCap, incrementGlobalAiCalls } from "@/lib/rate-limit";
+import { checkAiRateLimit, checkGlobalAiCap, incrementGlobalAiCalls, incrementGlobalAiTokens } from "@/lib/rate-limit";
+import { createAiStream } from "@/lib/ai-stream";
 import { languageCodeToName } from "@/lib/languages";
 import { withMetrics } from "@/lib/with-metrics";
 
@@ -298,6 +299,7 @@ ${dataSections.join("\n\n")}`;
       body: JSON.stringify({
         model: "gpt-4o-mini",
         stream: true,
+        stream_options: { include_usage: true },
         max_tokens: 1200,
         temperature: 0.3,
         messages: [
@@ -326,48 +328,15 @@ ${dataSections.join("\n\n")}`;
       incrementGlobalAiCalls(),
     ]);
 
-    const encoder = new TextEncoder();
-    const decoder = new TextDecoder();
-
-    const stream = new ReadableStream({
-      async start(controller) {
-        const reader = openaiRes.body?.getReader();
-        if (!reader) {
-          controller.close();
-          return;
-        }
-
-        let buffer = "";
-        try {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            buffer += decoder.decode(value, { stream: true });
-            const lines = buffer.split("\n");
-            buffer = lines.pop() || "";
-
-            for (const line of lines) {
-              const trimmed = line.trim();
-              if (!trimmed || !trimmed.startsWith("data: ")) continue;
-              const data = trimmed.slice(6);
-              if (data === "[DONE]") continue;
-
-              try {
-                const parsed = JSON.parse(data);
-                const content = parsed.choices?.[0]?.delta?.content;
-                if (content) {
-                  controller.enqueue(encoder.encode(content));
-                }
-              } catch {
-                // Skip malformed chunks
-              }
-            }
-          }
-        } finally {
-          controller.close();
-        }
+    const stream = createAiStream(openaiRes.body, {
+      onComplete: async (tokens) => {
+        await Promise.all([
+          incrementAiTokenUsage(session.userId, tokens),
+          incrementDailyAiTokenUsage(session.userId, tokens),
+          incrementGlobalAiTokens(tokens),
+        ]);
       },
+      fallbackTokenEstimate: 1200 + 2500,
     });
 
     return new Response(stream, {

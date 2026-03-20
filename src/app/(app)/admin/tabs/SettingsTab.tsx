@@ -868,7 +868,6 @@ function FeatureTogglesCard() {
   const toolRebalancingOn = flags.tool_rebalancing_enabled ?? false;
   const toolAccountsOn = flags.tool_accounts_enabled ?? true;
   const toolWatchlistOn = flags.tool_watchlist_enabled ?? true;
-
   const alertsSteps: SetupStep[] = [
     { text: "Enable this toggle", done: alertsOn },
     { text: "Configure the Resend API key below for email delivery", done: hasResendKey },

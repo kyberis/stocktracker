@@ -9,9 +9,12 @@ import {
   getPlatformSetting,
   createSupportChatConversation,
   appendSupportChatMessages,
+  incrementAiTokenUsage,
+  incrementDailyAiTokenUsage,
 } from "@/lib/db";
 import { supportChatTotal, supportChatDuration, rateLimitHitsTotal } from "@/lib/metrics";
-import { checkSupportChatRateLimit, checkGlobalAiCap, incrementGlobalAiCalls } from "@/lib/rate-limit";
+import { checkSupportChatRateLimit, checkGlobalAiCap, incrementGlobalAiCalls, incrementGlobalAiTokens } from "@/lib/rate-limit";
+import { createAiStream } from "@/lib/ai-stream";
 import { languageCodeToName } from "@/lib/languages";
 import { withMetrics } from "@/lib/with-metrics";
 import { parseBody } from "@/lib/api-response";
@@ -111,6 +114,7 @@ export const POST = withMetrics("/api/support-chat", async (request: NextRequest
       body: JSON.stringify({
         model: "gpt-4o-mini",
         stream: true,
+        stream_options: { include_usage: true },
         max_tokens: 800,
         temperature: 0.4,
         messages: openaiMessages,
@@ -132,58 +136,26 @@ export const POST = withMetrics("/api/support-chat", async (request: NextRequest
     supportChatTotal.inc({ status: "success" });
     await incrementGlobalAiCalls();
 
-    const encoder = new TextEncoder();
-    const decoder = new TextDecoder();
     let fullResponse = "";
 
-    const stream = new ReadableStream({
-      async start(controller) {
-        const reader = openaiRes.body?.getReader();
-        if (!reader) {
-          controller.close();
-          return;
+    const stream = createAiStream(openaiRes.body, {
+      onContent: (text) => { fullResponse += text; },
+      onComplete: async (tokens) => {
+        if (fullResponse) {
+          const assistantMsg: ChatMessage = {
+            role: "assistant",
+            content: fullResponse,
+            timestamp: new Date().toISOString(),
+          };
+          appendSupportChatMessages(conversationId, [assistantMsg]).catch(() => {});
         }
-
-        let buffer = "";
-        try {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            buffer += decoder.decode(value, { stream: true });
-            const lines = buffer.split("\n");
-            buffer = lines.pop() || "";
-
-            for (const line of lines) {
-              const trimmed = line.trim();
-              if (!trimmed || !trimmed.startsWith("data: ")) continue;
-              const data = trimmed.slice(6);
-              if (data === "[DONE]") continue;
-
-              try {
-                const parsed = JSON.parse(data);
-                const content = parsed.choices?.[0]?.delta?.content;
-                if (content) {
-                  fullResponse += content;
-                  controller.enqueue(encoder.encode(content));
-                }
-              } catch {
-                // skip malformed chunks
-              }
-            }
-          }
-        } finally {
-          if (fullResponse) {
-            const assistantMsg: ChatMessage = {
-              role: "assistant",
-              content: fullResponse,
-              timestamp: new Date().toISOString(),
-            };
-            appendSupportChatMessages(conversationId, [assistantMsg]).catch(() => {});
-          }
-          controller.close();
-        }
+        await Promise.all([
+          incrementAiTokenUsage(session.userId, tokens),
+          incrementDailyAiTokenUsage(session.userId, tokens),
+          incrementGlobalAiTokens(tokens),
+        ]);
       },
+      fallbackTokenEstimate: 800 + 1500,
     });
 
     return new Response(stream, {

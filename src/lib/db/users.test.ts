@@ -72,6 +72,8 @@ const dbUserRow = {
   last_active_at: "",
   tax_residency: "",
   onboarding_completed: 0,
+  ai_tokens_this_month: 0,
+  ai_tokens_today: 0,
 };
 
 describe("users", () => {
@@ -320,6 +322,62 @@ describe("users", () => {
         sql: "UPDATE users SET ai_calls_this_month = ? WHERE id = ?",
         args: [3, "u1"],
       });
+    });
+  });
+
+  describe("getAiTokenUsage", () => {
+    it("returns token usage when user exists and window is current", async () => {
+      const currentMonth = new Date().toISOString().slice(0, 7) + "-01";
+      const row = { ...dbUserRow, ai_tokens_this_month: 5000, ai_calls_reset_at: currentMonth, ai_daily_reset_at: new Date().toISOString() };
+      mockExecute.mockResolvedValue({ rows: [row] });
+
+      const result = await users.getAiTokenUsage("u1");
+
+      expect(result.plan).toBe("free");
+      expect(result.aiTokensThisMonth).toBe(5000);
+      expect(result.aiTokensToday).toBe(0);
+    });
+
+    it("resets tokens when month changed", async () => {
+      const oldMonth = "2024-01-01";
+      const row = { ...dbUserRow, ai_tokens_this_month: 10000, ai_calls_reset_at: oldMonth };
+      mockExecute
+        .mockResolvedValueOnce({ rows: [row] })
+        .mockResolvedValueOnce({ rows: [] });
+
+      const result = await users.getAiTokenUsage("u1");
+
+      expect(result.aiTokensThisMonth).toBe(0);
+    });
+
+    it("returns defaults when user not found", async () => {
+      mockExecute.mockResolvedValue({ rows: [] });
+      const result = await users.getAiTokenUsage("nonexistent");
+      expect(result.plan).toBe("free");
+      expect(result.aiTokensThisMonth).toBe(0);
+    });
+  });
+
+  describe("incrementAiTokenUsage", () => {
+    it("increments ai_tokens_this_month by the given amount", async () => {
+      const currentMonth = new Date().toISOString().slice(0, 7) + "-01";
+      const row = { ...dbUserRow, ai_tokens_this_month: 2000, ai_calls_reset_at: currentMonth, ai_daily_reset_at: new Date().toISOString() };
+      mockExecute
+        .mockResolvedValueOnce({ rows: [row] })
+        .mockResolvedValueOnce({ rows: [] });
+
+      const result = await users.incrementAiTokenUsage("u1", 1500);
+
+      expect(result).toBe(3500);
+      expect(mockExecute).toHaveBeenCalledWith({
+        sql: "UPDATE users SET ai_tokens_this_month = ? WHERE id = ?",
+        args: [3500, "u1"],
+      });
+    });
+
+    it("returns 0 for zero or negative tokens", async () => {
+      const result = await users.incrementAiTokenUsage("u1", 0);
+      expect(result).toBe(0);
     });
   });
 

@@ -130,10 +130,10 @@ export default function SupportChatWidget({
         const { done, value } = await reader.read();
         if (done) break;
         accumulated += decoder.decode(value, { stream: true });
-        const snapshot = accumulated;
+        const display = accumulated.replace(/\n\[TOKENS:\d+\]$/, "");
         setMessages((prev) => {
           const copy = [...prev];
-          copy[copy.length - 1] = { role: "assistant", content: snapshot };
+          copy[copy.length - 1] = { role: "assistant", content: display };
           return copy;
         });
       }

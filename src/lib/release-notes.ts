@@ -17,6 +17,72 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.53.0",
+    date: "2026-03-20",
+    title: "Performance Breakdown Page",
+    titleTranslations: { es: "Página de desglose del rendimiento" },
+    changes: [
+      {
+        type: "feature",
+        text: "New Performance tab replacing the old Metrics tab — annual return bar chart, performance breakdown (price gain, dividends, realized P&L), transaction cost totals, TTWROR, IRR, and advanced metrics (Sharpe, max drawdown, volatility) with year-by-year filtering.",
+        translations: {
+          es: "Nueva pestaña de Rendimiento que reemplaza la antigua pestaña de Métricas — gráfico de barras de retornos anuales, desglose del rendimiento (ganancia de precio, dividendos, P&L realizado), costes totales de transacción, TTWROR, TIR y métricas avanzadas (Sharpe, drawdown máximo, volatilidad) con filtrado por año.",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.52.0",
+    date: "2026-03-20",
+    title: "Data quality nudges & import comparison page",
+    titleTranslations: { es: "Avisos de calidad de datos y p\u00e1gina de comparaci\u00f3n de importaci\u00f3n" },
+    changes: [
+      {
+        type: "feature",
+        text: "Contextual data upgrade nudges across 6 screens (Tax Report, Transaction History, Dashboard, Import, Dividends, Performance) that detect incomplete transaction data and suggest connecting your broker or importing a CSV for more accurate tax reports, cost basis, and performance metrics.",
+        translations: {
+          es: "Avisos contextuales de mejora de datos en 6 pantallas (Informe Fiscal, Historial de Transacciones, Dashboard, Importaci\u00f3n, Dividendos, Rendimiento) que detectan datos incompletos y sugieren conectar tu br\u00f3ker o importar un CSV para informes fiscales, coste base y m\u00e9tricas de rendimiento m\u00e1s precisos.",
+        },
+      },
+      {
+        type: "feature",
+        text: "New import comparison page (/import/compare) that explains the differences between Broker API sync and CSV import, with a feature matrix and direct links to each import method.",
+        translations: {
+          es: "Nueva p\u00e1gina de comparaci\u00f3n de importaci\u00f3n (/import/compare) que explica las diferencias entre sincronizaci\u00f3n por API del br\u00f3ker e importaci\u00f3n CSV, con matriz de funciones y enlaces directos a cada m\u00e9todo.",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.51.0",
+    date: "2026-03-19",
+    title: "Dashboard V2 — Two-column layout & Portfolio AI",
+    titleTranslations: { es: "Dashboard V2 — Diseño en dos columnas y Portfolio AI" },
+    changes: [
+      {
+        type: "feature",
+        text: "New two-column dashboard layout (behind feature flag): compact hero chart with inline portfolio value, right sidebar with allocation donut (Type/Sectors/Regions tabs), key stats grid, goal progress, upcoming earnings, and Portfolio AI trigger card.",
+        translations: {
+          es: "Nuevo diseño del dashboard en dos columnas (tras feature flag): gráfico compacto con valor del portafolio, barra lateral derecha con donut de asignación (pestañas Tipo/Sectores/Regiones), estadísticas clave, progreso del objetivo, próximos resultados y tarjeta de Portfolio AI.",
+        },
+      },
+      {
+        type: "feature",
+        text: "Portfolio AI drawer: full-width slide-out panel that shares your entire portfolio context (holdings, allocations, performance, goals) with an AI assistant. Replaces the inline support chat with a more powerful, always-contextual experience.",
+        translations: {
+          es: "Panel de Portfolio AI: panel deslizante de ancho completo que comparte todo el contexto de tu portafolio (posiciones, asignación, rendimiento, objetivos) con un asistente de IA. Reemplaza el chat de soporte en línea con una experiencia más potente y siempre contextual.",
+        },
+      },
+      {
+        type: "feature",
+        text: "Benchmark overlay: compare your portfolio performance against 19 benchmarks (S&P 500, NASDAQ, DAX, FTSE 100, MSCI World, Bitcoin, Ethereum, Gold, Oil, EUR/USD, and more) directly on the chart with dashed overlay lines and interactive legend chips.",
+        translations: {
+          es: "Superposición de benchmarks: compara el rendimiento de tu portafolio con 19 referencias (S&P 500, NASDAQ, DAX, FTSE 100, MSCI World, Bitcoin, Ethereum, Oro, Petróleo, EUR/USD y más) directamente en el gráfico con líneas superpuestas y chips de leyenda interactivos.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.50.0",
     date: "2026-03-19",
     title: "Chart AI assistant",

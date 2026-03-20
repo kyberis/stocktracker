@@ -69,6 +69,7 @@ export default function ChartAiChatPanel({
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
   const [error, setError] = useState("");
+  const [lastTokens, setLastTokens] = useState<number | null>(null);
   const messagesScrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -176,18 +177,22 @@ export default function ChartAiChatPanel({
       const decoder = new TextDecoder();
       let accumulated = "";
       setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
+      setLastTokens(null);
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
         accumulated += decoder.decode(value, { stream: true });
-        const snapshot = accumulated;
+        const display = accumulated.replace(/\n\[TOKENS:\d+\]$/, "");
         setMessages((prev) => {
           const copy = [...prev];
-          copy[copy.length - 1] = { role: "assistant", content: snapshot };
+          copy[copy.length - 1] = { role: "assistant", content: display };
           return copy;
         });
       }
+
+      const tokenMatch = accumulated.match(/\[TOKENS:(\d+)\]$/);
+      if (tokenMatch) setLastTokens(parseInt(tokenMatch[1], 10));
 
       track("chart_chat_message_sent", { range, chartMode: String(chartMode) });
     } catch {
@@ -318,6 +323,13 @@ export default function ChartAiChatPanel({
                 </div>
               </div>
             ))}
+            {lastTokens !== null && !streaming && messages.length > 0 && (
+              <div className="text-center pt-1">
+                <span className="text-[10px] text-gray-400 dark:text-slate-500 tabular-nums">
+                  {t("aiResponseTokens").replace("{tokens}", lastTokens.toLocaleString())}
+                </span>
+              </div>
+            )}
           </div>
 
           {error ? (

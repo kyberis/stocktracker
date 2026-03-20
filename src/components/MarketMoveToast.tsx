@@ -94,12 +94,14 @@ export default function MarketMoveToast({ demoMode = false }: Props) {
   const { t } = useI18n();
   const { bigMovers, loading } = useTickerBar(demoMode);
   const [dismissed, setDismissed] = useState(false);
-  const [visible, setVisible] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const holdingMovers = useMemo(() => (demoMode ? [] : readHoldingMovers()), [loading]);
 
   const hasAlerts = bigMovers.length > 0 || holdingMovers.length > 0;
+  const totalMovers = bigMovers.length + holdingMovers.length;
 
   useEffect(() => {
     try {
@@ -113,21 +115,50 @@ export default function MarketMoveToast({ demoMode = false }: Props) {
   useEffect(() => {
     if (loading || dismissed) return;
     if (hasAlerts) {
-      setVisible(true);
-      timerRef.current = setTimeout(() => setVisible(false), AUTO_DISMISS_MS);
+      setExpanded(true);
+      setCollapsed(false);
+      timerRef.current = setTimeout(() => {
+        setExpanded(false);
+        setCollapsed(true);
+      }, AUTO_DISMISS_MS);
       sendBrowserNotification(bigMovers, holdingMovers, t("marketAlertTitle") || "Market Alert");
     }
     return () => { if (timerRef.current) clearTimeout(timerRef.current); };
   }, [bigMovers, holdingMovers, hasAlerts, loading, dismissed, t]);
 
   function dismiss() {
-    setVisible(false);
+    setExpanded(false);
+    setCollapsed(false);
     setDismissed(true);
     try { sessionStorage.setItem(DISMISS_KEY, "1"); } catch { /* ignore */ }
     if (timerRef.current) clearTimeout(timerRef.current);
   }
 
-  if (!visible || !hasAlerts) return null;
+  if (dismissed || !hasAlerts) return null;
+
+  if (collapsed && !expanded) {
+    return (
+      <button
+        onClick={() => { setCollapsed(false); setExpanded(true); }}
+        className="fixed bottom-20 sm:bottom-4 right-4 z-50 flex items-center gap-1.5 px-3 py-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 border-l-4 border-l-amber-500 rounded-xl shadow-lg hover:shadow-xl transition-shadow animate-slide-in-right"
+        aria-label={t("marketAlertTitle") || "Market Alert"}
+      >
+        <div className="w-5 h-5 rounded-md bg-amber-500/15 flex items-center justify-center shrink-0">
+          <svg className="w-3 h-3 text-amber-500 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+        </div>
+        <span className="text-xs font-semibold text-slate-900 dark:text-amber-300 tabular-nums">
+          {totalMovers}
+        </span>
+        <svg className="w-3 h-3 text-gray-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
+        </svg>
+      </button>
+    );
+  }
+
+  if (!expanded) return null;
 
   return (
     <div

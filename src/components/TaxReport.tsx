@@ -6,6 +6,7 @@ import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth-context";
 import { usePortfolio } from "@/lib/portfolio-context";
 import TierFeatureBadge from "./TierFeatureBadge";
+import DataUpgradeNudge from "./DataUpgradeNudge";
 import type {
   TaxReport as TaxReportType,
   TaxCountry,
@@ -357,6 +358,17 @@ export default function TaxReport() {
           {/* Data Quality */}
           {report.dataQuality && report.dataQuality.length > 0 && (
             <DataQualitySection checks={report.dataQuality} />
+          )}
+
+          {report.dataQuality && report.dataQuality.some((c) => c.status !== "ok") && (
+            <DataUpgradeNudge
+              variant="amber"
+              titleKey="nudgeTaxTitle"
+              descKey="nudgeTaxDesc"
+              titleReplacements={{ count: String(report.dataQuality.filter((c) => c.status !== "ok").length) }}
+              dismissKey="nudge_tax_dismissed"
+              dismissMode="session"
+            />
           )}
 
           {/* Summary Cards */}

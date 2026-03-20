@@ -6,6 +6,7 @@ vi.mock("./session", () => ({
 vi.mock("@/lib/db", () => ({
   findUserById: vi.fn(),
   getAiUsage: vi.fn(),
+  getAiTokenUsage: vi.fn(),
   trackEvent: vi.fn().mockResolvedValue(undefined),
   updateLastActive: vi.fn().mockResolvedValue(undefined),
 }));
@@ -24,7 +25,7 @@ vi.mock("@/lib/rate-limit", () => ({
 }));
 
 import { getSessionFromRequest } from "./session";
-import { findUserById, getAiUsage } from "@/lib/db";
+import { findUserById, getAiUsage, getAiTokenUsage } from "@/lib/db";
 import { canAccessFeature, effectivePlan } from "@/lib/subscription";
 import { checkAvRateLimit, checkAiRateLimit, checkAiImportRateLimit } from "@/lib/rate-limit";
 import { requireSession, requireAdmin, requirePro, requireFeatureAccess, requireRateLimit } from "./guards";
@@ -32,6 +33,7 @@ import { requireSession, requireAdmin, requirePro, requireFeatureAccess, require
 const mockGetSession = getSessionFromRequest as unknown as ReturnType<typeof vi.fn>;
 const mockFindUser = findUserById as unknown as ReturnType<typeof vi.fn>;
 const mockGetAiUsage = getAiUsage as unknown as ReturnType<typeof vi.fn>;
+const mockGetAiTokenUsage = getAiTokenUsage as unknown as ReturnType<typeof vi.fn>;
 const mockCanAccess = canAccessFeature as unknown as ReturnType<typeof vi.fn>;
 const mockEffectivePlan = effectivePlan as unknown as ReturnType<typeof vi.fn>;
 const mockCheckAv = checkAvRateLimit as unknown as ReturnType<typeof vi.fn>;
@@ -122,6 +124,7 @@ describe("requireFeatureAccess", () => {
     mockGetSession.mockResolvedValue(userSession);
     mockFindUser.mockResolvedValue({ plan: "free", plan_expires_at: "" });
     mockGetAiUsage.mockResolvedValue({ aiCallsThisMonth: 0 });
+    mockGetAiTokenUsage.mockResolvedValue({ aiTokensThisMonth: 0, aiTokensToday: 0 });
     mockEffectivePlan.mockReturnValue("free");
     mockCanAccess.mockReturnValue({ allowed: true });
     const { session, error } = await requireFeatureAccess(fakeReq, "charts");
@@ -133,12 +136,13 @@ describe("requireFeatureAccess", () => {
     mockGetSession.mockResolvedValue(userSession);
     mockFindUser.mockResolvedValue({ plan: "free", plan_expires_at: "" });
     mockGetAiUsage.mockResolvedValue({ aiCallsThisMonth: 10 });
+    mockGetAiTokenUsage.mockResolvedValue({ aiTokensThisMonth: 30000, aiTokensToday: 5000 });
     mockEffectivePlan.mockReturnValue("free");
-    mockCanAccess.mockReturnValue({ allowed: false, reason: "ai_limit_reached", limit: 5, used: 10 });
+    mockCanAccess.mockReturnValue({ allowed: false, reason: "ai_limit_reached", limit: 25000, used: 30000 });
     const { error } = await requireFeatureAccess(fakeReq, "ai");
     const body = await error!.json();
     expect(body.reason).toBe("ai_limit_reached");
-    expect(body.limit).toBe(5);
+    expect(body.limit).toBe(25000);
   });
 });
 

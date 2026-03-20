@@ -26,7 +26,7 @@ const GoalProgressBanner = dynamic(() => import("@/components/GoalProgressBanner
 const PortfolioNewsFeed = dynamic(() => import("@/components/PortfolioNewsFeed"), { ssr: false });
 const TaxonomyView = dynamic(() => import("@/components/TaxonomyView"), { ssr: false });
 const DividendSummary = dynamic(() => import("@/components/DividendSummary"), { ssr: false });
-const MetricsTab = dynamic(() => import("@/components/MetricsTab"), { ssr: false });
+const PerformancePage = dynamic(() => import("@/components/PerformancePage"), { ssr: false });
 const GrowthTab = dynamic(() => import("@/components/GrowthTab"), { ssr: false });
 const AddStockModal = dynamic(() => import("@/components/AddStockModal"), { ssr: false });
 const ProCompareCard = dynamic(() => import("@/components/ProCompareCard"), { ssr: false });
@@ -88,7 +88,7 @@ export default function MobileDashboard() {
     { key: "portfolio", label: t("portfolioTab") },
     { key: "diversification", label: t("diversificationTab") },
     { key: "dividends", label: t("dividendsTab") },
-    { key: "metrics", label: t("metricsTab"), tierBadge: "starter" as const },
+    { key: "metrics", label: t("performanceTab"), tierBadge: "starter" as const },
     { key: "growth", label: t("growthTab"), tierBadge: "starter" as const },
     { key: "events", label: t("eventsTab") },
     { key: "news", label: t("newsTab") },
@@ -274,7 +274,7 @@ export default function MobileDashboard() {
         {activeTab === "metrics" && (
           <div role="tabpanel" id="mtabpanel-metrics" aria-labelledby="mtab-metrics" tabIndex={0} className="focus-visible:outline-none animate-tab-fade">
             <Suspense fallback={<ChartSkeleton />}>
-              <MetricsTab holdings={filteredHoldings} cashEntries={investmentCashEntries} />
+              <PerformancePage holdings={filteredHoldings} cashEntries={investmentCashEntries} />
             </Suspense>
           </div>
         )}

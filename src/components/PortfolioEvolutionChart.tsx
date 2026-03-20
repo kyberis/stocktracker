@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import {
   AreaChart,
   Area,
+  Line,
   XAxis,
   YAxis,
   Tooltip,
@@ -59,13 +60,20 @@ interface EventMarker {
   currency?: string;
 }
 
+interface BenchmarkTooltipEntry {
+  key: string;
+  label: string;
+  color: string;
+}
+
 interface ChartTooltipProps {
   active?: boolean;
-  payload?: Array<{ payload: (SnapshotPoint | PerfPoint) & { events?: EventMarker[] } }>;
+  payload?: Array<{ payload: (SnapshotPoint | PerfPoint) & { events?: EventMarker[]; [k: string]: unknown } }>;
   baseCurrency: string;
   stealthMode: boolean;
   mode: ChartMode;
   t: (key: string) => string;
+  benchmarkEntries?: BenchmarkTooltipEntry[];
 }
 
 function formatEventShares(shares: number): string {
@@ -162,30 +170,51 @@ function EventsTooltipSection({
   );
 }
 
-function ChartTooltip({ active, payload, baseCurrency, stealthMode, mode, t }: ChartTooltipProps) {
+function ChartTooltip({ active, payload, baseCurrency, stealthMode, mode, t, benchmarkEntries }: ChartTooltipProps) {
   if (!active || !payload?.length) return null;
   const point = payload[0].payload;
-  const events = point.events;
+  const events = point.events as EventMarker[] | undefined;
+
+  const benchmarkRows = benchmarkEntries?.map((b) => {
+    const val = point[`bench_${b.key}`];
+    if (val == null || typeof val !== "number") return null;
+    const isPos = val >= 0;
+    return (
+      <div key={b.key} className="flex items-center gap-1.5 mt-0.5">
+        <span className="w-2 h-2 rounded-full shrink-0" style={{ background: b.color }} />
+        <span className="text-[10px] text-gray-500 dark:text-slate-400 truncate">{b.label}</span>
+        <span className={`text-[11px] font-semibold tabular-nums ml-auto ${isPos ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
+          {isPos ? "+" : ""}{val.toFixed(1)}%
+        </span>
+      </div>
+    );
+  }).filter(Boolean);
+
   if (mode === "performance") {
     const p = point as PerfPoint;
     const isPos = p.pct >= 0;
     return (
-      <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2 shadow-lg">
+      <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2 shadow-lg max-w-[200px]">
         <p className="text-xs text-gray-400 dark:text-slate-500">{formatDateLabel(p.date)}</p>
-        <p className={`text-sm font-semibold tabular-nums ${isPos ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
-          {isPos ? "+" : ""}{formatPercent(p.pct)}
-        </p>
+        <div className="flex items-center gap-1.5 mt-1">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+          <span className="text-[10px] text-gray-500 dark:text-slate-400">{t("portfolio")}</span>
+          <span className={`text-[11px] font-semibold tabular-nums ml-auto ${isPos ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
+            {isPos ? "+" : ""}{formatPercent(p.pct)}
+          </span>
+        </div>
+        {benchmarkRows}
         <EventsTooltipSection events={events} t={t} stealthMode={stealthMode} baseCurrency={baseCurrency} />
       </div>
     );
   }
   const sp = point as SnapshotPoint;
   return (
-    <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2 shadow-lg">
+    <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2 shadow-lg max-w-[200px]">
       <p className="text-xs text-gray-400 dark:text-slate-500">{formatDateLabel(sp.date)}</p>
       <div className="flex items-center gap-1.5 mt-1">
         <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-        <span className="text-xs text-gray-500 dark:text-slate-400">{t("portfolioValueLabel")}</span>
+        <span className="text-[10px] text-gray-500 dark:text-slate-400">{t("portfolioValueLabel")}</span>
         <span className="text-sm font-semibold text-gray-900 dark:text-white tabular-nums ml-auto">
           {stealthMode ? "•••••" : formatCurrency(sp.value, baseCurrency)}
         </span>
@@ -193,12 +222,13 @@ function ChartTooltip({ active, payload, baseCurrency, stealthMode, mode, t }: C
       {sp.invested > 0 && (
         <div className="flex items-center gap-1.5 mt-0.5">
           <span className="w-2 h-2 rounded-full bg-gray-400 dark:bg-slate-500 shrink-0" />
-          <span className="text-xs text-gray-500 dark:text-slate-400">{t("investedCapital")}</span>
+          <span className="text-[10px] text-gray-500 dark:text-slate-400">{t("investedCapital")}</span>
           <span className="text-sm font-semibold text-gray-900 dark:text-white tabular-nums ml-auto">
             {stealthMode ? "•••••" : formatCurrency(sp.invested, baseCurrency)}
           </span>
         </div>
       )}
+      {benchmarkRows}
       <EventsTooltipSection events={events} t={t} stealthMode={stealthMode} baseCurrency={baseCurrency} />
     </div>
   );
@@ -325,7 +355,27 @@ function attachEventsToPoints<T extends { date: string }>(
   return result;
 }
 
-export default function PortfolioEvolutionChart() {
+export interface BenchmarkOverlay {
+  key: string;
+  symbol: string;
+  label: string;
+  color: string;
+}
+
+interface EvolutionChartProps {
+  embedded?: boolean;
+  benchmarks?: BenchmarkOverlay[];
+  onRemoveBenchmark?: (key: string) => void;
+}
+
+function normalizeBenchmarkSeries(values: number[]): number[] {
+  if (values.length === 0) return [];
+  const first = values[0];
+  if (!first || first <= 0) return values.map(() => 0);
+  return values.map((v) => ((v - first) / first) * 100);
+}
+
+export default function PortfolioEvolutionChart({ embedded, benchmarks, onRemoveBenchmark }: EvolutionChartProps = {}) {
   const { t } = useI18n();
   const { holdings, cashEntries, quotes, exchangeRates, activePortfolioCurrency, activePortfolioId, demoMode } =
     usePortfolio();
@@ -350,6 +400,11 @@ export default function PortfolioEvolutionChart() {
   const sparseBackfillAttemptedRef = useRef(false);
   const prevHoldingsCount = useRef(holdings.length);
   const fetchHistoryRef = useRef<(r: EvolutionRange) => void>(() => {});
+
+  // Benchmark overlay data
+  const [benchmarkData, setBenchmarkData] = useState<Record<string, number[]>>({});
+  const [benchmarkLoading, setBenchmarkLoading] = useState(false);
+  const benchmarkAbortRef = useRef<AbortController | null>(null);
 
   const fetchHistory = useCallback(
     (r: EvolutionRange) => {
@@ -442,6 +497,55 @@ export default function PortfolioEvolutionChart() {
     }
   }, [holdings.length, demoMode, range]);
 
+  // Fetch benchmark overlay data when benchmarks or range changes
+  useEffect(() => {
+    if (!benchmarks?.length || points.length < 2) {
+      setBenchmarkData({});
+      return;
+    }
+    benchmarkAbortRef.current?.abort();
+    const ctrl = new AbortController();
+    benchmarkAbortRef.current = ctrl;
+
+    setBenchmarkLoading(true);
+    const chartDates = points.map((p) => p.date.slice(0, 10));
+
+    Promise.all(
+      benchmarks.map(async (b) => {
+        try {
+          const params = new URLSearchParams({ symbol: b.symbol, period: range === "ytd" ? "1y" : range });
+          const res = await fetch(`/api/historical?${params}`, { signal: ctrl.signal });
+          if (!res.ok) return { key: b.key, values: [] as number[] };
+          const json = await res.json();
+          const raw: { date: string; close: number }[] = Array.isArray(json) ? json : json.data || [];
+
+          const closeByDate = new Map<string, number>();
+          for (const pt of raw) closeByDate.set(pt.date.slice(0, 10), pt.close);
+
+          const aligned: number[] = [];
+          let lastClose = 0;
+          for (const d of chartDates) {
+            const c = closeByDate.get(d);
+            if (c != null && c > 0) lastClose = c;
+            aligned.push(lastClose);
+          }
+
+          return { key: b.key, values: normalizeBenchmarkSeries(aligned) };
+        } catch {
+          return { key: b.key, values: [] as number[] };
+        }
+      }),
+    ).then((results) => {
+      if (ctrl.signal.aborted) return;
+      const map: Record<string, number[]> = {};
+      for (const r of results) if (r.values.length > 0) map[r.key] = r.values;
+      setBenchmarkData(map);
+      setBenchmarkLoading(false);
+    });
+
+    return () => ctrl.abort();
+  }, [benchmarks, range, points]);
+
   function handleRangeChange(r: EvolutionRange) {
     if (!isPaid && !FREE_RANGES.has(r)) return;
     setRange(r);
@@ -471,6 +575,35 @@ export default function PortfolioEvolutionChart() {
 
   const enrichedPoints = attachEventsToPoints(points, events);
   const enrichedPerfPoints = attachEventsToPoints(perfPoints, events);
+
+  const hasBenchmarks = benchmarks && benchmarks.length > 0 && Object.keys(benchmarkData).length > 0;
+
+  // When benchmarks are active in value mode, normalize portfolio to % too
+  const portfolioPctFromValue: number[] = (() => {
+    if (!hasBenchmarks || isPerf) return [];
+    const first = points[0]?.value;
+    if (!first || first <= 0) return points.map(() => 0);
+    return points.map((p) => ((p.value - first) / first) * 100);
+  })();
+
+  // Merge benchmark % values into chart data for rendering
+  const mergedChartData = (() => {
+    if (!hasBenchmarks) return isPerf ? enrichedPerfPoints : enrichedPoints;
+    // Always use performance-style data when benchmarks are active
+    const base = isPerf ? enrichedPerfPoints : enrichedPoints;
+    return base.map((pt, i) => {
+      const extra: Record<string, number> = {};
+      // Inject portfolio % when in value mode with benchmarks
+      if (!isPerf && portfolioPctFromValue[i] != null) {
+        extra.pct = portfolioPctFromValue[i];
+      }
+      for (const b of benchmarks!) {
+        const vals = benchmarkData[b.key];
+        if (vals && vals[i] != null) extra[`bench_${b.key}`] = vals[i];
+      }
+      return { ...pt, ...extra };
+    });
+  })();
 
   const firstValue = points[0]?.value ?? 0;
   const lastValue = points[points.length - 1]?.value ?? 0;
@@ -669,6 +802,34 @@ export default function PortfolioEvolutionChart() {
       </div>
     ) : null;
 
+  const benchmarkTooltipEntries: BenchmarkTooltipEntry[] | undefined = hasBenchmarks
+    ? benchmarks!.filter((b) => benchmarkData[b.key]).map((b) => ({ key: b.key, label: b.label, color: b.color }))
+    : undefined;
+
+  const yDomain: [number, number] = (() => {
+    if (points.length < 2) return [0, 1];
+    if (isPerf || hasBenchmarks) {
+      const pctValues = perfPoints.map(p => p.pct);
+      if (hasBenchmarks) {
+        for (const vals of Object.values(benchmarkData)) {
+          pctValues.push(...vals);
+        }
+      }
+      const min = Math.min(...pctValues);
+      const max = Math.max(...pctValues);
+      const padding = (max - min) * 0.1 || 1;
+      return [min - padding, max + padding];
+    }
+    const vals = points.map(p => p.value);
+    if (hasInvestedData) {
+      vals.push(...points.map(p => p.invested).filter(v => v > 0));
+    }
+    const min = Math.min(...vals);
+    const max = Math.max(...vals);
+    const padding = (max - min) * 0.1 || 1;
+    return [min - padding, max + padding];
+  })();
+
   const chartContent = loading || backfilling ? (
     <div className="flex items-center justify-center py-16 gap-2 text-sm text-gray-400 dark:text-slate-500">
       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-500" />
@@ -712,7 +873,7 @@ export default function PortfolioEvolutionChart() {
   ) : (
     <div className="h-48" role="img" aria-label={isPerf ? "Portfolio performance chart" : "Portfolio value evolution chart"}>
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={isPerf ? enrichedPerfPoints : enrichedPoints} margin={{ top: 4, right: 4, left: 4, bottom: 4 }}>
+        <AreaChart data={mergedChartData} margin={{ top: 4, right: 4, left: 4, bottom: 4 }}>
           <defs>
             <linearGradient id="evolutionGrad" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor={accentColor} stopOpacity={0.2} />
@@ -742,13 +903,14 @@ export default function PortfolioEvolutionChart() {
             minTickGap={40}
           />
           <YAxis
+            domain={yDomain}
             tick={{
               fontSize: layoutTheme === "terminal" ? 10 : 11,
               fill: layoutTheme === "terminal" ? "#52525b" : layoutTheme === "canvas" ? "#94a3b8" : layoutTheme === "studio" ? "rgba(255,255,255,0.3)" : tickFill,
               ...(layoutTheme === "terminal" ? { fontFamily: "monospace" } : {}),
             }}
             tickFormatter={(v: number) =>
-              isPerf
+              isPerf || hasBenchmarks
                 ? `${v >= 0 ? "+" : ""}${v.toFixed(1)}%`
                 : stealthMode ? "•••" : formatCurrency(v, baseCurrency)
             }
@@ -756,7 +918,7 @@ export default function PortfolioEvolutionChart() {
             axisLine={false}
             tickLine={false}
           />
-          {isPerf && (
+          {(isPerf || hasBenchmarks) && (
             <ReferenceLine
               y={0}
               stroke={isDark ? "#475569" : "#d1d5db"}
@@ -764,9 +926,9 @@ export default function PortfolioEvolutionChart() {
             />
           )}
           <Tooltip
-            content={<ChartTooltip baseCurrency={baseCurrency} stealthMode={stealthMode} mode={chartMode} t={t} />}
+            content={<ChartTooltip baseCurrency={baseCurrency} stealthMode={stealthMode} mode={chartMode} t={t} benchmarkEntries={benchmarkTooltipEntries} />}
           />
-          {!isPerf && hasInvestedData && (
+          {!isPerf && !hasBenchmarks && hasInvestedData && (
             <Area
               type="monotone"
               dataKey="invested"
@@ -780,7 +942,7 @@ export default function PortfolioEvolutionChart() {
           )}
           <Area
             type="monotone"
-            dataKey={isPerf ? "pct" : "value"}
+            dataKey={isPerf || hasBenchmarks ? "pct" : "value"}
             stroke={accentColor}
             strokeWidth={2}
             fill="url(#evolutionGrad)"
@@ -828,10 +990,56 @@ export default function PortfolioEvolutionChart() {
             }}
             animationDuration={600}
           />
+          {hasBenchmarks && benchmarks!.map((b) =>
+            benchmarkData[b.key] ? (
+              <Line
+                key={b.key}
+                type="monotone"
+                dataKey={`bench_${b.key}`}
+                stroke={b.color}
+                strokeWidth={1.5}
+                strokeDasharray="4 3"
+                dot={false}
+                animationDuration={400}
+                connectNulls
+              />
+            ) : null,
+          )}
         </AreaChart>
       </ResponsiveContainer>
     </div>
   );
+
+  const benchmarkLegend = hasBenchmarks ? (
+    <div className="flex items-center gap-1.5 flex-wrap">
+      <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+        <span className="w-2 h-2 rounded-full bg-emerald-500" />
+        {t("portfolio")}
+      </span>
+      {benchmarks!.filter((b) => benchmarkData[b.key]).map((b) => (
+        <button
+          key={b.key}
+          onClick={() => onRemoveBenchmark?.(b.key)}
+          className="group inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-md transition-colors"
+          style={{
+            background: `${b.color}15`,
+            color: b.color,
+          }}
+        >
+          <span className="w-2 h-2 rounded-full shrink-0" style={{ background: b.color }} />
+          {b.label}
+          <span className="w-3.5 h-3.5 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-white/10">
+            <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </span>
+        </button>
+      ))}
+      {benchmarkLoading && (
+        <span className="animate-spin w-3 h-3 border-b border-current rounded-full opacity-40" />
+      )}
+    </div>
+  ) : null;
 
   const subtitle = isPerf ? t("chartPerformanceSubtitle") : t("chartValueSubtitle");
 
@@ -966,7 +1174,7 @@ export default function PortfolioEvolutionChart() {
 
   /* ── DEFAULT ── */
   return (
-    <div className="card px-5 py-4 space-y-3" data-testid="evolution-chart">
+    <div className={embedded ? "px-5 pb-4 space-y-3" : "card px-5 py-4 space-y-3"} data-testid="evolution-chart">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
           <h3
@@ -988,7 +1196,8 @@ export default function PortfolioEvolutionChart() {
       {explainerPanel}
       {periodReturnEl}
       {chartContent}
-      {chartAiPanel}
+      {benchmarkLegend}
+      {!embedded && chartAiPanel}
     </div>
   );
 }

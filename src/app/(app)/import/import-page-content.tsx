@@ -16,6 +16,7 @@ import ProCompareCard from "@/components/ProCompareCard";
 import TierFeatureBadge from "@/components/TierFeatureBadge";
 import AdSlot from "@/components/AdSlot";
 import AddStockModal from "@/components/AddStockModal";
+import DataUpgradeNudge from "@/components/DataUpgradeNudge";
 import type { BrokerFormat } from "@/hooks/import-types";
 
 type ImportMethod = "broker_csv" | "snaptrade_api" | "ai_import" | "manual";
@@ -735,13 +736,13 @@ export default function ImportPageContent() {
       {step === "done" && (
         <div className="animate-slide-up">
           {method === "broker_csv" && brokerCSV.step === "done" && (
-            <DoneCard txCount={brokerCSV.importedTxCount} holdingsCapped={brokerCSV.holdingsCapped} onReset={resetAll} t={t} />
+            <DoneCard txCount={brokerCSV.importedTxCount} holdingsCapped={brokerCSV.holdingsCapped} onReset={resetAll} t={t} importMethod="broker_csv" />
           )}
           {method === "ai_import" && aiImport.step === "done" && (
-            <DoneCard txCount={aiImport.importedTxCount} holdingsCapped={aiImport.holdingsCapped} onReset={resetAll} t={t} />
+            <DoneCard txCount={aiImport.importedTxCount} holdingsCapped={aiImport.holdingsCapped} onReset={resetAll} t={t} importMethod="ai_import" />
           )}
           {method === "snaptrade_api" && snapTradeApi.step === "done" && (
-            <DoneCard txCount={snapTradeApi.importedCount} holdingsCapped={snapTradeApi.holdingsCapped} onReset={resetAll} t={t} />
+            <DoneCard txCount={snapTradeApi.importedCount} holdingsCapped={snapTradeApi.holdingsCapped} onReset={resetAll} t={t} importMethod="snaptrade_api" />
           )}
         </div>
       )}
@@ -1467,7 +1468,8 @@ function ImportingProgress({ progress, t }: { progress: { current: number; total
   );
 }
 
-function DoneCard({ txCount, holdingsCapped, onReset, t }: { txCount: number; holdingsCapped: number; onReset: () => void; t: (key: string) => string }) {
+function DoneCard({ txCount, holdingsCapped, onReset, t, importMethod }: { txCount: number; holdingsCapped: number; onReset: () => void; t: (key: string) => string; importMethod?: string }) {
+  const showUpgradeNudge = importMethod && importMethod !== "broker_csv" && importMethod !== "snaptrade_api";
   return (
     <div className="py-8 text-center space-y-4">
       <div className="w-14 h-14 mx-auto rounded-full bg-emerald-100 dark:bg-emerald-500/15 flex items-center justify-center animate-slide-up">
@@ -1476,6 +1478,17 @@ function DoneCard({ txCount, holdingsCapped, onReset, t }: { txCount: number; ho
       <p className="text-lg font-bold text-gray-900 dark:text-white">
         {(t("importTxSuccess") || "{count} transactions imported successfully.").replace("{count}", String(txCount))}
       </p>
+      {showUpgradeNudge && (
+        <div className="max-w-md mx-auto text-left">
+          <DataUpgradeNudge
+            variant="violet"
+            titleKey="nudgeImportDoneTitle"
+            descKey="nudgeImportDoneDesc"
+            dismissKey="nudge_import_done"
+            dismissMode="none"
+          />
+        </div>
+      )}
       {holdingsCapped > 0 && (
         <div className="space-y-3 max-w-md mx-auto">
           <p className="text-xs text-amber-700 dark:text-amber-300 font-medium">

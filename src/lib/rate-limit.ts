@@ -212,13 +212,14 @@ export async function checkDeviceAuthRateLimit(ip: string): Promise<RateLimitRes
 // ── Global OpenAI monthly call cap ──────────────────────────
 
 const OPENAI_CALLS_KEY = "openai_monthly_calls";
+const OPENAI_TOKENS_KEY = "openai_monthly_tokens";
 
 export async function checkGlobalAiCap(role?: string): Promise<{ allowed: boolean; used: number; cap: number }> {
   if (role === "admin") return { allowed: true, used: 0, cap: Infinity };
 
-  const cap = PLATFORM_LIMITS.OPENAI_MONTHLY_CALL_CAP;
+  const cap = PLATFORM_LIMITS.OPENAI_MONTHLY_TOKEN_CAP;
   const monthKey = new Date().toISOString().slice(0, 7);
-  const raw = await getPlatformSetting(OPENAI_CALLS_KEY);
+  const raw = await getPlatformSetting(OPENAI_TOKENS_KEY);
   const [countStr, storedMonth] = raw.split("|");
   const used = storedMonth === monthKey ? parseInt(countStr, 10) || 0 : 0;
   return { allowed: used < cap, used, cap };
@@ -230,4 +231,13 @@ export async function incrementGlobalAiCalls(): Promise<void> {
   const [countStr, storedMonth] = raw.split("|");
   const current = storedMonth === monthKey ? parseInt(countStr, 10) || 0 : 0;
   await setPlatformSetting(OPENAI_CALLS_KEY, `${current + 1}|${monthKey}`);
+}
+
+export async function incrementGlobalAiTokens(tokens: number): Promise<void> {
+  if (tokens <= 0) return;
+  const monthKey = new Date().toISOString().slice(0, 7);
+  const raw = await getPlatformSetting(OPENAI_TOKENS_KEY);
+  const [countStr, storedMonth] = raw.split("|");
+  const current = storedMonth === monthKey ? parseInt(countStr, 10) || 0 : 0;
+  await setPlatformSetting(OPENAI_TOKENS_KEY, `${current + tokens}|${monthKey}`);
 }

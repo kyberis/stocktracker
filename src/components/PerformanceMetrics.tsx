@@ -7,6 +7,7 @@ import { usePortfolio } from "@/lib/portfolio-context";
 import { useAuth } from "@/lib/auth-context";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
 import { calculateTTWROR, calculateXIRR, buildXIRRCashFlows } from "@/lib/performance";
+import DataUpgradeNudge from "./DataUpgradeNudge";
 import type { Transaction, Holding, CashEntry } from "@/lib/types";
 
 const BlurredProSection = dynamic(() => import("./BlurredProSection"), { ssr: false });
@@ -111,6 +112,17 @@ export default function PerformanceMetrics({ holdings: holdingsProp, cashEntries
             <p className="text-gray-600 dark:text-slate-400 mt-0.5 leading-relaxed text-[11px]">{t("irrExplanation")}</p>
           </div>
         </div>
+      )}
+
+      {!hasTxData && (
+        <DataUpgradeNudge
+          variant="emerald"
+          titleKey="nudgePerfTitle"
+          descKey="nudgePerfDesc"
+          dismissKey="nudge_perf_dismissed"
+          dismissMode="session"
+          className="mb-3"
+        />
       )}
 
       <div className="grid grid-cols-2 gap-3">

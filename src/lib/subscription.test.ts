@@ -3,6 +3,10 @@ import { PLATFORM_LIMITS } from "./platform-config";
 import {
   FREE_AI_MONTHLY_LIMIT,
   STARTER_AI_MONTHLY_LIMIT,
+  FREE_AI_MONTHLY_TOKEN_LIMIT,
+  STARTER_AI_MONTHLY_TOKEN_LIMIT,
+  PRO_AI_MONTHLY_TOKEN_LIMIT,
+  getAiTokenLimit,
   canAccessFeature,
   canAccessTheme,
   effectivePlan,
@@ -34,31 +38,44 @@ describe("canAccessFeature", () => {
     expect(result.allowed).toBe(true);
   });
 
-  it("allows AI for free users under monthly limit", () => {
+  it("allows AI for free users under monthly token limit", () => {
     const result = canAccessFeature("ai", {
       plan: "free",
-      aiCallsThisMonth: FREE_AI_MONTHLY_LIMIT - 1,
+      aiCallsThisMonth: 0,
+      aiTokensThisMonth: FREE_AI_MONTHLY_TOKEN_LIMIT - 1,
     });
     expect(result.allowed).toBe(true);
   });
 
-  it("blocks AI for free users at monthly limit", () => {
+  it("blocks AI for free users at monthly token limit", () => {
     const result = canAccessFeature("ai", {
       plan: "free",
-      aiCallsThisMonth: FREE_AI_MONTHLY_LIMIT,
+      aiCallsThisMonth: 0,
+      aiTokensThisMonth: FREE_AI_MONTHLY_TOKEN_LIMIT,
     });
     expect(result.allowed).toBe(false);
     expect(result.reason).toBe("ai_limit_reached");
-    expect(result.limit).toBe(FREE_AI_MONTHLY_LIMIT);
-    expect(result.used).toBe(FREE_AI_MONTHLY_LIMIT);
+    expect(result.limit).toBe(FREE_AI_MONTHLY_TOKEN_LIMIT);
+    expect(result.used).toBe(FREE_AI_MONTHLY_TOKEN_LIMIT);
   });
 
-  it("allows unlimited AI for pro users", () => {
+  it("allows AI for pro users under token limit", () => {
     const result = canAccessFeature("ai", {
       plan: "pro",
-      aiCallsThisMonth: 10000,
+      aiCallsThisMonth: 0,
+      aiTokensThisMonth: PRO_AI_MONTHLY_TOKEN_LIMIT - 1,
     });
     expect(result.allowed).toBe(true);
+  });
+
+  it("blocks AI for pro users at token limit", () => {
+    const result = canAccessFeature("ai", {
+      plan: "pro",
+      aiCallsThisMonth: 0,
+      aiTokensThisMonth: PRO_AI_MONTHLY_TOKEN_LIMIT,
+    });
+    expect(result.allowed).toBe(false);
+    expect(result.reason).toBe("ai_limit_reached");
   });
 
   it("allows starter features for starter users", () => {
@@ -86,38 +103,42 @@ describe("canAccessFeature", () => {
     expect(result.reason).toBe("upgrade_required");
   });
 
-  it("allows AI for starter users under monthly limit", () => {
+  it("allows AI for starter users under monthly token limit", () => {
     const result = canAccessFeature("ai", {
       plan: "starter",
-      aiCallsThisMonth: STARTER_AI_MONTHLY_LIMIT - 1,
+      aiCallsThisMonth: 0,
+      aiTokensThisMonth: STARTER_AI_MONTHLY_TOKEN_LIMIT - 1,
     });
     expect(result.allowed).toBe(true);
   });
 
-  it("blocks AI for starter users at monthly limit", () => {
+  it("blocks AI for starter users at monthly token limit", () => {
     const result = canAccessFeature("ai", {
       plan: "starter",
-      aiCallsThisMonth: STARTER_AI_MONTHLY_LIMIT,
+      aiCallsThisMonth: 0,
+      aiTokensThisMonth: STARTER_AI_MONTHLY_TOKEN_LIMIT,
     });
     expect(result.allowed).toBe(false);
     expect(result.reason).toBe("ai_limit_reached");
-    expect(result.limit).toBe(STARTER_AI_MONTHLY_LIMIT);
-    expect(result.used).toBe(STARTER_AI_MONTHLY_LIMIT);
+    expect(result.limit).toBe(STARTER_AI_MONTHLY_TOKEN_LIMIT);
+    expect(result.used).toBe(STARTER_AI_MONTHLY_TOKEN_LIMIT);
   });
 
-  it("uses freeAiMonthlyLimit override for free users", () => {
-    const customLimit = 10;
+  it("uses freeAiMonthlyTokenLimit override for free users", () => {
+    const customLimit = 50000;
     const resultUnder = canAccessFeature("ai", {
       plan: "free",
-      aiCallsThisMonth: customLimit - 1,
-      freeAiMonthlyLimit: customLimit,
+      aiCallsThisMonth: 0,
+      aiTokensThisMonth: customLimit - 1,
+      freeAiMonthlyTokenLimit: customLimit,
     });
     expect(resultUnder.allowed).toBe(true);
 
     const resultAt = canAccessFeature("ai", {
       plan: "free",
-      aiCallsThisMonth: customLimit,
-      freeAiMonthlyLimit: customLimit,
+      aiCallsThisMonth: 0,
+      aiTokensThisMonth: customLimit,
+      freeAiMonthlyTokenLimit: customLimit,
     });
     expect(resultAt.allowed).toBe(false);
     expect(resultAt.reason).toBe("ai_limit_reached");
@@ -302,5 +323,19 @@ describe("planDisplayName", () => {
 
   it("returns Trefolio for pro plan", () => {
     expect(planDisplayName("pro")).toBe("Trefolio");
+  });
+});
+
+describe("getAiTokenLimit", () => {
+  it("returns FREE_AI_MONTHLY_TOKEN_LIMIT for free plan", () => {
+    expect(getAiTokenLimit("free")).toBe(PLATFORM_LIMITS.AI_FREE_MONTHLY_TOKEN_LIMIT);
+  });
+
+  it("returns STARTER_AI_MONTHLY_TOKEN_LIMIT for starter plan", () => {
+    expect(getAiTokenLimit("starter")).toBe(PLATFORM_LIMITS.AI_STARTER_MONTHLY_TOKEN_LIMIT);
+  });
+
+  it("returns PRO_AI_MONTHLY_TOKEN_LIMIT for pro plan", () => {
+    expect(getAiTokenLimit("pro")).toBe(PLATFORM_LIMITS.AI_PRO_MONTHLY_TOKEN_LIMIT);
   });
 });

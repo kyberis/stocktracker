@@ -12,14 +12,23 @@ export const PLATFORM_LIMITS = {
   /** Per-user AV budget per minute. Prevents a single user hogging the pool. */
   AV_PER_USER_PER_MINUTE: 15,
 
-  /** Max AI analysis calls per day for Pro users. */
+  /** Max AI analysis calls per day for Pro users (legacy call-count, kept for metrics). */
   AI_PRO_DAILY_LIMIT: 30,
 
-  /** Max AI analysis calls per month for Free users (mirrors FREE_AI_MONTHLY_LIMIT). */
+  /** Max AI analysis calls per month for Free users (legacy call-count, kept for metrics). */
   AI_FREE_MONTHLY_LIMIT: 5,
 
-  /** Max AI analysis calls per month for Starter users. */
+  /** Max AI analysis calls per month for Starter users (legacy call-count, kept for metrics). */
   AI_STARTER_MONTHLY_LIMIT: 20,
+
+  /** Monthly AI token budget for Free users. ~7-10 analyses. */
+  AI_FREE_MONTHLY_TOKEN_LIMIT: 25_000,
+
+  /** Monthly AI token budget for Starter users. ~25-40 analyses. */
+  AI_STARTER_MONTHLY_TOKEN_LIMIT: 100_000,
+
+  /** Monthly AI token budget for Pro users. ~125-200 analyses. */
+  AI_PRO_MONTHLY_TOKEN_LIMIT: 500_000,
 
   /** Max AI-powered portfolio imports per day (any tier). */
   AI_IMPORT_DAILY_LIMIT: 5,
@@ -53,6 +62,12 @@ export const PLATFORM_LIMITS = {
    * Prevents runaway costs from ad-driven traffic spikes.
    */
   OPENAI_MONTHLY_CALL_CAP: 10_000,
+
+  /**
+   * Global cap on OpenAI tokens per calendar month (all endpoints combined).
+   * ~$10 at gpt-4o-mini rates.
+   */
+  OPENAI_MONTHLY_TOKEN_CAP: 50_000_000,
 
   /**
    * WhatsApp alert messaging caps.

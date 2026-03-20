@@ -49,8 +49,12 @@ const PRO_FEATURES = new Set<SubscriptionFeature>([
 
 export interface EntitlementInput {
   plan: SubscriptionPlan;
+  /** @deprecated Use aiTokensThisMonth for token-based limits */
   aiCallsThisMonth: number;
+  /** Monthly token usage — primary AI limit check */
+  aiTokensThisMonth?: number;
   freeAiMonthlyLimit?: number;
+  freeAiMonthlyTokenLimit?: number;
 }
 
 export interface EntitlementResult {
@@ -63,12 +67,20 @@ export interface EntitlementResult {
 export const FREE_AI_MONTHLY_LIMIT = PLATFORM_LIMITS.AI_FREE_MONTHLY_LIMIT;
 export const STARTER_AI_MONTHLY_LIMIT = PLATFORM_LIMITS.AI_STARTER_MONTHLY_LIMIT;
 
+export const FREE_AI_MONTHLY_TOKEN_LIMIT = PLATFORM_LIMITS.AI_FREE_MONTHLY_TOKEN_LIMIT;
+export const STARTER_AI_MONTHLY_TOKEN_LIMIT = PLATFORM_LIMITS.AI_STARTER_MONTHLY_TOKEN_LIMIT;
+export const PRO_AI_MONTHLY_TOKEN_LIMIT = PLATFORM_LIMITS.AI_PRO_MONTHLY_TOKEN_LIMIT;
+
+export function getAiTokenLimit(plan: SubscriptionPlan): number {
+  if (plan === "pro") return PRO_AI_MONTHLY_TOKEN_LIMIT;
+  if (plan === "starter") return STARTER_AI_MONTHLY_TOKEN_LIMIT;
+  return FREE_AI_MONTHLY_TOKEN_LIMIT;
+}
+
 export function canAccessFeature(
   feature: SubscriptionFeature,
   input: EntitlementInput
 ): EntitlementResult {
-  const freeLimit = input.freeAiMonthlyLimit ?? FREE_AI_MONTHLY_LIMIT;
-
   if (FREE_FEATURES.has(feature)) {
     return { allowed: true };
   }
@@ -84,23 +96,17 @@ export function canAccessFeature(
   }
 
   if (feature === "ai") {
-    if (input.plan === "pro") return { allowed: true };
-    if (input.plan === "starter") {
-      if (input.aiCallsThisMonth < STARTER_AI_MONTHLY_LIMIT) return { allowed: true };
-      return {
-        allowed: false,
-        reason: "ai_limit_reached",
-        limit: STARTER_AI_MONTHLY_LIMIT,
-        used: input.aiCallsThisMonth,
-      };
-    }
-    // free
-    if (input.aiCallsThisMonth < freeLimit) return { allowed: true };
+    const tokensUsed = input.aiTokensThisMonth ?? 0;
+    const tokenLimit = input.freeAiMonthlyTokenLimit != null && input.plan === "free"
+      ? input.freeAiMonthlyTokenLimit
+      : getAiTokenLimit(input.plan);
+
+    if (tokensUsed < tokenLimit) return { allowed: true };
     return {
       allowed: false,
       reason: "ai_limit_reached",
-      limit: freeLimit,
-      used: input.aiCallsThisMonth,
+      limit: tokenLimit,
+      used: tokensUsed,
     };
   }
 

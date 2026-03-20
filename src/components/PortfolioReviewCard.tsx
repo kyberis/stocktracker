@@ -66,7 +66,7 @@ export default function PortfolioReviewCard() {
         const { done, value } = await reader.read();
         if (done) break;
         accumulated += decoder.decode(value, { stream: true });
-        setText(accumulated);
+        setText(accumulated.replace(/\n\[TOKENS:\d+\]$/, ""));
       }
       setStatus("done");
       refreshUser();

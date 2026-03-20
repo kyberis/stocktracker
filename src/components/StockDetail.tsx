@@ -196,7 +196,7 @@ export default function StockDetail({ ticker, exchange, fromScreener = false }: 
         if (body?.reason === "ai_limit_reached") {
           setAiLimitInfo({
             used: Number(body?.used || 0),
-            limit: Number(body?.limit || 5),
+            limit: Number(body?.limit || 25000),
           });
           setAiStatus("ai-limit");
           return;
@@ -713,7 +713,7 @@ function AiAnalysisSection({
       <ProCompareCard
         surface="ai_limit"
         reason="ai_limit_reached"
-        aiUsage={aiLimitInfo || { used: 0, limit: 5 }}
+        aiUsage={aiLimitInfo || { used: 0, limit: 25000 }}
       />
     );
   }

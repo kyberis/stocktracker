@@ -2,12 +2,20 @@
 
 import { useState, useEffect } from "react";
 import { useI18n } from "@/lib/i18n";
+import { usePortfolio } from "@/lib/portfolio-context";
 
 const DISMISSED_KEY = "trefolio_sample_banner_dismissed";
 const SEEDED_KEY = "trefolio_onboarding_auto_seeded";
 
+const SEED_TICKERS = new Set([
+  "ADBE","NVO","TSM","GOOGL","AMZN","BRK-B","CVX","W9C","WTRG","ITX.MC",
+  "KHC","MAIN","NA9.DE","NNN","NOVO-B.CO","OXY","PFE","O","SRB.L","SILA",
+  "SIRI","VZ","IB01","IS0E","ICGA","BTC-USD","ETH-USD",
+]);
+
 export default function SampleDataBanner() {
   const { t } = useI18n();
+  const { holdings } = usePortfolio();
   const [dismissed, setDismissed] = useState(true);
   const [seeded, setSeeded] = useState(false);
 
@@ -16,7 +24,11 @@ export default function SampleDataBanner() {
     setSeeded(localStorage.getItem(SEEDED_KEY) === "1");
   }, []);
 
-  if (dismissed || !seeded) return null;
+  const hasOwnData =
+    holdings.some((h) => h.accountId) ||
+    holdings.some((h) => !SEED_TICKERS.has(h.ticker));
+
+  if (dismissed || !seeded || hasOwnData) return null;
 
   return (
     <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl px-4 py-3 mb-4 flex items-center justify-between gap-3">

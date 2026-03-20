@@ -320,6 +320,66 @@ export async function incrementDailyAiUsage(userId: string): Promise<number> {
   return next;
 }
 
+export async function getAiTokenUsage(userId: string): Promise<{
+  plan: UserPlan;
+  aiTokensThisMonth: number;
+  aiTokensToday: number;
+  aiCallsResetAt: string;
+}> {
+  const user = await findUserById(userId);
+  if (!user) {
+    return { plan: "free", aiTokensThisMonth: 0, aiTokensToday: 0, aiCallsResetAt: new Date().toISOString() };
+  }
+  if (shouldResetAiWindow(user.ai_calls_reset_at)) {
+    const client = await ensureInitialized();
+    await client.execute({
+      sql: "UPDATE users SET ai_tokens_this_month = 0, ai_calls_this_month = 0, ai_calls_reset_at = datetime('now') WHERE id = ?",
+      args: [userId],
+    });
+    const tokensToday = shouldResetDailyAiWindow(user.ai_daily_reset_at) ? 0 : user.ai_tokens_today;
+    return { plan: user.plan, aiTokensThisMonth: 0, aiTokensToday: tokensToday, aiCallsResetAt: new Date().toISOString() };
+  }
+  const tokensToday = shouldResetDailyAiWindow(user.ai_daily_reset_at) ? 0 : user.ai_tokens_today;
+  return {
+    plan: user.plan,
+    aiTokensThisMonth: user.ai_tokens_this_month,
+    aiTokensToday: tokensToday,
+    aiCallsResetAt: user.ai_calls_reset_at,
+  };
+}
+
+export async function incrementAiTokenUsage(userId: string, tokens: number): Promise<number> {
+  if (tokens <= 0) return 0;
+  const usage = await getAiTokenUsage(userId);
+  const client = await ensureInitialized();
+  const next = usage.aiTokensThisMonth + tokens;
+  await client.execute({
+    sql: "UPDATE users SET ai_tokens_this_month = ? WHERE id = ?",
+    args: [next, userId],
+  });
+  return next;
+}
+
+export async function incrementDailyAiTokenUsage(userId: string, tokens: number): Promise<number> {
+  if (tokens <= 0) return 0;
+  const user = await findUserById(userId);
+  if (!user) return 0;
+  const client = await ensureInitialized();
+  if (shouldResetDailyAiWindow(user.ai_daily_reset_at)) {
+    await client.execute({
+      sql: "UPDATE users SET ai_tokens_today = ?, ai_calls_today = 0, ai_daily_reset_at = datetime('now') WHERE id = ?",
+      args: [tokens, userId],
+    });
+    return tokens;
+  }
+  const next = user.ai_tokens_today + tokens;
+  await client.execute({
+    sql: "UPDATE users SET ai_tokens_today = ? WHERE id = ?",
+    args: [next, userId],
+  });
+  return next;
+}
+
 export async function countProSubscribers(): Promise<number> {
   const client = await ensureInitialized();
   const result = await client.execute("SELECT COUNT(*) as cnt FROM users WHERE plan IN ('starter', 'pro')");

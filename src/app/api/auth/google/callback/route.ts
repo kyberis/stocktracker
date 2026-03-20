@@ -296,6 +296,8 @@ async function handleLoginFlow(
         referral_code: "",
         referred_by: "",
         referral_reward_days: 0,
+        ai_tokens_this_month: 0,
+        ai_tokens_today: 0,
       };
       trackEvent(publicUser.id, "signup", {
         source: attribution.source,

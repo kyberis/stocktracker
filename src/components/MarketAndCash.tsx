@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, memo } from "react";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useI18n } from "@/lib/i18n";
 import { formatCurrency, formatPercent } from "@/lib/utils";
@@ -42,6 +42,52 @@ const ASSET_TYPE_BORDER: Record<ManualAssetType, string> = {
 };
 
 const TYPE_ORDER: ManualAssetType[] = ["real_estate", "savings", "pension", "cash"];
+
+function buildSparkPath(points: number[], w: number, h: number): string {
+  if (points.length < 2) return "";
+  const min = Math.min(...points);
+  const max = Math.max(...points);
+  const range = max - min || 1;
+  const pad = 1;
+  return points
+    .map((v, i) => {
+      const x = (i / (points.length - 1)) * w;
+      const y = pad + ((max - v) / range) * (h - 2 * pad);
+      return `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(" ");
+}
+
+const PortfolioSparkline = memo(function PortfolioSparkline({ width = 56, height = 20, positive }: { width?: number; height?: number; positive?: boolean }) {
+  const [points, setPoints] = useState<number[]>([]);
+  const { activePortfolioId, demoMode } = usePortfolio();
+
+  useEffect(() => {
+    if (demoMode) return;
+    const pid = activePortfolioId || "";
+    fetch(`/api/portfolio/history?range=1w&portfolioId=${encodeURIComponent(pid)}`)
+      .then((r) => (r.ok ? r.json() : { points: [] }))
+      .then((data) => {
+        const raw = Array.isArray(data.points) ? data.points : [];
+        setPoints(raw.map((p: { value: number }) => p.value).filter((v: number) => v > 0));
+      })
+      .catch(() => {});
+  }, [activePortfolioId, demoMode]);
+
+  if (points.length < 2) {
+    return <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} aria-hidden="true" />;
+  }
+
+  const isUp = positive ?? points[points.length - 1] >= points[0];
+  const color = isUp ? "var(--gain, #22c55e)" : "var(--loss, #ef4444)";
+  const d = buildSparkPath(points, width, height);
+
+  return (
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} aria-hidden="true">
+      <path d={d} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+});
 
 interface Props {
   holdings?: Holding[];
@@ -213,7 +259,6 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
                 <tr className={`border-b ${dividerClass}`}>
                   <th scope="col" className="text-left text-xs font-medium text-gray-400 dark:text-slate-500 pb-2 pl-3 sm:pl-4">{t("stock")}</th>
                   <th scope="col" className="text-center text-xs font-medium text-gray-400 dark:text-slate-500 pb-2 hidden sm:table-cell">{t("weekTrend")}</th>
-                  <th scope="col" className="text-right text-xs font-medium text-gray-400 dark:text-slate-500 pb-2">{t("currentPrice")}</th>
                   <th scope="col" className="text-right text-xs font-medium text-gray-400 dark:text-slate-500 pb-2 hidden sm:table-cell">{t("dayChange")}</th>
                   <th scope="col" className="text-right text-xs font-medium text-gray-400 dark:text-slate-500 pb-2 pr-3 sm:pr-4">{t("change")}</th>
                 </tr>
@@ -226,13 +271,8 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
                         {t("portfolio")}
                       </span>
                     </td>
-                    <td className="py-2.5 hidden sm:table-cell" />
-                    <td className="py-2.5 text-right text-gray-700 dark:text-slate-200 tabular-nums font-semibold">
-                      {isLoading ? (
-                        <span className="inline-block w-16 h-4 bg-gray-100 dark:bg-slate-700 rounded animate-value-shimmer" />
-                      ) : (
-                        formatCurrency(totalCurrentEUR, baseCurrency)
-                      )}
+                    <td className="py-2.5 text-center hidden sm:table-cell">
+                      <PortfolioSparkline width={56} height={20} positive={dayGainLossEUR >= 0} />
                     </td>
                     <td className={`py-2.5 text-right tabular-nums font-medium hidden sm:table-cell ${changeColor(dayGainLossEUR)}`}>
                       {isLoading ? (
@@ -261,13 +301,6 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
                     </td>
                     <td className="py-2.5 text-center hidden sm:table-cell">
                       <Sparkline ticker={idx.symbol} width={56} height={20} positive={idx.changePercent >= 0} />
-                    </td>
-                    <td className="py-2.5 text-right text-gray-700 dark:text-slate-200 tabular-nums">
-                      {idx.loading ? (
-                        <span className="inline-block w-16 h-4 bg-gray-100 dark:bg-slate-700 rounded animate-pulse" />
-                      ) : (
-                        idx.price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                      )}
                     </td>
                     <td className={`py-2.5 text-right tabular-nums hidden sm:table-cell ${changeColor(idx.change)}`}>
                       {idx.loading ? (

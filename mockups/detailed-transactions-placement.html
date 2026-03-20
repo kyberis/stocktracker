@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Placement Proposal — "Upgrade Your Data" Nudges</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --card-border: #334155;
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --gain: #10b981;
+    --gain-bg: rgba(16,185,129,0.1);
+    --loss: #ef4444;
+    --loss-bg: rgba(239,68,68,0.1);
+    --accent: #10b981;
+    --violet: #8b5cf6;
+    --amber: #f59e0b;
+    --amber-bg: rgba(245,158,11,0.1);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    padding: 24px;
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+
+  .annotation {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+    padding: 16px 24px;
+    border-radius: 16px;
+    margin-bottom: 32px;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .annotation h1 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+  .annotation .tag {
+    display: inline-block;
+    background: rgba(255,255,255,0.2);
+    border-radius: 999px;
+    padding: 2px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 12px;
+  }
+  .annotation ul { margin: 8px 0 0 18px; font-size: 13px; }
+  .annotation li { margin-bottom: 4px; }
+
+  /* ── Placement section ─── */
+  .placement {
+    margin-bottom: 48px;
+  }
+  .placement-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 6px;
+  }
+  .placement-number {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .placement-title {
+    font-size: 16px;
+    font-weight: 700;
+  }
+  .placement-screen {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--amber);
+    background: var(--amber-bg);
+    padding: 2px 8px;
+    border-radius: 99px;
+  }
+  .placement-desc {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+    margin-left: 40px;
+    line-height: 1.5;
+  }
+
+  /* ── Screen mockup frame ─── */
+  .screen-frame {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+  }
+  .screen-topbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    background: rgba(255,255,255,0.02);
+  }
+  .screen-topbar-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    opacity: 0.3;
+  }
+  .screen-topbar-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    flex: 1;
+  }
+  .screen-topbar-path {
+    font-size: 10px;
+    color: rgba(100,116,139,0.5);
+    font-family: monospace;
+  }
+  .screen-body {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* ── Ghost elements (existing UI placeholders) ─── */
+  .ghost {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.04);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 11px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .ghost-wide {
+    height: 36px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.04);
+    border-radius: 8px;
+  }
+  .ghost-chart {
+    height: 80px;
+    background: linear-gradient(180deg, rgba(16,185,129,0.04) 0%, transparent 100%);
+    border: 1px solid rgba(255,255,255,0.04);
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+  }
+  .ghost-chart svg { width: 100%; height: 100%; }
+  .ghost-table {
+    border: 1px solid rgba(255,255,255,0.04);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .ghost-table-header {
+    display: flex;
+    gap: 4px;
+    padding: 8px 12px;
+    background: rgba(255,255,255,0.02);
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .ghost-table-header span {
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    opacity: 0.6;
+    flex: 1;
+  }
+  .ghost-table-row {
+    display: flex;
+    gap: 4px;
+    padding: 7px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+  }
+  .ghost-table-row:last-child { border-bottom: none; }
+  .ghost-table-row span {
+    font-size: 10px;
+    color: var(--text-muted);
+    opacity: 0.5;
+    flex: 1;
+  }
+  .ghost-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    opacity: 0.5;
+    text-align: center;
+    padding: 4px;
+  }
+  .ghost-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 6px;
+  }
+  .ghost-stat {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.04);
+    border-radius: 8px;
+    padding: 8px 10px;
+    text-align: center;
+  }
+  .ghost-stat-label {
+    font-size: 8px;
+    color: var(--text-muted);
+    opacity: 0.5;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  .ghost-stat-value {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    opacity: 0.5;
+  }
+
+  /* ── The nudge banner (the NEW element) ─── */
+  .nudge {
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    position: relative;
+    z-index: 1;
+  }
+  .nudge.amber {
+    background: linear-gradient(135deg, rgba(245,158,11,0.10) 0%, rgba(217,119,6,0.05) 100%);
+    border: 1px solid rgba(245,158,11,0.25);
+  }
+  .nudge.blue {
+    background: linear-gradient(135deg, rgba(59,130,246,0.10) 0%, rgba(99,102,241,0.05) 100%);
+    border: 1px solid rgba(59,130,246,0.25);
+  }
+  .nudge.emerald {
+    background: linear-gradient(135deg, rgba(16,185,129,0.10) 0%, rgba(16,185,129,0.04) 100%);
+    border: 1px solid rgba(16,185,129,0.25);
+  }
+  .nudge.violet {
+    background: linear-gradient(135deg, rgba(139,92,246,0.10) 0%, rgba(99,102,241,0.04) 100%);
+    border: 1px solid rgba(139,92,246,0.25);
+  }
+  .nudge-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 13px;
+  }
+  .nudge-icon.amber { background: var(--amber-bg); }
+  .nudge-icon.blue { background: rgba(59,130,246,0.15); }
+  .nudge-icon.emerald { background: var(--gain-bg); }
+  .nudge-icon.violet { background: rgba(139,92,246,0.15); }
+  .nudge-content { flex: 1; min-width: 0; }
+  .nudge-title {
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.3;
+    margin-bottom: 3px;
+  }
+  .nudge-desc {
+    font-size: 10px;
+    color: var(--text-muted);
+    line-height: 1.4;
+    margin-bottom: 8px;
+  }
+  .nudge-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  .btn-sm-accent {
+    background: var(--accent);
+    color: white;
+    border: none;
+    font: 600 10px/1 'Inter', sans-serif;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-sm-outline {
+    background: transparent;
+    border: 1px solid var(--card-border);
+    color: var(--text-secondary);
+    font: 500 10px/1 'Inter', sans-serif;
+    padding: 5px 9px;
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-sm-violet {
+    background: rgba(139,92,246,0.15);
+    color: #c4b5fd;
+    border: 1px solid rgba(139,92,246,0.2);
+    font: 600 10px/1 'Inter', sans-serif;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  /* ── Pointer arrow from annotation ─── */
+  .pointer-label {
+    position: absolute;
+    right: -8px;
+    top: 50%;
+    transform: translateY(-50%) translateX(100%);
+    background: #d97706;
+    color: white;
+    font-size: 9px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    z-index: 10;
+  }
+  .pointer-label::before {
+    content: '';
+    position: absolute;
+    left: -4px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-right: 4px solid #d97706;
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+  }
+
+  /* ── Highlight glow around the nudge ─── */
+  .highlight-ring {
+    position: relative;
+  }
+  .highlight-ring::before {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border: 2px solid rgba(245,158,11,0.5);
+    border-radius: 13px;
+    pointer-events: none;
+    animation: pulse-ring 2s ease-in-out infinite;
+  }
+  @keyframes pulse-ring {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* ── Trigger conditions sidebar ─── */
+  .trigger-bar {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    margin-left: 40px;
+    margin-top: -6px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .trigger-pill {
+    font-size: 9px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 99px;
+    white-space: nowrap;
+  }
+  .trigger-pill.when {
+    background: rgba(139,92,246,0.12);
+    color: #c4b5fd;
+  }
+  .trigger-pill.priority {
+    background: rgba(16,185,129,0.12);
+    color: #6ee7b7;
+  }
+  .trigger-pill.dismiss {
+    background: rgba(100,116,139,0.12);
+    color: var(--text-muted);
+  }
+
+  /* ── Journey flow diagram ─── */
+  .journey {
+    display: flex;
+    align-items: stretch;
+    gap: 2px;
+    margin-bottom: 40px;
+  }
+  .journey-step {
+    flex: 1;
+    min-width: 0;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    padding: 14px 12px;
+    text-align: center;
+    position: relative;
+  }
+  .journey-step:first-child { border-radius: 12px 0 0 12px; }
+  .journey-step:last-child { border-radius: 0 12px 12px 0; }
+  .journey-step-icon {
+    font-size: 18px;
+    margin-bottom: 6px;
+  }
+  .journey-step-name {
+    font-size: 11px;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+  .journey-step-sub {
+    font-size: 9px;
+    color: var(--text-muted);
+    line-height: 1.3;
+  }
+  .journey-step.active {
+    border-color: rgba(245,158,11,0.4);
+    background: linear-gradient(180deg, rgba(245,158,11,0.06) 0%, var(--card) 100%);
+  }
+  .journey-step.active .journey-step-name { color: #fbbf24; }
+  .journey-arrow {
+    display: flex;
+    align-items: center;
+    color: var(--text-muted);
+    opacity: 0.3;
+    font-size: 14px;
+  }
+
+  /* ── Summary table ─── */
+  .summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+    margin-top: 8px;
+  }
+  .summary-table th {
+    text-align: left;
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    padding: 8px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .summary-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    vertical-align: top;
+  }
+  .summary-table tr:last-child td { border-bottom: none; }
+  .summary-table .screen-col { font-weight: 600; white-space: nowrap; }
+  .summary-table .trigger-col { color: var(--text-secondary); }
+  .summary-table .priority-col { font-weight: 600; }
+  .priority-high { color: #34d399; }
+  .priority-med { color: #fbbf24; }
+  .priority-low { color: var(--text-muted); }
+
+  .main-card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    overflow: hidden;
+    padding: 16px;
+  }
+  .main-card-title {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+
+  /* ── Two-column layout for screen mockups ─── */
+  .two-screens {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 900px) {
+    .two-screens { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════
+     ANNOTATION BANNER
+     ═══════════════════════════════════════════════════════════ -->
+<div class="annotation">
+  <span class="tag">Placement Proposal</span>
+  <h1>Where to Show "Upgrade Your Data" Nudges</h1>
+  <ul>
+    <li><strong>6 placement locations</strong> across the product, each triggered by specific data quality conditions</li>
+    <li><strong>Contextual, not nagging</strong> — nudges appear exactly where incomplete data affects the user's experience</li>
+    <li><strong>Progressive disclosure</strong> — from soft hints to explicit CTAs depending on severity</li>
+    <li><strong>User journey</strong> — nudges appear at the moment the user feels the pain of missing data</li>
+  </ul>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     USER JOURNEY OVERVIEW
+     ═══════════════════════════════════════════════════════════ -->
+<div style="font-size:14px;font-weight:700;margin-bottom:6px">User Journey — Where Pain Meets the Nudge</div>
+<div style="font-size:11px;color:var(--text-muted);margin-bottom:16px">Users discover data gaps at different moments. Each nudge fires at the point of maximum relevance.</div>
+
+<div class="journey">
+  <div class="journey-step">
+    <div class="journey-step-icon">📥</div>
+    <div class="journey-step-name">Import</div>
+    <div class="journey-step-sub">Basic CSV or manual entry</div>
+  </div>
+  <div class="journey-arrow">&rarr;</div>
+  <div class="journey-step active">
+    <div class="journey-step-icon">📊</div>
+    <div class="journey-step-name">Dashboard</div>
+    <div class="journey-step-sub">Sees portfolio, notices gaps</div>
+  </div>
+  <div class="journey-arrow">&rarr;</div>
+  <div class="journey-step active">
+    <div class="journey-step-icon">🔧</div>
+    <div class="journey-step-name">Tools</div>
+    <div class="journey-step-sub">Tx history, dividends, perf.</div>
+  </div>
+  <div class="journey-arrow">&rarr;</div>
+  <div class="journey-step active">
+    <div class="journey-step-icon">📋</div>
+    <div class="journey-step-name">Tax Report</div>
+    <div class="journey-step-sub">Needs exact data for filing</div>
+  </div>
+  <div class="journey-arrow">&rarr;</div>
+  <div class="journey-step">
+    <div class="journey-step-icon">✅</div>
+    <div class="journey-step-name">Re-import</div>
+    <div class="journey-step-sub">Upgrades to broker CSV/sync</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     PLACEMENT 1: TAX REPORT
+     ═══════════════════════════════════════════════════════════ -->
+<div class="placement">
+  <div class="placement-header">
+    <div class="placement-number">1</div>
+    <div class="placement-title">Tax Report — After Data Quality Section</div>
+    <span class="placement-screen">Tools &rsaquo; Tax</span>
+  </div>
+  <div class="placement-desc">
+    Highest-value placement. Users generating tax reports <em>need</em> accurate data. The nudge appears directly after the existing DataQualitySection warnings, where the user is already primed to see issues. This is where the cost of incomplete data is most tangible.
+  </div>
+  <div class="trigger-bar">
+    <span class="trigger-pill when">When: sells without matching lots OR missing FX rates</span>
+    <span class="trigger-pill priority">Priority: HIGH</span>
+    <span class="trigger-pill dismiss">Dismissible per session</span>
+  </div>
+
+  <div class="screen-frame">
+    <div class="screen-topbar">
+      <span class="screen-topbar-dot"></span>
+      <span class="screen-topbar-dot"></span>
+      <span class="screen-topbar-dot"></span>
+      <span class="screen-topbar-title">Tax Report</span>
+      <span class="screen-topbar-path">/tools/tax</span>
+    </div>
+    <div class="screen-body">
+      <div class="ghost" style="border-color:rgba(245,158,11,0.15)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z"/></svg>
+        <span>Tax disclaimer — informational, not financial advice</span>
+      </div>
+      <div class="ghost">
+        <span>Controls: Tax year 2025 &middot; Country: Germany &middot; Portfolio: All &middot; Generate</span>
+      </div>
+
+      <!-- Existing DataQualitySection -->
+      <div style="border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:10px 14px">
+        <div style="font-size:11px;font-weight:600;margin-bottom:6px;color:var(--text-secondary)">Data Quality</div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text-muted);margin-bottom:4px">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008"/></svg>
+          2 sells for AAPL, NVDA without matching buy lots — cost basis estimated
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text-muted)">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008"/></svg>
+          3 transactions missing FX rate — using current rate as fallback
+        </div>
+      </div>
+
+      <!-- THE NUDGE — highlighted -->
+      <div class="highlight-ring">
+        <div class="nudge amber">
+          <div class="nudge-icon amber">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
+          </div>
+          <div class="nudge-content">
+            <div class="nudge-title">Your tax report is using estimated data for 3 holdings</div>
+            <div class="nudge-desc">Import your broker's transaction CSV to get exact FIFO lot matching, FX rates at purchase date, and withholding tax credits. Your existing data won't be duplicated.</div>
+            <div class="nudge-actions">
+              <button class="btn-sm-accent">Import from broker</button>
+              <button class="btn-sm-outline">Learn more</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ghost-stats">
+        <div class="ghost-stat"><div class="ghost-stat-label">Realized</div><div class="ghost-stat-value">~&euro;1,287</div></div>
+        <div class="ghost-stat"><div class="ghost-stat-label">Dividends</div><div class="ghost-stat-value">&euro;342</div></div>
+        <div class="ghost-stat"><div class="ghost-stat-label">Withholding</div><div class="ghost-stat-value">&euro;51</div></div>
+        <div class="ghost-stat"><div class="ghost-stat-label">Est. Tax</div><div class="ghost-stat-value">~&euro;395</div></div>
+      </div>
+      <div class="ghost-label">Gains table, dividends table, country-specific sections&hellip;</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     PLACEMENT 2: TRANSACTION HISTORY
+     ═══════════════════════════════════════════════════════════ -->
+<div class="placement">
+  <div class="placement-header">
+    <div class="placement-number">2</div>
+    <div class="placement-title">Transaction History — Above Table</div>
+    <span class="placement-screen">Tools &rsaquo; Transactions</span>
+  </div>
+  <div class="placement-desc">
+    Users browsing their transaction log can see missing data directly — empty fee/tax columns, absent dividends. The nudge appears between the filter bar and the table when we detect incomplete fields.
+  </div>
+  <div class="trigger-bar">
+    <span class="trigger-pill when">When: >5 transactions with fees=0 AND taxes=0</span>
+    <span class="trigger-pill priority">Priority: HIGH</span>
+    <span class="trigger-pill dismiss">Dismissible, remembers per user</span>
+  </div>
+
+  <div class="screen-frame">
+    <div class="screen-topbar">
+      <span class="screen-topbar-dot"></span>
+      <span class="screen-topbar-dot"></span>
+      <span class="screen-topbar-dot"></span>
+      <span class="screen-topbar-title">Transaction History</span>
+      <span class="screen-topbar-path">/tools/transactions</span>
+    </div>
+    <div class="screen-body">
+      <div class="ghost">
+        <span style="flex:1">Transactions &middot; 47 total</span>
+        <span style="font-size:10px;color:var(--accent)">+ Add transaction</span>
+      </div>
+      <div class="ghost" style="padding:6px 14px">
+        <span style="font-size:10px">Filter: All tickers &middot; All types &middot; All sources</span>
+      </div>
+
+      <!-- THE NUDGE -->
+      <div class="highlight-ring">
+        <div class="nudge blue">
+          <div class="nudge-icon blue">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+          </div>
+          <div class="nudge-content">
+            <div class="nudge-title">12 transactions are missing fees and taxes</div>
+            <div class="nudge-desc">Re-import from your broker's CSV to fill in the gaps. Duplicates are automatically skipped.</div>
+            <div class="nudge-actions">
+              <button class="btn-sm-accent">Update from broker CSV</button>
+              <button class="btn-sm-outline">Dismiss</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ghost-table">
+        <div class="ghost-table-header">
+          <span>Date</span><span>Type</span><span>Ticker</span><span>Shares</span><span>Total</span><span>Fees</span><span>Source</span>
+        </div>
+        <div class="ghost-table-row">
+          <span>2024-03-15</span><span style="color:#a5b4fc">BUY</span><span>AAPL</span><span>10</span><span>$1,524</span><span style="color:var(--text-muted);opacity:0.3">&mdash;</span><span>manual</span>
+        </div>
+        <div class="ghost-table-row">
+          <span>2024-02-28</span><span style="color:#a5b4fc">BUY</span><span>NVDA</span><span>5</span><span>$4,215</span><span style="color:var(--text-muted);opacity:0.3">&mdash;</span><span>manual</span>
+        </div>
+        <div class="ghost-table-row">
+          <span>2024-01-10</span><span style="color:#fbbf24">SELL</span><span>MSFT</span><span>8</span><span>$3,120</span><span style="color:var(--text-muted);opacity:0.3">&mdash;</span><span>manual</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     PLACEMENT 3 & 4: DASHBOARD + IMPORT DONE (side by side)
+     ═══════════════════════════════════════════════════════════ -->
+<div class="two-screens">
+
+  <!-- PLACEMENT 3: DASHBOARD -->
+  <div class="placement">
+    <div class="placement-header">
+      <div class="placement-number">3</div>
+      <div class="placement-title">Dashboard — Banner Stack</div>
+      <span class="placement-screen">Portfolio</span>
+    </div>
+    <div class="placement-desc">
+      Soft nudge in the existing banner area (alongside SnapTrade reconnect, Leaf promo, sample data). Lower priority — doesn't block anything, just plants the seed.
+    </div>
+    <div class="trigger-bar">
+      <span class="trigger-pill when">When: 0 broker-sourced txs</span>
+      <span class="trigger-pill priority" style="background:rgba(245,158,11,0.12);color:#fbbf24">Priority: MEDIUM</span>
+      <span class="trigger-pill dismiss">Dismissible forever</span>
+    </div>
+
+    <div class="screen-frame">
+      <div class="screen-topbar">
+        <span class="screen-topbar-dot"></span>
+        <span class="screen-topbar-dot"></span>
+        <span class="screen-topbar-dot"></span>
+        <span class="screen-topbar-title">Dashboard</span>
+        <span class="screen-topbar-path">/</span>
+      </div>
+      <div class="screen-body">
+        <div class="ghost" style="padding:6px 12px;font-size:10px">Tab bar: Portfolio &middot; Diversification &middot; Dividends &middot; &hellip;</div>
+
+        <!-- THE NUDGE -->
+        <div class="highlight-ring">
+          <div class="nudge emerald">
+            <div class="nudge-icon emerald">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 16.875h3.375m0 0h3.375m-3.375 0V13.5m0 3.375v3.375M6 10.5h2.25a2.25 2.25 0 002.25-2.25V6a2.25 2.25 0 00-2.25-2.25H6A2.25 2.25 0 003.75 6v2.25A2.25 2.25 0 006 10.5zm0 9.75h2.25A2.25 2.25 0 0010.5 18v-2.25a2.25 2.25 0 00-2.25-2.25H6a2.25 2.25 0 00-2.25 2.25V18A2.25 2.25 0 006 20.25zm9.75-9.75H18a2.25 2.25 0 002.25-2.25V6A2.25 2.25 0 0018 3.75h-2.25A2.25 2.25 0 0013.5 6v2.25a2.25 2.25 0 002.25 2.25z"/></svg>
+            </div>
+            <div class="nudge-content">
+              <div class="nudge-title">Get more from your portfolio</div>
+              <div class="nudge-desc">Connect your broker or import a CSV for exact cost basis, tax-ready data, and FIFO lot tracking.</div>
+              <div class="nudge-actions">
+                <button class="btn-sm-accent">Import transactions</button>
+                <button class="btn-sm-outline">&times;</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ghost" style="height:48px">
+          <span>&euro;53,685.75 &middot; +5.49% gain / loss</span>
+        </div>
+        <div class="ghost-chart">
+          <svg viewBox="0 0 400 80" preserveAspectRatio="none">
+            <path d="M0,60 L50,55 L100,50 L150,45 L200,40 L250,35 L300,30 L350,28 L400,25" fill="none" stroke="rgba(16,185,129,0.3)" stroke-width="1.5"/>
+          </svg>
+        </div>
+        <div class="ghost-label">Holdings table&hellip;</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLACEMENT 4: IMPORT DONE -->
+  <div class="placement">
+    <div class="placement-header">
+      <div class="placement-number">4</div>
+      <div class="placement-title">Import Complete — Next Steps</div>
+      <span class="placement-screen">Import</span>
+    </div>
+    <div class="placement-desc">
+      After a basic import finishes, we recommend upgrading to a broker CSV. Appears in the DoneCard when imported data lacks fees/lot dates.
+    </div>
+    <div class="trigger-bar">
+      <span class="trigger-pill when">When: import via manual/simple CSV</span>
+      <span class="trigger-pill priority" style="background:rgba(245,158,11,0.12);color:#fbbf24">Priority: MEDIUM</span>
+    </div>
+
+    <div class="screen-frame">
+      <div class="screen-topbar">
+        <span class="screen-topbar-dot"></span>
+        <span class="screen-topbar-dot"></span>
+        <span class="screen-topbar-dot"></span>
+        <span class="screen-topbar-title">Import</span>
+        <span class="screen-topbar-path">/import</span>
+      </div>
+      <div class="screen-body" style="text-align:center">
+        <div style="font-size:28px;margin:8px 0">&#10003;</div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:2px">15 transactions imported</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">Your portfolio has been updated</div>
+
+        <!-- THE NUDGE -->
+        <div class="highlight-ring" style="text-align:left">
+          <div class="nudge violet">
+            <div class="nudge-icon violet">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c4b5fd" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/></svg>
+            </div>
+            <div class="nudge-content">
+              <div class="nudge-title">Want more accurate data?</div>
+              <div class="nudge-desc">Your import is missing transaction fees, FX rates, and lot dates. Import your broker's CSV for tax-ready precision.</div>
+              <div class="nudge-actions">
+                <button class="btn-sm-violet">Import broker CSV instead</button>
+                <button class="btn-sm-outline">Skip for now</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:12px;display:flex;flex-direction:column;align-items:center;gap:6px">
+          <div style="background:var(--accent);color:white;font-size:11px;font-weight:600;padding:8px 16px;border-radius:8px;display:inline-block">View portfolio</div>
+          <div style="font-size:10px;color:var(--accent)">Import more</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     PLACEMENT 5 & 6: DIVIDENDS + PERFORMANCE (side by side)
+     ═══════════════════════════════════════════════════════════ -->
+<div class="two-screens" style="margin-top:16px">
+
+  <!-- PLACEMENT 5: DIVIDEND SUMMARY -->
+  <div class="placement">
+    <div class="placement-header">
+      <div class="placement-number">5</div>
+      <div class="placement-title">Dividends — Estimated vs Recorded</div>
+      <span class="placement-screen">Tools &rsaquo; Dividends</span>
+    </div>
+    <div class="placement-desc">
+      When users only have estimated dividends (no recorded history), the nudge bridges them from modeled data to real broker data.
+    </div>
+    <div class="trigger-bar">
+      <span class="trigger-pill when">When: estimated dividends but 0 recorded txs</span>
+      <span class="trigger-pill priority">Priority: HIGH</span>
+      <span class="trigger-pill dismiss">Dismissible per session</span>
+    </div>
+
+    <div class="screen-frame">
+      <div class="screen-topbar">
+        <span class="screen-topbar-dot"></span>
+        <span class="screen-topbar-dot"></span>
+        <span class="screen-topbar-dot"></span>
+        <span class="screen-topbar-title">Dividends</span>
+        <span class="screen-topbar-path">/tools/dividends</span>
+      </div>
+      <div class="screen-body">
+        <div class="ghost">
+          <span style="flex:1;font-weight:600">Estimated Dividend Income</span>
+          <span style="font-size:9px;background:rgba(245,158,11,0.12);color:#fbbf24;padding:2px 6px;border-radius:4px;font-weight:600">ESTIMATED</span>
+        </div>
+        <div class="ghost-stats" style="grid-template-columns:1fr 1fr">
+          <div class="ghost-stat"><div class="ghost-stat-label">Annual</div><div class="ghost-stat-value">&euro;1,288</div></div>
+          <div class="ghost-stat"><div class="ghost-stat-label">Yield</div><div class="ghost-stat-value">2.4%</div></div>
+        </div>
+
+        <!-- THE NUDGE -->
+        <div class="highlight-ring">
+          <div class="nudge amber">
+            <div class="nudge-icon amber">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <div class="nudge-content">
+              <div class="nudge-title">These are estimated — import real dividend history</div>
+              <div class="nudge-desc">Your broker's CSV includes actual dividend payments with withholding taxes, ex-dates, and net amounts for accurate income tracking.</div>
+              <div class="nudge-actions">
+                <button class="btn-sm-accent">Import dividend history</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ghost-label">Dividend by stock rows, projections&hellip;</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLACEMENT 6: PERFORMANCE METRICS -->
+  <div class="placement">
+    <div class="placement-header">
+      <div class="placement-number">6</div>
+      <div class="placement-title">Performance — Imprecise Metrics</div>
+      <span class="placement-screen">Tools &rsaquo; Performance</span>
+    </div>
+    <div class="placement-desc">
+      Currently shows "add transactions for precise metrics" as tiny text. We upgrade this to a visible nudge when TTWROR/IRR fall back to simple returns.
+    </div>
+    <div class="trigger-bar">
+      <span class="trigger-pill when">When: no dated transactions for TTWROR</span>
+      <span class="trigger-pill priority" style="background:rgba(245,158,11,0.12);color:#fbbf24">Priority: MEDIUM</span>
+      <span class="trigger-pill dismiss">Dismissible per session</span>
+    </div>
+
+    <div class="screen-frame">
+      <div class="screen-topbar">
+        <span class="screen-topbar-dot"></span>
+        <span class="screen-topbar-dot"></span>
+        <span class="screen-topbar-dot"></span>
+        <span class="screen-topbar-title">Performance</span>
+        <span class="screen-topbar-path">/tools/performance</span>
+      </div>
+      <div class="screen-body">
+        <div class="ghost">
+          <span style="flex:1;font-weight:600">Performance Metrics</span>
+          <span style="font-size:9px;background:rgba(16,185,129,0.12);color:#6ee7b7;padding:2px 6px;border-radius:4px;font-weight:600">PRO</span>
+        </div>
+
+        <!-- THE NUDGE -->
+        <div class="highlight-ring">
+          <div class="nudge emerald">
+            <div class="nudge-icon emerald">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5"/></svg>
+            </div>
+            <div class="nudge-content">
+              <div class="nudge-title">Import transaction dates for precise TTWROR &amp; IRR</div>
+              <div class="nudge-desc">Without dated buy/sell records, performance uses simple return. Broker data enables time-weighted and money-weighted calculations.</div>
+              <div class="nudge-actions">
+                <button class="btn-sm-accent">Import transactions</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ghost-stats" style="grid-template-columns:1fr 1fr">
+          <div class="ghost-stat">
+            <div class="ghost-stat-label">TTWROR</div>
+            <div class="ghost-stat-value" style="opacity:0.3">—</div>
+          </div>
+          <div class="ghost-stat">
+            <div class="ghost-stat-label">IRR (XIRR)</div>
+            <div class="ghost-stat-value" style="opacity:0.3">—</div>
+          </div>
+        </div>
+        <div class="ghost-label">Performance explainer, help panel&hellip;</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SUMMARY TABLE
+     ═══════════════════════════════════════════════════════════ -->
+<div style="margin-top:48px">
+  <div style="font-size:14px;font-weight:700;margin-bottom:6px">Implementation Summary</div>
+  <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">Priority order for rollout. Each nudge is independent — ship in any order.</div>
+
+  <div class="main-card">
+    <table class="summary-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Screen</th>
+          <th>Trigger Condition</th>
+          <th>Priority</th>
+          <th>Variant</th>
+          <th>Dismiss</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="font-weight:700;color:var(--amber)">1</td>
+          <td class="screen-col">Tax Report</td>
+          <td class="trigger-col">Sells without lots OR missing FX rates</td>
+          <td class="priority-col priority-high">HIGH</td>
+          <td>Amber, after DataQualitySection</td>
+          <td>Per session</td>
+        </tr>
+        <tr>
+          <td style="font-weight:700;color:var(--amber)">2</td>
+          <td class="screen-col">Transaction History</td>
+          <td class="trigger-col">&gt;5 txs with fees=0 and taxes=0</td>
+          <td class="priority-col priority-high">HIGH</td>
+          <td>Blue, above table</td>
+          <td>Per user (persistent)</td>
+        </tr>
+        <tr>
+          <td style="font-weight:700;color:var(--amber)">3</td>
+          <td class="screen-col">Dashboard</td>
+          <td class="trigger-col">No broker-sourced transactions</td>
+          <td class="priority-col priority-med">MEDIUM</td>
+          <td>Emerald, in banner stack</td>
+          <td>Permanent dismiss</td>
+        </tr>
+        <tr>
+          <td style="font-weight:700;color:var(--amber)">4</td>
+          <td class="screen-col">Import Done</td>
+          <td class="trigger-col">Just finished manual/simple CSV import</td>
+          <td class="priority-col priority-med">MEDIUM</td>
+          <td>Violet, inside DoneCard</td>
+          <td>N/A (transient)</td>
+        </tr>
+        <tr>
+          <td style="font-weight:700;color:var(--amber)">5</td>
+          <td class="screen-col">Dividends</td>
+          <td class="trigger-col">Estimated dividends but 0 recorded txs</td>
+          <td class="priority-col priority-high">HIGH</td>
+          <td>Amber, above estimated section</td>
+          <td>Per session</td>
+        </tr>
+        <tr>
+          <td style="font-weight:700;color:var(--amber)">6</td>
+          <td class="screen-col">Performance</td>
+          <td class="trigger-col">TTWROR unavailable (no dated txs)</td>
+          <td class="priority-col priority-med">MEDIUM</td>
+          <td>Emerald, above metric tiles</td>
+          <td>Per session</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     DESIGN PRINCIPLES
+     ═══════════════════════════════════════════════════════════ -->
+<div style="margin-top:40px;margin-bottom:24px">
+  <div style="font-size:14px;font-weight:700;margin-bottom:12px">Design Principles</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+    <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;padding:16px">
+      <div style="font-size:20px;margin-bottom:8px">🎯</div>
+      <div style="font-size:12px;font-weight:600;margin-bottom:4px">Contextual, not global</div>
+      <div style="font-size:11px;color:var(--text-muted);line-height:1.5">Each nudge appears only on the screen where incomplete data actually causes a problem. No generic "import more data" nag bars.</div>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;padding:16px">
+      <div style="font-size:20px;margin-bottom:8px">🔇</div>
+      <div style="font-size:12px;font-weight:600;margin-bottom:4px">Dismissible, not annoying</div>
+      <div style="font-size:11px;color:var(--text-muted);line-height:1.5">Every nudge can be dismissed. High-value screens (Tax, Dividends) reset per session. Lower-value ones (Dashboard) stay dismissed permanently.</div>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--card-border);border-radius:14px;padding:16px">
+      <div style="font-size:20px;margin-bottom:8px">📐</div>
+      <div style="font-size:12px;font-weight:600;margin-bottom:4px">Consistent visual system</div>
+      <div style="font-size:11px;color:var(--text-muted);line-height:1.5">Amber = data quality warning. Blue = informational. Emerald = opportunity. Violet = upsell moment. Same icon + title + desc + CTA pattern everywhere.</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -2,6 +2,8 @@ import { NextRequest } from "next/server";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { DE_FALLBACK_SUFFIXES, PA_FALLBACK_SUFFIXES } from "@/lib/api-providers/market-data-helpers";
 import { withMetrics } from "@/lib/with-metrics";
+import { getCachedQuotes, setCachedQuotes } from "@/lib/quote-cache";
+import type { ProviderQuoteResult } from "@/lib/api-providers/types";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -66,31 +68,53 @@ export const GET = withMetrics("/api/quote", async (request: NextRequest) => {
 
   const stockSymbols = symbols.split(",").map((s) => s.trim()).filter(Boolean);
   const results: Record<string, unknown> = {};
-  const yahoo = new YahooProvider();
 
-  const stockPromises = stockSymbols.map(async (symbol) => {
-    try {
-      const quote = await yahoo.getQuote(symbol);
-      if (quote.regularMarketPrice > 0) {
-        results[symbol] = { ...quote, providerUsed: "yahoo" };
-      } else {
-        const fb = await tryExchangeFallback(yahoo, symbol);
-        results[symbol] = fb
-          ? { ...fb.quote, symbol, providerUsed: "yahoo" }
-          : { ...quote, providerUsed: "yahoo" };
+  const { hits, misses } = await getCachedQuotes(stockSymbols);
+  for (const [symbol, quote] of Object.entries(hits)) {
+    results[symbol] = { ...quote, providerUsed: "yahoo" };
+  }
+
+  if (misses.length > 0) {
+    const yahoo = new YahooProvider();
+    const toCache: Record<string, ProviderQuoteResult> = {};
+
+    const stockPromises = misses.map(async (symbol) => {
+      try {
+        const quote = await yahoo.getQuote(symbol);
+        if (quote.regularMarketPrice > 0) {
+          results[symbol] = { ...quote, providerUsed: "yahoo" };
+          toCache[symbol] = quote;
+        } else {
+          const fb = await tryExchangeFallback(yahoo, symbol);
+          if (fb) {
+            const resolved = { ...fb.quote, symbol };
+            results[symbol] = { ...resolved, providerUsed: "yahoo" };
+            toCache[symbol] = resolved;
+          } else {
+            results[symbol] = { ...quote, providerUsed: "yahoo" };
+          }
+        }
+      } catch (err) {
+        const fb = await tryExchangeFallback(yahoo, symbol).catch(() => null);
+        if (fb) {
+          const resolved = { ...fb.quote, symbol };
+          results[symbol] = { ...resolved, providerUsed: "yahoo" };
+          toCache[symbol] = resolved;
+        } else {
+          console.error(`Failed to fetch quote for ${symbol}:`, err instanceof Error ? err.message : err);
+          results[symbol] = errorQuote(symbol);
+        }
       }
-    } catch (err) {
-      const fb = await tryExchangeFallback(yahoo, symbol).catch(() => null);
-      if (fb) {
-        results[symbol] = { ...fb.quote, symbol, providerUsed: "yahoo" };
-      } else {
-        console.error(`Failed to fetch quote for ${symbol}:`, err instanceof Error ? err.message : err);
-        results[symbol] = errorQuote(symbol);
-      }
+    });
+
+    await Promise.all(stockPromises);
+
+    if (Object.keys(toCache).length > 0) {
+      setCachedQuotes(toCache).catch(() => {});
     }
+  }
+
+  return Response.json(results, {
+    headers: { "Cache-Control": "public, max-age=15, stale-while-revalidate=30" },
   });
-
-  await Promise.all(stockPromises);
-
-  return Response.json(results);
 });

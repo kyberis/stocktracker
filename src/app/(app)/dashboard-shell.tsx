@@ -3,6 +3,7 @@
 import { PortfolioProvider } from "@/lib/portfolio-context";
 import Dashboard from "@/components/Dashboard";
 import type { Holding, CashEntry, QuoteData, ExchangeRates } from "@/lib/types";
+import type { Portfolio } from "@/lib/db";
 
 interface Props {
   initialHoldings: Holding[];
@@ -10,11 +11,12 @@ interface Props {
   demoMode?: boolean;
   initialQuotes?: Record<string, QuoteData>;
   initialExchangeRates?: ExchangeRates;
+  initialPortfolios?: Portfolio[];
 }
 
 export default function DashboardShell({
   initialHoldings, initialCash,
-  demoMode, initialQuotes, initialExchangeRates,
+  demoMode, initialQuotes, initialExchangeRates, initialPortfolios,
 }: Props) {
   return (
     <PortfolioProvider
@@ -23,6 +25,7 @@ export default function DashboardShell({
       demoMode={demoMode}
       initialQuotes={initialQuotes}
       initialExchangeRates={initialExchangeRates}
+      initialPortfolios={initialPortfolios}
     >
       <Dashboard />
     </PortfolioProvider>

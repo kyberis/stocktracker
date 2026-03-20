@@ -2,9 +2,6 @@
 
 import { useState, useCallback, useEffect, useMemo, useRef, Suspense } from "react";
 import dynamic from "next/dynamic";
-import PortfolioSummary from "./PortfolioSummary";
-import MarketAndCash from "./MarketAndCash";
-import PortfolioTable from "./PortfolioTable";
 import BrokerFilter from "./BrokerFilter";
 import DashboardToolbar from "./DashboardToolbar";
 import { useI18n } from "@/lib/i18n";
@@ -29,17 +26,11 @@ const MobileDashboard = dynamic(() => import("./mobile/MobileDashboard"), {
   ),
 });
 
-const GoalProgressBanner = dynamic(() => import("./GoalProgressBanner"), { ssr: false });
-const GoalCelebration = dynamic(() => import("./GoalCelebration"), { ssr: false });
-const PortfolioEvolutionChart = dynamic(() => import("./PortfolioEvolutionChart"), { ssr: false });
-const PortfolioGrowthPeriods = dynamic(() => import("./PortfolioGrowthPeriods"), { ssr: false });
-const PerformanceMetrics = dynamic(() => import("./PerformanceMetrics"), { ssr: false });
-const PortfolioProjection = dynamic(() => import("./PortfolioProjection"), { ssr: false });
 const PortfolioNewsFeed = dynamic(() => import("./PortfolioNewsFeed"), { ssr: false });
 const TaxonomyView = dynamic(() => import("./TaxonomyView"), { ssr: false });
 const RebalancingView = dynamic(() => import("./RebalancingView"), { ssr: false });
 const DividendSummary = dynamic(() => import("./DividendSummary"), { ssr: false });
-const MetricsTab = dynamic(() => import("./MetricsTab"), { ssr: false });
+const PerformancePage = dynamic(() => import("./PerformancePage"), { ssr: false });
 const GrowthTab = dynamic(() => import("./GrowthTab"), { ssr: false });
 const AddStockModal = dynamic(() => import("./AddStockModal"), { ssr: false });
 const SettingsModal = dynamic(() => import("./SettingsModal"), { ssr: false });
@@ -50,17 +41,16 @@ const ProCompareCard = dynamic(() => import("./ProCompareCard"), { ssr: false })
 const LeafPromoBanner = dynamic(() => import("./LeafPromoBanner"), { ssr: false });
 const SnapTradeReconnectBanner = dynamic(() => import("./SnapTradeReconnectBanner"), { ssr: false });
 const AddCryptoModal = dynamic(() => import("./AddCryptoModal"), { ssr: false });
-const AdSlot = dynamic(() => import("./AdSlot"), { ssr: false });
 const EventCalendar = dynamic(() => import("./EventCalendar"), { ssr: false });
-const UpcomingEarnings = dynamic(() => import("./UpcomingEarnings"), { ssr: false });
 const AddManualAssetModal = dynamic(() => import("./AddManualAssetModal"), { ssr: false });
 const SupportChatWidget = dynamic(() => import("./SupportChatWidget"), { ssr: false });
 const ReferralShareModal = dynamic(() => import("./ReferralShareModal"), { ssr: false });
-const ReferralBanner = dynamic(() => import("./ReferralBanner"), { ssr: false });
 import { usePortfolioSnapshotSync } from "@/lib/use-portfolio-snapshot-sync";
 import TierFeatureBadge from "./TierFeatureBadge";
 import SampleDataBanner from "./SampleDataBanner";
 import SecureAccountPrompt from "./SecureAccountPrompt";
+
+const DashboardUpgradeNudge = dynamic(() => import("./DashboardUpgradeNudge"), { ssr: false });
 import { HeroSkeleton, TableSkeleton, ChartSkeleton } from "./Skeleton";
 
 
@@ -128,6 +118,8 @@ export default function Dashboard() {
   return <DesktopDashboard />;
 }
 
+const DashboardPortfolioV2 = dynamic(() => import("./dashboard-v2/DashboardPortfolioV2"), { ssr: false });
+
 function DesktopDashboard() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showAddCrypto, setShowAddCrypto] = useState(false);
@@ -144,30 +136,35 @@ function DesktopDashboard() {
   const [brokerFilter, setBrokerFilter] = useState<string>("all");
   const [accounts, setAccounts] = useState<Account[]>([]);
   const { t } = useI18n();
-  const { holdings, cashEntries, isLoading, refreshHoldings, refreshQuotes, activePortfolioId, demoMode } =
+  const { holdings, cashEntries, isInitializing, refreshHoldings, refreshQuotes, activePortfolioId, demoMode } =
     usePortfolio();
   usePortfolioSnapshotSync({ demoMode });
   const { user, isLoading: authLoading } = useAuth();
   const track = useTrack();
   const { layoutTheme } = useTheme();
 
+  const holdingsLen = holdings.length;
   useEffect(() => {
     fetch("/api/accounts")
       .then((r) => r.ok ? r.json() : [])
       .then((data) => setAccounts(Array.isArray(data) ? data : []))
       .catch(() => {});
-  }, [holdings]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [holdingsLen]);
 
   useEffect(() => {
-    fetch("/api/support-chat/config")
-      .then((r) => r.ok ? r.json() : null)
-      .then((data) => {
-        if (data) {
-          setSupportChatEnabled(data.enabled);
-          setSupportChatWelcome(data.welcomeMessage || "");
-        }
-      })
-      .catch(() => {});
+    const timer = setTimeout(() => {
+      fetch("/api/support-chat/config")
+        .then((r) => r.ok ? r.json() : null)
+        .then((data) => {
+          if (data) {
+            setSupportChatEnabled(data.enabled);
+            setSupportChatWelcome(data.welcomeMessage || "");
+          }
+        })
+        .catch(() => {});
+    }, 3_000);
+    return () => clearTimeout(timer);
   }, []);
 
   const filteredHoldings = useMemo(() => {
@@ -206,7 +203,7 @@ function DesktopDashboard() {
     { key: "portfolio", label: t("portfolioTab") },
     { key: "diversification", label: t("diversificationTab") },
     { key: "dividends", label: t("dividendsTab") },
-    { key: "metrics", label: t("metricsTab"), tierBadge: "starter" as const },
+    { key: "metrics", label: t("performanceTab"), tierBadge: "starter" as const },
     { key: "growth", label: t("growthTab"), tierBadge: "starter" as const },
     { key: "events", label: t("eventsTab") },
     { key: "news", label: t("newsTab") },
@@ -242,11 +239,11 @@ function DesktopDashboard() {
   }
 
   const hasLoadedOnce = useRef(false);
-  if (!isLoading && (holdingsCount > 0 || cashEntries.length > 0)) {
+  if (!isInitializing && (holdingsCount > 0 || cashEntries.length > 0)) {
     hasLoadedOnce.current = true;
   }
 
-  if (isLoading && !hasLoadedOnce.current) {
+  if (isInitializing && !hasLoadedOnce.current) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-5" role="status" aria-label={t("loading")}>
         <svg className="animate-logo-breathe" width="72" height="72" viewBox="0 0 32 32" aria-hidden="true">
@@ -335,8 +332,8 @@ function DesktopDashboard() {
         <SnapTradeReconnectBanner />
         <LeafPromoBanner />
         <SampleDataBanner />
+        <DashboardUpgradeNudge />
         <SecureAccountPrompt />
-        <ReferralBanner onShare={() => setShowReferralModal(true)} />
 
         {activeTab === "portfolio" && (
           <div
@@ -346,7 +343,7 @@ function DesktopDashboard() {
             tabIndex={0}
             className="focus-visible:outline-none space-y-6 animate-tab-fade"
           >
-            {isLoading && holdingsCount === 0 ? (
+            {isInitializing && holdingsCount === 0 ? (
               <div className="space-y-6">
                 <HeroSkeleton />
                 <TableSkeleton rows={4} />
@@ -377,20 +374,16 @@ function DesktopDashboard() {
                   onChange={setBrokerFilter}
                 />
 
-                <PortfolioSummary holdings={filteredHoldings} cashEntries={investmentCashEntries} allCashEntries={filteredCashEntries} />
-                <PortfolioEvolutionChart />
-                <GoalProgressBanner holdings={filteredHoldings} cashEntries={investmentCashEntries} />
-                <GoalCelebration holdings={filteredHoldings} cashEntries={investmentCashEntries} />
-                <AdSlot slot="dashboard-summary" format="horizontal" />
-                <PortfolioTable holdings={filteredHoldings} onAddStock={() => setShowAddModal(true)} />
-                <UpcomingEarnings onNavigateToEvents={() => handleTabChange("events")} />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                  <PortfolioGrowthPeriods holdings={filteredHoldings} />
-                  <PerformanceMetrics holdings={filteredHoldings} cashEntries={investmentCashEntries} />
-                </div>
-                <MarketAndCash holdings={filteredHoldings} cashEntries={filteredCashEntries} />
-                <PortfolioProjection holdings={filteredHoldings} cashEntries={investmentCashEntries} />
-                <AdSlot slot="dashboard-bottom" format="auto" />
+                <DashboardPortfolioV2
+                  holdings={filteredHoldings}
+                  cashEntries={investmentCashEntries}
+                  allCashEntries={filteredCashEntries}
+                  onAddStock={() => setShowAddModal(true)}
+                  onNavigateToEvents={() => handleTabChange("events")}
+                  onNavigateToDividends={() => handleTabChange("dividends")}
+                  onNavigateToDiversification={() => handleTabChange("diversification")}
+                  onShareReferral={() => setShowReferralModal(true)}
+                />
 
                 {holdingsAtLimit && (
                   <ProCompareCard surface="holdings_limit" reason="holdings_limit_reached" />
@@ -444,7 +437,7 @@ function DesktopDashboard() {
             <Suspense fallback={
               <ChartSkeleton />
             }>
-              <MetricsTab holdings={filteredHoldings} cashEntries={investmentCashEntries} />
+              <PerformancePage holdings={filteredHoldings} cashEntries={investmentCashEntries} />
             </Suspense>
           </div>
         )}

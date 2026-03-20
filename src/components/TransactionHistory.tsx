@@ -8,6 +8,7 @@ import { useStealthMode } from "@/lib/stealth-context";
 import { useTrack } from "@/lib/use-track";
 import { calculateFifoRealizedPL } from "@/lib/performance";
 import { formatStealthCurrency } from "@/lib/utils";
+import DataUpgradeNudge from "./DataUpgradeNudge";
 import type { Transaction, TransactionType } from "@/lib/types";
 
 interface Props {
@@ -59,6 +60,11 @@ export default function TransactionHistory({ holdingId, ticker, exchange: holdin
   const fifoMap = useMemo(
     () => (hasSells ? calculateFifoRealizedPL(txs, exchangeRates, baseCurrency) : new Map()),
     [txs, exchangeRates, baseCurrency, hasSells],
+  );
+
+  const txsMissingFees = useMemo(
+    () => txs.filter((tx) => (tx.type === "buy" || tx.type === "sell") && !tx.fees && !tx.taxes).length,
+    [txs],
   );
 
   /* ── Filters ──────────────────────────────────────────── */
@@ -343,6 +349,18 @@ export default function TransactionHistory({ holdingId, ticker, exchange: holdin
               </span>
             )}
           </div>
+
+          {txsMissingFees > 5 && (
+            <DataUpgradeNudge
+              variant="blue"
+              titleKey="nudgeTxTitle"
+              descKey="nudgeTxDesc"
+              titleReplacements={{ count: String(txsMissingFees) }}
+              dismissKey="nudge_tx_dismissed"
+              dismissMode="permanent"
+              className="mb-3"
+            />
+          )}
 
           <table className="w-full text-xs">
             <caption className="sr-only">Transaction history</caption>

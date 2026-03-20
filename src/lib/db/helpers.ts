@@ -34,6 +34,8 @@ export interface DbUser {
   ai_calls_reset_at: string;
   ai_calls_today: number;
   ai_daily_reset_at: string;
+  ai_tokens_this_month: number;
+  ai_tokens_today: number;
   email_verified: number;
   auth_provider: AuthProvider;
   google_id: string;
@@ -101,6 +103,8 @@ export interface PublicUser {
   aiCallsResetAt: string;
   aiCallsToday: number;
   aiDailyResetAt: string;
+  aiTokensThisMonth: number;
+  aiTokensToday: number;
   emailVerified: boolean;
   authProvider: AuthProvider;
   portfolioReviewCount: number;
@@ -266,6 +270,8 @@ export function rowToDbUser(row: Row): DbUser {
     ai_calls_reset_at: str(row.ai_calls_reset_at),
     ai_calls_today: num(row.ai_calls_today),
     ai_daily_reset_at: str(row.ai_daily_reset_at),
+    ai_tokens_this_month: num(row.ai_tokens_this_month),
+    ai_tokens_today: num(row.ai_tokens_today),
     email_verified: num(row.email_verified),
     auth_provider: (["google", "apple"] as const).includes(str(row.auth_provider) as "google" | "apple")
       ? (str(row.auth_provider) as "google" | "apple")
@@ -320,6 +326,8 @@ export function mapUser(user: DbUser): PublicUser {
     aiCallsResetAt: user.ai_calls_reset_at,
     aiCallsToday: user.ai_calls_today,
     aiDailyResetAt: user.ai_daily_reset_at,
+    aiTokensThisMonth: user.ai_tokens_this_month,
+    aiTokensToday: user.ai_tokens_today,
     emailVerified: user.email_verified === 1,
     authProvider: user.auth_provider,
     portfolioReviewCount: user.portfolio_review_count,
