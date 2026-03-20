@@ -81,11 +81,22 @@ export const POST = withMetrics("/api/portfolio/backfill-snapshots", async (req:
 
   const result = await runBackfillForUser(session.userId);
 
+  const client = await ensureInitialized();
+
+  // The backfill now stops at yesterday, so any daily snapshot for today is
+  // stale leftover from a previous (buggy) run. Remove it so it doesn't
+  // conflict with live intraday snapshots and cause chart spikes.
+  const todayStr = new Date().toISOString().slice(0, 10);
+  await client.execute({
+    sql: `DELETE FROM portfolio_snapshots
+          WHERE user_id = ? AND date = ?`,
+    args: [session.userId, todayStr],
+  });
+
   // Repair intraday (15-min) snapshots: carry forward invested capital from the
   // nearest preceding daily snapshot written by the backfill so the invested line
   // stays flat between real transactions. Intraday rows have a space in the date
   // column (e.g. "2026-03-19 22:15:00") vs daily rows ("2026-03-19").
-  const client = await ensureInitialized();
   await client.execute({
     sql: `UPDATE portfolio_snapshots
           SET total_invested_eur = (
