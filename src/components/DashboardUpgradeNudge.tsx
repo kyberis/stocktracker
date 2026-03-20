@@ -9,6 +9,7 @@ const DISMISS_KEY = "nudge_dashboard_dismissed";
 export default function DashboardUpgradeNudge() {
   const { holdings, demoMode } = usePortfolio();
   const [dismissed, setDismissed] = useState(true);
+  const [hasConnection, setHasConnection] = useState(false);
 
   useEffect(() => {
     try {
@@ -18,9 +19,19 @@ export default function DashboardUpgradeNudge() {
     }
   }, []);
 
-  const hasBrokerData = holdings.some((h) => h.accountId);
+  useEffect(() => {
+    if (demoMode) return;
+    if (holdings.some((h) => h.accountId)) {
+      setHasConnection(true);
+      return;
+    }
+    fetch("/api/accounts")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((accounts: unknown[]) => { if (accounts.length > 0) setHasConnection(true); })
+      .catch(() => {});
+  }, [demoMode, holdings]);
 
-  if (demoMode || dismissed || hasBrokerData || holdings.length === 0) return null;
+  if (demoMode || dismissed || hasConnection || holdings.length === 0) return null;
 
   return (
     <DataUpgradeNudge

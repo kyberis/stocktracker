@@ -525,7 +525,7 @@ export default function AdminUserDetailPage() {
   const [backfilling, setBackfilling] = useState(false);
   const handleBackfill = async () => {
     setBackfilling(true);
-    setActionMsg("Backfilling…");
+    setActionMsg("Rebuilding snapshots…");
     try {
       const res = await fetch("/api/admin/backfill-snapshots", {
         method: "POST",
@@ -534,15 +534,15 @@ export default function AdminUserDetailPage() {
       });
       const json = await res.json();
       if (res.ok) {
-        setActionMsg(`Backfilled ${json.snapshotsCreated} snapshots`);
+        setActionMsg(`Rebuilt ${json.snapshotsCreated} historical + ${json.liveSnapshots ?? 0} live snapshots`);
       } else {
-        setActionMsg(`Backfill failed: ${json.error}`);
+        setActionMsg(`Rebuild failed: ${json.error}`);
       }
     } catch {
-      setActionMsg("Backfill failed");
+      setActionMsg("Rebuild failed");
     }
     setBackfilling(false);
-    setTimeout(() => setActionMsg(""), 4000);
+    setTimeout(() => setActionMsg(""), 6000);
   };
 
   const handleDelete = async () => {
@@ -763,7 +763,7 @@ export default function AdminUserDetailPage() {
                 <button onClick={() => handleResetData("seed")} className="btn-secondary text-xs px-2 py-1">Seed data</button>
                 <button onClick={() => handleResetData("empty")} className="btn-secondary text-xs px-2 py-1">Empty data</button>
                 <button onClick={handleBackfill} disabled={backfilling} className="btn-secondary text-xs px-2 py-1">
-                  {backfilling ? "Backfilling…" : "Backfill snapshots"}
+                  {backfilling ? "Rebuilding…" : "Rebuild snapshots"}
                 </button>
                 {user.username !== "admin" && (
                   <button onClick={handleDelete} className="btn-danger text-xs px-2 py-1">Delete user</button>
