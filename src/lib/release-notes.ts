@@ -17,6 +17,21 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.53.2",
+    date: "2026-03-20",
+    title: "Mobile Dashboard Reorder",
+    titleTranslations: { es: "Reordenación del panel móvil" },
+    changes: [
+      {
+        type: "improvement",
+        text: "Reordered mobile dashboard: holdings list now appears directly after the chart for faster daily checks. Removed goal progress banner from mobile to reduce clutter.",
+        translations: {
+          es: "Reordenación del panel móvil: la lista de posiciones ahora aparece directamente después del gráfico para consultas diarias más rápidas. Se eliminó el banner de progreso de meta del móvil para reducir el desorden.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.53.1",
     date: "2026-03-20",
     title: "Broker Sync Duplication Fix",
