@@ -2,6 +2,7 @@
 
 import React, { createContext, FormEvent, useContext, useEffect, useRef, useState } from "react";
 import XKeysCard from "./XKeysCard";
+import { CRON_REGISTRY } from "@/lib/cron-registry";
 
 /* ── Batch Settings Context ───────────────────────────────── */
 
@@ -2100,6 +2101,7 @@ function CronJobsCard() {
   }[]>([]);
   const [loading, setLoading] = useState(true);
   const [showRecent, setShowRecent] = useState(false);
+  const [showRegistry, setShowRegistry] = useState(false);
 
   useEffect(() => {
     if (loadedRef.current || batch === undefined) return;
@@ -2120,42 +2122,44 @@ function CronJobsCard() {
       .finally(() => setLoading(false));
   }, [batch]);
 
+  const statsMap = new Map(stats.map((s) => [s.jobName, s]));
+
   return (
     <div className="card p-6 space-y-4">
-      <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Cron Jobs</h3>
-      {loading ? (
-        <p className="text-xs text-gray-500 dark:text-slate-400">Loading...</p>
-      ) : stats.length === 0 ? (
-        <p className="text-xs text-gray-500 dark:text-slate-400">No cron executions recorded yet.</p>
-      ) : (
-        <>
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead className="bg-gray-50 dark:bg-slate-800/50">
-                <tr className="text-gray-500 dark:text-slate-400">
-                  <th className="text-left p-2 font-medium">Job</th>
-                  <th className="text-right p-2 font-medium">Runs</th>
-                  <th className="text-right p-2 font-medium">Success</th>
-                  <th className="text-right p-2 font-medium">Errors</th>
-                  <th className="text-right p-2 font-medium">Rate</th>
-                  <th className="text-right p-2 font-medium">Avg (ms)</th>
-                  <th className="text-left p-2 font-medium">Last Run</th>
-                  <th className="text-left p-2 font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {stats.map((s) => (
-                  <tr key={s.jobName} className="border-t border-gray-100 dark:border-slate-700">
-                    <td className="p-2 font-medium text-gray-900 dark:text-white">{s.jobName}</td>
-                    <td className="p-2 text-right text-gray-600 dark:text-slate-300">{s.totalRuns}</td>
-                    <td className="p-2 text-right text-emerald-600 dark:text-emerald-400">{s.successCount}</td>
-                    <td className="p-2 text-right text-red-600 dark:text-red-400">{s.errorCount}</td>
-                    <td className="p-2 text-right text-gray-600 dark:text-slate-300">{s.successRate}%</td>
-                    <td className="p-2 text-right text-gray-600 dark:text-slate-300">{s.avgDurationMs}</td>
-                    <td className="p-2 text-gray-500 dark:text-slate-400">
-                      {s.lastRunAt ? new Date(s.lastRunAt + "Z").toLocaleString() : "—"}
-                    </td>
-                    <td className="p-2">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Cron Jobs</h3>
+        <span className="text-[10px] font-medium text-gray-400 dark:text-slate-500">{CRON_REGISTRY.length} registered</span>
+      </div>
+
+      {/* Registry table — all configured crons with schedule + last status from stats */}
+      <div className="overflow-x-auto">
+        <table className="w-full text-xs">
+          <thead className="bg-gray-50 dark:bg-slate-800/50">
+            <tr className="text-gray-500 dark:text-slate-400">
+              <th className="text-left p-2 font-medium">Job</th>
+              <th className="text-left p-2 font-medium">Schedule</th>
+              <th className="text-left p-2 font-medium">Description</th>
+              <th className="text-right p-2 font-medium">Runs</th>
+              <th className="text-right p-2 font-medium">Rate</th>
+              <th className="text-left p-2 font-medium">Last Run</th>
+              <th className="text-left p-2 font-medium">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {CRON_REGISTRY.map((cron) => {
+              const s = statsMap.get(cron.name);
+              return (
+                <tr key={cron.name} className="border-t border-gray-100 dark:border-slate-700">
+                  <td className="p-2 font-medium text-gray-900 dark:text-white whitespace-nowrap">{cron.name}</td>
+                  <td className="p-2 text-gray-500 dark:text-slate-400 font-mono whitespace-nowrap">{cron.schedule}</td>
+                  <td className="p-2 text-gray-500 dark:text-slate-400 max-w-52 truncate">{cron.description}</td>
+                  <td className="p-2 text-right text-gray-600 dark:text-slate-300">{s ? s.totalRuns : "—"}</td>
+                  <td className="p-2 text-right text-gray-600 dark:text-slate-300">{s ? `${s.successRate}%` : "—"}</td>
+                  <td className="p-2 text-gray-500 dark:text-slate-400 whitespace-nowrap">
+                    {s?.lastRunAt ? new Date(s.lastRunAt + "Z").toLocaleString() : "—"}
+                  </td>
+                  <td className="p-2">
+                    {s?.lastStatus ? (
                       <span className={`inline-flex px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
                         s.lastStatus === "success"
                           ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
@@ -2163,63 +2167,107 @@ function CronJobsCard() {
                             ? "bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400"
                             : "bg-yellow-50 dark:bg-yellow-500/10 text-yellow-700 dark:text-yellow-400"
                       }`}>
-                        {s.lastStatus || "—"}
+                        {s.lastStatus}
                       </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    ) : (
+                      <span className="inline-flex px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-gray-50 dark:bg-slate-800 text-gray-400 dark:text-slate-500">never</span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
 
-          <button
-            onClick={() => setShowRecent(!showRecent)}
-            className="btn-secondary text-xs px-3 py-1"
-          >
-            {showRecent ? "Hide" : "Show"} recent executions ({recent.length})
-          </button>
+      {/* Detailed stats toggle */}
+      {stats.length > 0 && (
+        <button
+          onClick={() => setShowRegistry(!showRegistry)}
+          className="btn-secondary text-xs px-3 py-1"
+        >
+          {showRegistry ? "Hide" : "Show"} detailed stats
+        </button>
+      )}
 
-          {showRecent && recent.length > 0 && (
-            <div className="overflow-x-auto max-h-80 overflow-y-auto">
-              <table className="w-full text-xs">
-                <thead className="bg-gray-50 dark:bg-slate-800/50 sticky top-0">
-                  <tr className="text-gray-500 dark:text-slate-400">
-                    <th className="text-left p-2 font-medium">Job</th>
-                    <th className="text-left p-2 font-medium">Started</th>
-                    <th className="text-left p-2 font-medium">Status</th>
-                    <th className="text-right p-2 font-medium">Duration</th>
-                    <th className="text-left p-2 font-medium">Details</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recent.map((r) => (
-                    <tr key={r.id} className="border-t border-gray-100 dark:border-slate-700">
-                      <td className="p-2 font-medium text-gray-900 dark:text-white">{r.jobName}</td>
-                      <td className="p-2 text-gray-500 dark:text-slate-400">
-                        {new Date(r.startedAt + "Z").toLocaleString()}
-                      </td>
-                      <td className="p-2">
-                        <span className={`inline-flex px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
-                          r.status === "success"
-                            ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
-                            : r.status === "error"
-                              ? "bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400"
-                              : "bg-yellow-50 dark:bg-yellow-500/10 text-yellow-700 dark:text-yellow-400"
-                        }`}>
-                          {r.status}
-                        </span>
-                      </td>
-                      <td className="p-2 text-right text-gray-600 dark:text-slate-300">{r.durationMs}ms</td>
-                      <td className="p-2 text-gray-500 dark:text-slate-400 max-w-48 truncate">
-                        {r.errorMessage || (r.result && r.result !== "{}" ? r.result : "—")}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </>
+      {showRegistry && stats.length > 0 && (
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead className="bg-gray-50 dark:bg-slate-800/50">
+              <tr className="text-gray-500 dark:text-slate-400">
+                <th className="text-left p-2 font-medium">Job</th>
+                <th className="text-right p-2 font-medium">Runs</th>
+                <th className="text-right p-2 font-medium">Success</th>
+                <th className="text-right p-2 font-medium">Errors</th>
+                <th className="text-right p-2 font-medium">Rate</th>
+                <th className="text-right p-2 font-medium">Avg (ms)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {stats.map((s) => (
+                <tr key={s.jobName} className="border-t border-gray-100 dark:border-slate-700">
+                  <td className="p-2 font-medium text-gray-900 dark:text-white">{s.jobName}</td>
+                  <td className="p-2 text-right text-gray-600 dark:text-slate-300">{s.totalRuns}</td>
+                  <td className="p-2 text-right text-emerald-600 dark:text-emerald-400">{s.successCount}</td>
+                  <td className="p-2 text-right text-red-600 dark:text-red-400">{s.errorCount}</td>
+                  <td className="p-2 text-right text-gray-600 dark:text-slate-300">{s.successRate}%</td>
+                  <td className="p-2 text-right text-gray-600 dark:text-slate-300">{s.avgDurationMs}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Recent executions toggle */}
+      {!loading && (
+        <button
+          onClick={() => setShowRecent(!showRecent)}
+          className="btn-secondary text-xs px-3 py-1"
+        >
+          {showRecent ? "Hide" : "Show"} recent executions ({recent.length})
+        </button>
+      )}
+
+      {showRecent && recent.length > 0 && (
+        <div className="overflow-x-auto max-h-80 overflow-y-auto">
+          <table className="w-full text-xs">
+            <thead className="bg-gray-50 dark:bg-slate-800/50 sticky top-0">
+              <tr className="text-gray-500 dark:text-slate-400">
+                <th className="text-left p-2 font-medium">Job</th>
+                <th className="text-left p-2 font-medium">Started</th>
+                <th className="text-left p-2 font-medium">Status</th>
+                <th className="text-right p-2 font-medium">Duration</th>
+                <th className="text-left p-2 font-medium">Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              {recent.map((r) => (
+                <tr key={r.id} className="border-t border-gray-100 dark:border-slate-700">
+                  <td className="p-2 font-medium text-gray-900 dark:text-white">{r.jobName}</td>
+                  <td className="p-2 text-gray-500 dark:text-slate-400">
+                    {new Date(r.startedAt + "Z").toLocaleString()}
+                  </td>
+                  <td className="p-2">
+                    <span className={`inline-flex px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
+                      r.status === "success"
+                        ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+                        : r.status === "error"
+                          ? "bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400"
+                          : "bg-yellow-50 dark:bg-yellow-500/10 text-yellow-700 dark:text-yellow-400"
+                    }`}>
+                      {r.status}
+                    </span>
+                  </td>
+                  <td className="p-2 text-right text-gray-600 dark:text-slate-300">{r.durationMs}ms</td>
+                  <td className="p-2 text-gray-500 dark:text-slate-400 max-w-48 truncate">
+                    {r.errorMessage || (r.result && r.result !== "{}" ? r.result : "—")}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );

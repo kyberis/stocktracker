@@ -1,0 +1,21 @@
+# Cron Job Registration
+
+When adding a **new cron job**, it must be registered in three places:
+
+## Required Steps
+
+1. **`src/lib/cron-registry.ts`** — Add an entry to the `CRON_REGISTRY` array with `name`, `path`, `schedule`, and `description`. The `name` must match the string passed to `withCronLogging()`.
+2. **`vercel.json`** — Add the cron schedule under the `crons` array. The `path` and `schedule` must match the registry entry.
+3. **`src/middleware.ts`** — Add the cron API route to `PUBLIC_API_ROUTES` so Vercel can invoke it without a session cookie.
+
+## Conventions
+
+- Cron route files live under `src/app/api/cron/<name>/route.ts`
+- Always wrap the handler with `withCronLogging("<name>", handler)` for automatic stats tracking
+- Always use `verifyCronAuth("<name>", req.headers.get("authorization"))` to validate the Vercel cron secret
+- Export both `GET` and `POST` handlers for flexibility
+- Set `export const dynamic = "force-dynamic"` and `export const maxDuration = 120`
+
+## Admin Visibility
+
+The admin panel at `/admin` → Settings → Cron Jobs reads from `CRON_REGISTRY` to display all configured crons with their schedules, descriptions, and execution stats. If a cron is not in the registry, it won't appear in the admin panel.
