@@ -7,8 +7,9 @@ import { useI18n } from "@/lib/i18n";
 import { AuthProvider, useAuth } from "@/lib/auth-context";
 import { I18nProvider } from "@/lib/i18n";
 import { ThemeProvider } from "@/lib/theme-context";
-import { FeatureFlagProvider, useFeatureFlagContext } from "@/lib/feature-flag-context";
 import Link from "next/link";
+
+export type TrialTokenStatus = "valid" | "already_used" | "invalid";
 
 function tOr(t: (k: TranslationKey) => string, key: TranslationKey, fallback: string) {
   const v = t(key);
@@ -27,54 +28,52 @@ const ROWS: { feature: string; free: string; pro: string }[] = [
   { feature: "WhatsApp Alerts", free: "—", pro: "Included" },
 ];
 
-function TrialActivateInner({ token }: { token: string }) {
+function TrialUnavailablePage({ reason }: { reason: "already_used" | "invalid" }) {
+  const heading = reason === "already_used" ? "Trial already activated" : "Trial offer unavailable";
+  const description =
+    reason === "already_used"
+      ? "This trial link has already been used. If you\u2019re already on Pro, enjoy! Otherwise, subscribe to unlock the full experience."
+      : "This trial link is invalid or has expired. You can still explore trefolio for free or subscribe to Pro for the full experience.";
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 bg-slate-100 dark:bg-slate-950 safe-area-top">
+      <div className="w-full max-w-md rounded-2xl border border-slate-200/80 dark:border-slate-700/80 bg-white dark:bg-slate-900 shadow-xl shadow-slate-900/10 dark:shadow-black/40 p-8 text-center">
+        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
+          <svg className="w-7 h-7 text-slate-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+          </svg>
+        </div>
+        <p className="text-lg font-semibold tracking-tight text-emerald-600 dark:text-emerald-500 mb-3">trefolio</p>
+        <h1 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{heading}</h1>
+        <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-6">{description}</p>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+          <Link
+            href="/pricing"
+            className="w-full sm:w-auto min-w-[160px] rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 transition hover:bg-emerald-600 text-center"
+          >
+            View pricing
+          </Link>
+          <Link
+            href="/"
+            className="w-full sm:w-auto min-w-[160px] rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-5 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-700 text-center"
+          >
+            Go to dashboard
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TrialActivateInner({ token, tokenStatus }: { token: string; tokenStatus: TrialTokenStatus }) {
   const router = useRouter();
   const { t } = useI18n();
   const { user, isLoading: authLoading } = useAuth();
-  const { flags, isLoaded: flagsLoaded } = useFeatureFlagContext();
-  const trialEnabled = flags.pro_trial_enabled ?? false;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  if (!flagsLoaded) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-100 dark:bg-slate-950">
-        <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  if (!trialEnabled) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 bg-slate-100 dark:bg-slate-950 safe-area-top">
-        <div className="w-full max-w-md rounded-2xl border border-slate-200/80 dark:border-slate-700/80 bg-white dark:bg-slate-900 shadow-xl shadow-slate-900/10 dark:shadow-black/40 p-8 text-center">
-          <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
-            <svg className="w-7 h-7 text-slate-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-            </svg>
-          </div>
-          <p className="text-lg font-semibold tracking-tight text-emerald-600 dark:text-emerald-500 mb-3">trefolio</p>
-          <h1 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Trial offer unavailable</h1>
-          <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-6">
-            This trial promotion has ended or is not currently available. You can still explore trefolio for free or subscribe to Pro for the full experience.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Link
-              href="/pricing"
-              className="w-full sm:w-auto min-w-[160px] rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 transition hover:bg-emerald-600 text-center"
-            >
-              View pricing
-            </Link>
-            <Link
-              href="/"
-              className="w-full sm:w-auto min-w-[160px] rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-5 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-700 text-center"
-            >
-              Go to dashboard
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
+  if (tokenStatus !== "valid") {
+    return <TrialUnavailablePage reason={tokenStatus} />;
   }
 
   const heading = tOr(t, "trialActivateHeading" as TranslationKey, "Your Pro Trial Awaits");
@@ -170,15 +169,13 @@ function TrialActivateInner({ token }: { token: string }) {
   );
 }
 
-export default function TrialActivateClient({ token }: { token: string }) {
+export default function TrialActivateClient({ token, tokenStatus }: { token: string; tokenStatus: TrialTokenStatus }) {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <FeatureFlagProvider>
-          <I18nProvider>
-            <TrialActivateInner token={token} />
-          </I18nProvider>
-        </FeatureFlagProvider>
+        <I18nProvider>
+          <TrialActivateInner token={token} tokenStatus={tokenStatus} />
+        </I18nProvider>
       </AuthProvider>
     </ThemeProvider>
   );

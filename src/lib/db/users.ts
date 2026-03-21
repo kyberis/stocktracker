@@ -535,6 +535,20 @@ export async function findUserByDevicePasskey(passkey: string): Promise<DbUser |
   return rowToDbUser(result.rows[0]);
 }
 
+export type TrialTokenStatus = "valid" | "already_used" | "invalid";
+
+export async function checkTrialToken(token: string): Promise<TrialTokenStatus> {
+  if (!token) return "invalid";
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: "SELECT trial_activated_at FROM users WHERE trial_token = ?",
+    args: [token],
+  });
+  if (result.rows.length === 0) return "invalid";
+  const activated = String(result.rows[0].trial_activated_at ?? "");
+  return activated !== "" ? "already_used" : "valid";
+}
+
 export async function markDeviceLinked(userId: string): Promise<void> {
   const client = await ensureInitialized();
   await client.execute({

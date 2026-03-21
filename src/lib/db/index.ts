@@ -56,6 +56,7 @@ export {
   generateDevicePasskey,
   revokeDevicePasskey,
   findUserByDevicePasskey,
+  checkTrialToken,
   markDeviceLinked,
   markDeviceProRedeemed,
   updateDeviceTemplate,

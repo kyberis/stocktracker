@@ -1,16 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { findUserById, updateUserSubscription, isFeatureEnabledForUser } from "@/lib/db";
+import { findUserById, updateUserSubscription } from "@/lib/db";
 import { ensureInitialized } from "@/lib/db/client";
 import { withMetrics } from "@/lib/with-metrics";
 
 export const POST = withMetrics("/api/trial/activate", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
-
-  if (!(await isFeatureEnabledForUser("pro_trial_enabled", session.userId))) {
-    return NextResponse.json({ error: "Pro trial is not available" }, { status: 404 });
-  }
 
   let token: unknown;
   try {
