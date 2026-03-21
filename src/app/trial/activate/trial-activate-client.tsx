@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import type { TranslationKey } from "@/lib/i18n";
 import { useI18n } from "@/lib/i18n";
 import { AuthProvider, useAuth } from "@/lib/auth-context";
@@ -67,24 +67,16 @@ function TrialUnavailablePage({ reason }: { reason: "already_used" | "invalid" }
 
 function TrialActivateInner({ token, tokenStatus }: { token: string; tokenStatus: TrialTokenStatus }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { t } = useI18n();
   const { user, isLoading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const autoActivateRef = useRef(false);
 
-  if (tokenStatus !== "valid") {
-    return <TrialUnavailablePage reason={tokenStatus} />;
-  }
+  const shouldAutoActivate = searchParams.get("auto") === "1";
 
-  const heading = tOr(t, "trialActivateHeading" as TranslationKey, "Your Pro Trial Awaits");
-  const sub = tOr(t, "trialActivateSub" as TranslationKey, "Unlock everything in Trefolio Pro for 7 days — free.");
-
-  async function handleActivate() {
-    if (!user && !authLoading) {
-      const returnUrl = `/trial/activate?token=${encodeURIComponent(token)}`;
-      router.push(`/login?redirect=${encodeURIComponent(returnUrl)}`);
-      return;
-    }
+  async function doActivate() {
     setError(null);
     setLoading(true);
     try {
@@ -105,6 +97,38 @@ function TrialActivateInner({ token, tokenStatus }: { token: string; tokenStatus
     } finally {
       setLoading(false);
     }
+  }
+
+  useEffect(() => {
+    if (shouldAutoActivate && user && !authLoading && tokenStatus === "valid" && !autoActivateRef.current) {
+      autoActivateRef.current = true;
+      doActivate();
+    }
+  }, [shouldAutoActivate, user, authLoading, tokenStatus]);
+
+  if (tokenStatus !== "valid") {
+    return <TrialUnavailablePage reason={tokenStatus} />;
+  }
+
+  if (shouldAutoActivate && !error) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-3 bg-slate-100 dark:bg-slate-950">
+        <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+        <p className="text-sm text-slate-600 dark:text-slate-400">Activating your Pro trial…</p>
+      </div>
+    );
+  }
+
+  const heading = tOr(t, "trialActivateHeading" as TranslationKey, "Your Pro Trial Awaits");
+  const sub = tOr(t, "trialActivateSub" as TranslationKey, "Unlock everything in Trefolio Pro for 7 days — free.");
+
+  async function handleActivate() {
+    if (!user && !authLoading) {
+      const returnUrl = `/trial/activate?token=${encodeURIComponent(token)}&auto=1`;
+      router.push(`/login?redirect=${encodeURIComponent(returnUrl)}`);
+      return;
+    }
+    doActivate();
   }
 
   return (
