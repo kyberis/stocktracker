@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { DE_FALLBACK_SUFFIXES, PA_FALLBACK_SUFFIXES } from "@/lib/api-providers/market-data-helpers";
+import { resolveIsinToTicker } from "@/lib/api-providers/isin-resolver";
 import { withMetrics } from "@/lib/with-metrics";
 import { getCachedQuotes, setCachedQuotes } from "@/lib/quote-cache";
 import type { ProviderQuoteResult } from "@/lib/api-providers/types";
@@ -79,23 +80,25 @@ export const GET = withMetrics("/api/quote", async (request: NextRequest) => {
     const toCache: Record<string, ProviderQuoteResult> = {};
 
     const stockPromises = misses.map(async (symbol) => {
+      const ticker = await resolveIsinToTicker(yahoo, symbol);
       try {
-        const quote = await yahoo.getQuote(symbol);
+        const quote = await yahoo.getQuote(ticker);
         if (quote.regularMarketPrice > 0) {
-          results[symbol] = { ...quote, providerUsed: "yahoo" };
-          toCache[symbol] = quote;
+          const q = { ...quote, symbol };
+          results[symbol] = { ...q, providerUsed: "yahoo" };
+          toCache[symbol] = q;
         } else {
-          const fb = await tryExchangeFallback(yahoo, symbol);
+          const fb = await tryExchangeFallback(yahoo, ticker);
           if (fb) {
             const resolved = { ...fb.quote, symbol };
             results[symbol] = { ...resolved, providerUsed: "yahoo" };
             toCache[symbol] = resolved;
           } else {
-            results[symbol] = { ...quote, providerUsed: "yahoo" };
+            results[symbol] = { ...quote, symbol, providerUsed: "yahoo" };
           }
         }
       } catch (err) {
-        const fb = await tryExchangeFallback(yahoo, symbol).catch(() => null);
+        const fb = await tryExchangeFallback(yahoo, ticker).catch(() => null);
         if (fb) {
           const resolved = { ...fb.quote, symbol };
           results[symbol] = { ...resolved, providerUsed: "yahoo" };

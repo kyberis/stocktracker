@@ -1,6 +1,8 @@
+import { randomBytes } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/guards";
 import { findUserById, getEmailTemplate } from "@/lib/db";
+import { ensureInitialized } from "@/lib/db/client";
 import { getTemplateSubject, getLocalizedTemplateHtml } from "@/lib/email-i18n";
 
 export async function GET(req: NextRequest) {
@@ -42,8 +44,18 @@ export async function GET(req: NextRequest) {
   bodyHtml = bodyHtml.replaceAll("{{base_url}}", baseUrl);
   bodyHtml = bodyHtml.replaceAll("{{name}}", displayName);
   bodyHtml = bodyHtml.replaceAll("{{display_name}}", displayName);
-  bodyHtml = bodyHtml.replaceAll("{{trial_token}}", user?.trial_token || "preview-token");
+  let trialToken = user?.trial_token || "";
+  if (!trialToken && userId) {
+    trialToken = randomBytes(32).toString("hex");
+    const client = await ensureInitialized();
+    await client.execute({
+      sql: "UPDATE users SET trial_token = ?, trial_invited_at = CASE WHEN trial_invited_at = '' THEN datetime('now') ELSE trial_invited_at END WHERE id = ?",
+      args: [trialToken, userId],
+    });
+  }
+  bodyHtml = bodyHtml.replaceAll("{{trial_token}}", trialToken || "TOKEN");
   bodyHtml = bodyHtml.replaceAll("{{referral_link}}", `${baseUrl}/signup?ref=PREVIEW`);
+  bodyHtml = bodyHtml.replaceAll("{{growth_box}}", "");
 
   return NextResponse.json({ subject, bodyHtml });
 }

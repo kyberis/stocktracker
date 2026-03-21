@@ -899,8 +899,8 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
                 )}
               </div>
               {holdingsCapped > 0 && (
-                <div className="space-y-3 max-w-md mx-auto">
-                  <p className="text-xs text-amber-700 dark:text-amber-300 font-medium">
+                <div className="space-y-3">
+                  <p className="text-xs text-amber-700 dark:text-amber-300 font-medium text-center">
                     {(t("importHoldingsCapped") || "{count} holding(s) skipped — Free plan allows up to 15 holdings.")
                       .replace("{count}", String(holdingsCapped))}
                   </p>

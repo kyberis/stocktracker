@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { listDistinctHoldingTickers, batchUpdateValueInEur, resolveStaleTickersViaFigi } from "@/lib/db";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
+import { resolveIsinToTicker } from "@/lib/api-providers/isin-resolver";
 import { convertToEUR, resolveQuoteCurrency } from "@/lib/utils";
 import type { ExchangeRates } from "@/lib/types";
 import { withCronLogging, verifyCronAuth } from "@/lib/cron-logging";
@@ -66,7 +67,8 @@ const runRefreshHoldings = withCronLogging("refresh-holdings", async () => {
     const batch = uniqueTickers.slice(i, i + QUOTE_BATCH_SIZE);
     const results = await Promise.allSettled(
       batch.map(async (ticker) => {
-        const q = await yahoo.getQuote(ticker);
+        const resolved = await resolveIsinToTicker(yahoo, ticker);
+        const q = await yahoo.getQuote(resolved);
         return { ticker, price: q.regularMarketPrice, currency: q.currency };
       }),
     );

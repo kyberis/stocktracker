@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n";
 import { useTrack } from "@/lib/use-track";
 import { trackCanonicalConversion } from "@/lib/ad-tracking";
-import { getUpsellConfig, getUpsellReasonKey, getUpgradeTarget } from "@/lib/upsell";
+import { getUpsellConfig, getUpsellReasonKey } from "@/lib/upsell";
 import type { UpsellReason, UpsellSurface } from "@/lib/upsell";
 import type { TranslationKey } from "@/lib/i18n";
 import TierIcon from "@/components/TierIcon";
@@ -102,7 +102,6 @@ export default function ProCompareCard({
   const isFree = !isPro && !isStarter;
   const config = getUpsellConfig(surface);
   const reasonLabel = t(getUpsellReasonKey(reason));
-  const upgradeTarget = user ? getUpgradeTarget(user.plan as "free" | "starter" | "pro") : "starter";
   const isAnnual = billingPeriod === "annual";
 
   const fetchCapacity = useCallback(async () => {
@@ -188,6 +187,8 @@ export default function ProCompareCard({
     return false;
   }).sort((a, b) => (b.highlighted ? 1 : 0) - (a.highlighted ? 1 : 0));
 
+  const maxFeatures = compact ? 5 : Infinity;
+
   const renderTierCard = (tier: TierInfo, options: { isCurrent: boolean; mobilePill?: string }) => {
     const { isCurrent } = options;
     const isHighlighted = tier.highlighted && !isCurrent;
@@ -197,6 +198,8 @@ export default function ProCompareCard({
     );
     const displayPrice = tier.isFree ? "€0" : isAnnual ? tier.annualMonthly : tier.monthlyPrice;
     const regularPrice = isAnnual ? tier.regularAnnualMonthly : tier.regularMonthly;
+    const visibleFeatures = tier.featureKeys.slice(0, maxFeatures);
+    const hiddenCount = tier.featureKeys.length - visibleFeatures.length;
 
     return (
       <div
@@ -265,7 +268,7 @@ export default function ProCompareCard({
           {t(tier.descriptionKey)}
         </p>
         <ul className="space-y-1.5 mb-4 flex-1">
-          {tier.featureKeys.map((key) => (
+          {visibleFeatures.map((key) => (
             <li key={key} className="flex items-start gap-2 text-[11px]">
               <svg className="w-3.5 h-3.5 text-emerald-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -273,6 +276,11 @@ export default function ProCompareCard({
               <span className="text-gray-600 dark:text-slate-300">{t(key)}</span>
             </li>
           ))}
+          {hiddenCount > 0 && (
+            <li className="text-[11px] text-gray-400 dark:text-slate-500 pl-5.5">
+              +{hiddenCount} {t("upsellMoreFeatures") || "more"}
+            </li>
+          )}
         </ul>
         {isCurrent ? (
           isPro ? (
@@ -409,8 +417,8 @@ export default function ProCompareCard({
         </p>
       )}
 
-      {/* Mobile: collapsed current plan + focused upgrade cards */}
-      <div className="sm:hidden space-y-3">
+      {/* Compact / Mobile: collapsed current plan + focused upgrade cards */}
+      <div className={compact ? "space-y-3" : "sm:hidden space-y-3"}>
         {/* Current plan one-liner */}
         <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700">
           <TierIcon
@@ -433,12 +441,14 @@ export default function ProCompareCard({
         )}
       </div>
 
-      {/* Desktop: full 3-column grid */}
-      <div className="hidden sm:grid gap-3 sm:grid-cols-3">
-        {TIERS.map((tier) =>
-          renderTierCard(tier, { isCurrent: tier.plan === currentPlan })
-        )}
-      </div>
+      {/* Desktop: full 3-column grid (hidden in compact mode) */}
+      {!compact && (
+        <div className="hidden sm:grid gap-3 sm:grid-cols-3">
+          {TIERS.map((tier) =>
+            renderTierCard(tier, { isCurrent: tier.plan === currentPlan })
+          )}
+        </div>
+      )}
 
       {/* Billing error */}
       {billingError && (

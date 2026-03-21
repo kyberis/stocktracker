@@ -4,6 +4,8 @@ import { requireSession } from "@/lib/auth/guards";
 import { getGlobalAlphaVantageApiKey } from "@/lib/db";
 import { AlphaVantageProvider } from "@/lib/api-providers/alphavantage";
 import type { DividendEvent } from "@/lib/api-providers/alphavantage";
+import { looksLikeIsin } from "@/lib/api-providers/isin-resolver";
+import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { withMetrics } from "@/lib/with-metrics";
 
 const yahooFinance = new YahooFinance();
@@ -55,7 +57,7 @@ export const GET = withMetrics("/api/ex-dividend", async (req: NextRequest) => {
 
   const url = new URL(req.url);
   const tickersParam = url.searchParams.get("tickers") || "";
-  const tickers = tickersParam
+  let tickers = tickersParam
     .split(",")
     .map((t) => t.trim().toUpperCase())
     .filter(Boolean)
@@ -63,6 +65,21 @@ export const GET = withMetrics("/api/ex-dividend", async (req: NextRequest) => {
 
   if (tickers.length === 0) {
     return NextResponse.json({ events: [] });
+  }
+
+  const isinTickers = tickers.filter(looksLikeIsin);
+  if (isinTickers.length > 0) {
+    const yahoo = new YahooProvider();
+    const resolved = await Promise.all(
+      isinTickers.map(async (isin) => {
+        try {
+          const results = await yahoo.search(isin);
+          return results.length > 0 ? { isin, ticker: results[0].symbol } : null;
+        } catch { return null; }
+      })
+    );
+    const isinMap = new Map(resolved.filter(Boolean).map((r) => [r!.isin, r!.ticker]));
+    tickers = tickers.map((t) => isinMap.get(t) ?? t);
   }
 
   let events: DividendEvent[] = [];

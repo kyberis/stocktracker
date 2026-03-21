@@ -505,6 +505,7 @@ const en: TranslationStrings = {
   upsellHoldingsLimitReached: "Holdings limit reached",
   upsellUpgradeRequired: "Upgrade required",
   upsellCurrentPlan: "Current plan",
+  upsellMoreFeatures: "more",
   holdingsUsage: "Holdings: {used} of {limit}",
   holdingsLimitReached: "You've reached the holdings limit on your Folio plan. Upgrade to add more holdings.",
   notificationSettings: "Notifications",

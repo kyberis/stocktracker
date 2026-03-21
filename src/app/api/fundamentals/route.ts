@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
+import { resolveIsinToTicker } from "@/lib/api-providers/isin-resolver";
 import { requireFeatureAccess } from "@/lib/auth/guards";
 import { withMetrics } from "@/lib/with-metrics";
 
@@ -32,12 +33,13 @@ export const GET = withMetrics("/api/fundamentals", async (request: NextRequest)
   }
 
   const methodName = METHOD_MAP[type];
+  const ticker = await resolveIsinToTicker(yahoo, symbol);
 
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const method = (yahoo as any)[methodName];
     if (typeof method === "function") {
-      const result = await (method as (s: string) => Promise<unknown>).call(yahoo, symbol);
+      const result = await (method as (s: string) => Promise<unknown>).call(yahoo, ticker);
       if (result) return Response.json(result);
     }
     return Response.json({ error: "Failed to fetch data" }, { status: 500 });

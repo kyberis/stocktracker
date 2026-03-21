@@ -17,6 +17,21 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.57.1",
+    date: "2026-03-21",
+    title: "ISIN Auto-Resolution",
+    titleTranslations: { es: "Resolución Automática de ISIN" },
+    changes: [
+      {
+        type: "fix",
+        text: "Holdings imported with an ISIN instead of a ticker symbol now auto-resolve to the correct ticker via Yahoo Finance search, fixing missing price data.",
+        translations: {
+          es: "Las posiciones importadas con un ISIN en lugar de un símbolo de ticker ahora se resuelven automáticamente al ticker correcto mediante búsqueda en Yahoo Finance, corrigiendo datos de precios faltantes.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.57.0",
     date: "2026-03-20",
     title: "About Page",

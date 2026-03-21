@@ -14,6 +14,7 @@ import { materializeCurrentSnapshotsForUser } from "@/lib/cron-portfolio-snapsho
 import { getHoldingsLimit } from "@/lib/subscription";
 
 const KNOWN_ISINS: Record<string, string> = {
+  "US0378331005": "AAPL",
   "CA0641491075": "BNS",
   "CA1363851017": "CNQ",
   "VGG273581030": "DESP",

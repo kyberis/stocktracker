@@ -505,6 +505,7 @@ const es: TranslationStrings = {
   upsellHoldingsLimitReached: "Límite de posiciones alcanzado",
   upsellUpgradeRequired: "Mejora de plan requerida",
   upsellCurrentPlan: "Plan actual",
+  upsellMoreFeatures: "más",
   holdingsUsage: "Posiciones: {used} de {limit}",
   holdingsLimitReached: "Has alcanzado el límite de posiciones en tu plan Folio. Mejora a Trefolio para posiciones ilimitadas.",
   notificationSettings: "Notificaciones",

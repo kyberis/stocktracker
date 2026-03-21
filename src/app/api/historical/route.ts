@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 import type { TimePeriod } from "@/lib/api-providers/types";
 import { DE_FALLBACK_SUFFIXES, PA_FALLBACK_SUFFIXES } from "@/lib/api-providers/market-data-helpers";
+import { resolveIsinToTicker } from "@/lib/api-providers/isin-resolver";
 import { withMetrics } from "@/lib/with-metrics";
 
 export const dynamic = "force-dynamic";
@@ -47,17 +48,18 @@ export const GET = withMetrics("/api/historical", async (request: NextRequest) =
   }
 
   const yahoo = new YahooProvider();
+  const ticker = await resolveIsinToTicker(yahoo, symbol);
 
   try {
-    const data = await yahoo.getHistorical(symbol, period);
+    const data = await yahoo.getHistorical(ticker, period);
     if (data.length > 0) {
       return Response.json({ data, providerUsed: "yahoo" });
     }
-    const fb = await tryExchangeHistoricalFallback(yahoo, symbol, period);
+    const fb = await tryExchangeHistoricalFallback(yahoo, ticker, period);
     if (fb) return Response.json({ data: fb, providerUsed: "yahoo" });
     return Response.json({ data, providerUsed: "yahoo" });
   } catch (err) {
-    const fb = await tryExchangeHistoricalFallback(yahoo, symbol, period);
+    const fb = await tryExchangeHistoricalFallback(yahoo, ticker, period);
     if (fb) return Response.json({ data: fb, providerUsed: "yahoo" });
 
     console.error(`Failed to fetch historical data for ${symbol}:`, err instanceof Error ? err.message : err);
