@@ -1,15 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isFeatureEnabled } from "@/lib/db";
+import { isFeatureEnabled, resolveAllFlagsForUser } from "@/lib/db";
+import { getSessionFromRequest } from "@/lib/auth/session";
 import { withMetrics } from "@/lib/with-metrics";
 
 export const dynamic = "force-dynamic";
 
-export const GET = withMetrics("/api/feature-flags", async (_req: NextRequest) => {
+export const GET = withMetrics("/api/feature-flags", async (req: NextRequest) => {
+  const session = await getSessionFromRequest(req);
+
+  if (session?.userId) {
+    const flags = await resolveAllFlagsForUser(session.userId);
+    const { support_chat_enabled: _, ...publicFlags } = flags;
+    return NextResponse.json(publicFlags);
+  }
+
   const [
     alertsEnabled, csvExportEnabled, appleSigninEnabled, deviceEnabled,
     mobileAppEnabled, whatsappEnabled,
     toolTransactions, toolDividends, toolPerformance,
     toolTaxonomy, toolRebalancing, toolAccounts, toolWatchlist,
+    proTrialEnabled,
   ] = await Promise.all([
     isFeatureEnabled("alerts_enabled"),
     isFeatureEnabled("csv_export_enabled"),
@@ -24,6 +34,7 @@ export const GET = withMetrics("/api/feature-flags", async (_req: NextRequest) =
     isFeatureEnabled("tool_rebalancing_enabled"),
     isFeatureEnabled("tool_accounts_enabled"),
     isFeatureEnabled("tool_watchlist_enabled"),
+    isFeatureEnabled("pro_trial_enabled"),
   ]);
 
   return NextResponse.json({
@@ -40,5 +51,6 @@ export const GET = withMetrics("/api/feature-flags", async (_req: NextRequest) =
     tool_rebalancing_enabled: toolRebalancing,
     tool_accounts_enabled: toolAccounts,
     tool_watchlist_enabled: toolWatchlist,
+    pro_trial_enabled: proTrialEnabled,
   });
 });

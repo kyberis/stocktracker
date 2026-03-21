@@ -17,6 +17,36 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.57.0",
+    date: "2026-03-20",
+    title: "About Page",
+    titleTranslations: { es: "P\u00e1gina Acerca de" },
+    changes: [
+      {
+        type: "feature",
+        text: "New About page: learn about the person behind trefolio, the motivation, and the story of how it was built.",
+        translations: {
+          es: "Nueva p\u00e1gina Acerca de: conoce a la persona detr\u00e1s de trefolio, la motivaci\u00f3n y la historia de c\u00f3mo se construy\u00f3.",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.56.0",
+    date: "2026-03-20",
+    title: "7-Day Pro Trial",
+    titleTranslations: { es: "Prueba Pro de 7 D\u00edas" },
+    changes: [
+      {
+        type: "feature",
+        text: "7-day Trefolio Pro trial: after one week on the free plan with at least one holding, you\u2019ll receive a personal invitation to try every Pro feature for 7 days \u2014 no credit card required.",
+        translations: {
+          es: "Prueba de 7 d\u00edas de Trefolio Pro: despu\u00e9s de una semana en el plan gratuito con al menos una posici\u00f3n, recibir\u00e1s una invitaci\u00f3n personal para probar todas las funciones Pro durante 7 d\u00edas \u2014 sin tarjeta de cr\u00e9dito.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.55.0",
     date: "2026-03-20",
     title: "AI Portfolio Analysis — Full Details",

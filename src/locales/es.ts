@@ -2105,6 +2105,23 @@ const es: TranslationStrings = {
   nudgeCtaSkip: "Omitir por ahora",
   nudgeCtaUpdateTx: "Actualizar desde br\u00f3ker",
 
+  // Trial
+  trialActivateHeading: "Tu Prueba Pro te Espera",
+  trialActivateSub: "Desbloquea todo en Trefolio Pro durante 7 d\u00edas \u2014 gratis.",
+  trialActivateCta: "Activar Trefolio Pro",
+  trialActivateDisclaimer: "Sin tarjeta de cr\u00e9dito. Despu\u00e9s de 7 d\u00edas, tu cuenta vuelve al plan gratuito \u2014 sin sorpresas.",
+  trialActivating: "Activando\u2026",
+  trialWelcomeHeading: "\u00a1Bienvenido a Trefolio Pro!",
+  trialWelcomeSub: "Estamos preparando tu experiencia Pro",
+  trialWelcomeStep1: "Configurando el historial de tu cartera\u2026",
+  trialWelcomeStep2: "Preparando tus an\u00e1lisis\u2026",
+  trialWelcomeStep3: "Activando funciones Pro\u2026",
+  trialWelcomeEndsOn: "Tu prueba termina el",
+  trialBannerActive: "restantes",
+  trialBannerSubscribe: "Suscr\u00edbete para mantener Pro \u2192",
+  trialBannerExpiredMessage: "Tu prueba de Trefolio Pro ha terminado. Suscr\u00edbete para continuar.",
+  trialBannerExpiredCta: "Suscr\u00edbete a Trefolio Pro",
+
   // Import compare page
   importCompareTitle: "Sincronizaci\u00f3n con Br\u00f3ker vs Importaci\u00f3n CSV",
   importCompareSubtitle: "Dos formas de obtener datos detallados de transacciones \u2014 elige la que se adapte a tu br\u00f3ker",

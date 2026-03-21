@@ -3,7 +3,7 @@ import { requireSession } from "@/lib/auth/guards";
 import {
   findUserById,
   countPasskeysByUserId,
-  isFeatureEnabled,
+  isFeatureEnabledForUser,
   updateUserSubscription,
   getUserSettings,
   updateUserSettings,
@@ -42,7 +42,7 @@ export const GET = withMetrics("/api/auth/me", async (req: NextRequest) => {
   const [user, passkeyCount, deviceOn] = await Promise.all([
     findUserById(session.userId),
     countPasskeysByUserId(session.userId),
-    isFeatureEnabled("device_enabled"),
+    isFeatureEnabledForUser("device_enabled", session.userId),
   ]);
 
   const storedPlan = user?.plan || session.plan || "free";
@@ -82,6 +82,7 @@ export const GET = withMetrics("/api/auth/me", async (req: NextRequest) => {
       lastActiveAt: user?.last_active_at || "",
       taxResidency: user?.tax_residency || "",
       onboardingCompleted: user?.onboarding_completed === 1,
+      trialActivatedAt: user?.trial_activated_at || "",
     },
   });
 });

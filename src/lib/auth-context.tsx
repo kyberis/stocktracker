@@ -35,6 +35,7 @@ interface AuthUser {
   lastActiveAt: string;
   taxResidency: string;
   onboardingCompleted: boolean;
+  trialActivatedAt: string;
 }
 
 interface AuthContextType {

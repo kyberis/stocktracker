@@ -6,6 +6,7 @@ import { I18nProvider } from "@/lib/i18n";
 import { SettingsProvider } from "@/lib/settings-context";
 import { StealthProvider } from "@/lib/stealth-context";
 import { PlatformProvider } from "@/lib/platform-context";
+import { FeatureFlagProvider } from "@/lib/feature-flag-context";
 import { useIsNative } from "@/lib/use-native";
 import AppNav from "@/components/AppNav";
 import SidebarNav from "@/components/SidebarNav";
@@ -111,16 +112,18 @@ export default function AppLayoutClient({
   return (
     <ThemeProvider initialTheme={initialTheme}>
       <AuthProvider>
-        <PlatformBridge>
-          <I18nProvider>
-            <SettingsProvider>
-              <StealthProvider>
-                <AppShell>{children}</AppShell>
-                <ThemeWizard />
-              </StealthProvider>
-            </SettingsProvider>
-          </I18nProvider>
-        </PlatformBridge>
+        <FeatureFlagProvider>
+          <PlatformBridge>
+            <I18nProvider>
+              <SettingsProvider>
+                <StealthProvider>
+                  <AppShell>{children}</AppShell>
+                  <ThemeWizard />
+                </StealthProvider>
+              </SettingsProvider>
+            </I18nProvider>
+          </PlatformBridge>
+        </FeatureFlagProvider>
       </AuthProvider>
     </ThemeProvider>
   );

@@ -1,4 +1,11 @@
-import type { WelcomeNoStocksStrings, WelcomeFreeStocksStrings, BifolioUpgradeStrings, TrefolioUpgradeStrings } from "../template-types";
+import type {
+  WelcomeNoStocksStrings,
+  WelcomeFreeStocksStrings,
+  BifolioUpgradeStrings,
+  TrefolioUpgradeStrings,
+  TrialInvitationStrings,
+  TrialExpiredStrings,
+} from "../template-types";
 
 export const welcomeNoStocks: WelcomeNoStocksStrings = {
   heading: "Witaj w trefolio!",
@@ -186,4 +193,84 @@ export const trefolioUpgrade: TrefolioUpgradeStrings = {
   ctaPrimary: "Poznaj analizy IA",
   ctaSecondary: "Zobacz fundamenty",
   communityText: "&#x1F31F; <strong>Jesteś jednym z naszych pierwszych 500 członków Pro.</strong> Dziękujemy za wiarę w trefolio. Twoja opinia kształtuje to, co budujemy dalej."
+};
+
+export const trialInvitation: TrialInvitationStrings = {
+  heading: "Tw&#243;j okres pr&#243;bny Pro czeka",
+  paragraph:
+    "Cze&#347;&#263; {{display_name}}, budujesz ju&#380; sw&#243;j portfel w trefolio &mdash; teraz poznaj pe&#322;ny zestaw narz&#281;dzi przez 7 dni, ca&#322;kowicie za darmo.",
+  groups: [
+    {
+      label: "Dane &amp; analiza",
+      items: [
+        "Dane premium Alpha Vantage",
+        "Fundamenty: rachunek zysk&#243;w i strat, bilans, przep&#322;yw pieni&#281;&#380;ny",
+        "Panel wska&#378;nik&#243;w ekonomicznych",
+      ],
+    },
+    {
+      label: "Inteligencja",
+      items: [
+        "Kana&#322; wiadomo&#347;ci z analiz&#261; sentymentu",
+        "Transakcje insider&#243;w i udzia&#322;y instytucjonalne",
+        "Analiza AI: 30 wywo&#322;a&#324;/dzie&#324;, bez limitu miesi&#281;cznie",
+      ],
+    },
+    {
+      label: "Zaawansowane narz&#281;dzia",
+      items: [
+        "Wsp&#243;&#322;czynnik Sharpe&rsquo;a, maksymalny drawdown, zmienno&#347;&#263;",
+        "Pe&#322;na historia wynik&#243;w portfela",
+        "Filtr akcji: 600+ sp&#243;&#322;ek, 6 filtr&#243;w",
+      ],
+    },
+    {
+      label: "Alerty i limity",
+      items: [
+        "Powiadomienia WhatsApp i na urz&#261;dzeniu",
+        "Nieograniczone alerty cenowe i pozycje",
+        "Do 5 portfeli",
+      ],
+    },
+  ],
+  ctaPrimary: "Aktywuj bezp&#322;atn&#261; wersj&#281; pr&#243;bn&#261;",
+  ctaSecondary: "Zobacz, co jest w zestawie",
+  disclaimer:
+    "Bez karty kredytowej. Po 7 dniach konto wraca do planu Free &mdash; bez niespodzianek.",
+  signoffIntro:
+    "Stworzy&#322;em trefolio, bo chcia&#322;em lepiej &#347;ledzi&#263; w&#322;asny portfel. Mam nadziej&#281;, &#380;e spodoba Ci si&#281; pe&#322;ne do&#347;wiadczenie.",
+  signoffReply: "Daj zna&#263;, co s&#261;dzisz &mdash; wystarczy odpowiedzie&#263; na tego maila.",
+};
+
+export const trialExpired: TrialExpiredStrings = {
+  heading: "Tw&#243;j okres pr&#243;bny Pro dobieg&#322; ko&#324;ca",
+  paragraph:
+    "Cze&#347;&#263; {{display_name}}, tw&#243;j 7-dniowy trial Trefolio Pro si&#281; sko&#324;czy&#322;. Tego zabraknie:",
+  features: [
+    {
+      title: "Zaawansowana analityka",
+      desc: "Wsp&#243;&#322;czynnik Sharpe&rsquo;a, maksymalny drawdown, zmienno&#347;&#263; i pe&#322;na historia wzrostu",
+    },
+    {
+      title: "Analiza AI",
+      desc: "30 wywo&#322;a&#324; dziennie z g&#322;&#281;bokimi insightami o akcjach i recenzjami portfela",
+    },
+    {
+      title: "Fundamenty sp&#243;&#322;ek",
+      desc: "Rachunki zysk&#243;w i strat, bilanse, transakcje insider&#243;w i udzia&#322;y instytucjonalne",
+    },
+    {
+      title: "Alerty premium",
+      desc: "Powiadomienia WhatsApp, nieograniczone alerty i do 5 portfeli",
+    },
+  ],
+  pricingNote: "Plany od &euro;4,99/mies. Anuluj w dowolnym momencie.",
+  ctaPrimary: "Wykup subskrypcj&#281; Trefolio Pro",
+  ctaSecondary: "Zobacz cennik",
+  signoffIntro:
+    "Mam nadziej&#281;, &#380;e trial da&#322; Ci prawdziwy smak tego, co potrafi trefolio. Je&#347;li masz opini&#281;, ch&#281;tnie j&#261; przeczytam.",
+  growthTitle: "Tw&oacute;j portfel wzr&oacute;s&lstrok; o {{growth_pct}}% podczas okresu pr&oacute;bnego",
+  growthDesc: "Z Pro mo&zdot;esz nadal &sacute;ledzi&cacute; szczeg&oacute;&lstrok;owe metryki wydajno&sacute;ci i otrzymywa&cacute; analizy AI na temat kolejnych ruch&oacute;w.",
+  growthTitleDown: "Rynki si&eogon; zmieni&lstrok;y &mdash; Tw&oacute;j portfel zmieni&lstrok; si&eogon; o {{growth_pct}}% podczas okresu pr&oacute;bnego",
+  growthDescDown: "Z Pro mia&lstrok;by&sacute; alerty AI i g&lstrok;&eogon;bsze analizy, by szybciej reagowa&cacute; na ruchy rynkowe.",
 };

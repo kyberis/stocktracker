@@ -1,4 +1,4 @@
-import type { WelcomeNoStocksStrings, WelcomeFreeStocksStrings, BifolioUpgradeStrings, TrefolioUpgradeStrings } from "../template-types";
+import type { WelcomeNoStocksStrings, WelcomeFreeStocksStrings, BifolioUpgradeStrings, TrefolioUpgradeStrings, TrialInvitationStrings, TrialExpiredStrings } from "../template-types";
 
 export const welcomeNoStocks: WelcomeNoStocksStrings = {
   heading: "Bine ai venit la trefolio!",
@@ -186,4 +186,87 @@ export const trefolioUpgrade: TrefolioUpgradeStrings = {
   ctaPrimary: "Exploreaz&#259; analizele AI",
   ctaSecondary: "Vezi fundamentalele",
   communityText: "&#x1F31F; <strong>E&#537;ti unul dintre primii 500 de membri Pro.</strong> Mul&#539;umim c&#259; ai crezut în trefolio. Feedback-ul t&#259;u influen&#539;eaz&#259; ce construim în continuare."
+};
+
+export const trialInvitation: TrialInvitationStrings = {
+  heading: "Perioada ta Pro de prob&#x103; te a&#x219;teapt&#x103;",
+  paragraph:
+    "Salut, {{display_name}}, &#xee;&#x21b;i construie&#x219;ti portofoliul &#xee;n trefolio &mdash; acum &#xee;ncearc&#x103; &#xee;ntregul set de instrumente timp de 7 zile, complet gratuit.",
+  groups: [
+    {
+      label: "Date &amp; analiz&#x103;",
+      items: [
+        "Date premium Alpha Vantage",
+        "Fundamentale: cont de profit &#x219;i pierdere, bilan&#x21b;, flux de trezorerie",
+        "Tablou de bord cu indicatori economici",
+      ],
+    },
+    {
+      label: "Inteligen&#x21b;&#x103;",
+      items: [
+        "Flux de &#x219;tiri cu analiz&#x103; de sentiment",
+        "Tranzac&#x21b;ii insider &amp; de&#x21b;ineri institu&#x21b;ionale",
+        "Analiz&#x103; AI: 30 de apeluri/zi, nelimitat lunar",
+      ],
+    },
+    {
+      label: "Instrumente avansate",
+      items: [
+        "Raport Sharpe, drawdown maxim, volatilitate",
+        "Istoric complet al performan&#x21b;ei portofoliului",
+        "Filtru ac&#x21b;iuni: 600+ ac&#x21b;iuni, 6 filtre",
+      ],
+    },
+    {
+      label: "Alerte &amp; limite",
+      items: [
+        "Notific&#x103;ri WhatsApp &#x219;i pe dispozitiv",
+        "Alerte de pre&#x21b; nelimitate &amp; pozi&#x21b;ii",
+        "P&#xe2;n&#x103; la 5 portofolii",
+      ],
+    },
+  ],
+  ctaPrimary: "Activeaz&#x103; perioada gratuit&#x103; de prob&#x103;",
+  ctaSecondary: "Vezi ce este inclus",
+  disclaimer:
+    "Nu este necesar card de credit. Dup&#x103; 7 zile, contul t&#x103;u revine la planul Free &mdash; f&#x103;r&#x103; surprize.",
+  signoffIntro:
+    "Am creat trefolio pentru c&#x103; voiam un mod mai bun de a-mi urm&#x103;ri propriul portofoliu. Sper s&#x103; te bucuri de experien&#x21b;a complet&#x103;.",
+  signoffReply:
+    "Spune-mi ce p&#x103;rere ai &mdash; r&#x103;spunde pur &#x219;i simplu la acest e-mail.",
+};
+
+export const trialExpired: TrialExpiredStrings = {
+  heading: "Perioada ta Pro de prob&#x103; s-a &#xee;ncheiat",
+  paragraph:
+    "Salut, {{display_name}}, perioada ta de prob&#x103; Trefolio Pro de 7 zile s-a &#xee;ncheiat. Iat&#x103; ce vei rata:",
+  features: [
+    {
+      title: "Analitic&#x103; avansat&#x103;",
+      desc: "Raport Sharpe, drawdown maxim, volatilitate &#x219;i istoric complet al cre&#x219;terii",
+    },
+    {
+      title: "Analiz&#x103; AI",
+      desc: "30 de apeluri/zi cu perspective aprofundate despre ac&#x21b;iuni &#x219;i evalu&#x103;ri de portofoliu",
+    },
+    {
+      title: "Fundamentale companie",
+      desc: "Situa&#x21b;ii financiare, bilan&#x21b;uri, tranzac&#x21b;ii insider &#x219;i de&#x21b;ineri institu&#x21b;ionale",
+    },
+    {
+      title: "Alerte premium",
+      desc: "Notific&#x103;ri WhatsApp, alerte nelimitate &#x219;i p&#xe2;n&#x103; la 5 portofolii",
+    },
+  ],
+  pricingNote: "Planurile &#xee;ncep de la &euro;4,99/lun&#x103;. Anulezi oric&#xe2;nd.",
+  ctaPrimary: "Aboneaz&#x103;-te la Trefolio Pro",
+  ctaSecondary: "Vezi pre&#x21b;urile",
+  signoffIntro:
+    "Sper c&#x103; perioada de prob&#x103; &#x21b;i-a oferit o idee real&#x103; despre ce poate face trefolio. Dac&#x103; ai feedback, chiar a&#x219; vrea s&#x103; &#xee;l aud.",
+  growthTitle:
+    "Portofoliul t&abreve;u a crescut cu {{growth_pct}}% &icirc;n perioada de prob&abreve;",
+  growthDesc:
+    "Cu Pro, po&tcedil;i continua s&abreve; urmăre&scedil;ti metrici detaliate de performan&tcedil;&abreve; &scedil;i s&abreve; ob&tcedil;ii analize AI despre urm&abreve;torii pa&scedil;i.",
+  growthTitleDown: "Pie&tcedil;ele s-au schimbat &mdash; portofoliul t&abreve;u s-a mi&scedil;cat cu {{growth_pct}}% &icirc;n perioada de prob&abreve;",
+  growthDescDown: "Cu Pro, ai avea alerte AI &scedil;i analize mai profunde pentru a reac&tcedil;iona mai rapid la mi&scedil;c&abreve;rile pie&tcedil;ei.",
 };

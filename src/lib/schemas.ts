@@ -345,16 +345,30 @@ export const adminResetDataSchema = z.object({
   mode: z.enum(["seed", "empty"]),
 });
 
+const PLATFORM_FEATURE_ENUM = z.enum([
+  "alerts_enabled", "csv_export_enabled", "apple_signin_enabled", "device_enabled",
+  "mobile_app_enabled", "whatsapp_enabled",
+  "tool_transactions_enabled", "tool_dividends_enabled", "tool_performance_enabled",
+  "tool_taxonomy_enabled", "tool_rebalancing_enabled", "tool_accounts_enabled",
+  "tool_watchlist_enabled",
+  "support_chat_enabled",
+  "pro_trial_enabled",
+]);
+
 export const featureFlagSchema = z.object({
-  flag: z.enum([
-    "alerts_enabled", "csv_export_enabled", "apple_signin_enabled", "device_enabled",
-    "mobile_app_enabled", "whatsapp_enabled",
-    "tool_transactions_enabled", "tool_dividends_enabled", "tool_performance_enabled",
-    "tool_taxonomy_enabled", "tool_rebalancing_enabled", "tool_accounts_enabled",
-    "tool_watchlist_enabled",
-    "support_chat_enabled",
-  ]),
+  flag: PLATFORM_FEATURE_ENUM,
   enabled: z.boolean(),
+});
+
+export const featureFlagOverrideSchema = z.object({
+  flag: PLATFORM_FEATURE_ENUM,
+  userId: z.string().min(1, "User ID is required"),
+  enabled: z.boolean(),
+});
+
+export const featureFlagOverrideDeleteSchema = z.object({
+  flag: PLATFORM_FEATURE_ENUM,
+  userId: z.string().min(1, "User ID is required"),
 });
 
 export const apiKeySchema = z.object({

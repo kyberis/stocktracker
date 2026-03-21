@@ -339,3 +339,29 @@ describe("getAiTokenLimit", () => {
     expect(getAiTokenLimit("pro")).toBe(PLATFORM_LIMITS.AI_PRO_MONTHLY_TOKEN_LIMIT);
   });
 });
+
+describe("effectivePlan — trial scenarios", () => {
+  it("returns pro during active trial (future planExpiresAt)", () => {
+    const future = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString();
+    expect(effectivePlan("pro", future)).toBe("pro");
+  });
+
+  it("returns free when trial has expired (past planExpiresAt)", () => {
+    const past = new Date(Date.now() - 1000).toISOString();
+    expect(effectivePlan("pro", past)).toBe("free");
+  });
+
+  it("returns free when trial just expired (1 second ago)", () => {
+    const justExpired = new Date(Date.now() - 1).toISOString();
+    expect(effectivePlan("pro", justExpired)).toBe("free");
+  });
+
+  it("returns pro with no expiry (regular paid subscriber)", () => {
+    expect(effectivePlan("pro", "")).toBe("pro");
+  });
+
+  it("returns free if plan is free regardless of expiry", () => {
+    const future = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    expect(effectivePlan("free", future)).toBe("free");
+  });
+});

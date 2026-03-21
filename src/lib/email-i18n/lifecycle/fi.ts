@@ -1,4 +1,4 @@
-import type { WelcomeNoStocksStrings, WelcomeFreeStocksStrings, BifolioUpgradeStrings, TrefolioUpgradeStrings } from "../template-types";
+import type { WelcomeNoStocksStrings, WelcomeFreeStocksStrings, BifolioUpgradeStrings, TrefolioUpgradeStrings, TrialInvitationStrings, TrialExpiredStrings } from "../template-types";
 
 export const welcomeNoStocks: WelcomeNoStocksStrings = {
   heading: "Tervetuloa trefolioon!",
@@ -186,4 +186,85 @@ export const trefolioUpgrade: TrefolioUpgradeStrings = {
   ctaPrimary: "Tutustu AI-analyysiin",
   ctaSecondary: "N&#228;yt&#228; fundamentaaliset",
   communityText: "&#x1F31F; <strong>Olet yksi ensimm&#228;isist&#228; 500 Pro-j&#228;senest&#228;mme.</strong> Kiitos, ett&#228; uskot trefolioon. Palautteesi vaikuttaa siihen, mit&#228; rakennamme seuraavaksi."
+};
+
+export const trialInvitation: TrialInvitationStrings = {
+  heading: "Pro-kokeilusi odottaa",
+  paragraph:
+    "Hei {{display_name}}, olet rakentanut salkkuasi trefoliossa &mdash; kokeile nyt koko ty&#246;kalupakkia 7 p&#228;iv&#228;&#228;n, t&#228;ysin ilmaiseksi.",
+  groups: [
+    {
+      label: "Data &amp; analyysi",
+      items: [
+        "Alpha Vantage -premiumdata",
+        "Fundamentaalit: tuloslaskelma, tase, kassavirta",
+        "Talouden indikaattorit -dashboard",
+      ],
+    },
+    {
+      label: "&#196;lykkyys",
+      items: [
+        "Uutissy&#246;te sentimenttianalyysill&#228;",
+        "Sis&#228;piirikaupat &amp; institutionaaliset omistukset",
+        "AI-analyysi: 30 puhelua/p&#228;iv&#228;, rajaton kuukaudessa",
+      ],
+    },
+    {
+      label: "Edistyneet ty&#246;kalut",
+      items: [
+        "Sharpe-suhde, maksimipoisto, volatiliteetti",
+        "Koko salkun suorituskykyhistoria",
+        "Osakesuodatin: 600+ osaketta, 6 suodatinta",
+      ],
+    },
+    {
+      label: "H&#228;lytykset &amp; rajat",
+      items: [
+        "WhatsApp- ja laiteilmoitukset",
+        "Rajattomat hintah&#228;lytykset &amp; omistukset",
+        "Enint&#228;&#228;n 5 salkkua",
+      ],
+    },
+  ],
+  ctaPrimary: "Aktivoi ilmainen kokeilusi",
+  ctaSecondary: "Katso mit&#228; sis&#228;ltyy",
+  disclaimer:
+    "Luottokorttia ei tarvita. 7 p&#228;iv&#228;n j&#228;lkeen tilisi palaa Free-suunnitelmaan &mdash; ei yll&#228;tyksi&#228;.",
+  signoffIntro:
+    "Rakensin trefolion, koska halusin paremman tavan seurata omaa salkkuani. Toivon, ett&#228; nautit t&#228;ydest&#228; kokemuksesta.",
+  signoffReply: "Kerro mit&#228; mielt&#228; olet &mdash; vastaa vain t&#228;h&#228;n s&#228;hk&#246;postiin.",
+};
+
+export const trialExpired: TrialExpiredStrings = {
+  heading: "Pro-kokeilusi on p&#228;&#228;ttynyt",
+  paragraph:
+    "Hei {{display_name}}, 7 p&#228;iv&#228;n Trefolio Pro -kokeilusi on ohi. T&#228;ss&#228; mit&#228; tulet kaipaamaan:",
+  features: [
+    {
+      title: "Edistynyt analytiikka",
+      desc: "Sharpe-suhde, maksimipoisto, volatiliteetti ja t&#228;ysi kasvuhistoria",
+    },
+    {
+      title: "AI-analyysi",
+      desc: "30 puhelua/p&#228;iv&#228; syv&#228;ll&#228; osakeanalyysill&#228; ja salkun arvioinneilla",
+    },
+    {
+      title: "Yrityksen fundamentaalit",
+      desc: "Tuloslaskelmat, taseet, sis&#228;piirikaupat ja institutionaaliset omistukset",
+    },
+    {
+      title: "Premium-h&#228;lytykset",
+      desc: "WhatsApp-ilmoitukset, rajattomat h&#228;lytykset ja enint&#228;&#228;n 5 salkkua",
+    },
+  ],
+  pricingNote: "Suunnitelmat alkavat &euro;4,99/kk. Voit peruuttaa milloin tahansa.",
+  ctaPrimary: "Tilaa Trefolio Pro",
+  ctaSecondary: "Katso hinnoittelu",
+  signoffIntro:
+    "Toivon, ett&#228; kokeilu antoi oikean maun siit&#228;, mit&#228; trefolio voi tehd&#228;. Jos sinulla on palautetta, haluaisin aidosti kuulla sen.",
+  growthTitle: "Salkkusi kasvoi {{growth_pct}}% kokeilujakson aikana",
+  growthDesc:
+    "Pro-versiolla voit jatkaa yksityiskohtaisten suorituskykymittareiden seurantaa ja saada teko&auml;lyanalyysej&auml; seuraavista siirroistasi.",
+  growthTitleDown: "Markkinat muuttuivat &mdash; salkkusi liikkui {{growth_pct}}% kokeilujakson aikana",
+  growthDescDown: "Pro-versiolla saisit teko&auml;lyh&auml;lytyksi&auml; ja syvempi&auml; analyysej&auml; reagoidaksesi nopeammin markkinaliikkeisiin.",
 };

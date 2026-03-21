@@ -1,4 +1,4 @@
-import type { WelcomeNoStocksStrings, WelcomeFreeStocksStrings, BifolioUpgradeStrings, TrefolioUpgradeStrings } from "../template-types";
+import type { WelcomeNoStocksStrings, WelcomeFreeStocksStrings, BifolioUpgradeStrings, TrefolioUpgradeStrings, TrialInvitationStrings, TrialExpiredStrings } from "../template-types";
 
 export const welcomeNoStocks: WelcomeNoStocksStrings = {
   heading: "Benvenuto su trefolio!",
@@ -186,4 +186,79 @@ export const trefolioUpgrade: TrefolioUpgradeStrings = {
   ctaPrimary: "Esplora le analisi IA",
   ctaSecondary: "Visualizza i fondamentali",
   communityText: "&#x1F31F; <strong>Sei uno dei nostri primi 500 membri Pro.</strong> Grazie per aver creduto in trefolio. Il tuo feedback plasma ci&ograve; che costruiamo in futuro."
+};
+
+export const trialInvitation: TrialInvitationStrings = {
+  heading: "La tua prova Pro ti aspetta",
+  paragraph: "Ciao {{display_name}}, stai costruendo il tuo portafoglio su trefolio &mdash; ora prova il toolkit completo per 7 giorni, completamente gratuito.",
+  groups: [
+    {
+      label: "Dati &amp; analisi",
+      items: [
+        "Dati premium Alpha Vantage",
+        "Fondamentali: conto economico, stato patrimoniale, flusso di cassa",
+        "Dashboard degli indicatori economici"
+      ]
+    },
+    {
+      label: "Intelligence",
+      items: [
+        "Feed notizie con analisi del sentiment",
+        "Operazioni insider &amp; partecipazioni istituzionali",
+        "Analisi IA: 30 chiamate/giorno, illimitate al mese"
+      ]
+    },
+    {
+      label: "Strumenti avanzati",
+      items: [
+        "Rapporto di Sharpe, drawdown massimo, volatilit&agrave;",
+        "Storico completo delle performance del portafoglio",
+        "Screener azionario: oltre 600 titoli, 6 filtri"
+      ]
+    },
+    {
+      label: "Avvisi &amp; limiti",
+      items: [
+        "Notifiche WhatsApp e sul dispositivo",
+        "Alert sui prezzi e posizioni illimitati",
+        "Fino a 5 portafogli"
+      ]
+    }
+  ],
+  ctaPrimary: "Attiva la prova gratuita",
+  ctaSecondary: "Scopri cosa &egrave; incluso",
+  disclaimer: "Nessuna carta di credito richiesta. Dopo 7 giorni il tuo account torna al piano Gratuito &mdash; nessuna sorpresa.",
+  signoffIntro: "Ho creato trefolio perch&eacute; volevo un modo migliore per seguire il mio portafoglio. Spero che apprezzerai l&rsquo;esperienza completa.",
+  signoffReply: "Fammi sapere cosa ne pensi &mdash; rispondi a questa email."
+};
+
+export const trialExpired: TrialExpiredStrings = {
+  heading: "La tua prova Pro &egrave; terminata",
+  paragraph: "Ciao {{display_name}}, la tua prova Trefolio Pro di 7 giorni &egrave; finita. Ecco cosa perderai:",
+  features: [
+    {
+      title: "Analisi avanzate",
+      desc: "Rapporto di Sharpe, drawdown massimo, volatilit&agrave; e storico completo di crescita"
+    },
+    {
+      title: "Analisi IA",
+      desc: "30 chiamate/giorno con insight approfonditi sulle azioni e revisioni del portafoglio"
+    },
+    {
+      title: "Fondamentali aziendali",
+      desc: "Conti economici, bilanci, operazioni insider e partecipazioni istituzionali"
+    },
+    {
+      title: "Alert premium",
+      desc: "Notifiche WhatsApp, alert illimitati e fino a 5 portafogli"
+    }
+  ],
+  pricingNote: "I piani partono da &euro;4,99/mese. Disdici in qualsiasi momento.",
+  ctaPrimary: "Abbonati a Trefolio Pro",
+  ctaSecondary: "Vedi i prezzi",
+  signoffIntro: "Spero che la prova ti abbia dato un assaggio reale di cosa pu&ograve; fare trefolio. Se hai feedback, mi farebbe davvero piacere leggerlo.",
+  growthTitle: "Il tuo portafoglio &egrave; cresciuto del {{growth_pct}}% durante la prova",
+  growthDesc: "Con Pro, potresti continuare a monitorare metriche di performance dettagliate e ottenere analisi IA sulle tue prossime mosse.",
+  growthTitleDown: "I mercati si sono mossi &mdash; il tuo portafoglio ha registrato un {{growth_pct}}% durante la prova",
+  growthDescDown: "Con Pro, avresti avvisi IA e analisi pi&ugrave; approfondite per reagire pi&ugrave; velocemente ai movimenti del mercato.",
 };

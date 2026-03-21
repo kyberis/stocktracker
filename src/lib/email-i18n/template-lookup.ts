@@ -13,9 +13,13 @@ import {
   generateBifolioUpgrade,
   generateTrefolioUpgrade,
   generateReferralProgram,
+  generateTrialInvitation,
+  generateTrialExpired,
 } from "./template-html";
 import type {
   FeatureTemplateStrings,
+  TrialInvitationStrings,
+  TrialExpiredStrings,
   TemplateFooterStrings,
 } from "./template-types";
 import { referralStrings } from "./referral-strings";
@@ -152,6 +156,16 @@ export async function getLocalizedTemplateHtml(
       const s = lifecycleMod.trefolioUpgrade as Parameters<typeof generateTrefolioUpgrade>[0] | undefined;
       if (!s) return null;
       return generateTrefolioUpgrade(s, footer);
+    }
+    case "trial-invitation": {
+      const s = lifecycleMod.trialInvitation as TrialInvitationStrings | undefined;
+      if (!s) return null;
+      return generateTrialInvitation(s, footer);
+    }
+    case "trial-expired": {
+      const s = lifecycleMod.trialExpired as TrialExpiredStrings | undefined;
+      if (!s) return null;
+      return generateTrialExpired(s, footer);
     }
     default:
       return null;

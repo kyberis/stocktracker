@@ -1,4 +1,4 @@
-import type { WelcomeNoStocksStrings, WelcomeFreeStocksStrings, BifolioUpgradeStrings, TrefolioUpgradeStrings } from "../template-types";
+import type { WelcomeNoStocksStrings, WelcomeFreeStocksStrings, BifolioUpgradeStrings, TrefolioUpgradeStrings, TrialInvitationStrings, TrialExpiredStrings } from "../template-types";
 
 export const welcomeNoStocks: WelcomeNoStocksStrings = {
   heading: "V&iacute;tejte v trefolio!",
@@ -186,4 +186,87 @@ export const trefolioUpgrade: TrefolioUpgradeStrings = {
   ctaPrimary: "Prozkoumat IA anal&yacute;zy",
   ctaSecondary: "Zobrazit fundament&aacute;ly",
   communityText: "&#x1F31F; <strong>Jste jedním z našich prvních 500 Pro členů.</strong> Děkujeme, že jste v trefolio věřili. Va&scaron;e zpětn&aacute; vazba utv&aacute;ř&iacute; to, co budujeme d&aacute;le."
+};
+
+export const trialInvitation: TrialInvitationStrings = {
+  heading: "Va&#x161;e zku&#x161;ebn&#xed; verze Pro &#x10d;ek&#xe1;",
+  paragraph:
+    "Ahoj, {{display_name}}, budujete sv&#xe9; portfolio v trefolio &mdash; vyzkou&#x161;ejte celou sadu n&#xe1;stroj&#x16f; na 7 dn&#xed; zcela zdarma.",
+  groups: [
+    {
+      label: "Data &amp; anal&#xfd;za",
+      items: [
+        "Pr&#xe9;miov&#xe1; data Alpha Vantage",
+        "Fundament&#xe1;ly: v&#xfd;sledovka, rozvaha, cash flow",
+        "P&#x159;ehled ekonomick&#xfd;ch indik&#xe1;tor&#x16f;",
+      ],
+    },
+    {
+      label: "Inteligence",
+      items: [
+        "Zpr&#xe1;vy s anal&#xfd;zou sentimentu",
+        "Insider obchody &amp; institucion&#xe1;ln&#xed; pod&#xed;ly",
+        "Anal&#xfd;za AI: 30 vol&#xe1;n&#xed;/den, neomezen&#x11b; m&#x11b;s&#xed;&#x10d;n&#x11b;",
+      ],
+    },
+    {
+      label: "Pokro&#x10d;il&#xe9; n&#xe1;stroje",
+      items: [
+        "Sharpe&#x16f;v pom&#x11b;r, maxim&#xe1;ln&#xed; drawdown, volatilita",
+        "Pln&#xe1; historie v&#xfd;konnosti portfolia",
+        "Filtr akci&#xed;: 600+ akci&#xed;, 6 filtr&#x16f;",
+      ],
+    },
+    {
+      label: "Upozorn&#x11b;n&#xed; &amp; limity",
+      items: [
+        "Ozn&#xe1;men&#xed; WhatsApp a za&#x159;&#xed;zen&#xed;",
+        "Neomezen&#xe9; cenov&#xe9; alerty &amp; pozice",
+        "A&#x17e; 5 portfoli&#xed;",
+      ],
+    },
+  ],
+  ctaPrimary: "Aktivovat zku&#x161;ebn&#xed; verzi zdarma",
+  ctaSecondary: "Co je sou&#x10d;&#xe1;st&#xed;",
+  disclaimer:
+    "Nen&#xed; pot&#x159;eba kreditn&#xed; karta. Po 7 dnech se v&#xe1;&#x161; &#xfa;&#x10d;et vr&#xe1;t&#xed; na pl&#xe1;n Free &mdash; bez p&#x159;ekvapen&#xed;.",
+  signoffIntro:
+    "trefolio jsem vytvo&#x159;il, proto&#x17e;e jsem cht&#x11b;l lep&#x161;&#xed; zp&#x16f;sob, jak sledovat vlastn&#xed; portfolio. Douf&#xe1;m, &#x17e;e si u&#x17e;ijete pln&#xfd; z&#xe1;&#x17e;itek.",
+  signoffReply:
+    "Dejte mi v&#x11b;d&#x11b;t, co si mysl&#xed;te &mdash; sta&#x10d;&#xed; odpov&#x11b;d&#x11b;t na tento e-mail.",
+};
+
+export const trialExpired: TrialExpiredStrings = {
+  heading: "Va&#x161;e zku&#x161;ebn&#xed; verze Pro skon&#x10d;ila",
+  paragraph:
+    "Ahoj, {{display_name}}, va&#x161;e 7denn&#xed; zku&#x161;ebn&#xed; verze Trefolio Pro skon&#x10d;ila. O to p&#x159;ijdete:",
+  features: [
+    {
+      title: "Pokro&#x10d;il&#xe1; analytika",
+      desc: "Sharpe&#x16f;v pom&#x11b;r, maxim&#xe1;ln&#xed; drawdown, volatilita a pln&#xe1; historie r&#x16f;stu",
+    },
+    {
+      title: "Anal&#xfd;za AI",
+      desc: "30 vol&#xe1;n&#xed; denn&#x11b; s hlubok&#xfd;mi insighty k akci&#xed;m a hodnocen&#xed;m portfolia",
+    },
+    {
+      title: "Firemn&#xed; fundament&#xe1;ly",
+      desc: "V&#xfd;sledovky, rozvahy, insider obchody a institucion&#xe1;ln&#xed; pod&#xed;ly",
+    },
+    {
+      title: "Pr&#xe9;miov&#xe1; upozorn&#x11b;n&#xed;",
+      desc: "Ozn&#xe1;men&#xed; WhatsApp, neomezen&#xe9; alerty a a&#x17e; 5 portfoli&#xed;",
+    },
+  ],
+  pricingNote: "Pl&#xe1;ny za&#x10d;&#xed;naj&#xed; na &euro;4,99/m&#x11b;s&#xed;c. Zru&#x161;it m&#x16f;&#x17e;ete kdykoli.",
+  ctaPrimary: "P&#x159;edplatit Trefolio Pro",
+  ctaSecondary: "Zobrazit ceny",
+  signoffIntro:
+    "Douf&#xe1;m, &#x17e;e zku&#x161;ebn&#xed; verze v&#xe1;m dala opravdovou p&#x159;edstavu o tom, co trefolio um&#xed;. Pokud m&#xe1;te zp&#x11b;tnou vazbu, r&#xe1;d ji usly&#x161;&#xed;m.",
+  growthTitle:
+    "Va&scaron;e portfolio vzrostlo o {{growth_pct}}% b&ecaron;hem zku&scaron;ebn&iacute;ho obdob&iacute;",
+  growthDesc:
+    "S Pro m&uring;&zcaron;ete nad&aacute;le sledovat podrobn&eacute; metriky v&yacute;konnosti a z&iacute;sk&aacute;vat AI anal&yacute;zy va&scaron;ich dal&scaron;&iacute;ch krok&uring;.",
+  growthTitleDown: "Trhy se zm&ecaron;nily &mdash; va&scaron;e portfolio se posunulo o {{growth_pct}}% b&ecaron;hem zku&scaron;ebn&iacute;ho obdob&iacute;",
+  growthDescDown: "S Pro byste m&ecaron;li AI upozorn&ecaron;n&iacute; a hlub&scaron;&iacute; anal&yacute;zy pro rychlej&scaron;&iacute; reakci na pohyby trhu.",
 };

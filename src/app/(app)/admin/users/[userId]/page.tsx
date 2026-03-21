@@ -27,6 +27,10 @@ interface UserInfo {
   aiCallsThisMonth: number;
   experienceLevel: string;
   language: string;
+  trialInvitedAt: string;
+  trialActivatedAt: string;
+  trialToken: string;
+  trialExpiredNotified: boolean;
 }
 
 interface AllPortfolio {
@@ -300,7 +304,7 @@ function SendEmailSection({ userId, userEmail, userLanguage }: { userId: string;
     if (!templateId) return;
     setLoadingPreview(true);
     try {
-      const res = await fetch(`/api/admin/email-templates/preview?templateId=${encodeURIComponent(templateId)}&locale=${encodeURIComponent(loc)}`);
+      const res = await fetch(`/api/admin/email-templates/preview?templateId=${encodeURIComponent(templateId)}&locale=${encodeURIComponent(loc)}&userId=${encodeURIComponent(userId)}`);
       if (res.ok) {
         const data = await res.json();
         setSubject(data.subject);
@@ -308,7 +312,7 @@ function SendEmailSection({ userId, userEmail, userLanguage }: { userId: string;
       }
     } catch { /* ignore */ }
     setLoadingPreview(false);
-  }, []);
+  }, [userId]);
 
   const handleTemplateSelect = (templateId: string) => {
     setSelectedTemplate(templateId);
@@ -659,6 +663,10 @@ export default function AdminUserDetailPage() {
               ["Language", user.language ? user.language.toUpperCase() : "—"],
               ["Experience", user.experienceLevel || "—"],
               ["AI Calls (month)", String(user.aiCallsThisMonth)],
+              ["Trial Invited", user.trialInvitedAt ? new Date(user.trialInvitedAt).toLocaleDateString() : "—"],
+              ["Trial Activated", user.trialActivatedAt ? new Date(user.trialActivatedAt).toLocaleDateString() : "—"],
+              ["Trial Token", user.trialToken ? <span key="tt" className="font-mono text-[11px] select-all break-all">{user.trialToken}</span> : "—"],
+              ["Trial Expired Notified", user.trialExpiredNotified ? <span key="te" className="text-amber-500">Yes</span> : <span key="te" className="text-gray-400">No</span>],
             ] as [string, React.ReactNode][]).map(([label, value]) => (
               <div key={label} className="flex justify-between items-center text-xs gap-2">
                 <span className="text-gray-500 dark:text-slate-400 shrink-0">{label}</span>

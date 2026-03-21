@@ -1,4 +1,11 @@
-import type { WelcomeNoStocksStrings, WelcomeFreeStocksStrings, BifolioUpgradeStrings, TrefolioUpgradeStrings } from "../template-types";
+import type {
+  WelcomeNoStocksStrings,
+  WelcomeFreeStocksStrings,
+  BifolioUpgradeStrings,
+  TrefolioUpgradeStrings,
+  TrialInvitationStrings,
+  TrialExpiredStrings,
+} from "../template-types";
 
 export const welcomeNoStocks: WelcomeNoStocksStrings = {
   heading: "Добре дошли в trefolio!",
@@ -186,4 +193,86 @@ export const trefolioUpgrade: TrefolioUpgradeStrings = {
   ctaPrimary: "Разгледай AI анализите",
   ctaSecondary: "Виж фундаменталите",
   communityText: "&#x1F31F; <strong>Вие сте един от първите ни 500 Pro членове.</strong> Благодарим ви, че повярвахте в trefolio. Вашето мнение оформя какво ще изграждаме следващо."
+};
+
+export const trialInvitation: TrialInvitationStrings = {
+  heading: "Пробният ти Pro период те очаква",
+  paragraph:
+    "Здравей, {{display_name}}, изграждаш портфолиото си в trefolio — сега изпитай пълния инструментариум за 7 дни, напълно безплатно.",
+  groups: [
+    {
+      label: "Данни и анализ",
+      items: [
+        "Премиум данни от Alpha Vantage",
+        "Фундаментали: отчет за приходите, баланс, паричен поток",
+        "Табло с икономически индикатори",
+      ],
+    },
+    {
+      label: "Интелигентност",
+      items: [
+        "Новинарен поток с анализ на настроението",
+        "Инсайдерски сделки и институционални притежания",
+        "AI анализ: 30 заявки на ден, неограничени на месечна база",
+      ],
+    },
+    {
+      label: "Разширени инструменти",
+      items: [
+        "Коефициент на Шарп, максимално падане, волатилност",
+        "Пълна история на представянето на портфолиото",
+        "Филтър за акции: над 600 акции, 6 филтъра",
+      ],
+    },
+    {
+      label: "Известия и лимити",
+      items: [
+        "Известия в WhatsApp и на устройството",
+        "Неограничени ценови известия и позиции",
+        "До 5 портфолиа",
+      ],
+    },
+  ],
+  ctaPrimary: "Активирай безплатния пробен период",
+  ctaSecondary: "Виж какво е включено",
+  disclaimer:
+    "Не е нужна кредитна карта. След 7 дни акаунтът ти се връща към безплатния план — без изненади.",
+  signoffIntro:
+    "Създадох trefolio, защото исках по-добър начин да следя собственото си портфолио. Надявам се и ти да се насладиш на пълното изживяване.",
+  signoffReply: "Сподели какво мислиш — просто отговори на този имейл.",
+};
+
+export const trialExpired: TrialExpiredStrings = {
+  heading: "Пробният ти Pro период приключи",
+  paragraph:
+    "Здравей, {{display_name}}, 7-дневният ти пробен период на Trefolio Pro приключи. Ето какво ще пропуснеш:",
+  features: [
+    {
+      title: "Разширена аналитика",
+      desc: "Коефициент на Шарп, максимално падане, волатилност и пълна история на растежа",
+    },
+    {
+      title: "AI анализ",
+      desc: "30 заявки на ден с дълбоки прозрения за акции и прегледи на портфолиото",
+    },
+    {
+      title: "Фундаментали на компаниите",
+      desc: "Отчети за приходите, баланси, инсайдерски сделки и институционални притежания",
+    },
+    {
+      title: "Премиум известия",
+      desc: "Известия в WhatsApp, неограничени известия и до 5 портфолиа",
+    },
+  ],
+  pricingNote: "Плановете започват от &euro;4.99/месец. Отказ по всяко време.",
+  ctaPrimary: "Абонирай се за Trefolio Pro",
+  ctaSecondary: "Виж цените",
+  signoffIntro:
+    "Надявам се пробният период да ти даде истински вкус на това какво може trefolio. Ако имаш обратна връзка, честно бих искал да я чуя.",
+  growthTitle:
+    "&ETH;&Iuml;&ETH;&frac34;&Ntilde;&ETH;&sup3;&Ntilde;&ETH;&frac12;&ETH;&deg;&Ntilde;&ETH;&frac14;&ETH;&frac12;&ETH;&deg;&Ntilde;&Ntilde;&Ntilde; &ETH;&micro; &Ntilde;&ETH;&deg;&Ntilde;&ETH;&frac12;&ETH;&deg;&ETH;&raquo; &Ntilde; {{growth_pct}}% &ETH;&frac34;&ETH;&frac12;&ETH;&raquo;&ETH;&deg;&ETH;&sup1;&ETH;&frac12; &ETH;&frac34;&ETH; &ETH;&frac14;&ETH;&frac34;&ETH;&frac14;&ETH;&micro;&ETH;&frac12;&Ntilde;&ETH;&deg; &ETH;&frac12;&ETH;&deg; &ETH;&frac34;&ETH;&plusmn;&Ntilde;&ETH;&micro;&ETH;&frac14;&ETH;&micro;&ETH;&frac12;&ETH;&frac12;&ETH;&frac34;&ETH;&micro; &ETH;&cedil;&ETH;&middot;&ETH;&frac14;&ETH;&micro;&ETH;&frac12;&ETH;&micro;&ETH;&frac12;&ETH;&cedil;&ETH;&micro;",
+  growthDesc:
+    "&ETH;&iexcl; Pro &ETH;&frac34;&ETH;&frac38;&ETH;&micro;&Ntilde;&ETH;&micro; &ETH;&frac12;&ETH;&deg;&ETH;&frac14;&ETH;&deg;&Ntilde;&ETH;&cedil;&Ntilde;&ETH;&micro; &ETH;&frac14;&ETH;&frac34;&ETH;&frac38;&ETH;&frac12;&ETH;&frac34;&Ntilde;&Ntilde; &ETH;&cedil;&ETH;&middot;&ETH;&frac14;&ETH;&micro;&Ntilde;&ETH;&micro;&ETH;&frac12;&ETH;&cedil;&Ntilde; &ETH;&frac12;&ETH;&deg; &ETH;&plusmn;&ETH;&deg;&ETH;&middot;&ETH;&frac34;&ETH;&sup2;&ETH;&micro; &ETH;&frac14;&ETH;&micro;&Ntilde;&Ntilde;&ETH;&cedil;&ETH;&ordm;&ETH;&cedil; &ETH;&cedil; &ETH;&frac14;&ETH;&frac34;&ETH;&frac38;&ETH;&micro;&Ntilde;&ETH;&micro; &ETH;&frac14;&ETH;&frac34;&ETH;&frac38;&ETH;&frac12;&ETH;&frac34;&Ntilde;&Ntilde; &ETH;&deg;&ETH;&frac12;&ETH;&deg;&ETH;&raquo;&ETH;&cedil;&ETH;&middot;&ETH;&cedil; AI &ETH;&middot;&ETH;&deg; &ETH;&middot;&ETH;&deg;&ETH;&frac14;&ETH;&frac34;&ETH;&frac38;&ETH;&frac12;&ETH;&frac34;&Ntilde;&Ntilde; &Ntilde;&ETH;&micro;&ETH;&frac14;&ETH;&micro;&ETH;&frac12;&ETH;&cedil;&Ntilde; &Ntilde;&ETH;&deg;&ETH;&middot;&ETH;&micro;&ETH;&frac12;&ETH;&cedil;&Ntilde;.",
+  growthTitleDown: "&ETH;&Iuml;&ETH;&deg;&ETH;&middot;&ETH;&cedil;&Ntilde;&ETH;&micro; &Ntilde;&ETH;&micro; &ETH;&frac14;&ETH;&frac34;&ETH;&middot;&ETH;&cedil;&Ntilde;&ETH;&deg; &mdash; &ETH;&frac12;&ETH;&deg;&Ntilde;&ETH;&frac12;&ETH;&frac34;&Ntilde;&Ntilde; &ETH;&frac14;&ETH;&micro;&ETH;&frac12;&Ntilde;&ETH;&frac12;&ETH;&frac34;&Ntilde;&Ntilde; &ETH;&frac12;&ETH;&deg; {{growth_pct}}% &ETH;&middot;&ETH;&deg; &ETH;&frac14;&ETH;&frac34;&ETH;&frac14;&ETH;&micro;&ETH;&frac12;&Ntilde;&ETH;&deg; &ETH;&frac12;&ETH;&deg; &ETH;&frac34;&ETH;&plusmn;&Ntilde;&ETH;&micro;&ETH;&frac14;&ETH;&micro;&ETH;&frac12;&ETH;&frac12;&ETH;&frac34;&ETH;&micro; &ETH;&cedil;&ETH;&middot;&ETH;&frac14;&ETH;&micro;&ETH;&frac12;&ETH;&micro;&ETH;&frac12;&ETH;&cedil;&ETH;&micro;",
+  growthDescDown: "&ETH;&iexcl; Pro &ETH;&plusmn;&ETH;&cedil;&Ntilde;&Ntilde;&ETH;&micro; &ETH;&cedil;&ETH;&frac14;&ETH;&deg;&ETH;&raquo;&ETH;&cedil; AI &ETH;&cedil;&ETH;&middot;&ETH;&frac12;&ETH;&frac34;&ETH;&frac14;&ETH;&middot;&ETH;&deg;&ETH;&frac34;&ETH;&frac12;&ETH;&cedil;&Ntilde; &ETH;&cedil; &ETH;&frac14;&ETH;&frac34;&ETH;&para;&ETH;&frac12;&ETH;&frac34;&Ntilde;&Ntilde; &ETH;&deg;&ETH;&frac12;&ETH;&deg;&ETH;&raquo;&ETH;&cedil;&ETH;&middot;&ETH;&cedil; &ETH;&middot;&ETH;&deg; &ETH;&frac14;&ETH;&frac34;&ETH;&para;&ETH;&frac12;&ETH;&frac34;&Ntilde;&Ntilde; &Ntilde;&ETH;&micro;&ETH;&deg;&ETH;&ordm;&Ntilde;&ETH;&cedil;&Ntilde; &ETH;&frac12;&ETH;&deg; &ETH;&frac14;&ETH;&frac34;&ETH;&frac14;&ETH;&micro;&ETH;&frac12;&Ntilde;&ETH;&deg; &ETH;&frac12;&ETH;&deg; &ETH;&frac34;&ETH;&plusmn;&Ntilde;&ETH;&micro;&ETH;&frac14;&ETH;&micro;&ETH;&frac12;&ETH;&frac12;&ETH;&frac34;&ETH;&micro; &ETH;&cedil;&ETH;&middot;&ETH;&frac14;&ETH;&micro;&ETH;&frac12;&ETH;&micro;&ETH;&frac12;&ETH;&cedil;&ETH;&micro; &ETH;&frac12;&ETH;&deg; &ETH;&frac14;&ETH;&deg;&Ntilde;&ETH;&frac34;&ETH;&middot;&ETH;&deg;&Ntilde;&ETH;&cedil;&Ntilde;&ETH;&micro;.",
 };

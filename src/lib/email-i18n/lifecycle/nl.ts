@@ -1,4 +1,11 @@
-import type { WelcomeNoStocksStrings, WelcomeFreeStocksStrings, BifolioUpgradeStrings, TrefolioUpgradeStrings } from "../template-types";
+import type {
+  WelcomeNoStocksStrings,
+  WelcomeFreeStocksStrings,
+  BifolioUpgradeStrings,
+  TrefolioUpgradeStrings,
+  TrialInvitationStrings,
+  TrialExpiredStrings,
+} from "../template-types";
 
 export const welcomeNoStocks: WelcomeNoStocksStrings = {
   heading: "Welkom bij trefolio!",
@@ -186,4 +193,84 @@ export const trefolioUpgrade: TrefolioUpgradeStrings = {
   ctaPrimary: "AI-inzichten verkennen",
   ctaSecondary: "Fundamentals bekijken",
   communityText: "&#x1F31F; <strong>Je bent een van onze eerste 500 Pro-leden.</strong> Bedankt dat je in trefolio gelooft. Je feedback vormt wat we hierna bouwen."
+};
+
+export const trialInvitation: TrialInvitationStrings = {
+  heading: "Je Pro-proefperiode wacht op je",
+  paragraph:
+    "Hoi {{display_name}}, je bouwt je portefeuille al op met trefolio &mdash; ervaar nu 7 dagen lang de volledige toolkit, helemaal gratis.",
+  groups: [
+    {
+      label: "Data &amp; analyse",
+      items: [
+        "Alpha Vantage premiumdata",
+        "Fundamentals: resultatenrekening, balans, kasstroom",
+        "Dashboard economische indicatoren",
+      ],
+    },
+    {
+      label: "Intelligentie",
+      items: [
+        "Nieuwsfeed met sentimentanalyse",
+        "Insidertransacties &amp; institutionele posities",
+        "AI-analyse: 30 gesprekken/dag, onbeperkt per maand",
+      ],
+    },
+    {
+      label: "Geavanceerde tools",
+      items: [
+        "Sharpe-ratio, maximale drawdown, volatiliteit",
+        "Volledige portefeuilleprestatiegeschiedenis",
+        "Aandelenfilter: 600+ aandelen, 6 filters",
+      ],
+    },
+    {
+      label: "Meldingen &amp; limieten",
+      items: [
+        "WhatsApp- &amp; apparaatmeldingen",
+        "Onbeperkte prijs- &amp; positiemeldingen",
+        "Tot 5 portefeuilles",
+      ],
+    },
+  ],
+  ctaPrimary: "Activeer je gratis proefperiode",
+  ctaSecondary: "Bekijk wat erin zit",
+  disclaimer:
+    "Geen creditcard nodig. Na 7 dagen gaat je account terug naar het Free-plan &mdash; geen verrassingen.",
+  signoffIntro:
+    "Ik bouwde trefolio omdat ik een betere manier wilde om mijn eigen portefeuille te volgen. Ik hoop dat je van de volledige ervaring geniet.",
+  signoffReply: "Laat me weten wat je ervan vindt &mdash; antwoord gewoon op deze e-mail.",
+};
+
+export const trialExpired: TrialExpiredStrings = {
+  heading: "Je Pro-proefperiode is voorbij",
+  paragraph:
+    "Hoi {{display_name}}, je 7-daagse Trefolio Pro-proefperiode is afgelopen. Dit mis je:",
+  features: [
+    {
+      title: "Geavanceerde analytics",
+      desc: "Sharpe-ratio, maximale drawdown, volatiliteit en volledige groeigeschiedenis",
+    },
+    {
+      title: "AI-analyse",
+      desc: "30 gesprekken/dag met diepgaande aandeelinsights en portefeuillereviews",
+    },
+    {
+      title: "Bedrijfsfundamentals",
+      desc: "Resultatenrekeningen, balansen, insidertransacties en institutionele posities",
+    },
+    {
+      title: "Premiummeldingen",
+      desc: "WhatsApp-meldingen, onbeperkte meldingen en tot 5 portefeuilles",
+    },
+  ],
+  pricingNote: "Abonnementen vanaf &euro;4,99 per maand. Altijd opzegbaar.",
+  ctaPrimary: "Abonneer op Trefolio Pro",
+  ctaSecondary: "Bekijk prijzen",
+  signoffIntro:
+    "Ik hoop dat de proefperiode je een echte indruk gaf van wat trefolio kan. Als je feedback hebt, hoor ik het graag.",
+  growthTitle: "Uw portefeuille groeide {{growth_pct}}% tijdens de proefperiode",
+  growthDesc: "Met Pro kunt u gedetailleerde prestatiemetrieken blijven volgen en AI-inzichten krijgen over uw volgende stappen.",
+  growthTitleDown: "Markten verschoven &mdash; uw portefeuille bewoog {{growth_pct}}% tijdens de proefperiode",
+  growthDescDown: "Met Pro zou u AI-waarschuwingen en diepere analyses hebben om sneller te reageren op marktbewegingen.",
 };

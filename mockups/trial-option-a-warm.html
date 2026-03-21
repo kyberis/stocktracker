@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Option A — Warm &amp; Inviting Trial Flow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --card-border: #334155;
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --gain: #10b981;
+    --gain-bg: rgba(16,185,129,0.1);
+    --accent: #10b981;
+    --violet: #8b5cf6;
+    --amber: #f59e0b;
+    --amber-bg: rgba(245,158,11,0.1);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    padding: 24px;
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+
+  .annotation {
+    background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+    color: white;
+    padding: 16px 24px;
+    border-radius: 16px;
+    margin-bottom: 32px;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .annotation h1 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+  .annotation .tag {
+    display: inline-block;
+    background: rgba(255,255,255,0.2);
+    border-radius: 999px;
+    padding: 2px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 12px;
+  }
+
+  .section-label {
+    display: inline-block;
+    background: var(--violet);
+    color: white;
+    padding: 4px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 16px;
+  }
+
+  .screen-wrapper {
+    margin-bottom: 48px;
+    padding-bottom: 48px;
+    border-bottom: 1px dashed rgba(139,92,246,0.3);
+  }
+  .screen-wrapper:last-child { border-bottom: none; }
+
+  /* Email mockup */
+  .email-frame {
+    background: #f1f5f9;
+    border-radius: 16px;
+    padding: 32px 16px;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+  .email-card {
+    background: #ffffff;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    max-width: 480px;
+    margin: 0 auto;
+  }
+  .email-header {
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    padding: 28px 32px 24px;
+    text-align: center;
+  }
+  .email-header .logo {
+    color: #fff;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+  .email-header .badge {
+    margin-top: 10px;
+    color: rgba(255,255,255,0.9);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+  .email-body {
+    padding: 32px;
+  }
+  .email-body h2 {
+    font-size: 21px;
+    font-weight: 700;
+    color: #0f172a;
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  .email-body .intro {
+    font-size: 15px;
+    color: #475569;
+    text-align: center;
+    line-height: 1.6;
+    margin-bottom: 24px;
+  }
+  .feature-pill {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 16px;
+    background: #f0fdf4;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    border-left: 4px solid #10b981;
+  }
+  .feature-pill .emoji { font-size: 20px; flex-shrink: 0; }
+  .feature-pill strong { font-size: 14px; color: #0f172a; display: block; }
+  .feature-pill p { font-size: 13px; color: #475569; line-height: 1.4; margin-top: 2px; }
+
+  .pro-group-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #10b981;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    margin-top: 4px;
+  }
+  .pro-checklist {
+    padding: 10px 16px;
+    background: #f0fdf4;
+    border-radius: 10px;
+    border-left: 4px solid #10b981;
+    margin-bottom: 12px;
+    font-size: 13px;
+    color: #0f172a;
+    line-height: 1.7;
+  }
+
+  .cta-primary {
+    display: block;
+    text-align: center;
+    padding: 14px 36px;
+    background: #10b981;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    text-decoration: none;
+    border-radius: 10px;
+    margin: 24px auto 12px;
+    max-width: 320px;
+  }
+  .cta-secondary {
+    display: block;
+    text-align: center;
+    padding: 10px 24px;
+    background: transparent;
+    color: #10b981;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1.5px solid #10b981;
+    border-radius: 10px;
+    margin: 0 auto;
+    max-width: 280px;
+  }
+  .email-divider {
+    border: none;
+    border-top: 1px solid #e2e8f0;
+    margin: 24px 0;
+  }
+  .email-footer {
+    padding: 0 32px 28px;
+    text-align: center;
+    font-size: 12px;
+    color: #94a3b8;
+    line-height: 1.5;
+  }
+  .email-copyright {
+    text-align: center;
+    font-size: 11px;
+    color: #94a3b8;
+    margin-top: 20px;
+  }
+
+  .trial-badge-inline {
+    display: inline-block;
+    padding: 3px 10px;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 999px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .trial-note {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 10px;
+    padding: 14px 16px;
+    text-align: center;
+    font-size: 13px;
+    color: #1e40af;
+    line-height: 1.5;
+    margin-top: 16px;
+  }
+
+  /* Landing page mockup */
+  .landing-frame {
+    background: var(--bg);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    overflow: hidden;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  .landing-topbar {
+    background: var(--card);
+    border-bottom: 1px solid var(--card-border);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .landing-topbar .logo-text {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .landing-hero {
+    padding: 48px 40px 32px;
+    text-align: center;
+  }
+  .landing-hero .trial-badge-big {
+    display: inline-block;
+    padding: 6px 16px;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    border-radius: 999px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .landing-hero h1 {
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 12px;
+    background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .landing-hero p {
+    font-size: 16px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    max-width: 500px;
+    margin: 0 auto 32px;
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    padding: 0 40px 32px;
+  }
+  .feature-card-dark {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 16px;
+  }
+  .feature-card-dark .icon { font-size: 24px; margin-bottom: 8px; }
+  .feature-card-dark h3 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .feature-card-dark p { font-size: 12px; color: var(--text-secondary); line-height: 1.4; }
+
+  .landing-cta-area {
+    padding: 0 40px 40px;
+    text-align: center;
+  }
+  .cta-btn-big {
+    display: inline-block;
+    padding: 16px 48px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: #fff;
+    font-size: 17px;
+    font-weight: 700;
+    border-radius: 12px;
+    text-decoration: none;
+    box-shadow: 0 4px 16px rgba(16,185,129,0.3);
+    margin-bottom: 12px;
+  }
+  .landing-disclaimer {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 8px;
+  }
+
+  /* Welcome page mockup */
+  .welcome-frame {
+    background: var(--bg);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    overflow: hidden;
+    max-width: 600px;
+    margin: 0 auto;
+    text-align: center;
+    padding: 60px 40px;
+  }
+  .welcome-frame h1 {
+    font-size: 26px;
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
+  .welcome-frame .subtitle {
+    font-size: 15px;
+    color: var(--text-secondary);
+    margin-bottom: 40px;
+  }
+  .progress-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 380px;
+    margin: 0 auto 40px;
+    text-align: left;
+  }
+  .progress-step {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+  }
+  .progress-step.done {
+    border-color: #10b981;
+    background: rgba(16,185,129,0.08);
+  }
+  .progress-step.active {
+    border-color: #3b82f6;
+    background: rgba(59,130,246,0.08);
+  }
+  .step-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .step-icon.done { background: #10b981; color: #fff; }
+  .step-icon.active { background: #3b82f6; color: #fff; }
+  .step-icon.pending { background: var(--card-border); color: var(--text-muted); }
+  .step-label { font-size: 14px; font-weight: 500; }
+  .step-label.muted { color: var(--text-muted); }
+
+  .spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Dashboard mockup */
+  .dashboard-frame {
+    background: var(--bg);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    overflow: hidden;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .dash-topbar {
+    background: var(--card);
+    border-bottom: 1px solid var(--card-border);
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 14px;
+  }
+  .dash-topbar .logo-text { font-weight: 700; color: var(--accent); }
+
+  .trial-banner {
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .trial-banner.active {
+    background: linear-gradient(90deg, rgba(245,158,11,0.12) 0%, rgba(16,185,129,0.08) 100%);
+    border-bottom: 1px solid rgba(245,158,11,0.2);
+  }
+  .trial-banner.expired {
+    background: linear-gradient(90deg, rgba(239,68,68,0.12) 0%, rgba(239,68,68,0.06) 100%);
+    border-bottom: 1px solid rgba(239,68,68,0.2);
+  }
+  .trial-banner .info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .trial-banner .countdown {
+    font-weight: 700;
+    color: #f59e0b;
+    font-variant-numeric: tabular-nums;
+  }
+  .trial-banner.expired .countdown { color: #ef4444; }
+  .trial-banner .cta-btn {
+    padding: 8px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  .trial-banner.active .cta-btn { background: #10b981; }
+  .trial-banner.expired .cta-btn { background: #ef4444; }
+
+  .dash-content {
+    padding: 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .dash-card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .dash-card h3 {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+  }
+  .dash-card .value {
+    font-size: 28px;
+    font-weight: 700;
+  }
+  .dash-card .change {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--gain);
+    margin-top: 4px;
+  }
+  .dash-card.chart {
+    grid-column: 1 / -1;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+
+  .note-box {
+    background: var(--card);
+    border: 1px dashed var(--violet);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-top: 12px;
+  }
+  .note-box strong { color: var(--violet); }
+</style>
+</head>
+<body>
+
+<!-- ANNOTATION -->
+<div class="annotation">
+  <div class="tag">Option A</div>
+  <h1>Warm &amp; Inviting — Celebration-Focused Trial Flow</h1>
+  <p>This option emphasizes warmth and congratulation. The email feels like a personal invitation, the landing page highlights trust and community, and the welcome page celebrates joining. The countdown banner is friendly and uses warm amber tones.</p>
+</div>
+
+<!-- =============================================================== -->
+<!-- SCREEN 1: TRIAL INVITATION EMAIL                                -->
+<!-- =============================================================== -->
+<div class="screen-wrapper">
+  <div class="section-label">1. Trial Invitation Email</div>
+  <div class="note-box" style="max-width:520px; margin:0 auto 16px;">
+    <strong>Design notes:</strong> Sent 7 days after signup to users with 1+ holding. Uses trefolio's existing email header/footer pattern. Personal tone with the user's name. Features presented as a gift, not a sales pitch.
+  </div>
+  <div class="email-frame">
+    <div class="email-card">
+      <!-- Header -->
+      <div class="email-header">
+        <div class="logo">&#x1F340; trefolio</div>
+        <div class="badge">A GIFT FOR YOU</div>
+      </div>
+      <!-- Body -->
+      <div class="email-body">
+        <h2>You've earned 7 days of Trefolio Pro</h2>
+        <p class="intro">Hi Maria, you've been tracking your portfolio for a week now — that's great! We'd love to give you the full Trefolio Pro experience, completely free for 7 days. No credit card needed.</p>
+
+        <div class="pro-group-label">ADVANCED ANALYTICS</div>
+        <div class="pro-checklist">
+          &#x2705; Full portfolio history &amp; performance charts<br>
+          &#x2705; AI-powered portfolio score &amp; analysis<br>
+          &#x2705; Fundamentals, screener &amp; economic indicators
+        </div>
+
+        <div class="pro-group-label">POWERFUL TOOLS</div>
+        <div class="pro-checklist">
+          &#x2705; Tax reports &amp; planning tools<br>
+          &#x2705; Investment simulator &amp; projections<br>
+          &#x2705; WhatsApp &amp; device price alerts
+        </div>
+
+        <div class="pro-group-label">UNLIMITED EVERYTHING</div>
+        <div class="pro-checklist">
+          &#x2705; Unlimited holdings, alerts &amp; AI analyses<br>
+          &#x2705; Crypto portfolio tracking<br>
+          &#x2705; Priority support
+        </div>
+
+        <a class="cta-primary" href="#">Activate your free trial</a>
+        <a class="cta-secondary" href="#">See what's included</a>
+
+        <div class="trial-note">
+          No credit card required. After 7 days, your account returns to the Free plan — no surprises.
+        </div>
+      </div>
+      <div class="email-body" style="padding-top:0;">
+        <hr class="email-divider">
+      </div>
+      <div class="email-footer">
+        Every portfolio deserves a bit of luck &#x1F340;<br>
+        <a href="#" style="color:#94a3b8;">Manage preferences</a> &middot; <a href="#" style="color:#94a3b8;">Unsubscribe</a>
+      </div>
+    </div>
+    <div class="email-copyright">&copy; 2026 trefolio</div>
+  </div>
+</div>
+
+<!-- =============================================================== -->
+<!-- SCREEN 2: TRIAL EXPIRED EMAIL                                    -->
+<!-- =============================================================== -->
+<div class="screen-wrapper">
+  <div class="section-label">2. Trial Expired Email</div>
+  <div class="note-box" style="max-width:520px; margin:0 auto 16px;">
+    <strong>Design notes:</strong> Sent when the 7-day trial ends. Recaps what the user experienced. Warm but honest — no pressure tactics. Clear CTA to subscribe.
+  </div>
+  <div class="email-frame">
+    <div class="email-card">
+      <div class="email-header">
+        <div class="logo">&#x1F340; trefolio</div>
+      </div>
+      <div class="email-body">
+        <h2>Your Trefolio Pro trial has ended</h2>
+        <p class="intro">Hi Maria, your 7-day Pro experience is over. Your account is now back on the Free plan — your portfolio data is safe and still accessible.</p>
+
+        <div class="pro-group-label">WHAT YOU'LL MISS</div>
+        <div class="pro-checklist">
+          &#x274C; AI portfolio analysis &amp; score<br>
+          &#x274C; Full performance history<br>
+          &#x274C; Tax reports &amp; investment simulator<br>
+          &#x274C; Advanced screener &amp; fundamentals<br>
+          &#x274C; WhatsApp alerts
+        </div>
+
+        <div class="feature-pill" style="border-left-color:#3b82f6; background:#eff6ff;">
+          <span class="emoji">&#x1F4A1;</span>
+          <div>
+            <strong style="color:#1e40af;">Your portfolio grew 3.2% during the trial</strong>
+            <p style="color:#3b82f6;">With Pro, you could keep tracking detailed performance metrics and get AI insights on your next moves.</p>
+          </div>
+        </div>
+
+        <a class="cta-primary" href="#">Subscribe to Trefolio Pro</a>
+        <a class="cta-secondary" href="#">View pricing</a>
+
+        <div class="trial-note">
+          Plans start at &euro;4.99/month. Cancel anytime.
+        </div>
+      </div>
+      <div class="email-body" style="padding-top:0;"><hr class="email-divider"></div>
+      <div class="email-footer">
+        We hope you enjoyed the Pro experience &#x1F340;<br>
+        <a href="#" style="color:#94a3b8;">Manage preferences</a> &middot; <a href="#" style="color:#94a3b8;">Unsubscribe</a>
+      </div>
+    </div>
+    <div class="email-copyright">&copy; 2026 trefolio</div>
+  </div>
+</div>
+
+<!-- =============================================================== -->
+<!-- SCREEN 3: ACTIVATION LANDING PAGE                                -->
+<!-- =============================================================== -->
+<div class="screen-wrapper">
+  <div class="section-label">3. Activation Landing Page (/trial/activate)</div>
+  <div class="note-box" style="max-width:800px; margin:0 auto 16px;">
+    <strong>Design notes:</strong> Clean, trust-focused design. Feature cards laid out in a grid. Single CTA above the fold. Emphasizes "no card, no catch" messaging. Timer shows urgency without pressure.
+  </div>
+  <div class="landing-frame">
+    <div class="landing-topbar">
+      <span class="logo-text">&#x1F340; trefolio</span>
+      <span style="font-size:13px; color:var(--text-muted);">maria@example.com</span>
+    </div>
+    <div class="landing-hero">
+      <div class="trial-badge-big">7-DAY FREE TRIAL</div>
+      <h1>Unlock the full power of Trefolio Pro</h1>
+      <p>Experience every Pro feature for 7 days. No credit card needed, no automatic charges. Your account returns to Free when the trial ends.</p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card-dark">
+        <div class="icon">&#x1F4CA;</div>
+        <h3>AI Portfolio Score</h3>
+        <p>Get an AI-powered analysis of your portfolio's diversification, risk, and growth potential.</p>
+      </div>
+      <div class="feature-card-dark">
+        <div class="icon">&#x1F4C8;</div>
+        <h3>Full Performance History</h3>
+        <p>See your portfolio's evolution over time with detailed charts and benchmarks.</p>
+      </div>
+      <div class="feature-card-dark">
+        <div class="icon">&#x1F50D;</div>
+        <h3>Stock Screener</h3>
+        <p>Filter and discover stocks with advanced fundamental and technical criteria.</p>
+      </div>
+      <div class="feature-card-dark">
+        <div class="icon">&#x1F4B1;</div>
+        <h3>Tax Reports</h3>
+        <p>Generate tax-ready reports with capital gains, dividends, and withholding tax data.</p>
+      </div>
+      <div class="feature-card-dark">
+        <div class="icon">&#x1F52E;</div>
+        <h3>Investment Simulator</h3>
+        <p>Model future scenarios with different contributions, returns, and time horizons.</p>
+      </div>
+      <div class="feature-card-dark">
+        <div class="icon">&#x1F4F1;</div>
+        <h3>WhatsApp Alerts</h3>
+        <p>Get instant price alerts directly on WhatsApp — never miss a market move.</p>
+      </div>
+    </div>
+
+    <div class="landing-cta-area">
+      <a href="#" class="cta-btn-big">Activate Trefolio Pro</a>
+      <p class="landing-disclaimer">Free for 7 days. No credit card required. Reverts to Free automatically.</p>
+    </div>
+  </div>
+</div>
+
+<!-- =============================================================== -->
+<!-- SCREEN 4: WELCOME / SETUP PAGE                                   -->
+<!-- =============================================================== -->
+<div class="screen-wrapper">
+  <div class="section-label">4. Welcome &amp; Setup Page (/trial/welcome)</div>
+  <div class="note-box" style="max-width:600px; margin:0 auto 16px;">
+    <strong>Design notes:</strong> Celebrates the activation. Shows setup progress with clear steps. Auto-redirects when done. Warm language ("Welcome to the trefolio community").
+  </div>
+  <div class="welcome-frame">
+    <div style="font-size:40px; margin-bottom:16px;">&#x1F389;</div>
+    <h1>Welcome to Trefolio Pro!</h1>
+    <p class="subtitle">We're setting up your Pro experience. This takes just a moment.</p>
+
+    <div class="progress-steps">
+      <div class="progress-step done">
+        <div class="step-icon done">&#x2713;</div>
+        <span class="step-label">Pro plan activated</span>
+      </div>
+      <div class="progress-step done">
+        <div class="step-icon done">&#x2713;</div>
+        <span class="step-label">Portfolio history backfilled</span>
+      </div>
+      <div class="progress-step active">
+        <div class="step-icon active"><span class="spinner"></span></div>
+        <span class="step-label">Preparing your analytics...</span>
+      </div>
+      <div class="progress-step">
+        <div class="step-icon pending">4</div>
+        <span class="step-label muted">Redirecting to your dashboard</span>
+      </div>
+    </div>
+
+    <p style="font-size:13px; color:var(--text-muted);">Your trial ends on March 27, 2026</p>
+  </div>
+</div>
+
+<!-- =============================================================== -->
+<!-- SCREEN 5: DASHBOARD WITH ACTIVE TRIAL BANNER                     -->
+<!-- =============================================================== -->
+<div class="screen-wrapper">
+  <div class="section-label">5. Dashboard — Active Trial Banner</div>
+  <div class="note-box" style="max-width:900px; margin:0 auto 16px;">
+    <strong>Design notes:</strong> Warm amber-green gradient banner. Shows countdown in days + hours. Friendly CTA to subscribe. Dismissible per session but re-appears.
+  </div>
+  <div class="dashboard-frame">
+    <div class="dash-topbar">
+      <span class="logo-text">&#x1F340; trefolio</span>
+      <span style="color:var(--text-muted); font-size:13px;">&#x1F464; Maria</span>
+    </div>
+
+    <div class="trial-banner active">
+      <div class="info">
+        <span class="trial-badge-inline">PRO TRIAL</span>
+        <span>Your Trefolio Pro trial ends in <span class="countdown">5 days 14 hours</span></span>
+      </div>
+      <a href="#" class="cta-btn">Subscribe to keep Pro</a>
+    </div>
+
+    <div class="dash-content">
+      <div class="dash-card">
+        <h3>Portfolio Value</h3>
+        <div class="value">&euro;24,831.50</div>
+        <div class="change">+&euro;312.40 (+1.27%)</div>
+      </div>
+      <div class="dash-card">
+        <h3>AI Portfolio Score</h3>
+        <div class="value" style="color:var(--gain);">78/100</div>
+        <div class="change" style="color:var(--text-secondary);">Good diversification</div>
+      </div>
+      <div class="dash-card chart">&#x1F4C8; Portfolio evolution chart (Pro feature, now visible)</div>
+    </div>
+  </div>
+</div>
+
+<!-- =============================================================== -->
+<!-- SCREEN 6: DASHBOARD WITH EXPIRED TRIAL BANNER                    -->
+<!-- =============================================================== -->
+<div class="screen-wrapper">
+  <div class="section-label">6. Dashboard — Expired Trial Banner</div>
+  <div class="note-box" style="max-width:900px; margin:0 auto 16px;">
+    <strong>Design notes:</strong> Red-tinted banner, not dismissible. Clear message that the trial ended. Persistent CTA to subscribe. Dashboard reverts to free state (blurred Pro sections).
+  </div>
+  <div class="dashboard-frame">
+    <div class="dash-topbar">
+      <span class="logo-text">&#x1F340; trefolio</span>
+      <span style="color:var(--text-muted); font-size:13px;">&#x1F464; Maria</span>
+    </div>
+
+    <div class="trial-banner expired">
+      <div class="info">
+        <span style="display:inline-block; padding:3px 10px; background:rgba(239,68,68,0.2); color:#ef4444; font-size:11px; font-weight:700; border-radius:999px; text-transform:uppercase;">TRIAL ENDED</span>
+        <span>Your Trefolio Pro trial has ended. <span class="countdown">Subscribe to keep access.</span></span>
+      </div>
+      <a href="#" class="cta-btn">Subscribe to Trefolio Pro</a>
+    </div>
+
+    <div class="dash-content">
+      <div class="dash-card">
+        <h3>Portfolio Value</h3>
+        <div class="value">&euro;24,831.50</div>
+        <div class="change">+&euro;312.40 (+1.27%)</div>
+      </div>
+      <div class="dash-card" style="filter:blur(3px); opacity:0.5; pointer-events:none; position:relative;">
+        <h3>AI Portfolio Score</h3>
+        <div class="value" style="color:var(--gain);">78/100</div>
+        <div class="change" style="color:var(--text-secondary);">Good diversification</div>
+      </div>
+      <div class="dash-card chart" style="filter:blur(2px); opacity:0.5;">&#x1F512; Portfolio evolution chart (Pro feature, locked)</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

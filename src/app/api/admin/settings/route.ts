@@ -25,6 +25,7 @@ const ALLOWED_FLAGS: PlatformFeature[] = [
   "tool_taxonomy_enabled", "tool_rebalancing_enabled", "tool_accounts_enabled",
   "tool_watchlist_enabled",
   "support_chat_enabled",
+  "pro_trial_enabled",
 ];
 
 export const dynamic = "force-dynamic";

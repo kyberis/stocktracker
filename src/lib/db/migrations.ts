@@ -2243,6 +2243,100 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       );
     },
   },
+  {
+    version: 69,
+    description: "Add trial columns for 7-day Pro trial system",
+    up: async (client: Client) => {
+      for (const ddl of [
+        "ALTER TABLE users ADD COLUMN trial_invited_at TEXT NOT NULL DEFAULT ''",
+        "ALTER TABLE users ADD COLUMN trial_activated_at TEXT NOT NULL DEFAULT ''",
+        "ALTER TABLE users ADD COLUMN trial_token TEXT NOT NULL DEFAULT ''",
+        "ALTER TABLE users ADD COLUMN trial_expired_notified INTEGER NOT NULL DEFAULT 0",
+      ]) {
+        try {
+          await client.execute({ sql: ddl });
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : String(e);
+          if (!msg.includes("duplicate column")) throw e;
+        }
+      }
+    },
+  },
+  {
+    version: 70,
+    description: "Seed trial-invitation and trial-expired email templates",
+    up: async (client: Client) => {
+      const { EMAIL_TEMPLATE_SEEDS } = await import("./email-template-seeds");
+      for (const slug of ["trial-invitation", "trial-expired"]) {
+        const existing = await client.execute({
+          sql: "SELECT COUNT(*) as cnt FROM email_templates WHERE slug = ?",
+          args: [slug],
+        });
+        if (Number(existing.rows[0]?.cnt) > 0) continue;
+        const t = EMAIL_TEMPLATE_SEEDS.find((s) => s.slug === slug);
+        if (!t) continue;
+        await client.execute({
+          sql: `INSERT INTO email_templates (id, slug, name, subject, subject_es, body_html, body_html_es, body_text, body_text_es, category, experience_level)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          args: [
+            randomUUID(), t.slug, t.name, t.subject, t.subjectEs,
+            t.bodyHtml, t.bodyHtmlEs, t.bodyText, t.bodyTextEs,
+            t.category, t.experienceLevel,
+          ],
+        });
+      }
+    },
+  },
+  {
+    version: 71,
+    description: "Create feature_flag_overrides table for per-user feature flag targeting",
+    up: async (client: Client) => {
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS feature_flag_overrides (
+          id TEXT PRIMARY KEY,
+          flag TEXT NOT NULL,
+          user_id TEXT NOT NULL,
+          enabled INTEGER NOT NULL DEFAULT 1,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          UNIQUE(flag, user_id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_ffo_flag ON feature_flag_overrides(flag);
+        CREATE INDEX IF NOT EXISTS idx_ffo_user ON feature_flag_overrides(user_id);
+      `);
+    },
+  },
+  {
+    version: 72,
+    description: "Refresh trial email templates with rich feature groups",
+    up: async (client: Client) => {
+      const { EMAIL_TEMPLATE_SEEDS } = await import("./email-template-seeds");
+      for (const slug of ["trial-invitation", "trial-expired"]) {
+        const t = EMAIL_TEMPLATE_SEEDS.find((s) => s.slug === slug);
+        if (!t) continue;
+        await client.execute({
+          sql: `UPDATE email_templates
+                SET body_html = ?, body_html_es = ?, body_text = ?, body_text_es = ?
+                WHERE slug = ?`,
+          args: [t.bodyHtml, t.bodyHtmlEs, t.bodyText, t.bodyTextEs, slug],
+        });
+      }
+    },
+  },
+  {
+    version: 73,
+    description: "Add growth_box placeholder to trial-expired email template",
+    up: async (client: Client) => {
+      const { EMAIL_TEMPLATE_SEEDS } = await import("./email-template-seeds");
+      const t = EMAIL_TEMPLATE_SEEDS.find((s) => s.slug === "trial-expired");
+      if (!t) return;
+      await client.execute({
+        sql: `UPDATE email_templates
+              SET body_html = ?, body_html_es = ?
+              WHERE slug = 'trial-expired'`,
+        args: [t.bodyHtml, t.bodyHtmlEs],
+      });
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

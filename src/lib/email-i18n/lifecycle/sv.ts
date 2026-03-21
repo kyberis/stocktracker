@@ -1,4 +1,11 @@
-import type { WelcomeNoStocksStrings, WelcomeFreeStocksStrings, BifolioUpgradeStrings, TrefolioUpgradeStrings } from "../template-types";
+import type {
+  WelcomeNoStocksStrings,
+  WelcomeFreeStocksStrings,
+  BifolioUpgradeStrings,
+  TrefolioUpgradeStrings,
+  TrialInvitationStrings,
+  TrialExpiredStrings,
+} from "../template-types";
 
 export const welcomeNoStocks: WelcomeNoStocksStrings = {
   heading: "V&#228;lkommen till trefolio!",
@@ -186,4 +193,84 @@ export const trefolioUpgrade: TrefolioUpgradeStrings = {
   ctaPrimary: "Utforska AI-insikter",
   ctaSecondary: "Visa fundamenta",
   communityText: "&#x1F31F; <strong>Du &#228;r en av v&#229;ra f&#246;rsta 500 Pro-medlemmar.</strong> Tack f&#246;r att du tror p&#229; trefolio. Din feedback formar vad vi bygger h&#228;rn&#228;st."
+};
+
+export const trialInvitation: TrialInvitationStrings = {
+  heading: "Din Pro-provperiod v&#228;ntar",
+  paragraph:
+    "Hej {{display_name}}, du har byggt din portf&#246;lj i trefolio &mdash; upplev nu hela verktygsl&#229;dan i 7 dagar, helt gratis.",
+  groups: [
+    {
+      label: "Data &amp; analys",
+      items: [
+        "Alpha Vantage premiumdata",
+        "Fundamentaldata: resultatr&#228;kning, balansr&#228;kning, kassafl&#246;de",
+        "Instrumentpanel f&#246;r ekonomiska indikatorer",
+      ],
+    },
+    {
+      label: "Intelligens",
+      items: [
+        "Nyhetsfl&#246;de med sentimentanalys",
+        "Insideraff&#228;rer &amp; institutionella innehav",
+        "AI-analys: 30 anrop/dag, obegr&#228;nsat per m&#229;nad",
+      ],
+    },
+    {
+      label: "Avancerade verktyg",
+      items: [
+        "Sharpe-kvot, max drawdown, volatilitet",
+        "Fullst&#228;ndig portf&#246;ljprestandahistorik",
+        "Aktiescreener: 600+ aktier, 6 filter",
+      ],
+    },
+    {
+      label: "Aviseringar &amp; gr&#228;nser",
+      items: [
+        "WhatsApp- &amp; enhetsaviseringar",
+        "Obegr&#228;nsade prisaviseringar &amp; innehav",
+        "Upp till 5 portf&#246;ljer",
+      ],
+    },
+  ],
+  ctaPrimary: "Aktivera din kostnadsfria provperiod",
+  ctaSecondary: "Se vad som ing&#229;r",
+  disclaimer:
+    "Inget kreditkort kr&#228;vs. Efter 7 dagar &#229;terg&#229;r ditt konto till Free-planen &mdash; inga &#246;verraskningar.",
+  signoffIntro:
+    "Jag byggde trefolio f&#246;r att jag ville ha ett b&#228;ttre s&#228;tt att f&#246;lja min egen portf&#246;lj. Jag hoppas du gillar den fullst&#228;ndiga upplevelsen.",
+  signoffReply: "S&#228;g g&#228;rna vad du tycker &mdash; svara bara p&#229; det h&#228;r mejlet.",
+};
+
+export const trialExpired: TrialExpiredStrings = {
+  heading: "Din Pro-provperiod &#228;r slut",
+  paragraph:
+    "Hej {{display_name}}, din 7-dagars Trefolio Pro-provperiod &#228;r &#246;ver. H&#228;r &#228;r vad du g&#229;r miste om:",
+  features: [
+    {
+      title: "Avancerad analys",
+      desc: "Sharpe-kvot, max drawdown, volatilitet och fullst&#228;ndig tillv&#228;xthistorik",
+    },
+    {
+      title: "AI-analys",
+      desc: "30 anrop/dag med djupg&#229;ende aktieinsikter och portf&#246;ljrecensioner",
+    },
+    {
+      title: "F&#246;retagsfundamentala",
+      desc: "Resultatr&#228;kningar, balansr&#228;kningar, insideraff&#228;rer och institutionella innehav",
+    },
+    {
+      title: "Premiumaviseringar",
+      desc: "WhatsApp-aviseringar, obegr&#228;nsade aviseringar och upp till 5 portf&#246;ljer",
+    },
+  ],
+  pricingNote: "Planer fr&#229;n &euro;4,99/m&#229;nad. S&#228;g upp n&#228;r som helst.",
+  ctaPrimary: "Prenumerera p&#229; Trefolio Pro",
+  ctaSecondary: "Visa priser",
+  signoffIntro:
+    "Jag hoppas provperioden gav dig en riktig smak av vad trefolio kan g&#246;ra. Om du har feedback vill jag g&#228;rna h&#246;ra den.",
+  growthTitle: "Din portf&ouml;lj v&auml;xte {{growth_pct}}% under provperioden",
+  growthDesc: "Med Pro kan du forts&auml;tta f&ouml;lja detaljerade prestationsmått och f&aring; AI-insikter om dina n&auml;sta steg.",
+  growthTitleDown: "Marknaderna skiftade &mdash; din portf&ouml;lj r&ouml;rde sig {{growth_pct}}% under provperioden",
+  growthDescDown: "Med Pro skulle du f&aring; AI-varningar och djupare analyser f&ouml;r att reagera snabbare p&aring; marknadsf&ouml;r&auml;ndringar.",
 };

@@ -5,6 +5,7 @@ import type { Language, NotificationChannel } from "@/lib/types";
 import { isValidLanguage } from "@/lib/languages";
 import { encrypt, tryDecryptOrPlaintext } from "@/lib/crypto";
 import { PLATFORM_LIMITS } from "@/lib/platform-config";
+import { randomUUID } from "crypto";
 
 export type PlatformFeature =
   | "alerts_enabled" | "csv_export_enabled" | "apple_signin_enabled" | "device_enabled"
@@ -12,7 +13,8 @@ export type PlatformFeature =
   | "tool_transactions_enabled" | "tool_dividends_enabled" | "tool_performance_enabled"
   | "tool_taxonomy_enabled" | "tool_rebalancing_enabled" | "tool_accounts_enabled"
   | "tool_watchlist_enabled"
-  | "support_chat_enabled";
+  | "support_chat_enabled"
+  | "pro_trial_enabled";
 
 const DEFAULT_ENABLED_FLAGS: Set<PlatformFeature> = new Set([
   "whatsapp_enabled",
@@ -288,6 +290,109 @@ export async function isFeatureEnabled(feature: PlatformFeature): Promise<boolea
 
 export async function setFeatureEnabled(feature: PlatformFeature, enabled: boolean): Promise<void> {
   await setPlatformSetting(feature, enabled ? "true" : "false");
+}
+
+/* ─── Per-User Feature Flag Overrides ─── */
+
+const ALL_PLATFORM_FEATURES: PlatformFeature[] = [
+  "alerts_enabled", "csv_export_enabled", "apple_signin_enabled", "device_enabled",
+  "mobile_app_enabled", "whatsapp_enabled",
+  "tool_transactions_enabled", "tool_dividends_enabled", "tool_performance_enabled",
+  "tool_taxonomy_enabled", "tool_rebalancing_enabled", "tool_accounts_enabled",
+  "tool_watchlist_enabled",
+  "support_chat_enabled",
+  "pro_trial_enabled",
+];
+
+export async function isFeatureEnabledForUser(feature: PlatformFeature, userId: string): Promise<boolean> {
+  const client = await ensureInitialized();
+  const override = await client.execute({
+    sql: "SELECT enabled FROM feature_flag_overrides WHERE flag = ? AND user_id = ?",
+    args: [feature, userId],
+  });
+  if (override.rows.length > 0) return num(override.rows[0].enabled) === 1;
+  return isFeatureEnabled(feature);
+}
+
+export async function resolveAllFlagsForUser(userId: string): Promise<Record<PlatformFeature, boolean>> {
+  const client = await ensureInitialized();
+  const [allSettings, userOverrides] = await Promise.all([
+    client.execute("SELECT key, value FROM platform_settings"),
+    client.execute({ sql: "SELECT flag, enabled FROM feature_flag_overrides WHERE user_id = ?", args: [userId] }),
+  ]);
+
+  const globalMap: Record<string, string> = {};
+  for (const row of allSettings.rows) globalMap[str(row.key)] = str(row.value);
+
+  const overrideMap: Record<string, boolean> = {};
+  for (const row of userOverrides.rows) overrideMap[str(row.flag)] = num(row.enabled) === 1;
+
+  const result = {} as Record<PlatformFeature, boolean>;
+  for (const feature of ALL_PLATFORM_FEATURES) {
+    if (feature in overrideMap) {
+      result[feature] = overrideMap[feature];
+    } else if (feature in globalMap) {
+      result[feature] = globalMap[feature] === "true";
+    } else {
+      result[feature] = DEFAULT_ENABLED_FLAGS.has(feature);
+    }
+  }
+  return result;
+}
+
+export interface FeatureFlagOverride {
+  id: string;
+  flag: string;
+  userId: string;
+  username: string;
+  enabled: boolean;
+  createdAt: string;
+}
+
+export async function getFeatureFlagOverrides(flag: PlatformFeature): Promise<FeatureFlagOverride[]> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: `SELECT o.id, o.flag, o.user_id, o.enabled, o.created_at, u.username
+          FROM feature_flag_overrides o
+          LEFT JOIN users u ON u.id = o.user_id
+          WHERE o.flag = ?
+          ORDER BY o.created_at DESC`,
+    args: [flag],
+  });
+  return result.rows.map((row) => ({
+    id: str(row.id),
+    flag: str(row.flag),
+    userId: str(row.user_id),
+    username: str(row.username),
+    enabled: num(row.enabled) === 1,
+    createdAt: str(row.created_at),
+  }));
+}
+
+export async function getFeatureFlagOverrideCounts(): Promise<Record<string, number>> {
+  const client = await ensureInitialized();
+  const result = await client.execute("SELECT flag, COUNT(*) as cnt FROM feature_flag_overrides GROUP BY flag");
+  const counts: Record<string, number> = {};
+  for (const row of result.rows) counts[str(row.flag)] = num(row.cnt);
+  return counts;
+}
+
+export async function setFeatureFlagOverride(flag: PlatformFeature, userId: string, enabled: boolean): Promise<void> {
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: `INSERT INTO feature_flag_overrides (id, flag, user_id, enabled)
+          VALUES (?, ?, ?, ?)
+          ON CONFLICT(flag, user_id) DO UPDATE SET enabled = excluded.enabled`,
+    args: [randomUUID(), flag, userId, enabled ? 1 : 0],
+  });
+}
+
+export async function removeFeatureFlagOverride(flag: PlatformFeature, userId: string): Promise<void> {
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: "DELETE FROM feature_flag_overrides WHERE flag = ? AND user_id = ?",
+    args: [flag, userId],
+  });
 }
 
 export async function getGlobalResendApiKey(): Promise<string> {

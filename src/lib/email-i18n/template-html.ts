@@ -11,6 +11,8 @@ import type {
   BifolioUpgradeStrings,
   TrefolioUpgradeStrings,
   ReferralProgramStrings,
+  TrialInvitationStrings,
+  TrialExpiredStrings,
   TemplateFooterStrings,
 } from "./template-types";
 
@@ -446,3 +448,84 @@ export function generateReferralProgram(
         ${tip(strings.tipText)}
 ${foot}`;
 }
+
+export function generateTrialInvitation(
+  strings: TrialInvitationStrings,
+  footer: TemplateFooterStrings,
+): string {
+  const foot = footerForLocale(footer.receivedText, footer.unsubscribeLabel);
+  const groups = strings.groups
+    .map((g) => proFeatureGroup(g.label, g.items))
+    .join("");
+  return `${headerWithBadge("7-DAY PRO TRIAL")}
+        <tr><td style="padding:36px 32px 16px;">
+          <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#0f172a;text-align:center;">${strings.heading}</h1>
+          <p style="margin:0 0 28px;font-size:15px;color:#475569;text-align:center;line-height:1.6;">${strings.paragraph}</p>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:8px;">
+            ${groups}
+          </table>
+          <div style="height:12px;"></div>
+          ${cta(strings.ctaPrimary, "{{base_url}}/trial/activate?token={{trial_token}}")}
+          ${ctaSecondary(strings.ctaSecondary, "{{base_url}}/pricing")}
+          <p style="margin:20px 0 0;font-size:13px;color:#64748b;text-align:center;line-height:1.5;">${strings.disclaimer}</p>
+          <div style="margin-top:24px;padding-top:20px;border-top:1px solid #e2e8f0;">
+            <p style="margin:0 0 4px;font-size:14px;color:#475569;line-height:1.6;">${strings.signoffIntro}</p>
+            <p style="margin:0;font-size:14px;color:#475569;line-height:1.6;">${strings.signoffReply}</p>
+            <p style="margin:12px 0 0;font-size:14px;color:#0f172a;font-weight:600;">Marcos</p>
+            <p style="margin:0;font-size:12px;color:#64748b;">Founder, trefolio</p>
+          </div>
+        </td></tr>
+${foot}`;
+}
+
+function localizedGrowthBox(growthTitle: string, growthDesc: string, isPositive: boolean): string {
+  const emoji = isPositive ? "&#x1F4A1;" : "&#x1F6E1;&#xFE0F;";
+  const bg = isPositive ? "#f0fdf4" : "#fffbeb";
+  const border = isPositive ? "#bbf7d0" : "#fde68a";
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+            <tr><td style="padding:14px 16px;background:${bg};border-radius:10px;border:1px solid ${border};">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+                <td style="width:32px;font-size:20px;vertical-align:top;padding-top:2px;">${emoji}</td>
+                <td style="padding-left:8px;">
+                  <strong style="color:#0f172a;font-size:14px;">${growthTitle}</strong>
+                  <p style="margin:4px 0 0;font-size:13px;color:#475569;line-height:1.4;">${growthDesc}</p>
+                </td>
+              </tr></table>
+            </td></tr>
+          </table>`;
+}
+
+export function generateTrialExpired(
+  strings: TrialExpiredStrings,
+  footer: TemplateFooterStrings,
+): string {
+  const foot = footerForLocale(footer.receivedText, footer.unsubscribeLabel);
+  const rows = strings.features
+    .map((f, i) => {
+      const emojis = ["&#x1F4CA;", "&#x1F9E0;", "&#x1F4C8;", "&#x1F514;"];
+      return feature(emojis[i] || "&#x2B50;", f.title, f.desc);
+    })
+    .join("");
+  return `${HEADER}
+        <tr><td style="padding:36px 32px 16px;">
+          <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#0f172a;text-align:center;">${strings.heading}</h1>
+          <p style="margin:0 0 24px;font-size:15px;color:#475569;text-align:center;line-height:1.6;">${strings.paragraph}</p>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+            ${rows}
+          </table>
+          {{growth_box}}
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;"><tr><td style="padding:14px 16px;background:#eff6ff;border-radius:10px;border:1px solid #bfdbfe;">
+            <p style="margin:0;font-size:14px;color:#1e40af;text-align:center;line-height:1.5;">${strings.pricingNote}</p>
+          </td></tr></table>
+          ${cta(strings.ctaPrimary, "{{base_url}}/pricing")}
+          ${ctaSecondary(strings.ctaSecondary, "{{base_url}}/pricing")}
+          <div style="margin-top:24px;padding-top:20px;border-top:1px solid #e2e8f0;">
+            <p style="margin:0 0 4px;font-size:14px;color:#475569;line-height:1.6;">${strings.signoffIntro}</p>
+            <p style="margin:12px 0 0;font-size:14px;color:#0f172a;font-weight:600;">Marcos</p>
+            <p style="margin:0;font-size:12px;color:#64748b;">Founder, trefolio</p>
+          </div>
+        </td></tr>
+${foot}`;
+}
+
+export { localizedGrowthBox };

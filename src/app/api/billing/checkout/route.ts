@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { requireSession } from "@/lib/auth/guards";
-import { findUserById, trackEvent, updateUserSubscription, countProSubscribers, isFeatureEnabled, getStripePriceConfig } from "@/lib/db";
+import { findUserById, trackEvent, updateUserSubscription, countProSubscribers, isFeatureEnabledForUser, getStripePriceConfig } from "@/lib/db";
 import { billingEventsTotal } from "@/lib/metrics";
 import { PLATFORM_LIMITS } from "@/lib/platform-config";
 import { getBillingBaseUrl, getStripeClient } from "@/lib/stripe";
@@ -41,7 +41,7 @@ export const POST = withMetrics("/api/billing/checkout", async (req: NextRequest
   }
 
   if (deviceGrant) {
-    if (!(await isFeatureEnabled("device_enabled"))) {
+    if (!(await isFeatureEnabledForUser("device_enabled", session.userId))) {
       return NextResponse.json({ error: "Device features are not enabled" }, { status: 404 });
     }
     if (!user.device_linked_at) {

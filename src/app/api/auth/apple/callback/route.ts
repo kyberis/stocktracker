@@ -229,6 +229,10 @@ export async function POST(req: NextRequest) {
         referral_reward_days: 0,
         ai_tokens_this_month: 0,
         ai_tokens_today: 0,
+        trial_invited_at: "",
+        trial_activated_at: "",
+        trial_token: "",
+        trial_expired_notified: 0,
       };
       trackEvent(publicUser.id, "signup", {
         source: attribution.source,

@@ -54,6 +54,7 @@ import SampleDataBanner from "./SampleDataBanner";
 import SecureAccountPrompt from "./SecureAccountPrompt";
 
 const DashboardUpgradeNudge = dynamic(() => import("./DashboardUpgradeNudge"), { ssr: false });
+const TrialCountdownBanner = dynamic(() => import("./TrialCountdownBanner"), { ssr: false });
 import { HeroSkeleton, TableSkeleton, ChartSkeleton } from "./Skeleton";
 
 
@@ -318,6 +319,7 @@ function DesktopDashboard() {
           </div>
         )}
 
+        <TrialCountdownBanner />
         <SnapTradeReconnectBanner />
         <LeafPromoBanner />
         <SampleDataBanner />

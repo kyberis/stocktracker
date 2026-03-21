@@ -1,4 +1,4 @@
-import type { WelcomeNoStocksStrings, WelcomeFreeStocksStrings, BifolioUpgradeStrings, TrefolioUpgradeStrings } from "../template-types";
+import type { WelcomeNoStocksStrings, WelcomeFreeStocksStrings, BifolioUpgradeStrings, TrefolioUpgradeStrings, TrialInvitationStrings, TrialExpiredStrings } from "../template-types";
 
 export const welcomeNoStocks: WelcomeNoStocksStrings = {
   heading: "&Uuml;dv&ouml;z&ouml;l a trefoli&oacute;ban!",
@@ -186,4 +186,86 @@ export const trefolioUpgrade: TrefolioUpgradeStrings = {
   ctaPrimary: "IA elemz&eacute;sek felfedez&eacute;se",
   ctaSecondary: "Fundamentumok megtekint&eacute;se",
   communityText: "&#x1F31F; <strong>Az első 500 Pro tagunk egyike vagy.</strong> K&ouml;sz&ouml;nj&uuml;k, hogy hitt&eacute;l a trefoli&oacute;ban. A visszajelz&eacute;sed alak&iacute;tja, amit ezut&aacute;n ép&iacute;t&uuml;nk."
+};
+
+export const trialInvitation: TrialInvitationStrings = {
+  heading: "A Pro pr&oacute;b&aacute;id&otilde;d v&aacute;r",
+  paragraph:
+    "Szia {{display_name}}, a trefoli&oacute;ban &eacute;p&iacute;ted a portf&oacute;li&oacute;dat &mdash; most 7 napig teljesen ingyen kipr&oacute;b&aacute;lhatod a teljes eszk&ouml;zt&aacute;rat.",
+  groups: [
+    {
+      label: "Adatok &amp; elemz&eacute;s",
+      items: [
+        "Alpha Vantage pr&eacute;mium adatok",
+        "Fundamentumok: eredm&eacute;nykimutat&aacute;s, m&eacute;rleg, p&eacute;nz&aacute;raml&aacute;s",
+        "Gazdas&aacute;gi mutat&oacute;k ir&aacute;ny&iacute;t&oacute;pultja",
+      ],
+    },
+    {
+      label: "Intelligencia",
+      items: [
+        "H&iacute;rfolyam hangulatelemz&eacute;ssel",
+        "Insider tranzakci&oacute;k &amp; int&eacute;zm&eacute;nyi r&eacute;sztulajdonl&aacute;s",
+        "AI elemz&eacute;s: 30 h&iacute;v&aacute;s/nap, korl&aacute;tlan havi",
+      ],
+    },
+    {
+      label: "Halad&oacute; eszk&ouml;z&ouml;k",
+      items: [
+        "Sharpe-ar&aacuteny, maxim&aacute;lis drawdown, volatilit&aacute;s",
+        "Teljes portf&oacute;li&oacute; teljes&iacute;tm&eacute;nyt&ouml;rt&eacute;net",
+        "R&eacute;szv&eacute;ny sz&uuml;rő: 600+ r&eacute;szv&eacute;ny, 6 sz&uuml;rő",
+      ],
+    },
+    {
+      label: "Riaszt&aacute;sok &amp; korl&aacute;tok",
+      items: [
+        "WhatsApp &amp; eszk&ouml;z &eacute;rtes&iacute;t&eacute;sek",
+        "Korl&aacute;tlan &aacute;rriaszt&aacute;s &amp; poz&iacute;ci&oacute;k",
+        "Ak&aacute;r 5 portf&oacute;li&oacute;",
+      ],
+    },
+  ],
+  ctaPrimary: "Aktiv&aacute;ld az ingyenes pr&oacute;b&aacute;id&otilde;t",
+  ctaSecondary: "N&eacute;zd meg, mi tartozik bele",
+  disclaimer:
+    "Bankk&aacute;rtya nem sz&uuml;ks&eacute;ges. 7 nap ut&aacute;n a fi&oacute;kod visszav&aacute;lt az Ingyenes csomagra &mdash; meglepet&eacute;sek n&eacute;lk&uuml;l.",
+  signoffIntro:
+    "Az&eacute;rt &eacute;p&iacute;tettem a trefoli&oacute;t, mert jobb m&oacute;dot kerestem a saj&aacute;t portf&oacute;li&oacute;m k&ouml;vet&eacute;s&eacute;re. Rem&eacute;lem, te is &eacute;lvezed a teljes &eacute;lm&eacute;nyt.",
+  signoffReply: "&Iacute;rd meg, mit gondolsz &mdash; egyszer&uuml;en v&aacute;laszolj erre az e-mailre.",
+};
+
+export const trialExpired: TrialExpiredStrings = {
+  heading: "A Pro pr&oacute;b&aacute;id&otilde;d v&eacute;get &eacute;rt",
+  paragraph:
+    "Szia {{display_name}}, a 7 napos Trefolio Pro pr&oacute;b&aacute;id&otilde;d lej&aacute;rt. Ezt fogod hi&aacute;nyozni:",
+  features: [
+    {
+      title: "Fejlett analitika",
+      desc: "Sharpe-ar&aacuteny, maxim&aacute;lis drawdown, volatilit&aacute;s &eacute;s teljes n&ouml;veked&eacute;st&ouml;rt&eacute;net",
+    },
+    {
+      title: "AI elemz&eacute;s",
+      desc: "30 h&iacute;v&aacute;s/nap m&eacute;ly r&eacute;szv&eacute;ny betekint&eacute;sekkel &eacute;s portf&oacute;li&oacute; &eacute;rt&eacute;kel&eacute;sekkel",
+    },
+    {
+      title: "V&aacute;llalati fundamentumok",
+      desc: "Eredm&eacute;nykimutat&aacute;sok, m&eacute;rlegek, insider tranzakci&oacute;k &eacute;s int&eacute;zm&eacute;nyi r&eacute;sztulajdonl&aacute;s",
+    },
+    {
+      title: "Pr&eacute;mium riaszt&aacute;sok",
+      desc: "WhatsApp &eacute;rtes&iacute;t&eacute;sek, korl&aacute;tlan riaszt&aacute;s &eacute;s ak&aacute;r 5 portf&oacute;li&oacute;",
+    },
+  ],
+  pricingNote: "A csomagok &euro;4.99/h&oacute;-t&oacute;l kezd&otilde;dnek. B&aacute;rmikor lemondhat&oacute;.",
+  ctaPrimary: "Feliratkozom a Trefolio Pro-ra",
+  ctaSecondary: "Megn&eacute;zem az &aacute;rakat",
+  signoffIntro:
+    "Rem&eacute;lem, a pr&oacute;b&aacute;id&otilde; val&oacute;di &iacute;zel&iacute;t&otilde;t adott abb&oacute;l, mit tud a trefolio. Ha van visszajelz&eacute;sed, &otilde;szint&eacute;n sz&iacute;vesen hallan&aacute;m.",
+  growthTitle:
+    "A portf&oacute;li&oacute;d {{growth_pct}}%-ot n&odblac;tt a pr&oacute;baid&odblac;szak alatt",
+  growthDesc:
+    "A Pro-val tov&aacute;bbra is k&ouml;vetheted a r&eacute;szletes teljes&iacute;tm&eacute;nymutat&oacute;kat, &eacute;s AI-elemz&eacute;seket kaphatsz a k&ouml;vetkez&odblac; l&eacute;p&eacute;seidre.",
+  growthTitleDown: "A piacok v&aacute;ltoztak &mdash; a portf&oacute;li&oacute;d {{growth_pct}}%-ot mozdult a pr&oacute;baid&odblac;szak alatt",
+  growthDescDown: "A Pro-val AI-figyelmeztet&eacute;seket &eacute;s m&eacute;lyebb elemz&eacute;seket kapn&aacute;l, hogy gyorsabban reag&aacute;lj a piaci mozg&aacute;sokra.",
 };

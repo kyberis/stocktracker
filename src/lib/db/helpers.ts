@@ -55,6 +55,10 @@ export interface DbUser {
   referral_code: string;
   referred_by: string;
   referral_reward_days: number;
+  trial_invited_at: string;
+  trial_activated_at: string;
+  trial_token: string;
+  trial_expired_notified: number;
 }
 
 export type PortfolioCurrency =
@@ -293,6 +297,10 @@ export function rowToDbUser(row: Row): DbUser {
     referral_code: str(row.referral_code),
     referred_by: str(row.referred_by),
     referral_reward_days: num(row.referral_reward_days),
+    trial_invited_at: str(row.trial_invited_at),
+    trial_activated_at: str(row.trial_activated_at),
+    trial_token: str(row.trial_token),
+    trial_expired_notified: num(row.trial_expired_notified),
   };
 }
 

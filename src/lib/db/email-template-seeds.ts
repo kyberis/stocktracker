@@ -835,6 +835,116 @@ export const EMAIL_TEMPLATE_SEEDS: TemplateSeed[] = [
     category: "lifecycle",
     experienceLevel: "",
   },
+  {
+    slug: "trial-invitation",
+    name: "Trial — 7-Day Pro Invitation",
+    subject: "Your 7-day Trefolio Pro trial is ready",
+    subjectEs: "Tu prueba de 7 d\u00edas de Trefolio Pro est\u00e1 lista",
+    bodyHtml: `${headerWithBadge("7-DAY PRO TRIAL")}
+        <tr><td style="padding:36px 32px 16px;">
+          <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#0f172a;text-align:center;">Your Pro trial is waiting</h1>
+          <p style="margin:0 0 28px;font-size:15px;color:#475569;text-align:center;line-height:1.6;">Hi {{display_name}}, you&rsquo;ve been building your portfolio on trefolio &mdash; now experience the full toolkit for 7 days, completely free.</p>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:8px;">
+            ${proFeatureGroup("Data &amp; Analysis", ["Alpha Vantage premium data", "Fundamentals: income, balance sheet, cash flow", "Economic indicators dashboard"])}
+            ${proFeatureGroup("Intelligence", ["News feed with sentiment analysis", "Insider trades &amp; institutional holdings", "AI analysis: 30 calls/day, unlimited monthly"])}
+            ${proFeatureGroup("Advanced Tools", ["Sharpe ratio, max drawdown, volatility", "Full portfolio performance history", "Stock screener: 600+ stocks, 6 filters"])}
+            ${proFeatureGroup("Alerts &amp; Limits", ["WhatsApp &amp; device notifications", "Unlimited price alerts &amp; holdings", "Up to 5 portfolios"])}
+          </table>
+          <div style="height:12px;"></div>
+          ${cta("Activate your free trial", "{{base_url}}/trial/activate?token={{trial_token}}")}
+          ${ctaSecondary("See what's included", "{{base_url}}/pricing")}
+          <p style="margin:20px 0 0;font-size:13px;color:#64748b;text-align:center;line-height:1.5;">No credit card required. After 7 days, your account returns to the Free plan &mdash; no surprises.</p>
+          <div style="margin-top:24px;padding-top:20px;border-top:1px solid #e2e8f0;">
+            <p style="margin:0 0 4px;font-size:14px;color:#475569;line-height:1.6;">I built trefolio because I wanted a better way to track my own portfolio. I hope you&rsquo;ll enjoy having the full experience.</p>
+            <p style="margin:0;font-size:14px;color:#475569;line-height:1.6;">Let me know what you think &mdash; just reply to this email.</p>
+            <p style="margin:12px 0 0;font-size:14px;color:#0f172a;font-weight:600;">Marcos</p>
+            <p style="margin:0;font-size:12px;color:#64748b;">Founder, trefolio</p>
+          </div>
+        </td></tr>
+${FOOTER}`,
+    bodyHtmlEs: `${headerWithBadge("PRUEBA PRO 7 D\u00cdAS")}
+        <tr><td style="padding:36px 32px 16px;">
+          <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#0f172a;text-align:center;">Tu prueba Pro te espera</h1>
+          <p style="margin:0 0 28px;font-size:15px;color:#475569;text-align:center;line-height:1.6;">Hola {{display_name}}, has estado construyendo tu cartera en trefolio &mdash; ahora experimenta todas las herramientas durante 7 d&iacute;as, completamente gratis.</p>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:8px;">
+            ${proFeatureGroup("Datos y An&aacute;lisis", ["Datos premium de Alpha Vantage", "Fundamentales: ingresos, balance, flujo de caja", "Panel de indicadores econ&oacute;micos"])}
+            ${proFeatureGroup("Inteligencia", ["Feed de noticias con an&aacute;lisis de sentimiento", "Operaciones de insiders y posiciones institucionales", "An&aacute;lisis IA: 30 consultas/d&iacute;a, mensuales ilimitadas"])}
+            ${proFeatureGroup("Herramientas Avanzadas", ["Ratio Sharpe, drawdown m&aacute;ximo, volatilidad", "Historial completo de rendimiento", "Screener de acciones: 600+, 6 filtros"])}
+            ${proFeatureGroup("Alertas y L&iacute;mites", ["Notificaciones WhatsApp y dispositivos", "Alertas de precio y posiciones ilimitadas", "Hasta 5 carteras"])}
+          </table>
+          <div style="height:12px;"></div>
+          ${cta("Activa tu prueba gratuita", "{{base_url}}/trial/activate?token={{trial_token}}")}
+          ${ctaSecondary("Ver qu&eacute; incluye", "{{base_url}}/pricing")}
+          <p style="margin:20px 0 0;font-size:13px;color:#64748b;text-align:center;line-height:1.5;">Sin tarjeta de cr&eacute;dito. Despu&eacute;s de 7 d&iacute;as, tu cuenta vuelve al plan gratuito &mdash; sin sorpresas.</p>
+          <div style="margin-top:24px;padding-top:20px;border-top:1px solid #e2e8f0;">
+            <p style="margin:0 0 4px;font-size:14px;color:#475569;line-height:1.6;">Cre&eacute; trefolio porque quer&iacute;a una mejor forma de seguir mi propia cartera. Espero que disfrutes la experiencia completa.</p>
+            <p style="margin:0;font-size:14px;color:#475569;line-height:1.6;">Cu&eacute;ntame qu&eacute; te parece &mdash; responde a este email.</p>
+            <p style="margin:12px 0 0;font-size:14px;color:#0f172a;font-weight:600;">Marcos</p>
+            <p style="margin:0;font-size:12px;color:#64748b;">Fundador, trefolio</p>
+          </div>
+        </td></tr>
+${FOOTER}`,
+    bodyText: "Your Pro trial is waiting\n\nHi {{display_name}}, you've been building your portfolio on trefolio — now experience the full toolkit for 7 days, completely free.\n\nActivate your free trial: {{base_url}}/trial/activate?token={{trial_token}}\n\nNo credit card required. After 7 days, your account returns to the Free plan — no surprises.\n\nI built trefolio because I wanted a better way to track my own portfolio. I hope you'll enjoy having the full experience.\n\nLet me know what you think — just reply to this email.\n\nMarcos\nFounder, trefolio",
+    bodyTextEs: "Tu prueba Pro te espera\n\nHola {{display_name}}, has estado construyendo tu cartera en trefolio — ahora experimenta todas las herramientas durante 7 días, completamente gratis.\n\nActiva tu prueba gratuita: {{base_url}}/trial/activate?token={{trial_token}}\n\nSin tarjeta de crédito. Después de 7 días, tu cuenta vuelve al plan gratuito — sin sorpresas.\n\nCreé trefolio porque quería una mejor forma de seguir mi propia cartera. Espero que disfrutes la experiencia completa.\n\nCuéntame qué te parece — responde a este email.\n\nMarcos\nFundador, trefolio",
+    category: "lifecycle",
+    experienceLevel: "",
+  },
+  {
+    slug: "trial-expired",
+    name: "Trial — Pro Trial Ended",
+    subject: "Your Trefolio Pro trial has ended",
+    subjectEs: "Tu prueba de Trefolio Pro ha terminado",
+    bodyHtml: `${HEADER}
+        <tr><td style="padding:36px 32px 16px;">
+          <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#0f172a;text-align:center;">Your Pro trial has ended</h1>
+          <p style="margin:0 0 24px;font-size:15px;color:#475569;text-align:center;line-height:1.6;">Hi {{display_name}}, your 7-day Trefolio Pro trial is over. Here&rsquo;s what you&rsquo;ll miss:</p>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+            ${feature("&#x1F4CA;", "Advanced Analytics", "Sharpe ratio, max drawdown, volatility, and full growth history")}
+            ${feature("&#x1F9E0;", "AI Analysis", "30 calls/day with deep stock insights and portfolio reviews")}
+            ${feature("&#x1F4C8;", "Company Fundamentals", "Income statements, balance sheets, insider trades, and institutional holdings")}
+            ${feature("&#x1F514;", "Premium Alerts", "WhatsApp notifications, unlimited alerts, and up to 5 portfolios")}
+          </table>
+          {{growth_box}}
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;"><tr><td style="padding:14px 16px;background:#eff6ff;border-radius:10px;border:1px solid #bfdbfe;">
+            <p style="margin:0;font-size:14px;color:#1e40af;text-align:center;line-height:1.5;">Plans start at &euro;4.99/month. Cancel anytime.</p>
+          </td></tr></table>
+          ${cta("Subscribe to Trefolio Pro", "{{base_url}}/pricing")}
+          ${ctaSecondary("View pricing", "{{base_url}}/pricing")}
+          <div style="margin-top:24px;padding-top:20px;border-top:1px solid #e2e8f0;">
+            <p style="margin:0 0 4px;font-size:14px;color:#475569;line-height:1.6;">I hope the trial gave you a real taste of what trefolio can do. If you have feedback, I&rsquo;d genuinely love to hear it.</p>
+            <p style="margin:12px 0 0;font-size:14px;color:#0f172a;font-weight:600;">Marcos</p>
+            <p style="margin:0;font-size:12px;color:#64748b;">Founder, trefolio</p>
+          </div>
+        </td></tr>
+${FOOTER}`,
+    bodyHtmlEs: `${HEADER}
+        <tr><td style="padding:36px 32px 16px;">
+          <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#0f172a;text-align:center;">Tu prueba Pro ha terminado</h1>
+          <p style="margin:0 0 24px;font-size:15px;color:#475569;text-align:center;line-height:1.6;">Hola {{display_name}}, tu prueba de 7 d&iacute;as de Trefolio Pro ha terminado. Esto es lo que echar&aacute;s de menos:</p>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+            ${feature("&#x1F4CA;", "Anal&iacute;tica avanzada", "Ratio Sharpe, drawdown m&aacute;ximo, volatilidad e historial completo")}
+            ${feature("&#x1F9E0;", "An&aacute;lisis IA", "30 consultas/d&iacute;a con insights profundos y revisiones de cartera")}
+            ${feature("&#x1F4C8;", "Fundamentales", "Ingresos, balances, operaciones de insiders y posiciones institucionales")}
+            ${feature("&#x1F514;", "Alertas premium", "Notificaciones WhatsApp, alertas ilimitadas y hasta 5 carteras")}
+          </table>
+          {{growth_box}}
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;"><tr><td style="padding:14px 16px;background:#eff6ff;border-radius:10px;border:1px solid #bfdbfe;">
+            <p style="margin:0;font-size:14px;color:#1e40af;text-align:center;line-height:1.5;">Planes desde 4,99&euro;/mes. Cancela cuando quieras.</p>
+          </td></tr></table>
+          ${cta("Suscr\u00edbete a Trefolio Pro", "{{base_url}}/pricing")}
+          ${ctaSecondary("Ver precios", "{{base_url}}/pricing")}
+          <div style="margin-top:24px;padding-top:20px;border-top:1px solid #e2e8f0;">
+            <p style="margin:0 0 4px;font-size:14px;color:#475569;line-height:1.6;">Espero que la prueba te haya dado una idea real de lo que trefolio puede hacer. Si tienes feedback, me encantar&iacute;a escucharlo.</p>
+            <p style="margin:12px 0 0;font-size:14px;color:#0f172a;font-weight:600;">Marcos</p>
+            <p style="margin:0;font-size:12px;color:#64748b;">Fundador, trefolio</p>
+          </div>
+        </td></tr>
+${FOOTER}`,
+    bodyText: "Your Pro trial has ended\n\nHi {{display_name}}, your 7-day Trefolio Pro trial is over.\n\nHere's what you'll miss:\n- Advanced Analytics: Sharpe ratio, max drawdown, volatility\n- AI Analysis: 30 calls/day with deep stock insights\n- Company Fundamentals: income, balance sheets, insider trades\n- Premium Alerts: WhatsApp, unlimited alerts, up to 5 portfolios\n\nPlans start at €4.99/month. Cancel anytime.\n\nSubscribe: {{base_url}}/pricing\n\nI hope the trial gave you a real taste of what trefolio can do. If you have feedback, I'd genuinely love to hear it.\n\nMarcos\nFounder, trefolio",
+    bodyTextEs: "Tu prueba Pro ha terminado\n\nHola {{display_name}}, tu prueba de 7 días de Trefolio Pro ha terminado.\n\nEsto es lo que echarás de menos:\n- Analítica avanzada: ratio Sharpe, drawdown máximo, volatilidad\n- Análisis IA: 30 consultas/día con insights profundos\n- Fundamentales de empresas: ingresos, balances, insiders\n- Alertas premium: WhatsApp, ilimitadas, hasta 5 carteras\n\nPlanes desde 4,99€/mes. Cancela cuando quieras.\n\nSuscríbete: {{base_url}}/pricing\n\nEspero que la prueba te haya dado una idea real de lo que trefolio puede hacer.\n\nMarcos\nFundador, trefolio",
+    category: "lifecycle",
+    experienceLevel: "",
+  },
   ...featureTemplates,
   {
     slug: "referral-program",

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifySessionToken } from "@/lib/auth/session";
 
-const PUBLIC_ROUTES = new Set(["/login", "/signup", "/landing", "/privacy", "/terms", "/verify-email", "/blog", "/contact", "/demo", "/releasenotes", "/leaf", "/unsubscribe"]);
+const PUBLIC_ROUTES = new Set(["/login", "/signup", "/landing", "/privacy", "/terms", "/verify-email", "/blog", "/contact", "/demo", "/releasenotes", "/leaf", "/unsubscribe", "/about"]);
 const PUBLIC_API_ROUTES = new Set([
   "/api/auth/login",
   "/api/auth/signup",
@@ -28,6 +28,8 @@ const PUBLIC_API_ROUTES = new Set([
   "/api/cron/refresh-holdings",
   "/api/cron/portfolio-snapshots",
   "/api/cron/x-post",
+  "/api/cron/trial-invitations",
+  "/api/cron/trial-expiration",
   "/api/portfolio/summary",
   "/api/device/ai-summary",
   "/api/device/firmware",

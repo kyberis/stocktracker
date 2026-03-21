@@ -1,4 +1,4 @@
-import type { WelcomeNoStocksStrings, WelcomeFreeStocksStrings, BifolioUpgradeStrings, TrefolioUpgradeStrings } from "../template-types";
+import type { WelcomeNoStocksStrings, WelcomeFreeStocksStrings, BifolioUpgradeStrings, TrefolioUpgradeStrings, TrialInvitationStrings, TrialExpiredStrings } from "../template-types";
 
 export const welcomeNoStocks: WelcomeNoStocksStrings = {
   heading: "Willkommen bei trefolio!",
@@ -186,4 +186,79 @@ export const trefolioUpgrade: TrefolioUpgradeStrings = {
   ctaPrimary: "KI-Einblicke erkunden",
   ctaSecondary: "Fundamentaldaten anzeigen",
   communityText: "&#x1F31F; <strong>Sie sind eines unserer ersten 500 Pro-Mitglieder.</strong> Danke, dass Sie an trefolio glauben. Ihr Feedback pr&auml;gt, was wir als N&auml;chstes bauen."
+};
+
+export const trialInvitation: TrialInvitationStrings = {
+  heading: "Ihr Pro-Test wartet",
+  paragraph: "Hallo {{display_name}}, Sie haben Ihr Portfolio bei trefolio aufgebaut &mdash; erleben Sie jetzt 7 Tage lang das komplette Toolkit, v&ouml;llig kostenlos.",
+  groups: [
+    {
+      label: "Daten &amp; Analyse",
+      items: [
+        "Alpha Vantage Premium-Daten",
+        "Fundamentaldaten: GuV, Bilanz, Kapitalflussrechnung",
+        "Dashboard wirtschaftlicher Indikatoren"
+      ]
+    },
+    {
+      label: "Intelligence",
+      items: [
+        "Nachrichtenfeed mit Stimmungsanalyse",
+        "Insider-Handel &amp; institutionelle Beteiligungen",
+        "KI-Analyse: 30 Anrufe/Tag, unbegrenzt pro Monat"
+      ]
+    },
+    {
+      label: "Erweiterte Tools",
+      items: [
+        "Sharpe-Ratio, maximaler Drawdown, Volatilit&auml;t",
+        "Vollst&auml;ndige Portfolio-Performance-Historie",
+        "Aktien-Screener: &uuml;ber 600 Aktien, 6 Filter"
+      ]
+    },
+    {
+      label: "Alarme &amp; Grenzen",
+      items: [
+        "WhatsApp- &amp; Ger&auml;tebenachrichtigungen",
+        "Unbegrenzte Preisalarme &amp; Positionen",
+        "Bis zu 5 Portfolios"
+      ]
+    }
+  ],
+  ctaPrimary: "Kostenlosen Test starten",
+  ctaSecondary: "Leistungsumfang ansehen",
+  disclaimer: "Keine Kreditkarte erforderlich. Nach 7 Tagen wechselt Ihr Konto zum kostenlosen Tarif &mdash; ohne &Uuml;berraschungen.",
+  signoffIntro: "Ich habe trefolio gebaut, weil ich mein eigenes Portfolio besser verfolgen wollte. Ich hoffe, Sie genie&szlig;en die volle Erfahrung.",
+  signoffReply: "Sagen Sie mir, was Sie denken &mdash; antworten Sie einfach auf diese E-Mail."
+};
+
+export const trialExpired: TrialExpiredStrings = {
+  heading: "Ihr Pro-Test ist beendet",
+  paragraph: "Hallo {{display_name}}, Ihr 7-t&auml;giger Trefolio-Pro-Test ist vorbei. Das verpassen Sie k&uuml;nftig:",
+  features: [
+    {
+      title: "Erweiterte Analysen",
+      desc: "Sharpe-Ratio, maximaler Drawdown, Volatilit&auml;t und vollst&auml;ndige Wachstumsgeschichte"
+    },
+    {
+      title: "KI-Analyse",
+      desc: "30 Anrufe/Tag mit tiefen Aktien-Einblicken und Portfolio-Reviews"
+    },
+    {
+      title: "Unternehmensfundamentaldaten",
+      desc: "GuV, Bilanzen, Insider-Handel und institutionelle Beteiligungen"
+    },
+    {
+      title: "Premium-Alarme",
+      desc: "WhatsApp-Benachrichtigungen, unbegrenzte Alarme und bis zu 5 Portfolios"
+    }
+  ],
+  pricingNote: "Pl&auml;ne ab &euro;4,99/Monat. Jederzeit k&uuml;ndbar.",
+  ctaPrimary: "Trefolio Pro abonnieren",
+  ctaSecondary: "Preise ansehen",
+  signoffIntro: "Ich hoffe, der Test hat Ihnen gezeigt, was trefolio kann. &Uuml;ber Feedback freue ich mich wirklich sehr.",
+  growthTitle: "Ihr Portfolio ist w&auml;hrend der Testphase um {{growth_pct}}% gewachsen",
+  growthDesc: "Mit Pro k&ouml;nnten Sie weiterhin detaillierte Performance-Metriken verfolgen und KI-Einblicke zu Ihren n&auml;chsten Schritten erhalten.",
+  growthTitleDown: "M&auml;rkte ver&auml;ndert &mdash; Ihr Portfolio bewegte sich um {{growth_pct}}% w&auml;hrend der Testphase",
+  growthDescDown: "Mit Pro h&auml;tten Sie KI-Alerts und tiefere Analysen, um schneller auf Marktbewegungen zu reagieren.",
 };

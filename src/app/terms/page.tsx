@@ -147,6 +147,19 @@ export default function TermsOfServicePage() {
               subscribers will be given at least 30 days&apos; notice before any
               price increase takes effect on their subscription.
             </p>
+
+            <h3>Promotional Trials</h3>
+            <p>
+              From time to time, we may offer promotional trials of paid tiers (e.g., a 7-day Trefolio Pro trial).
+              Promotional trials are subject to the following terms:
+            </p>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>Trials do not require payment information. No charge is made during the trial period.</li>
+              <li>Each account is eligible for one promotional trial only.</li>
+              <li>At the end of the trial period, your account automatically reverts to the Folio (Free) tier. All your data is preserved.</li>
+              <li>Trial eligibility is determined at our sole discretion and may be withdrawn at any time.</li>
+              <li>Promotional trials may not be combined with other offers, referral rewards, or promotional codes.</li>
+            </ul>
           </section>
 
           <section>

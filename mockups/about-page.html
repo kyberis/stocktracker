@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>About — trefolio (Mockup)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  body { font-family: 'Inter', system-ui, sans-serif; }
+  .photo-professional {
+    filter: grayscale(30%) brightness(1.1) contrast(1.05);
+  }
+  .photo-ring {
+    background: conic-gradient(from 0deg, #10b981, #34d399, #6ee7b7, #34d399, #10b981);
+    padding: 3px;
+  }
+  .prose-story p {
+    margin-bottom: 1.5rem;
+    line-height: 1.8;
+  }
+  .prose-story .highlight {
+    color: #6ee7b7;
+    font-weight: 500;
+  }
+  .quote-block {
+    border-left: 3px solid #10b981;
+    padding-left: 1.5rem;
+    font-style: italic;
+    color: #94a3b8;
+  }
+</style>
+</head>
+<body class="bg-slate-950 text-slate-300 antialiased">
+
+<!-- Nav -->
+<nav class="bg-slate-950/95 backdrop-blur-xl border-b border-slate-800/60 sticky top-0 z-50">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <a href="#" class="text-lg font-bold text-white hover:text-emerald-400 transition-colors">trefolio</a>
+    <a href="#" class="text-sm text-slate-400 hover:text-white transition-colors">Contact Us</a>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="pt-20 pb-4">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+    <h1 class="text-3xl sm:text-4xl font-bold text-white mb-3">The person behind trefolio</h1>
+    <p class="text-slate-400 text-lg max-w-xl mx-auto">Why I built this, and why it matters.</p>
+  </div>
+</section>
+
+<!-- Story -->
+<section class="py-16">
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 prose-story">
+
+    <h2 class="text-2xl font-bold text-white mb-8">Why I built trefolio</h2>
+
+    <p>
+      I'm a systems engineer by trade, but markets and economics have always been a genuine passion.
+      Over the past few years I went from casually following the markets to actively investing across
+      stocks, ETFs, and other instruments — learning about valuations, cycles, and what really drives
+      long-term returns.
+    </p>
+
+    <p>
+      One book in particular changed the way I think about investing:
+    </p>
+
+    <div class="quote-block mb-8">
+      <p class="mb-0">
+        <span class="highlight">The Intelligent Investor</span> by Benjamin Graham reinforced many
+        of the lessons I'd been learning the hard way, and helped me build a more disciplined framework
+        for understanding how markets actually work — or at least get closer to it.
+      </p>
+    </div>
+
+    <p>
+      To track my growing portfolio I tried everything — free tools, paid subscriptions, spreadsheets.
+      None of them felt right. The data was often inaccurate, the information wasn't relevant to what
+      I actually needed, and I'd always end up going back to my broker to double-check the numbers.
+    </p>
+
+    <p>
+      Then it got worse. I started using <span class="highlight">different brokers for different
+      instruments</span> — one for European equities, another for US stocks, another for ETFs — each
+      chosen for convenience or fees. Suddenly I needed an aggregator, a single place to see everything.
+      The tools that existed were either too basic, too expensive for the data they actually provided,
+      or simply not built for investors like me.
+    </p>
+
+    <p>
+      So I started building my own.
+    </p>
+
+    <p>
+      What began as a personal side project kept growing. I added features I wished existed in other
+      tools — multi-currency support done right, proper European broker imports, dividend tracking
+      that actually makes sense. Eventually it reached a point where I thought:
+      <span class="highlight">this could help other people too</span>.
+    </p>
+
+    <p>
+      The rise of AI in software development has been a game-changer. With AI-assisted development,
+      the pace of progress accelerated dramatically — features that would have taken weeks shipped
+      in days. That speed is what made it possible for a solo founder to build a product that can
+      genuinely compete with established tools, at an affordable price.
+    </p>
+
+    <p>
+      I'm also building <span class="highlight">trefolio Leaf</span> — a dedicated hardware device
+      to track your portfolio at a glance, without picking up your phone and inevitably getting
+      distracted by something else entirely. It's the tool I've always wanted on my desk.
+    </p>
+
+    <h2 class="text-2xl font-bold text-white mb-8 mt-16">Join the community</h2>
+
+    <p>
+      trefolio is built by an investor, for investors. Every feature comes from a real need, and
+      every piece of feedback shapes what comes next.
+    </p>
+
+    <p>
+      If you're looking for an affordable, transparent portfolio tracker that respects your data and
+      your time — I'd love for you to give it a try. And whatever your experience, your feedback
+      will certainly be considered.
+    </p>
+
+    <!-- Author sign-off -->
+    <div class="mt-12 pt-8 border-t border-slate-800/50">
+      <p class="text-white font-semibold text-lg">Marcos Suarez</p>
+      <p class="text-emerald-400 text-sm">Founder of trefolio</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="pb-20">
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="bg-slate-900/50 border border-slate-800/50 rounded-2xl p-8 sm:p-10 text-center">
+      <h3 class="text-xl font-bold text-white mb-3">Ready to take control of your portfolio?</h3>
+      <p class="text-slate-400 mb-6 max-w-md mx-auto">
+        Start tracking your investments today. Free to get started, upgrade when you're ready.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-3 justify-center">
+        <a href="#" class="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-emerald-500 text-white font-semibold hover:bg-emerald-400 transition-colors shadow-lg shadow-emerald-500/25">
+          Get Started Free
+        </a>
+        <a href="#" class="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-slate-800 text-slate-300 font-medium hover:bg-slate-700 hover:text-white transition-colors border border-slate-700">
+          Get in Touch
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer (simplified mock of PublicFooter) -->
+<footer class="bg-slate-950 border-t border-slate-800/50 pt-16 pb-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+      <div class="col-span-2 md:col-span-1">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-8 h-8 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+            <svg class="w-5 h-5 text-emerald-400" viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="12" cy="12" r="8" />
+            </svg>
+          </div>
+          <span class="text-lg font-bold text-white">trefolio</span>
+        </div>
+        <p class="text-sm text-slate-400 leading-relaxed max-w-xs">
+          The simplest way to manage your stock portfolio. Built for European investors.
+        </p>
+      </div>
+      <div>
+        <h4 class="text-sm font-semibold text-white mb-4">Product</h4>
+        <ul class="space-y-3">
+          <li><a href="#" class="text-sm text-slate-400 hover:text-white transition-colors">Features</a></li>
+          <li><a href="#" class="text-sm text-slate-400 hover:text-white transition-colors">Pricing</a></li>
+          <li><a href="#" class="text-sm text-slate-400 hover:text-white transition-colors">FAQ</a></li>
+          <li><a href="#" class="text-sm text-slate-400 hover:text-white transition-colors">Blog</a></li>
+          <li><a href="#" class="text-sm text-slate-400 hover:text-white transition-colors">About</a></li>
+          <li><a href="#" class="text-sm text-slate-400 hover:text-white transition-colors">Contact Us</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="text-sm font-semibold text-white mb-4">Account</h4>
+        <ul class="space-y-3">
+          <li><a href="#" class="text-sm text-slate-400 hover:text-white transition-colors">Sign Up</a></li>
+          <li><a href="#" class="text-sm text-slate-400 hover:text-white transition-colors">Log In</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="text-sm font-semibold text-white mb-4">Legal</h4>
+        <ul class="space-y-3">
+          <li><a href="#" class="text-sm text-slate-400 hover:text-white transition-colors">Privacy Policy</a></li>
+          <li><a href="#" class="text-sm text-slate-400 hover:text-white transition-colors">Terms of Service</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="border-t border-slate-800/50 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <p class="text-sm text-slate-500">&copy; 2026 trefolio. Made in Europe.</p>
+      <p class="text-xs text-slate-600">Market data provided by Yahoo Finance and Alpha Vantage. Not financial advice.</p>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -7,6 +7,7 @@ import {
   markDeviceLinked,
   getDeviceTemplate,
   isFeatureEnabled,
+  isFeatureEnabledForUser,
   findPortfolioById,
 } from "@/lib/db";
 import { withMetrics } from "@/lib/with-metrics";
@@ -39,6 +40,10 @@ export const GET = withMetrics("/api/device/config", async (req: NextRequest) =>
   const user = await resolveUser(req);
   if (!user) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  if (!(await isFeatureEnabledForUser("device_enabled", user.id))) {
+    return Response.json({ error: "Device features are not enabled" }, { status: 404 });
   }
 
   // Portfolio info for device display

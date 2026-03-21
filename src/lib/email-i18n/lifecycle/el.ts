@@ -1,4 +1,4 @@
-import type { WelcomeNoStocksStrings, WelcomeFreeStocksStrings, BifolioUpgradeStrings, TrefolioUpgradeStrings } from "../template-types";
+import type { WelcomeNoStocksStrings, WelcomeFreeStocksStrings, BifolioUpgradeStrings, TrefolioUpgradeStrings, TrialInvitationStrings, TrialExpiredStrings } from "../template-types";
 
 export const welcomeNoStocks: WelcomeNoStocksStrings = {
   heading: "Καλώς ήρθες στο trefolio!",
@@ -186,4 +186,87 @@ export const trefolioUpgrade: TrefolioUpgradeStrings = {
   ctaPrimary: "Εξερεύνησε τις αναλύσεις AI",
   ctaSecondary: "Δες τα θεμελιώδη",
   communityText: "&#x1F31F; <strong>Είσαι ένας από τους πρώτους 500 Pro μέλη.</strong> Σε ευχαριστούμε που πίστεψες στο trefolio. Το feedback σου καθορίζει τι θα φτιάξουμε στη συνέχεια."
+};
+
+export const trialInvitation: TrialInvitationStrings = {
+  heading: "Η δοκιμ&#x3ae; Pro σας περιμ&#x3ad;νει",
+  paragraph:
+    "Γεια σου {{display_name}}, χτ&#x3af;ζεις το χαρτοφυλ&#x3ac;κι&#x3cc; σου στο trefolio &mdash; τ&#x3ce;ρα δοκ&#x3af;μασε ολ&#x3cc;κληρο το toolkit για 7 ημ&#x3ad;ρες, εντελ&#x3ce;ς δωρε&#x3ac;ν.",
+  groups: [
+    {
+      label: "Δεδομ&#x3ad;να &amp; αν&#x3ac;λυση",
+      items: [
+        "Premium δεδομ&#x3ad;να Alpha Vantage",
+        "Θεμελι&#x3ce;δη: αποτελ&#x3ad;σματα, ισολογισμ&#x3cc;ς, ταμειακ&#x3ae; ρο&#x3ae;",
+        "Π&#x3af;νακας οικονομικ&#x3ce;ν δεικτ&#x3ce;ν",
+      ],
+    },
+    {
+      label: "Νοημοσ&#x3cd;νη",
+      items: [
+        "Ρο&#x3ae; ειδ&#x3ae;σεων με αν&#x3ac;λυση συναισθ&#x3ae;ματος",
+        "Συναλλαγ&#x3ad;ς insider &amp; θεσμικ&#x3ad;ς κατοχ&#x3ad;ς",
+        "Αν&#x3ac;λυση AI: 30 κλ&#x3ae;σεις/ημ&#x3ad;ρα, απερι&#x3cc;ριστες μηνια&#x3af;ως",
+      ],
+    },
+    {
+      label: "Προηγμ&#x3ad;να εργαλε&#x3af;α",
+      items: [
+        "Δε&#x3af;κτης Sharpe, μ&#x3ad;γιστη κ&#x3ac;θοδος, διακ&#x3cd;μανση",
+        "Πλ&#x3ae;ρες ιστορικ&#x3cc; απ&#x3cc;δοσης χαρτοφυλακ&#x3af;ου",
+        "Φ&#x3af;λτρο μετοχ&#x3ce;ν: 600+ μετοχ&#x3ad;ς, 6 φ&#x3af;λτρα",
+      ],
+    },
+    {
+      label: "Ειδοποι&#x3ae;σεις &amp; &#x3cc;ρια",
+      items: [
+        "Ειδοποι&#x3ae;σεις WhatsApp &amp; συσκευ&#x3ae;ς",
+        "Απερι&#x3cc;ριστες ειδοποι&#x3ae;σεις τιμ&#x3ce;ν &amp; θ&#x3ad;σεις",
+        "&#x388;ως 5 χαρτοφυλ&#x3ac;κια",
+      ],
+    },
+  ],
+  ctaPrimary: "Ενεργοπο&#x3af;ησε τη δωρε&#x3ac;ν δοκιμ&#x3ae; σου",
+  ctaSecondary: "Δες τι περιλαμβ&#x3ac;νεται",
+  disclaimer:
+    "Δεν απαιτε&#x3af;ται πιστωτικ&#x3ae; κ&#x3ac;ρτα. Μετ&#x3ac; απ&#x3cc; 7 ημ&#x3ad;ρες, ο λογαριασμ&#x3cc;ς σου επιστρ&#x3ad;φει στο δωρε&#x3ac;ν πλ&#x3ac;νο &mdash; χωρ&#x3af;ς εκπλ&#x3ae;ξεις.",
+  signoffIntro:
+    "&#x388;φτιαξα το trefolio επειδ&#x3ae; &#x3ae;θελα &#x3ad;ναν καλ&#x3cd;τερο τρ&#x3cc;πο να παρακολουθ&#x3ce; το δικ&#x3cc; μου χαρτοφυλ&#x3ac;κιο. Ελπ&#x3af;ζω να απολα&#x3cd;σεις την πλ&#x3ae;ρη εμπειρ&#x3af;α.",
+  signoffReply:
+    "Πες μου τη γν&#x3ce;μη σου &mdash; απλ&#x3ac; απ&#x3ac;ντησε σε αυτ&#x3cc; το email.",
+};
+
+export const trialExpired: TrialExpiredStrings = {
+  heading: "Η δοκιμ&#x3ae; Pro σας τελε&#x3af;ωσε",
+  paragraph:
+    "Γεια σου {{display_name}}, η 7&#x3ae;μερη δοκιμ&#x3ae; Trefolio Pro τελε&#x3af;ωσε. Να τι θα χ&#x3ac;σεις:",
+  features: [
+    {
+      title: "Προηγμ&#x3ad;νη αναλυτικ&#x3ae;",
+      desc: "Δε&#x3af;κτης Sharpe, μ&#x3ad;γιστη κ&#x3ac;θοδος, διακ&#x3cd;μανση και πλ&#x3ae;ρες ιστορικ&#x3cc; αν&#x3ac;πτυξης",
+    },
+    {
+      title: "Αν&#x3ac;λυση AI",
+      desc: "30 κλ&#x3ae;σεις/ημ&#x3ad;ρα με εμβαθυσμ&#x3ad;νες πληροφορ&#x3af;ες για μετοχ&#x3ad;ς και αξιολογ&#x3ae;σεις χαρτοφυλακ&#x3af;ου",
+    },
+    {
+      title: "Θεμελι&#x3ce;δη εταιρε&#x3af;ας",
+      desc: "Καταστ&#x3ac;σεις αποτελεσμ&#x3ac;των, ισολογισμο&#x3af;, συναλλαγ&#x3ad;ς insider και θεσμικ&#x3ad;ς κατοχ&#x3ad;ς",
+    },
+    {
+      title: "Premium ειδοποι&#x3ae;σεις",
+      desc: "Ειδοποι&#x3ae;σεις WhatsApp, απερι&#x3cc;ριστες ειδοποι&#x3ae;σεις και &#x3ad;ως 5 χαρτοφυλ&#x3ac;κια",
+    },
+  ],
+  pricingNote: "Τα πλ&#x3ac;να ξεκινο&#x3cd;ν απ&#x3cc; &euro;4,99/μ&#x3ae;να. Ακ&#x3cd;ρωση αν&#x3ac; π&#x3ac;σα στιγμ&#x3ae;.",
+  ctaPrimary: "Εγγραφ&#x3ae; στο Trefolio Pro",
+  ctaSecondary: "Δες τιμολ&#x3cc;γηση",
+  signoffIntro:
+    "Ελπ&#x3af;ζω η δοκιμ&#x3ae; να σου &#x3ad;δωσε μια πραγματικ&#x3ae; γε&#x3cd;ση απ&#x3cc; το τι μπορε&#x3af; να κ&#x3ac;νει το trefolio. Αν &#x3ad;χεις feedback, θα &#x3ae;θελα πραγματικ&#x3ac; να το ακο&#x3cd;σω.",
+  growthTitle:
+    "&Tau;&omicron; &chi;&alpha;&rho;&tau;&omicron;&phi;&upsilon;&lambda;ά&kappa;&iota;ό &sigma;&alpha;&sigmaf; &alpha;&upsilon;&xi;ή&theta;&eta;&kappa;&epsilon; &kappa;&alpha;&tau;ά {{growth_pct}}% &kappa;&alpha;&tau;ά &tau;&eta; &delta;&omicron;&kappa;&iota;&mu;&alpha;&sigma;&tau;&iota;&kappa;ή &pi;&epsilon;&rho;ί&omicron;&delta;&omicron;",
+  growthDesc:
+    "&Mu;&epsilon; &tau;&omicron; Pro, &mu;&pi;&omicron;&rho;&epsilon;ί&tau;&epsilon; &nu;&alpha; &sigma;&upsilon;&nu;&epsilon;&chi;ί&sigma;&epsilon;&tau;&epsilon; &nu;&alpha; &pi;&alpha;&rho;&alpha;&kappa;&omicron;&lambda;&omicron;&upsilon;&theta;&epsilon;ί&tau;&epsilon; &lambda;&epsilon;&pi;&tau;&omicron;&mu;&epsilon;&rho;&epsilon;ί&sigmaf; &mu;&epsilon;&tau;&rho;ή&sigma;&epsilon;&iota;&sigmaf; &alpha;&pi;ό&delta;&omicron;&sigma;&eta;&sigmaf; &kappa;&alpha;&iota; &nu;&alpha; &lambda;&alpha;&mu;&beta;ά&nu;&epsilon;&tau;&epsilon; &alpha;&nu;&alpha;&lambda;ύ&sigma;&epsilon;&iota;&sigmaf; AI &gamma;&iota;&alpha; &tau;&alpha; &epsilon;&pi;ό&mu;&epsilon;&nu;&alpha; &beta;ή&mu;&alpha;&tau;ά &sigma;&alpha;&sigmaf;.",
+  growthTitleDown: "&Omicron;&iota; &alpha;&gamma;&omicron;&rho;έ&sigmaf; ά&lambda;&lambda;&alpha;&xi;&alpha;&nu; &mdash; &tau;&omicron; &chi;&alpha;&rho;&tau;&omicron;&phi;&upsilon;&lambda;ά&kappa;&iota;ό &sigma;&alpha;&sigmaf; &kappa;&iota;&nu;ή&theta;&eta;&kappa;&epsilon; {{growth_pct}}% &kappa;&alpha;&tau;ά &tau;&eta; &delta;&omicron;&kappa;&iota;&mu;&alpha;&sigma;&tau;&iota;&kappa;ή &pi;&epsilon;&rho;ί&omicron;&delta;&omicron;",
+  growthDescDown: "&Mu;&epsilon; &tau;&omicron; Pro, &theta;&alpha; &epsilon;ί&chi;&alpha;&tau;&epsilon; &epsilon;&iota;&delta;&omicron;&pi;&omicron;&iota;ή&sigma;&epsilon;&iota;&sigmaf; AI &kappa;&alpha;&iota; &beta;&alpha;&theta;ύ&tau;&epsilon;&rho;&epsilon;&sigmaf; &alpha;&nu;&alpha;&lambda;ύ&sigma;&epsilon;&iota;&sigmaf; &gamma;&iota;&alpha; &nu;&alpha; &alpha;&nu;&tau;&iota;&delta;&rho;ά&sigma;&epsilon;&tau;&epsilon; &gamma;&rho;&eta;&gamma;&omicron;&rho;ό&tau;&epsilon;&rho;&alpha; &sigma;&tau;&iota;&sigmaf; &kappa;&iota;&nu;ή&sigma;&epsilon;&iota;&sigmaf; &tau;&eta;&sigmaf; &alpha;&gamma;&omicron;&rho;ά&sigmaf;.",
 };

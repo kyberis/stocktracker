@@ -69,6 +69,33 @@ export interface ReferralProgramStrings {
   tipText: string;
 }
 
+/** Trial Invitation: 4 feature groups, heading, paragraph, CTAs, disclaimer, sign-off */
+export interface TrialInvitationStrings {
+  heading: string;
+  paragraph: string;
+  groups: { label: string; items: string[] }[];
+  ctaPrimary: string;
+  ctaSecondary: string;
+  disclaimer: string;
+  signoffIntro: string;
+  signoffReply: string;
+}
+
+/** Trial Expired: 4 feature rows, heading, paragraph, pricing, CTAs, sign-off, growth callout */
+export interface TrialExpiredStrings {
+  heading: string;
+  paragraph: string;
+  features: { title: string; desc: string }[];
+  pricingNote: string;
+  ctaPrimary: string;
+  ctaSecondary: string;
+  signoffIntro: string;
+  growthTitle: string;
+  growthDesc: string;
+  growthTitleDown: string;
+  growthDescDown: string;
+}
+
 /** Footer strings shared across all templates */
 export interface TemplateFooterStrings {
   receivedText: string;

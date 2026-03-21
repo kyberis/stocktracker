@@ -58,6 +58,10 @@ export const GET = withMetrics("/api/admin/users/[userId]/data", async (
     aiCallsThisMonth: dbUser.ai_calls_this_month,
     experienceLevel: dbUser.experience_level,
     language: settings.language,
+    trialInvitedAt: dbUser.trial_invited_at,
+    trialActivatedAt: dbUser.trial_activated_at,
+    trialToken: dbUser.trial_token,
+    trialExpiredNotified: dbUser.trial_expired_notified === 1,
   };
 
   return NextResponse.json({

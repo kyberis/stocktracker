@@ -383,6 +383,10 @@ function mockRow(overrides: Record<string, unknown> = {}): Row {
     referral_reward_days: 0,
     ai_tokens_this_month: 0,
     ai_tokens_today: 0,
+    trial_invited_at: "",
+    trial_activated_at: "",
+    trial_token: "",
+    trial_expired_notified: 0,
     ...overrides,
   } as unknown as Row;
 }
@@ -431,6 +435,10 @@ describe("rowToDbUser", () => {
       referral_reward_days: 0,
       ai_tokens_this_month: 0,
       ai_tokens_today: 0,
+      trial_invited_at: "",
+      trial_activated_at: "",
+      trial_token: "",
+      trial_expired_notified: 0,
     });
   });
 
@@ -628,6 +636,10 @@ describe("mapUser", () => {
     referral_reward_days: 0,
     ai_tokens_this_month: 0,
     ai_tokens_today: 0,
+    trial_invited_at: "",
+    trial_activated_at: "",
+    trial_token: "",
+    trial_expired_notified: 0,
   };
 
   it("maps DbUser to PublicUser with correct field mapping", () => {

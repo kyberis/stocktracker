@@ -1,7 +1,9 @@
+import { randomBytes } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/guards";
 import { findUserById, getEmailTemplate, getUserSettings, logEmailSend } from "@/lib/db";
 import { ensureReferralCode } from "@/lib/db/referrals";
+import { ensureInitialized } from "@/lib/db/client";
 import { withMetrics } from "@/lib/with-metrics";
 import { sendEmail, htmlToPlainText } from "@/lib/email";
 import { getTemplateSubject, getLocalizedTemplateHtml } from "@/lib/email-i18n";
@@ -42,12 +44,14 @@ export const POST = withMetrics("/api/admin/email-templates/send", async (req: N
   let subject = overrideSubject || "";
   let html = overrideHtml || "";
   let text = overrideText || "";
+  let templateSlug = "";
 
   if (templateId) {
     const template = await getEmailTemplate(templateId);
     if (!template) {
       return NextResponse.json({ error: "Template not found" }, { status: 404 });
     }
+    templateSlug = template.slug;
     if (!subject) subject = getTemplateSubject(template.slug, userLang, template.subject, template.subjectEs);
     if (!html) {
       const localized = await getLocalizedTemplateHtml(template.slug, userLang);
@@ -73,17 +77,37 @@ export const POST = withMetrics("/api/admin/email-templates/send", async (req: N
   // Replace common placeholders
   html = html.replaceAll("{{base_url}}", baseUrl);
   text = text.replaceAll("{{base_url}}", baseUrl);
-  if (user.display_name) {
-    html = html.replaceAll("{{name}}", user.display_name);
-    text = text.replaceAll("{{name}}", user.display_name);
+  const displayName = user.display_name || "there";
+  html = html.replaceAll("{{name}}", displayName);
+  text = text.replaceAll("{{name}}", displayName);
+  html = html.replaceAll("{{display_name}}", displayName);
+  text = text.replaceAll("{{display_name}}", displayName);
+
+  html = html.replaceAll("{{growth_box}}", "");
+  text = text.replaceAll("{{growth_box}}", "");
+
+  if (html.includes("{{trial_token}}") || text.includes("{{trial_token}}")) {
+    let token = user.trial_token;
+    if (!token) {
+      token = randomBytes(32).toString("hex");
+      const client = await ensureInitialized();
+      await client.execute({
+        sql: "UPDATE users SET trial_token = ?, trial_invited_at = CASE WHEN trial_invited_at = '' THEN datetime('now') ELSE trial_invited_at END WHERE id = ?",
+        args: [token, userId],
+      });
+    }
+    html = html.replaceAll("{{trial_token}}", token);
+    text = text.replaceAll("{{trial_token}}", token);
   }
 
+  const isTrialTemplate = templateSlug.startsWith("trial-");
   const result = await sendEmail({
     to: user.email,
     subject,
     html,
     text: text || htmlToPlainText(html),
     userId,
+    ...(isTrialTemplate && { from: "Marcos from trefolio <communications@trefolio.com>", replyTo: "communications@trefolio.com" }),
   });
 
   if (!result.success) {

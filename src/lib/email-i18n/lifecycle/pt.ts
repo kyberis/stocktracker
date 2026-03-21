@@ -1,4 +1,4 @@
-import type { WelcomeNoStocksStrings, WelcomeFreeStocksStrings, BifolioUpgradeStrings, TrefolioUpgradeStrings } from "../template-types";
+import type { WelcomeNoStocksStrings, WelcomeFreeStocksStrings, BifolioUpgradeStrings, TrefolioUpgradeStrings, TrialInvitationStrings, TrialExpiredStrings } from "../template-types";
 
 export const welcomeNoStocks: WelcomeNoStocksStrings = {
   heading: "Bem-vindo ao trefolio!",
@@ -186,4 +186,79 @@ export const trefolioUpgrade: TrefolioUpgradeStrings = {
   ctaPrimary: "Explorar insights de IA",
   ctaSecondary: "Ver fundamentos",
   communityText: "&#x1F31F; <strong>Faz parte dos nossos primeiros 500 membros Pro.</strong> Obrigado por acreditar no trefolio. O seu feedback molda o que constru&iacute;mos a seguir."
+};
+
+export const trialInvitation: TrialInvitationStrings = {
+  heading: "O seu teste Pro est&aacute; &agrave; espera",
+  paragraph: "Ol&aacute; {{display_name}}, tem vindo a construir o seu portf&oacute;lio no trefolio &mdash; experimente agora o kit completo durante 7 dias, totalmente gratuito.",
+  groups: [
+    {
+      label: "Dados &amp; an&aacute;lise",
+      items: [
+        "Dados premium Alpha Vantage",
+        "Fundamentais: demonstra&ccedil;&atilde;o de resultados, balan&ccedil;o, fluxo de caixa",
+        "Painel de indicadores econ&oacute;micos"
+      ]
+    },
+    {
+      label: "Intelig&ecirc;ncia",
+      items: [
+        "Feed de not&iacute;cias com an&aacute;lise de sentimento",
+        "Opera&ccedil;&otilde;es de insiders &amp; participa&ccedil;&otilde;es institucionais",
+        "An&aacute;lise IA: 30 chamadas/dia, ilimitadas por m&ecirc;s"
+      ]
+    },
+    {
+      label: "Ferramentas avan&ccedil;adas",
+      items: [
+        "R&aacute;cio de Sharpe, drawdown m&aacute;ximo, volatilidade",
+        "Hist&oacute;rico completo de desempenho do portf&oacute;lio",
+        "Filtro de a&ccedil;&otilde;es: mais de 600 t&iacute;tulos, 6 filtros"
+      ]
+    },
+    {
+      label: "Alertas &amp; limites",
+      items: [
+        "Notifica&ccedil;&otilde;es WhatsApp e no dispositivo",
+        "Alertas de pre&ccedil;os e posi&ccedil;&otilde;es ilimitados",
+        "At&eacute; 5 portf&oacute;lios"
+      ]
+    }
+  ],
+  ctaPrimary: "Ative o seu teste gratuito",
+  ctaSecondary: "Ver o que est&aacute; inclu&iacute;do",
+  disclaimer: "Sem cart&atilde;o de cr&eacute;dito. Ap&oacute;s 7 dias, a sua conta volta ao plano Gratuito &mdash; sem surpresas.",
+  signoffIntro: "Criei o trefolio porque queria uma forma melhor de acompanhar o meu pr&oacute;prio portf&oacute;lio. Espero que goste da experi&ecirc;ncia completa.",
+  signoffReply: "Diga-me o que acha &mdash; basta responder a este email."
+};
+
+export const trialExpired: TrialExpiredStrings = {
+  heading: "O seu teste Pro terminou",
+  paragraph: "Ol&aacute; {{display_name}}, o seu teste Trefolio Pro de 7 dias terminou. Eis o que vai deixar de ter:",
+  features: [
+    {
+      title: "An&aacute;lises avan&ccedil;adas",
+      desc: "R&aacute;cio de Sharpe, drawdown m&aacute;ximo, volatilidade e hist&oacute;rico completo de crescimento"
+    },
+    {
+      title: "An&aacute;lise IA",
+      desc: "30 chamadas/dia com insights profundos sobre a&ccedil;&otilde;es e revis&otilde;es de portf&oacute;lio"
+    },
+    {
+      title: "Fundamentais das empresas",
+      desc: "Demonstra&ccedil;&otilde;es de resultados, balan&ccedil;os, opera&ccedil;&otilde;es de insiders e participa&ccedil;&otilde;es institucionais"
+    },
+    {
+      title: "Alertas premium",
+      desc: "Notifica&ccedil;&otilde;es WhatsApp, alertas ilimitados e at&eacute; 5 portf&oacute;lios"
+    }
+  ],
+  pricingNote: "Os planos come&ccedil;am em &euro;4,99/m&ecirc;s. Cancele quando quiser.",
+  ctaPrimary: "Subscrever o Trefolio Pro",
+  ctaSecondary: "Ver pre&ccedil;os",
+  signoffIntro: "Espero que o teste lhe tenha dado uma ideia real do que o trefolio pode fazer. Se tiver feedback, adoraria saber.",
+  growthTitle: "O seu portf&oacute;lio cresceu {{growth_pct}}% durante o per&iacute;odo de teste",
+  growthDesc: "Com o Pro, poder&aacute; continuar a acompanhar m&eacute;tricas de performance detalhadas e obter an&aacute;lises de IA sobre os seus pr&oacute;ximos passos.",
+  growthTitleDown: "Os mercados mudaram &mdash; o seu portf&oacute;lio variou {{growth_pct}}% durante o per&iacute;odo de teste",
+  growthDescDown: "Com o Pro, teria alertas de IA e an&aacute;lises mais profundas para reagir mais rapidamente aos movimentos do mercado.",
 };

@@ -2119,6 +2119,23 @@ const en: TranslationStrings = {
   nudgeCtaSkip: "Skip for now",
   nudgeCtaUpdateTx: "Update from broker",
 
+  // Trial
+  trialActivateHeading: "Your Pro Trial Awaits",
+  trialActivateSub: "Unlock everything in Trefolio Pro for 7 days \u2014 free.",
+  trialActivateCta: "Activate Trefolio Pro",
+  trialActivateDisclaimer: "No credit card required. After 7 days, your account returns to the Free plan \u2014 no surprises.",
+  trialActivating: "Activating\u2026",
+  trialWelcomeHeading: "Welcome to Trefolio Pro!",
+  trialWelcomeSub: "We\u2019re setting up your Pro experience",
+  trialWelcomeStep1: "Setting up your portfolio history\u2026",
+  trialWelcomeStep2: "Preparing your analytics\u2026",
+  trialWelcomeStep3: "Enabling Pro features\u2026",
+  trialWelcomeEndsOn: "Your trial ends on",
+  trialBannerActive: "remaining",
+  trialBannerSubscribe: "Subscribe to keep Pro \u2192",
+  trialBannerExpiredMessage: "Your Trefolio Pro trial has ended. Subscribe to continue.",
+  trialBannerExpiredCta: "Subscribe to Trefolio Pro",
+
   // Import compare page
   importCompareTitle: "Broker Sync vs CSV Import",
   importCompareSubtitle: "Two ways to get detailed transaction data \u2014 choose the one that fits your broker",

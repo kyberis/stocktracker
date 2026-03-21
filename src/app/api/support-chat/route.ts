@@ -5,7 +5,7 @@ import { requireFeatureAccess } from "@/lib/auth/guards";
 import {
   getGlobalOpenAIApiKey,
   findUserById,
-  isFeatureEnabled,
+  isFeatureEnabledForUser,
   getPlatformSetting,
   createSupportChatConversation,
   appendSupportChatMessages,
@@ -24,13 +24,13 @@ import { PLATFORM_LIMITS } from "@/lib/platform-config";
 import type { ChatMessage } from "@/lib/db";
 
 export const POST = withMetrics("/api/support-chat", async (request: NextRequest) => {
-  const enabled = await isFeatureEnabled("support_chat_enabled");
+  const { session, error } = await requireFeatureAccess(request, "support-chat");
+  if (error || !session) return error;
+
+  const enabled = await isFeatureEnabledForUser("support_chat_enabled", session.userId);
   if (!enabled) {
     return Response.json({ error: "Support chat is not available" }, { status: 404 });
   }
-
-  const { session, error } = await requireFeatureAccess(request, "support-chat");
-  if (error || !session) return error;
 
   const parsed = await parseBody(request, supportChatMessageSchema);
   if (!parsed.success) return parsed.error;

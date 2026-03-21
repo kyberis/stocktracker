@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { getUserSettings, updateUserSettings, findUserById, getGlobalAlphaVantageApiKey, getGlobalOpenAIApiKey, isFeatureEnabled } from "@/lib/db";
+import { getUserSettings, updateUserSettings, findUserById, getGlobalAlphaVantageApiKey, getGlobalOpenAIApiKey, resolveAllFlagsForUser } from "@/lib/db";
 import { parseBody } from "@/lib/api-response";
 import { userSettingsSchema } from "@/lib/schemas";
 import { canAccessTheme } from "@/lib/subscription";
@@ -11,24 +11,10 @@ export const GET = withMetrics("/api/user-settings", async (req: NextRequest) =>
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
 
-  const [
-    settings, user, alertsEnabled, csvExportEnabled, deviceEnabled, whatsappEnabled,
-    toolTransactions, toolDividends, toolPerformance,
-    toolTaxonomy, toolRebalancing, toolAccounts, toolWatchlist,
-  ] = await Promise.all([
+  const [settings, user, flags] = await Promise.all([
     getUserSettings(session.userId),
     findUserById(session.userId),
-    isFeatureEnabled("alerts_enabled"),
-    isFeatureEnabled("csv_export_enabled"),
-    isFeatureEnabled("device_enabled"),
-    isFeatureEnabled("whatsapp_enabled"),
-    isFeatureEnabled("tool_transactions_enabled"),
-    isFeatureEnabled("tool_dividends_enabled"),
-    isFeatureEnabled("tool_performance_enabled"),
-    isFeatureEnabled("tool_taxonomy_enabled"),
-    isFeatureEnabled("tool_rebalancing_enabled"),
-    isFeatureEnabled("tool_accounts_enabled"),
-    isFeatureEnabled("tool_watchlist_enabled"),
+    resolveAllFlagsForUser(session.userId),
   ]);
 
   const plan: SubscriptionPlan = (user?.plan as SubscriptionPlan) || session.plan || "free";
@@ -45,17 +31,17 @@ export const GET = withMetrics("/api/user-settings", async (req: NextRequest) =>
     defaultCurrency: settings.defaultCurrency,
     hasGlobalAvKey: getGlobalAlphaVantageApiKey().length > 0,
     hasOpenAIKey: getGlobalOpenAIApiKey().length > 0,
-    alertsEnabled,
-    csvExportEnabled,
-    deviceEnabled,
-    whatsappEnabled,
-    toolTransactionsEnabled: toolTransactions,
-    toolDividendsEnabled: toolDividends,
-    toolPerformanceEnabled: toolPerformance,
-    toolTaxonomyEnabled: toolTaxonomy,
-    toolRebalancingEnabled: toolRebalancing,
-    toolAccountsEnabled: toolAccounts,
-    toolWatchlistEnabled: toolWatchlist,
+    alertsEnabled: flags.alerts_enabled,
+    csvExportEnabled: flags.csv_export_enabled,
+    deviceEnabled: flags.device_enabled,
+    whatsappEnabled: flags.whatsapp_enabled,
+    toolTransactionsEnabled: flags.tool_transactions_enabled,
+    toolDividendsEnabled: flags.tool_dividends_enabled,
+    toolPerformanceEnabled: flags.tool_performance_enabled,
+    toolTaxonomyEnabled: flags.tool_taxonomy_enabled,
+    toolRebalancingEnabled: flags.tool_rebalancing_enabled,
+    toolAccountsEnabled: flags.tool_accounts_enabled,
+    toolWatchlistEnabled: flags.tool_watchlist_enabled,
   });
 });
 

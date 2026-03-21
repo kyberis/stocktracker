@@ -1,6 +1,6 @@
 import { Resend } from "resend";
 import { SignJWT, jwtVerify } from "jose";
-import { getGlobalResendApiKey, countHoldings, generateUnsubscribeToken } from "@/lib/db";
+import { getGlobalResendApiKey, countHoldings, generateUnsubscribeToken, getEmailTemplateBySlug, logEmailSend } from "@/lib/db";
 
 const VERIFICATION_TOKEN_TTL = 60 * 60 * 24; // 24 hours
 
@@ -81,6 +81,8 @@ export interface SendEmailOptions {
   userId?: string;
   replyTo?: string;
   headers?: Record<string, string>;
+  /** Override the default noreply sender (e.g. for personal trial emails). */
+  from?: string;
   /** Skip List-Unsubscribe headers (e.g. verification or internal emails). */
   internal?: boolean;
 }
@@ -118,7 +120,7 @@ export async function sendEmail(
 
   try {
     const { data, error } = await resend.emails.send({
-      from: getFromAddress(),
+      from: opts.from || getFromAddress(),
       to: opts.to,
       subject: opts.subject,
       html,
@@ -691,4 +693,194 @@ export async function sendAdminSubscriptionNotification(
     internal: true,
   });
   if (!result.success) console.error("Failed to send admin subscription notification:", result.error);
+}
+
+// ---------------------------------------------------------------------------
+// 6. 7-day Pro trial (transactional)
+// ---------------------------------------------------------------------------
+
+const TRIAL_FROM = "Marcos from trefolio <communications@trefolio.com>";
+
+function trialInvitationHtml(
+  displayName: string,
+  activateUrl: string,
+  _locale: EmailLocale,
+): string {
+  const name = displayName || "there";
+  const campaign = "trial_invitation";
+  const groups = [
+    ["Data &amp; Analysis", ["Alpha Vantage premium data", "Fundamentals: income, balance sheet, cash flow", "Economic indicators dashboard"]],
+    ["Intelligence", ["News feed with sentiment analysis", "Insider trades &amp; institutional holdings", "AI analysis: 30 calls/day, unlimited monthly"]],
+    ["Advanced Tools", ["Sharpe ratio, max drawdown, volatility", "Full portfolio performance history", "Stock screener: 600+ stocks, 6 filters"]],
+    ["Alerts &amp; Limits", ["WhatsApp &amp; device notifications", "Unlimited price alerts &amp; holdings", "Up to 5 portfolios"]],
+  ]
+    .map(([label, items]) => proFeatureGroup(label as string, items as string[]))
+    .join("");
+  return `${emailHeader("7-DAY PRO TRIAL")}
+        <tr><td style="padding:36px 32px 16px;">
+          <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#0f172a;text-align:center;">Your Pro trial is waiting</h1>
+          <p style="margin:0 0 28px;font-size:15px;color:#475569;text-align:center;line-height:1.6;">Hi ${name}, you&rsquo;ve been building your portfolio on trefolio &mdash; now experience the full toolkit for 7 days, completely free.</p>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:8px;">
+            ${groups}
+          </table>
+          <div style="height:12px;"></div>
+          ${primaryCta("Activate your free trial", activateUrl)}
+          <p style="margin:20px 0 0;font-size:13px;color:#64748b;text-align:center;line-height:1.5;">No credit card required. After 7 days, your account returns to the Free plan &mdash; no surprises.</p>
+          <div style="margin-top:24px;padding-top:20px;border-top:1px solid #e2e8f0;">
+            <p style="margin:0 0 4px;font-size:14px;color:#475569;line-height:1.6;">I built trefolio because I wanted a better way to track my own portfolio. I hope you&rsquo;ll enjoy having the full experience.</p>
+            <p style="margin:0;font-size:14px;color:#475569;line-height:1.6;">Let me know what you think &mdash; just reply to this email.</p>
+            <p style="margin:12px 0 0;font-size:14px;color:#0f172a;font-weight:600;">Marcos</p>
+            <p style="margin:0;font-size:12px;color:#64748b;">Founder, trefolio</p>
+          </div>
+        </td></tr>
+${emailFooter(
+    "You received this email because you signed up for trefolio.",
+    utm("/profile", campaign),
+    "Manage email preferences",
+    "{{unsubscribe_url}}",
+  )}`;
+}
+
+export async function sendTrialInvitationEmail(
+  email: string,
+  displayName: string,
+  token: string,
+  locale: EmailLocale = "en",
+  userId?: string,
+): Promise<{ success: boolean; error?: string }> {
+  if (isTestEmail(email)) return { success: true };
+
+  const activateUrl = utm(`/trial/activate?token=${encodeURIComponent(token)}`, "trial_invitation");
+  const html = trialInvitationHtml(displayName, activateUrl, locale);
+  const subject = "Your 7-day Trefolio Pro trial is ready";
+
+  const result = await sendEmail({
+    to: email,
+    subject,
+    html,
+    from: TRIAL_FROM,
+    replyTo: "communications@trefolio.com",
+    userId,
+  });
+  if (!result.success) console.error("Failed to send trial invitation email:", result.error);
+
+  if (userId) {
+    try {
+      const tpl = await getEmailTemplateBySlug("trial-invitation");
+      await logEmailSend({
+        resendId: result.messageId || "",
+        templateId: tpl?.id || "",
+        userId,
+        emailTo: email,
+        subject,
+        bodyHtml: html,
+        bodyText: htmlToPlainText(html),
+        status: result.success ? "sent" : "failed",
+      });
+    } catch (e) {
+      console.error("[trial-invitation] Failed to log email send:", e);
+    }
+  }
+
+  return result;
+}
+
+function growthBox(pct: number): string {
+  const isPositive = pct > 0;
+  const emoji = isPositive ? "&#x1F4A1;" : "&#x1F6E1;&#xFE0F;";
+  const bg = isPositive ? "#f0fdf4" : "#fffbeb";
+  const border = isPositive ? "#bbf7d0" : "#fde68a";
+  const title = isPositive
+    ? `Your portfolio grew ${pct}% during the trial`
+    : `Markets shifted &mdash; your portfolio moved ${pct}% during the trial`;
+  const desc = isPositive
+    ? "With Pro, you could keep tracking detailed performance metrics and get AI insights on your next moves."
+    : "With Pro, you&rsquo;d get AI alerts and deeper analytics to react faster to market movements.";
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+            <tr><td style="padding:14px 16px;background:${bg};border-radius:10px;border:1px solid ${border};">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+                <td style="width:32px;font-size:20px;vertical-align:top;padding-top:2px;">${emoji}</td>
+                <td style="padding-left:8px;">
+                  <strong style="color:#0f172a;font-size:14px;">${title}</strong>
+                  <p style="margin:4px 0 0;font-size:13px;color:#475569;line-height:1.4;">${desc}</p>
+                </td>
+              </tr></table>
+            </td></tr>
+          </table>`;
+}
+
+function trialExpiredHtml(displayName: string, _locale: EmailLocale, growthPct?: number): string {
+  const name = displayName || "there";
+  const campaign = "trial_expired";
+  const growthHtml = growthPct != null ? growthBox(growthPct) : "";
+  return `${emailHeader()}
+        <tr><td style="padding:36px 32px 16px;">
+          <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#0f172a;text-align:center;">Your Pro trial has ended</h1>
+          <p style="margin:0 0 24px;font-size:15px;color:#475569;text-align:center;line-height:1.6;">Hi ${name}, your 7-day Trefolio Pro trial is over. Here&rsquo;s what you&rsquo;ll miss:</p>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+            ${featureRow("&#x1F4CA;", "Advanced Analytics", "Sharpe ratio, max drawdown, volatility, and full growth history")}
+            ${featureRow("&#x1F9E0;", "AI Analysis", "30 calls/day with deep stock insights and portfolio reviews")}
+            ${featureRow("&#x1F4C8;", "Company Fundamentals", "Income statements, balance sheets, insider trades, and institutional holdings")}
+            ${featureRow("&#x1F514;", "Premium Alerts", "WhatsApp notifications, unlimited alerts, and up to 5 portfolios")}
+          </table>
+          ${growthHtml}
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;"><tr><td style="padding:14px 16px;background:#eff6ff;border-radius:10px;border:1px solid #bfdbfe;">
+            <p style="margin:0;font-size:14px;color:#1e40af;text-align:center;line-height:1.5;">Plans start at &euro;4.99/month. Cancel anytime.</p>
+          </td></tr></table>
+          ${primaryCta("Subscribe to Trefolio Pro", utm("/pricing", campaign))}
+          <div style="margin-top:24px;padding-top:20px;border-top:1px solid #e2e8f0;">
+            <p style="margin:0 0 4px;font-size:14px;color:#475569;line-height:1.6;">I hope the trial gave you a real taste of what trefolio can do. If you have feedback, I&rsquo;d genuinely love to hear it.</p>
+            <p style="margin:12px 0 0;font-size:14px;color:#0f172a;font-weight:600;">Marcos</p>
+            <p style="margin:0;font-size:12px;color:#64748b;">Founder, trefolio</p>
+          </div>
+        </td></tr>
+${emailFooter(
+    "You received this email because you signed up for trefolio.",
+    utm("/profile", campaign),
+    "Manage email preferences",
+    "{{unsubscribe_url}}",
+  )}`;
+}
+
+export async function sendTrialExpiredEmail(
+  email: string,
+  displayName: string,
+  locale: EmailLocale = "en",
+  userId?: string,
+  growthPct?: number,
+): Promise<{ success: boolean; error?: string }> {
+  if (isTestEmail(email)) return { success: true };
+
+  const html = trialExpiredHtml(displayName, locale, growthPct);
+  const subject = "Your Trefolio Pro trial has ended";
+
+  const result = await sendEmail({
+    to: email,
+    subject,
+    html,
+    from: TRIAL_FROM,
+    replyTo: "communications@trefolio.com",
+    userId,
+  });
+  if (!result.success) console.error("Failed to send trial expired email:", result.error);
+
+  if (userId) {
+    try {
+      const tpl = await getEmailTemplateBySlug("trial-expired");
+      await logEmailSend({
+        resendId: result.messageId || "",
+        templateId: tpl?.id || "",
+        userId,
+        emailTo: email,
+        subject,
+        bodyHtml: html,
+        bodyText: htmlToPlainText(html),
+        status: result.success ? "sent" : "failed",
+      });
+    } catch (e) {
+      console.error("[trial-expired] Failed to log email send:", e);
+    }
+  }
+
+  return result;
 }

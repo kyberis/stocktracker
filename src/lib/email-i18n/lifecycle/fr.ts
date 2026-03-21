@@ -1,4 +1,4 @@
-import type { WelcomeNoStocksStrings, WelcomeFreeStocksStrings, BifolioUpgradeStrings, TrefolioUpgradeStrings } from "../template-types";
+import type { WelcomeNoStocksStrings, WelcomeFreeStocksStrings, BifolioUpgradeStrings, TrefolioUpgradeStrings, TrialInvitationStrings, TrialExpiredStrings } from "../template-types";
 
 export const welcomeNoStocks: WelcomeNoStocksStrings = {
   heading: "Bienvenue sur trefolio !",
@@ -186,4 +186,79 @@ export const trefolioUpgrade: TrefolioUpgradeStrings = {
   ctaPrimary: "Explorer les analyses IA",
   ctaSecondary: "Voir les fondamentaux",
   communityText: "&#x1F31F; <strong>Vous &ecirc;tes l&rsquo;un de nos 500 premiers membres Pro.</strong> Merci de croire en trefolio. Vos retours façonnent ce que nous construisons ensuite."
+};
+
+export const trialInvitation: TrialInvitationStrings = {
+  heading: "Votre essai Pro vous attend",
+  paragraph: "Bonjour {{display_name}}, vous construisez votre portefeuille sur trefolio &mdash; d&eacute;couvrez maintenant la bo&icirc;te &agrave; outils compl&egrave;te pendant 7 jours, enti&egrave;rement gratuite.",
+  groups: [
+    {
+      label: "Donn&eacute;es &amp; analyse",
+      items: [
+        "Donn&eacute;es premium Alpha Vantage",
+        "Fondamentaux : compte de r&eacute;sultat, bilan, flux de tr&eacute;sorerie",
+        "Tableau de bord des indicateurs &eacute;conomiques"
+      ]
+    },
+    {
+      label: "Intelligence",
+      items: [
+        "Fil d&rsquo;actualit&eacute;s avec analyse de sentiment",
+        "Transactions d&rsquo;initi&eacute;s &amp; participations institutionnelles",
+        "Analyse IA : 30 appels/jour, illimit&eacute; par mois"
+      ]
+    },
+    {
+      label: "Outils avanc&eacute;s",
+      items: [
+        "Ratio de Sharpe, drawdown max, volatilit&eacute;",
+        "Historique complet des performances du portefeuille",
+        "Filtre d&rsquo;actions : plus de 600 titres, 6 filtres"
+      ]
+    },
+    {
+      label: "Alertes &amp; limites",
+      items: [
+        "Notifications WhatsApp &amp; appareil",
+        "Alertes de prix &amp; positions illimit&eacute;es",
+        "Jusqu&rsquo;&agrave; 5 portefeuilles"
+      ]
+    }
+  ],
+  ctaPrimary: "Activer votre essai gratuit",
+  ctaSecondary: "Voir ce qui est inclus",
+  disclaimer: "Aucune carte bancaire requise. Apr&egrave;s 7 jours, votre compte repasse au plan Gratuit &mdash; sans surprise.",
+  signoffIntro: "J&rsquo;ai cr&eacute;&eacute; trefolio parce que je voulais suivre mon propre portefeuille autrement. J&rsquo;esp&egrave;re que vous appr&eacute;cierez l&rsquo;exp&eacute;rience compl&egrave;te.",
+  signoffReply: "Dites-moi ce que vous en pensez &mdash; il suffit de r&eacute;pondre &agrave; cet e-mail."
+};
+
+export const trialExpired: TrialExpiredStrings = {
+  heading: "Votre essai Pro est termin&eacute;",
+  paragraph: "Bonjour {{display_name}}, votre essai Trefolio Pro de 7 jours est termin&eacute;. Voici ce que vous allez manquer :",
+  features: [
+    {
+      title: "Analyses avanc&eacute;es",
+      desc: "Ratio de Sharpe, drawdown max, volatilit&eacute; et historique complet de croissance"
+    },
+    {
+      title: "Analyse IA",
+      desc: "30 appels/jour avec des analyses approfondies d&rsquo;actions et des revues de portefeuille"
+    },
+    {
+      title: "Fondamentaux d&rsquo;entreprise",
+      desc: "Comptes de r&eacute;sultat, bilans, transactions d&rsquo;initi&eacute;s et participations institutionnelles"
+    },
+    {
+      title: "Alertes premium",
+      desc: "Notifications WhatsApp, alertes illimit&eacute;es et jusqu&rsquo;&agrave; 5 portefeuilles"
+    }
+  ],
+  pricingNote: "Les formules &agrave; partir de &euro;4,99/mois. R&eacute;siliation &agrave; tout moment.",
+  ctaPrimary: "Souscrire &agrave; Trefolio Pro",
+  ctaSecondary: "Voir les tarifs",
+  signoffIntro: "J&rsquo;esp&egrave;re que l&rsquo;essai vous a donn&eacute; un vrai aper&ccedil;u de ce que trefolio peut faire. Si vous avez des retours, je serais ravi de les lire.",
+  growthTitle: "Votre portefeuille a progress&eacute; de {{growth_pct}}% pendant l&rsquo;essai",
+  growthDesc: "Avec Pro, vous pourriez continuer &agrave; suivre des m&eacute;triques de performance d&eacute;taill&eacute;es et obtenir des analyses IA sur vos prochains mouvements.",
+  growthTitleDown: "Les march&eacute;s ont boug&eacute; &mdash; votre portefeuille a vari&eacute; de {{growth_pct}}% pendant l&rsquo;essai",
+  growthDescDown: "Avec Pro, vous auriez des alertes IA et des analyses approfondies pour r&eacute;agir plus vite aux mouvements du march&eacute;.",
 };

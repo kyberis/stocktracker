@@ -113,7 +113,7 @@ export {
   getManualAssetCount,
 } from "./cash";
 
-export type { PlatformFeature, WhatsAppQuota, StripePriceKey, PromoBannerConfig, AdConfig, AdSlotConfig, XKeyName, UtmTaxonomyConfig } from "./settings";
+export type { PlatformFeature, WhatsAppQuota, StripePriceKey, PromoBannerConfig, AdConfig, AdSlotConfig, XKeyName, UtmTaxonomyConfig, FeatureFlagOverride } from "./settings";
 export {
   getUserSettings,
   updateUserSettings,
@@ -126,6 +126,12 @@ export {
   setPlatformSetting,
   isFeatureEnabled,
   setFeatureEnabled,
+  isFeatureEnabledForUser,
+  resolveAllFlagsForUser,
+  getFeatureFlagOverrides,
+  getFeatureFlagOverrideCounts,
+  setFeatureFlagOverride,
+  removeFeatureFlagOverride,
   getGlobalResendApiKey,
   setGlobalResendApiKey,
   getStripePriceConfig,

@@ -19,6 +19,7 @@ import { useIsNative } from "@/lib/use-native";
 import { usePortfolioSnapshotSync } from "@/lib/use-portfolio-snapshot-sync";
 import TierFeatureBadge from "@/components/TierFeatureBadge";
 import SampleDataBanner from "@/components/SampleDataBanner";
+import TrialCountdownBanner from "@/components/TrialCountdownBanner";
 import CloverToLogo from "@/components/CloverToLogo";
 import { HeroSkeleton, ChartSkeleton } from "@/components/Skeleton";
 import type { Account } from "@/lib/types";
@@ -212,6 +213,7 @@ export default function MobileDashboard() {
           ))}
         </div>
 
+        <TrialCountdownBanner />
         <SampleDataBanner />
         <ReferralBanner onShare={() => setShowReferralModal(true)} />
 
