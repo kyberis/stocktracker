@@ -39,6 +39,7 @@ export default function NotificationChannels() {
   const [verifying, setVerifying] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [verifySent, setVerifySent] = useState(false);
+  const [verifyChannel, setVerifyChannel] = useState<"whatsapp" | "sms">("whatsapp");
   const [changingNumber, setChangingNumber] = useState(false);
   const [verifyError, setVerifyError] = useState("");
   const [confirmError, setConfirmError] = useState("");
@@ -97,6 +98,8 @@ export default function NotificationChannels() {
         body: JSON.stringify({ phone }),
       });
       if (res.ok) {
+        const data = await res.json().catch(() => null);
+        setVerifyChannel(data?.channel || "whatsapp");
         setVerifySent(true);
         setConfirmError("");
       } else {
@@ -327,7 +330,7 @@ export default function NotificationChannels() {
               </>
             ) : (
               <>
-                <p className="text-[10px] text-emerald-500">{t("whatsappCodeSent")}</p>
+                <p className="text-[10px] text-emerald-500">{verifyChannel === "sms" ? t("whatsappCodeSentSms") : t("whatsappCodeSent")}</p>
                 <div className="flex items-center gap-2">
                   <input
                     type="text"

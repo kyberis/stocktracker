@@ -629,6 +629,7 @@ const ca: TranslationStrings = {
   whatsappConfirmError: "Verificació fallida. Comprova el codi i torna-ho a provar.",
   whatsappCodeExpired: "Codi caducat. Sol·licita'n un de nou.",
   whatsappCodeSent: "S'ha enviat un codi de 6 dígits al teu WhatsApp.",
+  whatsappCodeSentSms: "S'ha enviat un codi de 6 dígits per SMS al teu telèfon.",
   pushEnable: "Activar Push",
   emailVerified: "Email Verificat",
   emailVerifiedDesc: "Rebreu notificacions per email per alertes de preu.",

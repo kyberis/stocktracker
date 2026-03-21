@@ -628,6 +628,7 @@ const bg: TranslationStrings = {
   whatsappConfirmError: "Verification failed. Please check the code and try again.",
   whatsappCodeExpired: "Code expired. Please request a new one.",
   whatsappCodeSent: "A 6-digit code has been sent to your WhatsApp.",
+  whatsappCodeSentSms: "A 6-digit code has been sent via SMS to your phone.",
   pushEnable: "Enable Push",
   emailVerified: "Имейлът е потвърден",
   emailVerifiedDesc: "Ще получавате имейл известия за ценови аларми.",

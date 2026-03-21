@@ -631,6 +631,7 @@ const nl: TranslationStrings = {
   whatsappConfirmError: "Verificatie mislukt. Controleer de code en probeer opnieuw.",
   whatsappCodeExpired: "Code verlopen. Vraag een nieuwe aan.",
   whatsappCodeSent: "Een 6-cijferige code is naar je WhatsApp gestuurd.",
+  whatsappCodeSentSms: "Een 6-cijferige code is per SMS naar je telefoon gestuurd.",
   pushEnable: "Push inschakelen",
   emailVerified: "E-mail geverifieerd",
   emailVerifiedDesc: "U ontvangt e-mailmeldingen voor prijsalerts.",

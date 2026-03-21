@@ -34,5 +34,5 @@ export async function POST(req: NextRequest) {
   const settings = await getUserSettings(session.userId);
   await updateUserSettings(session.userId, { ...settings, whatsappPhone: phone, whatsappVerified: false });
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, channel: sendResult.channel || "whatsapp" });
 }

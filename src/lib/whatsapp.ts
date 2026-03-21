@@ -37,22 +37,40 @@ function getWelcomeMessage(language: Language): string {
   return msg + baseUrl;
 }
 
-export async function sendWhatsAppVerification(phone: string): Promise<{ success: boolean; error?: string }> {
+export async function sendWhatsAppVerification(phone: string): Promise<{ success: boolean; error?: string; channel?: string }> {
   const client = getTwilioClient();
   if (!client) return { success: false, error: "Twilio not configured" };
 
   const verifySid = process.env.TWILIO_VERIFY_SERVICE_SID;
   if (!verifySid) return { success: false, error: "Twilio Verify service not configured" };
 
+  const preferredChannel = getVerifyChannel();
+
   try {
     await client.verify.v2.services(verifySid).verifications.create({
       to: phone,
-      channel: getVerifyChannel(),
+      channel: preferredChannel,
     });
-    return { success: true };
+    return { success: true, channel: preferredChannel };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    console.error("Failed to send WhatsApp verification:", msg);
+
+    if (preferredChannel === "whatsapp" && msg.toLowerCase().includes("channel disabled")) {
+      console.warn("WhatsApp channel disabled on Verify service, falling back to SMS");
+      try {
+        await client.verify.v2.services(verifySid).verifications.create({
+          to: phone,
+          channel: "sms",
+        });
+        return { success: true, channel: "sms" };
+      } catch (smsErr) {
+        const smsMsg = smsErr instanceof Error ? smsErr.message : String(smsErr);
+        console.error("Failed to send SMS verification fallback:", smsMsg);
+        return { success: false, error: smsMsg };
+      }
+    }
+
+    console.error("Failed to send verification:", msg);
     return { success: false, error: msg };
   }
 }

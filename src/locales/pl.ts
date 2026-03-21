@@ -629,6 +629,7 @@ const pl: TranslationStrings = {
   whatsappConfirmError: "Weryfikacja nie powiodła się. Sprawdź kod i spróbuj ponownie.",
   whatsappCodeExpired: "Kod wygasł. Poproś o nowy.",
   whatsappCodeSent: "6-cyfrowy kod został wysłany na Twój WhatsApp.",
+  whatsappCodeSentSms: "6-cyfrowy kod został wysłany SMS-em na Twój telefon.",
   pushEnable: "Włącz Push",
   emailVerified: "E-mail zweryfikowany",
   emailVerifiedDesc: "Będziesz otrzymywać powiadomienia e-mail o alertach cenowych.",

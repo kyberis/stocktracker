@@ -646,6 +646,7 @@ const pt: TranslationStrings = {
   whatsappConfirmError: "Verificação falhou. Verifique o código e tente novamente.",
   whatsappCodeExpired: "Código expirado. Solicite um novo.",
   whatsappCodeSent: "Um código de 6 dígitos foi enviado ao seu WhatsApp.",
+  whatsappCodeSentSms: "Um código de 6 dígitos foi enviado por SMS ao seu telefone.",
   pushEnable: "Ativar Push",
   emailVerified: "Email verificado",
   emailVerifiedDesc: "Receberá notificações por email para alertas de preço.",
