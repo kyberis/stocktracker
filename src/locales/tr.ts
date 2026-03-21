@@ -837,6 +837,9 @@ const tr: TranslationStrings = {
   crisisEuroDebt2010: "Euro Debt Crisis",
   landingCardSimulatorTitle: "Portfolio Simulator",
   landingCardSimulatorDesc: "Backtest with up to 30 years of data, what-if scenarios, and crisis stress testing",
+  marketsClosedTitle: "Take a break — markets are closed",
+  marketsClosedBody: "Your portfolio closed at {value}. The chart will resume tracking when markets reopen.",
+  marketsClosedOpens: "{market} opens {time}",
 };
 
 export default tr;

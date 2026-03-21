@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
+import { isAnyMarketActive } from "@/lib/market-hours";
 
 /** Match /api/portfolio/snapshot 5-minute UTC buckets — writes create new rows while the app stays open. */
 const SNAPSHOT_INTERVAL_MS = 5 * 60 * 1000;
@@ -21,6 +22,8 @@ export function usePortfolioSnapshotSync(options: { demoMode: boolean }) {
 
   const postSnapshot = useCallback(() => {
     if (demoMode) return;
+    if (!isAnyMarketActive(holdings)) return;
+
     const allHaveValue = holdings.every(
       (h) => (quotes[h.ticker]?.regularMarketPrice ?? 0) > 0 || h.valueInEUR > 0,
     );

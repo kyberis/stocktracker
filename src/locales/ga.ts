@@ -846,6 +846,9 @@ const ga: TranslationStrings = {
   supportChatError: "Something went wrong. Please try again.",
   landingCardSimulatorTitle: "Portfolio Simulator",
   landingCardSimulatorDesc: "Backtest with up to 30 years of data, what-if scenarios, and crisis stress testing",
+  marketsClosedTitle: "Take a break — markets are closed",
+  marketsClosedBody: "Your portfolio closed at {value}. The chart will resume tracking when markets reopen.",
+  marketsClosedOpens: "{market} opens {time}",
 };
 
 export default ga;

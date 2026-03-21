@@ -895,6 +895,9 @@ const de: TranslationStrings = {
   referralPostCheckoutDesc: "Empfehle Freunde und verdiene mehr kostenlose Pro-Zeit",
 
   desktopOnly: "Nur Desktop",
+  marketsClosedTitle: "Take a break — markets are closed",
+  marketsClosedBody: "Your portfolio closed at {value}. The chart will resume tracking when markets reopen.",
+  marketsClosedOpens: "{market} opens {time}",
 };
 
 export default de;

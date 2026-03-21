@@ -56,6 +56,8 @@ interface PortfolioContextType {
   activePortfolioId: string | null;
   activePortfolioCurrency: string;
   alertedTickers: Set<string>;
+  /** Increments on every add/remove of holdings or cash entries — used by charts to trigger recalculation. */
+  mutationVersion: number;
   setActivePortfolio: (id: string | null) => void;
   refreshPortfolios: () => Promise<void | PortfolioInfo[]>;
   addHolding: (holding: Omit<Holding, "id"> & { purchaseDate?: string }) => Promise<void>;
@@ -159,6 +161,7 @@ export function PortfolioProvider({
     (demoMode || initialHoldings) ? new Date() : null
   );
   const [alertedTickers, setAlertedTickers] = useState<Set<string>>(new Set());
+  const [mutationVersion, setMutationVersion] = useState(0);
   const [goals, setGoals] = useState<Goal[]>(initialGoal ? [initialGoal] : []);
   const restoredPortfolioRef = useRef(false);
   useEffect(() => {
@@ -563,6 +566,7 @@ export function PortfolioProvider({
         }
         return prev.map((h) => (h.id === tempId ? created : h));
       });
+      setMutationVersion((v) => v + 1);
       fetchQuoteForTicker(created.ticker);
     } catch (err) {
       setHoldings((prev) => prev.filter((h) => h.id !== tempId));
@@ -580,6 +584,7 @@ export function PortfolioProvider({
         method: "DELETE",
       });
       if (!res.ok) throw new Error("Failed to remove holding");
+      setMutationVersion((v) => v + 1);
     } catch (err) {
       setHoldings(previous);
       setError(err instanceof Error ? err.message : "Failed to remove holding");
@@ -619,6 +624,7 @@ export function PortfolioProvider({
       if (!res.ok) throw new Error("Failed to add cash entry");
       const created = (await res.json()) as CashEntry;
       setCashEntries((prev) => prev.map((c) => (c.id === tempId ? created : c)));
+      setMutationVersion((v) => v + 1);
     } catch (err) {
       setCashEntries((prev) => prev.filter((c) => c.id !== tempId));
       setError(err instanceof Error ? err.message : "Failed to add cash entry");
@@ -632,6 +638,7 @@ export function PortfolioProvider({
       const qp = activePortfolioId ? `&portfolioId=${encodeURIComponent(activePortfolioId)}` : "";
       const res = await fetch(`/api/cash?id=${encodeURIComponent(id)}${qp}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to remove cash entry");
+      setMutationVersion((v) => v + 1);
     } catch (err) {
       setCashEntries(previous);
       setError(err instanceof Error ? err.message : "Failed to remove cash entry");
@@ -753,6 +760,7 @@ export function PortfolioProvider({
       activePortfolioId,
       activePortfolioCurrency,
       alertedTickers,
+      mutationVersion,
       setActivePortfolio: demoMode ? () => {} : setActivePortfolio,
       refreshPortfolios: demoMode ? noop : fetchPortfolios,
       addHolding: demoMode ? noop : addHolding,
@@ -777,7 +785,7 @@ export function PortfolioProvider({
     }),
     [
       holdings, cashEntries, quotes, quoteUpdatedAt, refreshingTickers, exchangeRates,
-      isLoading, isInitializing, isRefreshing, error, portfolios, activePortfolioId, activePortfolioCurrency, alertedTickers, setActivePortfolio, fetchPortfolios,
+      isLoading, isInitializing, isRefreshing, error, portfolios, activePortfolioId, activePortfolioCurrency, alertedTickers, mutationVersion, setActivePortfolio, fetchPortfolios,
       addHolding, removeHolding, updateHolding, addCashEntry,
       removeCashEntry, updateCashEntry, refreshHoldings, refreshQuotes, refreshSingleQuote,
       refreshAlertedTickers, lastUpdated, holdingsLastFetchedAt, demoMode, noop, noopGoal,

@@ -19,6 +19,8 @@ import { useTheme } from "@/lib/theme-context";
 import { useStealthMode } from "@/lib/stealth-context";
 import { useTrack } from "@/lib/use-track";
 import { formatCurrency, formatPercent } from "@/lib/utils";
+import { isAnyMarketActive, getNextMarketOpen } from "@/lib/market-hours";
+import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
 import TierFeatureBadge from "./TierFeatureBadge";
 import ChartAiChatPanel from "./ChartAiChatPanel";
 
@@ -384,7 +386,7 @@ function normalizeBenchmarkSeries(values: number[]): number[] {
 
 export default function PortfolioEvolutionChart({ embedded, compact, benchmarks, onRemoveBenchmark }: EvolutionChartProps = {}) {
   const { t } = useI18n();
-  const { holdings, cashEntries, quotes, exchangeRates, activePortfolioCurrency, activePortfolioId, demoMode } =
+  const { holdings, cashEntries, quotes, exchangeRates, activePortfolioCurrency, activePortfolioId, demoMode, mutationVersion } =
     usePortfolio();
   const { user } = useAuth();
   const { layoutTheme, isDark } = useTheme();
@@ -407,7 +409,7 @@ export default function PortfolioEvolutionChart({ embedded, compact, benchmarks,
   const sparseBackfillAttemptedRef = useRef(false);
   /** Only one stale-invested auto-backfill per portfolio. */
   const staleInvestedBackfillRef = useRef(false);
-  const prevHoldingsCount = useRef(holdings.length);
+  const prevMutationVersion = useRef(mutationVersion);
   const fetchHistoryRef = useRef<(r: EvolutionRange) => void>(() => {});
   /** Timer for 1D poll when waiting for the first snapshot to appear. */
   const dailyPollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -534,12 +536,12 @@ export default function PortfolioEvolutionChart({ embedded, compact, benchmarks,
     fetchHistory(range);
   }, [range, isPaid, fetchHistory, activePortfolioId]);
 
-  // Re-backfill when holdings count changes (stock added/removed) — silent refresh, no blocking overlay.
+  // Re-backfill when holdings or cash entries change (added/removed) — silent refresh, no blocking overlay.
   useEffect(() => {
     if (demoMode) return;
-    const prev = prevHoldingsCount.current;
-    prevHoldingsCount.current = holdings.length;
-    if (prev !== 0 && holdings.length !== prev && !backfillInFlightRef.current) {
+    const prev = prevMutationVersion.current;
+    prevMutationVersion.current = mutationVersion;
+    if (prev !== mutationVersion && mutationVersion > 0 && !backfillInFlightRef.current) {
       backfillInFlightRef.current = true;
       fetch("/api/portfolio/backfill-snapshots", { method: "POST" })
         .finally(() => {
@@ -547,7 +549,7 @@ export default function PortfolioEvolutionChart({ embedded, compact, benchmarks,
           fetchHistoryRef.current(range);
         });
     }
-  }, [holdings.length, demoMode, range]);
+  }, [mutationVersion, demoMode, range]);
 
   // Fetch benchmark overlay data when benchmarks or range changes
   useEffect(() => {
@@ -608,6 +610,14 @@ export default function PortfolioEvolutionChart({ embedded, compact, benchmarks,
     setChartMode(m);
     track("chart_mode_changed", { mode: m });
   }
+
+  const allMarketsClosed = !demoMode && !isAnyMarketActive(holdings);
+  const nextOpen = allMarketsClosed ? getNextMarketOpen(holdings) : null;
+  const lastKnownValue = (() => {
+    if (points.length > 0) return points[points.length - 1].value;
+    if (holdings.length === 0) return 0;
+    return calculatePortfolioTotals(holdings, cashEntries, quotes, exchangeRates, baseCurrency).totalCurrentEUR;
+  })();
 
   const hasInvestedData = points.some((p) => p.invested > 0);
 
@@ -906,10 +916,74 @@ export default function PortfolioEvolutionChart({ embedded, compact, benchmarks,
     return [min - padding, max + padding];
   })();
 
+  const marketsClosedOverlay = allMarketsClosed && range === "1d" && !loading && !backfilling;
+
   const chartContent = loading || backfilling ? (
     <div className="flex items-center justify-center py-16 gap-2 text-sm text-gray-400 dark:text-slate-500">
       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-500" />
       <span>{backfilling ? t("calculatingHistory") : t("loading")}</span>
+    </div>
+  ) : marketsClosedOverlay ? (
+    <div className="relative h-48 flex flex-col items-center justify-center text-center gap-2.5">
+      {/* faint grid background */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-20"
+        style={{
+          backgroundImage: `linear-gradient(to right, ${isDark ? "#334155" : "#e5e7eb"} 1px, transparent 1px), linear-gradient(to bottom, ${isDark ? "#334155" : "#e5e7eb"} 1px, transparent 1px)`,
+          backgroundSize: "80px 40px",
+          borderRadius: "12px",
+        }}
+      />
+      <span className="text-3xl relative z-10">🧘</span>
+      <p
+        className={`text-sm font-semibold relative z-10 ${
+          layoutTheme === "terminal"
+            ? "text-green-400"
+            : layoutTheme === "canvas"
+              ? "text-amber-600"
+              : layoutTheme === "studio"
+                ? "text-amber-400"
+                : "text-amber-500 dark:text-amber-400"
+        }`}
+      >
+        {t("marketsClosedTitle")}
+      </p>
+      <p
+        className={`text-xs relative z-10 max-w-xs leading-relaxed ${
+          layoutTheme === "terminal"
+            ? "text-zinc-500"
+            : layoutTheme === "canvas"
+              ? "text-slate-400"
+              : layoutTheme === "studio"
+                ? "text-white/40"
+                : "text-gray-500 dark:text-slate-400"
+        }`}
+      >
+        {t("marketsClosedBody").replace(
+          "{value}",
+          stealthMode ? "•••••" : formatCurrency(lastKnownValue, baseCurrency),
+        )}
+      </p>
+      {nextOpen && (
+        <span
+          className={`inline-flex items-center gap-1.5 text-[10px] font-medium px-2.5 py-1 rounded-full relative z-10 ${
+            layoutTheme === "terminal"
+              ? "text-zinc-500 border border-zinc-800"
+              : layoutTheme === "canvas"
+                ? "text-slate-400 bg-slate-100 border border-slate-200"
+                : layoutTheme === "studio"
+                  ? "text-white/30 border border-white/10"
+                  : "text-gray-400 dark:text-slate-400 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700"
+          }`}
+        >
+          <span
+            className={`w-1.5 h-1.5 rounded-full ${
+              layoutTheme === "terminal" ? "bg-zinc-700" : "bg-gray-300 dark:bg-slate-600"
+            }`}
+          />
+          {t("marketsClosedOpens").replace("{market}", nextOpen.market).replace("{time}", nextOpen.time)}
+        </span>
+      )}
     </div>
   ) : points.length < 2 ? (
     <div className="py-12 text-center space-y-3">

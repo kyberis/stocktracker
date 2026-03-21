@@ -29,6 +29,20 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "Las posiciones importadas con un ISIN en lugar de un símbolo de ticker ahora se resuelven automáticamente al ticker correcto mediante búsqueda en Yahoo Finance, corrigiendo datos de precios faltantes.",
         },
       },
+      {
+        type: "fix",
+        text: "Portfolio chart no longer fluctuates when markets are closed. Snapshots are now skipped on weekends and outside trading hours unless the portfolio contains crypto (24/7).",
+        translations: {
+          es: "El gráfico del portafolio ya no fluctúa cuando los mercados están cerrados. Las instantáneas se omiten en fines de semana y fuera del horario de negociación a menos que el portafolio contenga criptomonedas (24/7).",
+        },
+      },
+      {
+        type: "improvement",
+        text: "When all markets are closed, the 1-day chart shows a friendly 'markets closed' message with the last portfolio value and when the earliest market reopens.",
+        translations: {
+          es: "Cuando todos los mercados están cerrados, el gráfico de 1 día muestra un mensaje amigable de 'mercados cerrados' con el último valor del portafolio y la hora de reapertura del mercado más temprano.",
+        },
+      },
     ],
   },
   {

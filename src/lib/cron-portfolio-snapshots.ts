@@ -12,6 +12,7 @@ import { YahooProvider } from "@/lib/api-providers/yahoo";
 import type { ProviderQuoteResult } from "@/lib/api-providers/types";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
 import { generateId } from "@/lib/utils";
+import { isAnyMarketActive } from "@/lib/market-hours";
 import type { ExchangeRates, QuoteData } from "@/lib/types";
 
 const QUOTE_BATCH_SIZE = 15;
@@ -155,6 +156,7 @@ async function writeLiveSnapshotsForUser(
   let snapshots = 0;
   const holdingsAll = await listHoldings(userId);
   if (holdingsAll.length === 0) return 0;
+  if (!isAnyMarketActive(holdingsAll)) return 0;
 
   const cashAll = await listCashEntries(userId);
   const totalsAll = calculatePortfolioTotals(holdingsAll, cashAll, quotes, exchangeRates, "EUR");
