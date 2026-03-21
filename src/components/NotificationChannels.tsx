@@ -40,6 +40,8 @@ export default function NotificationChannels() {
   const [confirming, setConfirming] = useState(false);
   const [verifySent, setVerifySent] = useState(false);
   const [changingNumber, setChangingNumber] = useState(false);
+  const [verifyError, setVerifyError] = useState("");
+  const [confirmError, setConfirmError] = useState("");
   const [pushSupported] = useState(() => typeof window !== "undefined" && "Notification" in window && "serviceWorker" in navigator);
   const [pushPermission, setPushPermission] = useState<NotificationPermission>("default");
   const [pushSubscribed, setPushSubscribed] = useState(false);
@@ -87,20 +89,29 @@ export default function NotificationChannels() {
   const handleVerifyWhatsApp = async () => {
     if (!phone || phone.length < 10) return;
     setVerifying(true);
+    setVerifyError("");
     try {
       const res = await fetch("/api/notifications/whatsapp/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phone }),
       });
-      if (res.ok) setVerifySent(true);
-    } catch { /* ignore */ }
+      if (res.ok) {
+        setVerifySent(true);
+        setConfirmError("");
+      } else {
+        setVerifyError(t("whatsappSendError"));
+      }
+    } catch {
+      setVerifyError(t("whatsappSendError"));
+    }
     setVerifying(false);
   };
 
   const handleConfirmWhatsApp = async () => {
     if (!verifyCode) return;
     setConfirming(true);
+    setConfirmError("");
     try {
       const res = await fetch("/api/notifications/whatsapp/confirm", {
         method: "POST",
@@ -111,9 +122,20 @@ export default function NotificationChannels() {
         setVerifySent(false);
         setVerifyCode("");
         setChangingNumber(false);
+        setConfirmError("");
         fetchPrefs();
+      } else {
+        const data = await res.json().catch(() => null);
+        if (data?.error?.includes("expired")) {
+          setConfirmError(t("whatsappCodeExpired"));
+          setVerifySent(false);
+        } else {
+          setConfirmError(t("whatsappConfirmError"));
+        }
       }
-    } catch { /* ignore */ }
+    } catch {
+      setConfirmError(t("whatsappConfirmError"));
+    }
     setConfirming(false);
   };
 
@@ -283,36 +305,48 @@ export default function NotificationChannels() {
         {isPro && (!prefs?.whatsappVerified || changingNumber) && (
           <div className="ml-11 space-y-2">
             {!verifySent ? (
-              <div className="flex items-center gap-2">
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder={t("whatsappPhonePlaceholder")}
-                  className="flex-1 text-sm"
-                />
-                <button onClick={handleVerifyWhatsApp} disabled={verifying || phone.length < 10} className="btn-primary text-xs disabled:opacity-40">
-                  {verifying ? t("loading") : t("whatsappVerify")}
-                </button>
-                {changingNumber && (
-                  <button onClick={() => { setChangingNumber(false); setVerifySent(false); setPhone(prefs?.whatsappPhone || ""); }} className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+              <>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => { setPhone(e.target.value); setVerifyError(""); }}
+                    placeholder={t("whatsappPhonePlaceholder")}
+                    className="flex-1 text-sm"
+                  />
+                  <button onClick={handleVerifyWhatsApp} disabled={verifying || phone.length < 10} className="btn-primary text-xs disabled:opacity-40">
+                    {verifying ? t("loading") : t("whatsappVerify")}
+                  </button>
+                  {changingNumber && (
+                    <button onClick={() => { setChangingNumber(false); setVerifySent(false); setPhone(prefs?.whatsappPhone || ""); setVerifyError(""); }} className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                      {t("cancel")}
+                    </button>
+                  )}
+                </div>
+                {verifyError && <p className="text-[10px] text-red-500">{verifyError}</p>}
+              </>
+            ) : (
+              <>
+                <p className="text-[10px] text-emerald-500">{t("whatsappCodeSent")}</p>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={6}
+                    value={verifyCode}
+                    onChange={(e) => { setVerifyCode(e.target.value.replace(/\D/g, "").slice(0, 6)); setConfirmError(""); }}
+                    placeholder={t("whatsappCodePlaceholder")}
+                    className="flex-1 text-sm"
+                  />
+                  <button onClick={handleConfirmWhatsApp} disabled={confirming || verifyCode.length < 6} className="btn-primary text-xs disabled:opacity-40">
+                    {confirming ? t("loading") : t("whatsappConfirm")}
+                  </button>
+                  <button onClick={() => { setVerifySent(false); setVerifyCode(""); setConfirmError(""); }} className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
                     {t("cancel")}
                   </button>
-                )}
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={verifyCode}
-                  onChange={(e) => setVerifyCode(e.target.value)}
-                  placeholder={t("whatsappCodePlaceholder")}
-                  className="flex-1 text-sm"
-                />
-                <button onClick={handleConfirmWhatsApp} disabled={confirming || !verifyCode} className="btn-primary text-xs disabled:opacity-40">
-                  {confirming ? t("loading") : t("whatsappConfirm")}
-                </button>
-              </div>
+                </div>
+                {confirmError && <p className="text-[10px] text-red-500">{confirmError}</p>}
+              </>
             )}
           </div>
         )}

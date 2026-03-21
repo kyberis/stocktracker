@@ -2337,6 +2337,54 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       });
     },
   },
+  {
+    version: 74,
+    description: "Create ai_logs table for admin review of AI prompts and responses",
+    up: async (client: Client) => {
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS ai_logs (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          source TEXT NOT NULL DEFAULT '',
+          model TEXT NOT NULL DEFAULT '',
+          prompt_system TEXT NOT NULL DEFAULT '',
+          prompt_user TEXT NOT NULL DEFAULT '',
+          response TEXT NOT NULL DEFAULT '',
+          tokens_used INTEGER NOT NULL DEFAULT 0,
+          duration_ms INTEGER NOT NULL DEFAULT 0,
+          status TEXT NOT NULL DEFAULT 'success' CHECK(status IN ('success','error')),
+          error_message TEXT NOT NULL DEFAULT '',
+          created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+      `);
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_ai_logs_user ON ai_logs(user_id)"
+      );
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_ai_logs_source ON ai_logs(source)"
+      );
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_ai_logs_created ON ai_logs(created_at DESC)"
+      );
+    },
+  },
+  {
+    version: 75,
+    description: "Add input/output token breakdown and cost to ai_logs",
+    up: async (client: Client) => {
+      for (const col of [
+        "ALTER TABLE ai_logs ADD COLUMN tokens_input INTEGER NOT NULL DEFAULT 0",
+        "ALTER TABLE ai_logs ADD COLUMN tokens_output INTEGER NOT NULL DEFAULT 0",
+        "ALTER TABLE ai_logs ADD COLUMN cost_usd REAL NOT NULL DEFAULT 0",
+      ]) {
+        try { await client.execute(col); }
+        catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : String(e);
+          if (!msg.includes("duplicate column")) throw e;
+        }
+      }
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

@@ -17,6 +17,57 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.57.3",
+    date: "2026-03-21",
+    title: "WhatsApp Verification Improvements",
+    titleTranslations: { es: "Mejoras en la verificación de WhatsApp" },
+    changes: [
+      {
+        type: "fix",
+        text: "Fixed WhatsApp phone verification by enabling the WhatsApp channel on Twilio Verify. Verification now sends a 6-digit code via WhatsApp.",
+        translations: {
+          es: "Corregida la verificación de WhatsApp habilitando el canal de WhatsApp en Twilio Verify. La verificación ahora envía un código de 6 dígitos por WhatsApp.",
+        },
+      },
+      {
+        type: "feature",
+        text: "After verifying your WhatsApp number, you now receive a welcome message in your language.",
+        translations: {
+          es: "Tras verificar tu número de WhatsApp, ahora recibes un mensaje de bienvenida en tu idioma.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "WhatsApp verification UI now shows error messages, code-sent confirmation, and restricts code input to digits only.",
+        translations: {
+          es: "La verificación de WhatsApp ahora muestra mensajes de error, confirmación de envío de código y restringe la entrada solo a dígitos.",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.57.2",
+    date: "2026-03-21",
+    title: "AI Prompt Logging for Admin Review",
+    titleTranslations: { es: "Registro de Prompts de IA para Revisión de Admin" },
+    changes: [
+      {
+        type: "feature",
+        text: "All AI prompts and responses are now logged to the database. Admins can review them in the new AI Logs tab, with filters by user and source (fundamentals, portfolio AI, support chat, import, etc.).",
+        translations: {
+          es: "Todos los prompts y respuestas de IA ahora se registran en la base de datos. Los administradores pueden revisarlos en la nueva pestaña AI Logs, con filtros por usuario y origen (fundamentales, portfolio AI, chat de soporte, importación, etc.).",
+        },
+      },
+      {
+        type: "improvement",
+        text: "AI logs now track input/output tokens separately and calculate the dollar cost per request using gpt-4o-mini pricing ($0.15/M input, $0.60/M output).",
+        translations: {
+          es: "Los registros de IA ahora rastrean tokens de entrada/salida por separado y calculan el costo en dólares por solicitud usando precios de gpt-4o-mini ($0.15/M entrada, $0.60/M salida).",
+        },
+      },
+    ],
+  },
+  {
     version: "1.57.1",
     date: "2026-03-21",
     title: "ISIN Auto-Resolution",

@@ -3,7 +3,7 @@ import { requireSession } from "@/lib/auth/guards";
 import { getUserSettings, markWhatsAppVerified } from "@/lib/db";
 import { parseBody } from "@/lib/api-response";
 import { whatsappConfirmSchema } from "@/lib/schemas";
-import { confirmWhatsAppVerification } from "@/lib/whatsapp";
+import { confirmWhatsAppVerification, sendWhatsAppWelcome } from "@/lib/whatsapp";
 
 export async function POST(req: NextRequest) {
   const { session, error } = await requireSession(req);
@@ -23,6 +23,10 @@ export async function POST(req: NextRequest) {
   }
 
   await markWhatsAppVerified(session.userId, settings.whatsappPhone);
+
+  sendWhatsAppWelcome(settings.whatsappPhone, settings.language).catch((err) =>
+    console.error("Failed to send WhatsApp welcome:", err)
+  );
 
   return NextResponse.json({ ok: true, verified: true });
 }

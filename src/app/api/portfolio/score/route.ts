@@ -12,6 +12,7 @@ import {
   getPortfolioScoreHistory,
   savePortfolioScore,
   trackEvent,
+  insertAiLog,
 } from "@/lib/db";
 import { PLATFORM_LIMITS } from "@/lib/platform-config";
 import { checkGlobalAiCap, incrementGlobalAiCalls, incrementGlobalAiTokens } from "@/lib/rate-limit";
@@ -119,6 +120,7 @@ export const POST = withMetrics("/api/portfolio/score", async (request: NextRequ
   trackEvent(session.userId, "portfolio_score_requested", { portfolioId });
 
   const endTimer = aiRequestDuration.startTimer({ analysis_type: "portfolio_score" });
+  const aiLogStart = Date.now();
 
   try {
     const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -143,11 +145,13 @@ export const POST = withMetrics("/api/portfolio/score", async (request: NextRequ
     });
 
     endTimer();
+    const durationMs = Date.now() - aiLogStart;
 
     if (!openaiRes.ok) {
       aiCallsTotal.inc({ status: "error", analysis_type: "portfolio_score" });
       const errText = await openaiRes.text();
       console.error("OpenAI portfolio score error:", openaiRes.status, errText);
+      insertAiLog({ userId: session.userId, source: "portfolio_score", model: "gpt-4o-mini", promptSystem: system, promptUser: user, durationMs, status: "error", errorMessage: errText.slice(0, 2000) }).catch(() => {});
       return Response.json(
         { error: "AI service returned an error. Check your API key and quota." },
         { status: 502 },
@@ -158,6 +162,8 @@ export const POST = withMetrics("/api/portfolio/score", async (request: NextRequ
 
     const result = await openaiRes.json();
     const totalTokens: number = result.usage?.total_tokens ?? 2500;
+    const scoreInputTokens: number = result.usage?.prompt_tokens ?? 0;
+    const scoreOutputTokens: number = result.usage?.completion_tokens ?? 0;
     const content: string = result.choices?.[0]?.message?.content ?? "{}";
 
     let score: PortfolioScoreResponse;
@@ -165,8 +171,11 @@ export const POST = withMetrics("/api/portfolio/score", async (request: NextRequ
       score = JSON.parse(content);
     } catch {
       console.error("Failed to parse portfolio score response:", content.slice(0, 200));
+      insertAiLog({ userId: session.userId, source: "portfolio_score", model: "gpt-4o-mini", promptSystem: system, promptUser: user, response: content, tokensUsed: totalTokens, tokensInput: scoreInputTokens, tokensOutput: scoreOutputTokens, durationMs, status: "error", errorMessage: "JSON parse failed" }).catch(() => {});
       return Response.json({ error: "AI returned invalid response" }, { status: 502 });
     }
+
+    insertAiLog({ userId: session.userId, source: "portfolio_score", model: "gpt-4o-mini", promptSystem: system, promptUser: user, response: content, tokensUsed: totalTokens, tokensInput: scoreInputTokens, tokensOutput: scoreOutputTokens, durationMs }).catch(() => {});
 
     const [scoreId] = await Promise.all([
       savePortfolioScore(session.userId, portfolioId, JSON.stringify(score)),

@@ -4,6 +4,8 @@
  * and appends a metadata line so the client can display per-response cost.
  */
 
+import { updateAiLogResponse } from "@/lib/db/ai-logs";
+
 const DEFAULT_TOKEN_ESTIMATE = 3_000;
 
 export interface AiStreamOptions {
@@ -13,6 +15,10 @@ export interface AiStreamOptions {
   onContent?: (text: string) => void;
   /** Fallback estimate when OpenAI doesn't return usage data. */
   fallbackTokenEstimate?: number;
+  /** AI log row ID — when set, the log is updated with the full response and token count on completion. */
+  aiLogId?: string;
+  /** Model name used for the request (needed for cost calculation in the log update). */
+  aiLogModel?: string;
 }
 
 /**
@@ -34,7 +40,10 @@ export function createAiStream(
   const fallback = options.fallbackTokenEstimate ?? DEFAULT_TOKEN_ESTIMATE;
 
   let totalTokens = 0;
+  let promptTokens = 0;
+  let completionTokens = 0;
   let buffer = "";
+  let fullResponse = "";
 
   return new ReadableStream({
     async start(controller) {
@@ -65,11 +74,14 @@ export function createAiStream(
 
               if (parsed.usage?.total_tokens) {
                 totalTokens = parsed.usage.total_tokens;
+                promptTokens = parsed.usage.prompt_tokens ?? 0;
+                completionTokens = parsed.usage.completion_tokens ?? 0;
               }
 
               const content = parsed.choices?.[0]?.delta?.content;
               if (content) {
                 controller.enqueue(encoder.encode(content));
+                fullResponse += content;
                 options.onContent?.(content);
               }
             } catch {
@@ -87,6 +99,16 @@ export function createAiStream(
           await options.onComplete(tokensUsed);
         } catch {
           // fire-and-forget
+        }
+        if (options.aiLogId) {
+          updateAiLogResponse(
+            options.aiLogId,
+            fullResponse,
+            tokensUsed,
+            promptTokens,
+            completionTokens,
+            options.aiLogModel || "gpt-4o-mini",
+          ).catch(() => {});
         }
       }
     },

@@ -11,6 +11,7 @@ import {
   incrementPortfolioReviewUsage,
   trackEvent,
   isFeatureEnabled,
+  insertAiLog,
 } from "@/lib/db";
 import { PLATFORM_LIMITS } from "@/lib/platform-config";
 import { checkGlobalAiCap, incrementGlobalAiCalls, checkDeviceAuthRateLimit, getClientIp } from "@/lib/rate-limit";
@@ -117,6 +118,7 @@ Rules:
   });
 
   const endTimer = aiRequestDuration.startTimer({ analysis_type: "device_ai_summary" });
+  const aiLogStart = Date.now();
 
   try {
     const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -138,10 +140,13 @@ Rules:
     });
 
     endTimer();
+    const durationMs = Date.now() - aiLogStart;
 
     if (!openaiRes.ok) {
       aiCallsTotal.inc({ status: "error", analysis_type: "device_ai_summary" });
-      console.error("OpenAI error:", openaiRes.status, await openaiRes.text());
+      const errText = await openaiRes.text();
+      console.error("OpenAI error:", openaiRes.status, errText);
+      insertAiLog({ userId: user.id, source: "device_ai_summary", model: "gpt-4o-mini", promptSystem: systemPrompt, promptUser: userPrompt, durationMs, status: "error", errorMessage: errText.slice(0, 2000) }).catch(() => {});
       return Response.json(
         { error: "AI service error" },
         { status: 502 },
@@ -159,6 +164,10 @@ Rules:
 
     const result = await openaiRes.json();
     const summary = result.choices?.[0]?.message?.content ?? "Unable to generate summary.";
+    const totalTokens = result.usage?.total_tokens ?? 300;
+    const deviceInputTokens = result.usage?.prompt_tokens ?? 0;
+    const deviceOutputTokens = result.usage?.completion_tokens ?? 0;
+    insertAiLog({ userId: user.id, source: "device_ai_summary", model: "gpt-4o-mini", promptSystem: systemPrompt, promptUser: userPrompt, response: summary, tokensUsed: totalTokens, tokensInput: deviceInputTokens, tokensOutput: deviceOutputTokens, durationMs }).catch(() => {});
     const updatedUsage = await getPortfolioReviewUsage(user.id);
 
     return Response.json(

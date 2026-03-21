@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest } from "next/server";
 import { requireFeatureAccess } from "@/lib/auth/guards";
-import { getGlobalOpenAIApiKey, incrementAiUsage, incrementDailyAiUsage, incrementAiTokenUsage, incrementDailyAiTokenUsage, findUserById } from "@/lib/db";
+import { getGlobalOpenAIApiKey, incrementAiUsage, incrementDailyAiUsage, incrementAiTokenUsage, incrementDailyAiTokenUsage, findUserById, insertAiLog, updateAiLogError } from "@/lib/db";
 import { aiCallsTotal, aiRequestDuration, rateLimitHitsTotal } from "@/lib/metrics";
 import { checkAiRateLimit, checkGlobalAiCap, incrementGlobalAiCalls, incrementGlobalAiTokens } from "@/lib/rate-limit";
 import { createAiStream } from "@/lib/ai-stream";
@@ -288,6 +288,7 @@ ${dataSections.join("\n\n")}`;
   }
 
   const endTimer = aiRequestDuration.startTimer({ analysis_type: analysisTypeLabel });
+  const aiLogStart = Date.now();
 
   try {
     const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -310,11 +311,13 @@ ${dataSections.join("\n\n")}`;
     });
 
     endTimer();
+    const durationMs = Date.now() - aiLogStart;
 
     if (!openaiRes.ok) {
       aiCallsTotal.inc({ status: "error", analysis_type: analysisTypeLabel });
       const errText = await openaiRes.text();
       console.error("OpenAI error:", openaiRes.status, errText);
+      insertAiLog({ userId: session.userId, source: analysisTypeLabel, model: "gpt-4o-mini", promptSystem: systemPrompt, promptUser: userPrompt, durationMs, status: "error", errorMessage: errText.slice(0, 2000) }).catch(() => {});
       return Response.json(
         { error: "AI service returned an error. Check your API key and quota." },
         { status: 502 }
@@ -322,6 +325,7 @@ ${dataSections.join("\n\n")}`;
     }
 
     aiCallsTotal.inc({ status: "success", analysis_type: analysisTypeLabel });
+    const logId = await insertAiLog({ userId: session.userId, source: analysisTypeLabel, model: "gpt-4o-mini", promptSystem: systemPrompt, promptUser: userPrompt, durationMs }).catch(() => "");
     await Promise.all([
       incrementAiUsage(session.userId),
       incrementDailyAiUsage(session.userId),
@@ -329,6 +333,8 @@ ${dataSections.join("\n\n")}`;
     ]);
 
     const stream = createAiStream(openaiRes.body, {
+      aiLogId: logId || undefined,
+      aiLogModel: "gpt-4o-mini",
       onComplete: async (tokens) => {
         await Promise.all([
           incrementAiTokenUsage(session.userId, tokens),

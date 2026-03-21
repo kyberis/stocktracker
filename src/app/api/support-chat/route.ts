@@ -11,6 +11,7 @@ import {
   appendSupportChatMessages,
   incrementAiTokenUsage,
   incrementDailyAiTokenUsage,
+  insertAiLog,
 } from "@/lib/db";
 import { supportChatTotal, supportChatDuration, rateLimitHitsTotal } from "@/lib/metrics";
 import { checkSupportChatRateLimit, checkGlobalAiCap, incrementGlobalAiCalls, incrementGlobalAiTokens } from "@/lib/rate-limit";
@@ -103,6 +104,8 @@ export const POST = withMetrics("/api/support-chat", async (request: NextRequest
   ];
 
   const endTimer = supportChatDuration.startTimer();
+  const aiLogStart = Date.now();
+  const lastUserContent = lastUserMsg?.content || "";
 
   try {
     const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -122,11 +125,13 @@ export const POST = withMetrics("/api/support-chat", async (request: NextRequest
     });
 
     endTimer();
+    const durationMs = Date.now() - aiLogStart;
 
     if (!openaiRes.ok) {
       supportChatTotal.inc({ status: "error" });
       const errText = await openaiRes.text();
       console.error("Support chat OpenAI error:", openaiRes.status, errText);
+      insertAiLog({ userId: session.userId, source: "support_chat", model: "gpt-4o-mini", promptSystem: systemPrompt, promptUser: lastUserContent, durationMs, status: "error", errorMessage: errText.slice(0, 2000) }).catch(() => {});
       return Response.json(
         { error: "AI service returned an error." },
         { status: 502 }
@@ -135,10 +140,13 @@ export const POST = withMetrics("/api/support-chat", async (request: NextRequest
 
     supportChatTotal.inc({ status: "success" });
     await incrementGlobalAiCalls();
+    const logId = await insertAiLog({ userId: session.userId, source: "support_chat", model: "gpt-4o-mini", promptSystem: systemPrompt, promptUser: lastUserContent, durationMs }).catch(() => "");
 
     let fullResponse = "";
 
     const stream = createAiStream(openaiRes.body, {
+      aiLogId: logId || undefined,
+      aiLogModel: "gpt-4o-mini",
       onContent: (text) => { fullResponse += text; },
       onComplete: async (tokens) => {
         if (fullResponse) {

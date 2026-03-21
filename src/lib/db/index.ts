@@ -408,3 +408,11 @@ export {
   savePortfolioScore,
   deleteExpiredPortfolioScores,
 } from "./portfolio-scores";
+
+export type { AiLogEntry, AiLogWithUser, InsertAiLogParams, GetAiLogsOptions } from "./ai-logs";
+export {
+  insertAiLog,
+  updateAiLogResponse,
+  updateAiLogError,
+  getAiLogs,
+} from "./ai-logs";
