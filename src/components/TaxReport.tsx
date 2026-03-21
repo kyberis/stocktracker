@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth-context";
 import { usePortfolio } from "@/lib/portfolio-context";
 import TierFeatureBadge from "./TierFeatureBadge";
 import DataUpgradeNudge from "./DataUpgradeNudge";
+import AiMarkdown from "./AiMarkdown";
 import type {
   TaxReport as TaxReportType,
   TaxCountry,
@@ -949,14 +950,14 @@ function AiAssistantPanel({
         )}
       </div>
       {(aiSummary || aiLoading) && (
-        <div className="p-4 text-xs text-gray-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
+        <div className="p-4 text-gray-700 dark:text-slate-300 leading-relaxed">
           {aiLoading && !aiSummary && (
-            <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
+            <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 text-xs">
               <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-current" />
               {t("taxReportsAnalyzing")}
             </div>
           )}
-          {aiSummary}
+          {aiSummary && <AiMarkdown text={aiSummary} compact />}
         </div>
       )}
       {!aiSummary && !aiLoading && (

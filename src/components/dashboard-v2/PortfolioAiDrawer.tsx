@@ -18,6 +18,7 @@ interface Message {
 interface Props {
   isOpen: boolean;
   onClose: () => void;
+  autoAnalyze?: boolean;
 }
 
 function buildPortfolioSnapshot(
@@ -112,7 +113,7 @@ function buildPortfolioSnapshot(
   };
 }
 
-export default function PortfolioAiDrawer({ isOpen, onClose }: Props) {
+export default function PortfolioAiDrawer({ isOpen, onClose, autoAnalyze }: Props) {
   const { t, language } = useI18n();
   const { holdings, cashEntries, quotes, exchangeRates, activePortfolioCurrency, goals, demoMode } =
     usePortfolio();
@@ -130,6 +131,8 @@ export default function PortfolioAiDrawer({ isOpen, onClose }: Props) {
     () => calculatePortfolioTotals(holdings, cashEntries, quotes, exchangeRates, activePortfolioCurrency),
     [holdings, cashEntries, quotes, exchangeRates, activePortfolioCurrency],
   );
+
+  const autoAnalyzeFiredRef = useRef(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -204,6 +207,13 @@ export default function PortfolioAiDrawer({ isOpen, onClose }: Props) {
     },
     [messages, streaming, demoMode, stealthMode, holdings, cashEntries, quotes, exchangeRates, activePortfolioCurrency, goals, language],
   );
+
+  useEffect(() => {
+    if (isOpen && autoAnalyze && messages.length === 0 && !autoAnalyzeFiredRef.current && holdings.length > 0) {
+      autoAnalyzeFiredRef.current = true;
+      sendMessage(t("v2AiAutoAnalyzePrompt"));
+    }
+  }, [isOpen, autoAnalyze, messages.length, holdings.length, sendMessage, t]);
 
   const suggestions = [
     { label: t("v2AiChipBest"), q: "What's my best performing stock this month?" },

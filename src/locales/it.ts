@@ -896,6 +896,9 @@ const it: TranslationStrings = {
   marketsClosedTitle: "Take a break — markets are closed",
   marketsClosedBody: "Your portfolio closed at {value}. The chart will resume tracking when markets reopen.",
   marketsClosedOpens: "{market} opens {time}",
+  v2AiChipSP500: "Compare to S&P 500",
+  v2AiAutoAnalyzePrompt: "Analyze my portfolio and give me a comprehensive review: diversification, concentration risks, sector balance, strengths, weaknesses, and specific actionable recommendations to improve it.",
+  v2AiToday: "today",
 };
 
 export default it;

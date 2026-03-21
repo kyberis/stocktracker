@@ -17,6 +17,28 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.57.4",
+    date: "2026-03-21",
+    title: "Tax AI Rich Rendering & Auto Portfolio Analysis",
+    titleTranslations: { es: "Renderizado enriquecido de IA fiscal y análisis automático de cartera" },
+    changes: [
+      {
+        type: "fix",
+        text: "Tax report AI assistant now renders headings, bullet points, and bold text properly instead of showing raw markdown.",
+        translations: {
+          es: "El asistente de IA fiscal ahora muestra encabezados, viñetas y texto en negrita correctamente en lugar de markdown sin procesar.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "The 'Ask AI' button on the portfolio chart now automatically triggers a comprehensive portfolio analysis with diversification, risk, and actionable recommendations.",
+        translations: {
+          es: "El botón 'Preguntar a la IA' del gráfico de cartera ahora lanza automáticamente un análisis completo con diversificación, riesgo y recomendaciones accionables.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.57.3",
     date: "2026-03-21",
     title: "WhatsApp Verification Improvements",

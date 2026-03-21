@@ -2084,6 +2084,7 @@ const es: TranslationStrings = {
   v2AiChipEarnings: "¿Próximos resultados?",
   v2AiChipRisk: "¿Mayor riesgo?",
   v2AiChipSP500: "Comparar con S&P 500",
+  v2AiAutoAnalyzePrompt: "Analiza mi cartera y dame una revisión completa: diversificación, riesgos de concentración, equilibrio sectorial, fortalezas, debilidades y recomendaciones específicas para mejorarla.",
   v2AiToday: "hoy",
   v2Referral: "Invita a un Amigo, Obtén Pro Gratis",
   v2ReferralSub: "Gana 30 días de Pro por cada amigo que se una",

@@ -107,7 +107,7 @@ export default function DashboardPortfolioV2({
         </div>
       </div>
 
-      <PortfolioAiDrawer isOpen={aiDrawerOpen} onClose={() => setAiDrawerOpen(false)} />
+      <PortfolioAiDrawer isOpen={aiDrawerOpen} onClose={() => setAiDrawerOpen(false)} autoAnalyze />
     </>
   );
 }
