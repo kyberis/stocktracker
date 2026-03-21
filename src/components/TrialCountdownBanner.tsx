@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { useFeatureFlag } from "@/lib/feature-flag-context";
 import type { TranslationKey } from "@/lib/i18n";
 import { useI18n } from "@/lib/i18n";
 
@@ -22,7 +21,6 @@ function tOr(t: (k: TranslationKey) => string, key: TranslationKey, fallback: st
 export default function TrialCountdownBanner() {
   const { user } = useAuth();
   const { t } = useI18n();
-  const trialEnabled = useFeatureFlag("pro_trial_enabled");
   const [nowMs, setNowMs] = useState(() => Date.now());
 
   useEffect(() => {
@@ -65,7 +63,6 @@ export default function TrialCountdownBanner() {
     return { show: true as const, variant: "expired" as const };
   }, [user, nowMs]);
 
-  if (!trialEnabled) return null;
   if (!visibility.show) return null;
 
   if (visibility.variant === "expired") {
@@ -83,7 +80,7 @@ export default function TrialCountdownBanner() {
           <span className="text-sm text-slate-700 dark:text-slate-300">{msg}</span>
         </div>
         <a
-          href="/profile"
+          href="/profile?section=subscription"
           className="shrink-0 px-3 py-1 text-xs font-semibold text-white bg-emerald-500 hover:bg-emerald-600 rounded-lg transition-colors text-center"
         >
           Subscribe to Trefolio Pro
@@ -104,7 +101,7 @@ export default function TrialCountdownBanner() {
           {days}d {hours}h remaining
         </span>
       </div>
-      <a href="/profile" className="shrink-0 text-emerald-600 dark:text-emerald-400 hover:underline">
+      <a href="/profile?section=subscription" className="shrink-0 text-emerald-600 dark:text-emerald-400 hover:underline">
         Subscribe to keep Pro →
       </a>
     </div>

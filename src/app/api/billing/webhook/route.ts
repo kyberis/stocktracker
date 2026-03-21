@@ -18,6 +18,7 @@ import { canAccessTheme } from "@/lib/subscription";
 import { sendBifolioUpgradeEmail, sendTrefolioUpgradeEmail, sendAdminSubscriptionNotification } from "@/lib/email";
 import { billingEventsTotal } from "@/lib/metrics";
 import { getStripeClient } from "@/lib/stripe";
+import { ensureInitialized } from "@/lib/db/client";
 import { withMetrics } from "@/lib/with-metrics";
 import { createNotification } from "@/lib/db";
 import {
@@ -115,6 +116,13 @@ export const POST = withMetrics("/api/billing/webhook", async (req: NextRequest)
               stripeSubscriptionId: subscriptionId || user.stripe_subscription_id,
               planExpiresAt: "",
             });
+            if (user.trial_activated_at) {
+              const client = await ensureInitialized();
+              await client.execute({
+                sql: "UPDATE users SET trial_expired_notified = 1 WHERE id = ? AND trial_activated_at != ''",
+                args: [user.id],
+              });
+            }
             if (session.metadata?.deviceGrant === "true") {
               await markDeviceProRedeemed(user.id);
             }
