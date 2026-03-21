@@ -344,7 +344,9 @@ async function handleLoginFlow(
     trackEvent(dbUser.id, "login");
     authEventsTotal.inc({ event: "login_success" });
 
-    const response = NextResponse.redirect(new URL("/", req.nextUrl.origin));
+    const oauthRedirect = req.cookies.get("oauth_redirect")?.value;
+    const destination = oauthRedirect && oauthRedirect.startsWith("/") ? oauthRedirect : "/";
+    const response = NextResponse.redirect(new URL(destination, req.nextUrl.origin));
     response.cookies.set(getSessionCookieConfig(sessionToken));
     response.cookies.set({
       name: "google_oauth_state",
@@ -355,6 +357,9 @@ async function handleLoginFlow(
       path: "/",
       maxAge: 0,
     });
+    if (oauthRedirect) {
+      response.cookies.set({ name: "oauth_redirect", value: "", httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 0 });
+    }
 
     return response;
   } catch (error) {

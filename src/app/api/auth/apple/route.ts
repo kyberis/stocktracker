@@ -71,5 +71,18 @@ export async function GET(req: NextRequest) {
     });
   }
 
+  const postLoginRedirect = req.nextUrl.searchParams.get("redirect");
+  if (postLoginRedirect && postLoginRedirect.startsWith("/")) {
+    response.cookies.set({
+      name: "oauth_redirect",
+      value: postLoginRedirect,
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 600,
+    });
+  }
+
   return response;
 }

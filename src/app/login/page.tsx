@@ -53,6 +53,12 @@ function LoginForm() {
   const [nativePlatform, setNativePlatform] = useState<"ios" | "android" | "web">("web");
 
   const deviceRef = searchParams.get("ref") === "device";
+  const redirectTo = searchParams.get("redirect");
+
+  function postLoginUrl(): string {
+    if (redirectTo && redirectTo.startsWith("/")) return redirectTo;
+    return "/";
+  }
 
   useEffect(() => {
     const oauthError = searchParams.get("error");
@@ -100,7 +106,7 @@ function LoginForm() {
       if (data.user?.mustChangePassword) {
         router.replace("/change-password");
       } else {
-        router.replace("/");
+        router.replace(postLoginUrl());
       }
       router.refresh();
     } catch {
@@ -130,7 +136,7 @@ function LoginForm() {
       if (data.user?.mustChangePassword) {
         router.replace("/change-password");
       } else {
-        router.replace("/");
+        router.replace(postLoginUrl());
       }
       router.refresh();
     } catch {
@@ -192,7 +198,7 @@ function LoginForm() {
               </button>
             )}
             <a
-              href="/api/auth/google"
+              href={redirectTo ? `/api/auth/google?redirect=${encodeURIComponent(redirectTo)}` : "/api/auth/google"}
               className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-xl border-2 border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors text-sm font-medium text-gray-700 dark:text-slate-200"
             >
               <GoogleIcon />
@@ -200,7 +206,7 @@ function LoginForm() {
             </a>
             {showApple && (
               <a
-                href="/api/auth/apple"
+                href={redirectTo ? `/api/auth/apple?redirect=${encodeURIComponent(redirectTo)}` : "/api/auth/apple"}
                 className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-xl border-2 border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors text-sm font-medium text-gray-700 dark:text-slate-200"
               >
                 <AppleIcon />

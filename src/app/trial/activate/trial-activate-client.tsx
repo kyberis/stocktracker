@@ -29,7 +29,7 @@ const ROWS: { feature: string; free: string; pro: string }[] = [
 function TrialActivateInner({ token }: { token: string }) {
   const router = useRouter();
   const { t } = useI18n();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const trialEnabled = useFeatureFlag("pro_trial_enabled");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,6 +46,11 @@ function TrialActivateInner({ token }: { token: string }) {
   const sub = tOr(t, "trialActivateSub" as TranslationKey, "Unlock everything in Trefolio Pro for 7 days — free.");
 
   async function handleActivate() {
+    if (!user && !authLoading) {
+      const returnUrl = `/trial/activate?token=${encodeURIComponent(token)}`;
+      router.push(`/login?redirect=${encodeURIComponent(returnUrl)}`);
+      return;
+    }
     setError(null);
     setLoading(true);
     try {

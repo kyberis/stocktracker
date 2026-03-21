@@ -52,6 +52,8 @@ function isPublicPath(pathname: string): boolean {
   if (pathname === "/llms-full.txt") return true;
   // Public portfolio share pages
   if (pathname.startsWith("/p/")) return true;
+  // Trial activation page is public so email links work before login
+  if (pathname.startsWith("/trial/")) return true;
   if (/\.(png|jpg|jpeg|gif|svg|webp|ico|mp4|webm|css|js|woff2?)$/.test(pathname)) return true;
   return false;
 }
