@@ -635,8 +635,13 @@ export default function PortfolioEvolutionChart({ embedded, compact, benchmarks,
 
   const isPerf = chartMode === "performance" && hasInvestedData;
 
-  const enrichedPoints = attachEventsToPoints(points, events);
-  const enrichedPerfPoints = attachEventsToPoints(perfPoints, events);
+  const BUY_SELL_ONLY_RANGES = new Set<EvolutionRange>(["6m", "ytd", "1y", "all"]);
+  const filteredEvents = BUY_SELL_ONLY_RANGES.has(range)
+    ? events.filter((e) => e.type === "buy" || e.type === "sell")
+    : events;
+
+  const enrichedPoints = attachEventsToPoints(points, filteredEvents);
+  const enrichedPerfPoints = attachEventsToPoints(perfPoints, filteredEvents);
 
   const hasBenchmarks = benchmarks && benchmarks.length > 0 && Object.keys(benchmarkData).length > 0;
 
