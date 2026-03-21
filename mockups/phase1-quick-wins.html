@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phase 1 Mockups — Quick Wins</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b1120;
+    --card: #111827;
+    --card-border: rgba(255,255,255,0.06);
+    --text: #f1f5f9;
+    --text-muted: #64748b;
+    --text-dim: #475569;
+    --emerald: #10b981;
+    --emerald-light: #34d399;
+    --emerald-dark: #059669;
+    --red: #ef4444;
+    --amber: #f59e0b;
+    --input-bg: #1e293b;
+    --input-border: #334155;
+    --blue: #3b82f6;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', system-ui, sans-serif;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  .phase-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: linear-gradient(135deg, #0b1120 0%, #162032 100%);
+    border-bottom: 1px solid var(--card-border);
+    padding: 20px 40px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    backdrop-filter: blur(20px);
+  }
+  .phase-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    background: var(--emerald);
+    color: #000;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .phase-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: 28px;
+    font-weight: 400;
+    color: var(--text);
+  }
+  .phase-subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-left: auto;
+  }
+
+  .mockup-section {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 60px 40px;
+  }
+  .mockup-section + .mockup-section {
+    border-top: 1px solid rgba(255,255,255,0.04);
+  }
+
+  .section-number {
+    font-family: 'Instrument Serif', serif;
+    font-size: 64px;
+    color: var(--emerald);
+    opacity: 0.3;
+    line-height: 1;
+    position: absolute;
+    top: -10px;
+    left: -20px;
+  }
+  .section-header {
+    position: relative;
+    padding-left: 40px;
+    margin-bottom: 32px;
+  }
+  .section-tag {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+  }
+  .tag-config { background: rgba(59,130,246,0.15); color: var(--blue); }
+  .tag-ui { background: rgba(245,158,11,0.15); color: var(--amber); }
+  .section-title {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .section-desc {
+    font-size: 14px;
+    color: var(--text-muted);
+    max-width: 600px;
+  }
+
+  .comparison {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 24px;
+  }
+  .comp-panel {
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid var(--card-border);
+  }
+  .comp-label {
+    padding: 10px 16px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .comp-label.before { background: rgba(239,68,68,0.08); color: #f87171; }
+  .comp-label.after { background: rgba(16,185,129,0.08); color: var(--emerald-light); }
+  .comp-body {
+    background: var(--card);
+    padding: 24px;
+  }
+
+  /* ---- Signup mockup ---- */
+  .signup-card {
+    max-width: 360px;
+    margin: 0 auto;
+    background: var(--card);
+    border-radius: 16px;
+    padding: 28px;
+    border: 1px solid var(--card-border);
+  }
+  .signup-card h2 {
+    font-size: 20px;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 4px;
+  }
+  .signup-card .subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .form-group {
+    margin-bottom: 14px;
+  }
+  .form-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: #cbd5e1;
+    margin-bottom: 6px;
+  }
+  .form-label .opt { color: var(--text-dim); font-weight: 400; }
+  .form-input-wrap {
+    position: relative;
+  }
+  .form-input {
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--input-bg);
+    border: 1.5px solid var(--input-border);
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-input:focus {
+    border-color: var(--emerald);
+  }
+  .form-input.has-toggle {
+    padding-right: 42px;
+  }
+  .eye-toggle {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 6px;
+    transition: color 0.2s, background 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .eye-toggle:hover {
+    color: var(--text-muted);
+    background: rgba(255,255,255,0.05);
+  }
+  .eye-toggle svg { width: 18px; height: 18px; }
+  .btn-primary {
+    width: 100%;
+    padding: 11px 20px;
+    background: var(--emerald);
+    color: #000;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 6px;
+  }
+  .btn-primary:hover { background: var(--emerald-light); }
+
+  .change-highlight {
+    position: relative;
+    border: 2px solid var(--emerald);
+    border-radius: 12px;
+    padding: 2px;
+  }
+  .change-highlight::after {
+    content: 'NEW';
+    position: absolute;
+    top: -8px;
+    right: -6px;
+    background: var(--emerald);
+    color: #000;
+    font-size: 8px;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.08em;
+  }
+
+  /* ---- Pricing card mockup ---- */
+  .pricing-card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 24px;
+    border: 1px solid var(--card-border);
+    max-width: 320px;
+  }
+  .pricing-card h3 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .pricing-card h3 .leaf {
+    font-size: 20px;
+  }
+  .pricing-card .price {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+  }
+  .pricing-features {
+    list-style: none;
+    padding: 0;
+  }
+  .pricing-features li {
+    font-size: 13px;
+    color: #94a3b8;
+    padding: 5px 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .pricing-features li .check {
+    color: var(--emerald);
+    font-size: 14px;
+    margin-top: 1px;
+    flex-shrink: 0;
+  }
+  .pricing-features li.changed {
+    color: var(--text);
+    font-weight: 500;
+    background: rgba(16,185,129,0.06);
+    margin: 2px -8px;
+    padding: 5px 8px;
+    border-radius: 6px;
+    border-left: 2px solid var(--emerald);
+  }
+  .pricing-features li .old-value {
+    text-decoration: line-through;
+    color: var(--red);
+    opacity: 0.7;
+    margin-right: 4px;
+    font-weight: 400;
+  }
+  .pricing-features li .new-value {
+    color: var(--emerald-light);
+  }
+  .pricing-features li .delta {
+    font-size: 10px;
+    color: var(--emerald);
+    background: rgba(16,185,129,0.1);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+    margin-left: 4px;
+    white-space: nowrap;
+  }
+
+  /* ---- Import warning mockup ---- */
+  .import-warning {
+    background: rgba(245,158,11,0.08);
+    border: 1px solid rgba(245,158,11,0.2);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-top: 24px;
+    max-width: 500px;
+  }
+  .import-warning .iw-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--amber);
+    margin-bottom: 8px;
+  }
+  .import-warning .iw-body {
+    font-size: 13px;
+    color: #fbbf24;
+    opacity: 0.85;
+    margin-bottom: 12px;
+  }
+  .import-warning .iw-actions {
+    display: flex;
+    gap: 10px;
+  }
+  .import-warning .btn-sm {
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+  }
+  .btn-sm.primary {
+    background: var(--amber);
+    color: #000;
+  }
+  .btn-sm.secondary {
+    background: rgba(245,158,11,0.12);
+    color: var(--amber);
+    border: 1px solid rgba(245,158,11,0.25);
+  }
+
+  /* Annotations */
+  .annotation {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--emerald);
+    background: rgba(16,185,129,0.08);
+    border: 1px dashed rgba(16,185,129,0.3);
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-top: 12px;
+  }
+
+  /* Fade-in animation */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .mockup-section { animation: fadeUp 0.5s ease-out both; }
+  .mockup-section:nth-child(2) { animation-delay: 0.1s; }
+  .mockup-section:nth-child(3) { animation-delay: 0.2s; }
+  .mockup-section:nth-child(4) { animation-delay: 0.3s; }
+</style>
+</head>
+<body>
+
+<div class="phase-header">
+  <div class="phase-badge">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+    Phase 1
+  </div>
+  <div class="phase-title">Quick Wins</div>
+  <div class="phase-subtitle">3 changes &mdash; config tweaks + UI polish</div>
+</div>
+
+<!-- ================= 1. HOLDINGS LIMIT ================= -->
+<div class="mockup-section">
+  <div class="section-header">
+    <div class="section-number">01</div>
+    <div class="section-tag tag-config">Config</div>
+    <div class="section-title">Holdings limit: 15 &rarr; 20</div>
+    <div class="section-desc">A typical DEGIRO/IBKR portfolio has 16-20 positions. The current limit blocks users at the exact moment of first import.</div>
+  </div>
+
+  <div class="comparison">
+    <div class="comp-panel">
+      <div class="comp-label before">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+        Current (Folio Free)
+      </div>
+      <div class="comp-body">
+        <div class="pricing-card" style="margin:0 auto">
+          <h3><span class="leaf">&#x2618;</span> Folio</h3>
+          <div class="price">Free forever</div>
+          <ul class="pricing-features">
+            <li><span class="check">&#10003;</span> Up to 15 stocks & ETFs</li>
+            <li><span class="check">&#10003;</span> Real-time Yahoo Finance quotes</li>
+            <li><span class="check">&#10003;</span> Historical price charts</li>
+            <li><span class="check">&#10003;</span> Cash balance tracking</li>
+            <li><span class="check">&#10003;</span> 14 broker imports</li>
+            <li><span class="check">&#10003;</span> 2 price alerts (in-app)</li>
+            <li><span class="check">&#10003;</span> 5 AI analysis calls/month</li>
+            <li><span class="check">&#10003;</span> 30-day portfolio history</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="comp-panel">
+      <div class="comp-label after">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        Proposed (Folio Free)
+      </div>
+      <div class="comp-body">
+        <div class="pricing-card" style="margin:0 auto">
+          <h3><span class="leaf">&#x2618;</span> Folio</h3>
+          <div class="price">Free forever</div>
+          <ul class="pricing-features">
+            <li class="changed">
+              <span class="check">&#10003;</span>
+              Up to <span class="old-value">15</span> <span class="new-value">20</span> stocks & ETFs
+              <span class="delta">+33%</span>
+            </li>
+            <li><span class="check">&#10003;</span> Real-time Yahoo Finance quotes</li>
+            <li><span class="check">&#10003;</span> Historical price charts</li>
+            <li><span class="check">&#10003;</span> Cash balance tracking</li>
+            <li><span class="check">&#10003;</span> 14 broker imports</li>
+            <li class="changed">
+              <span class="check">&#10003;</span>
+              <span class="old-value">2</span> <span class="new-value">5</span> price alerts (in-app)
+              <span class="delta">+150%</span>
+            </li>
+            <li><span class="check">&#10003;</span> 5 AI analysis calls/month</li>
+            <li><span class="check">&#10003;</span> 30-day portfolio history</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pre-import warning -->
+  <div style="margin-top: 40px;">
+    <div class="section-tag tag-ui" style="margin-bottom: 12px;">New UI</div>
+    <div style="font-size: 15px; font-weight: 600; margin-bottom: 4px;">Pre-import slot warning</div>
+    <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">Shown during broker CSV import when the file contains more tickers than available slots.</div>
+
+    <div class="import-warning">
+      <div class="iw-header">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Your file has 24 tickers — 4 exceed your limit
+      </div>
+      <div class="iw-body">
+        Your Folio plan allows 20 holdings. The first 20 tickers will be imported; <strong>4 will be skipped</strong>: NKE, DIS, BABA, SPOT.
+      </div>
+      <div class="iw-actions">
+        <button class="btn-sm primary">Import first 20</button>
+        <button class="btn-sm secondary">Upgrade to import all</button>
+      </div>
+    </div>
+    <div class="annotation">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+      Shows before import executes, not after — prevents frustration
+    </div>
+  </div>
+</div>
+
+<!-- ================= 2. ALERT LIMIT ================= -->
+<div class="mockup-section">
+  <div class="section-header">
+    <div class="section-number">02</div>
+    <div class="section-tag tag-config">Config</div>
+    <div class="section-title">Alert limit: 2 &rarr; 5</div>
+    <div class="section-desc">2 alerts for 20 holdings is unusable. 5 gives one alert per top position — enough to feel useful, not enough to replace Pro.</div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+    <div style="background: var(--card); border-radius: 12px; padding: 20px; border: 1px solid var(--card-border);">
+      <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); margin-bottom: 12px;">Folio (Free)</div>
+      <div style="display: flex; align-items: baseline; gap: 4px; margin-bottom: 6px;">
+        <span style="font-size: 32px; font-weight: 700; color: var(--emerald-light);">5</span>
+        <span style="font-size: 13px; color: var(--text-muted);">alerts</span>
+      </div>
+      <div style="font-size: 12px; color: var(--text-dim);">In-app only</div>
+      <div style="margin-top: 10px; display: flex; gap: 4px;">
+        <div style="width: 24px; height: 4px; border-radius: 2px; background: var(--emerald);"></div>
+        <div style="width: 24px; height: 4px; border-radius: 2px; background: var(--emerald);"></div>
+        <div style="width: 24px; height: 4px; border-radius: 2px; background: var(--emerald);"></div>
+        <div style="width: 24px; height: 4px; border-radius: 2px; background: var(--emerald);"></div>
+        <div style="width: 24px; height: 4px; border-radius: 2px; background: var(--emerald);"></div>
+      </div>
+    </div>
+    <div style="background: var(--card); border-radius: 12px; padding: 20px; border: 1px solid var(--card-border);">
+      <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); margin-bottom: 12px;">Bifolio (Starter)</div>
+      <div style="display: flex; align-items: baseline; gap: 4px; margin-bottom: 6px;">
+        <span style="font-size: 32px; font-weight: 700; color: var(--text);">10</span>
+        <span style="font-size: 13px; color: var(--text-muted);">alerts</span>
+      </div>
+      <div style="font-size: 12px; color: var(--text-dim);">+ Email & push</div>
+      <div style="margin-top: 10px; display: flex; gap: 4px; flex-wrap: wrap;">
+        <div style="width: 24px; height: 4px; border-radius: 2px; background: var(--blue);"></div>
+        <div style="width: 24px; height: 4px; border-radius: 2px; background: var(--blue);"></div>
+        <div style="width: 24px; height: 4px; border-radius: 2px; background: var(--blue);"></div>
+        <div style="width: 24px; height: 4px; border-radius: 2px; background: var(--blue);"></div>
+        <div style="width: 24px; height: 4px; border-radius: 2px; background: var(--blue);"></div>
+        <div style="width: 24px; height: 4px; border-radius: 2px; background: var(--blue);"></div>
+        <div style="width: 24px; height: 4px; border-radius: 2px; background: var(--blue);"></div>
+        <div style="width: 24px; height: 4px; border-radius: 2px; background: var(--blue);"></div>
+        <div style="width: 24px; height: 4px; border-radius: 2px; background: var(--blue);"></div>
+        <div style="width: 24px; height: 4px; border-radius: 2px; background: var(--blue);"></div>
+      </div>
+    </div>
+    <div style="background: var(--card); border-radius: 12px; padding: 20px; border: 1px solid var(--card-border);">
+      <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); margin-bottom: 12px;">Trefolio (Pro)</div>
+      <div style="display: flex; align-items: baseline; gap: 4px; margin-bottom: 6px;">
+        <span style="font-size: 32px; font-weight: 700; color: var(--text);">&infin;</span>
+        <span style="font-size: 13px; color: var(--text-muted);">alerts</span>
+      </div>
+      <div style="font-size: 12px; color: var(--text-dim);">+ WhatsApp, push & email</div>
+      <div style="margin-top: 10px;">
+        <div style="width: 100%; height: 4px; border-radius: 2px; background: linear-gradient(90deg, #8b5cf6, #6366f1, #3b82f6, #10b981);"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="annotation" style="margin-top: 16px;">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+    Change: FREE_ALERT_LIMIT in platform-config.ts — one line, zero migration
+  </div>
+</div>
+
+<!-- ================= 3. PASSWORD TOGGLE ================= -->
+<div class="mockup-section">
+  <div class="section-header">
+    <div class="section-number">03</div>
+    <div class="section-tag tag-ui">UI</div>
+    <div class="section-title">Password visibility toggle</div>
+    <div class="section-desc">Both password fields get an eye icon to toggle visibility. Standard UX that prevents mistyped passwords and failed signups.</div>
+  </div>
+
+  <div class="comparison">
+    <div class="comp-panel">
+      <div class="comp-label before">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+        Current signup form
+      </div>
+      <div class="comp-body">
+        <div class="signup-card">
+          <h2>Create your account</h2>
+          <div class="subtitle">Start tracking your portfolio for free</div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input class="form-input" type="email" placeholder="you@example.com" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Display name <span class="opt">(optional)</span></label>
+            <input class="form-input" placeholder="John Doe" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input class="form-input" type="password" value="mypassword" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Confirm password</label>
+            <input class="form-input" type="password" value="mypassword" />
+          </div>
+          <button class="btn-primary">Create account</button>
+        </div>
+      </div>
+    </div>
+    <div class="comp-panel">
+      <div class="comp-label after">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        Proposed — with visibility toggle
+      </div>
+      <div class="comp-body">
+        <div class="signup-card">
+          <h2>Create your account</h2>
+          <div class="subtitle">Start tracking your portfolio for free</div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input class="form-input" type="email" placeholder="you@example.com" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Display name <span class="opt">(optional)</span></label>
+            <input class="form-input" placeholder="John Doe" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <div class="form-input-wrap change-highlight">
+              <input class="form-input has-toggle" id="pw1" type="password" value="mypassword" />
+              <button class="eye-toggle" onclick="togglePw('pw1', this)" aria-label="Show password">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Confirm password</label>
+            <div class="form-input-wrap change-highlight">
+              <input class="form-input has-toggle" id="pw2" type="password" value="mypassword" />
+              <button class="eye-toggle" onclick="togglePw('pw2', this)" aria-label="Show password">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <button class="btn-primary">Create account</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="annotation" style="margin-top: 16px;">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v.01M12 8v4"/></svg>
+    Click the eye icons above to test the toggle &mdash; they're interactive
+  </div>
+</div>
+
+<!-- ================= FILES CHANGED SUMMARY ================= -->
+<div class="mockup-section" style="padding-top: 40px;">
+  <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--card-border); border-radius: 12px; padding: 24px;">
+    <div style="font-size: 14px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Files changed in Phase 1
+    </div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+      <div style="font-size: 12px; padding: 8px 12px; border-radius: 8px; background: rgba(16,185,129,0.05); border: 1px solid rgba(16,185,129,0.1); font-family: monospace;">
+        <span style="color: var(--emerald);">M</span> src/lib/platform-config.ts
+      </div>
+      <div style="font-size: 12px; padding: 8px 12px; border-radius: 8px; background: rgba(16,185,129,0.05); border: 1px solid rgba(16,185,129,0.1); font-family: monospace;">
+        <span style="color: var(--emerald);">M</span> src/app/signup/page.tsx
+      </div>
+      <div style="font-size: 12px; padding: 8px 12px; border-radius: 8px; background: rgba(16,185,129,0.05); border: 1px solid rgba(16,185,129,0.1); font-family: monospace;">
+        <span style="color: var(--emerald);">M</span> src/app/login/page.tsx
+      </div>
+      <div style="font-size: 12px; padding: 8px 12px; border-radius: 8px; background: rgba(16,185,129,0.05); border: 1px solid rgba(16,185,129,0.1); font-family: monospace;">
+        <span style="color: var(--emerald);">M</span> src/locales/en.ts
+      </div>
+      <div style="font-size: 12px; padding: 8px 12px; border-radius: 8px; background: rgba(16,185,129,0.05); border: 1px solid rgba(16,185,129,0.1); font-family: monospace;">
+        <span style="color: var(--emerald);">M</span> src/locales/es.ts
+      </div>
+      <div style="font-size: 12px; padding: 8px 12px; border-radius: 8px; background: rgba(16,185,129,0.05); border: 1px solid rgba(16,185,129,0.1); font-family: monospace;">
+        <span style="color: var(--emerald);">M</span> src/app/landing/page.tsx
+      </div>
+      <div style="font-size: 12px; padding: 8px 12px; border-radius: 8px; background: rgba(59,130,246,0.05); border: 1px solid rgba(59,130,246,0.1); font-family: monospace;">
+        <span style="color: var(--blue);">M</span> src/app/api/transactions/import-broker/route.ts
+      </div>
+      <div style="font-size: 12px; padding: 8px 12px; border-radius: 8px; background: rgba(59,130,246,0.05); border: 1px solid rgba(59,130,246,0.1); font-family: monospace;">
+        <span style="color: var(--blue);">M</span> src/lib/subscription.test.ts
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function togglePw(inputId, btn) {
+  const inp = document.getElementById(inputId);
+  const isPassword = inp.type === 'password';
+  inp.type = isPassword ? 'text' : 'password';
+
+  const eyeOpen = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+  const eyeOff = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
+
+  btn.innerHTML = isPassword ? eyeOff : eyeOpen;
+  btn.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
+}
+</script>
+
+</body>
+</html>

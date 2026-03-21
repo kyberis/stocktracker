@@ -102,6 +102,7 @@ export {
   mapTransactionsToPortfolio,
   mapTransactionsBySourceRef,
   removeTransactionPortfolioMappings,
+  listDistinctBuyTickers,
 } from "./transactions";
 
 export {

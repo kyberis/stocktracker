@@ -41,6 +41,14 @@ function normalizeTransaction(tx: Record<string, unknown>): ExtractedTransaction
   };
 }
 
+export interface HoldingsLimitInfo {
+  limit: number;
+  currentCount: number;
+  newTickers: number;
+  willBeSkipped: number;
+  skippedTickers: string[];
+}
+
 export interface UseImportBrokerCSVReturn {
   step: "idle" | "parsing" | "preview" | "importing" | "backfilling" | "done" | "error";
   transactions: ExtractedTransaction[];
@@ -48,6 +56,7 @@ export interface UseImportBrokerCSVReturn {
   cashBalances: CashBalance[];
   duplicatesRemoved: number;
   holdingsCapped: number;
+  holdingsLimitInfo: HoldingsLimitInfo | null;
   importProgress: { current: number; total: number; errors: number };
   importedTxCount: number;
   errorMsg: string;
@@ -65,6 +74,7 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
   const [cashBalances, setCashBalances] = useState<CashBalance[]>([]);
   const [duplicatesRemoved, setDuplicatesRemoved] = useState(0);
   const [holdingsCapped, setHoldingsCapped] = useState(0);
+  const [holdingsLimitInfo, setHoldingsLimitInfo] = useState<HoldingsLimitInfo | null>(null);
   const [importProgress, setImportProgress] = useState({
     current: 0,
     total: 0,
@@ -81,6 +91,7 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
     setCashBalances([]);
     setDuplicatesRemoved(0);
     setHoldingsCapped(0);
+    setHoldingsLimitInfo(null);
     setImportProgress({ current: 0, total: 0, errors: 0 });
     setImportedTxCount(0);
     setErrorMsg("");
@@ -158,6 +169,7 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
         return;
       }
       setDuplicatesRemoved(dupCount);
+      setHoldingsLimitInfo(data.summary?.holdingsLimitInfo ?? null);
       setHoldings([]);
       setTransactions(
         parsedTransactions.map((tx: Record<string, unknown>) =>
@@ -204,7 +216,17 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
       const derivedTransactions = [...unsorted].sort((a, b) =>
         a.date.localeCompare(b.date)
       );
-      const validTransactions = derivedTransactions.filter((tx) => tx.date);
+      let validTransactions = derivedTransactions.filter((tx) => tx.date);
+
+      if (holdingsLimitInfo?.skippedTickers?.length) {
+        const skippedSet = new Set(
+          holdingsLimitInfo.skippedTickers.map((t) => t.toUpperCase()),
+        );
+        validTransactions = validTransactions.filter(
+          (tx) => !skippedSet.has((tx.ticker || "").toUpperCase()),
+        );
+      }
+
       const total = validTransactions.length;
 
       setImportProgress({ current: 0, total, errors: 0 });
@@ -225,7 +247,9 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
         const chunk = validTransactions.slice(i, i + CHUNK_SIZE);
         const isLastChunk =
           i + CHUNK_SIZE >= validTransactions.length || limitReached;
-        const payload = chunk.map((tx) => ({
+        const payload = chunk
+          .filter((tx) => tx.type !== "buy" || !!tx.ticker)
+          .map((tx) => ({
           holdingId: "",
           ticker:
             tx.ticker ||
@@ -325,7 +349,7 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
           .finally(() => setStep("done"));
       }
     },
-    [transactions, holdings, cashBalances]
+    [transactions, holdings, cashBalances, holdingsLimitInfo]
   );
 
   return {
@@ -335,6 +359,7 @@ export function useImportBrokerCSV(): UseImportBrokerCSVReturn {
     cashBalances,
     duplicatesRemoved,
     holdingsCapped,
+    holdingsLimitInfo,
     importProgress,
     importedTxCount,
     errorMsg,

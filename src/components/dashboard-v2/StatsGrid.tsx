@@ -2,10 +2,12 @@
 
 import { useMemo } from "react";
 import { useI18n } from "@/lib/i18n";
+import { useAuth } from "@/lib/auth-context";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useStealthMode } from "@/lib/stealth-context";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
 import { formatCurrency, formatPercent, resolveQuoteCurrency, convertCurrency } from "@/lib/utils";
+import { getHoldingsLimit } from "@/lib/subscription";
 import type { Holding, CashEntry } from "@/lib/types";
 
 interface Props {
@@ -16,8 +18,10 @@ interface Props {
 
 export default function StatsGrid({ holdings, cashEntries, snapshotInvested }: Props) {
   const { t } = useI18n();
+  const { user } = useAuth();
   const { quotes, exchangeRates, activePortfolioCurrency } = usePortfolio();
   const { stealthMode } = useStealthMode();
+  const holdingsLimit = getHoldingsLimit(user?.plan ?? "free");
 
   const totals = useMemo(
     () => calculatePortfolioTotals(holdings, cashEntries, quotes, exchangeRates, activePortfolioCurrency),
@@ -53,7 +57,12 @@ export default function StatsGrid({ holdings, cashEntries, snapshotInvested }: P
       accent: true,
       positive: isGain,
     },
-    { label: t("v2Holdings"), value: String(holdings.length) },
+    {
+      label: t("v2Holdings"),
+      value: holdingsLimit < Infinity ? `${holdings.length}/${holdingsLimit}` : String(holdings.length),
+      accent: holdingsLimit < Infinity,
+      positive: holdings.length < holdingsLimit,
+    },
     { label: t("v2DivYield"), value: `${divYield.toFixed(2)}%` },
   ];
 

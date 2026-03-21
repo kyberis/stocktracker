@@ -201,7 +201,7 @@ function DesktopDashboard() {
   const isPro = user?.plan === "pro";
   const holdingsCount = holdings.length;
   const holdingsLimit = getHoldingsLimit(user?.plan ?? "free");
-  const showHoldingsBanner = !authLoading && holdingsLimit !== Infinity && holdingsCount >= holdingsLimit - 2 && holdingsCount > 0;
+  const showHoldingsBanner = !authLoading && holdingsLimit !== Infinity && holdingsCount >= Math.ceil(holdingsLimit / 2) && holdingsCount > 0;
   const holdingsAtLimit = !authLoading && holdingsLimit !== Infinity && holdingsCount >= holdingsLimit;
 
   const dashboardTabs: { key: DashboardTab; label: string; tierBadge?: "starter" | "pro" }[] = [

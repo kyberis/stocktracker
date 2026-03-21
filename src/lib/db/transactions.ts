@@ -493,3 +493,23 @@ export async function removeTransactionPortfolioMappings(
     args: [userId, portfolioId],
   });
 }
+
+/**
+ * Returns the set of distinct UPPER(ticker) values for buy transactions already
+ * stored. Used by the bulk import route to enforce the holdings limit across
+ * chunked imports where the holdings table hasn't been rebuilt yet.
+ */
+export async function listDistinctBuyTickers(
+  userId: string,
+  portfolioId?: string,
+): Promise<Set<string>> {
+  const client = await ensureInitialized();
+  const resolved = await resolvePortfolioId(userId, portfolioId);
+  const result = await client.execute({
+    sql: `SELECT DISTINCT UPPER(ticker) AS t
+          FROM transactions
+          WHERE user_id = ? AND portfolio_id = ? AND type = 'buy' AND ticker != ''`,
+    args: [userId, resolved],
+  });
+  return new Set(result.rows.map((r) => str(r.t)));
+}

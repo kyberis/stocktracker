@@ -108,7 +108,7 @@ function getFeatureCards(t: T) {
     { icon: "shield", title: t("landingCardTaxTitle"), desc: t("landingCardTaxDesc"), badge: "Pro" },
     { icon: "search", title: t("landingCardScreenerTitle"), desc: t("landingCardScreenerDesc"), badge: "Pro" },
     { icon: "wallet", title: t("landingCardNetWorthTitle"), desc: t("landingCardNetWorthDesc") },
-    { icon: "sparkle", title: t("landingCardAiTitle"), desc: t("landingCardAiDesc") },
+    { icon: "sparkle", title: t("landingCardAiTitle"), desc: t("landingCardAiDesc"), badge: "Pro" },
     { icon: "upload", title: t("landingCardImportTitle"), desc: t("landingCardImportDesc") },
     { icon: "chart", title: t("landingCardPerfTitle"), desc: t("landingCardPerfDesc") },
     { icon: "beaker", title: t("landingCardSimulatorTitle"), desc: t("landingCardSimulatorDesc"), badge: "Pro" },
@@ -174,7 +174,7 @@ function getPricing(t: T): PricingTier[] {
       regularAnnual: "€79.99", annualPrice: "€59.99",
       annualSavePct: 37, launchDiscountPct: 20,
       description: t("landingPricingTrefolioDesc"),
-      features: Array.from({ length: 21 }, (_, i) => t(`landingPricingTrefolioFeature${i + 1}` as TranslationKey)),
+      features: Array.from({ length: 23 }, (_, i) => t(`landingPricingTrefolioFeature${i + 1}` as TranslationKey)),
       cta: t("landingPricingTrefolioCta"),
       highlighted: true,
     },
@@ -432,7 +432,7 @@ function HeroDashboardMock() {
         {/* Top bar */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex gap-2">
-            {["Portfolio", "Dividends", "Metrics", "Events"].map((tab, i) => (
+            {["Portfolio", "Dividends", "Performance", "Events"].map((tab, i) => (
               <span key={tab} className={`text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${i === 0 ? "bg-emerald-500/15 text-emerald-400" : "text-slate-500 hover:text-slate-300"}`}>
                 {tab}
               </span>
@@ -851,6 +851,8 @@ function WhySection() {
     { feature: t("landingWhyRow14" as TranslationKey), us: true, others: false, spreadsheets: false, exclusive: true },
     { feature: t("landingWhyRow15" as TranslationKey), us: true, others: true, spreadsheets: false },
     { feature: t("landingWhyRow16" as TranslationKey), us: true, others: false, spreadsheets: false },
+    { feature: t("landingWhyRow17" as TranslationKey), us: true, others: false, spreadsheets: false, exclusive: true },
+    { feature: t("landingWhyRow18" as TranslationKey), us: true, others: false, spreadsheets: false, exclusive: true },
   ], [t]);
 
   const Check = () => (

@@ -17,6 +17,86 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.58.1",
+    date: "2026-03-21",
+    title: "Holdings Limit Awareness",
+    titleTranslations: { es: "Visibilidad del límite de posiciones" },
+    changes: [
+      {
+        type: "improvement",
+        text: "Holdings counter now shows usage vs. limit (e.g. 18/20) in the dashboard stats grid and portfolio summary for free-tier users.",
+        translations: {
+          es: "El contador de posiciones ahora muestra el uso vs. límite (ej. 18/20) en las estadísticas del dashboard y resumen de cartera para usuarios del plan gratuito.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Add stock/crypto modals now show an upgrade prompt when the holdings limit is reached instead of the add form.",
+        translations: {
+          es: "Los modales de agregar acción/cripto ahora muestran un aviso de mejora de plan cuando se alcanza el límite de posiciones.",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.58.0",
+    date: "2026-03-21",
+    title: "Free Tier Improvements",
+    titleTranslations: { es: "Mejoras del plan gratuito" },
+    changes: [
+      {
+        type: "improvement",
+        text: "Increased free plan holdings limit from 15 to 20 stocks & ETFs, fitting typical starter portfolios without immediate friction.",
+        translations: {
+          es: "Aumentado el límite de posiciones del plan gratuito de 15 a 20 acciones y ETFs, adaptándose a carteras iniciales típicas sin fricción inmediata.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Increased free plan price alerts from 2 to 5 — enough to cover your top positions.",
+        translations: {
+          es: "Aumentadas las alertas de precio del plan gratuito de 2 a 5 — suficiente para cubrir tus principales posiciones.",
+        },
+      },
+      {
+        type: "feature",
+        text: "Added password visibility toggle on signup and login pages to prevent mistyped passwords.",
+        translations: {
+          es: "Añadido botón de visibilidad de contraseña en las páginas de registro e inicio de sesión para evitar errores al escribir.",
+        },
+      },
+      {
+        type: "feature",
+        text: "Broker CSV import now shows a pre-import warning when your file contains more tickers than your plan allows, listing exactly which ones will be skipped.",
+        translations: {
+          es: "La importación de CSV de broker ahora muestra una advertencia antes de importar cuando tu archivo contiene más tickers de los permitidos por tu plan, indicando exactamente cuáles serán omitidos.",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.57.5",
+    date: "2026-03-21",
+    title: "Landing Page Content Refresh",
+    titleTranslations: { es: "Actualización del contenido de la página de inicio" },
+    changes: [
+      {
+        type: "improvement",
+        text: "Refreshed all landing page screenshots with the latest dashboard UI, updated feature descriptions to highlight AI Portfolio Score, Portfolio AI drawer, chart AI assistant, DRIP simulation, portfolio evolution chart with 19 benchmarks, and Financial Planning with FIRE calculator.",
+        translations: {
+          es: "Actualizadas todas las capturas de pantalla de la landing page con la última interfaz del dashboard, actualizadas las descripciones de funciones para destacar AI Portfolio Score, panel de Portfolio AI, asistente IA del gráfico, simulación DRIP, gráfico de evolución con 19 benchmarks y Planificación Financiera con calculadora FIRE.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Added 7-day free trial mention to pricing section, Financial Planning and referral program to the comparison table, and standardized broker CSV count to 14 across all copy.",
+        translations: {
+          es: "Añadida mención de prueba gratuita de 7 días en la sección de precios, Planificación Financiera y programa de referidos en la tabla comparativa, y estandarizado el número de formatos CSV a 14 en todo el texto.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.57.4",
     date: "2026-03-21",
     title: "Tax AI Rich Rendering & Auto Portfolio Analysis",

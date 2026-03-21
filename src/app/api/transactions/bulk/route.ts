@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireSession } from "@/lib/auth/guards";
-import { addTransactionsBulk, rebuildHoldings, listHoldings, findUserById } from "@/lib/db";
+import { addTransactionsBulk, rebuildHoldings, listHoldings, findUserById, listDistinctBuyTickers } from "@/lib/db";
+import { baseTickerName } from "@/lib/db/helpers";
 import { withMetrics } from "@/lib/with-metrics";
 import { transactionsOpsTotal } from "@/lib/metrics";
 import { parseBody } from "@/lib/api-response";
@@ -101,23 +102,44 @@ export const POST = withMetrics("/api/transactions/bulk", async (req: NextReques
   let allowedTickers: Set<string> | null = null;
 
   if (holdingsLimit < Infinity) {
-    const currentHoldings = await listHoldings(userId, portfolioId);
-    const existingTickers = new Set(
-      currentHoldings.map((h) => `${h.ticker}|${h.exchange || ""}`)
-    );
-    const newTickers = new Set<string>();
+    const [currentHoldings, priorBuyTickers] = await Promise.all([
+      listHoldings(userId, portfolioId),
+      listDistinctBuyTickers(userId, portfolioId),
+    ]);
+    // Build set of known base tickers (strip exchange suffixes) for stable
+    // cross-chunk matching regardless of exchange resolution differences.
+    const knownBases = new Set<string>();
+    for (const h of currentHoldings) knownBases.add(baseTickerName(h.ticker.toUpperCase()));
+    for (const t of priorBuyTickers) knownBases.add(baseTickerName(t));
+
+    const chunkNewBases = new Set<string>();
+    const chunkNewRaw = new Set<string>();
     for (const tx of transactions) {
       if (tx.type === "buy") {
-        const key = `${tx.ticker.toUpperCase()}|${getExchange(tx).toUpperCase()}`;
-        if (!existingTickers.has(key)) newTickers.add(key);
+        const raw = tx.ticker.toUpperCase();
+        const base = baseTickerName(raw);
+        if (base && !knownBases.has(base)) {
+          chunkNewBases.add(base);
+          chunkNewRaw.add(raw);
+        }
       }
     }
-    const slotsAvailable = Math.max(0, holdingsLimit - currentHoldings.length);
-    if (newTickers.size > slotsAvailable) {
-      const newArr = [...newTickers];
-      const allowed = new Set(newArr.slice(0, slotsAvailable));
-      holdingsCapped = newTickers.size - slotsAvailable;
-      allowedTickers = new Set([...existingTickers, ...allowed]);
+    const slotsAvailable = Math.max(0, holdingsLimit - knownBases.size);
+    if (chunkNewBases.size > slotsAvailable) {
+      const allowedBases = new Set([...chunkNewBases].slice(0, slotsAvailable));
+      holdingsCapped = chunkNewBases.size - slotsAvailable;
+      // Build allowed raw-ticker set for filtering
+      const allowedRaw = new Set<string>();
+      for (const h of currentHoldings) allowedRaw.add(h.ticker.toUpperCase());
+      for (const t of priorBuyTickers) allowedRaw.add(t);
+      for (const tx of transactions) {
+        if (tx.type === "buy") {
+          const raw = tx.ticker.toUpperCase();
+          const base = baseTickerName(raw);
+          if (knownBases.has(base) || allowedBases.has(base)) allowedRaw.add(raw);
+        }
+      }
+      allowedTickers = allowedRaw;
     }
   }
 
@@ -143,8 +165,8 @@ export const POST = withMetrics("/api/transactions/bulk", async (req: NextReques
   let filtered = transactions;
   if (allowedTickers) {
     filtered = transactions.filter((tx) => {
-      const key = `${tx.ticker.toUpperCase()}|${getExchange(tx).toUpperCase()}`;
-      return allowedTickers!.has(key);
+      if (tx.type !== "buy") return true;
+      return allowedTickers!.has(tx.ticker.toUpperCase());
     });
   }
 

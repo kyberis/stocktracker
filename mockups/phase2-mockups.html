@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Phase 2 Mockups — trefolio</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0f172a; --surface: #1e293b; --border: rgba(255,255,255,0.06);
+    --text: #f1f5f9; --text-muted: #94a3b8; --text-dim: #64748b;
+    --emerald: #10b981; --emerald-bg: rgba(16,185,129,0.08);
+    --red: #ef4444; --red-bg: rgba(239,68,68,0.08);
+    --amber: #f59e0b; --amber-bg: rgba(245,158,11,0.08);
+    --violet: #8b5cf6; --violet-bg: rgba(139,92,246,0.08);
+    --blue: #3b82f6; --blue-bg: rgba(59,130,246,0.08);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background: var(--bg); color: var(--text);
+    padding: 32px 24px; max-width: 1200px; margin: 0 auto;
+  }
+  h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+  .subtitle { color: var(--text-muted); font-size: 14px; margin-bottom: 40px; }
+  .section {
+    margin-bottom: 56px; padding-bottom: 56px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section:last-child { border-bottom: none; }
+  .section-header {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 8px;
+  }
+  .section-num {
+    background: var(--emerald); color: #fff; font-weight: 700;
+    width: 28px; height: 28px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; flex-shrink: 0;
+  }
+  .section-title { font-size: 20px; font-weight: 700; }
+  .section-desc { color: var(--text-muted); font-size: 13px; margin-bottom: 24px; margin-left: 40px; }
+
+  /* TABS */
+  .tab-bar { display: flex; gap: 4px; margin-bottom: 24px; }
+  .tab-btn {
+    padding: 6px 14px; border-radius: 8px; border: none;
+    background: transparent; color: var(--text-muted);
+    font-size: 12px; font-weight: 500; cursor: pointer;
+    font-family: inherit; transition: all 0.15s;
+  }
+  .tab-btn.active { background: var(--emerald); color: #fff; }
+  .tab-btn:hover:not(.active) { background: rgba(255,255,255,0.04); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* CARDS */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 24px;
+  }
+  .card-sm { padding: 16px; border-radius: 12px; }
+
+  /* MOCKUP FRAME */
+  .mockup-frame {
+    background: #0c1222; border: 1px solid var(--border);
+    border-radius: 16px; overflow: hidden;
+  }
+  .mockup-label {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--text-dim); padding: 10px 16px;
+    border-bottom: 1px solid var(--border); font-weight: 500;
+  }
+  .mockup-body { padding: 24px; }
+
+  /* STATS GRID */
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .stat-cell {
+    background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04);
+    border-radius: 10px; padding: 10px 12px;
+  }
+  .stat-label {
+    font-size: 9px; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--text-dim); font-weight: 500;
+  }
+  .stat-value {
+    font-size: 14px; font-weight: 700; margin-top: 3px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .stat-green { color: var(--emerald); }
+  .stat-red { color: var(--red); }
+  .stat-amber { color: var(--amber); }
+  .stat-white { color: var(--text); }
+
+  /* EMPTY STATE */
+  .empty-state { text-align: center; padding: 40px 20px; }
+  .empty-icon {
+    width: 56px; height: 56px; border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px;
+  }
+  .empty-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+  .empty-subtitle { font-size: 13px; color: var(--text-muted); max-width: 320px; margin: 0 auto 20px; line-height: 1.5; }
+  .empty-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .btn-primary {
+    padding: 8px 18px; border-radius: 10px; border: none;
+    background: var(--emerald); color: #fff;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    font-family: inherit; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-secondary {
+    padding: 8px 18px; border-radius: 10px;
+    border: 1px solid var(--border); background: transparent;
+    color: var(--text-muted); font-size: 13px; font-weight: 500;
+    cursor: pointer; font-family: inherit;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+
+  /* TOOLS SECTIONS */
+  .tools-section-header {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 12px; padding: 0 4px;
+  }
+  .tools-section-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+  .tools-section-line { flex: 1; height: 1px; background: var(--border); }
+  .tools-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin-bottom: 24px; }
+  .tool-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 12px;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 8px; cursor: pointer; transition: all 0.15s; text-align: center;
+  }
+  .tool-card:hover { border-color: rgba(255,255,255,0.12); transform: translateY(-1px); }
+  .tool-card.locked { opacity: 0.6; }
+  .tool-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .tool-name { font-size: 12px; font-weight: 600; }
+  .tool-desc { font-size: 10px; color: var(--text-dim); line-height: 1.3; }
+  .tier-badge {
+    font-size: 9px; font-weight: 700; padding: 2px 6px;
+    border-radius: 4px; text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .tier-bifolio { background: var(--amber-bg); color: var(--amber); }
+  .tier-trefolio { background: var(--violet-bg); color: var(--violet); }
+
+  /* COMPARISON */
+  .compare-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 16px; }
+  .compare-label {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--text-dim); font-weight: 600; margin-bottom: 12px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .compare-label .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .dot-red { background: var(--red); }
+  .dot-green { background: var(--emerald); }
+
+  @media (max-width: 640px) {
+    .compare-cols { grid-template-columns: 1fr; }
+    .tools-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<h1>Fase 2 — Mockups</h1>
+<p class="subtitle">Componentes UI: EmptyState unificado, StatsGrid con Daily P/L, Tools separacion Free/Pro</p>
+
+<!-- ======== MOCKUP 1: EMPTY STATE ======== -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-num">1</span>
+    <span class="section-title">EmptyState unificado</span>
+  </div>
+  <p class="section-desc">
+    Un componente reutilizable que reemplaza los ~8 patrones inconsistentes actuales.
+    Acepta: icono, titulo, subtitulo, y acciones opcionales (CTAs).
+    Usado en: Portfolio, Dividendos, Eventos, News, Growth, Taxonomy, etc.
+  </p>
+
+  <div class="tab-bar" data-group="empty">
+    <button class="tab-btn active" data-tab="empty-portfolio">Portfolio</button>
+    <button class="tab-btn" data-tab="empty-dividends">Dividendos</button>
+    <button class="tab-btn" data-tab="empty-events">Eventos</button>
+    <button class="tab-btn" data-tab="empty-growth">Crecimiento</button>
+    <button class="tab-btn" data-tab="empty-news">Noticias</button>
+  </div>
+
+  <!-- Portfolio empty -->
+  <div class="tab-panel active" id="empty-portfolio">
+    <div class="mockup-frame">
+      <div class="mockup-label">Dashboard → Portfolio tab (0 holdings)</div>
+      <div class="mockup-body">
+        <div class="card">
+          <div class="empty-state">
+            <div class="empty-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+              <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" /></svg>
+            </div>
+            <div class="empty-title">Start building your portfolio</div>
+            <div class="empty-subtitle">Import your broker CSV or add your first stock manually. Your portfolio will come to life with real-time quotes and analytics.</div>
+            <div class="empty-actions">
+              <button class="btn-primary">
+                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
+                Import from broker
+              </button>
+              <button class="btn-secondary">
+                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                Add stock manually
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dividends empty -->
+  <div class="tab-panel" id="empty-dividends">
+    <div class="mockup-frame">
+      <div class="mockup-label">Dashboard → Dividends tab (no dividend data)</div>
+      <div class="mockup-body">
+        <div class="card">
+          <div class="empty-state">
+            <div class="empty-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+              <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <div class="empty-title">No dividends yet</div>
+            <div class="empty-subtitle">Dividend payments and estimates will appear here once your portfolio includes dividend-paying stocks or ETFs.</div>
+            <div class="empty-actions">
+              <button class="btn-secondary">
+                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z"/></svg>
+                Learn about dividends
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Events empty -->
+  <div class="tab-panel" id="empty-events">
+    <div class="mockup-frame">
+      <div class="mockup-label">Dashboard → Events tab (no events)</div>
+      <div class="mockup-body">
+        <div class="card">
+          <div class="empty-state">
+            <div class="empty-icon" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">
+              <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>
+            </div>
+            <div class="empty-title">No upcoming events</div>
+            <div class="empty-subtitle">Earnings dates, ex-dividend dates, and economic events will appear here as they become available for your holdings.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Growth empty -->
+  <div class="tab-panel" id="empty-growth">
+    <div class="mockup-frame">
+      <div class="mockup-label">Dashboard → Growth tab (no history)</div>
+      <div class="mockup-body">
+        <div class="card">
+          <div class="empty-state">
+            <div class="empty-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+              <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941"/></svg>
+            </div>
+            <div class="empty-title">Growth data loading</div>
+            <div class="empty-subtitle">Start investing and check back in a few days. We need at least two data points to draw your growth chart.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- News empty -->
+  <div class="tab-panel" id="empty-news">
+    <div class="mockup-frame">
+      <div class="mockup-label">Dashboard → News tab (no articles)</div>
+      <div class="mockup-body">
+        <div class="card">
+          <div class="empty-state">
+            <div class="empty-icon" style="background: linear-gradient(135deg, #06b6d4, #0891b2);">
+              <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25M16.5 7.5V18a2.25 2.25 0 002.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 002.25 2.25h13.5"/></svg>
+            </div>
+            <div class="empty-title">No news yet</div>
+            <div class="empty-subtitle">Portfolio news will appear here once articles are available for your holdings. Add stocks to get started.</div>
+            <div class="empty-actions">
+              <button class="btn-primary">
+                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                Add your first stock
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======== MOCKUP 2: STATS GRID ======== -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-num">2</span>
+    <span class="section-title">StatsGrid con Daily P/L</span>
+  </div>
+  <p class="section-desc">
+    Agregar celda de "Daily P/L" al grid de stats del sidebar derecho.
+    El grid pasa de 2×2 a 2×3 (o 3×2), con el cambio diario prominente con color y flecha.
+  </p>
+
+  <div class="compare-cols">
+    <div>
+      <div class="compare-label"><span class="dot dot-red"></span> Actual (2×2)</div>
+      <div class="mockup-frame">
+        <div class="mockup-label">Dashboard sidebar → StatsGrid</div>
+        <div class="mockup-body">
+          <div class="card card-sm">
+            <div class="stats-grid">
+              <div class="stat-cell">
+                <div class="stat-label">Cost</div>
+                <div class="stat-value stat-white">€24,580</div>
+              </div>
+              <div class="stat-cell">
+                <div class="stat-label">Gain / Loss</div>
+                <div class="stat-value stat-green">+€3,241</div>
+              </div>
+              <div class="stat-cell">
+                <div class="stat-label">Holdings</div>
+                <div class="stat-value stat-green">18/20</div>
+              </div>
+              <div class="stat-cell">
+                <div class="stat-label">Div. Yield</div>
+                <div class="stat-value stat-white">2.34%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="compare-label"><span class="dot dot-green"></span> Propuesta (2×3)</div>
+      <div class="mockup-frame">
+        <div class="mockup-label">Dashboard sidebar → StatsGrid (nuevo)</div>
+        <div class="mockup-body">
+          <div class="card card-sm">
+            <div class="stats-grid">
+              <div class="stat-cell">
+                <div class="stat-label">Cost</div>
+                <div class="stat-value stat-white">€24,580</div>
+              </div>
+              <div class="stat-cell">
+                <div class="stat-label">Gain / Loss</div>
+                <div class="stat-value stat-green">+€3,241</div>
+              </div>
+              <div class="stat-cell" style="border-color: rgba(16,185,129,0.15); background: rgba(16,185,129,0.04);">
+                <div class="stat-label">Day Change</div>
+                <div class="stat-value stat-green">+€186 <span style="font-size:10px; opacity:0.7;">▲ 0.67%</span></div>
+              </div>
+              <div class="stat-cell">
+                <div class="stat-label">Div. Yield</div>
+                <div class="stat-value stat-white">2.34%</div>
+              </div>
+              <div class="stat-cell">
+                <div class="stat-label">Holdings</div>
+                <div class="stat-value stat-green">18/20</div>
+              </div>
+              <div class="stat-cell">
+                <div class="stat-label">Est. Div. Income</div>
+                <div class="stat-value stat-white">€652/yr</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top: 24px;">
+    <div class="compare-label"><span class="dot dot-green"></span> Day Change negativo (ejemplo)</div>
+    <div class="mockup-frame" style="max-width: 320px;">
+      <div class="mockup-label">Cuando el mercado baja</div>
+      <div class="mockup-body">
+        <div class="stat-cell" style="border-color: rgba(239,68,68,0.15); background: rgba(239,68,68,0.04);">
+          <div class="stat-label">Day Change</div>
+          <div class="stat-value stat-red">−€423 <span style="font-size:10px; opacity:0.7;">▼ 1.52%</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======== MOCKUP 3: TOOLS SEPARATION ======== -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-num">3</span>
+    <span class="section-title">Tools — Separacion Free / Pro</span>
+  </div>
+  <p class="section-desc">
+    Reorganizar las herramientas en secciones visuales claras: "Included" (free), "Bifolio" (starter), y "Trefolio" (pro).
+    Cada herramienta muestra icono, nombre, y breve descripcion. Las bloqueadas tienen overlay sutil.
+  </p>
+
+  <div class="tab-bar" data-group="tools">
+    <button class="tab-btn active" data-tab="tools-tabs">Tab strip (actual + badges)</button>
+    <button class="tab-btn" data-tab="tools-sections">Secciones agrupadas (propuesta)</button>
+  </div>
+
+  <!-- Current: tab strip -->
+  <div class="tab-panel active" id="tools-tabs">
+    <div class="mockup-frame">
+      <div class="mockup-label">Tools page → Tab strip actual</div>
+      <div class="mockup-body">
+        <div style="display: flex; gap: 4px; flex-wrap: wrap; padding: 8px 0;">
+          <span class="tab-btn active" style="pointer-events:none;">Transactions</span>
+          <span class="tab-btn" style="pointer-events:none;">Dividends</span>
+          <span class="tab-btn" style="pointer-events:none;">Taxonomy</span>
+          <span class="tab-btn" style="pointer-events:none;">Rebalancing</span>
+          <span class="tab-btn" style="pointer-events:none;">Accounts</span>
+          <span class="tab-btn" style="pointer-events:none;">Watchlist</span>
+          <span class="tab-btn" style="pointer-events:none;">Performance <span class="tier-badge tier-bifolio">Bifolio</span></span>
+          <span class="tab-btn" style="pointer-events:none;">Alerts <span class="tier-badge tier-bifolio">Bifolio</span></span>
+          <span class="tab-btn" style="pointer-events:none;">Screener <span class="tier-badge tier-trefolio">Trefolio</span></span>
+          <span class="tab-btn" style="pointer-events:none;">Tax <span class="tier-badge tier-trefolio">Trefolio</span></span>
+          <span class="tab-btn" style="pointer-events:none;">Simulator <span class="tier-badge tier-trefolio">Trefolio</span></span>
+          <span class="tab-btn" style="pointer-events:none;">Planning <span class="tier-badge tier-trefolio">Trefolio</span></span>
+          <span class="tab-btn" style="pointer-events:none;">Score <span class="tier-badge tier-trefolio">Trefolio</span></span>
+        </div>
+        <div style="margin-top: 16px; padding: 16px; border-radius: 10px; background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.15);">
+          <p style="font-size: 12px; color: var(--red);">Problema: 13 tabs en una linea larga, dificil distinguir free vs paid de un vistazo. Badges son pequenos y faciles de ignorar.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Proposed: grouped sections -->
+  <div class="tab-panel" id="tools-sections">
+    <div class="mockup-frame">
+      <div class="mockup-label">Tools page → Secciones agrupadas (propuesta)</div>
+      <div class="mockup-body">
+
+        <!-- Free section -->
+        <div class="tools-section-header">
+          <span class="tools-section-title" style="color: var(--emerald);">✓ Included in your plan</span>
+          <span class="tools-section-line"></span>
+        </div>
+        <div class="tools-grid">
+          <div class="tool-card">
+            <div class="tool-icon" style="background: var(--emerald-bg);">📊</div>
+            <div class="tool-name">Transactions</div>
+            <div class="tool-desc">Full history & CSV export</div>
+          </div>
+          <div class="tool-card">
+            <div class="tool-icon" style="background: var(--amber-bg);">💰</div>
+            <div class="tool-name">Dividends</div>
+            <div class="tool-desc">Income tracking & calendar</div>
+          </div>
+          <div class="tool-card">
+            <div class="tool-icon" style="background: var(--blue-bg);">🏦</div>
+            <div class="tool-name">Accounts</div>
+            <div class="tool-desc">Multi-broker management</div>
+          </div>
+          <div class="tool-card">
+            <div class="tool-icon" style="background: var(--violet-bg);">🎯</div>
+            <div class="tool-name">Taxonomy</div>
+            <div class="tool-desc">Sector & geography breakdown</div>
+          </div>
+          <div class="tool-card">
+            <div class="tool-icon" style="background: rgba(6,182,212,0.08);">⚖️</div>
+            <div class="tool-name">Rebalancing</div>
+            <div class="tool-desc">Target allocation advisor</div>
+          </div>
+          <div class="tool-card">
+            <div class="tool-icon" style="background: rgba(244,63,94,0.08);">👁️</div>
+            <div class="tool-name">Watchlist</div>
+            <div class="tool-desc">Track stocks you're watching</div>
+          </div>
+        </div>
+
+        <!-- Bifolio section -->
+        <div class="tools-section-header">
+          <span class="tools-section-title" style="color: var(--amber);">☘️ Bifolio</span>
+          <span class="tier-badge tier-bifolio" style="font-size: 8px;">UPGRADE</span>
+          <span class="tools-section-line"></span>
+        </div>
+        <div class="tools-grid">
+          <div class="tool-card locked">
+            <div class="tool-icon" style="background: var(--amber-bg);">📈</div>
+            <div class="tool-name">Performance</div>
+            <div class="tool-desc">TTWROR, XIRR & benchmarks</div>
+            <span class="tier-badge tier-bifolio">Bifolio</span>
+          </div>
+          <div class="tool-card locked">
+            <div class="tool-icon" style="background: var(--amber-bg);">🔔</div>
+            <div class="tool-name">Price Alerts</div>
+            <div class="tool-desc">Unlimited price notifications</div>
+            <span class="tier-badge tier-bifolio">Bifolio</span>
+          </div>
+        </div>
+
+        <!-- Trefolio section -->
+        <div class="tools-section-header">
+          <span class="tools-section-title" style="color: var(--violet);">🍀 Trefolio</span>
+          <span class="tier-badge tier-trefolio" style="font-size: 8px;">UPGRADE</span>
+          <span class="tools-section-line"></span>
+        </div>
+        <div class="tools-grid">
+          <div class="tool-card locked">
+            <div class="tool-icon" style="background: var(--violet-bg);">🔍</div>
+            <div class="tool-name">Screener</div>
+            <div class="tool-desc">Filter & discover stocks</div>
+            <span class="tier-badge tier-trefolio">Trefolio</span>
+          </div>
+          <div class="tool-card locked">
+            <div class="tool-icon" style="background: var(--violet-bg);">📋</div>
+            <div class="tool-name">Tax Report</div>
+            <div class="tool-desc">Capital gains & tax lots</div>
+            <span class="tier-badge tier-trefolio">Trefolio</span>
+          </div>
+          <div class="tool-card locked">
+            <div class="tool-icon" style="background: var(--violet-bg);">🧪</div>
+            <div class="tool-name">Simulator</div>
+            <div class="tool-desc">What-if scenarios</div>
+            <span class="tier-badge tier-trefolio">Trefolio</span>
+          </div>
+          <div class="tool-card locked">
+            <div class="tool-icon" style="background: var(--violet-bg);">📐</div>
+            <div class="tool-name">Planning</div>
+            <div class="tool-desc">Financial goals & projections</div>
+            <span class="tier-badge tier-trefolio">Trefolio</span>
+          </div>
+          <div class="tool-card locked">
+            <div class="tool-icon" style="background: var(--violet-bg);">⭐</div>
+            <div class="tool-name">Portfolio Score</div>
+            <div class="tool-desc">Health check & recommendations</div>
+            <span class="tier-badge tier-trefolio">Trefolio</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="text-align:center; padding: 24px 0;">
+  <p style="font-size: 13px; color: var(--text-dim);">Fase 2 — Awaiting approval before implementation</p>
+</div>
+
+<script>
+  document.querySelectorAll('.tab-bar').forEach(bar => {
+    bar.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const group = bar.dataset.group;
+        bar.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const target = btn.dataset.tab;
+        document.querySelectorAll(`.tab-panel`).forEach(p => {
+          if (p.id && p.id.startsWith(group.split('-')[0])) {
+            // Only hide panels in same section
+          }
+        });
+        // Simple: hide siblings, show target
+        const section = bar.closest('.section');
+        section.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById(target)?.classList.add('active');
+      });
+    });
+  });
+</script>
+</body>
+</html>

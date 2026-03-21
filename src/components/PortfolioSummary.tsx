@@ -9,6 +9,7 @@ import { formatCurrency, formatPercent, formatStealthCurrency, hasExchangeRate, 
 import { calculatePortfolioTotals, computeAllocationByType, type AllocationSlice } from "@/lib/portfolio-summary";
 import { useStealthMode } from "@/lib/stealth-context";
 import { PLATFORM_LIMITS } from "@/lib/platform-config";
+import { getHoldingsLimit } from "@/lib/subscription";
 import type { Holding, CashEntry, ManualAssetType, HoldingAssetType } from "@/lib/types";
 import PortfolioReviewCard from "./PortfolioReviewCard";
 import { useTheme } from "@/lib/theme-context";
@@ -178,6 +179,10 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
 
   const totalIsPositive = totalGainLoss >= 0;
   const holdingsCount = holdings.length + cashEntries.length;
+  const holdingsLimit = getHoldingsLimit(user?.plan ?? "free");
+  const holdingsLabel = holdingsLimit < Infinity
+    ? `${holdingsCount} (${holdings.length}/${holdingsLimit})`
+    : String(holdingsCount);
 
   const isAdmin = user?.role === "admin";
   const isPro = user?.plan === "pro" || isAdmin;
@@ -322,7 +327,7 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
       </div>
       <div>
         <p className="text-gray-400 dark:text-slate-500 mb-0.5" style={{ fontSize: "var(--text-label)" }}>{t("holdings")}</p>
-        <p className="font-semibold text-gray-700 dark:text-slate-200 tabular-nums">{holdingsCount}</p>
+        <p className="font-semibold text-gray-700 dark:text-slate-200 tabular-nums">{holdingsLabel}</p>
       </div>
     </div>
   );
@@ -347,7 +352,7 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
           )}
           <span className="text-xs text-zinc-600">cost <b className="text-zinc-500">{costLabel}</b></span>
           <span className="text-xs text-zinc-600">gain <b className={totalIsPositive ? "text-green-400" : "text-red-400"}>{formatPercent(totalGainLossPercent)}</b></span>
-          <span className="text-xs text-zinc-600">holdings <b className="text-zinc-500">{holdingsCount}</b></span>
+          <span className="text-xs text-zinc-600">holdings <b className="text-zinc-500">{holdingsLabel}</b></span>
           {aiReviewBtn}
           <BrokerSyncDot />
         </div>
@@ -384,7 +389,7 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
           )}
           <div><p className="text-xs text-slate-400 mb-0.5">{t("cost")}</p><p className="text-base font-semibold text-slate-700">{costLabel}</p></div>
           <div><p className="text-xs text-slate-400 mb-0.5">{t("totalGainLoss")}</p><p className={`text-base font-semibold ${totalIsPositive ? "text-green-600" : "text-red-500"}`}>{stealthMode ? "•••••" : `${totalIsPositive ? "+" : ""}${formatCurrency(totalGainLoss, baseCurrency)}`}</p></div>
-          <div><p className="text-xs text-slate-400 mb-0.5">{t("holdings")}</p><p className="text-base font-semibold text-slate-700">{holdingsCount}</p></div>
+          <div><p className="text-xs text-slate-400 mb-0.5">{t("holdings")}</p><p className="text-base font-semibold text-slate-700">{holdingsLabel}</p></div>
         </div>
         {breakdownGrid}
         {allocationSlices.length > 0 && (
@@ -428,7 +433,7 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
           )}
           <div><p className="text-xs text-zinc-500">{t("cost")}</p><p className="text-sm font-bold font-mono text-zinc-300">{costLabel}</p></div>
           <div><p className="text-xs text-zinc-500">{t("totalGainLoss")}</p><p className={`text-sm font-bold font-mono ${totalIsPositive ? "text-emerald-400" : "text-red-400"}`}>{stealthMode ? "•••••" : `${totalIsPositive ? "+" : ""}${formatCurrency(totalGainLoss, baseCurrency)}`}</p></div>
-          <div><p className="text-xs text-zinc-500">{t("holdings")}</p><p className="text-sm font-bold font-mono text-zinc-300">{holdingsCount}</p></div>
+          <div><p className="text-xs text-zinc-500">{t("holdings")}</p><p className="text-sm font-bold font-mono text-zinc-300">{holdingsLabel}</p></div>
         </div>
         {breakdownGrid}
         {allocationSlices.length > 0 && (
@@ -505,7 +510,7 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
           </div>
           <div>
             <p className="text-gray-400 dark:text-slate-500 mb-0.5" style={{ fontSize: "var(--text-label)" }}>{t("holdings")}</p>
-            <p className="font-semibold text-gray-700 dark:text-slate-200 tabular-nums">{holdingsCount}</p>
+            <p className="font-semibold text-gray-700 dark:text-slate-200 tabular-nums">{holdingsLabel}</p>
           </div>
         </div>
 

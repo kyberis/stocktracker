@@ -255,6 +255,16 @@ export function normalizeTickerForExchange(ticker: string, exchange: string): st
   return suffix ? `${ticker}${suffix}` : ticker;
 }
 
+const KNOWN_SUFFIXES = new Set(Object.values(EXCHANGE_SUFFIX_MAP));
+
+/** Strip known exchange suffixes (.L, .DE, .TO, …) to get the base ticker. */
+export function baseTickerName(ticker: string): string {
+  for (const sfx of KNOWN_SUFFIXES) {
+    if (ticker.endsWith(sfx)) return ticker.slice(0, -sfx.length);
+  }
+  return ticker;
+}
+
 export function rowToDbUser(row: Row): DbUser {
   return {
     id: str(row.id),

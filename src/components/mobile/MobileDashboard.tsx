@@ -170,17 +170,21 @@ export default function MobileDashboard() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
             </button>
-            {!holdingsAtLimit && (
-              <button
-                onClick={() => setShowAddModal(true)}
-                className="p-2 rounded-xl bg-emerald-500 text-white"
-                aria-label={t("addStock")}
-              >
+            <button
+              onClick={() => setShowAddModal(true)}
+              className={`p-2 rounded-xl text-white ${holdingsAtLimit ? "bg-amber-500" : "bg-emerald-500"}`}
+              aria-label={t("addStock")}
+            >
+              {holdingsAtLimit ? (
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              ) : (
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                 </svg>
-              </button>
-            )}
+              )}
+            </button>
           </div>
         </div>
       </div>
@@ -331,7 +335,7 @@ export default function MobileDashboard() {
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
             </svg>
-            Upgrade to add more holdings
+            {t("upgradeToAddMoreHoldings")}
           </button>
         </div>
       )}

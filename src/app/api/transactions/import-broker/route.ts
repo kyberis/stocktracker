@@ -393,6 +393,34 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
     const deduped = parsed.filter((tx) => !tx.sourceRef || !existingRefs.has(tx.sourceRef));
     const duplicatesRemoved = parsed.length - deduped.length;
     const cashBalances = parser.parseCashBalances?.(csv) || [];
+
+    const holdingsLimit = getHoldingsLimit(plan);
+    let holdingsLimitInfo: { limit: number; currentCount: number; newTickers: number; willBeSkipped: number; skippedTickers: string[] } | undefined;
+    if (holdingsLimit < Infinity) {
+      const existing = await listHoldings(session.userId, portfolioId);
+      const existingTickerSet = new Set(existing.map((h) => `${h.ticker}|${h.exchange || ""}`));
+      const newTickerMap = new Map<string, string>();
+      for (const tx of deduped) {
+        if (tx.type !== "buy" || !tx.ticker) continue;
+        const exch = inferExchangeFromTicker(tx.ticker);
+        const key = `${tx.ticker}|${exch}`;
+        if (!existingTickerSet.has(key) && !newTickerMap.has(key)) {
+          newTickerMap.set(key, tx.ticker);
+        }
+      }
+      const slotsAvailable = Math.max(0, holdingsLimit - existing.length);
+      if (newTickerMap.size > slotsAvailable) {
+        const allNew = [...newTickerMap.values()];
+        holdingsLimitInfo = {
+          limit: holdingsLimit,
+          currentCount: existing.length,
+          newTickers: newTickerMap.size,
+          willBeSkipped: newTickerMap.size - slotsAvailable,
+          skippedTickers: allNew.slice(slotsAvailable),
+        };
+      }
+    }
+
     const summary = {
       total: deduped.length,
       buys: deduped.filter((t) => t.type === "buy").length,
@@ -405,6 +433,7 @@ export const POST = withMetrics("/api/transactions/import-broker", async (req: N
         .filter((v, i, a) => a.indexOf(v) === i),
       cashBalances,
       duplicatesRemoved,
+      ...(holdingsLimitInfo ? { holdingsLimitInfo } : {}),
     };
     return NextResponse.json({ transactions: deduped, summary });
   }

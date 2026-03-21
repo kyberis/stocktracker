@@ -34,13 +34,13 @@ export const PLATFORM_LIMITS = {
   AI_IMPORT_DAILY_LIMIT: 5,
 
   /** Max active price alerts for Free users. Starter: 10. Pro is unlimited. */
-  FREE_ALERT_LIMIT: 2,
+  FREE_ALERT_LIMIT: 5,
 
   /** Max active price alerts for Starter users. Pro is unlimited. */
   STARTER_ALERT_LIMIT: 10,
 
   /** Max holdings (stocks + ETFs) for Free users. Starter: 50. Pro is unlimited. */
-  FREE_HOLDINGS_LIMIT: 15,
+  FREE_HOLDINGS_LIMIT: 20,
 
   /** Max holdings (stocks + ETFs) for Starter users. Pro is unlimited. */
   STARTER_HOLDINGS_LIMIT: 50,
