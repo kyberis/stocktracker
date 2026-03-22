@@ -229,6 +229,9 @@ export default function PortfolioGrowthPeriods({ holdings: holdingsProp }: Props
                 ? "bg-emerald-50 dark:bg-emerald-500/10"
                 : "bg-red-50 dark:bg-red-500/10";
 
+          const formatted = hasValue ? formatPercent(p.value!) : "—";
+          const longValue = formatted.length > 7;
+
           return (
             <div
               key={p.label}
@@ -238,8 +241,8 @@ export default function PortfolioGrowthPeriods({ holdings: holdingsProp }: Props
               <p className="text-[10px] text-gray-500 dark:text-slate-400 font-medium uppercase mb-1">
                 {p.label}
               </p>
-              <p className={`text-xl font-bold ${color} ${loading ? "animate-value-shimmer" : ""}`}>
-                {loading ? "—" : hasValue ? formatPercent(p.value!) : "—"}
+              <p className={`${longValue ? "text-base" : "text-lg"} font-bold tabular-nums ${color} ${loading ? "animate-value-shimmer" : ""}`}>
+                {loading ? "—" : formatted}
               </p>
             </div>
           );
