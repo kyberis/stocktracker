@@ -36,6 +36,7 @@ const FLAG_META: Record<string, { label: string; description: string; group: str
   tool_accounts_enabled: { label: "Accounts", description: "Multi-account management tool", group: "Tools" },
   tool_watchlist_enabled: { label: "Watchlist", description: "Stock watchlist tracking tool", group: "Tools" },
   pro_trial_enabled: { label: "7-Day Pro Trial", description: "Card-free Pro trial invitations, activation, and dashboard countdown", group: "Features" },
+  ai_report_enabled: { label: "AI Portfolio Report", description: "AI-generated portfolio score, detailed analysis page, and streaming review", group: "Features" },
 };
 
 export default function FeatureFlagsPage() {

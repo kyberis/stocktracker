@@ -353,6 +353,7 @@ const PLATFORM_FEATURE_ENUM = z.enum([
   "tool_watchlist_enabled",
   "support_chat_enabled",
   "pro_trial_enabled",
+  "ai_report_enabled",
 ]);
 
 export const featureFlagSchema = z.object({

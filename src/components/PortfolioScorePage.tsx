@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useI18n } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useAuth } from "@/lib/auth-context";
+import { useFeatureFlag } from "@/lib/feature-flag-context";
 import { PLATFORM_LIMITS } from "@/lib/platform-config";
 import ProCompareCard from "@/components/ProCompareCard";
 import BlurredProSection from "@/components/BlurredProSection";
@@ -382,6 +383,15 @@ export default function PortfolioScorePage() {
   const { t, language } = useI18n();
   const { holdings, cashEntries, quotes, exchangeRates, activePortfolioId, demoMode } = usePortfolio();
   const { user, refreshUser } = useAuth();
+  const aiReportEnabled = useFeatureFlag("ai_report_enabled");
+
+  if (!aiReportEnabled) {
+    return (
+      <div className="text-center py-12 text-gray-400 dark:text-slate-500 text-sm">
+        {t("featureDisabled") || "This feature is currently unavailable."}
+      </div>
+    );
+  }
 
   const [status, setStatus] = useState<PageStatus>("idle");
   const [score, setScore] = useState<PortfolioScoreResponse | null>(null);

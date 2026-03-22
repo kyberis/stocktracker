@@ -13,6 +13,7 @@ const ALLOWED_FLAGS: PlatformFeature[] = [
   "tool_watchlist_enabled",
   "support_chat_enabled",
   "pro_trial_enabled",
+  "ai_report_enabled",
 ];
 
 export const GET = withMetrics("/api/admin/feature-flags", async (req: NextRequest) => {

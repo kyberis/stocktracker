@@ -19,7 +19,7 @@ export const GET = withMetrics("/api/feature-flags", async (req: NextRequest) =>
     mobileAppEnabled, whatsappEnabled,
     toolTransactions, toolDividends, toolPerformance,
     toolTaxonomy, toolRebalancing, toolAccounts, toolWatchlist,
-    proTrialEnabled,
+    proTrialEnabled, aiReportEnabled,
   ] = await Promise.all([
     isFeatureEnabled("alerts_enabled"),
     isFeatureEnabled("csv_export_enabled"),
@@ -35,6 +35,7 @@ export const GET = withMetrics("/api/feature-flags", async (req: NextRequest) =>
     isFeatureEnabled("tool_accounts_enabled"),
     isFeatureEnabled("tool_watchlist_enabled"),
     isFeatureEnabled("pro_trial_enabled"),
+    isFeatureEnabled("ai_report_enabled"),
   ]);
 
   return NextResponse.json({
@@ -52,5 +53,6 @@ export const GET = withMetrics("/api/feature-flags", async (req: NextRequest) =>
     tool_accounts_enabled: toolAccounts,
     tool_watchlist_enabled: toolWatchlist,
     pro_trial_enabled: proTrialEnabled,
+    ai_report_enabled: aiReportEnabled,
   });
 });

@@ -26,6 +26,7 @@ const ALLOWED_FLAGS: PlatformFeature[] = [
   "tool_watchlist_enabled",
   "support_chat_enabled",
   "pro_trial_enabled",
+  "ai_report_enabled",
 ];
 
 export const dynamic = "force-dynamic";

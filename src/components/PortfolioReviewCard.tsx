@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { usePortfolio } from "@/lib/portfolio-context";
+import { useFeatureFlag } from "@/lib/feature-flag-context";
 import { useI18n } from "@/lib/i18n";
 import { PLATFORM_LIMITS } from "@/lib/platform-config";
 
@@ -12,6 +13,9 @@ export default function PortfolioReviewCard() {
   const { user, refreshUser } = useAuth();
   const { holdings } = usePortfolio();
   const { t, language } = useI18n();
+  const aiReportEnabled = useFeatureFlag("ai_report_enabled");
+
+  if (!aiReportEnabled) return null;
 
   const [status, setStatus] = useState<ReviewStatus>("idle");
   const [text, setText] = useState("");

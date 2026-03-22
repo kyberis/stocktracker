@@ -14,7 +14,8 @@ export type PlatformFeature =
   | "tool_taxonomy_enabled" | "tool_rebalancing_enabled" | "tool_accounts_enabled"
   | "tool_watchlist_enabled"
   | "support_chat_enabled"
-  | "pro_trial_enabled";
+  | "pro_trial_enabled"
+  | "ai_report_enabled";
 
 const DEFAULT_ENABLED_FLAGS: Set<PlatformFeature> = new Set([
   "whatsapp_enabled",
@@ -24,6 +25,7 @@ const DEFAULT_ENABLED_FLAGS: Set<PlatformFeature> = new Set([
   "tool_taxonomy_enabled",
   "tool_accounts_enabled",
   "tool_watchlist_enabled",
+  "ai_report_enabled",
 ]);
 
 const VALID_THEMES = new Set(["default", "terminal", "canvas", "studio"]);
@@ -302,6 +304,7 @@ const ALL_PLATFORM_FEATURES: PlatformFeature[] = [
   "tool_watchlist_enabled",
   "support_chat_enabled",
   "pro_trial_enabled",
+  "ai_report_enabled",
 ];
 
 export async function isFeatureEnabledForUser(feature: PlatformFeature, userId: string): Promise<boolean> {

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth-context";
 import { useSettings } from "@/lib/settings-context";
+import { useFeatureFlag } from "@/lib/feature-flag-context";
 import AdSlot from "@/components/AdSlot";
 import TierFeatureBadge from "./TierFeatureBadge";
 
@@ -63,6 +64,7 @@ export default function PortfolioTools({ initialTab = "transactions" }: Portfoli
     toolTransactionsEnabled, toolDividendsEnabled, toolPerformanceEnabled,
     toolTaxonomyEnabled, toolRebalancingEnabled, toolAccountsEnabled, toolWatchlistEnabled,
   } = useSettings();
+  const aiReportEnabled = useFeatureFlag("ai_report_enabled");
   const router = useRouter();
   const activeTab: Tab = initialTab;
   const isPaid = user?.plan === "starter" || user?.plan === "pro";
@@ -88,7 +90,7 @@ export default function PortfolioTools({ initialTab = "transactions" }: Portfoli
     tax: true,
     simulator: true,
     planning: true,
-    score: true,
+    score: aiReportEnabled,
   };
 
   const visibleTabs = useMemo(() => {
@@ -97,6 +99,7 @@ export default function PortfolioTools({ initialTab = "transactions" }: Portfoli
   }, [
     alertsEnabled, toolTransactionsEnabled, toolDividendsEnabled, toolPerformanceEnabled,
     toolTaxonomyEnabled, toolRebalancingEnabled, toolAccountsEnabled, toolWatchlistEnabled,
+    aiReportEnabled,
   ]);
 
   useEffect(() => {

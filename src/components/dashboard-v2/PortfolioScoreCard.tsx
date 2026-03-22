@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useAuth } from "@/lib/auth-context";
+import { useFeatureFlag } from "@/lib/feature-flag-context";
 import { PLATFORM_LIMITS } from "@/lib/platform-config";
 import { buildScorePayload, type PortfolioScoreResponse, type CategoryScore } from "@/lib/portfolio-score";
 import type { Holding, CashEntry } from "@/lib/types";
@@ -128,6 +129,9 @@ export default function PortfolioScoreCard({ holdings, cashEntries }: Props) {
   const router = useRouter();
   const { quotes, exchangeRates, activePortfolioId, demoMode } = usePortfolio();
   const { user, refreshUser } = useAuth();
+  const aiReportEnabled = useFeatureFlag("ai_report_enabled");
+
+  if (!aiReportEnabled) return null;
 
   const [status, setStatus] = useState<ScoreStatus>("idle");
   const [score, setScore] = useState<PortfolioScoreResponse | null>(null);

@@ -13,6 +13,7 @@ import {
   savePortfolioScore,
   trackEvent,
   insertAiLog,
+  isFeatureEnabledForUser,
 } from "@/lib/db";
 import { PLATFORM_LIMITS } from "@/lib/platform-config";
 import { checkGlobalAiCap, incrementGlobalAiCalls, incrementGlobalAiTokens } from "@/lib/rate-limit";
@@ -29,6 +30,10 @@ import {
 export const GET = withMetrics("/api/portfolio/score", async (request: NextRequest) => {
   const { session, error } = await requirePro(request);
   if (error || !session) return error;
+
+  if (!await isFeatureEnabledForUser("ai_report_enabled", session.userId)) {
+    return Response.json({ error: "AI report is currently disabled" }, { status: 404 });
+  }
 
   const portfolioId = request.nextUrl.searchParams.get("portfolioId") || "";
   const history = request.nextUrl.searchParams.get("history") === "true";
@@ -65,6 +70,10 @@ export const GET = withMetrics("/api/portfolio/score", async (request: NextReque
 export const POST = withMetrics("/api/portfolio/score", async (request: NextRequest) => {
   const { session, error } = await requirePro(request);
   if (error || !session) return error;
+
+  if (!await isFeatureEnabledForUser("ai_report_enabled", session.userId)) {
+    return Response.json({ error: "AI report is currently disabled" }, { status: 404 });
+  }
 
   const isAdmin = session.role === "admin";
   const isDev = process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test";

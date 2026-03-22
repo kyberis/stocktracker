@@ -8,6 +8,7 @@ import { useI18n } from "@/lib/i18n";
 import { formatCurrency, formatPercent, formatStealthCurrency, hasExchangeRate, normalizeCurrency } from "@/lib/utils";
 import { calculatePortfolioTotals, computeAllocationByType, type AllocationSlice } from "@/lib/portfolio-summary";
 import { useStealthMode } from "@/lib/stealth-context";
+import { useFeatureFlag } from "@/lib/feature-flag-context";
 import { PLATFORM_LIMITS } from "@/lib/platform-config";
 import { getHoldingsLimit } from "@/lib/subscription";
 import type { Holding, CashEntry, ManualAssetType, HoldingAssetType } from "@/lib/types";
@@ -186,6 +187,7 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
 
   const isAdmin = user?.role === "admin";
   const isPro = user?.plan === "pro" || isAdmin;
+  const aiReportEnabled = useFeatureFlag("ai_report_enabled");
   const limit = PLATFORM_LIMITS.PORTFOLIO_REVIEW_MONTHLY_LIMIT;
   const used = user?.portfolioReviewCount ?? 0;
   const remaining = isAdmin ? Infinity : Math.max(0, limit - used);
@@ -234,7 +236,7 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
     ? formatStealthCurrency(netWorthTotals.totalCurrentEUR, baseCurrency, stealthMode)
     : valueLabel;
 
-  const aiReviewBtn = isPro ? (
+  const aiReviewBtn = !aiReportEnabled ? null : isPro ? (
     <button
       onClick={() => {
         if (!reviewOpen) track("ai_review_opened");
