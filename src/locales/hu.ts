@@ -140,6 +140,7 @@ const hu: TranslationStrings = {
   noAccountYet: "Még nincs fiókod?",
   alreadyHaveAccount: "Már van fiókod?",
   editValues: "Értékek szerkesztése",
+  moveToPortfolio: "Áthelyezés ide...",
   saveChanges: "Változtatások mentése",
   editName: "Név",
   editTicker: "Ticker",

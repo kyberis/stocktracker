@@ -13,7 +13,7 @@ type FeedStatus = "idle" | "loading" | "done" | "error";
 
 export default function PortfolioNewsFeed() {
   const { getApiHeaders } = useSettings();
-  const { holdings } = usePortfolio();
+  const { holdings, activePortfolioId } = usePortfolio();
   const { user } = useAuth();
   const { t } = useI18n();
 
@@ -23,12 +23,18 @@ export default function PortfolioNewsFeed() {
   const isFree = user?.plan !== "pro";
 
   useEffect(() => {
+    setArticles(null);
+    setStatus("idle");
+  }, [activePortfolioId]);
+
+  useEffect(() => {
     if (isFree || holdings.length === 0) return;
     if (articles !== null || status === "loading") return;
 
     setStatus("loading");
     const headers = getApiHeaders();
-    fetch("/api/portfolio-news", { headers })
+    const qp = activePortfolioId ? `?portfolioId=${encodeURIComponent(activePortfolioId)}` : "";
+    fetch(`/api/portfolio-news${qp}`, { headers })
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
@@ -41,7 +47,7 @@ export default function PortfolioNewsFeed() {
         setArticles([]);
         setStatus("error");
       });
-  }, [isFree, holdings.length, articles, status, getApiHeaders]);
+  }, [isFree, holdings.length, articles, status, getApiHeaders, activePortfolioId]);
 
   if (isFree) {
     return (

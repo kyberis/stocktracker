@@ -40,7 +40,7 @@ interface Props {
 export default function UpcomingEarnings({ onNavigateToEvents }: Props) {
   const { t, language } = useI18n();
   const { user } = useAuth();
-  const { holdings } = usePortfolio();
+  const { holdings, activePortfolioId } = usePortfolio();
   const [events, setEvents] = useState<EarningsEvent[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -64,7 +64,7 @@ export default function UpcomingEarnings({ onNavigateToEvents }: Props) {
         const from = toISODate(new Date());
         const to = toISODate(addDays(new Date(), 14));
         const res = await fetch(
-          `/api/events?type=earnings&holdings_only=true&from=${from}&to=${to}`
+          `/api/events?type=earnings&holdings_only=true&from=${from}&to=${to}${activePortfolioId ? `&portfolioId=${encodeURIComponent(activePortfolioId)}` : ""}`
         );
         if (res.ok) {
           const data = await res.json();
@@ -76,7 +76,7 @@ export default function UpcomingEarnings({ onNavigateToEvents }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [holdings.length, isDemo]);
+  }, [holdings.length, isDemo, activePortfolioId]);
 
   useEffect(() => {
     fetchEvents();

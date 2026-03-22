@@ -140,6 +140,7 @@ const lt: TranslationStrings = {
   noAccountYet: "Dar neturite paskyros?",
   alreadyHaveAccount: "Jau turite paskyrą?",
   editValues: "Redaguoti reikšmes",
+  moveToPortfolio: "Perkelti į...",
   saveChanges: "Išsaugoti pakeitimus",
   editName: "Pavadinimas",
   editTicker: "Ticker",

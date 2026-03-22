@@ -17,6 +17,7 @@ import TierFeatureBadge from "@/components/TierFeatureBadge";
 import AdSlot from "@/components/AdSlot";
 import AddStockModal from "@/components/AddStockModal";
 import DataUpgradeNudge from "@/components/DataUpgradeNudge";
+import PortfolioPickerModal from "@/components/PortfolioPickerModal";
 import type { BrokerFormat } from "@/hooks/import-types";
 
 type ImportMethod = "broker_csv" | "snaptrade_api" | "ai_import" | "manual";
@@ -122,8 +123,11 @@ const t_static_back = "Back";
 export default function ImportPageContent() {
   const { t, language: locale } = useI18n();
   const { user, isLoading: authLoading } = useAuth();
-  const { refreshHoldings, refreshQuotes, activePortfolioId, portfolios } = usePortfolio();
+  const { refreshHoldings, refreshQuotes, activePortfolioId, portfolios, setActivePortfolio } = usePortfolio();
   const track = useTrack();
+  const [showPortfolioPicker, setShowPortfolioPicker] = useState(false);
+
+  const needsPortfolioPick = !activePortfolioId && portfolios.length > 1;
 
   const activePortfolioName = activePortfolioId
     ? portfolios.find((p) => p.id === activePortfolioId)?.name
@@ -360,6 +364,46 @@ export default function ImportPageContent() {
 
   const totalSteps = method === "broker_csv" ? 4 : method === "snaptrade_api" ? 3 : method === "ai_import" ? 3 : 2;
   const currentStepNum = step === "method" ? 1 : step === "broker" ? 2 : step === "upload" ? (method === "broker_csv" ? 3 : 2) : step === "preview" ? (method === "broker_csv" ? 4 : 3) : totalSteps;
+
+  if (needsPortfolioPick && step === "method") {
+    return (
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 pb-24 sm:pb-6">
+        <div className="max-w-md mx-auto py-12 text-center space-y-6">
+          <div className="w-14 h-14 mx-auto rounded-2xl bg-emerald-100 dark:bg-emerald-500/15 flex items-center justify-center">
+            <svg className="w-7 h-7 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
+            </svg>
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">{t("selectPortfolioFirst")}</h2>
+            <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">{t("selectPortfolioFirstDesc")}</p>
+          </div>
+          <div className="space-y-2">
+            {portfolios.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => setActivePortfolio(p.id)}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-emerald-300 dark:hover:border-emerald-500/40 hover:shadow-sm transition-all text-left"
+              >
+                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shrink-0">
+                  <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
+                  </svg>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{p.name}</p>
+                  <p className="text-xs text-gray-400 dark:text-slate-500">{p.currency ?? "EUR"}{p.isDefault ? ` · ${t("defaultLabel")}` : ""}</p>
+                </div>
+                <svg className="w-4 h-4 text-gray-300 dark:text-slate-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                </svg>
+              </button>
+            ))}
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 pb-24 sm:pb-6">

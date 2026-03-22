@@ -11,7 +11,7 @@ type ReviewStatus = "idle" | "loading" | "streaming" | "done" | "error" | "limit
 
 export default function PortfolioReviewCard() {
   const { user, refreshUser } = useAuth();
-  const { holdings } = usePortfolio();
+  const { holdings, activePortfolioId } = usePortfolio();
   const { t, language } = useI18n();
   const aiReportEnabled = useFeatureFlag("ai_report_enabled");
 
@@ -41,7 +41,7 @@ export default function PortfolioReviewCard() {
       const res = await fetch("/api/portfolio-review", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ language }),
+        body: JSON.stringify({ language, portfolioId: activePortfolioId ?? undefined }),
         signal: controller.signal,
       });
 

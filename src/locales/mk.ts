@@ -140,6 +140,7 @@ const mk: TranslationStrings = {
   noAccountYet: "Сè уште немате сметка?",
   alreadyHaveAccount: "Веќе имате сметка?",
   editValues: "Измени вредности",
+  moveToPortfolio: "Премести во...",
   saveChanges: "Зачувај промени",
   editName: "Име",
   editTicker: "Симбол",

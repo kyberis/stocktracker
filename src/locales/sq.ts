@@ -140,6 +140,7 @@ const sq: TranslationStrings = {
   noAccountYet: "Ende nuk keni llogari?",
   alreadyHaveAccount: "Tashmë keni llogari?",
   editValues: "Ndrysho vlerat",
+  moveToPortfolio: "Zhvendos te...",
   saveChanges: "Ruaj ndryshimet",
   editName: "Emri",
   editTicker: "Simboli",

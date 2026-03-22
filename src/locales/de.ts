@@ -142,6 +142,7 @@ const de: TranslationStrings = {
   noAccountYet: "Noch kein Konto?",
   alreadyHaveAccount: "Bereits ein Konto?",
   editValues: "Werte bearbeiten",
+  moveToPortfolio: "Verschieben nach...",
   saveChanges: "Änderungen speichern",
   editName: "Name",
   editTicker: "Symbol",

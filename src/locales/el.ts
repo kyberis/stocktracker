@@ -140,6 +140,7 @@ const el: TranslationStrings = {
   noAccountYet: "Δεν έχετε ακόμα λογαριασμό;",
   alreadyHaveAccount: "Έχετε ήδη λογαριασμό;",
   editValues: "Επεξεργασία τιμών",
+  moveToPortfolio: "Μετακίνηση σε...",
   saveChanges: "Αποθήκευση αλλαγών",
   editName: "Όνομα",
   editTicker: "Ticker",

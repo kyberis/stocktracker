@@ -17,6 +17,63 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.63.0",
+    date: "2026-03-22",
+    title: "Global Portfolio Awareness",
+    titleTranslations: { es: "Conciencia global de cartera" },
+    changes: [
+      {
+        type: "feature",
+        text: "Global portfolio selector — choose your active portfolio from the navigation bar and every page, tool, and AI feature will respect that selection.",
+        translations: {
+          es: "Selector global de cartera — elige tu cartera activa desde la barra de navegación y cada página, herramienta y función de IA respetará esa selección.",
+        },
+      },
+      {
+        type: "feature",
+        text: "Tools breadcrumb navigation — when you open a tool, the card grid collapses into a clean breadcrumb bar with a back-to-menu button.",
+        translations: {
+          es: "Navegación por migas de pan en herramientas — al abrir una herramienta, la cuadrícula se colapsa en una barra de navegación con botón de volver al menú.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "News feed, event calendar, upcoming earnings, and AI portfolio review now filter by the active portfolio instead of showing all holdings.",
+        translations: {
+          es: "El feed de noticias, calendario de eventos, próximos resultados y revisión IA de cartera ahora filtran por la cartera activa en vez de mostrar todas las posiciones.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Sync button in toolbar — the refresh icon is now a visible Sync CTA so it's clear how to update quotes on demand.",
+        translations: {
+          es: "Botón de sincronización en la barra — el icono de actualización es ahora un botón visible de Sincronizar para que sea claro cómo actualizar cotizaciones.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Denser 1D chart — portfolio snapshots are now recorded every 5 minutes instead of hourly, producing smoother intraday evolution graphs even when offline.",
+        translations: {
+          es: "Gráfico 1D más detallado — las capturas de cartera se registran cada 5 minutos en lugar de cada hora, produciendo gráficos de evolución intradía más suaves incluso sin conexión.",
+        },
+      },
+      {
+        type: "feature",
+        text: "Move holdings and cash between portfolios — Pro users can now move an entire position or a cash entry from one portfolio to another with automatic snapshot and totals recalculation.",
+        translations: {
+          es: "Mover posiciones y efectivo entre carteras — los usuarios Pro ahora pueden mover una posición completa o una entrada de efectivo de una cartera a otra con recálculo automático de totales e historial.",
+        },
+      },
+      {
+        type: "feature",
+        text: "Instrument-aware detail tabs — stock pages now adapt to the asset type: stocks show Financial Statements and Earnings, ETFs show a new Holdings tab with top positions and sector weightings, and crypto shows a streamlined Overview.",
+        translations: {
+          es: "Pestañas de detalle según tipo de instrumento — las páginas de activos se adaptan al tipo: las acciones muestran Estados Financieros y Resultados, los ETF muestran una nueva pestaña de Composición con principales posiciones y ponderación por sector, y las criptomonedas muestran una Vista General simplificada.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.62.0",
     date: "2026-03-22",
     title: "Enhanced Rebalancing Tool with AI-powered portfolio analysis",

@@ -355,6 +355,25 @@ export interface FundamentalData<T> {
   quarterly: T[];
 }
 
+export interface ETFHoldingEntry {
+  symbol: string;
+  name: string;
+  weight: number;
+}
+
+export interface ETFSectorWeight {
+  sector: string;
+  weight: number;
+}
+
+export interface ETFHoldingsData {
+  holdings: ETFHoldingEntry[];
+  sectorWeightings: ETFSectorWeight[];
+  category: string;
+  fundFamily: string;
+  legalType: string;
+}
+
 export interface HistoricalDataPoint {
   date: string;
   open: number;

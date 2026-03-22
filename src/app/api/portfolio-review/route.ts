@@ -62,15 +62,16 @@ export const POST = withMetrics("/api/portfolio-review", async (request: NextReq
     );
   }
 
-  let body: { language?: string };
+  let body: { language?: string; portfolioId?: string };
   try {
     body = await request.json();
   } catch {
     body = {};
   }
 
-  const holdings = await listHoldings(session.userId);
-  const cashEntries = await listCashEntries(session.userId);
+  const portfolioId = body.portfolioId || undefined;
+  const holdings = await listHoldings(session.userId, portfolioId);
+  const cashEntries = await listCashEntries(session.userId, portfolioId);
 
   if (holdings.length === 0 && cashEntries.length === 0) {
     return Response.json({ error: "No holdings or cash to review" }, { status: 400 });

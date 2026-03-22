@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Global Portfolio Awareness Mockup</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f172a;
+  --card: #1e293b;
+  --card-hover: #334155;
+  --border: #334155;
+  --border-light: #475569;
+  --text: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --accent: #10b981;
+  --accent-light: rgba(16,185,129,0.1);
+  --accent-text: #34d399;
+  --nav-bg: #0f172a;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
+
+.view-switcher {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; gap: 0; background: #020617; border-bottom: 1px solid #1e293b;
+}
+.view-switcher button {
+  flex: 1; padding: 10px 16px; border: none; background: transparent;
+  color: var(--text-secondary); font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s; font-family: inherit;
+  border-bottom: 2px solid transparent;
+}
+.view-switcher button.active {
+  color: var(--accent-text); border-bottom-color: var(--accent);
+  background: rgba(16,185,129,0.05);
+}
+.view-switcher button:hover:not(.active) { color: var(--text); background: rgba(255,255,255,0.03); }
+
+.view { display: none; padding-top: 44px; }
+.view.active { display: block; }
+
+.nav-bar {
+  border-bottom: 1px solid var(--border);
+  background: var(--nav-bg);
+  position: sticky; top: 44px; z-index: 40;
+}
+.nav-inner {
+  max-width: 1280px; margin: 0 auto; padding: 10px 24px;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+}
+.nav-left { display: flex; align-items: center; gap: 20px; }
+.logo-group { display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--text); }
+.logo { width: 28px; height: 28px; border-radius: 6px; }
+.logo svg { width: 28px; height: 28px; }
+.app-title { font-size: 15px; font-weight: 700; color: white; }
+
+.portfolio-selector { position: relative; }
+.portfolio-selector-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 10px; border-radius: 8px; border: 1px solid var(--border);
+  background: rgba(255,255,255,0.05); color: var(--text);
+  font-size: 13px; font-weight: 500; cursor: pointer;
+  transition: all 0.15s; font-family: inherit; white-space: nowrap;
+}
+.portfolio-selector-btn:hover { background: rgba(255,255,255,0.08); border-color: var(--border-light); }
+.portfolio-selector-btn.open { background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.3); }
+.portfolio-selector-btn .folder-icon { width: 14px; height: 14px; color: var(--text-muted); flex-shrink: 0; }
+.portfolio-selector-btn .chevron { width: 12px; height: 12px; color: var(--text-muted); transition: transform 0.2s; flex-shrink: 0; }
+.portfolio-selector-btn.open .chevron { transform: rotate(180deg); }
+.portfolio-selector-btn .currency-badge {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.5px;
+  padding: 1px 5px; border-radius: 4px;
+  background: rgba(16,185,129,0.15); color: var(--accent-text);
+}
+
+.portfolio-dropdown {
+  position: absolute; top: calc(100% + 6px); left: 0; width: 260px;
+  background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4); z-index: 50; overflow: hidden;
+  display: none;
+}
+.portfolio-dropdown.open { display: block; animation: slideDown 0.15s ease-out; }
+@keyframes slideDown { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+.portfolio-dropdown .option {
+  display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+  font-size: 13px; color: var(--text-secondary); cursor: pointer; transition: background 0.1s;
+  border: none; background: none; width: 100%; text-align: left; font-family: inherit;
+}
+.portfolio-dropdown .option:hover { background: rgba(255,255,255,0.05); }
+.portfolio-dropdown .option.active { background: rgba(59,130,246,0.1); color: #93c5fd; font-weight: 500; }
+.portfolio-dropdown .option .icon { width: 16px; height: 16px; flex-shrink: 0; }
+.portfolio-dropdown .option .cur { margin-left: auto; font-size: 10px; font-weight: 600; color: var(--text-muted); }
+.portfolio-dropdown .divider { height: 1px; background: var(--border); margin: 4px 0; }
+.portfolio-dropdown .option.create { color: #60a5fa; }
+.portfolio-dropdown .option .star { width: 16px; height: 16px; color: #fbbf24; margin-left: auto; flex-shrink: 0; }
+
+.nav-links { display: flex; align-items: center; gap: 4px; }
+.nav-link {
+  padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 500;
+  color: var(--text-secondary); text-decoration: none; transition: all 0.15s; white-space: nowrap;
+}
+.nav-link:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+.nav-link.active { background: var(--accent-light); color: var(--accent-text); }
+.nav-link .badge {
+  font-size: 9px; font-weight: 700; padding: 1px 4px; border-radius: 3px;
+  background: rgba(139,92,246,0.15); color: #a78bfa; margin-left: 4px; vertical-align: middle;
+}
+.nav-right { display: flex; align-items: center; gap: 6px; }
+.nav-icon-btn {
+  width: 32px; height: 32px; border-radius: 8px; border: none;
+  background: transparent; color: var(--text-muted); cursor: pointer;
+  display: flex; align-items: center; justify-content: center; transition: all 0.15s;
+}
+.nav-icon-btn:hover { background: rgba(255,255,255,0.05); color: var(--text-secondary); }
+.avatar {
+  width: 28px; height: 28px; border-radius: 8px; background: linear-gradient(135deg, #10b981, #059669);
+  color: white; font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+
+.annotation { position: relative; display: inline-block; }
+.annotation-badge {
+  position: absolute; top: -8px; right: -8px;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: #ef4444; color: white; font-size: 10px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 5; box-shadow: 0 2px 6px rgba(239,68,68,0.4);
+  animation: pulse-badge 2s infinite;
+}
+@keyframes pulse-badge { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+.callout {
+  background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
+  border-radius: 8px; padding: 8px 12px; margin: 8px 0;
+  font-size: 12px; color: #fca5a5; display: flex; align-items: flex-start; gap: 6px;
+}
+.callout-number {
+  width: 18px; height: 18px; border-radius: 50%; background: #ef4444;
+  color: white; font-size: 10px; font-weight: 700; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.callout-new {
+  background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3);
+  border-radius: 8px; padding: 8px 12px; margin: 8px 0;
+  font-size: 12px; color: var(--accent-text); display: flex; align-items: center; gap: 6px;
+}
+.new-tag {
+  font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px;
+  background: var(--accent); color: #022c22; letter-spacing: 0.5px;
+}
+
+.dashboard-toolbar {
+  background: rgba(30,41,59,0.5); border-bottom: 1px solid var(--border);
+}
+.toolbar-inner {
+  max-width: 1280px; margin: 0 auto; padding: 8px 24px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.toolbar-left { display: flex; align-items: center; gap: 8px; }
+.freshness-pill {
+  display: flex; align-items: center; gap: 8px;
+  padding: 4px 10px; border-radius: 999px;
+  background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.06);
+  font-size: 11px; font-family: monospace; color: var(--text-muted);
+}
+.freshness-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+.toolbar-right { display: flex; align-items: center; gap: 6px; }
+.toolbar-btn {
+  width: 36px; height: 36px; border-radius: 8px; border: none;
+  background: transparent; color: var(--text-muted); cursor: pointer;
+  display: flex; align-items: center; justify-content: center; transition: all 0.15s;
+}
+.toolbar-btn:hover { background: rgba(255,255,255,0.05); color: var(--text-secondary); }
+.btn-primary {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: 8px; border: none;
+  background: var(--accent); color: #022c22; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all 0.15s; font-family: inherit;
+}
+.btn-primary:hover { background: #059669; }
+
+.tools-breadcrumb {
+  display: flex; align-items: center; gap: 12px; padding: 12px 0; margin-bottom: 16px;
+}
+.breadcrumb-links { display: flex; align-items: center; gap: 4px; }
+.breadcrumb-link {
+  font-size: 13px; color: var(--text-secondary); text-decoration: none;
+  padding: 4px 8px; border-radius: 6px; transition: all 0.15s;
+}
+.breadcrumb-link:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+.breadcrumb-sep { color: var(--text-muted); font-size: 13px; }
+.breadcrumb-current { font-size: 13px; font-weight: 600; color: var(--text); padding: 4px 8px; }
+.back-btn {
+  display: flex; align-items: center; gap: 4px; margin-left: auto;
+  padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border);
+  background: transparent; color: var(--text-secondary); font-size: 12px;
+  font-weight: 500; cursor: pointer; transition: all 0.15s; font-family: inherit;
+}
+.back-btn:hover { background: rgba(255,255,255,0.05); color: var(--text); border-color: var(--border-light); }
+.back-btn svg { width: 14px; height: 14px; }
+
+.tools-header {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
+}
+.tools-title { font-size: 18px; font-weight: 700; color: var(--text); }
+.section-label {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px;
+  color: var(--accent-text); margin-bottom: 8px; padding-left: 2px;
+}
+.section-label svg { width: 14px; height: 14px; }
+.tools-grid {
+  display: grid; grid-template-columns: repeat(8, 1fr); gap: 12px; margin-bottom: 20px;
+}
+.tool-card {
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  padding: 16px 8px; border-radius: 12px; border: 1px solid var(--border);
+  background: var(--card); cursor: pointer; transition: all 0.2s;
+}
+.tool-card:hover { border-color: var(--border-light); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+.tool-card.active {
+  background: var(--accent-light); border-color: rgba(16,185,129,0.4);
+  box-shadow: 0 0 0 1px rgba(16,185,129,0.2);
+}
+.tool-icon {
+  width: 44px; height: 44px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.tool-icon svg { width: 20px; height: 20px; color: white; }
+.tool-name { font-size: 12px; font-weight: 600; color: var(--text); line-height: 1.3; }
+.tool-card.active .tool-name { color: var(--accent-text); }
+.tool-desc { font-size: 10px; color: var(--text-muted); margin-top: 2px; line-height: 1.3; }
+.tier-badge {
+  margin-top: 6px; font-size: 9px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.5px; padding: 2px 6px; border-radius: 4px;
+}
+.tier-badge.pro { background: rgba(139,92,246,0.15); color: #a78bfa; }
+
+.tool-content-placeholder {
+  background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+  padding: 32px; min-height: 300px;
+}
+.tool-content-placeholder h2 { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+.tool-content-placeholder p { font-size: 13px; color: var(--text-secondary); }
+.skeleton { height: 12px; background: rgba(255,255,255,0.05); border-radius: 6px; margin-top: 12px; }
+.skeleton.w60 { width: 60%; } .skeleton.w40 { width: 40%; } .skeleton.w80 { width: 80%; }
+.skeleton.h40 { height: 40px; margin-top: 20px; }
+
+.content-area { max-width: 1280px; margin: 0 auto; padding: 24px; }
+
+.legend {
+  max-width: 1280px; margin: 0 auto; padding: 16px 24px;
+  display: flex; gap: 20px; flex-wrap: wrap;
+}
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); }
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.legend-dot.red { background: #ef4444; }
+.legend-dot.green { background: var(--accent); }
+</style>
+</head>
+<body>
+
+<div class="view-switcher">
+  <button class="active" onclick="showView('nav', this)">1. Nav Bar + Portfolio Selector</button>
+  <button onclick="showView('tools-menu', this)">2. Tools Menu (Card Grid)</button>
+  <button onclick="showView('tools-breadcrumb', this)">3. Tools with Breadcrumb</button>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot red"></div> Annotation: key change</div>
+  <div class="legend-item"><div class="legend-dot green"></div> NEW element or behavior</div>
+</div>
+
+<!-- VIEW 1: NAV BAR -->
+<div id="view-nav" class="view active">
+  <div style="max-width:1280px;margin:0 auto;padding:16px 24px 8px">
+    <div class="callout-new"><span class="new-tag">NEW</span> Portfolio selector moved to global nav — always visible, conditions all pages</div>
+  </div>
+
+  <div class="nav-bar">
+    <div class="nav-inner">
+      <div class="nav-left">
+        <a href="#" class="logo-group">
+          <div class="logo">
+            <svg viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#0f172a"/><g transform="translate(16,16) rotate(45)"><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#34d399"/><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#10b981" transform="rotate(90)"/><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#059669" transform="rotate(180)"/><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#6ee7b7" transform="rotate(270)"/><circle cx="0" cy="0" r="1.2" fill="#0f172a" opacity=".35"/></g></svg>
+          </div>
+          <span class="app-title">trefolio</span>
+        </a>
+
+        <div class="annotation">
+          <div class="annotation-badge">1</div>
+          <div class="portfolio-selector">
+            <button class="portfolio-selector-btn open" id="selectorBtn" onclick="toggleDropdown()">
+              <svg class="folder-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z"/></svg>
+              <span>Long Term Growth</span>
+              <span class="currency-badge">EUR</span>
+              <svg class="chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+            </button>
+            <div class="portfolio-dropdown open" id="dropdown">
+              <button class="option">
+                <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"/></svg>
+                All Portfolios
+              </button>
+              <div class="divider"></div>
+              <button class="option active">
+                <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z"/></svg>
+                Long Term Growth
+                <span class="cur">EUR</span>
+                <svg class="star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              </button>
+              <button class="option">
+                <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z"/></svg>
+                Dividend Kings
+                <span class="cur">USD</span>
+              </button>
+              <button class="option">
+                <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z"/></svg>
+                Speculative
+                <span class="cur">EUR</span>
+              </button>
+              <div class="divider"></div>
+              <button class="option create">
+                <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                Create Portfolio
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <nav class="nav-links">
+          <a href="#" class="nav-link active">Portfolio</a>
+          <a href="#" class="nav-link">Import</a>
+          <a href="#" class="nav-link">Tools</a>
+          <a href="#" class="nav-link">Crypto <span class="badge">Pro</span></a>
+          <a href="#" class="nav-link">Indicators <span class="badge">Pro</span></a>
+        </nav>
+      </div>
+
+      <div class="nav-right">
+        <button class="nav-icon-btn" title="Notifications"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/></svg></button>
+        <button class="nav-icon-btn" title="Stealth"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg></button>
+        <button class="nav-icon-btn" title="Theme"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg></button>
+        <div class="avatar">MC</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="annotation" style="display:block">
+    <div class="dashboard-toolbar">
+      <div class="toolbar-inner">
+        <div class="toolbar-left">
+          <div class="callout" style="margin:0;padding:4px 8px;font-size:11px">
+            <div class="callout-number" style="width:14px;height:14px;font-size:8px">2</div>
+            Portfolio selector removed from here
+          </div>
+          <div class="freshness-pill">
+            <span class="freshness-dot"></span>
+            <span style="color:var(--text-muted)">Quotes</span>
+            <span>14:32</span>
+            <span style="width:1px;height:12px;background:var(--border);display:inline-block"></span>
+            <span class="freshness-dot"></span>
+            <span style="color:var(--text-muted)">Synced</span>
+            <span>2m ago</span>
+          </div>
+        </div>
+        <div class="toolbar-right">
+          <button class="toolbar-btn" title="Settings"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></button>
+          <button class="toolbar-btn" title="Refresh"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg></button>
+          <button class="toolbar-btn" title="Import"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg></button>
+          <button class="btn-primary"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg> Add</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content-area">
+    <div class="callout" style="margin-bottom:16px">
+      <div class="callout-number">1</div>
+      <div>The portfolio selector is now in the <strong>global nav bar</strong>, between the logo and the nav links. It persists across all pages (Portfolio, Tools, Import, Crypto, Indicators). Changing the portfolio here filters <strong>all data everywhere</strong>.</div>
+    </div>
+    <div class="callout" style="margin-bottom:16px">
+      <div class="callout-number">2</div>
+      <div>The <strong>Dashboard Toolbar</strong> no longer contains the portfolio switcher. It keeps: freshness indicators, settings, refresh, import, and add buttons only.</div>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW 2: TOOLS MENU -->
+<div id="view-tools-menu" class="view">
+  <div class="nav-bar">
+    <div class="nav-inner">
+      <div class="nav-left">
+        <a href="#" class="logo-group">
+          <div class="logo"><svg viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#0f172a"/><g transform="translate(16,16) rotate(45)"><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#34d399"/><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#10b981" transform="rotate(90)"/><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#059669" transform="rotate(180)"/><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#6ee7b7" transform="rotate(270)"/><circle cx="0" cy="0" r="1.2" fill="#0f172a" opacity=".35"/></g></svg></div>
+          <span class="app-title">trefolio</span>
+        </a>
+        <div class="portfolio-selector">
+          <button class="portfolio-selector-btn">
+            <svg class="folder-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z"/></svg>
+            <span>Long Term Growth</span>
+            <span class="currency-badge">EUR</span>
+            <svg class="chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+          </button>
+        </div>
+        <nav class="nav-links">
+          <a href="#" class="nav-link">Portfolio</a>
+          <a href="#" class="nav-link">Import</a>
+          <a href="#" class="nav-link active">Tools</a>
+          <a href="#" class="nav-link">Crypto <span class="badge">Pro</span></a>
+          <a href="#" class="nav-link">Indicators <span class="badge">Pro</span></a>
+        </nav>
+      </div>
+      <div class="nav-right">
+        <button class="nav-icon-btn"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/></svg></button>
+        <button class="nav-icon-btn"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg></button>
+        <button class="nav-icon-btn"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg></button>
+        <div class="avatar">MC</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content-area">
+    <div class="callout-new" style="margin-bottom:16px"><span class="new-tag">STATE</span> Full card grid shown when no tool is selected (the "menu" state at <code style="background:rgba(255,255,255,0.1);padding:1px 4px;border-radius:3px">/tools</code>)</div>
+
+    <div class="tools-header">
+      <h1 class="tools-title">Tools</h1>
+    </div>
+
+    <div class="section-label">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+      Included in your plan
+    </div>
+    <div class="tools-grid">
+      <div class="tool-card"><div class="tool-icon" style="background:linear-gradient(135deg,#3b82f6,#4f46e5)"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg></div><span class="tool-name">Transactions</span><span class="tool-desc">History &amp; log</span></div>
+      <div class="tool-card"><div class="tool-icon" style="background:linear-gradient(135deg,#10b981,#16a34a)"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div><span class="tool-name">Dividends</span><span class="tool-desc">Income tracking</span></div>
+      <div class="tool-card"><div class="tool-icon" style="background:linear-gradient(135deg,#f97316,#ef4444)"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg></div><span class="tool-name">Performance</span><span class="tool-desc">Returns &amp; metrics</span></div>
+      <div class="tool-card"><div class="tool-icon" style="background:linear-gradient(135deg,#ec4899,#e11d48)"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6z"/></svg></div><span class="tool-name">Taxonomy</span><span class="tool-desc">Sector breakdown</span></div>
+      <div class="tool-card"><div class="tool-icon" style="background:linear-gradient(135deg,#06b6d4,#0d9488)"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/></svg></div><span class="tool-name">Rebalancing</span><span class="tool-desc">Target allocation</span></div>
+      <div class="tool-card"><div class="tool-icon" style="background:linear-gradient(135deg,#64748b,#4b5563)"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5"/></svg></div><span class="tool-name">Accounts</span><span class="tool-desc">Broker accounts</span></div>
+      <div class="tool-card"><div class="tool-icon" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed)"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg></div><span class="tool-name">Watchlist</span><span class="tool-desc">Track stocks</span></div>
+      <div class="tool-card"><div class="tool-icon" style="background:linear-gradient(135deg,#f59e0b,#eab308)"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg></div><span class="tool-name">Alerts</span><span class="tool-desc">Price alerts</span></div>
+    </div>
+
+    <div class="section-label" style="color:#a78bfa">
+      <span style="font-size:14px">&#127808;</span>
+      Trefolio
+      <span style="font-size:9px;font-weight:700;background:#8b5cf6;color:white;padding:2px 6px;border-radius:4px;margin-left:4px">UPGRADE</span>
+    </div>
+    <div class="tools-grid" style="grid-template-columns:repeat(5,1fr)">
+      <div class="tool-card"><div class="tool-icon" style="background:linear-gradient(135deg,#0ea5e9,#3b82f6)"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg></div><span class="tool-name">Screener</span><span class="tool-desc">Find stocks</span><span class="tier-badge pro">Trefolio</span></div>
+      <div class="tool-card"><div class="tool-icon" style="background:linear-gradient(135deg,#6366f1,#8b5cf6)"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/></svg></div><span class="tool-name">Tax Reports</span><span class="tool-desc">Tax-ready data</span><span class="tier-badge pro">Trefolio</span></div>
+      <div class="tool-card"><div class="tool-icon" style="background:linear-gradient(135deg,#14b8a6,#10b981)"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3v18h18M19 9l-5 5-4-4-3 3"/></svg></div><span class="tool-name">Simulator</span><span class="tool-desc">What-if analysis</span><span class="tier-badge pro">Trefolio</span></div>
+      <div class="tool-card"><div class="tool-icon" style="background:linear-gradient(135deg,#d946ef,#ec4899)"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2z"/></svg></div><span class="tool-name">Planning</span><span class="tool-desc">Financial planner</span><span class="tier-badge pro">Trefolio</span></div>
+      <div class="tool-card"><div class="tool-icon" style="background:linear-gradient(135deg,#f59e0b,#f97316)"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg></div><span class="tool-name">Score</span><span class="tool-desc">AI portfolio score</span><span class="tier-badge pro">Trefolio</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW 3: TOOLS BREADCRUMB -->
+<div id="view-tools-breadcrumb" class="view">
+  <div class="nav-bar">
+    <div class="nav-inner">
+      <div class="nav-left">
+        <a href="#" class="logo-group">
+          <div class="logo"><svg viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#0f172a"/><g transform="translate(16,16) rotate(45)"><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#34d399"/><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#10b981" transform="rotate(90)"/><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#059669" transform="rotate(180)"/><ellipse cx="0" cy="-4.8" rx="4" ry="5.8" fill="#6ee7b7" transform="rotate(270)"/><circle cx="0" cy="0" r="1.2" fill="#0f172a" opacity=".35"/></g></svg></div>
+          <span class="app-title">trefolio</span>
+        </a>
+        <div class="portfolio-selector">
+          <button class="portfolio-selector-btn">
+            <svg class="folder-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z"/></svg>
+            <span>Long Term Growth</span>
+            <span class="currency-badge">EUR</span>
+            <svg class="chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+          </button>
+        </div>
+        <nav class="nav-links">
+          <a href="#" class="nav-link">Portfolio</a>
+          <a href="#" class="nav-link">Import</a>
+          <a href="#" class="nav-link active">Tools</a>
+          <a href="#" class="nav-link">Crypto <span class="badge">Pro</span></a>
+          <a href="#" class="nav-link">Indicators <span class="badge">Pro</span></a>
+        </nav>
+      </div>
+      <div class="nav-right">
+        <button class="nav-icon-btn"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/></svg></button>
+        <button class="nav-icon-btn"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg></button>
+        <button class="nav-icon-btn"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg></button>
+        <div class="avatar">MC</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content-area">
+    <div class="callout-new" style="margin-bottom:16px"><span class="new-tag">NEW</span> Breadcrumb replaces card grid when a tool is selected. Card grid is hidden. "Back to menu" returns to the full grid.</div>
+
+    <div class="tools-breadcrumb" style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 16px;margin-bottom:20px">
+      <div class="breadcrumb-links">
+        <a href="#" class="breadcrumb-link">
+          <svg style="width:14px;height:14px;vertical-align:-2px;margin-right:2px" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg>
+          Home
+        </a>
+        <span class="breadcrumb-sep">/</span>
+        <a href="#" class="breadcrumb-link">Tools</a>
+        <span class="breadcrumb-sep">/</span>
+        <span class="breadcrumb-current" style="display:flex;align-items:center;gap:6px">
+          <span style="width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,#10b981,#16a34a);display:inline-flex;align-items:center;justify-content:center"><svg style="width:12px;height:12px;color:white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></span>
+          Dividends
+        </span>
+      </div>
+      <button class="back-btn">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
+        Back to menu
+      </button>
+    </div>
+
+    <div class="tool-content-placeholder">
+      <h2 style="display:flex;align-items:center;gap:8px">
+        <span style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#10b981,#16a34a);display:inline-flex;align-items:center;justify-content:center"><svg style="width:14px;height:14px;color:white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></span>
+        Dividend Summary
+        <span style="font-size:11px;font-weight:500;color:var(--accent-text);background:var(--accent-light);padding:2px 8px;border-radius:6px">Long Term Growth (EUR)</span>
+      </h2>
+      <p>Showing dividend data for the selected portfolio only.</p>
+      <div class="skeleton w80"></div>
+      <div class="skeleton w60"></div>
+      <div class="skeleton w40"></div>
+      <div class="skeleton h40"></div>
+      <div class="skeleton w80" style="margin-top:8px"></div>
+      <div class="skeleton w60" style="margin-top:8px"></div>
+    </div>
+
+    <div class="callout" style="margin-top:20px">
+      <div class="callout-number">!</div>
+      <div>The tool content header shows which portfolio is active with a small badge: <strong>"Long Term Growth (EUR)"</strong>. This reinforces that all data is scoped to the selected portfolio.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+function showView(id, btn) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.view-switcher button').forEach(b => b.classList.remove('active'));
+  document.getElementById('view-' + id).classList.add('active');
+  if (btn) btn.classList.add('active');
+}
+function toggleDropdown() {
+  const btn = document.getElementById('selectorBtn');
+  const dd = document.getElementById('dropdown');
+  btn.classList.toggle('open');
+  dd.classList.toggle('open');
+}
+</script>
+</body>
+</html>

@@ -26,6 +26,7 @@ export const GET = withMetrics("/api/events", async (req: NextRequest) => {
     return d.toISOString().slice(0, 10);
   })();
   const holdingsOnly = url.searchParams.get("holdings_only") === "true";
+  const portfolioId = url.searchParams.get("portfolioId") || undefined;
 
   const plan = user.plan || "free";
   const aiCalls = user.ai_calls_this_month ?? 0;
@@ -61,7 +62,7 @@ export const GET = withMetrics("/api/events", async (req: NextRequest) => {
 
   let userSymbols: string[] | undefined;
   if (holdingsOnly || (plan === "free" && allowedTypes.includes("earnings"))) {
-    const holdings = await listHoldings(session.userId);
+    const holdings = await listHoldings(session.userId, portfolioId);
     userSymbols = [...new Set(holdings.map((h) => h.ticker.toUpperCase()))];
   }
 

@@ -140,6 +140,7 @@ const lv: TranslationStrings = {
   noAccountYet: "Vēl nav konta?",
   alreadyHaveAccount: "Jau ir konts?",
   editValues: "Rediģēt vērtības",
+  moveToPortfolio: "Pārvietot uz...",
   saveChanges: "Saglabāt izmaiņas",
   editName: "Nosaukums",
   editTicker: "Ticker",

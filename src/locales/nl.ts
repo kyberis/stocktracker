@@ -142,6 +142,7 @@ const nl: TranslationStrings = {
   noAccountYet: "Nog geen account?",
   alreadyHaveAccount: "Heeft u al een account?",
   editValues: "Waarden bewerken",
+  moveToPortfolio: "Verplaatsen naar...",
   saveChanges: "Wijzigingen opslaan",
   editName: "Naam",
   editTicker: "Symbool",

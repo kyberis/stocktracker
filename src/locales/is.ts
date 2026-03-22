@@ -140,6 +140,7 @@ const is: TranslationStrings = {
   noAccountYet: "Ertu ekki með reikning enn?",
   alreadyHaveAccount: "Ertu þegar með reikning?",
   editValues: "Breyta gildum",
+  moveToPortfolio: "Færa í...",
   saveChanges: "Vista breytingar",
   editName: "Nafn",
   editTicker: "Táknið",

@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth-context";
 import { useTrack } from "@/lib/use-track";
+import { usePortfolio } from "@/lib/portfolio-context";
 import { canAccessFeature } from "@/lib/subscription";
 import ProCompareCard from "@/components/ProCompareCard";
 import TierFeatureBadge from "./TierFeatureBadge";
@@ -64,6 +65,7 @@ function getStartDayOffset(year: number, month: number): number {
 export default function EventCalendar() {
   const { t, language } = useI18n();
   const { user } = useAuth();
+  const { activePortfolioId } = usePortfolio();
   const track = useTrack();
 
   const [events, setEvents] = useState<EventItem[]>([]);
@@ -103,7 +105,7 @@ export default function EventCalendar() {
         const to = new Date(calYear, calMonth + 1, 0);
         const types = Array.from(filters).join(",");
         const res = await fetch(
-          `/api/events?type=${types}&from=${toISODate(from)}&to=${toISODate(to)}`
+          `/api/events?type=${types}&from=${toISODate(from)}&to=${toISODate(to)}${activePortfolioId ? `&portfolioId=${encodeURIComponent(activePortfolioId)}` : ""}`
         );
         if (res.ok) {
           const data = await res.json();
@@ -116,7 +118,7 @@ export default function EventCalendar() {
     } finally {
       setLoading(false);
     }
-  }, [calYear, calMonth, filters, isDemo]);
+  }, [calYear, calMonth, filters, isDemo, activePortfolioId]);
 
   useEffect(() => {
     fetchEvents();

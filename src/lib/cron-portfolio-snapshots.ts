@@ -24,10 +24,10 @@ const FX_PAIRS = [
   "EURHKD", "EURZAR", "EURTRY", "EURBRL", "EURMXN",
 ];
 
-/** Same 15-minute UTC bucket as POST /api/portfolio/snapshot */
+/** 5-minute UTC bucket aligned with POST /api/portfolio/snapshot */
 export function snapshotDateBucketUtc(): string {
   const floored = new Date();
-  floored.setUTCMinutes(Math.floor(floored.getUTCMinutes() / 15) * 15, 0, 0);
+  floored.setUTCMinutes(Math.floor(floored.getUTCMinutes() / 5) * 5, 0, 0);
   return floored.toISOString().slice(0, 16).replace("T", " ") + ":00";
 }
 
@@ -158,6 +158,11 @@ async function writeLiveSnapshotsForUser(
   if (holdingsAll.length === 0) return 0;
   if (!isAnyMarketActive(holdingsAll)) return 0;
 
+  const allHaveFreshQuote = holdingsAll.every(
+    (h) => (quotes[h.ticker]?.regularMarketPrice ?? 0) > 0,
+  );
+  if (!allHaveFreshQuote) return 0;
+
   const cashAll = await listCashEntries(userId);
   const totalsAll = calculatePortfolioTotals(holdingsAll, cashAll, quotes, exchangeRates, "EUR");
   if (totalsAll.totalCurrentEUR > 0) {
@@ -179,7 +184,7 @@ async function writeLiveSnapshotsForUser(
 }
 
 /**
- * Writes one 15-minute “dashboard open” snapshot for a single user (after import or backfill).
+ * Writes one 5-minute snapshot for a single user (after import or backfill).
  * Fetches Yahoo quotes only for that user’s tickers.
  */
 export async function materializeCurrentSnapshotsForUser(userId: string): Promise<{ snapshots: number }> {

@@ -140,6 +140,7 @@ const ga: TranslationStrings = {
   noAccountYet: "Níl cuntas agat fós?",
   alreadyHaveAccount: "An bhfuil cuntas agat cheana?",
   editValues: "Cuir luachanna in eagar",
+  moveToPortfolio: "Bog go...",
   saveChanges: "Sábháil athruithe",
   editName: "Ainm",
   editTicker: "Ticker",

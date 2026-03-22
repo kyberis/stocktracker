@@ -140,6 +140,7 @@ const pl: TranslationStrings = {
   noAccountYet: "Nie masz jeszcze konta?",
   alreadyHaveAccount: "Masz już konto?",
   editValues: "Edytuj wartości",
+  moveToPortfolio: "Przenieś do...",
   saveChanges: "Zapisz zmiany",
   editName: "Nazwa",
   editTicker: "Symbol",

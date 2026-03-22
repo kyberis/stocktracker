@@ -169,6 +169,20 @@ export async function removeCashEntriesBySourceAndBrokers(
   return result.rowsAffected ?? 0;
 }
 
+export async function moveCashToPortfolio(
+  userId: string,
+  cashId: string,
+  toPortfolioId: string,
+): Promise<boolean> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: `UPDATE cash_entries SET portfolio_id = ?, updated_at = datetime('now')
+          WHERE id = ? AND user_id = ?`,
+    args: [toPortfolioId, cashId, userId],
+  });
+  return (result.rowsAffected ?? 0) > 0;
+}
+
 export async function getManualAssetCount(userId: string, portfolioId?: string): Promise<number> {
   const client = await ensureInitialized();
   const portfolioFilter = portfolioId ? " AND portfolio_id = ?" : "";

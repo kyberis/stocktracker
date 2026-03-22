@@ -140,6 +140,7 @@ const be: TranslationStrings = {
   noAccountYet: "Яшчэ няма рахунку?",
   alreadyHaveAccount: "Ужо ёсць рахунак?",
   editValues: "Рэдагаваць значэнні",
+  moveToPortfolio: "Перамясціць у...",
   saveChanges: "Захаваць змены",
   editName: "Назва",
   editTicker: "Сімвал",

@@ -12,6 +12,7 @@ import type {
   BalanceSheetReport,
   CashFlowReport,
   EarningsReport,
+  ETFHoldingsData,
 } from "./types";
 import { providerRequestsTotal, providerRequestDuration } from "@/lib/metrics";
 
@@ -372,6 +373,52 @@ export class YahooProvider implements StockDataProvider {
     } finally {
       end();
       providerRequestsTotal.inc({ provider: "yahoo", operation: "earnings", status: ok ? "success" : "error" });
+    }
+  }
+
+  async getETFHoldings(symbol: string): Promise<ETFHoldingsData | null> {
+    const end = providerRequestDuration.startTimer({ provider: "yahoo", operation: "etf_holdings" });
+    let ok = false;
+    try {
+      const result = await yahooFinance.quoteSummary(symbol, {
+        modules: ["topHoldings", "fundProfile"],
+      });
+      ok = true;
+
+      const th = result.topHoldings;
+      const fp = result.fundProfile;
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const holdings = (th?.holdings ?? []).map((h: any) => ({
+        symbol: String(h.symbol ?? ""),
+        name: String(h.holdingName ?? h.symbol ?? ""),
+        weight: typeof h.holdingPercent === "number" ? h.holdingPercent * 100 : 0,
+      }));
+
+      const sectorWeightings: ETFHoldingsData["sectorWeightings"] = [];
+      if (th?.sectorWeightings) {
+        for (const entry of th.sectorWeightings) {
+          // Each entry is an object with a single key-value pair { sectorName: weight }
+          for (const [sector, weight] of Object.entries(entry)) {
+            if (typeof weight === "number" && weight > 0) {
+              sectorWeightings.push({ sector, weight: weight * 100 });
+            }
+          }
+        }
+      }
+
+      return {
+        holdings,
+        sectorWeightings: sectorWeightings.sort((a, b) => b.weight - a.weight),
+        category: String(fp?.categoryName ?? ""),
+        fundFamily: String(fp?.family ?? ""),
+        legalType: String(fp?.legalType ?? ""),
+      };
+    } catch {
+      return null;
+    } finally {
+      end();
+      providerRequestsTotal.inc({ provider: "yahoo", operation: "etf_holdings", status: ok ? "success" : "error" });
     }
   }
 }

@@ -140,6 +140,7 @@ const ca: TranslationStrings = {
   noAccountYet: "Encara sense compte?",
   alreadyHaveAccount: "Ja teniu compte?",
   editValues: "Editar valors",
+  moveToPortfolio: "Moure a...",
   saveChanges: "Desar canvis",
   editName: "Nom",
   editTicker: "Símbol",

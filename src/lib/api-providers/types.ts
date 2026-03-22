@@ -164,6 +164,27 @@ export interface EarningsTranscript {
   sentimentScore: number | null;
 }
 
+/* ── ETF Holdings types ──────────────────────────────────── */
+
+export interface ETFHoldingEntry {
+  symbol: string;
+  name: string;
+  weight: number;
+}
+
+export interface ETFSectorWeight {
+  sector: string;
+  weight: number;
+}
+
+export interface ETFHoldingsData {
+  holdings: ETFHoldingEntry[];
+  sectorWeightings: ETFSectorWeight[];
+  category: string;
+  fundFamily: string;
+  legalType: string;
+}
+
 /* ── Economic Indicators types ───────────────────────────── */
 
 export interface EconDataPoint {
@@ -192,6 +213,7 @@ export interface StockDataProvider {
   getBalanceSheet?(symbol: string): Promise<FundamentalData<BalanceSheetReport> | null>;
   getCashFlow?(symbol: string): Promise<FundamentalData<CashFlowReport> | null>;
   getEarnings?(symbol: string): Promise<FundamentalData<EarningsReport> | null>;
+  getETFHoldings?(symbol: string): Promise<ETFHoldingsData | null>;
   getNewsSentiment?(symbol: string): Promise<NewsArticle[]>;
   getPortfolioNewsSentiment?(symbols: string[]): Promise<NewsArticle[]>;
   getInsiderTransactions?(symbol: string): Promise<InsiderTransaction[]>;

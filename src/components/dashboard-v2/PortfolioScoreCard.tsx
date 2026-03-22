@@ -76,7 +76,7 @@ function CompactGauge({ score, percentile }: { score: number; percentile: number
           /10
         </text>
       </svg>
-      <p className="text-[9px] text-gray-500 dark:text-slate-500 -mt-1 text-center">
+      <p className="text-[11px] text-gray-500 dark:text-slate-500 -mt-1 text-center">
         {t("portfolioScorePercentile").replace("{pct}", String(percentile))}
       </p>
     </div>
@@ -96,28 +96,19 @@ function MiniScore({ category, data }: { category: string; data: CategoryScore }
   const label = t(CATEGORY_KEYS[category] as never) || category;
   const color = scoreColor(data.score, 10);
   const pct = (data.score / 10) * 100;
-  const needsAttention = data.score <= 6;
-  const firstWeakness = needsAttention && data.weaknesses?.length > 0 ? data.weaknesses[0] : null;
 
   return (
-    <div>
-      <div className="flex items-center gap-2">
-        <span className="text-[10px] font-medium text-gray-600 dark:text-slate-400 w-20 truncate">{label}</span>
-        <div className="flex-1 h-1.5 bg-gray-100 dark:bg-white/[0.06] rounded-full overflow-hidden">
-          <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: color }} />
-        </div>
-        <span className="text-[10px] font-bold tabular-nums w-6 text-right" style={{ color }}>
-          {data.score}
-        </span>
-        <span className={`text-[8px] font-semibold w-14 truncate ${labelColor(data.label)}`}>
-          {data.label}
-        </span>
+    <div className="flex items-center gap-2">
+      <span className="text-[10px] font-medium text-gray-600 dark:text-slate-400 w-20 truncate">{label}</span>
+      <div className="flex-1 h-1.5 bg-gray-100 dark:bg-white/[0.06] rounded-full overflow-hidden">
+        <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: color }} />
       </div>
-      {firstWeakness && (
-        <p className="text-[9px] text-amber-600/80 dark:text-amber-400/70 mt-0.5 ml-[88px] leading-snug truncate" title={firstWeakness}>
-          ⚠ {firstWeakness}
-        </p>
-      )}
+      <span className="text-[10px] font-bold tabular-nums w-6 text-right" style={{ color }}>
+        {data.score}
+      </span>
+      <span className={`text-[8px] font-semibold w-14 truncate ${labelColor(data.label)}`}>
+        {data.label}
+      </span>
     </div>
   );
 }

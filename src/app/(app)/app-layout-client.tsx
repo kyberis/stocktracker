@@ -7,7 +7,9 @@ import { SettingsProvider } from "@/lib/settings-context";
 import { StealthProvider } from "@/lib/stealth-context";
 import { PlatformProvider } from "@/lib/platform-context";
 import { FeatureFlagProvider } from "@/lib/feature-flag-context";
+import { PortfolioProvider } from "@/lib/portfolio-context";
 import { useIsNative } from "@/lib/use-native";
+import NavigationProgress from "@/components/NavigationProgress";
 import AppNav from "@/components/AppNav";
 import SidebarNav from "@/components/SidebarNav";
 import MarketTickerBar from "@/components/MarketTickerBar";
@@ -117,7 +119,10 @@ export default function AppLayoutClient({
             <I18nProvider>
               <SettingsProvider>
                 <StealthProvider>
-                  <AppShell>{children}</AppShell>
+                  <PortfolioProvider>
+                    <NavigationProgress />
+                    <AppShell>{children}</AppShell>
+                  </PortfolioProvider>
                   <ThemeWizard />
                 </StealthProvider>
               </SettingsProvider>

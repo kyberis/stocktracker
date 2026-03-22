@@ -2,7 +2,6 @@
 
 import { useState, useCallback, useEffect, useMemo, useRef, Suspense } from "react";
 import dynamic from "next/dynamic";
-import BrokerFilter from "./BrokerFilter";
 import DashboardToolbar from "./DashboardToolbar";
 import { useI18n } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/portfolio-context";
@@ -12,8 +11,8 @@ import { useTrack } from "@/lib/use-track";
 import { useTheme } from "@/lib/theme-context";
 import { useIsNative } from "@/lib/use-native";
 import { useIsMobileViewport } from "@/lib/use-mobile-viewport";
-import type { Account } from "@/lib/types";
 import CloverToLogo from "./CloverToLogo";
+import PortfolioPickerModal from "./PortfolioPickerModal";
 
 const MobileDashboard = dynamic(() => import("./mobile/MobileDashboard"), {
   ssr: false,
@@ -132,30 +131,37 @@ function DesktopDashboard() {
   const [supportChatEnabled, setSupportChatEnabled] = useState(false);
   const [supportChatWelcome, setSupportChatWelcome] = useState("");
   const [activeTab, setActiveTab] = useState<DashboardTab>("portfolio");
-  const [brokerFilter, setBrokerFilter] = useState<string>("all");
-  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [showPortfolioPicker, setShowPortfolioPicker] = useState(false);
+  const [pendingAction, setPendingAction] = useState<"stock" | "crypto" | "asset" | null>(null);
   const { t } = useI18n();
-  const { holdings, cashEntries, isInitializing, refreshHoldings, refreshQuotes, activePortfolioId, demoMode } =
+  const { holdings, cashEntries, isInitializing, refreshHoldings, refreshQuotes, activePortfolioId, portfolios, demoMode } =
     usePortfolio();
   usePortfolioSnapshotSync({ demoMode });
   const { user, isLoading: authLoading } = useAuth();
   const track = useTrack();
   const { layoutTheme } = useTheme();
 
-  const holdingsLen = holdings.length;
-  useEffect(() => {
-    fetch("/api/accounts")
-      .then((r) => r.ok ? r.json() : [])
-      .then((data) => setAccounts(Array.isArray(data) ? data : []))
-      .catch(() => {});
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [holdingsLen]);
+  const needsPortfolioPick = !activePortfolioId && portfolios.length > 1;
+
+  const gatedAdd = useCallback((action: "stock" | "crypto" | "asset") => {
+    if (needsPortfolioPick) {
+      setPendingAction(action);
+      setShowPortfolioPicker(true);
+    } else if (action === "stock") {
+      setShowAddModal(true);
+    } else if (action === "crypto") {
+      setShowAddCrypto(true);
+    } else {
+      setShowAddAsset(true);
+    }
+  }, [needsPortfolioPick]);
+
 
   useEffect(() => {
-    if (holdingsLen === 0 && activeTab === "diversification") {
+    if (holdings.length === 0 && activeTab === "diversification") {
       setActiveTab("portfolio");
     }
-  }, [holdingsLen, activeTab]);
+  }, [holdings.length, activeTab]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -172,25 +178,9 @@ function DesktopDashboard() {
     return () => clearTimeout(timer);
   }, []);
 
-  const filteredHoldings = useMemo(() => {
-    if (brokerFilter === "all") return holdings;
-    if (brokerFilter === "manual") return holdings.filter((h) => !h.accountId);
-    return holdings.filter((h) => h.accountId === brokerFilter);
-  }, [holdings, brokerFilter]);
-
-  const filteredCashEntries = useMemo(() => {
-    if (brokerFilter === "all") return cashEntries;
-    if (brokerFilter === "manual") return cashEntries.filter((c) => {
-      return !accounts.some((a) => c.name.toUpperCase().startsWith(a.name.toUpperCase()));
-    });
-    const account = accounts.find((a) => a.id === brokerFilter);
-    if (!account) return [];
-    return cashEntries.filter((c) => c.name.toUpperCase().startsWith(account.name.toUpperCase()));
-  }, [cashEntries, brokerFilter, accounts]);
-
   const investmentCashEntries = useMemo(
-    () => filteredCashEntries.filter((c) => !c.type || c.type === "cash"),
-    [filteredCashEntries],
+    () => cashEntries.filter((c) => !c.type || c.type === "cash"),
+    [cashEntries],
   );
 
   const handleImportComplete = useCallback(async () => {
@@ -265,9 +255,9 @@ function DesktopDashboard() {
   return (
     <>
       <DashboardToolbar
-        onAddStock={() => setShowAddModal(true)}
-        onAddCrypto={() => setShowAddCrypto(true)}
-        onAddAsset={() => setShowAddAsset(true)}
+        onAddStock={() => gatedAdd("stock")}
+        onAddCrypto={() => gatedAdd("crypto")}
+        onAddAsset={() => gatedAdd("asset")}
         onOpenSettings={() => setShowSettings(true)}
         onResetPortfolio={() => setShowReset(true)}
       />
@@ -336,7 +326,7 @@ function DesktopDashboard() {
             className="focus-visible:outline-none space-y-6 animate-tab-fade"
           >
             <OnboardingChecklist
-              onOpenAddStock={() => setShowAddModal(true)}
+              onOpenAddStock={() => gatedAdd("stock")}
               onNavigateTools={() => { window.location.href = "/tools"; }}
               onNavigateAlerts={() => { window.location.href = "/tools?tab=alerts"; }}
             />
@@ -347,7 +337,7 @@ function DesktopDashboard() {
               </div>
             ) : holdingsCount === 0 ? (
               <EmptyPortfolio
-                onAddStock={() => setShowAddModal(true)}
+                onAddStock={() => gatedAdd("stock")}
               />
             ) : (
               <>
@@ -364,18 +354,11 @@ function DesktopDashboard() {
                   </div>
                 )}
 
-                <BrokerFilter
-                  accounts={accounts}
-                  holdings={holdings}
-                  selected={brokerFilter}
-                  onChange={setBrokerFilter}
-                />
-
                 <DashboardPortfolioV2
-                  holdings={filteredHoldings}
+                  holdings={holdings}
                   cashEntries={investmentCashEntries}
-                  allCashEntries={filteredCashEntries}
-                  onAddStock={() => setShowAddModal(true)}
+                  allCashEntries={cashEntries}
+                  onAddStock={() => gatedAdd("stock")}
                   onNavigateToEvents={() => handleTabChange("events")}
                   onNavigateToDividends={() => handleTabChange("dividends")}
                   onNavigateToDiversification={() => handleTabChange("diversification")}
@@ -434,7 +417,7 @@ function DesktopDashboard() {
             <Suspense fallback={
               <ChartSkeleton />
             }>
-              <PerformancePage holdings={filteredHoldings} cashEntries={investmentCashEntries} />
+              <PerformancePage holdings={holdings} cashEntries={investmentCashEntries} />
             </Suspense>
           </div>
         )}
@@ -487,6 +470,18 @@ function DesktopDashboard() {
           </div>
         )}
       </main>
+
+      <PortfolioPickerModal
+        isOpen={showPortfolioPicker}
+        onClose={() => { setShowPortfolioPicker(false); setPendingAction(null); }}
+        onSelect={() => {
+          setShowPortfolioPicker(false);
+          if (pendingAction === "stock") setShowAddModal(true);
+          else if (pendingAction === "crypto") setShowAddCrypto(true);
+          else if (pendingAction === "asset") setShowAddAsset(true);
+          setPendingAction(null);
+        }}
+      />
 
       {showAddModal && (
         <AddStockModal

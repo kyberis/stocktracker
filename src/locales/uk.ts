@@ -140,6 +140,7 @@ const uk: TranslationStrings = {
   noAccountYet: "Ще немає облікового запису?",
   alreadyHaveAccount: "Вже є обліковий запис?",
   editValues: "Редагувати значення",
+  moveToPortfolio: "Перемістити до...",
   saveChanges: "Зберегти зміни",
   editName: "Назва",
   editTicker: "Тікер",

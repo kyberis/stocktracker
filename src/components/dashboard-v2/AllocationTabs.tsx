@@ -27,6 +27,8 @@ function Donut({ segments, centerLabel, centerValue }: {
   centerLabel: string;
   centerValue: string;
 }) {
+  const valueSizeClass = centerValue.length > 12 ? "text-[10px]" : centerValue.length > 9 ? "text-xs" : "text-sm";
+
   return (
     <div className="relative w-[120px] h-[120px] mx-auto mb-2">
       <svg viewBox="0 0 100 100" width="120" height="120">
@@ -45,8 +47,8 @@ function Donut({ segments, centerLabel, centerValue }: {
         )}
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-[9px] text-gray-500 dark:text-slate-500">{centerLabel}</span>
-        <span className="text-sm font-bold text-gray-900 dark:text-white tabular-nums">{centerValue}</span>
+        <span className="text-[10px] text-gray-500 dark:text-slate-500">{centerLabel}</span>
+        <span className={`${valueSizeClass} font-bold text-gray-900 dark:text-white tabular-nums`}>{centerValue}</span>
       </div>
     </div>
   );

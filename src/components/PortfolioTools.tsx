@@ -10,6 +10,7 @@ import { useFeatureFlag } from "@/lib/feature-flag-context";
 import AdSlot from "@/components/AdSlot";
 import TierFeatureBadge from "./TierFeatureBadge";
 import ErrorBoundary from "./ErrorBoundary";
+import ToolsBreadcrumb from "./ToolsBreadcrumb";
 
 const TransactionHistory = dynamic(() => import("./TransactionHistory"), { ssr: false });
 const DividendSummary = dynamic(() => import("./DividendSummary"), { ssr: false });
@@ -57,7 +58,7 @@ interface PortfolioToolsProps {
   initialTab?: Tab;
 }
 
-export default function PortfolioTools({ initialTab = "transactions" }: PortfolioToolsProps) {
+export default function PortfolioTools({ initialTab }: PortfolioToolsProps) {
   const { t } = useI18n();
   const { user } = useAuth();
   const {
@@ -67,15 +68,12 @@ export default function PortfolioTools({ initialTab = "transactions" }: Portfoli
   } = useSettings();
   const aiReportEnabled = useFeatureFlag("ai_report_enabled");
   const router = useRouter();
-  const activeTab: Tab = initialTab;
+  const activeTab: Tab | null = initialTab ?? null;
+  const isMenuMode = !activeTab;
   const isPaid = user?.plan === "starter" || user?.plan === "pro";
 
   const setActiveTab = (tab: Tab) => {
-    if (tab === "transactions") {
-      router.push("/tools");
-    } else {
-      router.push(`/tools/${tab}`);
-    }
+    router.push(`/tools/${tab}`);
   };
 
   const toolFlagMap: Record<Tab, boolean> = {
@@ -104,13 +102,8 @@ export default function PortfolioTools({ initialTab = "transactions" }: Portfoli
   ]);
 
   useEffect(() => {
-    if (visibleTabs.length > 0 && !visibleTabs.some((t) => t.key === activeTab)) {
-      const fallback = visibleTabs[0].key;
-      if (fallback === "transactions") {
-        router.replace("/tools");
-      } else {
-        router.replace(`/tools/${fallback}`);
-      }
+    if (activeTab && visibleTabs.length > 0 && !visibleTabs.some((t) => t.key === activeTab)) {
+      router.replace("/tools");
     }
   }, [visibleTabs, activeTab, router]);
 
@@ -137,40 +130,55 @@ export default function PortfolioTools({ initialTab = "transactions" }: Portfoli
     return map[key];
   };
 
+  const activeToolMeta = activeTab ? ALL_TABS.find((t) => t.key === activeTab) : null;
+
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 overflow-x-hidden">
-      {/* Header with export */}
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-lg font-bold text-gray-900 dark:text-white">{t("toolsNav")}</h1>
-        {isPaid && csvExportEnabled && (
-          <div className="flex items-center gap-1.5">
-            <button onClick={() => handleExport("holdings")} className="text-xs text-gray-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
-              {t("exportCSV")}
-              <TierFeatureBadge requiredPlan="starter" size="xs" className="ml-0.5" />
-            </button>
-            <button onClick={() => handleExport("transactions")} className="text-xs text-gray-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
-              {t("transactions")}
-              <TierFeatureBadge requiredPlan="starter" size="xs" className="ml-0.5" />
-            </button>
+      {/* Breadcrumb (shown when a specific tool is active) */}
+      {!isMenuMode && activeToolMeta && (
+        <ToolsBreadcrumb
+          toolLabel={tabLabel(activeTab)}
+          toolIcon={activeToolMeta.icon}
+          toolGradient={activeToolMeta.gradient}
+        />
+      )}
+
+      {/* Header with export (menu mode only) */}
+      {isMenuMode && (
+        <>
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-lg font-bold text-gray-900 dark:text-white">{t("toolsNav")}</h1>
+            {isPaid && csvExportEnabled && (
+              <div className="flex items-center gap-1.5">
+                <button onClick={() => handleExport("holdings")} className="text-xs text-gray-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+                  {t("exportCSV")}
+                  <TierFeatureBadge requiredPlan="starter" size="xs" className="ml-0.5" />
+                </button>
+                <button onClick={() => handleExport("transactions")} className="text-xs text-gray-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+                  {t("transactions")}
+                  <TierFeatureBadge requiredPlan="starter" size="xs" className="ml-0.5" />
+                </button>
+              </div>
+            )}
           </div>
-        )}
-      </div>
 
-      {/* Import redirect card */}
-      <a href="/import" className="flex items-center gap-3 mb-4 px-4 py-3 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors">
-        <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-        </svg>
-        <div className="min-w-0 flex-1">
-          <p className="text-xs font-medium text-emerald-700 dark:text-emerald-400">{t("importToolsRedirect")}</p>
-        </div>
-        <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 whitespace-nowrap">{t("importGoToPage")} →</span>
-      </a>
+          {/* Import redirect card */}
+          <a href="/import" className="flex items-center gap-3 mb-4 px-4 py-3 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors">
+            <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+            </svg>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-medium text-emerald-700 dark:text-emerald-400">{t("importToolsRedirect")}</p>
+            </div>
+            <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 whitespace-nowrap">{t("importGoToPage")} →</span>
+          </a>
+        </>
+      )}
 
-      {/* Tool navigation — card grid grouped by tier relative to user plan */}
-      {(() => {
+      {/* Tool navigation — card grid grouped by tier (menu mode only) */}
+      {isMenuMode && (() => {
         const userPlan = user?.plan ?? "free";
         const isAdmin = user?.role === "admin";
         const tierRank = { free: 0, starter: 1, pro: 2 } as const;
@@ -187,24 +195,19 @@ export default function PortfolioTools({ initialTab = "transactions" }: Portfoli
         const proTabs = visibleTabs.filter(({ key }) => !isIncluded(key) && TIER_BADGE_MAP[key] === "pro");
 
         const renderCard = ({ key, icon, descKey, gradient }: typeof ALL_TABS[number]) => {
-          const isActive = activeTab === key;
           const upgradeTier = !isIncluded(key) ? TIER_BADGE_MAP[key] : undefined;
           return (
             <button
               key={key}
               onClick={() => setActiveTab(key)}
-              className={`relative flex flex-col items-center text-center p-3 sm:p-4 rounded-xl border transition-all ${
-                isActive
-                  ? "bg-emerald-50 dark:bg-emerald-500/10 border-emerald-300 dark:border-emerald-500/40 ring-1 ring-emerald-400/30 shadow-sm"
-                  : "bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-700 hover:border-gray-300 dark:hover:border-slate-600 hover:shadow-sm"
-              }`}
+              className="relative flex flex-col items-center text-center p-3 sm:p-4 rounded-xl border transition-all bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-700 hover:border-gray-300 dark:hover:border-slate-600 hover:shadow-sm"
             >
               <div className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center mb-2 shadow-sm`}>
                 <svg className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
                   <path strokeLinecap="round" strokeLinejoin="round" d={icon} />
                 </svg>
               </div>
-              <span className={`text-xs sm:text-sm font-semibold leading-tight ${isActive ? "text-emerald-700 dark:text-emerald-300" : "text-gray-900 dark:text-white"}`}>
+              <span className="text-xs sm:text-sm font-semibold leading-tight text-gray-900 dark:text-white">
                 {tabLabel(key)}
               </span>
               <span className="text-[10px] sm:text-xs text-gray-500 dark:text-slate-400 mt-0.5 leading-tight line-clamp-2">
@@ -225,7 +228,6 @@ export default function PortfolioTools({ initialTab = "transactions" }: Portfoli
 
         return (
           <div className="mb-6 space-y-4">
-            {/* Included in user's plan */}
             <div>
               <h2 className="flex items-center gap-1.5 text-[11px] sm:text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-2 px-0.5">
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
@@ -236,7 +238,6 @@ export default function PortfolioTools({ initialTab = "transactions" }: Portfoli
               </div>
             </div>
 
-            {/* Bifolio upgrade section — only visible to free users */}
             {starterTabs.length > 0 && (
               <div>
                 <h2 className="flex items-center gap-1.5 text-[11px] sm:text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-2 px-0.5">
@@ -250,7 +251,6 @@ export default function PortfolioTools({ initialTab = "transactions" }: Portfoli
               </div>
             )}
 
-            {/* Trefolio upgrade section — only visible to free/starter users */}
             {proTabs.length > 0 && (
               <div>
                 <h2 className="flex items-center gap-1.5 text-[11px] sm:text-xs font-bold text-violet-600 dark:text-violet-400 uppercase tracking-wider mb-2 px-0.5">
@@ -267,7 +267,8 @@ export default function PortfolioTools({ initialTab = "transactions" }: Portfoli
         );
       })()}
 
-        {/* Tab content */}
+      {/* Tool content (shown only when a tool is selected) */}
+      {!isMenuMode && activeTab && (
         <ErrorBoundary>
           <Suspense fallback={<div className="h-40 flex items-center justify-center"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-500" /></div>}>
             <div className="space-y-6">
@@ -287,8 +288,9 @@ export default function PortfolioTools({ initialTab = "transactions" }: Portfoli
             </div>
           </Suspense>
         </ErrorBoundary>
+      )}
 
-        <AdSlot slot="tools-bottom" format="horizontal" className="mt-6" />
+      <AdSlot slot="tools-bottom" format="horizontal" className="mt-6" />
     </main>
   );
 }

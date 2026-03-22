@@ -140,6 +140,7 @@ const et: TranslationStrings = {
   noAccountYet: "Ei tiliä vielä?",
   alreadyHaveAccount: "Onko sinulla jo tili?",
   editValues: "Muokkaa arvoja",
+  moveToPortfolio: "Teisalda...",
   saveChanges: "Tallenna muutokset",
   editName: "Nimi",
   editTicker: "Ticker",

@@ -58,24 +58,24 @@ export default function DemoShell({
         <I18nProvider>
           <SettingsProvider>
             <StealthProvider>
-              <div className="min-h-screen bg-gray-50 dark:bg-slate-900 pb-14 sm:pb-0">
-                <DemoBanner />
-                <MarketTickerBar demoMode />
-                <AppNav />
-                <main id="main-content">
-                  <PortfolioProvider
-                    initialHoldings={initialHoldings}
-                    initialCash={initialCash}
-                    demoMode
-                    initialQuotes={initialQuotes}
-                    initialExchangeRates={initialExchangeRates}
-                    initialGoal={DEMO_GOAL}
-                  >
+              <PortfolioProvider
+                initialHoldings={initialHoldings}
+                initialCash={initialCash}
+                demoMode
+                initialQuotes={initialQuotes}
+                initialExchangeRates={initialExchangeRates}
+                initialGoal={DEMO_GOAL}
+              >
+                <div className="min-h-screen bg-gray-50 dark:bg-slate-900 pb-14 sm:pb-0">
+                  <DemoBanner />
+                  <MarketTickerBar demoMode />
+                  <AppNav />
+                  <main id="main-content">
                     <Dashboard />
-                  </PortfolioProvider>
-                </main>
-                <MobileTabBar />
-              </div>
+                  </main>
+                  <MobileTabBar />
+                </div>
+              </PortfolioProvider>
             </StealthProvider>
           </SettingsProvider>
         </I18nProvider>

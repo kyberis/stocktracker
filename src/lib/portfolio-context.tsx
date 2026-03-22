@@ -66,6 +66,14 @@ interface PortfolioContextType {
   addCashEntry: (entry: Omit<CashEntry, "id">) => Promise<void>;
   removeCashEntry: (id: string) => Promise<void>;
   updateCashEntry: (id: string, updates: Partial<CashEntry>) => Promise<void>;
+  moveToPortfolio: (params: {
+    type: "holding" | "cash";
+    ticker?: string;
+    exchange?: string;
+    cashId?: string;
+    fromPortfolioId: string;
+    toPortfolioId: string;
+  }) => Promise<boolean>;
   refreshHoldings: () => Promise<void>;
   refreshQuotes: () => Promise<void>;
   refreshSingleQuote: (ticker: string) => Promise<void>;
@@ -734,6 +742,29 @@ export function PortfolioProvider({
     await Promise.all([fetchHoldings(), fetchCashEntries()]);
   }, [fetchHoldings, fetchCashEntries]);
 
+  const moveToPortfolio = useCallback(async (params: {
+    type: "holding" | "cash";
+    ticker?: string;
+    exchange?: string;
+    cashId?: string;
+    fromPortfolioId: string;
+    toPortfolioId: string;
+  }): Promise<boolean> => {
+    try {
+      const res = await fetch("/api/portfolios/move", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(params),
+      });
+      if (!res.ok) return false;
+      await Promise.all([fetchHoldings(), fetchCashEntries()]);
+      setMutationVersion((v) => v + 1);
+      return true;
+    } catch {
+      return false;
+    }
+  }, [fetchHoldings, fetchCashEntries]);
+
   const activePortfolioCurrency = useMemo(() => {
     if (!activePortfolioId) return "EUR";
     const found = portfolios.find((p) => p.id === activePortfolioId);
@@ -769,6 +800,7 @@ export function PortfolioProvider({
       addCashEntry: demoMode ? noop : addCashEntry,
       removeCashEntry: demoMode ? noop : removeCashEntry,
       updateCashEntry: demoMode ? noop : updateCashEntry,
+      moveToPortfolio: demoMode ? (async () => false) : moveToPortfolio,
       refreshHoldings: demoMode ? noop : refreshHoldings,
       refreshQuotes: demoMode ? noop : refreshQuotes,
       refreshSingleQuote: demoMode ? noop : refreshSingleQuote,
@@ -787,7 +819,7 @@ export function PortfolioProvider({
       holdings, cashEntries, quotes, quoteUpdatedAt, refreshingTickers, exchangeRates,
       isLoading, isInitializing, isRefreshing, error, portfolios, activePortfolioId, activePortfolioCurrency, alertedTickers, mutationVersion, setActivePortfolio, fetchPortfolios,
       addHolding, removeHolding, updateHolding, addCashEntry,
-      removeCashEntry, updateCashEntry, refreshHoldings, refreshQuotes, refreshSingleQuote,
+      removeCashEntry, updateCashEntry, moveToPortfolio, refreshHoldings, refreshQuotes, refreshSingleQuote,
       refreshAlertedTickers, lastUpdated, holdingsLastFetchedAt, demoMode, noop, noopGoal,
       goals, saveGoalCb, deleteGoalCb, fetchGoals,
     ]

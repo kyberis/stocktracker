@@ -140,6 +140,7 @@ const mt: TranslationStrings = {
   noAccountYet: "M'għandekx kont?",
   alreadyHaveAccount: "Diġà għandek kont?",
   editValues: "Editja valuri",
+  moveToPortfolio: "Mexxi lejn...",
   saveChanges: "Issejvja bidliet",
   editName: "Isem",
   editTicker: "Ticker",

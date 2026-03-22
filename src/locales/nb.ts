@@ -140,6 +140,7 @@ const nb: TranslationStrings = {
   noAccountYet: "Ingen konto endnu?",
   alreadyHaveAccount: "Har du allerede en konto?",
   editValues: "Rediger værdier",
+  moveToPortfolio: "Flytt til...",
   saveChanges: "Gem ændringer",
   editName: "Navn",
   editTicker: "Ticker",

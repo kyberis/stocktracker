@@ -140,6 +140,7 @@ const sv: TranslationStrings = {
   noAccountYet: "Inget konto ännu?",
   alreadyHaveAccount: "Har du redan ett konto?",
   editValues: "Redigera värden",
+  moveToPortfolio: "Flytta till...",
   saveChanges: "Spara ändringar",
   editName: "Namn",
   editTicker: "Ticker",

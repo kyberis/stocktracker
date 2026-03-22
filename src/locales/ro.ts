@@ -140,6 +140,7 @@ const ro: TranslationStrings = {
   noAccountYet: "Nu ai încă cont?",
   alreadyHaveAccount: "Ai deja cont?",
   editValues: "Editează valori",
+  moveToPortfolio: "Mută în...",
   saveChanges: "Salvează modificările",
   editName: "Nume",
   editTicker: "Simbol",

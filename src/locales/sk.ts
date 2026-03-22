@@ -140,6 +140,7 @@ const sk: TranslationStrings = {
   noAccountYet: "Ešte nemáte účet?",
   alreadyHaveAccount: "Už máte účet?",
   editValues: "Upraviť hodnoty",
+  moveToPortfolio: "Presunúť do...",
   saveChanges: "Uložiť zmeny",
   editName: "Názov",
   editTicker: "Symbol",

@@ -7,6 +7,7 @@ import { useStealthMode } from "@/lib/stealth-context";
 import { useAuth } from "@/lib/auth-context";
 import TierFeatureBadge from "./TierFeatureBadge";
 import NotificationBell from "./NotificationBell";
+import GlobalPortfolioSelector from "./GlobalPortfolioSelector";
 
 const NAV_LINKS = [
   { href: "/", labelKey: "portfolio" as const, icon: "home" },
@@ -97,6 +98,11 @@ export default function SidebarNav() {
           </g>
         </svg>
         <span className="text-base font-extrabold text-white tracking-tight">{t("appTitle")}</span>
+      </div>
+
+      {/* Portfolio selector */}
+      <div className="px-3 mt-1 mb-2">
+        <GlobalPortfolioSelector />
       </div>
 
       {/* Main nav */}

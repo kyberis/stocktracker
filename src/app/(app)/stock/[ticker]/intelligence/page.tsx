@@ -1,5 +1,3 @@
-import { getServerSession } from "@/lib/auth/server-session";
-import { listHoldings, listCashEntries } from "@/lib/db";
 import StockIntelligenceShell from "./stock-intelligence-shell";
 
 interface PageProps {
@@ -8,28 +6,15 @@ interface PageProps {
 }
 
 export default async function StockIntelligencePage({ params, searchParams }: PageProps) {
-  const [{ ticker }, { exchange }, session] = await Promise.all([
+  const [{ ticker }, { exchange }] = await Promise.all([
     params,
     searchParams,
-    getServerSession(),
   ]);
-
-  let initialHoldings;
-  let initialCash;
-
-  if (session) {
-    [initialHoldings, initialCash] = await Promise.all([
-      listHoldings(session.userId),
-      listCashEntries(session.userId),
-    ]);
-  }
 
   return (
     <StockIntelligenceShell
       ticker={decodeURIComponent(ticker)}
       exchange={exchange || ""}
-      initialHoldings={initialHoldings ?? []}
-      initialCash={initialCash ?? []}
     />
   );
 }

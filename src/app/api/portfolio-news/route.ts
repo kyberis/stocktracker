@@ -33,8 +33,9 @@ export const GET = withMetrics("/api/portfolio-news", async (request: NextReques
   if (rl.error) return rl.error;
 
   const userId = rl.session?.userId ?? session!.userId;
+  const portfolioId = request.nextUrl.searchParams.get("portfolioId") || undefined;
 
-  const holdings = await listHoldings(userId);
+  const holdings = await listHoldings(userId, portfolioId);
   if (holdings.length === 0) {
     return Response.json([]);
   }

@@ -140,6 +140,7 @@ const cy: TranslationStrings = {
   noAccountYet: "Dim cyfrif eto?",
   alreadyHaveAccount: "Eisoes â chyfrif?",
   editValues: "Golygu gwerthoedd",
+  moveToPortfolio: "Symud i...",
   saveChanges: "Cadw newidiadau",
   editName: "Enw",
   editTicker: "Symbol",

@@ -8,6 +8,7 @@ import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
 import PortfolioBenchmarkChart from "./PortfolioBenchmarkChart";
 import Sparkline from "./Sparkline";
 import { useTheme } from "@/lib/theme-context";
+import { useAuth } from "@/lib/auth-context";
 import { useTrack } from "@/lib/use-track";
 import type { Holding, CashEntry, ManualAssetType } from "@/lib/types";
 
@@ -95,7 +96,8 @@ interface Props {
 }
 
 export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cashEntriesProp }: Props) {
-  const { holdings: ctxHoldings, cashEntries: ctxCashEntries, quotes, exchangeRates, isLoading, addCashEntry, updateCashEntry, removeCashEntry, activePortfolioCurrency } = usePortfolio();
+  const { holdings: ctxHoldings, cashEntries: ctxCashEntries, quotes, exchangeRates, isLoading, addCashEntry, updateCashEntry, removeCashEntry, activePortfolioCurrency, portfolios, activePortfolioId, moveToPortfolio } = usePortfolio();
+  const { user } = useAuth();
   const baseCurrency = activePortfolioCurrency;
   const holdings = holdingsProp ?? ctxHoldings;
   const cashEntries = cashEntriesProp ?? ctxCashEntries;
@@ -119,6 +121,27 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editAmount, setEditAmount] = useState("");
+  const [movingCashId, setMovingCashId] = useState<string | null>(null);
+  const [moveCashLoading, setMoveCashLoading] = useState(false);
+
+  const isPro = user?.plan === "pro";
+  const otherPortfolios = activePortfolioId
+    ? portfolios.filter((p) => p.id !== activePortfolioId)
+    : [];
+  const canMoveCash = isPro && otherPortfolios.length > 0 && !!activePortfolioId;
+
+  const handleMoveCash = async (cashId: string, toPortfolioId: string) => {
+    if (!activePortfolioId || moveCashLoading) return;
+    setMoveCashLoading(true);
+    await moveToPortfolio({
+      type: "cash",
+      cashId,
+      fromPortfolioId: activePortfolioId,
+      toPortfolioId,
+    });
+    setMoveCashLoading(false);
+    setMovingCashId(null);
+  };
 
   const fetchIndices = useCallback(async () => {
     try {
@@ -469,6 +492,35 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
                                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                                 </svg>
                               </button>
+                              {canMoveCash && (
+                                <div className="relative">
+                                  <button
+                                    onClick={() => setMovingCashId(movingCashId === entry.id ? null : entry.id)}
+                                    disabled={moveCashLoading}
+                                    className="p-0.5 rounded text-gray-400 hover:text-blue-500 transition-colors disabled:opacity-50"
+                                    title={t("moveToPortfolio")}
+                                    aria-label={t("moveToPortfolio")}
+                                  >
+                                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                                    </svg>
+                                  </button>
+                                  {movingCashId === entry.id && (
+                                    <div className="absolute bottom-full right-0 mb-1 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg shadow-lg py-1 min-w-[160px] z-20">
+                                      {otherPortfolios.map((p) => (
+                                        <button
+                                          key={p.id}
+                                          onClick={() => handleMoveCash(entry.id, p.id)}
+                                          disabled={moveCashLoading}
+                                          className="w-full text-left px-3 py-1.5 text-xs text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
+                                        >
+                                          {p.name}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
                               <button
                                 onClick={() => removeCashEntry(entry.id)}
                                 className="p-0.5 rounded text-gray-400 hover:text-red-500 transition-colors"

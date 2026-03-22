@@ -140,6 +140,7 @@ const bg: TranslationStrings = {
   noAccountYet: "Все още нямате акаунт?",
   alreadyHaveAccount: "Вече имате акаунт?",
   editValues: "Редактирай стойности",
+  moveToPortfolio: "Премести в...",
   saveChanges: "Запази промените",
   editName: "Име",
   editTicker: "Тикер",

@@ -24,10 +24,11 @@ export function usePortfolioSnapshotSync(options: { demoMode: boolean }) {
     if (demoMode) return;
     if (!isAnyMarketActive(holdings)) return;
 
-    const allHaveValue = holdings.every(
-      (h) => (quotes[h.ticker]?.regularMarketPrice ?? 0) > 0 || h.valueInEUR > 0,
+    if (holdings.length === 0) return;
+    const allHaveFreshQuote = holdings.every(
+      (h) => (quotes[h.ticker]?.regularMarketPrice ?? 0) > 0,
     );
-    if (!allHaveValue || holdings.length === 0) return;
+    if (!allHaveFreshQuote) return;
 
     // Always compute in EUR — the DB columns are total_value_eur / total_invested_eur.
     const totals = calculatePortfolioTotals(holdings, cashEntries, quotes, exchangeRates, "EUR");

@@ -142,6 +142,7 @@ const fr: TranslationStrings = {
   noAccountYet: "Pas encore de compte ?",
   alreadyHaveAccount: "Vous avez déjà un compte ?",
   editValues: "Modifier les valeurs",
+  moveToPortfolio: "Déplacer vers...",
   saveChanges: "Enregistrer les modifications",
   editName: "Nom",
   editTicker: "Symbole",

@@ -36,9 +36,11 @@ import type {
   CashFlowReport,
   EarningsReport,
   FundamentalData,
+  ETFHoldingsData,
+  HoldingAssetType,
 } from "@/lib/types";
 
-type MainTab = "overview" | "financials" | "earnings";
+type MainTab = "overview" | "financials" | "earnings" | "holdings";
 type FinancialSub = "income" | "balance" | "cashflow";
 type Period = "annual" | "quarterly";
 type AiStatus = "idle" | "loading" | "done" | "error" | "no-key" | "ai-limit" | "upgrade";
@@ -93,6 +95,9 @@ export default function StockDetail({ ticker, exchange, fromScreener = false }: 
   const [balanceLoading, setBalanceLoading] = useState(false);
   const [cashflowLoading, setCashflowLoading] = useState(false);
   const [earningsLoading, setEarningsLoading] = useState(false);
+
+  const [etfHoldings, setEtfHoldings] = useState<ETFHoldingsData | null>(null);
+  const [etfHoldingsLoading, setEtfHoldingsLoading] = useState(false);
 
   const [aiStatus, setAiStatus] = useState<AiStatus>("idle");
   const [aiText, setAiText] = useState("");
@@ -149,6 +154,24 @@ export default function StockDetail({ ticker, exchange, fromScreener = false }: 
     },
     [getApiHeaders, ticker]
   );
+
+  const fetchETFHoldings = useCallback(async () => {
+    if (!canAccessPremium || etfHoldingsLoading || etfHoldings) return;
+    setEtfHoldingsLoading(true);
+    try {
+      const headers = getApiHeaders();
+      const params = new URLSearchParams({ symbol: ticker });
+      const res = await fetch(`/api/etf-holdings?${params}`, { headers });
+      if (res.status === 403) {
+        const body = await res.json().catch(() => null);
+        if (body?.reason === "upgrade_required") setLockedReason("upgrade_required");
+        return;
+      }
+      if (res.ok) setEtfHoldings(await res.json());
+    } catch { /* supplementary */ } finally {
+      setEtfHoldingsLoading(false);
+    }
+  }, [canAccessPremium, etfHoldingsLoading, etfHoldings, getApiHeaders, ticker]);
 
   const requestAiAnalysis = useCallback(async () => {
     if (aiStatus === "loading") return;
@@ -253,14 +276,27 @@ export default function StockDetail({ ticker, exchange, fromScreener = false }: 
       setEarningsLoading(true);
       fetchFundamental("earnings").then(setEarnings).finally(() => setEarningsLoading(false));
     }
+    if (mainTab === "holdings") {
+      fetchETFHoldings();
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mainTab, financialSub, canAccessPremium]);
 
-  const mainTabs: { key: MainTab; label: string }[] = [
-    { key: "overview", label: t("overview") },
-    { key: "financials", label: t("financialStatements") },
-    { key: "earnings", label: t("earnings") },
-  ];
+  const assetType: HoldingAssetType = holding?.assetType ?? "stock";
+
+  const mainTabs: { key: MainTab; label: string }[] =
+    assetType === "etf"
+      ? [
+          { key: "overview", label: t("overview") },
+          { key: "holdings", label: t("holdings") },
+        ]
+      : assetType === "crypto"
+        ? [{ key: "overview", label: t("overview") }]
+        : [
+            { key: "overview", label: t("overview") },
+            { key: "financials", label: t("financialStatements") },
+            { key: "earnings", label: t("earnings") },
+          ];
 
   const financialTabs: { key: FinancialSub; label: string }[] = [
     { key: "income", label: t("incomeStatement") },
@@ -402,30 +438,32 @@ export default function StockDetail({ ticker, exchange, fromScreener = false }: 
         {/* Fundamentals Tabs */}
         {canAccessPremium && (
           <>
-            {/* Main Tab Pills */}
-            <div className="flex gap-1.5 items-center">
-              {mainTabs.map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setMainTab(tab.key)}
-                  className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
-                    mainTab === tab.key
-                      ? "bg-emerald-500 text-white"
-                      : "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-600"
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-              <TierFeatureBadge requiredPlan="pro" size="xs" />
-            </div>
+            {/* Main Tab Pills (hidden for single-tab layouts) */}
+            {mainTabs.length > 1 && (
+              <div className="flex gap-1.5 items-center">
+                {mainTabs.map((tab) => (
+                  <button
+                    key={tab.key}
+                    onClick={() => setMainTab(tab.key)}
+                    className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
+                      mainTab === tab.key
+                        ? "bg-emerald-500 text-white"
+                        : "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-600"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+                <TierFeatureBadge requiredPlan="pro" size="xs" />
+              </div>
+            )}
 
             {/* Overview Tab */}
             {mainTab === "overview" && (
-              <OverviewTab overview={overview} loading={overviewLoading} />
+              <OverviewTab overview={overview} loading={overviewLoading} assetType={assetType} />
             )}
 
-            {/* Financials Tab */}
+            {/* Financials Tab (stocks only) */}
             {mainTab === "financials" && (
               <div className="space-y-4">
                 <div className="flex flex-wrap items-center gap-3">
@@ -473,9 +511,14 @@ export default function StockDetail({ ticker, exchange, fromScreener = false }: 
               </div>
             )}
 
-            {/* Earnings Tab */}
+            {/* Earnings Tab (stocks only) */}
             {mainTab === "earnings" && (
               <EarningsTab data={earnings} period={period} setPeriod={setPeriod} loading={earningsLoading} />
+            )}
+
+            {/* ETF Holdings Tab */}
+            {mainTab === "holdings" && (
+              <ETFHoldingsTab data={etfHoldings} loading={etfHoldingsLoading} />
             )}
           </>
         )}
@@ -796,29 +839,34 @@ function EmptyState({ label }: { label: string }) {
 
 /* ── Overview ────────────────────────────────────────────────── */
 
-function OverviewTab({ overview, loading }: { overview: CompanyOverview | null; loading: boolean }) {
+function OverviewTab({ overview, loading, assetType = "stock" }: { overview: CompanyOverview | null; loading: boolean; assetType?: HoldingAssetType }) {
   const { t } = useI18n();
 
   if (loading) return <LoadingSpinner label={t("loadingOverview")} />;
   if (!overview) return <EmptyState label={t("noFundamentalData")} />;
 
+  const isEquity = assetType === "stock";
+  const isETF = assetType === "etf";
+  const isCrypto = assetType === "crypto";
+
   const metricItems: Array<{ label: string; value: string }> = [
-    overview.peRatio != null ? { label: t("peRatio"), value: overview.peRatio.toFixed(2) } : null,
-    overview.forwardPE != null ? { label: t("forwardPE"), value: overview.forwardPE.toFixed(2) } : null,
-    overview.pegRatio != null ? { label: t("pegRatio"), value: overview.pegRatio.toFixed(2) } : null,
-    overview.eps != null ? { label: t("eps"), value: `${overview.currency} ${overview.eps.toFixed(2)}` } : null,
-    overview.dividendYield != null ? { label: t("dividendYield"), value: `${(overview.dividendYield * 100).toFixed(2)}%` } : null,
-    overview.dividendPerShare != null ? { label: t("dividendPerShare"), value: `${overview.currency} ${overview.dividendPerShare.toFixed(2)}` } : null,
+    isEquity && overview.peRatio != null ? { label: t("peRatio"), value: overview.peRatio.toFixed(2) } : null,
+    isEquity && overview.forwardPE != null ? { label: t("forwardPE"), value: overview.forwardPE.toFixed(2) } : null,
+    isEquity && overview.pegRatio != null ? { label: t("pegRatio"), value: overview.pegRatio.toFixed(2) } : null,
+    isEquity && overview.eps != null ? { label: t("eps"), value: `${overview.currency} ${overview.eps.toFixed(2)}` } : null,
+    !isCrypto && overview.dividendYield != null ? { label: t("dividendYield"), value: `${(overview.dividendYield * 100).toFixed(2)}%` } : null,
+    !isCrypto && overview.dividendPerShare != null ? { label: t("dividendPerShare"), value: `${overview.currency} ${overview.dividendPerShare.toFixed(2)}` } : null,
     overview.beta != null ? { label: t("beta"), value: overview.beta.toFixed(2) } : null,
-    overview.profitMargin != null ? { label: t("profitMargin"), value: `${(overview.profitMargin * 100).toFixed(1)}%` } : null,
-    overview.returnOnEquity != null ? { label: t("returnOnEquity"), value: `${(overview.returnOnEquity * 100).toFixed(1)}%` } : null,
-    overview.revenueTTM != null ? { label: t("revenueTTM"), value: formatCompactNumber(overview.revenueTTM) } : null,
-    overview.analystTargetPrice != null ? { label: t("analystTarget"), value: `${overview.currency} ${overview.analystTargetPrice.toFixed(2)}` } : null,
+    isEquity && overview.profitMargin != null ? { label: t("profitMargin"), value: `${(overview.profitMargin * 100).toFixed(1)}%` } : null,
+    isEquity && overview.returnOnEquity != null ? { label: t("returnOnEquity"), value: `${(overview.returnOnEquity * 100).toFixed(1)}%` } : null,
+    isEquity && overview.revenueTTM != null ? { label: t("revenueTTM"), value: formatCompactNumber(overview.revenueTTM) } : null,
+    !isCrypto && overview.analystTargetPrice != null ? { label: t("analystTarget"), value: `${overview.currency} ${overview.analystTargetPrice.toFixed(2)}` } : null,
     overview.fiftyDayMA != null ? { label: t("fiftyDayMA"), value: `${overview.currency} ${overview.fiftyDayMA.toFixed(2)}` } : null,
     overview.twoHundredDayMA != null ? { label: t("twoHundredDayMA"), value: `${overview.currency} ${overview.twoHundredDayMA.toFixed(2)}` } : null,
-    overview.sharesOutstanding != null ? { label: t("sharesOutstanding"), value: formatCompactNumber(overview.sharesOutstanding) } : null,
+    !isCrypto && overview.sharesOutstanding != null ? { label: t("sharesOutstanding"), value: formatCompactNumber(overview.sharesOutstanding) } : null,
   ].filter((i): i is { label: string; value: string } => i != null);
 
+  const showAnalystRatings = !isCrypto && !isETF;
   const ratings = overview.analystRatings;
   const totalRatings = ratings ? ratings.strongBuy + ratings.buy + ratings.hold + ratings.sell + ratings.strongSell : 0;
 
@@ -846,7 +894,7 @@ function OverviewTab({ overview, loading }: { overview: CompanyOverview | null; 
       </div>
 
       {/* Analyst Ratings */}
-      {ratings && totalRatings > 0 && (
+      {showAnalystRatings && ratings && totalRatings > 0 && (
         <div className="card px-6 py-5">
           <h3 className="text-sm font-semibold text-gray-700 dark:text-slate-200 mb-3">{t("analystRatings")}</h3>
           <div className="flex gap-0.5 h-4 rounded-full overflow-hidden mb-2">
@@ -1105,6 +1153,112 @@ function EarningsTab({
           </tbody>
         </table>
       </div>
+    </div>
+  );
+}
+
+/* ── ETF Holdings ────────────────────────────────────────────── */
+
+function ETFHoldingsTab({
+  data,
+  loading,
+}: {
+  data: ETFHoldingsData | null;
+  loading: boolean;
+}) {
+  const { t } = useI18n();
+
+  if (loading) return <LoadingSpinner label={t("loadingHoldings")} />;
+  if (!data) return <EmptyState label={t("noHoldingsData")} />;
+
+  const maxSectorWeight = data.sectorWeightings.length > 0
+    ? Math.max(...data.sectorWeightings.map((s) => s.weight))
+    : 0;
+
+  return (
+    <div className="space-y-4">
+      {/* Fund Info */}
+      {(data.category || data.fundFamily || data.legalType) && (
+        <div className="card px-6 py-5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {data.category && (
+              <div className="bg-gray-50 dark:bg-slate-700/50 rounded-xl px-3 py-2.5">
+                <p className="text-[10px] font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">{t("fundCategory")}</p>
+                <p className="text-sm font-semibold text-gray-800 dark:text-slate-100 mt-0.5">{data.category}</p>
+              </div>
+            )}
+            {data.fundFamily && (
+              <div className="bg-gray-50 dark:bg-slate-700/50 rounded-xl px-3 py-2.5">
+                <p className="text-[10px] font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">{t("fundFamily")}</p>
+                <p className="text-sm font-semibold text-gray-800 dark:text-slate-100 mt-0.5">{data.fundFamily}</p>
+              </div>
+            )}
+            {data.legalType && (
+              <div className="bg-gray-50 dark:bg-slate-700/50 rounded-xl px-3 py-2.5">
+                <p className="text-[10px] font-medium text-gray-400 dark:text-slate-500 uppercase tracking-wider">{t("legalType")}</p>
+                <p className="text-sm font-semibold text-gray-800 dark:text-slate-100 mt-0.5">{data.legalType}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Top Holdings */}
+      {data.holdings.length > 0 && (
+        <div className="card overflow-x-auto">
+          <h3 className="text-sm font-semibold text-gray-700 dark:text-slate-200 px-6 pt-5 pb-3">{t("topHoldings")}</h3>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-gray-50 dark:bg-slate-800/50">
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400">#</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400">{t("name")}</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400">{t("ticker")}</th>
+                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400">{t("weight")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.holdings.map((h, idx) => (
+                <tr
+                  key={h.symbol || idx}
+                  className={`border-t border-gray-100 dark:border-slate-700 ${idx % 2 === 0 ? "" : "bg-gray-50/50 dark:bg-slate-800/20"}`}
+                >
+                  <td className="px-4 py-2.5 text-xs text-gray-400 dark:text-slate-500">{idx + 1}</td>
+                  <td className="px-4 py-2.5 text-xs font-medium text-gray-700 dark:text-slate-300">{h.name || "—"}</td>
+                  <td className="px-4 py-2.5 text-xs text-gray-500 dark:text-slate-400 font-mono">{h.symbol || "—"}</td>
+                  <td className="text-right px-4 py-2.5 text-xs tabular-nums font-medium text-gray-600 dark:text-slate-300">
+                    {h.weight.toFixed(2)}%
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Sector Weightings */}
+      {data.sectorWeightings.length > 0 && (
+        <div className="card px-6 py-5">
+          <h3 className="text-sm font-semibold text-gray-700 dark:text-slate-200 mb-3">{t("sectorWeightings")}</h3>
+          <div className="space-y-2">
+            {data.sectorWeightings.map((s) => (
+              <div key={s.sector} className="flex items-center gap-3">
+                <span className="text-xs text-gray-600 dark:text-slate-300 w-36 shrink-0 capitalize">
+                  {s.sector.replace(/_/g, " ")}
+                </span>
+                <div className="flex-1 h-4 bg-gray-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-emerald-500 rounded-full transition-all"
+                    style={{ width: `${maxSectorWeight > 0 ? (s.weight / maxSectorWeight) * 100 : 0}%` }}
+                  />
+                </div>
+                <span className="text-xs tabular-nums font-medium text-gray-500 dark:text-slate-400 w-14 text-right">
+                  {s.weight.toFixed(1)}%
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

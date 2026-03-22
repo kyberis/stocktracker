@@ -140,6 +140,7 @@ const sr: TranslationStrings = {
   noAccountYet: "Још немате налог?",
   alreadyHaveAccount: "Већ имате налог?",
   editValues: "Измени вредности",
+  moveToPortfolio: "Премести у...",
   saveChanges: "Сачувај измене",
   editName: "Назив",
   editTicker: "Симбол",

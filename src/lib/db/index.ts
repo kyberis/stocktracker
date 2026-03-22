@@ -112,6 +112,7 @@ export {
   removeCashEntry,
   removeCashEntriesBySource,
   removeCashEntriesBySourceAndBrokers,
+  moveCashToPortfolio,
   getManualAssetCount,
 } from "./cash";
 

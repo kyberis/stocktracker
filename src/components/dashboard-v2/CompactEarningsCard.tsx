@@ -18,7 +18,7 @@ interface Props {
 
 export default function CompactEarningsCard({ onNavigateToEvents }: Props) {
   const { t } = useI18n();
-  const { holdings, demoMode } = usePortfolio();
+  const { holdings, demoMode, activePortfolioId } = usePortfolio();
   const { user } = useAuth();
   const [events, setEvents] = useState<EarningsEvent[]>([]);
 
@@ -33,14 +33,15 @@ export default function CompactEarningsCard({ onNavigateToEvents }: Props) {
     }
     if (holdings.length === 0) return;
 
-    fetch("/api/events?type=earnings&holdings_only=true&limit=4")
+    const portfolioParam = activePortfolioId ? `&portfolioId=${encodeURIComponent(activePortfolioId)}` : "";
+    fetch(`/api/events?type=earnings&holdings_only=true&limit=4${portfolioParam}`)
       .then((r) => (r.ok ? r.json() : []))
       .then((data) => {
         const items = Array.isArray(data) ? data : data?.events ?? [];
         setEvents(items.slice(0, 4));
       })
       .catch(() => {});
-  }, [holdings, demoMode, user]);
+  }, [holdings, demoMode, user, activePortfolioId]);
 
   if (events.length === 0) return null;
 

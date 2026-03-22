@@ -10,6 +10,7 @@ import LanguageSwitcher from "./LanguageSwitcher";
 import UserDropdown from "./UserDropdown";
 import TierFeatureBadge from "./TierFeatureBadge";
 import NotificationBell from "./NotificationBell";
+import GlobalPortfolioSelector from "./GlobalPortfolioSelector";
 
 const NAV_LINKS = [
   {
@@ -79,6 +80,10 @@ export default function AppNav() {
             </svg>
             <span className="hidden sm:inline text-base font-bold text-gray-900 dark:text-white">{t("appTitle")}</span>
           </Link>
+
+          <div className="hidden sm:block">
+            <GlobalPortfolioSelector />
+          </div>
 
           <nav className="hidden sm:flex items-center gap-1">
             {NAV_LINKS.map((link) => {

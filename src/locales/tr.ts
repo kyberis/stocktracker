@@ -140,6 +140,7 @@ const tr: TranslationStrings = {
   noAccountYet: "Henüz hesabınız yok mu?",
   alreadyHaveAccount: "Zaten hesabınız var mı?",
   editValues: "Değerleri düzenle",
+  moveToPortfolio: "Taşı...",
   saveChanges: "Değişiklikleri kaydet",
   editName: "İsim",
   editTicker: "Sembol",
