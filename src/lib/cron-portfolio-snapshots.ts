@@ -158,23 +158,27 @@ async function writeLiveSnapshotsForUser(
   if (holdingsAll.length === 0) return 0;
   if (!isAnyMarketActive(holdingsAll)) return 0;
 
-  const allHaveFreshQuote = holdingsAll.every(
-    (h) => (quotes[h.ticker]?.regularMarketPrice ?? 0) > 0,
-  );
-  if (!allHaveFreshQuote) return 0;
+  const hasQuote = (h: { ticker: string }) =>
+    (quotes[h.ticker]?.regularMarketPrice ?? 0) > 0;
 
   const cashAll = await listCashEntries(userId);
-  const totalsAll = calculatePortfolioTotals(holdingsAll, cashAll, quotes, exchangeRates, "EUR");
-  if (totalsAll.totalCurrentEUR > 0) {
-    await upsertPortfolioSnapshotRow(userId, "", dateBucket, totalsAll.totalCurrentEUR, totalsAll.totalCostEUR);
-    snapshots++;
+
+  // Aggregate snapshot — only when ALL holdings have fresh quotes
+  if (holdingsAll.every(hasQuote)) {
+    const totalsAll = calculatePortfolioTotals(holdingsAll, cashAll, quotes, exchangeRates, "EUR");
+    if (totalsAll.totalCurrentEUR > 0) {
+      await upsertPortfolioSnapshotRow(userId, "", dateBucket, totalsAll.totalCurrentEUR, totalsAll.totalCostEUR);
+      snapshots++;
+    }
   }
 
+  // Per-portfolio snapshots — write each portfolio independently when its holdings have quotes
   const portfolioIds = await listDistinctPortfolioIdsForUser(userId);
   for (const pid of portfolioIds) {
     const h = await listHoldings(userId, pid);
     const c = await listCashEntries(userId, pid);
     if (h.length === 0 && c.length === 0) continue;
+    if (!h.every(hasQuote)) continue;
     const t = calculatePortfolioTotals(h, c, quotes, exchangeRates, "EUR");
     if (t.totalCurrentEUR <= 0) continue;
     await upsertPortfolioSnapshotRow(userId, pid, dateBucket, t.totalCurrentEUR, t.totalCostEUR);
