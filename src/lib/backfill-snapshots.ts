@@ -339,12 +339,6 @@ export async function runBackfillForUser(userId: string): Promise<BackfillResult
 
   const dates = generateDateList(earliestDate, yesterday);
 
-  await client.execute({
-    sql: `DELETE FROM portfolio_snapshots
-          WHERE user_id = ? AND date NOT LIKE '% %' AND date NOT LIKE '%T%'`,
-    args: [userId],
-  });
-
   let snapshotsCreated = 0;
   const BATCH_SIZE = 50;
   let batch: { id: string; portfolioId: string; date: string; value: number; invested: number }[] = [];
@@ -356,7 +350,6 @@ export async function runBackfillForUser(userId: string): Promise<BackfillResult
 
     const portfolioTotals = new Map<string, number>();
     let aggregateEUR = 0;
-    let pricedCount = 0;
 
     for (const h of holdings) {
       const series = tickerSeries.get(h.ticker);
@@ -371,14 +364,12 @@ export async function runBackfillForUser(userId: string): Promise<BackfillResult
       if (fxRate && fxRate > 0) {
         const eurValue = valueInLocal / fxRate;
         aggregateEUR += eurValue;
-        pricedCount++;
         const pid = h.portfolioId || "";
         portfolioTotals.set(pid, (portfolioTotals.get(pid) || 0) + eurValue);
       }
     }
 
-    const allHoldingsPriced = pricedCount === holdings.length;
-    if (aggregateEUR > 0 && allHoldingsPriced) {
+    if (aggregateEUR > 0) {
       batch.push({
         id: generateId(),
         portfolioId: "",

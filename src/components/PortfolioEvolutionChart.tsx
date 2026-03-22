@@ -444,18 +444,8 @@ export default function PortfolioEvolutionChart({ embedded, compact, benchmarks,
           setPoints(pts);
           setEvents(Array.isArray(data.events) ? data.events : []);
           setLoading(false);
-          // 1D: poll after a short delay when < 2 points (waiting for snapshot sync).
-          if (r === "1d" && pts.length < 2 && dailyPollCountRef.current < MAX_DAILY_POLLS) {
-            dailyPollCountRef.current++;
-            setCollectingDaily(true);
-            if (dailyPollRef.current) clearTimeout(dailyPollRef.current);
-            dailyPollRef.current = setTimeout(() => fetchHistoryRef.current(r), 20_000);
-            return;
-          }
-          setCollectingDaily(false);
-          // Auto-backfill once when insufficient history (non-1D) — silent (no “Calculating…” overlay).
+          // Auto-backfill once when insufficient history — silent (no “Calculating…” overlay).
           if (
-            r !== "1d" &&
             pts.length < 2 &&
             !sparseBackfillAttemptedRef.current &&
             !backfillInFlightRef.current
@@ -467,7 +457,17 @@ export default function PortfolioEvolutionChart({ embedded, compact, benchmarks,
                 backfillInFlightRef.current = false;
                 fetchHistoryRef.current(r);
               });
+            if (r === "1d") return;
           }
+          // 1D: poll when < 2 points (waiting for snapshot sync).
+          if (r === "1d" && pts.length < 2 && dailyPollCountRef.current < MAX_DAILY_POLLS) {
+            dailyPollCountRef.current++;
+            setCollectingDaily(true);
+            if (dailyPollRef.current) clearTimeout(dailyPollRef.current);
+            dailyPollRef.current = setTimeout(() => fetchHistoryRef.current(r), 20_000);
+            return;
+          }
+          setCollectingDaily(false);
           // Auto-backfill once when invested data looks stale (flat across >30 days).
           if (
             pts.length >= 10 &&
