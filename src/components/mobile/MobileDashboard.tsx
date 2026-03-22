@@ -94,9 +94,9 @@ export default function MobileDashboard() {
     growth: "starter",
   };
 
-  const dashboardTabs: { key: DashboardTab; label: string; tierBadge?: "starter" | "pro" }[] = [
+  const dashboardTabs: { key: DashboardTab; label: string; tierBadge?: "starter" | "pro"; disabled?: boolean }[] = [
     { key: "portfolio", label: t("portfolioTab") },
-    { key: "diversification", label: t("diversificationTab") },
+    { key: "diversification", label: t("diversificationTab"), disabled: holdingsCount === 0 },
     { key: "dividends", label: t("dividendsTab") },
     { key: "metrics", label: t("performanceTab"), tierBadge: "starter" as const },
     { key: "growth", label: t("growthTab"), tierBadge: "starter" as const },
@@ -105,6 +105,8 @@ export default function MobileDashboard() {
   ];
 
   function handleTabChange(tab: DashboardTab) {
+    const tabDef = dashboardTabs.find((dt) => dt.key === tab);
+    if (tabDef?.disabled) return;
     const requiredTier = TIER_GATE[tab];
     if (requiredTier) {
       const rank = { free: 0, starter: 1, pro: 2 };
@@ -118,6 +120,12 @@ export default function MobileDashboard() {
     track(`${tab}_tab_viewed`);
     hapticSelectionChanged();
   }
+
+  useEffect(() => {
+    if (holdingsCount === 0 && activeTab === "diversification") {
+      setActiveTab("portfolio");
+    }
+  }, [holdingsCount, activeTab]);
 
   const quotesAvailable = holdingsCount === 0 || holdings.some((h) => quotes[h.ticker]);
   const hasLoadedOnce = useRef(false);
@@ -207,11 +215,15 @@ export default function MobileDashboard() {
               aria-selected={activeTab === tab.key}
               aria-controls={`mtabpanel-${tab.key}`}
               tabIndex={activeTab === tab.key ? 0 : -1}
+              disabled={tab.disabled}
+              aria-disabled={tab.disabled}
               onClick={() => handleTabChange(tab.key)}
               className={`shrink-0 px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
-                activeTab === tab.key
-                  ? "bg-emerald-500 text-white shadow-sm"
-                  : "bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400"
+                tab.disabled
+                  ? "bg-gray-100 dark:bg-slate-800 text-gray-400 dark:text-slate-600 opacity-50 cursor-not-allowed"
+                  : activeTab === tab.key
+                    ? "bg-emerald-500 text-white shadow-sm"
+                    : "bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400"
               }`}
             >
               {tab.label}

@@ -9,7 +9,6 @@ import type { Holding, CashEntry, Transaction } from "@/lib/types";
 import CompactHeroChart from "./CompactHeroChart";
 import StatsGrid from "./StatsGrid";
 import CompactReferralCard from "./CompactReferralCard";
-import OnboardingChecklist from "./OnboardingChecklist";
 
 const AllocationTabs = dynamic(() => import("./AllocationTabs"), { ssr: false });
 const GoalProgressCard = dynamic(() => import("./GoalProgressCard"), { ssr: false });
@@ -77,11 +76,6 @@ export default function DashboardPortfolioV2({
 
   return (
     <>
-      <OnboardingChecklist
-        onOpenAddStock={onAddStock}
-        onNavigateTools={() => { window.location.href = "/tools"; }}
-        onNavigateAlerts={() => { window.location.href = "/tools?tab=alerts"; }}
-      />
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4 items-start">
         {/* Left column */}
         <div className="flex flex-col gap-4 min-w-0">

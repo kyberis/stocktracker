@@ -55,6 +55,7 @@ import SecureAccountPrompt from "./SecureAccountPrompt";
 
 const DashboardUpgradeNudge = dynamic(() => import("./DashboardUpgradeNudge"), { ssr: false });
 const TrialCountdownBanner = dynamic(() => import("./TrialCountdownBanner"), { ssr: false });
+const OnboardingChecklist = dynamic(() => import("./dashboard-v2/OnboardingChecklist"), { ssr: false });
 import { HeroSkeleton, TableSkeleton, ChartSkeleton } from "./Skeleton";
 
 
@@ -151,6 +152,12 @@ function DesktopDashboard() {
   }, [holdingsLen]);
 
   useEffect(() => {
+    if (holdingsLen === 0 && activeTab === "diversification") {
+      setActiveTab("portfolio");
+    }
+  }, [holdingsLen, activeTab]);
+
+  useEffect(() => {
     const timer = setTimeout(() => {
       fetch("/api/support-chat/config")
         .then((r) => r.ok ? r.json() : null)
@@ -197,9 +204,9 @@ function DesktopDashboard() {
   const showHoldingsBanner = !authLoading && holdingsLimit !== Infinity && holdingsCount >= Math.ceil(holdingsLimit / 2) && holdingsCount > 0;
   const holdingsAtLimit = !authLoading && holdingsLimit !== Infinity && holdingsCount >= holdingsLimit;
 
-  const dashboardTabs: { key: DashboardTab; label: string; tierBadge?: "starter" | "pro" }[] = [
+  const dashboardTabs: { key: DashboardTab; label: string; tierBadge?: "starter" | "pro"; disabled?: boolean }[] = [
     { key: "portfolio", label: t("portfolioTab") },
-    { key: "diversification", label: t("diversificationTab") },
+    { key: "diversification", label: t("diversificationTab"), disabled: holdingsCount === 0 },
     { key: "dividends", label: t("dividendsTab") },
     { key: "metrics", label: t("performanceTab"), tierBadge: "starter" as const },
     { key: "growth", label: t("growthTab"), tierBadge: "starter" as const },
@@ -217,7 +224,8 @@ function DesktopDashboard() {
   }
 
   function handleTabKeyDown(e: React.KeyboardEvent) {
-    const keys = dashboardTabs.map((dt) => dt.key);
+    const enabledTabs = dashboardTabs.filter((dt) => !dt.disabled);
+    const keys = enabledTabs.map((dt) => dt.key);
     const idx = keys.indexOf(activeTab);
     let next = -1;
     if (e.key === "ArrowRight" || e.key === "ArrowDown") {
@@ -269,8 +277,8 @@ function DesktopDashboard() {
         {layoutTheme === "terminal" ? (
           <div role="tablist" aria-label={t("portfolioTab")} className="flex gap-0 overflow-x-auto scrollbar-hide border-b border-zinc-800 font-mono" data-testid="tabbar-terminal" data-tour="tabs" onKeyDown={handleTabKeyDown}>
             {dashboardTabs.map((tab) => (
-              <button key={tab.key} role="tab" id={`tab-${tab.key}`} aria-selected={activeTab === tab.key} aria-controls={`tabpanel-${tab.key}`} tabIndex={activeTab === tab.key ? 0 : -1} onClick={() => handleTabChange(tab.key)}
-                className={`shrink-0 px-3 py-1.5 text-xs transition-colors focus-visible:ring-1 focus-visible:ring-green-500 focus-visible:outline-none border-b-2 ${activeTab === tab.key ? "border-green-500 text-green-400" : "border-transparent text-zinc-600 hover:text-zinc-300"}`}
+              <button key={tab.key} role="tab" id={`tab-${tab.key}`} aria-selected={activeTab === tab.key} aria-controls={`tabpanel-${tab.key}`} tabIndex={activeTab === tab.key ? 0 : -1} disabled={tab.disabled} aria-disabled={tab.disabled} onClick={() => !tab.disabled && handleTabChange(tab.key)}
+                className={`shrink-0 px-3 py-1.5 text-xs transition-colors focus-visible:ring-1 focus-visible:ring-green-500 focus-visible:outline-none border-b-2 ${tab.disabled ? "border-transparent text-zinc-700 opacity-40 cursor-not-allowed" : activeTab === tab.key ? "border-green-500 text-green-400" : "border-transparent text-zinc-600 hover:text-zinc-300"}`}
               >
                 {tab.label.toLowerCase()}
                 {tab.tierBadge && <TierFeatureBadge requiredPlan={tab.tierBadge} size="xs" className="ml-1" />}
@@ -280,8 +288,8 @@ function DesktopDashboard() {
         ) : layoutTheme === "canvas" ? (
           <div role="tablist" aria-label={t("portfolioTab")} className="flex gap-2 overflow-x-auto sm:flex-wrap sm:overflow-visible scrollbar-hide" data-testid="tabbar-canvas" data-tour="tabs" onKeyDown={handleTabKeyDown}>
             {dashboardTabs.map((tab) => (
-              <button key={tab.key} role="tab" id={`tab-${tab.key}`} aria-selected={activeTab === tab.key} aria-controls={`tabpanel-${tab.key}`} tabIndex={activeTab === tab.key ? 0 : -1} onClick={() => handleTabChange(tab.key)}
-                className={`shrink-0 px-5 py-2.5 text-sm font-medium rounded-full transition-all focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:outline-none ${activeTab === tab.key ? "bg-slate-900 text-white shadow-md" : "bg-white text-slate-500 border border-slate-200 hover:border-slate-300 hover:text-slate-800"}`}
+              <button key={tab.key} role="tab" id={`tab-${tab.key}`} aria-selected={activeTab === tab.key} aria-controls={`tabpanel-${tab.key}`} tabIndex={activeTab === tab.key ? 0 : -1} disabled={tab.disabled} aria-disabled={tab.disabled} onClick={() => !tab.disabled && handleTabChange(tab.key)}
+                className={`shrink-0 px-5 py-2.5 text-sm font-medium rounded-full transition-all focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:outline-none ${tab.disabled ? "bg-white text-slate-300 border border-slate-100 opacity-50 cursor-not-allowed" : activeTab === tab.key ? "bg-slate-900 text-white shadow-md" : "bg-white text-slate-500 border border-slate-200 hover:border-slate-300 hover:text-slate-800"}`}
               >
                 {tab.label}
                 {tab.tierBadge && <TierFeatureBadge requiredPlan={tab.tierBadge} size="xs" className="ml-1" />}
@@ -291,8 +299,8 @@ function DesktopDashboard() {
         ) : layoutTheme === "studio" ? (
           <div role="tablist" aria-label={t("portfolioTab")} className="flex gap-0 overflow-x-auto scrollbar-hide border-b border-white/10" data-testid="tabbar-studio" data-tour="tabs" onKeyDown={handleTabKeyDown}>
             {dashboardTabs.map((tab) => (
-              <button key={tab.key} role="tab" id={`tab-${tab.key}`} aria-selected={activeTab === tab.key} aria-controls={`tabpanel-${tab.key}`} tabIndex={activeTab === tab.key ? 0 : -1} onClick={() => handleTabChange(tab.key)}
-                className={`shrink-0 px-4 py-2.5 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none border-b-2 ${activeTab === tab.key ? "border-emerald-400 text-white" : "border-transparent text-zinc-500 hover:text-zinc-300"}`}
+              <button key={tab.key} role="tab" id={`tab-${tab.key}`} aria-selected={activeTab === tab.key} aria-controls={`tabpanel-${tab.key}`} tabIndex={activeTab === tab.key ? 0 : -1} disabled={tab.disabled} aria-disabled={tab.disabled} onClick={() => !tab.disabled && handleTabChange(tab.key)}
+                className={`shrink-0 px-4 py-2.5 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none border-b-2 ${tab.disabled ? "border-transparent text-zinc-700 opacity-40 cursor-not-allowed" : activeTab === tab.key ? "border-emerald-400 text-white" : "border-transparent text-zinc-500 hover:text-zinc-300"}`}
               >
                 {tab.label}
                 {tab.tierBadge && <TierFeatureBadge requiredPlan={tab.tierBadge} size="xs" className="ml-1" />}
@@ -302,8 +310,8 @@ function DesktopDashboard() {
         ) : (
           <div role="tablist" aria-label={t("portfolioTab")} className="flex gap-1 overflow-x-auto sm:flex-wrap sm:overflow-visible scrollbar-hide bg-white dark:bg-slate-800 rounded-2xl p-1.5 border border-gray-200 dark:border-slate-700 shadow-sm" data-testid="tabbar-default" data-tour="tabs" onKeyDown={handleTabKeyDown}>
             {dashboardTabs.map((tab) => (
-              <button key={tab.key} role="tab" id={`tab-${tab.key}`} aria-selected={activeTab === tab.key} aria-controls={`tabpanel-${tab.key}`} tabIndex={activeTab === tab.key ? 0 : -1} onClick={() => handleTabChange(tab.key)}
-                className={`shrink-0 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium rounded-xl transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none ${activeTab === tab.key ? "bg-emerald-500 text-white shadow-sm" : "text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-700"}`}
+              <button key={tab.key} role="tab" id={`tab-${tab.key}`} aria-selected={activeTab === tab.key} aria-controls={`tabpanel-${tab.key}`} tabIndex={activeTab === tab.key ? 0 : -1} disabled={tab.disabled} aria-disabled={tab.disabled} onClick={() => !tab.disabled && handleTabChange(tab.key)}
+                className={`shrink-0 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium rounded-xl transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none ${tab.disabled ? "text-gray-400 dark:text-slate-600 opacity-50 cursor-not-allowed" : activeTab === tab.key ? "bg-emerald-500 text-white shadow-sm" : "text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-700"}`}
               >
                 {tab.label}
                 {tab.tierBadge && <TierFeatureBadge requiredPlan={tab.tierBadge} size="xs" className="ml-1" />}
@@ -327,6 +335,11 @@ function DesktopDashboard() {
             tabIndex={0}
             className="focus-visible:outline-none space-y-6 animate-tab-fade"
           >
+            <OnboardingChecklist
+              onOpenAddStock={() => setShowAddModal(true)}
+              onNavigateTools={() => { window.location.href = "/tools"; }}
+              onNavigateAlerts={() => { window.location.href = "/tools?tab=alerts"; }}
+            />
             {isInitializing && holdingsCount === 0 ? (
               <div className="space-y-6">
                 <HeroSkeleton />
