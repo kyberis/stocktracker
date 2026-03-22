@@ -51,6 +51,7 @@ const EXPERIENCE_OPTIONS: { key: ExperienceOption; icon: string; color: string; 
 function StepProfile({
   displayName,
   setDisplayName,
+  hasExistingName,
   currency,
   setCurrency,
   experienceLevel,
@@ -61,6 +62,7 @@ function StepProfile({
 }: {
   displayName: string;
   setDisplayName: (v: string) => void;
+  hasExistingName: boolean;
   currency: string;
   setCurrency: (v: string) => void;
   experienceLevel: ExperienceOption | "";
@@ -71,6 +73,7 @@ function StepProfile({
 }) {
   const { t } = useI18n();
   const [countrySearch, setCountrySearch] = useState("");
+  const [editingName, setEditingName] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
 
   const filteredCountries = useMemo(() => {
@@ -90,22 +93,32 @@ function StepProfile({
 
   return (
     <div className="space-y-5">
-      {/* Name & Currency */}
-      <div>
-        <label htmlFor="ob-name" className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">
-          {t("onboardingDisplayNameLabel")}
-        </label>
-        <input
-          id="ob-name"
-          type="text"
-          maxLength={100}
-          value={displayName}
-          onChange={(e) => setDisplayName(e.target.value)}
-          placeholder={t("onboardingDisplayNamePlaceholder")}
-          className="w-full px-3 py-2.5 rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 placeholder:text-gray-400 dark:placeholder:text-slate-500"
-          autoFocus
-        />
-      </div>
+      {hasExistingName && !editingName ? (
+        <div className="flex items-center gap-2 py-1">
+          <span className="text-sm text-gray-700 dark:text-slate-300">
+            👋 {displayName}
+          </span>
+          <button type="button" onClick={() => setEditingName(true)} className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline">
+            {t("edit")}
+          </button>
+        </div>
+      ) : (
+        <div>
+          <label htmlFor="ob-name" className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">
+            {t("onboardingDisplayNameLabel")}
+          </label>
+          <input
+            id="ob-name"
+            type="text"
+            maxLength={100}
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            placeholder={t("onboardingDisplayNamePlaceholder")}
+            className="w-full px-3 py-2.5 rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 placeholder:text-gray-400 dark:placeholder:text-slate-500"
+            autoFocus
+          />
+        </div>
+      )}
       <div>
         <label htmlFor="ob-currency" className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">
           {t("onboardingDefaultCurrencyLabel")}
@@ -541,6 +554,7 @@ function OnboardingContent() {
             <StepProfile
               displayName={displayName}
               setDisplayName={setDisplayName}
+              hasExistingName={!!user?.displayName}
               currency={currency}
               setCurrency={setCurrency}
               experienceLevel={experienceLevel}

@@ -17,6 +17,49 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.61.0",
+    date: "2026-03-21",
+    title: "UX polish — timezone fix, error boundaries, onboarding & email improvements",
+    titleTranslations: { es: "Pulido UX — corrección de zona horaria, límites de error, mejoras de onboarding y email" },
+    changes: [
+      {
+        type: "fix",
+        text: "Purchase date default now uses local time instead of UTC, preventing 'tomorrow' from appearing in Americas timezones.",
+        translations: {
+          es: "La fecha de compra por defecto ahora usa hora local en vez de UTC, evitando que aparezca 'mañana' en zonas horarias de América.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Email copyright year is now dynamic instead of hardcoded.",
+        translations: {
+          es: "El año de copyright en emails ahora es dinámico en vez de estar fijo.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Onboarding skips the display name field when it was already provided during signup.",
+        translations: {
+          es: "El onboarding omite el campo de nombre para mostrar cuando ya fue proporcionado durante el registro.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Added error boundaries to the Tools page and a global app-level fallback to prevent full-page crashes.",
+        translations: {
+          es: "Se agregaron límites de error en la página de Herramientas y un fallback global para prevenir caídas de página completa.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Email verification banner now accurately describes what requires verification (subscriptions and alert emails) instead of claiming data export is locked.",
+        translations: {
+          es: "El banner de verificación de email ahora describe con precisión qué requiere verificación (suscripciones y alertas por email) en vez de afirmar que la exportación de datos está bloqueada.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.60.0",
     date: "2026-03-21",
     title: "Phase 3 — Onboarding, Previews, Goals & AI Digest",

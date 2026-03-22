@@ -975,7 +975,7 @@ const es: TranslationStrings = {
   emailNotVerifiedDesc: "Verifica tu email para recibir notificaciones de alertas.",
   sendVerificationEmail: "Enviar Verificación",
   verificationEmailSent: "¡Email de verificación enviado! Revisa tu bandeja.",
-  emailVerifyBanner: "Verifica tu email para desbloquear facturación y exportación de datos.",
+  emailVerifyBanner: "Verifica tu email para habilitar suscripciones y notificaciones de alertas. Todo lo demás funciona sin verificación.",
   emailVerifySent: "¡Email enviado!",
   emailVerifyResend: "Reenviar verificación",
   verifyEmailPageTitle: "Revisa tu email",

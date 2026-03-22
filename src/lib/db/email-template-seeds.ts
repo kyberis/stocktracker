@@ -52,7 +52,7 @@ const FOOTER = `        <tr><td style="padding:0 32px;"><div style="border-top:1
         </td></tr>
       </table>
       <p style="margin:24px 0 0;font-size:11px;color:#94a3b8;text-align:center;">
-        &copy; 2026 trefolio &mdash; Every portfolio deserves a bit of luck &#x1F340;
+        &copy; ${new Date().getFullYear()} trefolio &mdash; Every portfolio deserves a bit of luck &#x1F340;
       </p>
     </td></tr>
   </table>

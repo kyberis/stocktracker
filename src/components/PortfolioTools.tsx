@@ -9,6 +9,7 @@ import { useSettings } from "@/lib/settings-context";
 import { useFeatureFlag } from "@/lib/feature-flag-context";
 import AdSlot from "@/components/AdSlot";
 import TierFeatureBadge from "./TierFeatureBadge";
+import ErrorBoundary from "./ErrorBoundary";
 
 const TransactionHistory = dynamic(() => import("./TransactionHistory"), { ssr: false });
 const DividendSummary = dynamic(() => import("./DividendSummary"), { ssr: false });
@@ -267,23 +268,25 @@ export default function PortfolioTools({ initialTab = "transactions" }: Portfoli
       })()}
 
         {/* Tab content */}
-        <Suspense fallback={<div className="h-40 flex items-center justify-center"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-500" /></div>}>
-          <div className="space-y-6">
-            {activeTab === "transactions" && <TransactionHistory />}
-            {activeTab === "dividends" && <DividendSummary />}
-            {activeTab === "performance" && <PerformanceMetrics />}
-            {activeTab === "taxonomy" && <TaxonomyView />}
-            {activeTab === "rebalancing" && <RebalancingView />}
-            {activeTab === "accounts" && <AccountsManager />}
-            {activeTab === "watchlist" && <Watchlist />}
-            {activeTab === "alerts" && <PriceAlerts />}
-            {activeTab === "screener" && <StockScreener />}
-            {activeTab === "tax" && <TaxReport />}
-            {activeTab === "simulator" && <PortfolioSimulator />}
-            {activeTab === "planning" && <FinancialPlanner />}
-            {activeTab === "score" && <PortfolioScorePage />}
-          </div>
-        </Suspense>
+        <ErrorBoundary>
+          <Suspense fallback={<div className="h-40 flex items-center justify-center"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-500" /></div>}>
+            <div className="space-y-6">
+              {activeTab === "transactions" && <TransactionHistory />}
+              {activeTab === "dividends" && <DividendSummary />}
+              {activeTab === "performance" && <PerformanceMetrics />}
+              {activeTab === "taxonomy" && <TaxonomyView />}
+              {activeTab === "rebalancing" && <RebalancingView />}
+              {activeTab === "accounts" && <AccountsManager />}
+              {activeTab === "watchlist" && <Watchlist />}
+              {activeTab === "alerts" && <PriceAlerts />}
+              {activeTab === "screener" && <StockScreener />}
+              {activeTab === "tax" && <TaxReport />}
+              {activeTab === "simulator" && <PortfolioSimulator />}
+              {activeTab === "planning" && <FinancialPlanner />}
+              {activeTab === "score" && <PortfolioScorePage />}
+            </div>
+          </Suspense>
+        </ErrorBoundary>
 
         <AdSlot slot="tools-bottom" format="horizontal" className="mt-6" />
     </main>

@@ -7,7 +7,7 @@ import { useTransactions } from "@/lib/hooks/use-api";
 import { useStealthMode } from "@/lib/stealth-context";
 import { useTrack } from "@/lib/use-track";
 import { calculateFifoRealizedPL } from "@/lib/performance";
-import { formatStealthCurrency } from "@/lib/utils";
+import { formatStealthCurrency, todayLocal } from "@/lib/utils";
 import DataUpgradeNudge from "./DataUpgradeNudge";
 import type { Transaction, TransactionType } from "@/lib/types";
 
@@ -134,7 +134,7 @@ export default function TransactionHistory({ holdingId, ticker, exchange: holdin
 
   const [showForm, setShowForm] = useState(false);
   const [formType, setFormType] = useState<TransactionType>("buy");
-  const [formDate, setFormDate] = useState(new Date().toISOString().slice(0, 10));
+  const [formDate, setFormDate] = useState(todayLocal);
   const [formShares, setFormShares] = useState("");
   const [formPrice, setFormPrice] = useState("");
   const [formFees, setFormFees] = useState("");

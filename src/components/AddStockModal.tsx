@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useAuth } from "@/lib/auth-context";
+import { todayLocal } from "@/lib/utils";
 import { useSettings } from "@/lib/settings-context";
 import { useI18n } from "@/lib/i18n";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
@@ -34,7 +35,7 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
   const [currency, setCurrency] = useState("USD");
   const [exchange, setExchange] = useState("");
   const [assetType, setAssetType] = useState<"stock" | "etf" | "">("");
-  const [purchaseDate, setPurchaseDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [purchaseDate, setPurchaseDate] = useState(todayLocal);
   const searchTimeout = useRef<NodeJS.Timeout | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const track = useTrack();
@@ -59,7 +60,7 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
       setCurrency("USD");
       setExchange("");
       setAssetType("");
-      setPurchaseDate(new Date().toISOString().slice(0, 10));
+      setPurchaseDate(todayLocal());
     }
   }, [isOpen]);
 
@@ -329,7 +330,7 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
                       type="date"
                       value={purchaseDate}
                       onChange={(e) => setPurchaseDate(e.target.value)}
-                      max={new Date().toISOString().slice(0, 10)}
+                      max={todayLocal()}
                       className="w-full"
                     />
                   </div>

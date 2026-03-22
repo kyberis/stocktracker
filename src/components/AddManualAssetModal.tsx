@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useI18n } from "@/lib/i18n";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
+import { todayLocal } from "@/lib/utils";
 import type { ManualAssetType } from "@/lib/types";
 
 interface Props {
@@ -59,7 +60,7 @@ export default function AddManualAssetModal({ isOpen, onClose }: Props) {
         displayCurrency: currency,
         displayAmount: parsed,
         notes: notes.trim(),
-        valuationDate: new Date().toISOString().slice(0, 10),
+        valuationDate: todayLocal(),
       });
       onClose();
     } catch (err) {

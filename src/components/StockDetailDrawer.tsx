@@ -14,6 +14,7 @@ import {
   convertToEUR,
   normalizeCurrency,
   resolveQuoteCurrency,
+  todayLocal,
 } from "@/lib/utils";
 import { getMarketStatus } from "@/lib/market-hours";
 import type { Holding, QuoteData, CompanyOverview } from "@/lib/types";
@@ -254,7 +255,7 @@ export default function StockDetailDrawer({ holding, onClose }: StockDetailDrawe
         assetType: holding.assetType || "stock",
         accountId: holding.accountId || "",
         type: tradeAction,
-        date: new Date().toISOString().slice(0, 10),
+        date: todayLocal(),
         shares: qty,
         pricePerShare: price,
         totalAmount: qty * price,

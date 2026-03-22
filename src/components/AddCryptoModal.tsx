@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useSWRConfig } from "swr";
 import { usePortfolio } from "@/lib/portfolio-context";
+import { todayLocal } from "@/lib/utils";
 import { useAuth } from "@/lib/auth-context";
 import { useSettings } from "@/lib/settings-context";
 import { useI18n } from "@/lib/i18n";
@@ -48,7 +49,7 @@ export default function AddCryptoModal({ isOpen, onClose }: AddCryptoModalProps)
   const [selected, setSelected] = useState<SearchResult | null>(null);
   const [coinName, setCoinName] = useState("");
   const [ticker, setTicker] = useState("");
-  const [txDate, setTxDate] = useState(new Date().toISOString().slice(0, 10));
+  const [txDate, setTxDate] = useState(todayLocal);
   const [quantity, setQuantity] = useState("");
   const [price, setPrice] = useState("");
   const searchTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -64,7 +65,7 @@ export default function AddCryptoModal({ isOpen, onClose }: AddCryptoModalProps)
       setSelected(null);
       setCoinName("");
       setTicker("");
-      setTxDate(new Date().toISOString().slice(0, 10));
+      setTxDate(todayLocal());
       setQuantity("");
       setPrice("");
       setSubmitting(false);
@@ -276,7 +277,7 @@ export default function AddCryptoModal({ isOpen, onClose }: AddCryptoModalProps)
                   type="date"
                   value={txDate}
                   onChange={(e) => setTxDate(e.target.value)}
-                  max={new Date().toISOString().slice(0, 10)}
+                  max={todayLocal()}
                   className="w-full"
                 />
               </div>

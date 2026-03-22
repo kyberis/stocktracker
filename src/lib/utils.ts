@@ -1,5 +1,10 @@
 import type { ExchangeRates } from "./types";
 
+export function todayLocal(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 export function generateId(): string {
   return Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
 }
