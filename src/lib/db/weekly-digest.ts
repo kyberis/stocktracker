@@ -18,6 +18,8 @@ export interface WeeklyDigestStats {
   bestPerformer?: { ticker: string; changePct: number };
   worstPerformer?: { ticker: string; changePct: number };
   dividendsReceived?: number;
+  totalValue?: number;
+  holdingCount?: number;
   currency?: string;
 }
 

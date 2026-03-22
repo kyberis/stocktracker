@@ -89,7 +89,43 @@ export default function WeeklyDigestCard({ position = "default" }: WeeklyDigestC
 
   const stats = digest.stats;
   const currency = stats.currency || "EUR";
-  const sym = currency === "EUR" ? "€" : "$";
+  const sym = currency === "EUR" ? "€" : currency === "USD" ? "$" : currency === "GBP" ? "£" : "€";
+
+  const statItems: { label: string; value: string; color?: string }[] = [];
+
+  if (stats.weekChange !== undefined) {
+    statItems.push({
+      label: t("weeklyDigestWeekChange"),
+      value: `${stats.weekChange >= 0 ? "+" : ""}${sym}${Math.abs(stats.weekChange).toFixed(0)}`,
+      color: stats.weekChange >= 0 ? "text-emerald-500" : "text-red-500",
+    });
+  } else if (stats.totalValue !== undefined) {
+    statItems.push({
+      label: t("weeklyDigestPortfolioValue") ?? "Value",
+      value: `${sym}${stats.totalValue.toFixed(0)}`,
+    });
+  }
+
+  if (stats.bestPerformer) {
+    statItems.push({
+      label: t("weeklyDigestBestPerformer"),
+      value: `${stats.bestPerformer.ticker} ${stats.bestPerformer.changePct >= 0 ? "+" : ""}${stats.bestPerformer.changePct.toFixed(1)}%`,
+      color: stats.bestPerformer.changePct >= 0 ? "text-emerald-500" : "text-red-500",
+    });
+  } else if (stats.holdingCount !== undefined) {
+    statItems.push({
+      label: t("weeklyDigestHoldings") ?? "Holdings",
+      value: `${stats.holdingCount}`,
+    });
+  }
+
+  if (stats.dividendsReceived && stats.dividendsReceived > 0) {
+    statItems.push({
+      label: t("weeklyDigestDividendsReceived"),
+      value: `${sym}${stats.dividendsReceived.toFixed(2)}`,
+      color: "text-emerald-500",
+    });
+  }
 
   return (
     <div className="card rounded-2xl p-3 bg-gradient-to-br from-violet-500/[0.06] to-cyan-500/[0.04] border-violet-500/10">
@@ -105,28 +141,18 @@ export default function WeeklyDigestCard({ position = "default" }: WeeklyDigestC
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-1.5 mb-2">
-        <div className="rounded-lg bg-white/40 dark:bg-white/[0.03] p-2 text-center">
-          <div className="text-[9px] uppercase tracking-wider text-gray-400 dark:text-slate-500">{t("weeklyDigestWeekChange")}</div>
-          <div className={`text-xs font-bold font-mono mt-0.5 ${(stats.weekChange ?? 0) >= 0 ? "text-emerald-500" : "text-red-500"}`}>
-            {stats.weekChange !== undefined ? `${stats.weekChange >= 0 ? "+" : ""}${sym}${Math.abs(stats.weekChange).toFixed(0)}` : "—"}
-          </div>
+      {statItems.length > 0 && (
+        <div className={`grid gap-1.5 mb-2`} style={{ gridTemplateColumns: `repeat(${statItems.length}, 1fr)` }}>
+          {statItems.map((s, i) => (
+            <div key={i} className="rounded-lg bg-white/40 dark:bg-white/[0.03] p-2 text-center">
+              <div className="text-[9px] uppercase tracking-wider text-gray-400 dark:text-slate-500">{s.label}</div>
+              <div className={`text-xs font-bold font-mono mt-0.5 ${s.color || "text-gray-900 dark:text-white"}`}>{s.value}</div>
+            </div>
+          ))}
         </div>
-        <div className="rounded-lg bg-white/40 dark:bg-white/[0.03] p-2 text-center">
-          <div className="text-[9px] uppercase tracking-wider text-gray-400 dark:text-slate-500">{t("weeklyDigestBestPerformer")}</div>
-          <div className="text-xs font-bold font-mono mt-0.5 text-emerald-500">
-            {stats.bestPerformer ? `${stats.bestPerformer.ticker} +${stats.bestPerformer.changePct.toFixed(1)}%` : "—"}
-          </div>
-        </div>
-        <div className="rounded-lg bg-white/40 dark:bg-white/[0.03] p-2 text-center">
-          <div className="text-[9px] uppercase tracking-wider text-gray-400 dark:text-slate-500">{t("weeklyDigestDividendsReceived")}</div>
-          <div className="text-xs font-bold font-mono mt-0.5">
-            {stats.dividendsReceived !== undefined ? `${sym}${stats.dividendsReceived.toFixed(2)}` : "—"}
-          </div>
-        </div>
-      </div>
+      )}
 
-      <p className="text-[11px] text-gray-600 dark:text-slate-300 leading-relaxed mb-2 line-clamp-4">
+      <p className="text-[11px] text-gray-600 dark:text-slate-300 leading-relaxed mb-2">
         {digest.summaryText}
       </p>
       <p className="text-[9px] text-gray-400 dark:text-slate-600 italic">{t("weeklyDigestDisclaimer")}</p>

@@ -76,9 +76,9 @@ function buildWeeklyDigestEmail(displayName: string, summaryText: string, stats:
   const bestColor = stats.bestPerformer
     ? (stats.bestPerformer.changePct >= 0 ? "#10b981" : "#ef4444")
     : "#64748b";
-  const divs = stats.dividendsReceived !== undefined
+  const divs = stats.dividendsReceived && stats.dividendsReceived > 0
     ? `${currencySymbol}${stats.dividendsReceived.toFixed(2)}`
-    : "—";
+    : "None this week";
 
   return `<!DOCTYPE html><html><head><meta charset="utf-8"/></head><body style="margin:0;padding:0;background:#f8fafc;font-family:'DM Sans',-apple-system,sans-serif;">
 <div style="max-width:520px;margin:24px auto;background:#fff;border-radius:12px;padding:28px;">
@@ -225,11 +225,13 @@ export const POST = withMetrics("/api/admin/weekly-digest", async (req: NextRequ
 
   const stats: WeeklyDigestStats = {
     currency: baseCurrency,
+    totalValue: currentValueEUR,
+    holdingCount: holdings.length,
     weekChange,
     weekChangePct,
     bestPerformer,
     worstPerformer,
-    dividendsReceived: weekDividends > 0 ? weekDividends : undefined,
+    dividendsReceived: weekDividends,
   };
 
   // -- Build AI summary with real data --
