@@ -7,13 +7,15 @@ import { usePortfolio } from "@/lib/portfolio-context";
 import { convertToEUR, resolveQuoteCurrency, formatCurrency } from "@/lib/utils";
 import BlurredProSection from "./BlurredProSection";
 import AiMarkdown from "./AiMarkdown";
-import type { RebalanceTarget, RebalanceDrift, RebalanceMove } from "@/lib/types";
+import type { Holding, QuoteData, RebalanceTarget, RebalanceDrift, RebalanceMove } from "@/lib/types";
 
 const PIE_COLORS = [
   "#10b981", "#6366f1", "#f59e0b", "#ef4444", "#8b5cf6",
   "#06b6d4", "#ec4899", "#84cc16", "#f97316", "#14b8a6",
   "#a855f7", "#64748b",
 ];
+
+const SPARKLE_PATH = "M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z";
 
 type Category = "assetClass" | "sector" | "region" | "exchange";
 
@@ -22,6 +24,33 @@ interface BucketAlloc {
   valueEUR: number;
   percent: number;
   color: string;
+}
+
+function SectionBadge({ n, variant = "default" }: { n: number; variant?: "default" | "ai" }) {
+  const base = variant === "ai"
+    ? "bg-violet-500/10 border-violet-500/25 text-violet-600 dark:text-violet-400"
+    : "bg-emerald-500/10 border-emerald-500/25 text-emerald-600 dark:text-emerald-400";
+  return (
+    <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold border mr-2 flex-shrink-0 ${base}`}>
+      {n}
+    </span>
+  );
+}
+
+function AiInsightStrip({ text, cta, isPro, onClick }: { text: React.ReactNode; cta: string; isPro: boolean; onClick?: () => void }) {
+  if (!isPro) return null;
+  return (
+    <button
+      onClick={onClick}
+      className="w-full flex items-start gap-2 mt-3 p-2.5 rounded-lg bg-violet-50/50 dark:bg-violet-500/[0.04] border border-violet-200/60 dark:border-violet-500/20 text-left hover:border-violet-300 dark:hover:border-violet-500/40 transition-colors group"
+    >
+      <svg className="w-4 h-4 text-violet-500 dark:text-violet-400 mt-0.5 flex-shrink-0 opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+        <path d={SPARKLE_PATH} />
+      </svg>
+      <span className="flex-1 text-[11px] leading-relaxed text-gray-600 dark:text-slate-400">{text}</span>
+      <span className="flex-shrink-0 text-[10px] font-semibold text-violet-600 dark:text-violet-400 whitespace-nowrap mt-0.5 group-hover:underline">{cta} →</span>
+    </button>
+  );
 }
 
 /* ═══════════════════════════════════════════════════════════ */
@@ -118,7 +147,6 @@ export default function RebalancingView() {
 
   return (
     <div className="space-y-4">
-      {/* ── Section 1: Allocation Overview ── */}
       <AllocationOverview
         allocations={allocations}
         drifts={drifts}
@@ -127,24 +155,20 @@ export default function RebalancingView() {
         onCategoryChange={setCategory}
         onSaveTarget={handleSaveTarget}
         baseCurrency={baseCurrency}
+        isPro={isPro}
       />
-
-      {/* ── Section 2: Exposure Analysis ── */}
-      <ExposureAnalysis drifts={drifts} />
-
-      {/* ── Section 3: Rebalancing Actions ── */}
+      <ExposureAnalysis drifts={drifts} isPro={isPro} />
       <RebalancingActions
         drifts={drifts}
         totalValue={totalValue}
         baseCurrency={baseCurrency}
         isPro={isPro}
         language={language}
+        holdings={holdings}
+        quotes={quotes}
+        exchangeRates={exchangeRates}
       />
-
-      {/* ── Section 4: Industry Screener ── */}
       <RebalancingScreener isPro={isPro} />
-
-      {/* ── Section 5: AI Assistant ── */}
       <AiRebalancingPanel
         drifts={drifts}
         totalValue={totalValue}
@@ -161,7 +185,7 @@ export default function RebalancingView() {
 /* ═══════════════════════════════════════════════════════════ */
 
 function AllocationOverview({
-  allocations, drifts, totalValue, category, onCategoryChange, onSaveTarget, baseCurrency,
+  allocations, drifts, totalValue, category, onCategoryChange, onSaveTarget, baseCurrency, isPro,
 }: {
   allocations: BucketAlloc[];
   drifts: (RebalanceDrift & { color: string })[];
@@ -170,6 +194,7 @@ function AllocationOverview({
   onCategoryChange: (c: Category) => void;
   onSaveTarget: (label: string, percent: number) => void;
   baseCurrency: string;
+  isPro: boolean;
 }) {
   const { t } = useI18n();
   const categories: { key: Category; label: string }[] = [
@@ -180,13 +205,17 @@ function AllocationOverview({
   ];
 
   const totalTarget = drifts.reduce((s, d) => s + d.targetPercent, 0);
+  const biggestOver = drifts.filter((d) => d.driftPercent > 2).sort((a, b) => b.driftPercent - a.driftPercent)[0];
 
   return (
     <div className="card">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{t("allocationOverview")}</h3>
-          <p className="text-[10px] text-gray-500 dark:text-slate-400 mt-0.5">{t("allocationOverviewDesc")}</p>
+          <div className="flex items-center">
+            <SectionBadge n={1} />
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{t("allocationOverview")}</h3>
+          </div>
+          <p className="text-[10px] text-gray-500 dark:text-slate-400 mt-0.5 ml-7">{t("allocationOverviewDesc")}</p>
         </div>
         <div className="flex gap-1">
           {categories.map((c) => (
@@ -204,12 +233,9 @@ function AllocationOverview({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-5">
-        {/* Donut */}
         <div className="flex justify-center">
           <DonutChart allocations={allocations} totalValue={totalValue} baseCurrency={baseCurrency} />
         </div>
-
-        {/* Drift Table */}
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead className="text-gray-500 dark:text-slate-400">
@@ -232,6 +258,14 @@ function AllocationOverview({
           </div>
         </div>
       </div>
+
+      {biggestOver && (
+        <AiInsightStrip
+          isPro={isPro}
+          text={<><strong className="text-gray-900 dark:text-white">{biggestOver.label} {t("overexposed").toLowerCase()} at {biggestOver.actualPercent.toFixed(1)}%</strong> — {t("drift")} of +{biggestOver.driftPercent.toFixed(1)}% from your {biggestOver.targetPercent.toFixed(1)}% target. This single-bucket concentration creates meaningful downside risk.</>}
+          cta="Ask AI"
+        />
+      )}
     </div>
   );
 }
@@ -255,8 +289,9 @@ function DriftRow({ drift: d, baseCurrency, onSaveTarget }: {
         <span className="inline-block w-2.5 h-2.5 rounded-sm mr-2 align-middle" style={{ background: d.color }} />
         {d.label}
         {d.actualPercent > 30 && (
-          <span className="ml-1.5 text-[9px] font-semibold uppercase tracking-wide text-red-500 bg-red-500/10 px-1.5 py-0.5 rounded">
-            {/* overexposed icon */ }⚠
+          <span className="ml-1.5 inline-flex items-center gap-0.5 text-[9px] font-semibold uppercase tracking-wide text-red-500 bg-red-500/10 px-1.5 py-0.5 rounded">
+            <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M12 9v4M12 17h.01" /><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /></svg>
+            Overexposed
           </span>
         )}
       </td>
@@ -333,17 +368,21 @@ function DonutChart({ allocations, totalValue, baseCurrency }: {
 /*  Section 2: Exposure Analysis                             */
 /* ═══════════════════════════════════════════════════════════ */
 
-function ExposureAnalysis({ drifts }: { drifts: (RebalanceDrift & { color: string })[] }) {
+function ExposureAnalysis({ drifts, isPro }: { drifts: (RebalanceDrift & { color: string })[]; isPro: boolean }) {
   const { t } = useI18n();
   const sorted = [...drifts].sort((a, b) => Math.abs(b.driftPercent) - Math.abs(a.driftPercent));
   const alerts = sorted.filter((d) => Math.abs(d.driftPercent) >= 1);
+  const top3pct = drifts.slice(0, 3).reduce((s, d) => s + d.actualPercent, 0);
 
   return (
     <div className="card">
       <div className="flex items-center justify-between mb-3">
         <div>
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{t("exposureAnalysis")}</h3>
-          <p className="text-[10px] text-gray-500 dark:text-slate-400 mt-0.5">{t("exposureAnalysisDesc")}</p>
+          <div className="flex items-center">
+            <SectionBadge n={2} />
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{t("exposureAnalysis")}</h3>
+          </div>
+          <p className="text-[10px] text-gray-500 dark:text-slate-400 mt-0.5 ml-7">{t("exposureAnalysisDesc")}</p>
         </div>
         <div className="flex items-center gap-3 text-[10px] text-gray-500 dark:text-slate-400">
           <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-emerald-500" /> {t("withinTarget")}</span>
@@ -352,20 +391,21 @@ function ExposureAnalysis({ drifts }: { drifts: (RebalanceDrift & { color: strin
         </div>
       </div>
 
-      {/* Treemap-style bar */}
-      <div className="flex gap-0.5 rounded-lg overflow-hidden mb-3">
+      {/* Treemap — wrapping tiles */}
+      <div className="flex flex-wrap gap-[3px] rounded-lg overflow-hidden mb-3">
         {drifts.map((d) => {
           const absDrift = Math.abs(d.driftPercent);
-          const borderColor = absDrift > 5 ? "ring-2 ring-red-500/60" : absDrift > 2 ? "ring-2 ring-amber-500/50" : "";
+          const borderClass = absDrift > 5 ? "ring-2 ring-red-500/60" : absDrift > 2 ? "ring-2 ring-amber-500/50" : "";
+          const widthPct = Math.max(6, d.actualPercent);
           return (
             <div
               key={d.label}
-              className={`flex flex-col items-center justify-center py-2.5 px-1 text-white text-center min-w-[40px] ${borderColor}`}
-              style={{ flexGrow: d.actualPercent, background: d.color, opacity: 0.85, minHeight: 56 }}
+              className={`flex flex-col items-center justify-center py-3 px-2 text-white text-center rounded-md cursor-pointer hover:scale-[1.02] hover:shadow-lg transition-all ${borderClass}`}
+              style={{ flexBasis: `${widthPct}%`, flexGrow: d.actualPercent, background: d.color, opacity: 0.85, minHeight: 64 }}
               title={`${d.label}: ${d.actualPercent.toFixed(1)}%`}
             >
-              <span className="text-[10px] font-semibold leading-tight drop-shadow truncate max-w-full">{d.label}</span>
-              <span className="text-xs font-bold drop-shadow">{d.actualPercent.toFixed(1)}%</span>
+              <span className="text-[10px] font-semibold leading-tight drop-shadow-sm truncate max-w-full">{d.label}</span>
+              <span className="text-[13px] font-bold drop-shadow-sm mt-0.5">{d.actualPercent.toFixed(1)}%</span>
             </div>
           );
         })}
@@ -392,6 +432,12 @@ function ExposureAnalysis({ drifts }: { drifts: (RebalanceDrift & { color: strin
           })}
         </div>
       )}
+
+      <AiInsightStrip
+        isPro={isPro}
+        text={<>Your <strong className="text-gray-900 dark:text-white">top 3 {t("sector").toLowerCase()}s represent {top3pct.toFixed(1)}%</strong> of your portfolio. In a diversified portfolio, no single bucket should exceed 30%. Consider spreading risk across your underweight areas.</>}
+        cta="Deep dive"
+      />
     </div>
   );
 }
@@ -400,12 +446,15 @@ function ExposureAnalysis({ drifts }: { drifts: (RebalanceDrift & { color: strin
 /*  Section 3: Rebalancing Actions                           */
 /* ═══════════════════════════════════════════════════════════ */
 
-function RebalancingActions({ drifts, totalValue, baseCurrency, isPro, language }: {
+function RebalancingActions({ drifts, totalValue, baseCurrency, isPro, language, holdings, quotes, exchangeRates }: {
   drifts: (RebalanceDrift & { color: string })[];
   totalValue: number;
   baseCurrency: string;
   isPro: boolean;
   language: string;
+  holdings: Holding[];
+  quotes: Record<string, QuoteData>;
+  exchangeRates: Record<string, number>;
 }) {
   const { t } = useI18n();
   const [mode, setMode] = useState<"add" | "move">("add");
@@ -428,6 +477,21 @@ function RebalancingActions({ drifts, totalValue, baseCurrency, isPro, language 
     ...d,
     alloc: totalDeficit > 0 ? Math.round(amount * (Math.abs(d.driftPercent) / totalDeficit)) : 0,
   }));
+
+  const holdingsBySector = useMemo(() => {
+    const map: Record<string, { ticker: string; valueEUR: number }[]> = {};
+    holdings.forEach((h) => {
+      const q = quotes[h.ticker];
+      if (!q || q.regularMarketPrice <= 0) return;
+      const qc = resolveQuoteCurrency(h.displayCurrency, q.currency);
+      const valueEUR = convertToEUR(h.shares * q.regularMarketPrice, qc, exchangeRates);
+      const sector = h.sector || "Other";
+      if (!map[sector]) map[sector] = [];
+      map[sector].push({ ticker: h.ticker, valueEUR });
+    });
+    Object.values(map).forEach((arr) => arr.sort((a, b) => b.valueEUR - a.valueEUR));
+    return map;
+  }, [holdings, quotes, exchangeRates]);
 
   const handleAddMove = () => {
     if (!moveSource || !moveDest || !moveAmount) return;
@@ -498,18 +562,19 @@ function RebalancingActions({ drifts, totalValue, baseCurrency, isPro, language 
     <div className="card">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{t("rebalancingActions")}</h3>
-          <p className="text-[10px] text-gray-500 dark:text-slate-400 mt-0.5">{t("rebalancingActionsDesc")}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="inline-flex bg-gray-100 dark:bg-slate-800 rounded-lg p-0.5 gap-0.5">
-            <button onClick={() => setMode("add")} className={`text-[10px] font-medium px-2.5 py-1 rounded-md transition-colors ${mode === "add" ? "bg-emerald-500 text-white" : "text-gray-500 dark:text-slate-400"}`}>
-              {t("addMoney")}
-            </button>
-            <button onClick={() => setMode("move")} className={`text-[10px] font-medium px-2.5 py-1 rounded-md transition-colors ${mode === "move" ? "bg-emerald-500 text-white" : "text-gray-500 dark:text-slate-400"}`}>
-              {t("moveFunds")}
-            </button>
+          <div className="flex items-center">
+            <SectionBadge n={3} />
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{t("rebalancingActions")}</h3>
           </div>
+          <p className="text-[10px] text-gray-500 dark:text-slate-400 mt-0.5 ml-7">{t("rebalancingActionsDesc")}</p>
+        </div>
+        <div className="inline-flex bg-gray-100 dark:bg-slate-800 rounded-lg p-0.5 gap-0.5">
+          <button onClick={() => setMode("add")} className={`text-[10px] font-medium px-2.5 py-1 rounded-md transition-colors ${mode === "add" ? "bg-emerald-500 text-white" : "text-gray-500 dark:text-slate-400"}`}>
+            {t("addMoney")}
+          </button>
+          <button onClick={() => setMode("move")} className={`text-[10px] font-medium px-2.5 py-1 rounded-md transition-colors ${mode === "move" ? "bg-emerald-500 text-white" : "text-gray-500 dark:text-slate-400"}`}>
+            {t("moveFunds")}
+          </button>
         </div>
       </div>
 
@@ -527,8 +592,7 @@ function RebalancingActions({ drifts, totalValue, baseCurrency, isPro, language 
             </div>
             <button
               onClick={requestAiEvaluation}
-              disabled={!isPro}
-              className="text-xs font-medium px-3 py-2 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-colors disabled:opacity-50"
+              className="text-xs font-medium px-3 py-2 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-colors"
             >
               {t("calculate")}
             </button>
@@ -542,27 +606,49 @@ function RebalancingActions({ drifts, totalValue, baseCurrency, isPro, language 
                     <th className="text-left p-2 font-medium">{t("bucket")}</th>
                     <th className="text-right p-2 font-medium">{t("underweight")}</th>
                     <th className="text-right p-2 font-medium">{t("allocate")}</th>
+                    <th className="text-left p-2 font-medium pl-4">Holdings to Buy</th>
+                    <th className="text-right p-2 font-medium"></th>
                   </tr>
                 </thead>
                 <tbody>
-                  {distributions.map((d) => (
-                    <tr key={d.label} className="border-t border-gray-100 dark:border-slate-700">
-                      <td className="p-2 font-medium text-gray-900 dark:text-white">
-                        <span className="inline-block w-2.5 h-2.5 rounded-sm mr-2 align-middle" style={{ background: d.color }} />
-                        {d.label}
-                      </td>
-                      <td className="p-2 text-right font-mono text-red-500">{d.driftPercent.toFixed(1)}%</td>
-                      <td className="p-2 text-right font-mono font-medium text-emerald-600 dark:text-emerald-400">{formatCurrency(d.alloc, baseCurrency)}</td>
-                    </tr>
-                  ))}
+                  {distributions.map((d) => {
+                    const sectorHoldings = holdingsBySector[d.label] || [];
+                    const topHoldings = sectorHoldings.slice(0, 3);
+                    return (
+                      <tr key={d.label} className="border-t border-gray-100 dark:border-slate-700">
+                        <td className="p-2 font-medium text-gray-900 dark:text-white">
+                          <span className="inline-block w-2.5 h-2.5 rounded-sm mr-2 align-middle" style={{ background: d.color }} />
+                          {d.label}
+                        </td>
+                        <td className="p-2 text-right font-mono text-red-500">{d.driftPercent.toFixed(1)}%</td>
+                        <td className="p-2 text-right font-mono font-medium text-emerald-600 dark:text-emerald-400">{formatCurrency(d.alloc, baseCurrency)}</td>
+                        <td className="p-2 pl-4">
+                          <div className="flex flex-wrap gap-1">
+                            {topHoldings.length > 0 ? topHoldings.map((h) => (
+                              <span key={h.ticker} className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-gray-100 dark:bg-slate-700/60 text-gray-600 dark:text-slate-300">
+                                <span className="font-semibold text-gray-900 dark:text-white">{h.ticker.split(".")[0]}</span>
+                                {formatCurrency(Math.round(d.alloc * (h.valueEUR / sectorHoldings.reduce((s, x) => s + x.valueEUR, 0))), baseCurrency)}
+                              </span>
+                            )) : (
+                              <span className="text-[10px] text-gray-400 dark:text-slate-500">—</span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="p-2 text-right">
+                          <button className="text-[10px] font-medium px-2 py-0.5 rounded border border-emerald-500/40 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500 hover:text-white transition-colors whitespace-nowrap">
+                            Find stocks
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
           )}
 
-          {/* Before/After bars */}
           {amount > 0 && distributions.length > 0 && (
-            <BeforeAfterBars drifts={drifts} distributions={distributions} mode="add" totalValue={totalValue} amount={amount} />
+            <BeforeAfterBars drifts={drifts} distributions={distributions} totalValue={totalValue} amount={amount} />
           )}
         </>
       ) : (
@@ -574,6 +660,19 @@ function RebalancingActions({ drifts, totalValue, baseCurrency, isPro, language 
                 <option value="">—</option>
                 {overweight.map((d) => <option key={d.label} value={d.label}>{d.label} (+{d.driftPercent.toFixed(1)}%)</option>)}
               </select>
+              {moveSource && (
+                <div className="mt-2">
+                  <div className="text-[9px] text-gray-500 dark:text-slate-400 mb-1">Sell from:</div>
+                  <div className="flex flex-wrap gap-1">
+                    {(holdingsBySector[moveSource] || []).slice(0, 3).map((h) => (
+                      <span key={h.ticker} className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-gray-100 dark:bg-slate-700/60 text-gray-600 dark:text-slate-300">
+                        <span className="font-semibold text-gray-900 dark:text-white">{h.ticker.split(".")[0]}</span>
+                        {formatCurrency(h.valueEUR, baseCurrency)}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
             <div className="flex items-center justify-center pt-6 text-emerald-500">
               <svg className="w-6 h-6 md:rotate-0 rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -596,6 +695,19 @@ function RebalancingActions({ drifts, totalValue, baseCurrency, isPro, language 
                   placeholder="0"
                 />
               </div>
+              {moveDest && (
+                <div className="mt-2">
+                  <div className="text-[9px] text-gray-500 dark:text-slate-400 mb-1">Buy into:</div>
+                  <div className="flex flex-wrap gap-1">
+                    {(holdingsBySector[moveDest] || []).slice(0, 3).map((h) => (
+                      <span key={h.ticker} className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-gray-100 dark:bg-slate-700/60 text-gray-600 dark:text-slate-300">
+                        <span className="font-semibold text-gray-900 dark:text-white">{h.ticker.split(".")[0]}</span>
+                        {formatCurrency(h.valueEUR, baseCurrency)}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -636,7 +748,7 @@ function RebalancingActions({ drifts, totalValue, baseCurrency, isPro, language 
         <div className="mt-3 p-3 rounded-lg bg-violet-50 dark:bg-violet-500/5 border border-violet-200 dark:border-violet-500/20">
           <div className="flex items-center gap-1.5 mb-2">
             <svg className="w-3.5 h-3.5 text-violet-600 dark:text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d={SPARKLE_PATH} />
             </svg>
             <span className="text-xs font-semibold text-violet-700 dark:text-violet-400">{mode === "add" ? t("aiPlanEvaluation") : t("aiMoveEvaluation")}</span>
             <span className="text-[9px] font-bold uppercase tracking-wider bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-400 px-1.5 py-0.5 rounded">PRO</span>
@@ -654,10 +766,9 @@ function RebalancingActions({ drifts, totalValue, baseCurrency, isPro, language 
   );
 }
 
-function BeforeAfterBars({ drifts, distributions, mode, totalValue, amount }: {
+function BeforeAfterBars({ drifts, distributions, totalValue, amount }: {
   drifts: (RebalanceDrift & { color: string })[];
   distributions: { label: string; alloc: number; driftPercent: number; color: string }[];
-  mode: "add";
   totalValue: number;
   amount: number;
 }) {
@@ -669,17 +780,17 @@ function BeforeAfterBars({ drifts, distributions, mode, totalValue, amount }: {
     <div className="mt-3 p-3 rounded-lg bg-gray-50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700">
       <div className="text-xs font-semibold text-gray-900 dark:text-white mb-2">{t("beforeAfterComparison")}</div>
       <div className="space-y-1.5">
-        {drifts.slice(0, 8).map((d) => {
+        {drifts.slice(0, 10).map((d) => {
           const afterValue = d.valueEUR + (allocMap[d.label] || 0);
           const afterPct = newTotal > 0 ? (afterValue / newTotal) * 100 : 0;
           return (
             <div key={d.label} className="flex items-center gap-2 text-[10px]">
-              <span className="w-24 truncate text-right text-gray-600 dark:text-slate-400">{d.label}</span>
-              <div className="flex-1 h-3.5 bg-gray-200 dark:bg-slate-700 rounded-full relative overflow-hidden">
-                <div className="absolute h-full rounded-full opacity-40" style={{ width: `${d.actualPercent}%`, background: d.color }} />
-                <div className="absolute h-full rounded-full" style={{ width: `${afterPct}%`, background: d.color }} />
+              <span className="w-28 truncate text-right text-gray-600 dark:text-slate-400">{d.label}</span>
+              <div className="flex-1 h-[18px] bg-gray-200/50 dark:bg-slate-700/30 rounded relative overflow-hidden">
+                <div className="absolute h-full rounded opacity-40" style={{ width: `${Math.min(d.actualPercent * 2, 100)}%`, background: d.color }} />
+                <div className="absolute h-full rounded" style={{ width: `${Math.min(afterPct * 2, 100)}%`, background: d.color }} />
               </div>
-              <span className="w-10 text-right font-mono font-medium text-gray-600 dark:text-slate-400">{afterPct.toFixed(1)}%</span>
+              <span className="w-10 text-right font-mono font-semibold text-gray-600 dark:text-slate-400">{afterPct.toFixed(1)}%</span>
             </div>
           );
         })}
@@ -771,6 +882,7 @@ function RebalancingScreener({ isPro }: { isPro: boolean }) {
                 <th className="text-right p-2 font-medium">Div Yield</th>
                 <th className="text-right p-2 font-medium">P/E</th>
                 <th className="text-right p-2 font-medium">Mkt Cap</th>
+                <th className="p-2"></th>
               </tr>
             </thead>
             <tbody>
@@ -783,6 +895,11 @@ function RebalancingScreener({ isPro }: { isPro: boolean }) {
                   <td className="p-2 text-right font-mono text-emerald-600">{r.dividendYield != null ? `${(r.dividendYield * 100).toFixed(1)}%` : "—"}</td>
                   <td className="p-2 text-right font-mono">{r.peRatio != null ? r.peRatio.toFixed(1) : "—"}</td>
                   <td className="p-2 text-right font-mono text-gray-500 dark:text-slate-400">{fmtMc(r.marketCap)}</td>
+                  <td className="p-2 text-right">
+                    <button className="text-[10px] font-medium px-2 py-0.5 rounded border border-emerald-500/40 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500 hover:text-white transition-colors whitespace-nowrap">
+                      Add to plan
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -799,12 +916,15 @@ function RebalancingScreener({ isPro }: { isPro: boolean }) {
   return (
     <div className="card">
       <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{t("industryScreener")}</h3>
-          <span className="text-[9px] font-bold uppercase tracking-wider bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-400 px-1.5 py-0.5 rounded">PRO</span>
+        <div>
+          <div className="flex items-center gap-2">
+            <SectionBadge n={4} />
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{t("industryScreener")}</h3>
+            <span className="text-[9px] font-bold uppercase tracking-wider bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-400 px-1.5 py-0.5 rounded">PRO</span>
+          </div>
+          <p className="text-[10px] text-gray-500 dark:text-slate-400 mt-0.5 ml-7">{t("industryScreenerDesc")}</p>
         </div>
       </div>
-      <p className="text-[10px] text-gray-500 dark:text-slate-400 mb-3">{t("industryScreenerDesc")}</p>
 
       {isPro ? content : (
         <BlurredProSection blurb="Upgrade to Trefolio to search for stocks by industry and sector.">
@@ -881,19 +1001,26 @@ function AiRebalancingPanel({ drifts, totalValue, isPro, language, category }: {
     <div>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
+          <SectionBadge n={5} variant="ai" />
           <svg className="w-4 h-4 text-violet-600 dark:text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d={SPARKLE_PATH} />
           </svg>
           <span className="text-sm font-semibold text-violet-700 dark:text-violet-400">{t("aiRebalancingAssistant")}</span>
           <span className="text-[9px] font-bold uppercase tracking-wider bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-400 px-1.5 py-0.5 rounded">PRO</span>
         </div>
         {!aiSummary && !aiLoading && (
-          <button onClick={requestAnalysis} className="text-xs font-medium text-violet-600 dark:text-violet-400 hover:text-violet-800 dark:hover:text-violet-300 px-3 py-1 rounded-lg hover:bg-violet-100 dark:hover:bg-violet-500/20 transition-colors">
+          <button
+            onClick={requestAnalysis}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-white px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 shadow-sm shadow-violet-500/25 transition-all hover:-translate-y-px"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d={SPARKLE_PATH} />
+            </svg>
             {t("aiFullAnalysis")}
           </button>
         )}
       </div>
-      <p className="text-[10px] text-gray-500 dark:text-slate-400 mb-3">{t("aiRebalancingAssistantDesc")}</p>
+      <p className="text-[10px] text-gray-500 dark:text-slate-400 mb-3 ml-7">{t("aiRebalancingAssistantDesc")}</p>
 
       {(aiSummary || aiLoading) && (
         <div className="text-gray-700 dark:text-slate-300 leading-relaxed">
