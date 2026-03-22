@@ -8,6 +8,7 @@ import {
   listTransactions,
   listPortfolios,
   insertAiLog,
+  logEmailSend,
 } from "@/lib/db";
 import { getGlobalOpenAIApiKey } from "@/lib/db/settings";
 import { sendEmail, getFromAddress } from "@/lib/email";
@@ -313,13 +314,23 @@ Week: ${weekStart} to ${weekEnd}`;
       incrementGlobalAiTokens(tokensUsed).catch(() => {});
 
       const baseUrl = process.env.APP_BASE_URL || "https://trefolio.com";
+      const digestSubject = `🍀 Your Weekly Portfolio Digest — ${weekStart} to ${weekEnd}`;
       const html = buildWeeklyDigestEmail(user.displayName, summaryText, stats, baseUrl, weekStart, weekEnd);
-      await sendEmail({
+      const emailResult = await sendEmail({
         to: user.email,
-        subject: `🍀 Your Weekly Portfolio Digest — ${weekStart} to ${weekEnd}`,
+        subject: digestSubject,
         html,
         userId: user.id,
       });
+
+      logEmailSend({
+        resendId: emailResult.messageId,
+        userId: user.id,
+        emailTo: user.email,
+        subject: digestSubject,
+        bodyHtml: html,
+        status: emailResult.success ? "sent" : "failed",
+      }).catch(() => {});
 
       sent++;
     } catch (err) {

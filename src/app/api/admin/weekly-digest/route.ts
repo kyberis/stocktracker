@@ -10,6 +10,7 @@ import {
   hasDigestForWeek,
   insertDigest,
   getDefaultPortfolio,
+  logEmailSend,
 } from "@/lib/db";
 import { getGlobalOpenAIApiKey } from "@/lib/db/settings";
 import { sendEmail } from "@/lib/email";
@@ -331,14 +332,24 @@ Week: ${weekStart} to ${weekEnd}`;
   if (sendEmail_ && user.email) {
     try {
       const baseUrl = process.env.APP_BASE_URL || "https://trefolio.com";
+      const digestSubject = `🍀 Your Weekly Portfolio Digest — ${weekStart} to ${weekEnd}`;
       const html = buildWeeklyDigestEmail(user.display_name || user.username, summaryText, stats, baseUrl, weekStart, weekEnd);
-      await sendEmail({
+      const emailResult = await sendEmail({
         to: user.email,
-        subject: `🍀 Your Weekly Portfolio Digest — ${weekStart} to ${weekEnd}`,
+        subject: digestSubject,
         html,
         userId,
       });
       emailSent = true;
+
+      logEmailSend({
+        resendId: emailResult.messageId,
+        userId,
+        emailTo: user.email,
+        subject: digestSubject,
+        bodyHtml: html,
+        status: emailResult.success ? "sent" : "failed",
+      }).catch(() => {});
     } catch (e) {
       console.error("[admin/weekly-digest] email send failed:", e);
     }
