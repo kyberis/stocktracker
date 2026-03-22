@@ -430,19 +430,19 @@ function HeroDashboardMock() {
       <div className="relative rounded-2xl overflow-hidden border border-slate-200 shadow-xl shadow-slate-900/[0.06] bg-slate-900 p-4 sm:p-6 transition-transform duration-500 hover:[transform:rotateY(0)_rotateX(0)] lg:[transform:perspective(1000px)_rotateY(-2deg)_rotateX(0.5deg)]">
         {/* Top bar */}
         <div className="flex items-center justify-between mb-4">
-          <div className="flex gap-2">
+          <div className="flex gap-1.5 sm:gap-2 overflow-hidden">
             {["Portfolio", "Dividends", "Performance", "Events"].map((tab, i) => (
-              <span key={tab} className={`text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${i === 0 ? "bg-emerald-500/15 text-emerald-400" : "text-slate-500 hover:text-slate-300"}`}>
+              <span key={tab} className={`text-[10px] sm:text-xs font-medium px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg transition-colors whitespace-nowrap ${i === 0 ? "bg-emerald-500/15 text-emerald-400" : "text-slate-500 hover:text-slate-300"} ${i === 3 ? "hidden sm:inline" : ""}`}>
                 {tab}
               </span>
             ))}
           </div>
-          <div className="flex gap-2">
-            <div className="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center text-slate-500">
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
+          <div className="flex gap-1.5 sm:gap-2 shrink-0">
+            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-white/5 flex items-center justify-center text-slate-500">
+              <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
             </div>
-            <div className="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center text-slate-500">
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx="11" cy="11" r="8" /><path strokeLinecap="round" d="M21 21l-4.35-4.35" /></svg>
+            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-white/5 flex items-center justify-center text-slate-500">
+              <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx="11" cy="11" r="8" /><path strokeLinecap="round" d="M21 21l-4.35-4.35" /></svg>
             </div>
           </div>
         </div>
@@ -606,7 +606,7 @@ function HeroSection() {
           </div>
 
           {/* Dashboard side */}
-          <div className="relative mt-4 lg:mt-0">
+          <div className="relative mt-4 lg:mt-0 min-w-0">
             <HeroDashboardMock />
           </div>
         </div>
@@ -707,7 +707,7 @@ function FeaturesSection() {
                 </div>
 
                 {/* Screenshot side */}
-                <div className={`relative ${reversed ? "lg:order-1" : ""}`}>
+                <div className={`relative min-w-0 ${reversed ? "lg:order-1" : ""}`}>
                   <div className="absolute -inset-3 bg-emerald-500/[0.04] rounded-2xl blur-xl" />
                   <div className="relative rounded-xl overflow-hidden border border-slate-200 shadow-lg bg-slate-900">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1236,9 +1236,9 @@ function DeviceSection() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           {/* Image side */}
-          <div className="relative flex justify-center">
+          <div className="relative flex justify-center min-w-0">
             <div className="absolute -inset-8 bg-emerald-500/[0.04] rounded-3xl blur-3xl" />
-            <div className="relative">
+            <div className="relative max-w-full">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/screenshots/device-t4s3.png"
@@ -2100,7 +2100,7 @@ export default function LandingPage() {
   return (
     <LandingI18nProvider>
     <NativeRedirect />
-    <div className="min-h-screen bg-[#faf9f7] text-slate-800">
+    <div className="min-h-screen bg-[#faf9f7] text-slate-800 overflow-x-hidden">
       <NavBar />
       <main id="main-content">
       <HeroSection />
