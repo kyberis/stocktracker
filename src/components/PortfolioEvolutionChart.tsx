@@ -413,6 +413,8 @@ export default function PortfolioEvolutionChart({ embedded, compact, benchmarks,
   const fetchHistoryRef = useRef<(r: EvolutionRange) => void>(() => {});
   /** Timer for 1D poll when waiting for the first snapshot to appear. */
   const dailyPollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dailyPollCountRef = useRef(0);
+  const MAX_DAILY_POLLS = 6;
   const [collectingDaily, setCollectingDaily] = useState(false);
 
   // Benchmark overlay data
@@ -443,7 +445,8 @@ export default function PortfolioEvolutionChart({ embedded, compact, benchmarks,
           setEvents(Array.isArray(data.events) ? data.events : []);
           setLoading(false);
           // 1D: poll after a short delay when < 2 points (waiting for snapshot sync).
-          if (r === "1d" && pts.length < 2) {
+          if (r === "1d" && pts.length < 2 && dailyPollCountRef.current < MAX_DAILY_POLLS) {
+            dailyPollCountRef.current++;
             setCollectingDaily(true);
             if (dailyPollRef.current) clearTimeout(dailyPollRef.current);
             dailyPollRef.current = setTimeout(() => fetchHistoryRef.current(r), 20_000);
@@ -528,6 +531,7 @@ export default function PortfolioEvolutionChart({ embedded, compact, benchmarks,
 
   useEffect(() => {
     if (dailyPollRef.current) clearTimeout(dailyPollRef.current);
+    dailyPollCountRef.current = 0;
     if (range !== "1d") setCollectingDaily(false);
     if (!isPaid && !FREE_RANGES.has(range)) {
       setRange("1m");
