@@ -514,6 +514,18 @@ export async function setGaMeasurementId(id: string): Promise<void> {
   await setPlatformSetting(GA_SETTING_KEY, id.trim());
 }
 
+const GOOGLE_ADS_SETTING_KEY = "google_ads_id";
+
+export async function getGoogleAdsId(): Promise<string> {
+  const dbVal = await getPlatformSetting(GOOGLE_ADS_SETTING_KEY);
+  if (dbVal) return dbVal;
+  return process.env.NEXT_PUBLIC_GOOGLE_ADS_ID || "";
+}
+
+export async function setGoogleAdsId(id: string): Promise<void> {
+  await setPlatformSetting(GOOGLE_ADS_SETTING_KEY, id.trim());
+}
+
 /* ─── UTM Taxonomy Config ─── */
 
 export interface UtmTaxonomyConfig {

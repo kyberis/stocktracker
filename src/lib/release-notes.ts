@@ -37,6 +37,13 @@ export const releaseNotes: ReleaseEntry[] = [
         },
       },
       {
+        type: "improvement",
+        text: "Google Ads conversion tracking — configure a Google Ads ID (AW-XXXXXXXXXX) alongside Google Analytics from the admin panel.",
+        translations: {
+          es: "Seguimiento de conversiones de Google Ads — configura un ID de Google Ads (AW-XXXXXXXXXX) junto con Google Analytics desde el panel de administración.",
+        },
+      },
+      {
         type: "feature",
         text: "Industry Screener (Pro) — find stocks by industry within the rebalancing flow, pre-filtered by underweight sectors.",
         translations: {

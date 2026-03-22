@@ -16,12 +16,12 @@ export default function ShareBar({ title, slug, lang }: { title: string; slug: s
 
   return (
     <div className="flex items-center gap-1.5 ml-auto">
-      <span className="text-xs text-gray-600 mr-1">Share</span>
+      <span className="text-xs text-slate-400 mr-1">Share</span>
       <a
         href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`}
         target="_blank"
         rel="noopener noreferrer"
-        className="p-1.5 rounded-md hover:bg-gray-800 text-gray-500 hover:text-gray-300 transition-colors"
+        className="p-1.5 rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
         aria-label="Share on LinkedIn"
       >
         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -32,7 +32,7 @@ export default function ShareBar({ title, slug, lang }: { title: string; slug: s
         href={`https://x.com/intent/tweet?text=${text}&url=${encodedUrl}`}
         target="_blank"
         rel="noopener noreferrer"
-        className="p-1.5 rounded-md hover:bg-gray-800 text-gray-500 hover:text-gray-300 transition-colors"
+        className="p-1.5 rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
         aria-label="Share on X"
       >
         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -41,11 +41,11 @@ export default function ShareBar({ title, slug, lang }: { title: string; slug: s
       </a>
       <button
         onClick={copyLink}
-        className="p-1.5 rounded-md hover:bg-gray-800 text-gray-500 hover:text-gray-300 transition-colors"
+        className="p-1.5 rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
         aria-label="Copy link"
       >
         {copied ? (
-          <svg className="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
           </svg>
         ) : (

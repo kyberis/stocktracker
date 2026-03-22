@@ -60,17 +60,31 @@ function AiInsightStrip({ text, cta, isPro, onClick }: { text: React.ReactNode; 
 export default function RebalancingView() {
   const { t, language } = useI18n();
   const { user } = useAuth();
-  const { holdings, quotes, exchangeRates, activePortfolioCurrency } = usePortfolio();
+  const { holdings, quotes, exchangeRates, activePortfolioCurrency, refreshHoldings } = usePortfolio();
   const baseCurrency = activePortfolioCurrency;
   const isAdmin = user?.role === "admin";
   const isPro = user?.plan === "pro" || user?.plan === "starter" || isAdmin;
 
   const [targets, setTargets] = useState<RebalanceTarget[]>([]);
   const [category, setCategory] = useState<Category>("sector");
+  const [enriching, setEnriching] = useState(false);
+  const enrichAttempted = useRef(false);
 
   useEffect(() => {
     fetch("/api/rebalance-targets").then((r) => r.ok ? r.json() : []).then(setTargets);
   }, []);
+
+  useEffect(() => {
+    if (enrichAttempted.current || holdings.length === 0) return;
+    const unclassified = holdings.filter((h) => !h.sector && !h.region && !h.assetClass);
+    if (unclassified.length === 0) return;
+    enrichAttempted.current = true;
+    setEnriching(true);
+    fetch("/api/holdings/autofill-classification", { method: "POST" })
+      .then(() => refreshHoldings())
+      .catch(() => {})
+      .finally(() => setEnriching(false));
+  }, [holdings, refreshHoldings]);
 
   const allocations = useMemo((): BucketAlloc[] => {
     const buckets: Record<string, number> = {};
@@ -83,9 +97,16 @@ export default function RebalancingView() {
         valueEUR = convertToEUR(h.shares * q.regularMarketPrice, qc, exchangeRates);
       }
       total += valueEUR;
-      const label = category === "exchange"
-        ? (h.exchange || t("unclassified"))
-        : ((h[category as keyof typeof h] as string) || t("unclassified"));
+      let label: string;
+      if (category === "exchange") {
+        label = h.exchange || t("unclassified");
+      } else {
+        label = (h[category as keyof typeof h] as string) || "";
+        if (!label && category === "sector" && h.assetClass && h.assetClass !== "stock") {
+          label = h.assetClass.toUpperCase() === "ETF" ? t("etfFundLabel") : h.assetClass;
+        }
+        if (!label) label = t("unclassified");
+      }
       buckets[label] = (buckets[label] || 0) + valueEUR;
     });
     return Object.entries(buckets)
@@ -156,6 +177,8 @@ export default function RebalancingView() {
         onSaveTarget={handleSaveTarget}
         baseCurrency={baseCurrency}
         isPro={isPro}
+        language={language}
+        enriching={enriching}
       />
       <ExposureAnalysis drifts={drifts} isPro={isPro} />
       <RebalancingActions
@@ -185,7 +208,7 @@ export default function RebalancingView() {
 /* ═══════════════════════════════════════════════════════════ */
 
 function AllocationOverview({
-  allocations, drifts, totalValue, category, onCategoryChange, onSaveTarget, baseCurrency, isPro,
+  allocations, drifts, totalValue, category, onCategoryChange, onSaveTarget, baseCurrency, isPro, language, enriching,
 }: {
   allocations: BucketAlloc[];
   drifts: (RebalanceDrift & { color: string })[];
@@ -195,6 +218,8 @@ function AllocationOverview({
   onSaveTarget: (label: string, percent: number) => void;
   baseCurrency: string;
   isPro: boolean;
+  language: string;
+  enriching: boolean;
 }) {
   const { t } = useI18n();
   const categories: { key: Category; label: string }[] = [
@@ -207,22 +232,126 @@ function AllocationOverview({
   const totalTarget = drifts.reduce((s, d) => s + d.targetPercent, 0);
   const biggestOver = drifts.filter((d) => d.driftPercent > 2).sort((a, b) => b.driftPercent - a.driftPercent)[0];
 
+  const [suggestedTargets, setSuggestedTargets] = useState<Record<string, number> | null>(null);
+  const [suggestLoading, setSuggestLoading] = useState(false);
+  const [suggestRationale, setSuggestRationale] = useState("");
+  const suggestAbortRef = useRef<AbortController | null>(null);
+
+  const handleSuggestTargets = useCallback(async () => {
+    if (!isPro || drifts.length === 0) return;
+    suggestAbortRef.current?.abort();
+    const controller = new AbortController();
+    suggestAbortRef.current = controller;
+    setSuggestLoading(true);
+    setSuggestedTargets(null);
+    setSuggestRationale("");
+
+    const allocationData = {
+      totalValueEUR: totalValue,
+      category,
+      buckets: drifts.map((d) => ({
+        label: d.label,
+        actualPercent: d.actualPercent,
+        currentTarget: d.targetPercent,
+        valueEUR: d.valueEUR,
+      })),
+    };
+
+    try {
+      const res = await fetch("/api/ai-analysis", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          analysisType: "rebalancing_suggest_targets",
+          allocationData,
+          language,
+        }),
+        signal: controller.signal,
+      });
+      if (!res.ok || !res.body) {
+        setSuggestRationale(t("aiSuggestError"));
+        return;
+      }
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let text = "";
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        text += decoder.decode(value, { stream: true });
+        setSuggestRationale(text);
+      }
+      const jsonMatch = text.match(/```json\s*([\s\S]*?)```/);
+      if (jsonMatch) {
+        try {
+          const parsed = JSON.parse(jsonMatch[1].trim());
+          if (typeof parsed === "object" && parsed !== null) {
+            const targets: Record<string, number> = {};
+            for (const [key, val] of Object.entries(parsed)) {
+              if (typeof val === "number") targets[key] = val;
+            }
+            if (Object.keys(targets).length > 0) setSuggestedTargets(targets);
+          }
+        } catch { /* ignore parse errors */ }
+      }
+      const clean = text
+        .replace(/```json\s*[\s\S]*?```/g, "")
+        .replace(/\[TOKENS:\d+\]/g, "")
+        .trim();
+      setSuggestRationale(clean);
+    } catch (err) {
+      if ((err as Error).name !== "AbortError") setSuggestRationale(t("aiSuggestError"));
+    } finally {
+      setSuggestLoading(false);
+    }
+  }, [isPro, drifts, totalValue, category, language, t]);
+
+  const handleApplyAll = () => {
+    if (!suggestedTargets) return;
+    for (const [label, pct] of Object.entries(suggestedTargets)) {
+      onSaveTarget(label, pct);
+    }
+    setSuggestedTargets(null);
+    setSuggestRationale("");
+  };
+
+  const handleDismissSuggestions = () => {
+    setSuggestedTargets(null);
+    setSuggestRationale("");
+  };
+
   return (
     <div className="card">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <div className="flex items-center">
-            <SectionBadge n={1} />
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{t("allocationOverview")}</h3>
+      <div className="flex flex-col gap-3 mb-4">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <div className="flex items-center">
+              <SectionBadge n={1} />
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{t("allocationOverview")}</h3>
+            </div>
+            <p className="text-[10px] text-gray-500 dark:text-slate-400 mt-0.5 ml-7">{t("allocationOverviewDesc")}</p>
           </div>
-          <p className="text-[10px] text-gray-500 dark:text-slate-400 mt-0.5 ml-7">{t("allocationOverviewDesc")}</p>
+          {isPro && (
+            <button
+              onClick={handleSuggestTargets}
+              disabled={suggestLoading}
+              className="inline-flex items-center gap-1.5 text-[10px] font-semibold px-2.5 py-1 rounded-lg bg-gradient-to-r from-violet-500 to-purple-600 text-white hover:from-violet-600 hover:to-purple-700 disabled:opacity-60 transition-all shadow-sm flex-shrink-0"
+            >
+              {suggestLoading ? (
+                <svg className="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+              ) : (
+                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d={SPARKLE_PATH} /></svg>
+              )}
+              <span className="hidden sm:inline">{suggestLoading ? t("aiSuggestLoading") : t("aiSuggestTargets")}</span>
+            </button>
+          )}
         </div>
-        <div className="flex gap-1">
+        <div className="flex flex-wrap gap-1 ml-7 sm:ml-0 sm:justify-end">
           {categories.map((c) => (
             <button
               key={c.key}
               onClick={() => onCategoryChange(c.key)}
-              className={`text-[10px] font-medium px-2 py-1 rounded-lg transition-colors ${
+              className={`text-[10px] font-medium px-2.5 py-1.5 rounded-lg transition-colors ${
                 category === c.key ? "bg-emerald-500 text-white" : "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300"
               }`}
             >
@@ -232,29 +361,82 @@ function AllocationOverview({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-5">
+      {enriching && (
+        <div className="mb-4 flex items-center gap-2 px-3 py-2 rounded-lg bg-sky-50 dark:bg-sky-500/[0.06] border border-sky-200/60 dark:border-sky-500/20 text-[11px] text-sky-700 dark:text-sky-400">
+          <svg className="w-3.5 h-3.5 animate-spin flex-shrink-0" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+          {t("enrichingClassifications")}
+        </div>
+      )}
+
+      {suggestRationale && (
+        <div className="mb-4 p-3 rounded-lg bg-violet-50/60 dark:bg-violet-500/[0.06] border border-violet-200/60 dark:border-violet-500/20">
+          <div className="flex items-start gap-2 mb-2">
+            <svg className="w-4 h-4 text-violet-500 mt-0.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d={SPARKLE_PATH} /></svg>
+            <div className="flex-1 text-xs text-gray-700 dark:text-slate-300 leading-relaxed whitespace-pre-line">
+              <AiMarkdown text={suggestRationale} compact />
+            </div>
+          </div>
+          {suggestedTargets && (
+            <div className="flex items-center justify-end gap-2 mt-3 pt-2 border-t border-violet-200/40 dark:border-violet-500/15">
+              <button
+                onClick={handleDismissSuggestions}
+                className="text-[10px] font-medium px-3 py-1 rounded-md text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+              >
+                {t("dismiss")}
+              </button>
+              <button
+                onClick={handleApplyAll}
+                className="inline-flex items-center gap-1 text-[10px] font-semibold px-3 py-1 rounded-md bg-violet-500 text-white hover:bg-violet-600 transition-colors"
+              >
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                {t("applyAllSuggestions")}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-4">
         <div className="flex justify-center">
           <DonutChart allocations={allocations} totalValue={totalValue} baseCurrency={baseCurrency} />
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs">
+        <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+          <table className="w-full text-xs min-w-[480px]">
             <thead className="text-gray-500 dark:text-slate-400">
               <tr>
                 <th className="text-left p-2 font-medium">{t("bucket")}</th>
                 <th className="text-right p-2 font-medium">{t("currentPercent")}</th>
                 <th className="text-right p-2 font-medium">{t("value")}</th>
-                <th className="text-right p-2 font-medium">{t("targetAllocation")}</th>
+                <th className="text-right p-2 font-medium">
+                  <span className="inline-flex items-center gap-1">
+                    {t("targetAllocation")}
+                    <svg className="w-3 h-3 text-gray-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+                    </svg>
+                  </span>
+                </th>
                 <th className="text-right p-2 font-medium">{t("drift")}</th>
               </tr>
             </thead>
             <tbody>
               {drifts.map((d) => (
-                <DriftRow key={d.label} drift={d} baseCurrency={baseCurrency} onSaveTarget={onSaveTarget} />
+                <DriftRow
+                  key={d.label}
+                  drift={d}
+                  baseCurrency={baseCurrency}
+                  onSaveTarget={onSaveTarget}
+                  suggestedTarget={suggestedTargets?.[d.label] ?? null}
+                />
               ))}
             </tbody>
           </table>
-          <div className="text-xs text-gray-500 dark:text-slate-400 mt-2 px-2">
-            {t("totalTarget")}: <span className={`font-medium ${Math.abs(totalTarget - 100) < 0.1 ? "text-emerald-500" : "text-amber-500"}`}>{totalTarget.toFixed(1)}%</span>
+          <div className="flex items-center justify-between mt-2 px-2">
+            <div className="text-xs text-gray-500 dark:text-slate-400">
+              {t("totalTarget")}: <span className={`font-medium ${Math.abs(totalTarget - 100) < 0.1 ? "text-emerald-500" : "text-amber-500"}`}>{totalTarget.toFixed(1)}%</span>
+            </div>
+            <div className="text-[9px] text-gray-400 dark:text-slate-500 italic">
+              {t("clickTargetToEdit")}
+            </div>
           </div>
         </div>
       </div>
@@ -262,19 +444,21 @@ function AllocationOverview({
       {biggestOver && (
         <AiInsightStrip
           isPro={isPro}
-          text={<><strong className="text-gray-900 dark:text-white">{biggestOver.label} {t("overexposed").toLowerCase()} at {biggestOver.actualPercent.toFixed(1)}%</strong> — {t("drift")} of +{biggestOver.driftPercent.toFixed(1)}% from your {biggestOver.targetPercent.toFixed(1)}% target. This single-bucket concentration creates meaningful downside risk.</>}
-          cta="Ask AI"
+          text={<><strong className="text-gray-900 dark:text-white">{t("overexposedAtPct").replace("{label}", biggestOver.label).replace("{pct}", biggestOver.actualPercent.toFixed(1))}</strong> — {t("driftFromTarget").replace("{drift}", biggestOver.driftPercent.toFixed(1)).replace("{target}", biggestOver.targetPercent.toFixed(1))}</>}
+          cta={t("askAi")}
         />
       )}
     </div>
   );
 }
 
-function DriftRow({ drift: d, baseCurrency, onSaveTarget }: {
+function DriftRow({ drift: d, baseCurrency, onSaveTarget, suggestedTarget }: {
   drift: RebalanceDrift & { color: string };
   baseCurrency: string;
   onSaveTarget: (label: string, percent: number) => void;
+  suggestedTarget?: number | null;
 }) {
+  const { t } = useI18n();
   const [editing, setEditing] = useState(false);
   const [val, setVal] = useState(d.targetPercent.toFixed(1));
   const driftColor = Math.abs(d.driftPercent) < 2
@@ -283,15 +467,17 @@ function DriftRow({ drift: d, baseCurrency, onSaveTarget }: {
       ? "text-red-500 dark:text-red-400"
       : "text-emerald-600 dark:text-emerald-400";
 
+  const hasSuggestion = suggestedTarget != null && Math.abs(suggestedTarget - d.targetPercent) > 0.05;
+
   return (
-    <tr className="border-t border-gray-100 dark:border-slate-700">
+    <tr className="border-t border-gray-100 dark:border-slate-700 group">
       <td className="p-2 font-medium text-gray-900 dark:text-white">
         <span className="inline-block w-2.5 h-2.5 rounded-sm mr-2 align-middle" style={{ background: d.color }} />
         {d.label}
         {d.actualPercent > 30 && (
           <span className="ml-1.5 inline-flex items-center gap-0.5 text-[9px] font-semibold uppercase tracking-wide text-red-500 bg-red-500/10 px-1.5 py-0.5 rounded">
             <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M12 9v4M12 17h.01" /><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /></svg>
-            Overexposed
+            {t("overexposed")}
           </span>
         )}
       </td>
@@ -308,12 +494,26 @@ function DriftRow({ drift: d, baseCurrency, onSaveTarget }: {
             onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
           />
         ) : (
-          <button
-            onClick={() => { setVal(d.targetPercent.toFixed(1)); setEditing(true); }}
-            className="font-mono text-gray-700 dark:text-slate-300 hover:text-emerald-500 transition-colors"
-          >
-            {d.targetPercent.toFixed(1)}%
-          </button>
+          <div className="flex items-center justify-end gap-1">
+            {hasSuggestion && (
+              <button
+                onClick={() => onSaveTarget(d.label, suggestedTarget!)}
+                title={`${t("applySuggestion")}: ${suggestedTarget!.toFixed(1)}%`}
+                className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-violet-100 dark:bg-violet-500/15 text-violet-600 dark:text-violet-400 border border-violet-200 dark:border-violet-500/25 hover:bg-violet-200 dark:hover:bg-violet-500/25 transition-colors whitespace-nowrap"
+              >
+                {suggestedTarget!.toFixed(1)}%
+              </button>
+            )}
+            <button
+              onClick={() => { setVal(d.targetPercent.toFixed(1)); setEditing(true); }}
+              className="inline-flex items-center gap-1 font-mono text-gray-700 dark:text-slate-300 px-1.5 py-0.5 rounded border border-dashed border-gray-300 dark:border-slate-600 hover:border-emerald-400 dark:hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+            >
+              {d.targetPercent.toFixed(1)}%
+              <svg className="w-2.5 h-2.5 opacity-0 group-hover:opacity-60 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+              </svg>
+            </button>
+          </div>
         )}
       </td>
       <td className={`p-2 text-right font-mono font-medium ${driftColor}`}>
@@ -332,6 +532,7 @@ function DonutChart({ allocations, totalValue, baseCurrency }: {
   totalValue: number;
   baseCurrency: string;
 }) {
+  const { t } = useI18n();
   const cx = 90, cy = 90, r = 72, r2 = 50;
   let cumAngle = -90;
 
@@ -358,7 +559,7 @@ function DonutChart({ allocations, totalValue, baseCurrency }: {
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className="text-lg font-bold text-gray-900 dark:text-white">{formatCurrency(totalValue, baseCurrency)}</span>
-        <span className="text-[10px] text-gray-500 dark:text-slate-400">Total</span>
+        <span className="text-[10px] text-gray-500 dark:text-slate-400">{t("total")}</span>
       </div>
     </div>
   );
@@ -376,7 +577,7 @@ function ExposureAnalysis({ drifts, isPro }: { drifts: (RebalanceDrift & { color
 
   return (
     <div className="card">
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
         <div>
           <div className="flex items-center">
             <SectionBadge n={2} />
@@ -384,7 +585,7 @@ function ExposureAnalysis({ drifts, isPro }: { drifts: (RebalanceDrift & { color
           </div>
           <p className="text-[10px] text-gray-500 dark:text-slate-400 mt-0.5 ml-7">{t("exposureAnalysisDesc")}</p>
         </div>
-        <div className="flex items-center gap-3 text-[10px] text-gray-500 dark:text-slate-400">
+        <div className="flex items-center gap-3 text-[10px] text-gray-500 dark:text-slate-400 ml-7 sm:ml-0">
           <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-emerald-500" /> {t("withinTarget")}</span>
           <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-amber-500" /> {t("drifting")}</span>
           <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-red-500" /> {t("overexposed")}</span>
@@ -392,20 +593,20 @@ function ExposureAnalysis({ drifts, isPro }: { drifts: (RebalanceDrift & { color
       </div>
 
       {/* Treemap — wrapping tiles */}
-      <div className="flex flex-wrap gap-[3px] rounded-lg overflow-hidden mb-3">
+      <div className="flex flex-wrap gap-1 rounded-lg overflow-hidden mb-3">
         {drifts.map((d) => {
           const absDrift = Math.abs(d.driftPercent);
           const borderClass = absDrift > 5 ? "ring-2 ring-red-500/60" : absDrift > 2 ? "ring-2 ring-amber-500/50" : "";
-          const widthPct = Math.max(6, d.actualPercent);
+          const widthPct = Math.max(8, d.actualPercent);
           return (
             <div
               key={d.label}
-              className={`flex flex-col items-center justify-center py-3 px-2 text-white text-center rounded-md cursor-pointer hover:scale-[1.02] hover:shadow-lg transition-all ${borderClass}`}
-              style={{ flexBasis: `${widthPct}%`, flexGrow: d.actualPercent, background: d.color, opacity: 0.85, minHeight: 64 }}
+              className={`flex flex-col items-center justify-center py-2.5 sm:py-3 px-1.5 sm:px-2 text-white text-center rounded-md cursor-pointer hover:scale-[1.02] hover:shadow-lg transition-all ${borderClass}`}
+              style={{ flexBasis: `${widthPct}%`, flexGrow: d.actualPercent, background: d.color, opacity: 0.85, minHeight: 56 }}
               title={`${d.label}: ${d.actualPercent.toFixed(1)}%`}
             >
-              <span className="text-[10px] font-semibold leading-tight drop-shadow-sm truncate max-w-full">{d.label}</span>
-              <span className="text-[13px] font-bold drop-shadow-sm mt-0.5">{d.actualPercent.toFixed(1)}%</span>
+              <span className="text-[9px] sm:text-[10px] font-semibold leading-tight drop-shadow-sm truncate max-w-full">{d.label}</span>
+              <span className="text-[12px] sm:text-[13px] font-bold drop-shadow-sm mt-0.5">{d.actualPercent.toFixed(1)}%</span>
             </div>
           );
         })}
@@ -435,8 +636,8 @@ function ExposureAnalysis({ drifts, isPro }: { drifts: (RebalanceDrift & { color
 
       <AiInsightStrip
         isPro={isPro}
-        text={<>Your <strong className="text-gray-900 dark:text-white">top 3 {t("sector").toLowerCase()}s represent {top3pct.toFixed(1)}%</strong> of your portfolio. In a diversified portfolio, no single bucket should exceed 30%. Consider spreading risk across your underweight areas.</>}
-        cta="Deep dive"
+        text={t("top3SectorsInsight").replace("{category}", t("sector").toLowerCase()).replace("{pct}", top3pct.toFixed(1))}
+        cta={t("deepDive")}
       />
     </div>
   );
@@ -470,13 +671,26 @@ function RebalancingActions({ drifts, totalValue, baseCurrency, isPro, language,
 
   const overweight = drifts.filter((d) => d.driftPercent > 1).sort((a, b) => b.driftPercent - a.driftPercent);
   const underweight = drifts.filter((d) => d.driftPercent < -1).sort((a, b) => a.driftPercent - b.driftPercent);
+  const hasCustomTargets = underweight.length > 0 || overweight.length > 0;
 
   const amount = parseFloat(newCapital) || 0;
   const totalDeficit = underweight.reduce((s, d) => s + Math.abs(d.driftPercent), 0);
-  const distributions = underweight.map((d) => ({
-    ...d,
-    alloc: totalDeficit > 0 ? Math.round(amount * (Math.abs(d.driftPercent) / totalDeficit)) : 0,
-  }));
+
+  const distributions = useMemo(() => {
+    if (hasCustomTargets && underweight.length > 0) {
+      return underweight.map((d) => ({
+        ...d,
+        alloc: totalDeficit > 0 ? Math.round(amount * (Math.abs(d.driftPercent) / totalDeficit)) : 0,
+      }));
+    }
+    const totalPct = drifts.reduce((s, d) => s + d.targetPercent, 0);
+    return drifts
+      .filter((d) => d.actualPercent > 0)
+      .map((d) => ({
+        ...d,
+        alloc: totalPct > 0 ? Math.round(amount * (d.targetPercent / totalPct)) : 0,
+      }));
+  }, [hasCustomTargets, underweight, drifts, totalDeficit, amount]);
 
   const holdingsBySector = useMemo(() => {
     const map: Record<string, { ticker: string; valueEUR: number }[]> = {};
@@ -541,7 +755,7 @@ function RebalancingActions({ drifts, totalValue, baseCurrency, isPro, language,
         }),
         signal: controller.signal,
       });
-      if (!res.ok || !res.body) { setAiSummary("Unable to generate AI analysis."); return; }
+      if (!res.ok || !res.body) { setAiSummary(t("aiAnalysisError")); return; }
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let text = "";
@@ -551,16 +765,17 @@ function RebalancingActions({ drifts, totalValue, baseCurrency, isPro, language,
         text += decoder.decode(value, { stream: true });
         setAiSummary(text);
       }
+      setAiSummary(text.replace(/\[TOKENS:\d+\]/g, "").trim());
     } catch (err) {
-      if ((err as Error).name !== "AbortError") setAiSummary("AI analysis unavailable.");
+      if ((err as Error).name !== "AbortError") setAiSummary(t("aiUnavailable"));
     } finally {
       setAiLoading(false);
     }
-  }, [isPro, totalValue, drifts, mode, amount, distributions, moves, language]);
+  }, [isPro, totalValue, drifts, mode, amount, distributions, moves, language, t]);
 
   return (
     <div className="card">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
         <div>
           <div className="flex items-center">
             <SectionBadge n={3} />
@@ -568,11 +783,11 @@ function RebalancingActions({ drifts, totalValue, baseCurrency, isPro, language,
           </div>
           <p className="text-[10px] text-gray-500 dark:text-slate-400 mt-0.5 ml-7">{t("rebalancingActionsDesc")}</p>
         </div>
-        <div className="inline-flex bg-gray-100 dark:bg-slate-800 rounded-lg p-0.5 gap-0.5">
-          <button onClick={() => setMode("add")} className={`text-[10px] font-medium px-2.5 py-1 rounded-md transition-colors ${mode === "add" ? "bg-emerald-500 text-white" : "text-gray-500 dark:text-slate-400"}`}>
+        <div className="inline-flex bg-gray-100 dark:bg-slate-800 rounded-lg p-0.5 gap-0.5 ml-7 sm:ml-0 self-start sm:self-auto">
+          <button onClick={() => setMode("add")} className={`text-[10px] font-medium px-2.5 py-1.5 rounded-md transition-colors ${mode === "add" ? "bg-emerald-500 text-white" : "text-gray-500 dark:text-slate-400"}`}>
             {t("addMoney")}
           </button>
-          <button onClick={() => setMode("move")} className={`text-[10px] font-medium px-2.5 py-1 rounded-md transition-colors ${mode === "move" ? "bg-emerald-500 text-white" : "text-gray-500 dark:text-slate-400"}`}>
+          <button onClick={() => setMode("move")} className={`text-[10px] font-medium px-2.5 py-1.5 rounded-md transition-colors ${mode === "move" ? "bg-emerald-500 text-white" : "text-gray-500 dark:text-slate-400"}`}>
             {t("moveFunds")}
           </button>
         </div>
@@ -598,15 +813,21 @@ function RebalancingActions({ drifts, totalValue, baseCurrency, isPro, language,
             </button>
           </div>
 
-          {distributions.length > 0 && (
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
+          {amount > 0 && distributions.length > 0 && (
+            <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+              {!hasCustomTargets && (
+                <div className="flex items-center gap-2 mb-2 px-2 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-500/5 border border-amber-200 dark:border-amber-500/20 text-[10px] text-amber-700 dark:text-amber-400">
+                  <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M12 3a9 9 0 100 18 9 9 0 000-18z" /></svg>
+                  {t("noTargetsHint")}
+                </div>
+              )}
+              <table className="w-full text-xs min-w-[540px]">
                 <thead className="text-gray-500 dark:text-slate-400">
                   <tr>
                     <th className="text-left p-2 font-medium">{t("bucket")}</th>
-                    <th className="text-right p-2 font-medium">{t("underweight")}</th>
+                    <th className="text-right p-2 font-medium">{hasCustomTargets ? t("underweight") : t("currentPercent")}</th>
                     <th className="text-right p-2 font-medium">{t("allocate")}</th>
-                    <th className="text-left p-2 font-medium pl-4">Holdings to Buy</th>
+                    <th className="text-left p-2 font-medium pl-4">{t("holdingsToBuy")}</th>
                     <th className="text-right p-2 font-medium"></th>
                   </tr>
                 </thead>
@@ -614,20 +835,23 @@ function RebalancingActions({ drifts, totalValue, baseCurrency, isPro, language,
                   {distributions.map((d) => {
                     const sectorHoldings = holdingsBySector[d.label] || [];
                     const topHoldings = sectorHoldings.slice(0, 3);
+                    const sectorTotal = sectorHoldings.reduce((s, x) => s + x.valueEUR, 0);
                     return (
                       <tr key={d.label} className="border-t border-gray-100 dark:border-slate-700">
                         <td className="p-2 font-medium text-gray-900 dark:text-white">
                           <span className="inline-block w-2.5 h-2.5 rounded-sm mr-2 align-middle" style={{ background: d.color }} />
                           {d.label}
                         </td>
-                        <td className="p-2 text-right font-mono text-red-500">{d.driftPercent.toFixed(1)}%</td>
+                        <td className={`p-2 text-right font-mono ${hasCustomTargets ? "text-red-500" : "text-gray-500 dark:text-slate-400"}`}>
+                          {hasCustomTargets ? `${d.driftPercent.toFixed(1)}%` : `${d.actualPercent.toFixed(1)}%`}
+                        </td>
                         <td className="p-2 text-right font-mono font-medium text-emerald-600 dark:text-emerald-400">{formatCurrency(d.alloc, baseCurrency)}</td>
                         <td className="p-2 pl-4">
                           <div className="flex flex-wrap gap-1">
                             {topHoldings.length > 0 ? topHoldings.map((h) => (
                               <span key={h.ticker} className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-gray-100 dark:bg-slate-700/60 text-gray-600 dark:text-slate-300">
                                 <span className="font-semibold text-gray-900 dark:text-white">{h.ticker.split(".")[0]}</span>
-                                {formatCurrency(Math.round(d.alloc * (h.valueEUR / sectorHoldings.reduce((s, x) => s + x.valueEUR, 0))), baseCurrency)}
+                                {formatCurrency(sectorTotal > 0 ? Math.round(d.alloc * (h.valueEUR / sectorTotal)) : 0, baseCurrency)}
                               </span>
                             )) : (
                               <span className="text-[10px] text-gray-400 dark:text-slate-500">—</span>
@@ -636,7 +860,7 @@ function RebalancingActions({ drifts, totalValue, baseCurrency, isPro, language,
                         </td>
                         <td className="p-2 text-right">
                           <button className="text-[10px] font-medium px-2 py-0.5 rounded border border-emerald-500/40 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500 hover:text-white transition-colors whitespace-nowrap">
-                            Find stocks
+                            {t("findStocks")}
                           </button>
                         </td>
                       </tr>
@@ -648,12 +872,12 @@ function RebalancingActions({ drifts, totalValue, baseCurrency, isPro, language,
           )}
 
           {amount > 0 && distributions.length > 0 && (
-            <BeforeAfterBars drifts={drifts} distributions={distributions} totalValue={totalValue} amount={amount} />
+            <BeforeAfterBars drifts={drifts} distributions={distributions} totalValue={totalValue} amount={amount} baseCurrency={baseCurrency} />
           )}
         </>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-3 items-start mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] gap-3 items-start mb-4">
             <div className="p-3 rounded-lg bg-gray-50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700">
               <div className="text-[9px] font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400 mb-2">{t("sourceOverweight")}</div>
               <select className="w-full text-xs px-2 py-1.5 rounded-md border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-white" value={moveSource} onChange={(e) => setMoveSource(e.target.value)}>
@@ -662,7 +886,7 @@ function RebalancingActions({ drifts, totalValue, baseCurrency, isPro, language,
               </select>
               {moveSource && (
                 <div className="mt-2">
-                  <div className="text-[9px] text-gray-500 dark:text-slate-400 mb-1">Sell from:</div>
+                  <div className="text-[9px] text-gray-500 dark:text-slate-400 mb-1">{t("sellFrom")}:</div>
                   <div className="flex flex-wrap gap-1">
                     {(holdingsBySector[moveSource] || []).slice(0, 3).map((h) => (
                       <span key={h.ticker} className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-gray-100 dark:bg-slate-700/60 text-gray-600 dark:text-slate-300">
@@ -674,8 +898,8 @@ function RebalancingActions({ drifts, totalValue, baseCurrency, isPro, language,
                 </div>
               )}
             </div>
-            <div className="flex items-center justify-center pt-6 text-emerald-500">
-              <svg className="w-6 h-6 md:rotate-0 rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <div className="flex items-center justify-center py-1 sm:pt-6 text-emerald-500">
+              <svg className="w-6 h-6 sm:rotate-0 rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M12 5l7 7-7 7" />
               </svg>
             </div>
@@ -697,7 +921,7 @@ function RebalancingActions({ drifts, totalValue, baseCurrency, isPro, language,
               </div>
               {moveDest && (
                 <div className="mt-2">
-                  <div className="text-[9px] text-gray-500 dark:text-slate-400 mb-1">Buy into:</div>
+                  <div className="text-[9px] text-gray-500 dark:text-slate-400 mb-1">{t("buyInto")}:</div>
                   <div className="flex flex-wrap gap-1">
                     {(holdingsBySector[moveDest] || []).slice(0, 3).map((h) => (
                       <span key={h.ticker} className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-gray-100 dark:bg-slate-700/60 text-gray-600 dark:text-slate-300">
@@ -756,7 +980,7 @@ function RebalancingActions({ drifts, totalValue, baseCurrency, isPro, language,
           {aiLoading && !aiSummary && (
             <div className="flex items-center gap-2 text-violet-600 dark:text-violet-400 text-xs">
               <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-current" />
-              Analyzing...
+              {t("analyzing")}
             </div>
           )}
           {aiSummary && <AiMarkdown text={aiSummary} compact />}
@@ -766,11 +990,12 @@ function RebalancingActions({ drifts, totalValue, baseCurrency, isPro, language,
   );
 }
 
-function BeforeAfterBars({ drifts, distributions, totalValue, amount }: {
+function BeforeAfterBars({ drifts, distributions, totalValue, amount, baseCurrency }: {
   drifts: (RebalanceDrift & { color: string })[];
-  distributions: { label: string; alloc: number; driftPercent: number; color: string }[];
+  distributions: { label: string; alloc: number; driftPercent: number; color: string; actualPercent: number }[];
   totalValue: number;
   amount: number;
+  baseCurrency: string;
 }) {
   const { t } = useI18n();
   const newTotal = totalValue + amount;
@@ -851,19 +1076,19 @@ function RebalancingScreener({ isPro }: { isPro: boolean }) {
 
   const content = (
     <div>
-      <div className="flex items-center flex-wrap gap-2 mb-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
         <input
-          className="text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 w-48"
+          className="text-xs px-2.5 py-2 sm:py-1.5 rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 w-full"
           placeholder={t("searchPlaceholder")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <select className="text-xs px-2 py-1.5 rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-white" value={sector} onChange={(e) => { setSector(e.target.value); setIndustry(""); }}>
-          <option value="">{t("sector")}: All</option>
+        <select className="text-xs px-2 py-2 sm:py-1.5 rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-white w-full" value={sector} onChange={(e) => { setSector(e.target.value); setIndustry(""); }}>
+          <option value="">{t("sectorAll")}</option>
           {sectors.map((s) => <option key={s} value={s}>{s}</option>)}
         </select>
-        <select className="text-xs px-2 py-1.5 rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-white" value={industry} onChange={(e) => setIndustry(e.target.value)}>
-          <option value="">{t("industry")}: All</option>
+        <select className="text-xs px-2 py-2 sm:py-1.5 rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-white w-full" value={industry} onChange={(e) => setIndustry(e.target.value)}>
+          <option value="">{t("industryAll")}</option>
           {industries.map((i) => <option key={i} value={i}>{i}</option>)}
         </select>
       </div>
@@ -871,17 +1096,17 @@ function RebalancingScreener({ isPro }: { isPro: boolean }) {
       {loading ? (
         <div className="text-xs text-gray-500 dark:text-slate-400 py-6 text-center">{t("loading")}</div>
       ) : results.length > 0 ? (
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs">
+        <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+          <table className="w-full text-xs min-w-[640px]">
             <thead className="text-gray-500 dark:text-slate-400">
               <tr>
                 <th className="text-left p-2 font-medium">{t("ticker")}</th>
                 <th className="text-left p-2 font-medium">{t("name")}</th>
                 <th className="text-left p-2 font-medium">{t("industry")}</th>
                 <th className="text-right p-2 font-medium">{t("currentPrice")}</th>
-                <th className="text-right p-2 font-medium">Div Yield</th>
-                <th className="text-right p-2 font-medium">P/E</th>
-                <th className="text-right p-2 font-medium">Mkt Cap</th>
+                <th className="text-right p-2 font-medium">{t("divYield")}</th>
+                <th className="text-right p-2 font-medium">{t("peRatio")}</th>
+                <th className="text-right p-2 font-medium">{t("mktCap")}</th>
                 <th className="p-2"></th>
               </tr>
             </thead>
@@ -897,7 +1122,7 @@ function RebalancingScreener({ isPro }: { isPro: boolean }) {
                   <td className="p-2 text-right font-mono text-gray-500 dark:text-slate-400">{fmtMc(r.marketCap)}</td>
                   <td className="p-2 text-right">
                     <button className="text-[10px] font-medium px-2 py-0.5 rounded border border-emerald-500/40 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500 hover:text-white transition-colors whitespace-nowrap">
-                      Add to plan
+                      {t("addToPlan")}
                     </button>
                   </td>
                 </tr>
@@ -908,7 +1133,7 @@ function RebalancingScreener({ isPro }: { isPro: boolean }) {
       ) : sector ? (
         <div className="text-xs text-gray-500 dark:text-slate-400 py-6 text-center">{t("noResults")}</div>
       ) : (
-        <div className="text-xs text-gray-500 dark:text-slate-400 py-6 text-center">Select a sector to search stocks.</div>
+        <div className="text-xs text-gray-500 dark:text-slate-400 py-6 text-center">{t("selectSectorToSearch")}</div>
       )}
     </div>
   );
@@ -927,7 +1152,7 @@ function RebalancingScreener({ isPro }: { isPro: boolean }) {
       </div>
 
       {isPro ? content : (
-        <BlurredProSection blurb="Upgrade to Trefolio to search for stocks by industry and sector.">
+        <BlurredProSection blurb={t("upgradeScreenerBlurb")}>
           {content}
         </BlurredProSection>
       )}
@@ -980,7 +1205,7 @@ function AiRebalancingPanel({ drifts, totalValue, isPro, language, category }: {
         }),
         signal: controller.signal,
       });
-      if (!res.ok || !res.body) { setAiSummary("Unable to generate analysis."); return; }
+      if (!res.ok || !res.body) { setAiSummary(t("aiAnalysisError")); return; }
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let text = "";
@@ -990,12 +1215,13 @@ function AiRebalancingPanel({ drifts, totalValue, isPro, language, category }: {
         text += decoder.decode(value, { stream: true });
         setAiSummary(text);
       }
+      setAiSummary(text.replace(/\[TOKENS:\d+\]/g, "").trim());
     } catch (err) {
-      if ((err as Error).name !== "AbortError") setAiSummary("AI analysis unavailable.");
+      if ((err as Error).name !== "AbortError") setAiSummary(t("aiUnavailable"));
     } finally {
       setAiLoading(false);
     }
-  }, [isPro, category, totalValue, drifts, language]);
+  }, [isPro, category, totalValue, drifts, language, t]);
 
   const content = (
     <div>
@@ -1027,7 +1253,7 @@ function AiRebalancingPanel({ drifts, totalValue, isPro, language, category }: {
           {aiLoading && !aiSummary && (
             <div className="flex items-center gap-2 text-violet-600 dark:text-violet-400 text-xs">
               <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-current" />
-              Analyzing your portfolio...
+              {t("analyzingPortfolio")}
             </div>
           )}
           {aiSummary && <AiMarkdown text={aiSummary} compact />}
@@ -1039,7 +1265,7 @@ function AiRebalancingPanel({ drifts, totalValue, isPro, language, category }: {
   return (
     <div className="card border-violet-200 dark:border-violet-500/20 bg-violet-50/30 dark:bg-violet-500/5">
       {isPro ? content : (
-        <BlurredProSection blurb="Upgrade to Trefolio for AI-powered rebalancing suggestions and portfolio analysis.">
+        <BlurredProSection blurb={t("upgradeAiBlurb")}>
           {content}
         </BlurredProSection>
       )}

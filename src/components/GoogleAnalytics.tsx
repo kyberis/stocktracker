@@ -3,9 +3,9 @@
 import Script from "next/script";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
-import { getGaId, setGaId, CONSENT_KEY, pageview, consentUpdate } from "@/lib/gtag";
+import { getGaId, setGaId, getAdsId, setAdsId, CONSENT_KEY, pageview, consentUpdate } from "@/lib/gtag";
 
-export default function GoogleAnalytics({ gaId = "" }: { gaId?: string }) {
+export default function GoogleAnalytics({ gaId = "", googleAdsId = "" }: { gaId?: string; googleAdsId?: string }) {
   const pathname = usePathname();
   const prevPathname = useRef(pathname);
 
@@ -14,7 +14,11 @@ export default function GoogleAnalytics({ gaId = "" }: { gaId?: string }) {
   }, [gaId]);
 
   useEffect(() => {
-    if (!getGaId()) return;
+    if (googleAdsId) setAdsId(googleAdsId);
+  }, [googleAdsId]);
+
+  useEffect(() => {
+    if (!getGaId() && !getAdsId()) return;
     if (prevPathname.current !== pathname) {
       prevPathname.current = pathname;
       pageview(pathname);
@@ -22,7 +26,7 @@ export default function GoogleAnalytics({ gaId = "" }: { gaId?: string }) {
   }, [pathname]);
 
   useEffect(() => {
-    if (!getGaId()) return;
+    if (!getGaId() && !getAdsId()) return;
 
     if (localStorage.getItem(CONSENT_KEY) === "all") {
       consentUpdate(true);
@@ -45,9 +49,12 @@ export default function GoogleAnalytics({ gaId = "" }: { gaId?: string }) {
       window.removeEventListener("storage", onStorage);
       window.removeEventListener("trefolio-consent", onConsentChange);
     };
-  }, [gaId]);
+  }, [gaId, googleAdsId]);
 
-  if (!gaId) return null;
+  const hasAnyId = gaId || googleAdsId;
+  if (!hasAnyId) return null;
+
+  const adsConfigLine = googleAdsId ? `\n            gtag('config', '${googleAdsId}');` : "";
 
   return (
     <>
@@ -69,7 +76,7 @@ export default function GoogleAnalytics({ gaId = "" }: { gaId?: string }) {
       />
 
       <Script
-        src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
+        src={`https://www.googletagmanager.com/gtag/js?id=${gaId || googleAdsId}`}
         strategy="afterInteractive"
       />
 
@@ -80,11 +87,11 @@ export default function GoogleAnalytics({ gaId = "" }: { gaId?: string }) {
           __html: `
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
+            gtag('js', new Date());${gaId ? `
             gtag('config', '${gaId}', {
               page_path: window.location.pathname,
               send_page_view: true,
-            });
+            });` : ""}${adsConfigLine}
           `,
         }}
       />

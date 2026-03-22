@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, FormEvent } from "react";
 import Link from "next/link";
+import PublicNav from "@/components/PublicNav";
 import PublicFooter from "@/components/PublicFooter";
 
 export default function LeafWaitlistPage() {
@@ -120,33 +121,13 @@ export default function LeafWaitlistPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
-      {/* Nav */}
-      <nav className="sticky top-0 z-50 border-b border-slate-800/60 bg-slate-950/90 backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
-          <Link href="/" className="flex items-center gap-2">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/trefolio-icon-foil.svg" alt="trefolio" className="h-7 w-7" />
-            <span className="text-lg font-bold">trefolio</span>
-          </Link>
-          <div className="flex items-center gap-3">
-            <Link href="/login" className="text-sm text-slate-400 hover:text-white transition-colors">
-              Log in
-            </Link>
-            <Link
-              href="/signup"
-              className="text-sm font-medium bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-lg transition-colors"
-            >
-              Sign up
-            </Link>
-          </div>
-        </div>
-      </nav>
+    <div className="min-h-screen bg-[#faf9f7] text-slate-800">
+      <PublicNav />
 
       {/* Hero */}
       <section ref={heroRef} className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-violet-600/8 via-transparent to-transparent" />
-        <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-violet-500/10 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-violet-100/50 via-transparent to-transparent" />
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-violet-200/30 rounded-full blur-[120px] pointer-events-none" />
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-24 pb-16">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
@@ -154,22 +135,22 @@ export default function LeafWaitlistPage() {
             <div className="space-y-8">
               <div>
                 <div className="inline-flex items-center gap-2 mb-5">
-                  <span className="text-xs font-bold uppercase tracking-wider text-violet-400 bg-violet-500/10 px-3 py-1 rounded-full border border-violet-500/20">
+                  <span className="text-xs font-bold uppercase tracking-wider text-violet-700 bg-violet-100 px-3 py-1 rounded-full border border-violet-200">
                     Limited Edition
                   </span>
-                  <span className="text-xs font-bold uppercase tracking-wider text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
+                  <span className="text-xs font-bold uppercase tracking-wider text-amber-700 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">
                     Only 10 units
                   </span>
                 </div>
 
-                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.1] tracking-tight mb-5">
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.1] tracking-tight text-slate-900 mb-5">
                   Your portfolio,{" "}
-                  <span className="bg-gradient-to-r from-violet-400 via-emerald-400 to-teal-400 bg-clip-text text-transparent">
+                  <span className="bg-gradient-to-r from-violet-600 via-emerald-500 to-teal-500 bg-clip-text text-transparent">
                     always visible.
                   </span>
                 </h1>
 
-                <p className="text-lg sm:text-xl text-slate-400 leading-relaxed max-w-xl">
+                <p className="text-lg sm:text-xl text-slate-500 leading-relaxed max-w-xl">
                   trefolio Leaf is a premium AMOLED desk display that shows your investment
                   portfolio in real time. AI-powered insights, 4 beautiful themes, and updates
                   every 60 seconds.
@@ -178,26 +159,26 @@ export default function LeafWaitlistPage() {
 
               {/* Waitlist form */}
               {status === "sent" ? (
-                <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-6">
+                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-6">
                   <div className="flex items-center gap-3 mb-2">
-                    <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                      <svg className="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
+                      <svg className="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                       </svg>
                     </div>
-                    <h3 className="text-lg font-semibold text-emerald-300">You&apos;re on the list!</h3>
+                    <h3 className="text-lg font-semibold text-emerald-700">You&apos;re on the list!</h3>
                   </div>
-                  <p className="text-sm text-slate-400">
+                  <p className="text-sm text-slate-500">
                     We&apos;ll email you when the trefolio Leaf is ready to order.
                     {waitlistCount && waitlistCount > 1 && (
-                      <span className="text-slate-500"> You&apos;re #{waitlistCount} on the waitlist.</span>
+                      <span className="text-slate-400"> You&apos;re #{waitlistCount} on the waitlist.</span>
                     )}
                   </p>
                 </div>
               ) : status === "already" ? (
-                <div className="rounded-2xl border border-violet-500/30 bg-violet-500/10 p-6">
-                  <h3 className="text-lg font-semibold text-violet-300 mb-1">Already on the list!</h3>
-                  <p className="text-sm text-slate-400">
+                <div className="rounded-2xl border border-violet-200 bg-violet-50 p-6">
+                  <h3 className="text-lg font-semibold text-violet-700 mb-1">Already on the list!</h3>
+                  <p className="text-sm text-slate-500">
                     You&apos;re already signed up. We&apos;ll notify you when it&apos;s time to order.
                   </p>
                 </div>
@@ -209,7 +190,7 @@ export default function LeafWaitlistPage() {
                       value={email}
                       onChange={(e) => { setEmail(e.target.value); setErrorMsg(""); }}
                       placeholder="Enter your email"
-                      className="flex-1 min-w-0 px-5 py-3.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 text-sm"
+                      className="flex-1 min-w-0 px-5 py-3.5 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 text-sm"
                       required
                       disabled={status === "sending"}
                     />
@@ -226,9 +207,9 @@ export default function LeafWaitlistPage() {
                       )}
                     </button>
                   </div>
-                  {errorMsg && <p className="text-xs text-red-400">{errorMsg}</p>}
+                  {errorMsg && <p className="text-xs text-red-500">{errorMsg}</p>}
                   {waitlistCount !== null && waitlistCount > 0 && (
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-slate-400">
                       {waitlistCount} {waitlistCount === 1 ? "person" : "people"} already on the waitlist
                     </p>
                   )}
@@ -237,20 +218,20 @@ export default function LeafWaitlistPage() {
 
               {/* Price chips */}
               <div className="flex flex-wrap gap-3">
-                <div className="px-4 py-2 rounded-xl bg-slate-800/60 border border-slate-700/50">
+                <div className="px-4 py-2 rounded-xl bg-white border border-slate-200 shadow-sm">
                   <span className="text-xs text-slate-500 block">Device only</span>
-                  <span className="text-sm font-bold">99 EUR</span>
+                  <span className="text-sm font-bold text-slate-900">99 EUR</span>
                 </div>
-                <div className="px-4 py-2 rounded-xl bg-violet-500/10 border border-violet-500/25">
-                  <span className="text-xs text-violet-400 block">+ 1 Year Pro</span>
-                  <span className="text-sm font-bold text-violet-300">139 EUR</span>
+                <div className="px-4 py-2 rounded-xl bg-violet-50 border border-violet-200">
+                  <span className="text-xs text-violet-600 block">+ 1 Year Pro</span>
+                  <span className="text-sm font-bold text-violet-700">139 EUR</span>
                 </div>
               </div>
             </div>
 
             {/* Image side */}
             <div className="relative flex justify-center lg:justify-end">
-              <div className="absolute -inset-8 bg-gradient-to-br from-violet-500/15 via-emerald-500/10 to-cyan-500/15 rounded-3xl blur-3xl" />
+              <div className="absolute -inset-8 bg-gradient-to-br from-violet-200/40 via-emerald-200/30 to-cyan-200/30 rounded-3xl blur-3xl" />
               <div className="relative">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -265,16 +246,16 @@ export default function LeafWaitlistPage() {
       </section>
 
       {/* Features Grid */}
-      <section className="py-20 sm:py-28 border-t border-slate-800/50">
+      <section className="py-20 sm:py-28 border-t border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
               Everything you need,{" "}
-              <span className="bg-gradient-to-r from-violet-400 to-emerald-400 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-violet-600 to-emerald-500 bg-clip-text text-transparent">
                 nothing you don&apos;t.
               </span>
             </h2>
-            <p className="text-slate-400 text-lg max-w-2xl mx-auto">
+            <p className="text-slate-500 text-lg max-w-2xl mx-auto">
               No phone, no laptop, no distractions. Just a glance at your desk.
             </p>
           </div>
@@ -283,13 +264,13 @@ export default function LeafWaitlistPage() {
             {FEATURES.map((f) => (
               <div
                 key={f.title}
-                className="group p-6 rounded-2xl bg-slate-800/30 border border-slate-700/40 hover:border-violet-500/30 transition-all hover:bg-slate-800/50"
+                className="group p-6 rounded-2xl bg-white border border-slate-200 hover:border-violet-300 transition-all hover:shadow-md shadow-sm"
               >
-                <div className="w-11 h-11 rounded-xl bg-violet-500/10 text-violet-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <div className="w-11 h-11 rounded-xl bg-violet-100 text-violet-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   {f.icon}
                 </div>
-                <h3 className="text-sm font-semibold mb-1">{f.title}</h3>
-                <p className="text-xs text-slate-400 leading-relaxed">{f.desc}</p>
+                <h3 className="text-sm font-semibold text-slate-900 mb-1">{f.title}</h3>
+                <p className="text-xs text-slate-500 leading-relaxed">{f.desc}</p>
               </div>
             ))}
           </div>
@@ -297,14 +278,14 @@ export default function LeafWaitlistPage() {
       </section>
 
       {/* Specs */}
-      <section className="py-20 sm:py-28 border-t border-slate-800/50">
+      <section className="py-20 sm:py-28 border-t border-slate-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl sm:text-3xl font-bold text-center mb-10">Technical Specs</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 text-center mb-10">Technical Specs</h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {SPECS.map((s) => (
-              <div key={s.label} className="p-4 rounded-xl bg-slate-800/40 border border-slate-700/40 text-center">
-                <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">{s.label}</p>
-                <p className="text-sm font-semibold">{s.value}</p>
+              <div key={s.label} className="p-4 rounded-xl bg-white border border-slate-200 text-center shadow-sm">
+                <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">{s.label}</p>
+                <p className="text-sm font-semibold text-slate-900">{s.value}</p>
               </div>
             ))}
           </div>
@@ -312,48 +293,48 @@ export default function LeafWaitlistPage() {
       </section>
 
       {/* Comparison */}
-      <section className="py-20 sm:py-28 border-t border-slate-800/50">
+      <section className="py-20 sm:py-28 border-t border-slate-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl sm:text-3xl font-bold text-center mb-4">
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 text-center mb-4">
             Why not just check your phone?
           </h2>
-          <p className="text-slate-400 text-center mb-10 max-w-xl mx-auto">
+          <p className="text-slate-500 text-center mb-10 max-w-xl mx-auto">
             Because glancing at a display is the difference between checking a wall clock
             and pulling out your phone to see the time.
           </p>
 
           <div className="grid sm:grid-cols-2 gap-5">
-            <div className="p-6 rounded-2xl bg-rose-500/5 border border-rose-500/15">
-              <h3 className="text-sm font-bold text-rose-400 mb-3">Checking your phone</h3>
-              <ul className="space-y-2 text-sm text-slate-400">
+            <div className="p-6 rounded-2xl bg-rose-50 border border-rose-200">
+              <h3 className="text-sm font-bold text-rose-600 mb-3">Checking your phone</h3>
+              <ul className="space-y-2 text-sm text-slate-500">
                 <li className="flex items-start gap-2">
-                  <span className="text-rose-400 mt-0.5">✕</span> Unlock, open app, wait for load
+                  <span className="text-rose-500 mt-0.5">✕</span> Unlock, open app, wait for load
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-rose-400 mt-0.5">✕</span> Notifications pull you into other apps
+                  <span className="text-rose-500 mt-0.5">✕</span> Notifications pull you into other apps
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-rose-400 mt-0.5">✕</span> 50+ phone checks per day
+                  <span className="text-rose-500 mt-0.5">✕</span> 50+ phone checks per day
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-rose-400 mt-0.5">✕</span> Screen time guilt
+                  <span className="text-rose-500 mt-0.5">✕</span> Screen time guilt
                 </li>
               </ul>
             </div>
-            <div className="p-6 rounded-2xl bg-emerald-500/5 border border-emerald-500/15">
-              <h3 className="text-sm font-bold text-emerald-400 mb-3">Glancing at trefolio Leaf</h3>
-              <ul className="space-y-2 text-sm text-slate-400">
+            <div className="p-6 rounded-2xl bg-emerald-50 border border-emerald-200">
+              <h3 className="text-sm font-bold text-emerald-600 mb-3">Glancing at trefolio Leaf</h3>
+              <ul className="space-y-2 text-sm text-slate-500">
                 <li className="flex items-start gap-2">
-                  <span className="text-emerald-400 mt-0.5">✓</span> Always on, always visible
+                  <span className="text-emerald-600 mt-0.5">✓</span> Always on, always visible
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-emerald-400 mt-0.5">✓</span> Zero distractions — just your portfolio
+                  <span className="text-emerald-600 mt-0.5">✓</span> Zero distractions — just your portfolio
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-emerald-400 mt-0.5">✓</span> AI insights with one tap
+                  <span className="text-emerald-600 mt-0.5">✓</span> AI insights with one tap
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-emerald-400 mt-0.5">✓</span> Beautiful desk companion
+                  <span className="text-emerald-600 mt-0.5">✓</span> Beautiful desk companion
                 </li>
               </ul>
             </div>
@@ -362,18 +343,18 @@ export default function LeafWaitlistPage() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-20 sm:py-28 border-t border-slate-800/50">
+      <section className="py-20 sm:py-28 border-t border-slate-200">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
             Be first in line.
           </h2>
-          <p className="text-slate-400 mb-8 max-w-lg mx-auto">
+          <p className="text-slate-500 mb-8 max-w-lg mx-auto">
             Only 10 trefolio Leaf units will be made in the first batch.
             Join the waitlist to reserve yours.
           </p>
 
           {status === "sent" || status === "already" ? (
-            <div className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 font-medium">
+            <div className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 font-medium">
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
               </svg>
@@ -395,7 +376,7 @@ export default function LeafWaitlistPage() {
 
       {/* Disclaimer */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
-        <p className="text-xs text-slate-600 text-center leading-relaxed">
+        <p className="text-xs text-slate-400 text-center leading-relaxed">
           trefolio Leaf requires a trefolio Pro subscription (7.99 EUR/month or 59.99 EUR/year).
           The &ldquo;Leaf + 1 Year Pro&rdquo; bundle at 139 EUR includes 12 months of Pro.
           trefolio does not provide financial advice. Past performance does not guarantee future results.

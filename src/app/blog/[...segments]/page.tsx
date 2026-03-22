@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { getPostBySlug, getAllSlugs, getPostsByLang, getPostByLangAndSlug, getAllLocalizedSlugs } from "@/lib/blog";
 import { JsonLd } from "@/components/JsonLd";
+import PublicNav from "@/components/PublicNav";
 import PublicFooter from "@/components/PublicFooter";
 import ShareBar from "../share-bar";
 import "@/lib/blog-posts";
@@ -196,10 +197,10 @@ function EnglishPostView({ slug }: { slug: string }) {
   return (
     <>
       <JsonLd data={articleSchema} />
-      <div className="min-h-screen bg-gray-950 text-gray-100">
-        <BlogHeader blogHref="/blog" signUpLabel={ui.signUp} />
+      <div className="min-h-screen bg-[#faf9f7] text-slate-600">
+        <PublicNav />
         <main className="max-w-3xl mx-auto px-6 py-16">
-          <Link href="/blog" className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors mb-8 inline-block">
+          <Link href="/blog" className="text-sm text-emerald-600 hover:text-emerald-500 transition-colors mb-8 inline-block">
             &larr; {ui.allPosts}
           </Link>
           <PostArticle post={post} shareBarLang={undefined} />
@@ -230,27 +231,22 @@ function LangIndexView({ lang }: { lang: string }) {
   return (
     <>
       <JsonLd data={blogSchema} />
-      <div className="min-h-screen bg-gray-950 text-gray-100" lang={lang}>
-        <header className="border-b border-gray-800">
-          <div className="max-w-3xl mx-auto px-6 py-6 flex items-center justify-between">
-            <Link href="/" className="text-emerald-400 font-semibold text-lg hover:text-emerald-300 transition-colors">trefolio</Link>
-            <Link href="/signup" className="text-sm bg-emerald-500 hover:bg-emerald-400 text-white px-4 py-2 rounded-lg transition-colors font-medium">{ui.signUp}</Link>
-          </div>
-        </header>
+      <div className="min-h-screen bg-[#faf9f7] text-slate-600" lang={lang}>
+        <PublicNav />
         <main className="max-w-3xl mx-auto px-6 py-16">
-          <h1 className="text-4xl font-bold mb-3">{ui.title}</h1>
-          <p className="text-gray-400 mb-12 text-lg">{ui.subtitle}</p>
+          <h1 className="text-4xl font-bold text-slate-900 mb-3">{ui.title}</h1>
+          <p className="text-slate-500 mb-12 text-lg">{ui.subtitle}</p>
           {posts.length === 0 ? (
-            <p className="text-gray-500">No posts yet.</p>
+            <p className="text-slate-400">No posts yet.</p>
           ) : (
             <div className="space-y-10">
               {posts.map((post) => (
                 <article key={post.slug} className="group">
                   <Link href={`/blog/${lang}/${post.slug}`} className="block">
-                    <time className="text-sm text-gray-500">{post.date}</time>
-                    <h2 className="text-xl font-semibold mt-1 mb-2 group-hover:text-emerald-400 transition-colors">{post.title}</h2>
-                    <p className="text-gray-400 leading-relaxed">{post.description}</p>
-                    <span className="text-sm text-emerald-400 mt-2 inline-block">{post.readingTime}</span>
+                    <time className="text-sm text-slate-400">{post.date}</time>
+                    <h2 className="text-xl font-semibold text-slate-900 mt-1 mb-2 group-hover:text-emerald-600 transition-colors">{post.title}</h2>
+                    <p className="text-slate-500 leading-relaxed">{post.description}</p>
+                    <span className="text-sm text-emerald-600 mt-2 inline-block">{post.readingTime}</span>
                   </Link>
                 </article>
               ))}
@@ -284,10 +280,10 @@ function LangPostView({ lang, slug }: { lang: string; slug: string }) {
   return (
     <>
       <JsonLd data={articleSchema} />
-      <div className="min-h-screen bg-gray-950 text-gray-100" lang={lang}>
-        <BlogHeader blogHref={`/blog/${lang}`} signUpLabel={ui.signUp} />
+      <div className="min-h-screen bg-[#faf9f7] text-slate-600" lang={lang}>
+        <PublicNav />
         <main className="max-w-3xl mx-auto px-6 py-16">
-          <Link href={`/blog/${lang}`} className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors mb-8 inline-block">
+          <Link href={`/blog/${lang}`} className="text-sm text-emerald-600 hover:text-emerald-500 transition-colors mb-8 inline-block">
             &larr; {ui.allPosts}
           </Link>
           <PostArticle post={post} shareBarLang={lang} />
@@ -300,34 +296,20 @@ function LangPostView({ lang, slug }: { lang: string; slug: string }) {
   );
 }
 
-function BlogHeader({ blogHref, signUpLabel }: { blogHref: string; signUpLabel: string }) {
-  return (
-    <header className="border-b border-gray-800">
-      <div className="max-w-3xl mx-auto px-6 py-6 flex items-center justify-between">
-        <Link href="/" className="text-emerald-400 font-semibold text-lg hover:text-emerald-300 transition-colors">trefolio</Link>
-        <div className="flex items-center gap-4">
-          <Link href={blogHref} className="text-sm text-gray-400 hover:text-gray-200 transition-colors">Blog</Link>
-          <Link href="/signup" className="text-sm bg-emerald-500 hover:bg-emerald-400 text-white px-4 py-2 rounded-lg transition-colors font-medium">{signUpLabel}</Link>
-        </div>
-      </div>
-    </header>
-  );
-}
-
 function PostArticle({ post, shareBarLang }: { post: { title: string; date: string; description: string; readingTime: string; slug: string; content: string }; shareBarLang: string | undefined }) {
   return (
     <article>
       <header className="mb-10">
-        <time className="text-sm text-gray-500">{post.date}</time>
-        <h1 className="text-3xl sm:text-4xl font-bold mt-2 mb-3">{post.title}</h1>
-        <p className="text-gray-400 text-lg leading-relaxed">{post.description}</p>
+        <time className="text-sm text-slate-400">{post.date}</time>
+        <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mt-2 mb-3">{post.title}</h1>
+        <p className="text-slate-500 text-lg leading-relaxed">{post.description}</p>
         <div className="flex items-center gap-3 mt-3">
-          <span className="text-sm text-gray-500">{post.readingTime}</span>
+          <span className="text-sm text-slate-400">{post.readingTime}</span>
           <ShareBar title={post.title} slug={post.slug} lang={shareBarLang} />
         </div>
       </header>
       <div
-        className="prose prose-invert prose-emerald max-w-none prose-headings:font-semibold prose-headings:text-gray-100 prose-p:text-gray-300 prose-p:leading-relaxed prose-a:text-emerald-400 prose-a:no-underline hover:prose-a:text-emerald-300 prose-strong:text-gray-100 prose-li:text-gray-300 prose-th:text-gray-200 prose-td:text-gray-300 prose-table:border-gray-700 prose-th:border-gray-700 prose-td:border-gray-700"
+        className="prose prose-slate prose-emerald max-w-none prose-headings:font-semibold prose-headings:text-slate-900 prose-p:text-slate-600 prose-p:leading-relaxed prose-a:text-emerald-600 prose-a:no-underline hover:prose-a:text-emerald-500 prose-strong:text-slate-900 prose-li:text-slate-600 prose-th:text-slate-800 prose-td:text-slate-600 prose-table:border-slate-200 prose-th:border-slate-200 prose-td:border-slate-200"
         dangerouslySetInnerHTML={{ __html: post.content }}
       />
     </article>
@@ -336,18 +318,18 @@ function PostArticle({ post, shareBarLang }: { post: { title: string; date: stri
 
 function Disclaimer({ text }: { text: string }) {
   return (
-    <aside className="mt-12 p-4 rounded-lg border border-gray-800 text-xs text-gray-500 leading-relaxed">
-      <strong className="text-gray-400">Disclaimer:</strong> {text}
+    <aside className="mt-12 p-4 rounded-lg border border-slate-200 bg-white text-xs text-slate-500 leading-relaxed shadow-sm">
+      <strong className="text-slate-600">Disclaimer:</strong> {text}
     </aside>
   );
 }
 
 function CtaBox({ title, body, button }: { title: string; body: string; button: string }) {
   return (
-    <aside className="mt-8 p-8 rounded-xl bg-gray-900 border border-gray-800 text-center">
-      <h2 className="text-xl font-semibold mb-2">{title}</h2>
-      <p className="text-gray-400 mb-4">{body}</p>
-      <Link href="/signup" className="inline-block bg-emerald-500 hover:bg-emerald-400 text-white px-6 py-3 rounded-lg transition-colors font-medium">{button}</Link>
+    <aside className="mt-8 p-8 rounded-xl bg-white border border-slate-200 text-center shadow-sm">
+      <h2 className="text-xl font-semibold text-slate-900 mb-2">{title}</h2>
+      <p className="text-slate-500 mb-4">{body}</p>
+      <Link href="/signup" className="inline-block bg-emerald-500 hover:bg-emerald-400 text-white px-6 py-3 rounded-lg transition-colors font-medium shadow-md shadow-emerald-500/20">{button}</Link>
     </aside>
   );
 }

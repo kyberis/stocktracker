@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import PublicNav from "@/components/PublicNav";
 import PublicFooter from "@/components/PublicFooter";
 
 export const metadata: Metadata = {
@@ -26,35 +27,20 @@ export const metadata: Metadata = {
 
 export default function TermsOfServicePage() {
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-300">
-      <nav className="border-b border-slate-800/60 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Link
-            href="/landing"
-            className="text-lg font-bold text-white hover:text-emerald-400 transition-colors"
-          >
-            trefolio
-          </Link>
-          <Link
-            href="/privacy"
-            className="text-sm text-slate-400 hover:text-white transition-colors"
-          >
-            Privacy Policy
-          </Link>
-        </div>
-      </nav>
+    <div className="min-h-screen bg-[#faf9f7] text-slate-600">
+      <PublicNav />
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <header className="mb-12">
-          <h1 className="text-4xl font-bold text-white mb-3">
+          <h1 className="text-4xl font-bold text-slate-900 mb-3">
             Terms of Service
           </h1>
-          <p className="text-slate-400">
+          <p className="text-slate-500">
             Last updated: March 8, 2026
           </p>
         </header>
 
-        <div className="prose prose-invert prose-slate max-w-none space-y-10 [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:text-white [&_h2]:mt-12 [&_h2]:mb-4 [&_h3]:text-lg [&_h3]:font-medium [&_h3]:text-slate-200 [&_h3]:mt-8 [&_h3]:mb-3 [&_p]:leading-relaxed [&_li]:leading-relaxed">
+        <div className="prose prose-slate max-w-none space-y-10 [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:text-slate-900 [&_h2]:mt-12 [&_h2]:mb-4 [&_h3]:text-lg [&_h3]:font-medium [&_h3]:text-slate-800 [&_h3]:mt-8 [&_h3]:mb-3 [&_p]:leading-relaxed [&_li]:leading-relaxed">
           <section>
             <h2>1. Agreement to Terms</h2>
             <p>
@@ -171,7 +157,7 @@ export default function TermsOfServicePage() {
                   href="https://stripe.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-emerald-400 hover:text-emerald-300 underline underline-offset-2"
+                  className="text-emerald-600 hover:text-emerald-500 underline underline-offset-2"
                 >
                   Stripe
                 </a>
@@ -222,7 +208,7 @@ export default function TermsOfServicePage() {
               from your profile settings or contact{" "}
               <a
                 href="mailto:support@trefolio.com"
-                className="text-emerald-400 hover:text-emerald-300 underline underline-offset-2"
+                className="text-emerald-600 hover:text-emerald-500 underline underline-offset-2"
               >
                 support@trefolio.com
               </a>
@@ -260,15 +246,15 @@ export default function TermsOfServicePage() {
 
           <section>
             <h2>8. Financial Disclaimer</h2>
-            <div className="bg-slate-900/80 border border-slate-700 rounded-2xl p-6 mt-4">
-              <p className="text-slate-200 font-medium mb-3">
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 mt-4 shadow-sm">
+              <p className="text-slate-800 font-medium mb-3">
                 trefolio is NOT a financial advisor.
               </p>
               <ul className="list-disc pl-6 space-y-2">
                 <li>
                   All information provided through the Service, including AI
                   analysis, market data, charts, projections, and indicators, is
-                  for <strong className="text-white">informational purposes only</strong>.
+                  for <strong className="text-slate-900">informational purposes only</strong>.
                 </li>
                 <li>
                   Nothing on trefolio constitutes financial advice, investment
@@ -291,7 +277,7 @@ export default function TermsOfServicePage() {
                   loss.
                 </li>
                 <li>
-                  <strong className="text-white">Shared portfolios</strong> — when you share your portfolio via a public link, the shared view is for informational purposes only. It does not constitute financial advice. You are solely responsible for the content you choose to share publicly.
+                  <strong className="text-slate-900">Shared portfolios</strong> — when you share your portfolio via a public link, the shared view is for informational purposes only. It does not constitute financial advice. You are solely responsible for the content you choose to share publicly.
                 </li>
               </ul>
             </div>
@@ -321,8 +307,8 @@ export default function TermsOfServicePage() {
             </p>
             <ul className="list-disc pl-6 space-y-2">
               <li>
-                The Service is provided <strong className="text-white">&quot;as is&quot;</strong>{" "}
-                and <strong className="text-white">&quot;as available&quot;</strong>{" "}
+                The Service is provided <strong className="text-slate-900">&quot;as is&quot;</strong>{" "}
+                and <strong className="text-slate-900">&quot;as available&quot;</strong>{" "}
                 without warranties of any kind, express or implied.
               </li>
               <li>
@@ -369,7 +355,7 @@ export default function TermsOfServicePage() {
               Your privacy is important to us. Please review our{" "}
               <Link
                 href="/privacy"
-                className="text-emerald-400 hover:text-emerald-300 underline underline-offset-2"
+                className="text-emerald-600 hover:text-emerald-500 underline underline-offset-2"
               >
                 Privacy Policy
               </Link>{" "}
@@ -401,7 +387,7 @@ export default function TermsOfServicePage() {
                   href="https://ec.europa.eu/consumers/odr"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-emerald-400 hover:text-emerald-300 underline underline-offset-2"
+                  className="text-emerald-600 hover:text-emerald-500 underline underline-offset-2"
                 >
                   ec.europa.eu/consumers/odr
                 </a>
@@ -424,7 +410,7 @@ export default function TermsOfServicePage() {
               For questions about these Terms, contact us at{" "}
               <a
                 href="mailto:support@trefolio.com"
-                className="text-emerald-400 hover:text-emerald-300 underline underline-offset-2"
+                className="text-emerald-600 hover:text-emerald-500 underline underline-offset-2"
               >
                 support@trefolio.com
               </a>

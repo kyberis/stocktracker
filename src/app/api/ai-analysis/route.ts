@@ -95,8 +95,9 @@ export const POST = withMetrics("/api/ai-analysis", async (request: NextRequest)
   const isCrypto = body.analysisType === "crypto_market";
   const isTaxAssistant = body.analysisType === "tax_assistant";
   const isRebalancing = body.analysisType === "rebalancing_assistant";
+  const isSuggestTargets = body.analysisType === "rebalancing_suggest_targets";
 
-  if (isRebalancing) {
+  if (isRebalancing || isSuggestTargets) {
     if (body.allocationData) {
       dataSections.push(`## Portfolio Allocation & Drift\n${JSON.stringify(body.allocationData, null, 2)}`);
     }
@@ -175,14 +176,34 @@ export const POST = withMetrics("/api/ai-analysis", async (request: NextRequest)
           ? "crypto"
           : body.analysisType === "tax_assistant"
             ? "tax_assistant"
-            : body.analysisType === "rebalancing_assistant"
+            : (body.analysisType === "rebalancing_assistant" || body.analysisType === "rebalancing_suggest_targets")
               ? "rebalancing"
               : "fundamental";
 
   let systemPrompt: string;
   let userPrompt: string;
 
-  if (isRebalancing) {
+  if (isSuggestTargets) {
+    systemPrompt = `You are an expert portfolio strategist helping retail investors set optimal target allocations.
+
+Rules:
+- Write in ${lang}.
+- ONLY use facts and numbers explicitly present in the data provided below. Do NOT invent holdings, prices, or market predictions.
+- Analyze the current allocation by ${(body.allocationData as Record<string, unknown>)?.category || "sector"} and recommend target percentages.
+- Consider diversification best practices: no single bucket over 25%, spread across at least 5 buckets, reduce concentration risk.
+- Your response MUST include a JSON code block with the recommended targets. Use this exact format:
+
+\`\`\`json
+{"BucketName1": 15.0, "BucketName2": 20.0, ...}
+\`\`\`
+
+- Bucket names must EXACTLY match the labels in the data provided.
+- All target values must sum to 100.0.
+- Before the JSON block, write a brief (3-4 sentence) rationale explaining your reasoning.
+- After the JSON block, add one sentence inviting the user to adjust individual targets by clicking them.`;
+
+    userPrompt = `Here is the user's current portfolio allocation. Suggest optimal target percentages for each bucket.\n\n${dataSections.join("\n\n")}`;
+  } else if (isRebalancing) {
     const hasPlan = !!body.rebalancePlan;
 
     systemPrompt = `You are an expert portfolio strategist and financial advisor who helps retail investors rebalance their portfolios.

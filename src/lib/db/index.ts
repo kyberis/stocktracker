@@ -144,6 +144,8 @@ export {
   setPromoBannerConfig,
   getGaMeasurementId,
   setGaMeasurementId,
+  getGoogleAdsId,
+  setGoogleAdsId,
   getUtmTaxonomyConfig,
   setUtmTaxonomyConfig,
   resetUtmTaxonomyConfig,

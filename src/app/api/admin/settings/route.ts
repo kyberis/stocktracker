@@ -9,6 +9,7 @@ import {
   getAllStripePriceConfig,
   getPromoBannerConfig,
   getGaMeasurementId,
+  getGoogleAdsId,
   getAdConfig,
   getUtmTaxonomyConfig,
   countProSubscribers,
@@ -63,9 +64,11 @@ export const GET = withMetrics("/api/admin/settings", async (req: NextRequest) =
     getPlatformSetting("support_chat_messages_this_month").then((v) => parseInt(v || "0", 10)),
     getAllStripePriceConfig(),
     getPromoBannerConfig(),
-    getGaMeasurementId().then((gaId) => ({
+    Promise.all([getGaMeasurementId(), getGoogleAdsId()]).then(([gaId, googleAdsId]) => ({
       gaId,
       source: gaId === (process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || "") ? "env" as const : "database" as const,
+      googleAdsId,
+      googleAdsSource: googleAdsId === (process.env.NEXT_PUBLIC_GOOGLE_ADS_ID || "") ? "env" as const : "database" as const,
     })),
     getAdConfig(),
     getUtmTaxonomyConfig(),

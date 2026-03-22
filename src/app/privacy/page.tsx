@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import PublicNav from "@/components/PublicNav";
 import PublicFooter from "@/components/PublicFooter";
 
 export const metadata: Metadata = {
@@ -26,35 +26,20 @@ export const metadata: Metadata = {
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-300">
-      <nav className="border-b border-slate-800/60 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Link
-            href="/landing"
-            className="text-lg font-bold text-white hover:text-emerald-400 transition-colors"
-          >
-            trefolio
-          </Link>
-          <Link
-            href="/terms"
-            className="text-sm text-slate-400 hover:text-white transition-colors"
-          >
-            Terms of Service
-          </Link>
-        </div>
-      </nav>
+    <div className="min-h-screen bg-[#faf9f7] text-slate-600">
+      <PublicNav />
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <header className="mb-12">
-          <h1 className="text-4xl font-bold text-white mb-3">
+          <h1 className="text-4xl font-bold text-slate-900 mb-3">
             Privacy Policy
           </h1>
-          <p className="text-slate-400">
+          <p className="text-slate-500">
             Last updated: March 17, 2026
           </p>
         </header>
 
-        <div className="prose prose-invert prose-slate max-w-none space-y-10 [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:text-white [&_h2]:mt-12 [&_h2]:mb-4 [&_h3]:text-lg [&_h3]:font-medium [&_h3]:text-slate-200 [&_h3]:mt-8 [&_h3]:mb-3 [&_p]:leading-relaxed [&_li]:leading-relaxed">
+        <div className="prose prose-slate max-w-none space-y-10 [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:text-slate-900 [&_h2]:mt-12 [&_h2]:mb-4 [&_h3]:text-lg [&_h3]:font-medium [&_h3]:text-slate-800 [&_h3]:mt-8 [&_h3]:mb-3 [&_p]:leading-relaxed [&_li]:leading-relaxed">
           <section>
             <h2>1. Who We Are</h2>
             <p>
@@ -67,7 +52,7 @@ export default function PrivacyPolicyPage() {
               For data protection inquiries, contact us at{" "}
               <a
                 href="mailto:privacy@trefolio.com"
-                className="text-emerald-400 hover:text-emerald-300 underline underline-offset-2"
+                className="text-emerald-600 hover:text-emerald-500 underline underline-offset-2"
               >
                 privacy@trefolio.com
               </a>
@@ -80,17 +65,17 @@ export default function PrivacyPolicyPage() {
             <h3>Account Information</h3>
             <ul className="list-disc pl-6 space-y-2">
               <li>
-                <strong className="text-slate-200">Email address</strong> — used
+                <strong className="text-slate-800">Email address</strong> — used
                 for authentication, account recovery, and essential service
                 communications.
               </li>
               <li>
-                <strong className="text-slate-200">Password</strong> — stored as
+                <strong className="text-slate-800">Password</strong> — stored as
                 a one-way bcrypt hash. We never store or have access to your
                 plaintext password.
               </li>
               <li>
-                <strong className="text-slate-200">Third-party sign-in (Google, Apple)</strong> — 
+                <strong className="text-slate-800">Third-party sign-in (Google, Apple)</strong> — 
                 if you sign in with Google, we receive and store your name, email
                 address, and profile picture from your Google account. We do not
                 receive or store your Google password. If you sign in with Apple,
@@ -99,7 +84,7 @@ export default function PrivacyPolicyPage() {
                 Apple password.
               </li>
               <li>
-                <strong className="text-slate-200">Passkeys (WebAuthn)</strong> — if
+                <strong className="text-slate-800">Passkeys (WebAuthn)</strong> — if
                 you register a passkey for passwordless sign-in, we store the
                 cryptographic public key and credential metadata (credential ID,
                 device type, sign-in counter) associated with your account. The
@@ -112,12 +97,12 @@ export default function PrivacyPolicyPage() {
             <h3>Referral Data</h3>
             <ul className="list-disc pl-6 space-y-2">
               <li>
-                <strong className="text-slate-200">Referral code</strong> — a unique
+                <strong className="text-slate-800">Referral code</strong> — a unique
                 8-character code is generated for each user to enable referral link
                 sharing. This code is not derived from personal information.
               </li>
               <li>
-                <strong className="text-slate-200">Referral relationships</strong> — when
+                <strong className="text-slate-800">Referral relationships</strong> — when
                 a new user signs up via a referral link, we store the connection
                 between the referring user and the referred user to credit rewards.
                 This data includes the referral status, timestamps, and any
@@ -137,7 +122,7 @@ export default function PrivacyPolicyPage() {
                 selected during onboarding).
               </li>
               <li>
-                <strong className="text-slate-200">Broker connection credentials (optional)</strong> —
+                <strong className="text-slate-800">Broker connection credentials (optional)</strong> —
                 if you connect your Interactive Brokers account via the Flex Web
                 Service API, your access token and query ID are encrypted with
                 AES-256-GCM and stored so you can re-sync your portfolio on demand.
@@ -148,7 +133,7 @@ export default function PrivacyPolicyPage() {
                 any time, which permanently deletes these credentials.
               </li>
               <li>
-                <strong className="text-slate-200">Widget access token (optional)</strong> —
+                <strong className="text-slate-800">Widget access token (optional)</strong> —
                 if you generate a widget token for home screen widget access, we
                 store a one-way SHA-256 hash of the token. The plaintext token is
                 shown once and never stored. You can revoke it at any time from
@@ -159,13 +144,13 @@ export default function PrivacyPolicyPage() {
             <h3>Contact Form Data</h3>
             <ul className="list-disc pl-6 space-y-2">
               <li>
-                <strong className="text-slate-200">Name, email, subject, message</strong> —
+                <strong className="text-slate-800">Name, email, subject, message</strong> —
                 when you submit the contact form, we collect these fields for
                 customer support purposes. Submissions are sent to support@trefolio.com
                 via Resend and are subject to IP-based rate limiting (5 per hour).
               </li>
               <li>
-                <strong className="text-slate-200">Broker integration requests</strong> —
+                <strong className="text-slate-800">Broker integration requests</strong> —
                 if you request support for a missing broker, we store your account
                 identifier, requested broker name, optional notes, and request
                 timestamp so our team can evaluate demand and notify you about your request.
@@ -175,13 +160,13 @@ export default function PrivacyPolicyPage() {
             <h3>Notification Data</h3>
             <ul className="list-disc pl-6 space-y-2">
               <li>
-                <strong className="text-slate-200">WhatsApp phone number</strong> — 
+                <strong className="text-slate-800">WhatsApp phone number</strong> — 
                 if you opt in to WhatsApp alert notifications (Pro plan), we collect
                 your phone number in E.164 format and verify it via Twilio Verify.
                 The number is used solely for delivering price alert messages.
               </li>
               <li>
-                <strong className="text-slate-200">Push notification subscription</strong> — 
+                <strong className="text-slate-800">Push notification subscription</strong> — 
                 if you opt in to browser push notifications (Starter/Pro), we store
                 your browser push subscription endpoint and encryption keys. These
                 are used only to deliver price alert notifications and are deleted
@@ -192,20 +177,20 @@ export default function PrivacyPolicyPage() {
             <h3>Automatically Collected Data</h3>
             <ul className="list-disc pl-6 space-y-2">
               <li>
-                <strong className="text-slate-200">Session cookies</strong> — 
+                <strong className="text-slate-800">Session cookies</strong> — 
                 essential httpOnly cookies for authentication.
               </li>
               <li>
-                <strong className="text-slate-200">Basic analytics</strong> — 
+                <strong className="text-slate-800">Basic analytics</strong> — 
                 anonymous, aggregated page-view data via Vercel Analytics to
                 understand product usage. No personal identifiers are stored.
               </li>
               <li>
-                <strong className="text-slate-200">Attribution parameters (UTM/referrer)</strong> —
+                <strong className="text-slate-800">Attribution parameters (UTM/referrer)</strong> —
                 when you first visit trefolio, we may store first-touch attribution
-                fields such as <code className="text-xs text-slate-300 bg-slate-800 px-1 py-0.5 rounded">utm_source</code>,{" "}
-                <code className="text-xs text-slate-300 bg-slate-800 px-1 py-0.5 rounded">utm_medium</code>,{" "}
-                <code className="text-xs text-slate-300 bg-slate-800 px-1 py-0.5 rounded">utm_campaign</code>,
+                fields such as <code className="text-xs text-slate-700 bg-slate-100 px-1 py-0.5 rounded">utm_source</code>,{" "}
+                <code className="text-xs text-slate-700 bg-slate-100 px-1 py-0.5 rounded">utm_medium</code>,{" "}
+                <code className="text-xs text-slate-700 bg-slate-100 px-1 py-0.5 rounded">utm_campaign</code>,
                 referrer, and landing path. These fields are used to measure signup
                 and subscription conversion by acquisition source.
               </li>
@@ -231,7 +216,7 @@ export default function PrivacyPolicyPage() {
               <li>Measure acquisition performance (signup and paid conversion rates by source).</li>
             </ul>
             <p>
-              We do <strong className="text-white">not</strong> sell, rent, or
+              We do <strong className="text-slate-900">not</strong> sell, rent, or
               share your personal data with third parties for advertising or
               marketing purposes. If you grant optional cookie consent, we may
               send pseudonymous conversion signals (for example signup and
@@ -245,17 +230,17 @@ export default function PrivacyPolicyPage() {
             <p>We process your data under the following legal bases:</p>
             <ul className="list-disc pl-6 space-y-2">
               <li>
-                <strong className="text-slate-200">Contract performance</strong>{" "}
+                <strong className="text-slate-800">Contract performance</strong>{" "}
                 — processing necessary to provide the trefolio service you signed
                 up for (Art. 6(1)(b) GDPR).
               </li>
               <li>
-                <strong className="text-slate-200">Legitimate interest</strong>{" "}
+                <strong className="text-slate-800">Legitimate interest</strong>{" "}
                 — anonymous analytics to improve the product, fraud prevention,
                 and service security (Art. 6(1)(f) GDPR).
               </li>
               <li>
-                <strong className="text-slate-200">Legal obligation</strong>{" "}
+                <strong className="text-slate-800">Legal obligation</strong>{" "}
                 — where required by applicable law (Art. 6(1)(c) GDPR).
               </li>
             </ul>
@@ -271,13 +256,13 @@ export default function PrivacyPolicyPage() {
             <div className="overflow-x-auto mt-4">
               <table className="w-full text-sm border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-700 text-left">
-                    <th className="py-3 pr-6 text-slate-200 font-medium">Service</th>
-                    <th className="py-3 pr-6 text-slate-200 font-medium">Purpose</th>
-                    <th className="py-3 text-slate-200 font-medium">Data Shared</th>
+                  <tr className="border-b border-slate-200 text-left">
+                    <th className="py-3 pr-6 text-slate-800 font-medium">Service</th>
+                    <th className="py-3 pr-6 text-slate-800 font-medium">Purpose</th>
+                    <th className="py-3 text-slate-800 font-medium">Data Shared</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800">
+                <tbody className="divide-y divide-slate-200">
                   <tr>
                     <td className="py-3 pr-6">Vercel</td>
                     <td className="py-3 pr-6">Hosting &amp; deployment</td>
@@ -386,33 +371,33 @@ export default function PrivacyPolicyPage() {
             <h2>7. Data Retention</h2>
             <ul className="list-disc pl-6 space-y-2">
               <li>
-                <strong className="text-slate-200">Account data</strong> — retained
+                <strong className="text-slate-800">Account data</strong> — retained
                 for as long as your account is active.
               </li>
               <li>
-                <strong className="text-slate-200">Portfolio data</strong> — retained
+                <strong className="text-slate-800">Portfolio data</strong> — retained
                 for as long as your account is active. If your paid subscription
                 lapses, your data is preserved and accessible when you resubscribe.
               </li>
               <li>
-                <strong className="text-slate-200">Analytics events</strong> — 
+                <strong className="text-slate-800">Analytics events</strong> — 
                 anonymous, aggregated usage events are automatically purged after
                 90 days.
               </li>
               <li>
-                <strong className="text-slate-200">Contact form submissions</strong> — 
+                <strong className="text-slate-800">Contact form submissions</strong> — 
                 retained until the inquiry is resolved, then purged within 90 days.
               </li>
               <li>
-                <strong className="text-slate-200">Broker integration requests</strong> —
+                <strong className="text-slate-800">Broker integration requests</strong> —
                 retained for product planning and support follow-up, then periodically reviewed and deleted when no longer needed.
               </li>
               <li>
-                <strong className="text-slate-200">Support chat conversations</strong> — 
+                <strong className="text-slate-800">Support chat conversations</strong> — 
                 retained for up to 90 days for quality review, then automatically purged.
               </li>
               <li>
-                <strong className="text-slate-200">After account deletion</strong>{" "}
+                <strong className="text-slate-800">After account deletion</strong>{" "}
                 — all personal data is permanently deleted within 30 days. Backups
                 containing your data are purged within 90 days.
               </li>
@@ -423,20 +408,20 @@ export default function PrivacyPolicyPage() {
             <h2>7a. Public Portfolio Sharing</h2>
             <p>
               Bifolio and Trefolio subscribers may choose to generate a shareable link that allows anyone with the link to view a
-              read-only snapshot of their portfolio holdings. This feature is <strong className="text-slate-200">opt-in</strong> and disabled by default.
+              read-only snapshot of their portfolio holdings. This feature is <strong className="text-slate-800">opt-in</strong> and disabled by default.
             </p>
             <ul className="list-disc pl-6 space-y-2">
               <li>
-                <strong className="text-slate-200">What is shared:</strong> Ticker symbols, stock names, exchange, and optionally share counts (configurable by you). Financial values (prices, total values) are never exposed via shared links.
+                <strong className="text-slate-800">What is shared:</strong> Ticker symbols, stock names, exchange, and optionally share counts (configurable by you). Financial values (prices, total values) are never exposed via shared links.
               </li>
               <li>
-                <strong className="text-slate-200">Access control:</strong> Shared portfolio pages are accessible by anyone with the link but are not indexed by search engines (<code className="text-xs">noindex</code>). You can revoke access at any time from your profile settings.
+                <strong className="text-slate-800">Access control:</strong> Shared portfolio pages are accessible by anyone with the link but are not indexed by search engines (<code className="text-xs">noindex</code>). You can revoke access at any time from your profile settings.
               </li>
               <li>
-                <strong className="text-slate-200">Visitor data:</strong> We log anonymized access events (no IP address, no personal data) to measure feature usage.
+                <strong className="text-slate-800">Visitor data:</strong> We log anonymized access events (no IP address, no personal data) to measure feature usage.
               </li>
               <li>
-                <strong className="text-slate-200">Your responsibility:</strong> You are responsible for deciding what holdings to include in your shared portfolio. We recommend reviewing the excluded tickers option before sharing.
+                <strong className="text-slate-800">Your responsibility:</strong> You are responsible for deciding what holdings to include in your shared portfolio. We recommend reviewing the excluded tickers option before sharing.
               </li>
             </ul>
           </section>
@@ -446,32 +431,32 @@ export default function PrivacyPolicyPage() {
             <p>As a user in the European Economic Area, you have the right to:</p>
             <ul className="list-disc pl-6 space-y-2">
               <li>
-                <strong className="text-slate-200">Access</strong> — request a
+                <strong className="text-slate-800">Access</strong> — request a
                 copy of all personal data we hold about you.
               </li>
               <li>
-                <strong className="text-slate-200">Rectification</strong> — 
+                <strong className="text-slate-800">Rectification</strong> — 
                 correct inaccurate personal data.
               </li>
               <li>
-                <strong className="text-slate-200">Erasure</strong> — request
+                <strong className="text-slate-800">Erasure</strong> — request
                 deletion of your account and all associated data.
               </li>
               <li>
-                <strong className="text-slate-200">Data portability</strong> — 
+                <strong className="text-slate-800">Data portability</strong> — 
                 export your portfolio data in CSV or JSON format from your
                 profile settings.
               </li>
               <li>
-                <strong className="text-slate-200">Restriction</strong> — 
+                <strong className="text-slate-800">Restriction</strong> — 
                 request restricted processing of your data.
               </li>
               <li>
-                <strong className="text-slate-200">Object</strong> — object to
+                <strong className="text-slate-800">Object</strong> — object to
                 processing based on legitimate interest.
               </li>
               <li>
-                <strong className="text-slate-200">Lodge a complaint</strong> — 
+                <strong className="text-slate-800">Lodge a complaint</strong> — 
                 with your local data protection authority.
               </li>
             </ul>
@@ -479,7 +464,7 @@ export default function PrivacyPolicyPage() {
               To exercise any of these rights, email{" "}
               <a
                 href="mailto:privacy@trefolio.com"
-                className="text-emerald-400 hover:text-emerald-300 underline underline-offset-2"
+                className="text-emerald-600 hover:text-emerald-500 underline underline-offset-2"
               >
                 privacy@trefolio.com
               </a>
@@ -492,13 +477,13 @@ export default function PrivacyPolicyPage() {
             <h3>Essential Cookies (always active)</h3>
             <ul className="list-disc pl-6 space-y-2">
               <li>
-                <strong className="text-slate-200">Session cookie</strong> — an
+                <strong className="text-slate-800">Session cookie</strong> — an
                 httpOnly, secure cookie that maintains your authenticated session.
                 Expires when you log out or after the session timeout period.
               </li>
               <li>
-                <strong className="text-slate-200">Cloudflare Turnstile</strong> — 
-                Turnstile may set a transient cookie (<code className="text-xs text-slate-300 bg-slate-800 px-1 py-0.5 rounded">cf_bm</code>)
+                <strong className="text-slate-800">Cloudflare Turnstile</strong> — 
+                Turnstile may set a transient cookie (<code className="text-xs text-slate-700 bg-slate-100 px-1 py-0.5 rounded">cf_bm</code>)
                 to complete its bot-detection challenge on signup, login, and contact forms.
                 This cookie is classified as strictly necessary (bot protection)
                 and contains no personal identifiers.
@@ -508,16 +493,16 @@ export default function PrivacyPolicyPage() {
             <h3>Analytics Cookies (optional, consent required)</h3>
             <p>
               If you choose &quot;Accept All&quot; in the cookie banner, we use{" "}
-              <strong className="text-white">Google Analytics 4</strong> to understand
+              <strong className="text-slate-900">Google Analytics 4</strong> to understand
               how visitors use trefolio. Google Analytics sets the following cookies:
             </p>
             <ul className="list-disc pl-6 space-y-2">
               <li>
-                <strong className="text-slate-200"><code className="text-xs text-slate-300 bg-slate-800 px-1 py-0.5 rounded">_ga</code></strong> — 
+                <strong className="text-slate-800"><code className="text-xs text-slate-700 bg-slate-100 px-1 py-0.5 rounded">_ga</code></strong> — 
                 distinguishes unique visitors. Expires after 2 years.
               </li>
               <li>
-                <strong className="text-slate-200"><code className="text-xs text-slate-300 bg-slate-800 px-1 py-0.5 rounded">_ga_*</code></strong> — 
+                <strong className="text-slate-800"><code className="text-xs text-slate-700 bg-slate-100 px-1 py-0.5 rounded">_ga_*</code></strong> — 
                 maintains session state. Expires after 2 years.
               </li>
             </ul>
@@ -533,7 +518,7 @@ export default function PrivacyPolicyPage() {
                 href="https://privacy.google.com/businesses/processorterms/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-emerald-400 hover:text-emerald-300 underline underline-offset-2"
+                className="text-emerald-600 hover:text-emerald-500 underline underline-offset-2"
               >
                 Data Processing Terms
               </a>.
@@ -542,7 +527,7 @@ export default function PrivacyPolicyPage() {
             <p>
               If you choose &quot;Accept All&quot; in the cookie banner and are on
               the free plan, we use{" "}
-              <strong className="text-white">Google AdSense</strong> to display
+              <strong className="text-slate-900">Google AdSense</strong> to display
               relevant advertisements. Google AdSense may set cookies to serve
               ads based on your browsing history. Paid plan users (Starter and Pro)
               are never shown ads and no advertising cookies are set.
@@ -553,7 +538,7 @@ export default function PrivacyPolicyPage() {
                 href="https://adssettings.google.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-emerald-400 hover:text-emerald-300 underline"
+                className="text-emerald-600 hover:text-emerald-500 underline"
               >
                 Google Ads Settings
               </a>.

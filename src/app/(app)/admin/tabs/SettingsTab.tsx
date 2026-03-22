@@ -19,7 +19,7 @@ interface BatchSettingsData {
   };
   stripePrices?: Record<string, string>;
   promoBanner?: { config: { enabled: boolean; title: string; badge: string; description: string; ctaText: string; ctaLink: string } };
-  gaConfig?: { gaId: string; source: "env" | "database" };
+  gaConfig?: { gaId: string; source: "env" | "database"; googleAdsId: string; googleAdsSource: "env" | "database" };
   adConfig?: { clientId: string; globalEnabled: boolean; slots: Record<string, { enabled: boolean; slotId: string }> };
   utmTaxonomy?: { config: { sources: string[]; mediums: string[]; campaigns: string[]; notes: string } };
   cronStats?: { stats: any[]; recent: any[] };
@@ -1178,6 +1178,9 @@ function GaConfigCard() {
   const [gaId, setGaId] = useState("");
   const [draft, setDraft] = useState("");
   const [source, setSource] = useState<"env" | "database">("env");
+  const [adsId, setAdsId] = useState("");
+  const [adsDraft, setAdsDraft] = useState("");
+  const [adsSource, setAdsSource] = useState<"env" | "database">("env");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -1190,6 +1193,9 @@ function GaConfigCard() {
       setGaId(batch.gaConfig.gaId || "");
       setDraft(batch.gaConfig.gaId || "");
       setSource(batch.gaConfig.source || "env");
+      setAdsId(batch.gaConfig.googleAdsId || "");
+      setAdsDraft(batch.gaConfig.googleAdsId || "");
+      setAdsSource(batch.gaConfig.googleAdsSource || "env");
       setLoading(false);
       return;
     }
@@ -1199,22 +1205,30 @@ function GaConfigCard() {
         setGaId(d.gaId || "");
         setDraft(d.gaId || "");
         setSource(d.source || "env");
+        setAdsId(d.googleAdsId || "");
+        setAdsDraft(d.googleAdsId || "");
+        setAdsSource(d.googleAdsSource || "env");
       })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [batch]);
 
-  const hasChanges = draft !== gaId;
+  const hasGaChanges = draft !== gaId;
+  const hasAdsChanges = adsDraft !== adsId;
+  const hasChanges = hasGaChanges || hasAdsChanges;
 
   const handleSave = async () => {
     setSaving(true);
     setError("");
     setSaved(false);
     try {
+      const payload: Record<string, string> = {};
+      if (hasGaChanges) payload.gaId = draft.trim();
+      if (hasAdsChanges) payload.googleAdsId = adsDraft.trim();
       const res = await fetch("/api/admin/ga-config", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ gaId: draft.trim() }),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -1225,6 +1239,9 @@ function GaConfigCard() {
       setGaId(data.gaId);
       setDraft(data.gaId);
       setSource(data.gaId ? "database" : "env");
+      setAdsId(data.googleAdsId);
+      setAdsDraft(data.googleAdsId);
+      setAdsSource(data.googleAdsId ? "database" : "env");
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch {
@@ -1233,7 +1250,7 @@ function GaConfigCard() {
     setSaving(false);
   };
 
-  const handleRemove = async () => {
+  const handleRemoveGa = async () => {
     setSaving(true);
     setError("");
     const res = await fetch("/api/admin/ga-config", {
@@ -1242,9 +1259,33 @@ function GaConfigCard() {
       body: JSON.stringify({ gaId: "" }),
     });
     if (res.ok) {
+      const data = await res.json();
       setGaId("");
       setDraft("");
       setSource("env");
+      setAdsId(data.googleAdsId ?? adsId);
+      setAdsDraft(data.googleAdsId ?? adsDraft);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    }
+    setSaving(false);
+  };
+
+  const handleRemoveAds = async () => {
+    setSaving(true);
+    setError("");
+    const res = await fetch("/api/admin/ga-config", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ googleAdsId: "" }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      setAdsId("");
+      setAdsDraft("");
+      setAdsSource("env");
+      setGaId(data.gaId ?? gaId);
+      setDraft(data.gaId ?? draft);
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     }
@@ -1262,31 +1303,70 @@ function GaConfigCard() {
   return (
     <div className="card p-6">
       <div className="flex items-start justify-between mb-1">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Google Analytics</h3>
-        {gaId && (
-          <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
-            source === "database"
-              ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
-              : "bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-slate-400"
-          }`}>
-            {source === "database" ? "From database" : "From env var"}
-          </span>
-        )}
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Google Analytics &amp; Ads</h3>
+        <div className="flex items-center gap-1.5">
+          {gaId && (
+            <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
+              source === "database"
+                ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+                : "bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-slate-400"
+            }`}>
+              GA: {source === "database" ? "DB" : "env"}
+            </span>
+          )}
+          {adsId && (
+            <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
+              adsSource === "database"
+                ? "bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400"
+                : "bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-slate-400"
+            }`}>
+              Ads: {adsSource === "database" ? "DB" : "env"}
+            </span>
+          )}
+        </div>
       </div>
       <p className="text-xs text-gray-500 dark:text-slate-400 mb-4">
-        Configure the Google Analytics Measurement ID (e.g. <code className="px-1 py-0.5 rounded bg-gray-100 dark:bg-slate-800 font-mono text-xs">G-XXXXXXXXXX</code>).
-        A value saved here overrides the <code className="px-1 py-0.5 rounded bg-gray-100 dark:bg-slate-800 font-mono text-xs">NEXT_PUBLIC_GA_MEASUREMENT_ID</code> environment variable.
-        Leave empty to use the env var or to disable GA entirely.
+        Configure the Google Analytics Measurement ID and Google Ads Conversion ID.
+        Values saved here override the <code className="px-1 py-0.5 rounded bg-gray-100 dark:bg-slate-800 font-mono text-xs">NEXT_PUBLIC_GA_MEASUREMENT_ID</code> and <code className="px-1 py-0.5 rounded bg-gray-100 dark:bg-slate-800 font-mono text-xs">NEXT_PUBLIC_GOOGLE_ADS_ID</code> environment variables.
       </p>
 
-      <div className="flex items-center gap-2">
-        <input
-          type="text"
-          value={draft}
-          onChange={(e) => { setDraft(e.target.value); setError(""); }}
-          placeholder="G-XXXXXXXXXX"
-          className="text-sm flex-1 font-mono"
-        />
+      <div className="space-y-3">
+        <div>
+          <label className="text-[10px] uppercase tracking-wider text-gray-400 dark:text-slate-500 font-semibold mb-1 block">Analytics Measurement ID</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={draft}
+              onChange={(e) => { setDraft(e.target.value); setError(""); }}
+              placeholder="G-XXXXXXXXXX"
+              className="text-sm flex-1 font-mono"
+            />
+            {gaId && source === "database" && (
+              <button onClick={handleRemoveGa} disabled={saving} className="btn-danger text-xs px-3 py-2">
+                Remove
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div>
+          <label className="text-[10px] uppercase tracking-wider text-gray-400 dark:text-slate-500 font-semibold mb-1 block">Google Ads Conversion ID</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={adsDraft}
+              onChange={(e) => { setAdsDraft(e.target.value); setError(""); }}
+              placeholder="AW-XXXXXXXXXX"
+              className="text-sm flex-1 font-mono"
+            />
+            {adsId && adsSource === "database" && (
+              <button onClick={handleRemoveAds} disabled={saving} className="btn-danger text-xs px-3 py-2">
+                Remove
+              </button>
+            )}
+          </div>
+        </div>
+
         <button
           onClick={handleSave}
           disabled={saving || !hasChanges}
@@ -1294,11 +1374,6 @@ function GaConfigCard() {
         >
           {saving ? "Saving..." : "Save"}
         </button>
-        {gaId && source === "database" && (
-          <button onClick={handleRemove} disabled={saving} className="btn-danger text-xs px-3 py-2">
-            Remove
-          </button>
-        )}
       </div>
 
       {error && <p className="text-xs text-red-500 dark:text-red-400 mt-2">{error}</p>}

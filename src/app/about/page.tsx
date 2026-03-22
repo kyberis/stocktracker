@@ -1,40 +1,26 @@
 import Link from "next/link";
+import PublicNav from "@/components/PublicNav";
 import PublicFooter from "@/components/PublicFooter";
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-300">
-      <nav className="border-b border-slate-800/60 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Link
-            href="/landing"
-            className="text-lg font-bold text-white hover:text-emerald-400 transition-colors"
-          >
-            trefolio
-          </Link>
-          <Link
-            href="/contact"
-            className="text-sm text-slate-400 hover:text-white transition-colors"
-          >
-            Contact Us
-          </Link>
-        </div>
-      </nav>
+    <div className="min-h-screen bg-[#faf9f7] text-slate-600">
+      <PublicNav />
 
       <section className="pt-20 pb-4">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-3xl sm:text-4xl font-bold text-white mb-3">
+          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-3">
             The person behind trefolio
           </h1>
-          <p className="text-slate-400 text-lg max-w-xl mx-auto">
+          <p className="text-slate-500 text-lg max-w-xl mx-auto">
             Why I built this, and why it matters.
           </p>
         </div>
       </section>
 
       <main className="py-16">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 leading-relaxed [&_p]:text-slate-300">
-          <h2 className="text-2xl font-bold text-white !mb-6">Why I built trefolio</h2>
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 leading-relaxed [&_p]:text-slate-600">
+          <h2 className="text-2xl font-bold text-slate-900 !mb-6">Why I built trefolio</h2>
 
           <p>
             I&rsquo;m a systems engineer by trade, but markets and economics have always been a
@@ -45,8 +31,8 @@ export default function AboutPage() {
 
           <p>One book in particular changed the way I think about investing:</p>
 
-          <blockquote className="border-l-[3px] border-emerald-500 pl-6 italic text-slate-400">
-            <span className="text-emerald-300 font-medium not-italic">The Intelligent Investor</span>{" "}
+          <blockquote className="border-l-[3px] border-emerald-500 pl-6 italic text-slate-500">
+            <span className="text-emerald-600 font-medium not-italic">The Intelligent Investor</span>{" "}
             by Benjamin Graham reinforced many of the lessons I&rsquo;d been learning the hard way,
             and helped me build a more disciplined framework for understanding how markets actually
             work &mdash; or at least get closer to it.
@@ -61,7 +47,7 @@ export default function AboutPage() {
 
           <p>
             Then it got worse. I started using{" "}
-            <span className="text-emerald-300 font-medium">
+            <span className="text-emerald-600 font-medium">
               different brokers for different instruments
             </span>{" "}
             &mdash; one for European equities, another for US stocks, another for ETFs &mdash; each
@@ -77,7 +63,7 @@ export default function AboutPage() {
             other tools &mdash; multi-currency support done right, proper European broker imports,
             dividend tracking that actually makes sense. Eventually it reached a point where I
             thought:{" "}
-            <span className="text-emerald-300 font-medium">
+            <span className="text-emerald-600 font-medium">
               this could help other people too
             </span>
             .
@@ -93,13 +79,13 @@ export default function AboutPage() {
 
           <p>
             I&rsquo;m also building{" "}
-            <span className="text-emerald-300 font-medium">trefolio Leaf</span> &mdash; a dedicated
+            <span className="text-emerald-600 font-medium">trefolio Leaf</span> &mdash; a dedicated
             hardware device to track your portfolio at a glance, without picking up your phone and
             inevitably getting distracted by something else entirely. It&rsquo;s the tool I&rsquo;ve
             always wanted on my desk.
           </p>
 
-          <h2 className="text-2xl font-bold text-white !mt-16 !mb-6">Join the community</h2>
+          <h2 className="text-2xl font-bold text-slate-900 !mt-16 !mb-6">Join the community</h2>
 
           <p>
             trefolio is built by an investor, for investors. Every feature comes from a real need,
@@ -112,20 +98,20 @@ export default function AboutPage() {
             your experience, your feedback will certainly be considered.
           </p>
 
-          <div className="!mt-12 pt-8 border-t border-slate-800/50">
-            <p className="text-white font-semibold text-lg !mb-0">Marcos C. Suarez</p>
-            <p className="text-emerald-400 text-sm !mt-1">Founder of trefolio</p>
+          <div className="!mt-12 pt-8 border-t border-slate-200">
+            <p className="text-slate-900 font-semibold text-lg !mb-0">Marcos C. Suarez</p>
+            <p className="text-emerald-600 text-sm !mt-1">Founder of trefolio</p>
           </div>
         </div>
       </main>
 
       <section className="pb-20">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-slate-900/50 border border-slate-800/50 rounded-2xl p-8 sm:p-10 text-center">
-            <h3 className="text-xl font-bold text-white mb-3">
+          <div className="bg-white border border-slate-200 rounded-2xl p-8 sm:p-10 text-center shadow-sm">
+            <h3 className="text-xl font-bold text-slate-900 mb-3">
               Ready to take control of your portfolio?
             </h3>
-            <p className="text-slate-400 mb-6 max-w-md mx-auto">
+            <p className="text-slate-500 mb-6 max-w-md mx-auto">
               Start tracking your investments today. Free to get started, upgrade when you&rsquo;re
               ready.
             </p>
@@ -138,7 +124,7 @@ export default function AboutPage() {
               </Link>
               <Link
                 href="/contact"
-                className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-slate-800 text-slate-300 font-medium hover:bg-slate-700 hover:text-white transition-colors border border-slate-700"
+                className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-white text-slate-700 font-medium hover:bg-slate-50 transition-colors border border-slate-200"
               >
                 Get in Touch
               </Link>

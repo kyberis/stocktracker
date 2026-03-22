@@ -10,7 +10,7 @@ import AdSenseScript from "@/components/AdSenseScript";
 import MetaPixel from "@/components/MetaPixel";
 import ServiceWorkerUpdater from "@/components/ServiceWorkerUpdater";
 import NativeSplashGate from "@/components/NativeSplashGate";
-import { getGaMeasurementId, getAdConfig } from "@/lib/db";
+import { getGaMeasurementId, getGoogleAdsId, getAdConfig } from "@/lib/db";
 import "./globals.css";
 
 export const viewport: Viewport = {
@@ -64,7 +64,7 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [gaId, adConfig] = await Promise.all([getGaMeasurementId(), getAdConfig()]);
+  const [gaId, googleAdsId, adConfig] = await Promise.all([getGaMeasurementId(), getGoogleAdsId(), getAdConfig()]);
   const adsClientId = adConfig.globalEnabled ? adConfig.clientId : "";
   const metaPixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID || "";
 
@@ -117,7 +117,7 @@ export default async function RootLayout({
         {children}
         <NativeSplashGate />
         <CookieConsent />
-        <GoogleAnalytics gaId={gaId} />
+        <GoogleAnalytics gaId={gaId} googleAdsId={googleAdsId} />
         <MetaPixel pixelId={metaPixelId} />
         <AdSenseScript clientId={adsClientId} />
         <Analytics />

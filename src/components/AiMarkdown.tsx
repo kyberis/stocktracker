@@ -30,7 +30,10 @@ export interface AiMarkdownProps {
 }
 
 export default function AiMarkdown({ text, compact }: AiMarkdownProps) {
-  const lines = text.split("\n");
+  const cleaned = text
+    .replace(/```(?:json|JSON)?\s*[\s\S]*?```/g, "")
+    .replace(/\[TOKENS:\d+\]/g, "");
+  const lines = cleaned.split("\n");
   const elements: React.ReactNode[] = [];
 
   const p = compact ? "text-xs leading-relaxed" : "text-sm";
@@ -44,8 +47,11 @@ export default function AiMarkdown({ text, compact }: AiMarkdownProps) {
     ? "font-semibold text-gray-800 dark:text-slate-100"
     : "font-semibold text-gray-800 dark:text-slate-100";
 
+  let inCodeFence = false;
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
+    if (line.trimStart().startsWith("```")) { inCodeFence = !inCodeFence; continue; }
+    if (inCodeFence) continue;
     if (line.startsWith("## ")) {
       elements.push(
         <h3 key={i} className={h2}>
