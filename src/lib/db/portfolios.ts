@@ -101,6 +101,20 @@ export async function deletePortfolio(userId: string, portfolioId: string): Prom
     args: [userId, portfolioId, userId],
   });
 
+  // Re-assign surviving transactions whose portfolio_id still points to the
+  // deleted portfolio — pick the first remaining mapped portfolio so they don't
+  // become orphans if that other portfolio is deleted later.
+  await client.execute({
+    sql: `UPDATE transactions SET portfolio_id = (
+            SELECT portfolio_id FROM transaction_portfolio_map
+            WHERE transaction_id = transactions.id AND user_id = ?
+            LIMIT 1
+          )
+          WHERE user_id = ? AND portfolio_id = ?
+          AND id IN (SELECT transaction_id FROM transaction_portfolio_map WHERE user_id = ?)`,
+    args: [userId, userId, portfolioId, userId],
+  });
+
   for (const table of ["holdings", "cash_entries", "portfolio_snapshots", "portfolio_shares"] as const) {
     await client.execute({
       sql: `DELETE FROM ${table} WHERE user_id = ? AND portfolio_id = ?`,

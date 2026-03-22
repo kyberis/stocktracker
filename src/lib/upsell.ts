@@ -24,7 +24,9 @@ export type UpsellSurface =
   | "net_worth_locked"
   | "screener_locked"
   | "simulator_locked"
-  | "planning_locked";
+  | "planning_locked"
+  | "portfolio_score_locked"
+  | "tax_report_locked";
 
 export interface UpsellConfig {
   subtitleKey: TranslationKey;
@@ -298,6 +300,30 @@ const UPSELL_BY_SURFACE: Record<UpsellSurface, UpsellConfig> = {
     starterItems: DEFAULT_STARTER_ITEMS,
     proItems: [
       "upsellProItemSimulator",
+      "upsellProItemAlphaVantage",
+      "upsellProItemAiUnlimited",
+    ],
+  },
+  portfolio_score_locked: {
+    subtitleKey: "upsellCompareSubtitleLocked",
+    attemptedActionKey: "upsellAttemptPortfolioScore",
+    feature: "portfolio_score",
+    freeItems: DEFAULT_FREE_ITEMS,
+    starterItems: DEFAULT_STARTER_ITEMS,
+    proItems: [
+      "upsellProItemPortfolioScore",
+      "upsellProItemAlphaVantage",
+      "upsellProItemAiUnlimited",
+    ],
+  },
+  tax_report_locked: {
+    subtitleKey: "upsellCompareSubtitleLocked",
+    attemptedActionKey: "upsellAttemptTaxReport",
+    feature: "tax_report",
+    freeItems: DEFAULT_FREE_ITEMS,
+    starterItems: DEFAULT_STARTER_ITEMS,
+    proItems: [
+      "upsellProItemTaxReport",
       "upsellProItemAlphaVantage",
       "upsellProItemAiUnlimited",
     ],

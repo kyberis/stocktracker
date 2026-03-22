@@ -6,6 +6,7 @@ import { usePortfolio } from "@/lib/portfolio-context";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth-context";
 import ProCompareCard from "@/components/ProCompareCard";
+import EmptyState from "@/components/EmptyState";
 import type { NewsArticle } from "@/lib/types";
 
 type FeedStatus = "idle" | "loading" | "done" | "error";
@@ -55,7 +56,18 @@ export default function PortfolioNewsFeed() {
     return (
       <div className="space-y-4">
         <SectionHeader />
-        <EmptyState label={t("portfolioNewsNoHoldings")} />
+        <EmptyState
+          icon={<svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25M16.5 7.5V18a2.25 2.25 0 002.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 002.25 2.25h13.5" /></svg>}
+          iconClassName="from-cyan-400 to-cyan-600 shadow-cyan-500/20"
+          title={t("portfolioNewsNoHoldingsTitle")}
+          subtitle={t("portfolioNewsNoHoldings")}
+          actions={[{
+            label: t("emptyStateAddStock"),
+            href: "/tools",
+            variant: "primary",
+            icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>,
+          }]}
+        />
       </div>
     );
   }
@@ -76,7 +88,11 @@ export default function PortfolioNewsFeed() {
     return (
       <div className="space-y-4">
         <SectionHeader />
-        <EmptyState label={t("portfolioNewsError")} />
+        <EmptyState
+          icon={<svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25M16.5 7.5V18a2.25 2.25 0 002.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 002.25 2.25h13.5" /></svg>}
+          iconClassName="from-cyan-400 to-cyan-600 shadow-cyan-500/20"
+          title={t("portfolioNewsError")}
+        />
       </div>
     );
   }
@@ -85,7 +101,12 @@ export default function PortfolioNewsFeed() {
     return (
       <div className="space-y-4">
         <SectionHeader />
-        <EmptyState label={t("noPortfolioNews")} />
+        <EmptyState
+          icon={<svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25M16.5 7.5V18a2.25 2.25 0 002.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 002.25 2.25h13.5" /></svg>}
+          iconClassName="from-cyan-400 to-cyan-600 shadow-cyan-500/20"
+          title={t("noPortfolioNewsTitle")}
+          subtitle={t("noPortfolioNews")}
+        />
       </div>
     );
   }
@@ -115,14 +136,6 @@ function SectionHeader() {
       <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
         {t("portfolioNews")}
       </h2>
-    </div>
-  );
-}
-
-function EmptyState({ label }: { label: string }) {
-  return (
-    <div className="card px-6 py-10 text-center text-gray-400 dark:text-slate-500 text-sm">
-      {label}
     </div>
   );
 }

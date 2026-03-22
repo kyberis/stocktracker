@@ -7,6 +7,7 @@ import { useTrack } from "@/lib/use-track";
 import { canAccessFeature } from "@/lib/subscription";
 import ProCompareCard from "@/components/ProCompareCard";
 import TierFeatureBadge from "./TierFeatureBadge";
+import EmptyState from "./EmptyState";
 
 interface EventItem {
   id: string;
@@ -632,16 +633,13 @@ export default function EventCalendar() {
           </div>
           <div className="card divide-y divide-gray-100 dark:divide-slate-700">
             {filteredEvents.length === 0 ? (
-              <div className="px-5 py-12 text-center">
-                <div className="w-12 h-12 mx-auto mb-3 rounded-2xl bg-gray-100 dark:bg-slate-700 flex items-center justify-center">
-                  <svg className="w-6 h-6 text-gray-400 dark:text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                    <rect x="3" y="4" width="18" height="18" rx="2" />
-                    <path d="M16 2v4M8 2v4M3 10h18" />
-                  </svg>
-                </div>
-                <p className="text-sm font-medium text-gray-500 dark:text-slate-400">{t("noUpcomingEvents")}</p>
-                <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">{t("noUpcomingEventsDesc")}</p>
-              </div>
+              <EmptyState
+                icon={<svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>}
+                iconClassName="from-blue-400 to-blue-600 shadow-blue-500/20"
+                title={t("noUpcomingEvents")}
+                subtitle={t("noUpcomingEventsDesc")}
+                className="border-0 shadow-none"
+              />
             ) : (
               groupedByDate.map((group) => (
                 <div key={group.date} className="px-5 py-4">

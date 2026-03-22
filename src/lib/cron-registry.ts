@@ -87,4 +87,10 @@ export const CRON_REGISTRY: CronJob[] = [
     schedule: "0 * * * *",
     description: "Downgrade expired trial users to free and send expiration email",
   },
+  {
+    name: "weekly-digest",
+    path: "/api/cron/weekly-digest",
+    schedule: "0 8 * * 1",
+    description: "Generate and send AI-powered weekly portfolio digest to Pro users every Monday",
+  },
 ];

@@ -101,7 +101,7 @@ describe("transactions", () => {
 
       expect(mockExecute).toHaveBeenCalledWith({
         sql: expect.stringContaining("portfolio_id"),
-        args: ["user-1", "portfolio-1"],
+        args: ["user-1", "portfolio-1", "user-1", "portfolio-1"],
       });
       expect(result).toHaveLength(1);
       expect(result[0]).toMatchObject({ id: "tx1", ticker: "AAPL" });
@@ -127,7 +127,7 @@ describe("transactions", () => {
       });
       expect(mockExecute).toHaveBeenNthCalledWith(2, {
         sql: expect.stringContaining("holding_id = ? OR (holding_id = '' AND ticker = ?"),
-        args: ["user-1", "portfolio-1", "h1", "AAPL", "US"],
+        args: ["user-1", "portfolio-1", "user-1", "portfolio-1", "h1", "AAPL", "US"],
       });
       expect(result).toHaveLength(2);
     });
@@ -408,8 +408,11 @@ describe("transactions", () => {
       expect(result).toBe(5);
     });
 
-    it("filters by portfolioId when provided", async () => {
-      mockExecute.mockResolvedValueOnce({ rowsAffected: 2 });
+    it("filters by portfolioId and re-assigns surviving transactions", async () => {
+      mockExecute
+        .mockResolvedValueOnce({ rowsAffected: 1 })  // delete map entries
+        .mockResolvedValueOnce({ rowsAffected: 2 })  // delete orphan txs
+        .mockResolvedValueOnce({ rowsAffected: 0 }); // re-assign surviving txs
 
       const result = await transactions.deleteTransactionsForPosition(
         "user-1",
@@ -418,11 +421,10 @@ describe("transactions", () => {
         "portfolio-1"
       );
 
-      expect(mockExecute).toHaveBeenCalledWith({
-        sql: expect.stringContaining("AND portfolio_id = ?"),
-        args: ["user-1", "AAPL", "", "portfolio-1"],
-      });
       expect(result).toBe(2);
+      const allSql = mockExecute.mock.calls.map((c) => c[0]?.sql || "");
+      expect(allSql.some((s: string) => s.includes("DELETE FROM transaction_portfolio_map"))).toBe(true);
+      expect(allSql.some((s: string) => s.includes("UPDATE transactions SET portfolio_id"))).toBe(true);
     });
   });
 
@@ -439,16 +441,21 @@ describe("transactions", () => {
       expect(result).toBe(10);
     });
 
-    it("filters by portfolioId when provided", async () => {
-      mockExecute.mockResolvedValueOnce({ rowsAffected: 3 });
+    it("filters by portfolioId, removes map entries, and re-assigns surviving txs", async () => {
+      mockExecute
+        .mockResolvedValueOnce({ rowsAffected: 2 })  // delete map entries
+        .mockResolvedValueOnce({ rowsAffected: 3 })  // delete orphan txs
+        .mockResolvedValueOnce({ rowsAffected: 1 }); // re-assign surviving txs
 
       const result = await transactions.deleteAllTransactions("user-1", "portfolio-1");
 
-      expect(mockExecute).toHaveBeenCalledWith({
-        sql: expect.stringContaining("AND portfolio_id = ?"),
-        args: ["user-1", "portfolio-1"],
-      });
       expect(result).toBe(3);
+
+      const allSql = mockExecute.mock.calls.map((c) => c[0]?.sql || "");
+      expect(allSql[0]).toContain("DELETE FROM transaction_portfolio_map");
+      expect(allSql[1]).toContain("DELETE FROM transactions");
+      expect(allSql[1]).toContain("NOT IN");
+      expect(allSql[2]).toContain("UPDATE transactions SET portfolio_id");
     });
   });
 
@@ -480,8 +487,8 @@ describe("transactions", () => {
       );
 
       expect(mockExecute).toHaveBeenCalledWith({
-        sql: expect.stringContaining("AND portfolio_id = ?"),
-        args: ["user-1", "portfolio-1"],
+        sql: expect.stringContaining("portfolio_id = ?"),
+        args: ["user-1", "portfolio-1", "user-1", "portfolio-1"],
       });
       expect(result).toEqual(new Set(["ref-a"]));
     });

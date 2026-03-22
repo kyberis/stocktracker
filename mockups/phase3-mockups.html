@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Phase 3 Mockups — trefolio</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0f172a; --surface: #1e293b; --border: rgba(255,255,255,0.06);
+    --text: #f1f5f9; --text-muted: #94a3b8; --text-dim: #64748b;
+    --emerald: #10b981; --emerald-bg: rgba(16,185,129,0.08);
+    --red: #ef4444; --red-bg: rgba(239,68,68,0.08);
+    --amber: #f59e0b; --amber-bg: rgba(245,158,11,0.08);
+    --violet: #8b5cf6; --violet-bg: rgba(139,92,246,0.08);
+    --blue: #3b82f6; --blue-bg: rgba(59,130,246,0.08);
+    --cyan: #06b6d4; --cyan-bg: rgba(6,182,212,0.08);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background: var(--bg); color: var(--text);
+    padding: 32px 24px; max-width: 1200px; margin: 0 auto;
+  }
+  h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+  .subtitle { color: var(--text-muted); font-size: 14px; margin-bottom: 40px; }
+  .section {
+    margin-bottom: 56px; padding-bottom: 56px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section:last-child { border-bottom: none; }
+  .section-header {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 8px;
+  }
+  .section-num {
+    background: var(--emerald); color: #fff; font-weight: 700;
+    width: 28px; height: 28px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; flex-shrink: 0;
+  }
+  .section-title { font-size: 20px; font-weight: 700; }
+  .section-desc { color: var(--text-muted); font-size: 13px; margin-bottom: 24px; margin-left: 40px; line-height: 1.6; }
+
+  /* TABS */
+  .tab-bar { display: flex; gap: 4px; margin-bottom: 24px; flex-wrap: wrap; }
+  .tab-btn {
+    padding: 6px 14px; border-radius: 8px; border: none;
+    background: transparent; color: var(--text-muted);
+    font-size: 12px; font-weight: 500; cursor: pointer;
+    font-family: inherit; transition: all 0.15s;
+  }
+  .tab-btn.active { background: var(--emerald); color: #fff; }
+  .tab-btn:hover:not(.active) { background: rgba(255,255,255,0.04); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* CARDS */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 24px;
+  }
+
+  /* MOCKUP FRAME */
+  .mockup-frame {
+    background: #0c1222; border: 1px solid var(--border);
+    border-radius: 16px; overflow: hidden;
+  }
+  .mockup-label {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--text-dim); padding: 10px 16px;
+    border-bottom: 1px solid var(--border); font-weight: 500;
+  }
+  .mockup-body { padding: 24px; }
+
+  /* CHECKLIST */
+  .checklist-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 20px 24px;
+  }
+  .checklist-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .checklist-title {
+    font-size: 15px; font-weight: 700;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .checklist-progress {
+    font-size: 11px; color: var(--text-dim); font-weight: 500;
+  }
+  .checklist-bar {
+    height: 4px; border-radius: 2px;
+    background: rgba(255,255,255,0.06); margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .checklist-bar-fill {
+    height: 100%; border-radius: 2px;
+    background: var(--emerald);
+    transition: width 0.3s;
+  }
+  .checklist-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+  }
+  .checklist-item:last-child { border-bottom: none; }
+  .checklist-check {
+    width: 22px; height: 22px; border-radius: 6px;
+    border: 2px solid var(--text-dim);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: all 0.15s;
+  }
+  .checklist-check.done {
+    background: var(--emerald); border-color: var(--emerald);
+  }
+  .checklist-label { font-size: 13px; font-weight: 500; flex: 1; }
+  .checklist-label.done { color: var(--text-dim); text-decoration: line-through; }
+  .checklist-action {
+    font-size: 11px; color: var(--emerald); font-weight: 600;
+    text-decoration: none; white-space: nowrap;
+  }
+  .checklist-dismiss {
+    font-size: 11px; color: var(--text-dim); cursor: pointer;
+    background: none; border: none; font-family: inherit;
+  }
+
+  /* BLURRED PREVIEW */
+  .blur-preview {
+    position: relative; min-height: 200px; border-radius: 12px; overflow: hidden;
+  }
+  .blur-content {
+    filter: blur(6px); pointer-events: none; user-select: none; opacity: 0.55;
+  }
+  .blur-overlay {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 12px; background: rgba(15,23,42,0.4); backdrop-filter: blur(1px);
+    border-radius: 12px;
+  }
+  .blur-lock {
+    width: 44px; height: 44px; border-radius: 12px;
+    background: linear-gradient(135deg, var(--amber), #ea580c);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .blur-text { font-size: 13px; color: var(--text-muted); text-align: center; max-width: 280px; }
+  .blur-cta {
+    padding: 8px 20px; border-radius: 10px; border: none;
+    background: linear-gradient(135deg, var(--amber), #ea580c);
+    color: #fff; font-size: 13px; font-weight: 600; cursor: pointer;
+    font-family: inherit;
+  }
+
+  /* SAMPLE TABLE */
+  .sample-table { width: 100%; font-size: 12px; border-collapse: collapse; }
+  .sample-table th {
+    text-align: left; font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--text-dim); font-weight: 600;
+    padding: 8px 10px; border-bottom: 1px solid var(--border);
+  }
+  .sample-table td {
+    padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.02);
+    color: var(--text-muted);
+  }
+  .sample-table .ticker { font-weight: 600; color: var(--text); font-family: 'JetBrains Mono', monospace; }
+  .sample-table .green { color: var(--emerald); }
+  .sample-table .red { color: var(--red); }
+
+  /* SCORE GAUGE */
+  .gauge-container { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 24px; }
+  .gauge-ring {
+    width: 140px; height: 140px; border-radius: 50%;
+    background: conic-gradient(var(--emerald) 0deg, var(--emerald) 266deg, rgba(255,255,255,0.06) 266deg);
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  .gauge-inner {
+    width: 110px; height: 110px; border-radius: 50%;
+    background: var(--surface); display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+  .gauge-score { font-size: 36px; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--emerald); }
+  .gauge-max { font-size: 11px; color: var(--text-dim); }
+  .gauge-label { font-size: 14px; font-weight: 600; color: var(--emerald); }
+  .category-bars { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; max-width: 400px; }
+  .cat-bar { padding: 10px 12px; background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px solid var(--border); }
+  .cat-bar-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
+  .cat-bar-track { height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; }
+  .cat-bar-fill { height: 100%; border-radius: 3px; }
+
+  /* TAX SUMMARY CARDS */
+  .tax-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+  .tax-card {
+    background: rgba(255,255,255,0.02); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px;
+  }
+  .tax-card-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.04em; }
+  .tax-card-value { font-size: 18px; font-weight: 700; margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
+
+  /* WEEKLY DIGEST */
+  .digest-card {
+    background: linear-gradient(135deg, rgba(139,92,246,0.08), rgba(6,182,212,0.06));
+    border: 1px solid rgba(139,92,246,0.15);
+    border-radius: 16px; padding: 20px 24px;
+  }
+  .digest-header {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+  }
+  .digest-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--violet), var(--cyan));
+    display: flex; align-items: center; justify-content: center;
+  }
+  .digest-title { font-size: 14px; font-weight: 700; }
+  .digest-date { font-size: 11px; color: var(--text-dim); }
+  .digest-body { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: 14px; }
+  .digest-stats {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px;
+  }
+  .digest-stat {
+    background: rgba(255,255,255,0.03); border-radius: 8px; padding: 10px;
+    text-align: center;
+  }
+  .digest-stat-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.04em; }
+  .digest-stat-value { font-size: 15px; font-weight: 700; margin-top: 2px; font-family: 'JetBrains Mono', monospace; }
+  .digest-footer { font-size: 11px; color: var(--text-dim); font-style: italic; }
+
+  /* GOAL PROMPT */
+  .goal-prompt {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 20px 24px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .goal-icon {
+    width: 48px; height: 48px; border-radius: 14px;
+    background: linear-gradient(135deg, var(--emerald), #059669);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .goal-content { flex: 1; }
+  .goal-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+  .goal-subtitle { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+  .goal-cta {
+    padding: 8px 18px; border-radius: 10px; border: none;
+    background: var(--emerald); color: #fff;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    font-family: inherit; white-space: nowrap;
+  }
+
+  /* TEASER CARD */
+  .teaser-card {
+    background: linear-gradient(135deg, rgba(139,92,246,0.06), rgba(6,182,212,0.04));
+    border: 1px dashed rgba(139,92,246,0.2);
+    border-radius: 16px; padding: 20px 24px;
+    text-align: center;
+  }
+  .teaser-badge {
+    display: inline-block; font-size: 10px; font-weight: 700;
+    background: var(--violet-bg); color: var(--violet);
+    padding: 3px 8px; border-radius: 6px; text-transform: uppercase;
+    letter-spacing: 0.04em; margin-bottom: 8px;
+  }
+
+  @media (max-width: 640px) {
+    .tax-cards { grid-template-columns: 1fr; }
+    .category-bars { grid-template-columns: 1fr; }
+    .digest-stats { grid-template-columns: 1fr; }
+    .goal-prompt { flex-direction: column; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Fase 3 — Mockups</h1>
+<p class="subtitle">Post-onboarding checklist, ProFeaturePreview (blurred teasers), Goal Planner relocation, AI Weekly Digest</p>
+
+<!-- ======== MOCKUP 1: CHECKLIST ======== -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-num">1</span>
+    <span class="section-title">Post-Onboarding Checklist</span>
+  </div>
+  <p class="section-desc">
+    Aparece en el dashboard despues del signup. Guia al usuario por 4 pasos clave.
+    Cada item tiene un link directo a la accion. Se puede descartar manualmente o desaparece al completar todo.
+  </p>
+
+  <div class="tab-bar" data-group="checklist">
+    <button class="tab-btn active" data-tab="cl-new">New user (0/4)</button>
+    <button class="tab-btn" data-tab="cl-progress">In progress (2/4)</button>
+    <button class="tab-btn" data-tab="cl-done">Complete (4/4)</button>
+  </div>
+
+  <!-- New user -->
+  <div class="tab-panel active" id="cl-new">
+    <div class="mockup-frame">
+      <div class="mockup-label">Dashboard — new user, 0 of 4 complete</div>
+      <div class="mockup-body">
+        <div class="checklist-card">
+          <div class="checklist-header">
+            <div class="checklist-title">
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              Getting started
+            </div>
+            <span class="checklist-progress">0 of 4</span>
+          </div>
+          <div class="checklist-bar"><div class="checklist-bar-fill" style="width: 0%;"></div></div>
+          <div class="checklist-item">
+            <div class="checklist-check"></div>
+            <span class="checklist-label">Complete your profile</span>
+            <a href="#" class="checklist-action">Go to profile →</a>
+          </div>
+          <div class="checklist-item">
+            <div class="checklist-check"></div>
+            <span class="checklist-label">Add your first stock</span>
+            <a href="#" class="checklist-action">Add stock →</a>
+          </div>
+          <div class="checklist-item">
+            <div class="checklist-check"></div>
+            <span class="checklist-label">Create a price alert</span>
+            <a href="#" class="checklist-action">Set alert →</a>
+          </div>
+          <div class="checklist-item">
+            <div class="checklist-check"></div>
+            <span class="checklist-label">Explore the tools page</span>
+            <a href="#" class="checklist-action">View tools →</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- In progress -->
+  <div class="tab-panel" id="cl-progress">
+    <div class="mockup-frame">
+      <div class="mockup-label">Dashboard — 2 of 4 complete</div>
+      <div class="mockup-body">
+        <div class="checklist-card">
+          <div class="checklist-header">
+            <div class="checklist-title">
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              Getting started
+            </div>
+            <span class="checklist-progress">2 of 4</span>
+          </div>
+          <div class="checklist-bar"><div class="checklist-bar-fill" style="width: 50%;"></div></div>
+          <div class="checklist-item">
+            <div class="checklist-check done">
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <span class="checklist-label done">Complete your profile</span>
+          </div>
+          <div class="checklist-item">
+            <div class="checklist-check done">
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <span class="checklist-label done">Add your first stock</span>
+          </div>
+          <div class="checklist-item">
+            <div class="checklist-check"></div>
+            <span class="checklist-label">Create a price alert</span>
+            <a href="#" class="checklist-action">Set alert →</a>
+          </div>
+          <div class="checklist-item">
+            <div class="checklist-check"></div>
+            <span class="checklist-label">Explore the tools page</span>
+            <a href="#" class="checklist-action">View tools →</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Done -->
+  <div class="tab-panel" id="cl-done">
+    <div class="mockup-frame">
+      <div class="mockup-label">Dashboard — all complete, dismissible</div>
+      <div class="mockup-body">
+        <div class="checklist-card" style="border-color: rgba(16,185,129,0.2); background: rgba(16,185,129,0.04);">
+          <div class="checklist-header">
+            <div class="checklist-title" style="color: var(--emerald);">
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              All done! You're set up.
+            </div>
+            <button class="checklist-dismiss">Dismiss ✕</button>
+          </div>
+          <div class="checklist-bar"><div class="checklist-bar-fill" style="width: 100%;"></div></div>
+          <div style="text-align: center; padding: 8px 0; font-size: 13px; color: var(--emerald);">
+            You've completed all onboarding steps. Happy investing!
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======== MOCKUP 2: BLURRED PREVIEWS ======== -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-num">2</span>
+    <span class="section-title">ProFeaturePreview — Blurred Teasers</span>
+  </div>
+  <p class="section-desc">
+    Reemplaza el lock screen plano (solo ProCompareCard) con una vista blurreada del feature con datos de ejemplo.
+    El usuario ve que hay algo valioso detras del blur, lo que aumenta la conversion. ProCompareCard aparece debajo.
+  </p>
+
+  <div class="tab-bar" data-group="preview">
+    <button class="tab-btn active" data-tab="pv-screener">Screener</button>
+    <button class="tab-btn" data-tab="pv-tax">Tax Report</button>
+    <button class="tab-btn" data-tab="pv-score">Portfolio Score</button>
+  </div>
+
+  <!-- Screener preview -->
+  <div class="tab-panel active" id="pv-screener">
+    <div class="mockup-frame">
+      <div class="mockup-label">Tools → Screener (free user)</div>
+      <div class="mockup-body">
+        <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;">
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          Stock Screener
+        </h2>
+        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">Screen stocks by dividend yield, P/E ratio, sector, and more.</p>
+
+        <div class="blur-preview">
+          <div class="blur-content">
+            <table class="sample-table">
+              <thead>
+                <tr><th>Ticker</th><th>Name</th><th>Price</th><th>P/E</th><th>Div. Yield</th><th>Sector</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="ticker">ASML</td><td>ASML Holding</td><td>€682.40</td><td>38.2</td><td class="green">0.92%</td><td>Technology</td></tr>
+                <tr><td class="ticker">NOVO-B</td><td>Novo Nordisk</td><td>DKK 892</td><td>42.1</td><td>1.21%</td><td>Healthcare</td></tr>
+                <tr><td class="ticker">TTE</td><td>TotalEnergies</td><td>€58.30</td><td>7.8</td><td class="green">5.14%</td><td>Energy</td></tr>
+                <tr><td class="ticker">SAP</td><td>SAP SE</td><td>€178.50</td><td>35.6</td><td>1.42%</td><td>Technology</td></tr>
+                <tr><td class="ticker">BNP</td><td>BNP Paribas</td><td>€64.20</td><td>6.4</td><td class="green">6.83%</td><td>Financials</td></tr>
+                <tr><td class="ticker">AIR</td><td>Airbus SE</td><td>€142.80</td><td>28.9</td><td>1.18%</td><td>Industrials</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="blur-overlay">
+            <div class="blur-lock">
+              <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+            </div>
+            <p class="blur-text">Filter stocks by fundamental metrics, dividends, sector, and more</p>
+            <button class="blur-cta">Upgrade to Trefolio</button>
+          </div>
+        </div>
+        <div style="margin-top: 16px; padding: 16px; border-radius: 12px; border: 1px dashed rgba(139,92,246,0.2); text-align: center; font-size: 12px; color: var(--text-dim);">
+          ↓ ProCompareCard goes here (existing component) ↓
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tax Report preview -->
+  <div class="tab-panel" id="pv-tax">
+    <div class="mockup-frame">
+      <div class="mockup-label">Tools → Tax Report (free user)</div>
+      <div class="mockup-body">
+        <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;">
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+          Tax Report
+        </h2>
+        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">Generate tax reports tailored to your country.</p>
+
+        <div class="blur-preview">
+          <div class="blur-content">
+            <div class="tax-cards">
+              <div class="tax-card">
+                <div class="tax-card-label">Realized Gains</div>
+                <div class="tax-card-value" style="color: var(--emerald);">+€2,847</div>
+              </div>
+              <div class="tax-card">
+                <div class="tax-card-label">Dividends</div>
+                <div class="tax-card-value" style="color: var(--text);">€1,234</div>
+              </div>
+              <div class="tax-card">
+                <div class="tax-card-label">Withholding Tax</div>
+                <div class="tax-card-value" style="color: var(--red);">-€185</div>
+              </div>
+            </div>
+            <table class="sample-table">
+              <thead>
+                <tr><th>Ticker</th><th>Sell Date</th><th>Proceeds</th><th>Cost Basis</th><th>Gain/Loss</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="ticker">AAPL</td><td>2025-11-15</td><td>€4,280</td><td>€3,120</td><td class="green">+€1,160</td></tr>
+                <tr><td class="ticker">MSFT</td><td>2025-09-22</td><td>€6,540</td><td>€5,100</td><td class="green">+€1,440</td></tr>
+                <tr><td class="ticker">META</td><td>2025-08-03</td><td>€2,180</td><td>€2,430</td><td class="red">-€250</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="blur-overlay">
+            <div class="blur-lock">
+              <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+            </div>
+            <p class="blur-text">Capital gains, dividends, withholding tax, and local filing forms for your country</p>
+            <button class="blur-cta">Upgrade to Trefolio</button>
+          </div>
+        </div>
+        <div style="margin-top: 16px; padding: 16px; border-radius: 12px; border: 1px dashed rgba(139,92,246,0.2); text-align: center; font-size: 12px; color: var(--text-dim);">
+          ↓ ProCompareCard goes here ↓
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Portfolio Score preview -->
+  <div class="tab-panel" id="pv-score">
+    <div class="mockup-frame">
+      <div class="mockup-label">Tools → Portfolio Score (free user)</div>
+      <div class="mockup-body">
+        <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;">
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+          Portfolio Score
+        </h2>
+        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">AI-powered health score with actionable recommendations.</p>
+
+        <div class="blur-preview">
+          <div class="blur-content">
+            <div class="gauge-container">
+              <div class="gauge-ring">
+                <div class="gauge-inner">
+                  <span class="gauge-score">74</span>
+                  <span class="gauge-max">/ 100</span>
+                </div>
+              </div>
+              <div class="gauge-label">Good — Room for improvement</div>
+              <div class="category-bars">
+                <div class="cat-bar">
+                  <div class="cat-bar-label">Diversification</div>
+                  <div class="cat-bar-track"><div class="cat-bar-fill" style="width: 82%; background: var(--emerald);"></div></div>
+                </div>
+                <div class="cat-bar">
+                  <div class="cat-bar-label">Risk</div>
+                  <div class="cat-bar-track"><div class="cat-bar-fill" style="width: 65%; background: var(--amber);"></div></div>
+                </div>
+                <div class="cat-bar">
+                  <div class="cat-bar-label">Income</div>
+                  <div class="cat-bar-track"><div class="cat-bar-fill" style="width: 58%; background: var(--amber);"></div></div>
+                </div>
+                <div class="cat-bar">
+                  <div class="cat-bar-label">Growth</div>
+                  <div class="cat-bar-track"><div class="cat-bar-fill" style="width: 91%; background: var(--emerald);"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="blur-overlay">
+            <div class="blur-lock">
+              <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+            </div>
+            <p class="blur-text">Get your AI-powered portfolio health score with personalized recommendations</p>
+            <button class="blur-cta">Upgrade to Trefolio</button>
+          </div>
+        </div>
+        <div style="margin-top: 16px; padding: 16px; border-radius: 12px; border: 1px dashed rgba(139,92,246,0.2); text-align: center; font-size: 12px; color: var(--text-dim);">
+          ↓ ProCompareCard goes here ↓
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======== MOCKUP 3: GOAL PROMPT ======== -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-num">3</span>
+    <span class="section-title">Goal Planner — Dashboard Prompt</span>
+  </div>
+  <p class="section-desc">
+    Un card ligero en el dashboard principal para usuarios que tienen holdings pero no han definido un objetivo.
+    Usuarios free pueden crear un objetivo basico (valor meta). Features avanzados (FIRE, retirement) siguen siendo pro.
+  </p>
+
+  <div class="tab-bar" data-group="goal">
+    <button class="tab-btn active" data-tab="goal-prompt">No goal set</button>
+    <button class="tab-btn" data-tab="goal-active">Goal active</button>
+  </div>
+
+  <div class="tab-panel active" id="goal-prompt">
+    <div class="mockup-frame">
+      <div class="mockup-label">Dashboard — user has holdings, no goal set</div>
+      <div class="mockup-body">
+        <div class="goal-prompt">
+          <div class="goal-icon">
+            <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3v1.5M3 21v-6m0 0l2.77-.693a9 9 0 016.208.682l.108.054a9 9 0 006.086.71l3.114-.732a48.524 48.524 0 01-.005-10.499l-3.11.732a9 9 0 01-6.085-.711l-.108-.054a9 9 0 00-6.208-.682L3 4.5M3 15V4.5"/></svg>
+          </div>
+          <div class="goal-content">
+            <div class="goal-title">Set a portfolio goal</div>
+            <div class="goal-subtitle">Define a target value for your portfolio and track your progress over time. Stay motivated and on course.</div>
+          </div>
+          <button class="goal-cta">Set goal</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-panel" id="goal-active">
+    <div class="mockup-frame">
+      <div class="mockup-label">Dashboard — goal is active (existing GoalProgressCard)</div>
+      <div class="mockup-body">
+        <div class="card" style="padding: 16px 20px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+            <span style="font-size: 13px; font-weight: 600;">My goal: €50,000</span>
+            <span style="font-size: 12px; color: var(--emerald); font-weight: 600;">56% complete</span>
+          </div>
+          <div class="checklist-bar" style="margin-bottom: 8px;"><div class="checklist-bar-fill" style="width: 56%;"></div></div>
+          <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-dim);">
+            <span>Current: €28,120</span>
+            <span>Target: €50,000</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======== MOCKUP 4: AI WEEKLY DIGEST ======== -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-num">4</span>
+    <span class="section-title">AI Weekly Digest</span>
+  </div>
+  <p class="section-desc">
+    Resumen semanal generado por IA del rendimiento del portfolio. Se entrega como card en el dashboard (pro) y por email.
+    Usuarios free ven un teaser card con CTA para upgrade.
+  </p>
+
+  <div class="tab-bar" data-group="digest">
+    <button class="tab-btn active" data-tab="dg-pro">Pro user — digest card</button>
+    <button class="tab-btn" data-tab="dg-free">Free user — teaser</button>
+    <button class="tab-btn" data-tab="dg-email">Email preview</button>
+  </div>
+
+  <!-- Pro digest card -->
+  <div class="tab-panel active" id="dg-pro">
+    <div class="mockup-frame">
+      <div class="mockup-label">Dashboard — pro user, weekly digest</div>
+      <div class="mockup-body">
+        <div class="digest-card">
+          <div class="digest-header">
+            <div class="digest-icon">
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z"/></svg>
+            </div>
+            <div>
+              <div class="digest-title">Weekly Portfolio Digest</div>
+              <div class="digest-date">Mar 15 – Mar 21, 2026</div>
+            </div>
+          </div>
+          <div class="digest-stats">
+            <div class="digest-stat">
+              <div class="digest-stat-label">Week Change</div>
+              <div class="digest-stat-value" style="color: var(--emerald);">+€482</div>
+            </div>
+            <div class="digest-stat">
+              <div class="digest-stat-label">Best Performer</div>
+              <div class="digest-stat-value" style="color: var(--emerald);">ASML +4.2%</div>
+            </div>
+            <div class="digest-stat">
+              <div class="digest-stat-label">Dividends Received</div>
+              <div class="digest-stat-value">€38.50</div>
+            </div>
+          </div>
+          <div class="digest-body">
+            Your portfolio gained <strong style="color: var(--emerald);">+1.7%</strong> this week, outperforming the EURO STOXX 50 (+0.9%). ASML led the charge after a positive earnings revision. TotalEnergies paid a quarterly dividend of €0.79/share. Consider rebalancing — your tech allocation is now 42%, above your 35% target.
+          </div>
+          <div class="digest-footer">AI-generated summary based on your portfolio data. Not financial advice.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Free teaser -->
+  <div class="tab-panel" id="dg-free">
+    <div class="mockup-frame">
+      <div class="mockup-label">Dashboard — free user, digest teaser</div>
+      <div class="mockup-body">
+        <div class="teaser-card">
+          <span class="teaser-badge">Trefolio</span>
+          <div style="display: flex; justify-content: center; margin-bottom: 10px;">
+            <div class="digest-icon">
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>
+            </div>
+          </div>
+          <div style="font-size: 14px; font-weight: 700; margin-bottom: 6px;">AI Weekly Digest</div>
+          <div style="font-size: 12px; color: var(--text-muted); max-width: 340px; margin: 0 auto 14px; line-height: 1.5;">
+            Get a personalized AI summary of your portfolio performance, top movers, and actionable insights — delivered every Monday.
+          </div>
+          <button class="blur-cta" style="font-size: 12px;">Upgrade to Trefolio</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Email preview -->
+  <div class="tab-panel" id="dg-email">
+    <div class="mockup-frame">
+      <div class="mockup-label">Email — weekly digest (inbox preview)</div>
+      <div class="mockup-body">
+        <div style="background: #fff; color: #1e293b; border-radius: 12px; padding: 28px; max-width: 520px; margin: 0 auto;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <div style="font-size: 24px; margin-bottom: 4px;">🍀</div>
+            <div style="font-size: 18px; font-weight: 700; color: #0f172a;">Your Weekly Portfolio Digest</div>
+            <div style="font-size: 12px; color: #64748b;">Mar 15 – Mar 21, 2026</div>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 20px;">
+            <div style="background: #f0fdf4; border-radius: 8px; padding: 10px; text-align: center;">
+              <div style="font-size: 10px; color: #64748b; text-transform: uppercase;">Week Change</div>
+              <div style="font-size: 16px; font-weight: 700; color: #10b981;">+€482</div>
+            </div>
+            <div style="background: #f0fdf4; border-radius: 8px; padding: 10px; text-align: center;">
+              <div style="font-size: 10px; color: #64748b; text-transform: uppercase;">Best</div>
+              <div style="font-size: 16px; font-weight: 700; color: #10b981;">ASML +4.2%</div>
+            </div>
+            <div style="background: #f8fafc; border-radius: 8px; padding: 10px; text-align: center;">
+              <div style="font-size: 10px; color: #64748b; text-transform: uppercase;">Dividends</div>
+              <div style="font-size: 16px; font-weight: 700; color: #0f172a;">€38.50</div>
+            </div>
+          </div>
+          <div style="font-size: 14px; color: #475569; line-height: 1.7; margin-bottom: 20px;">
+            Your portfolio gained <strong style="color: #10b981;">+1.7%</strong> this week, outperforming the EURO STOXX 50 (+0.9%). ASML led the charge after a positive earnings revision. TotalEnergies paid a quarterly dividend of €0.79/share. Consider rebalancing — your tech allocation is now 42%, above your 35% target.
+          </div>
+          <div style="text-align: center; margin-bottom: 16px;">
+            <a href="#" style="display: inline-block; padding: 10px 28px; border-radius: 10px; background: #10b981; color: #fff; font-size: 14px; font-weight: 600; text-decoration: none;">View full dashboard</a>
+          </div>
+          <div style="font-size: 10px; color: #94a3b8; text-align: center; font-style: italic;">
+            AI-generated summary. Not financial advice. <a href="#" style="color: #94a3b8;">Unsubscribe</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="text-align:center; padding: 24px 0;">
+  <p style="font-size: 13px; color: var(--text-dim);">Fase 3 — Awaiting approval before implementation</p>
+</div>
+
+<script>
+  document.querySelectorAll('.tab-bar').forEach(bar => {
+    bar.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        bar.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const target = btn.dataset.tab;
+        const section = bar.closest('.section');
+        section.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById(target)?.classList.add('active');
+      });
+    });
+  });
+</script>
+</body>
+</html>

@@ -62,8 +62,6 @@ type DashboardTab = "portfolio" | "diversification" | "dividends" | "metrics" | 
 
 function EmptyPortfolio({ onAddStock }: { onAddStock: () => void }) {
   const { t } = useI18n();
-  const { user, isLoading: authLoading } = useAuth();
-  const isPro = user?.plan === "pro";
 
   return (
     <div className="space-y-6">
@@ -107,11 +105,6 @@ function EmptyPortfolio({ onAddStock }: { onAddStock: () => void }) {
         </button>
 
       </div>
-
-      {/* Broker API sync upsell for non-Pro users */}
-      {!authLoading && !isPro && (
-        <ProCompareCard surface="broker_sync_import" reason="upgrade_required" compact className="mt-2" />
-      )}
     </div>
   );
 }

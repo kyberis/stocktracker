@@ -7,6 +7,8 @@ import { useAuth } from "@/lib/auth-context";
 import { usePortfolio } from "@/lib/portfolio-context";
 import TierFeatureBadge from "./TierFeatureBadge";
 import DataUpgradeNudge from "./DataUpgradeNudge";
+import ProCompareCard from "./ProCompareCard";
+import BlurredProSection from "./BlurredProSection";
 import AiMarkdown from "./AiMarkdown";
 import type {
   TaxReport as TaxReportType,
@@ -207,11 +209,47 @@ export default function TaxReport() {
 
   if (user?.plan !== "pro") {
     return (
-      <div className="text-center py-16">
-        <div className="text-4xl mb-4">📊</div>
-        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{t("taxReportsTitle")}</h2>
-        <p className="text-sm text-gray-500 dark:text-slate-400 mb-4 max-w-md mx-auto">{t("taxReportsUpgradeDesc")}</p>
-        <TierFeatureBadge requiredPlan="pro" size="sm" />
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold flex items-center gap-3">
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+            </svg>
+            {t("taxReportsTitle")}
+          </h1>
+          <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">{t("taxReportsUpgradeDesc")}</p>
+        </div>
+        <BlurredProSection blurb={t("blurTaxTeaser")}>
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            <div className="rounded-xl border border-gray-200 dark:border-slate-700 p-3">
+              <div className="text-[10px] uppercase tracking-wider text-gray-400 dark:text-slate-500">Realized Gains</div>
+              <div className="text-lg font-bold text-emerald-500 mt-1 font-mono">+&euro;2,847</div>
+            </div>
+            <div className="rounded-xl border border-gray-200 dark:border-slate-700 p-3">
+              <div className="text-[10px] uppercase tracking-wider text-gray-400 dark:text-slate-500">Dividends</div>
+              <div className="text-lg font-bold mt-1 font-mono">&euro;1,234</div>
+            </div>
+            <div className="rounded-xl border border-gray-200 dark:border-slate-700 p-3">
+              <div className="text-[10px] uppercase tracking-wider text-gray-400 dark:text-slate-500">Withholding Tax</div>
+              <div className="text-lg font-bold text-red-500 mt-1 font-mono">-&euro;185</div>
+            </div>
+          </div>
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr className="text-left text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wider">
+                <th className="py-2 px-3">Ticker</th><th className="py-2 px-3">Sell Date</th><th className="py-2 px-3">Proceeds</th><th className="py-2 px-3">Cost Basis</th><th className="py-2 px-3">Gain/Loss</th>
+              </tr>
+            </thead>
+            <tbody className="text-gray-600 dark:text-slate-300">
+              <tr><td className="py-2 px-3 font-mono font-semibold">AAPL</td><td className="py-2 px-3">2025-11-15</td><td className="py-2 px-3">&euro;4,280</td><td className="py-2 px-3">&euro;3,120</td><td className="py-2 px-3 text-emerald-500">+&euro;1,160</td></tr>
+              <tr><td className="py-2 px-3 font-mono font-semibold">MSFT</td><td className="py-2 px-3">2025-09-22</td><td className="py-2 px-3">&euro;6,540</td><td className="py-2 px-3">&euro;5,100</td><td className="py-2 px-3 text-emerald-500">+&euro;1,440</td></tr>
+              <tr><td className="py-2 px-3 font-mono font-semibold">META</td><td className="py-2 px-3">2025-08-03</td><td className="py-2 px-3">&euro;2,180</td><td className="py-2 px-3">&euro;2,430</td><td className="py-2 px-3 text-red-500">-&euro;250</td></tr>
+            </tbody>
+          </table>
+        </BlurredProSection>
+        <div className="mt-6">
+          <ProCompareCard surface="tax_report_locked" reason="upgrade_required" />
+        </div>
       </div>
     );
   }

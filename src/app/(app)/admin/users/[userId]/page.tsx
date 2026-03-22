@@ -526,6 +526,32 @@ export default function AdminUserDetailPage() {
     fetchData(selectedPortfolio);
   };
 
+  const [generatingDigest, setGeneratingDigest] = useState(false);
+  const [digestResult, setDigestResult] = useState<{ summaryText: string; emailSent: boolean; weekStart: string; weekEnd: string } | null>(null);
+  const handleGenerateDigest = async () => {
+    setGeneratingDigest(true);
+    setActionMsg("Generating digest…");
+    setDigestResult(null);
+    try {
+      const res = await fetch("/api/admin/weekly-digest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, force: true }),
+      });
+      const json = await res.json();
+      if (res.ok) {
+        setActionMsg(`Digest generated${json.emailSent ? " & emailed" : ""}`);
+        setDigestResult({ summaryText: json.summaryText, emailSent: json.emailSent, weekStart: json.weekStart, weekEnd: json.weekEnd });
+      } else {
+        setActionMsg(`Digest failed: ${json.error}`);
+      }
+    } catch {
+      setActionMsg("Digest generation failed");
+    }
+    setGeneratingDigest(false);
+    setTimeout(() => setActionMsg(""), 6000);
+  };
+
   const [backfilling, setBackfilling] = useState(false);
   const handleBackfill = async () => {
     setBackfilling(true);
@@ -773,12 +799,31 @@ export default function AdminUserDetailPage() {
                 <button onClick={handleBackfill} disabled={backfilling} className="btn-secondary text-xs px-2 py-1">
                   {backfilling ? "Rebuilding…" : "Rebuild snapshots"}
                 </button>
+                <button onClick={handleGenerateDigest} disabled={generatingDigest} className="btn-secondary text-xs px-2 py-1">
+                  {generatingDigest ? "Generating…" : "Generate Digest"}
+                </button>
                 {user.username !== "admin" && (
                   <button onClick={handleDelete} className="btn-danger text-xs px-2 py-1">Delete user</button>
                 )}
                 {actionMsg && <span className="text-xs text-emerald-500 self-center">{actionMsg}</span>}
               </div>
             </div>
+
+            {/* Digest result preview */}
+            {digestResult && (
+              <div className="border-t border-gray-100 dark:border-slate-700 pt-2 space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">
+                    Digest Preview ({digestResult.weekStart} → {digestResult.weekEnd})
+                  </span>
+                  {digestResult.emailSent && <span className="text-[10px] font-semibold text-emerald-500">Email sent</span>}
+                  <button onClick={() => setDigestResult(null)} className="ml-auto text-[10px] text-gray-400 hover:text-gray-600 dark:hover:text-slate-300">Dismiss</button>
+                </div>
+                <p className="text-xs text-gray-700 dark:text-slate-300 leading-relaxed bg-gray-50 dark:bg-slate-800/50 rounded-lg p-3">
+                  {digestResult.summaryText}
+                </p>
+              </div>
+            )}
           </div>
         </div>
 

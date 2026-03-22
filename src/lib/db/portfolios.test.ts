@@ -146,20 +146,24 @@ describe("portfolios", () => {
     });
 
     it("deletes all scoped data and the portfolio row when not default", async () => {
+      // check is_default -> delete map -> delete txs -> re-assign txs ->
+      // delete holdings -> delete cash_entries -> delete portfolio_snapshots ->
+      // delete portfolio_shares -> delete price_alerts -> delete goals ->
+      // delete snaptrade_broker_portfolio_map -> update users -> delete portfolio
       mockExecute
-        .mockResolvedValueOnce({ rows: [{ is_default: 0 }] })
-        .mockResolvedValueOnce({ rowsAffected: 0 })
-        .mockResolvedValueOnce({ rowsAffected: 0 })
-        .mockResolvedValueOnce({ rowsAffected: 0 })
-        .mockResolvedValueOnce({ rowsAffected: 0 })
-        .mockResolvedValueOnce({ rowsAffected: 0 })
-        .mockResolvedValueOnce({ rowsAffected: 0 })
-        .mockResolvedValueOnce({ rowsAffected: 0 })
-        .mockResolvedValueOnce({ rowsAffected: 0 })
-        .mockResolvedValueOnce({ rowsAffected: 0 })
-        .mockResolvedValueOnce({ rowsAffected: 0 })
-        .mockResolvedValueOnce({ rowsAffected: 0 })
-        .mockResolvedValueOnce({ rowsAffected: 1 });
+        .mockResolvedValueOnce({ rows: [{ is_default: 0 }] })  // check
+        .mockResolvedValueOnce({ rowsAffected: 0 })  // delete map
+        .mockResolvedValueOnce({ rowsAffected: 0 })  // delete txs
+        .mockResolvedValueOnce({ rowsAffected: 0 })  // re-assign txs
+        .mockResolvedValueOnce({ rowsAffected: 0 })  // holdings
+        .mockResolvedValueOnce({ rowsAffected: 0 })  // cash_entries
+        .mockResolvedValueOnce({ rowsAffected: 0 })  // portfolio_snapshots
+        .mockResolvedValueOnce({ rowsAffected: 0 })  // portfolio_shares
+        .mockResolvedValueOnce({ rowsAffected: 0 })  // price_alerts
+        .mockResolvedValueOnce({ rowsAffected: 0 })  // goals
+        .mockResolvedValueOnce({ rowsAffected: 0 })  // snaptrade map
+        .mockResolvedValueOnce({ rowsAffected: 0 })  // users device_portfolio_id
+        .mockResolvedValueOnce({ rowsAffected: 1 }); // delete portfolio
 
       const result = await portfolios.deletePortfolio("user-1", "non-default-id");
       expect(result).toBe(true);
@@ -171,6 +175,54 @@ describe("portfolios", () => {
         sql: expect.stringContaining("DELETE FROM portfolio_snapshots"),
         args: ["user-1", "non-default-id"],
       });
+    });
+
+    it("re-assigns surviving transactions to remaining mapped portfolio", async () => {
+      mockExecute
+        .mockResolvedValueOnce({ rows: [{ is_default: 0 }] })  // check
+        .mockResolvedValueOnce({ rowsAffected: 1 })  // delete map entries
+        .mockResolvedValueOnce({ rowsAffected: 0 })  // delete orphan txs (none — tx still mapped)
+        .mockResolvedValueOnce({ rowsAffected: 1 })  // re-assign surviving txs
+        .mockResolvedValueOnce({ rowsAffected: 0 })  // holdings
+        .mockResolvedValueOnce({ rowsAffected: 0 })  // cash_entries
+        .mockResolvedValueOnce({ rowsAffected: 0 })  // portfolio_snapshots
+        .mockResolvedValueOnce({ rowsAffected: 0 })  // portfolio_shares
+        .mockResolvedValueOnce({ rowsAffected: 0 })  // price_alerts
+        .mockResolvedValueOnce({ rowsAffected: 0 })  // goals
+        .mockResolvedValueOnce({ rowsAffected: 0 })  // snaptrade map
+        .mockResolvedValueOnce({ rowsAffected: 0 })  // users
+        .mockResolvedValueOnce({ rowsAffected: 1 }); // delete portfolio
+
+      const result = await portfolios.deletePortfolio("user-1", "deleted-portfolio");
+      expect(result).toBe(true);
+
+      // Verify the UPDATE re-assignment query was called
+      const calls = mockExecute.mock.calls;
+      const reassignCall = calls.find(
+        (c) => typeof c[0]?.sql === "string" && c[0].sql.includes("UPDATE transactions SET portfolio_id")
+      );
+      expect(reassignCall).toBeDefined();
+      expect(reassignCall![0].sql).toContain("transaction_portfolio_map");
+      expect(reassignCall![0].args).toContain("deleted-portfolio");
+      expect(reassignCall![0].args).toContain("user-1");
+    });
+
+    it("deletes snapshots, holdings, cash, shares, alerts, and goals for the portfolio", async () => {
+      const mockChain = mockExecute
+        .mockResolvedValueOnce({ rows: [{ is_default: 0 }] });
+      for (let i = 0; i < 12; i++) mockChain.mockResolvedValueOnce({ rowsAffected: 0 });
+
+      await portfolios.deletePortfolio("user-1", "p-to-delete");
+
+      const allSql = mockExecute.mock.calls.map((c) => c[0]?.sql || "");
+      expect(allSql.some((s: string) => s.includes("DELETE FROM holdings"))).toBe(true);
+      expect(allSql.some((s: string) => s.includes("DELETE FROM cash_entries"))).toBe(true);
+      expect(allSql.some((s: string) => s.includes("DELETE FROM portfolio_snapshots"))).toBe(true);
+      expect(allSql.some((s: string) => s.includes("DELETE FROM portfolio_shares"))).toBe(true);
+      expect(allSql.some((s: string) => s.includes("DELETE FROM price_alerts"))).toBe(true);
+      expect(allSql.some((s: string) => s.includes("DELETE FROM goals"))).toBe(true);
+      expect(allSql.some((s: string) => s.includes("DELETE FROM snaptrade_broker_portfolio_map"))).toBe(true);
+      expect(allSql.some((s: string) => s.includes("UPDATE users SET device_portfolio_id"))).toBe(true);
     });
   });
 

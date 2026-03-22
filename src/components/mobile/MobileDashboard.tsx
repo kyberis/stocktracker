@@ -39,6 +39,9 @@ const ReferralShareModal = dynamic(() => import("@/components/ReferralShareModal
 const ReferralBanner = dynamic(() => import("@/components/ReferralBanner"), { ssr: false });
 const FeedbackModal = dynamic(() => import("@/components/FeedbackModal"), { ssr: false });
 const PortfolioScoreCard = dynamic(() => import("@/components/dashboard-v2/PortfolioScoreCard"), { ssr: false });
+const GoalPromptCard = dynamic(() => import("@/components/dashboard-v2/GoalPromptCard"), { ssr: false });
+const WeeklyDigestCard = dynamic(() => import("@/components/dashboard-v2/WeeklyDigestCard"), { ssr: false });
+const OnboardingChecklist = dynamic(() => import("@/components/dashboard-v2/OnboardingChecklist"), { ssr: false });
 
 type DashboardTab = "portfolio" | "diversification" | "dividends" | "metrics" | "growth" | "events" | "news";
 
@@ -219,6 +222,11 @@ export default function MobileDashboard() {
 
         <TrialCountdownBanner />
         <SampleDataBanner />
+        <OnboardingChecklist
+          onOpenAddStock={() => setShowAddModal(true)}
+          onNavigateTools={() => { window.location.href = "/tools"; }}
+          onNavigateAlerts={() => { window.location.href = "/tools?tab=alerts"; }}
+        />
         <ReferralBanner onShare={() => setShowReferralModal(true)} />
 
         {/* Portfolio tab */}
@@ -234,12 +242,15 @@ export default function MobileDashboard() {
               <MobileEmptyState onAdd={() => setShowAddModal(true)} />
             ) : (
               <>
+                <WeeklyDigestCard position="promoted" />
                 <PortfolioSummary holdings={filteredHoldings} cashEntries={investmentCashEntries} allCashEntries={cashEntries} />
                 <PortfolioEvolutionChart compact />
                 <PortfolioCards holdings={filteredHoldings} />
                 <UpcomingEarnings onNavigateToEvents={() => handleTabChange("events")} />
                 <MarketAndCash holdings={filteredHoldings} cashEntries={cashEntries} />
                 <PortfolioScoreCard holdings={filteredHoldings} cashEntries={investmentCashEntries} />
+                <GoalPromptCard holdings={filteredHoldings} />
+                <WeeklyDigestCard position="default" />
 
                 {holdingsAtLimit && (
                   <ProCompareCard surface="holdings_limit" reason="holdings_limit_reached" />

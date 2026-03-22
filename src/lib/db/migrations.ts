@@ -2385,6 +2385,64 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       }
     },
   },
+  {
+    version: 76,
+    description: "Onboarding checklist table and users.checklist_dismissed_at",
+    up: async (client: Client) => {
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS onboarding_checklist (
+          id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+          user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          step TEXT NOT NULL,
+          completed_at DATETIME NOT NULL DEFAULT (datetime('now')),
+          UNIQUE(user_id, step)
+        )
+      `);
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_onboarding_checklist_user ON onboarding_checklist(user_id)"
+      );
+      try {
+        await client.execute(
+          "ALTER TABLE users ADD COLUMN checklist_dismissed_at DATETIME"
+        );
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("duplicate column")) throw e;
+      }
+    },
+  },
+  {
+    version: 77,
+    description: "Weekly digests table and users.weekly_digest_enabled",
+    up: async (client: Client) => {
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS weekly_digests (
+          id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+          user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          portfolio_id TEXT,
+          week_start DATE NOT NULL,
+          week_end DATE NOT NULL,
+          summary_text TEXT NOT NULL DEFAULT '',
+          stats_json TEXT NOT NULL DEFAULT '{}',
+          created_at DATETIME NOT NULL DEFAULT (datetime('now'))
+        )
+      `);
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_weekly_digests_user ON weekly_digests(user_id)"
+      );
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_weekly_digests_week ON weekly_digests(user_id, week_end DESC)"
+      );
+      try {
+        await client.execute(
+          "ALTER TABLE users ADD COLUMN weekly_digest_enabled INTEGER NOT NULL DEFAULT 1"
+        );
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("duplicate column")) throw e;
+      }
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

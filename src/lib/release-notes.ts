@@ -17,6 +17,71 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.60.0",
+    date: "2026-03-21",
+    title: "Phase 3 — Onboarding, Previews, Goals & AI Digest",
+    titleTranslations: { es: "Fase 3 — Onboarding, Previews, Objetivos y Resumen IA" },
+    changes: [
+      {
+        type: "feature",
+        text: "Post-onboarding checklist guides new users through profile setup, adding stocks, creating alerts, and exploring tools.",
+        translations: {
+          es: "Lista de verificación post-onboarding guía a nuevos usuarios a configurar su perfil, agregar acciones, crear alertas y explorar herramientas.",
+        },
+      },
+      {
+        type: "feature",
+        text: "Blurred pro-feature previews for Screener, Tax Report, and Portfolio Score show sample data behind the paywall to boost conversion.",
+        translations: {
+          es: "Vistas previas borrosas de funciones Pro para Screener, Informe Fiscal y Puntuación del Portafolio muestran datos de ejemplo detrás del paywall.",
+        },
+      },
+      {
+        type: "feature",
+        text: "Goal prompt card on the dashboard encourages users with holdings to set a portfolio target.",
+        translations: {
+          es: "Tarjeta de objetivo en el dashboard motiva a usuarios con posiciones a definir una meta para su portafolio.",
+        },
+      },
+      {
+        type: "feature",
+        text: "AI Weekly Digest delivers a personalized portfolio summary every Monday — dashboard card for Pro, teaser for free users, plus email delivery.",
+        translations: {
+          es: "Resumen Semanal IA entrega un resumen personalizado del portafolio cada lunes — tarjeta en dashboard para Pro, teaser para usuarios gratuitos, más envío por email.",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.59.0",
+    date: "2026-03-21",
+    title: "Dashboard & Tools UX Overhaul",
+    titleTranslations: { es: "Mejora de UX en Dashboard y Herramientas" },
+    changes: [
+      {
+        type: "feature",
+        text: "Stats grid now shows daily P/L with color-coded highlight, arrow indicator, and estimated annual dividend income.",
+        translations: {
+          es: "El panel de estadísticas ahora muestra el P/L diario con indicador de color y flecha, y el ingreso anual estimado por dividendos.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Unified empty state design across all dashboard tabs — consistent icons, titles, and action buttons.",
+        translations: {
+          es: "Diseño unificado de estados vacíos en todas las pestañas del dashboard — iconos, títulos y botones de acción consistentes.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Tools page tabs are now grouped by plan tier (Free, Bifolio, Trefolio) for clearer navigation.",
+        translations: {
+          es: "Las pestañas de herramientas ahora están agrupadas por plan (Free, Bifolio, Trefolio) para una navegación más clara.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.58.1",
     date: "2026-03-21",
     title: "Holdings Limit Awareness",

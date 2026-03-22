@@ -14,6 +14,7 @@ import {
 import { useI18n } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/portfolio-context";
 import DataUpgradeNudge from "./DataUpgradeNudge";
+import EmptyState from "./EmptyState";
 import { formatCurrency, formatStealthCurrency } from "@/lib/utils";
 import type { Transaction } from "@/lib/types";
 import { useTrack } from "@/lib/use-track";
@@ -124,10 +125,12 @@ export default function DividendSummary() {
 
   if (!hasDividendTxs && !hasEstimatedDividends) {
     return (
-      <div className="card">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">{t("dividends")}</h3>
-        <p className="text-sm text-gray-400 dark:text-slate-500">{t("noDividends")}</p>
-      </div>
+      <EmptyState
+        icon={<svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+        iconClassName="from-amber-400 to-amber-600 shadow-amber-500/20"
+        title={t("noDividendsTitle")}
+        subtitle={t("noDividends")}
+      />
     );
   }
 

@@ -417,3 +417,20 @@ export {
   updateAiLogError,
   getAiLogs,
 } from "./ai-logs";
+
+export type { ChecklistStep, ChecklistState } from "./checklist";
+export {
+  ALL_CHECKLIST_STEPS,
+  getChecklistState,
+  completeChecklistStep,
+  dismissChecklist,
+  autoDetectCompletedSteps,
+} from "./checklist";
+
+export type { WeeklyDigestRow, WeeklyDigestStats } from "./weekly-digest";
+export {
+  getLatestDigest,
+  insertDigest,
+  getDigestEligibleUsers,
+  hasDigestForWeek,
+} from "./weekly-digest";

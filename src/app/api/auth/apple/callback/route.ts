@@ -233,6 +233,8 @@ export async function POST(req: NextRequest) {
         trial_activated_at: "",
         trial_token: "",
         trial_expired_notified: 0,
+        checklist_dismissed_at: "",
+        weekly_digest_enabled: 1,
       };
       trackEvent(publicUser.id, "signup", {
         source: attribution.source,

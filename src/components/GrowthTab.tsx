@@ -6,6 +6,7 @@ import { useI18n } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useAuth } from "@/lib/auth-context";
 import { useTrack } from "@/lib/use-track";
+import EmptyState from "./EmptyState";
 import { formatCurrency, formatPercent } from "@/lib/utils";
 import {
   AreaChart,
@@ -200,7 +201,14 @@ export default function GrowthTab() {
         </div>
       )}
 
-      {showPaywall ? (
+      {holdings.length === 0 ? (
+        <EmptyState
+          icon={<svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" /></svg>}
+          iconClassName="from-violet-400 to-violet-600 shadow-violet-500/20"
+          title={t("growthTabEmptyTitle")}
+          subtitle={t("growthTabEmpty")}
+        />
+      ) : showPaywall ? (
         <BlurredProSection blurb="Upgrade to Bifolio for full portfolio history with 3M, 6M, 1Y, and All-time views." ctaLabel="Upgrade to Bifolio">
           <div className="h-64 rounded-xl bg-gradient-to-b from-emerald-500/10 to-transparent" />
         </BlurredProSection>
@@ -210,9 +218,12 @@ export default function GrowthTab() {
           <span>{t("loading")}</span>
         </div>
       ) : points.length < 2 ? (
-        <div className="py-16 text-center">
-          <p className="text-sm text-gray-400 dark:text-slate-500">{t("growthTabEmpty")}</p>
-        </div>
+        <EmptyState
+          icon={<svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" /></svg>}
+          iconClassName="from-violet-400 to-violet-600 shadow-violet-500/20"
+          title={t("growthTabEmptyTitle")}
+          subtitle={t("growthTabEmpty")}
+        />
       ) : (
         <>
           {periodReturn !== null && (

@@ -9,13 +9,16 @@ import type { Holding, CashEntry, Transaction } from "@/lib/types";
 import CompactHeroChart from "./CompactHeroChart";
 import StatsGrid from "./StatsGrid";
 import CompactReferralCard from "./CompactReferralCard";
+import OnboardingChecklist from "./OnboardingChecklist";
 
 const AllocationTabs = dynamic(() => import("./AllocationTabs"), { ssr: false });
 const GoalProgressCard = dynamic(() => import("./GoalProgressCard"), { ssr: false });
+const GoalPromptCard = dynamic(() => import("./GoalPromptCard"), { ssr: false });
 const CompactDividendCard = dynamic(() => import("./CompactDividendCard"), { ssr: false });
 const CompactEarningsCard = dynamic(() => import("./CompactEarningsCard"), { ssr: false });
 const PortfolioScoreCard = dynamic(() => import("./PortfolioScoreCard"), { ssr: false });
 const PortfolioAiTrigger = dynamic(() => import("./PortfolioAiTrigger"), { ssr: false });
+const WeeklyDigestCard = dynamic(() => import("./WeeklyDigestCard"), { ssr: false });
 const PortfolioAiDrawer = dynamic(() => import("./PortfolioAiDrawer"), { ssr: false });
 const PortfolioTable = dynamic(() => import("../PortfolioTable"), { ssr: false });
 const PortfolioGrowthPeriods = dynamic(() => import("../PortfolioGrowthPeriods"), { ssr: false });
@@ -74,6 +77,11 @@ export default function DashboardPortfolioV2({
 
   return (
     <>
+      <OnboardingChecklist
+        onOpenAddStock={onAddStock}
+        onNavigateTools={() => { window.location.href = "/tools"; }}
+        onNavigateAlerts={() => { window.location.href = "/tools?tab=alerts"; }}
+      />
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4 items-start">
         {/* Left column */}
         <div className="flex flex-col gap-4 min-w-0">
@@ -90,7 +98,9 @@ export default function DashboardPortfolioV2({
 
         {/* Right sidebar */}
         <div className="flex flex-col gap-3">
+          <WeeklyDigestCard position="promoted" />
           <CompactReferralCard onShare={onShareReferral} />
+          <GoalPromptCard holdings={holdings} />
           <PortfolioScoreCard holdings={holdings} cashEntries={cashEntries} />
           <GoalProgressCard holdings={holdings} cashEntries={cashEntries} />
           <StatsGrid holdings={holdings} cashEntries={cashEntries} snapshotInvested={txInvested} />
@@ -104,6 +114,7 @@ export default function DashboardPortfolioV2({
           <PortfolioGrowthPeriods holdings={holdings} />
           <PerformanceMetrics holdings={holdings} cashEntries={cashEntries} />
           <PortfolioAiTrigger onOpen={() => setAiDrawerOpen(true)} />
+          <WeeklyDigestCard position="default" />
         </div>
       </div>
 

@@ -387,6 +387,20 @@ export async function deleteTransactionsForPosition(
             AND id NOT IN (SELECT transaction_id FROM transaction_portfolio_map WHERE user_id = ?)`,
       args: [userId, portfolioId, normalizedTicker, exchange, userId],
     });
+
+    // Re-assign surviving transactions whose portfolio_id still points here
+    await client.execute({
+      sql: `UPDATE transactions SET portfolio_id = (
+              SELECT portfolio_id FROM transaction_portfolio_map
+              WHERE transaction_id = transactions.id AND user_id = ?
+              LIMIT 1
+            )
+            WHERE user_id = ? AND portfolio_id = ?
+            AND UPPER(ticker) = UPPER(?) AND UPPER(exchange) = UPPER(?)
+            AND id IN (SELECT transaction_id FROM transaction_portfolio_map WHERE user_id = ?)`,
+      args: [userId, userId, portfolioId, normalizedTicker, exchange, userId],
+    });
+
     return Number(result.rowsAffected ?? 0);
   }
 
@@ -413,6 +427,19 @@ export async function deleteAllTransactions(userId: string, portfolioId?: string
             AND id NOT IN (SELECT transaction_id FROM transaction_portfolio_map WHERE user_id = ?)`,
       args: [userId, portfolioId, userId],
     });
+
+    // Re-assign surviving transactions whose portfolio_id still points here
+    await client.execute({
+      sql: `UPDATE transactions SET portfolio_id = (
+              SELECT portfolio_id FROM transaction_portfolio_map
+              WHERE transaction_id = transactions.id AND user_id = ?
+              LIMIT 1
+            )
+            WHERE user_id = ? AND portfolio_id = ?
+            AND id IN (SELECT transaction_id FROM transaction_portfolio_map WHERE user_id = ?)`,
+      args: [userId, userId, portfolioId, userId],
+    });
+
     return Number(result.rowsAffected ?? 0);
   }
 

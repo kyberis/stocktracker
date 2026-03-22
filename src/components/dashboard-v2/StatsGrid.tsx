@@ -30,11 +30,16 @@ export default function StatsGrid({ holdings, cashEntries, snapshotInvested }: P
 
   const investedCost = snapshotInvested ?? totals.totalCostEUR;
   const gainLoss = totals.totalCurrentEUR - investedCost;
+  const dayChange = totals.dayGainLossEUR;
+  const dayIsPositive = dayChange >= 0;
+  const dayPct = totals.totalCurrentEUR > 0
+    ? (dayChange / (totals.totalCurrentEUR - dayChange)) * 100
+    : 0;
 
   const cur = activePortfolioCurrency;
 
-  const divYield = useMemo(() => {
-    if (totals.totalCurrentEUR <= 0) return 0;
+  const { divYield, annualDivIncome } = useMemo(() => {
+    if (totals.totalCurrentEUR <= 0) return { divYield: 0, annualDivIncome: 0 };
     let annualDivBase = 0;
     for (const h of holdings) {
       const q = quotes[h.ticker];
@@ -44,12 +49,15 @@ export default function StatsGrid({ holdings, cashEntries, snapshotInvested }: P
         annualDivBase += convertCurrency(divLocal, divCurrency, cur, exchangeRates);
       }
     }
-    return (annualDivBase / totals.totalCurrentEUR) * 100;
+    return {
+      divYield: (annualDivBase / totals.totalCurrentEUR) * 100,
+      annualDivIncome: annualDivBase,
+    };
   }, [holdings, quotes, exchangeRates, cur, totals.totalCurrentEUR]);
 
   const isGain = gainLoss >= 0;
 
-  const cells = [
+  const cells: { label: string; value: string; accent?: boolean; positive?: boolean; highlight?: boolean }[] = [
     { label: t("v2Cost"), value: stealthMode ? "•••••" : formatCurrency(investedCost, cur) },
     {
       label: t("v2GainLoss"),
@@ -58,12 +66,23 @@ export default function StatsGrid({ holdings, cashEntries, snapshotInvested }: P
       positive: isGain,
     },
     {
+      label: t("dayChange"),
+      value: stealthMode ? "•••••" : `${dayIsPositive ? "+" : ""}${formatCurrency(dayChange, cur)} ${dayIsPositive ? "▲" : "▼"} ${formatPercent(Math.abs(dayPct))}`,
+      accent: true,
+      positive: dayIsPositive,
+      highlight: true,
+    },
+    { label: t("v2DivYield"), value: `${divYield.toFixed(2)}%` },
+    {
       label: t("v2Holdings"),
       value: holdingsLimit < Infinity ? `${holdings.length}/${holdingsLimit}` : String(holdings.length),
       accent: holdingsLimit < Infinity,
       positive: holdings.length < holdingsLimit,
     },
-    { label: t("v2DivYield"), value: `${divYield.toFixed(2)}%` },
+    {
+      label: t("estAnnualIncome"),
+      value: stealthMode ? "•••••" : `${formatCurrency(annualDivIncome, cur)}/yr`,
+    },
   ];
 
   return (
@@ -72,7 +91,13 @@ export default function StatsGrid({ holdings, cashEntries, snapshotInvested }: P
         {cells.map((c) => (
           <div
             key={c.label}
-            className="rounded-lg bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/[0.04] px-2.5 py-2"
+            className={`rounded-lg px-2.5 py-2 ${
+              c.highlight
+                ? c.positive
+                  ? "bg-emerald-50 dark:bg-emerald-500/[0.06] border border-emerald-200/60 dark:border-emerald-500/15"
+                  : "bg-red-50 dark:bg-red-500/[0.06] border border-red-200/60 dark:border-red-500/15"
+                : "bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/[0.04]"
+            }`}
           >
             <p className="text-[9px] font-medium text-gray-500 dark:text-slate-500 uppercase tracking-wide">
               {c.label}

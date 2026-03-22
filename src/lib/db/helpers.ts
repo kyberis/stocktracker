@@ -59,6 +59,8 @@ export interface DbUser {
   trial_activated_at: string;
   trial_token: string;
   trial_expired_notified: number;
+  checklist_dismissed_at: string;
+  weekly_digest_enabled: number;
 }
 
 export type PortfolioCurrency =
@@ -311,6 +313,8 @@ export function rowToDbUser(row: Row): DbUser {
     trial_activated_at: str(row.trial_activated_at),
     trial_token: str(row.trial_token),
     trial_expired_notified: num(row.trial_expired_notified),
+    checklist_dismissed_at: str(row.checklist_dismissed_at),
+    weekly_digest_enabled: num(row.weekly_digest_enabled ?? 1),
   };
 }
 

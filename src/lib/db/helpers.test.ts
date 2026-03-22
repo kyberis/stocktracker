@@ -387,6 +387,8 @@ function mockRow(overrides: Record<string, unknown> = {}): Row {
     trial_activated_at: "",
     trial_token: "",
     trial_expired_notified: 0,
+    checklist_dismissed_at: "",
+    weekly_digest_enabled: 1,
     ...overrides,
   } as unknown as Row;
 }
@@ -439,6 +441,8 @@ describe("rowToDbUser", () => {
       trial_activated_at: "",
       trial_token: "",
       trial_expired_notified: 0,
+      checklist_dismissed_at: "",
+      weekly_digest_enabled: 1,
     });
   });
 
@@ -640,6 +644,8 @@ describe("mapUser", () => {
     trial_activated_at: "",
     trial_token: "",
     trial_expired_notified: 0,
+    checklist_dismissed_at: "",
+    weekly_digest_enabled: 1,
   };
 
   it("maps DbUser to PublicUser with correct field mapping", () => {
