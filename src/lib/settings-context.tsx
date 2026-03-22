@@ -56,7 +56,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [toolDividendsEnabled, setToolDividendsEnabled] = useState(true);
   const [toolPerformanceEnabled, setToolPerformanceEnabled] = useState(true);
   const [toolTaxonomyEnabled, setToolTaxonomyEnabled] = useState(true);
-  const [toolRebalancingEnabled, setToolRebalancingEnabled] = useState(false);
+  const [toolRebalancingEnabled, setToolRebalancingEnabled] = useState(true);
   const [toolAccountsEnabled, setToolAccountsEnabled] = useState(true);
   const [toolWatchlistEnabled, setToolWatchlistEnabled] = useState(true);
   const [defaultCurrency, setDefaultCurrencyState] = useState("EUR");

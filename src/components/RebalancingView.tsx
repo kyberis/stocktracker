@@ -33,7 +33,8 @@ export default function RebalancingView() {
   const { user } = useAuth();
   const { holdings, quotes, exchangeRates, activePortfolioCurrency } = usePortfolio();
   const baseCurrency = activePortfolioCurrency;
-  const isPro = user?.plan === "pro" || user?.plan === "starter";
+  const isAdmin = user?.role === "admin";
+  const isPro = user?.plan === "pro" || user?.plan === "starter" || isAdmin;
 
   const [targets, setTargets] = useState<RebalanceTarget[]>([]);
   const [category, setCategory] = useState<Category>("sector");
