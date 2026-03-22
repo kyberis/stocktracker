@@ -84,6 +84,12 @@ export default async function RootLayout({
             __html: `(function(){try{var m=document.cookie.match(/(?:^|; )trefolio_layout_theme=([^;]*)/);if(m){var t=decodeURIComponent(m[1]);if(t==="terminal"||t==="studio")document.documentElement.classList.add("dark");if(t==="canvas")document.documentElement.classList.remove("dark")}else{var s=localStorage.getItem("trefolio-theme");if(s==="dark")document.documentElement.classList.add("dark")}}catch(e){}})()`,
           }}
         />
+        {/* Auto-reload once on ChunkLoadError (stale deploy) */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){var K="trefolio_chunk_reload";window.addEventListener("error",function(e){if(e.message&&e.message.indexOf("ChunkLoadError")!==-1||e.message&&e.message.indexOf("Loading chunk")!==-1){try{if(!sessionStorage.getItem(K)){sessionStorage.setItem(K,"1");window.location.reload()}}catch(x){}}},true);try{if(sessionStorage.getItem(K))sessionStorage.removeItem(K)}catch(e){}})()`,
+          }}
+        />
         {layoutCookie && validThemes.has(layoutCookie) && (
           <>
             <link rel="preconnect" href="https://fonts.googleapis.com" />

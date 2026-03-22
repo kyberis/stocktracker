@@ -12,6 +12,11 @@ interface State {
   error: Error | null;
 }
 
+function isChunkError(error: Error | null): boolean {
+  if (!error) return false;
+  return error.name === "ChunkLoadError" || error.message?.includes("Loading chunk");
+}
+
 export default class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
@@ -24,6 +29,9 @@ export default class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, info: ErrorInfo) {
     console.error("[ErrorBoundary]", error, info.componentStack);
+    if (isChunkError(error)) {
+      window.location.reload();
+    }
   }
 
   handleReset = () => {
@@ -32,6 +40,7 @@ export default class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
+      const isStale = isChunkError(this.state.error);
       return (
         <div className={`flex flex-col items-center justify-center gap-3 py-12 px-4 text-center ${this.props.fallbackClassName || ""}`}>
           <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center">
@@ -40,16 +49,20 @@ export default class ErrorBoundary extends Component<Props, State> {
             </svg>
           </div>
           <div>
-            <p className="text-sm font-semibold text-gray-900 dark:text-white">Something went wrong</p>
+            <p className="text-sm font-semibold text-gray-900 dark:text-white">
+              {isStale ? "New version available" : "Something went wrong"}
+            </p>
             <p className="text-xs text-gray-500 dark:text-slate-400 mt-1 max-w-xs mx-auto">
-              This section encountered an error. Try reloading or contact support if it persists.
+              {isStale
+                ? "A new version was deployed. Reloading..."
+                : "This section encountered an error. Try reloading or contact support if it persists."}
             </p>
           </div>
           <button
-            onClick={this.handleReset}
+            onClick={isStale ? () => window.location.reload() : this.handleReset}
             className="px-4 py-1.5 text-xs font-semibold rounded-lg bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-200 hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors"
           >
-            Try again
+            {isStale ? "Reload now" : "Try again"}
           </button>
         </div>
       );
