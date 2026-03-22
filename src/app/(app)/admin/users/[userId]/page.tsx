@@ -40,6 +40,16 @@ interface AllPortfolio {
   isDefault: boolean;
 }
 
+interface ChecklistStepInfo {
+  step: string;
+  completedAt: string | null;
+}
+
+interface ChecklistInfo {
+  steps: ChecklistStepInfo[];
+  dismissed: boolean;
+}
+
 interface PageData {
   user: UserInfo;
   portfolios: UserPortfolio[];
@@ -49,6 +59,7 @@ interface PageData {
   cash: CashEntry[];
   accounts: Account[];
   allPortfolios: AllPortfolio[];
+  checklist: ChecklistInfo;
 }
 
 type DataTab = "holdings" | "transactions" | "cash";
@@ -553,6 +564,12 @@ export default function AdminUserDetailPage() {
   };
 
   const [backfilling, setBackfilling] = useState(false);
+  const [checklistData, setChecklistData] = useState<ChecklistInfo | null>(null);
+  const [resettingChecklist, setResettingChecklist] = useState(false);
+
+  useEffect(() => {
+    if (data?.checklist) setChecklistData(data.checklist);
+  }, [data?.checklist]);
   const handleBackfill = async () => {
     setBackfilling(true);
     setActionMsg("Rebuilding snapshots…");
@@ -826,6 +843,90 @@ export default function AdminUserDetailPage() {
             )}
           </div>
         </div>
+
+        {/* Onboarding Checklist */}
+        {checklistData && (
+          <div className="card p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider">Onboarding Checklist</h3>
+              <div className="flex items-center gap-2">
+                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                  checklistData.dismissed
+                    ? "bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-slate-400"
+                    : checklistData.steps.every(s => s.completedAt)
+                      ? "bg-emerald-100 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+                      : "bg-amber-100 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400"
+                }`}>
+                  {checklistData.dismissed ? "Dismissed" : checklistData.steps.every(s => s.completedAt) ? "Complete" : "In Progress"}
+                </span>
+                <button
+                  onClick={async () => {
+                    setResettingChecklist(true);
+                    try {
+                      const res = await fetch("/api/admin/users", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ userId, action: "resetChecklist" }),
+                      });
+                      if (res.ok) {
+                        setChecklistData({
+                          steps: checklistData.steps.map(s => ({ ...s, completedAt: null })),
+                          dismissed: false,
+                        });
+                        setActionMsg("Checklist reset");
+                        setTimeout(() => setActionMsg(""), 4000);
+                      }
+                    } catch {}
+                    setResettingChecklist(false);
+                  }}
+                  disabled={resettingChecklist}
+                  className="btn-secondary text-[10px] px-2 py-0.5"
+                >
+                  {resettingChecklist ? "Resetting…" : "Reset"}
+                </button>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {checklistData.steps.map((s) => {
+                const labels: Record<string, string> = {
+                  complete_profile: "Complete Profile",
+                  add_stock: "Add Stock",
+                  create_alert: "Create Alert",
+                  explore_tools: "Explore Tools",
+                };
+                const done = !!s.completedAt;
+                return (
+                  <div
+                    key={s.step}
+                    className={`rounded-lg px-3 py-2 text-center border ${
+                      done
+                        ? "bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20"
+                        : "bg-gray-50 dark:bg-slate-800/50 border-gray-200 dark:border-slate-700"
+                    }`}
+                  >
+                    <div className="flex items-center justify-center gap-1 mb-0.5">
+                      {done ? (
+                        <svg className="w-3 h-3 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      ) : (
+                        <svg className="w-3 h-3 text-gray-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <circle cx="12" cy="12" r="9" />
+                        </svg>
+                      )}
+                      <span className={`text-[11px] font-semibold ${done ? "text-emerald-700 dark:text-emerald-400" : "text-gray-600 dark:text-slate-400"}`}>
+                        {labels[s.step] || s.step}
+                      </span>
+                    </div>
+                    {done && s.completedAt && (
+                      <p className="text-[9px] text-gray-400 dark:text-slate-500">{relativeTime(s.completedAt)}</p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Send Email */}
         <SendEmailSection userId={userId} userEmail={user.email} userLanguage={user.language || "en"} />

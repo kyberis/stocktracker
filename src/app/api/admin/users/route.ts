@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/guards";
 import { deleteUser, findUserById, listUsers, updateUserPassword, updateUserRole, updateUserSubscription } from "@/lib/db";
+import { resetChecklist } from "@/lib/db/checklist";
 import { hashPassword } from "@/lib/auth/password";
 import { parseBody } from "@/lib/api-response";
 import { adminUserActionSchema } from "@/lib/schemas";
@@ -52,6 +53,11 @@ export const POST = withMetrics("/api/admin/users", async (req: NextRequest) => 
       ? new Date(Date.now() + 365 * 86400000).toISOString()
       : "";
     await updateUserSubscription(user.id, { plan: data.plan, planExpiresAt });
+    return NextResponse.json({ ok: true });
+  }
+
+  if (data.action === "resetChecklist") {
+    await resetChecklist(user.id);
     return NextResponse.json({ ok: true });
   }
 

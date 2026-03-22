@@ -64,6 +64,14 @@ export async function dismissChecklist(userId: string): Promise<void> {
   });
 }
 
+export async function resetChecklist(userId: string): Promise<void> {
+  const client = await ensureInitialized();
+  await client.batch([
+    { sql: "DELETE FROM onboarding_checklist WHERE user_id = ?", args: [userId] },
+    { sql: "UPDATE users SET checklist_dismissed_at = NULL WHERE id = ?", args: [userId] },
+  ]);
+}
+
 export async function autoDetectCompletedSteps(userId: string): Promise<void> {
   const client = await ensureInitialized();
 

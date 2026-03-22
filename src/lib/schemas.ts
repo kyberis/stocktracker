@@ -338,6 +338,10 @@ export const adminUserActionSchema = z.discriminatedUnion("action", [
     userId: z.string().min(1),
     newPassword: z.string().min(4, "Password must be at least 4 characters"),
   }),
+  z.object({
+    action: z.literal("resetChecklist"),
+    userId: z.string().min(1),
+  }),
 ]);
 
 export const adminResetDataSchema = z.object({

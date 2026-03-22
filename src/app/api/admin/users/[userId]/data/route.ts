@@ -10,6 +10,7 @@ import {
   listAccounts,
   getUserSettings,
 } from "@/lib/db";
+import { getChecklistState } from "@/lib/db/checklist";
 import { withMetrics } from "@/lib/with-metrics";
 
 export const GET = withMetrics("/api/admin/users/[userId]/data", async (
@@ -28,7 +29,7 @@ export const GET = withMetrics("/api/admin/users/[userId]/data", async (
 
   const portfolioId = req.nextUrl.searchParams.get("portfolioId") || undefined;
 
-  const [detail, portfolios, holdings, transactions, cash, accounts, settings] = await Promise.all([
+  const [detail, portfolios, holdings, transactions, cash, accounts, settings, checklist] = await Promise.all([
     getUserDetailData(userId),
     listPortfolios(userId),
     listHoldings(userId, portfolioId),
@@ -36,6 +37,7 @@ export const GET = withMetrics("/api/admin/users/[userId]/data", async (
     listCashEntries(userId, portfolioId),
     listAccounts(userId),
     getUserSettings(userId),
+    getChecklistState(userId),
   ]);
 
   const user = {
@@ -73,5 +75,6 @@ export const GET = withMetrics("/api/admin/users/[userId]/data", async (
     cash,
     accounts,
     allPortfolios: portfolios,
+    checklist,
   });
 });
