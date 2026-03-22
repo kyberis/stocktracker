@@ -32,6 +32,7 @@ export interface ScreenerCacheRow {
 
 export interface ScreenerFilters {
   sector?: string;
+  industry?: string;
   divYieldMin?: number;
   divYieldMax?: number;
   peMin?: number;
@@ -112,6 +113,10 @@ export async function queryScreener(filters: ScreenerFilters): Promise<ScreenerR
   if (filters.sector) {
     conditions.push("sector = ?");
     args.push(filters.sector);
+  }
+  if (filters.industry) {
+    conditions.push("industry = ?");
+    args.push(filters.industry);
   }
   if (filters.divYieldMin != null) {
     conditions.push("dividend_yield >= ?");
@@ -250,4 +255,12 @@ export async function getScreenerDistinctExchanges(): Promise<string[]> {
   const client = await ensureInitialized();
   const result = await client.execute("SELECT DISTINCT exchange FROM screener_cache WHERE exchange != '' ORDER BY exchange");
   return result.rows.map((r) => str(r.exchange));
+}
+
+export async function getScreenerDistinctIndustries(sector?: string): Promise<string[]> {
+  const client = await ensureInitialized();
+  const where = sector ? "WHERE industry != '' AND sector = ?" : "WHERE industry != ''";
+  const args = sector ? [sector] : [];
+  const result = await client.execute({ sql: `SELECT DISTINCT industry FROM screener_cache ${where} ORDER BY industry`, args });
+  return result.rows.map((r) => str(r.industry));
 }

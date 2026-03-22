@@ -5,6 +5,7 @@ import {
   getScreenerDistinctSectors,
   getScreenerDistinctCountries,
   getScreenerDistinctExchanges,
+  getScreenerDistinctIndustries,
   getScreenerCacheCount,
 } from "@/lib/db";
 import type { ScreenerFilters } from "@/lib/db";
@@ -19,19 +20,24 @@ export async function GET(request: NextRequest) {
   const action = url.searchParams.get("action");
 
   if (action === "meta") {
-    const [sectors, countries, exchanges, total] = await Promise.all([
+    const sectorParam = url.searchParams.get("sector") || undefined;
+    const [sectors, countries, exchanges, industries, total] = await Promise.all([
       getScreenerDistinctSectors(),
       getScreenerDistinctCountries(),
       getScreenerDistinctExchanges(),
+      getScreenerDistinctIndustries(sectorParam),
       getScreenerCacheCount(),
     ]);
-    return NextResponse.json({ sectors, countries, exchanges, total });
+    return NextResponse.json({ sectors, countries, exchanges, industries, total });
   }
 
   const filters: ScreenerFilters = {};
 
   const sector = url.searchParams.get("sector");
   if (sector) filters.sector = sector;
+
+  const industry = url.searchParams.get("industry");
+  if (industry) filters.industry = industry;
 
   const divYieldMin = url.searchParams.get("divYieldMin");
   if (divYieldMin) filters.divYieldMin = parseFloat(divYieldMin);

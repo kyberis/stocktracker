@@ -345,6 +345,7 @@ export {
   getScreenerDistinctSectors,
   getScreenerDistinctCountries,
   getScreenerDistinctExchanges,
+  getScreenerDistinctIndustries,
 } from "./screener";
 
 export type { ScheduledXPost, XPostStatus, CreateXPostInput } from "./x-posts";

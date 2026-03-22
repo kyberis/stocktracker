@@ -174,7 +174,7 @@ const SOFTWARE_APP_SCHEMA = {
       priceCurrency: "EUR",
       name: "Folio",
       description:
-        "Up to 15 holdings, real-time quotes, charts, growth projection, broker import, earnings calendar, 5 AI calls/month",
+        "Up to 20 holdings, real-time quotes, charts, growth projection, broker import, earnings calendar, 5 AI calls/month",
     },
     {
       "@type": "Offer",
@@ -204,7 +204,7 @@ const FAQ_SCHEMA = {
       name: "How do I import my portfolio?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Go to the unified /import page to access all import methods in one place: 14 broker CSV formats (DEGIRO, IBKR, Trading 212, Revolut, Schwab, Fidelity, Nordnet, and more), SnapTrade auto-sync with 20+ brokerages, and AI Import from screenshots or any file. Each method has a built-in guide. Bifolio users get 1 broker sync connection, Trefolio gets unlimited.",
+        text: "Go to the /import page to access all import methods: 14 broker CSV formats (DEGIRO, IBKR, Trading 212, Revolut, Schwab, Fidelity, and more), AI Import for screenshots or unsupported formats, and manual entry. Each method has a built-in step-by-step guide. Bifolio and Trefolio users can use Broker Sync to connect their brokerage directly and import automatically — privacy-first, read-only access via SnapTrade.",
       },
     },
     {
@@ -212,7 +212,7 @@ const FAQ_SCHEMA = {
       name: "What CSV formats are supported?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "14 broker CSV formats: DEGIRO, IBKR, Trading 212, Revolut, Schwab, Fidelity, Nordnet, Tastytrade, Freetrade, eToro, Wealthsimple, Questrade, Firstrade, and Simple CSV. For any other format, use AI Import — upload or paste your file and AI will parse it. Bifolio and Trefolio users can also connect 20+ brokerages via SnapTrade for automatic syncing every hour.",
+        text: "14 broker CSV formats: DEGIRO, Interactive Brokers, Trading 212, Revolut, Charles Schwab, Fidelity, Nordnet, Tastytrade, Freetrade, eToro, Wealthsimple, Questrade, Firstrade, plus a Simple CSV format. For any other format, use AI Import — upload a screenshot or paste your file and AI will parse it. Bifolio and Trefolio users can also use Broker Sync for automatic one-click import from 20+ brokerages.",
       },
     },
     {
@@ -228,7 +228,7 @@ const FAQ_SCHEMA = {
       name: "What exchanges are supported?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "trefolio supports NYSE, NASDAQ, XETRA, LSE, Amsterdam (AMS), Madrid (MAD), Copenhagen (OMK), and more. Multi-currency conversion between 21 currencies (EUR, USD, GBP, CHF, SEK, NOK, DKK, CAD, AUD, NZD, JPY, and more) is handled automatically.",
+        text: "trefolio supports NYSE, NASDAQ, XETRA, LSE, Amsterdam (AMS), Madrid (MAD), Copenhagen (OMK), and more. Multi-currency conversion between EUR, USD, GBP, DKK, and CAD is handled automatically.",
       },
     },
     {
@@ -244,7 +244,7 @@ const FAQ_SCHEMA = {
       name: "What's the difference between the plans?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Folio (free) includes up to 15 holdings, real-time quotes, charts, growth projection, broker import, earnings calendar, and 5 AI calls/month. Bifolio (€2.99/month) adds 50 holdings, 20 AI calls, full portfolio history, advanced metrics, portfolio sharing, CSV export, 1 broker sync, and Canvas theme. Trefolio (€7.99/month) adds unlimited holdings, unlimited AI, EU tax reports for 5 countries, stock screener, net worth tracking, fundamentals, all 4 dashboard themes, unlimited broker sync, and IPO calendar.",
+        text: "Folio includes 20 holdings, real-time quotes, charts, growth projection, broker import, and 5 AI calls/month. Bifolio (from €2.99/month with launch discount) raises the limit to 50 holdings, 20 AI calls, full portfolio history, advanced metrics (Sharpe, Drawdown, Volatility), portfolio sharing, and CSV export. Trefolio (from €7.99/month with launch discount) adds unlimited holdings, unlimited AI, AI Portfolio Score, fundamentals, intelligence, economic indicators, financial planning with FIRE calculator, portfolio simulator, and crypto tracking. Try Trefolio free for 7 days — no credit card required.",
       },
     },
     {
@@ -252,7 +252,7 @@ const FAQ_SCHEMA = {
       name: "Can I cancel anytime?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Yes. Bifolio and Trefolio are billed monthly or annually (save ~37%). You can cancel anytime from the billing portal — your paid features remain active until the end of the billing period.",
+        text: "Yes. Bifolio and Trefolio can be billed monthly or annually — switch to annual billing using the toggle above to save up to 37%. Cancel anytime from the billing portal; your paid features remain active until the end of the billing period.",
       },
     },
     {

@@ -8,7 +8,7 @@ trefolio is a web-based portfolio tracker built for European retail investors. I
 
 ## Pricing
 
-- Free (Folio): Up to 15 holdings, real-time quotes, charts, growth projection, broker import, earnings calendar, 5 AI calls/month
+- Free (Folio): Up to 20 holdings, real-time quotes, charts, growth projection, broker import, earnings calendar, 5 AI calls/month
 - Bifolio (€2.99/month or €23.99/year): 50 holdings, 20 AI calls/month, full portfolio history, advanced metrics, portfolio sharing, CSV export, 1 broker sync, Canvas theme
 - Trefolio (€7.99/month or €59.99/year): Unlimited holdings, unlimited AI, tax reports (17 countries), stock screener, portfolio simulator, net worth tracking, fundamentals, all 4 themes, unlimited broker sync, IPO calendar
 

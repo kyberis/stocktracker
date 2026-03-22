@@ -107,7 +107,7 @@ trefolio is a web-based portfolio tracking application designed for European ret
 ## Pricing Details
 
 ### Free Plan (Folio — €0 forever)
-- Up to 15 stocks & ETFs
+- Up to 20 stocks & ETFs
 - Real-time Yahoo Finance quotes
 - Historical price charts
 - Cash balance tracking
@@ -209,7 +209,7 @@ trefolio supports NYSE, NASDAQ, XETRA, LSE, Amsterdam (AMS), Madrid (MAD), Copen
 TTWROR uses the Modified Dietz method, which weights each cash flow by the fraction of the period remaining — so returns reflect market performance only, not deposit timing. IRR (XIRR) finds the annualized rate that makes the net present value of all dated cash flows equal zero. Advanced metrics (Sharpe, Drawdown, Volatility) are available from Bifolio.
 
 ### What's the difference between the plans?
-Folio (free) includes up to 15 holdings, real-time quotes, charts, growth projection, broker import, earnings calendar, and 5 AI calls/month. Bifolio (€2.99/month) adds 50 holdings, 20 AI calls, full portfolio history, advanced metrics, portfolio sharing, CSV export, 1 broker sync, and Canvas theme. Trefolio (€7.99/month) adds unlimited holdings, unlimited AI, tax reports for 17 countries, stock screener, portfolio simulator, net worth tracking, fundamentals, all 4 dashboard themes, unlimited broker sync, and IPO calendar.
+Folio (free) includes up to 20 holdings, real-time quotes, charts, growth projection, broker import, earnings calendar, and 5 AI calls/month. Bifolio (€2.99/month) adds 50 holdings, 20 AI calls, full portfolio history, advanced metrics, portfolio sharing, CSV export, 1 broker sync, and Canvas theme. Trefolio (€7.99/month) adds unlimited holdings, unlimited AI, tax reports for 17 countries, stock screener, portfolio simulator, net worth tracking, fundamentals, all 4 dashboard themes, unlimited broker sync, and IPO calendar.
 
 ### What tax reports are available?
 Trefolio includes country-specific tax reports for 17 countries: Germany (Anlage KAP, Vorabpauschale, Teilfreistellung), France (Déclaration 2074), Spain (Modelo 100/720), Netherlands (Box 3), Italy (Quadro RT/RW, IVAFE), UK (CGT), US (Schedule D), Switzerland (Verrechnungssteuer), Austria (KESt), Portugal (IRS Anexo J), Belgium (TOB), Ireland (CGT 33%), Sweden (K4), Denmark (Aktieindkomst), Norway (RF-1159), Finland (capital income 30%), and Poland (PIT-38). Reports include FIFO/LIFO/average cost basis, dividend income, withholding tax, and form field mapping. An AI Tax Assistant provides optimization suggestions.

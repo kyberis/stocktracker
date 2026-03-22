@@ -74,6 +74,8 @@ export const POST = withMetrics("/api/ai-analysis", async (request: NextRequest)
     cryptoData?: Record<string, unknown>;
     historyData?: Array<Record<string, unknown>>;
     taxReport?: Record<string, unknown>;
+    allocationData?: Record<string, unknown>;
+    rebalancePlan?: Record<string, unknown>;
   };
 
   try {
@@ -92,8 +94,16 @@ export const POST = withMetrics("/api/ai-analysis", async (request: NextRequest)
   const isEconomic = body.analysisType === "economic_indicator";
   const isCrypto = body.analysisType === "crypto_market";
   const isTaxAssistant = body.analysisType === "tax_assistant";
+  const isRebalancing = body.analysisType === "rebalancing_assistant";
 
-  if (isTaxAssistant) {
+  if (isRebalancing) {
+    if (body.allocationData) {
+      dataSections.push(`## Portfolio Allocation & Drift\n${JSON.stringify(body.allocationData, null, 2)}`);
+    }
+    if (body.rebalancePlan) {
+      dataSections.push(`## Proposed Rebalancing Plan\n${JSON.stringify(body.rebalancePlan, null, 2)}`);
+    }
+  } else if (isTaxAssistant) {
     if (body.taxReport) {
       dataSections.push(`## Tax Report\n${JSON.stringify(body.taxReport, null, 2)}`);
     }
@@ -165,12 +175,41 @@ export const POST = withMetrics("/api/ai-analysis", async (request: NextRequest)
           ? "crypto"
           : body.analysisType === "tax_assistant"
             ? "tax_assistant"
-            : "fundamental";
+            : body.analysisType === "rebalancing_assistant"
+              ? "rebalancing"
+              : "fundamental";
 
   let systemPrompt: string;
   let userPrompt: string;
 
-  if (isCrypto) {
+  if (isRebalancing) {
+    const hasPlan = !!body.rebalancePlan;
+
+    systemPrompt = `You are an expert portfolio strategist and financial advisor who helps retail investors rebalance their portfolios.
+Your audience ranges from beginners to experienced investors.
+
+Rules:
+- Write in ${lang}.
+- ONLY use facts and numbers explicitly present in the data provided below. Do NOT invent holdings, prices, or market predictions.
+- Structure your response with clear headings using markdown ##.
+- Be actionable: tell the user exactly what to do and why.
+${hasPlan
+  ? `- The user has created a rebalancing plan. Evaluate it: is the distribution sensible? Are there risks? Suggest improvements.
+- Start with a brief verdict: is this a good plan, needs adjustment, or has issues?
+- Comment on the before/after impact — does it meaningfully reduce drift?
+- Flag any tax implications (holding period, wash sale rules) if relevant.`
+  : `- The user has NOT yet created a plan. Analyze their current allocation and drift.
+- Start with a brief "Portfolio Health" summary — rate the current state.
+- Identify the biggest risks (overexposure, concentration, correlation).
+- Suggest specific rebalancing moves with amounts and priority order.
+- Explain the reasoning in simple terms.`}
+- Keep the total response under 600 words.
+- Include a disclaimer that this is not financial advice.`;
+
+    userPrompt = hasPlan
+      ? `Here is my portfolio allocation data and a proposed rebalancing plan. Please evaluate the plan and suggest improvements.\n\n${dataSections.join("\n\n")}`
+      : `Here is my current portfolio allocation and drift data. Please analyze it and suggest a rebalancing strategy.\n\n${dataSections.join("\n\n")}`;
+  } else if (isCrypto) {
     const cryptoLabel = body.cryptoName
       ? `${body.cryptoName} (${body.cryptoSymbol})`
       : body.cryptoSymbol || "this cryptocurrency";

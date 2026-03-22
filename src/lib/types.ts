@@ -199,6 +199,20 @@ export interface RebalanceDrift {
   actionEUR: number;
 }
 
+export interface RebalanceMove {
+  id: string;
+  sourceLabel: string;
+  destLabel: string;
+  amountEUR: number;
+}
+
+export interface RebalancePlan {
+  mode: "add_money" | "move_funds";
+  newCapitalEUR?: number;
+  allocations: { label: string; amountEUR: number; holdings: { ticker: string; amountEUR: number }[] }[];
+  moves: RebalanceMove[];
+}
+
 /* ── Goals ────────────────────────────────────────────────── */
 
 export type GoalType = "retirement" | "fire" | "house" | "education" | "emergency_fund" | "vacation" | "custom";

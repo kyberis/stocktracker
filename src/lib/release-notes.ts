@@ -17,6 +17,42 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.62.0",
+    date: "2026-03-22",
+    title: "Enhanced Rebalancing Tool with AI-powered portfolio analysis",
+    titleTranslations: { es: "Herramienta de Rebalanceo mejorada con análisis de cartera impulsado por IA" },
+    changes: [
+      {
+        type: "feature",
+        text: "Completely redesigned rebalancing tool with auto-populated allocation overview, exposure analysis treemap, Add Money / Move Funds planner, and before/after comparison charts.",
+        translations: {
+          es: "Herramienta de rebalanceo completamente rediseñada con resumen de asignación auto-rellenado, mapa de exposición, planificador Añadir Dinero / Mover Fondos y gráficos de comparación antes/después.",
+        },
+      },
+      {
+        type: "feature",
+        text: "AI Rebalancing Assistant (Pro) — get full portfolio analysis, rebalancing strategy suggestions, and plan evaluations from an AI financial expert.",
+        translations: {
+          es: "Asistente IA de Rebalanceo (Pro) — obtén análisis completo de cartera, sugerencias de estrategia de rebalanceo y evaluaciones de plan de un experto financiero IA.",
+        },
+      },
+      {
+        type: "feature",
+        text: "Industry Screener (Pro) — find stocks by industry within the rebalancing flow, pre-filtered by underweight sectors.",
+        translations: {
+          es: "Screener por Industria (Pro) — encuentra acciones por industria dentro del flujo de rebalanceo, pre-filtrado por sectores infraponderados.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Screener now supports industry filtering alongside existing sector, country, and exchange filters.",
+        translations: {
+          es: "El screener ahora soporta filtrado por industria junto con los filtros existentes de sector, país y mercado.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.61.0",
     date: "2026-03-21",
     title: "UX polish — timezone fix, error boundaries, onboarding & email improvements",

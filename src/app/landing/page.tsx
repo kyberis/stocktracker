@@ -162,7 +162,7 @@ function getPricing(t: T): PricingTier[] {
       regularAnnual: "€31.99", annualPrice: "€23.99",
       annualSavePct: 33, launchDiscountPct: 25,
       description: t("landingPricingBifolioDesc"),
-      features: Array.from({ length: 13 }, (_, i) => t(`landingPricingBifolioFeature${i + 1}` as TranslationKey)),
+      features: Array.from({ length: 14 }, (_, i) => t(`landingPricingBifolioFeature${i + 1}` as TranslationKey)),
       cta: t("landingPricingBifolioCta"),
       highlighted: false,
     },
@@ -289,15 +289,15 @@ function LangPicker({ className = "" }: { className?: string }) {
         value={language}
         onChange={(e) => setLanguage(e.target.value as Parameters<typeof setLanguage>[0])}
         aria-label="Select language"
-        className="appearance-none bg-slate-800/60 hover:bg-slate-700/70 border border-slate-700/50 hover:border-slate-600/60 text-slate-300 hover:text-white text-sm font-medium pl-8 pr-7 py-1.5 rounded-lg cursor-pointer transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/50"
+        className="appearance-none bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 text-slate-600 hover:text-slate-900 text-sm font-medium pl-8 pr-7 py-1.5 rounded-lg cursor-pointer transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/50"
       >
         {SUPPORTED_LANGUAGES.map((lang) => (
-          <option key={lang.code} value={lang.code} className="bg-slate-900 text-white">
+            <option key={lang.code} value={lang.code} className="bg-white text-slate-900">
             {lang.nativeName}
           </option>
         ))}
       </select>
-      <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 group-hover:text-slate-300 pointer-events-none transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 group-hover:text-slate-600 pointer-events-none transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" />
       </svg>
       <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-500 group-hover:text-slate-400 pointer-events-none transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -327,13 +327,13 @@ function NavBar() {
   return (
     <nav className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
       scrolled
-        ? "bg-slate-950/95 backdrop-blur-xl border-b border-slate-800/60 shadow-lg shadow-black/10"
+        ? "bg-[#faf9f7]/90 backdrop-blur-xl border-b border-slate-200 shadow-sm"
         : "bg-transparent"
     }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Logo className="w-9 h-9" />
-          <span className="text-xl font-bold text-white tracking-tight">trefolio</span>
+          <span className="text-xl font-bold text-slate-900 tracking-tight">trefolio</span>
         </div>
 
         {/* Desktop nav */}
@@ -343,7 +343,7 @@ function NavBar() {
               <a
                 key={link.href}
                 href={link.href}
-                className="text-sm font-medium text-slate-300 hover:text-white transition-colors"
+                className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
               >
                 {link.label}
               </a>
@@ -354,14 +354,14 @@ function NavBar() {
             <Link
               href="/login"
               onClick={() => trackLanding("landing_cta_click", { cta: "nav_login" })}
-              className="text-sm font-medium text-slate-300 hover:text-white transition-colors px-4 py-2"
+              className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors px-4 py-2"
             >
               {t("landingNavLogin")}
             </Link>
             <Link
               href="/signup"
               onClick={() => trackLanding("landing_cta_click", { cta: "nav_signup" })}
-              className="text-sm font-semibold bg-emerald-500 hover:bg-emerald-400 text-white px-5 py-2.5 rounded-lg transition-all shadow-lg shadow-emerald-500/25 hover:shadow-emerald-400/30"
+              className="text-sm font-semibold bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-lg transition-all shadow-md shadow-emerald-500/20 hover:shadow-emerald-500/30"
             >
               {t("landingNavSignUp")}
             </Link>
@@ -370,7 +370,7 @@ function NavBar() {
 
         {/* Mobile hamburger */}
         <button
-          className="md:hidden p-2 text-slate-300 hover:text-white"
+          className="md:hidden p-2 text-slate-500 hover:text-slate-900"
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label="Toggle menu"
         >
@@ -388,29 +388,29 @@ function NavBar() {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="md:hidden bg-slate-950/98 backdrop-blur-xl border-t border-slate-800/50">
+        <div className="md:hidden bg-[#faf9f7]/98 backdrop-blur-xl border-t border-slate-200">
           <div className="px-4 py-4 space-y-1">
             {navLinks.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
                 onClick={() => setMobileOpen(false)}
-                className="block px-4 py-3 text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/50 rounded-lg transition-colors"
+                className="block px-4 py-3 text-sm font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
               >
                 {link.label}
               </a>
             ))}
-            <div className="pt-3 border-t border-slate-800/50 space-y-2">
+            <div className="pt-3 border-t border-slate-200 space-y-2">
               <LangPicker className="px-4 py-2" />
               <Link
                 href="/login"
-                className="block px-4 py-3 text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/50 rounded-lg transition-colors"
+                className="block px-4 py-3 text-sm font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
               >
                 {t("landingNavLogin")}
               </Link>
               <Link
                 href="/signup"
-                className="block text-center bg-emerald-500 hover:bg-emerald-400 text-white font-semibold py-3 rounded-lg transition-all"
+                className="block text-center bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-3 rounded-lg transition-all"
               >
                 {t("landingNavSignUp")}
               </Link>
@@ -426,9 +426,8 @@ function NavBar() {
 
 function HeroDashboardMock() {
   return (
-    <div className="relative max-w-5xl mx-auto">
-      <div className="absolute -inset-4 bg-gradient-to-r from-emerald-500/20 via-teal-500/20 to-cyan-500/20 rounded-3xl blur-2xl" />
-      <div className="relative rounded-2xl overflow-hidden border border-slate-700/50 shadow-2xl shadow-black/50 bg-slate-900 p-4 sm:p-6">
+    <div className="relative max-w-5xl mx-auto" style={{ perspective: "1000px" }}>
+      <div className="relative rounded-2xl overflow-hidden border border-slate-200 shadow-xl shadow-slate-900/[0.06] bg-slate-900 p-4 sm:p-6 transition-transform duration-500 hover:[transform:rotateY(0)_rotateX(0)] lg:[transform:perspective(1000px)_rotateY(-2deg)_rotateX(0.5deg)]">
         {/* Top bar */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex gap-2">
@@ -504,9 +503,9 @@ function HeroDashboardMock() {
       </div>
 
       {/* Floating AI card */}
-      <div className="absolute -right-2 sm:-right-6 top-16 sm:top-20 w-48 sm:w-56 bg-slate-800/95 backdrop-blur-sm border border-slate-700/60 rounded-xl p-3 shadow-xl hidden md:block">
-        <div className="text-[10px] font-semibold text-slate-400 mb-1.5">AI Portfolio Review</div>
-        <p className="text-[11px] text-slate-300 leading-relaxed mb-2">
+      <div className="absolute -right-2 sm:-right-6 top-16 sm:top-20 w-48 sm:w-56 bg-white border border-slate-200 rounded-xl p-3 shadow-lg hidden md:block">
+        <div className="text-[10px] font-semibold text-violet-500 mb-1.5">AI Portfolio Review</div>
+        <p className="text-[11px] text-slate-500 leading-relaxed mb-2">
           Your tech allocation is <span className="text-emerald-400 font-semibold">well-diversified</span>. Here&apos;s what we found...
         </p>
         <span className="inline-flex items-center gap-1 text-[10px] font-bold text-violet-400 bg-violet-500/10 px-2 py-0.5 rounded-full border border-violet-500/20">
@@ -516,7 +515,7 @@ function HeroDashboardMock() {
       </div>
 
       {/* Floating dividend card */}
-      <div className="absolute -left-2 sm:-left-6 bottom-16 sm:bottom-20 w-40 sm:w-44 bg-slate-800/95 backdrop-blur-sm border border-slate-700/60 rounded-xl p-3 shadow-xl hidden md:block">
+      <div className="absolute -left-2 sm:-left-6 bottom-16 sm:bottom-20 w-40 sm:w-44 bg-white border border-slate-200 rounded-xl p-3 shadow-lg hidden md:block">
         <div className="text-[10px] font-semibold text-slate-400 mb-1">Next Dividend</div>
         <div className="text-lg font-extrabold text-emerald-400">€82.40</div>
         <div className="text-[10px] text-slate-500 mt-0.5">ASML · Ex-date Apr 28</div>
@@ -536,82 +535,81 @@ function HeroSection() {
   ], [t]);
 
   return (
-    <section className="relative pt-20 pb-12 sm:pt-28 sm:pb-24 overflow-hidden">
+    <section className="relative pt-24 pb-8 sm:pt-28 sm:pb-16 overflow-hidden">
       <div className="absolute inset-0 -z-10">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl" />
-        <div className="absolute top-20 right-1/4 w-80 h-80 bg-teal-500/15 rounded-full blur-3xl" />
-        <div className="absolute -bottom-20 left-1/2 w-[600px] h-96 bg-emerald-600/10 rounded-full blur-3xl" />
+        <div className="absolute top-[8%] right-[-8%] w-[550px] h-[550px] bg-emerald-500/[0.06] rounded-full blur-3xl" />
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-3xl mx-auto">
-          {/* Animation + badge — inline row */}
-          <div className="flex items-center justify-center gap-3 mb-3 sm:mb-5">
-            <CloverToLogo once delay={400} transitionMs={2000} className="w-10 h-10 sm:w-14 sm:h-14 lg:w-20 lg:h-20 drop-shadow-[0_0_24px_rgba(16,185,129,0.3)]" />
-            <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-3 py-1 sm:px-4 sm:py-1.5">
-              <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-xs sm:text-sm font-medium text-emerald-400">{t("landingHeroBadge")}</span>
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+          {/* Text side */}
+          <div>
+            <div className="flex items-center gap-3 mb-4 sm:mb-5">
+              <CloverToLogo once delay={400} transitionMs={2000} className="w-10 h-10 sm:w-12 sm:h-12 drop-shadow-[0_0_24px_rgba(16,185,129,0.3)]" />
+              <div className="inline-flex items-center gap-2 bg-emerald-500/[0.06] border border-emerald-500/15 rounded-full px-3 py-1 sm:px-4 sm:py-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-xs sm:text-sm font-medium text-emerald-600">{t("landingHeroBadge")}</span>
+              </div>
+            </div>
+
+            <h1 className="text-3xl sm:text-5xl lg:text-[3.5rem] font-extrabold text-slate-900 tracking-tight leading-[1.08] mb-2 sm:mb-3">
+              {t("landingHeroTitle")}{" "}
+              <span className="text-emerald-500">{t("landingHeroTitleAccent")}</span>
+            </h1>
+            <p className="text-base sm:text-lg text-emerald-600/70 font-medium italic mb-3 sm:mb-4">
+              {t("landingBrandTagline")}
+            </p>
+
+            <p className="text-base lg:text-lg text-slate-500 max-w-[460px] mb-5 sm:mb-6 leading-relaxed">
+              {t("landingHeroParagraph")}
+            </p>
+
+            {/* CTA */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-6 sm:mb-8">
+              <Link
+                href="/signup"
+                onClick={() => trackLanding("landing_cta_click", { cta: "hero_signup" })}
+                className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold px-6 py-3 sm:px-7 sm:py-3.5 rounded-xl text-base transition-all shadow-md shadow-emerald-500/20 hover:shadow-emerald-500/25 hover:-translate-y-0.5 justify-center"
+              >
+                {t("landingHeroCtaSignup")}
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </Link>
+              <Link
+                href="/demo"
+                onClick={() => trackLanding("landing_cta_click", { cta: "hero_demo" })}
+                className="inline-flex items-center gap-2 border border-slate-200 hover:border-emerald-500/40 text-slate-500 hover:text-emerald-600 font-semibold px-6 py-3 sm:px-7 sm:py-3.5 rounded-xl text-base transition-all hover:-translate-y-0.5 justify-center"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <circle cx="12" cy="12" r="10" />
+                  <polygon points="10,8 16,12 10,16" fill="currentColor" stroke="none" />
+                </svg>
+                {t("landingHeroCtaDemo")}
+              </Link>
+            </div>
+
+            {/* Stats */}
+            <div className="flex flex-wrap gap-x-6 gap-y-3 sm:gap-x-8">
+              {[
+                { value: t("landingHeroProof1Value"), label: t("landingHeroProof1Label") },
+                { value: t("landingHeroProof2Value"), label: t("landingHeroProof2Label") },
+                { value: t("landingHeroProof3Value"), label: t("landingHeroProof3Label") },
+                { value: t("landingHeroProof4Value"), label: t("landingHeroProof4Label") },
+              ].map((s) => (
+                <div key={s.label}>
+                  <div className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">{s.value}</div>
+                  <div className="text-[10px] sm:text-xs text-slate-400 uppercase tracking-wider mt-0.5">{s.label}</div>
+                </div>
+              ))}
             </div>
           </div>
 
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-[1.1] mb-2 sm:mb-3">
-            {t("landingHeroTitle")}{" "}
-            <span className="bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 bg-clip-text text-transparent">
-              {t("landingHeroTitleAccent")}
-            </span>
-          </h1>
-          <p className="text-base sm:text-lg text-emerald-400/80 font-medium italic mb-3 sm:mb-5">
-            {t("landingBrandTagline")}
-          </p>
-
-          {/* Value props — inline flow */}
-          <div className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 sm:gap-x-6 sm:gap-y-2 mb-4 sm:mb-6">
-            {valuePropItems.map((item) => (
-              <div key={item} className="flex items-center gap-1.5 sm:gap-2">
-                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-                <span className="text-sm sm:text-base text-slate-300">{item}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* Long paragraph — only on large screens */}
-          <p className="hidden md:block text-base lg:text-lg text-slate-400 max-w-xl mx-auto mb-8 leading-relaxed">
-            {t("landingHeroParagraph")}
-          </p>
-
-          {/* CTA */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-5 sm:mb-8">
-            <Link
-              href="/signup"
-              onClick={() => trackLanding("landing_cta_click", { cta: "hero_signup" })}
-              className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-white font-semibold px-6 py-3 sm:px-8 sm:py-3.5 rounded-xl text-base sm:text-lg transition-all shadow-xl shadow-emerald-500/25 hover:shadow-emerald-400/30 hover:-translate-y-0.5 w-full sm:w-auto justify-center"
-            >
-              {t("landingHeroCtaSignup")}
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-            </Link>
-          </div>
-
-          {/* Stats — 4 cols on all sizes */}
-          <div className="grid grid-cols-4 gap-3 sm:gap-6 mb-10 sm:mb-14 max-w-2xl mx-auto">
-            {[
-              { value: t("landingHeroProof1Value"), label: t("landingHeroProof1Label") },
-              { value: t("landingHeroProof2Value"), label: t("landingHeroProof2Label") },
-              { value: t("landingHeroProof3Value"), label: t("landingHeroProof3Label") },
-              { value: t("landingHeroProof4Value"), label: t("landingHeroProof4Label") },
-            ].map((s) => (
-              <div key={s.label} className="text-center">
-                <div className="text-lg sm:text-2xl font-extrabold text-white tracking-tight">{s.value}</div>
-                <div className="text-[10px] sm:text-xs text-slate-400 mt-0.5 sm:mt-1">{s.label}</div>
-              </div>
-            ))}
+          {/* Dashboard side */}
+          <div className="relative mt-4 lg:mt-0">
+            <HeroDashboardMock />
           </div>
         </div>
-
-        <HeroDashboardMock />
       </div>
     </section>
   );
@@ -629,12 +627,12 @@ function StatsBar() {
   ], [t]);
 
   return (
-    <section className="py-10 border-y border-slate-800/50 bg-slate-900/30">
+    <section className="py-10 border-y border-slate-200 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-8">
           {stats.map((stat) => (
             <div key={stat.label} className="text-center">
-              <div className="text-2xl sm:text-3xl font-bold text-white mb-1">{stat.value}</div>
+              <div className="text-2xl sm:text-3xl font-bold text-slate-900 mb-1">{stat.value}</div>
               <div className="text-sm text-slate-400">{stat.label}</div>
             </div>
           ))}
@@ -657,13 +655,13 @@ function FeaturesSection() {
     <section id="features" className="py-20 sm:py-28" ref={sectionRef as React.RefObject<HTMLElement>}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
             {t("landingFeaturesHeading")}{" "}
-            <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
+            <span className="text-emerald-500">
               {t("landingFeaturesHeadingAccent")}
             </span>
           </h2>
-          <p className="text-lg text-slate-400 max-w-2xl mx-auto">
+          <p className="text-lg text-slate-500 max-w-2xl mx-auto">
             {t("landingFeaturesSubtitle")}
           </p>
         </div>
@@ -681,7 +679,7 @@ function FeaturesSection() {
                 {/* Text side */}
                 <div className={`space-y-6 ${reversed ? "lg:order-2" : ""}`}>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+                    <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
                       {feature.tag}
                     </span>
                     {feature.tagBadge && (
@@ -690,19 +688,19 @@ function FeaturesSection() {
                       </span>
                     )}
                   </div>
-                  <h3 className="text-2xl sm:text-3xl font-bold text-white leading-tight">
+                  <h3 className="text-2xl sm:text-3xl font-bold text-slate-900 leading-tight">
                     {feature.title}
                   </h3>
-                  <p className="text-slate-400 leading-relaxed text-lg">
+                  <p className="text-slate-500 leading-relaxed text-lg">
                     {feature.description}
                   </p>
                   <ul className="space-y-3">
                     {feature.points.map((point) => (
                       <li key={point} className="flex items-center gap-3 text-sm">
-                        <svg className="w-5 h-5 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <svg className="w-5 h-5 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                         </svg>
-                        <span className="text-slate-300">{point}</span>
+                        <span className="text-slate-600">{point}</span>
                       </li>
                     ))}
                   </ul>
@@ -710,8 +708,8 @@ function FeaturesSection() {
 
                 {/* Screenshot side */}
                 <div className={`relative ${reversed ? "lg:order-1" : ""}`}>
-                  <div className="absolute -inset-3 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-2xl blur-xl" />
-                  <div className="relative rounded-xl overflow-hidden border border-slate-700/50 shadow-xl bg-slate-900">
+                  <div className="absolute -inset-3 bg-emerald-500/[0.04] rounded-2xl blur-xl" />
+                  <div className="relative rounded-xl overflow-hidden border border-slate-200 shadow-lg bg-slate-900">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={feature.screenshot}
@@ -730,20 +728,20 @@ function FeaturesSection() {
           {featureCards.map((card) => (
             <div
               key={card.title}
-              className="group rounded-2xl border border-slate-800 bg-slate-900/50 p-6 hover:border-emerald-500/30 hover:bg-slate-800/50 transition-all"
+              className="group rounded-2xl border border-slate-200 bg-white p-6 hover:border-emerald-200 hover:bg-white transition-all"
             >
-              <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-4 group-hover:bg-emerald-500/20 transition-colors">
+              <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-500 flex items-center justify-center mb-4 group-hover:bg-emerald-100 transition-colors">
                 <FeatureIcon type={card.icon} />
               </div>
-              <h4 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
+              <h4 className="text-lg font-semibold text-slate-900 mb-2 flex items-center gap-2">
                 {card.title}
                 {"badge" in card && card.badge && (
-                  <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                  <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
                     {card.badge}
                   </span>
                 )}
               </h4>
-              <p className="text-sm text-slate-400 leading-relaxed">{card.desc}</p>
+              <p className="text-sm text-slate-500 leading-relaxed">{card.desc}</p>
             </div>
           ))}
         </div>
@@ -761,16 +759,16 @@ function TestimonialsSection() {
   const testimonials = useMemo(() => getTestimonials(t), [t]);
 
   return (
-    <section className="py-20 sm:py-28 border-t border-slate-800/50" ref={sectionRef as React.RefObject<HTMLElement>}>
+    <section className="py-20 sm:py-28 border-t border-slate-200" ref={sectionRef as React.RefObject<HTMLElement>}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
             {t("landingTestimonialsHeading")}{" "}
-            <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
+            <span className="text-emerald-500">
               {t("landingTestimonialsHeadingAccent")}
             </span>
           </h2>
-          <p className="text-lg text-slate-400 max-w-xl mx-auto">
+          <p className="text-lg text-slate-500 max-w-xl mx-auto">
             {t("landingTestimonialsSubtitle")}
           </p>
         </div>
@@ -779,7 +777,7 @@ function TestimonialsSection() {
           {testimonials.map((tm) => (
             <div
               key={tm.name}
-              className="rounded-2xl border border-slate-800 bg-slate-900/50 p-8 hover:border-slate-700 transition-colors"
+              className="rounded-2xl border border-slate-200 bg-white p-8 hover:border-emerald-200 transition-colors"
             >
               <div className="flex gap-1 mb-4">
                 {[...Array(5)].map((_, i) => (
@@ -788,12 +786,12 @@ function TestimonialsSection() {
                   </svg>
                 ))}
               </div>
-              <p className="text-slate-300 leading-relaxed mb-6 text-sm">&ldquo;{tm.quote}&rdquo;</p>
+              <p className="text-slate-600 leading-relaxed mb-6 text-sm">&ldquo;{tm.quote}&rdquo;</p>
               <div>
-                <div className="text-sm font-semibold text-white">{tm.name}</div>
-                <div className="text-xs text-slate-500">{tm.role}</div>
+                <div className="text-sm font-semibold text-slate-900">{tm.name}</div>
+                <div className="text-xs text-slate-400">{tm.role}</div>
                 {tm.detail && (
-                  <div className="text-[10px] text-emerald-400/70 mt-1">{tm.detail}</div>
+                  <div className="text-[10px] text-emerald-600/80 mt-1">{tm.detail}</div>
                 )}
               </div>
             </div>
@@ -809,9 +807,9 @@ function TestimonialsSection() {
 function MidFunnelCTA() {
   const { t } = useI18n();
   return (
-    <div className="py-12 border-t border-slate-800/50">
+    <div className="py-12 border-t border-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <p className="text-lg text-slate-300 mb-6">{t("landingMidCtaText")}</p>
+        <p className="text-lg text-slate-600 mb-6">{t("landingMidCtaText")}</p>
         <Link
           href="/signup"
           onClick={() => trackLanding("landing_cta_click", { cta: "mid_funnel_signup" })}
@@ -856,7 +854,7 @@ function WhySection() {
   ], [t]);
 
   const Check = () => (
-    <svg className="w-5 h-5 text-emerald-400 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+    <svg className="w-5 h-5 text-emerald-500 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
     </svg>
   );
@@ -868,19 +866,19 @@ function WhySection() {
   );
 
   return (
-    <section className="py-20 sm:py-28 border-t border-slate-800/50" ref={sectionRef as React.RefObject<HTMLElement>}>
+    <section className="py-20 sm:py-28 border-t border-slate-200" ref={sectionRef as React.RefObject<HTMLElement>}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+          <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
             {t("landingWhyEyebrow")}
           </span>
-          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4 mt-4">
+          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4 mt-4">
             {t("landingWhyHeading")}{" "}
-            <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
+            <span className="text-emerald-500">
               {t("landingWhyHeadingAccent")}
             </span>
           </h2>
-          <p className="text-lg text-slate-400 max-w-xl mx-auto">
+          <p className="text-lg text-slate-500 max-w-xl mx-auto">
             {t("landingWhySubtitle")}
           </p>
         </div>
@@ -888,17 +886,17 @@ function WhySection() {
         <div className="max-w-3xl mx-auto overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-800">
+              <tr className="border-b border-slate-200">
                 <th className="text-left px-4 py-4 text-slate-400 font-medium">{t("landingWhyColFeature")}</th>
-                <th className="text-center px-4 py-4 text-emerald-400 font-semibold">{t("landingWhyColUs")}</th>
+                <th className="text-center px-4 py-4 text-emerald-600 font-semibold">{t("landingWhyColUs")}</th>
                 <th className="text-center px-4 py-4 text-slate-400 font-medium">{t("landingWhyColOthers")}</th>
                 <th className="text-center px-4 py-4 text-slate-400 font-medium">{t("landingWhyColSheets")}</th>
               </tr>
             </thead>
             <tbody>
               {comparisons.map((row) => (
-                <tr key={row.feature} className="border-b border-slate-800/50">
-                  <td className={`px-4 py-3.5 ${row.exclusive ? "text-white font-semibold" : "text-slate-300"}`}>{row.feature}</td>
+                <tr key={row.feature} className="border-b border-slate-100">
+                  <td className={`px-4 py-3.5 ${row.exclusive ? "text-slate-900 font-semibold" : "text-slate-600"}`}>{row.feature}</td>
                   <td className="px-4 py-3.5">{row.us ? <Check /> : <Cross />}</td>
                   <td className="px-4 py-3.5">{row.others ? <Check /> : <Cross />}</td>
                   <td className="px-4 py-3.5">{row.spreadsheets ? <Check /> : <Cross />}</td>
@@ -906,7 +904,7 @@ function WhySection() {
               ))}
             </tbody>
           </table>
-          <p className="text-center text-xs text-slate-500 mt-6">
+          <p className="text-center text-xs text-slate-400 mt-6">
             {t("landingWhyTableFootnote")}
           </p>
         </div>
@@ -923,21 +921,20 @@ function VideoTutorialSection() {
   const sectionRef = useInViewOnce(sectionCb);
 
   return (
-    <section className="py-20 sm:py-28 border-t border-slate-800/50" ref={sectionRef as React.RefObject<HTMLElement>}>
+    <section className="py-20 sm:py-28 border-t border-slate-200" ref={sectionRef as React.RefObject<HTMLElement>}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
             {t("landingVideoHeading")}{" "}
-            <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">{t("landingVideoHeadingAccent")}</span>
+            <span className="text-emerald-500">{t("landingVideoHeadingAccent")}</span>
           </h2>
-          <p className="text-lg text-slate-400 max-w-2xl mx-auto">
+          <p className="text-lg text-slate-500 max-w-2xl mx-auto">
             {t("landingVideoSubtitle")}
           </p>
         </div>
 
         <div className="relative max-w-4xl mx-auto">
-          <div className="absolute -inset-4 bg-gradient-to-r from-emerald-500/20 via-teal-500/20 to-cyan-500/20 rounded-3xl blur-2xl" />
-          <div className="relative rounded-2xl overflow-hidden border border-slate-700/50 shadow-2xl shadow-black/50 bg-slate-900">
+          <div className="relative rounded-2xl overflow-hidden border border-slate-200 shadow-xl bg-slate-900">
             <video
               className="w-full h-auto"
               controls
@@ -958,12 +955,12 @@ function VideoTutorialSection() {
             { step: "3", title: t("landingVideoStep3Title"), desc: t("landingVideoStep3Desc") },
           ].map((s) => (
             <div key={s.step} className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center font-bold text-lg shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-500 flex items-center justify-center font-bold text-lg shrink-0">
                 {s.step}
               </div>
               <div>
-                <h4 className="text-sm font-semibold text-white mb-1">{s.title}</h4>
-                <p className="text-sm text-slate-400">{s.desc}</p>
+                <h4 className="text-sm font-semibold text-slate-900 mb-1">{s.title}</h4>
+                <p className="text-sm text-slate-500">{s.desc}</p>
               </div>
             </div>
           ))}
@@ -988,11 +985,11 @@ function InstallAppSection() {
   ], [t]);
 
   return (
-    <section className="py-20 sm:py-28 border-t border-slate-800/50" ref={sectionRef as React.RefObject<HTMLElement>}>
+    <section className="py-20 sm:py-28 border-t border-slate-200" ref={sectionRef as React.RefObject<HTMLElement>}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           <div className="relative flex justify-center">
-            <div className="absolute -inset-4 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-2xl blur-xl" />
+            <div className="absolute -inset-4 bg-emerald-500/[0.04] rounded-2xl blur-xl" />
             <div className="relative w-[280px] sm:w-[320px]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -1005,26 +1002,26 @@ function InstallAppSection() {
           </div>
           <div className="space-y-6">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+              <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
                 PWA
               </span>
             </div>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white leading-tight">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 leading-tight">
               {t("landingInstallPwaHeading" as TranslationKey)}{" "}
-              <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
+              <span className="text-emerald-500">
                 {t("landingInstallPwaHeadingAccent" as TranslationKey)}
               </span>
             </h2>
-            <p className="text-lg text-slate-400 leading-relaxed">
+            <p className="text-lg text-slate-500 leading-relaxed">
               {t("landingInstallPwaSubtitle" as TranslationKey)}
             </p>
             <ul className="space-y-3">
               {points.map((point) => (
                 <li key={point} className="flex items-center gap-3 text-sm">
-                  <svg className="w-5 h-5 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <svg className="w-5 h-5 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
-                  <span className="text-slate-300">{point}</span>
+                  <span className="text-slate-600">{point}</span>
                 </li>
               ))}
             </ul>
@@ -1097,12 +1094,12 @@ function MobileAppSection() {
   if (!visible) return null;
 
   return (
-    <section className="py-20 sm:py-28 border-t border-slate-800/50" ref={sectionRef as React.RefObject<HTMLElement>}>
+    <section className="py-20 sm:py-28 border-t border-slate-200" ref={sectionRef as React.RefObject<HTMLElement>}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* Phone mockup side */}
           <div className="relative flex justify-center">
-            <div className="absolute -inset-4 bg-gradient-to-br from-emerald-500/15 via-teal-500/10 to-cyan-500/15 rounded-3xl blur-2xl" />
+            <div className="absolute -inset-4 bg-emerald-500/[0.04] rounded-3xl blur-2xl" />
             <div className="relative w-[260px] sm:w-[300px]">
               <div className="rounded-[2.5rem] border-[3px] border-slate-700/60 bg-slate-900 p-1.5 shadow-2xl shadow-black/50">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1119,29 +1116,29 @@ function MobileAppSection() {
           {/* Text side */}
           <div className="space-y-6">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+              <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
                 Native App
               </span>
               <span className="text-xs font-bold uppercase tracking-wider text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/20">
                 New
               </span>
             </div>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white leading-tight">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 leading-tight">
               {t("landingInstallHeading")}{" "}
-              <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
+              <span className="text-emerald-500">
                 {t("landingInstallHeadingAccent")}
               </span>
             </h2>
-            <p className="text-lg text-slate-400 leading-relaxed">
+            <p className="text-lg text-slate-500 leading-relaxed">
               {t("landingInstallSubtitle")}
             </p>
             <ul className="space-y-3">
               {points.map((point) => (
                 <li key={point} className="flex items-center gap-3 text-sm">
-                  <svg className="w-5 h-5 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <svg className="w-5 h-5 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
-                  <span className="text-slate-300">{point}</span>
+                  <span className="text-slate-600">{point}</span>
                 </li>
               ))}
             </ul>
@@ -1151,7 +1148,7 @@ function MobileAppSection() {
               <AppStoreBadge />
               <GooglePlayBadge />
             </div>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-400">
               {t("landingMobileAppFreeNote")}
             </p>
           </div>
@@ -1235,12 +1232,12 @@ function DeviceSection() {
   ];
 
   return (
-    <section className="py-20 sm:py-28 border-t border-slate-800/50" ref={sectionRef as React.RefObject<HTMLElement>}>
+    <section className="py-20 sm:py-28 border-t border-slate-200" ref={sectionRef as React.RefObject<HTMLElement>}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           {/* Image side */}
           <div className="relative flex justify-center">
-            <div className="absolute -inset-8 bg-gradient-to-br from-violet-500/15 via-emerald-500/10 to-cyan-500/15 rounded-3xl blur-3xl" />
+            <div className="absolute -inset-8 bg-emerald-500/[0.04] rounded-3xl blur-3xl" />
             <div className="relative">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -1263,13 +1260,13 @@ function DeviceSection() {
                   {t("landingDeviceBadgeComingSoon")}
                 </span>
               </div>
-              <h2 className="text-3xl sm:text-4xl font-bold text-white leading-tight mb-4">
+              <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 leading-tight mb-4">
                 {t("landingDeviceHeading")}{" "}
-                <span className="bg-gradient-to-r from-violet-400 via-emerald-400 to-teal-400 bg-clip-text text-transparent">
+                <span className="text-emerald-600">
                   {t("landingDeviceHeadingAccent")}
                 </span>
               </h2>
-              <p className="text-lg text-slate-400 leading-relaxed">
+              <p className="text-lg text-slate-500 leading-relaxed">
                 {t("landingDeviceDesc")}
               </p>
             </div>
@@ -1277,12 +1274,12 @@ function DeviceSection() {
             <div className="grid sm:grid-cols-2 gap-4">
               {highlights.map((item) => (
                 <div key={item.title} className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-violet-500/10 text-violet-400 flex items-center justify-center shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center shrink-0">
                     {item.icon}
                   </div>
                   <div>
-                    <h4 className="text-sm font-semibold text-white mb-0.5">{item.title}</h4>
-                    <p className="text-xs text-slate-400 leading-relaxed">{item.desc}</p>
+                    <h4 className="text-sm font-semibold text-slate-900 mb-0.5">{item.title}</h4>
+                    <p className="text-xs text-slate-500 leading-relaxed">{item.desc}</p>
                   </div>
                 </div>
               ))}
@@ -1294,7 +1291,7 @@ function DeviceSection() {
                 value={email}
                 onChange={(e) => { setEmail(e.target.value); setEnrollError(""); }}
                 placeholder={t("landingDeviceEmailPlaceholder")}
-                className="flex-1 min-w-0 px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 text-sm"
+                className="flex-1 min-w-0 px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 text-sm"
                 required
               />
               <button
@@ -1311,7 +1308,7 @@ function DeviceSection() {
               <p className="text-xs text-red-400 mt-1">{enrollError}</p>
             )}
 
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-400">
               {t("landingDeviceDisclaimer")}
             </p>
           </div>
@@ -1336,16 +1333,11 @@ function BrokerSyncCTA() {
   ], [t]);
 
   return (
-    <section className="py-20 sm:py-28 border-t border-slate-800/50 relative overflow-hidden" ref={sectionRef as React.RefObject<HTMLElement>}>
-      <div className="absolute inset-0 -z-10">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-500/[0.07] rounded-full blur-3xl" />
-      </div>
-
+    <section className="py-20 sm:py-28 border-t border-slate-200 relative overflow-hidden" ref={sectionRef as React.RefObject<HTMLElement>}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           {/* Visual side */}
           <div className="relative flex justify-center">
-            <div className="absolute -inset-6 bg-gradient-to-br from-emerald-500/10 via-teal-500/10 to-cyan-500/10 rounded-3xl blur-2xl" />
             <div className="relative w-full max-w-sm">
               {/* Sync animation card */}
               <div className="rounded-2xl border border-slate-700/50 bg-slate-900/90 backdrop-blur-sm p-6 shadow-2xl shadow-black/40">
@@ -1407,29 +1399,29 @@ function BrokerSyncCTA() {
           {/* Text side */}
           <div className="space-y-6">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+              <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
                 {t("landingSyncCtaEyebrow" as TranslationKey)}
               </span>
               <span className="text-xs font-bold uppercase tracking-wider text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/20">
                 Auto
               </span>
             </div>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white leading-tight">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 leading-tight">
               {t("landingSyncCtaHeading" as TranslationKey)}{" "}
-              <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
+              <span className="text-emerald-500">
                 {t("landingSyncCtaHeadingAccent" as TranslationKey)}
               </span>
             </h2>
-            <p className="text-lg text-slate-400 leading-relaxed">
+            <p className="text-lg text-slate-500 leading-relaxed">
               {t("landingSyncCtaDesc" as TranslationKey)}
             </p>
             <ul className="space-y-3">
               {points.map((point) => (
                 <li key={point} className="flex items-center gap-3 text-sm">
-                  <svg className="w-5 h-5 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <svg className="w-5 h-5 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
-                  <span className="text-slate-300">{point}</span>
+                  <span className="text-slate-600">{point}</span>
                 </li>
               ))}
             </ul>
@@ -1445,7 +1437,7 @@ function BrokerSyncCTA() {
               {t("landingSyncCtaButton" as TranslationKey)}
             </Link>
 
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-400">
               {t("landingSyncCtaBrokers" as TranslationKey)}
             </p>
           </div>
@@ -1486,6 +1478,7 @@ function ThemesShowcase() {
       tierClass: "text-violet-400 bg-violet-500/10 border-violet-500/20",
       bg: "bg-[#09090b]", text: "text-[#22c55e]", accent: "#22c55e", muted: "text-[#52525b]",
       valueBg: "bg-[#18181b]",
+      terminal: true,
     },
     {
       name: t("landingThemeStudioName"),
@@ -1498,19 +1491,19 @@ function ThemesShowcase() {
   ], [t]);
 
   return (
-    <section id="themes" className="py-20 sm:py-28 border-t border-slate-800/50" ref={sectionRef as React.RefObject<HTMLElement>}>
+    <section id="themes" className="py-20 sm:py-28 border-t border-slate-200" ref={sectionRef as React.RefObject<HTMLElement>}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+          <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
             {t("landingThemesEyebrow")}
           </span>
-          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4 mt-4">
+          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4 mt-4">
             {t("landingThemesHeading")}{" "}
-            <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
+            <span className="text-emerald-500">
               {t("landingThemesHeadingAccent")}
             </span>
           </h2>
-          <p className="text-lg text-slate-400 max-w-2xl mx-auto">
+          <p className="text-lg text-slate-500 max-w-2xl mx-auto">
             {t("landingThemesSubtitle")}
           </p>
         </div>
@@ -1519,24 +1512,50 @@ function ThemesShowcase() {
           {themes.map((theme) => (
             <div
               key={theme.name}
-              className={`${theme.bg} rounded-2xl border border-slate-700/40 p-5 shadow-lg`}
+              className={`${theme.bg} rounded-2xl border ${theme.terminal ? "border-[#22c55e]/30" : "border-slate-700/40"} ${theme.terminal ? "font-mono" : ""} p-0 shadow-lg overflow-hidden`}
             >
-              <div className="flex items-center justify-between mb-3">
-                <span className={`font-bold text-sm ${theme.text}`}>{theme.name}</span>
-                <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${theme.tierClass}`}>
-                  {theme.tier}
-                </span>
-              </div>
-              <div className={`text-xs ${theme.muted} mb-3`}>{theme.desc}</div>
-              <div className={`text-xl font-extrabold tracking-tight ${theme.text}`}>€47,284</div>
-              <div className="text-xs font-semibold mt-0.5 mb-3" style={{ color: theme.accent }}>+2.71%</div>
-              <div className="space-y-1">
-                {["ASML", "VWCE", "AAPL"].map((ticker) => (
-                  <div key={ticker} className={`flex items-center justify-between ${theme.valueBg} rounded-md px-2 py-1.5 text-[11px]`}>
-                    <span className={`font-semibold ${theme.text}`}>{ticker}</span>
-                    <span style={{ color: theme.accent }} className="font-semibold">+18.42%</span>
+              {theme.terminal && (
+                <div className="flex items-center gap-1.5 px-3 py-2 bg-[#18181b] border-b border-[#22c55e]/20">
+                  <span className="w-2.5 h-2.5 rounded-full bg-red-500/80" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-yellow-500/80" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-green-500/80" />
+                  <span className="text-[10px] text-[#52525b] ml-2">portfolio — zsh</span>
+                </div>
+              )}
+              <div className="p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <span className={`font-bold text-sm ${theme.text}`}>{theme.name}</span>
+                  <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${theme.tierClass}`}>
+                    {theme.tier}
+                  </span>
+                </div>
+                <div className={`text-xs ${theme.muted} mb-3`}>{theme.desc}</div>
+                {theme.terminal ? (
+                  <>
+                    <div className="text-xs text-[#52525b] mb-1">$ portfolio --total</div>
+                    <div className={`text-xl font-extrabold tracking-tight ${theme.text}`}>€47,284</div>
+                    <div className="text-xs font-semibold mt-0.5 mb-3" style={{ color: theme.accent }}>+2.71%</div>
+                    <div className="text-xs text-[#52525b] mb-1">$ portfolio --holdings</div>
+                  </>
+                ) : (
+                  <>
+                    <div className={`text-xl font-extrabold tracking-tight ${theme.text}`}>€47,284</div>
+                    <div className="text-xs font-semibold mt-0.5 mb-3" style={{ color: theme.accent }}>+2.71%</div>
+                  </>
+                )}
+                <div className="space-y-1">
+                  {["ASML", "VWCE", "AAPL"].map((ticker) => (
+                    <div key={ticker} className={`flex items-center justify-between ${theme.valueBg} rounded-md px-2 py-1.5 text-[11px]`}>
+                      <span className={`font-semibold ${theme.text}`}>{ticker}</span>
+                      <span style={{ color: theme.accent }} className="font-semibold">+18.42%</span>
+                    </div>
+                  ))}
+                </div>
+                {theme.terminal && (
+                  <div className="mt-2 text-xs text-[#22c55e]/60">
+                    <span className="animate-pulse">▊</span>
                   </div>
-                ))}
+                )}
               </div>
             </div>
           ))}
@@ -1590,19 +1609,19 @@ function ValuePropsSection() {
   ], [t]);
 
   return (
-    <section className="py-20 sm:py-28 border-t border-slate-800/50" ref={sectionRef as React.RefObject<HTMLElement>}>
+    <section className="py-20 sm:py-28 border-t border-slate-200" ref={sectionRef as React.RefObject<HTMLElement>}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+          <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
             {t("landingValueEyebrow")}
           </span>
-          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4 mt-4">
+          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4 mt-4">
             {t("landingValueHeading")}{" "}
-            <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
+            <span className="text-emerald-500">
               {t("landingValueHeadingAccent")}
             </span>
           </h2>
-          <p className="text-lg text-slate-400 max-w-2xl mx-auto">
+          <p className="text-lg text-slate-500 max-w-2xl mx-auto">
             {t("landingValueSubtitle")}
           </p>
         </div>
@@ -1613,8 +1632,8 @@ function ValuePropsSection() {
               key={v.label}
               className={`relative rounded-2xl p-7 text-center ${
                 v.highlighted
-                  ? "bg-slate-900/50 border-2 border-emerald-500/40"
-                  : "bg-slate-900/50 border border-slate-800"
+                  ? "bg-white border-2 border-emerald-500/40"
+                  : "bg-white border border-slate-200"
               }`}
             >
               {v.badge && (
@@ -1622,14 +1641,14 @@ function ValuePropsSection() {
                   {v.badge}
                 </div>
               )}
-              <div className="w-11 h-11 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-3 text-emerald-400">
+              <div className="w-11 h-11 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center mx-auto mb-3 text-emerald-500">
                 {v.icon}
               </div>
-              <div className="text-4xl font-extrabold text-white tracking-tight mb-1">
+              <div className="text-4xl font-extrabold text-slate-900 tracking-tight mb-1">
                 {v.value}{v.highlighted && <span className="text-base font-medium text-slate-400">/mo</span>}
               </div>
-              <div className="text-sm font-semibold text-slate-300 mb-1">{v.label}</div>
-              <div className="text-xs text-slate-500">{v.desc}</div>
+              <div className="text-sm font-semibold text-slate-600 mb-1">{v.label}</div>
+              <div className="text-xs text-slate-400">{v.desc}</div>
             </div>
           ))}
         </div>
@@ -1652,7 +1671,7 @@ function TrustSection() {
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
         </svg>
       ),
-      iconClass: "bg-emerald-500/10 text-emerald-400",
+      iconClass: "bg-emerald-50 text-emerald-500",
       title: t("landingTrust1Title"), desc: t("landingTrust1Desc"),
     },
     {
@@ -1661,7 +1680,7 @@ function TrustSection() {
           <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
         </svg>
       ),
-      iconClass: "bg-cyan-500/10 text-cyan-400",
+      iconClass: "bg-cyan-50 text-cyan-600",
       title: t("landingTrust2Title"), desc: t("landingTrust2Desc"),
     },
     {
@@ -1670,37 +1689,37 @@ function TrustSection() {
           <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
         </svg>
       ),
-      iconClass: "bg-violet-500/10 text-violet-400",
+      iconClass: "bg-violet-50 text-violet-600",
       title: t("landingTrust3Title"), desc: t("landingTrust3Desc"),
     },
   ], [t]);
 
   return (
-    <section className="py-20 sm:py-28 border-t border-slate-800/50" ref={sectionRef as React.RefObject<HTMLElement>}>
+    <section className="py-20 sm:py-28 border-t border-slate-200" ref={sectionRef as React.RefObject<HTMLElement>}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+          <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
             {t("landingTrustEyebrow")}
           </span>
-          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4 mt-4">
+          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4 mt-4">
             {t("landingTrustHeading")}{" "}
-            <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
+            <span className="text-emerald-500">
               {t("landingTrustHeadingAccent")}
             </span>
           </h2>
-          <p className="text-lg text-slate-400 max-w-xl mx-auto">
+          <p className="text-lg text-slate-500 max-w-xl mx-auto">
             {t("landingTrustSubtitle")}
           </p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
           {cards.map((card) => (
-            <div key={card.title} className="rounded-2xl border border-slate-800 bg-slate-900/50 p-8 text-center hover:border-slate-700 transition-colors">
+            <div key={card.title} className="rounded-2xl border border-slate-200 bg-white p-8 text-center hover:border-emerald-200 transition-colors">
               <div className={`w-14 h-14 rounded-xl ${card.iconClass} flex items-center justify-center mx-auto mb-5`}>
                 {card.icon}
               </div>
-              <h4 className="text-lg font-semibold text-white mb-2">{card.title}</h4>
-              <p className="text-sm text-slate-400 leading-relaxed">{card.desc}</p>
+              <h4 className="text-lg font-semibold text-slate-900 mb-2">{card.title}</h4>
+              <p className="text-sm text-slate-500 leading-relaxed">{card.desc}</p>
             </div>
           ))}
         </div>
@@ -1717,19 +1736,19 @@ function GettingStartedSection() {
   const sectionRef = useInViewOnce(sectionCb);
 
   return (
-    <section className="py-20 sm:py-28 border-t border-slate-800/50" ref={sectionRef as React.RefObject<HTMLElement>}>
+    <section className="py-20 sm:py-28 border-t border-slate-200" ref={sectionRef as React.RefObject<HTMLElement>}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+          <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
             {t("landingGsEyebrow")}
           </span>
-          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4 mt-4">
+          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4 mt-4">
             {t("landingGsHeading")}{" "}
-            <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
+            <span className="text-emerald-500">
               {t("landingGsHeadingAccent")}
             </span>
           </h2>
-          <p className="text-lg text-slate-400 max-w-xl mx-auto">
+          <p className="text-lg text-slate-500 max-w-xl mx-auto">
             {t("landingGsSubtitle")}
           </p>
         </div>
@@ -1741,11 +1760,11 @@ function GettingStartedSection() {
             { step: "3", title: t("landingGs3Title"), desc: t("landingGs3Desc") },
           ].map((s) => (
             <div key={s.step} className="text-center">
-              <div className="w-12 h-12 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center font-bold text-xl mx-auto mb-4">
+              <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-500 flex items-center justify-center font-bold text-xl mx-auto mb-4">
                 {s.step}
               </div>
-              <h4 className="text-base font-semibold text-white mb-2">{s.title}</h4>
-              <p className="text-sm text-slate-400 leading-relaxed">{s.desc}</p>
+              <h4 className="text-base font-semibold text-slate-900 mb-2">{s.title}</h4>
+              <p className="text-sm text-slate-500 leading-relaxed">{s.desc}</p>
             </div>
           ))}
         </div>
@@ -1764,14 +1783,14 @@ function FAQSection() {
   const faqItems = useMemo(() => getFaqItems(t), [t]);
 
   return (
-    <section id="faq" className="py-20 sm:py-28 border-t border-slate-800/50" ref={sectionRef as React.RefObject<HTMLElement>}>
+    <section id="faq" className="py-20 sm:py-28 border-t border-slate-200" ref={sectionRef as React.RefObject<HTMLElement>}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
             {t("landingFaqHeading")}{" "}
-            <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">{t("landingFaqHeadingAccent")}</span>
+            <span className="text-emerald-500">{t("landingFaqHeadingAccent")}</span>
           </h2>
-          <p className="text-lg text-slate-400 max-w-xl mx-auto">
+          <p className="text-lg text-slate-500 max-w-xl mx-auto">
             {t("landingFaqSubtitle")}
           </p>
         </div>
@@ -1784,8 +1803,8 @@ function FAQSection() {
                 key={i}
                 className={`rounded-2xl border transition-all ${
                   isOpen
-                    ? "border-emerald-500/30 bg-emerald-500/5"
-                    : "border-slate-800 bg-slate-900/50 hover:border-slate-700"
+                    ? "border-emerald-200 bg-emerald-50/50"
+                    : "border-slate-200 bg-white hover:border-slate-300"
                 }`}
               >
                 <button
@@ -1795,7 +1814,7 @@ function FAQSection() {
                   }}
                   className="w-full flex items-center justify-between px-6 py-5 text-left"
                 >
-                  <span className="text-sm sm:text-base font-medium text-white pr-4">{item.q}</span>
+                  <span className="text-sm sm:text-base font-medium text-slate-900 pr-4">{item.q}</span>
                   <svg
                     className={`w-5 h-5 text-slate-400 shrink-0 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
                     fill="none"
@@ -1808,7 +1827,7 @@ function FAQSection() {
                 </button>
                 {isOpen && (
                   <div className="px-6 pb-5">
-                    <p className="text-sm text-slate-400 leading-relaxed">{item.a}</p>
+                    <p className="text-sm text-slate-500 leading-relaxed">{item.a}</p>
                   </div>
                 )}
               </div>
@@ -1835,7 +1854,7 @@ function BillingToggle({
     <div className="flex items-center justify-center gap-3">
       <span
         className={`text-sm font-medium transition-colors cursor-pointer ${
-          !isAnnual ? "text-white" : "text-slate-400"
+          !isAnnual ? "text-slate-900" : "text-slate-400"
         }`}
         onClick={() => onChange("monthly")}
       >
@@ -1847,8 +1866,8 @@ function BillingToggle({
         aria-checked={isAnnual}
         aria-label="Toggle annual billing"
         onClick={() => onChange(isAnnual ? "monthly" : "annual")}
-        className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 ${
-          isAnnual ? "bg-emerald-500" : "bg-slate-700"
+        className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#faf9f7] ${
+          isAnnual ? "bg-emerald-500" : "bg-slate-300"
         }`}
       >
         <span
@@ -1859,14 +1878,14 @@ function BillingToggle({
       </button>
       <span
         className={`flex items-center gap-2 cursor-pointer transition-colors ${
-          isAnnual ? "text-white" : "text-slate-400"
+          isAnnual ? "text-slate-900" : "text-slate-400"
         }`}
         onClick={() => onChange("annual")}
       >
         <span className="text-sm font-medium">{t("landingPricingToggleAnnually")}</span>
         <span className={`text-xs font-bold px-2 py-0.5 rounded-full border transition-colors ${
           isAnnual
-            ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
+            ? "text-emerald-600 bg-emerald-50 border-emerald-200"
             : "text-amber-400 bg-amber-500/10 border-amber-500/20 animate-pulse"
         }`}>
           {t("landingPricingSavePct")}
@@ -1887,14 +1906,14 @@ function PricingSection() {
   const pricing = useMemo(() => getPricing(t), [t]);
 
   return (
-    <section id="pricing" className="py-20 sm:py-28 border-t border-slate-800/50" ref={sectionRef as React.RefObject<HTMLElement>}>
+    <section id="pricing" className="py-20 sm:py-28 border-t border-slate-200 bg-[#f5f3ef]" ref={sectionRef as React.RefObject<HTMLElement>}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-10">
-          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
             {t("landingPricingHeading")}{" "}
-            <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">{t("landingPricingHeadingAccent")}</span>
+            <span className="text-emerald-500">{t("landingPricingHeadingAccent")}</span>
           </h2>
-          <p className="text-lg text-slate-400 max-w-xl mx-auto">
+          <p className="text-lg text-slate-500 max-w-xl mx-auto">
             {t("landingPricingSubtitle")}
           </p>
           <div className="inline-flex items-center gap-2 mt-4 bg-amber-500/10 border border-amber-500/20 rounded-full px-4 py-1.5">
@@ -1911,7 +1930,7 @@ function PricingSection() {
             trackLanding("landing_pricing_toggle", { period: p });
           }} />
         </div>
-        <p className="text-center text-sm text-slate-400 mb-12">
+        <p className="text-center text-sm text-slate-500 mb-12">
           {t("landingPricingTierExplainer")}
         </p>
 
@@ -1934,8 +1953,8 @@ function PricingSection() {
                 key={tier.name}
                 className={`relative rounded-2xl p-8 ${
                   tier.highlighted
-                    ? "bg-gradient-to-b from-emerald-500/10 to-transparent border-2 border-emerald-500/40 shadow-xl shadow-emerald-500/10"
-                    : "border border-slate-800 bg-slate-900/50"
+                    ? "bg-white border-2 border-emerald-500 shadow-lg shadow-emerald-500/10"
+                    : "border border-slate-200 bg-white"
                 }`}
               >
                 {tier.highlighted && (
@@ -1945,8 +1964,8 @@ function PricingSection() {
                 )}
 
                 <div className="mb-6">
-                  <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
-                    <TierIcon plan={tier.plan} size={22} className="text-emerald-400" />
+                  <h3 className="text-xl font-bold text-slate-900 mb-2 flex items-center gap-2">
+                    <TierIcon plan={tier.plan} size={22} className="text-emerald-600" />
                     {tier.name}
                     {!tier.isFree && tier.launchDiscountPct > 0 && (
                       <span className="text-xs font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
@@ -1956,32 +1975,32 @@ function PricingSection() {
                   </h3>
                   <div className="flex items-baseline gap-2">
                     {!tier.isFree && (
-                      <span className="text-lg text-slate-500 line-through">{regularPrice}</span>
+                      <span className="text-lg text-slate-400 line-through">{regularPrice}</span>
                     )}
-                    <span className="text-4xl font-extrabold text-white">{displayPrice}</span>
-                    <span className="text-slate-400">{displayPeriod}</span>
+                    <span className="text-4xl font-extrabold text-slate-900">{displayPrice}</span>
+                    <span className="text-slate-500">{displayPeriod}</span>
                   </div>
                   {!tier.isFree && isAnnual && (
                     <div className="flex items-center gap-2 mt-1.5">
-                      <span className="text-sm text-slate-500 line-through">{tier.regularAnnual}/yr</span>
-                      <span className="text-sm text-slate-400">
+                      <span className="text-sm text-slate-400 line-through">{tier.regularAnnual}/yr</span>
+                      <span className="text-sm text-slate-500">
                         {tier.annualPrice}/year
                       </span>
-                      <span className="text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                      <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
                         Save {tier.annualSavePct}%
                       </span>
                     </div>
                   )}
-                  <p className="text-sm text-slate-400 mt-2">{tier.description}</p>
+                  <p className="text-sm text-slate-500 mt-2">{tier.description}</p>
                 </div>
 
                 <ul className="space-y-3 mb-8">
                   {tier.features.map((feature) => (
                     <li key={feature} className="flex items-start gap-3 text-sm">
-                      <svg className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <svg className="w-5 h-5 text-emerald-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                       </svg>
-                      <span className="text-slate-300">{feature}</span>
+                      <span className="text-slate-600">{feature}</span>
                     </li>
                   ))}
                 </ul>
@@ -1992,7 +2011,7 @@ function PricingSection() {
                   className={`block text-center font-semibold py-3.5 rounded-xl transition-all ${
                     tier.highlighted
                       ? "bg-emerald-500 hover:bg-emerald-400 text-white shadow-lg shadow-emerald-500/25"
-                      : "bg-slate-800 hover:bg-slate-700 text-white border border-slate-700"
+                      : "bg-white hover:bg-slate-50 text-slate-900 border border-slate-200"
                   }`}
                 >
                   {tier.cta}
@@ -2002,7 +2021,7 @@ function PricingSection() {
           })}
         </div>
 
-        <p className="text-center text-sm text-slate-500 mt-8">
+        <p className="text-center text-sm text-slate-400 mt-8">
           {t("landingPricingFooter")}
         </p>
       </div>
@@ -2081,8 +2100,9 @@ export default function LandingPage() {
   return (
     <LandingI18nProvider>
     <NativeRedirect />
-    <div className="min-h-screen bg-slate-950 text-slate-100">
+    <div className="min-h-screen bg-[#faf9f7] text-slate-800">
       <NavBar />
+      <main id="main-content">
       <HeroSection />
       <StatsBar />
       <FeaturesSection />
@@ -2101,6 +2121,7 @@ export default function LandingPage() {
       <MobileAppSection />
       <DeviceSection />
       <CTASection />
+      </main>
       <PublicFooter />
     </div>
     </LandingI18nProvider>
