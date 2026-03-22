@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>trefolio — Enhanced Rebalancing Tool Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f172a;
+    --bg-card: #1e293b;
+    --bg-card-hover: #334155;
+    --border: #334155;
+    --border-light: #475569;
+    --text: #f1f5f9;
+    --text-soft: #94a3b8;
+    --text-muted: #64748b;
+    --gain: #10b981;
+    --gain-dim: rgba(16,185,129,0.15);
+    --loss: #ef4444;
+    --loss-dim: rgba(239,68,68,0.12);
+    --amber: #f59e0b;
+    --amber-dim: rgba(245,158,11,0.12);
+    --accent: #10b981;
+    --accent-dim: rgba(16,185,129,0.08);
+    --pro-purple: #8b5cf6;
+    --pro-purple-dim: rgba(139,92,246,0.12);
+    --indigo: #6366f1;
+    --cyan: #06b6d4;
+    --pink: #ec4899;
+    --orange: #f97316;
+    --lime: #84cc16;
+    --teal: #14b8a6;
+    --ai-bg: linear-gradient(135deg, rgba(139,92,246,0.06) 0%, rgba(99,102,241,0.03) 100%);
+    --ai-border: rgba(139,92,246,0.2);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .serif { font-family: 'Instrument Serif', Georgia, serif; }
+
+  /* ── Top Bar ── */
+  .topbar {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(15,23,42,0.88);
+    backdrop-filter: blur(20px) saturate(1.4);
+    border-bottom: 1px solid var(--border);
+    padding: 0.75rem 1.5rem;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 0.75rem; }
+  .topbar h1 { font-size: 0.875rem; font-weight: 600; letter-spacing: -0.01em; }
+  .badge-mockup {
+    font-size: 0.625rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em;
+    background: var(--amber-dim); color: var(--amber); padding: 0.2rem 0.5rem; border-radius: 4px;
+  }
+
+  /* ── Layout ── */
+  .container { max-width: 1200px; margin: 0 auto; padding: 1.5rem; display: flex; flex-direction: column; gap: 1.25rem; padding-bottom: 5rem; }
+
+  .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; }
+  .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+  .card-title { font-size: 0.8125rem; font-weight: 600; color: var(--text); }
+  .card-subtitle { font-size: 0.6875rem; color: var(--text-muted); margin-top: 0.15rem; }
+
+  /* ── Inline AI Insight Strip ── */
+  .ai-insight {
+    display: flex; align-items: flex-start; gap: 0.5rem;
+    padding: 0.65rem 0.75rem; border-radius: 8px; margin-top: 0.75rem;
+    background: var(--ai-bg); border: 1px solid var(--ai-border);
+    font-size: 0.6875rem; line-height: 1.55; color: var(--text-soft);
+    cursor: pointer; transition: border-color 0.15s, background 0.15s;
+  }
+  .ai-insight:hover { border-color: rgba(139,92,246,0.4); background: rgba(139,92,246,0.08); }
+  .ai-insight .ai-icon {
+    flex-shrink: 0; width: 18px; height: 18px; margin-top: 1px;
+    color: var(--pro-purple); opacity: 0.8;
+  }
+  .ai-insight .ai-text { flex: 1; }
+  .ai-insight .ai-text strong { color: var(--text); font-weight: 600; }
+  .ai-insight .ai-cta {
+    flex-shrink: 0; font-size: 0.5625rem; font-weight: 600;
+    color: var(--pro-purple); white-space: nowrap; margin-top: 2px;
+    text-decoration: none;
+  }
+  .ai-insight .ai-cta:hover { text-decoration: underline; }
+
+  .ai-insight-expanded {
+    display: none; margin-top: 0.5rem; padding: 0.75rem;
+    background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+    font-size: 0.6875rem; line-height: 1.6; color: var(--text-soft);
+  }
+  .ai-insight-expanded.visible { display: block; }
+  .ai-insight-expanded h4 {
+    font-size: 0.75rem; font-weight: 600; color: var(--text); margin: 0.5rem 0 0.2rem;
+  }
+  .ai-insight-expanded h4:first-child { margin-top: 0; }
+  .ai-insight-expanded ul { padding-left: 1.1rem; margin: 0.2rem 0; }
+  .ai-insight-expanded li { margin-bottom: 0.15rem; }
+  .ai-insight-expanded strong { color: var(--text); }
+
+  /* ── Category Tabs ── */
+  .cat-tabs { display: flex; gap: 0.25rem; }
+  .cat-tab {
+    font-size: 0.6875rem; font-weight: 500; padding: 0.3rem 0.6rem; border-radius: 6px;
+    border: none; cursor: pointer; transition: all 0.15s; background: transparent; color: var(--text-muted);
+  }
+  .cat-tab:hover { background: var(--bg-card-hover); color: var(--text-soft); }
+  .cat-tab.active { background: var(--accent); color: #fff; }
+
+  /* ── Section 1: Allocation Overview ── */
+  .alloc-grid { display: grid; grid-template-columns: 260px 1fr; gap: 1.5rem; align-items: start; }
+  .donut-wrap { position: relative; width: 220px; height: 220px; margin: 0 auto; }
+  .donut-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .donut-center .value { font-size: 1.375rem; font-weight: 700; letter-spacing: -0.02em; }
+  .donut-center .label { font-size: 0.6875rem; color: var(--text-muted); margin-top: 0.1rem; }
+
+  .alloc-table { width: 100%; border-collapse: collapse; }
+  .alloc-table th { font-size: 0.625rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border); }
+  .alloc-table th.r { text-align: right; }
+  .alloc-table td { font-size: 0.75rem; padding: 0.6rem 0.75rem; border-bottom: 1px solid rgba(51,65,85,0.5); vertical-align: middle; }
+  .alloc-table td.r { text-align: right; font-variant-numeric: tabular-nums; }
+  .alloc-table tr:last-child td { border-bottom: none; }
+  .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 0.5rem; vertical-align: middle; }
+  .target-input { width: 52px; background: var(--bg); border: 1px solid var(--border); border-radius: 4px; color: var(--text); font-size: 0.75rem; padding: 0.2rem 0.35rem; text-align: right; font-variant-numeric: tabular-nums; }
+  .target-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-dim); }
+  .drift-badge { display: inline-block; font-size: 0.625rem; font-weight: 600; padding: 0.1rem 0.4rem; border-radius: 4px; font-variant-numeric: tabular-nums; }
+  .drift-over { background: var(--loss-dim); color: var(--loss); }
+  .drift-under { background: var(--gain-dim); color: var(--gain); }
+  .drift-ok { background: rgba(148,163,184,0.1); color: var(--text-muted); }
+  .overexposed-badge { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.5625rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; padding: 0.15rem 0.4rem; border-radius: 4px; background: var(--loss-dim); color: var(--loss); margin-left: 0.5rem; }
+
+  /* ── Section 2: Exposure Analysis ── */
+  .treemap-container { width: 100%; display: flex; flex-wrap: wrap; gap: 3px; border-radius: 8px; overflow: hidden; margin-bottom: 1rem; }
+  .treemap-tile { display: flex; align-items: center; justify-content: center; flex-direction: column; padding: 0.5rem; border-radius: 6px; transition: transform 0.15s, box-shadow 0.15s; cursor: pointer; position: relative; min-height: 70px; }
+  .treemap-tile:hover { transform: scale(1.02); box-shadow: 0 4px 20px rgba(0,0,0,0.3); z-index: 2; }
+  .treemap-tile .tile-label { font-size: 0.6875rem; font-weight: 600; color: rgba(255,255,255,0.95); text-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+  .treemap-tile .tile-pct { font-size: 0.8125rem; font-weight: 700; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.3); margin-top: 0.15rem; }
+  .exposure-list { display: flex; flex-direction: column; gap: 0.35rem; }
+  .exposure-row { display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0.75rem; border-radius: 8px; background: var(--bg); cursor: pointer; transition: background 0.12s; }
+  .exposure-row:hover { background: var(--bg-card-hover); }
+  .exposure-row .left { display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; }
+  .exposure-row .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .exposure-row .right { font-size: 0.75rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  /* ── Section 3: Rebalancing Actions ── */
+  .mode-toggle { display: inline-flex; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 3px; gap: 2px; }
+  .mode-btn { font-size: 0.6875rem; font-weight: 500; padding: 0.35rem 0.75rem; border-radius: 6px; border: none; cursor: pointer; transition: all 0.15s; background: transparent; color: var(--text-muted); }
+  .mode-btn.active { background: var(--accent); color: #fff; box-shadow: 0 1px 4px rgba(16,185,129,0.3); }
+  .mode-btn:hover:not(.active) { color: var(--text-soft); }
+  .amount-input-row { display: flex; align-items: center; gap: 0.75rem; margin: 1rem 0; }
+  .amount-input { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 1.125rem; font-weight: 600; padding: 0.6rem 0.9rem; width: 180px; font-variant-numeric: tabular-nums; }
+  .amount-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
+  .amount-label { font-size: 0.6875rem; color: var(--text-muted); }
+  .distrib-table { width: 100%; border-collapse: collapse; margin-top: 0.75rem; }
+  .distrib-table th { font-size: 0.625rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); text-align: left; padding: 0.5rem 0.6rem; border-bottom: 1px solid var(--border); }
+  .distrib-table th.r { text-align: right; }
+  .distrib-table td { font-size: 0.75rem; padding: 0.55rem 0.6rem; border-bottom: 1px solid rgba(51,65,85,0.4); }
+  .distrib-table td.r { text-align: right; font-variant-numeric: tabular-nums; }
+  .distrib-table tr:last-child td { border-bottom: none; }
+  .bar-compare { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 1rem; padding: 1rem; background: var(--bg); border-radius: 8px; border: 1px solid var(--border); }
+  .bar-row { display: flex; align-items: center; gap: 0.5rem; font-size: 0.6875rem; }
+  .bar-label { width: 100px; text-align: right; color: var(--text-soft); flex-shrink: 0; }
+  .bar-track { flex: 1; height: 18px; background: rgba(51,65,85,0.3); border-radius: 4px; position: relative; overflow: hidden; }
+  .bar-fill-before { height: 100%; border-radius: 4px; position: absolute; opacity: 0.4; }
+  .bar-fill-after { height: 100%; border-radius: 4px; position: absolute; }
+  .bar-pct { width: 40px; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--text-soft); flex-shrink: 0; }
+
+  /* ── Section 3b: Move Funds ── */
+  .move-flow { display: grid; grid-template-columns: 1fr auto 1fr; gap: 1rem; align-items: start; margin-top: 1rem; }
+  .move-panel { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 0.875rem; }
+  .move-panel-title { font-size: 0.625rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 0.5rem; }
+  .move-arrow { display: flex; align-items: center; justify-content: center; padding-top: 2rem; color: var(--accent); }
+  .move-select { width: 100%; background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 0.75rem; padding: 0.4rem 0.6rem; appearance: none; cursor: pointer; }
+  .move-amount-row { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.75rem; }
+  .move-amount-input { flex: 1; background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 0.8125rem; font-weight: 600; padding: 0.4rem 0.6rem; font-variant-numeric: tabular-nums; }
+  .move-queue { margin-top: 1rem; }
+  .move-queue-item { display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0.6rem; border-radius: 6px; background: var(--bg); border: 1px solid var(--border); font-size: 0.6875rem; margin-bottom: 0.35rem; }
+  .move-queue-item .flow { display: flex; align-items: center; gap: 0.35rem; }
+  .move-queue-item .amt { font-weight: 600; color: var(--accent); font-variant-numeric: tabular-nums; }
+
+  /* ── Section 4: Industry Screener ── */
+  .screener-header { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+  .search-input { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 0.75rem; padding: 0.4rem 0.7rem; width: 200px; }
+  .search-input:focus { outline: none; border-color: var(--accent); }
+  .filter-select { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 0.75rem; padding: 0.4rem 0.6rem; appearance: none; cursor: pointer; }
+  .screener-table { width: 100%; border-collapse: collapse; margin-top: 0.75rem; }
+  .screener-table th { font-size: 0.625rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); text-align: left; padding: 0.5rem 0.6rem; border-bottom: 1px solid var(--border); }
+  .screener-table th.r { text-align: right; }
+  .screener-table td { font-size: 0.75rem; padding: 0.55rem 0.6rem; border-bottom: 1px solid rgba(51,65,85,0.4); vertical-align: middle; }
+  .screener-table td.r { text-align: right; font-variant-numeric: tabular-nums; }
+  .screener-table tr:hover td { background: rgba(51,65,85,0.15); }
+  .screener-table .ticker { font-weight: 600; color: var(--accent); }
+  .btn-add-plan { font-size: 0.625rem; font-weight: 600; padding: 0.2rem 0.5rem; border-radius: 4px; border: 1px solid var(--accent); background: var(--accent-dim); color: var(--accent); cursor: pointer; transition: all 0.12s; white-space: nowrap; }
+  .btn-add-plan:hover { background: var(--accent); color: #fff; }
+  .btn-add-plan.added { border-color: var(--text-muted); background: transparent; color: var(--text-muted); cursor: default; }
+  .pro-badge { font-size: 0.5625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.15rem 0.4rem; border-radius: 4px; background: var(--pro-purple-dim); color: var(--pro-purple); }
+
+  /* ── AI Chat FAB + Panel ── */
+  .ai-fab {
+    position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 80;
+    width: 52px; height: 52px; border-radius: 50%; border: none; cursor: pointer;
+    background: linear-gradient(135deg, var(--pro-purple), var(--indigo));
+    color: #fff; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 20px rgba(139,92,246,0.4), 0 0 0 0 rgba(139,92,246,0.3);
+    transition: all 0.2s;
+    animation: fabPulse 3s ease-in-out infinite;
+  }
+  .ai-fab:hover { transform: scale(1.08); box-shadow: 0 6px 28px rgba(139,92,246,0.5); }
+  @keyframes fabPulse {
+    0%, 100% { box-shadow: 0 4px 20px rgba(139,92,246,0.4), 0 0 0 0 rgba(139,92,246,0.3); }
+    50% { box-shadow: 0 4px 20px rgba(139,92,246,0.4), 0 0 0 8px rgba(139,92,246,0); }
+  }
+
+  .ai-chat-panel {
+    position: fixed; bottom: 5rem; right: 1.5rem; z-index: 85;
+    width: 380px; max-height: 520px; border-radius: 16px;
+    background: var(--bg-card); border: 1px solid var(--ai-border);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(139,92,246,0.1);
+    display: flex; flex-direction: column;
+    transform: translateY(20px) scale(0.95); opacity: 0; pointer-events: none;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .ai-chat-panel.open { transform: translateY(0) scale(1); opacity: 1; pointer-events: auto; }
+  .ai-chat-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.875rem 1rem; border-bottom: 1px solid var(--border);
+    background: linear-gradient(135deg, rgba(139,92,246,0.08), rgba(99,102,241,0.04));
+    border-radius: 16px 16px 0 0;
+  }
+  .ai-chat-header-left { display: flex; align-items: center; gap: 0.5rem; }
+  .ai-chat-header .title { font-size: 0.8125rem; font-weight: 600; }
+  .ai-chat-header .subtitle { font-size: 0.5625rem; color: var(--text-muted); }
+  .ai-chat-body { flex: 1; overflow-y: auto; padding: 0.875rem; display: flex; flex-direction: column; gap: 0.75rem; }
+  .ai-chat-footer { padding: 0.75rem; border-top: 1px solid var(--border); display: flex; gap: 0.5rem; }
+  .ai-chat-input {
+    flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text); font-size: 0.75rem; padding: 0.5rem 0.75rem;
+  }
+  .ai-chat-input:focus { outline: none; border-color: var(--pro-purple); }
+  .ai-chat-input::placeholder { color: var(--text-muted); }
+  .ai-chat-send {
+    background: linear-gradient(135deg, var(--pro-purple), var(--indigo));
+    border: none; border-radius: 8px; color: #fff; padding: 0.5rem 0.75rem;
+    cursor: pointer; display: flex; align-items: center;
+  }
+
+  .chat-msg { display: flex; gap: 0.5rem; }
+  .chat-msg.assistant .avatar {
+    width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--pro-purple), var(--indigo));
+    display: flex; align-items: center; justify-content: center;
+  }
+  .chat-msg .bubble {
+    padding: 0.6rem 0.75rem; border-radius: 10px; font-size: 0.6875rem; line-height: 1.55;
+    max-width: 300px;
+  }
+  .chat-msg.assistant .bubble { background: var(--bg); color: var(--text-soft); border: 1px solid var(--border); }
+  .chat-msg.assistant .bubble strong { color: var(--text); }
+  .chat-msg.user { justify-content: flex-end; }
+  .chat-msg.user .bubble { background: var(--accent); color: #fff; }
+
+  .chat-suggestion-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+  .chat-chip {
+    font-size: 0.5625rem; font-weight: 500; padding: 0.3rem 0.6rem;
+    border-radius: 20px; border: 1px solid var(--ai-border); background: var(--ai-bg);
+    color: var(--pro-purple); cursor: pointer; transition: all 0.12s; white-space: nowrap;
+  }
+  .chat-chip:hover { background: rgba(139,92,246,0.15); border-color: var(--pro-purple); }
+
+  /* ── AI Feedback after rebalance ── */
+  .ai-feedback-card {
+    background: var(--ai-bg); border: 1px solid var(--ai-border); border-radius: 10px;
+    padding: 0.75rem; margin-top: 0.75rem;
+  }
+  .ai-feedback-header { display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.4rem; }
+  .ai-feedback-header .label { font-size: 0.6875rem; font-weight: 600; color: var(--pro-purple); }
+  .ai-feedback-body { font-size: 0.6875rem; line-height: 1.55; color: var(--text-soft); }
+  .ai-feedback-body strong { color: var(--text); }
+
+  /* ── Section 5: AI Suggestions ── */
+  .ai-card { border: 1px solid var(--ai-border); background: var(--ai-bg); }
+  .ai-response { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; font-size: 0.75rem; line-height: 1.65; color: var(--text-soft); max-height: 300px; overflow-y: auto; }
+  .ai-response h4 { font-size: 0.8125rem; font-weight: 600; color: var(--text); margin: 0.75rem 0 0.35rem; }
+  .ai-response h4:first-child { margin-top: 0; }
+  .ai-response ul { padding-left: 1.25rem; margin: 0.25rem 0; }
+  .ai-response li { margin-bottom: 0.2rem; }
+  .ai-response strong { color: var(--text); }
+  .btn-ai { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; font-weight: 600; padding: 0.5rem 1rem; border-radius: 8px; border: none; cursor: pointer; transition: all 0.15s; background: linear-gradient(135deg, var(--pro-purple), var(--indigo)); color: #fff; box-shadow: 0 2px 8px rgba(139,92,246,0.25); }
+  .btn-ai:hover { box-shadow: 0 4px 16px rgba(139,92,246,0.35); transform: translateY(-1px); }
+
+  .holding-chip { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.625rem; padding: 0.2rem 0.45rem; border-radius: 4px; background: rgba(51,65,85,0.4); color: var(--text-soft); margin: 0.15rem 0.15rem 0 0; }
+  .holding-chip .ticker-chip { font-weight: 600; color: var(--text); }
+  .btn-find-stocks { font-size: 0.625rem; font-weight: 500; padding: 0.2rem 0.5rem; border-radius: 4px; border: 1px solid var(--border); background: transparent; color: var(--text-muted); cursor: pointer; transition: all 0.12s; }
+  .btn-find-stocks:hover { border-color: var(--accent); color: var(--accent); }
+  .legend-row { display: flex; align-items: center; gap: 1rem; margin-top: 0.75rem; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 0.3rem; font-size: 0.625rem; color: var(--text-soft); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 3px; }
+  .section-num { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; background: var(--accent-dim); border: 1px solid rgba(16,185,129,0.25); color: var(--accent); font-size: 0.625rem; font-weight: 700; margin-right: 0.5rem; flex-shrink: 0; }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    .alloc-grid { grid-template-columns: 1fr; }
+    .move-flow { grid-template-columns: 1fr; }
+    .move-arrow { transform: rotate(90deg); padding: 0.5rem 0; }
+    .ai-chat-panel { width: calc(100vw - 2rem); right: 1rem; }
+  }
+
+  /* ── Animations ── */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .card { animation: fadeIn 0.35s ease both; }
+  .card:nth-child(2) { animation-delay: 0.05s; }
+  .card:nth-child(3) { animation-delay: 0.1s; }
+  .card:nth-child(4) { animation-delay: 0.15s; }
+  .card:nth-child(5) { animation-delay: 0.2s; }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+  .cursor-blink { display: inline-block; width: 2px; height: 0.85em; background: var(--pro-purple); margin-left: 2px; animation: blink 0.8s infinite; vertical-align: text-bottom; }
+</style>
+</head>
+<body>
+
+<!-- ── Top Bar ── -->
+<div class="topbar">
+  <div class="topbar-left">
+    <svg width="22" height="22" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" fill="#10b981" opacity="0.15"/><path d="M16 8c-3 0-5.5 2-6 5-.5-2-3-3.5-5.5-3 2 1 3.5 3 3.5 5.5 0 4 3.5 8.5 8 8.5s8-4.5 8-8.5c0-2.5 1.5-4.5 3.5-5.5-2.5-.5-5 1-5.5 3-.5-3-3-5-6-5z" fill="#10b981"/></svg>
+    <h1>trefolio</h1>
+    <span style="color:var(--text-muted);font-size:0.75rem;margin:0 0.25rem;">/</span>
+    <span style="color:var(--text-soft);font-size:0.75rem;">Tools</span>
+    <span style="color:var(--text-muted);font-size:0.75rem;margin:0 0.25rem;">/</span>
+    <span style="color:var(--text);font-size:0.75rem;font-weight:500;">Rebalancing</span>
+  </div>
+  <span class="badge-mockup">Mockup v2 — Pervasive AI</span>
+</div>
+
+<div class="container">
+
+  <!-- ═══════ SECTION 1: Allocation Overview ═══════ -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div style="display:flex;align-items:center;">
+          <span class="section-num">1</span>
+          <span class="card-title">Allocation Overview</span>
+        </div>
+        <div class="card-subtitle" style="margin-left:28px">Auto-populated from your holdings. Adjust targets inline.</div>
+      </div>
+      <div class="cat-tabs">
+        <button class="cat-tab active" onclick="switchCategory(this,'sector')">Sector</button>
+        <button class="cat-tab" onclick="switchCategory(this,'assetClass')">Asset Class</button>
+        <button class="cat-tab" onclick="switchCategory(this,'region')">Region</button>
+        <button class="cat-tab" onclick="switchCategory(this,'exchange')">Exchange</button>
+      </div>
+    </div>
+
+    <div class="alloc-grid">
+      <div>
+        <div class="donut-wrap">
+          <svg viewBox="0 0 200 200" id="donut-svg"></svg>
+          <div class="donut-center">
+            <div class="value">&euro;47,832</div>
+            <div class="label">Total Value</div>
+          </div>
+        </div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="alloc-table" id="alloc-table">
+          <thead><tr><th>Bucket</th><th class="r">Current %</th><th class="r">Value</th><th class="r">Target %</th><th class="r">Drift</th><th></th></tr></thead>
+          <tbody id="alloc-tbody"></tbody>
+        </table>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:0.5rem;padding:0 0.75rem;">
+          <span style="font-size:0.6875rem;color:var(--text-muted)">Total target: <strong style="color:var(--gain)">100.0%</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Insight: Allocation -->
+    <div class="ai-insight" onclick="toggleInsight('insight-alloc')">
+      <svg class="ai-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z"/></svg>
+      <div class="ai-text"><strong>Technology dominates at 35.2%</strong> — well above your 25% target. This single-sector concentration creates meaningful downside risk if tech corrects. Your overall allocation has drifted ~10% from targets.</div>
+      <span class="ai-cta">Ask AI &rarr;</span>
+    </div>
+    <div class="ai-insight-expanded" id="insight-alloc">
+      <h4>What's happening</h4>
+      <p>Your portfolio has grown lopsided due to tech outperformance. Technology at 35.2% means over a third of your wealth depends on one sector — the S&P 500 cap-weights it at ~29%, so you're running above even index-level concentration.</p>
+      <h4>Why it matters</h4>
+      <ul>
+        <li><strong>Sector drawdowns are real</strong> — Tech fell 33% in 2022. At 35% allocation, that would wipe ~12% off your total portfolio.</li>
+        <li>Your <strong>Healthcare and Fixed Income gaps</strong> (-5.9% and -3.1%) leave you underweight in defensive assets that cushion downturns.</li>
+      </ul>
+      <h4>Suggested targets</h4>
+      <p>Based on your risk profile and a balanced growth strategy, consider: Tech 25%, Healthcare 18%, Fixed Income 8%. These targets would reduce your max single-sector drawdown by ~40%.</p>
+    </div>
+  </div>
+
+  <!-- ═══════ SECTION 2: Exposure Analysis ═══════ -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div style="display:flex;align-items:center;">
+          <span class="section-num">2</span>
+          <span class="card-title">Exposure Analysis</span>
+        </div>
+        <div class="card-subtitle" style="margin-left:28px">Concentration risk at a glance. Tile size = portfolio weight.</div>
+      </div>
+      <div class="legend-row" style="margin:0;">
+        <span class="legend-item"><span class="legend-dot" style="background:var(--gain)"></span> Within target</span>
+        <span class="legend-item"><span class="legend-dot" style="background:var(--amber)"></span> Drifting</span>
+        <span class="legend-item"><span class="legend-dot" style="background:var(--loss)"></span> Overexposed</span>
+      </div>
+    </div>
+
+    <div class="treemap-container" id="treemap"></div>
+    <div class="exposure-list" id="exposure-list"></div>
+
+    <!-- AI Insight: Exposure risks -->
+    <div class="ai-insight" onclick="toggleInsight('insight-exposure')">
+      <svg class="ai-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z"/></svg>
+      <div class="ai-text">Your <strong>top 3 sectors represent 62.1%</strong> of your portfolio. In a diversified portfolio, no single bucket should exceed 30%. Consider spreading risk across your underweight areas.</div>
+      <span class="ai-cta">Deep dive &rarr;</span>
+    </div>
+    <div class="ai-insight-expanded" id="insight-exposure">
+      <h4>Concentration breakdown</h4>
+      <p>Technology (35.2%) + Financials (14.8%) + Healthcare (12.1%) = 62.1% in three sectors. Modern Portfolio Theory suggests diminishing diversification benefits above ~30% in any single bucket.</p>
+      <h4>Correlation risk</h4>
+      <p>Tech and Consumer Cyclical (combined 46.5%) tend to be <strong>positively correlated</strong> — both sell off during risk-off events. Adding Fixed Income and Utilities exposure would create genuine hedging.</p>
+      <h4>Your biggest opportunities</h4>
+      <ul>
+        <li><strong>Healthcare (-5.9%)</strong> — Defensive, aging population tailwind, strong dividend payers</li>
+        <li><strong>Fixed Income (-3.1%)</strong> — Rate cuts ahead could boost bond prices while providing income</li>
+        <li><strong>Industrials (-1.4%)</strong> — Infrastructure spending cycle beneficiary</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ═══════ SECTION 3: Rebalancing Actions ═══════ -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div style="display:flex;align-items:center;">
+          <span class="section-num">3</span>
+          <span class="card-title">Rebalancing Actions</span>
+        </div>
+        <div class="card-subtitle" style="margin-left:28px">Plan how to bring your portfolio back to target.</div>
+      </div>
+      <div class="mode-toggle">
+        <button class="mode-btn active" id="btn-add-money" onclick="switchMode('add')">Add Money</button>
+        <button class="mode-btn" id="btn-move-funds" onclick="switchMode('move')">Move Funds</button>
+      </div>
+    </div>
+
+    <!-- Add Money Mode -->
+    <div id="mode-add">
+      <div class="amount-input-row">
+        <div>
+          <div class="amount-label">New capital to invest</div>
+          <input class="amount-input" type="text" value="€5,000" id="add-amount" />
+        </div>
+        <button style="background:var(--accent);color:#fff;border:none;padding:0.5rem 1rem;border-radius:8px;font-size:0.75rem;font-weight:600;cursor:pointer;margin-top:0.9rem;" onclick="recalcDistrib()">Calculate</button>
+      </div>
+
+      <table class="distrib-table">
+        <thead><tr><th>Bucket</th><th class="r">Underweight</th><th class="r">Allocate</th><th>Holdings to Buy</th><th></th></tr></thead>
+        <tbody id="distrib-tbody"></tbody>
+      </table>
+
+      <div class="bar-compare" id="before-after-add">
+        <div style="font-size:0.6875rem;font-weight:600;color:var(--text);margin-bottom:0.25rem;">Before / After Comparison</div>
+        <div id="bar-rows-add"></div>
+      </div>
+
+      <!-- AI Feedback after rebalance plan -->
+      <div class="ai-feedback-card" id="ai-feedback-add">
+        <div class="ai-feedback-header">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--pro-purple)" stroke-width="2"><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z"/></svg>
+          <span class="label">AI Plan Evaluation</span>
+          <span class="pro-badge" style="margin-left:0.25rem;">Pro</span>
+        </div>
+        <div class="ai-feedback-body">
+          <strong>Good plan.</strong> Adding &euro;5,000 to underweight sectors reduces your overall portfolio drift from 10.2% to 6.8%. Healthcare gets the biggest boost (+3.5%), which is smart given its defensive qualities. <strong>One suggestion:</strong> Consider splitting the Fixed Income allocation between BND (US bonds) and a European bond ETF for geographic diversification. <a href="#" style="color:var(--pro-purple);font-size:0.625rem;" onclick="openChat(); return false;">Discuss with AI &rarr;</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Move Funds Mode -->
+    <div id="mode-move" style="display:none;">
+      <div class="move-flow">
+        <div class="move-panel">
+          <div class="move-panel-title">Source (Overweight)</div>
+          <select class="move-select"><option>Technology (+12.3%)</option><option>Consumer Cyclical (+3.1%)</option></select>
+          <div style="margin-top:0.75rem;"><div style="font-size:0.625rem;color:var(--text-muted);margin-bottom:0.3rem;">Sell from:</div>
+            <div class="holding-chip"><span class="ticker-chip">AAPL</span> 2.1 shares &middot; &euro;892</div>
+            <div class="holding-chip"><span class="ticker-chip">NVDA</span> 1.5 shares &middot; &euro;608</div>
+          </div>
+        </div>
+        <div class="move-arrow"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+        <div class="move-panel">
+          <div class="move-panel-title">Destination (Underweight)</div>
+          <select class="move-select"><option>Healthcare (-5.8%)</option><option>Fixed Income (-8.1%)</option><option>Industrials (-2.4%)</option></select>
+          <div class="move-amount-row"><span style="font-size:0.6875rem;color:var(--text-muted);">&euro;</span><input class="move-amount-input" type="text" value="1,500" /></div>
+          <div style="margin-top:0.75rem;"><div style="font-size:0.625rem;color:var(--text-muted);margin-bottom:0.3rem;">Buy into:</div>
+            <div class="holding-chip"><span class="ticker-chip">JNJ</span> &euro;780</div>
+            <div class="holding-chip"><span class="ticker-chip">UNH</span> &euro;720</div>
+          </div>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:1rem;"><button style="background:var(--accent);color:#fff;border:none;padding:0.45rem 1rem;border-radius:8px;font-size:0.6875rem;font-weight:600;cursor:pointer;">Add to Queue</button></div>
+
+      <div class="move-queue">
+        <div style="font-size:0.6875rem;font-weight:600;color:var(--text);margin-bottom:0.5rem;">Planned Moves</div>
+        <div class="move-queue-item"><div class="flow"><span style="color:var(--loss);">Technology</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg><span style="color:var(--gain);">Healthcare</span></div><span class="amt">&euro;1,500</span></div>
+        <div class="move-queue-item"><div class="flow"><span style="color:var(--loss);">Technology</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg><span style="color:var(--gain);">Fixed Income</span></div><span class="amt">&euro;2,200</span></div>
+      </div>
+
+      <div class="bar-compare" style="margin-top:1rem;">
+        <div style="font-size:0.6875rem;font-weight:600;color:var(--text);margin-bottom:0.25rem;">Before / After Comparison</div>
+        <div id="bar-rows-move"></div>
+      </div>
+
+      <!-- AI feedback for Move Funds -->
+      <div class="ai-feedback-card">
+        <div class="ai-feedback-header">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--pro-purple)" stroke-width="2"><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z"/></svg>
+          <span class="label">AI Move Evaluation</span>
+          <span class="pro-badge" style="margin-left:0.25rem;">Pro</span>
+        </div>
+        <div class="ai-feedback-body">
+          <strong>Smart rebalancing strategy.</strong> Moving &euro;3,700 from Technology into Healthcare and Fixed Income cuts your tech overweight from +10.2% to +5.0% while adding defensive assets. <strong>Tax tip:</strong> Check if any AAPL or NVDA positions have short-term gains — selling those first could have tax implications. Consider lots with long-term holding periods for more favorable treatment. <a href="#" style="color:var(--pro-purple);font-size:0.625rem;" onclick="openChat(); return false;">Discuss with AI &rarr;</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ SECTION 4: Industry Screener (Pro) ═══════ -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div style="display:flex;align-items:center;">
+          <span class="section-num">4</span>
+          <span class="card-title">Industry Screener</span>
+          <span class="pro-badge" style="margin-left:0.5rem;">Pro</span>
+        </div>
+        <div class="card-subtitle" style="margin-left:28px">Find stocks for underweight sectors without leaving the rebalancing flow.</div>
+      </div>
+    </div>
+
+    <div class="screener-header">
+      <input class="search-input" type="text" placeholder="Search ticker or name..." value="healthcare" />
+      <select class="filter-select"><option>Sector: Healthcare</option><option>Sector: Technology</option><option>Sector: Financials</option></select>
+      <select class="filter-select"><option>Industry: All</option><option>Industry: Biotechnology</option><option>Industry: Medical Devices</option><option selected>Industry: Pharmaceuticals</option><option>Industry: Health Plans</option></select>
+    </div>
+
+    <table class="screener-table">
+      <thead><tr><th>Symbol</th><th>Name</th><th>Industry</th><th class="r">Price</th><th class="r">Div Yield</th><th class="r">P/E</th><th class="r">Mkt Cap</th><th></th></tr></thead>
+      <tbody id="screener-tbody"></tbody>
+    </table>
+
+    <!-- AI Insight: Stock picks -->
+    <div class="ai-insight" onclick="toggleInsight('insight-screener')">
+      <svg class="ai-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z"/></svg>
+      <div class="ai-text">For your Healthcare gap, <strong>JNJ and PFE offer the best dividend profiles</strong> (3.1% and 5.8% yield) with reasonable valuations. ABT provides medical devices diversification within the sector.</div>
+      <span class="ai-cta">Compare stocks &rarr;</span>
+    </div>
+    <div class="ai-insight-expanded" id="insight-screener">
+      <h4>AI Stock Comparison — Healthcare Picks</h4>
+      <p>Based on your goal of filling a 5.9% Healthcare underweight with dividend-paying defensive stocks:</p>
+      <ul>
+        <li><strong>JNJ (P/E 16.2, Yield 3.1%)</strong> — Diversified pharma giant. Low beta, consistent dividend growth for 60+ years. Best "sleep at night" pick.</li>
+        <li><strong>PFE (P/E 11.4, Yield 5.8%)</strong> — Highest yield in the list, deeply discounted after COVID revenue normalization. Value play with upside if pipeline delivers.</li>
+        <li><strong>UNH (P/E 21.8, Yield 1.4%)</strong> — Growth + healthcare exposure. Dominant health insurer with pricing power. Premium valuation but consistent earnings growth.</li>
+        <li><strong>ABT (P/E 24.1, Yield 1.9%)</strong> — Medical devices + diagnostics. Less correlated with pharma regulation risk. Good sector diversifier within Healthcare.</li>
+      </ul>
+      <p><strong>Recommendation:</strong> Split between JNJ (income) and ABT (growth) for the most balanced Healthcare exposure.</p>
+    </div>
+  </div>
+
+  <!-- ═══════ SECTION 5: AI Rebalancing Assistant (Pro) ═══════ -->
+  <div class="card ai-card">
+    <div class="card-header">
+      <div>
+        <div style="display:flex;align-items:center;">
+          <span class="section-num" style="background:var(--pro-purple-dim);border-color:rgba(139,92,246,0.25);color:var(--pro-purple);">5</span>
+          <span class="card-title">AI Rebalancing Assistant</span>
+          <span class="pro-badge" style="margin-left:0.5rem;">Pro</span>
+        </div>
+        <div class="card-subtitle" style="margin-left:28px">Get a full portfolio analysis and actionable rebalancing strategy.</div>
+      </div>
+      <button class="btn-ai" onclick="toggleAiResponse()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z"/></svg>
+        Full Analysis
+      </button>
+    </div>
+    <div class="ai-response" id="ai-response" style="display:none;"></div>
+  </div>
+
+</div>
+
+<!-- ═══════ Floating AI Chat Button ═══════ -->
+<button class="ai-fab" onclick="toggleChat()" id="ai-fab" title="Chat with AI Financial Advisor">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z"/></svg>
+</button>
+
+<!-- ═══════ AI Chat Panel ═══════ -->
+<div class="ai-chat-panel" id="ai-chat-panel">
+  <div class="ai-chat-header">
+    <div class="ai-chat-header-left">
+      <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--pro-purple),var(--indigo));display:flex;align-items:center;justify-content:center;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>
+      </div>
+      <div>
+        <div class="title">AI Financial Advisor</div>
+        <div class="subtitle">Expert on markets, allocation & rebalancing</div>
+      </div>
+    </div>
+    <button style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1.1rem;" onclick="toggleChat()">&times;</button>
+  </div>
+
+  <div class="ai-chat-body" id="ai-chat-body">
+    <div class="chat-msg assistant">
+      <div class="avatar"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg></div>
+      <div class="bubble">
+        Hi! I'm your AI financial advisor. I can see your portfolio is <strong>heavily weighted toward Technology at 35.2%</strong>. I can help you with allocation strategy, stock selection, risk analysis, or evaluate your rebalancing plan. What would you like to explore?
+      </div>
+    </div>
+
+    <div class="chat-suggestion-chips">
+      <span class="chat-chip" onclick="addUserMsg('Why is my tech allocation a problem?')">Why is tech overweight risky?</span>
+      <span class="chat-chip" onclick="addUserMsg('What should I buy for healthcare?')">Best healthcare picks?</span>
+      <span class="chat-chip" onclick="addUserMsg('Evaluate my rebalancing plan')">Evaluate my plan</span>
+      <span class="chat-chip" onclick="addUserMsg('Should I add bonds now?')">Should I add bonds?</span>
+    </div>
+
+    <div class="chat-msg user" id="chat-user-1" style="display:none;">
+      <div class="bubble" id="chat-user-1-text"></div>
+    </div>
+    <div class="chat-msg assistant" id="chat-ai-1" style="display:none;">
+      <div class="avatar"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg></div>
+      <div class="bubble" id="chat-ai-1-text"></div>
+    </div>
+  </div>
+
+  <div class="ai-chat-footer">
+    <input class="ai-chat-input" id="chat-input" type="text" placeholder="Ask about your portfolio..." onkeydown="if(event.key==='Enter')sendChat()" />
+    <button class="ai-chat-send" onclick="sendChat()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+    </button>
+  </div>
+</div>
+
+<script>
+const COLORS = ['#10b981','#6366f1','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#ec4899','#84cc16','#f97316','#14b8a6'];
+const sectorData = [
+  { label: 'Technology', pct: 35.2, value: 16837, target: 25, color: COLORS[0] },
+  { label: 'Healthcare', pct: 12.1, value: 5788, target: 18, color: COLORS[1] },
+  { label: 'Financials', pct: 14.8, value: 7079, target: 15, color: COLORS[2] },
+  { label: 'Consumer Cyclical', pct: 11.3, value: 5405, target: 10, color: COLORS[3] },
+  { label: 'Industrials', pct: 8.6, value: 4114, target: 10, color: COLORS[4] },
+  { label: 'Energy', pct: 6.2, value: 2966, target: 7, color: COLORS[5] },
+  { label: 'Fixed Income', pct: 4.9, value: 2344, target: 8, color: COLORS[6] },
+  { label: 'Real Estate', pct: 3.7, value: 1770, target: 4, color: COLORS[7] },
+  { label: 'Utilities', pct: 2.1, value: 1005, target: 2, color: COLORS[8] },
+  { label: 'Materials', pct: 1.1, value: 526, target: 1, color: COLORS[9] },
+];
+
+function fmt(n) { return '€' + n.toLocaleString('de-DE'); }
+
+function renderDonut() {
+  const svg = document.getElementById('donut-svg');
+  svg.innerHTML = '';
+  const cx = 100, cy = 100, r = 80, r2 = 55;
+  let cumAngle = -90;
+  sectorData.forEach((d) => {
+    const angle = (d.pct / 100) * 360;
+    const startRad = (cumAngle * Math.PI) / 180;
+    const endRad = ((cumAngle + angle) * Math.PI) / 180;
+    const largeArc = angle > 180 ? 1 : 0;
+    const x1o = cx + r * Math.cos(startRad), y1o = cy + r * Math.sin(startRad);
+    const x2o = cx + r * Math.cos(endRad), y2o = cy + r * Math.sin(endRad);
+    const x1i = cx + r2 * Math.cos(endRad), y1i = cy + r2 * Math.sin(endRad);
+    const x2i = cx + r2 * Math.cos(startRad), y2i = cy + r2 * Math.sin(startRad);
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', `M${x1o},${y1o} A${r},${r} 0 ${largeArc} 1 ${x2o},${y2o} L${x1i},${y1i} A${r2},${r2} 0 ${largeArc} 0 ${x2i},${y2i} Z`);
+    path.setAttribute('fill', d.color);
+    path.setAttribute('opacity', '0.85');
+    path.style.transition = 'opacity 0.15s';
+    path.addEventListener('mouseenter', () => path.setAttribute('opacity', '1'));
+    path.addEventListener('mouseleave', () => path.setAttribute('opacity', '0.85'));
+    svg.appendChild(path);
+    cumAngle += angle;
+  });
+}
+
+function renderAllocTable() {
+  const tbody = document.getElementById('alloc-tbody');
+  tbody.innerHTML = '';
+  sectorData.forEach((d) => {
+    const drift = d.pct - d.target;
+    const driftClass = Math.abs(drift) < 2 ? 'drift-ok' : drift > 0 ? 'drift-over' : 'drift-under';
+    const overexposed = d.pct > 30;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td><span class="swatch" style="background:${d.color}"></span>${d.label}${overexposed ? '<span class="overexposed-badge"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 9v4M12 17h.01"/><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>Overexposed</span>' : ''}</td><td class="r" style="font-weight:500;">${d.pct.toFixed(1)}%</td><td class="r" style="color:var(--text-soft);">${fmt(d.value)}</td><td class="r"><input class="target-input" type="text" value="${d.target.toFixed(1)}%" /></td><td class="r"><span class="drift-badge ${driftClass}">${drift > 0 ? '+' : ''}${drift.toFixed(1)}%</span></td><td style="text-align:right;"><button class="btn-find-stocks" onclick="openPanel()">Find stocks</button></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderTreemap() {
+  const container = document.getElementById('treemap');
+  container.innerHTML = '';
+  const totalWidth = container.offsetWidth || 1160;
+  sectorData.forEach((d) => {
+    const drift = d.pct - d.target;
+    let bg;
+    if (Math.abs(drift) < 2) bg = `${d.color}cc`;
+    else if (drift > 5) bg = `linear-gradient(135deg, ${d.color}99, rgba(239,68,68,0.6))`;
+    else if (drift > 2) bg = `linear-gradient(135deg, ${d.color}99, rgba(245,158,11,0.5))`;
+    else bg = `linear-gradient(135deg, ${d.color}99, rgba(16,185,129,0.5))`;
+    const tile = document.createElement('div');
+    tile.className = 'treemap-tile';
+    tile.style.width = Math.max(60, (d.pct / 100) * totalWidth - 3) + 'px';
+    tile.style.flexGrow = d.pct;
+    tile.style.background = bg;
+    if (drift > 5) tile.style.border = '2px solid var(--loss)';
+    else if (drift > 2) tile.style.border = '2px solid var(--amber)';
+    tile.innerHTML = `<span class="tile-label">${d.label}</span><span class="tile-pct">${d.pct.toFixed(1)}%</span>`;
+    container.appendChild(tile);
+  });
+}
+
+function renderExposureList() {
+  const list = document.getElementById('exposure-list');
+  list.innerHTML = '';
+  [...sectorData].sort((a, b) => Math.abs(b.pct - b.target) - Math.abs(a.pct - a.target)).forEach((d) => {
+    const drift = d.pct - d.target;
+    if (Math.abs(drift) < 1) return;
+    const isOver = drift > 0;
+    const row = document.createElement('div');
+    row.className = 'exposure-row';
+    row.innerHTML = `<div class="left"><div class="dot" style="background:${isOver ? 'var(--loss)' : 'var(--gain)'}"></div><span>${isOver ? 'Overexposed to' : 'Underexposed to'} <strong style="color:var(--text)">${d.label}</strong></span></div><div class="right" style="color:${isOver ? 'var(--loss)' : 'var(--gain)'}"> ${drift > 0 ? '+' : ''}${drift.toFixed(1)}%</div>`;
+    list.appendChild(row);
+  });
+}
+
+function renderDistribution() {
+  const tbody = document.getElementById('distrib-tbody');
+  tbody.innerHTML = '';
+  const underweight = sectorData.map(d => ({...d, drift: d.pct - d.target})).filter(d => d.drift < -1).sort((a, b) => a.drift - b.drift);
+  const totalDeficit = underweight.reduce((s, d) => s + Math.abs(d.drift), 0);
+  const holdingMap = { 'Healthcare': [{t:'JNJ',a:'€1,100'},{t:'UNH',a:'€980'}], 'Fixed Income': [{t:'BND',a:'€940'},{t:'AGG',a:'€560'}], 'Industrials': [{t:'HON',a:'€420'}], 'Energy': [{t:'XOM',a:'€320'}] };
+  underweight.forEach((d) => {
+    const alloc = Math.round(5000 * (Math.abs(d.drift) / totalDeficit));
+    const holdings = holdingMap[d.label] || [{t:'—',a:'—'}];
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td><span class="swatch" style="background:${d.color}"></span>${d.label}</td><td class="r" style="color:var(--loss)">${d.drift.toFixed(1)}%</td><td class="r" style="font-weight:600;color:var(--gain);">${fmt(alloc)}</td><td>${holdings.map(h => `<span class="holding-chip"><span class="ticker-chip">${h.t}</span> ${h.a}</span>`).join('')}</td><td style="text-align:right;"><button class="btn-find-stocks" onclick="openPanel()">Find stocks</button></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderBars(containerId, mode) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  sectorData.forEach((d) => {
+    let afterPct;
+    if (mode === 'add') { const drift = d.pct - d.target; afterPct = drift < -1 ? d.pct + Math.abs(drift) * 0.6 : d.pct * 0.95; }
+    else { afterPct = d.label === 'Technology' ? d.pct - 5.2 : d.label === 'Healthcare' ? d.pct + 3.1 : d.label === 'Fixed Income' ? d.pct + 2.8 : d.pct; }
+    const row = document.createElement('div');
+    row.className = 'bar-row';
+    row.innerHTML = `<span class="bar-label">${d.label}</span><div class="bar-track"><div class="bar-fill-before" style="width:${d.pct}%;background:${d.color};"></div><div class="bar-fill-after" style="width:${afterPct.toFixed(1)}%;background:${d.color};"></div></div><span class="bar-pct">${afterPct.toFixed(1)}%</span>`;
+    container.appendChild(row);
+  });
+}
+
+function renderScreener() {
+  const tbody = document.getElementById('screener-tbody');
+  const stocks = [
+    { sym: 'JNJ', name: 'Johnson & Johnson', ind: 'Pharmaceuticals', price: '€152.40', dy: '3.1%', pe: '16.2', mc: '€368B', added: true },
+    { sym: 'UNH', name: 'UnitedHealth Group', ind: 'Health Plans', price: '€487.20', dy: '1.4%', pe: '21.8', mc: '€448B', added: true },
+    { sym: 'PFE', name: 'Pfizer Inc.', ind: 'Pharmaceuticals', price: '€28.90', dy: '5.8%', pe: '11.4', mc: '€163B', added: false },
+    { sym: 'ABT', name: 'Abbott Laboratories', ind: 'Medical Devices', price: '€108.65', dy: '1.9%', pe: '24.1', mc: '€189B', added: false },
+    { sym: 'TMO', name: 'Thermo Fisher', ind: 'Diagnostics', price: '€542.10', dy: '0.3%', pe: '29.7', mc: '€211B', added: false },
+    { sym: 'AMGN', name: 'Amgen Inc.', ind: 'Biotechnology', price: '€278.30', dy: '3.4%', pe: '18.9', mc: '€149B', added: false },
+  ];
+  tbody.innerHTML = '';
+  stocks.forEach((s) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td class="ticker">${s.sym}</td><td>${s.name}</td><td style="color:var(--text-muted)">${s.ind}</td><td class="r">${s.price}</td><td class="r" style="color:var(--gain)">${s.dy}</td><td class="r">${s.pe}</td><td class="r" style="color:var(--text-soft)">${s.mc}</td><td style="text-align:right;"><button class="btn-add-plan ${s.added ? 'added' : ''}">${s.added ? '✓ Added' : 'Add to plan'}</button></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// ── AI insight toggles ──
+function toggleInsight(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('visible');
+}
+
+// ── AI full analysis (Section 5) ──
+const aiText = `<h4>Portfolio Analysis</h4><p>Your portfolio has a <strong>significant technology overweight</strong> at 35.2% vs. your 25% target — a +10.2% drift that represents considerable concentration risk, especially given recent sector volatility.</p><h4>Recommended Moves</h4><ul><li><strong>Reduce Technology by ~€4,900</strong> — Consider trimming AAPL (your largest position) and NVDA. Both have appreciated significantly and taking some profit here would be prudent risk management.</li><li><strong>Increase Healthcare to 18%</strong> — You're 5.9% underweight. JNJ and UNH offer strong dividend profiles and defensive characteristics that complement your growth-heavy tech allocation.</li><li><strong>Build Fixed Income to 8%</strong> — At 4.9%, you're 3.1% under target. Adding bond ETFs like BND or AGG would reduce portfolio volatility heading into an uncertain rate environment.</li><li><strong>Add Industrials exposure</strong> — HON or CAT would bring this bucket closer to your 10% target while adding inflation-hedging characteristics.</li></ul><h4>Priority Order</h4><p>Start with Healthcare (largest underweight + strong fundamentals), then Fixed Income (risk reduction), then Industrials. This sequence maximizes risk-adjusted improvement per trade.</p>`;
+
+let aiVisible = false;
+function toggleAiResponse() {
+  const el = document.getElementById('ai-response');
+  if (aiVisible) { el.style.display = 'none'; aiVisible = false; return; }
+  el.style.display = 'block'; el.innerHTML = ''; aiVisible = true;
+  typeAiResponse(el, aiText);
+}
+function typeAiResponse(el, html) {
+  let i = 0;
+  el.innerHTML = '<span class="cursor-blink"></span>';
+  function addChar() {
+    if (i >= html.length) { el.innerHTML = html; return; }
+    if (html[i] === '<') { const closeIdx = html.indexOf('>', i); if (closeIdx !== -1) { i = closeIdx + 1; el.innerHTML = html.substring(0, i) + '<span class="cursor-blink"></span>'; requestAnimationFrame(addChar); return; } }
+    i++;
+    el.innerHTML = html.substring(0, i) + '<span class="cursor-blink"></span>';
+    if (i < html.length) setTimeout(addChar, 4); else el.innerHTML = html;
+  }
+  setTimeout(addChar, 300);
+}
+
+// ── Mode toggle ──
+function switchMode(mode) {
+  document.getElementById('mode-add').style.display = mode === 'add' ? 'block' : 'none';
+  document.getElementById('mode-move').style.display = mode === 'move' ? 'block' : 'none';
+  document.getElementById('btn-add-money').classList.toggle('active', mode === 'add');
+  document.getElementById('btn-move-funds').classList.toggle('active', mode === 'move');
+}
+
+function switchCategory(btn) {
+  document.querySelectorAll('.cat-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ── Chat ──
+let chatOpen = false;
+function toggleChat() {
+  chatOpen = !chatOpen;
+  document.getElementById('ai-chat-panel').classList.toggle('open', chatOpen);
+}
+function openChat() {
+  if (!chatOpen) toggleChat();
+}
+
+const aiResponses = {
+  'Why is my tech allocation a problem?': 'Great question. At <strong>35.2% in Technology</strong>, over a third of your wealth depends on one sector. Historical data shows tech can drop 30-40% in corrections (2022: -33%, 2000: -78%). With your current allocation, a 30% tech drawdown would wipe <strong>~10.6% off your total portfolio</strong>. Compare that to a 25% target where the same drawdown costs ~7.5%. That 3% difference is about €1,400 in your case. Diversification is your only free lunch in investing.',
+  'What should I buy for healthcare?': 'For closing your <strong>5.9% Healthcare gap (~€2,800)</strong>, I\'d suggest a barbell approach:<br><br>• <strong>JNJ €1,400</strong> — Stable compounder, 3.1% yield, 60+ years of dividend growth. Your "anchor" position.<br>• <strong>ABT €900</strong> — Medical devices exposure (less pharma regulation risk). Growing diagnostics business.<br>• <strong>PFE €500</strong> — Deep value at P/E 11.4, highest yield at 5.8%. Smaller position due to pipeline uncertainty.<br><br>This gives you <strong>diversification within healthcare</strong> across pharma, devices, and diagnostics.',
+  'Evaluate my rebalancing plan': 'Looking at your €5,000 Add Money plan:<br><br>✅ <strong>Healthcare gets €2,837</strong> — Perfect, it\'s your biggest gap<br>✅ <strong>Fixed Income gets €1,490</strong> — Good defensive addition<br>✅ <strong>Industrials gets €673</strong> — Proportional to its underweight<br><br>⚠️ <strong>One concern:</strong> This only reduces total drift from 10.2% to ~6.8%. You\'d need ~€12,000 to fully close all gaps. Consider making this a recurring monthly contribution of €400-500 to gradually close the gaps over the next 10-12 months.',
+  'Should I add bonds now?': 'With central banks signaling potential rate cuts, <strong>now is actually a good time to build bond exposure</strong>. Here\'s why:<br><br>• Bond prices rise when rates fall — you\'d be buying before the rally<br>• Your Fixed Income at 4.9% (target 8%) is your second-largest gap<br>• Bonds provide genuine diversification — they\'re negatively correlated with equities during stress<br><br><strong>Suggestion:</strong> Split between <strong>BND</strong> (broad US bonds) and <strong>VAGF</strong> (Euro aggregate bonds) for currency diversification. This protects you whether ECB or Fed cuts first.',
+};
+
+function addUserMsg(text) {
+  const userEl = document.getElementById('chat-user-1');
+  const userText = document.getElementById('chat-user-1-text');
+  const aiEl = document.getElementById('chat-ai-1');
+  const aiText = document.getElementById('chat-ai-1-text');
+
+  userText.textContent = text;
+  userEl.style.display = 'flex';
+
+  document.querySelector('.chat-suggestion-chips').style.display = 'none';
+
+  setTimeout(() => {
+    aiEl.style.display = 'flex';
+    aiText.innerHTML = aiResponses[text] || 'Let me analyze that for you. Based on your current allocation and market conditions, I\'d recommend focusing on closing your Healthcare and Fixed Income gaps first, as these provide the best risk-adjusted improvement to your portfolio.';
+    document.getElementById('ai-chat-body').scrollTop = 9999;
+  }, 600);
+}
+
+function sendChat() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  addUserMsg(text);
+}
+
+function openPanel() {}
+function recalcDistrib() { renderDistribution(); renderBars('bar-rows-add', 'add'); }
+
+// ── Init ──
+renderDonut(); renderAllocTable(); renderTreemap(); renderExposureList();
+renderDistribution(); renderBars('bar-rows-add', 'add'); renderBars('bar-rows-move', 'move'); renderScreener();
+window.addEventListener('resize', () => { renderTreemap(); });
+</script>
+</body>
+</html>
