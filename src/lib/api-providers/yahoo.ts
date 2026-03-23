@@ -147,22 +147,29 @@ export class YahooProvider implements StockDataProvider {
     const end = providerRequestDuration.startTimer({ provider: "yahoo", operation: "classification" });
     let ok = false;
     try {
-      const result = await yahooFinance.quoteSummary(symbol, { modules: ["assetProfile", "quoteType"] });
-      ok = true;
-      const profile = result.assetProfile;
-      const qt = result.quoteType;
+      try {
+        const result = await yahooFinance.quoteSummary(symbol, { modules: ["assetProfile", "quoteType"] });
+        ok = true;
+        const profile = result.assetProfile;
+        const qt = result.quoteType;
 
-      const quoteType = qt?.quoteType ?? "";
-      let assetClass = "Equity";
-      if (quoteType === "ETF") assetClass = "ETF";
-      else if (quoteType === "MUTUALFUND") assetClass = "Fund";
-      else if (quoteType === "CRYPTOCURRENCY") assetClass = "Cryptocurrency";
-
-      return {
-        sector: profile?.sector ?? "",
-        region: profile?.country ?? "",
-        assetClass,
-      };
+        return {
+          sector: profile?.sector ?? "",
+          region: profile?.country ?? "",
+          assetClass: yahooQuoteTypeToAssetClass(qt?.quoteType),
+        };
+      } catch {
+        // assetProfile module is unavailable for many instruments (bond ETFs,
+        // money-market ETFs, ETCs, crypto pairs). Fall back to quote() which
+        // reliably returns quoteType so we can still classify the asset class.
+        const quote = await yahooFinance.quote(symbol);
+        ok = true;
+        return {
+          sector: "",
+          region: "",
+          assetClass: yahooQuoteTypeToAssetClass(quote.quoteType),
+        };
+      }
     } catch {
       return null;
     } finally {
@@ -420,6 +427,15 @@ export class YahooProvider implements StockDataProvider {
       end();
       providerRequestsTotal.inc({ provider: "yahoo", operation: "etf_holdings", status: ok ? "success" : "error" });
     }
+  }
+}
+
+function yahooQuoteTypeToAssetClass(quoteType?: string): string {
+  switch (quoteType) {
+    case "ETF": return "ETF";
+    case "MUTUALFUND": return "Fund";
+    case "CRYPTOCURRENCY": return "Cryptocurrency";
+    default: return "Equity";
   }
 }
 

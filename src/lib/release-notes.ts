@@ -17,6 +17,21 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.64.1",
+    date: "2026-03-23",
+    title: "Classification Fix for Bond ETFs & Crypto",
+    titleTranslations: { es: "Corrección de clasificación para ETFs de bonos y criptomonedas" },
+    changes: [
+      {
+        type: "fix",
+        text: "Auto-classify now works for bond ETFs, money-market ETFs, ETCs, and crypto pairs that previously failed silently.",
+        translations: {
+          es: "La autoclasificación ahora funciona para ETFs de bonos, ETFs del mercado monetario, ETCs y pares de criptomonedas que antes fallaban silenciosamente.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.64.0",
     date: "2026-03-22",
     title: "Snapshot Pipeline Optimization",
