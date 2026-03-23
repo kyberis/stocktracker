@@ -92,10 +92,10 @@ export const POST = withMetrics("/api/portfolio/backfill-snapshots", async (req:
 
   const result = await runBackfillForUser(session.userId);
 
-  // Sync invested capital from the freshly-built daily rows onto intraday
-  // snapshots for the same calendar day. This fixes stale invested values
-  // from past cron writes (e.g. after a move) that would otherwise persist
-  // as spikes in the Performance chart.
+  // Sync invested capital from the nearest daily backfill row onto every
+  // intraday snapshot. Uses the most recent daily row on-or-before the
+  // intraday date so "today's" snapshots (no daily row yet) pick up
+  // yesterday's value. Fixes stale invested from past cron writes.
   const syncResult = await client.execute({
     sql: `UPDATE portfolio_snapshots
           SET total_invested_eur = (
@@ -103,18 +103,14 @@ export const POST = withMetrics("/api/portfolio/backfill-snapshots", async (req:
             FROM portfolio_snapshots d
             WHERE d.user_id = portfolio_snapshots.user_id
               AND d.portfolio_id = portfolio_snapshots.portfolio_id
-              AND d.date = substr(portfolio_snapshots.date, 1, 10)
               AND d.date NOT LIKE '% %'
+              AND d.date NOT LIKE '%T%'
+              AND d.date <= substr(portfolio_snapshots.date, 1, 10)
+            ORDER BY d.date DESC
+            LIMIT 1
           )
           WHERE user_id = ?
-            AND date LIKE '% %'
-            AND EXISTS (
-              SELECT 1 FROM portfolio_snapshots d
-              WHERE d.user_id = portfolio_snapshots.user_id
-                AND d.portfolio_id = portfolio_snapshots.portfolio_id
-                AND d.date = substr(portfolio_snapshots.date, 1, 10)
-                AND d.date NOT LIKE '% %'
-            )`,
+            AND date LIKE '% %'`,
     args: [session.userId],
   });
   const intradaySynced = syncResult.rowsAffected ?? 0;
