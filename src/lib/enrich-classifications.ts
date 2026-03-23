@@ -12,7 +12,7 @@ const MAX_CONCURRENT = 10;
 export async function enrichHoldingClassifications(userId: string): Promise<number> {
   const holdings = await listHoldings(userId);
   const unclassified = holdings.filter(
-    (h) => !h.sector && !h.region && !h.assetClass
+    (h) => !h.sector || !h.region || !h.assetClass
   );
 
   if (unclassified.length === 0) return 0;

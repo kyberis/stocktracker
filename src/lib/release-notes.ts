@@ -29,6 +29,13 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "La autoclasificación ahora funciona para ETFs de bonos, ETFs del mercado monetario, ETCs y pares de criptomonedas que antes fallaban silenciosamente.",
         },
       },
+      {
+        type: "fix",
+        text: "ETFs and crypto no longer show as 'Unclassified' in the Sector view — ETFs display their fund category and crypto displays as 'Cryptocurrency'.",
+        translations: {
+          es: "Los ETFs y las criptomonedas ya no aparecen como 'Sin clasificar' en la vista de Sector — los ETFs muestran su categoría de fondo y las criptomonedas aparecen como 'Cryptocurrency'.",
+        },
+      },
     ],
   },
   {

@@ -147,29 +147,42 @@ export class YahooProvider implements StockDataProvider {
     const end = providerRequestDuration.startTimer({ provider: "yahoo", operation: "classification" });
     let ok = false;
     try {
+      // Tier 1: full equity profile (sector + region + quoteType)
       try {
         const result = await yahooFinance.quoteSummary(symbol, { modules: ["assetProfile", "quoteType"] });
         ok = true;
         const profile = result.assetProfile;
-        const qt = result.quoteType;
-
+        const assetClass = yahooQuoteTypeToAssetClass(result.quoteType?.quoteType);
         return {
-          sector: profile?.sector ?? "",
+          sector: profile?.sector || assetClassAsSector(assetClass),
           region: profile?.country ?? "",
-          assetClass: yahooQuoteTypeToAssetClass(qt?.quoteType),
+          assetClass,
         };
-      } catch {
-        // assetProfile module is unavailable for many instruments (bond ETFs,
-        // money-market ETFs, ETCs, crypto pairs). Fall back to quote() which
-        // reliably returns quoteType so we can still classify the asset class.
-        const quote = await yahooFinance.quote(symbol);
+      } catch { /* assetProfile unavailable — try fund modules */ }
+
+      // Tier 2: fund profile (category as sector proxy, works for ETFs/funds)
+      try {
+        const result = await yahooFinance.quoteSummary(symbol, { modules: ["fundProfile", "quoteType"] });
         ok = true;
+        const assetClass = yahooQuoteTypeToAssetClass(result.quoteType?.quoteType);
         return {
-          sector: "",
+          sector: result.fundProfile?.categoryName || assetClassAsSector(assetClass),
           region: "",
-          assetClass: yahooQuoteTypeToAssetClass(quote.quoteType),
+          assetClass,
         };
-      }
+      } catch { /* fundProfile also unavailable — use plain quote */ }
+
+      // Tier 3: quote() with relaxed validation (most reliable, works for
+      // exotic symbols where quoteSummary validation rejects the response)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const quote: any = await yahooFinance.quote(symbol, {}, { validateResult: false });
+      ok = true;
+      const assetClass = yahooQuoteTypeToAssetClass(quote?.quoteType);
+      return {
+        sector: assetClassAsSector(assetClass),
+        region: "",
+        assetClass,
+      };
     } catch {
       return null;
     } finally {
@@ -436,6 +449,17 @@ function yahooQuoteTypeToAssetClass(quoteType?: string): string {
     case "MUTUALFUND": return "Fund";
     case "CRYPTOCURRENCY": return "Cryptocurrency";
     default: return "Equity";
+  }
+}
+
+/** Provides a meaningful sector label for non-equity instruments so they don't
+ *  land in "Unclassified" in the Sector taxonomy view. */
+function assetClassAsSector(assetClass: string): string {
+  switch (assetClass) {
+    case "ETF": return "ETF";
+    case "Fund": return "Fund";
+    case "Cryptocurrency": return "Cryptocurrency";
+    default: return "";
   }
 }
 
