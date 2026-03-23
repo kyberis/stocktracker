@@ -142,12 +142,20 @@ async function buildQuotesAndExchangeRates(distinctTickers: DistinctHoldingTicke
   return { quotes, exchangeRates, quoteErrors: errorCount };
 }
 
-/** Aggregate + per-portfolio rows for one user at the given UTC bucket (live quotes). */
+/**
+ * Aggregate + per-portfolio rows for one user at the given UTC bucket (live quotes).
+ *
+ * When `forceRecalculateInvested` is true the freshly-computed totalCostEUR is
+ * written instead of carrying forward the last snapshot's invested value.
+ * This is needed after moves / imports where portfolio composition changed and
+ * the old carry-forward would be stale.
+ */
 async function writeLiveSnapshotsForUser(
   userId: string,
   quotes: Record<string, QuoteData>,
   exchangeRates: ExchangeRates,
   dateBucket: string,
+  forceRecalculateInvested = false,
 ): Promise<number> {
   const holdingsAll = await listHoldings(userId);
   if (holdingsAll.length === 0) return 0;
@@ -157,7 +165,9 @@ async function writeLiveSnapshotsForUser(
     (quotes[h.ticker]?.regularMarketPrice ?? 0) > 0;
 
   const client = await ensureInitialized();
-  const investedMap = await fetchLatestInvestedMap(client, userId);
+  const investedMap = forceRecalculateInvested
+    ? new Map<string, number>()
+    : await fetchLatestInvestedMap(client, userId);
   const cashAll = await listCashEntries(userId);
 
   const rows: { portfolioId: string; value: number; invested: number }[] = [];
@@ -194,11 +204,19 @@ async function writeLiveSnapshotsForUser(
 
   if (rows.length === 0) return 0;
 
+  const upsertSql = forceRecalculateInvested
+    ? `INSERT INTO portfolio_snapshots (id, user_id, portfolio_id, date, total_value_eur, total_invested_eur)
+       VALUES (?, ?, ?, ?, ?, ?)
+       ON CONFLICT(user_id, portfolio_id, date) DO UPDATE SET
+         total_value_eur = excluded.total_value_eur,
+         total_invested_eur = excluded.total_invested_eur`
+    : `INSERT INTO portfolio_snapshots (id, user_id, portfolio_id, date, total_value_eur, total_invested_eur)
+       VALUES (?, ?, ?, ?, ?, ?)
+       ON CONFLICT(user_id, portfolio_id, date) DO UPDATE SET
+         total_value_eur = excluded.total_value_eur`;
+
   const stmts = rows.map((r) => ({
-    sql: `INSERT INTO portfolio_snapshots (id, user_id, portfolio_id, date, total_value_eur, total_invested_eur)
-          VALUES (?, ?, ?, ?, ?, ?)
-          ON CONFLICT(user_id, portfolio_id, date) DO UPDATE SET
-            total_value_eur = excluded.total_value_eur`,
+    sql: upsertSql,
     args: [generateId(), userId, r.portfolioId, dateBucket, r.value, r.invested],
   }));
   await client.batch(stmts, "write");
@@ -207,15 +225,16 @@ async function writeLiveSnapshotsForUser(
 }
 
 /**
- * Writes one 5-minute snapshot for a single user (after import or backfill).
- * Fetches Yahoo quotes only for that user’s tickers.
+ * Writes one 5-minute snapshot for a single user (after import, backfill, or move).
+ * Uses forceRecalculateInvested so the invested line reflects the current portfolio
+ * composition rather than carrying forward a stale value from before the operation.
  */
 export async function materializeCurrentSnapshotsForUser(userId: string): Promise<{ snapshots: number }> {
   const distinctTickers = await listDistinctHoldingTickersForUser(userId);
   if (distinctTickers.length === 0) return { snapshots: 0 };
   const { quotes, exchangeRates } = await buildQuotesAndExchangeRates(distinctTickers);
   const dateBucket = snapshotDateBucketUtc();
-  const snapshots = await writeLiveSnapshotsForUser(userId, quotes, exchangeRates, dateBucket);
+  const snapshots = await writeLiveSnapshotsForUser(userId, quotes, exchangeRates, dateBucket, true);
   return { snapshots };
 }
 
