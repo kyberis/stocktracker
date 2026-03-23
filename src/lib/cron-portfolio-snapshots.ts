@@ -48,33 +48,30 @@ function toQuoteData(q: ProviderQuoteResult): QuoteData {
   };
 }
 
-async function upsertPortfolioSnapshotRow(
+/**
+ * Fetch the most recent total_invested_eur for every portfolio of a user in a
+ * single query, returning a Map<portfolioId, invested>. This replaces the
+ * per-row SELECT that the old upsertPortfolioSnapshotRow used.
+ */
+async function fetchLatestInvestedMap(
+  client: Awaited<ReturnType<typeof ensureInitialized>>,
   userId: string,
-  portfolioId: string,
-  dateBucket: string,
-  totalValueEUR: number,
-  callerInvestedEUR: number,
-): Promise<void> {
-  const client = await ensureInitialized();
-
-  // Carry forward invested from the most recent snapshot so the invested line stays
-  // flat between real transactions. Only the backfill writes new invested values.
-  const prevResult = await client.execute({
-    sql: `SELECT total_invested_eur FROM portfolio_snapshots
-          WHERE user_id = ? AND portfolio_id = ?
-          ORDER BY date DESC LIMIT 1`,
-    args: [userId, portfolioId],
+): Promise<Map<string, number>> {
+  const result = await client.execute({
+    sql: `SELECT portfolio_id, total_invested_eur
+          FROM portfolio_snapshots
+          WHERE user_id = ?
+          GROUP BY portfolio_id
+          HAVING date = MAX(date)`,
+    args: [userId],
   });
-  const prevInvested = prevResult.rows.length > 0 ? Number(prevResult.rows[0].total_invested_eur) : 0;
-  const totalInvestedEUR = prevInvested > 0 ? prevInvested : callerInvestedEUR;
-
-  await client.execute({
-    sql: `INSERT INTO portfolio_snapshots (id, user_id, portfolio_id, date, total_value_eur, total_invested_eur)
-          VALUES (?, ?, ?, ?, ?, ?)
-          ON CONFLICT(user_id, portfolio_id, date) DO UPDATE SET
-            total_value_eur = excluded.total_value_eur`,
-    args: [generateId(), userId, portfolioId, dateBucket, totalValueEUR, totalInvestedEUR],
-  });
+  const map = new Map<string, number>();
+  for (const row of result.rows) {
+    const pid = String(row.portfolio_id ?? "");
+    const inv = Number(row.total_invested_eur) || 0;
+    if (inv > 0) map.set(pid, inv);
+  }
+  return map;
 }
 
 /**
@@ -123,7 +120,6 @@ async function buildQuotesAndExchangeRates(distinctTickers: DistinctHoldingTicke
   }
 
   let errorCount = 0;
-  const failedTickers = new Set<string>();
 
   for (let i = 0; i < uniqueTickers.length; i += QUOTE_BATCH_SIZE) {
     const batch = uniqueTickers.slice(i, i + QUOTE_BATCH_SIZE);
@@ -153,7 +149,6 @@ async function writeLiveSnapshotsForUser(
   exchangeRates: ExchangeRates,
   dateBucket: string,
 ): Promise<number> {
-  let snapshots = 0;
   const holdingsAll = await listHoldings(userId);
   if (holdingsAll.length === 0) return 0;
   if (!isAnyMarketActive(holdingsAll)) return 0;
@@ -161,14 +156,22 @@ async function writeLiveSnapshotsForUser(
   const hasQuote = (h: { ticker: string }) =>
     (quotes[h.ticker]?.regularMarketPrice ?? 0) > 0;
 
+  const client = await ensureInitialized();
+  const investedMap = await fetchLatestInvestedMap(client, userId);
   const cashAll = await listCashEntries(userId);
+
+  const rows: { portfolioId: string; value: number; invested: number }[] = [];
 
   // Aggregate snapshot — only when ALL holdings have fresh quotes
   if (holdingsAll.every(hasQuote)) {
     const totalsAll = calculatePortfolioTotals(holdingsAll, cashAll, quotes, exchangeRates, "EUR");
     if (totalsAll.totalCurrentEUR > 0) {
-      await upsertPortfolioSnapshotRow(userId, "", dateBucket, totalsAll.totalCurrentEUR, totalsAll.totalCostEUR);
-      snapshots++;
+      const prevInv = investedMap.get("") || 0;
+      rows.push({
+        portfolioId: "",
+        value: totalsAll.totalCurrentEUR,
+        invested: prevInv > 0 ? prevInv : totalsAll.totalCostEUR,
+      });
     }
   }
 
@@ -181,10 +184,26 @@ async function writeLiveSnapshotsForUser(
     if (!h.every(hasQuote)) continue;
     const t = calculatePortfolioTotals(h, c, quotes, exchangeRates, "EUR");
     if (t.totalCurrentEUR <= 0) continue;
-    await upsertPortfolioSnapshotRow(userId, pid, dateBucket, t.totalCurrentEUR, t.totalCostEUR);
-    snapshots++;
+    const prevInv = investedMap.get(pid) || 0;
+    rows.push({
+      portfolioId: pid,
+      value: t.totalCurrentEUR,
+      invested: prevInv > 0 ? prevInv : t.totalCostEUR,
+    });
   }
-  return snapshots;
+
+  if (rows.length === 0) return 0;
+
+  const stmts = rows.map((r) => ({
+    sql: `INSERT INTO portfolio_snapshots (id, user_id, portfolio_id, date, total_value_eur, total_invested_eur)
+          VALUES (?, ?, ?, ?, ?, ?)
+          ON CONFLICT(user_id, portfolio_id, date) DO UPDATE SET
+            total_value_eur = excluded.total_value_eur`,
+    args: [generateId(), userId, r.portfolioId, dateBucket, r.value, r.invested],
+  }));
+  await client.batch(stmts, "write");
+
+  return rows.length;
 }
 
 /**

@@ -2443,6 +2443,16 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       }
     },
   },
+  {
+    version: 78,
+    description: "Add index on portfolio_snapshots for compaction and history queries",
+    up: async (client: Client) => {
+      await client.execute(
+        `CREATE INDEX IF NOT EXISTS idx_snapshots_user_date
+         ON portfolio_snapshots (user_id, date)`
+      );
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

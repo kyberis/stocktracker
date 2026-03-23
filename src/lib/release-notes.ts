@@ -17,6 +17,42 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.64.0",
+    date: "2026-03-22",
+    title: "Snapshot Pipeline Optimization",
+    titleTranslations: { es: "Optimización del pipeline de snapshots" },
+    changes: [
+      {
+        type: "improvement",
+        text: "Past-dated transactions now automatically recalculate portfolio history — no more manual recalculate needed.",
+        translations: {
+          es: "Las transacciones con fecha pasada ahora recalculan automáticamente el historial de cartera — ya no es necesario recalcular manualmente.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Snapshot pipeline uses batched DB writes for faster cron jobs and backfills.",
+        translations: {
+          es: "El pipeline de snapshots usa escrituras por lotes para cron jobs y reconstrucciones más rápidas.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Automatic snapshot compaction keeps database lean — old intraday rows are rolled up to hourly and daily granularity.",
+        translations: {
+          es: "Compactación automática de snapshots mantiene la base de datos liviana — las filas intradía antiguas se consolidan a granularidad horaria y diaria.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Backfill no longer deletes all snapshot history — only daily rows are rebuilt, preserving intraday data if the process fails midway.",
+        translations: {
+          es: "La reconstrucción ya no elimina todo el historial de snapshots — solo se reconstruyen las filas diarias, preservando datos intradía si el proceso falla a mitad de camino.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.63.0",
     date: "2026-03-22",
     title: "Global Portfolio Awareness",

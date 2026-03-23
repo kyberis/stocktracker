@@ -7,6 +7,8 @@ import { parseBody } from "@/lib/api-response";
 import { createTransactionSchema, updateTransactionSchema } from "@/lib/schemas";
 import { getHoldingsLimit } from "@/lib/subscription";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
+import { deferTask } from "@/lib/task-runner";
+import { runIncrementalBackfill } from "@/lib/backfill-snapshots";
 
 export const GET = withMetrics("/api/transactions", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
@@ -77,7 +79,22 @@ export const POST = withMetrics("/api/transactions", async (req: NextRequest) =>
     return NextResponse.json({ skipped: true, reason: "duplicate_source_ref" }, { status: 200 });
   }
   transactionsOpsTotal.inc({ operation: "add" });
-  return NextResponse.json(created, { status: 201 });
+
+  // When the transaction date is in the past, rebuild daily snapshots from
+  // that date forward so the portfolio evolution chart reflects the real history.
+  const txDate = (created.date || "").slice(0, 10);
+  const today = new Date().toISOString().slice(0, 10);
+  if (txDate && txDate < today) {
+    deferTask(async () => {
+      try {
+        await runIncrementalBackfill(session.userId, txDate);
+      } catch (err) {
+        console.warn("[transactions] incremental backfill failed:", err);
+      }
+    });
+  }
+
+  return NextResponse.json({ ...created, snapshotBackfillTriggered: txDate < today }, { status: 201 });
 });
 
 export const PATCH = withMetrics("/api/transactions", async (req: NextRequest) => {

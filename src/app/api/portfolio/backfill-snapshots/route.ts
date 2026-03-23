@@ -71,9 +71,9 @@ export const GET = withMetrics("/api/portfolio/backfill-snapshots", async (req: 
 
 /**
  * POST /api/portfolio/backfill-snapshots
- * Wipes all existing snapshots, then reconstructs historical portfolio value
- * from transactions + Yahoo price data so removed holdings/transactions are
- * fully excluded from the chart.
+ * Rebuilds daily historical snapshots from transactions + Yahoo price data.
+ * Only deletes daily (non-intraday) rows so cron/client 5-min snapshots
+ * survive even if the backfill times out partway through.
  */
 export const POST = withMetrics("/api/portfolio/backfill-snapshots", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
@@ -81,10 +81,12 @@ export const POST = withMetrics("/api/portfolio/backfill-snapshots", async (req:
 
   const client = await ensureInitialized();
 
-  // Wipe all existing snapshots so stale data from removed holdings/transactions
-  // doesn't persist. The backfill + materialize below rebuild everything cleanly.
+  // Only wipe daily (date-only) rows — intraday snapshots from the cron and
+  // client sync are preserved. The history API already prefers intraday over
+  // daily when both exist for the same calendar day, so there's no conflict.
   await client.execute({
-    sql: "DELETE FROM portfolio_snapshots WHERE user_id = ?",
+    sql: `DELETE FROM portfolio_snapshots
+          WHERE user_id = ? AND date NOT LIKE '% %' AND date NOT LIKE '%T%'`,
     args: [session.userId],
   });
 

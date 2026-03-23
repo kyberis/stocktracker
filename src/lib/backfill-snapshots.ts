@@ -416,19 +416,269 @@ export async function runBackfillForUser(userId: string): Promise<BackfillResult
   };
 }
 
+/**
+ * Incremental backfill: rebuild daily snapshots from `fromDate` to yesterday.
+ * Unlike `runBackfillForUser` this only deletes daily rows in the affected range,
+ * preserving all intraday snapshots and any daily history before `fromDate`.
+ */
+export async function runIncrementalBackfill(
+  userId: string,
+  fromDate: string,
+): Promise<BackfillResult> {
+  const client = await ensureInitialized();
+
+  const txResult = await client.execute({
+    sql: `SELECT * FROM transactions WHERE user_id = ? AND type IN ('buy','sell')
+          ORDER BY date ASC, created_at ASC`,
+    args: [userId],
+  });
+
+  if (txResult.rows.length === 0) {
+    return { snapshotsCreated: 0, dateRange: { from: fromDate, to: fromDate }, tickers: 0, currencies: 0 };
+  }
+
+  const transactions: TxWithPortfolio[] = txResult.rows.map((r) => ({
+    id: str(r.id),
+    holdingId: str(r.holding_id),
+    ticker: str(r.ticker),
+    name: str(r.name),
+    exchange: str(r.exchange),
+    isin: str(r.isin),
+    assetType: holdingAssetType(r.asset_type),
+    accountId: str(r.account_id),
+    type: txType(r.type),
+    date: str(r.date),
+    shares: num(r.shares),
+    pricePerShare: num(r.price_per_share),
+    totalAmount: num(r.total_amount),
+    fees: num(r.fees),
+    taxes: num(r.taxes),
+    currency: str(r.currency),
+    displayCurrency: str(r.display_currency),
+    exchangeRateEur: num(r.exchange_rate_eur) || undefined,
+    notes: str(r.notes),
+    sourceRef: str(r.source_ref),
+    brokerName: str(r.broker_name),
+    createdAt: str(r.created_at),
+    portfolioId: str(r.portfolio_id),
+  }));
+
+  const sorted = [...transactions].sort((a, b) => a.date.localeCompare(b.date));
+  const now = new Date();
+  now.setDate(now.getDate() - 1);
+  const yesterday = now.toISOString().slice(0, 10);
+
+  if (fromDate > yesterday) {
+    return { snapshotsCreated: 0, dateRange: { from: fromDate, to: yesterday }, tickers: 0, currencies: 0 };
+  }
+
+  const holdingsResult = await client.execute({
+    sql: "SELECT ticker, display_currency FROM holdings WHERE user_id = ?",
+    args: [userId],
+  });
+  const holdingCurrencyMap = new Map<string, string>();
+  for (const row of holdingsResult.rows) {
+    const ticker = str(row.ticker).toUpperCase().trim();
+    const dc = str(row.display_currency).toUpperCase().trim();
+    if (ticker && dc) holdingCurrencyMap.set(ticker, dc);
+  }
+
+  const uniqueTickers = [...new Set(sorted.map((tx) => tx.ticker.toUpperCase().trim()).filter(Boolean))];
+  const uniqueCurrencies = [
+    ...new Set(
+      sorted
+        .map((tx) => {
+          const ticker = (tx.ticker || "").toUpperCase().trim();
+          const holdingDC = holdingCurrencyMap.get(ticker);
+          let c = normalizeCurrency(holdingDC || tx.displayCurrency || tx.currency || "");
+          if (c === "GBX") c = "GBP";
+          return c;
+        })
+        .filter((c) => c && c !== "EUR"),
+    ),
+  ];
+
+  const yahoo = new YahooProvider();
+
+  const tickerSeries = new Map<string, HistoricalDataPoint[]>();
+  for (const ticker of uniqueTickers) {
+    try {
+      const data = await yahoo.getHistorical(ticker, "1y").catch(() => [] as HistoricalDataPoint[]);
+      if (data.length > 0) tickerSeries.set(ticker, data);
+    } catch {
+      // skip
+    }
+  }
+
+  const fxSeries = new Map<string, Map<string, number>>();
+  for (const currency of uniqueCurrencies) {
+    try {
+      const pair = `EUR${currency}=X`;
+      const data = await yahoo.getHistorical(pair, "1y").catch(() => []);
+      const rateMap = new Map<string, number>();
+      for (const p of data) if (p.close > 0) rateMap.set(p.date, p.close);
+      if (rateMap.size > 0) fxSeries.set(currency, rateMap);
+    } catch {
+      // skip
+    }
+  }
+
+  function findFxRate(currency: string, date: string): number | null {
+    let norm = currency.toUpperCase().trim();
+    if (norm === "GBp") norm = "GBX";
+    if (norm === "EUR") return 1;
+    if (norm === "GBX") {
+      const gbpRates = fxSeries.get("GBP");
+      if (!gbpRates) return null;
+      const rate = findClosestRateInc(gbpRates, date);
+      return rate ? rate * 100 : null;
+    }
+    const rates = fxSeries.get(norm);
+    if (!rates) return null;
+    return findClosestRateInc(rates, date);
+  }
+
+  function findClosestRateInc(rates: Map<string, number>, target: string): number | null {
+    if (rates.has(target)) return rates.get(target)!;
+    const targetMs = new Date(target).getTime();
+    let bestDate: string | null = null;
+    let bestDiff = Infinity;
+    for (const date of rates.keys()) {
+      const diff = Math.abs(new Date(date).getTime() - targetMs);
+      if (diff < bestDiff) { bestDiff = diff; bestDate = date; }
+    }
+    if (bestDate && bestDiff <= 35 * 86400000) return rates.get(bestDate)!;
+    return null;
+  }
+
+  function computeInvestedUpToDate(
+    txs: TxWithPortfolio[],
+    date: string,
+  ): { aggregate: number; byPortfolio: Map<string, number> } {
+    const byPortfolio = new Map<string, number>();
+    let aggregate = 0;
+    for (const tx of txs) {
+      if (tx.date > date) break;
+      const cur = tx.currency || "EUR";
+      let amountEUR: number;
+      if (cur === "EUR" || normalizeCurrency(cur) === "EUR") {
+        amountEUR = tx.totalAmount;
+      } else if (tx.exchangeRateEur && tx.exchangeRateEur > 0) {
+        amountEUR = tx.totalAmount / tx.exchangeRateEur;
+      } else {
+        const fxR = findFxRate(cur, tx.date);
+        if (!fxR || fxR <= 0) continue;
+        amountEUR = tx.totalAmount / fxR;
+      }
+      const feesEUR = tx.fees
+        ? cur === "EUR" || normalizeCurrency(cur) === "EUR"
+          ? tx.fees
+          : tx.exchangeRateEur && tx.exchangeRateEur > 0
+            ? tx.fees / tx.exchangeRateEur
+            : (() => { const r = findFxRate(cur, tx.date); return r && r > 0 ? tx.fees / r : 0; })()
+        : 0;
+      const taxesEUR = tx.taxes
+        ? cur === "EUR" || normalizeCurrency(cur) === "EUR"
+          ? tx.taxes
+          : tx.exchangeRateEur && tx.exchangeRateEur > 0
+            ? tx.taxes / tx.exchangeRateEur
+            : (() => { const r = findFxRate(cur, tx.date); return r && r > 0 ? tx.taxes / r : 0; })()
+        : 0;
+      const flow = tx.type === "buy"
+        ? amountEUR + feesEUR + taxesEUR
+        : -(amountEUR - feesEUR - taxesEUR);
+      aggregate += flow;
+      const pid = tx.portfolioId || "";
+      byPortfolio.set(pid, (byPortfolio.get(pid) || 0) + flow);
+    }
+    return { aggregate, byPortfolio };
+  }
+
+  // Only delete daily rows from fromDate onward — leaves older history intact
+  await client.execute({
+    sql: `DELETE FROM portfolio_snapshots
+          WHERE user_id = ? AND date >= ? AND date NOT LIKE '% %' AND date NOT LIKE '%T%'`,
+    args: [userId, fromDate],
+  });
+
+  const dates = generateDateList(fromDate, yesterday);
+  let snapshotsCreated = 0;
+  const BATCH_SIZE = 50;
+  let batch: { id: string; portfolioId: string; date: string; value: number; invested: number }[] = [];
+
+  for (const date of dates) {
+    const holdings = replayTransactionsUpToDate(sorted, date, holdingCurrencyMap);
+    const { aggregate: investedAggregate, byPortfolio: investedByPortfolio } =
+      computeInvestedUpToDate(sorted, date);
+
+    const portfolioTotals = new Map<string, number>();
+    let aggregateEUR = 0;
+
+    for (const h of holdings) {
+      const series = tickerSeries.get(h.ticker);
+      if (!series) continue;
+      const close = closeOnOrBeforeDate(series, date);
+      if (close == null || close <= 0) continue;
+      const valueInLocal = h.shares * close;
+      const fxR = findFxRate(h.displayCurrency, date);
+      if (fxR && fxR > 0) {
+        const eurValue = valueInLocal / fxR;
+        aggregateEUR += eurValue;
+        const pid = h.portfolioId || "";
+        portfolioTotals.set(pid, (portfolioTotals.get(pid) || 0) + eurValue);
+      }
+    }
+
+    if (aggregateEUR > 0) {
+      batch.push({
+        id: generateId(), portfolioId: "", date,
+        value: Math.round(aggregateEUR * 100) / 100,
+        invested: Math.round(investedAggregate * 100) / 100,
+      });
+      for (const [pid, total] of portfolioTotals) {
+        if (pid && total > 0) {
+          batch.push({
+            id: generateId(), portfolioId: pid, date,
+            value: Math.round(total * 100) / 100,
+            invested: Math.round((investedByPortfolio.get(pid) || 0) * 100) / 100,
+          });
+        }
+      }
+    }
+
+    if (batch.length >= BATCH_SIZE) {
+      await flushBatch(client, userId, batch);
+      snapshotsCreated += batch.length;
+      batch = [];
+    }
+  }
+
+  if (batch.length > 0) {
+    await flushBatch(client, userId, batch);
+    snapshotsCreated += batch.length;
+  }
+
+  return {
+    snapshotsCreated,
+    dateRange: { from: fromDate, to: yesterday },
+    tickers: uniqueTickers.length,
+    currencies: uniqueCurrencies.length,
+  };
+}
+
 async function flushBatch(
   client: Awaited<ReturnType<typeof ensureInitialized>>,
   userId: string,
   batch: { id: string; portfolioId: string; date: string; value: number; invested: number }[],
 ) {
-  for (const row of batch) {
-    await client.execute({
-      sql: `INSERT INTO portfolio_snapshots (id, user_id, portfolio_id, date, total_value_eur, total_invested_eur)
-            VALUES (?, ?, ?, ?, ?, ?)
-            ON CONFLICT(user_id, portfolio_id, date) DO UPDATE SET
-              total_value_eur = excluded.total_value_eur,
-              total_invested_eur = excluded.total_invested_eur`,
-      args: [row.id, userId, row.portfolioId, row.date, row.value, row.invested],
-    });
-  }
+  if (batch.length === 0) return;
+  const stmts = batch.map((row) => ({
+    sql: `INSERT INTO portfolio_snapshots (id, user_id, portfolio_id, date, total_value_eur, total_invested_eur)
+          VALUES (?, ?, ?, ?, ?, ?)
+          ON CONFLICT(user_id, portfolio_id, date) DO UPDATE SET
+            total_value_eur = excluded.total_value_eur,
+            total_invested_eur = excluded.total_invested_eur`,
+    args: [row.id, userId, row.portfolioId, row.date, row.value, row.invested],
+  }));
+  await client.batch(stmts, "write");
 }
