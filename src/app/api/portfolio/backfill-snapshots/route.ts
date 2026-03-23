@@ -92,6 +92,33 @@ export const POST = withMetrics("/api/portfolio/backfill-snapshots", async (req:
 
   const result = await runBackfillForUser(session.userId);
 
+  // Sync invested capital from the freshly-built daily rows onto intraday
+  // snapshots for the same calendar day. This fixes stale invested values
+  // from past cron writes (e.g. after a move) that would otherwise persist
+  // as spikes in the Performance chart.
+  const syncResult = await client.execute({
+    sql: `UPDATE portfolio_snapshots
+          SET total_invested_eur = (
+            SELECT d.total_invested_eur
+            FROM portfolio_snapshots d
+            WHERE d.user_id = portfolio_snapshots.user_id
+              AND d.portfolio_id = portfolio_snapshots.portfolio_id
+              AND d.date = substr(portfolio_snapshots.date, 1, 10)
+              AND d.date NOT LIKE '% %'
+          )
+          WHERE user_id = ?
+            AND date LIKE '% %'
+            AND EXISTS (
+              SELECT 1 FROM portfolio_snapshots d
+              WHERE d.user_id = portfolio_snapshots.user_id
+                AND d.portfolio_id = portfolio_snapshots.portfolio_id
+                AND d.date = substr(portfolio_snapshots.date, 1, 10)
+                AND d.date NOT LIKE '% %'
+            )`,
+    args: [session.userId],
+  });
+  const intradaySynced = syncResult.rowsAffected ?? 0;
+
   let liveSnapshots = 0;
   try {
     const live = await materializeCurrentSnapshotsForUser(session.userId);
@@ -104,9 +131,10 @@ export const POST = withMetrics("/api/portfolio/backfill-snapshots", async (req:
     return NextResponse.json({
       snapshotsCreated: 0,
       liveSnapshots,
+      intradaySynced,
       message: "No transactions found",
     });
   }
 
-  return NextResponse.json({ ...result, liveSnapshots });
+  return NextResponse.json({ ...result, liveSnapshots, intradaySynced });
 });
