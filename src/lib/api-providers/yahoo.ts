@@ -176,8 +176,9 @@ export class YahooProvider implements StockDataProvider {
       // exotic symbols where quoteSummary validation rejects the response)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const quote: any = await yahooFinance.quote(symbol, {}, { validateResult: false });
+      if (!quote) return null;
       ok = true;
-      const assetClass = yahooQuoteTypeToAssetClass(quote?.quoteType);
+      const assetClass = yahooQuoteTypeToAssetClass(quote.quoteType);
       return {
         sector: assetClassAsSector(assetClass),
         region: "",

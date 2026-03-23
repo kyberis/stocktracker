@@ -1,7 +1,25 @@
 import { listHoldings, updateHolding } from "@/lib/db";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
+import type { Holding } from "@/lib/types";
 
 const MAX_CONCURRENT = 10;
+
+const ETF_NAME_PATTERNS = /\bETF\b|\bUCITS\b|\biShares\b|\bVanguard\b|\bSPDR\b|\bAmundi\b|\bXtrackers\b|\bInvesco\b|\bWisdomTree\b/i;
+
+/** Best-effort classification from the holding's own metadata when Yahoo
+ *  doesn't know the symbol at all. */
+function classifyFromHolding(h: Holding): { sector: string; region: string; assetClass: string } | null {
+  if (h.assetType === "crypto") {
+    return { sector: "Cryptocurrency", region: "", assetClass: "Cryptocurrency" };
+  }
+  if (h.assetType === "etf" || ETF_NAME_PATTERNS.test(h.name)) {
+    return { sector: "ETF", region: "", assetClass: "ETF" };
+  }
+  if (h.assetType === "stock") {
+    return { sector: "", region: "", assetClass: "Equity" };
+  }
+  return null;
+}
 
 /**
  * Fetches sector/region/assetClass from Yahoo Finance for all holdings
@@ -32,12 +50,14 @@ export async function enrichHoldingClassifications(userId: string): Promise<numb
     const batch = entries.slice(i, i + MAX_CONCURRENT);
     const results = await Promise.allSettled(
       batch.map(async ([ticker, holdingIds]) => {
-        const data = await yahoo.getClassification(ticker);
-        if (!data) return;
+        const yahooData = await yahoo.getClassification(ticker);
 
         for (const id of holdingIds) {
           const holding = unclassified.find((h) => h.id === id);
           if (!holding) continue;
+
+          const data = yahooData ?? classifyFromHolding(holding);
+          if (!data) continue;
 
           const updates: Record<string, string> = {};
           if (!holding.sector && data.sector) updates.sector = data.sector;
