@@ -87,6 +87,89 @@ export function computeAllocationByType(
     }));
 }
 
+/**
+ * Bucket current holding values by asset type — used by live snapshot writers
+ * and the client-side breakdown cards. Returns EUR-equivalent values per type.
+ */
+export function computeValueByAssetType(
+  holdings: Holding[],
+  quotes: Record<string, QuoteData>,
+  exchangeRates: ExchangeRates,
+  baseCurrency: string = "EUR",
+): Record<HoldingAssetType, number> {
+  const buckets: Record<HoldingAssetType, number> = { stock: 0, etf: 0, crypto: 0 };
+
+  for (const h of holdings) {
+    const type: HoldingAssetType = h.assetType ?? "stock";
+    const quote = quotes[h.ticker];
+    let valueBase = 0;
+
+    if (quote && quote.regularMarketPrice > 0) {
+      const quoteCurrency = resolveQuoteCurrency(h.displayCurrency, quote.currency);
+      const valueInQuoteCurrency = h.shares * quote.regularMarketPrice;
+      const currentBase = convertCurrency(valueInQuoteCurrency, quoteCurrency, baseCurrency, exchangeRates);
+      const referenceEUR = convertToEUR(valueInQuoteCurrency, quoteCurrency, exchangeRates);
+      const isSuspiciousGBXOutlier =
+        h.displayCurrency === "GBX" && h.valueInEUR > 0 && referenceEUR > h.valueInEUR * 10;
+
+      if (isSuspiciousGBXOutlier) {
+        valueBase = convertCurrency(h.valueInEUR, "EUR", baseCurrency, exchangeRates);
+      } else if (currentBase !== valueInQuoteCurrency || quoteCurrency === baseCurrency) {
+        valueBase = currentBase;
+      } else {
+        valueBase = convertCurrency(h.valueInEUR, "EUR", baseCurrency, exchangeRates);
+      }
+    } else {
+      valueBase = convertCurrency(h.valueInEUR, "EUR", baseCurrency, exchangeRates);
+    }
+
+    buckets[type] += valueBase;
+  }
+
+  return buckets;
+}
+
+export interface AssetTypeTotals {
+  stock: PortfolioTotals;
+  etf: PortfolioTotals;
+  crypto: PortfolioTotals;
+  allocations: Record<HoldingAssetType, number>;
+}
+
+/**
+ * Compute PortfolioTotals for each asset type independently.
+ * Used by breakdown cards and the hero chart filter.
+ */
+export function calculateTotalsByAssetType(
+  holdings: Holding[],
+  cashEntries: CashEntry[],
+  quotes: Record<string, QuoteData>,
+  exchangeRates: ExchangeRates,
+  baseCurrency: string = "EUR",
+): AssetTypeTotals {
+  const groups: Record<HoldingAssetType, Holding[]> = { stock: [], etf: [], crypto: [] };
+  for (const h of holdings) {
+    const type: HoldingAssetType = h.assetType ?? "stock";
+    groups[type].push(h);
+  }
+
+  const emptyCash: CashEntry[] = [];
+  const stock = calculatePortfolioTotals(groups.stock, emptyCash, quotes, exchangeRates, baseCurrency);
+  const etf = calculatePortfolioTotals(groups.etf, emptyCash, quotes, exchangeRates, baseCurrency);
+  const crypto = calculatePortfolioTotals(groups.crypto, emptyCash, quotes, exchangeRates, baseCurrency);
+
+  const allTotals = calculatePortfolioTotals(holdings, cashEntries, quotes, exchangeRates, baseCurrency);
+  const total = allTotals.totalCurrentEUR;
+
+  const allocations: Record<HoldingAssetType, number> = {
+    stock: total > 0 ? (stock.totalCurrentEUR / total) * 100 : 0,
+    etf: total > 0 ? (etf.totalCurrentEUR / total) * 100 : 0,
+    crypto: total > 0 ? (crypto.totalCurrentEUR / total) * 100 : 0,
+  };
+
+  return { stock, etf, crypto, allocations };
+}
+
 export interface PortfolioTotals {
   totalCurrentEUR: number;
   totalCostEUR: number;

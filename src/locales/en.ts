@@ -1197,6 +1197,8 @@ const en: TranslationStrings = {
   marketsClosedTitle: "Take a break — markets are closed",
   marketsClosedBody: "Your portfolio closed at {value}. The chart will resume tracking when markets reopen.",
   marketsClosedOpens: "{market} opens {time}",
+  marketSessionOpen: "open",
+  marketSessionClosesIn: "closes in {time}",
   recalculateHistory: "Recalculate history",
   recalculateHistoryDesc: "Rebuild historical data from your transactions",
   chartChatAsk: "Ask about this chart",
@@ -2331,6 +2333,22 @@ const en: TranslationStrings = {
   // Chart expand/minimize
   chartExpand: "Maximize",
   chartMinimize: "Minimize",
+
+  // Asset type breakdown
+  allAssets: "All Assets",
+  stocksLabel: "Stocks",
+  etfsLabel: "ETFs",
+  cryptoLabel: "Crypto",
+  performanceByAssetType: "Performance by Asset Type",
+  ofPortfolio: "of portfolio",
+  todayChange: "today",
+  totalGainLabel: "total",
+  volatilityLabel: "Volatility",
+  maxDrawdownLabel: "Max DD",
+  sharpeLabel: "Sharpe",
+  periodReturnLabel: "Return",
+  typeLabel: "Type",
+  valueLabel: "Value",
 };
 
 export default en;

@@ -42,6 +42,7 @@ const PortfolioScoreCard = dynamic(() => import("@/components/dashboard-v2/Portf
 const GoalPromptCard = dynamic(() => import("@/components/dashboard-v2/GoalPromptCard"), { ssr: false });
 const WeeklyDigestCard = dynamic(() => import("@/components/dashboard-v2/WeeklyDigestCard"), { ssr: false });
 const OnboardingChecklist = dynamic(() => import("@/components/dashboard-v2/OnboardingChecklist"), { ssr: false });
+const AssetBreakdownCards = dynamic(() => import("@/components/dashboard-v2/AssetBreakdownCards"), { ssr: false });
 
 type DashboardTab = "portfolio" | "diversification" | "dividends" | "metrics" | "growth" | "events" | "news";
 
@@ -255,6 +256,7 @@ export default function MobileDashboard() {
                 <WeeklyDigestCard position="promoted" />
                 <PortfolioSummary holdings={filteredHoldings} cashEntries={investmentCashEntries} allCashEntries={cashEntries} />
                 <PortfolioEvolutionChart compact />
+                <AssetBreakdownCards holdings={filteredHoldings} cashEntries={investmentCashEntries} />
                 <PortfolioCards holdings={filteredHoldings} />
                 <UpcomingEarnings onNavigateToEvents={() => handleTabChange("events")} />
                 <MarketAndCash holdings={filteredHoldings} cashEntries={cashEntries} />

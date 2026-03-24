@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef } from "react";
 import { usePortfolio } from "@/lib/portfolio-context";
-import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
+import { calculatePortfolioTotals, computeValueByAssetType } from "@/lib/portfolio-summary";
 import { isAnyMarketActive } from "@/lib/market-hours";
 
 /** Match /api/portfolio/snapshot 5-minute UTC buckets — writes create new rows while the app stays open. */
@@ -30,9 +30,10 @@ export function usePortfolioSnapshotSync(options: { demoMode: boolean }) {
     );
     if (!allHaveFreshQuote) return;
 
-    // Always compute in EUR — the DB columns are total_value_eur / total_invested_eur.
     const totals = calculatePortfolioTotals(holdings, cashEntries, quotes, exchangeRates, "EUR");
     if (totals.totalCurrentEUR <= 0) return;
+
+    const byType = computeValueByAssetType(holdings, quotes, exchangeRates, "EUR");
 
     fetch("/api/portfolio/snapshot", {
       method: "POST",
@@ -40,6 +41,9 @@ export function usePortfolioSnapshotSync(options: { demoMode: boolean }) {
       body: JSON.stringify({
         totalValueEUR: totals.totalCurrentEUR,
         portfolioId: portfolioIdRef.current || "",
+        stockValueEUR: byType.stock,
+        etfValueEUR: byType.etf,
+        cryptoValueEUR: byType.crypto,
       }),
     }).catch(() => {});
     // activePortfolioId omitted from deps — portfolioIdRef avoids race when id updates before holdings.

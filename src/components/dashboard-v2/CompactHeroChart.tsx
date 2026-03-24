@@ -9,6 +9,8 @@ import { formatCurrency, formatPercent } from "@/lib/utils";
 import PortfolioEvolutionChart from "../PortfolioEvolutionChart";
 import BenchmarkDropdown, { OVERLAY_BENCHMARKS } from "./BenchmarkDropdown";
 import StatsGrid from "./StatsGrid";
+import AssetTypeFilter from "./AssetTypeFilter";
+import type { AssetFilter } from "./AssetTypeFilter";
 import type { BenchmarkOverlay } from "../PortfolioEvolutionChart";
 import type { Holding, CashEntry } from "@/lib/types";
 
@@ -27,10 +29,19 @@ export default function CompactHeroChart({ holdings, cashEntries, onOpenAi, expa
   const { t } = useI18n();
   const { quotes, exchangeRates, activePortfolioCurrency, lastUpdated } = usePortfolio();
   const { stealthMode } = useStealthMode();
+  const [assetFilter, setAssetFilter] = useState<AssetFilter>("all");
+
+  const filteredHoldings = useMemo(
+    () => assetFilter === "all" ? holdings : holdings.filter(h => (h.assetType ?? "stock") === assetFilter),
+    [holdings, assetFilter],
+  );
+
+  const emptyCash: CashEntry[] = useMemo(() => [], []);
+  const effectiveCash = assetFilter === "all" ? cashEntries : emptyCash;
 
   const totals = useMemo(
-    () => calculatePortfolioTotals(holdings, cashEntries, quotes, exchangeRates, activePortfolioCurrency),
-    [holdings, cashEntries, quotes, exchangeRates, activePortfolioCurrency],
+    () => calculatePortfolioTotals(filteredHoldings, effectiveCash, quotes, exchangeRates, activePortfolioCurrency),
+    [filteredHoldings, effectiveCash, quotes, exchangeRates, activePortfolioCurrency],
   );
 
   const cur = activePortfolioCurrency;
@@ -134,11 +145,17 @@ export default function CompactHeroChart({ holdings, cashEntries, onOpenAi, expa
         </div>
       </div>
 
+      {/* Asset type filter pills */}
+      <div className="px-5 pb-1">
+        <AssetTypeFilter value={assetFilter} onChange={setAssetFilter} />
+      </div>
+
       {/* Chart component — embedded strips the card wrapper */}
       <PortfolioEvolutionChart
         embedded
         benchmarks={benchmarks.length > 0 ? benchmarks : undefined}
         onRemoveBenchmark={handleRemoveBenchmark}
+        assetFilter={assetFilter}
       />
 
       {/* Inline stats when expanded */}

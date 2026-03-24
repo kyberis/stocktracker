@@ -17,6 +17,21 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.65.0",
+    date: "2026-03-24",
+    title: "Portfolio Breakdown by Asset Type",
+    titleTranslations: { es: "Desglose del portafolio por tipo de activo" },
+    changes: [
+      {
+        type: "feature",
+        text: "See portfolio value and performance broken down by asset type (Stocks, ETFs, Crypto) with filter pills, stacked area chart, breakdown cards showing daily and total P&L per type, and a performance comparison table.",
+        translations: {
+          es: "Visualiza el valor y rendimiento de tu portafolio desglosado por tipo de activo (Acciones, ETFs, Cripto) con filtros, gráfico de áreas apiladas, tarjetas de desglose con P&L diario y total por tipo, y una tabla comparativa de rendimiento.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.64.3",
     date: "2026-03-23",
     title: "Expandable Portfolio Value Chart",

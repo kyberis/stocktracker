@@ -425,3 +425,119 @@ export function getTickerMarketStatuses(now: Date = new Date()): TickerMarketSta
     isOpen: getMarketStatus(m.exchangeKey, now).isOpen,
   }));
 }
+
+/* ── Chart market-session overlays ────────────────────────────────────── */
+
+const MARKET_SESSION_COLORS: Record<string, string> = {
+  NYSE: "#10b981", NASDAQ: "#10b981", "NYSE Arca": "#10b981", "NYSE American": "#10b981",
+  XETRA: "#3b82f6", Tradegate: "#60a5fa", Frankfurt: "#3b82f6",
+  LSE: "#8b5cf6",
+  TSX: "#f59e0b", "TSX-V": "#f59e0b",
+  Euronext: "#f59e0b", BME: "#f97316", "Borsa Italiana": "#f97316",
+  SIX: "#06b6d4",
+  "OMX Copenhagen": "#06b6d4", "OMX Helsinki": "#06b6d4", "OMX Stockholm": "#06b6d4", "Oslo Børs": "#06b6d4",
+  "Tokyo SE": "#ec4899", HKSE: "#ec4899",
+  ASX: "#14b8a6", SGX: "#14b8a6",
+  KRX: "#ec4899", "NSE India": "#f97316", "BSE India": "#f97316",
+};
+
+export interface ChartMarketSession {
+  name: string;
+  color: string;
+  openDate: Date;
+  closeDate: Date;
+  openLabel: string;
+  closeLabel: string;
+}
+
+/**
+ * Convert an exchange-local time (hour:minute in tz) to a UTC instant (Date)
+ * so that `date.getHours()` gives browser-local time.
+ */
+function exchangeTimeToLocalInstant(dayIso: string, hour: number, minute: number, tz: string): Date {
+  const [y, m, d] = dayIso.split("-").map(Number);
+  const guess = new Date(Date.UTC(y, m - 1, d, hour, minute, 0));
+  const local = getLocalTime(tz, guess);
+  const targetMin = hour * 60 + minute;
+  const actualMin = local.hours * 60 + local.minutes;
+  return new Date(guess.getTime() - (actualMin - targetMin) * 60_000);
+}
+
+/**
+ * Deduplicated market sessions for the user's holdings on a given day.
+ * Open/close times are in the browser's local timezone.
+ */
+export function getPortfolioMarketSessions(
+  holdings: ReadonlyArray<{ assetType?: string; exchange?: string }>,
+  day?: Date,
+): ChartMarketSession[] {
+  const ref = day ?? new Date();
+  const dow = ref.getDay();
+  if (dow === 0 || dow === 6) return [];
+
+  const dayIso = `${ref.getFullYear()}-${String(ref.getMonth() + 1).padStart(2, "0")}-${String(ref.getDate()).padStart(2, "0")}`;
+
+  const seen = new Map<string, ExchangeSchedule>();
+  for (const h of holdings) {
+    if (h.assetType === "crypto") continue;
+    const ex = h.exchange?.toUpperCase();
+    if (!ex) continue;
+    const schedule = EXCHANGE_SCHEDULES[ex];
+    if (!schedule) continue;
+    const name = EXCHANGE_LABEL[ex] ?? ex;
+    if (!seen.has(name)) seen.set(name, schedule);
+  }
+
+  const fmt = (d: Date) =>
+    `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+
+  const sessions: ChartMarketSession[] = [];
+  for (const [name, schedule] of seen) {
+    const openDate = exchangeTimeToLocalInstant(dayIso, schedule.openHour, schedule.openMinute, schedule.tz);
+    const closeDate = exchangeTimeToLocalInstant(dayIso, schedule.closeHour, schedule.closeMinute, schedule.tz);
+    sessions.push({
+      name,
+      color: MARKET_SESSION_COLORS[name] ?? "#64748b",
+      openDate,
+      closeDate,
+      openLabel: fmt(openDate),
+      closeLabel: fmt(closeDate),
+    });
+  }
+
+  sessions.sort((a, b) => a.openDate.getTime() - b.openDate.getTime());
+  return sessions;
+}
+
+export interface ActiveMarketInfo {
+  name: string;
+  isOpen: boolean;
+  closesIn: string;
+}
+
+/**
+ * Which of the user's markets are open at a given instant.
+ * Open markets sorted first; includes time-until-close.
+ */
+export function getActiveMarketsAt(
+  holdings: ReadonlyArray<{ assetType?: string; exchange?: string }>,
+  at: Date,
+): ActiveMarketInfo[] {
+  const seen = new Map<string, string>();
+  for (const h of holdings) {
+    if (h.assetType === "crypto") continue;
+    const ex = h.exchange?.toUpperCase();
+    if (!ex || !EXCHANGE_SCHEDULES[ex]) continue;
+    const name = EXCHANGE_LABEL[ex] ?? ex;
+    if (!seen.has(name)) seen.set(name, ex);
+  }
+
+  const result: ActiveMarketInfo[] = [];
+  for (const [name, ex] of seen) {
+    const status = getMarketStatus(ex, at);
+    result.push({ name, isOpen: status.isOpen, closesIn: status.nextEvent });
+  }
+
+  result.sort((a, b) => (a.isOpen === b.isOpen ? 0 : a.isOpen ? -1 : 1));
+  return result;
+}

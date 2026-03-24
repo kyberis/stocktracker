@@ -2453,6 +2453,25 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       );
     },
   },
+  {
+    version: 79,
+    description: "Add per-asset-type value columns to portfolio_snapshots",
+    up: async (client: Client) => {
+      const cols = [
+        "stock_value_eur REAL NOT NULL DEFAULT 0",
+        "etf_value_eur REAL NOT NULL DEFAULT 0",
+        "crypto_value_eur REAL NOT NULL DEFAULT 0",
+      ];
+      for (const col of cols) {
+        try {
+          await client.execute(`ALTER TABLE portfolio_snapshots ADD COLUMN ${col}`);
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : String(e);
+          if (!msg.includes("duplicate column")) throw e;
+        }
+      }
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

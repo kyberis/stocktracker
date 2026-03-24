@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import {
   AreaChart,
   Area,
@@ -11,6 +11,7 @@ import {
   ResponsiveContainer,
   CartesianGrid,
   ReferenceLine,
+  ReferenceArea,
 } from "recharts";
 import { useI18n } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/portfolio-context";
@@ -19,10 +20,18 @@ import { useTheme } from "@/lib/theme-context";
 import { useStealthMode } from "@/lib/stealth-context";
 import { useTrack } from "@/lib/use-track";
 import { formatCurrency, formatPercent } from "@/lib/utils";
-import { isAnyMarketActive, getNextMarketOpen } from "@/lib/market-hours";
+import { isAnyMarketActive, getNextMarketOpen, getPortfolioMarketSessions, getActiveMarketsAt } from "@/lib/market-hours";
+import type { ChartMarketSession } from "@/lib/market-hours";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
 import TierFeatureBadge from "./TierFeatureBadge";
 import ChartAiChatPanel from "./ChartAiChatPanel";
+
+const ASSET_FILTER_COLORS: Record<string, string> = {
+  all: "#10b981",
+  stock: "#6366f1",
+  etf: "#f59e0b",
+  crypto: "#ec4899",
+};
 
 type ChartMode = "value" | "performance";
 
@@ -46,6 +55,9 @@ interface SnapshotPoint {
   date: string;
   value: number;
   invested: number;
+  stockValue?: number;
+  etfValue?: number;
+  cryptoValue?: number;
 }
 
 interface PerfPoint {
@@ -78,6 +90,8 @@ interface ChartTooltipProps {
   mode: ChartMode;
   t: (key: string) => string;
   benchmarkEntries?: BenchmarkTooltipEntry[];
+  holdings?: ReadonlyArray<{ assetType?: string; exchange?: string }>;
+  range?: string;
 }
 
 function formatEventShares(shares: number): string {
@@ -174,7 +188,37 @@ function EventsTooltipSection({
   );
 }
 
-function ChartTooltip({ active, payload, baseCurrency, stealthMode, mode, t, benchmarkEntries }: ChartTooltipProps) {
+function MarketSessionTooltipSection({
+  holdings,
+  dateStr,
+  t,
+}: {
+  holdings: ReadonlyArray<{ assetType?: string; exchange?: string }>;
+  dateStr: string;
+  t: (key: string) => string;
+}) {
+  const d = new Date(dateStr.replace(" ", "T"));
+  if (!Number.isFinite(d.getTime())) return null;
+  const markets = getActiveMarketsAt(holdings, d);
+  const openMarkets = markets.filter((m) => m.isOpen);
+  if (openMarkets.length === 0) return null;
+
+  return (
+    <div className="border-t border-gray-200 dark:border-slate-600 mt-1.5 pt-1.5 space-y-0.5">
+      {openMarkets.map((m) => (
+        <div key={m.name} className="flex items-center gap-1">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+          <span className="text-[9px] text-gray-500 dark:text-slate-400">
+            {m.name} {t("marketSessionOpen")}
+            {m.closesIn ? ` · ${t("marketSessionClosesIn").replace("{time}", m.closesIn)}` : ""}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ChartTooltip({ active, payload, baseCurrency, stealthMode, mode, t, benchmarkEntries, holdings, range }: ChartTooltipProps) {
   if (!active || !payload?.length) return null;
   const point = payload[0].payload;
   // Future padding slots (1D) have no value — skip tooltip
@@ -211,6 +255,7 @@ function ChartTooltip({ active, payload, baseCurrency, stealthMode, mode, t, ben
         </div>
         {benchmarkRows}
         <EventsTooltipSection events={events} t={t} stealthMode={stealthMode} baseCurrency={baseCurrency} />
+        {range === "1d" && holdings && <MarketSessionTooltipSection holdings={holdings} dateStr={p.date} t={t} />}
       </div>
     );
   }
@@ -236,6 +281,7 @@ function ChartTooltip({ active, payload, baseCurrency, stealthMode, mode, t, ben
       )}
       {benchmarkRows}
       <EventsTooltipSection events={events} t={t} stealthMode={stealthMode} baseCurrency={baseCurrency} />
+      {range === "1d" && holdings && <MarketSessionTooltipSection holdings={holdings} dateStr={sp.date} t={t} />}
     </div>
   );
 }
@@ -255,23 +301,38 @@ const DEMO_POINTS: SnapshotPoint[] = (() => {
   const pts: SnapshotPoint[] = [];
   let val = 38500;
   let invested = 35000;
+  let stockPct = 0.59, etfPct = 0.28, cryptoPct = 0.13;
   for (let i = 90; i >= 0; i--) {
     const d = new Date();
     d.setDate(d.getDate() - i);
     if (d.getDay() === 0 || d.getDay() === 6) continue;
     if (i === 60) invested += 2000;
     if (i === 30) invested += 1500;
+    stockPct += (Math.random() - 0.5) * 0.002;
+    etfPct += (Math.random() - 0.5) * 0.001;
+    cryptoPct = Math.max(0.05, 1 - stockPct - etfPct);
+    const norm = stockPct + etfPct + cryptoPct;
+    const addPoint = (dateStr: string, v: number) => {
+      pts.push({
+        date: dateStr,
+        value: Math.round(v * 100) / 100,
+        invested: Math.round(invested * 100) / 100,
+        stockValue: Math.round(v * (stockPct / norm) * 100) / 100,
+        etfValue: Math.round(v * (etfPct / norm) * 100) / 100,
+        cryptoValue: Math.round(v * (cryptoPct / norm) * 100) / 100,
+      });
+    };
     if (i <= 7) {
       for (let h = 9; h <= 17; h += 2) {
         val += (Math.random() - 0.42) * val * 0.001 + val * 0.00005;
         const hd = new Date(d);
         hd.setHours(h, 0, 0, 0);
         const dateStr = hd.toISOString().slice(0, 13).replace("T", " ") + ":00";
-        pts.push({ date: dateStr, value: Math.round(val * 100) / 100, invested: Math.round(invested * 100) / 100 });
+        addPoint(dateStr, val);
       }
     } else {
       val += (Math.random() - 0.42) * val * 0.006 + val * 0.0003;
-      pts.push({ date: d.toISOString().slice(0, 10), value: Math.round(val * 100) / 100, invested: Math.round(invested * 100) / 100 });
+      addPoint(d.toISOString().slice(0, 10), val);
     }
   }
   return pts;
@@ -369,12 +430,15 @@ export interface BenchmarkOverlay {
   color: string;
 }
 
+type AssetFilter = "all" | "stock" | "etf" | "crypto";
+
 interface EvolutionChartProps {
   embedded?: boolean;
   /** Show only 1D/1W/1M range pills and hide the Value/Performance toggle. */
   compact?: boolean;
   benchmarks?: BenchmarkOverlay[];
   onRemoveBenchmark?: (key: string) => void;
+  assetFilter?: AssetFilter;
 }
 
 function normalizeBenchmarkSeries(values: number[]): number[] {
@@ -385,7 +449,7 @@ function normalizeBenchmarkSeries(values: number[]): number[] {
   return values.map((v, i) => (i < firstRealIdx || v <= 0 ? 0 : ((v - base) / base) * 100));
 }
 
-export default function PortfolioEvolutionChart({ embedded, compact, benchmarks, onRemoveBenchmark }: EvolutionChartProps = {}) {
+export default function PortfolioEvolutionChart({ embedded, compact, benchmarks, onRemoveBenchmark, assetFilter = "all" }: EvolutionChartProps = {}) {
   const { t } = useI18n();
   const { holdings, cashEntries, quotes, exchangeRates, activePortfolioCurrency, activePortfolioId, demoMode, mutationVersion } =
     usePortfolio();
@@ -438,10 +502,13 @@ export default function PortfolioEvolutionChart({ embedded, compact, benchmarks,
         .then((res) => (res.ok ? res.json() : { points: [] }))
         .then((data) => {
           const raw = Array.isArray(data.points) ? data.points : [];
-          const pts: SnapshotPoint[] = raw.map((p: { date: string; value: number; invested?: number }) => ({
+          const pts: SnapshotPoint[] = raw.map((p: { date: string; value: number; invested?: number; stockValue?: number; etfValue?: number; cryptoValue?: number }) => ({
             date: p.date,
             value: p.value,
             invested: p.invested || 0,
+            stockValue: p.stockValue || 0,
+            etfValue: p.etfValue || 0,
+            cryptoValue: p.cryptoValue || 0,
           }));
           setPoints(pts);
           setEvents(Array.isArray(data.events) ? data.events : []);
@@ -674,13 +741,72 @@ export default function PortfolioEvolutionChart({ embedded, compact, benchmarks,
 
   const isPerf = chartMode === "performance" && hasInvestedData;
 
+  const isStacked = false;
+  const isFilteredSingle = assetFilter !== "all";
+
+  // Current live allocation ratios per asset type — used as fallback when a
+  // snapshot's per-type data is missing (pre-migration or pre-deploy rows that
+  // have all-zero stock/etf/crypto values but a valid total).
+  const liveAllocationRatios = useMemo(() => {
+    const buckets: Record<string, number> = { stock: 0, etf: 0, crypto: 0 };
+    let total = 0;
+    for (const h of holdings) {
+      const type = h.assetType ?? "stock";
+      const val = h.valueInEUR || 0;
+      buckets[type] += val;
+      total += val;
+    }
+    if (total <= 0) return { stock: 0, etf: 0, crypto: 0 };
+    return {
+      stock: buckets.stock / total,
+      etf: buckets.etf / total,
+      crypto: buckets.crypto / total,
+    };
+  }, [holdings]);
+
+  const effectivePoints: SnapshotPoint[] = useMemo(() => {
+    if (!isFilteredSingle) return points;
+    const key = assetFilter === "stock" ? "stockValue" : assetFilter === "etf" ? "etfValue" : "cryptoValue";
+    const ratio = liveAllocationRatios[assetFilter] ?? 0;
+    return points.map((p) => {
+      const perTypeSum = (p.stockValue ?? 0) + (p.etfValue ?? 0) + (p.cryptoValue ?? 0);
+      const hasPerType = perTypeSum > 0;
+      return {
+        ...p,
+        value: hasPerType ? (p[key] ?? 0) : p.value * ratio,
+        invested: hasPerType ? p.invested : p.invested * ratio,
+      };
+    });
+  }, [points, isFilteredSingle, assetFilter, liveAllocationRatios]);
+
+  const marketClosedZone = useMemo<{ x1: string; x2: string } | null>(() => {
+    if (range !== "1d" || assetFilter === "all" || assetFilter === "crypto") return null;
+    if (effectivePoints.length < 2) return null;
+    const firstVal = effectivePoints[0]?.value ?? 0;
+    const openIdx = effectivePoints.findIndex((p, i) => i > 0 && Math.abs(p.value - firstVal) > 0.5);
+    if (openIdx <= 0) return null;
+    return { x1: effectivePoints[0].date, x2: effectivePoints[openIdx].date };
+  }, [range, assetFilter, effectivePoints]);
+
+  const filteredPerfPoints: PerfPoint[] = useMemo(() => {
+    if (!isFilteredSingle || !isPerf) return perfPoints;
+    const first = effectivePoints[0]?.value ?? 0;
+    if (first <= 0) return perfPoints;
+    const raw = effectivePoints.map((p) => ({
+      date: p.date,
+      pct: ((p.value - first) / first) * 100,
+    }));
+    const base = raw[0]?.pct ?? 0;
+    return raw.map((p) => ({ date: p.date, pct: p.pct - base }));
+  }, [effectivePoints, isFilteredSingle, isPerf, perfPoints]);
+
   const BUY_SELL_ONLY_RANGES = new Set<EvolutionRange>(["6m", "ytd", "1y", "all"]);
   const filteredEvents = BUY_SELL_ONLY_RANGES.has(range)
     ? events.filter((e) => e.type === "buy" || e.type === "sell")
     : events;
 
-  const enrichedPoints = attachEventsToPoints(points, filteredEvents);
-  const enrichedPerfPoints = attachEventsToPoints(perfPoints, filteredEvents);
+  const enrichedPoints = attachEventsToPoints(isFilteredSingle ? effectivePoints : points, filteredEvents);
+  const enrichedPerfPoints = attachEventsToPoints(isFilteredSingle ? filteredPerfPoints : perfPoints, filteredEvents);
 
   const hasBenchmarks = benchmarks && benchmarks.length > 0 && Object.keys(benchmarkData).length > 0;
 
@@ -736,13 +862,64 @@ export default function PortfolioEvolutionChart({ embedded, compact, benchmarks,
     return [...mergedChartData, ...padding];
   })();
 
-  const firstValue = points[0]?.value ?? 0;
-  const lastValue = points[points.length - 1]?.value ?? 0;
+  // Market session overlays for 1D view
+  interface SessionOverlay extends ChartMarketSession {
+    x1: string;
+    x2: string;
+  }
+  const sessionOverlays: SessionOverlay[] = useMemo(() => {
+    if (range !== "1d" || points.length < 2) return [];
+    const dayStr = points[0].date.slice(0, 10);
+    const day = new Date(`${dayStr}T12:00:00`);
+    const sessions = getPortfolioMarketSessions(holdings, day);
+    if (sessions.length === 0) return [];
+
+    const dateEntries: { date: string; ms: number }[] = [];
+    for (const p of points) {
+      const ms = new Date(p.date.replace(" ", "T")).getTime();
+      if (Number.isFinite(ms)) dateEntries.push({ date: p.date, ms });
+    }
+    if (dateEntries.length > 0) {
+      const lastMs = dateEntries[dateEntries.length - 1].ms;
+      const endMs = new Date(`${dayStr}T23:45:00`).getTime();
+      const STEP = 5 * 60_000;
+      for (let ts = lastMs + STEP; ts <= endMs; ts += STEP) {
+        const d = new Date(ts);
+        const hh = String(d.getHours()).padStart(2, "0");
+        const mm = String(d.getMinutes()).padStart(2, "0");
+        dateEntries.push({ date: `${dayStr} ${hh}:${mm}:00`, ms: ts });
+      }
+    }
+
+    function findNearest(targetMs: number): string {
+      let best = dateEntries[0].date;
+      let bestDiff = Infinity;
+      for (const e of dateEntries) {
+        const diff = Math.abs(e.ms - targetMs);
+        if (diff < bestDiff) { bestDiff = diff; best = e.date; }
+      }
+      return best;
+    }
+
+    return sessions
+      .map((s) => ({
+        ...s,
+        x1: findNearest(s.openDate.getTime()),
+        x2: findNearest(s.closeDate.getTime()),
+      }))
+      .filter((s) => s.x1 !== s.x2);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [range, points, holdings]);
+
+  const ptsForReturn = isFilteredSingle ? effectivePoints : points;
+  const firstValue = ptsForReturn[0]?.value ?? 0;
+  const lastValue = ptsForReturn[ptsForReturn.length - 1]?.value ?? 0;
 
   let periodReturn: number | null;
   if (isPerf) {
-    const firstPct = perfPoints[0]?.pct ?? 0;
-    const lastPct = perfPoints[perfPoints.length - 1]?.pct ?? 0;
+    const pp = isFilteredSingle ? filteredPerfPoints : perfPoints;
+    const firstPct = pp[0]?.pct ?? 0;
+    const lastPct = pp[pp.length - 1]?.pct ?? 0;
     periodReturn = lastPct - firstPct;
   } else {
     periodReturn = firstValue > 0 ? ((lastValue - firstValue) / firstValue) * 100 : null;
@@ -943,7 +1120,7 @@ export default function PortfolioEvolutionChart({ embedded, compact, benchmarks,
     if (points.length < 2) return [0, 1];
     if (isPerf || hasBenchmarks) {
       const pctValues = isPerf
-        ? perfPoints.map(p => p.pct)
+        ? (isFilteredSingle ? filteredPerfPoints : perfPoints).map(p => p.pct)
         : [...portfolioPctFromValue];
       if (hasBenchmarks) {
         for (const vals of Object.values(benchmarkData)) {
@@ -955,8 +1132,16 @@ export default function PortfolioEvolutionChart({ embedded, compact, benchmarks,
       const padding = (max - min) * 0.1 || 1;
       return [min - padding, max + padding];
     }
-    const vals = points.map(p => p.value);
-    if (hasInvestedData && range !== "1d") {
+    if (isStacked) {
+      const totals = points.map(p => (p.stockValue ?? 0) + (p.etfValue ?? 0) + (p.cryptoValue ?? 0));
+      const max = Math.max(...totals);
+      const padding = max * 0.1 || 1;
+      return [0, max + padding];
+    }
+    const src = isFilteredSingle ? effectivePoints : points;
+    const vals = src.map(p => p.value).filter(v => v > 0);
+    if (vals.length === 0) return [0, 1];
+    if (!isFilteredSingle && hasInvestedData && range !== "1d") {
       vals.push(...points.map(p => p.invested).filter(v => v > 0));
     }
     const min = Math.min(...vals);
@@ -1079,22 +1264,73 @@ export default function PortfolioEvolutionChart({ embedded, compact, benchmarks,
   ) : (
     <div className="h-48" role="img" aria-label={isPerf ? "Portfolio performance chart" : "Portfolio value evolution chart"}>
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={finalChartData} margin={{ top: 4, right: 4, left: 4, bottom: 4 }}>
+        <AreaChart data={finalChartData} margin={{ top: 4, right: 4, left: 4, bottom: 4 }} stackOffset={isStacked ? "none" : undefined}>
           <defs>
             <linearGradient id="evolutionGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor={accentColor} stopOpacity={0.2} />
-              <stop offset="95%" stopColor={accentColor} stopOpacity={0} />
+              <stop offset="5%" stopColor={isFilteredSingle ? ASSET_FILTER_COLORS[assetFilter] : accentColor} stopOpacity={0.2} />
+              <stop offset="95%" stopColor={isFilteredSingle ? ASSET_FILTER_COLORS[assetFilter] : accentColor} stopOpacity={0} />
             </linearGradient>
             <linearGradient id="investedGrad" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor={isDark ? "#64748b" : "#9ca3af"} stopOpacity={0.15} />
               <stop offset="95%" stopColor={isDark ? "#64748b" : "#9ca3af"} stopOpacity={0} />
             </linearGradient>
+            <linearGradient id="stockGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#6366f1" stopOpacity={0.2} />
+              <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+            </linearGradient>
+            <linearGradient id="etfGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.2} />
+              <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
+            </linearGradient>
+            <linearGradient id="cryptoGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#ec4899" stopOpacity={0.2} />
+              <stop offset="95%" stopColor="#ec4899" stopOpacity={0} />
+            </linearGradient>
+            <pattern id="marketClosedHatch" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
+              <line x1="0" y1="0" x2="0" y2="6" stroke={isDark ? "#475569" : "#cbd5e1"} strokeWidth="1" strokeOpacity="0.35" />
+            </pattern>
           </defs>
           <CartesianGrid
             strokeDasharray="3 3"
             stroke={layoutTheme === "terminal" ? "#27272a" : gridStroke}
             strokeOpacity={layoutTheme === "studio" ? 0.15 : 0.4}
           />
+          {sessionOverlays.map((s) => (
+            <ReferenceArea
+              key={`band-${s.name}`}
+              x1={s.x1}
+              x2={s.x2}
+              fill={s.color}
+              fillOpacity={0.06}
+              stroke="none"
+            />
+          ))}
+          {sessionOverlays.map((s) => (
+            <ReferenceLine
+              key={`open-${s.name}`}
+              x={s.x1}
+              stroke={s.color}
+              strokeDasharray="3 3"
+              strokeOpacity={0.4}
+              label={{
+                value: `▸ ${s.name} ${s.openLabel}`,
+                position: "insideTopLeft",
+                fill: s.color,
+                fontSize: 8,
+                fontWeight: 600,
+                opacity: 0.7,
+              }}
+            />
+          ))}
+          {sessionOverlays.map((s) => (
+            <ReferenceLine
+              key={`close-${s.name}`}
+              x={s.x2}
+              stroke={isDark ? "#475569" : "#cbd5e1"}
+              strokeDasharray="3 3"
+              strokeOpacity={0.25}
+            />
+          ))}
           <XAxis
             dataKey="date"
             tick={{
@@ -1131,10 +1367,27 @@ export default function PortfolioEvolutionChart({ embedded, compact, benchmarks,
               strokeDasharray="3 3"
             />
           )}
+          {marketClosedZone && (
+            <ReferenceArea
+              x1={marketClosedZone.x1}
+              x2={marketClosedZone.x2}
+              fill="url(#marketClosedHatch)"
+              fillOpacity={1}
+              ifOverflow="visible"
+              label={{
+                value: "Market closed",
+                position: "insideTop",
+                fill: isDark ? "#64748b" : "#94a3b8",
+                fontSize: 10,
+                fontWeight: 500,
+                dy: 8,
+              }}
+            />
+          )}
           <Tooltip
-            content={<ChartTooltip baseCurrency={baseCurrency} stealthMode={stealthMode} mode={chartMode} t={t} benchmarkEntries={benchmarkTooltipEntries} />}
+            content={<ChartTooltip baseCurrency={baseCurrency} stealthMode={stealthMode} mode={chartMode} t={t} benchmarkEntries={benchmarkTooltipEntries} holdings={holdings} range={range} />}
           />
-          {!isPerf && !hasBenchmarks && hasInvestedData && range !== "1d" && (
+          {!isPerf && !hasBenchmarks && !isStacked && hasInvestedData && range !== "1d" && (
             <Area
               type="monotone"
               dataKey="invested"
@@ -1146,10 +1399,17 @@ export default function PortfolioEvolutionChart({ embedded, compact, benchmarks,
               animationDuration={600}
             />
           )}
+          {isStacked ? (
+            <>
+              <Area type="monotone" dataKey="cryptoValue" stackId="asset" stroke="#ec4899" strokeWidth={1} fill="url(#cryptoGrad)" dot={false} animationDuration={600} />
+              <Area type="monotone" dataKey="etfValue" stackId="asset" stroke="#f59e0b" strokeWidth={1} fill="url(#etfGrad)" dot={false} animationDuration={600} />
+              <Area type="monotone" dataKey="stockValue" stackId="asset" stroke="#6366f1" strokeWidth={1} fill="url(#stockGrad)" dot={false} animationDuration={600} />
+            </>
+          ) : (
           <Area
             type="monotone"
             dataKey={isPerf || hasBenchmarks ? "pct" : "value"}
-            stroke={accentColor}
+            stroke={isFilteredSingle ? ASSET_FILTER_COLORS[assetFilter] : accentColor}
             strokeWidth={2}
             fill="url(#evolutionGrad)"
             dot={(props: Record<string, unknown>) => {
@@ -1196,6 +1456,7 @@ export default function PortfolioEvolutionChart({ embedded, compact, benchmarks,
             }}
             animationDuration={600}
           />
+          )}
           {hasBenchmarks && benchmarks!.map((b) =>
             benchmarkData[b.key] ? (
               <Line
@@ -1244,6 +1505,32 @@ export default function PortfolioEvolutionChart({ embedded, compact, benchmarks,
       {benchmarkLoading && (
         <span className="animate-spin w-3 h-3 border-b border-current rounded-full opacity-40" />
       )}
+    </div>
+  ) : null;
+
+  const stackedLegend = isStacked ? (
+    <div className="flex items-center justify-center gap-3 flex-wrap">
+      {[
+        { key: "stock", color: "#6366f1", label: t("stocksLabel") },
+        { key: "etf", color: "#f59e0b", label: t("etfsLabel") },
+        { key: "crypto", color: "#ec4899", label: t("cryptoLabel") },
+      ].map((item) => (
+        <span key={item.key} className="inline-flex items-center gap-1 text-[11px] font-medium text-gray-500 dark:text-slate-400">
+          <span className="w-2.5 h-[3px] rounded-full" style={{ background: item.color }} />
+          {item.label}
+        </span>
+      ))}
+    </div>
+  ) : null;
+
+  const sessionLegend = range === "1d" && sessionOverlays.length > 0 ? (
+    <div className="flex items-center gap-3 flex-wrap">
+      {sessionOverlays.map((s) => (
+        <span key={s.name} className="inline-flex items-center gap-1.5 text-[10px] text-gray-500 dark:text-slate-400">
+          <span className="w-3 h-1.5 rounded-sm" style={{ background: s.color, opacity: 0.5 }} />
+          {s.name} ({s.openLabel}–{s.closeLabel})
+        </span>
+      ))}
     </div>
   ) : null;
 
@@ -1314,6 +1601,7 @@ export default function PortfolioEvolutionChart({ embedded, compact, benchmarks,
         {explainerPanel}
         {periodReturnEl}
         {chartContent}
+        {sessionLegend}
         {chartAiPanel}
       </div>
     );
@@ -1343,6 +1631,7 @@ export default function PortfolioEvolutionChart({ embedded, compact, benchmarks,
         {explainerPanel}
         {periodReturnEl}
         {chartContent}
+        {sessionLegend}
         {chartAiPanel}
       </div>
     );
@@ -1373,6 +1662,7 @@ export default function PortfolioEvolutionChart({ embedded, compact, benchmarks,
         {explainerPanel}
         {periodReturnEl}
         {chartContent}
+        {sessionLegend}
         {chartAiPanel}
       </div>
     );
@@ -1403,6 +1693,8 @@ export default function PortfolioEvolutionChart({ embedded, compact, benchmarks,
       {periodReturnEl}
       {chartContent}
       {benchmarkLegend}
+      {stackedLegend}
+      {sessionLegend}
       {!embedded && chartAiPanel}
     </div>
   );

@@ -10,6 +10,9 @@ interface Point {
   date: string;
   value: number;
   invested: number;
+  stockValue: number;
+  etfValue: number;
+  cryptoValue: number;
 }
 
 /** Same calendar day one month earlier (local): Mar 19 → Feb 19, not rolling 30 days. */
@@ -99,6 +102,10 @@ function densifyHourlyTimeline(raw: Point[], windowStartMs: number, windowEndMs:
     const v0 = sorted[i].value;
     const v1 = sorted[i + 1].value;
     const inv0 = sorted[i].invested;
+    const sv0 = sorted[i].stockValue;
+    const ev0 = sorted[i].etfValue;
+    const cv0 = sorted[i].cryptoValue;
+    const cv1 = sorted[i + 1].cryptoValue;
     let t = t0 + HOUR_MS;
     while (t < t1 - 0.5) {
       const ratio = (t - t0) / (t1 - t0);
@@ -106,6 +113,9 @@ function densifyHourlyTimeline(raw: Point[], windowStartMs: number, windowEndMs:
         date: new Date(t).toISOString(),
         value: v0 + ratio * (v1 - v0),
         invested: inv0,
+        stockValue: sv0,
+        etfValue: ev0,
+        cryptoValue: cv0 + ratio * (cv1 - cv0),
       });
       t += HOUR_MS;
     }
@@ -134,6 +144,10 @@ function densifyFiveMinuteTimeline(raw: Point[], windowStartMs: number, windowEn
     const v0 = sorted[i].value;
     const v1 = sorted[i + 1].value;
     const inv0 = sorted[i].invested;
+    const sv0 = sorted[i].stockValue;
+    const ev0 = sorted[i].etfValue;
+    const cv0 = sorted[i].cryptoValue;
+    const cv1 = sorted[i + 1].cryptoValue;
     let t = t0 + FIVE_MIN_MS;
     while (t < t1 - 0.5) {
       const ratio = (t - t0) / (t1 - t0);
@@ -141,6 +155,9 @@ function densifyFiveMinuteTimeline(raw: Point[], windowStartMs: number, windowEn
         date: new Date(t).toISOString(),
         value: v0 + ratio * (v1 - v0),
         invested: inv0,
+        stockValue: sv0,
+        etfValue: ev0,
+        cryptoValue: cv0 + ratio * (cv1 - cv0),
       });
       t += FIVE_MIN_MS;
     }
@@ -226,7 +243,7 @@ export const GET = withMetrics("/api/portfolio/history", async (req: NextRequest
 
   const paidRanges = new Set(["all", "1y", "6m", "3m", "ytd"]);
 
-  const cols = "date, total_value_eur as value, total_invested_eur as invested";
+  const cols = "date, total_value_eur as value, total_invested_eur as invested, stock_value_eur as stockValue, etf_value_eur as etfValue, crypto_value_eur as cryptoValue";
 
   if (paidRanges.has(range)) {
     if (!canViewFull) {
@@ -258,11 +275,14 @@ export const GET = withMetrics("/api/portfolio/history", async (req: NextRequest
     }
   } else if (range === "1d") {
     const today = todayDateString();
+    const d = new Date();
+    d.setUTCDate(d.getUTCDate() - 1);
+    const yesterday = d.toISOString().slice(0, 10);
     sql = `SELECT ${cols}
            FROM portfolio_snapshots
            WHERE user_id = ? AND portfolio_id = ? AND date >= ?
            ORDER BY date ASC`;
-    args = [session.userId, portfolioId, today];
+    args = [session.userId, portfolioId, yesterday];
   } else if (range === "1w") {
     sql = `SELECT ${cols}
            FROM portfolio_snapshots
@@ -310,6 +330,9 @@ export const GET = withMetrics("/api/portfolio/history", async (req: NextRequest
     date: row.date as string,
     value: row.value as number,
     invested: (row.invested as number) || 0,
+    stockValue: (row.stockValue as number) || 0,
+    etfValue: (row.etfValue as number) || 0,
+    cryptoValue: (row.cryptoValue as number) || 0,
   }));
 
   // When a date has both a daily backfill snapshot ("2026-03-19") AND intraday

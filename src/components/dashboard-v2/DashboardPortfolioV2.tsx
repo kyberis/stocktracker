@@ -11,6 +11,8 @@ import StatsGrid from "./StatsGrid";
 import CompactReferralCard from "./CompactReferralCard";
 import OnboardingChecklist from "./OnboardingChecklist";
 
+const AssetBreakdownCards = dynamic(() => import("./AssetBreakdownCards"), { ssr: false });
+const AssetPerformanceTable = dynamic(() => import("./AssetPerformanceTable"), { ssr: false });
 const AllocationTabs = dynamic(() => import("./AllocationTabs"), { ssr: false });
 const GoalProgressCard = dynamic(() => import("./GoalProgressCard"), { ssr: false });
 const GoalPromptCard = dynamic(() => import("./GoalPromptCard"), { ssr: false });
@@ -88,6 +90,8 @@ export default function DashboardPortfolioV2({
             onToggleExpand={() => setChartExpanded(false)}
             snapshotInvested={txInvested}
           />
+          <AssetBreakdownCards holdings={holdings} cashEntries={cashEntries} />
+          <AssetPerformanceTable holdings={holdings} cashEntries={cashEntries} />
 
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4 items-start">
             {/* Left column */}
@@ -130,6 +134,8 @@ export default function DashboardPortfolioV2({
               onOpenAi={() => setAiDrawerOpen(true)}
               onToggleExpand={() => setChartExpanded(true)}
             />
+            <AssetBreakdownCards holdings={holdings} cashEntries={cashEntries} />
+            <AssetPerformanceTable holdings={holdings} cashEntries={cashEntries} />
             <PortfolioTable holdings={holdings} onAddStock={onAddStock} />
             <MarketAndCash holdings={holdings} cashEntries={allCashEntries} />
             <PortfolioProjection holdings={holdings} cashEntries={cashEntries} />

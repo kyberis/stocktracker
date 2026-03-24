@@ -22,11 +22,17 @@ export const POST = withMetrics("/api/portfolio/snapshot", async (req: NextReque
   let totalValueEUR: number;
   let callerInvestedEUR: number;
   let portfolioId: string;
+  let stockValueEUR: number;
+  let etfValueEUR: number;
+  let cryptoValueEUR: number;
   try {
     const body = await req.json();
     totalValueEUR = Number(body.totalValueEUR);
     callerInvestedEUR = Number(body.totalInvestedEUR) || 0;
     portfolioId = body.portfolioId || "";
+    stockValueEUR = Number(body.stockValueEUR) || 0;
+    etfValueEUR = Number(body.etfValueEUR) || 0;
+    cryptoValueEUR = Number(body.cryptoValueEUR) || 0;
     if (!Number.isFinite(totalValueEUR) || totalValueEUR < 0) {
       return NextResponse.json({ error: "Invalid totalValueEUR" }, { status: 400 });
     }
@@ -64,12 +70,15 @@ export const POST = withMetrics("/api/portfolio/snapshot", async (req: NextReque
   const totalInvestedEUR = prevInvested > 0 ? prevInvested : callerInvestedEUR;
 
   await client.execute({
-    sql: `INSERT INTO portfolio_snapshots (id, user_id, portfolio_id, date, total_value_eur, total_invested_eur)
-          VALUES (?, ?, ?, ?, ?, ?)
+    sql: `INSERT INTO portfolio_snapshots (id, user_id, portfolio_id, date, total_value_eur, total_invested_eur, stock_value_eur, etf_value_eur, crypto_value_eur)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
           ON CONFLICT(user_id, portfolio_id, date) DO UPDATE SET
             total_value_eur = excluded.total_value_eur,
-            total_invested_eur = excluded.total_invested_eur`,
-    args: [generateId(), session.userId, portfolioId, dateBucket, totalValueEUR, totalInvestedEUR],
+            total_invested_eur = excluded.total_invested_eur,
+            stock_value_eur = excluded.stock_value_eur,
+            etf_value_eur = excluded.etf_value_eur,
+            crypto_value_eur = excluded.crypto_value_eur`,
+    args: [generateId(), session.userId, portfolioId, dateBucket, totalValueEUR, totalInvestedEUR, stockValueEUR, etfValueEUR, cryptoValueEUR],
   });
 
   return NextResponse.json({ ok: true, date: dateBucket, totalValueEUR, totalInvestedEUR });

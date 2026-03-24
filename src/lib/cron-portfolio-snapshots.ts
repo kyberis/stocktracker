@@ -11,9 +11,10 @@ import type { DistinctHoldingTicker } from "@/lib/db/holdings";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 import type { ProviderQuoteResult } from "@/lib/api-providers/types";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
+import { computeValueByAssetType } from "@/lib/portfolio-summary";
 import { generateId } from "@/lib/utils";
 import { isAnyMarketActive } from "@/lib/market-hours";
-import type { ExchangeRates, QuoteData } from "@/lib/types";
+import type { ExchangeRates, Holding, QuoteData } from "@/lib/types";
 
 const QUOTE_BATCH_SIZE = 15;
 
@@ -138,9 +139,22 @@ async function writeLiveSnapshotsForUser(
     (quotes[h.ticker]?.regularMarketPrice ?? 0) > 0;
 
   const cashAll = await listCashEntries(userId);
-  const rows: { portfolioId: string; value: number; invested: number }[] = [];
 
-  // Aggregate snapshot — only when ALL holdings have fresh quotes
+  interface SnapshotRow {
+    portfolioId: string;
+    value: number;
+    invested: number;
+    stockValue: number;
+    etfValue: number;
+    cryptoValue: number;
+  }
+  const rows: SnapshotRow[] = [];
+
+  function assetValues(h: Holding[]): { stockValue: number; etfValue: number; cryptoValue: number } {
+    const b = computeValueByAssetType(h, quotes, exchangeRates, "EUR");
+    return { stockValue: b.stock, etfValue: b.etf, cryptoValue: b.crypto };
+  }
+
   if (holdingsAll.every(hasQuote)) {
     const totalsAll = calculatePortfolioTotals(holdingsAll, cashAll, quotes, exchangeRates, "EUR");
     if (totalsAll.totalCurrentEUR > 0) {
@@ -148,11 +162,11 @@ async function writeLiveSnapshotsForUser(
         portfolioId: "",
         value: totalsAll.totalCurrentEUR,
         invested: totalsAll.totalCostEUR,
+        ...assetValues(holdingsAll),
       });
     }
   }
 
-  // Per-portfolio snapshots — write each portfolio independently when its holdings have quotes
   const portfolioIds = await listDistinctPortfolioIdsForUser(userId);
   for (const pid of portfolioIds) {
     const h = await listHoldings(userId, pid);
@@ -165,6 +179,7 @@ async function writeLiveSnapshotsForUser(
       portfolioId: pid,
       value: t.totalCurrentEUR,
       invested: t.totalCostEUR,
+      ...assetValues(h),
     });
   }
 
@@ -172,12 +187,15 @@ async function writeLiveSnapshotsForUser(
 
   const client = await ensureInitialized();
   const stmts = rows.map((r) => ({
-    sql: `INSERT INTO portfolio_snapshots (id, user_id, portfolio_id, date, total_value_eur, total_invested_eur)
-          VALUES (?, ?, ?, ?, ?, ?)
+    sql: `INSERT INTO portfolio_snapshots (id, user_id, portfolio_id, date, total_value_eur, total_invested_eur, stock_value_eur, etf_value_eur, crypto_value_eur)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
           ON CONFLICT(user_id, portfolio_id, date) DO UPDATE SET
             total_value_eur = excluded.total_value_eur,
-            total_invested_eur = excluded.total_invested_eur`,
-    args: [generateId(), userId, r.portfolioId, dateBucket, r.value, r.invested],
+            total_invested_eur = excluded.total_invested_eur,
+            stock_value_eur = excluded.stock_value_eur,
+            etf_value_eur = excluded.etf_value_eur,
+            crypto_value_eur = excluded.crypto_value_eur`,
+    args: [generateId(), userId, r.portfolioId, dateBucket, r.value, r.invested, r.stockValue, r.etfValue, r.cryptoValue],
   }));
   await client.batch(stmts, "write");
 

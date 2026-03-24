@@ -92,10 +92,10 @@ export const POST = withMetrics("/api/portfolio/backfill-snapshots", async (req:
 
   const result = await runBackfillForUser(session.userId);
 
-  // Sync invested capital from the nearest daily backfill row onto every
-  // intraday snapshot. Uses the most recent daily row on-or-before the
-  // intraday date so "today's" snapshots (no daily row yet) pick up
-  // yesterday's value. Fixes stale invested from past cron writes.
+  // Sync invested capital and per-asset-type values from the nearest daily
+  // backfill row onto every intraday snapshot. Uses the most recent daily row
+  // on-or-before the intraday date. Fixes stale invested/per-type values from
+  // past cron writes or pre-migration snapshots.
   const syncResult = await client.execute({
     sql: `UPDATE portfolio_snapshots
           SET total_invested_eur = (
@@ -108,7 +108,52 @@ export const POST = withMetrics("/api/portfolio/backfill-snapshots", async (req:
               AND d.date <= substr(portfolio_snapshots.date, 1, 10)
             ORDER BY d.date DESC
             LIMIT 1
-          )
+          ),
+          stock_value_eur = CASE
+            WHEN stock_value_eur = 0 AND etf_value_eur = 0 AND crypto_value_eur = 0 THEN (
+              SELECT d.stock_value_eur
+              FROM portfolio_snapshots d
+              WHERE d.user_id = portfolio_snapshots.user_id
+                AND d.portfolio_id = portfolio_snapshots.portfolio_id
+                AND d.date NOT LIKE '% %'
+                AND d.date NOT LIKE '%T%'
+                AND d.date <= substr(portfolio_snapshots.date, 1, 10)
+                AND (d.stock_value_eur > 0 OR d.etf_value_eur > 0 OR d.crypto_value_eur > 0)
+              ORDER BY d.date DESC
+              LIMIT 1
+            )
+            ELSE stock_value_eur
+          END,
+          etf_value_eur = CASE
+            WHEN stock_value_eur = 0 AND etf_value_eur = 0 AND crypto_value_eur = 0 THEN (
+              SELECT d.etf_value_eur
+              FROM portfolio_snapshots d
+              WHERE d.user_id = portfolio_snapshots.user_id
+                AND d.portfolio_id = portfolio_snapshots.portfolio_id
+                AND d.date NOT LIKE '% %'
+                AND d.date NOT LIKE '%T%'
+                AND d.date <= substr(portfolio_snapshots.date, 1, 10)
+                AND (d.stock_value_eur > 0 OR d.etf_value_eur > 0 OR d.crypto_value_eur > 0)
+              ORDER BY d.date DESC
+              LIMIT 1
+            )
+            ELSE etf_value_eur
+          END,
+          crypto_value_eur = CASE
+            WHEN stock_value_eur = 0 AND etf_value_eur = 0 AND crypto_value_eur = 0 THEN (
+              SELECT d.crypto_value_eur
+              FROM portfolio_snapshots d
+              WHERE d.user_id = portfolio_snapshots.user_id
+                AND d.portfolio_id = portfolio_snapshots.portfolio_id
+                AND d.date NOT LIKE '% %'
+                AND d.date NOT LIKE '%T%'
+                AND d.date <= substr(portfolio_snapshots.date, 1, 10)
+                AND (d.stock_value_eur > 0 OR d.etf_value_eur > 0 OR d.crypto_value_eur > 0)
+              ORDER BY d.date DESC
+              LIMIT 1
+            )
+            ELSE crypto_value_eur
+          END
           WHERE user_id = ?
             AND date LIKE '% %'`,
     args: [session.userId],
