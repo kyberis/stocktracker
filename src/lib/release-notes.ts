@@ -17,6 +17,36 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.64.3",
+    date: "2026-03-23",
+    title: "Expandable Portfolio Value Chart",
+    titleTranslations: { es: "Gráfico de valor del portafolio expandible" },
+    changes: [
+      {
+        type: "feature",
+        text: "The Portfolio Value chart now has a maximize/minimize toggle — expand it to full width with inline stats (cost, gain/loss, day change, div. yield, holdings, est. annual dividend) below the graph.",
+        translations: {
+          es: "El gráfico de valor del portafolio ahora tiene un botón de maximizar/minimizar — expándelo a ancho completo con estadísticas en línea (coste, ganancia/pérdida, cambio del día, rdto. div., posiciones, ingreso anual est.) debajo del gráfico.",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.64.2",
+    date: "2026-03-23",
+    title: "Collapsible Onboarding Checklist",
+    titleTranslations: { es: "Checklist de inicio colapsable" },
+    changes: [
+      {
+        type: "improvement",
+        text: "The onboarding checklist now starts collapsed with a progress ring, expanding on click to reveal steps — less clutter on the dashboard.",
+        translations: {
+          es: "El checklist de inicio ahora comienza colapsado con un anillo de progreso, expandiéndose al hacer clic para mostrar los pasos — menos desorden en el panel.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.64.1",
     date: "2026-03-23",
     title: "Classification Fix for Bond ETFs & Crypto",

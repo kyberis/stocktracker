@@ -402,7 +402,7 @@ export interface SearchResult {
 
 export type ExchangeRates = Record<string, number>;
 
-export type TimePeriod = "1w" | "1m" | "3m" | "6m" | "1y" | "all";
+export type TimePeriod = "1d" | "1w" | "1m" | "3m" | "6m" | "1y" | "all";
 
 export type Language =
   | "en" | "es" | "fr" | "de" | "it" | "pt" | "nl" | "pl"

@@ -46,6 +46,7 @@ const es: TranslationStrings = {
   save: "Guardar",
   edit: "Editar",
   name: "Nombre",
+  period1d: "1D",
   period1w: "1S",
   period1m: "1M",
   period3m: "3M",
@@ -2294,6 +2295,7 @@ const es: TranslationStrings = {
   checklistAllDoneDesc: "Has completado todos los pasos de inicio. ¡Feliz inversión!",
   checklistDismiss: "Descartar",
   checklistOf: "de",
+  checklistStepsCompleted: "pasos completados",
 
   // Goal prompt
   goalPromptTitle: "Define un objetivo para tu portafolio",
@@ -2317,6 +2319,10 @@ const es: TranslationStrings = {
   blurScreenerTeaser: "Filtra acciones por métricas fundamentales, dividendos, sector y más",
   blurTaxTeaser: "Ganancias de capital, dividendos, retenciones fiscales y formularios de declaración para tu país",
   blurScoreTeaser: "Obtén tu puntuación de salud del portafolio impulsada por IA con recomendaciones personalizadas",
+
+  // Chart expand/minimize
+  chartExpand: "Maximizar",
+  chartMinimize: "Minimizar",
 };
 
 export default es;

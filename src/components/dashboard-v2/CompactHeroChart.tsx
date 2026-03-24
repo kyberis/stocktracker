@@ -8,6 +8,7 @@ import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
 import { formatCurrency, formatPercent } from "@/lib/utils";
 import PortfolioEvolutionChart from "../PortfolioEvolutionChart";
 import BenchmarkDropdown, { OVERLAY_BENCHMARKS } from "./BenchmarkDropdown";
+import StatsGrid from "./StatsGrid";
 import type { BenchmarkOverlay } from "../PortfolioEvolutionChart";
 import type { Holding, CashEntry } from "@/lib/types";
 
@@ -17,9 +18,12 @@ interface Props {
   holdings: Holding[];
   cashEntries: CashEntry[];
   onOpenAi?: () => void;
+  expanded?: boolean;
+  onToggleExpand?: () => void;
+  snapshotInvested?: number | null;
 }
 
-export default function CompactHeroChart({ holdings, cashEntries, onOpenAi }: Props) {
+export default function CompactHeroChart({ holdings, cashEntries, onOpenAi, expanded, onToggleExpand, snapshotInvested }: Props) {
   const { t } = useI18n();
   const { quotes, exchangeRates, activePortfolioCurrency, lastUpdated } = usePortfolio();
   const { stealthMode } = useStealthMode();
@@ -80,9 +84,29 @@ export default function CompactHeroChart({ holdings, cashEntries, onOpenAi }: Pr
     <div className="card overflow-hidden">
       {/* Hero header */}
       <div className="px-5 pt-4 pb-2">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-slate-500 mb-1">
-          {t("v2PortfolioValue")}
-        </p>
+        <div className="flex items-center justify-between mb-1">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-slate-500">
+            {t("v2PortfolioValue")}
+          </p>
+          {onToggleExpand && (
+            <button
+              onClick={onToggleExpand}
+              className="p-1.5 -mr-1.5 rounded-lg text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors"
+              title={expanded ? t("chartMinimize") : t("chartExpand")}
+              aria-label={expanded ? t("chartMinimize") : t("chartExpand")}
+            >
+              {expanded ? (
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+                </svg>
+              )}
+            </button>
+          )}
+        </div>
         <p className="text-3xl sm:text-4xl font-extrabold tracking-tight tabular-nums text-gray-900 dark:text-white leading-none">
           {stealthMode ? "•••••" : formatCurrency(totals.totalCurrentEUR, cur)}
         </p>
@@ -116,6 +140,13 @@ export default function CompactHeroChart({ holdings, cashEntries, onOpenAi }: Pr
         benchmarks={benchmarks.length > 0 ? benchmarks : undefined}
         onRemoveBenchmark={handleRemoveBenchmark}
       />
+
+      {/* Inline stats when expanded */}
+      {expanded && (
+        <div className="px-5 pb-2 pt-1">
+          <StatsGrid holdings={holdings} cashEntries={cashEntries} snapshotInvested={snapshotInvested} inline />
+        </div>
+      )}
 
       {/* Footer: sync + compare + AI link */}
       <div className="flex items-center justify-between px-5 py-2 border-t border-gray-100 dark:border-white/[0.04]">

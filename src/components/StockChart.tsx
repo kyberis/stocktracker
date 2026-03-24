@@ -24,6 +24,7 @@ interface StockChartProps {
 }
 
 const PERIOD_LABELS: Record<TimePeriod, string> = {
+  "1d": "period1d",
   "1w": "period1w",
   "1m": "period1m",
   "3m": "period3m",

@@ -236,8 +236,6 @@ export default function MobileDashboard() {
         <SampleDataBanner />
         <OnboardingChecklist
           onOpenAddStock={() => setShowAddModal(true)}
-          onNavigateTools={() => { window.location.href = "/tools"; }}
-          onNavigateAlerts={() => { window.location.href = "/tools?tab=alerts"; }}
         />
         <ReferralBanner onShare={() => setShowReferralModal(true)} />
 

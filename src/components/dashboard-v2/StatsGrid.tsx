@@ -14,9 +14,11 @@ interface Props {
   holdings: Holding[];
   cashEntries: CashEntry[];
   snapshotInvested?: number | null;
+  /** Render without the card wrapper — used when embedded inside another card */
+  inline?: boolean;
 }
 
-export default function StatsGrid({ holdings, cashEntries, snapshotInvested }: Props) {
+export default function StatsGrid({ holdings, cashEntries, snapshotInvested, inline }: Props) {
   const { t } = useI18n();
   const { user } = useAuth();
   const { quotes, exchangeRates, activePortfolioCurrency } = usePortfolio();
@@ -85,37 +87,43 @@ export default function StatsGrid({ holdings, cashEntries, snapshotInvested }: P
     },
   ];
 
-  return (
-    <div className="card p-3">
-      <div className="grid grid-cols-2 gap-1.5">
-        {cells.map((c) => (
-          <div
-            key={c.label}
-            className={`rounded-lg px-2.5 py-2 ${
-              c.highlight
+  const gridContent = (
+    <div className={`grid gap-1.5 ${inline ? "grid-cols-3 sm:grid-cols-6" : "grid-cols-2"}`}>
+      {cells.map((c) => (
+        <div
+          key={c.label}
+          className={`rounded-lg px-2.5 py-2 ${
+            c.highlight
+              ? c.positive
+                ? "bg-emerald-50 dark:bg-emerald-500/[0.06] border border-emerald-200/60 dark:border-emerald-500/15"
+                : "bg-red-50 dark:bg-red-500/[0.06] border border-red-200/60 dark:border-red-500/15"
+              : "bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/[0.04]"
+          }`}
+        >
+          <p className="text-[9px] font-medium text-gray-500 dark:text-slate-500 uppercase tracking-wide">
+            {c.label}
+          </p>
+          <p
+            className={`text-sm font-bold tabular-nums mt-0.5 ${
+              c.accent
                 ? c.positive
-                  ? "bg-emerald-50 dark:bg-emerald-500/[0.06] border border-emerald-200/60 dark:border-emerald-500/15"
-                  : "bg-red-50 dark:bg-red-500/[0.06] border border-red-200/60 dark:border-red-500/15"
-                : "bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/[0.04]"
+                  ? "text-emerald-600 dark:text-emerald-400"
+                  : "text-red-500 dark:text-red-400"
+                : "text-gray-900 dark:text-white"
             }`}
           >
-            <p className="text-[9px] font-medium text-gray-500 dark:text-slate-500 uppercase tracking-wide">
-              {c.label}
-            </p>
-            <p
-              className={`text-sm font-bold tabular-nums mt-0.5 ${
-                c.accent
-                  ? c.positive
-                    ? "text-emerald-600 dark:text-emerald-400"
-                    : "text-red-500 dark:text-red-400"
-                  : "text-gray-900 dark:text-white"
-              }`}
-            >
-              {c.value}
-            </p>
-          </div>
-        ))}
-      </div>
+            {c.value}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+
+  if (inline) return gridContent;
+
+  return (
+    <div className="card p-3">
+      {gridContent}
     </div>
   );
 }

@@ -87,9 +87,15 @@ export class YahooProvider implements StockDataProvider {
     try {
       const now = new Date();
       let period1: Date;
-      let interval: "1d" | "1wk" | "1mo" = "1d";
+      let interval: "1d" | "1wk" | "1mo" | "5m" = "1d";
+      let intraday = false;
 
       switch (period) {
+        case "1d":
+          period1 = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000);
+          interval = "5m";
+          intraday = true;
+          break;
         case "1w":
           period1 = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
           interval = "1d";
@@ -130,7 +136,9 @@ export class YahooProvider implements StockDataProvider {
       return quotes
         .filter((item) => item.close != null)
         .map((item) => ({
-          date: item.date.toISOString().split("T")[0],
+          date: intraday
+            ? item.date.toISOString().replace("T", " ").slice(0, 16) + ":00"
+            : item.date.toISOString().split("T")[0],
           open: item.open ?? 0,
           high: item.high ?? 0,
           low: item.low ?? 0,

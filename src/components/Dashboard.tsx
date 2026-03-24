@@ -54,7 +54,6 @@ import SecureAccountPrompt from "./SecureAccountPrompt";
 
 const DashboardUpgradeNudge = dynamic(() => import("./DashboardUpgradeNudge"), { ssr: false });
 const TrialCountdownBanner = dynamic(() => import("./TrialCountdownBanner"), { ssr: false });
-const OnboardingChecklist = dynamic(() => import("./dashboard-v2/OnboardingChecklist"), { ssr: false });
 import { HeroSkeleton, TableSkeleton, ChartSkeleton } from "./Skeleton";
 
 
@@ -325,11 +324,6 @@ function DesktopDashboard() {
             tabIndex={0}
             className="focus-visible:outline-none space-y-6 animate-tab-fade"
           >
-            <OnboardingChecklist
-              onOpenAddStock={() => gatedAdd("stock")}
-              onNavigateTools={() => { window.location.href = "/tools"; }}
-              onNavigateAlerts={() => { window.location.href = "/tools?tab=alerts"; }}
-            />
             {isInitializing && holdingsCount === 0 ? (
               <div className="space-y-6">
                 <HeroSkeleton />

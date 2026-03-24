@@ -85,7 +85,7 @@ export async function autoDetectCompletedSteps(userId: string): Promise<void> {
       args: [userId],
     }),
     client.execute({
-      sql: "SELECT COUNT(*) as cnt FROM alerts WHERE user_id = ?",
+      sql: "SELECT COUNT(*) as cnt FROM price_alerts WHERE user_id = ?",
       args: [userId],
     }),
   ]);

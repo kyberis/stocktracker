@@ -46,6 +46,7 @@ const en: TranslationStrings = {
   save: "Save",
   edit: "Edit",
   name: "Name",
+  period1d: "1D",
   period1w: "1W",
   period1m: "1M",
   period3m: "3M",
@@ -2302,6 +2303,7 @@ const en: TranslationStrings = {
   checklistAllDoneDesc: "You've completed all onboarding steps. Happy investing!",
   checklistDismiss: "Dismiss",
   checklistOf: "of",
+  checklistStepsCompleted: "steps completed",
 
   // Goal prompt
   goalPromptTitle: "Set a portfolio goal",
@@ -2325,6 +2327,10 @@ const en: TranslationStrings = {
   blurScreenerTeaser: "Filter stocks by fundamental metrics, dividends, sector, and more",
   blurTaxTeaser: "Capital gains, dividends, withholding tax, and local filing forms for your country",
   blurScoreTeaser: "Get your AI-powered portfolio health score with personalized recommendations",
+
+  // Chart expand/minimize
+  chartExpand: "Maximize",
+  chartMinimize: "Minimize",
 };
 
 export default en;

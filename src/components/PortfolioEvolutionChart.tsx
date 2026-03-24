@@ -379,9 +379,10 @@ interface EvolutionChartProps {
 
 function normalizeBenchmarkSeries(values: number[]): number[] {
   if (values.length === 0) return [];
-  const first = values[0];
-  if (!first || first <= 0) return values.map(() => 0);
-  return values.map((v) => ((v - first) / first) * 100);
+  const firstRealIdx = values.findIndex((v) => v > 0);
+  if (firstRealIdx < 0) return values.map(() => 0);
+  const base = values[firstRealIdx];
+  return values.map((v, i) => (i < firstRealIdx || v <= 0 ? 0 : ((v - base) / base) * 100));
 }
 
 export default function PortfolioEvolutionChart({ embedded, compact, benchmarks, onRemoveBenchmark }: EvolutionChartProps = {}) {
@@ -419,6 +420,7 @@ export default function PortfolioEvolutionChart({ embedded, compact, benchmarks,
 
   // Benchmark overlay data
   const [benchmarkData, setBenchmarkData] = useState<Record<string, number[]>>({});
+  const [benchmarkAlignStart, setBenchmarkAlignStart] = useState(0);
   const [benchmarkLoading, setBenchmarkLoading] = useState(false);
   const benchmarkAbortRef = useRef<AbortController | null>(null);
 
@@ -566,38 +568,71 @@ export default function PortfolioEvolutionChart({ embedded, compact, benchmarks,
     benchmarkAbortRef.current = ctrl;
 
     setBenchmarkLoading(true);
-    const chartDates = points.map((p) => p.date.slice(0, 10));
+    const isIntraday = range === "1d";
+
+    function toAlignKey(dateStr: string): string {
+      if (!isIntraday) return dateStr.slice(0, 10);
+      const s = dateStr.includes("T") ? dateStr : dateStr.replace(" ", "T");
+      const d = new Date(s);
+      if (!Number.isFinite(d.getTime())) return dateStr.slice(0, 10);
+      const mins = Math.floor(d.getTime() / 300000) * 300000;
+      const rounded = new Date(mins);
+      return rounded.toISOString().slice(0, 16);
+    }
+
+    const chartKeys = points.map((p) => toAlignKey(p.date));
 
     Promise.all(
       benchmarks.map(async (b) => {
         try {
-          const params = new URLSearchParams({ symbol: b.symbol, period: range === "ytd" ? "1y" : range });
+          const apiPeriod = range === "ytd" ? "1y" : range;
+          const params = new URLSearchParams({ symbol: b.symbol, period: apiPeriod });
           const res = await fetch(`/api/historical?${params}`, { signal: ctrl.signal });
-          if (!res.ok) return { key: b.key, values: [] as number[] };
+          if (!res.ok) return { key: b.key, values: [] as number[], firstMatch: -1 };
           const json = await res.json();
           const raw: { date: string; close: number }[] = Array.isArray(json) ? json : json.data || [];
 
-          const closeByDate = new Map<string, number>();
-          for (const pt of raw) closeByDate.set(pt.date.slice(0, 10), pt.close);
+          const closeByKey = new Map<string, number>();
+          for (const pt of raw) closeByKey.set(toAlignKey(pt.date), pt.close);
+
+          // Pre-fill lastClose from the latest benchmark point at or before the chart window
+          const firstChartKey = chartKeys[0];
+          const sortedBenchKeys = [...closeByKey.keys()].sort();
+          let lastClose = 0;
+          for (const bk of sortedBenchKeys) {
+            if (bk <= firstChartKey && (closeByKey.get(bk) ?? 0) > 0) {
+              lastClose = closeByKey.get(bk)!;
+            }
+          }
 
           const aligned: number[] = [];
-          let lastClose = 0;
-          for (const d of chartDates) {
-            const c = closeByDate.get(d);
-            if (c != null && c > 0) lastClose = c;
+          let firstDirectMatch = -1;
+          for (let i = 0; i < chartKeys.length; i++) {
+            const c = closeByKey.get(chartKeys[i]);
+            if (c != null && c > 0) {
+              if (firstDirectMatch < 0) firstDirectMatch = i;
+              lastClose = c;
+            }
             aligned.push(lastClose);
           }
 
-          return { key: b.key, values: normalizeBenchmarkSeries(aligned) };
+          return { key: b.key, values: normalizeBenchmarkSeries(aligned), firstMatch: firstDirectMatch };
         } catch {
-          return { key: b.key, values: [] as number[] };
+          return { key: b.key, values: [] as number[], firstMatch: -1 };
         }
       }),
     ).then((results) => {
       if (ctrl.signal.aborted) return;
       const map: Record<string, number[]> = {};
-      for (const r of results) if (r.values.length > 0) map[r.key] = r.values;
+      let minStart = Infinity;
+      for (const r of results) {
+        if (r.values.length > 0) {
+          map[r.key] = r.values;
+          if (r.firstMatch >= 0 && r.firstMatch < minStart) minStart = r.firstMatch;
+        }
+      }
       setBenchmarkData(map);
+      setBenchmarkAlignStart(Number.isFinite(minStart) ? minStart : 0);
       setBenchmarkLoading(false);
     });
 
@@ -649,12 +684,15 @@ export default function PortfolioEvolutionChart({ embedded, compact, benchmarks,
 
   const hasBenchmarks = benchmarks && benchmarks.length > 0 && Object.keys(benchmarkData).length > 0;
 
-  // When benchmarks are active in value mode, normalize portfolio to % too
+  // When benchmarks are active in value mode, normalize portfolio to % too.
+  // Rebase from the first index where any benchmark has a direct data match
+  // so both series share a common 0% starting point and similar visual scale.
   const portfolioPctFromValue: number[] = (() => {
     if (!hasBenchmarks || isPerf) return [];
-    const first = points[0]?.value;
-    if (!first || first <= 0) return points.map(() => 0);
-    return points.map((p) => ((p.value - first) / first) * 100);
+    const startIdx = Math.min(benchmarkAlignStart, points.length - 1);
+    const base = points[startIdx]?.value;
+    if (!base || base <= 0) return points.map(() => 0);
+    return points.map((p, i) => (i < startIdx ? 0 : ((p.value - base) / base) * 100));
   })();
 
   // Merge benchmark % values into chart data for rendering
@@ -904,7 +942,9 @@ export default function PortfolioEvolutionChart({ embedded, compact, benchmarks,
   const yDomain: [number, number] = (() => {
     if (points.length < 2) return [0, 1];
     if (isPerf || hasBenchmarks) {
-      const pctValues = perfPoints.map(p => p.pct);
+      const pctValues = isPerf
+        ? perfPoints.map(p => p.pct)
+        : [...portfolioPctFromValue];
       if (hasBenchmarks) {
         for (const vals of Object.values(benchmarkData)) {
           pctValues.push(...vals);

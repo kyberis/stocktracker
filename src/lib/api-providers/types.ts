@@ -121,7 +121,7 @@ export interface FundamentalData<T> {
   quarterly: T[];
 }
 
-export type TimePeriod = "1w" | "1m" | "3m" | "6m" | "1y" | "all";
+export type TimePeriod = "1d" | "1w" | "1m" | "3m" | "6m" | "1y" | "all";
 
 /* ── Alpha Intelligence types ──────────────────────────────── */
 

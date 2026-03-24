@@ -35,6 +35,7 @@ const PERIOD_KEYS: TimePeriod[] = ["1w", "1m", "3m", "6m", "1y", "all"];
 const BENCHMARK_SELECTION_KEY = "trefolio-benchmark-selection-v1";
 
 const PERIOD_LABELS: Record<TimePeriod, string> = {
+  "1d": "period1d",
   "1w": "period1w",
   "1m": "period1m",
   "3m": "period3m",
