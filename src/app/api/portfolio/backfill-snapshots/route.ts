@@ -20,7 +20,7 @@ export const GET = withMetrics("/api/portfolio/backfill-snapshots", async (req: 
 
   const client = await ensureInitialized();
 
-  const [txResult, snapResult, userResult, missingInvestedResult] = await Promise.all([
+  const [txResult, snapResult, userResult, missingInvestedResult, missingAssetTypeResult] = await Promise.all([
     client.execute({
       sql: "SELECT MIN(date) as earliest FROM transactions WHERE user_id = ? AND type IN ('buy','sell')",
       args: [session.userId],
@@ -37,6 +37,12 @@ export const GET = withMetrics("/api/portfolio/backfill-snapshots", async (req: 
       sql: "SELECT COUNT(*) as cnt FROM portfolio_snapshots WHERE user_id = ? AND total_value_eur > 0 AND total_invested_eur = 0",
       args: [session.userId],
     }),
+    client.execute({
+      sql: `SELECT COUNT(*) as cnt FROM portfolio_snapshots
+            WHERE user_id = ? AND total_value_eur > 0
+              AND stock_value_eur = 0 AND etf_value_eur = 0 AND crypto_value_eur = 0`,
+      args: [session.userId],
+    }),
   ]);
 
   const earliestTx = str(txResult.rows[0]?.earliest) || null;
@@ -44,6 +50,7 @@ export const GET = withMetrics("/api/portfolio/backfill-snapshots", async (req: 
   const snapshotCount = num(snapResult.rows[0]?.cnt);
   const backfilledAt = str(userResult.rows[0]?.snapshots_backfilled_at) || null;
   const missingInvestedCount = num(missingInvestedResult.rows[0]?.cnt);
+  const missingAssetTypeCount = num(missingAssetTypeResult.rows[0]?.cnt);
 
   if (!earliestTx) {
     return NextResponse.json({ needsBackfill: false, reason: "no_transactions" });
@@ -57,11 +64,18 @@ export const GET = withMetrics("/api/portfolio/backfill-snapshots", async (req: 
 
   const needsGapBackfill = gapDays > 7 && (!backfilledAt || backfilledAt < earliestTx);
   const needsInvestedBackfill = missingInvestedCount > 0;
-  const needsBackfill = needsGapBackfill || needsInvestedBackfill;
+  const needsAssetTypeBackfill = missingAssetTypeCount > 0;
+  const needsBackfill = needsGapBackfill || needsInvestedBackfill || needsAssetTypeBackfill;
+
+  const reason = needsAssetTypeBackfill
+    ? "missing_asset_type_data"
+    : needsInvestedBackfill
+      ? "missing_invested_data"
+      : undefined;
 
   return NextResponse.json({
     needsBackfill,
-    reason: needsInvestedBackfill ? "missing_invested_data" : undefined,
+    reason,
     earliestTx,
     earliestSnapshot,
     snapshotCount,

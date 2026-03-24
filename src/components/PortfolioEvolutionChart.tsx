@@ -474,6 +474,8 @@ export default function PortfolioEvolutionChart({ embedded, compact, benchmarks,
   const sparseBackfillAttemptedRef = useRef(false);
   /** Only one stale-invested auto-backfill per portfolio. */
   const staleInvestedBackfillRef = useRef(false);
+  /** Only one auto-backfill for missing per-asset-type data. */
+  const missingAssetTypeBackfillRef = useRef(false);
   const prevMutationVersion = useRef(mutationVersion);
   const fetchHistoryRef = useRef<(r: EvolutionRange) => void>(() => {});
   /** Timer for 1D poll when waiting for the first snapshot to appear. */
@@ -557,6 +559,26 @@ export default function PortfolioEvolutionChart({ embedded, compact, benchmarks,
                     fetchHistoryRef.current(r);
                   });
               }
+            }
+          }
+          // Auto-backfill once when per-asset-type data is missing on historical points.
+          if (
+            pts.length >= 5 &&
+            !missingAssetTypeBackfillRef.current &&
+            !backfillInFlightRef.current
+          ) {
+            const withValue = pts.filter((p) => p.value > 0);
+            const allZeroPerType = withValue.length >= 5 && withValue.every(
+              (p) => (p.stockValue ?? 0) === 0 && (p.etfValue ?? 0) === 0 && (p.cryptoValue ?? 0) === 0,
+            );
+            if (allZeroPerType) {
+              missingAssetTypeBackfillRef.current = true;
+              backfillInFlightRef.current = true;
+              fetch("/api/portfolio/backfill-snapshots", { method: "POST" })
+                .finally(() => {
+                  backfillInFlightRef.current = false;
+                  fetchHistoryRef.current(r);
+                });
             }
           }
         })
