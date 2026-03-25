@@ -240,6 +240,7 @@ export const GET = withMetrics("/api/portfolio/history", async (req: NextRequest
 
   let sql: string;
   let args: (string | number)[];
+  let targetDay1d = "";
 
   const paidRanges = new Set(["all", "1y", "6m", "3m", "ytd"]);
 
@@ -275,15 +276,15 @@ export const GET = withMetrics("/api/portfolio/history", async (req: NextRequest
     }
   } else if (range === "1d") {
     const dateParam = url.searchParams.get("date");
-    const targetDay = dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam) ? dateParam : todayDateString();
-    const td = new Date(targetDay + "T00:00:00Z");
+    targetDay1d = dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam) ? dateParam : todayDateString();
+    const td = new Date(targetDay1d + "T00:00:00Z");
     td.setUTCDate(td.getUTCDate() - 1);
     const dayBefore = td.toISOString().slice(0, 10);
     sql = `SELECT ${cols}
            FROM portfolio_snapshots
            WHERE user_id = ? AND portfolio_id = ? AND date >= ? AND date < ?
            ORDER BY date ASC`;
-    const nextDay = new Date(targetDay + "T00:00:00Z");
+    const nextDay = new Date(targetDay1d + "T00:00:00Z");
     nextDay.setUTCDate(nextDay.getUTCDate() + 1);
     args = [session.userId, portfolioId, dayBefore, nextDay.toISOString().slice(0, 10)];
   } else if (range === "1w") {
@@ -303,7 +304,7 @@ export const GET = withMetrics("/api/portfolio/history", async (req: NextRequest
   }
 
   const effectiveRange = (paidRanges.has(range) && !canViewFull) ? "1m" : range;
-  const eventsStartDate = computeStartDate(effectiveRange);
+  const eventsStartDate = targetDay1d || computeStartDate(effectiveRange);
 
   /** One row per transaction (all types) for chart markers — capped for very large ledgers. */
   const eventsSql = portfolioId
@@ -359,7 +360,9 @@ export const GET = withMetrics("/api/portfolio/history", async (req: NextRequest
 
   if ((granularity === "five-minute" || granularity === "hourly") && rawPoints.length >= 1) {
     const windowStartMs = Date.parse(`${eventsStartDate}T00:00:00.000Z`);
-    const windowEndMs = Date.now();
+    const windowEndMs = targetDay1d
+      ? Date.parse(`${targetDay1d}T23:59:59.999Z`)
+      : Date.now();
     if (Number.isFinite(windowStartMs)) {
       points = granularity === "five-minute"
         ? densifyFiveMinuteTimeline(rawPoints, windowStartMs, windowEndMs)
