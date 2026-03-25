@@ -195,59 +195,10 @@ function generatePaddingTicks(fromMs: number, toMs: number, step: number = 5 * 6
   return out;
 }
 
-interface ClosedZone {
-  x1: string;
-  x2: string;
-}
-
-/**
- * From market session overlays, derive the zones where no market is open.
- * Returns bands for: before first open, gaps between non-overlapping sessions,
- * and after the last close until dayEndIso.
- */
-function computeClosedZones(
-  sessions: ChartMarketSession[],
-  dayStartIso: string,
-  dayEndIso: string,
-): ClosedZone[] {
-  if (sessions.length === 0) return [{ x1: dayStartIso, x2: dayEndIso }];
-
-  const sorted = [...sessions].sort((a, b) => a.openDate.getTime() - b.openDate.getTime());
-
-  const merged: { open: number; close: number }[] = [];
-  for (const s of sorted) {
-    const o = s.openDate.getTime();
-    const c = s.closeDate.getTime();
-    if (merged.length > 0 && o <= merged[merged.length - 1].close) {
-      merged[merged.length - 1].close = Math.max(merged[merged.length - 1].close, c);
-    } else {
-      merged.push({ open: o, close: c });
-    }
-  }
-
-  const zones: ClosedZone[] = [];
-  const dayStartMs = parseTime(dayStartIso);
-  const dayEndMs = parseTime(dayEndIso);
-
-  if (merged[0].open > dayStartMs) {
-    zones.push({ x1: dayStartIso, x2: new Date(merged[0].open).toISOString() });
-  }
-
-  for (let i = 0; i < merged.length - 1; i++) {
-    if (merged[i + 1].open > merged[i].close) {
-      zones.push({
-        x1: new Date(merged[i].close).toISOString(),
-        x2: new Date(merged[i + 1].open).toISOString(),
-      });
-    }
-  }
-
-  const lastClose = merged[merged.length - 1].close;
-  if (lastClose < dayEndMs) {
-    zones.push({ x1: new Date(lastClose).toISOString(), x2: dayEndIso });
-  }
-
-  return zones;
+/** Snap a timestamp to the nearest 5-min tick aligned with the chart grid. */
+function snapToTick(ms: number, startMs: number, step = 5 * 60_000): string {
+  const snapped = startMs + Math.round((ms - startMs) / step) * step;
+  return new Date(snapped).toISOString();
 }
 
 function computeWeekendBands(points: ChartPoint[]): { x1: string; x2: string }[] {
@@ -507,16 +458,6 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
       endMs,
     };
   }, [range, sessionOverlays, debugDate]);
-
-  // ── Closed-market zones for 1D (not shown when crypto is in view) ──
-
-  const hasCryptoInView = assetFilter === "crypto" ||
-    (assetFilter === "all" && holdings.some((h) => h.assetType === "crypto"));
-
-  const closedZones = useMemo((): ClosedZone[] => {
-    if (range !== "1d" || !dayBounds || hasCryptoInView) return [];
-    return computeClosedZones(sessionOverlays, dayBounds.startIso, dayBounds.endIso);
-  }, [range, sessionOverlays, dayBounds, hasCryptoInView]);
 
   // ── Derive chart data ──
 
@@ -784,7 +725,9 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
     );
   }
 
-  const showMarketsClosedBanner = allMarketsClosed && !hasCryptoInView && range === "1d";
+  const showMarketsClosedBanner = allMarketsClosed && range === "1d" &&
+    assetFilter !== "crypto" &&
+    !(assetFilter === "all" && holdings.some((h) => h.assetType === "crypto"));
 
   return (
     <div className="card overflow-hidden relative">
@@ -803,9 +746,6 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
               </linearGradient>
               <pattern id="pv2-weekend" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
                 <line x1="0" y1="0" x2="0" y2="6" stroke="var(--weekend-hatch, rgba(148,163,184,0.08))" strokeWidth="2" />
-              </pattern>
-              <pattern id="pv2-closed-hatch" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
-                <line x1="0" y1="0" x2="0" y2="6" stroke="var(--closed-hatch, rgba(148,163,184,0.30))" strokeWidth="1.5" />
               </pattern>
             </defs>
 
@@ -863,11 +803,11 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
             ))}
 
             {/* Market session bands (1D) with staggered name labels */}
-            {sessionOverlays.map((s, i) => (
+            {dayBounds && sessionOverlays.map((s, i) => (
               <ReferenceArea
                 key={`session-${i}`}
-                x1={s.openDate.toISOString()}
-                x2={s.closeDate.toISOString()}
+                x1={snapToTick(s.openDate.getTime(), dayBounds.startMs)}
+                x2={snapToTick(s.closeDate.getTime(), dayBounds.startMs)}
                 fill={s.color}
                 fillOpacity={0.05}
                 ifOverflow="visible"
@@ -885,42 +825,22 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
             ))}
 
             {/* Session open/close vertical markers (1D) */}
-            {sessionOverlays.map((s) => (
+            {dayBounds && sessionOverlays.map((s) => (
               <ReferenceLine
                 key={`open-${s.name}`}
-                x={s.openDate.toISOString()}
+                x={snapToTick(s.openDate.getTime(), dayBounds.startMs)}
                 stroke={s.color}
                 strokeDasharray="3 3"
                 strokeOpacity={0.4}
               />
             ))}
-            {sessionOverlays.map((s) => (
+            {dayBounds && sessionOverlays.map((s) => (
               <ReferenceLine
                 key={`close-${s.name}`}
-                x={s.closeDate.toISOString()}
+                x={snapToTick(s.closeDate.getTime(), dayBounds.startMs)}
                 stroke="var(--axis, rgba(148,163,184,0.25))"
                 strokeDasharray="3 3"
                 strokeOpacity={0.25}
-              />
-            ))}
-
-            {/* Closed-market hatched zones (1D) */}
-            {closedZones.map((zone, i) => (
-              <ReferenceArea
-                key={`closed-${i}`}
-                x1={zone.x1}
-                x2={zone.x2}
-                fill="url(#pv2-closed-hatch)"
-                fillOpacity={1}
-                ifOverflow="visible"
-                label={closedZones.length <= 3 ? {
-                  value: "Market closed",
-                  position: "insideTop" as const,
-                  fill: "var(--closed-label, rgba(100,116,139,0.7))",
-                  fontSize: 10,
-                  fontWeight: 600,
-                  dy: 12,
-                } : undefined}
               />
             ))}
 
