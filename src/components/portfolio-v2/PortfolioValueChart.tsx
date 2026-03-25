@@ -478,10 +478,10 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
   }, [allMarketsClosed, relevantHoldings]);
 
   const sessionOverlays: ChartMarketSession[] = useMemo(() => {
-    if (range !== "1d" || holdings.length === 0) return [];
+    if (range !== "1d" || relevantHoldings.length === 0) return [];
     const refDay = debugDate ? new Date(debugDate + "T12:00:00") : new Date();
-    return getPortfolioMarketSessions(holdings, refDay);
-  }, [range, holdings, debugDate]);
+    return getPortfolioMarketSessions(relevantHoldings, refDay);
+  }, [range, relevantHoldings, debugDate]);
 
   // ── Full-day boundaries for 1D (earliest open → latest close) ──
 
