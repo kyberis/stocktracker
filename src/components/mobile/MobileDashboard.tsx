@@ -24,7 +24,10 @@ import CloverToLogo from "@/components/CloverToLogo";
 import { HeroSkeleton, ChartSkeleton } from "@/components/Skeleton";
 import type { Account } from "@/lib/types";
 
-const PortfolioValueChart = dynamic(() => import("@/components/portfolio-v2/PortfolioValueChart"), { ssr: false });
+const PortfolioValueChart = dynamic(() => import("@/components/portfolio-v2/PortfolioValueChart"), {
+  ssr: false,
+  loading: () => <div className="card rounded-xl h-[480px] animate-pulse bg-gray-50 dark:bg-white/[0.02]" />,
+});
 
 const PortfolioNewsFeed = dynamic(() => import("@/components/PortfolioNewsFeed"), { ssr: false });
 const TaxonomyView = dynamic(() => import("@/components/TaxonomyView"), { ssr: false });

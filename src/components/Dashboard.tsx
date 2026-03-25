@@ -115,7 +115,18 @@ export default function Dashboard() {
   return <DesktopDashboard />;
 }
 
-const DashboardPortfolioV2 = dynamic(() => import("./dashboard-v2/DashboardPortfolioV2"), { ssr: false });
+const DashboardPortfolioV2 = dynamic(() => import("./dashboard-v2/DashboardPortfolioV2"), {
+  ssr: false,
+  loading: () => (
+    <div className="space-y-4">
+      <div className="card rounded-xl h-[480px] animate-pulse bg-gray-50 dark:bg-white/[0.02]" />
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4">
+        <div className="card rounded-xl h-48 animate-pulse bg-gray-50 dark:bg-white/[0.02]" />
+        <div className="card rounded-xl h-48 animate-pulse bg-gray-50 dark:bg-white/[0.02]" />
+      </div>
+    </div>
+  ),
+});
 
 function DesktopDashboard() {
   const [showAddModal, setShowAddModal] = useState(false);

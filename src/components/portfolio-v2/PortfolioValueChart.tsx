@@ -743,6 +743,9 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
           </svg>
         </div>
+        {range === "1d" && <div className="min-h-[32px] border-t border-gray-100 dark:border-white/[0.04]" />}
+        <div className="min-h-[36px] border-t border-gray-100 dark:border-white/[0.04]" />
+        <div className="min-h-[32px] border-t border-gray-100 dark:border-white/[0.04]" />
       </div>
     );
   }
@@ -1017,9 +1020,9 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
         </ResponsiveContainer>
       </div>
 
-      {/* Market sessions bar (1D) */}
-      {range === "1d" && sessionOverlays.length > 0 && (
-        <div className="flex items-center gap-4 px-5 py-2 border-t border-gray-100 dark:border-white/[0.04] text-[11px] text-gray-500 dark:text-slate-500 overflow-x-auto">
+      {/* Market sessions bar (1D) — always reserve space to avoid layout shift */}
+      {range === "1d" && (
+        <div className="flex items-center gap-4 px-5 py-2 border-t border-gray-100 dark:border-white/[0.04] text-[11px] text-gray-500 dark:text-slate-500 overflow-x-auto min-h-[32px]">
           {sessionOverlays.map((s, i) => (
             <div key={i} className="flex items-center gap-1.5 whitespace-nowrap">
               <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: s.color }} />

@@ -42,7 +42,7 @@ export default function WeeklyDigestCard({ position = "default" }: WeeklyDigestC
       .finally(() => setLoading(false));
   }, [isPro, activePortfolioId, demoMode]);
 
-  if (loading) return null;
+  if (loading) return <div className="card rounded-2xl h-24 animate-pulse bg-gray-50 dark:bg-white/[0.02]" />;
 
   if (!isPro) {
     return (

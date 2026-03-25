@@ -16,22 +16,29 @@ import CompactReferralCard from "./CompactReferralCard";
 import OnboardingChecklist from "./OnboardingChecklist";
 import type { Holding, CashEntry } from "@/lib/types";
 
-const AssetBreakdownCards = dynamic(() => import("./AssetBreakdownCards"), { ssr: false });
-const AssetPerformanceTable = dynamic(() => import("./AssetPerformanceTable"), { ssr: false });
-const AllocationTabs = dynamic(() => import("./AllocationTabs"), { ssr: false });
+function CardSkeleton({ h = "h-24" }: { h?: string }) {
+  return <div className={`card rounded-xl ${h} animate-pulse bg-gray-50 dark:bg-white/[0.02]`} />;
+}
+function TableSkeleton() {
+  return <div className="card rounded-xl h-48 animate-pulse bg-gray-50 dark:bg-white/[0.02]" />;
+}
+
+const AssetBreakdownCards = dynamic(() => import("./AssetBreakdownCards"), { ssr: false, loading: () => <CardSkeleton h="h-20" /> });
+const AssetPerformanceTable = dynamic(() => import("./AssetPerformanceTable"), { ssr: false, loading: () => <TableSkeleton /> });
+const AllocationTabs = dynamic(() => import("./AllocationTabs"), { ssr: false, loading: () => <CardSkeleton h="h-48" /> });
 const GoalProgressCard = dynamic(() => import("./GoalProgressCard"), { ssr: false });
 const GoalPromptCard = dynamic(() => import("./GoalPromptCard"), { ssr: false });
-const CompactDividendCard = dynamic(() => import("./CompactDividendCard"), { ssr: false });
-const CompactEarningsCard = dynamic(() => import("./CompactEarningsCard"), { ssr: false });
-const PortfolioScoreCard = dynamic(() => import("./PortfolioScoreCard"), { ssr: false });
+const CompactDividendCard = dynamic(() => import("./CompactDividendCard"), { ssr: false, loading: () => <CardSkeleton /> });
+const CompactEarningsCard = dynamic(() => import("./CompactEarningsCard"), { ssr: false, loading: () => <CardSkeleton /> });
+const PortfolioScoreCard = dynamic(() => import("./PortfolioScoreCard"), { ssr: false, loading: () => <CardSkeleton /> });
 const PortfolioAiTrigger = dynamic(() => import("./PortfolioAiTrigger"), { ssr: false });
 const WeeklyDigestCard = dynamic(() => import("./WeeklyDigestCard"), { ssr: false });
 const PortfolioAiDrawer = dynamic(() => import("./PortfolioAiDrawer"), { ssr: false });
-const PortfolioTable = dynamic(() => import("../PortfolioTable"), { ssr: false });
-const PortfolioGrowthPeriods = dynamic(() => import("../PortfolioGrowthPeriods"), { ssr: false });
-const PerformanceMetrics = dynamic(() => import("../PerformanceMetrics"), { ssr: false });
-const MarketAndCash = dynamic(() => import("../MarketAndCash"), { ssr: false });
-const PortfolioProjection = dynamic(() => import("../PortfolioProjection"), { ssr: false });
+const PortfolioTable = dynamic(() => import("../PortfolioTable"), { ssr: false, loading: () => <TableSkeleton /> });
+const PortfolioGrowthPeriods = dynamic(() => import("../PortfolioGrowthPeriods"), { ssr: false, loading: () => <CardSkeleton /> });
+const PerformanceMetrics = dynamic(() => import("../PerformanceMetrics"), { ssr: false, loading: () => <CardSkeleton /> });
+const MarketAndCash = dynamic(() => import("../MarketAndCash"), { ssr: false, loading: () => <TableSkeleton /> });
+const PortfolioProjection = dynamic(() => import("../PortfolioProjection"), { ssr: false, loading: () => <CardSkeleton h="h-32" /> });
 const GoalCelebration = dynamic(() => import("../GoalCelebration"), { ssr: false });
 
 interface Props {

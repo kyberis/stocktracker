@@ -109,7 +109,9 @@ export default function OnboardingChecklist({ onOpenAddStock }: Props) {
     }
   }, []);
 
-  if (demoMode || loading || !data || data.dismissed || !user) return null;
+  if (demoMode || !user) return null;
+  if (loading) return <div className="card rounded-xl h-[52px] animate-pulse bg-gray-50 dark:bg-white/[0.02]" />;
+  if (!data || data.dismissed) return null;
 
   const completedCount = data.steps.filter((s) => s.completedAt).length;
   const total = data.steps.length;

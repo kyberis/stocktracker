@@ -50,7 +50,8 @@ export default function BackfillCTA({ holdingsCount, onComplete }: Props) {
     }
   }, [onComplete]);
 
-  if (!status || !status.needsBackfill || holdingsCount === 0) return null;
+  if (holdingsCount === 0 || (status && !status.needsBackfill)) return null;
+  if (!status) return null;
 
   const isEmptyHistory = (status.snapshotCount ?? 0) === 0;
 
