@@ -103,7 +103,9 @@ function densifyHourlyTimeline(raw: Point[], windowStartMs: number, windowEndMs:
     const v1 = sorted[i + 1].value;
     const inv0 = sorted[i].invested;
     const sv0 = sorted[i].stockValue;
+    const sv1 = sorted[i + 1].stockValue;
     const ev0 = sorted[i].etfValue;
+    const ev1 = sorted[i + 1].etfValue;
     const cv0 = sorted[i].cryptoValue;
     const cv1 = sorted[i + 1].cryptoValue;
     let t = t0 + HOUR_MS;
@@ -113,8 +115,8 @@ function densifyHourlyTimeline(raw: Point[], windowStartMs: number, windowEndMs:
         date: new Date(t).toISOString(),
         value: v0 + ratio * (v1 - v0),
         invested: inv0,
-        stockValue: sv0,
-        etfValue: ev0,
+        stockValue: sv0 + ratio * (sv1 - sv0),
+        etfValue: ev0 + ratio * (ev1 - ev0),
         cryptoValue: cv0 + ratio * (cv1 - cv0),
       });
       t += HOUR_MS;
@@ -145,7 +147,9 @@ function densifyFiveMinuteTimeline(raw: Point[], windowStartMs: number, windowEn
     const v1 = sorted[i + 1].value;
     const inv0 = sorted[i].invested;
     const sv0 = sorted[i].stockValue;
+    const sv1 = sorted[i + 1].stockValue;
     const ev0 = sorted[i].etfValue;
+    const ev1 = sorted[i + 1].etfValue;
     const cv0 = sorted[i].cryptoValue;
     const cv1 = sorted[i + 1].cryptoValue;
     let t = t0 + FIVE_MIN_MS;
@@ -155,8 +159,8 @@ function densifyFiveMinuteTimeline(raw: Point[], windowStartMs: number, windowEn
         date: new Date(t).toISOString(),
         value: v0 + ratio * (v1 - v0),
         invested: inv0,
-        stockValue: sv0,
-        etfValue: ev0,
+        stockValue: sv0 + ratio * (sv1 - sv0),
+        etfValue: ev0 + ratio * (ev1 - ev0),
         cryptoValue: cv0 + ratio * (cv1 - cv0),
       });
       t += FIVE_MIN_MS;

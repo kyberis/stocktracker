@@ -875,10 +875,10 @@ export default function PortfolioEvolutionChart({ embedded, compact, benchmarks,
     });
   })();
 
-  // For 1D, pad the timeline to end of day so the X-axis shows the full remaining day.
-  // Future slots have no value/pct — Recharts leaves them empty, signaling "still collecting".
+  // For 1D today, pad the timeline to end of day so the X-axis shows the full remaining day.
+  // Skip padding for past days — the data is already complete.
   const finalChartData = (() => {
-    if (range !== "1d" || mergedChartData.length === 0) return mergedChartData;
+    if (range !== "1d" || dayOffset > 0 || mergedChartData.length === 0) return mergedChartData;
     const lastDate = mergedChartData[mergedChartData.length - 1].date;
     const todayStr = lastDate.slice(0, 10);
     const lastMs = new Date(lastDate.replace(" ", "T")).getTime();
