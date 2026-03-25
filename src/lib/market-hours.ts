@@ -299,22 +299,35 @@ export function isAnyMarketActive(
 }
 
 const EXCHANGE_LABEL: Record<string, string> = {
-  NMS: "NASDAQ", NGM: "NASDAQ", NCM: "NASDAQ", NDQ: "NASDAQ", XNAS: "NASDAQ",
+  // US
+  NYSE: "NYSE", NMS: "NASDAQ", NGM: "NASDAQ", NCM: "NASDAQ", NDQ: "NASDAQ", NASDAQ: "NASDAQ", XNAS: "NASDAQ",
   NYQ: "NYSE", NSY: "NYSE", XNYS: "NYSE", ARCX: "NYSE Arca", NYSEARCA: "NYSE Arca", PCX: "NYSE Arca",
-  PNK: "OTC Markets", CCC: "NYSE", NYSEAMERICAN: "NYSE American",
+  PNK: "OTC Markets", CCC: "NYSE", NYSEAMERICAN: "NYSE American", AMEX: "NYSE American", XASE: "NYSE American",
+  BATS: "NYSE", BTS: "NYSE", OTC: "OTC Markets",
+  // Canada
+  TSE: "TSX", TOR: "TSX", XTSE: "TSX", XTSX: "TSX-V", CVE: "TSX-V", NEO: "TSX",
+  // UK
+  LSE: "LSE", LON: "LSE", IOB: "LSE", XLON: "LSE",
+  // Germany
   XET: "XETRA", GER: "XETRA", ETR: "XETRA", XETR: "XETRA",
   TGD: "Tradegate", TDG: "Tradegate", XGAT: "Tradegate",
   FRA: "Frankfurt", XFRA: "Frankfurt",
-  LON: "LSE", IOB: "LSE", XLON: "LSE",
-  TOR: "TSX", XTSE: "TSX", XTSX: "TSX-V",
+  // France / Euronext
   PAR: "Euronext", EPA: "Euronext", ENX: "Euronext", XPAR: "Euronext",
   AMS: "Euronext", XAMS: "Euronext", BRU: "Euronext", EBR: "Euronext", XBRU: "Euronext",
   LIS: "Euronext", XLIS: "Euronext",
-  MCE: "BME", XMAD: "BME",
+  // Spain
+  MCE: "BME", MAD: "BME", BME: "BME", XMAD: "BME",
+  // Italy
   MIL: "Borsa Italiana", BIT: "Borsa Italiana", XMIL: "Borsa Italiana",
+  // Switzerland
   SWX: "SIX", EBS: "SIX", XSWX: "SIX",
-  OMK: "OMX Copenhagen", XCSE: "OMX Copenhagen",
+  // Ireland
+  ISE: "Euronext Dublin",
+  // Nordic
+  CPH: "OMX Copenhagen", OMK: "OMX Copenhagen", XCSE: "OMX Copenhagen",
   XHEL: "OMX Helsinki", XSTO: "OMX Stockholm", XOSL: "Oslo Børs",
+  // Asia-Pacific
   TYO: "Tokyo SE", XTKS: "Tokyo SE",
   HKSE: "HKSE", XHKG: "HKSE",
   AX: "ASX", XASX: "ASX",

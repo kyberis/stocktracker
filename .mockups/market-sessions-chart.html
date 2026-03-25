@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Market Sessions on Portfolio Chart — Mockup</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --card-border: #334155;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent: #10b981;
+      --accent-light: rgba(16, 185, 129, 0.1);
+      --loss: #ef4444;
+      --grid: rgba(51, 65, 85, 0.4);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      padding: 32px;
+      min-height: 100vh;
+    }
+    .mockup-header {
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--card-border);
+    }
+    .mockup-header h1 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+    .mockup-header p {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .chart-title {
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .chart-controls {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .mode-toggle {
+      display: flex;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .mode-btn {
+      padding: 4px 10px;
+      font-size: 10px;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+    .mode-btn.active {
+      background: var(--accent);
+      color: white;
+    }
+    .mode-btn:not(.active) {
+      background: transparent;
+      color: var(--text-muted);
+    }
+    .range-pills {
+      display: flex;
+      gap: 4px;
+    }
+    .range-pill {
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 500;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+    .range-pill.active {
+      background: var(--accent);
+      color: white;
+      box-shadow: 0 1px 3px rgba(16, 185, 129, 0.3);
+    }
+    .range-pill:not(.active) {
+      background: var(--card-border);
+      color: var(--text-secondary);
+    }
+
+    .chart-subtitle {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .period-return {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .period-return .pct {
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .period-return .pct.negative { color: var(--loss); }
+    .period-return .pct.positive { color: var(--accent); }
+    .period-return .range-values {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Chart area */
+    .chart-container {
+      position: relative;
+      height: 220px;
+      margin: 0 -4px;
+    }
+    .chart-svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Market session bands */
+    .session-band {
+      opacity: 0.06;
+      transition: opacity 0.2s;
+    }
+    .session-band:hover {
+      opacity: 0.12;
+    }
+
+    /* Session labels at top of chart */
+    .session-label {
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      fill: var(--text-muted);
+      opacity: 0.7;
+    }
+    .session-label.open { fill: #10b981; opacity: 0.8; }
+    .session-label.closed { fill: #64748b; opacity: 0.5; }
+
+    /* Session open/close markers */
+    .session-marker-line {
+      stroke-dasharray: 3 3;
+      stroke-width: 1;
+      opacity: 0.35;
+    }
+    .session-marker-line.open { stroke: #10b981; }
+    .session-marker-line.close { stroke: #ef4444; opacity: 0.25; }
+
+    .session-icon {
+      font-size: 10px;
+    }
+
+    /* Market session legend */
+    .session-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(51, 65, 85, 0.4);
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+    .legend-swatch {
+      width: 20px;
+      height: 8px;
+      border-radius: 2px;
+      opacity: 0.5;
+    }
+    .legend-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+    .legend-line {
+      width: 16px;
+      height: 0;
+      border-top: 1.5px dashed;
+    }
+
+    /* Annotations section */
+    .annotations {
+      margin-top: 20px;
+    }
+    .annotations h3 {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+    }
+    .annotation-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .annotation-card {
+      background: rgba(51, 65, 85, 0.3);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 14px;
+    }
+    .annotation-card h4 {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .annotation-card p {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    .callout-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    /* Tooltip mockup */
+    .chart-tooltip {
+      position: absolute;
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+      pointer-events: none;
+      min-width: 180px;
+      z-index: 10;
+    }
+    .tooltip-time {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .tooltip-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 2px;
+    }
+    .tooltip-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .tooltip-label {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+    .tooltip-value {
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: auto;
+      font-variant-numeric: tabular-nums;
+    }
+    .tooltip-session {
+      margin-top: 6px;
+      padding-top: 6px;
+      border-top: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .tooltip-session-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+    }
+    .tooltip-session-text {
+      font-size: 9px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* Variant selector */
+    .variant-selector {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .variant-btn {
+      padding: 8px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 10px;
+      border: 1px solid var(--card-border);
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+      background: transparent;
+      color: var(--text-secondary);
+    }
+    .variant-btn.active {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+    .variant-btn:not(.active):hover {
+      border-color: var(--text-muted);
+    }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<div class="mockup-header">
+  <h1>Market Sessions on Portfolio Chart</h1>
+  <p>Interactive mockup — showing when markets open/close so users understand price movements</p>
+</div>
+
+<div class="variant-selector">
+  <button class="variant-btn active" onclick="showVariant('1d')">1D View (Intraday)</button>
+  <button class="variant-btn" onclick="showVariant('1w')">1W View</button>
+  <button class="variant-btn" onclick="showVariant('1m')">1M View</button>
+</div>
+
+<!-- ═══ VARIANT A: 1D Intraday ═══ -->
+<div id="variant-1d" class="card">
+  <div class="chart-header">
+    <div style="display:flex;align-items:center;gap:8px">
+      <span class="chart-title">Performance</span>
+    </div>
+    <div class="chart-controls">
+      <div class="mode-toggle">
+        <button class="mode-btn active">Value</button>
+        <button class="mode-btn">Performance</button>
+      </div>
+      <div class="range-pills">
+        <button class="range-pill active">1D</button>
+        <button class="range-pill">1W</button>
+        <button class="range-pill">1M</button>
+        <button class="range-pill">3M</button>
+        <button class="range-pill">6M</button>
+        <button class="range-pill">YTD</button>
+        <button class="range-pill">1Y</button>
+        <button class="range-pill">MAX</button>
+      </div>
+    </div>
+  </div>
+  <div class="chart-subtitle">Portfolio value vs invested capital over time</div>
+  <div class="period-return">
+    <span class="pct negative">-0.29%</span>
+    <span class="range-values">€8,503.32 → €8,478.42</span>
+  </div>
+
+  <div class="chart-container">
+    <!-- Tooltip positioned at a hover point -->
+    <div class="chart-tooltip" style="top: 60px; left: 380px;">
+      <div class="tooltip-time">24 Mar, 15:30</div>
+      <div class="tooltip-row">
+        <span class="tooltip-dot" style="background:#10b981"></span>
+        <span class="tooltip-label">Portfolio value</span>
+        <span class="tooltip-value" style="color:var(--text-primary)">€8,491.20</span>
+      </div>
+      <div class="tooltip-row">
+        <span class="tooltip-dot" style="background:#64748b"></span>
+        <span class="tooltip-label">Invested</span>
+        <span class="tooltip-value" style="color:var(--text-primary)">€8,200.00</span>
+      </div>
+      <div class="tooltip-session">
+        <span class="tooltip-session-dot" style="background:#10b981"></span>
+        <span class="tooltip-session-text">NYSE open · closes in 30m</span>
+      </div>
+      <div class="tooltip-session" style="border-top:none;margin-top:1px;padding-top:0">
+        <span class="tooltip-session-dot" style="background:#10b981"></span>
+        <span class="tooltip-session-text">XETRA open · closes in 2h</span>
+      </div>
+    </div>
+
+    <svg class="chart-svg" viewBox="0 0 780 220" preserveAspectRatio="none">
+      <!-- Background grid -->
+      <line x1="70" y1="10" x2="70" y2="195" stroke="rgba(51,65,85,0.3)" stroke-width="0.5"/>
+      <line x1="200" y1="10" x2="200" y2="195" stroke="rgba(51,65,85,0.3)" stroke-width="0.5"/>
+      <line x1="340" y1="10" x2="340" y2="195" stroke="rgba(51,65,85,0.3)" stroke-width="0.5"/>
+      <line x1="480" y1="10" x2="480" y2="195" stroke="rgba(51,65,85,0.3)" stroke-width="0.5"/>
+      <line x1="620" y1="10" x2="620" y2="195" stroke="rgba(51,65,85,0.3)" stroke-width="0.5"/>
+      <line x1="760" y1="10" x2="760" y2="195" stroke="rgba(51,65,85,0.3)" stroke-width="0.5"/>
+      <!-- Horizontal grid -->
+      <line x1="70" y1="50" x2="760" y2="50" stroke="rgba(51,65,85,0.25)" stroke-width="0.5"/>
+      <line x1="70" y1="100" x2="760" y2="100" stroke="rgba(51,65,85,0.25)" stroke-width="0.5"/>
+      <line x1="70" y1="150" x2="760" y2="150" stroke="rgba(51,65,85,0.25)" stroke-width="0.5"/>
+
+      <!-- ★ Market session background bands -->
+      <!-- XETRA 09:00-17:30 CET → mapped to chart x range -->
+      <rect x="70" y="10" width="530" height="185" rx="0" fill="#3b82f6" class="session-band"/>
+      <!-- NYSE 15:30-22:00 CET → mapped to chart x range -->
+      <rect x="415" y="10" width="345" height="185" rx="0" fill="#10b981" class="session-band"/>
+
+      <!-- ★ Session open/close dashed vertical markers -->
+      <!-- XETRA open 09:00 -->
+      <line x1="70" y1="10" x2="70" y2="195" class="session-marker-line open"/>
+      <!-- NYSE open 15:30 -->
+      <line x1="415" y1="10" x2="415" y2="195" class="session-marker-line open"/>
+      <!-- XETRA close 17:30 -->
+      <line x1="540" y1="10" x2="540" y2="195" class="session-marker-line close"/>
+
+      <!-- ★ Session labels at top -->
+      <text x="75" y="22" class="session-label open" font-size="8">▸ XETRA 09:00</text>
+      <text x="420" y="22" class="session-label open" font-size="8">▸ NYSE 15:30</text>
+      <text x="545" y="22" class="session-label closed" font-size="8">◼ XETRA 17:30</text>
+
+      <!-- Y-axis labels -->
+      <text x="64" y="54" text-anchor="end" fill="#64748b" font-size="10" font-family="Inter">€8,550</text>
+      <text x="64" y="104" text-anchor="end" fill="#64748b" font-size="10" font-family="Inter">€8,500</text>
+      <text x="64" y="154" text-anchor="end" fill="#64748b" font-size="10" font-family="Inter">€8,450</text>
+
+      <!-- X-axis time labels -->
+      <text x="70" y="210" text-anchor="middle" fill="#64748b" font-size="10" font-family="Inter">09:00</text>
+      <text x="160" y="210" text-anchor="middle" fill="#64748b" font-size="10" font-family="Inter">11:00</text>
+      <text x="250" y="210" text-anchor="middle" fill="#64748b" font-size="10" font-family="Inter">13:00</text>
+      <text x="340" y="210" text-anchor="middle" fill="#64748b" font-size="10" font-family="Inter">15:00</text>
+      <text x="480" y="210" text-anchor="middle" fill="#64748b" font-size="10" font-family="Inter">17:00</text>
+      <text x="620" y="210" text-anchor="middle" fill="#64748b" font-size="10" font-family="Inter">19:00</text>
+      <text x="740" y="210" text-anchor="middle" fill="#64748b" font-size="10" font-family="Inter">21:00</text>
+
+      <!-- Invested capital dashed line -->
+      <line x1="70" y1="130" x2="680" y2="130" stroke="#64748b" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.5"/>
+
+      <!-- Portfolio value area gradient -->
+      <defs>
+        <linearGradient id="areaGrad1d" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ef4444" stop-opacity="0.15"/>
+          <stop offset="100%" stop-color="#ef4444" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+
+      <!-- Area fill -->
+      <path d="M70,65 L100,58 L130,52 L160,60 L190,72 L220,78 L250,85 L280,75 L310,82 L340,90 L370,95 L400,88 L415,92 L430,98 L460,105 L490,108 L520,102 L540,110 L560,115 L590,120 L620,118 L650,125 L680,128 L680,195 L70,195 Z" fill="url(#areaGrad1d)"/>
+
+      <!-- Line -->
+      <path d="M70,65 L100,58 L130,52 L160,60 L190,72 L220,78 L250,85 L280,75 L310,82 L340,90 L370,95 L400,88 L415,92 L430,98 L460,105 L490,108 L520,102 L540,110 L560,115 L590,120 L620,118 L650,125 L680,128" fill="none" stroke="#ef4444" stroke-width="2"/>
+
+      <!-- Hover crosshair at ~15:30 -->
+      <line x1="415" y1="92" x2="415" y2="195" stroke="#94a3b8" stroke-width="0.5" stroke-dasharray="2 2" opacity="0.5"/>
+      <circle cx="415" cy="92" r="4" fill="#ef4444" stroke="#1e293b" stroke-width="2"/>
+    </svg>
+  </div>
+
+  <!-- Session legend -->
+  <div class="session-legend">
+    <div class="legend-item">
+      <span class="legend-swatch" style="background:#3b82f6"></span>
+      XETRA (09:00–17:30)
+    </div>
+    <div class="legend-item">
+      <span class="legend-swatch" style="background:#10b981"></span>
+      NYSE (15:30–22:00)
+    </div>
+    <div class="legend-item">
+      <span class="legend-line" style="border-color:#10b981"></span>
+      Market opens
+    </div>
+    <div class="legend-item">
+      <span class="legend-line" style="border-color:#ef4444;opacity:0.5"></span>
+      Market closes
+    </div>
+  </div>
+</div>
+
+<!-- ═══ VARIANT B: 1W View ═══ -->
+<div id="variant-1w" class="card hidden">
+  <div class="chart-header">
+    <div style="display:flex;align-items:center;gap:8px">
+      <span class="chart-title">Performance</span>
+    </div>
+    <div class="chart-controls">
+      <div class="mode-toggle">
+        <button class="mode-btn active">Value</button>
+        <button class="mode-btn">Performance</button>
+      </div>
+      <div class="range-pills">
+        <button class="range-pill">1D</button>
+        <button class="range-pill active">1W</button>
+        <button class="range-pill">1M</button>
+        <button class="range-pill">3M</button>
+        <button class="range-pill">6M</button>
+        <button class="range-pill">YTD</button>
+        <button class="range-pill">1Y</button>
+        <button class="range-pill">MAX</button>
+      </div>
+    </div>
+  </div>
+  <div class="chart-subtitle">Portfolio value vs invested capital over time</div>
+  <div class="period-return">
+    <span class="pct positive">+1.47%</span>
+    <span class="range-values">€8,355.10 → €8,478.42</span>
+  </div>
+
+  <div class="chart-container">
+    <svg class="chart-svg" viewBox="0 0 780 220" preserveAspectRatio="none">
+      <!-- Horizontal grid -->
+      <line x1="70" y1="50" x2="760" y2="50" stroke="rgba(51,65,85,0.25)" stroke-width="0.5"/>
+      <line x1="70" y1="100" x2="760" y2="100" stroke="rgba(51,65,85,0.25)" stroke-width="0.5"/>
+      <line x1="70" y1="150" x2="760" y2="150" stroke="rgba(51,65,85,0.25)" stroke-width="0.5"/>
+
+      <!-- ★ Trading days as session bands, weekends as gaps -->
+      <!-- Mon 17 -->
+      <rect x="70" y="10" width="120" height="185" fill="#3b82f6" opacity="0.04"/>
+      <!-- Tue 18 -->
+      <rect x="190" y="10" width="120" height="185" fill="#3b82f6" opacity="0.04"/>
+      <!-- Wed 19 -->
+      <rect x="310" y="10" width="120" height="185" fill="#3b82f6" opacity="0.04"/>
+      <!-- Thu 20 -->
+      <rect x="430" y="10" width="120" height="185" fill="#3b82f6" opacity="0.04"/>
+      <!-- Fri 21 -->
+      <rect x="550" y="10" width="120" height="185" fill="#3b82f6" opacity="0.04"/>
+      <!-- Weekend gap (Sat-Sun) shown as darker -->
+      <rect x="670" y="10" width="60" height="185" fill="#0f172a" opacity="0.3" rx="4"/>
+      <!-- Mon 24 (today, partial) -->
+      <rect x="730" y="10" width="30" height="185" fill="#10b981" opacity="0.04"/>
+
+      <!-- Weekend label -->
+      <text x="700" y="105" text-anchor="middle" fill="#475569" font-size="9" font-family="Inter" font-weight="500" transform="rotate(-90, 700, 105)">WEEKEND</text>
+
+      <!-- Day labels -->
+      <text x="130" y="210" text-anchor="middle" fill="#64748b" font-size="10" font-family="Inter">Mon 17</text>
+      <text x="250" y="210" text-anchor="middle" fill="#64748b" font-size="10" font-family="Inter">Tue 18</text>
+      <text x="370" y="210" text-anchor="middle" fill="#64748b" font-size="10" font-family="Inter">Wed 19</text>
+      <text x="490" y="210" text-anchor="middle" fill="#64748b" font-size="10" font-family="Inter">Thu 20</text>
+      <text x="610" y="210" text-anchor="middle" fill="#64748b" font-size="10" font-family="Inter">Fri 21</text>
+      <text x="745" y="210" text-anchor="middle" fill="#10b981" font-size="10" font-family="Inter" font-weight="600">Today</text>
+
+      <!-- Y-axis labels -->
+      <text x="64" y="54" text-anchor="end" fill="#64748b" font-size="10" font-family="Inter">€8,550</text>
+      <text x="64" y="104" text-anchor="end" fill="#64748b" font-size="10" font-family="Inter">€8,450</text>
+      <text x="64" y="154" text-anchor="end" fill="#64748b" font-size="10" font-family="Inter">€8,350</text>
+
+      <!-- Invested capital -->
+      <line x1="70" y1="120" x2="750" y2="120" stroke="#64748b" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.4"/>
+
+      <!-- Area gradient -->
+      <defs>
+        <linearGradient id="areaGrad1w" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#10b981" stop-opacity="0.15"/>
+          <stop offset="100%" stop-color="#10b981" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+
+      <!-- Area fill -->
+      <path d="M70,155 L130,148 L190,140 L250,132 L310,128 L370,108 L430,100 L490,95 L550,88 L610,80 L670,80 L730,70 L750,65 L750,195 L70,195 Z" fill="url(#areaGrad1w)"/>
+
+      <!-- Line -->
+      <path d="M70,155 L130,148 L190,140 L250,132 L310,128 L370,108 L430,100 L490,95 L550,88 L610,80 L670,80 L730,70 L750,65" fill="none" stroke="#10b981" stroke-width="2"/>
+    </svg>
+  </div>
+
+  <div class="session-legend">
+    <div class="legend-item">
+      <span class="legend-swatch" style="background:#3b82f6"></span>
+      Trading days
+    </div>
+    <div class="legend-item">
+      <span class="legend-swatch" style="background:#0f172a;border:1px solid #334155"></span>
+      Weekend (markets closed)
+    </div>
+    <div class="legend-item">
+      <span class="legend-swatch" style="background:#10b981"></span>
+      Today
+    </div>
+  </div>
+</div>
+
+<!-- ═══ VARIANT C: 1M View ═══ -->
+<div id="variant-1m" class="card hidden">
+  <div class="chart-header">
+    <div style="display:flex;align-items:center;gap:8px">
+      <span class="chart-title">Performance</span>
+    </div>
+    <div class="chart-controls">
+      <div class="mode-toggle">
+        <button class="mode-btn active">Value</button>
+        <button class="mode-btn">Performance</button>
+      </div>
+      <div class="range-pills">
+        <button class="range-pill">1D</button>
+        <button class="range-pill">1W</button>
+        <button class="range-pill active">1M</button>
+        <button class="range-pill">3M</button>
+        <button class="range-pill">6M</button>
+        <button class="range-pill">YTD</button>
+        <button class="range-pill">1Y</button>
+        <button class="range-pill">MAX</button>
+      </div>
+    </div>
+  </div>
+  <div class="chart-subtitle">Portfolio value vs invested capital over time</div>
+  <div class="period-return">
+    <span class="pct positive">+3.82%</span>
+    <span class="range-values">€8,166.00 → €8,478.42</span>
+  </div>
+
+  <div class="chart-container">
+    <svg class="chart-svg" viewBox="0 0 780 220" preserveAspectRatio="none">
+      <!-- Horizontal grid -->
+      <line x1="70" y1="50" x2="760" y2="50" stroke="rgba(51,65,85,0.25)" stroke-width="0.5"/>
+      <line x1="70" y1="100" x2="760" y2="100" stroke="rgba(51,65,85,0.25)" stroke-width="0.5"/>
+      <line x1="70" y1="150" x2="760" y2="150" stroke="rgba(51,65,85,0.25)" stroke-width="0.5"/>
+
+      <!-- ★ Weekend bands (subtle) -->
+      <!-- Weekend 1: Mar 1-2 -->
+      <rect x="100" y="10" width="28" height="185" fill="#0f172a" opacity="0.25" rx="2"/>
+      <!-- Weekend 2: Mar 8-9 -->
+      <rect x="240" y="10" width="28" height="185" fill="#0f172a" opacity="0.25" rx="2"/>
+      <!-- Weekend 3: Mar 15-16 -->
+      <rect x="380" y="10" width="28" height="185" fill="#0f172a" opacity="0.25" rx="2"/>
+      <!-- Weekend 4: Mar 22-23 -->
+      <rect x="520" y="10" width="28" height="185" fill="#0f172a" opacity="0.25" rx="2"/>
+
+      <!-- Day labels -->
+      <text x="85" y="210" text-anchor="middle" fill="#64748b" font-size="10" font-family="Inter">28 Feb</text>
+      <text x="200" y="210" text-anchor="middle" fill="#64748b" font-size="10" font-family="Inter">5 Mar</text>
+      <text x="335" y="210" text-anchor="middle" fill="#64748b" font-size="10" font-family="Inter">12 Mar</text>
+      <text x="470" y="210" text-anchor="middle" fill="#64748b" font-size="10" font-family="Inter">17 Mar</text>
+      <text x="605" y="210" text-anchor="middle" fill="#64748b" font-size="10" font-family="Inter">21 Mar</text>
+      <text x="740" y="210" text-anchor="middle" fill="#10b981" font-size="10" font-family="Inter" font-weight="600">24 Mar</text>
+
+      <!-- Y-axis labels -->
+      <text x="64" y="54" text-anchor="end" fill="#64748b" font-size="10" font-family="Inter">€8,550</text>
+      <text x="64" y="104" text-anchor="end" fill="#64748b" font-size="10" font-family="Inter">€8,350</text>
+      <text x="64" y="154" text-anchor="end" fill="#64748b" font-size="10" font-family="Inter">€8,150</text>
+
+      <!-- Invested capital -->
+      <line x1="70" y1="110" x2="750" y2="110" stroke="#64748b" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.4"/>
+
+      <!-- Area gradient -->
+      <defs>
+        <linearGradient id="areaGrad1m" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#10b981" stop-opacity="0.15"/>
+          <stop offset="100%" stop-color="#10b981" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+
+      <!-- Area fill -->
+      <path d="M70,160 L100,155 L128,152 L168,145 L200,135 L240,130 L268,120 L310,115 L335,105 L380,108 L408,95 L440,88 L470,82 L520,90 L548,78 L580,72 L605,65 L640,60 L680,55 L720,50 L750,48 L750,195 L70,195 Z" fill="url(#areaGrad1m)"/>
+
+      <!-- Line -->
+      <path d="M70,160 L100,155 L128,152 L168,145 L200,135 L240,130 L268,120 L310,115 L335,105 L380,108 L408,95 L440,88 L470,82 L520,90 L548,78 L580,72 L605,65 L640,60 L680,55 L720,50 L750,48" fill="none" stroke="#10b981" stroke-width="2"/>
+    </svg>
+  </div>
+
+  <div class="session-legend">
+    <div class="legend-item">
+      <span class="legend-swatch" style="background:#0f172a;border:1px solid #334155"></span>
+      Weekends (closed)
+    </div>
+    <div class="legend-item" style="font-size:10px;color:#64748b">
+      Hover any point for active markets at that time
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Design Annotations ═══ -->
+<div class="annotations">
+  <h3>Design Decisions & Interactions</h3>
+  <div class="annotation-grid">
+    <div class="annotation-card">
+      <h4><span class="callout-number">1</span> Session Background Bands</h4>
+      <p>
+        Subtle colored bands show when each market is in session. XETRA = blue, NYSE = green.
+        Colors come from the existing market status system. Opacity is very low (6%) to avoid
+        competing with the chart line — increases to 12% on hover.
+      </p>
+    </div>
+    <div class="annotation-card">
+      <h4><span class="callout-number">2</span> Open/Close Dashed Lines</h4>
+      <p>
+        Vertical dashed lines mark the exact open (green) and close (red, faded) times.
+        Small labels at the top show market name + time. Only shown on 1D view where
+        intraday precision matters.
+      </p>
+    </div>
+    <div class="annotation-card">
+      <h4><span class="callout-number">3</span> Tooltip Enhancement</h4>
+      <p>
+        The existing tooltip gains a new "market session" section at the bottom showing
+        which markets are open at the hovered time, with a green/red dot and how long
+        until they close. Reuses the existing <code>getMarketStatus()</code> logic.
+      </p>
+    </div>
+    <div class="annotation-card">
+      <h4><span class="callout-number">4</span> Range-Adaptive Display</h4>
+      <p>
+        <strong>1D:</strong> Full session bands + open/close markers + tooltip sessions.<br/>
+        <strong>1W:</strong> Trading day bands + weekend gaps (labeled "WEEKEND").<br/>
+        <strong>1M+:</strong> Only weekend bands as thin gray strips. Tooltip still shows market status.
+        This avoids visual clutter on wider time ranges.
+      </p>
+    </div>
+    <div class="annotation-card">
+      <h4><span class="callout-number">5</span> Session Legend</h4>
+      <p>
+        A compact legend below the chart identifies each market's color. Only shows markets
+        that the user's portfolio actually trades on (derived from holding exchanges).
+        Auto-hides when only one market or when range > 1M.
+      </p>
+    </div>
+    <div class="annotation-card">
+      <h4><span class="callout-number">6</span> Data Source</h4>
+      <p>
+        Market open/close times come from the existing <code>market-hours.ts</code> module
+        which already maps every exchange code to schedules. No new API calls needed —
+        times are computed client-side from holdings' exchange codes and converted to
+        the user's local timezone.
+      </p>
+    </div>
+  </div>
+</div>
+
+<script>
+  function showVariant(id) {
+    document.querySelectorAll('.variant-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('[id^="variant-"]').forEach(el => el.classList.add('hidden'));
+    document.getElementById('variant-' + id).classList.remove('hidden');
+    event.target.classList.add('active');
+  }
+</script>
+
+</body>
+</html>

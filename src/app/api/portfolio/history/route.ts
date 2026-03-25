@@ -170,7 +170,7 @@ function densifyFiveMinuteTimeline(raw: Point[], windowStartMs: number, windowEn
   return clipPointsToWindow(out, windowStartMs, windowEndMs);
 }
 
-/** 1D → five-minute. 1W, 1M, YTD, 1Y → hourly. MAX (all): hourly if span ≤ ~1 year, else weekly. */
+/** 1D → five-minute. 1W/1M/3M → hourly (best-available). 6M/1Y → weekly. YTD → adaptive. */
 function resolveGranularity(range: string, rawPoints: Point[]): Granularity {
   if (range === "all") {
     if (rawPoints.length < 2) return "hourly";
@@ -186,9 +186,19 @@ function resolveGranularity(range: string, rawPoints: Point[]): Granularity {
       return "five-minute";
     case "1w":
     case "1m":
-    case "ytd":
-    case "1y":
+    case "3m":
       return "hourly";
+    case "ytd": {
+      const daysSinceJan1 = Math.floor(
+        (Date.now() - new Date(`${new Date().getFullYear()}-01-01`).getTime()) / 86400000,
+      );
+      if (daysSinceJan1 <= 7) return "five-minute";
+      if (daysSinceJan1 <= 180) return "hourly";
+      return "weekly";
+    }
+    case "6m":
+    case "1y":
+      return "weekly";
     default:
       return "weekly";
   }
@@ -280,7 +290,9 @@ export const GET = withMetrics("/api/portfolio/history", async (req: NextRequest
     }
   } else if (range === "1d") {
     const dateParam = url.searchParams.get("date");
-    targetDay1d = dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam) ? dateParam : todayDateString();
+    const isAdmin = session.role === "admin";
+    const requestedDate = dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam) ? dateParam : null;
+    targetDay1d = (isAdmin && requestedDate) ? requestedDate : todayDateString();
     const td = new Date(targetDay1d + "T00:00:00Z");
     td.setUTCDate(td.getUTCDate() - 1);
     const dayBefore = td.toISOString().slice(0, 10);

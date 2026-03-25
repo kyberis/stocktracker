@@ -2472,6 +2472,28 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       }
     },
   },
+  {
+    version: 80,
+    description: "Create yahoo_historical_cache table for permanent historical price storage",
+    up: async (client: Client) => {
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS yahoo_historical_cache (
+          symbol TEXT NOT NULL,
+          date TEXT NOT NULL,
+          open REAL NOT NULL DEFAULT 0,
+          high REAL NOT NULL DEFAULT 0,
+          low REAL NOT NULL DEFAULT 0,
+          close REAL NOT NULL DEFAULT 0,
+          volume REAL NOT NULL DEFAULT 0,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          PRIMARY KEY (symbol, date)
+        )
+      `);
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_yhc_symbol ON yahoo_historical_cache (symbol)"
+      );
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

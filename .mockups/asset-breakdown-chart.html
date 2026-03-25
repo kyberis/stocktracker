@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Portfolio Value by Asset Type — Mockup</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0f172a;
+    --fg: #f1f5f9;
+    --card: #1e293b;
+    --card-hover: #334155;
+    --border: #334155;
+    --muted: #94a3b8;
+    --gain: #10b981;
+    --loss: #ef4444;
+    --accent: #10b981;
+    --stock-color: #6366f1;
+    --etf-color: #f59e0b;
+    --crypto-color: #ec4899;
+    --all-color: #10b981;
+    --radius: 12px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: 'Outfit', -apple-system, sans-serif;
+    min-height: 100vh;
+    padding: 24px;
+  }
+
+  .mockup-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    background: rgba(99, 102, 241, 0.15);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #a5b4fc;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .mockup-badge::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #818cf8;
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .card {
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  /* Hero section */
+  .hero-header {
+    padding: 20px 24px 12px;
+  }
+
+  .hero-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #64748b;
+    margin-bottom: 4px;
+  }
+
+  .hero-value {
+    font-size: 2.5rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #fff;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .hero-change-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+
+  .day-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 20px;
+  }
+
+  .day-badge.positive {
+    background: rgba(16, 185, 129, 0.1);
+    color: #34d399;
+  }
+
+  .day-badge.negative {
+    background: rgba(239, 68, 68, 0.1);
+    color: #f87171;
+  }
+
+  .total-change {
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .total-change.positive { color: #34d399; }
+  .total-change.negative { color: #f87171; }
+
+  /* Segmented control for view mode */
+  .view-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 24px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .segment-group {
+    display: flex;
+    background: rgba(255,255,255,0.04);
+    border-radius: 10px;
+    padding: 3px;
+    gap: 2px;
+  }
+
+  .segment-btn {
+    font-family: 'Outfit', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: transparent;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .segment-btn:hover {
+    color: var(--fg);
+    background: rgba(255,255,255,0.06);
+  }
+
+  .segment-btn.active {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  }
+
+  .segment-btn .dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-right: 5px;
+    vertical-align: middle;
+  }
+
+  /* Asset type pills */
+  .asset-pills {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .asset-pill {
+    font-family: 'Outfit', sans-serif;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: transparent;
+    color: var(--muted);
+  }
+
+  .asset-pill:hover {
+    border-color: rgba(255,255,255,0.15);
+    color: var(--fg);
+  }
+
+  .asset-pill.active {
+    border-color: transparent;
+  }
+
+  .asset-pill.active[data-type="all"] {
+    background: rgba(16, 185, 129, 0.12);
+    color: #34d399;
+    border-color: rgba(16, 185, 129, 0.3);
+  }
+  .asset-pill.active[data-type="stock"] {
+    background: rgba(99, 102, 241, 0.12);
+    color: #a5b4fc;
+    border-color: rgba(99, 102, 241, 0.3);
+  }
+  .asset-pill.active[data-type="etf"] {
+    background: rgba(245, 158, 11, 0.12);
+    color: #fbbf24;
+    border-color: rgba(245, 158, 11, 0.3);
+  }
+  .asset-pill.active[data-type="crypto"] {
+    background: rgba(236, 72, 153, 0.12);
+    color: #f472b6;
+    border-color: rgba(236, 72, 153, 0.3);
+  }
+
+  .asset-pill .pill-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* Chart area */
+  .chart-container {
+    padding: 4px 16px 12px;
+    height: 320px;
+    position: relative;
+  }
+
+  /* Time range selector */
+  .range-row {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    padding: 6px 24px 16px;
+  }
+
+  .range-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    background: transparent;
+    color: var(--muted);
+  }
+
+  .range-btn:hover {
+    color: var(--fg);
+    background: rgba(255,255,255,0.06);
+  }
+
+  .range-btn.active {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+  }
+
+  /* Breakdown cards */
+  .breakdown-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    padding: 0 24px 20px;
+  }
+
+  .breakdown-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .breakdown-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px;
+    height: 100%;
+    border-radius: 0 2px 2px 0;
+  }
+
+  .breakdown-card[data-type="stock"]::before { background: var(--stock-color); }
+  .breakdown-card[data-type="etf"]::before { background: var(--etf-color); }
+  .breakdown-card[data-type="crypto"]::before { background: var(--crypto-color); }
+
+  .breakdown-card:hover {
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.12);
+    transform: translateY(-1px);
+  }
+
+  .breakdown-card .bc-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  .breakdown-card .bc-type {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .breakdown-card .bc-pct-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 6px;
+  }
+
+  .breakdown-card .bc-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+
+  .breakdown-card .bc-change {
+    font-size: 12px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .breakdown-card .bc-alloc {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .alloc-bar {
+    flex: 1;
+    height: 3px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .alloc-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.5s ease;
+  }
+
+  /* Performance comparison section */
+  .perf-section {
+    margin-top: 16px;
+  }
+
+  .perf-section .card {
+    padding: 20px 24px;
+  }
+
+  .perf-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .perf-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+  }
+
+  .perf-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .perf-table th {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    text-align: left;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .perf-table th:not(:first-child) { text-align: right; }
+
+  .perf-table td {
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    font-size: 13px;
+  }
+
+  .perf-table td:not(:first-child) {
+    text-align: right;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .perf-table .type-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+  }
+
+  .type-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .positive { color: #34d399; }
+  .negative { color: #f87171; }
+
+  /* Footer info */
+  .footer-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 24px;
+    border-top: 1px solid rgba(255,255,255,0.04);
+  }
+
+  .sync-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #64748b;
+  }
+
+  .sync-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--gain);
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+
+  /* Annotations */
+  .annotation {
+    margin-top: 24px;
+    padding: 16px 20px;
+    background: rgba(99, 102, 241, 0.06);
+    border: 1px dashed rgba(99, 102, 241, 0.25);
+    border-radius: 10px;
+    font-size: 13px;
+    color: #a5b4fc;
+    line-height: 1.6;
+  }
+
+  .annotation strong {
+    color: #c7d2fe;
+  }
+
+  .annotation ul {
+    margin: 8px 0 0 16px;
+    list-style: disc;
+  }
+
+  .annotation li {
+    margin-bottom: 4px;
+  }
+
+  /* Mode toggle (value / performance) */
+  .mode-toggle {
+    display: flex;
+    background: rgba(255,255,255,0.04);
+    border-radius: 8px;
+    padding: 2px;
+  }
+
+  .mode-btn {
+    font-family: 'Outfit', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    background: transparent;
+    color: var(--muted);
+  }
+
+  .mode-btn:hover { color: var(--fg); }
+  .mode-btn.active {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+  }
+
+  /* Stacked view legend */
+  .stacked-legend {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 0 24px 8px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .legend-dot {
+    width: 10px;
+    height: 3px;
+    border-radius: 2px;
+  }
+
+  @media (max-width: 640px) {
+    body { padding: 12px; }
+    .hero-value { font-size: 1.75rem; }
+    .breakdown-grid { grid-template-columns: 1fr; }
+    .chart-container { height: 240px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="mockup-badge">Interactive Mockup — Portfolio by Asset Type</div>
+
+<!-- Main chart card -->
+<div class="card" id="main-card">
+  <!-- Hero header -->
+  <div class="hero-header">
+    <p class="hero-label">Portfolio Value</p>
+    <p class="hero-value" id="hero-value">€47,832.14</p>
+    <div class="hero-change-row">
+      <span class="day-badge positive" id="day-badge">+€312.45 (+0.66%)</span>
+      <span class="total-change positive" id="total-change">+14.2% total gain/loss</span>
+    </div>
+  </div>
+
+  <!-- View controls: asset filter + mode toggle -->
+  <div class="view-controls">
+    <div class="asset-pills" id="asset-pills">
+      <button class="asset-pill active" data-type="all" onclick="setFilter('all')">
+        <span class="pill-dot" style="background: var(--all-color)"></span>
+        All Assets
+      </button>
+      <button class="asset-pill" data-type="stock" onclick="setFilter('stock')">
+        <span class="pill-dot" style="background: var(--stock-color)"></span>
+        Stocks
+      </button>
+      <button class="asset-pill" data-type="etf" onclick="setFilter('etf')">
+        <span class="pill-dot" style="background: var(--etf-color)"></span>
+        ETFs
+      </button>
+      <button class="asset-pill" data-type="crypto" onclick="setFilter('crypto')">
+        <span class="pill-dot" style="background: var(--crypto-color)"></span>
+        Crypto
+      </button>
+    </div>
+    <div class="mode-toggle">
+      <button class="mode-btn active" id="mode-value" onclick="setMode('value')">Value</button>
+      <button class="mode-btn" id="mode-perf" onclick="setMode('performance')">Performance</button>
+    </div>
+  </div>
+
+  <!-- Stacked legend (shown when "All" + value mode) -->
+  <div class="stacked-legend" id="stacked-legend">
+    <span class="legend-item"><span class="legend-dot" style="background: var(--stock-color)"></span> Stocks</span>
+    <span class="legend-item"><span class="legend-dot" style="background: var(--etf-color)"></span> ETFs</span>
+    <span class="legend-item"><span class="legend-dot" style="background: var(--crypto-color)"></span> Crypto</span>
+  </div>
+
+  <!-- Chart -->
+  <div class="chart-container">
+    <canvas id="mainChart"></canvas>
+  </div>
+
+  <!-- Time range -->
+  <div class="range-row" id="range-row">
+    <button class="range-btn" onclick="setRange('1D')">1D</button>
+    <button class="range-btn" onclick="setRange('1W')">1W</button>
+    <button class="range-btn active" onclick="setRange('1M')">1M</button>
+    <button class="range-btn" onclick="setRange('3M')">3M</button>
+    <button class="range-btn" onclick="setRange('6M')">6M</button>
+    <button class="range-btn" onclick="setRange('YTD')">YTD</button>
+    <button class="range-btn" onclick="setRange('1Y')">1Y</button>
+    <button class="range-btn" onclick="setRange('MAX')">MAX</button>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer-row">
+    <div class="sync-info">
+      <span class="sync-dot"></span>
+      Last synced 2m ago
+    </div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <button style="font-family:'Outfit';font-size:11px;font-weight:600;border:1px solid var(--border);border-radius:8px;padding:5px 12px;background:transparent;color:var(--muted);cursor:pointer">
+        ⇅ Compare
+      </button>
+      <button style="font-family:'Outfit';font-size:11px;font-weight:600;border:none;background:transparent;color:#a78bfa;cursor:pointer">
+        ✦ Ask AI
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Breakdown cards -->
+<div class="breakdown-grid" id="breakdown-cards" style="margin-top: 16px;">
+  <div class="breakdown-card" data-type="stock" onclick="setFilter('stock')">
+    <div class="bc-header">
+      <span class="bc-type">Stocks</span>
+      <span class="bc-pct-badge positive" style="background:rgba(16,185,129,0.1)">+11.3%</span>
+    </div>
+    <div class="bc-value">€28,415.20</div>
+    <div class="bc-change">
+      <span class="positive">+€187.30 today</span>
+      <span style="color:var(--muted)">·</span>
+      <span class="positive">+€2,883.12 total</span>
+    </div>
+    <div class="bc-alloc">
+      59.4% of portfolio
+      <div class="alloc-bar"><div class="alloc-bar-fill" style="width:59.4%;background:var(--stock-color)"></div></div>
+    </div>
+  </div>
+  <div class="breakdown-card" data-type="etf" onclick="setFilter('etf')">
+    <div class="bc-header">
+      <span class="bc-type">ETFs</span>
+      <span class="bc-pct-badge positive" style="background:rgba(16,185,129,0.1)">+18.7%</span>
+    </div>
+    <div class="bc-value">€13,296.52</div>
+    <div class="bc-change">
+      <span class="positive">+€78.95 today</span>
+      <span style="color:var(--muted)">·</span>
+      <span class="positive">+€2,093.48 total</span>
+    </div>
+    <div class="bc-alloc">
+      27.8% of portfolio
+      <div class="alloc-bar"><div class="alloc-bar-fill" style="width:27.8%;background:var(--etf-color)"></div></div>
+    </div>
+  </div>
+  <div class="breakdown-card" data-type="crypto" onclick="setFilter('crypto')">
+    <div class="bc-header">
+      <span class="bc-type">Crypto</span>
+      <span class="bc-pct-badge negative" style="background:rgba(239,68,68,0.1)">−4.2%</span>
+    </div>
+    <div class="bc-value">€6,120.42</div>
+    <div class="bc-change">
+      <span class="positive">+€46.20 today</span>
+      <span style="color:var(--muted)">·</span>
+      <span class="negative">−€268.15 total</span>
+    </div>
+    <div class="bc-alloc">
+      12.8% of portfolio
+      <div class="alloc-bar"><div class="alloc-bar-fill" style="width:12.8%;background:var(--crypto-color)"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Performance comparison table -->
+<div class="perf-section">
+  <div class="card">
+    <div class="perf-header">
+      <span class="perf-title">Performance by Asset Type</span>
+      <div class="mode-toggle">
+        <button class="mode-btn active" style="font-size:10px;padding:3px 10px">1M</button>
+        <button class="mode-btn" style="font-size:10px;padding:3px 10px">YTD</button>
+        <button class="mode-btn" style="font-size:10px;padding:3px 10px">1Y</button>
+      </div>
+    </div>
+    <table class="perf-table">
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Value</th>
+          <th>1M Return</th>
+          <th>Volatility</th>
+          <th>Sharpe</th>
+          <th>Max DD</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="type-cell"><span class="type-dot" style="background:var(--all-color)"></span> All</span></td>
+          <td>€47,832</td>
+          <td class="positive">+3.41%</td>
+          <td>12.8%</td>
+          <td>1.24</td>
+          <td class="negative">−5.2%</td>
+        </tr>
+        <tr>
+          <td><span class="type-cell"><span class="type-dot" style="background:var(--stock-color)"></span> Stocks</span></td>
+          <td>€28,415</td>
+          <td class="positive">+2.18%</td>
+          <td>14.1%</td>
+          <td>0.98</td>
+          <td class="negative">−6.8%</td>
+        </tr>
+        <tr>
+          <td><span class="type-cell"><span class="type-dot" style="background:var(--etf-color)"></span> ETFs</span></td>
+          <td>€13,297</td>
+          <td class="positive">+4.52%</td>
+          <td>9.3%</td>
+          <td>1.67</td>
+          <td class="negative">−3.1%</td>
+        </tr>
+        <tr>
+          <td><span class="type-cell"><span class="type-dot" style="background:var(--crypto-color)"></span> Crypto</span></td>
+          <td>€6,120</td>
+          <td class="positive">+5.87%</td>
+          <td>38.4%</td>
+          <td>0.42</td>
+          <td class="negative">−18.7%</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Annotations -->
+<div class="annotation">
+  <strong>Design notes:</strong>
+  <ul>
+    <li><strong>Asset filter pills</strong> — toggle between All (stacked area, all types overlaid) or a single asset type (isolated area chart). Clicking a breakdown card also filters.</li>
+    <li><strong>Value / Performance toggle</strong> — "Value" shows absolute €, "Performance" shows % return (rebased to 0%).</li>
+    <li><strong>Breakdown cards</strong> — always visible below the chart; show value, daily + total P&L, and allocation bar per type.</li>
+    <li><strong>Performance table</strong> — optional section with key risk/return metrics per asset type and configurable period.</li>
+    <li><strong>"All" stacked view</strong> uses a stacked area chart so users see how each type contributes to total value over time.</li>
+    <li>The hero value and change badges update to reflect the selected filter (e.g., filtering to "Crypto" shows only crypto totals).</li>
+    <li>Mobile: breakdown cards stack vertically; chart height reduces; pills scroll horizontally.</li>
+  </ul>
+</div>
+
+<script>
+const COLORS = {
+  all: '#10b981',
+  stock: '#6366f1',
+  etf: '#f59e0b',
+  crypto: '#ec4899',
+};
+
+const TOTALS = {
+  all:    { value: 47832.14, dayChange: 312.45, dayPct: 0.66, totalPct: 14.2, totalChange: 4708.45 },
+  stock:  { value: 28415.20, dayChange: 187.30, dayPct: 0.66, totalPct: 11.3, totalChange: 2883.12 },
+  etf:    { value: 13296.52, dayChange: 78.95,  dayPct: 0.60, totalPct: 18.7, totalChange: 2093.48 },
+  crypto: { value: 6120.42,  dayChange: 46.20,  dayPct: 0.76, totalPct: -4.2, totalChange: -268.15 },
+};
+
+let currentFilter = 'all';
+let currentMode = 'value';
+let currentRange = '1M';
+let chart = null;
+
+function generateDates(n) {
+  const dates = [];
+  const now = new Date();
+  for (let i = n - 1; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    dates.push(d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }));
+  }
+  return dates;
+}
+
+function generateSeries(base, volatility, trend, n) {
+  const data = [base];
+  for (let i = 1; i < n; i++) {
+    const change = (Math.random() - 0.48) * volatility + trend;
+    data.push(Math.max(data[i-1] + change, base * 0.7));
+  }
+  return data;
+}
+
+const N = 30;
+const labels = generateDates(N);
+const stockData = generateSeries(26000, 300, 80, N);
+const etfData = generateSeries(11500, 120, 60, N);
+const cryptoData = generateSeries(6500, 400, -12, N);
+const allData = stockData.map((v, i) => v + etfData[i] + cryptoData[i]);
+
+const stockPerf = stockData.map(v => ((v - stockData[0]) / stockData[0]) * 100);
+const etfPerf = etfData.map(v => ((v - etfData[0]) / etfData[0]) * 100);
+const cryptoPerf = cryptoData.map(v => ((v - cryptoData[0]) / cryptoData[0]) * 100);
+const allPerf = allData.map(v => ((v - allData[0]) / allData[0]) * 100);
+
+function createChart() {
+  const ctx = document.getElementById('mainChart').getContext('2d');
+  if (chart) chart.destroy();
+
+  const isValue = currentMode === 'value';
+  const isAll = currentFilter === 'all';
+
+  let datasets = [];
+
+  if (isValue) {
+    if (isAll) {
+      datasets = [
+        {
+          label: 'Crypto',
+          data: cryptoData,
+          backgroundColor: 'rgba(236, 72, 153, 0.15)',
+          borderColor: 'rgba(236, 72, 153, 0.6)',
+          borderWidth: 1.5,
+          fill: true,
+          tension: 0.35,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          order: 3,
+        },
+        {
+          label: 'ETFs',
+          data: etfData.map((v, i) => v + cryptoData[i]),
+          backgroundColor: 'rgba(245, 158, 11, 0.15)',
+          borderColor: 'rgba(245, 158, 11, 0.6)',
+          borderWidth: 1.5,
+          fill: true,
+          tension: 0.35,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          order: 2,
+        },
+        {
+          label: 'Stocks',
+          data: allData,
+          backgroundColor: 'rgba(99, 102, 241, 0.15)',
+          borderColor: 'rgba(99, 102, 241, 0.6)',
+          borderWidth: 1.5,
+          fill: true,
+          tension: 0.35,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          order: 1,
+        },
+      ];
+    } else {
+      const dataMap = { stock: stockData, etf: etfData, crypto: cryptoData };
+      const color = COLORS[currentFilter];
+      const rgb = hexToRgb(color);
+      datasets = [{
+        label: currentFilter.charAt(0).toUpperCase() + currentFilter.slice(1),
+        data: dataMap[currentFilter],
+        backgroundColor: `rgba(${rgb}, 0.12)`,
+        borderColor: color,
+        borderWidth: 2,
+        fill: true,
+        tension: 0.35,
+        pointRadius: 0,
+        pointHoverRadius: 5,
+        pointHoverBackgroundColor: color,
+      }];
+    }
+  } else {
+    if (isAll) {
+      datasets = [
+        { label: 'All', data: allPerf, borderColor: COLORS.all, borderWidth: 2, tension: 0.35, pointRadius: 0, fill: false },
+        { label: 'Stocks', data: stockPerf, borderColor: COLORS.stock, borderWidth: 1.5, tension: 0.35, pointRadius: 0, fill: false, borderDash: [4, 3] },
+        { label: 'ETFs', data: etfPerf, borderColor: COLORS.etf, borderWidth: 1.5, tension: 0.35, pointRadius: 0, fill: false, borderDash: [4, 3] },
+        { label: 'Crypto', data: cryptoPerf, borderColor: COLORS.crypto, borderWidth: 1.5, tension: 0.35, pointRadius: 0, fill: false, borderDash: [4, 3] },
+      ];
+    } else {
+      const perfMap = { stock: stockPerf, etf: etfPerf, crypto: cryptoPerf };
+      const color = COLORS[currentFilter];
+      const rgb = hexToRgb(color);
+      datasets = [{
+        label: currentFilter.charAt(0).toUpperCase() + currentFilter.slice(1),
+        data: perfMap[currentFilter],
+        backgroundColor: `rgba(${rgb}, 0.08)`,
+        borderColor: color,
+        borderWidth: 2,
+        fill: true,
+        tension: 0.35,
+        pointRadius: 0,
+        pointHoverRadius: 5,
+      }];
+    }
+  }
+
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1e293b',
+          borderColor: '#334155',
+          borderWidth: 1,
+          titleFont: { family: 'Outfit', size: 12 },
+          bodyFont: { family: 'JetBrains Mono', size: 12 },
+          padding: 12,
+          cornerRadius: 8,
+          callbacks: {
+            label: function(ctx) {
+              if (isValue) {
+                return `${ctx.dataset.label}: €${ctx.parsed.y.toLocaleString('en', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+              }
+              return `${ctx.dataset.label}: ${ctx.parsed.y >= 0 ? '+' : ''}${ctx.parsed.y.toFixed(2)}%`;
+            }
+          }
+        },
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(255,255,255,0.03)', drawBorder: false },
+          ticks: { color: '#64748b', font: { family: 'Outfit', size: 10 }, maxTicksLimit: 8 },
+        },
+        y: {
+          grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
+          ticks: {
+            color: '#64748b',
+            font: { family: 'JetBrains Mono', size: 10 },
+            callback: function(val) {
+              if (isValue) return '€' + (val / 1000).toFixed(0) + 'k';
+              return (val >= 0 ? '+' : '') + val.toFixed(1) + '%';
+            },
+          },
+          position: 'right',
+        }
+      },
+      animation: { duration: 500, easing: 'easeOutCubic' },
+    },
+  });
+}
+
+function hexToRgb(hex) {
+  const r = parseInt(hex.slice(1,3), 16);
+  const g = parseInt(hex.slice(3,5), 16);
+  const b = parseInt(hex.slice(5,7), 16);
+  return `${r},${g},${b}`;
+}
+
+function setFilter(type) {
+  currentFilter = type;
+  document.querySelectorAll('.asset-pill').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.type === type);
+  });
+
+  const t = TOTALS[type];
+  document.getElementById('hero-value').textContent = `€${t.value.toLocaleString('en', { minimumFractionDigits: 2 })}`;
+  const dayBadge = document.getElementById('day-badge');
+  const isPos = t.dayChange >= 0;
+  dayBadge.className = `day-badge ${isPos ? 'positive' : 'negative'}`;
+  dayBadge.textContent = `${isPos ? '+' : ''}€${t.dayChange.toFixed(2)} (${isPos ? '+' : ''}${t.dayPct.toFixed(2)}%)`;
+  
+  const totalEl = document.getElementById('total-change');
+  const isTotalPos = t.totalPct >= 0;
+  totalEl.className = `total-change ${isTotalPos ? 'positive' : 'negative'}`;
+  totalEl.textContent = `${isTotalPos ? '+' : ''}${t.totalPct.toFixed(1)}% total gain/loss`;
+
+  document.getElementById('stacked-legend').style.display =
+    (type === 'all' && currentMode === 'value') ? 'flex' : 'none';
+
+  createChart();
+}
+
+function setMode(mode) {
+  currentMode = mode;
+  document.getElementById('mode-value').classList.toggle('active', mode === 'value');
+  document.getElementById('mode-perf').classList.toggle('active', mode === 'performance');
+
+  document.getElementById('stacked-legend').style.display =
+    (currentFilter === 'all' && mode === 'value') ? 'flex' : 'none';
+
+  createChart();
+}
+
+function setRange(range) {
+  currentRange = range;
+  document.querySelectorAll('.range-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.textContent === range);
+  });
+}
+
+createChart();
+</script>
+</body>
+</html>

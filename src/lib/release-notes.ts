@@ -17,6 +17,28 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.66.0",
+    date: "2026-03-25",
+    title: "Portfolio Performance Page",
+    titleTranslations: { es: "Página de rendimiento del portafolio" },
+    changes: [
+      {
+        type: "feature",
+        text: "New dedicated /portfolio page with interactive value and performance charts. Supports 1D/1W/3M/6M/YTD/1Y time ranges, benchmark comparisons, asset type filtering, market session overlays, weekend shading, and a generate-history CTA for new users.",
+        translations: {
+          es: "Nueva página /portfolio dedicada con gráficos interactivos de valor y rendimiento. Soporta rangos de tiempo 1D/1S/3M/6M/YTD/1A, comparaciones con índices, filtrado por tipo de activo, superposición de sesiones de mercado, sombreado de fines de semana y un CTA de generación de historial para nuevos usuarios.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Yahoo Finance API calls are now cached for 5 minutes to reduce redundant requests when multiple users hold the same tickers.",
+        translations: {
+          es: "Las llamadas a la API de Yahoo Finance ahora se almacenan en caché durante 5 minutos para reducir solicitudes redundantes cuando varios usuarios tienen los mismos tickers.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.65.0",
     date: "2026-03-24",
     title: "Portfolio Breakdown by Asset Type",

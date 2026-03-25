@@ -15,19 +15,65 @@ import type {
   ETFHoldingsData,
 } from "./types";
 import { providerRequestsTotal, providerRequestDuration } from "@/lib/metrics";
+import { getCachedHistorical, cacheHistoricalPoints } from "@/lib/db/historical-cache";
 
 const yahooFinance = new YahooFinance();
+
+/**
+ * In-memory TTL cache for Yahoo API results. Avoids redundant calls when
+ * multiple users hold the same ticker and the cron / materialize runs
+ * overlap, or when a user refreshes shortly after data was fetched.
+ *
+ * Key format: `quote:${symbol}`, `rate:${from}${to}`, `hist:${symbol}:${period}`.
+ * Default TTL: 5 minutes (aligned with the snapshot bucket cadence).
+ */
+const QUOTE_CACHE_TTL_MS = 5 * 60 * 1000;
+
+interface CacheEntry<T> {
+  data: T;
+  expiresAt: number;
+}
+
+const quoteCache = new Map<string, CacheEntry<unknown>>();
+
+function getCached<T>(key: string): T | undefined {
+  const entry = quoteCache.get(key);
+  if (!entry) return undefined;
+  if (Date.now() > entry.expiresAt) {
+    quoteCache.delete(key);
+    return undefined;
+  }
+  return entry.data as T;
+}
+
+function setCache<T>(key: string, data: T, ttlMs: number = QUOTE_CACHE_TTL_MS): void {
+  quoteCache.set(key, { data, expiresAt: Date.now() + ttlMs });
+}
+
+/** Evict expired entries periodically to prevent unbounded growth. */
+if (typeof setInterval !== "undefined") {
+  setInterval(() => {
+    const now = Date.now();
+    for (const [key, entry] of quoteCache) {
+      if (now > entry.expiresAt) quoteCache.delete(key);
+    }
+  }, 60_000);
+}
 
 export class YahooProvider implements StockDataProvider {
   readonly name = "yahoo";
 
   async getQuote(symbol: string): Promise<ProviderQuoteResult> {
+    const cacheKey = `quote:${symbol}`;
+    const cached = getCached<ProviderQuoteResult>(cacheKey);
+    if (cached) return cached;
+
     const end = providerRequestDuration.startTimer({ provider: "yahoo", operation: "quote" });
     let ok = false;
     try {
       const quote = await yahooFinance.quote(symbol);
       ok = true;
-      return {
+      const result: ProviderQuoteResult = {
         symbol: quote.symbol ?? symbol,
         shortName: quote.shortName || quote.longName || symbol,
         regularMarketPrice: quote.regularMarketPrice ?? 0,
@@ -41,6 +87,8 @@ export class YahooProvider implements StockDataProvider {
         trailingAnnualDividendRate: quote.trailingAnnualDividendRate ?? undefined,
         trailingAnnualDividendYield: quote.trailingAnnualDividendYield ?? undefined,
       };
+      setCache(cacheKey, result);
+      return result;
     } finally {
       end();
       providerRequestsTotal.inc({ provider: "yahoo", operation: "quote", status: ok ? "success" : "error" });
@@ -82,58 +130,96 @@ export class YahooProvider implements StockDataProvider {
     symbol: string,
     period: TimePeriod
   ): Promise<ProviderHistoricalPoint[]> {
+    const cacheKey = `hist:${symbol}:${period}`;
+    const memCached = getCached<ProviderHistoricalPoint[]>(cacheKey);
+    if (memCached) return memCached;
+
+    const now = new Date();
+    let period1: Date;
+    let interval: "1d" | "1wk" | "1mo" | "5m" = "1d";
+    let intraday = false;
+
+    switch (period) {
+      case "1d":
+        period1 = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000);
+        interval = "5m";
+        intraday = true;
+        break;
+      case "1w":
+        period1 = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        interval = "1d";
+        break;
+      case "1m":
+        period1 = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+        interval = "1d";
+        break;
+      case "3m":
+        period1 = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate());
+        interval = "1d";
+        break;
+      case "6m":
+        period1 = new Date(now.getFullYear(), now.getMonth() - 6, now.getDate());
+        interval = "1wk";
+        break;
+      case "1y":
+        period1 = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+        interval = "1wk";
+        break;
+      case "all":
+        period1 = new Date(2000, 0, 1);
+        interval = "1mo";
+        break;
+      default:
+        period1 = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+        interval = "1d";
+    }
+
+    // Intraday data is real-time — always fetch fresh, never persist
+    if (intraday) {
+      return this._fetchHistoricalFromYahoo(symbol, period1, now, interval, true, cacheKey);
+    }
+
+    // Non-intraday: check SQLite permanent cache first
+    const startDate = period1.toISOString().slice(0, 10);
+    try {
+      const dbPoints = await getCachedHistorical(symbol);
+      if (dbPoints.length > 0) {
+        const inRange = dbPoints.filter((p) => p.date >= startDate);
+        const latest = dbPoints[dbPoints.length - 1].date;
+        const today = now.toISOString().slice(0, 10);
+        const latestTs = new Date(latest).getTime();
+        const todayTs = new Date(today).getTime();
+        const gapDays = (todayTs - latestTs) / 86400000;
+
+        // Cache is sufficient if it covers the range and is recent (within 3 days, to account for weekends)
+        if (inRange.length > 0 && gapDays <= 3) {
+          setCache(cacheKey, inRange);
+          return inRange;
+        }
+      }
+    } catch {
+      // SQLite unavailable — fall through to Yahoo
+    }
+
+    // Fetch from Yahoo and persist daily points to SQLite
+    return this._fetchHistoricalFromYahoo(symbol, period1, now, interval, false, cacheKey);
+  }
+
+  private async _fetchHistoricalFromYahoo(
+    symbol: string,
+    period1: Date,
+    period2: Date,
+    interval: "1d" | "1wk" | "1mo" | "5m",
+    intraday: boolean,
+    memCacheKey: string,
+  ): Promise<ProviderHistoricalPoint[]> {
     const end = providerRequestDuration.startTimer({ provider: "yahoo", operation: "historical" });
     let ok = false;
     try {
-      const now = new Date();
-      let period1: Date;
-      let interval: "1d" | "1wk" | "1mo" | "5m" = "1d";
-      let intraday = false;
-
-      switch (period) {
-        case "1d":
-          period1 = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000);
-          interval = "5m";
-          intraday = true;
-          break;
-        case "1w":
-          period1 = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-          interval = "1d";
-          break;
-        case "1m":
-          period1 = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
-          interval = "1d";
-          break;
-        case "3m":
-          period1 = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate());
-          interval = "1d";
-          break;
-        case "6m":
-          period1 = new Date(now.getFullYear(), now.getMonth() - 6, now.getDate());
-          interval = "1wk";
-          break;
-        case "1y":
-          period1 = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
-          interval = "1wk";
-          break;
-        case "all":
-          period1 = new Date(2000, 0, 1);
-          interval = "1mo";
-          break;
-        default:
-          period1 = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
-          interval = "1d";
-      }
-
-      const result = await yahooFinance.chart(symbol, {
-        period1,
-        period2: now,
-        interval,
-      });
-
+      const result = await yahooFinance.chart(symbol, { period1, period2, interval });
       ok = true;
       const quotes = result.quotes ?? [];
-      return quotes
+      const points = quotes
         .filter((item) => item.close != null)
         .map((item) => ({
           date: intraday
@@ -145,6 +231,15 @@ export class YahooProvider implements StockDataProvider {
           close: item.close ?? 0,
           volume: item.volume ?? 0,
         }));
+
+      if (points.length > 0) {
+        setCache(memCacheKey, points);
+        // Persist non-intraday points to SQLite (fire-and-forget)
+        if (!intraday) {
+          cacheHistoricalPoints(symbol, points).catch(() => {});
+        }
+      }
+      return points;
     } finally {
       end();
       providerRequestsTotal.inc({ provider: "yahoo", operation: "historical", status: ok ? "success" : "error" });
@@ -201,13 +296,19 @@ export class YahooProvider implements StockDataProvider {
   }
 
   async getExchangeRate(from: string, to: string): Promise<number> {
+    const cacheKey = `rate:${from}${to}`;
+    const cached = getCached<number>(cacheKey);
+    if (cached !== undefined) return cached;
+
     const end = providerRequestDuration.startTimer({ provider: "yahoo", operation: "exchange_rate" });
     let ok = false;
     try {
       const symbol = `${from}${to}=X`;
       const quote = await yahooFinance.quote(symbol);
       ok = true;
-      return quote.regularMarketPrice ?? 0;
+      const rate = quote.regularMarketPrice ?? 0;
+      if (rate > 0) setCache(cacheKey, rate);
+      return rate;
     } finally {
       end();
       providerRequestsTotal.inc({ provider: "yahoo", operation: "exchange_rate", status: ok ? "success" : "error" });

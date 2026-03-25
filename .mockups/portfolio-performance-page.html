@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portfolio Performance — Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f172a;
+    --bg-card: #1e293b;
+    --bg-card-hover: #243247;
+    --border: rgba(255,255,255,0.06);
+    --border-hover: rgba(255,255,255,0.12);
+    --text: #f1f5f9;
+    --text-dim: #94a3b8;
+    --text-muted: #64748b;
+    --gain: #10b981;
+    --gain-bg: rgba(16,185,129,0.12);
+    --loss: #ef4444;
+    --loss-bg: rgba(239,68,68,0.12);
+    --accent: #3b82f6;
+    --accent-bg: rgba(59,130,246,0.12);
+    --stock-color: #6366f1;
+    --etf-color: #f59e0b;
+    --crypto-color: #ec4899;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 24px;
+  }
+
+  .page { max-width: 1080px; margin: 0 auto; }
+
+  /* Header */
+  .portfolio-header {
+    padding: 0 0 20px;
+  }
+  .portfolio-header .label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+  }
+  .portfolio-header .value-row {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .portfolio-header .big-value {
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+  .portfolio-header .change-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .portfolio-header .change {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 8px;
+  }
+  .change.positive { background: var(--gain-bg); color: var(--gain); }
+  .change.negative { background: var(--loss-bg); color: var(--loss); }
+  .portfolio-header .total-return {
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+  .portfolio-header .total-return span { font-weight: 600; }
+  .total-return .pos { color: var(--gain); }
+
+  /* Asset Filter Pills */
+  .asset-filter {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .asset-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .asset-pill:hover { border-color: var(--border-hover); color: var(--text); }
+  .asset-pill.active {
+    border-color: transparent;
+  }
+  .asset-pill .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* Main Card */
+  .chart-card {
+    background: var(--bg-card);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+
+  /* Chart Area */
+  .chart-area {
+    position: relative;
+    height: 340px;
+    padding: 16px 16px 0;
+  }
+  .chart-canvas {
+    width: 100%;
+    height: 100%;
+    position: relative;
+  }
+
+  /* SVG Chart */
+  .chart-svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Chart Footer */
+  .chart-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .chart-footer-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .chart-footer-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* Mode Toggle (Value / Performance) */
+  .mode-toggle {
+    display: inline-flex;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.04);
+    padding: 2px;
+  }
+  .mode-btn {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 14px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .mode-btn.active {
+    background: rgba(255,255,255,0.1);
+    color: var(--text);
+  }
+
+  /* Range Pills */
+  .range-pills {
+    display: flex;
+    gap: 2px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.04);
+    padding: 2px;
+  }
+  .range-pill {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+  }
+  .range-pill:hover { color: var(--text-dim); }
+  .range-pill.active {
+    background: var(--accent-bg);
+    color: var(--accent);
+  }
+  .range-pill .pro-badge {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    font-size: 7px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #a78bfa, #7c3aed);
+    color: white;
+    padding: 1px 4px;
+    border-radius: 4px;
+    letter-spacing: 0.04em;
+  }
+
+  /* Compare Button */
+  .compare-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .compare-btn:hover {
+    border-color: rgba(59,130,246,0.4);
+    color: var(--accent);
+  }
+  .compare-btn svg { width: 12px; height: 12px; }
+
+  /* Benchmark Chips */
+  .benchmark-chips {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .bench-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.04);
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .bench-chip .chip-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+  }
+  .bench-chip .chip-x {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-left: 2px;
+  }
+
+  /* Market Session Indicator */
+  .market-sessions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text-muted);
+    overflow-x: auto;
+  }
+  .market-session {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+  }
+  .session-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+  }
+  .session-dot.open { background: var(--gain); }
+  .session-dot.closed { background: var(--text-muted); }
+  .session-name { font-weight: 600; color: var(--text-dim); }
+  .session-time { color: var(--text-muted); }
+
+  /* Breakdown Cards */
+  .breakdown-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 16px;
+  }
+  @media (max-width: 640px) {
+    .breakdown-grid { grid-template-columns: 1fr; }
+  }
+  .breakdown-card {
+    position: relative;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 16px 16px 20px;
+    cursor: pointer;
+    transition: all 0.15s;
+    overflow: hidden;
+  }
+  .breakdown-card:hover {
+    border-color: var(--border-hover);
+    transform: translateY(-1px);
+  }
+  .breakdown-card .accent-bar {
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+    border-radius: 0 3px 3px 0;
+  }
+  .breakdown-card .card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .breakdown-card .card-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+  }
+  .breakdown-card .card-badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 6px;
+  }
+  .breakdown-card .card-value {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    letter-spacing: -0.01em;
+  }
+  .breakdown-card .card-changes {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .breakdown-card .card-changes .sep {
+    color: var(--text-muted);
+    opacity: 0.4;
+  }
+  .breakdown-card .alloc-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+  .alloc-bar-bg {
+    flex: 1;
+    height: 3px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.06);
+    overflow: hidden;
+  }
+  .alloc-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.5s ease;
+  }
+
+  /* Chart tooltip mockup */
+  .tooltip-mockup {
+    position: absolute;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1a2332;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 12px 16px;
+    min-width: 200px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    pointer-events: none;
+    display: none;
+    z-index: 10;
+  }
+  .tooltip-mockup.visible { display: block; }
+  .tooltip-date {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  .tooltip-value {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .tooltip-change {
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .tooltip-benchmarks {
+    border-top: 1px solid var(--border);
+    padding-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .tooltip-bench-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+  }
+  .tooltip-bench-label {
+    display: flex; align-items: center; gap: 5px;
+    color: var(--text-dim);
+  }
+  .tooltip-bench-val { font-weight: 600; }
+
+  /* Weekend shading legend */
+  .chart-legend {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 6px 20px 10px;
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .legend-swatch {
+    width: 14px; height: 10px;
+    border-radius: 2px;
+  }
+
+  /* Markets Closed Overlay */
+  .markets-closed-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(15,23,42,0.85);
+    backdrop-filter: blur(4px);
+    border-radius: 12px;
+    z-index: 5;
+  }
+  .markets-closed-overlay .icon {
+    font-size: 32px;
+    margin-bottom: 12px;
+    opacity: 0.6;
+  }
+  .markets-closed-overlay .title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .markets-closed-overlay .subtitle {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+  }
+  .markets-closed-overlay .last-value {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .markets-closed-overlay .last-value strong {
+    color: var(--text);
+    font-weight: 700;
+  }
+
+  /* Crosshair */
+  .crosshair-line {
+    position: absolute;
+    top: 0;
+    width: 1px;
+    height: 100%;
+    background: rgba(255,255,255,0.15);
+    pointer-events: none;
+    display: none;
+  }
+  .crosshair-dot {
+    position: absolute;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--gain);
+    border: 2px solid var(--bg-card);
+    pointer-events: none;
+    display: none;
+    transform: translate(-50%, -50%);
+  }
+
+  /* Annotations */
+  .annotation-badge {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    position: absolute;
+    pointer-events: none;
+  }
+
+  /* Page sections */
+  .section-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 24px 0 12px;
+  }
+
+  /* Sync bar */
+  .sync-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 20px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .sync-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--gain);
+    display: inline-block;
+    margin-right: 5px;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    body { padding: 12px; }
+    .portfolio-header .big-value { font-size: 28px; }
+    .chart-area { height: 260px; }
+    .chart-footer { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <!-- Portfolio Header -->
+  <div class="portfolio-header">
+    <div class="label">Portfolio Value</div>
+    <div class="value-row">
+      <div class="big-value">&euro;99,166.22</div>
+      <div class="change-group">
+        <span class="change positive">+&euro;553.69 (+0.56%)</span>
+        <span class="total-return"><span class="pos">+36.89%</span> total return</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Asset Type Filter -->
+  <div class="asset-filter">
+    <button class="asset-pill active" id="filter-all" style="background: var(--gain-bg); color: var(--gain); border-color: rgba(16,185,129,0.3);">
+      <span class="dot" style="background: var(--gain);"></span>
+      All Assets
+    </button>
+    <button class="asset-pill" id="filter-stock" onclick="setFilter('stock')">
+      <span class="dot" style="background: var(--stock-color);"></span>
+      Stocks
+    </button>
+    <button class="asset-pill" id="filter-etf" onclick="setFilter('etf')">
+      <span class="dot" style="background: var(--etf-color);"></span>
+      ETFs
+    </button>
+    <button class="asset-pill" id="filter-crypto" onclick="setFilter('crypto')">
+      <span class="dot" style="background: var(--crypto-color);"></span>
+      Crypto
+    </button>
+  </div>
+
+  <!-- Main Chart Card -->
+  <div class="chart-card">
+    <div class="chart-area" id="chartArea">
+      <!-- SVG Chart -->
+      <svg class="chart-svg" id="chartSvg" viewBox="0 0 1048 320" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#10b981" stop-opacity="0.25"/>
+            <stop offset="100%" stop-color="#10b981" stop-opacity="0"/>
+          </linearGradient>
+          <linearGradient id="areaGradNeg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#ef4444" stop-opacity="0"/>
+            <stop offset="100%" stop-color="#ef4444" stop-opacity="0.25"/>
+          </linearGradient>
+          <pattern id="weekendHatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+            <line x1="0" y1="0" x2="0" y2="6" stroke="rgba(255,255,255,0.04)" stroke-width="2"/>
+          </pattern>
+        </defs>
+
+        <!-- Grid lines -->
+        <line x1="0" y1="64" x2="1048" y2="64" stroke="rgba(255,255,255,0.04)" stroke-dasharray="3,3"/>
+        <line x1="0" y1="128" x2="1048" y2="128" stroke="rgba(255,255,255,0.04)" stroke-dasharray="3,3"/>
+        <line x1="0" y1="192" x2="1048" y2="192" stroke="rgba(255,255,255,0.04)" stroke-dasharray="3,3"/>
+        <line x1="0" y1="256" x2="1048" y2="256" stroke="rgba(255,255,255,0.04)" stroke-dasharray="3,3"/>
+
+        <!-- Weekend shading (visible on 1W view) -->
+        <rect id="weekendShade1" x="0" y="0" width="0" height="320" fill="url(#weekendHatch)" display="none"/>
+        <rect id="weekendShade2" x="0" y="0" width="0" height="320" fill="url(#weekendHatch)" display="none"/>
+
+        <!-- Market session bands (1D) -->
+        <rect id="sessionUS" x="0" y="0" width="0" height="320" fill="rgba(59,130,246,0.04)" rx="2" display="none"/>
+        <rect id="sessionEU" x="0" y="0" width="0" height="320" fill="rgba(16,185,129,0.04)" rx="2" display="none"/>
+
+        <!-- Area fill -->
+        <path id="areaPath" fill="url(#areaGrad)" opacity="0.8"/>
+
+        <!-- Main line -->
+        <path id="mainLine" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+
+        <!-- Benchmark lines -->
+        <path id="benchLine1" fill="none" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="4,3" stroke-linecap="round" opacity="0.7" display="none"/>
+        <path id="benchLine2" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="4,3" stroke-linecap="round" opacity="0.7" display="none"/>
+
+        <!-- Y-axis labels -->
+        <text x="1040" y="60" fill="rgba(255,255,255,0.3)" font-size="10" text-anchor="end" font-family="Inter">€101K</text>
+        <text x="1040" y="128" fill="rgba(255,255,255,0.3)" font-size="10" text-anchor="end" font-family="Inter">€100K</text>
+        <text x="1040" y="196" fill="rgba(255,255,255,0.3)" font-size="10" text-anchor="end" font-family="Inter">€99K</text>
+        <text x="1040" y="260" fill="rgba(255,255,255,0.3)" font-size="10" text-anchor="end" font-family="Inter">€98K</text>
+
+        <!-- X-axis labels -->
+        <text id="xLabel0" x="20" y="310" fill="rgba(255,255,255,0.3)" font-size="10" font-family="Inter">09:30</text>
+        <text id="xLabel1" x="220" y="310" fill="rgba(255,255,255,0.3)" font-size="10" font-family="Inter">11:00</text>
+        <text id="xLabel2" x="420" y="310" fill="rgba(255,255,255,0.3)" font-size="10" font-family="Inter">12:30</text>
+        <text id="xLabel3" x="620" y="310" fill="rgba(255,255,255,0.3)" font-size="10" font-family="Inter">14:00</text>
+        <text id="xLabel4" x="820" y="310" fill="rgba(255,255,255,0.3)" font-size="10" font-family="Inter">15:30</text>
+        <text id="xLabel5" x="1000" y="310" fill="rgba(255,255,255,0.3)" font-size="10" font-family="Inter">17:00</text>
+      </svg>
+
+      <!-- Tooltip -->
+      <div class="tooltip-mockup" id="tooltip">
+        <div class="tooltip-date">Mar 25, 2026 · 14:35 CET</div>
+        <div class="tooltip-value">&euro;99,166.22</div>
+        <div class="tooltip-change" style="color: var(--gain);">+0.56% from open</div>
+        <div class="tooltip-benchmarks" id="tooltipBenchmarks" style="display:none;">
+          <div class="tooltip-bench-row">
+            <span class="tooltip-bench-label">
+              <span style="width:6px;height:6px;border-radius:50%;background:#3b82f6;display:inline-block;"></span>
+              S&P 500
+            </span>
+            <span class="tooltip-bench-val" style="color:#3b82f6;">+0.42%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Crosshair -->
+      <div class="crosshair-line" id="crosshairLine"></div>
+      <div class="crosshair-dot" id="crosshairDot"></div>
+    </div>
+
+    <!-- Chart Legend (visible with benchmarks or 1W+) -->
+    <div class="chart-legend" id="chartLegend" style="display:none;">
+      <div class="legend-item">
+        <span class="legend-swatch" style="background:url(#weekendHatch); background: repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255,255,255,0.06) 2px, rgba(255,255,255,0.06) 4px);"></span>
+        Weekend
+      </div>
+      <div class="legend-item">
+        <span class="legend-swatch" style="background: rgba(59,130,246,0.15);"></span>
+        US Market Hours
+      </div>
+      <div class="legend-item">
+        <span class="legend-swatch" style="background: rgba(16,185,129,0.15);"></span>
+        EU Market Hours
+      </div>
+    </div>
+
+    <!-- Market Sessions Bar -->
+    <div class="market-sessions" id="marketSessions">
+      <div class="market-session">
+        <span class="session-dot open"></span>
+        <span class="session-name">NYSE</span>
+        <span class="session-time">Open · closes 22:00</span>
+      </div>
+      <div class="market-session">
+        <span class="session-dot open"></span>
+        <span class="session-name">XETRA</span>
+        <span class="session-time">Open · closes 17:30</span>
+      </div>
+      <div class="market-session">
+        <span class="session-dot closed"></span>
+        <span class="session-name">LSE</span>
+        <span class="session-time">Closed · opens tomorrow 09:00</span>
+      </div>
+      <div class="market-session">
+        <span class="session-dot open"></span>
+        <span class="session-name">Crypto</span>
+        <span class="session-time">24/7</span>
+      </div>
+    </div>
+
+    <!-- Chart Footer: modes, ranges, compare -->
+    <div class="chart-footer">
+      <div class="chart-footer-left">
+        <div class="mode-toggle">
+          <button class="mode-btn active" id="modeValue" onclick="setMode('value')">Value</button>
+          <button class="mode-btn" id="modePerf" onclick="setMode('perf')">Performance</button>
+        </div>
+
+        <div class="range-pills">
+          <button class="range-pill active" id="range-1d" onclick="setRange('1d')">1D</button>
+          <button class="range-pill" id="range-1w" onclick="setRange('1w')">1W</button>
+          <button class="range-pill" id="range-3m" onclick="setRange('3m')">3M<span class="pro-badge">PRO</span></button>
+          <button class="range-pill" id="range-6m" onclick="setRange('6m')">6M<span class="pro-badge">PRO</span></button>
+          <button class="range-pill" id="range-ytd" onclick="setRange('ytd')">YTD<span class="pro-badge">PRO</span></button>
+          <button class="range-pill" id="range-1y" onclick="setRange('1y')">1Y<span class="pro-badge">PRO</span></button>
+        </div>
+      </div>
+
+      <div class="chart-footer-right">
+        <div class="benchmark-chips" id="benchmarkChips"></div>
+        <button class="compare-btn" id="compareBtn" onclick="toggleCompare()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 3v18h18"/>
+            <path d="M7 16l4-8 4 4 4-8"/>
+          </svg>
+          Compare
+        </button>
+      </div>
+    </div>
+
+    <!-- Sync Status -->
+    <div class="sync-bar">
+      <div>
+        <span class="sync-dot"></span>
+        Last synced 2 min ago
+      </div>
+      <div>Updating every 5 min</div>
+    </div>
+  </div>
+
+  <!-- Asset Breakdown -->
+  <div class="breakdown-grid">
+    <div class="breakdown-card" onclick="setFilter('stock')">
+      <span class="accent-bar" style="background: var(--stock-color);"></span>
+      <div class="card-top">
+        <span class="card-label">Stocks</span>
+        <span class="card-badge" style="background: rgba(16,185,129,0.1); color: var(--gain);">+28.4%</span>
+      </div>
+      <div class="card-value">&euro;45,892.30</div>
+      <div class="card-changes">
+        <span style="color: var(--gain); font-weight: 600;">+&euro;215.40 today</span>
+        <span class="sep">&middot;</span>
+        <span style="color: var(--gain); font-weight: 600;">+&euro;10,153 total</span>
+      </div>
+      <div class="alloc-row">
+        <span>46.3% of portfolio</span>
+        <div class="alloc-bar-bg">
+          <div class="alloc-bar-fill" style="width: 46.3%; background: var(--stock-color);"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="breakdown-card" onclick="setFilter('etf')">
+      <span class="accent-bar" style="background: var(--etf-color);"></span>
+      <div class="card-top">
+        <span class="card-label">ETFs</span>
+        <span class="card-badge" style="background: rgba(16,185,129,0.1); color: var(--gain);">+42.1%</span>
+      </div>
+      <div class="card-value">&euro;32,451.80</div>
+      <div class="card-changes">
+        <span style="color: var(--gain); font-weight: 600;">+&euro;198.20 today</span>
+        <span class="sep">&middot;</span>
+        <span style="color: var(--gain); font-weight: 600;">+&euro;9,618 total</span>
+      </div>
+      <div class="alloc-row">
+        <span>32.7% of portfolio</span>
+        <div class="alloc-bar-bg">
+          <div class="alloc-bar-fill" style="width: 32.7%; background: var(--etf-color);"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="breakdown-card" onclick="setFilter('crypto')">
+      <span class="accent-bar" style="background: var(--crypto-color);"></span>
+      <div class="card-top">
+        <span class="card-label">Crypto</span>
+        <span class="card-badge" style="background: rgba(16,185,129,0.1); color: var(--gain);">+51.7%</span>
+      </div>
+      <div class="card-value">&euro;20,822.12</div>
+      <div class="card-changes">
+        <span style="color: var(--gain); font-weight: 600;">+&euro;140.09 today</span>
+        <span class="sep">&middot;</span>
+        <span style="color: var(--gain); font-weight: 600;">+&euro;7,098 total</span>
+      </div>
+      <div class="alloc-row">
+        <span>21.0% of portfolio</span>
+        <div class="alloc-bar-bg">
+          <div class="alloc-bar-fill" style="width: 21%; background: var(--crypto-color);"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Chart data generators per range
+const CHART_DATA = {
+  '1d': generateIntradayData(),
+  '1w': generateWeekData(),
+  '3m': generate3MData(),
+  '6m': generate6MData(),
+  'ytd': generateYTDData(),
+  '1y': generate1YData(),
+};
+
+const RANGE_XLABELS = {
+  '1d': ['09:30','11:00','12:30','14:00','15:30','17:00'],
+  '1w': ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+  '3m': ['Jan','Feb','Mar','','',''],
+  '6m': ['Oct','Nov','Dec','Jan','Feb','Mar'],
+  'ytd': ['Jan','Feb','Mar','','',''],
+  '1y': ['Apr 25','Jul 25','Oct 25','Jan 26','Mar 26',''],
+};
+
+let currentRange = '1d';
+let currentMode = 'value';
+let benchmarks = [];
+let showCompare = false;
+
+function generateIntradayData() {
+  const pts = [];
+  let val = 98612;
+  for (let i = 0; i < 100; i++) {
+    val += (Math.random() - 0.45) * 80;
+    if (i > 70) val += 15;
+    pts.push(val);
+  }
+  return pts;
+}
+function generateWeekData() {
+  const pts = [];
+  let val = 97800;
+  for (let i = 0; i < 120; i++) {
+    const dayInWeek = Math.floor(i / (120/7));
+    if (dayInWeek === 5 || dayInWeek === 6) continue; // skip weekends
+    val += (Math.random() - 0.42) * 120;
+    pts.push(val);
+  }
+  return pts;
+}
+function generate3MData() {
+  const pts = [];
+  let val = 89000;
+  for (let i = 0; i < 90; i++) {
+    val += (Math.random() - 0.38) * 300;
+    pts.push(val);
+  }
+  return pts;
+}
+function generate6MData() {
+  const pts = [];
+  let val = 82000;
+  for (let i = 0; i < 26; i++) {
+    val += (Math.random() - 0.35) * 800;
+    pts.push(val);
+  }
+  return pts;
+}
+function generateYTDData() {
+  const pts = [];
+  let val = 91500;
+  for (let i = 0; i < 84; i++) {
+    val += (Math.random() - 0.38) * 250;
+    pts.push(val);
+  }
+  return pts;
+}
+function generate1YData() {
+  const pts = [];
+  let val = 72000;
+  for (let i = 0; i < 52; i++) {
+    val += (Math.random() - 0.32) * 700;
+    pts.push(val);
+  }
+  return pts;
+}
+function generateBenchmark(pts, volatility = 0.5) {
+  const bench = [];
+  let val = 0;
+  for (let i = 0; i < pts.length; i++) {
+    val += (Math.random() - 0.42) * volatility;
+    bench.push(val);
+  }
+  return bench;
+}
+
+function drawChart() {
+  const pts = CHART_DATA[currentRange];
+  if (!pts || pts.length === 0) return;
+
+  const svg = document.getElementById('chartSvg');
+  const W = 1048, H = 290;
+  const minV = Math.min(...pts);
+  const maxV = Math.max(...pts);
+  const range = maxV - minV || 1;
+  const padY = range * 0.1;
+
+  const scaleX = (i) => (i / (pts.length - 1)) * W;
+  const scaleY = (v) => H - ((v - (minV - padY)) / (range + 2 * padY)) * H;
+
+  // Main line
+  let d = `M${scaleX(0)},${scaleY(pts[0])}`;
+  for (let i = 1; i < pts.length; i++) {
+    d += ` L${scaleX(i)},${scaleY(pts[i])}`;
+  }
+  document.getElementById('mainLine').setAttribute('d', d);
+
+  const isPositive = pts[pts.length - 1] >= pts[0];
+  document.getElementById('mainLine').setAttribute('stroke', isPositive ? '#10b981' : '#ef4444');
+
+  // Area
+  const areaD = d + ` L${scaleX(pts.length - 1)},${H} L${scaleX(0)},${H} Z`;
+  const areaPath = document.getElementById('areaPath');
+  areaPath.setAttribute('d', areaD);
+  areaPath.setAttribute('fill', isPositive ? 'url(#areaGrad)' : 'url(#areaGradNeg)');
+
+  // Y-axis labels
+  const yLabels = svg.querySelectorAll('text[x="1040"]');
+  const steps = [0.85, 0.6, 0.35, 0.1];
+  steps.forEach((s, i) => {
+    const v = minV - padY + (range + 2 * padY) * s;
+    if (currentMode === 'perf') {
+      const pct = ((v - pts[0]) / pts[0]) * 100;
+      yLabels[i].textContent = (pct >= 0 ? '+' : '') + pct.toFixed(1) + '%';
+    } else {
+      yLabels[i].textContent = '€' + (v / 1000).toFixed(1) + 'K';
+    }
+  });
+
+  // X-axis labels
+  const xlabels = RANGE_XLABELS[currentRange];
+  for (let i = 0; i < 6; i++) {
+    const el = document.getElementById('xLabel' + i);
+    el.textContent = xlabels[i] || '';
+  }
+
+  // Weekend shading for 1W+
+  const ws1 = document.getElementById('weekendShade1');
+  const ws2 = document.getElementById('weekendShade2');
+  const legend = document.getElementById('chartLegend');
+  if (currentRange === '1w') {
+    ws1.setAttribute('x', String(W * 5/7));
+    ws1.setAttribute('width', String(W * 2/7));
+    ws1.setAttribute('display', 'block');
+    ws2.setAttribute('display', 'none');
+    legend.style.display = 'flex';
+  } else if (['3m','6m','ytd','1y'].includes(currentRange)) {
+    legend.style.display = 'flex';
+    ws1.setAttribute('display', 'none');
+    ws2.setAttribute('display', 'none');
+  } else {
+    ws1.setAttribute('display', 'none');
+    ws2.setAttribute('display', 'none');
+    legend.style.display = 'none';
+  }
+
+  // Market sessions (1D only)
+  const sUS = document.getElementById('sessionUS');
+  const sEU = document.getElementById('sessionEU');
+  if (currentRange === '1d') {
+    sUS.setAttribute('x', String(W * 0.02));
+    sUS.setAttribute('width', String(W * 0.72));
+    sUS.setAttribute('display', 'block');
+    sEU.setAttribute('x', String(W * 0));
+    sEU.setAttribute('width', String(W * 0.52));
+    sEU.setAttribute('display', 'block');
+    legend.style.display = 'flex';
+    document.getElementById('marketSessions').style.display = 'flex';
+  } else {
+    sUS.setAttribute('display', 'none');
+    sEU.setAttribute('display', 'none');
+    document.getElementById('marketSessions').style.display = currentRange === '1d' ? 'flex' : 'none';
+  }
+
+  // Benchmark lines
+  drawBenchmarks(pts, scaleX, scaleY);
+}
+
+function drawBenchmarks(pts, scaleX, scaleY) {
+  const lines = ['benchLine1', 'benchLine2'];
+  const colors = ['#3b82f6', '#f59e0b'];
+  benchmarks.forEach((b, idx) => {
+    if (idx >= 2) return;
+    const el = document.getElementById(lines[idx]);
+    const bench = generateBenchmark(pts, idx === 0 ? 0.4 : 0.6);
+    if (currentMode === 'perf') {
+      // normalize to %
+      const startVal = pts[0];
+      let d = '';
+      for (let i = 0; i < pts.length; i++) {
+        const py = scaleY(startVal * (1 + bench[i] / 100 * 20));
+        d += (i === 0 ? 'M' : ' L') + scaleX(i) + ',' + py;
+      }
+      el.setAttribute('d', d);
+    } else {
+      const minV = Math.min(...pts);
+      const maxV = Math.max(...pts);
+      const r = maxV - minV || 1;
+      let d = '';
+      for (let i = 0; i < pts.length; i++) {
+        const normVal = minV + (bench[i] / 3 + 0.5) * r;
+        const py = scaleY(normVal);
+        d += (i === 0 ? 'M' : ' L') + scaleX(i) + ',' + py;
+      }
+      el.setAttribute('d', d);
+    }
+    el.setAttribute('display', 'block');
+    el.setAttribute('stroke', colors[idx]);
+  });
+  for (let i = benchmarks.length; i < 2; i++) {
+    document.getElementById(lines[i]).setAttribute('display', 'none');
+  }
+}
+
+function setRange(r) {
+  currentRange = r;
+  document.querySelectorAll('.range-pill').forEach(el => el.classList.remove('active'));
+  document.getElementById('range-' + r).classList.add('active');
+  drawChart();
+}
+
+function setMode(m) {
+  currentMode = m;
+  document.getElementById('modeValue').classList.toggle('active', m === 'value');
+  document.getElementById('modePerf').classList.toggle('active', m === 'perf');
+  drawChart();
+}
+
+function setFilter(type) {
+  const colors = { all: 'var(--gain)', stock: 'var(--stock-color)', etf: 'var(--etf-color)', crypto: 'var(--crypto-color)' };
+  const bgs = { all: 'var(--gain-bg)', stock: 'rgba(99,102,241,0.12)', etf: 'rgba(245,158,11,0.12)', crypto: 'rgba(236,72,153,0.12)' };
+  const borderColors = { all: 'rgba(16,185,129,0.3)', stock: 'rgba(99,102,241,0.3)', etf: 'rgba(245,158,11,0.3)', crypto: 'rgba(236,72,153,0.3)' };
+  document.querySelectorAll('.asset-pill').forEach(el => {
+    el.classList.remove('active');
+    el.style.background = 'transparent';
+    el.style.color = 'var(--text-dim)';
+    el.style.borderColor = 'var(--border)';
+  });
+  const btn = document.getElementById('filter-' + type);
+  btn.classList.add('active');
+  btn.style.background = bgs[type];
+  btn.style.color = colors[type];
+  btn.style.borderColor = borderColors[type];
+
+  // Update line color
+  const lineColor = type === 'all' ? '#10b981' : type === 'stock' ? '#6366f1' : type === 'etf' ? '#f59e0b' : '#ec4899';
+  document.getElementById('mainLine').setAttribute('stroke', lineColor);
+}
+
+function toggleCompare() {
+  showCompare = !showCompare;
+  if (showCompare && benchmarks.length === 0) {
+    benchmarks = [
+      { key: 'sp500', label: 'S&P 500', color: '#3b82f6' },
+    ];
+  } else if (!showCompare) {
+    benchmarks = [];
+  }
+  updateBenchmarkChips();
+  drawChart();
+}
+
+function removeBenchmark(key) {
+  benchmarks = benchmarks.filter(b => b.key !== key);
+  if (benchmarks.length === 0) showCompare = false;
+  updateBenchmarkChips();
+  drawChart();
+}
+
+function updateBenchmarkChips() {
+  const container = document.getElementById('benchmarkChips');
+  const tooltipBench = document.getElementById('tooltipBenchmarks');
+  container.innerHTML = benchmarks.map(b =>
+    `<span class="bench-chip" onclick="removeBenchmark('${b.key}')">
+      <span class="chip-dot" style="background:${b.color};"></span>
+      ${b.label}
+      <span class="chip-x">&times;</span>
+    </span>`
+  ).join('');
+  tooltipBench.style.display = benchmarks.length > 0 ? 'block' : 'none';
+}
+
+// Crosshair interaction
+const chartArea = document.getElementById('chartArea');
+chartArea.addEventListener('mousemove', (e) => {
+  const rect = chartArea.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  const line = document.getElementById('crosshairLine');
+  const dot = document.getElementById('crosshairDot');
+  const tooltip = document.getElementById('tooltip');
+
+  line.style.display = 'block';
+  line.style.left = x + 'px';
+  dot.style.display = 'block';
+
+  const pts = CHART_DATA[currentRange];
+  const idx = Math.round((x / rect.width) * (pts.length - 1));
+  const clamped = Math.max(0, Math.min(pts.length - 1, idx));
+  const val = pts[clamped];
+
+  const svgH = 290;
+  const minV = Math.min(...pts);
+  const maxV = Math.max(...pts);
+  const range = maxV - minV || 1;
+  const padY = range * 0.1;
+  const dotY = 16 + svgH - ((val - (minV - padY)) / (range + 2 * padY)) * svgH;
+
+  dot.style.left = x + 'px';
+  dot.style.top = dotY + 'px';
+  dot.style.background = document.getElementById('mainLine').getAttribute('stroke');
+
+  tooltip.classList.add('visible');
+  tooltip.style.left = Math.min(Math.max(x, 120), rect.width - 120) + 'px';
+  tooltip.querySelector('.tooltip-value').textContent = '€' + val.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  const pctChange = ((val - pts[0]) / pts[0] * 100);
+  tooltip.querySelector('.tooltip-change').textContent = (pctChange >= 0 ? '+' : '') + pctChange.toFixed(2) + '% from start';
+  tooltip.querySelector('.tooltip-change').style.color = pctChange >= 0 ? 'var(--gain)' : 'var(--loss)';
+});
+
+chartArea.addEventListener('mouseleave', () => {
+  document.getElementById('crosshairLine').style.display = 'none';
+  document.getElementById('crosshairDot').style.display = 'none';
+  document.getElementById('tooltip').classList.remove('visible');
+});
+
+// Initial draw
+drawChart();
+</script>
+
+</body>
+</html>
