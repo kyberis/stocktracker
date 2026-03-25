@@ -116,7 +116,7 @@ export default function OnboardingChecklist({ onOpenAddStock }: Props) {
   const allDone = completedCount === total;
   const pct = total > 0 ? (completedCount / total) * 100 : 0;
 
-  if (allDone && data.dismissed) return null;
+  if (allDone) return null;
 
   const STEPS: StepInfo[] = [
     {
@@ -144,27 +144,6 @@ export default function OnboardingChecklist({ onOpenAddStock }: Props) {
       onAction: () => { window.location.href = "/tools"; },
     },
   ];
-
-  if (allDone) {
-    return (
-      <div className="card rounded-xl p-3 border-emerald-500/20 bg-emerald-500/[0.04]">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 text-xs font-bold">
-            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            {t("checklistAllDone")}
-          </div>
-          <button onClick={dismiss} className="text-[10px] text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300">
-            &times;
-          </button>
-        </div>
-        <div className="h-1 rounded-full bg-emerald-500/20 overflow-hidden mt-2">
-          <div className="h-full rounded-full bg-emerald-500" style={{ width: "100%" }} />
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="card rounded-xl overflow-hidden">
