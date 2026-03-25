@@ -11,12 +11,13 @@ import {
   ResponsiveContainer,
   CartesianGrid,
   ReferenceArea,
+  ReferenceLine,
 } from "recharts";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useAuth } from "@/lib/auth-context";
 import { useStealthMode } from "@/lib/stealth-context";
 import { useI18n } from "@/lib/i18n";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatPercent } from "@/lib/utils";
 import {
   isAnyMarketActive,
   getNextMarketOpen,
@@ -29,6 +30,7 @@ import BenchmarkDropdown from "@/components/dashboard-v2/BenchmarkDropdown";
 import RangeSelector from "./RangeSelector";
 import type { EvolutionRange } from "./RangeSelector";
 import ChartTooltip from "./ChartTooltip";
+import AssetTypeFilter from "@/components/dashboard-v2/AssetTypeFilter";
 import type { AssetFilter } from "@/components/dashboard-v2/AssetTypeFilter";
 import type { Holding } from "@/lib/types";
 
@@ -61,10 +63,34 @@ export interface EventMarker {
   currency?: string;
 }
 
+export interface SpikeContributor {
+  ticker: string;
+  name: string;
+  contribution: number;
+  dayChangePct: number;
+}
+
+export interface SpikeTypeBreakdown {
+  type: string;
+  delta: number;
+  pct: number;
+}
+
+export interface SpikeDetail {
+  delta: number;
+  deltaPct: number;
+  byType: SpikeTypeBreakdown[];
+}
+
 interface ChartPoint {
   date: string;
   value?: number;
   pct?: number;
+  spike?: number;
+  spikeDetail?: SpikeDetail;
+  stockValue?: number;
+  etfValue?: number;
+  cryptoValue?: number;
   events?: EventMarker[];
   [key: string]: unknown;
 }
@@ -140,12 +166,21 @@ function formatDateLabel(dateStr: string, isIntraday: boolean): string {
   return new Date(dateStr).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
 
-function toAlignKey(dateStr: string): string {
-  const hasTime = dateStr.includes(" ") || dateStr.includes("T");
-  if (!hasTime) return dateStr;
-  const d = new Date(dateStr.replace(" ", "T"));
-  d.setMinutes(Math.floor(d.getMinutes() / 5) * 5, 0, 0);
-  return d.toISOString().slice(0, 16);
+function toAlignKey(dateStr: string, intraday: boolean): string {
+  if (!intraday) return dateStr.slice(0, 10);
+  const s = dateStr.includes("T") ? dateStr : dateStr.replace(" ", "T");
+  const d = new Date(s);
+  if (!Number.isFinite(d.getTime())) return dateStr.slice(0, 10);
+  const mins = Math.floor(d.getTime() / 300000) * 300000;
+  return new Date(mins).toISOString().slice(0, 16);
+}
+
+function normalizeBenchmarkSeries(values: number[]): number[] {
+  if (values.length === 0) return [];
+  const firstRealIdx = values.findIndex((v) => v > 0);
+  if (firstRealIdx < 0) return values.map(() => 0);
+  const base = values[firstRealIdx];
+  return values.map((v, i) => (i < firstRealIdx || v <= 0 ? 0 : ((v - base) / base) * 100));
 }
 
 /**
@@ -250,10 +285,18 @@ interface Props {
   /** Expand/collapse toggle for dashboard embedding */
   expanded?: boolean;
   onToggleExpand?: () => void;
+  /** Inline header data (renders inside the card) */
+  totalValue?: number;
+  dayGainLoss?: number;
+  dayGainLossPercent?: number;
+  totalGainLossPercent?: number;
+  /** Asset filter controls */
+  onAssetFilterChange?: (v: AssetFilter) => void;
+  dayChangePctByType?: Partial<Record<AssetFilter, number>>;
 }
 
-export default function PortfolioValueChart({ holdings, assetFilter, refreshKey, onRecalculate, recalculating, onOpenAi, expanded, onToggleExpand }: Props) {
-  const { activePortfolioId, activePortfolioCurrency, mutationVersion } = usePortfolio();
+export default function PortfolioValueChart({ holdings, assetFilter, refreshKey, onRecalculate, recalculating, onOpenAi, expanded, onToggleExpand, totalValue, dayGainLoss, dayGainLossPercent, totalGainLossPercent, onAssetFilterChange, dayChangePctByType }: Props) {
+  const { activePortfolioId, activePortfolioCurrency, mutationVersion, quotes } = usePortfolio();
   const { user } = useAuth();
   const { stealthMode } = useStealthMode();
   const { t } = useI18n();
@@ -263,6 +306,7 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
 
   const [range, setRange] = useState<EvolutionRange>("1d");
   const [mode, setMode] = useState<"value" | "performance">("value");
+  const [showGuide, setShowGuide] = useState(false);
   const [debugDate, setDebugDate] = useState<string | null>(null);
   const [points, setPoints] = useState<SnapshotPoint[]>([]);
   const [events, setEvents] = useState<EventMarker[]>([]);
@@ -275,7 +319,7 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
       return [];
     }
   });
-  const [benchmarkData, setBenchmarkData] = useState<Record<string, Record<string, number>>>({});
+  const [benchmarkData, setBenchmarkData] = useState<Record<string, number[]>>({});
   const [showCompareDropdown, setShowCompareDropdown] = useState(false);
 
   const fetchVersionRef = useRef(0);
@@ -325,58 +369,7 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
     return () => clearInterval(interval);
   }, [range, fetchHistory, debugDate]);
 
-  // ── Fetch benchmarks ──
-
-  const benchmarkEntries: BenchmarkOverlayEntry[] = useMemo(
-    () =>
-      benchmarkKeys
-        .map((k) => OVERLAY_BENCHMARKS.find((b: BenchmarkDef) => b.key === k))
-        .filter((b): b is BenchmarkDef => !!b)
-        .map((b) => ({ key: b.key, symbol: b.symbol, label: b.labelKey, color: b.color })),
-    [benchmarkKeys],
-  );
-
-  useEffect(() => {
-    if (benchmarkEntries.length === 0) {
-      setBenchmarkData({});
-      return;
-    }
-    let cancelled = false;
-    const period = BENCHMARK_PERIOD_MAP[range];
-
-    Promise.all(
-      benchmarkEntries.map(async (b) => {
-        const res = await fetch(`/api/historical?symbol=${encodeURIComponent(b.symbol)}&period=${period}`);
-        if (!res.ok) return { key: b.key, data: {} };
-        const json = await res.json();
-        const pts: { date: string; close: number }[] = json.data ?? [];
-        if (pts.length === 0) return { key: b.key, data: {} };
-        const first = pts[0].close;
-        const mapped: Record<string, number> = {};
-        for (const p of pts) {
-          mapped[toAlignKey(p.date)] = ((p.close - first) / first) * 100;
-        }
-        return { key: b.key, data: mapped };
-      }),
-    ).then((results) => {
-      if (cancelled) return;
-      const merged: Record<string, Record<string, number>> = {};
-      for (const r of results) merged[r.key] = r.data;
-      setBenchmarkData(merged);
-    });
-
-    return () => { cancelled = true; };
-  }, [benchmarkEntries, range, points.length]);
-
-  // ── Persist benchmark selection ──
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(BENCHMARK_STORAGE_KEY, JSON.stringify(benchmarkKeys));
-    } catch {}
-  }, [benchmarkKeys]);
-
-  // ── Derive chart data ──
+  // ── Derive effective points (must be before benchmark fetch) ──
 
   const isFilteredSingle = assetFilter !== "all";
 
@@ -390,8 +383,82 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
     });
   }, [points, isFilteredSingle, assetFilter]);
 
+  // ── Fetch benchmarks ──
+
+  const benchmarkEntries: BenchmarkOverlayEntry[] = useMemo(
+    () =>
+      benchmarkKeys
+        .map((k) => OVERLAY_BENCHMARKS.find((b: BenchmarkDef) => b.key === k))
+        .filter((b): b is BenchmarkDef => !!b)
+        .map((b) => ({ key: b.key, symbol: b.symbol, label: b.labelKey, color: b.color })),
+    [benchmarkKeys],
+  );
+
+  useEffect(() => {
+    if (benchmarkEntries.length === 0 || effectivePoints.length < 2) {
+      setBenchmarkData({});
+      return;
+    }
+    let cancelled = false;
+    const period = BENCHMARK_PERIOD_MAP[range];
+    const isIntraday = range === "1d" || range === "1w";
+    const chartKeys = effectivePoints.map((p) => toAlignKey(p.date, isIntraday));
+
+    Promise.all(
+      benchmarkEntries.map(async (b) => {
+        try {
+          const res = await fetch(`/api/historical?symbol=${encodeURIComponent(b.symbol)}&period=${period}`);
+          if (!res.ok) return { key: b.key, values: [] as number[] };
+          const json = await res.json();
+          const raw: { date: string; close: number }[] = Array.isArray(json) ? json : json.data || [];
+
+          const closeByKey = new Map<string, number>();
+          for (const pt of raw) closeByKey.set(toAlignKey(pt.date, isIntraday), pt.close);
+
+          const firstChartKey = chartKeys[0];
+          const sortedBenchKeys = [...closeByKey.keys()].sort();
+          let lastClose = 0;
+          for (const bk of sortedBenchKeys) {
+            if (bk <= firstChartKey && (closeByKey.get(bk) ?? 0) > 0) {
+              lastClose = closeByKey.get(bk)!;
+            }
+          }
+
+          const aligned: number[] = [];
+          for (let i = 0; i < chartKeys.length; i++) {
+            const c = closeByKey.get(chartKeys[i]);
+            if (c != null && c > 0) lastClose = c;
+            aligned.push(lastClose);
+          }
+
+          return { key: b.key, values: normalizeBenchmarkSeries(aligned) };
+        } catch {
+          return { key: b.key, values: [] as number[] };
+        }
+      }),
+    ).then((results) => {
+      if (cancelled) return;
+      const map: Record<string, number[]> = {};
+      for (const r of results) {
+        if (r.values.length > 0) map[r.key] = r.values;
+      }
+      setBenchmarkData(map);
+    });
+
+    return () => { cancelled = true; };
+  }, [benchmarkEntries, range, effectivePoints]);
+
+  // ── Persist benchmark selection ──
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(BENCHMARK_STORAGE_KEY, JSON.stringify(benchmarkKeys));
+    } catch {}
+  }, [benchmarkKeys]);
+
   const hasBenchmarks = benchmarkEntries.length > 0 && Object.keys(benchmarkData).length > 0;
-  const showPerformance = mode === "performance" || hasBenchmarks;
+  const showPerformance = mode === "performance";
+  const showBenchmarks = showPerformance && hasBenchmarks;
 
   // ── Market hours (must come before chartData which depends on sessionOverlays) ──
 
@@ -457,25 +524,47 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
     if (effectivePoints.length === 0) return [];
     const firstValue = effectivePoints[0].value;
 
-    const realPoints: ChartPoint[] = effectivePoints.map((p) => {
+    const realPoints: ChartPoint[] = effectivePoints.map((p, idx) => {
       const point: ChartPoint = {
         date: p.date,
         value: p.value,
         pct: firstValue > 0 ? ((p.value - firstValue) / firstValue) * 100 : 0,
+        stockValue: p.stockValue,
+        etfValue: p.etfValue,
+        cryptoValue: p.cryptoValue,
       };
 
       if (hasBenchmarks) {
-        const alignKey = toAlignKey(p.date);
         for (const b of benchmarkEntries) {
-          const bData = benchmarkData[b.key];
-          if (bData) {
-            const match = bData[alignKey] ?? bData[p.date.slice(0, 10)];
-            if (match != null) point[`bench_${b.key}`] = match;
-          }
+          const arr = benchmarkData[b.key];
+          if (arr && idx < arr.length) point[`bench_${b.key}`] = arr[idx];
         }
       }
       return point;
     });
+
+    const SPIKE_THRESHOLD = 0.3;
+    for (let i = 1; i < realPoints.length; i++) {
+      const prev = realPoints[i - 1];
+      const curr = realPoints[i];
+      if (prev.value != null && curr.value != null && prev.value > 0) {
+        const deltaPct = ((curr.value! - prev.value!) / prev.value!) * 100;
+        if (Math.abs(deltaPct) >= SPIKE_THRESHOLD) {
+          curr.spike = deltaPct;
+          const totalDelta = curr.value! - prev.value!;
+          const types: SpikeTypeBreakdown[] = [
+            { type: "Stocks", delta: (curr.stockValue ?? 0) - (prev.stockValue ?? 0), pct: 0 },
+            { type: "ETFs", delta: (curr.etfValue ?? 0) - (prev.etfValue ?? 0), pct: 0 },
+            { type: "Crypto", delta: (curr.cryptoValue ?? 0) - (prev.cryptoValue ?? 0), pct: 0 },
+          ]
+            .filter((t) => Math.abs(t.delta) > 0.01)
+            .map((t) => ({ ...t, pct: totalDelta !== 0 ? (t.delta / Math.abs(totalDelta)) * 100 : 0 }))
+            .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
+
+          curr.spikeDetail = { delta: totalDelta, deltaPct, byType: types };
+        }
+      }
+    }
 
     if (range !== "1d" || !dayBounds) return realPoints;
 
@@ -497,7 +586,19 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
     const masked = shouldMask
       ? realPoints.map((p) => {
           const ms = parseTime(p.date);
-          if (!isInOpenSession(ms)) return { date: p.date } as ChartPoint;
+          if (!isInOpenSession(ms)) {
+            const kept: ChartPoint = { date: p.date };
+            for (const b of benchmarkEntries) {
+              const bKey = `bench_${b.key}`;
+              if (p[bKey] != null) kept[bKey] = p[bKey];
+            }
+            if (p.spike != null) kept.spike = p.spike;
+            if (p.spikeDetail) kept.spikeDetail = p.spikeDetail;
+            if (p.stockValue != null) kept.stockValue = p.stockValue;
+            if (p.etfValue != null) kept.etfValue = p.etfValue;
+            if (p.cryptoValue != null) kept.cryptoValue = p.cryptoValue;
+            return kept;
+          }
           return p;
         })
       : realPoints;
@@ -534,13 +635,23 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
   const dataKey = showPerformance ? "pct" : "value";
 
   const yDomain = useMemo((): [number, number] => {
-    const vals = chartData.map((p) => (showPerformance ? p.pct : p.value)).filter((v): v is number => v != null);
+    const vals: number[] = [];
+    for (const p of chartData) {
+      const v = showPerformance ? p.pct : p.value;
+      if (v != null) vals.push(v as number);
+      if (showBenchmarks) {
+        for (const b of benchmarkEntries) {
+          const bv = p[`bench_${b.key}`];
+          if (typeof bv === "number") vals.push(bv);
+        }
+      }
+    }
     if (vals.length === 0) return [0, 100];
     const min = Math.min(...vals);
     const max = Math.max(...vals);
     const pad = (max - min) * 0.08 || 1;
     return [min - pad, max + pad];
-  }, [chartData, showPerformance]);
+  }, [chartData, showPerformance, showBenchmarks, benchmarkEntries]);
 
   // ── Period return ──
 
@@ -553,33 +664,116 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
     return ((last - first) / first) * 100;
   }, [chartData]);
 
+  // ── Spike contributors (top movers by portfolio contribution) ──
+
+  const spikeContributors: SpikeContributor[] = useMemo(() => {
+    const totalVal = holdings.reduce((s, h) => s + (h.valueInEUR || 0), 0);
+    if (totalVal <= 0 || !quotes) return [];
+    return holdings
+      .map((h) => {
+        const q = quotes[h.ticker];
+        if (!q) return null;
+        const weight = (h.valueInEUR || 0) / totalVal;
+        const dayChangePct = q.regularMarketChangePercent ?? 0;
+        const contribution = weight * dayChangePct;
+        return { ticker: h.ticker, name: h.name || h.ticker, contribution, dayChangePct };
+      })
+      .filter((x): x is SpikeContributor => x != null && Math.abs(x.contribution) > 0.001)
+      .sort((a, b) => Math.abs(b.contribution) - Math.abs(a.contribution))
+      .slice(0, 5);
+  }, [holdings, quotes]);
+
   // ── Render ──
 
   const isIntraday = range === "1d";
 
-  const expandBtn = onToggleExpand ? (
-    <button
-      onClick={onToggleExpand}
-      className="absolute top-3 right-3 z-10 p-1.5 rounded-lg text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors"
-      title={expanded ? t("chartMinimize") : t("chartExpand")}
-      aria-label={expanded ? t("chartMinimize") : t("chartExpand")}
-    >
-      {expanded ? (
+  const topButtons = (
+    <div className="absolute top-3 right-3 z-10 flex items-center gap-1">
+      <button
+        onClick={() => setShowGuide(true)}
+        className="p-1.5 rounded-lg text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors"
+        title="Chart guide"
+        aria-label="Chart guide"
+      >
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M12 18h.01" />
+          <circle cx="12" cy="12" r="9.75" />
         </svg>
-      ) : (
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
-        </svg>
+      </button>
+      {onToggleExpand && (
+        <button
+          onClick={onToggleExpand}
+          className="p-1.5 rounded-lg text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors"
+          title={expanded ? t("chartMinimize") : t("chartExpand")}
+          aria-label={expanded ? t("chartMinimize") : t("chartExpand")}
+        >
+          {expanded ? (
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25" />
+            </svg>
+          ) : (
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+            </svg>
+          )}
+        </button>
       )}
-    </button>
+    </div>
+  );
+
+  const hasHeader = totalValue != null;
+  const isPositiveDay = (dayGainLoss ?? 0) >= 0;
+  const isPositiveTotal = (totalGainLossPercent ?? 0) >= 0;
+
+  const inlineHeader = hasHeader ? (
+    <div className="px-5 pt-4 pb-2">
+      <div className="flex items-baseline gap-3 flex-wrap">
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-slate-500">
+          {t("portfolioValue")}
+        </p>
+        <h2 className="text-[28px] font-extrabold tracking-tight leading-none text-gray-900 dark:text-white tabular-nums">
+          {stealthMode ? "•••••" : formatCurrency(totalValue!, activePortfolioCurrency)}
+        </h2>
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <span
+            className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-md ${
+              isPositiveDay
+                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                : "bg-red-500/10 text-red-500 dark:text-red-400"
+            }`}
+          >
+            {stealthMode
+              ? "•••"
+              : `${isPositiveDay ? "+" : ""}${formatCurrency(dayGainLoss ?? 0, activePortfolioCurrency)} (${formatPercent(dayGainLossPercent ?? 0)})`}
+          </span>
+          <span className="text-[11px] text-gray-500 dark:text-slate-400">
+            <span
+              className={`font-semibold ${
+                isPositiveTotal
+                  ? "text-emerald-600 dark:text-emerald-400"
+                  : "text-red-500 dark:text-red-400"
+              }`}
+            >
+              {stealthMode ? "•••" : formatPercent(totalGainLossPercent ?? 0)}
+            </span>{" "}
+            {t("totalGainLabel")}
+          </span>
+        </div>
+      </div>
+      {onAssetFilterChange && (
+        <div className="mt-2.5">
+          <AssetTypeFilter value={assetFilter} onChange={onAssetFilterChange} dayChangePct={dayChangePctByType} />
+        </div>
+      )}
+    </div>
   ) : null;
 
   if (loading && points.length === 0) {
     return (
       <div className="card overflow-hidden relative">
-        {expandBtn}
+        {topButtons}
+        {showGuide && <ChartGuideModal mode={mode} onClose={() => setShowGuide(false)} />}
+        {inlineHeader}
         <div className="h-[340px] flex items-center justify-center">
           <svg className="animate-spin h-6 w-6 text-gray-400" viewBox="0 0 24 24" fill="none">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -596,7 +790,9 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
     const lastValue = effectivePoints.length > 0 ? effectivePoints[effectivePoints.length - 1].value : null;
     return (
       <div className="card overflow-hidden relative">
-        {expandBtn}
+        {topButtons}
+        {showGuide && <ChartGuideModal mode={mode} onClose={() => setShowGuide(false)} />}
+        {inlineHeader}
         <div className="relative h-[340px] flex flex-col items-center justify-center text-center gap-2.5">
           {/* Faint grid background */}
           <div
@@ -643,9 +839,12 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
 
   return (
     <div className="card overflow-hidden relative">
-      {expandBtn}
+      {topButtons}
+      {showGuide && <ChartGuideModal mode={mode} onClose={() => setShowGuide(false)} />}
+      {inlineHeader}
+
       {/* Chart */}
-      <div className="h-[340px] px-2 pt-3">
+      <div className={`h-[340px] px-2 ${hasHeader ? "pt-1" : "pt-3"}`}>
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartDataWithEvents} margin={{ top: 4, right: 8, left: 8, bottom: 4 }}>
             <defs>
@@ -657,7 +856,7 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
                 <line x1="0" y1="0" x2="0" y2="6" stroke="var(--weekend-hatch, rgba(148,163,184,0.08))" strokeWidth="2" />
               </pattern>
               <pattern id="pv2-closed-hatch" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
-                <line x1="0" y1="0" x2="0" y2="6" stroke="var(--closed-hatch, rgba(148,163,184,0.18))" strokeWidth="1" />
+                <line x1="0" y1="0" x2="0" y2="6" stroke="var(--closed-hatch, rgba(148,163,184,0.30))" strokeWidth="1.5" />
               </pattern>
             </defs>
 
@@ -690,12 +889,13 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
             <Tooltip
               content={
                 <ChartTooltip
-                  mode={showPerformance ? "performance" : "value"}
+                  mode={mode}
                   baseCurrency={baseCurrency}
                   stealthMode={stealthMode}
-                  benchmarkEntries={benchmarkEntries}
+                  benchmarkEntries={showBenchmarks ? benchmarkEntries : undefined}
                   holdings={holdings}
                   range={range}
+                  spikeContributors={spikeContributors}
                 />
               }
               cursor={{ stroke: "var(--cursor, rgba(148,163,184,0.2))", strokeDasharray: "3 3" }}
@@ -713,7 +913,7 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
               />
             ))}
 
-            {/* Market session bands (1D) */}
+            {/* Market session bands (1D) with staggered name labels */}
             {sessionOverlays.map((s, i) => (
               <ReferenceArea
                 key={`session-${i}`}
@@ -722,6 +922,36 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
                 fill={s.color}
                 fillOpacity={0.05}
                 ifOverflow="visible"
+                label={{
+                  value: s.name,
+                  position: "insideTopLeft" as const,
+                  fill: s.color,
+                  fontSize: 8,
+                  fontWeight: 600,
+                  opacity: 0.6,
+                  dy: 6 + i * 12,
+                  dx: 4,
+                }}
+              />
+            ))}
+
+            {/* Session open/close vertical markers (1D) */}
+            {sessionOverlays.map((s) => (
+              <ReferenceLine
+                key={`open-${s.name}`}
+                x={s.openDate.toISOString()}
+                stroke={s.color}
+                strokeDasharray="3 3"
+                strokeOpacity={0.4}
+              />
+            ))}
+            {sessionOverlays.map((s) => (
+              <ReferenceLine
+                key={`close-${s.name}`}
+                x={s.closeDate.toISOString()}
+                stroke="var(--axis, rgba(148,163,184,0.25))"
+                strokeDasharray="3 3"
+                strokeOpacity={0.25}
               />
             ))}
 
@@ -737,9 +967,9 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
                 label={closedZones.length <= 3 ? {
                   value: "Market closed",
                   position: "insideTop" as const,
-                  fill: "var(--closed-label, rgba(148,163,184,0.5))",
+                  fill: "var(--closed-label, rgba(100,116,139,0.7))",
                   fontSize: 10,
-                  fontWeight: 500,
+                  fontWeight: 600,
                   dy: 12,
                 } : undefined}
               />
@@ -760,17 +990,28 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
                   index: number;
                   payload: ChartPoint;
                 };
-                const evts = payload?.events;
-                if (!evts?.length || typeof cx !== "number" || typeof cy !== "number") {
+                if (typeof cx !== "number" || typeof cy !== "number") {
                   return <g key={`ed-${index}`} />;
                 }
-                const show = evts.slice(0, 4);
+                const evts = payload?.events;
+                const hasSpike = payload?.spike != null;
+                const hasEvents = evts?.length;
+                if (!hasSpike && !hasEvents) {
+                  return <g key={`ed-${index}`} />;
+                }
+                const spikeColor = hasSpike ? ((payload.spike as number) > 0 ? "#10b981" : "#ef4444") : undefined;
                 return (
                   <g key={`ed-${index}`}>
-                    {show.map((e, i) => (
+                    {hasSpike && (
+                      <>
+                        <circle cx={cx} cy={cy} r={7} fill={spikeColor} fillOpacity={0.15} />
+                        <circle cx={cx} cy={cy} r={4} fill={spikeColor} fillOpacity={0.5} stroke={spikeColor} strokeWidth={1} />
+                      </>
+                    )}
+                    {hasEvents && evts!.slice(0, 4).map((e, i) => (
                       <circle
                         key={e.id || `${e.type}-${e.ticker}-${i}`}
-                        cx={cx + (i - (show.length - 1) / 2) * 6}
+                        cx={cx + (i - (evts!.slice(0, 4).length - 1) / 2) * 6}
                         cy={cy}
                         r={3.5}
                         fill={eventDotFill(e.type)}
@@ -787,8 +1028,8 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
               isAnimationActive={false}
             />
 
-            {/* Benchmark lines */}
-            {benchmarkEntries.map((b) => (
+            {/* Benchmark lines (performance mode only) */}
+            {showBenchmarks && benchmarkEntries.map((b) => (
               <Line
                 key={b.key}
                 type="monotone"
@@ -810,7 +1051,7 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
         <div className="flex items-center gap-4 px-5 py-2 border-t border-gray-100 dark:border-white/[0.04] text-[11px] text-gray-500 dark:text-slate-500 overflow-x-auto">
           {sessionOverlays.map((s, i) => (
             <div key={i} className="flex items-center gap-1.5 whitespace-nowrap">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
               <span className="font-semibold text-gray-600 dark:text-slate-400">{s.name}</span>
               <span>{s.openLabel} – {s.closeLabel}</span>
             </div>
@@ -940,25 +1181,93 @@ interface ChartFooterProps {
   onOpenAi?: () => void;
 }
 
-function ModeInfoTooltip({ mode }: { mode: "value" | "performance" }) {
-  const text = mode === "value"
-    ? "Shows your total portfolio value (green) alongside your invested capital (gray). The gap between the two lines is your profit or loss. A rising green line doesn\u2019t necessarily mean positive returns \u2014 it may include deposits. Dots mark transactions (buys, sells, dividends, fees) \u2014 hover for details."
-    : "Shows how your investments are performing as a percentage of what you invested. Deposits and withdrawals are factored out, so you see your actual investment returns.";
+function ChartGuideModal({ mode, onClose }: { mode: "value" | "performance"; onClose: () => void }) {
+  const sections = [
+    {
+      icon: "📊",
+      title: mode === "value" ? "Value mode" : "Performance mode",
+      text: mode === "value"
+        ? "Shows your total portfolio value over time. A rising line doesn\u2019t necessarily mean positive returns \u2014 it may reflect deposits."
+        : "Shows your investment returns as a percentage, with deposits and withdrawals factored out so you see true performance.",
+    },
+    {
+      icon: "📅",
+      title: "Time ranges",
+      text: "1D shows intraday snapshots (every 5 min). 1W\u20131Y show daily closing values. Longer ranges are available on the Pro plan.",
+    },
+    {
+      icon: "🟦",
+      title: "Colored bands",
+      text: "Each colored band marks when a stock exchange is open for trading. The legend below the chart shows which color belongs to which exchange.",
+    },
+    {
+      icon: "▨",
+      title: "Hatched zones",
+      text: "Diagonal-line zones indicate periods when all your markets are closed \u2014 before open, between sessions, or after close.",
+    },
+    {
+      icon: "⚡",
+      title: "Spike indicators",
+      text: "Green or red pulsing rings highlight points where your portfolio moved \u22650.3% between consecutive snapshots. Hover to see which asset types and individual holdings likely drove the move.",
+    },
+    {
+      icon: "🔵",
+      title: "Transaction markers",
+      text: "Small green (buy) and red (sell) dots on the line mark where you executed trades. Hover for transaction details.",
+    },
+    {
+      icon: "📈",
+      title: "Benchmark comparison",
+      text: "In Performance mode, use the Compare button to overlay index benchmarks (S&P 500, NASDAQ, etc.) as dashed lines and see how your returns stack up.",
+    },
+    {
+      icon: "💡",
+      title: "Hover for details",
+      text: "Hover anywhere on the chart to see a detailed tooltip with your portfolio value, daily change, market session status, and any spike or transaction information for that point.",
+    },
+  ];
 
   return (
-    <div className="group/info relative flex items-center">
-      <button
-        type="button"
-        className="p-0.5 text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 transition-colors"
-        aria-label={`${mode} mode info`}
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+      <div
+        className="relative w-full max-w-md max-h-[80vh] rounded-xl bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 shadow-2xl overflow-hidden flex flex-col"
+        onClick={(e) => e.stopPropagation()}
       >
-        <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
-          <path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 2.5a1 1 0 110 2 1 1 0 010-2zM6.75 7h1.5v4.5h-1.5V7z" />
-        </svg>
-      </button>
-      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2.5 rounded-lg bg-gray-900 dark:bg-slate-800 text-[10px] leading-relaxed text-gray-200 dark:text-slate-300 shadow-lg border border-gray-800 dark:border-slate-700 opacity-0 pointer-events-none group-hover/info:opacity-100 group-hover/info:pointer-events-auto transition-opacity z-50">
-        <p className="font-semibold text-white mb-1 text-[11px] capitalize">{mode}</p>
-        <p>{text}</p>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-slate-800">
+          <div>
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white">Chart guide</h2>
+            <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">How to read your portfolio chart</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors"
+            aria-label="Close guide"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div className="overflow-y-auto px-5 py-4 space-y-4">
+          {sections.map((s) => (
+            <div key={s.title} className="flex gap-3">
+              <span className="text-base mt-0.5 shrink-0 w-6 text-center">{s.icon}</span>
+              <div>
+                <p className="text-sm font-medium text-gray-900 dark:text-white">{s.title}</p>
+                <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5 leading-relaxed">{s.text}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="px-5 py-3 border-t border-gray-100 dark:border-slate-800">
+          <button
+            onClick={onClose}
+            className="w-full py-2 rounded-lg text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+          >
+            Got it
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -1004,7 +1313,6 @@ function ChartFooter({
               Performance
             </button>
           </div>
-          <ModeInfoTooltip mode={mode} />
         </div>
 
         <RangeSelector value={range} onChange={setRange} />

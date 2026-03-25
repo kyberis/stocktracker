@@ -43,6 +43,41 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "Botón 'Preguntar a la IA' en la página de portafolio y el pie del gráfico — obtén análisis instantáneo de tu rendimiento con inteligencia artificial.",
         },
       },
+      {
+        type: "fix",
+        text: "Portfolio chart: market session dots now show their actual exchange color instead of all being green. Closed-market zones are more visible with stronger hatching and session open/close markers.",
+        translations: {
+          es: "Gráfico de portafolio: los indicadores de sesión de mercado ahora muestran su color real por bolsa en vez de ser todos verdes. Las zonas de mercado cerrado son más visibles con un rayado más fuerte y marcadores de apertura/cierre de sesión.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Benchmark overlay lines now draw correctly on the portfolio chart with proper data alignment, forward-fill, and normalization.",
+        translations: {
+          es: "Las líneas de comparación con índices ahora se dibujan correctamente en el gráfico de portafolio con alineación de datos, relleno progresivo y normalización adecuados.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Benchmark overlays are now only shown in Performance mode, keeping the Value chart clean and focused on portfolio value.",
+        translations: {
+          es: "Las líneas de comparación con índices ahora solo se muestran en modo Rendimiento, manteniendo el gráfico de Valor limpio y enfocado en el valor del portafolio.",
+        },
+      },
+      {
+        type: "feature",
+        text: "Spike detection on the portfolio chart — significant gains or losses are highlighted with colored dots. Hovering reveals a per-asset-type breakdown (from actual snapshot data) and estimated top holding contributors.",
+        translations: {
+          es: "Detección de picos en el gráfico de portafolio — las ganancias o pérdidas significativas se resaltan con puntos de color. Al pasar el cursor se muestra un desglose por tipo de activo (datos reales de snapshot) y las posiciones que probablemente contribuyeron más.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Removed legacy chart stack — the V2 portfolio chart is now the default for all users on desktop and mobile.",
+        translations: {
+          es: "Se eliminó el gráfico heredado — el gráfico V2 del portafolio es ahora el predeterminado para todos los usuarios en escritorio y móvil.",
+        },
+      },
     ],
   },
   {

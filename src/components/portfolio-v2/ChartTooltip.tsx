@@ -1,9 +1,9 @@
 "use client";
 
 import { formatCurrency, formatPercent } from "@/lib/utils";
-import { getActiveMarketsAt } from "@/lib/market-hours";
+import { getActiveMarketsAt, MARKET_SESSION_COLORS } from "@/lib/market-hours";
 import type { Holding } from "@/lib/types";
-import type { BenchmarkOverlayEntry, EventMarker } from "./PortfolioValueChart";
+import type { BenchmarkOverlayEntry, EventMarker, SpikeContributor, SpikeDetail } from "./PortfolioValueChart";
 
 interface Props {
   active?: boolean;
@@ -15,6 +15,7 @@ interface Props {
   benchmarkEntries?: BenchmarkOverlayEntry[];
   holdings?: Holding[];
   range: string;
+  spikeContributors?: SpikeContributor[];
 }
 
 function formatDateLabel(dateStr: string): string {
@@ -62,11 +63,74 @@ function MarketSessionSection({ holdings, dateStr }: { holdings: Holding[]; date
     <div className="border-t border-gray-100 dark:border-slate-700 mt-1.5 pt-1.5">
       {open.map((m) => (
         <div key={m.name} className="flex items-center gap-1.5 text-[10px] text-gray-400 dark:text-slate-500">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+          <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: MARKET_SESSION_COLORS[m.name] ?? "#10b981" }} />
           {m.name}
           {m.closesIn && <span className="ml-auto">{m.closesIn}</span>}
         </div>
       ))}
+    </div>
+  );
+}
+
+function SpikeContributorsSection({ spike, detail, contributors, baseCurrency, stealthMode }: {
+  spike: number;
+  detail?: SpikeDetail;
+  contributors: SpikeContributor[];
+  baseCurrency: string;
+  stealthMode: boolean;
+}) {
+  const isGain = spike > 0;
+  const color = isGain ? "#10b981" : "#ef4444";
+  const hasTypeBreakdown = detail?.byType && detail.byType.length > 0;
+  if (!hasTypeBreakdown && !contributors.length) return null;
+
+  return (
+    <div className="border-t border-gray-100 dark:border-slate-700 mt-1.5 pt-1.5">
+      <p className="text-[10px] font-semibold mb-1" style={{ color }}>
+        {isGain ? "▲" : "▼"} {spike > 0 ? "+" : ""}{spike.toFixed(2)}%
+        {detail && !stealthMode ? ` (${detail.delta > 0 ? "+" : ""}${formatCurrency(detail.delta, baseCurrency)})` : ""}
+      </p>
+
+      {hasTypeBreakdown && (
+        <div className="mb-1">
+          {detail!.byType.map((t) => {
+            const tPos = t.delta >= 0;
+            return (
+              <div key={t.type} className="flex items-center gap-1 text-[10px] leading-relaxed">
+                <span className="text-gray-600 dark:text-slate-300 font-medium">{t.type}</span>
+                <span className={`tabular-nums ml-auto ${tPos ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
+                  {stealthMode ? "•••" : `${tPos ? "+" : ""}${formatCurrency(t.delta, baseCurrency)}`}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {contributors.length > 0 && (
+        <>
+          <p className="text-[9px] text-gray-400 dark:text-slate-500 mb-0.5">Likely movers</p>
+          {contributors.map((c) => {
+            const isPos = c.dayChangePct >= 0;
+            return (
+              <div key={c.ticker} className="flex items-center gap-1 text-[10px] leading-relaxed">
+                <span className="text-gray-600 dark:text-slate-300 font-medium truncate max-w-[60px]">{c.ticker}</span>
+                <span className={`tabular-nums ${isPos ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
+                  {isPos ? "+" : ""}{c.dayChangePct.toFixed(1)}%
+                </span>
+                <span className="text-gray-400 dark:text-slate-500 ml-auto tabular-nums">
+                  ({c.contribution > 0 ? "+" : ""}{c.contribution.toFixed(2)}%)
+                </span>
+              </div>
+            );
+          })}
+        </>
+      )}
+
+      <p className="text-[8px] text-gray-300 dark:text-slate-600 mt-1 leading-tight">
+        {hasTypeBreakdown ? "Type breakdown from snapshot diff." : ""}{" "}
+        {contributors.length > 0 ? "Holdings estimated from day moves." : ""}
+      </p>
     </div>
   );
 }
@@ -80,6 +144,7 @@ export default function ChartTooltip({
   benchmarkEntries,
   holdings,
   range,
+  spikeContributors,
 }: Props) {
   if (!active || !payload?.length) return null;
   const point = payload[0]?.payload;
@@ -127,6 +192,7 @@ export default function ChartTooltip({
         </div>
         {benchmarkRows}
         {pointEvents.length > 0 && <EventSection events={pointEvents} stealthMode={stealthMode} baseCurrency={baseCurrency} />}
+        {point.spike != null ? <SpikeContributorsSection spike={point.spike} detail={point.spikeDetail} contributors={spikeContributors ?? []} baseCurrency={baseCurrency} stealthMode={stealthMode} /> : null}
         {range === "1d" && holdings && <MarketSessionSection holdings={holdings} dateStr={point.date} />}
       </div>
     );
@@ -142,8 +208,8 @@ export default function ChartTooltip({
           {stealthMode ? "•••••" : formatCurrency(point.value, baseCurrency)}
         </span>
       </div>
-      {benchmarkRows}
       {pointEvents.length > 0 && <EventSection events={pointEvents} stealthMode={stealthMode} baseCurrency={baseCurrency} />}
+      {point.spike != null ? <SpikeContributorsSection spike={point.spike} detail={point.spikeDetail} contributors={spikeContributors ?? []} baseCurrency={baseCurrency} stealthMode={stealthMode} /> : null}
       {range === "1d" && holdings && <MarketSessionSection holdings={holdings} dateStr={point.date} />}
     </div>
   );

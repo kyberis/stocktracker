@@ -5,9 +5,7 @@ import { usePortfolio } from "@/lib/portfolio-context";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
 import { getMarketStatus, wasMarketOpenToday } from "@/lib/market-hours";
 import { convertCurrency, resolveQuoteCurrency } from "@/lib/utils";
-import AssetTypeFilter from "@/components/dashboard-v2/AssetTypeFilter";
 import type { AssetFilter } from "@/components/dashboard-v2/AssetTypeFilter";
-import PortfolioHeader from "./PortfolioHeader";
 import PortfolioValueChart from "./PortfolioValueChart";
 import BackfillCTA from "./BackfillCTA";
 import MarketAwareBreakdown from "./MarketAwareBreakdown";
@@ -140,8 +138,17 @@ export default function PortfolioPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-4">
-      {/* Header */}
-      <PortfolioHeader
+      {/* Backfill CTA */}
+      <BackfillCTA holdingsCount={holdings.length} onComplete={handleBackfillComplete} />
+
+      {/* Chart (with integrated header + filter) */}
+      <PortfolioValueChart
+        holdings={holdings}
+        assetFilter={assetFilter}
+        refreshKey={refreshKey}
+        onRecalculate={handleRecalculate}
+        recalculating={recalculating}
+        onOpenAi={() => setAiDrawerOpen(true)}
         totalValue={totals.totalCurrentEUR}
         dayGainLoss={dayGainLoss}
         dayGainLossPercent={
@@ -150,23 +157,8 @@ export default function PortfolioPage() {
             : 0
         }
         totalGainLossPercent={totals.totalGainLossPercent}
-        currency={baseCurrency}
-      />
-
-      {/* Asset Type Filter */}
-      <AssetTypeFilter value={assetFilter} onChange={setAssetFilter} dayChangePct={dayChangePctByType} />
-
-      {/* Backfill CTA */}
-      <BackfillCTA holdingsCount={holdings.length} onComplete={handleBackfillComplete} />
-
-      {/* Chart */}
-      <PortfolioValueChart
-        holdings={holdings}
-        assetFilter={assetFilter}
-        refreshKey={refreshKey}
-        onRecalculate={handleRecalculate}
-        recalculating={recalculating}
-        onOpenAi={() => setAiDrawerOpen(true)}
+        onAssetFilterChange={setAssetFilter}
+        dayChangePctByType={dayChangePctByType}
       />
 
       {/* Asset Breakdown Cards */}

@@ -1,24 +1,20 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { usePortfolio } from "@/lib/portfolio-context";
-import { useFeatureFlag } from "@/lib/feature-flag-context";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
 import { getMarketStatus, wasMarketOpenToday } from "@/lib/market-hours";
 import { convertCurrency, resolveQuoteCurrency } from "@/lib/utils";
-import { txAmountToBase } from "@/lib/performance";
-import AssetTypeFilter from "./AssetTypeFilter";
 import type { AssetFilter } from "./AssetTypeFilter";
-import PortfolioHeader from "@/components/portfolio-v2/PortfolioHeader";
+
 import PortfolioValueChart from "@/components/portfolio-v2/PortfolioValueChart";
 import BackfillCTA from "@/components/portfolio-v2/BackfillCTA";
 import MarketAwareBreakdown from "@/components/portfolio-v2/MarketAwareBreakdown";
-import CompactHeroChart from "./CompactHeroChart";
 import StatsGrid from "./StatsGrid";
 import CompactReferralCard from "./CompactReferralCard";
 import OnboardingChecklist from "./OnboardingChecklist";
-import type { Holding, CashEntry, Transaction } from "@/lib/types";
+import type { Holding, CashEntry } from "@/lib/types";
 
 const AssetBreakdownCards = dynamic(() => import("./AssetBreakdownCards"), { ssr: false });
 const AssetPerformanceTable = dynamic(() => import("./AssetPerformanceTable"), { ssr: false });
@@ -167,84 +163,7 @@ function CollapsedLayout({ chartBlock, breakdownBlock, holdings, cashEntries, al
   );
 }
 
-// ── Legacy chart (flag off) ──
-
-function LegacyDashboard(props: Props) {
-  const { exchangeRates, activePortfolioCurrency, activePortfolioId, demoMode } = usePortfolio();
-  const [aiDrawerOpen, setAiDrawerOpen] = useState(false);
-  const [txInvested, setTxInvested] = useState<number | null>(null);
-  const [chartExpanded, setChartExpanded] = useState(false);
-
-  useEffect(() => {
-    if (demoMode) return;
-    const pid = activePortfolioId ? `?portfolioId=${encodeURIComponent(activePortfolioId)}` : "";
-    fetch(`/api/transactions${pid}`)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((txs: Transaction[] | null) => {
-        if (!txs || txs.length === 0) return;
-        const base = activePortfolioCurrency;
-        let buyTotal = 0;
-        let sellProceeds = 0;
-        for (const tx of txs) {
-          const amt = txAmountToBase(tx.totalAmount, tx, base, exchangeRates);
-          const fees = txAmountToBase(tx.fees || 0, tx, base, exchangeRates);
-          const taxes = txAmountToBase(tx.taxes || 0, tx, base, exchangeRates);
-          if (tx.type === "buy") buyTotal += amt + fees + taxes;
-          else if (tx.type === "sell") sellProceeds += amt - fees - taxes;
-        }
-        const invested = buyTotal - sellProceeds;
-        if (invested > 0) setTxInvested(invested);
-      })
-      .catch(() => {});
-  }, [activePortfolioId, demoMode, activePortfolioCurrency, exchangeRates]);
-
-  const { holdings, cashEntries, allCashEntries, onAddStock, onNavigateToEvents, onNavigateToDividends, onNavigateToDiversification, onShareReferral } = props;
-
-  if (chartExpanded) {
-    return (
-      <ExpandedLayout
-        chartBlock={
-          <>
-            <CompactHeroChart
-              holdings={holdings}
-              cashEntries={cashEntries}
-              onOpenAi={() => setAiDrawerOpen(true)}
-              expanded
-              onToggleExpand={() => setChartExpanded(false)}
-              snapshotInvested={txInvested}
-            />
-            <AssetBreakdownCards holdings={holdings} cashEntries={cashEntries} />
-          </>
-        }
-        holdings={holdings} cashEntries={cashEntries} allCashEntries={allCashEntries}
-        onAddStock={onAddStock} onNavigateToEvents={onNavigateToEvents}
-        onNavigateToDividends={onNavigateToDividends} onNavigateToDiversification={onNavigateToDiversification}
-        onShareReferral={onShareReferral} aiDrawerOpen={aiDrawerOpen} setAiDrawerOpen={setAiDrawerOpen}
-      />
-    );
-  }
-
-  return (
-    <CollapsedLayout
-      chartBlock={
-        <CompactHeroChart
-          holdings={holdings}
-          cashEntries={cashEntries}
-          onOpenAi={() => setAiDrawerOpen(true)}
-          onToggleExpand={() => setChartExpanded(true)}
-        />
-      }
-      breakdownBlock={<AssetBreakdownCards holdings={holdings} cashEntries={cashEntries} />}
-      holdings={holdings} cashEntries={cashEntries} allCashEntries={allCashEntries}
-      onAddStock={onAddStock} onNavigateToEvents={onNavigateToEvents}
-      onNavigateToDividends={onNavigateToDividends} onNavigateToDiversification={onNavigateToDiversification}
-      onShareReferral={onShareReferral} aiDrawerOpen={aiDrawerOpen} setAiDrawerOpen={setAiDrawerOpen}
-      sidebarExtra={<StatsGrid holdings={holdings} cashEntries={cashEntries} snapshotInvested={txInvested} />}
-    />
-  );
-}
-
-// ── New V2 chart (flag on) ──
+// ── Dashboard with V2 chart ──
 
 function V2Dashboard(props: Props) {
   const { quotes, exchangeRates, activePortfolioCurrency } = usePortfolio();
@@ -320,14 +239,6 @@ function V2Dashboard(props: Props) {
 
   const v2ChartBlock = (
     <>
-      <PortfolioHeader
-        totalValue={totals.totalCurrentEUR}
-        dayGainLoss={dayGainLoss}
-        dayGainLossPercent={totals.totalCurrentEUR > 0 ? (dayGainLoss / (totals.totalCurrentEUR - dayGainLoss)) * 100 : 0}
-        totalGainLossPercent={totals.totalGainLossPercent}
-        currency={baseCurrency}
-      />
-      <AssetTypeFilter value={assetFilter} onChange={setAssetFilter} dayChangePct={dayChangePctByType} />
       <BackfillCTA holdingsCount={holdings.length} onComplete={handleBackfillComplete} />
       <PortfolioValueChart
         holdings={holdings}
@@ -338,6 +249,12 @@ function V2Dashboard(props: Props) {
         onOpenAi={() => setAiDrawerOpen(true)}
         expanded={chartExpanded}
         onToggleExpand={() => setChartExpanded(!chartExpanded)}
+        totalValue={totals.totalCurrentEUR}
+        dayGainLoss={dayGainLoss}
+        dayGainLossPercent={totals.totalCurrentEUR > 0 ? (dayGainLoss / (totals.totalCurrentEUR - dayGainLoss)) * 100 : 0}
+        totalGainLossPercent={totals.totalGainLossPercent}
+        onAssetFilterChange={setAssetFilter}
+        dayChangePctByType={dayChangePctByType}
       />
       <MarketAwareBreakdown
         holdings={holdings}
@@ -372,9 +289,6 @@ function V2Dashboard(props: Props) {
   );
 }
 
-// ── Entry point — switches on feature flag ──
-
 export default function DashboardPortfolioV2(props: Props) {
-  const useV2Chart = useFeatureFlag("portfolio_v2_chart_enabled");
-  return useV2Chart ? <V2Dashboard {...props} /> : <LegacyDashboard {...props} />;
+  return <V2Dashboard {...props} />;
 }

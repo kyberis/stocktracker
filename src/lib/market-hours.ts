@@ -465,14 +465,14 @@ export function getTickerMarketStatuses(now: Date = new Date()): TickerMarketSta
 
 /* ── Chart market-session overlays ────────────────────────────────────── */
 
-const MARKET_SESSION_COLORS: Record<string, string> = {
+export const MARKET_SESSION_COLORS: Record<string, string> = {
   NYSE: "#10b981", NASDAQ: "#10b981", "NYSE Arca": "#10b981", "NYSE American": "#10b981",
   XETRA: "#3b82f6", Tradegate: "#60a5fa", Frankfurt: "#3b82f6",
   LSE: "#8b5cf6",
-  TSX: "#f59e0b", "TSX-V": "#f59e0b",
+  TSX: "#a855f7", "TSX-V": "#a855f7",
   Euronext: "#f59e0b", BME: "#f97316", "Borsa Italiana": "#f97316",
   SIX: "#06b6d4",
-  "OMX Copenhagen": "#06b6d4", "OMX Helsinki": "#06b6d4", "OMX Stockholm": "#06b6d4", "Oslo Børs": "#06b6d4",
+  "OMX Copenhagen": "#0ea5e9", "OMX Helsinki": "#2dd4bf", "OMX Stockholm": "#818cf8", "Oslo Børs": "#fb923c",
   "Tokyo SE": "#ec4899", HKSE: "#ec4899",
   ASX: "#14b8a6", SGX: "#14b8a6",
   KRX: "#ec4899", "NSE India": "#f97316", "BSE India": "#f97316",

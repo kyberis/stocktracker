@@ -118,6 +118,7 @@ Dashboard Change Checklist
 
 ## Coordination
 
+- If change touches **charts or graph components**, involve `engineer-charts` skill — it owns `PortfolioValueChart`, `ChartTooltip`, spike attribution, benchmark overlays, and the demo page sync checklist.
 - If change touches performance math, involve `engineer-tools`.
 - If change adds tracked UI behavior, involve `analytics-instrumentation`.
 - If change is user-facing feature work, include `qa-tester` for coverage.
