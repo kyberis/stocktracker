@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   AreaChart,
   Area,
@@ -195,10 +196,25 @@ function generatePaddingTicks(fromMs: number, toMs: number, step: number = 5 * 6
   return out;
 }
 
-/** Snap a timestamp to the nearest 5-min tick aligned with the chart grid. */
-function snapToTick(ms: number, startMs: number, step = 5 * 60_000): string {
-  const snapped = startMs + Math.round((ms - startMs) / step) * step;
-  return new Date(snapped).toISOString();
+/**
+ * Find the date string in chartData closest to `targetMs`.
+ * Recharts categorical XAxis needs an exact string match, so we must
+ * return a value that actually exists in the data array.
+ */
+function findClosestDataDate(chartData: { date: string }[], targetMs: number): string | null {
+  if (chartData.length === 0) return null;
+  let best = chartData[0].date;
+  let bestDiff = Math.abs(parseTime(best) - targetMs);
+  for (let i = 1; i < chartData.length; i++) {
+    const d = chartData[i].date;
+    const diff = Math.abs(parseTime(d) - targetMs);
+    if (diff < bestDiff) {
+      best = d;
+      bestDiff = diff;
+    }
+    if (diff > bestDiff) break;
+  }
+  return best;
 }
 
 function computeWeekendBands(points: ChartPoint[]): { x1: string; x2: string }[] {
@@ -439,13 +455,20 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
   const dayBounds = useMemo(() => {
     if (range !== "1d") return null;
     if (sessionOverlays.length > 0) {
-      const startMs = Math.min(...sessionOverlays.map((s) => s.openDate.getTime()));
-      const endMs = Math.max(...sessionOverlays.map((s) => s.closeDate.getTime()));
+      const firstOpenMs = Math.min(...sessionOverlays.map((s) => s.openDate.getTime()));
+      const lastCloseMs = Math.max(...sessionOverlays.map((s) => s.closeDate.getTime()));
+      const refDay = debugDate || new Date().toISOString().slice(0, 10);
+      const midnightMs = new Date(refDay + "T00:00:00").getTime();
+      const startMs = Math.min(midnightMs, firstOpenMs);
+      const nowMs = debugDate ? lastCloseMs : Date.now();
+      const endMs = Math.max(lastCloseMs, nowMs);
       return {
         startIso: new Date(startMs).toISOString(),
         endIso: new Date(endMs).toISOString(),
         startMs,
         endMs,
+        firstOpenMs,
+        lastCloseMs,
       };
     }
     const refDate = debugDate || new Date().toISOString().slice(0, 10);
@@ -456,6 +479,8 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
       endIso: new Date(endMs).toISOString(),
       startMs,
       endMs,
+      firstOpenMs: startMs,
+      lastCloseMs: endMs,
     };
   }, [range, sessionOverlays, debugDate]);
 
@@ -493,11 +518,13 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
         if (Math.abs(deltaPct) >= SPIKE_THRESHOLD) {
           curr.spike = deltaPct;
           const totalDelta = curr.value! - prev.value!;
-          const types: SpikeTypeBreakdown[] = [
+          const allTypes: SpikeTypeBreakdown[] = [
             { type: "Stocks", delta: (curr.stockValue ?? 0) - (prev.stockValue ?? 0), pct: 0 },
             { type: "ETFs", delta: (curr.etfValue ?? 0) - (prev.etfValue ?? 0), pct: 0 },
             { type: "Crypto", delta: (curr.cryptoValue ?? 0) - (prev.cryptoValue ?? 0), pct: 0 },
-          ]
+          ];
+          const filterMap: Record<string, string> = { stock: "Stocks", etf: "ETFs", crypto: "Crypto" };
+          const types = (assetFilter === "all" ? allTypes : allTypes.filter((t) => t.type === filterMap[assetFilter]))
             .filter((t) => Math.abs(t.delta) > 0.01)
             .map((t) => ({ ...t, pct: totalDelta !== 0 ? (t.delta / Math.abs(totalDelta)) * 100 : 0 }))
             .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
@@ -608,9 +635,9 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
   // ── Spike contributors (top movers by portfolio contribution) ──
 
   const spikeContributors: SpikeContributor[] = useMemo(() => {
-    const totalVal = holdings.reduce((s, h) => s + (h.valueInEUR || 0), 0);
+    const totalVal = relevantHoldings.reduce((s, h) => s + (h.valueInEUR || 0), 0);
     if (totalVal <= 0 || !quotes) return [];
-    return holdings
+    return relevantHoldings
       .map((h) => {
         const q = quotes[h.ticker];
         if (!q) return null;
@@ -622,7 +649,7 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
       .filter((x): x is SpikeContributor => x != null && Math.abs(x.contribution) > 0.001)
       .sort((a, b) => Math.abs(b.contribution) - Math.abs(a.contribution))
       .slice(0, 5);
-  }, [holdings, quotes]);
+  }, [relevantHoldings, quotes]);
 
   // ── Render ──
 
@@ -668,38 +695,33 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
 
   const inlineHeader = hasHeader ? (
     <div className="px-5 pt-4 pb-2">
-      <div className="flex items-baseline gap-3 flex-wrap">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-slate-500">
-          {t("portfolioValue")}
-        </p>
+      <div className="flex items-baseline gap-2.5 flex-wrap">
         <h2 className="text-[28px] font-extrabold tracking-tight leading-none text-gray-900 dark:text-white tabular-nums">
           {stealthMode ? "•••••" : formatCurrency(totalValue!, activePortfolioCurrency)}
         </h2>
-        <div className="flex items-center gap-2.5 flex-wrap">
+        <span
+          className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-md ${
+            isPositiveDay
+              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+              : "bg-red-500/10 text-red-500 dark:text-red-400"
+          }`}
+        >
+          {stealthMode
+            ? "•••"
+            : `${isPositiveDay ? "+" : ""}${formatCurrency(dayGainLoss ?? 0, activePortfolioCurrency)} (${formatPercent(dayGainLossPercent ?? 0)})`}
+        </span>
+        <span className="text-[11px] text-gray-500 dark:text-slate-400">
           <span
-            className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-md ${
-              isPositiveDay
-                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                : "bg-red-500/10 text-red-500 dark:text-red-400"
+            className={`font-semibold ${
+              isPositiveTotal
+                ? "text-emerald-600 dark:text-emerald-400"
+                : "text-red-500 dark:text-red-400"
             }`}
           >
-            {stealthMode
-              ? "•••"
-              : `${isPositiveDay ? "+" : ""}${formatCurrency(dayGainLoss ?? 0, activePortfolioCurrency)} (${formatPercent(dayGainLossPercent ?? 0)})`}
-          </span>
-          <span className="text-[11px] text-gray-500 dark:text-slate-400">
-            <span
-              className={`font-semibold ${
-                isPositiveTotal
-                  ? "text-emerald-600 dark:text-emerald-400"
-                  : "text-red-500 dark:text-red-400"
-              }`}
-            >
-              {stealthMode ? "•••" : formatPercent(totalGainLossPercent ?? 0)}
-            </span>{" "}
-            {t("totalGainLabel")}
-          </span>
-        </div>
+            {stealthMode ? "•••" : formatPercent(totalGainLossPercent ?? 0)}
+          </span>{" "}
+          {t("totalGainLabel")}
+        </span>
       </div>
       {onAssetFilterChange && (
         <div className="mt-2.5">
@@ -803,11 +825,15 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
             ))}
 
             {/* Market session bands (1D) with staggered name labels */}
-            {dayBounds && sessionOverlays.map((s, i) => (
+            {dayBounds && sessionOverlays.map((s, i) => {
+              const x1 = findClosestDataDate(chartData, s.openDate.getTime());
+              const x2 = findClosestDataDate(chartData, s.closeDate.getTime());
+              if (!x1 || !x2) return null;
+              return (
               <ReferenceArea
                 key={`session-${i}`}
-                x1={snapToTick(s.openDate.getTime(), dayBounds.startMs)}
-                x2={snapToTick(s.closeDate.getTime(), dayBounds.startMs)}
+                x1={x1}
+                x2={x2}
                 fill={s.color}
                 fillOpacity={0.05}
                 ifOverflow="visible"
@@ -822,27 +848,103 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
                   dx: 4,
                 }}
               />
-            ))}
+              );
+            })}
+
+            {/* "Market closed" labels in pre-market, inter-session gaps, and after-hours (1D) */}
+            {dayBounds && (() => {
+              const sorted = [...sessionOverlays].sort((a, b) => a.openDate.getTime() - b.openDate.getTime());
+              const merged: { open: number; close: number }[] = [];
+              for (const s of sorted) {
+                const o = s.openDate.getTime();
+                const c = s.closeDate.getTime();
+                if (merged.length > 0 && o <= merged[merged.length - 1].close) {
+                  merged[merged.length - 1].close = Math.max(merged[merged.length - 1].close, c);
+                } else {
+                  merged.push({ open: o, close: c });
+                }
+              }
+              const gaps: { x1: string | null; x2: string | null; label: string }[] = [];
+              if (merged.length > 0 && dayBounds.firstOpenMs > dayBounds.startMs + 5 * 60_000) {
+                gaps.push({
+                  x1: findClosestDataDate(chartData, dayBounds.startMs),
+                  x2: findClosestDataDate(chartData, dayBounds.firstOpenMs),
+                  label: "Pre-market",
+                });
+              }
+              for (let i = 0; i < merged.length - 1; i++) {
+                if (merged[i + 1].open > merged[i].close) {
+                  gaps.push({
+                    x1: findClosestDataDate(chartData, merged[i].close),
+                    x2: findClosestDataDate(chartData, merged[i + 1].open),
+                    label: "Market closed",
+                  });
+                }
+              }
+              if (merged.length > 0 && dayBounds.endMs > dayBounds.lastCloseMs + 5 * 60_000) {
+                gaps.push({
+                  x1: findClosestDataDate(chartData, dayBounds.lastCloseMs),
+                  x2: findClosestDataDate(chartData, dayBounds.endMs),
+                  label: "Market closed",
+                });
+              }
+              return gaps.map((g, i) => {
+                if (!g.x1 || !g.x2) return null;
+                return (
+                  <ReferenceArea
+                    key={`gap-${i}`}
+                    x1={g.x1}
+                    x2={g.x2}
+                    fill="transparent"
+                    ifOverflow="visible"
+                    label={({ viewBox }: { viewBox?: { x?: number; y?: number; width?: number } }) => {
+                      const vx = viewBox?.x ?? 0;
+                      const vy = viewBox?.y ?? 0;
+                      return (
+                        <text
+                          x={vx + 6}
+                          y={vy + 16}
+                          fill="var(--closed-label, rgba(100,116,139,0.5))"
+                          fontSize={9}
+                          fontWeight={500}
+                          fontStyle="italic"
+                        >
+                          {g.label}
+                        </text>
+                      );
+                    }}
+                  />
+                );
+              });
+            })()}
 
             {/* Session open/close vertical markers (1D) */}
-            {dayBounds && sessionOverlays.map((s) => (
-              <ReferenceLine
-                key={`open-${s.name}`}
-                x={snapToTick(s.openDate.getTime(), dayBounds.startMs)}
-                stroke={s.color}
-                strokeDasharray="3 3"
-                strokeOpacity={0.4}
-              />
-            ))}
-            {dayBounds && sessionOverlays.map((s) => (
-              <ReferenceLine
-                key={`close-${s.name}`}
-                x={snapToTick(s.closeDate.getTime(), dayBounds.startMs)}
-                stroke="var(--axis, rgba(148,163,184,0.25))"
-                strokeDasharray="3 3"
-                strokeOpacity={0.25}
-              />
-            ))}
+            {sessionOverlays.map((s) => {
+              const x = findClosestDataDate(chartData, s.openDate.getTime());
+              if (!x) return null;
+              return (
+                <ReferenceLine
+                  key={`open-${s.name}`}
+                  x={x}
+                  stroke={s.color}
+                  strokeDasharray="3 3"
+                  strokeOpacity={0.4}
+                />
+              );
+            })}
+            {sessionOverlays.map((s) => {
+              const x = findClosestDataDate(chartData, s.closeDate.getTime());
+              if (!x) return null;
+              return (
+                <ReferenceLine
+                  key={`close-${s.name}`}
+                  x={x}
+                  stroke="var(--axis, rgba(148,163,184,0.25))"
+                  strokeDasharray="3 3"
+                  strokeOpacity={0.25}
+                />
+              );
+            })}
 
             {/* Main area */}
             <Area
@@ -1104,7 +1206,9 @@ function ChartGuideModal({ mode, onClose }: { mode: "value" | "performance"; onC
     },
   ];
 
-  return (
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
       <div
@@ -1146,7 +1250,8 @@ function ChartGuideModal({ mode, onClose }: { mode: "value" | "performance"; onC
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
