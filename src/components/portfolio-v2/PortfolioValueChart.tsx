@@ -341,15 +341,20 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey 
 
   // ── Market hours (must come before chartData which depends on sessionOverlays) ──
 
+  const relevantHoldings = useMemo(() => {
+    if (assetFilter === "all") return holdings;
+    return holdings.filter((h) => (h.assetType ?? "stock") === assetFilter);
+  }, [holdings, assetFilter]);
+
   const allMarketsClosed = useMemo(
-    () => range === "1d" && !isAnyMarketActive(holdings),
-    [range, holdings],
+    () => range === "1d" && !isAnyMarketActive(relevantHoldings),
+    [range, relevantHoldings],
   );
 
   const nextOpen = useMemo(() => {
     if (!allMarketsClosed) return null;
-    return getNextMarketOpen(holdings);
-  }, [allMarketsClosed, holdings]);
+    return getNextMarketOpen(relevantHoldings);
+  }, [allMarketsClosed, relevantHoldings]);
 
   const sessionOverlays: ChartMarketSession[] = useMemo(() => {
     if (range !== "1d" || holdings.length === 0) return [];
