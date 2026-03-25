@@ -36,6 +36,13 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "Las llamadas a la API de Yahoo Finance ahora se almacenan en caché durante 5 minutos para reducir solicitudes redundantes cuando varios usuarios tienen los mismos tickers.",
         },
       },
+      {
+        type: "improvement",
+        text: "Ask AI button on the portfolio page and chart footer — get instant AI-powered analysis of your portfolio performance.",
+        translations: {
+          es: "Botón 'Preguntar a la IA' en la página de portafolio y el pie del gráfico — obtén análisis instantáneo de tu rendimiento con inteligencia artificial.",
+        },
+      },
     ],
   },
   {

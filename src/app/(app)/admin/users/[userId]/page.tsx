@@ -814,7 +814,7 @@ export default function AdminUserDetailPage() {
                 <button onClick={() => handleResetData("seed")} className="btn-secondary text-xs px-2 py-1">Seed data</button>
                 <button onClick={() => handleResetData("empty")} className="btn-secondary text-xs px-2 py-1">Empty data</button>
                 <button onClick={handleBackfill} disabled={backfilling} className="btn-secondary text-xs px-2 py-1">
-                  {backfilling ? "Rebuilding…" : "Rebuild snapshots"}
+                  {backfilling ? "Recalculating…" : "Recalculate snapshots"}
                 </button>
                 <button onClick={handleGenerateDigest} disabled={generatingDigest} className="btn-secondary text-xs px-2 py-1">
                   {generatingDigest ? "Generating…" : "Generate Digest"}

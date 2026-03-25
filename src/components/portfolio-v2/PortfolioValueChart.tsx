@@ -50,11 +50,51 @@ interface SnapshotPoint {
   cryptoValue: number;
 }
 
+export interface EventMarker {
+  id?: string;
+  date: string;
+  type: string;
+  ticker: string;
+  name: string;
+  shares: number;
+  totalAmount?: number;
+  currency?: string;
+}
+
 interface ChartPoint {
   date: string;
   value?: number;
   pct?: number;
+  events?: EventMarker[];
   [key: string]: unknown;
+}
+
+function eventDotFill(type: string): string {
+  return type === "sell" ? "#ef4444" : "#10b981";
+}
+
+function attachEventsToPoints(pts: ChartPoint[], evts: EventMarker[]): ChartPoint[] {
+  if (!evts.length || !pts.length) return pts;
+  const result = pts.map((p) => ({ ...p }));
+
+  for (const evt of evts) {
+    const evtMs = new Date(evt.date).getTime();
+    let bestIdx = 0;
+    let bestDiff = Infinity;
+    for (let i = 0; i < result.length; i++) {
+      if (result[i].value == null) continue;
+      const pMs = new Date(result[i].date.replace(" ", "T")).getTime();
+      const diff = Math.abs(pMs - evtMs);
+      if (diff < bestDiff) {
+        bestDiff = diff;
+        bestIdx = i;
+      }
+    }
+    const target = result[bestIdx];
+    if (!target.events) target.events = [];
+    target.events.push(evt);
+  }
+  return result;
 }
 
 const ASSET_FILTER_LINE_COLORS: Record<AssetFilter, string> = {
@@ -202,9 +242,17 @@ interface Props {
   assetFilter: AssetFilter;
   /** Called after backfill completes to refetch */
   refreshKey?: number;
+  /** Trigger a full data recalculation */
+  onRecalculate?: () => void;
+  recalculating?: boolean;
+  /** Open AI analysis drawer */
+  onOpenAi?: () => void;
+  /** Expand/collapse toggle for dashboard embedding */
+  expanded?: boolean;
+  onToggleExpand?: () => void;
 }
 
-export default function PortfolioValueChart({ holdings, assetFilter, refreshKey }: Props) {
+export default function PortfolioValueChart({ holdings, assetFilter, refreshKey, onRecalculate, recalculating, onOpenAi, expanded, onToggleExpand }: Props) {
   const { activePortfolioId, activePortfolioCurrency, mutationVersion } = usePortfolio();
   const { user } = useAuth();
   const { stealthMode } = useStealthMode();
@@ -217,6 +265,7 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey 
   const [mode, setMode] = useState<"value" | "performance">("value");
   const [debugDate, setDebugDate] = useState<string | null>(null);
   const [points, setPoints] = useState<SnapshotPoint[]>([]);
+  const [events, setEvents] = useState<EventMarker[]>([]);
   const [loading, setLoading] = useState(true);
   const [benchmarkKeys, setBenchmarkKeys] = useState<string[]>(() => {
     if (typeof window === "undefined") return [];
@@ -248,8 +297,13 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey 
       const data = await res.json();
       if (version !== fetchVersionRef.current) return;
       setPoints(data.points ?? []);
+      const allEvents: EventMarker[] = Array.isArray(data.events) ? data.events : [];
+      setEvents(allEvents.filter((e) => e.type === "buy" || e.type === "sell"));
     } catch {
-      if (version === fetchVersionRef.current) setPoints([]);
+      if (version === fetchVersionRef.current) {
+        setPoints([]);
+        setEvents([]);
+      }
     } finally {
       if (version === fetchVersionRef.current) setLoading(false);
     }
@@ -465,6 +519,11 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey 
     return result;
   }, [effectivePoints, hasBenchmarks, benchmarkEntries, benchmarkData, range, dayBounds, sessionOverlays, assetFilter, holdings]);
 
+  const chartDataWithEvents = useMemo(
+    () => events.length > 0 ? attachEventsToPoints(chartData, events) : chartData,
+    [chartData, events],
+  );
+
   const weekendBands = useMemo(() => {
     if (range === "1d") return [];
     return computeWeekendBands(chartData);
@@ -498,9 +557,29 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey 
 
   const isIntraday = range === "1d";
 
+  const expandBtn = onToggleExpand ? (
+    <button
+      onClick={onToggleExpand}
+      className="absolute top-3 right-3 z-10 p-1.5 rounded-lg text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors"
+      title={expanded ? t("chartMinimize") : t("chartExpand")}
+      aria-label={expanded ? t("chartMinimize") : t("chartExpand")}
+    >
+      {expanded ? (
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25" />
+        </svg>
+      ) : (
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+        </svg>
+      )}
+    </button>
+  ) : null;
+
   if (loading && points.length === 0) {
     return (
-      <div className="card overflow-hidden">
+      <div className="card overflow-hidden relative">
+        {expandBtn}
         <div className="h-[340px] flex items-center justify-center">
           <svg className="animate-spin h-6 w-6 text-gray-400" viewBox="0 0 24 24" fill="none">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -516,7 +595,8 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey 
   if (showMarketsClosedOverlay) {
     const lastValue = effectivePoints.length > 0 ? effectivePoints[effectivePoints.length - 1].value : null;
     return (
-      <div className="card overflow-hidden">
+      <div className="card overflow-hidden relative">
+        {expandBtn}
         <div className="relative h-[340px] flex flex-col items-center justify-center text-center gap-2.5">
           {/* Faint grid background */}
           <div
@@ -555,17 +635,19 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey 
           showCompareDropdown={showCompareDropdown}
           setShowCompareDropdown={setShowCompareDropdown}
           periodReturn={null}
+          onOpenAi={onOpenAi}
         />
       </div>
     );
   }
 
   return (
-    <div className="card overflow-hidden">
+    <div className="card overflow-hidden relative">
+      {expandBtn}
       {/* Chart */}
       <div className="h-[340px] px-2 pt-3">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={chartData} margin={{ top: 4, right: 8, left: 8, bottom: 4 }}>
+          <AreaChart data={chartDataWithEvents} margin={{ top: 4, right: 8, left: 8, bottom: 4 }}>
             <defs>
               <linearGradient id="pv2-grad" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor={lineColor} stopOpacity={0.2} />
@@ -671,7 +753,35 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey 
               strokeWidth={2}
               fill="url(#pv2-grad)"
               fillOpacity={0.8}
-              dot={false}
+              dot={(props: Record<string, unknown>) => {
+                const { cx, cy, index, payload } = props as {
+                  cx: number;
+                  cy: number;
+                  index: number;
+                  payload: ChartPoint;
+                };
+                const evts = payload?.events;
+                if (!evts?.length || typeof cx !== "number" || typeof cy !== "number") {
+                  return <g key={`ed-${index}`} />;
+                }
+                const show = evts.slice(0, 4);
+                return (
+                  <g key={`ed-${index}`}>
+                    {show.map((e, i) => (
+                      <circle
+                        key={e.id || `${e.type}-${e.ticker}-${i}`}
+                        cx={cx + (i - (show.length - 1) / 2) * 6}
+                        cy={cy}
+                        r={3.5}
+                        fill={eventDotFill(e.type)}
+                        stroke="#fff"
+                        strokeWidth={1.5}
+                        style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.2))" }}
+                      />
+                    ))}
+                  </g>
+                );
+              }}
               activeDot={{ r: 4, strokeWidth: 2, fill: lineColor }}
               connectNulls={false}
               isAnimationActive={false}
@@ -720,11 +830,12 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey 
         showCompareDropdown={showCompareDropdown}
         setShowCompareDropdown={setShowCompareDropdown}
         periodReturn={periodReturn}
+        onOpenAi={onOpenAi}
       />
 
-      {/* Sync status */}
-      {range === "1d" && (
-        <div className="flex items-center justify-between px-5 py-2 border-t border-gray-100 dark:border-white/[0.04] text-[11px] text-gray-500 dark:text-slate-500">
+      {/* Sync status & recalculate */}
+      <div className="flex items-center justify-between px-5 py-2 border-t border-gray-100 dark:border-white/[0.04] text-[11px] text-gray-500 dark:text-slate-500">
+        {range === "1d" ? (
           <div className="flex items-center gap-1.5">
             {debugDate ? (
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
@@ -733,9 +844,39 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey 
             )}
             {debugDate ? `Viewing ${debugDate}` : loading ? "Syncing…" : "Live"}
           </div>
-          <span>{debugDate ? "Debug mode" : "Updates every 5 min"}</span>
+        ) : (
+          <span>{loading ? "Loading…" : `${chartData.filter((p) => p.value != null).length} data points`}</span>
+        )}
+        <div className="flex items-center gap-3">
+          {range === "1d" && !debugDate && <span>Updates every 5 min</span>}
+          {range === "1d" && debugDate && <span>Debug mode</span>}
+          {onRecalculate && (
+            <button
+              onClick={onRecalculate}
+              disabled={recalculating}
+              className="inline-flex items-center gap-1 font-medium text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 transition-colors disabled:opacity-50"
+            >
+              <svg
+                width="11"
+                height="11"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className={recalculating ? "animate-spin" : ""}
+              >
+                <path d="M21 2v6h-6" />
+                <path d="M3 12a9 9 0 0115.36-6.36L21 8" />
+                <path d="M3 22v-6h6" />
+                <path d="M21 12a9 9 0 01-15.36 6.36L3 16" />
+              </svg>
+              {recalculating ? "Recalculating…" : "Recalculate"}
+            </button>
+          )}
         </div>
-      )}
+      </div>
 
       {/* Admin time-travel (1D only) */}
       {isAdmin && range === "1d" && (
@@ -796,6 +937,31 @@ interface ChartFooterProps {
   showCompareDropdown: boolean;
   setShowCompareDropdown: (v: boolean) => void;
   periodReturn: number | null;
+  onOpenAi?: () => void;
+}
+
+function ModeInfoTooltip({ mode }: { mode: "value" | "performance" }) {
+  const text = mode === "value"
+    ? "Shows your total portfolio value (green) alongside your invested capital (gray). The gap between the two lines is your profit or loss. A rising green line doesn\u2019t necessarily mean positive returns \u2014 it may include deposits. Dots mark transactions (buys, sells, dividends, fees) \u2014 hover for details."
+    : "Shows how your investments are performing as a percentage of what you invested. Deposits and withdrawals are factored out, so you see your actual investment returns.";
+
+  return (
+    <div className="group/info relative flex items-center">
+      <button
+        type="button"
+        className="p-0.5 text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 transition-colors"
+        aria-label={`${mode} mode info`}
+      >
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 2.5a1 1 0 110 2 1 1 0 010-2zM6.75 7h1.5v4.5h-1.5V7z" />
+        </svg>
+      </button>
+      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2.5 rounded-lg bg-gray-900 dark:bg-slate-800 text-[10px] leading-relaxed text-gray-200 dark:text-slate-300 shadow-lg border border-gray-800 dark:border-slate-700 opacity-0 pointer-events-none group-hover/info:opacity-100 group-hover/info:pointer-events-auto transition-opacity z-50">
+        <p className="font-semibold text-white mb-1 text-[11px] capitalize">{mode}</p>
+        <p>{text}</p>
+      </div>
+    </div>
+  );
 }
 
 function ChartFooter({
@@ -809,32 +975,36 @@ function ChartFooter({
   showCompareDropdown,
   setShowCompareDropdown,
   periodReturn,
+  onOpenAi,
 }: ChartFooterProps) {
   return (
     <div className="flex items-center justify-between px-5 py-2.5 border-t border-gray-100 dark:border-white/[0.04] flex-wrap gap-2">
       <div className="flex items-center gap-2">
         {/* Mode toggle */}
-        <div className="flex rounded-lg bg-gray-100/60 dark:bg-white/[0.04] p-0.5">
-          <button
-            onClick={() => setMode("value")}
-            className={`text-[11px] font-semibold px-3 py-1.5 rounded-md transition-colors ${
-              mode === "value"
-                ? "bg-white dark:bg-white/10 text-gray-900 dark:text-white shadow-sm"
-                : "text-gray-500 dark:text-slate-500"
-            }`}
-          >
-            Value
-          </button>
-          <button
-            onClick={() => setMode("performance")}
-            className={`text-[11px] font-semibold px-3 py-1.5 rounded-md transition-colors ${
-              mode === "performance"
-                ? "bg-white dark:bg-white/10 text-gray-900 dark:text-white shadow-sm"
-                : "text-gray-500 dark:text-slate-500"
-            }`}
-          >
-            Performance
-          </button>
+        <div className="flex items-center gap-1">
+          <div className="flex rounded-lg bg-gray-100/60 dark:bg-white/[0.04] p-0.5">
+            <button
+              onClick={() => setMode("value")}
+              className={`text-[11px] font-semibold px-3 py-1.5 rounded-md transition-colors ${
+                mode === "value"
+                  ? "bg-white dark:bg-white/10 text-gray-900 dark:text-white shadow-sm"
+                  : "text-gray-500 dark:text-slate-500"
+              }`}
+            >
+              Value
+            </button>
+            <button
+              onClick={() => setMode("performance")}
+              className={`text-[11px] font-semibold px-3 py-1.5 rounded-md transition-colors ${
+                mode === "performance"
+                  ? "bg-white dark:bg-white/10 text-gray-900 dark:text-white shadow-sm"
+                  : "text-gray-500 dark:text-slate-500"
+              }`}
+            >
+              Performance
+            </button>
+          </div>
+          <ModeInfoTooltip mode={mode} />
         </div>
 
         <RangeSelector value={range} onChange={setRange} />
@@ -886,6 +1056,19 @@ function ChartFooter({
             onClose={() => setShowCompareDropdown(false)}
           />
         </div>
+
+        {/* Ask AI button */}
+        {onOpenAi && (
+          <button
+            onClick={onOpenAi}
+            className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg border border-violet-400/30 text-violet-400 hover:border-violet-400/60 hover:text-violet-300 transition-colors"
+          >
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+            </svg>
+            Ask AI
+          </button>
+        )}
       </div>
     </div>
   );

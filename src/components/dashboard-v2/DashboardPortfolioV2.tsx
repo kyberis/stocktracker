@@ -1,15 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { usePortfolio } from "@/lib/portfolio-context";
+import { useFeatureFlag } from "@/lib/feature-flag-context";
+import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
+import { getMarketStatus, wasMarketOpenToday } from "@/lib/market-hours";
+import { convertCurrency, resolveQuoteCurrency } from "@/lib/utils";
 import { txAmountToBase } from "@/lib/performance";
-import type { Holding, CashEntry, Transaction } from "@/lib/types";
-
+import AssetTypeFilter from "./AssetTypeFilter";
+import type { AssetFilter } from "./AssetTypeFilter";
+import PortfolioHeader from "@/components/portfolio-v2/PortfolioHeader";
+import PortfolioValueChart from "@/components/portfolio-v2/PortfolioValueChart";
+import BackfillCTA from "@/components/portfolio-v2/BackfillCTA";
+import MarketAwareBreakdown from "@/components/portfolio-v2/MarketAwareBreakdown";
 import CompactHeroChart from "./CompactHeroChart";
 import StatsGrid from "./StatsGrid";
 import CompactReferralCard from "./CompactReferralCard";
 import OnboardingChecklist from "./OnboardingChecklist";
+import type { Holding, CashEntry, Transaction } from "@/lib/types";
 
 const AssetBreakdownCards = dynamic(() => import("./AssetBreakdownCards"), { ssr: false });
 const AssetPerformanceTable = dynamic(() => import("./AssetPerformanceTable"), { ssr: false });
@@ -40,16 +49,127 @@ interface Props {
   onShareReferral: () => void;
 }
 
-export default function DashboardPortfolioV2({
-  holdings,
-  cashEntries,
-  allCashEntries,
-  onAddStock,
-  onNavigateToEvents,
-  onNavigateToDividends,
-  onNavigateToDiversification,
-  onShareReferral,
-}: Props) {
+function computeMarketAwareDayPL(
+  holdings: Holding[],
+  quotes: ReturnType<typeof usePortfolio>["quotes"],
+  exchangeRates: ReturnType<typeof usePortfolio>["exchangeRates"],
+  baseCurrency: string,
+): number {
+  let dayPL = 0;
+  for (const h of holdings) {
+    const isCrypto = h.assetType === "crypto";
+    if (!isCrypto && !getMarketStatus(h.exchange).isOpen) continue;
+    const quote = quotes[h.ticker];
+    if (!quote || quote.regularMarketPrice <= 0) continue;
+    const quoteCurrency = resolveQuoteCurrency(h.displayCurrency, quote.currency);
+    const dayDelta = h.shares * (quote.regularMarketChange ?? 0);
+    dayPL += convertCurrency(dayDelta, quoteCurrency, baseCurrency, exchangeRates);
+  }
+  return dayPL;
+}
+
+// ── Shared sidebar + table sections ──
+
+function ExpandedLayout({ chartBlock, holdings, cashEntries, allCashEntries, onAddStock, onNavigateToEvents, onNavigateToDividends, onNavigateToDiversification, onShareReferral, aiDrawerOpen, setAiDrawerOpen }: {
+  chartBlock: React.ReactNode;
+  holdings: Holding[];
+  cashEntries: CashEntry[];
+  allCashEntries: CashEntry[];
+  onAddStock: () => void;
+  onNavigateToEvents: () => void;
+  onNavigateToDividends: () => void;
+  onNavigateToDiversification: () => void;
+  onShareReferral: () => void;
+  aiDrawerOpen: boolean;
+  setAiDrawerOpen: (v: boolean) => void;
+}) {
+  return (
+    <>
+      <div className="flex flex-col gap-4">
+        {chartBlock}
+        <AssetPerformanceTable holdings={holdings} cashEntries={cashEntries} />
+
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4 items-start">
+          <div className="flex flex-col gap-4 min-w-0">
+            <PortfolioTable holdings={holdings} onAddStock={onAddStock} />
+            <MarketAndCash holdings={holdings} cashEntries={allCashEntries} />
+            <PortfolioProjection holdings={holdings} cashEntries={cashEntries} />
+            <GoalCelebration holdings={holdings} cashEntries={cashEntries} />
+          </div>
+          <div className="flex flex-col gap-3">
+            <OnboardingChecklist onOpenAddStock={onAddStock} />
+            <WeeklyDigestCard position="promoted" />
+            <CompactReferralCard onShare={onShareReferral} />
+            <GoalPromptCard holdings={holdings} />
+            <PortfolioScoreCard holdings={holdings} cashEntries={cashEntries} />
+            <GoalProgressCard holdings={holdings} cashEntries={cashEntries} />
+            <AllocationTabs holdings={holdings} cashEntries={allCashEntries} onShowMore={onNavigateToDiversification} />
+            <CompactDividendCard holdings={holdings} cashEntries={cashEntries} onNavigateToDividends={onNavigateToDividends} />
+            <CompactEarningsCard onNavigateToEvents={onNavigateToEvents} />
+            <PortfolioGrowthPeriods holdings={holdings} />
+            <PerformanceMetrics holdings={holdings} cashEntries={cashEntries} />
+            <PortfolioAiTrigger onOpen={() => setAiDrawerOpen(true)} />
+            <WeeklyDigestCard position="default" />
+          </div>
+        </div>
+      </div>
+      <PortfolioAiDrawer isOpen={aiDrawerOpen} onClose={() => setAiDrawerOpen(false)} autoAnalyze />
+    </>
+  );
+}
+
+function CollapsedLayout({ chartBlock, breakdownBlock, holdings, cashEntries, allCashEntries, onAddStock, onNavigateToEvents, onNavigateToDividends, onNavigateToDiversification, onShareReferral, aiDrawerOpen, setAiDrawerOpen, sidebarExtra }: {
+  chartBlock: React.ReactNode;
+  breakdownBlock?: React.ReactNode;
+  holdings: Holding[];
+  cashEntries: CashEntry[];
+  allCashEntries: CashEntry[];
+  onAddStock: () => void;
+  onNavigateToEvents: () => void;
+  onNavigateToDividends: () => void;
+  onNavigateToDiversification: () => void;
+  onShareReferral: () => void;
+  aiDrawerOpen: boolean;
+  setAiDrawerOpen: (v: boolean) => void;
+  sidebarExtra?: React.ReactNode;
+}) {
+  return (
+    <>
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4 items-start">
+        <div className="flex flex-col gap-4 min-w-0">
+          {chartBlock}
+          {breakdownBlock}
+          <AssetPerformanceTable holdings={holdings} cashEntries={cashEntries} />
+          <PortfolioTable holdings={holdings} onAddStock={onAddStock} />
+          <MarketAndCash holdings={holdings} cashEntries={allCashEntries} />
+          <PortfolioProjection holdings={holdings} cashEntries={cashEntries} />
+          <GoalCelebration holdings={holdings} cashEntries={cashEntries} />
+        </div>
+        <div className="flex flex-col gap-3">
+          <OnboardingChecklist onOpenAddStock={onAddStock} />
+          <WeeklyDigestCard position="promoted" />
+          <CompactReferralCard onShare={onShareReferral} />
+          <GoalPromptCard holdings={holdings} />
+          <PortfolioScoreCard holdings={holdings} cashEntries={cashEntries} />
+          <GoalProgressCard holdings={holdings} cashEntries={cashEntries} />
+          {sidebarExtra}
+          <AllocationTabs holdings={holdings} cashEntries={allCashEntries} onShowMore={onNavigateToDiversification} />
+          <CompactDividendCard holdings={holdings} cashEntries={cashEntries} onNavigateToDividends={onNavigateToDividends} />
+          <CompactEarningsCard onNavigateToEvents={onNavigateToEvents} />
+          <PortfolioGrowthPeriods holdings={holdings} />
+          <PerformanceMetrics holdings={holdings} cashEntries={cashEntries} />
+          <PortfolioAiTrigger onOpen={() => setAiDrawerOpen(true)} />
+          <WeeklyDigestCard position="default" />
+        </div>
+      </div>
+      <PortfolioAiDrawer isOpen={aiDrawerOpen} onClose={() => setAiDrawerOpen(false)} autoAnalyze />
+    </>
+  );
+}
+
+// ── Legacy chart (flag off) ──
+
+function LegacyDashboard(props: Props) {
   const { exchangeRates, activePortfolioCurrency, activePortfolioId, demoMode } = usePortfolio();
   const [aiDrawerOpen, setAiDrawerOpen] = useState(false);
   const [txInvested, setTxInvested] = useState<number | null>(null);
@@ -78,95 +198,183 @@ export default function DashboardPortfolioV2({
       .catch(() => {});
   }, [activePortfolioId, demoMode, activePortfolioCurrency, exchangeRates]);
 
-  return (
-    <>
-      {chartExpanded ? (
-        <div className="flex flex-col gap-4">
-          <CompactHeroChart
-            holdings={holdings}
-            cashEntries={cashEntries}
-            onOpenAi={() => setAiDrawerOpen(true)}
-            expanded
-            onToggleExpand={() => setChartExpanded(false)}
-            snapshotInvested={txInvested}
-          />
-          <AssetBreakdownCards holdings={holdings} cashEntries={cashEntries} />
-          <AssetPerformanceTable holdings={holdings} cashEntries={cashEntries} />
+  const { holdings, cashEntries, allCashEntries, onAddStock, onNavigateToEvents, onNavigateToDividends, onNavigateToDiversification, onShareReferral } = props;
 
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4 items-start">
-            {/* Left column */}
-            <div className="flex flex-col gap-4 min-w-0">
-              <PortfolioTable holdings={holdings} onAddStock={onAddStock} />
-              <MarketAndCash holdings={holdings} cashEntries={allCashEntries} />
-              <PortfolioProjection holdings={holdings} cashEntries={cashEntries} />
-              <GoalCelebration holdings={holdings} cashEntries={cashEntries} />
-            </div>
-
-            {/* Right sidebar */}
-            <div className="flex flex-col gap-3">
-              <OnboardingChecklist onOpenAddStock={onAddStock} />
-              <WeeklyDigestCard position="promoted" />
-              <CompactReferralCard onShare={onShareReferral} />
-              <GoalPromptCard holdings={holdings} />
-              <PortfolioScoreCard holdings={holdings} cashEntries={cashEntries} />
-              <GoalProgressCard holdings={holdings} cashEntries={cashEntries} />
-              <AllocationTabs
-                holdings={holdings}
-                cashEntries={allCashEntries}
-                onShowMore={onNavigateToDiversification}
-              />
-              <CompactDividendCard holdings={holdings} cashEntries={cashEntries} onNavigateToDividends={onNavigateToDividends} />
-              <CompactEarningsCard onNavigateToEvents={onNavigateToEvents} />
-              <PortfolioGrowthPeriods holdings={holdings} />
-              <PerformanceMetrics holdings={holdings} cashEntries={cashEntries} />
-              <PortfolioAiTrigger onOpen={() => setAiDrawerOpen(true)} />
-              <WeeklyDigestCard position="default" />
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4 items-start">
-          {/* Left column */}
-          <div className="flex flex-col gap-4 min-w-0">
+  if (chartExpanded) {
+    return (
+      <ExpandedLayout
+        chartBlock={
+          <>
             <CompactHeroChart
               holdings={holdings}
               cashEntries={cashEntries}
               onOpenAi={() => setAiDrawerOpen(true)}
-              onToggleExpand={() => setChartExpanded(true)}
+              expanded
+              onToggleExpand={() => setChartExpanded(false)}
+              snapshotInvested={txInvested}
             />
             <AssetBreakdownCards holdings={holdings} cashEntries={cashEntries} />
-            <AssetPerformanceTable holdings={holdings} cashEntries={cashEntries} />
-            <PortfolioTable holdings={holdings} onAddStock={onAddStock} />
-            <MarketAndCash holdings={holdings} cashEntries={allCashEntries} />
-            <PortfolioProjection holdings={holdings} cashEntries={cashEntries} />
-            <GoalCelebration holdings={holdings} cashEntries={cashEntries} />
-          </div>
+          </>
+        }
+        holdings={holdings} cashEntries={cashEntries} allCashEntries={allCashEntries}
+        onAddStock={onAddStock} onNavigateToEvents={onNavigateToEvents}
+        onNavigateToDividends={onNavigateToDividends} onNavigateToDiversification={onNavigateToDiversification}
+        onShareReferral={onShareReferral} aiDrawerOpen={aiDrawerOpen} setAiDrawerOpen={setAiDrawerOpen}
+      />
+    );
+  }
 
-          {/* Right sidebar */}
-          <div className="flex flex-col gap-3">
-            <OnboardingChecklist onOpenAddStock={onAddStock} />
-            <WeeklyDigestCard position="promoted" />
-            <CompactReferralCard onShare={onShareReferral} />
-            <GoalPromptCard holdings={holdings} />
-            <PortfolioScoreCard holdings={holdings} cashEntries={cashEntries} />
-            <GoalProgressCard holdings={holdings} cashEntries={cashEntries} />
-            <StatsGrid holdings={holdings} cashEntries={cashEntries} snapshotInvested={txInvested} />
-            <AllocationTabs
-              holdings={holdings}
-              cashEntries={allCashEntries}
-              onShowMore={onNavigateToDiversification}
-            />
-            <CompactDividendCard holdings={holdings} cashEntries={cashEntries} onNavigateToDividends={onNavigateToDividends} />
-            <CompactEarningsCard onNavigateToEvents={onNavigateToEvents} />
-            <PortfolioGrowthPeriods holdings={holdings} />
-            <PerformanceMetrics holdings={holdings} cashEntries={cashEntries} />
-            <PortfolioAiTrigger onOpen={() => setAiDrawerOpen(true)} />
-            <WeeklyDigestCard position="default" />
-          </div>
-        </div>
-      )}
+  return (
+    <CollapsedLayout
+      chartBlock={
+        <CompactHeroChart
+          holdings={holdings}
+          cashEntries={cashEntries}
+          onOpenAi={() => setAiDrawerOpen(true)}
+          onToggleExpand={() => setChartExpanded(true)}
+        />
+      }
+      breakdownBlock={<AssetBreakdownCards holdings={holdings} cashEntries={cashEntries} />}
+      holdings={holdings} cashEntries={cashEntries} allCashEntries={allCashEntries}
+      onAddStock={onAddStock} onNavigateToEvents={onNavigateToEvents}
+      onNavigateToDividends={onNavigateToDividends} onNavigateToDiversification={onNavigateToDiversification}
+      onShareReferral={onShareReferral} aiDrawerOpen={aiDrawerOpen} setAiDrawerOpen={setAiDrawerOpen}
+      sidebarExtra={<StatsGrid holdings={holdings} cashEntries={cashEntries} snapshotInvested={txInvested} />}
+    />
+  );
+}
 
-      <PortfolioAiDrawer isOpen={aiDrawerOpen} onClose={() => setAiDrawerOpen(false)} autoAnalyze />
+// ── New V2 chart (flag on) ──
+
+function V2Dashboard(props: Props) {
+  const { quotes, exchangeRates, activePortfolioCurrency } = usePortfolio();
+  const [aiDrawerOpen, setAiDrawerOpen] = useState(false);
+  const [chartExpanded, setChartExpanded] = useState(false);
+  const [assetFilter, setAssetFilter] = useState<AssetFilter>("all");
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [recalculating, setRecalculating] = useState(false);
+
+  const baseCurrency = activePortfolioCurrency;
+  const { holdings, cashEntries, allCashEntries, onAddStock, onNavigateToEvents, onNavigateToDividends, onNavigateToDiversification, onShareReferral } = props;
+
+  const filteredHoldings = useMemo(() => {
+    if (assetFilter === "all") return holdings;
+    return holdings.filter((h) => (h.assetType ?? "stock") === assetFilter);
+  }, [holdings, assetFilter]);
+
+  const effectiveCash = assetFilter === "all" ? cashEntries : [];
+
+  const totals = useMemo(
+    () => calculatePortfolioTotals(filteredHoldings, effectiveCash, quotes, exchangeRates, baseCurrency),
+    [filteredHoldings, effectiveCash, quotes, exchangeRates, baseCurrency],
+  );
+
+  const dayGainLoss = useMemo(
+    () => computeMarketAwareDayPL(filteredHoldings, quotes, exchangeRates, baseCurrency),
+    [filteredHoldings, quotes, exchangeRates, baseCurrency],
+  );
+
+  const dayChangePctByType = useMemo(() => {
+    const result: Partial<Record<AssetFilter, number>> = {};
+    const groups: AssetFilter[] = ["all", "stock", "etf", "crypto"];
+    for (const group of groups) {
+      const groupHoldings = group === "all" ? holdings : holdings.filter((h) => (h.assetType ?? "stock") === group);
+      if (groupHoldings.length === 0) continue;
+      let weightedChange = 0;
+      let totalValue = 0;
+      for (const h of groupHoldings) {
+        const quote = quotes[h.ticker];
+        if (!quote || quote.regularMarketPrice <= 0) continue;
+        const isCrypto = h.assetType === "crypto";
+        const quoteCurrency = resolveQuoteCurrency(h.displayCurrency, quote.currency);
+        const posValue = Math.abs(h.shares * quote.regularMarketPrice);
+        const posValueBase = convertCurrency(posValue, quoteCurrency, baseCurrency, exchangeRates);
+        if (!isCrypto && !wasMarketOpenToday(h.exchange)) {
+          totalValue += posValueBase;
+          continue;
+        }
+        const dayDelta = h.shares * (quote.regularMarketChange ?? 0);
+        const dayDeltaBase = convertCurrency(dayDelta, quoteCurrency, baseCurrency, exchangeRates);
+        weightedChange += dayDeltaBase;
+        totalValue += posValueBase;
+      }
+      result[group] = totalValue > 0 ? (weightedChange / totalValue) * 100 : 0;
+    }
+    return result;
+  }, [holdings, quotes, exchangeRates, baseCurrency]);
+
+  const handleBackfillComplete = useCallback(() => {
+    setRefreshKey((k) => k + 1);
+  }, []);
+
+  const handleRecalculate = useCallback(async () => {
+    setRecalculating(true);
+    try {
+      const res = await fetch("/api/portfolio/backfill-snapshots", { method: "POST", credentials: "include" });
+      if (!res.ok) throw new Error("recalculate failed");
+      setRefreshKey((k) => k + 1);
+    } catch { /* user can retry */ } finally {
+      setRecalculating(false);
+    }
+  }, []);
+
+  const v2ChartBlock = (
+    <>
+      <PortfolioHeader
+        totalValue={totals.totalCurrentEUR}
+        dayGainLoss={dayGainLoss}
+        dayGainLossPercent={totals.totalCurrentEUR > 0 ? (dayGainLoss / (totals.totalCurrentEUR - dayGainLoss)) * 100 : 0}
+        totalGainLossPercent={totals.totalGainLossPercent}
+        currency={baseCurrency}
+      />
+      <AssetTypeFilter value={assetFilter} onChange={setAssetFilter} dayChangePct={dayChangePctByType} />
+      <BackfillCTA holdingsCount={holdings.length} onComplete={handleBackfillComplete} />
+      <PortfolioValueChart
+        holdings={holdings}
+        assetFilter={assetFilter}
+        refreshKey={refreshKey}
+        onRecalculate={handleRecalculate}
+        recalculating={recalculating}
+        onOpenAi={() => setAiDrawerOpen(true)}
+        expanded={chartExpanded}
+        onToggleExpand={() => setChartExpanded(!chartExpanded)}
+      />
+      <MarketAwareBreakdown
+        holdings={holdings}
+        cashEntries={cashEntries}
+        onFilterChange={setAssetFilter}
+        activeFilter={assetFilter}
+      />
     </>
   );
+
+  if (chartExpanded) {
+    return (
+      <ExpandedLayout
+        chartBlock={v2ChartBlock}
+        holdings={holdings} cashEntries={cashEntries} allCashEntries={allCashEntries}
+        onAddStock={onAddStock} onNavigateToEvents={onNavigateToEvents}
+        onNavigateToDividends={onNavigateToDividends} onNavigateToDiversification={onNavigateToDiversification}
+        onShareReferral={onShareReferral} aiDrawerOpen={aiDrawerOpen} setAiDrawerOpen={setAiDrawerOpen}
+      />
+    );
+  }
+
+  return (
+    <CollapsedLayout
+      chartBlock={v2ChartBlock}
+      holdings={holdings} cashEntries={cashEntries} allCashEntries={allCashEntries}
+      onAddStock={onAddStock} onNavigateToEvents={onNavigateToEvents}
+      onNavigateToDividends={onNavigateToDividends} onNavigateToDiversification={onNavigateToDiversification}
+      onShareReferral={onShareReferral} aiDrawerOpen={aiDrawerOpen} setAiDrawerOpen={setAiDrawerOpen}
+      sidebarExtra={<StatsGrid holdings={holdings} cashEntries={cashEntries} />}
+    />
+  );
+}
+
+// ── Entry point — switches on feature flag ──
+
+export default function DashboardPortfolioV2(props: Props) {
+  const useV2Chart = useFeatureFlag("portfolio_v2_chart_enabled");
+  return useV2Chart ? <V2Dashboard {...props} /> : <LegacyDashboard {...props} />;
 }

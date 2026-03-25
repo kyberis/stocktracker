@@ -16,6 +16,7 @@ import { initNudgeTracking, shouldShowPaywallNudge, recordPaywallNudgeShown, rec
 import { hapticImpact, hapticSelectionChanged } from "@/lib/native-haptics";
 import { hideNativeSplash } from "@/lib/native-splash";
 import { useIsNative } from "@/lib/use-native";
+import { useFeatureFlag } from "@/lib/feature-flag-context";
 import { usePortfolioSnapshotSync } from "@/lib/use-portfolio-snapshot-sync";
 import TierFeatureBadge from "@/components/TierFeatureBadge";
 import SampleDataBanner from "@/components/SampleDataBanner";
@@ -25,6 +26,7 @@ import { HeroSkeleton, ChartSkeleton } from "@/components/Skeleton";
 import type { Account } from "@/lib/types";
 
 const PortfolioEvolutionChart = dynamic(() => import("@/components/PortfolioEvolutionChart"), { ssr: false });
+const PortfolioValueChart = dynamic(() => import("@/components/portfolio-v2/PortfolioValueChart"), { ssr: false });
 
 const PortfolioNewsFeed = dynamic(() => import("@/components/PortfolioNewsFeed"), { ssr: false });
 const TaxonomyView = dynamic(() => import("@/components/TaxonomyView"), { ssr: false });
@@ -47,6 +49,7 @@ const AssetBreakdownCards = dynamic(() => import("@/components/dashboard-v2/Asse
 type DashboardTab = "portfolio" | "diversification" | "dividends" | "metrics" | "growth" | "events" | "news";
 
 export default function MobileDashboard() {
+  const useV2Chart = useFeatureFlag("portfolio_v2_chart_enabled");
   const [activeTab, setActiveTab] = useState<DashboardTab>("portfolio");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showReferralModal, setShowReferralModal] = useState(false);
@@ -255,7 +258,11 @@ export default function MobileDashboard() {
               <>
                 <WeeklyDigestCard position="promoted" />
                 <PortfolioSummary holdings={filteredHoldings} cashEntries={investmentCashEntries} allCashEntries={cashEntries} />
-                <PortfolioEvolutionChart compact />
+                {useV2Chart ? (
+                  <PortfolioValueChart holdings={filteredHoldings} assetFilter="all" />
+                ) : (
+                  <PortfolioEvolutionChart compact />
+                )}
                 <AssetBreakdownCards holdings={filteredHoldings} cashEntries={investmentCashEntries} />
                 <PortfolioCards holdings={filteredHoldings} />
                 <UpcomingEarnings onNavigateToEvents={() => handleTabChange("events")} />

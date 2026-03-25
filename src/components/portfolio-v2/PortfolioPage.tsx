@@ -3,7 +3,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
-import { getMarketStatus } from "@/lib/market-hours";
+import { getMarketStatus, wasMarketOpenToday } from "@/lib/market-hours";
 import { convertCurrency, resolveQuoteCurrency } from "@/lib/utils";
 import AssetTypeFilter from "@/components/dashboard-v2/AssetTypeFilter";
 import type { AssetFilter } from "@/components/dashboard-v2/AssetTypeFilter";
@@ -11,7 +11,8 @@ import PortfolioHeader from "./PortfolioHeader";
 import PortfolioValueChart from "./PortfolioValueChart";
 import BackfillCTA from "./BackfillCTA";
 import MarketAwareBreakdown from "./MarketAwareBreakdown";
-import type { Holding, QuoteData, ExchangeRates } from "@/lib/types";
+import PortfolioAiDrawer from "@/components/dashboard-v2/PortfolioAiDrawer";
+import type { Holding, QuoteData, ExchangeRates, HoldingAssetType } from "@/lib/types";
 
 /**
  * Compute day P/L only from holdings whose market is currently open.
@@ -50,6 +51,8 @@ export default function PortfolioPage() {
 
   const [assetFilter, setAssetFilter] = useState<AssetFilter>("all");
   const [refreshKey, setRefreshKey] = useState(0);
+  const [recalculating, setRecalculating] = useState(false);
+  const [aiDrawerOpen, setAiDrawerOpen] = useState(false);
 
   const baseCurrency = activePortfolioCurrency;
 
@@ -70,8 +73,56 @@ export default function PortfolioPage() {
     [filteredHoldings, quotes, exchangeRates, baseCurrency],
   );
 
+  const dayChangePctByType = useMemo(() => {
+    const result: Partial<Record<AssetFilter, number>> = {};
+    const groups: AssetFilter[] = ["all", "stock", "etf", "crypto"];
+    for (const group of groups) {
+      const groupHoldings = group === "all" ? holdings : holdings.filter((h) => (h.assetType ?? "stock") === group);
+      if (groupHoldings.length === 0) continue;
+
+      let weightedChange = 0;
+      let totalValue = 0;
+      for (const h of groupHoldings) {
+        const quote = quotes[h.ticker];
+        if (!quote || quote.regularMarketPrice <= 0) continue;
+        const isCrypto = h.assetType === "crypto";
+        const quoteCurrency = resolveQuoteCurrency(h.displayCurrency, quote.currency);
+        const posValue = Math.abs(h.shares * quote.regularMarketPrice);
+        const posValueBase = convertCurrency(posValue, quoteCurrency, baseCurrency, exchangeRates);
+
+        if (!isCrypto && !wasMarketOpenToday(h.exchange)) {
+          totalValue += posValueBase;
+          continue;
+        }
+
+        const dayDelta = h.shares * (quote.regularMarketChange ?? 0);
+        const dayDeltaBase = convertCurrency(dayDelta, quoteCurrency, baseCurrency, exchangeRates);
+        weightedChange += dayDeltaBase;
+        totalValue += posValueBase;
+      }
+      result[group] = totalValue > 0 ? (weightedChange / totalValue) * 100 : 0;
+    }
+    return result;
+  }, [holdings, quotes, exchangeRates, baseCurrency]);
+
   const handleBackfillComplete = useCallback(() => {
     setRefreshKey((k) => k + 1);
+  }, []);
+
+  const handleRecalculate = useCallback(async () => {
+    setRecalculating(true);
+    try {
+      const res = await fetch("/api/portfolio/backfill-snapshots", {
+        method: "POST",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("recalculate failed");
+      setRefreshKey((k) => k + 1);
+    } catch {
+      // Silently fail — the user can retry
+    } finally {
+      setRecalculating(false);
+    }
   }, []);
 
   if (isInitializing) {
@@ -103,7 +154,7 @@ export default function PortfolioPage() {
       />
 
       {/* Asset Type Filter */}
-      <AssetTypeFilter value={assetFilter} onChange={setAssetFilter} />
+      <AssetTypeFilter value={assetFilter} onChange={setAssetFilter} dayChangePct={dayChangePctByType} />
 
       {/* Backfill CTA */}
       <BackfillCTA holdingsCount={holdings.length} onComplete={handleBackfillComplete} />
@@ -113,6 +164,9 @@ export default function PortfolioPage() {
         holdings={holdings}
         assetFilter={assetFilter}
         refreshKey={refreshKey}
+        onRecalculate={handleRecalculate}
+        recalculating={recalculating}
+        onOpenAi={() => setAiDrawerOpen(true)}
       />
 
       {/* Asset Breakdown Cards */}
@@ -121,6 +175,12 @@ export default function PortfolioPage() {
         cashEntries={cashEntries}
         onFilterChange={setAssetFilter}
         activeFilter={assetFilter}
+      />
+
+      <PortfolioAiDrawer
+        isOpen={aiDrawerOpen}
+        onClose={() => setAiDrawerOpen(false)}
+        autoAnalyze
       />
     </div>
   );

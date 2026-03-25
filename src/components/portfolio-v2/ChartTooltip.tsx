@@ -3,7 +3,7 @@
 import { formatCurrency, formatPercent } from "@/lib/utils";
 import { getActiveMarketsAt } from "@/lib/market-hours";
 import type { Holding } from "@/lib/types";
-import type { BenchmarkOverlayEntry } from "./PortfolioValueChart";
+import type { BenchmarkOverlayEntry, EventMarker } from "./PortfolioValueChart";
 
 interface Props {
   active?: boolean;
@@ -24,6 +24,32 @@ function formatDateLabel(dateStr: string): string {
     return d.toLocaleString("en-GB", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" });
   }
   return new Date(dateStr).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+}
+
+function EventSection({ events, stealthMode, baseCurrency }: { events: EventMarker[]; stealthMode: boolean; baseCurrency: string }) {
+  if (!events.length) return null;
+  return (
+    <div className="border-t border-gray-100 dark:border-slate-700 mt-1.5 pt-1.5 space-y-1">
+      {events.map((e, i) => (
+        <div key={e.id || `${e.type}-${e.ticker}-${i}`} className="flex items-center gap-1.5">
+          <span
+            className="w-2 h-2 rounded-full shrink-0"
+            style={{ background: e.type === "sell" ? "#ef4444" : "#10b981" }}
+          />
+          <span className="text-[10px] font-semibold uppercase" style={{ color: e.type === "sell" ? "#ef4444" : "#10b981" }}>
+            {e.type}
+          </span>
+          <span className="text-[10px] text-gray-500 dark:text-slate-400 truncate max-w-[80px]">
+            {e.ticker}
+          </span>
+          <span className="text-[10px] text-gray-400 dark:text-slate-500 ml-auto tabular-nums whitespace-nowrap">
+            {e.shares > 0 ? `${Number.isInteger(e.shares) ? e.shares : e.shares.toFixed(2)} sh` : ""}
+            {e.totalAmount && !stealthMode ? ` · ${formatCurrency(e.totalAmount, e.currency || baseCurrency)}` : ""}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function MarketSessionSection({ holdings, dateStr }: { holdings: Holding[]; dateStr: string }) {
@@ -59,6 +85,8 @@ export default function ChartTooltip({
   const point = payload[0]?.payload;
   if (!point || (point.value == null && point.pct == null)) return null;
 
+  const pointEvents: EventMarker[] = Array.isArray(point.events) ? point.events : [];
+
   const benchmarkRows = benchmarkEntries?.map((b) => {
     const val = point[`bench_${b.key}`];
     if (val == null || typeof val !== "number") return null;
@@ -83,7 +111,7 @@ export default function ChartTooltip({
     const pct = point.pct as number;
     const isPos = pct >= 0;
     return (
-      <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2 shadow-lg max-w-[200px]">
+      <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2 shadow-lg max-w-[240px]">
         <p className="text-xs text-gray-400 dark:text-slate-500">{formatDateLabel(point.date)}</p>
         <div className="flex items-center gap-1.5 mt-1">
           <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
@@ -98,13 +126,14 @@ export default function ChartTooltip({
           </span>
         </div>
         {benchmarkRows}
+        {pointEvents.length > 0 && <EventSection events={pointEvents} stealthMode={stealthMode} baseCurrency={baseCurrency} />}
         {range === "1d" && holdings && <MarketSessionSection holdings={holdings} dateStr={point.date} />}
       </div>
     );
   }
 
   return (
-    <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2 shadow-lg max-w-[200px]">
+    <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2 shadow-lg max-w-[240px]">
       <p className="text-xs text-gray-400 dark:text-slate-500">{formatDateLabel(point.date)}</p>
       <div className="flex items-center gap-1.5 mt-1">
         <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
@@ -114,6 +143,7 @@ export default function ChartTooltip({
         </span>
       </div>
       {benchmarkRows}
+      {pointEvents.length > 0 && <EventSection events={pointEvents} stealthMode={stealthMode} baseCurrency={baseCurrency} />}
       {range === "1d" && holdings && <MarketSessionSection holdings={holdings} dateStr={point.date} />}
     </div>
   );

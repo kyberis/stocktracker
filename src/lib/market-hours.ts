@@ -269,6 +269,30 @@ export function getMarketStatus(exchange: string, now?: Date): MarketStatus {
   return { isOpen, nextEvent };
 }
 
+/**
+ * Returns true if the given exchange was open at any point during the current
+ * calendar day in the exchange's local timezone. This is true when:
+ * - The market is currently open, OR
+ * - The local time is past the market's close time on a weekday
+ *
+ * Returns false on weekends or before the market opens on a given day.
+ * Crypto is always considered "open today".
+ */
+export function wasMarketOpenToday(exchange: string, now?: Date): boolean {
+  const schedule = EXCHANGE_SCHEDULES[exchange.toUpperCase()];
+  if (!schedule) return false;
+
+  const currentTime = now ?? new Date();
+  const { hours, minutes, dayOfWeek } = getLocalTime(schedule.tz, currentTime);
+  const currentMinutes = hours * 60 + minutes;
+  const openMinutes = schedule.openHour * 60 + schedule.openMinute;
+
+  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+  if (isWeekend) return false;
+
+  return currentMinutes >= openMinutes;
+}
+
 /* ── Snapshot gating: should we record a portfolio snapshot right now? ─ */
 
 /**

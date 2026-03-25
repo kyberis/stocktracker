@@ -37,6 +37,7 @@ const FLAG_META: Record<string, { label: string; description: string; group: str
   tool_watchlist_enabled: { label: "Watchlist", description: "Stock watchlist tracking tool", group: "Tools" },
   pro_trial_enabled: { label: "7-Day Pro Trial", description: "Card-free Pro trial invitations, activation, and dashboard countdown", group: "Features" },
   ai_report_enabled: { label: "AI Portfolio Report", description: "AI-generated portfolio score, detailed analysis page, and streaming review", group: "Features" },
+  portfolio_v2_chart_enabled: { label: "Portfolio V2 Chart", description: "New portfolio value/performance chart with market sessions, buy/sell dots, benchmarks, and backfill CTA on the homepage", group: "Features" },
 };
 
 export default function FeatureFlagsPage() {

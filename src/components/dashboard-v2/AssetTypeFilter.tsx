@@ -15,9 +15,10 @@ const ASSET_COLORS: Record<AssetFilter, string> = {
 interface Props {
   value: AssetFilter;
   onChange: (v: AssetFilter) => void;
+  dayChangePct?: Partial<Record<AssetFilter, number>>;
 }
 
-export default function AssetTypeFilter({ value, onChange }: Props) {
+export default function AssetTypeFilter({ value, onChange, dayChangePct }: Props) {
   const { t } = useI18n();
 
   const options: { key: AssetFilter; label: string }[] = [
@@ -32,6 +33,15 @@ export default function AssetTypeFilter({ value, onChange }: Props) {
       {options.map(({ key, label }) => {
         const isActive = value === key;
         const color = ASSET_COLORS[key];
+        const pct = dayChangePct?.[key];
+        const hasPct = pct != null;
+        const pctColor =
+          !hasPct || pct === 0
+            ? "text-gray-400 dark:text-slate-500"
+            : pct > 0
+              ? "text-emerald-500 dark:text-emerald-400"
+              : "text-red-500 dark:text-red-400";
+
         return (
           <button
             key={key}
@@ -53,6 +63,11 @@ export default function AssetTypeFilter({ value, onChange }: Props) {
               style={{ background: color }}
             />
             {label}
+            {hasPct && (
+              <span className={`text-[10px] tabular-nums font-medium ${pctColor}`}>
+                {pct > 0 ? "+" : ""}{pct.toFixed(2)}%
+              </span>
+            )}
           </button>
         );
       })}
