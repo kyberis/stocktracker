@@ -784,58 +784,7 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
     );
   }
 
-  const showMarketsClosedOverlay = allMarketsClosed && !hasCryptoInView && range === "1d";
-
-  if (showMarketsClosedOverlay) {
-    const lastValue = effectivePoints.length > 0 ? effectivePoints[effectivePoints.length - 1].value : null;
-    return (
-      <div className="card overflow-hidden relative">
-        {topButtons}
-        {showGuide && <ChartGuideModal mode={mode} onClose={() => setShowGuide(false)} />}
-        {inlineHeader}
-        <div className="relative h-[340px] flex flex-col items-center justify-center text-center gap-2.5">
-          {/* Faint grid background */}
-          <div
-            className="absolute inset-0 pointer-events-none opacity-20"
-            style={{
-              backgroundImage: "linear-gradient(to right, var(--grid-line, rgba(148,163,184,0.3)) 1px, transparent 1px), linear-gradient(to bottom, var(--grid-line, rgba(148,163,184,0.3)) 1px, transparent 1px)",
-              backgroundSize: "80px 40px",
-              borderRadius: "12px",
-            }}
-          />
-          <span className="text-3xl relative z-10">🧘</span>
-          <p className="text-sm font-semibold relative z-10 text-amber-500 dark:text-amber-400">
-            {t("marketsClosedTitle")}
-          </p>
-          <p className="text-xs relative z-10 max-w-xs leading-relaxed text-gray-500 dark:text-slate-400">
-            {t("marketsClosedBody").replace(
-              "{value}",
-              stealthMode ? "•••••" : formatCurrency(lastValue ?? 0, baseCurrency),
-            )}
-          </p>
-          {nextOpen && (
-            <span className="inline-flex items-center gap-1.5 text-[10px] font-medium px-2.5 py-1 rounded-full relative z-10 text-gray-400 dark:text-slate-400 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700">
-              <span className="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-slate-600" />
-              {t("marketsClosedOpens").replace("{market}", nextOpen.market).replace("{time}", nextOpen.time)}
-            </span>
-          )}
-        </div>
-        <ChartFooter
-          mode={mode}
-          setMode={setMode}
-          range={range}
-          setRange={setRange}
-          benchmarkKeys={benchmarkKeys}
-          benchmarkEntries={benchmarkEntries}
-          setBenchmarkKeys={setBenchmarkKeys}
-          showCompareDropdown={showCompareDropdown}
-          setShowCompareDropdown={setShowCompareDropdown}
-          periodReturn={null}
-          onOpenAi={onOpenAi}
-        />
-      </div>
-    );
-  }
+  const showMarketsClosedBanner = allMarketsClosed && !hasCryptoInView && range === "1d";
 
   return (
     <div className="card overflow-hidden relative">
@@ -1080,16 +1029,24 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
           <div className="flex items-center gap-1.5">
             {debugDate ? (
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+            ) : showMarketsClosedBanner ? (
+              <span className="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-slate-600" />
             ) : (
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
             )}
-            {debugDate ? `Viewing ${debugDate}` : loading ? "Syncing…" : "Live"}
+            {debugDate
+              ? `Viewing ${debugDate}`
+              : loading
+                ? "Syncing…"
+                : showMarketsClosedBanner
+                  ? `${t("marketsClosedTitle")}${nextOpen ? ` · ${nextOpen.market} ${t("marketsClosedOpens").replace("{market}", "").replace("{time}", nextOpen.time).trim()}` : ""}`
+                  : "Live"}
           </div>
         ) : (
           <span>{loading ? "Loading…" : `${chartData.filter((p) => p.value != null).length} data points`}</span>
         )}
         <div className="flex items-center gap-3">
-          {range === "1d" && !debugDate && <span>Updates every 5 min</span>}
+          {range === "1d" && !debugDate && !showMarketsClosedBanner && <span>Updates every 5 min</span>}
           {range === "1d" && debugDate && <span>Debug mode</span>}
           {onRecalculate && (
             <button
