@@ -121,6 +121,7 @@ export default function MobileDashboard() {
       }
     }
     setActiveTab(tab);
+    window.scrollTo({ top: 0, behavior: "instant" });
     track(`${tab}_tab_viewed`);
     hapticSelectionChanged();
   }

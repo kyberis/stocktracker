@@ -216,6 +216,7 @@ function DesktopDashboard() {
 
   function handleTabChange(tab: DashboardTab) {
     setActiveTab(tab);
+    window.scrollTo({ top: 0, behavior: "instant" });
     if (tab === "diversification") track("diversification_tab_viewed");
     if (tab === "dividends") track("dividends_tab_viewed");
     if (tab === "metrics") track("metrics_tab_viewed");
