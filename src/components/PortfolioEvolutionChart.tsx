@@ -460,8 +460,10 @@ export default function PortfolioEvolutionChart({ embedded, compact, benchmarks,
 
   const baseCurrency = activePortfolioCurrency;
   const isPaid = user?.plan === "starter" || user?.plan === "pro";
+  const isAdmin = user?.role === "admin";
 
   const [range, setRange] = useState<EvolutionRange>("1d");
+  const [dayOffset, setDayOffset] = useState(0);
   const [chartMode, setChartMode] = useState<ChartMode>("value");
   const [points, setPoints] = useState<SnapshotPoint[]>([]);
   const [events, setEvents] = useState<EventMarker[]>([]);
@@ -490,6 +492,13 @@ export default function PortfolioEvolutionChart({ embedded, compact, benchmarks,
   const [benchmarkLoading, setBenchmarkLoading] = useState(false);
   const benchmarkAbortRef = useRef<AbortController | null>(null);
 
+  const targetDate = useMemo(() => {
+    if (dayOffset === 0) return "";
+    const d = new Date();
+    d.setDate(d.getDate() - dayOffset);
+    return d.toISOString().slice(0, 10);
+  }, [dayOffset]);
+
   const fetchHistory = useCallback(
     (r: EvolutionRange) => {
       if (demoMode) {
@@ -500,7 +509,8 @@ export default function PortfolioEvolutionChart({ embedded, compact, benchmarks,
       }
       setLoading(true);
       const pid = activePortfolioId || "";
-      fetch(`/api/portfolio/history?range=${r}&portfolioId=${encodeURIComponent(pid)}`)
+      const dateParam = r === "1d" && targetDate ? `&date=${targetDate}` : "";
+      fetch(`/api/portfolio/history?range=${r}&portfolioId=${encodeURIComponent(pid)}${dateParam}`)
         .then((res) => (res.ok ? res.json() : { points: [] }))
         .then((data) => {
           const raw = Array.isArray(data.points) ? data.points : [];
@@ -515,8 +525,10 @@ export default function PortfolioEvolutionChart({ embedded, compact, benchmarks,
           setPoints(pts);
           setEvents(Array.isArray(data.events) ? data.events : []);
           setLoading(false);
+          const isHistorical = !!targetDate;
           // Auto-backfill once when insufficient history — silent (no “Calculating…” overlay).
           if (
+            !isHistorical &&
             pts.length < 2 &&
             !sparseBackfillAttemptedRef.current &&
             !backfillInFlightRef.current
@@ -530,8 +542,8 @@ export default function PortfolioEvolutionChart({ embedded, compact, benchmarks,
               });
             if (r === "1d") return;
           }
-          // 1D: poll when < 2 points (waiting for snapshot sync).
-          if (r === "1d" && pts.length < 2 && dailyPollCountRef.current < MAX_DAILY_POLLS) {
+          // 1D: poll when < 2 points (waiting for snapshot sync). Skip for past days.
+          if (r === "1d" && !isHistorical && pts.length < 2 && dailyPollCountRef.current < MAX_DAILY_POLLS) {
             dailyPollCountRef.current++;
             setCollectingDaily(true);
             if (dailyPollRef.current) clearTimeout(dailyPollRef.current);
@@ -584,7 +596,7 @@ export default function PortfolioEvolutionChart({ embedded, compact, benchmarks,
         })
         .catch(() => setLoading(false));
     },
-    [demoMode, activePortfolioId],
+    [demoMode, activePortfolioId, targetDate],
   );
 
   useEffect(() => {
@@ -730,6 +742,7 @@ export default function PortfolioEvolutionChart({ embedded, compact, benchmarks,
 
   function handleRangeChange(r: EvolutionRange) {
     if (!isPaid && !FREE_RANGES.has(r)) return;
+    if (r !== "1d") setDayOffset(0);
     setRange(r);
     track("evolution_range_changed", { range: r });
   }
@@ -739,7 +752,7 @@ export default function PortfolioEvolutionChart({ embedded, compact, benchmarks,
     track("chart_mode_changed", { mode: m });
   }
 
-  const allMarketsClosed = !demoMode && !isAnyMarketActive(holdings);
+  const allMarketsClosed = !demoMode && dayOffset === 0 && !isAnyMarketActive(holdings);
   const nextOpen = allMarketsClosed ? getNextMarketOpen(holdings) : null;
   const lastKnownValue = (() => {
     if (points.length > 0) return points[points.length - 1].value;
@@ -978,6 +991,52 @@ export default function PortfolioEvolutionChart({ embedded, compact, benchmarks,
   const gridStroke = isDark ? "#334155" : "#e5e7eb";
 
   const visibleRanges = compact ? COMPACT_RANGE_KEYS : RANGE_KEYS;
+
+  const dayNavLabel = useMemo(() => {
+    if (dayOffset === 0) return "";
+    const d = new Date();
+    d.setDate(d.getDate() - dayOffset);
+    return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  }, [dayOffset]);
+
+  const dayNav = isAdmin && range === "1d" ? (
+    <div className="flex items-center gap-1">
+      <button
+        onClick={() => setDayOffset((o) => o + 1)}
+        className="p-1 rounded-md text-gray-400 dark:text-slate-500 hover:text-emerald-500 dark:hover:text-emerald-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+        aria-label="Previous day"
+        title="Previous day"
+      >
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+      {dayOffset > 0 && (
+        <>
+          <span className="text-[10px] tabular-nums text-gray-500 dark:text-slate-400 font-medium px-1">
+            {dayNavLabel}
+          </span>
+          <button
+            onClick={() => setDayOffset((o) => Math.max(0, o - 1))}
+            className="p-1 rounded-md text-gray-400 dark:text-slate-500 hover:text-emerald-500 dark:hover:text-emerald-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+            aria-label="Next day"
+            title="Next day"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+          <button
+            onClick={() => setDayOffset(0)}
+            className="text-[10px] text-emerald-600 dark:text-emerald-400 hover:underline font-medium px-1"
+            aria-label="Back to today"
+          >
+            Today
+          </button>
+        </>
+      )}
+    </div>
+  ) : null;
 
   const rangePills = (
     <div className="flex gap-1" role="group" aria-label="Time range">
@@ -1615,6 +1674,7 @@ export default function PortfolioEvolutionChart({ embedded, compact, benchmarks,
             {recalcButton}
           </div>
           <div className="flex items-center gap-2">
+            {dayNav}
             {modePills}
             {rangePills}
           </div>
@@ -1645,6 +1705,7 @@ export default function PortfolioEvolutionChart({ embedded, compact, benchmarks,
             {recalcButton}
           </div>
           <div className="flex items-center gap-2">
+            {dayNav}
             {modePills}
             {rangePills}
           </div>
@@ -1676,6 +1737,7 @@ export default function PortfolioEvolutionChart({ embedded, compact, benchmarks,
             {recalcButton}
           </div>
           <div className="flex items-center gap-2">
+            {dayNav}
             {modePills}
             {rangePills}
           </div>
@@ -1706,6 +1768,7 @@ export default function PortfolioEvolutionChart({ embedded, compact, benchmarks,
           {recalcButton}
         </div>
         <div className="flex items-center gap-2">
+          {dayNav}
           {modePills}
           {rangePills}
         </div>

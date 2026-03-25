@@ -274,15 +274,18 @@ export const GET = withMetrics("/api/portfolio/history", async (req: NextRequest
       args = [session.userId, portfolioId, dayMap[range]];
     }
   } else if (range === "1d") {
-    const today = todayDateString();
-    const d = new Date();
-    d.setUTCDate(d.getUTCDate() - 1);
-    const yesterday = d.toISOString().slice(0, 10);
+    const dateParam = url.searchParams.get("date");
+    const targetDay = dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam) ? dateParam : todayDateString();
+    const td = new Date(targetDay + "T00:00:00Z");
+    td.setUTCDate(td.getUTCDate() - 1);
+    const dayBefore = td.toISOString().slice(0, 10);
     sql = `SELECT ${cols}
            FROM portfolio_snapshots
-           WHERE user_id = ? AND portfolio_id = ? AND date >= ?
+           WHERE user_id = ? AND portfolio_id = ? AND date >= ? AND date < ?
            ORDER BY date ASC`;
-    args = [session.userId, portfolioId, yesterday];
+    const nextDay = new Date(targetDay + "T00:00:00Z");
+    nextDay.setUTCDate(nextDay.getUTCDate() + 1);
+    args = [session.userId, portfolioId, dayBefore, nextDay.toISOString().slice(0, 10)];
   } else if (range === "1w") {
     sql = `SELECT ${cols}
            FROM portfolio_snapshots
