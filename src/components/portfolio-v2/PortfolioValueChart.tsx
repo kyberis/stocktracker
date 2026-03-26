@@ -262,7 +262,7 @@ interface Props {
   dayChangePctByType?: Partial<Record<AssetFilter, number>>;
 }
 
-export default function PortfolioValueChart({ holdings, assetFilter, refreshKey, onRecalculate, recalculating, onOpenAi, expanded, onToggleExpand, totalValue, dayGainLoss, dayGainLossPercent, totalGainLossPercent, onAssetFilterChange, dayChangePctByType }: Props) {
+export default function PortfolioValueChart({ holdings, assetFilter, refreshKey, onRecalculate, recalculating, onOpenAi, expanded, onToggleExpand, totalValue, dayGainLoss, dayGainLossPercent, onAssetFilterChange, dayChangePctByType }: Props) {
   const { activePortfolioId, activePortfolioCurrency, mutationVersion, quotes } = usePortfolio();
   const { user } = useAuth();
   const { stealthMode } = useStealthMode();
@@ -691,7 +691,6 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
 
   const hasHeader = totalValue != null;
   const isPositiveDay = (dayGainLoss ?? 0) >= 0;
-  const isPositiveTotal = (totalGainLossPercent ?? 0) >= 0;
 
   const inlineHeader = hasHeader ? (
     <div className="px-5 pt-4 pb-2">
@@ -709,18 +708,6 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
           {stealthMode
             ? "•••"
             : `${isPositiveDay ? "+" : ""}${formatCurrency(dayGainLoss ?? 0, activePortfolioCurrency)} (${formatPercent(dayGainLossPercent ?? 0)})`}
-        </span>
-        <span className="text-[11px] text-gray-500 dark:text-slate-400">
-          <span
-            className={`font-semibold ${
-              isPositiveTotal
-                ? "text-emerald-600 dark:text-emerald-400"
-                : "text-red-500 dark:text-red-400"
-            }`}
-          >
-            {stealthMode ? "•••" : formatPercent(totalGainLossPercent ?? 0)}
-          </span>{" "}
-          {t("totalGainLabel")}
         </span>
       </div>
       {onAssetFilterChange && (
