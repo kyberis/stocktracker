@@ -85,6 +85,8 @@ export interface SendEmailOptions {
   from?: string;
   /** Skip List-Unsubscribe headers (e.g. verification or internal emails). */
   internal?: boolean;
+  /** BCC recipients (e.g. Trustpilot AFS). */
+  bcc?: string | string[];
 }
 
 export async function sendEmail(
@@ -126,6 +128,7 @@ export async function sendEmail(
       html,
       text: plainText,
       headers,
+      ...(opts.bcc ? { bcc: opts.bcc } : {}),
     });
 
     if (error) {
@@ -879,6 +882,96 @@ export async function sendTrialExpiredEmail(
       });
     } catch (e) {
       console.error("[trial-expired] Failed to log email send:", e);
+    }
+  }
+
+  return result;
+}
+
+// ---------------------------------------------------------------------------
+// Trustpilot AFS — BCC triggers an automatic Trustpilot review invitation.
+// Only sent to users who gave 4-5 stars on the satisfaction survey.
+// ---------------------------------------------------------------------------
+
+const TRUSTPILOT_AFS_EMAIL = "trefolio.com+8acd094c6c@invite.trustpilot.com";
+
+const satisfactionThankYouCopy = {
+  en: {
+    subject: "Thank you for your feedback!",
+    heading: "We're glad you're enjoying trefolio",
+    body: "Your {{rating}}-star rating means a lot to our team. If you have a minute, sharing your experience on Trustpilot helps other investors discover trefolio.",
+    cta: "Leave a Trustpilot Review",
+    footer: "You received this because you submitted feedback on trefolio.",
+    manage: "Manage preferences",
+  },
+  es: {
+    subject: "¡Gracias por tu opinión!",
+    heading: "Nos alegra que disfrutes trefolio",
+    body: "Tu valoración de {{rating}} estrellas significa mucho para nuestro equipo. Si tienes un minuto, compartir tu experiencia en Trustpilot ayuda a otros inversores a descubrir trefolio.",
+    cta: "Dejar una reseña en Trustpilot",
+    footer: "Recibiste este correo porque enviaste tu opinión en trefolio.",
+    manage: "Gestionar preferencias",
+  },
+} as const;
+
+type AfsLocale = keyof typeof satisfactionThankYouCopy;
+
+function satisfactionThankYouHtml(rating: number, locale: AfsLocale): string {
+  const c = satisfactionThankYouCopy[locale] ?? satisfactionThankYouCopy.en;
+  const campaign = "satisfaction_trustpilot";
+  const trustpilotUrl = "https://www.trustpilot.com/evaluate/trefolio.app";
+  const dashboardUrl = utm("/", campaign);
+  const stars = Array.from({ length: 5 }, (_, i) =>
+    `<span style="font-size:24px;color:${i < rating ? "#fbbf24" : "#cbd5e1"};">&#9733;</span>`
+  ).join("");
+
+  return `${emailHeader()}
+        <tr><td style="padding:32px 32px 0;">
+          <h1 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#0f172a;">${c.heading}</h1>
+          <div style="text-align:center;margin:0 0 16px;">${stars}</div>
+          <p style="margin:0 0 24px;font-size:15px;color:#475569;line-height:1.6;">${c.body.replace("{{rating}}", String(rating))}</p>
+          ${primaryCta(c.cta, trustpilotUrl)}
+        </td></tr>
+${emailFooter(c.footer, dashboardUrl, c.manage, "{{unsubscribe_url}}")}`;
+}
+
+export async function sendSatisfactionTrustpilotEmail(
+  email: string,
+  rating: number,
+  locale: EmailLocale = "en",
+  userId?: string,
+): Promise<{ success: boolean; error?: string }> {
+  if (isTestEmail(email)) return { success: true };
+  if (rating < 4) return { success: true };
+
+  const afsLocale: AfsLocale = locale === "es" ? "es" : "en";
+  const c = satisfactionThankYouCopy[afsLocale];
+  const html = satisfactionThankYouHtml(rating, afsLocale);
+
+  const result = await sendEmail({
+    to: email,
+    subject: c.subject,
+    html,
+    userId,
+    bcc: TRUSTPILOT_AFS_EMAIL,
+  });
+  if (!result.success) console.error("Failed to send satisfaction Trustpilot email:", result.error);
+
+  if (userId) {
+    try {
+      const tpl = await getEmailTemplateBySlug("satisfaction-trustpilot");
+      await logEmailSend({
+        resendId: result.messageId || "",
+        templateId: tpl?.id || "",
+        userId,
+        emailTo: email,
+        subject: c.subject,
+        bodyHtml: html,
+        bodyText: htmlToPlainText(html),
+        status: result.success ? "sent" : "failed",
+      });
+    } catch (e) {
+      console.error("[satisfaction-trustpilot] Failed to log email send:", e);
     }
   }
 

@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { checkEligibility, createOrUpdateDraft, submitSurvey, dismissSurvey } from "@/lib/db";
+import { checkEligibility, createOrUpdateDraft, submitSurvey, dismissSurvey, getUserSettings } from "@/lib/db";
 import { parseBody } from "@/lib/api-response";
 import { satisfactionDraftSchema } from "@/lib/schemas";
 import { withMetrics } from "@/lib/with-metrics";
+import { sendSatisfactionTrustpilotEmail, getEmailLocale } from "@/lib/email";
 
 export const GET = withMetrics("/api/satisfaction", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
@@ -46,6 +47,15 @@ export const PUT = withMetrics("/api/satisfaction", async (req: NextRequest) => 
     if (!survey) {
       return NextResponse.json({ error: "No draft to submit" }, { status: 404 });
     }
+
+    if (survey.rating >= 4) {
+      const settings = await getUserSettings(session.userId);
+      const locale = getEmailLocale(settings.language || "en");
+      sendSatisfactionTrustpilotEmail(session.email, survey.rating, locale, session.userId).catch((err) =>
+        console.error("[satisfaction] Trustpilot AFS email failed:", err),
+      );
+    }
+
     return NextResponse.json(survey);
   }
 
