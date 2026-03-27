@@ -2494,6 +2494,45 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       );
     },
   },
+  {
+    version: 81,
+    description: "Create satisfaction_surveys table and add satisfaction columns to users",
+    up: async (client: Client) => {
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS satisfaction_surveys (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          rating INTEGER NOT NULL CHECK(rating BETWEEN 1 AND 5),
+          comment TEXT NOT NULL DEFAULT '',
+          status TEXT NOT NULL DEFAULT 'draft' CHECK(status IN ('draft', 'submitted')),
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+          submitted_at TEXT NOT NULL DEFAULT '',
+          FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+      `);
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_satisfaction_user ON satisfaction_surveys(user_id)"
+      );
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_satisfaction_status ON satisfaction_surveys(status)"
+      );
+
+      const cols = [
+        "satisfaction_completed INTEGER NOT NULL DEFAULT 0",
+        "satisfaction_dismiss_count INTEGER NOT NULL DEFAULT 0",
+        "satisfaction_interaction_count INTEGER NOT NULL DEFAULT 0",
+      ];
+      for (const col of cols) {
+        try {
+          await client.execute(`ALTER TABLE users ADD COLUMN ${col}`);
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : String(e);
+          if (!msg.includes("duplicate column")) throw e;
+        }
+      }
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

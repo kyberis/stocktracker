@@ -437,6 +437,21 @@ export const supportChatMessageSchema = z.object({
   }).optional(),
 });
 
+/* ── Satisfaction survey ──────────────────────── */
+
+export const satisfactionDraftSchema = z.object({
+  rating: z.number().int().min(1).max(5),
+  comment: z.string().max(500).optional(),
+});
+
+export const satisfactionSubmitSchema = z.object({
+  action: z.literal("submit"),
+});
+
+export const satisfactionDismissSchema = z.object({
+  action: z.literal("dismiss"),
+});
+
 /** Portfolio chart Q&A — context is rebuilt client-side each request; keep samples bounded. */
 export const chartChatRequestSchema = z.object({
   messages: z.array(

@@ -17,6 +17,21 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.67.0",
+    date: "2026-03-27",
+    title: "Satisfaction Survey",
+    titleTranslations: { es: "Encuesta de satisfacción" },
+    changes: [
+      {
+        type: "feature",
+        text: "In-app satisfaction survey that appears after meaningful interactions. Rate your experience with stars, leave optional comments, and help shape trefolio's future.",
+        translations: {
+          es: "Encuesta de satisfacción integrada que aparece tras interacciones significativas. Califica tu experiencia con estrellas, deja comentarios opcionales y ayuda a dar forma al futuro de trefolio.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.66.0",
     date: "2026-03-25",
     title: "Portfolio Performance Page",

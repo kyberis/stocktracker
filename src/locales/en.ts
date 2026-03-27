@@ -2354,6 +2354,27 @@ const en: TranslationStrings = {
   periodReturnLabel: "Return",
   typeLabel: "Type",
   valueLabel: "Value",
+
+  // Satisfaction survey
+  satisfactionQuickFeedback: "Quick feedback",
+  satisfactionQuestion: "How would you rate your experience with trefolio?",
+  satisfactionRating: "Rating",
+  satisfactionStar: "star",
+  satisfactionStars: "stars",
+  satisfactionNotGreat: "Not great",
+  satisfactionExcellent: "Excellent",
+  satisfactionCommentLabel: "Anything you'd like to share?",
+  satisfactionOptional: "optional",
+  satisfactionCommentPlaceholder: "What could we do better? What do you love?",
+  satisfactionSubmit: "Send Feedback",
+  satisfactionThankYouLabel: "Thank you!",
+  satisfactionThankYou: "Thanks for your feedback!",
+  satisfactionThankYouDesc: "Your rating helps us improve trefolio for everyone.",
+  satisfactionTrustpilot: "Share your experience on Trustpilot",
+  satisfactionMaybeLater: "Maybe later",
+  satisfactionWeHearYou: "We hear you.",
+  satisfactionWeHearYouDesc: "Your feedback is valuable — we'll use it to make trefolio better for you.",
+  satisfactionDismissed: "No worries — we'll check back later.",
 };
 
 export default en;

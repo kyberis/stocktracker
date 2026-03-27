@@ -431,6 +431,17 @@ export {
   autoDetectCompletedSteps,
 } from "./checklist";
 
+export type { SatisfactionSurvey, SatisfactionStatus, SatisfactionStats, SatisfactionEligibility } from "./satisfaction";
+export {
+  createOrUpdateDraft,
+  getSurveyByUser,
+  submitSurvey,
+  dismissSurvey,
+  checkEligibility,
+  incrementInteractionCount,
+  getAllSurveysPaginated,
+} from "./satisfaction";
+
 export type { WeeklyDigestRow, WeeklyDigestStats } from "./weekly-digest";
 export {
   getLatestDigest,

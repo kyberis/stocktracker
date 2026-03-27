@@ -140,6 +140,7 @@ export default function MarketMoveToast({ demoMode = false }: Props) {
     return (
       <button
         onClick={() => { setCollapsed(false); setExpanded(true); }}
+        data-market-toast
         className="fixed bottom-20 sm:bottom-4 right-4 z-50 flex items-center gap-1.5 px-3 py-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 border-l-4 border-l-amber-500 rounded-xl shadow-lg hover:shadow-xl transition-shadow animate-slide-in-right"
         aria-label={t("marketAlertTitle") || "Market Alert"}
       >
@@ -163,6 +164,7 @@ export default function MarketMoveToast({ demoMode = false }: Props) {
   return (
     <div
       role="alert"
+      data-market-toast
       className="fixed bottom-20 sm:bottom-4 right-4 z-50 w-72 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 border-l-4 border-l-amber-500 rounded-xl shadow-lg animate-slide-in-right"
     >
       <div className="p-3.5">

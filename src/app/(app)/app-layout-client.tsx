@@ -16,6 +16,7 @@ import MarketTickerBar from "@/components/MarketTickerBar";
 import MobileTabBar from "@/components/MobileTabBar";
 import InstallPrompt from "@/components/InstallPrompt";
 import MarketMoveToast from "@/components/MarketMoveToast";
+import SatisfactionSurvey from "@/components/SatisfactionSurvey";
 import CapacitorBridge from "@/components/CapacitorBridge";
 import NativePushBridge from "@/components/NativePushBridge";
 import DeviceInterestEnroller from "@/components/DeviceInterestEnroller";
@@ -69,6 +70,7 @@ function AppShell({ children }: { children: React.ReactNode }) {
           <MobileTabBar />
           <InstallPrompt />
           <MarketMoveToast />
+          <SatisfactionSurvey />
           <CapacitorBridge />
           <NativePushBridge />
           <DeviceInterestEnroller />
@@ -88,6 +90,7 @@ function AppShell({ children }: { children: React.ReactNode }) {
       <MobileTabBar />
       <InstallPrompt />
       <MarketMoveToast />
+      <SatisfactionSurvey />
       <CapacitorBridge />
       <NativePushBridge />
       <DeviceInterestEnroller />

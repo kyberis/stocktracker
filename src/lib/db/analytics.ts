@@ -2,6 +2,20 @@ import { randomUUID } from "crypto";
 import { PLATFORM_LIMITS } from "@/lib/platform-config";
 import { ensureInitialized } from "./client";
 import { str, num } from "./helpers";
+import { incrementInteractionCount } from "./satisfaction";
+
+const SATISFACTION_QUALIFYING_EVENTS = new Set([
+  "holding_add",
+  "holding_delete",
+  "portfolio_import",
+  "alert_created",
+  "portfolio_review_completed",
+  "portfolio_score_completed",
+  "csv_exported",
+  "snaptrade_fetch",
+  "snaptrade_auto_sync",
+  "tax_report_generated",
+]);
 
 export interface LandingAnalytics {
   totalPageViews: number;
@@ -78,6 +92,10 @@ export async function trackEvent(
       sql: "INSERT INTO analytics_events (id, user_id, event, metadata) VALUES (?, ?, ?, ?)",
       args: [randomUUID(), userId, event, metadata ? JSON.stringify(metadata) : null],
     });
+
+    if (SATISFACTION_QUALIFYING_EVENTS.has(event)) {
+      incrementInteractionCount(userId).catch(() => {});
+    }
   } catch (err) {
     console.error("Failed to track event:", err instanceof Error ? err.message : err);
   }
