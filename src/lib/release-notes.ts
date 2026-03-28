@@ -17,6 +17,21 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.68.0",
+    date: "2026-03-22",
+    title: "Market Insights",
+    titleTranslations: { es: "Análisis de Mercado" },
+    changes: [
+      {
+        type: "feature",
+        text: "New Market Insights page with AI-curated market intelligence. Digests are automatically processed from financial newsletters, rewritten as original editorial content, translated into all active user languages, and published after admin review. Tickers in your portfolio are highlighted, and admins can optionally send digests via email.",
+        translations: {
+          es: "Nueva página de Análisis de Mercado con inteligencia de mercado curada por IA. Los resúmenes se procesan automáticamente de boletines financieros, se reescriben como contenido editorial original, se traducen a todos los idiomas activos y se publican tras revisión del administrador. Los tickers de tu portafolio se resaltan, y los administradores pueden enviar los resúmenes por email opcionalmente.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.67.0",
     date: "2026-03-27",
     title: "Satisfaction Survey",

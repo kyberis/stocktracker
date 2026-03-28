@@ -93,4 +93,10 @@ export const CRON_REGISTRY: CronJob[] = [
     schedule: "0 8 * * 1",
     description: "Generate and send AI-powered weekly portfolio digest to Pro users every Monday",
   },
+  {
+    name: "digest-email",
+    path: "/api/cron/digest-email",
+    schedule: "*/15 * * * *",
+    description: "Poll Gmail for new market digest emails, rewrite with AI, and store as drafts for admin review",
+  },
 ];

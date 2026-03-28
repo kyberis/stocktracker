@@ -35,6 +35,11 @@ const NAV_LINKS = [
     tierBadge: "pro" as const,
   },
   {
+    href: "/market-insights",
+    labelKey: "marketInsightsNav" as const,
+    match: (p: string) => p === "/market-insights",
+  },
+  {
     href: "/economic-indicators",
     labelKey: "indicatorsNav" as const,
     match: (p: string) => p === "/economic-indicators",

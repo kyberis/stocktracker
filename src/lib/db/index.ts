@@ -449,3 +449,18 @@ export {
   getDigestEligibleUsers,
   hasDigestForWeek,
 } from "./weekly-digest";
+
+export type { MarketDigest, MarketDigestWithTranslations, DigestTranslation, DigestStatus } from "./market-digests";
+export {
+  digestExistsByGmailId,
+  insertMarketDigest,
+  listMarketDigests,
+  getMarketDigestWithTranslations,
+  updateTranslation,
+  publishDigest,
+  archiveDigest,
+  markDigestEmailSent,
+  getActiveUserLanguages,
+  getDigestTranslation,
+  getUsersForDigestEmail,
+} from "./market-digests";

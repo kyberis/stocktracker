@@ -20,6 +20,7 @@ const TAB_GROUPS: { category: string; tabs: Tab[] }[] = [
       { slug: "email-templates", label: "Email Templates" },
       { slug: "unsubscribes", label: "Unsubscribes" },
       { slug: "x-posts", label: "X Posts" },
+      { slug: "market-digests", label: "Market Digests" },
     ],
   },
   {

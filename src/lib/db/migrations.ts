@@ -2533,6 +2533,54 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       }
     },
   },
+  {
+    version: 82,
+    description: "Market digests and translations tables for email-to-insight pipeline",
+    up: async (client: Client) => {
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS market_digests (
+          id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+          gmail_message_id TEXT NOT NULL UNIQUE,
+          sender TEXT NOT NULL,
+          original_subject TEXT NOT NULL,
+          received_at DATETIME NOT NULL,
+          raw_text TEXT,
+          raw_html TEXT,
+          mentioned_tickers TEXT NOT NULL DEFAULT '[]',
+          sectors TEXT NOT NULL DEFAULT '[]',
+          sentiment TEXT,
+          ai_model TEXT,
+          tokens_used INTEGER DEFAULT 0,
+          status TEXT NOT NULL DEFAULT 'draft',
+          published_at DATETIME,
+          email_sent INTEGER NOT NULL DEFAULT 0,
+          created_at DATETIME NOT NULL DEFAULT (datetime('now'))
+        )
+      `);
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_market_digests_status ON market_digests(status)"
+      );
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_market_digests_received ON market_digests(received_at DESC)"
+      );
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS market_digest_translations (
+          id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+          digest_id TEXT NOT NULL REFERENCES market_digests(id) ON DELETE CASCADE,
+          language TEXT NOT NULL,
+          title TEXT NOT NULL DEFAULT '',
+          summary TEXT NOT NULL DEFAULT '',
+          key_points TEXT NOT NULL DEFAULT '[]',
+          created_at DATETIME NOT NULL DEFAULT (datetime('now')),
+          UNIQUE(digest_id, language)
+        )
+      `);
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_mdt_digest_lang ON market_digest_translations(digest_id, language)"
+      );
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {
