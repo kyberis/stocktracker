@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
 import { withMetrics } from "@/lib/with-metrics";
-import { getPrivateChatRoom, getPrivateChatMessages } from "@/lib/db";
+import { getPrivateChatRoom, getPrivateChatMessages, joinPrivateChatRoom, getPrivateChatParticipants } from "@/lib/db";
 
 export const GET = withMetrics("/api/chat/[token]", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
@@ -17,8 +17,14 @@ export const GET = withMetrics("/api/chat/[token]", async (req: NextRequest) => 
     return NextResponse.json({ error: "Chat not found or has been disabled" }, { status: 404 });
   }
 
-  const afterId = req.nextUrl.searchParams.get("after") || undefined;
-  const messages = await getPrivateChatMessages(token, afterId);
+  // Register this user as a participant (idempotent)
+  await joinPrivateChatRoom(token, session.userId);
 
-  return NextResponse.json({ room, messages });
+  const afterId = req.nextUrl.searchParams.get("after") || undefined;
+  const [messages, participants] = await Promise.all([
+    getPrivateChatMessages(token, afterId),
+    getPrivateChatParticipants(token),
+  ]);
+
+  return NextResponse.json({ room, messages, participants });
 });

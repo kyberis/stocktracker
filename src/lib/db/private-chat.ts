@@ -22,6 +22,16 @@ export interface PrivateChatMessage {
   content: string;
   createdAt: string;
   expiresAt: string;
+  replyToId: string;
+  editedAt: string;
+}
+
+export interface PrivateChatParticipant {
+  userId: string;
+  displayName: string;
+  avatarUrl: string;
+  joinedAt: string;
+  lastTypingAt: string;
 }
 
 export interface PrivateChatRoomListItem extends PrivateChatRoom {
@@ -32,6 +42,22 @@ function parseMessageType(val: unknown): PrivateChatMessageType {
   const s = String(val || "text");
   if (s === "link" || s === "image") return s;
   return "text";
+}
+
+function mapMessageRow(r: Record<string, unknown>): PrivateChatMessage {
+  return {
+    id: str(r.id),
+    roomId: str(r.room_id),
+    senderId: str(r.sender_id),
+    senderName: str(r.display_name) || str(r.sender_id),
+    senderAvatar: str(r.avatar_url),
+    type: parseMessageType(r.type),
+    content: str(r.content),
+    createdAt: str(r.created_at),
+    expiresAt: str(r.expires_at),
+    replyToId: str(r.reply_to_id),
+    editedAt: str(r.edited_at),
+  };
 }
 
 export async function createPrivateChatRoom(
@@ -96,38 +122,50 @@ export async function listPrivateChatRooms(
   }));
 }
 
+const MSG_SELECT = `SELECT m.*, u.display_name, u.avatar_url
+  FROM private_chat_messages m
+  JOIN users u ON u.id = m.sender_id`;
+
 export async function addPrivateChatMessage(
   roomId: string,
   senderId: string,
   type: PrivateChatMessageType,
-  content: string
+  content: string,
+  replyToId?: string
 ): Promise<PrivateChatMessage> {
   const client = await ensureInitialized();
   const id = generateId();
   await client.execute({
-    sql: `INSERT INTO private_chat_messages (id, room_id, sender_id, type, content, expires_at)
-          VALUES (?, ?, ?, ?, ?, datetime('now', '+24 hours'))`,
-    args: [id, roomId, senderId, type, content],
+    sql: `INSERT INTO private_chat_messages (id, room_id, sender_id, type, content, reply_to_id, expires_at)
+          VALUES (?, ?, ?, ?, ?, ?, datetime('now', '+24 hours'))`,
+    args: [id, roomId, senderId, type, content, replyToId || null],
   });
   const row = await client.execute({
-    sql: `SELECT m.*, u.display_name, u.avatar_url
-          FROM private_chat_messages m
-          JOIN users u ON u.id = m.sender_id
-          WHERE m.id = ?`,
+    sql: `${MSG_SELECT} WHERE m.id = ?`,
     args: [id],
   });
-  const r = row.rows[0];
-  return {
-    id: str(r.id),
-    roomId: str(r.room_id),
-    senderId: str(r.sender_id),
-    senderName: str(r.display_name) || str(r.sender_id),
-    senderAvatar: str(r.avatar_url),
-    type: parseMessageType(r.type),
-    content: str(r.content),
-    createdAt: str(r.created_at),
-    expiresAt: str(r.expires_at),
-  };
+  return mapMessageRow(row.rows[0] as Record<string, unknown>);
+}
+
+export async function editPrivateChatMessage(
+  messageId: string,
+  senderId: string,
+  newContent: string
+): Promise<PrivateChatMessage | null> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: `UPDATE private_chat_messages
+          SET content = ?, edited_at = datetime('now')
+          WHERE id = ? AND sender_id = ? AND expires_at > datetime('now')`,
+    args: [newContent, messageId, senderId],
+  });
+  if ((result.rowsAffected ?? 0) === 0) return null;
+  const row = await client.execute({
+    sql: `${MSG_SELECT} WHERE m.id = ?`,
+    args: [messageId],
+  });
+  if (row.rows.length === 0) return null;
+  return mapMessageRow(row.rows[0] as Record<string, unknown>);
 }
 
 export async function getPrivateChatMessages(
@@ -140,18 +178,18 @@ export async function getPrivateChatMessages(
   let args: (string | number)[];
 
   if (afterId) {
-    sql = `SELECT m.*, u.display_name, u.avatar_url
-           FROM private_chat_messages m
-           JOIN users u ON u.id = m.sender_id
+    // Fetch messages created after the cursor OR edited after the cursor's created_at
+    sql = `${MSG_SELECT}
            WHERE m.room_id = ?
              AND m.expires_at > datetime('now')
-             AND m.created_at > (SELECT created_at FROM private_chat_messages WHERE id = ?)
+             AND (
+               m.created_at > (SELECT created_at FROM private_chat_messages WHERE id = ?)
+               OR (m.edited_at IS NOT NULL AND m.edited_at > (SELECT created_at FROM private_chat_messages WHERE id = ?))
+             )
            ORDER BY m.created_at ASC`;
-    args = [roomId, afterId];
+    args = [roomId, afterId, afterId];
   } else {
-    sql = `SELECT m.*, u.display_name, u.avatar_url
-           FROM private_chat_messages m
-           JOIN users u ON u.id = m.sender_id
+    sql = `${MSG_SELECT}
            WHERE m.room_id = ?
              AND m.expires_at > datetime('now')
            ORDER BY m.created_at ASC`;
@@ -159,16 +197,49 @@ export async function getPrivateChatMessages(
   }
 
   const result = await client.execute({ sql, args });
+  return result.rows.map((r) => mapMessageRow(r as Record<string, unknown>));
+}
+
+export async function joinPrivateChatRoom(
+  roomId: string,
+  userId: string
+): Promise<void> {
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: `INSERT OR IGNORE INTO private_chat_participants (room_id, user_id) VALUES (?, ?)`,
+    args: [roomId, userId],
+  });
+}
+
+export async function updateTypingStatus(
+  roomId: string,
+  userId: string
+): Promise<void> {
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: `UPDATE private_chat_participants SET last_typing_at = datetime('now') WHERE room_id = ? AND user_id = ?`,
+    args: [roomId, userId],
+  });
+}
+
+export async function getPrivateChatParticipants(
+  roomId: string
+): Promise<PrivateChatParticipant[]> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: `SELECT p.user_id, p.joined_at, p.last_typing_at, u.display_name, u.avatar_url
+          FROM private_chat_participants p
+          JOIN users u ON u.id = p.user_id
+          WHERE p.room_id = ?
+          ORDER BY p.joined_at ASC`,
+    args: [roomId],
+  });
   return result.rows.map((r) => ({
-    id: str(r.id),
-    roomId: str(r.room_id),
-    senderId: str(r.sender_id),
-    senderName: str(r.display_name) || str(r.sender_id),
-    senderAvatar: str(r.avatar_url),
-    type: parseMessageType(r.type),
-    content: str(r.content),
-    createdAt: str(r.created_at),
-    expiresAt: str(r.expires_at),
+    userId: str(r.user_id),
+    displayName: str(r.display_name) || str(r.user_id),
+    avatarUrl: str(r.avatar_url),
+    joinedAt: str(r.joined_at),
+    lastTypingAt: str(r.last_typing_at),
   }));
 }
 

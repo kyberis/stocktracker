@@ -2613,6 +2613,39 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       );
     },
   },
+  {
+    version: 84,
+    description: "Private chat participants tracking",
+    up: async (client: Client) => {
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS private_chat_participants (
+          room_id TEXT NOT NULL REFERENCES private_chat_rooms(id) ON DELETE CASCADE,
+          user_id TEXT NOT NULL REFERENCES users(id),
+          joined_at TEXT NOT NULL DEFAULT (datetime('now')),
+          PRIMARY KEY (room_id, user_id)
+        )
+      `);
+    },
+  },
+  {
+    version: 85,
+    description: "Chat reply-to, edit, and typing indicator columns",
+    up: async (client: Client) => {
+      const msgCols = await client.execute("PRAGMA table_info(private_chat_messages)");
+      const msgColNames = new Set(msgCols.rows.map((r) => String(r.name)));
+      if (!msgColNames.has("reply_to_id")) {
+        await client.execute("ALTER TABLE private_chat_messages ADD COLUMN reply_to_id TEXT");
+      }
+      if (!msgColNames.has("edited_at")) {
+        await client.execute("ALTER TABLE private_chat_messages ADD COLUMN edited_at TEXT");
+      }
+      const partCols = await client.execute("PRAGMA table_info(private_chat_participants)");
+      const partColNames = new Set(partCols.rows.map((r) => String(r.name)));
+      if (!partColNames.has("last_typing_at")) {
+        await client.execute("ALTER TABLE private_chat_participants ADD COLUMN last_typing_at TEXT");
+      }
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {
