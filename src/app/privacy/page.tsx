@@ -208,6 +208,7 @@ export default function PrivacyPolicyPage() {
                 Answer optional chart Q&amp;A (your question and the chart snapshot — values, invested capital, time range, and trade markers — are sent to OpenAI; see Section 5).
               </li>
               <li>Provide AI-powered support chat (your messages and optional portfolio summary are sent to OpenAI; see Section 5). Support chat conversations are stored for up to 90 days to enable admin review and improve support quality.</li>
+              <li>Enable private chat rooms for direct communication between you and trefolio support. Messages (text, links, and images) are stored in our database and automatically deleted after 24 hours.</li>
               <li>Process subscription payments through Stripe (see Section 5).</li>
               <li>Send essential service communications (e.g., password resets, critical security notices).</li>
               <li>Respond to customer support inquiries submitted via the contact form.</li>
@@ -395,6 +396,12 @@ export default function PrivacyPolicyPage() {
               <li>
                 <strong className="text-slate-800">Support chat conversations</strong> — 
                 retained for up to 90 days for quality review, then automatically purged.
+              </li>
+              <li>
+                <strong className="text-slate-800">Private chat messages</strong> — 
+                messages sent in admin-created private chat rooms (text, links, and images)
+                are automatically deleted 24 hours after being sent. No third-party services
+                receive this data; messages are stored only in our database.
               </li>
               <li>
                 <strong className="text-slate-800">After account deletion</strong>{" "}

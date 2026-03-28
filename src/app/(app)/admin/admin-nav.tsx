@@ -29,6 +29,7 @@ const TAB_GROUPS: { category: string; tabs: Tab[] }[] = [
       { slug: "feedback", label: "Feedback" },
       { slug: "satisfaction", label: "Surveys" },
       { slug: "support-chat", label: "Support Chat" },
+      { slug: "chats", label: "Private Chats" },
       { slug: "refund-requests", label: "Refunds" },
       { slug: "integration-requests", label: "Broker Requests" },
     ],

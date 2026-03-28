@@ -2581,6 +2581,38 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       );
     },
   },
+  {
+    version: 83,
+    description: "Private chat rooms and messages",
+    up: async (client: Client) => {
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS private_chat_rooms (
+          id TEXT PRIMARY KEY,
+          created_by TEXT NOT NULL REFERENCES users(id),
+          label TEXT NOT NULL DEFAULT '',
+          is_active INTEGER NOT NULL DEFAULT 1,
+          created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+      `);
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS private_chat_messages (
+          id TEXT PRIMARY KEY,
+          room_id TEXT NOT NULL REFERENCES private_chat_rooms(id) ON DELETE CASCADE,
+          sender_id TEXT NOT NULL REFERENCES users(id),
+          type TEXT NOT NULL DEFAULT 'text',
+          content TEXT NOT NULL DEFAULT '',
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          expires_at TEXT NOT NULL
+        )
+      `);
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_pcm_room_created ON private_chat_messages(room_id, created_at)"
+      );
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_pcm_expires ON private_chat_messages(expires_at)"
+      );
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

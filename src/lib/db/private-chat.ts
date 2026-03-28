@@ -1,0 +1,181 @@
+import { ensureInitialized } from "./client";
+import { str } from "./helpers";
+import { generateId } from "@/lib/utils";
+
+export type PrivateChatMessageType = "text" | "link" | "image";
+
+export interface PrivateChatRoom {
+  id: string;
+  createdBy: string;
+  label: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface PrivateChatMessage {
+  id: string;
+  roomId: string;
+  senderId: string;
+  senderName: string;
+  senderAvatar: string;
+  type: PrivateChatMessageType;
+  content: string;
+  createdAt: string;
+  expiresAt: string;
+}
+
+export interface PrivateChatRoomListItem extends PrivateChatRoom {
+  messageCount: number;
+}
+
+function parseMessageType(val: unknown): PrivateChatMessageType {
+  const s = String(val || "text");
+  if (s === "link" || s === "image") return s;
+  return "text";
+}
+
+export async function createPrivateChatRoom(
+  createdBy: string,
+  label: string
+): Promise<PrivateChatRoom> {
+  const client = await ensureInitialized();
+  const id = generateId();
+  await client.execute({
+    sql: `INSERT INTO private_chat_rooms (id, created_by, label) VALUES (?, ?, ?)`,
+    args: [id, createdBy, label],
+  });
+  return { id, createdBy, label, isActive: true, createdAt: new Date().toISOString() };
+}
+
+export async function getPrivateChatRoom(id: string): Promise<PrivateChatRoom | null> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: `SELECT * FROM private_chat_rooms WHERE id = ? AND is_active = 1`,
+    args: [id],
+  });
+  if (result.rows.length === 0) return null;
+  const r = result.rows[0];
+  return {
+    id: str(r.id),
+    createdBy: str(r.created_by),
+    label: str(r.label),
+    isActive: true,
+    createdAt: str(r.created_at),
+  };
+}
+
+export async function deactivatePrivateChatRoom(id: string): Promise<boolean> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: `UPDATE private_chat_rooms SET is_active = 0 WHERE id = ?`,
+    args: [id],
+  });
+  return (result.rowsAffected ?? 0) > 0;
+}
+
+export async function listPrivateChatRooms(
+  adminUserId: string
+): Promise<PrivateChatRoomListItem[]> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: `SELECT r.*, COUNT(m.id) as message_count
+          FROM private_chat_rooms r
+          LEFT JOIN private_chat_messages m ON m.room_id = r.id
+          WHERE r.created_by = ?
+          GROUP BY r.id
+          ORDER BY r.created_at DESC`,
+    args: [adminUserId],
+  });
+  return result.rows.map((r) => ({
+    id: str(r.id),
+    createdBy: str(r.created_by),
+    label: str(r.label),
+    isActive: Number(r.is_active) === 1,
+    createdAt: str(r.created_at),
+    messageCount: Number(r.message_count) || 0,
+  }));
+}
+
+export async function addPrivateChatMessage(
+  roomId: string,
+  senderId: string,
+  type: PrivateChatMessageType,
+  content: string
+): Promise<PrivateChatMessage> {
+  const client = await ensureInitialized();
+  const id = generateId();
+  await client.execute({
+    sql: `INSERT INTO private_chat_messages (id, room_id, sender_id, type, content, expires_at)
+          VALUES (?, ?, ?, ?, ?, datetime('now', '+24 hours'))`,
+    args: [id, roomId, senderId, type, content],
+  });
+  const row = await client.execute({
+    sql: `SELECT m.*, u.display_name, u.avatar_url
+          FROM private_chat_messages m
+          JOIN users u ON u.id = m.sender_id
+          WHERE m.id = ?`,
+    args: [id],
+  });
+  const r = row.rows[0];
+  return {
+    id: str(r.id),
+    roomId: str(r.room_id),
+    senderId: str(r.sender_id),
+    senderName: str(r.display_name) || str(r.sender_id),
+    senderAvatar: str(r.avatar_url),
+    type: parseMessageType(r.type),
+    content: str(r.content),
+    createdAt: str(r.created_at),
+    expiresAt: str(r.expires_at),
+  };
+}
+
+export async function getPrivateChatMessages(
+  roomId: string,
+  afterId?: string
+): Promise<PrivateChatMessage[]> {
+  const client = await ensureInitialized();
+
+  let sql: string;
+  let args: (string | number)[];
+
+  if (afterId) {
+    sql = `SELECT m.*, u.display_name, u.avatar_url
+           FROM private_chat_messages m
+           JOIN users u ON u.id = m.sender_id
+           WHERE m.room_id = ?
+             AND m.expires_at > datetime('now')
+             AND m.created_at > (SELECT created_at FROM private_chat_messages WHERE id = ?)
+           ORDER BY m.created_at ASC`;
+    args = [roomId, afterId];
+  } else {
+    sql = `SELECT m.*, u.display_name, u.avatar_url
+           FROM private_chat_messages m
+           JOIN users u ON u.id = m.sender_id
+           WHERE m.room_id = ?
+             AND m.expires_at > datetime('now')
+           ORDER BY m.created_at ASC`;
+    args = [roomId];
+  }
+
+  const result = await client.execute({ sql, args });
+  return result.rows.map((r) => ({
+    id: str(r.id),
+    roomId: str(r.room_id),
+    senderId: str(r.sender_id),
+    senderName: str(r.display_name) || str(r.sender_id),
+    senderAvatar: str(r.avatar_url),
+    type: parseMessageType(r.type),
+    content: str(r.content),
+    createdAt: str(r.created_at),
+    expiresAt: str(r.expires_at),
+  }));
+}
+
+export async function purgeExpiredPrivateChatMessages(): Promise<number> {
+  const client = await ensureInitialized();
+  const result = await client.execute(
+    `DELETE FROM private_chat_messages WHERE expires_at < datetime('now')`
+  );
+  return result.rowsAffected ?? 0;
+}

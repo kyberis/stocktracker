@@ -464,3 +464,14 @@ export {
   getDigestTranslation,
   getUsersForDigestEmail,
 } from "./market-digests";
+
+export type { PrivateChatRoom, PrivateChatRoomListItem, PrivateChatMessage, PrivateChatMessageType } from "./private-chat";
+export {
+  createPrivateChatRoom,
+  getPrivateChatRoom,
+  deactivatePrivateChatRoom,
+  listPrivateChatRooms,
+  addPrivateChatMessage,
+  getPrivateChatMessages,
+  purgeExpiredPrivateChatMessages,
+} from "./private-chat";
