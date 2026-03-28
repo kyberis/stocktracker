@@ -748,7 +748,41 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
       {inlineHeader}
 
       {/* Chart */}
-      <div className={`h-[340px] px-2 ${hasHeader ? "pt-1" : "pt-3"}`}>
+      <div className={`h-[340px] px-2 ${hasHeader ? "pt-1" : "pt-3"} relative`}>
+        {showMarketsClosedBanner && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center pointer-events-none">
+            <div className="flex flex-col items-center gap-2.5 text-center">
+              <div className="w-10 h-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white/80 dark:bg-white/5 flex items-center justify-center">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 dark:text-slate-500">
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
+              </div>
+              <p className="text-sm font-semibold text-gray-700 dark:text-slate-300">
+                {t("marketsClosedTitle")}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-slate-500 max-w-[320px] leading-relaxed">
+                {t("marketsClosedBody").replace(
+                  "{value}",
+                  stealthMode
+                    ? "•••"
+                    : (() => {
+                        const last = effectivePoints.length > 0 ? effectivePoints[effectivePoints.length - 1] : null;
+                        return last ? formatCurrency(last.value, baseCurrency) : "—";
+                      })(),
+                )}
+              </p>
+              {nextOpen && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-medium text-gray-500 dark:text-slate-400 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 mt-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-gray-400 dark:bg-slate-600" />
+                  {t("marketsClosedOpens")
+                    .replace("{market}", nextOpen.market)
+                    .replace("{time}", nextOpen.time)}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartDataWithEvents} margin={{ top: 4, right: 8, left: 8, bottom: 4 }}>
             <defs>
