@@ -547,14 +547,14 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
     }));
 
     const shouldMask = !hasCrypto && openRanges.length > 0;
+    const allClosed = !hasCrypto && allMarketsClosed;
 
     const isInOpenSession = (ms: number) =>
       openRanges.some((r) => ms >= r.start && ms <= r.end);
 
-    const masked = shouldMask
+    const masked = (shouldMask || allClosed)
       ? realPoints.map((p) => {
-          const ms = parseTime(p.date);
-          if (!isInOpenSession(ms)) {
+          if (allClosed || !isInOpenSession(parseTime(p.date))) {
             const kept: ChartPoint = { date: p.date };
             for (const b of benchmarkEntries) {
               const bKey = `bench_${b.key}`;
