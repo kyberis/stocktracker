@@ -2671,6 +2671,17 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       }
     },
   },
+  {
+    version: 88,
+    description: "Per-user chat clear timestamp",
+    up: async (client: Client) => {
+      const cols = await client.execute("PRAGMA table_info(private_chat_participants)");
+      const colNames = new Set(cols.rows.map((r) => String(r.name)));
+      if (!colNames.has("cleared_at")) {
+        await client.execute("ALTER TABLE private_chat_participants ADD COLUMN cleared_at TEXT");
+      }
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

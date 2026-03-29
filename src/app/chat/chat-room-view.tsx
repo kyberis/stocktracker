@@ -5,7 +5,7 @@ import Link from "next/link";
 import {
   Send, ImagePlus, Camera, Clock, AlertTriangle, Loader2,
   Link as LinkIcon, Users, Pencil, Reply, X, ChevronLeft, CheckCheck,
-  Pin, Share2,
+  Pin, Share2, MoreVertical, Trash2,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 
@@ -404,13 +404,13 @@ function MessageBubble({ msg, isOwn, isRead, isFirstInGroup, isLastInGroup, colo
       )}
 
       {repliedMsg && (
-        <div className={`text-[11px] px-3 py-1 mb-0.5 rounded-lg border-l-2 ${
+        <div className={`text-[11px] px-3 py-1.5 mb-0.5 rounded-lg border-l-2 ${
           isOwn
-            ? "bg-indigo-500/20 border-indigo-300 text-indigo-100"
+            ? "bg-white/15 border-white/50 text-white"
             : "bg-gray-100 dark:bg-slate-700/50 border-gray-300 dark:border-slate-500 text-gray-600 dark:text-slate-300"
         }`}>
           <span className="font-medium">{repliedMsg.senderName}</span>
-          <span className="ml-1 opacity-80">
+          <span className="ml-1 opacity-90">
             {repliedMsg.type === "image" ? "Photo"
               : CARD_TYPES.has(repliedMsg.type) ? `Shared ${repliedMsg.type.replace("_", " ")}`
               : repliedMsg.content.slice(0, 60) + (repliedMsg.content.length > 60 ? "…" : "")}
@@ -524,8 +524,12 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
   const [editingMsg, setEditingMsg] = useState<ChatMessage | null>(null);
   const [tickerSuggestions, setTickerSuggestions] = useState<{ symbol: string; shortname: string; exchange: string }[]>([]);
   const [tickerHighlight, setTickerHighlight] = useState(0);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [confirmClear, setConfirmClear] = useState(false);
+  const [clearing, setClearing] = useState(false);
   const tickerAbortRef = useRef<AbortController | null>(null);
   const tickerDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const lastMessageIdRef = useRef<string | null>(null);
@@ -758,6 +762,34 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
     });
   }
 
+  useEffect(() => {
+    if (!menuOpen) return;
+    function handleClick(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+        setConfirmClear(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [menuOpen]);
+
+  async function handleClearChat() {
+    setClearing(true);
+    try {
+      const res = await fetch(`/api/chat/${token}/clear`, { method: "DELETE" });
+      if (res.ok) {
+        setMessages([]);
+        lastMessageIdRef.current = null;
+      }
+    } catch { /* ignore */ }
+    finally {
+      setClearing(false);
+      setConfirmClear(false);
+      setMenuOpen(false);
+    }
+  }
+
   const MAX_DIMENSION = 1920;
   const JPEG_QUALITY = 0.8;
   const MAX_COMPRESSED_BYTES = 3.5 * 1024 * 1024;
@@ -918,6 +950,50 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
               </span>
             </div>
           )}
+          <div className="relative shrink-0" ref={menuRef}>
+            <button
+              type="button"
+              onClick={() => { setMenuOpen((v) => !v); setConfirmClear(false); }}
+              className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 dark:text-slate-500 dark:hover:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+            >
+              <MoreVertical className="w-4.5 h-4.5" />
+            </button>
+            {menuOpen && (
+              <div className="absolute right-0 top-full mt-1 z-50 w-56 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl shadow-lg overflow-hidden">
+                {confirmClear ? (
+                  <div className="p-3 space-y-2">
+                    <p className="text-xs text-gray-600 dark:text-slate-300">Clear this conversation? Messages will only be removed from your view.</p>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setConfirmClear(false)}
+                        className="flex-1 text-xs px-3 py-1.5 rounded-lg border border-gray-200 dark:border-slate-600 text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleClearChat}
+                        disabled={clearing}
+                        className="flex-1 text-xs px-3 py-1.5 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 transition-colors"
+                      >
+                        {clearing ? "Clearing…" : "Clear"}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setConfirmClear(true)}
+                    className="w-full text-left px-3 py-2.5 flex items-center gap-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Clear conversation
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </header>
 

@@ -479,5 +479,6 @@ export {
   updateLastSeen,
   getPrivateChatParticipants,
   listUserChatRooms,
+  clearChatForUser,
   purgeExpiredPrivateChatMessages,
 } from "./private-chat";

@@ -17,7 +17,6 @@ export const GET = withMetrics("/api/chat/[token]", async (req: NextRequest) => 
     return NextResponse.json({ error: "Chat not found or has been disabled" }, { status: 404 });
   }
 
-  // Register this user as a participant (idempotent)
   await joinPrivateChatRoom(token, session.userId);
 
   const afterId = req.nextUrl.searchParams.get("after") || undefined;
@@ -25,10 +24,11 @@ export const GET = withMetrics("/api/chat/[token]", async (req: NextRequest) => 
 
   await updateLastSeen(token, session.userId, lastRead);
 
-  const [messages, participants] = await Promise.all([
-    getPrivateChatMessages(token, afterId),
-    getPrivateChatParticipants(token),
-  ]);
+  const participants = await getPrivateChatParticipants(token);
+  const me = participants.find((p) => p.userId === session.userId);
+  const clearedAt = me?.clearedAt || undefined;
+
+  const messages = await getPrivateChatMessages(token, afterId, clearedAt);
 
   return NextResponse.json({ room, messages, participants });
 });

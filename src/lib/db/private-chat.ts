@@ -35,6 +35,7 @@ export interface PrivateChatParticipant {
   lastTypingAt: string;
   lastSeenAt: string;
   lastReadMsgId: string;
+  clearedAt: string;
 }
 
 export interface PrivateChatRoomListItem extends PrivateChatRoom {
@@ -181,30 +182,31 @@ export async function editPrivateChatMessage(
 
 export async function getPrivateChatMessages(
   roomId: string,
-  afterId?: string
+  afterId?: string,
+  clearedAt?: string
 ): Promise<PrivateChatMessage[]> {
   const client = await ensureInitialized();
 
   let sql: string;
   let args: (string | number)[];
+  const clearFilter = clearedAt ? " AND m.created_at > ?" : "";
 
   if (afterId) {
-    // Fetch messages created after the cursor OR edited after the cursor's created_at
     sql = `${MSG_SELECT}
            WHERE m.room_id = ?
-             AND m.expires_at > datetime('now')
+             AND m.expires_at > datetime('now')${clearFilter}
              AND (
                m.created_at > (SELECT created_at FROM private_chat_messages WHERE id = ?)
                OR (m.edited_at IS NOT NULL AND m.edited_at > (SELECT created_at FROM private_chat_messages WHERE id = ?))
              )
            ORDER BY m.created_at ASC`;
-    args = [roomId, afterId, afterId];
+    args = clearedAt ? [roomId, clearedAt, afterId, afterId] : [roomId, afterId, afterId];
   } else {
     sql = `${MSG_SELECT}
            WHERE m.room_id = ?
-             AND m.expires_at > datetime('now')
+             AND m.expires_at > datetime('now')${clearFilter}
            ORDER BY m.created_at ASC`;
-    args = [roomId];
+    args = clearedAt ? [roomId, clearedAt] : [roomId];
   }
 
   const result = await client.execute({ sql, args });
@@ -257,7 +259,7 @@ export async function getPrivateChatParticipants(
 ): Promise<PrivateChatParticipant[]> {
   const client = await ensureInitialized();
   const result = await client.execute({
-    sql: `SELECT p.user_id, p.joined_at, p.last_typing_at, p.last_seen_at, p.last_read_msg_id, u.display_name, u.avatar_url
+    sql: `SELECT p.user_id, p.joined_at, p.last_typing_at, p.last_seen_at, p.last_read_msg_id, p.cleared_at, u.display_name, u.avatar_url
           FROM private_chat_participants p
           JOIN users u ON u.id = p.user_id
           WHERE p.room_id = ?
@@ -272,6 +274,7 @@ export async function getPrivateChatParticipants(
     lastTypingAt: str(r.last_typing_at),
     lastSeenAt: str(r.last_seen_at),
     lastReadMsgId: str(r.last_read_msg_id),
+    clearedAt: str(r.cleared_at),
   }));
 }
 
@@ -284,6 +287,17 @@ export interface UserChatRoomSummary {
   lastMessageAt: string;
   lastSenderName: string;
   participants: { userId: string; displayName: string; avatarUrl: string; lastSeenAt: string }[];
+}
+
+export async function clearChatForUser(
+  roomId: string,
+  userId: string
+): Promise<void> {
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: `UPDATE private_chat_participants SET cleared_at = datetime('now') WHERE room_id = ? AND user_id = ?`,
+    args: [roomId, userId],
+  });
 }
 
 export async function listUserChatRooms(
@@ -302,6 +316,7 @@ export async function listUserChatRooms(
           LEFT JOIN private_chat_messages last_msg ON last_msg.id = (
             SELECT id FROM private_chat_messages
             WHERE room_id = r.id AND expires_at > datetime('now')
+              AND (p.cleared_at IS NULL OR created_at > p.cleared_at)
             ORDER BY created_at DESC LIMIT 1
           )
           LEFT JOIN users last_sender ON last_sender.id = last_msg.sender_id
