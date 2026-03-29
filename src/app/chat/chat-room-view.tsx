@@ -366,7 +366,7 @@ const CARD_TYPES = new Set<ChatMessageType>(["holding", "allocation", "summary",
 // Message bubble
 // ---------------------------------------------------------------------------
 
-const QUICK_EMOJIS = ["👍", "❤️", "😂", "🔥", "👀", "🎉"];
+const QUICK_EMOJIS = ["👍", "❤️", "🚀", "💎", "📈", "📉", "🐂", "🐻", "💰", "🤑", "😂", "🔥"];
 
 interface BubbleProps {
   msg: ChatMessage;
@@ -458,7 +458,7 @@ function MessageBubble({ msg, isOwn, isRead, isFirstInGroup, isLastInGroup, colo
         )}
 
         <div className={`absolute bottom-full ${isOwn ? "right-0" : "left-0"} hidden group-hover:flex items-center gap-0.5 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg shadow-md px-1 py-0.5 pb-2 z-10`}>
-          {QUICK_EMOJIS.slice(0, 3).map((em) => (
+          {QUICK_EMOJIS.slice(0, 4).map((em) => (
             <button key={em} onClick={() => onReact(msg.id, em)} className="p-1 rounded hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors text-sm leading-none" title={em}>
               {em}
             </button>
