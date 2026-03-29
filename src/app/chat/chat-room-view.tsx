@@ -457,13 +457,14 @@ function MessageBubble({ msg, isOwn, isRead, isFirstInGroup, isLastInGroup, colo
           </div>
         )}
 
-        <div className={`absolute top-0 ${isOwn ? "left-0 -translate-x-full pr-1" : "right-0 translate-x-full pl-1"} hidden group-hover:flex items-center gap-0.5`}>
+        <div className={`absolute bottom-full mb-1 ${isOwn ? "right-0" : "left-0"} hidden group-hover:flex items-center gap-0.5 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg shadow-md px-1 py-0.5 z-10`}>
           {QUICK_EMOJIS.slice(0, 3).map((em) => (
             <button key={em} onClick={() => onReact(msg.id, em)} className="p-1 rounded hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors text-sm leading-none" title={em}>
               {em}
             </button>
           ))}
           <EmojiPickerButton onSelect={(em) => onReact(msg.id, em)} />
+          <div className="w-px h-4 bg-gray-200 dark:bg-slate-600 mx-0.5" />
           <button onClick={() => onReply(msg)} className="p-1 rounded text-gray-400 hover:text-indigo-500 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors" title="Reply">
             <Reply className="w-3.5 h-3.5" />
           </button>
@@ -542,7 +543,7 @@ function EmojiPickerButton({ onSelect }: { onSelect: (emoji: string) => void }) 
         <SmilePlus className="w-3.5 h-3.5" />
       </button>
       {open && (
-        <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl shadow-lg p-2 flex gap-1 z-50">
+        <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl shadow-lg p-1.5 flex gap-0.5 z-50 whitespace-nowrap">
           {QUICK_EMOJIS.map((em) => (
             <button key={em} onClick={() => { onSelect(em); setOpen(false); }} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors text-lg leading-none">
               {em}
