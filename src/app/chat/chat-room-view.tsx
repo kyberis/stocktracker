@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Link from "next/link";
 import {
-  Send, ImagePlus, Clock, AlertTriangle, Loader2,
+  Send, ImagePlus, Camera, Clock, AlertTriangle, Loader2,
   Link as LinkIcon, Users, Pencil, Reply, X, ChevronLeft,
 } from "lucide-react";
 
@@ -236,6 +236,7 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
   const bottomRef = useRef<HTMLDivElement>(null);
   const lastMessageIdRef = useRef<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const lastTypingSentRef = useRef(0);
 
@@ -570,8 +571,12 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
         {!editingMsg && (
           <>
             <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+            <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleImageUpload} />
             <button type="button" onClick={() => fileInputRef.current?.click()} className="p-2 mb-0.5 rounded-lg text-gray-500 hover:text-indigo-600 hover:bg-gray-100 dark:hover:bg-slate-800 dark:text-slate-400 transition-colors" title="Upload image">
               <ImagePlus className="w-5 h-5" />
+            </button>
+            <button type="button" onClick={() => cameraInputRef.current?.click()} className="p-2 mb-0.5 rounded-lg text-gray-500 hover:text-indigo-600 hover:bg-gray-100 dark:hover:bg-slate-800 dark:text-slate-400 transition-colors" title="Take photo">
+              <Camera className="w-5 h-5" />
             </button>
           </>
         )}
