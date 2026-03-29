@@ -2660,6 +2660,17 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       }
     },
   },
+  {
+    version: 87,
+    description: "Persistent chat messages (opt-out from 24h TTL)",
+    up: async (client: Client) => {
+      const cols = await client.execute("PRAGMA table_info(private_chat_messages)");
+      const colNames = new Set(cols.rows.map((r) => String(r.name)));
+      if (!colNames.has("is_persistent")) {
+        await client.execute("ALTER TABLE private_chat_messages ADD COLUMN is_persistent INTEGER NOT NULL DEFAULT 0");
+      }
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

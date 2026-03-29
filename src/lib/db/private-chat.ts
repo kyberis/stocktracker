@@ -2,7 +2,7 @@ import { ensureInitialized } from "./client";
 import { str } from "./helpers";
 import { generateId } from "@/lib/utils";
 
-export type PrivateChatMessageType = "text" | "link" | "image";
+export type PrivateChatMessageType = "text" | "link" | "image" | "holding" | "allocation" | "summary" | "stock_pick";
 
 export interface PrivateChatRoom {
   id: string;
@@ -24,6 +24,7 @@ export interface PrivateChatMessage {
   expiresAt: string;
   replyToId: string;
   editedAt: string;
+  isPersistent: boolean;
 }
 
 export interface PrivateChatParticipant {
@@ -40,9 +41,11 @@ export interface PrivateChatRoomListItem extends PrivateChatRoom {
   messageCount: number;
 }
 
+const VALID_MSG_TYPES = new Set<PrivateChatMessageType>(["text", "link", "image", "holding", "allocation", "summary", "stock_pick"]);
+
 function parseMessageType(val: unknown): PrivateChatMessageType {
   const s = String(val || "text");
-  if (s === "link" || s === "image") return s;
+  if (VALID_MSG_TYPES.has(s as PrivateChatMessageType)) return s as PrivateChatMessageType;
   return "text";
 }
 
@@ -59,6 +62,7 @@ function mapMessageRow(r: Record<string, unknown>): PrivateChatMessage {
     expiresAt: str(r.expires_at),
     replyToId: str(r.reply_to_id),
     editedAt: str(r.edited_at),
+    isPersistent: Number(r.is_persistent) === 1,
   };
 }
 
@@ -133,14 +137,19 @@ export async function addPrivateChatMessage(
   senderId: string,
   type: PrivateChatMessageType,
   content: string,
-  replyToId?: string
+  replyToId?: string,
+  persistent?: boolean
 ): Promise<PrivateChatMessage> {
   const client = await ensureInitialized();
   const id = generateId();
+  const isPersistent = persistent ? 1 : 0;
+  const expiresExpr = persistent
+    ? "datetime('9999-12-31')"
+    : "datetime('now', '+24 hours')";
   await client.execute({
-    sql: `INSERT INTO private_chat_messages (id, room_id, sender_id, type, content, reply_to_id, expires_at)
-          VALUES (?, ?, ?, ?, ?, ?, datetime('now', '+24 hours'))`,
-    args: [id, roomId, senderId, type, content, replyToId || null],
+    sql: `INSERT INTO private_chat_messages (id, room_id, sender_id, type, content, reply_to_id, expires_at, is_persistent)
+          VALUES (?, ?, ?, ?, ?, ?, ${expiresExpr}, ?)`,
+    args: [id, roomId, senderId, type, content, replyToId || null, isPersistent],
   });
   const row = await client.execute({
     sql: `${MSG_SELECT} WHERE m.id = ?`,
@@ -341,7 +350,7 @@ export async function listUserChatRooms(
 export async function purgeExpiredPrivateChatMessages(): Promise<number> {
   const client = await ensureInitialized();
   const result = await client.execute(
-    `DELETE FROM private_chat_messages WHERE expires_at < datetime('now')`
+    `DELETE FROM private_chat_messages WHERE expires_at < datetime('now') AND is_persistent = 0`
   );
   return result.rowsAffected ?? 0;
 }

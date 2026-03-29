@@ -9,7 +9,7 @@ export interface ChatRoomSummary {
   label: string;
   createdAt: string;
   lastMessageContent: string;
-  lastMessageType: "text" | "link" | "image";
+  lastMessageType: string;
   lastMessageAt: string;
   lastSenderName: string;
   participants: { userId: string; displayName: string; avatarUrl: string; lastSeenAt: string }[];
@@ -38,6 +38,9 @@ function lastMessagePreview(room: ChatRoomSummary): string {
   if (!room.lastMessageContent) return "No messages yet";
   if (room.lastMessageType === "image") return "Shared a photo";
   if (room.lastMessageType === "link") return room.lastMessageContent;
+  if (["holding", "allocation", "summary", "stock_pick"].includes(room.lastMessageType)) {
+    return `Shared ${room.lastMessageType.replace("_", " ")}`;
+  }
   return room.lastMessageContent;
 }
 

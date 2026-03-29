@@ -5,7 +5,7 @@ import { getPrivateChatRoom, addPrivateChatMessage, editPrivateChatMessage } fro
 import type { PrivateChatMessageType } from "@/lib/db";
 
 const MAX_IMAGE_BYTES = 3.5 * 1024 * 1024;
-const VALID_TYPES = new Set<PrivateChatMessageType>(["text", "link", "image"]);
+const VALID_TYPES = new Set<PrivateChatMessageType>(["text", "link", "image", "holding", "allocation", "summary", "stock_pick"]);
 
 function extractToken(pathname: string): string {
   const segments = pathname.split("/");
@@ -28,7 +28,7 @@ export const POST = withMetrics(
       return NextResponse.json({ error: "Chat not found or has been disabled" }, { status: 404 });
     }
 
-    let body: { type?: string; content?: string; replyToId?: string };
+    let body: { type?: string; content?: string; replyToId?: string; persistent?: boolean };
     try {
       body = await req.json();
     } catch {
@@ -38,6 +38,7 @@ export const POST = withMetrics(
     const type = (body.type || "text") as PrivateChatMessageType;
     const content = typeof body.content === "string" ? body.content : "";
     const replyToId = typeof body.replyToId === "string" ? body.replyToId : undefined;
+    const persistent = body.persistent === true;
 
     if (!VALID_TYPES.has(type)) {
       return NextResponse.json({ error: "Invalid message type" }, { status: 400 });
@@ -55,7 +56,7 @@ export const POST = withMetrics(
       }
     }
 
-    const message = await addPrivateChatMessage(token, session.userId, type, content, replyToId);
+    const message = await addPrivateChatMessage(token, session.userId, type, content, replyToId, persistent);
     return NextResponse.json(message, { status: 201 });
   }
 );
