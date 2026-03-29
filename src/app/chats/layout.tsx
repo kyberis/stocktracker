@@ -6,7 +6,7 @@ export const metadata: Metadata = {
 
 export default function ChatsLayout({ children }: { children: React.ReactNode }) {
   return (
-    <main className="h-dvh bg-gray-50 dark:bg-slate-950 overflow-hidden">
+    <main className="h-dvh bg-gray-50 dark:bg-slate-950 overflow-hidden fixed inset-0">
       {children}
     </main>
   );

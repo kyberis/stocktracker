@@ -203,7 +203,7 @@ function MessageBubble({ msg, isOwn, isRead, isFirstInGroup, isLastInGroup, colo
         </div>
       </div>
 
-      {isLastInGroup && (
+      {isLastInGroup ? (
         <div className="flex items-center gap-1.5 px-1 mt-0.5">
           <span className="text-[10px] text-gray-400 dark:text-slate-500">
             {new Date(msg.createdAt + "Z").toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
@@ -215,6 +215,10 @@ function MessageBubble({ msg, isOwn, isRead, isFirstInGroup, isLastInGroup, colo
           <span className="text-[10px] text-gray-400 dark:text-slate-500 flex items-center gap-0.5">
             <Clock className="w-2.5 h-2.5" />{ttl}
           </span>
+        </div>
+      ) : isOwn && (
+        <div className="flex justify-end px-1 mt-0.5">
+          <CheckCheck className={`w-3 h-3 ${isRead ? "text-blue-500" : "text-gray-300 dark:text-slate-600"}`} />
         </div>
       )}
     </div>
@@ -389,6 +393,12 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
     if (e.key === "Enter" && e.altKey) {
       e.preventDefault();
       handleSubmit();
+      return;
+    }
+    if (e.key === "ArrowUp" && (e.metaKey || e.ctrlKey) && !editingMsg && !input.trim()) {
+      e.preventDefault();
+      const lastOwn = [...messages].reverse().find((m) => m.senderId === currentUserId && m.type === "text");
+      if (lastOwn) startEdit(lastOwn);
     }
   }
 
@@ -518,7 +528,7 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
   }
 
   return (
-    <div className={`flex flex-col ${heightClass}`}>
+    <div className={`flex flex-col ${heightClass} overflow-hidden`} style={{ overscrollBehavior: "none" }}>
       {/* Header */}
       <header className="shrink-0 border-b border-gray-200 dark:border-slate-800 px-4 py-3 bg-white dark:bg-slate-900">
         <div className="flex items-center gap-3">
@@ -565,7 +575,7 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
       </header>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col">
+      <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col overscroll-none">
         {messages.length === 0 && (
           <p className="text-center text-sm text-gray-400 dark:text-slate-500 mt-12">No messages yet. Start the conversation!</p>
         )}
