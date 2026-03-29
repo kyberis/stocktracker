@@ -373,24 +373,65 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
     if (inputRef.current) inputRef.current.style.height = "auto";
   }
 
+  const MAX_DIMENSION = 1920;
+  const JPEG_QUALITY = 0.8;
+  const MAX_COMPRESSED_BYTES = 3.5 * 1024 * 1024;
+
+  function compressImage(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+          const scale = MAX_DIMENSION / Math.max(width, height);
+          width = Math.round(width * scale);
+          height = Math.round(height * scale);
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) { reject(new Error("Canvas not supported")); return; }
+        ctx.drawImage(img, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL("image/jpeg", JPEG_QUALITY);
+        const sizeEstimate = Math.ceil((dataUrl.length - "data:image/jpeg;base64,".length) * 3 / 4);
+        if (sizeEstimate > MAX_COMPRESSED_BYTES) {
+          reject(new Error("Image is still too large after compression. Try a smaller image."));
+          return;
+        }
+        resolve(dataUrl);
+      };
+      img.onerror = () => reject(new Error("Failed to load image"));
+      img.src = URL.createObjectURL(file);
+    });
+  }
+
+  async function processAndSendImage(file: File) {
+    if (!file.type.startsWith("image/")) { setError("Only image files are allowed"); return; }
+    try {
+      setSending(true);
+      const dataUrl = await compressImage(file);
+      await sendMessage("image", dataUrl);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to process image");
+      setSending(false);
+    }
+  }
+
   function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]; if (!file) return;
-    if (!file.type.startsWith("image/")) { setError("Only image files are allowed"); return; }
-    if (file.size > 3.5 * 1024 * 1024) { setError("Image must be under 3.5 MB"); return; }
-    const reader = new FileReader();
-    reader.onload = () => sendMessage("image", reader.result as string);
-    reader.readAsDataURL(file); e.target.value = "";
+    processAndSendImage(file);
+    e.target.value = "";
   }
 
   function handlePaste(e: React.ClipboardEvent) {
     const items = e.clipboardData?.items; if (!items) return;
     for (const item of Array.from(items)) {
       if (item.type.startsWith("image/")) {
-        e.preventDefault(); const file = item.getAsFile(); if (!file) return;
-        if (file.size > 3.5 * 1024 * 1024) { setError("Pasted image must be under 3.5 MB"); return; }
-        const reader = new FileReader();
-        reader.onload = () => sendMessage("image", reader.result as string);
-        reader.readAsDataURL(file); return;
+        e.preventDefault();
+        const file = item.getAsFile(); if (!file) return;
+        processAndSendImage(file);
+        return;
       }
     }
   }
