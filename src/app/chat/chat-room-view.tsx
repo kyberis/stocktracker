@@ -236,7 +236,7 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
   const bottomRef = useRef<HTMLDivElement>(null);
   const lastMessageIdRef = useRef<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const lastTypingSentRef = useRef(0);
 
   const scrollToBottom = useCallback(() => {
@@ -336,7 +336,7 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
         if (!res.ok) { const data = await res.json().catch(() => ({ error: "Failed to edit" })); throw new Error(data.error || "Failed to edit"); }
         const updated: ChatMessage = await res.json();
         setMessages((prev) => prev.map((m) => (m.id === updated.id ? updated : m)));
-        setEditingMsg(null); setInput("");
+        setEditingMsg(null); setInput(""); resetTextareaHeight();
       } else {
         const body: Record<string, string> = { type, content };
         if (replyTo) body.replyToId = replyTo.id;
@@ -344,13 +344,34 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
         if (!res.ok) { const data = await res.json().catch(() => ({ error: "Failed to send" })); throw new Error(data.error || "Failed to send"); }
         const msg: ChatMessage = await res.json();
         setMessages((prev) => { if (prev.some((m) => m.id === msg.id)) return prev; return [...prev, msg]; });
-        lastMessageIdRef.current = msg.id; setReplyTo(null); setInput("");
+        lastMessageIdRef.current = msg.id; setReplyTo(null); setInput(""); resetTextareaHeight();
       }
     } catch (e) { setError(e instanceof Error ? e.message : "Failed to send message"); }
     finally { setSending(false); }
   }
 
-  function handleSubmit(e: React.FormEvent) { e.preventDefault(); const text = input.trim(); if (!text) return; sendMessage(isUrl(text) ? "link" : "text", text); }
+  function handleSubmit(e?: React.FormEvent) {
+    e?.preventDefault();
+    const text = input.trim();
+    if (!text) return;
+    sendMessage(isUrl(text) ? "link" : "text", text);
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === "Enter" && e.altKey) {
+      e.preventDefault();
+      handleSubmit();
+    }
+  }
+
+  function autoResize(el: HTMLTextAreaElement) {
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
+  }
+
+  function resetTextareaHeight() {
+    if (inputRef.current) inputRef.current.style.height = "auto";
+  }
 
   function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]; if (!file) return;
@@ -376,7 +397,7 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
 
   function startReply(msg: ChatMessage) { setEditingMsg(null); setReplyTo(msg); inputRef.current?.focus(); }
   function startEdit(msg: ChatMessage) { setReplyTo(null); setEditingMsg(msg); setInput(msg.content); inputRef.current?.focus(); }
-  function cancelAction() { setReplyTo(null); setEditingMsg(null); setInput(""); }
+  function cancelAction() { setReplyTo(null); setEditingMsg(null); setInput(""); resetTextareaHeight(); }
 
   const groupedMessages = useMemo(() => {
     return messages.map((msg, i) => {
@@ -494,17 +515,27 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
       )}
 
       {/* Input */}
-      <form onSubmit={handleSubmit} className="shrink-0 border-t border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 flex items-center gap-2" style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
+      <form onSubmit={handleSubmit} className="shrink-0 border-t border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 flex items-end gap-2" style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
         {!editingMsg && (
           <>
             <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-            <button type="button" onClick={() => fileInputRef.current?.click()} className="p-2 rounded-lg text-gray-500 hover:text-indigo-600 hover:bg-gray-100 dark:hover:bg-slate-800 dark:text-slate-400 transition-colors" title="Upload image">
+            <button type="button" onClick={() => fileInputRef.current?.click()} className="p-2 mb-0.5 rounded-lg text-gray-500 hover:text-indigo-600 hover:bg-gray-100 dark:hover:bg-slate-800 dark:text-slate-400 transition-colors" title="Upload image">
               <ImagePlus className="w-5 h-5" />
             </button>
           </>
         )}
-        <input ref={inputRef} type="text" value={input} onChange={(e) => { setInput(e.target.value); sendTypingHeartbeat(); }} onPaste={handlePaste} placeholder={editingMsg ? "Edit your message..." : "Type a message..."} className="flex-1 bg-gray-100 dark:bg-slate-800 text-gray-900 dark:text-slate-100 rounded-full px-4 py-2.5 text-sm placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-        <button type="submit" disabled={!input.trim() || sending} className="p-2.5 rounded-full bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+        <textarea
+          ref={inputRef}
+          rows={1}
+          value={input}
+          onChange={(e) => { setInput(e.target.value); sendTypingHeartbeat(); autoResize(e.target); }}
+          onKeyDown={handleKeyDown}
+          onPaste={handlePaste}
+          placeholder={editingMsg ? "Edit your message… ⌥↵ send" : "Type a message… ⌥↵ send"}
+          className="flex-1 bg-gray-100 dark:bg-slate-800 text-gray-900 dark:text-slate-100 rounded-2xl px-4 py-2.5 text-sm placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none leading-snug"
+          style={{ maxHeight: "120px" }}
+        />
+        <button type="submit" disabled={!input.trim() || sending} className="p-2.5 mb-0.5 rounded-full bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
           {sending ? <Loader2 className="w-4.5 h-4.5 animate-spin" /> : <Send className="w-4.5 h-4.5" />}
         </button>
       </form>
