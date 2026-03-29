@@ -5,7 +5,7 @@ import Link from "next/link";
 import {
   Send, ImagePlus, Camera, Clock, AlertTriangle, Loader2,
   Link as LinkIcon, Users, Pencil, Reply, X, ChevronLeft, CheckCheck,
-  Pin, Share2, MoreVertical, Trash2,
+  Pin, Share2, MoreVertical, Trash2, SmilePlus,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 
@@ -31,6 +31,11 @@ interface ChatMessage {
   replyToId: string;
   editedAt: string;
   isPersistent: boolean;
+}
+
+interface ChatReaction {
+  emoji: string;
+  userIds: string[];
 }
 
 interface ChatRoomData {
@@ -361,6 +366,8 @@ const CARD_TYPES = new Set<ChatMessageType>(["holding", "allocation", "summary",
 // Message bubble
 // ---------------------------------------------------------------------------
 
+const QUICK_EMOJIS = ["👍", "❤️", "😂", "🔥", "👀", "🎉"];
+
 interface BubbleProps {
   msg: ChatMessage;
   isOwn: boolean;
@@ -369,12 +376,15 @@ interface BubbleProps {
   isLastInGroup: boolean;
   color: typeof USER_COLORS[number];
   allMessages: ChatMessage[];
+  reactions: ChatReaction[];
+  currentUserId: string | null;
   onReply: (msg: ChatMessage) => void;
   onEdit: (msg: ChatMessage) => void;
   onTickerClick: (symbol: string) => void;
+  onReact: (messageId: string, emoji: string) => void;
 }
 
-function MessageBubble({ msg, isOwn, isRead, isFirstInGroup, isLastInGroup, color, allMessages, onReply, onEdit, onTickerClick }: BubbleProps) {
+function MessageBubble({ msg, isOwn, isRead, isFirstInGroup, isLastInGroup, color, allMessages, reactions, currentUserId, onReply, onEdit, onTickerClick, onReact }: BubbleProps) {
   const ttl = msg.isPersistent ? "pinned" : timeUntilExpiry(msg.expiresAt);
   const repliedMsg = msg.replyToId ? allMessages.find((m) => m.id === msg.replyToId) : null;
   const isCardMsg = CARD_TYPES.has(msg.type);
@@ -448,6 +458,12 @@ function MessageBubble({ msg, isOwn, isRead, isFirstInGroup, isLastInGroup, colo
         )}
 
         <div className={`absolute top-0 ${isOwn ? "left-0 -translate-x-full pr-1" : "right-0 translate-x-full pl-1"} hidden group-hover:flex items-center gap-0.5`}>
+          {QUICK_EMOJIS.slice(0, 3).map((em) => (
+            <button key={em} onClick={() => onReact(msg.id, em)} className="p-1 rounded hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors text-sm leading-none" title={em}>
+              {em}
+            </button>
+          ))}
+          <EmojiPickerButton onSelect={(em) => onReact(msg.id, em)} />
           <button onClick={() => onReply(msg)} className="p-1 rounded text-gray-400 hover:text-indigo-500 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors" title="Reply">
             <Reply className="w-3.5 h-3.5" />
           </button>
@@ -458,6 +474,28 @@ function MessageBubble({ msg, isOwn, isRead, isFirstInGroup, isLastInGroup, colo
           )}
         </div>
       </div>
+
+      {reactions.length > 0 && (
+        <div className={`flex flex-wrap gap-1 mt-0.5 px-1 ${isOwn ? "justify-end" : "justify-start"}`}>
+          {reactions.map((r) => {
+            const iReacted = currentUserId ? r.userIds.includes(currentUserId) : false;
+            return (
+              <button
+                key={r.emoji}
+                onClick={() => onReact(msg.id, r.emoji)}
+                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border transition-colors ${
+                  iReacted
+                    ? "bg-indigo-50 dark:bg-indigo-900/30 border-indigo-300 dark:border-indigo-600 text-indigo-700 dark:text-indigo-300"
+                    : "bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700"
+                }`}
+              >
+                <span className="text-sm leading-none">{r.emoji}</span>
+                <span>{r.userIds.length}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {isLastInGroup ? (
         <div className="flex items-center gap-1.5 px-1 mt-0.5">
@@ -479,6 +517,37 @@ function MessageBubble({ msg, isOwn, isRead, isFirstInGroup, isLastInGroup, colo
       ) : isOwn && (
         <div className="flex justify-end px-1 mt-0.5">
           <CheckCheck className={`w-3 h-3 ${isRead ? "text-blue-500" : "text-gray-300 dark:text-slate-600"}`} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function EmojiPickerButton({ onSelect }: { onSelect: (emoji: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [open]);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button onClick={() => setOpen((v) => !v)} className="p-1 rounded text-gray-400 hover:text-indigo-500 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors" title="React">
+        <SmilePlus className="w-3.5 h-3.5" />
+      </button>
+      {open && (
+        <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl shadow-lg p-2 flex gap-1 z-50">
+          {QUICK_EMOJIS.map((em) => (
+            <button key={em} onClick={() => { onSelect(em); setOpen(false); }} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors text-lg leading-none">
+              {em}
+            </button>
+          ))}
         </div>
       )}
     </div>
@@ -527,6 +596,7 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
   const [clearing, setClearing] = useState(false);
+  const [reactions, setReactions] = useState<Record<string, ChatReaction[]>>({});
   const tickerAbortRef = useRef<AbortController | null>(null);
   const tickerDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -572,10 +642,11 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
 
     fetch(`/api/chat/${token}`)
       .then((r) => { if (!r.ok) throw new Error(r.status === 404 ? "Chat not found" : "Failed to load chat"); return r.json(); })
-      .then((data: { room: ChatRoomData; messages: ChatMessage[]; participants: Participant[] }) => {
+      .then((data: { room: ChatRoomData; messages: ChatMessage[]; participants: Participant[]; reactions?: Record<string, ChatReaction[]> }) => {
         setRoom(data.room);
         setMessages(data.messages);
         setParticipants(data.participants || []);
+        if (data.reactions) setReactions(data.reactions);
         if (data.messages.length > 0) {
           const lastId = data.messages[data.messages.length - 1].id;
           lastMessageIdRef.current = lastId;
@@ -596,9 +667,10 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
       const qs = params.toString();
       fetch(`/api/chat/${token}${qs ? `?${qs}` : ""}`)
         .then((r) => (r.ok ? r.json() : null))
-        .then((data: { room: ChatRoomData; messages: ChatMessage[]; participants: Participant[] } | null) => {
+        .then((data: { room: ChatRoomData; messages: ChatMessage[]; participants: Participant[]; reactions?: Record<string, ChatReaction[]> } | null) => {
           if (!data) return;
           if (data.participants) setParticipants(data.participants);
+          if (data.reactions) setReactions(data.reactions);
           if (data.messages.length === 0) return;
           setMessages((prev) => {
             const byId = new Map(prev.map((m) => [m.id, m]));
@@ -788,6 +860,39 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
       setConfirmClear(false);
       setMenuOpen(false);
     }
+  }
+
+  async function handleReact(messageId: string, emoji: string) {
+    // Optimistic update
+    setReactions((prev) => {
+      const msgReactions = [...(prev[messageId] || [])];
+      const idx = msgReactions.findIndex((r) => r.emoji === emoji);
+      if (idx >= 0) {
+        const r = msgReactions[idx];
+        if (currentUserId && r.userIds.includes(currentUserId)) {
+          const filtered = r.userIds.filter((id) => id !== currentUserId);
+          if (filtered.length === 0) msgReactions.splice(idx, 1);
+          else msgReactions[idx] = { ...r, userIds: filtered };
+        } else {
+          msgReactions[idx] = { ...r, userIds: [...r.userIds, currentUserId || ""] };
+        }
+      } else {
+        msgReactions.push({ emoji, userIds: [currentUserId || ""] });
+      }
+      return { ...prev, [messageId]: msgReactions };
+    });
+
+    try {
+      const res = await fetch(`/api/chat/${token}/reactions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messageId, emoji }),
+      });
+      if (res.ok) {
+        const data: { reactions: Record<string, ChatReaction[]> } = await res.json();
+        setReactions(data.reactions);
+      }
+    } catch { /* ignore */ }
   }
 
   const MAX_DIMENSION = 1920;
@@ -1004,7 +1109,7 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
         )}
         {groupedMessages.map(({ msg, isFirstInGroup, isLastInGroup }) => (
           <div key={msg.id} className={isFirstInGroup ? "mt-3 first:mt-0" : "mt-0.5"}>
-            <MessageBubble msg={msg} isOwn={msg.senderId === currentUserId} isRead={isMessageRead(msg.id)} isFirstInGroup={isFirstInGroup} isLastInGroup={isLastInGroup} color={USER_COLORS[userColorIndex(msg.senderId)]} allMessages={messages} onReply={startReply} onEdit={startEdit} onTickerClick={setPreviewTicker} />
+            <MessageBubble msg={msg} isOwn={msg.senderId === currentUserId} isRead={isMessageRead(msg.id)} isFirstInGroup={isFirstInGroup} isLastInGroup={isLastInGroup} color={USER_COLORS[userColorIndex(msg.senderId)]} allMessages={messages} reactions={reactions[msg.id] || []} currentUserId={currentUserId} onReply={startReply} onEdit={startEdit} onTickerClick={setPreviewTicker} onReact={handleReact} />
           </div>
         ))}
         <div ref={bottomRef} />

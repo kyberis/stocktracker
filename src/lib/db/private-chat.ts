@@ -369,3 +369,67 @@ export async function purgeExpiredPrivateChatMessages(): Promise<number> {
   );
   return result.rowsAffected ?? 0;
 }
+
+// ---------------------------------------------------------------------------
+// Reactions
+// ---------------------------------------------------------------------------
+
+export interface ChatReaction {
+  emoji: string;
+  userIds: string[];
+}
+
+export async function toggleReaction(
+  messageId: string,
+  userId: string,
+  emoji: string
+): Promise<"added" | "removed"> {
+  const client = await ensureInitialized();
+  const existing = await client.execute({
+    sql: `SELECT 1 FROM private_chat_reactions WHERE message_id = ? AND user_id = ? AND emoji = ?`,
+    args: [messageId, userId, emoji],
+  });
+  if (existing.rows.length > 0) {
+    await client.execute({
+      sql: `DELETE FROM private_chat_reactions WHERE message_id = ? AND user_id = ? AND emoji = ?`,
+      args: [messageId, userId, emoji],
+    });
+    return "removed";
+  }
+  await client.execute({
+    sql: `INSERT INTO private_chat_reactions (message_id, user_id, emoji) VALUES (?, ?, ?)`,
+    args: [messageId, userId, emoji],
+  });
+  return "added";
+}
+
+export async function getReactionsForRoom(
+  roomId: string
+): Promise<Record<string, ChatReaction[]>> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: `SELECT r.message_id, r.emoji, r.user_id
+          FROM private_chat_reactions r
+          JOIN private_chat_messages m ON m.id = r.message_id
+          WHERE m.room_id = ?
+          ORDER BY r.created_at ASC`,
+    args: [roomId],
+  });
+
+  const byMsg = new Map<string, Map<string, string[]>>();
+  for (const row of result.rows) {
+    const msgId = str(row.message_id);
+    const emoji = str(row.emoji);
+    const userId = str(row.user_id);
+    if (!byMsg.has(msgId)) byMsg.set(msgId, new Map());
+    const emojiMap = byMsg.get(msgId)!;
+    if (!emojiMap.has(emoji)) emojiMap.set(emoji, []);
+    emojiMap.get(emoji)!.push(userId);
+  }
+
+  const out: Record<string, ChatReaction[]> = {};
+  for (const [msgId, emojiMap] of byMsg) {
+    out[msgId] = Array.from(emojiMap.entries()).map(([emoji, userIds]) => ({ emoji, userIds }));
+  }
+  return out;
+}

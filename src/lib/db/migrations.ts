@@ -2682,6 +2682,21 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       }
     },
   },
+  {
+    version: 89,
+    description: "Emoji reactions on chat messages",
+    up: async (client: Client) => {
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS private_chat_reactions (
+          message_id TEXT NOT NULL REFERENCES private_chat_messages(id) ON DELETE CASCADE,
+          user_id TEXT NOT NULL REFERENCES users(id),
+          emoji TEXT NOT NULL,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          PRIMARY KEY (message_id, user_id, emoji)
+        )
+      `);
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {
