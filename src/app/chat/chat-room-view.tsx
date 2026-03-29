@@ -385,6 +385,18 @@ interface BubbleProps {
 }
 
 function MessageBubble({ msg, isOwn, isRead, isFirstInGroup, isLastInGroup, color, allMessages, reactions, currentUserId, onReply, onEdit, onTickerClick, onReact }: BubbleProps) {
+  const [showActions, setShowActions] = useState(false);
+  const actionsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showActions) return;
+    function handleTap(e: MouseEvent | TouchEvent) {
+      if (actionsRef.current && !actionsRef.current.contains(e.target as Node)) setShowActions(false);
+    }
+    document.addEventListener("mousedown", handleTap);
+    document.addEventListener("touchstart", handleTap);
+    return () => { document.removeEventListener("mousedown", handleTap); document.removeEventListener("touchstart", handleTap); };
+  }, [showActions]);
   const ttl = msg.isPersistent ? "pinned" : timeUntilExpiry(msg.expiresAt);
   const repliedMsg = msg.replyToId ? allMessages.find((m) => m.id === msg.replyToId) : null;
   const isCardMsg = CARD_TYPES.has(msg.type);
@@ -428,12 +440,15 @@ function MessageBubble({ msg, isOwn, isRead, isFirstInGroup, isLastInGroup, colo
         </div>
       )}
 
-      <div className="group relative">
+      <div className="group relative" ref={actionsRef}>
         {isCardMsg ? (
-          <PortfolioCardRenderer type={msg.type} content={msg.content} />
+          <div onClick={() => setShowActions((v) => !v)}>
+            <PortfolioCardRenderer type={msg.type} content={msg.content} />
+          </div>
         ) : (
           <div
-            className={`px-4 py-2.5 text-sm break-words ${
+            onClick={() => setShowActions((v) => !v)}
+            className={`px-4 py-2.5 text-sm break-words select-none ${
               isOwn
                 ? `bg-indigo-600 text-white ${ownRadius}`
                 : `${color.bg} ${color.text} ${otherRadius}`
@@ -444,6 +459,7 @@ function MessageBubble({ msg, isOwn, isRead, isFirstInGroup, isLastInGroup, colo
             ) : msg.type === "link" || isUrl(msg.content) ? (
               <a
                 href={msg.content} target="_blank" rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
                 className={`underline flex items-center gap-1 ${
                   isOwn ? "text-indigo-100 hover:text-white" : "text-indigo-600 dark:text-indigo-400 hover:text-indigo-800"
                 }`}
@@ -457,19 +473,19 @@ function MessageBubble({ msg, isOwn, isRead, isFirstInGroup, isLastInGroup, colo
           </div>
         )}
 
-        <div className={`absolute bottom-full ${isOwn ? "right-0" : "left-0"} hidden group-hover:flex items-center gap-0.5 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg shadow-md px-1 py-0.5 pb-2 z-10`}>
+        <div className={`absolute bottom-full ${isOwn ? "right-0" : "left-0"} items-center gap-0.5 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg shadow-md px-1 py-0.5 pb-2 z-10 ${showActions ? "flex" : "hidden group-hover:flex"}`}>
           {QUICK_EMOJIS.slice(0, 4).map((em) => (
-            <button key={em} onClick={() => onReact(msg.id, em)} className="p-1 rounded hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors text-sm leading-none" title={em}>
+            <button key={em} onClick={() => { onReact(msg.id, em); setShowActions(false); }} className="p-1 rounded hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors text-sm leading-none" title={em}>
               {em}
             </button>
           ))}
-          <EmojiPickerButton onSelect={(em) => onReact(msg.id, em)} />
+          <EmojiPickerButton onSelect={(em) => { onReact(msg.id, em); setShowActions(false); }} />
           <div className="w-px h-4 bg-gray-200 dark:bg-slate-600 mx-0.5" />
-          <button onClick={() => onReply(msg)} className="p-1 rounded text-gray-400 hover:text-indigo-500 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors" title="Reply">
+          <button onClick={() => { onReply(msg); setShowActions(false); }} className="p-1 rounded text-gray-400 hover:text-indigo-500 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors" title="Reply">
             <Reply className="w-3.5 h-3.5" />
           </button>
           {isOwn && msg.type === "text" && (
-            <button onClick={() => onEdit(msg)} className="p-1 rounded text-gray-400 hover:text-indigo-500 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors" title="Edit">
+            <button onClick={() => { onEdit(msg); setShowActions(false); }} className="p-1 rounded text-gray-400 hover:text-indigo-500 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors" title="Edit">
               <Pencil className="w-3.5 h-3.5" />
             </button>
           )}
