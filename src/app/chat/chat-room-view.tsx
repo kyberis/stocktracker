@@ -376,7 +376,7 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
   function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]; if (!file) return;
     if (!file.type.startsWith("image/")) { setError("Only image files are allowed"); return; }
-    if (file.size > 2 * 1024 * 1024) { setError("Image must be under 2 MB"); return; }
+    if (file.size > 3.5 * 1024 * 1024) { setError("Image must be under 3.5 MB"); return; }
     const reader = new FileReader();
     reader.onload = () => sendMessage("image", reader.result as string);
     reader.readAsDataURL(file); e.target.value = "";
@@ -387,7 +387,7 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
     for (const item of Array.from(items)) {
       if (item.type.startsWith("image/")) {
         e.preventDefault(); const file = item.getAsFile(); if (!file) return;
-        if (file.size > 2 * 1024 * 1024) { setError("Pasted image must be under 2 MB"); return; }
+        if (file.size > 3.5 * 1024 * 1024) { setError("Pasted image must be under 3.5 MB"); return; }
         const reader = new FileReader();
         reader.onload = () => sendMessage("image", reader.result as string);
         reader.readAsDataURL(file); return;
@@ -396,7 +396,17 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
   }
 
   function startReply(msg: ChatMessage) { setEditingMsg(null); setReplyTo(msg); inputRef.current?.focus(); }
-  function startEdit(msg: ChatMessage) { setReplyTo(null); setEditingMsg(msg); setInput(msg.content); inputRef.current?.focus(); }
+  function startEdit(msg: ChatMessage) {
+    setReplyTo(null);
+    setEditingMsg(msg);
+    setInput(msg.content);
+    requestAnimationFrame(() => {
+      if (inputRef.current) {
+        autoResize(inputRef.current);
+        inputRef.current.focus();
+      }
+    });
+  }
   function cancelAction() { setReplyTo(null); setEditingMsg(null); setInput(""); resetTextareaHeight(); }
 
   const groupedMessages = useMemo(() => {

@@ -4,7 +4,7 @@ import { withMetrics } from "@/lib/with-metrics";
 import { getPrivateChatRoom, addPrivateChatMessage, editPrivateChatMessage } from "@/lib/db";
 import type { PrivateChatMessageType } from "@/lib/db";
 
-const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
+const MAX_IMAGE_BYTES = 3.5 * 1024 * 1024;
 const VALID_TYPES = new Set<PrivateChatMessageType>(["text", "link", "image"]);
 
 function extractToken(pathname: string): string {
@@ -49,7 +49,7 @@ export const POST = withMetrics(
       const sizeEstimate = Math.ceil((content.length * 3) / 4);
       if (sizeEstimate > MAX_IMAGE_BYTES) {
         return NextResponse.json(
-          { error: "Image too large. Maximum size is 2 MB." },
+          { error: "Image too large. Maximum size is 3.5 MB." },
           { status: 413 }
         );
       }
