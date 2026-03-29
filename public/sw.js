@@ -1,4 +1,4 @@
-const CACHE_NAME = "trefolio-mmjdmkve";
+const CACHE_NAME = "trefolio-e1e2fe86";
 const SHELL_ASSETS = ["/", "/app", "/icons/icon-192.png", "/icons/icon-512.png"];
 
 self.addEventListener("install", (event) => {
