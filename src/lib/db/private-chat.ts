@@ -243,6 +243,77 @@ export async function getPrivateChatParticipants(
   }));
 }
 
+export interface UserChatRoomSummary {
+  id: string;
+  label: string;
+  createdAt: string;
+  lastMessageContent: string;
+  lastMessageType: PrivateChatMessageType;
+  lastMessageAt: string;
+  lastSenderName: string;
+  participants: { userId: string; displayName: string; avatarUrl: string }[];
+}
+
+export async function listUserChatRooms(
+  userId: string
+): Promise<UserChatRoomSummary[]> {
+  const client = await ensureInitialized();
+
+  const roomsResult = await client.execute({
+    sql: `SELECT r.id, r.label, r.created_at,
+                 last_msg.content AS last_content,
+                 last_msg.type AS last_type,
+                 last_msg.created_at AS last_msg_at,
+                 last_sender.display_name AS last_sender_name
+          FROM private_chat_participants p
+          JOIN private_chat_rooms r ON r.id = p.room_id AND r.is_active = 1
+          LEFT JOIN private_chat_messages last_msg ON last_msg.id = (
+            SELECT id FROM private_chat_messages
+            WHERE room_id = r.id AND expires_at > datetime('now')
+            ORDER BY created_at DESC LIMIT 1
+          )
+          LEFT JOIN users last_sender ON last_sender.id = last_msg.sender_id
+          WHERE p.user_id = ?
+          ORDER BY COALESCE(last_msg.created_at, r.created_at) DESC`,
+    args: [userId],
+  });
+
+  if (roomsResult.rows.length === 0) return [];
+
+  const roomIds = roomsResult.rows.map((r) => str(r.id));
+  const placeholders = roomIds.map(() => "?").join(",");
+  const partResult = await client.execute({
+    sql: `SELECT p.room_id, p.user_id, u.display_name, u.avatar_url
+          FROM private_chat_participants p
+          JOIN users u ON u.id = p.user_id
+          WHERE p.room_id IN (${placeholders})
+          ORDER BY p.joined_at ASC`,
+    args: roomIds,
+  });
+
+  const partsByRoom = new Map<string, { userId: string; displayName: string; avatarUrl: string }[]>();
+  for (const r of partResult.rows) {
+    const roomId = str(r.room_id);
+    if (!partsByRoom.has(roomId)) partsByRoom.set(roomId, []);
+    partsByRoom.get(roomId)!.push({
+      userId: str(r.user_id),
+      displayName: str(r.display_name) || str(r.user_id),
+      avatarUrl: str(r.avatar_url),
+    });
+  }
+
+  return roomsResult.rows.map((r) => ({
+    id: str(r.id),
+    label: str(r.label),
+    createdAt: str(r.created_at),
+    lastMessageContent: str(r.last_content),
+    lastMessageType: parseMessageType(r.last_type),
+    lastMessageAt: str(r.last_msg_at),
+    lastSenderName: str(r.last_sender_name),
+    participants: partsByRoom.get(str(r.id)) || [],
+  }));
+}
+
 export async function purgeExpiredPrivateChatMessages(): Promise<number> {
   const client = await ensureInitialized();
   const result = await client.execute(

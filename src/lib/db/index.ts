@@ -465,7 +465,7 @@ export {
   getUsersForDigestEmail,
 } from "./market-digests";
 
-export type { PrivateChatRoom, PrivateChatRoomListItem, PrivateChatMessage, PrivateChatMessageType, PrivateChatParticipant } from "./private-chat";
+export type { PrivateChatRoom, PrivateChatRoomListItem, PrivateChatMessage, PrivateChatMessageType, PrivateChatParticipant, UserChatRoomSummary } from "./private-chat";
 export {
   createPrivateChatRoom,
   getPrivateChatRoom,
@@ -477,5 +477,6 @@ export {
   joinPrivateChatRoom,
   updateTypingStatus,
   getPrivateChatParticipants,
+  listUserChatRooms,
   purgeExpiredPrivateChatMessages,
 } from "./private-chat";
