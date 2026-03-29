@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Search, MessageSquare, Image, Link as LinkIcon } from "lucide-react";
-import { USER_COLORS, userColorIndex } from "@/app/chat/chat-room-view";
+import { USER_COLORS, userColorIndex, isParticipantOnline } from "@/app/chat/chat-room-view";
 
 export interface ChatRoomSummary {
   id: string;
@@ -12,7 +12,7 @@ export interface ChatRoomSummary {
   lastMessageType: "text" | "link" | "image";
   lastMessageAt: string;
   lastSenderName: string;
-  participants: { userId: string; displayName: string; avatarUrl: string }[];
+  participants: { userId: string; displayName: string; avatarUrl: string; lastSeenAt: string }[];
 }
 
 interface ChatListSidebarProps {
@@ -109,17 +109,21 @@ export function ChatListSidebar({ rooms, selectedToken, onSelect }: ChatListSide
               <div className="relative shrink-0" style={{ width: `${Math.min(visibleParticipants.length, 3) * 8 + 32}px`, height: "40px" }}>
                 {visibleParticipants.map((p, i) => {
                   const c = USER_COLORS[userColorIndex(p.userId)];
+                  const online = isParticipantOnline(p.lastSeenAt);
                   return (
                     <div
                       key={p.userId}
-                      className={`absolute top-0 w-10 h-10 rounded-full border-2 border-white dark:border-slate-900 flex items-center justify-center text-xs font-semibold overflow-hidden ring-1 ${c.ring} ${c.bg} ${c.text}`}
+                      className="absolute top-0"
                       style={{ left: `${i * 8}px`, zIndex: visibleParticipants.length - i }}
                     >
-                      {p.avatarUrl ? (
-                        <img src={p.avatarUrl} alt={p.displayName} className="w-full h-full object-cover" />
-                      ) : (
-                        p.displayName.charAt(0).toUpperCase()
-                      )}
+                      <div className={`w-10 h-10 rounded-full border-2 border-white dark:border-slate-900 flex items-center justify-center text-xs font-semibold overflow-hidden ring-1 ${c.ring} ${c.bg} ${c.text}`}>
+                        {p.avatarUrl ? (
+                          <img src={p.avatarUrl} alt={p.displayName} className="w-full h-full object-cover" />
+                        ) : (
+                          p.displayName.charAt(0).toUpperCase()
+                        )}
+                      </div>
+                      <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-slate-900 ${online ? "bg-green-500" : "bg-gray-300 dark:bg-slate-600"}`} />
                     </div>
                   );
                 })}

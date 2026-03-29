@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Link from "next/link";
 import {
   Send, ImagePlus, Camera, Clock, AlertTriangle, Loader2,
-  Link as LinkIcon, Users, Pencil, Reply, X, ChevronLeft,
+  Link as LinkIcon, Users, Pencil, Reply, X, ChevronLeft, CheckCheck,
 } from "lucide-react";
 
 // ---------------------------------------------------------------------------
@@ -39,6 +39,8 @@ interface Participant {
   avatarUrl: string;
   joinedAt: string;
   lastTypingAt: string;
+  lastSeenAt: string;
+  lastReadMsgId: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -69,6 +71,24 @@ export function userColorIndex(userId: string): number {
 const POLL_INTERVAL_MS = 3000;
 const TYPING_HEARTBEAT_MS = 2000;
 const TYPING_VISIBLE_MS = 4000;
+const ONLINE_THRESHOLD_MS = 15_000;
+
+export function isParticipantOnline(lastSeenAt: string): boolean {
+  if (!lastSeenAt) return false;
+  return Date.now() - new Date(lastSeenAt + "Z").getTime() < ONLINE_THRESHOLD_MS;
+}
+
+function lastSeenText(lastSeenAt: string): string {
+  if (!lastSeenAt) return "Offline";
+  const diff = Date.now() - new Date(lastSeenAt + "Z").getTime();
+  if (diff < ONLINE_THRESHOLD_MS) return "Online";
+  const mins = Math.floor(diff / 60_000);
+  if (mins < 1) return "Last seen just now";
+  if (mins < 60) return `Last seen ${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `Last seen ${hours}h ago`;
+  return `Last seen ${Math.floor(hours / 24)}d ago`;
+}
 
 function timeUntilExpiry(expiresAt: string): string {
   const diff = new Date(expiresAt + "Z").getTime() - Date.now();
@@ -95,6 +115,7 @@ function isUrl(text: string): boolean {
 interface BubbleProps {
   msg: ChatMessage;
   isOwn: boolean;
+  isRead: boolean;
   isFirstInGroup: boolean;
   isLastInGroup: boolean;
   color: typeof USER_COLORS[number];
@@ -103,7 +124,7 @@ interface BubbleProps {
   onEdit: (msg: ChatMessage) => void;
 }
 
-function MessageBubble({ msg, isOwn, isFirstInGroup, isLastInGroup, color, allMessages, onReply, onEdit }: BubbleProps) {
+function MessageBubble({ msg, isOwn, isRead, isFirstInGroup, isLastInGroup, color, allMessages, onReply, onEdit }: BubbleProps) {
   const ttl = timeUntilExpiry(msg.expiresAt);
   const repliedMsg = msg.replyToId ? allMessages.find((m) => m.id === msg.replyToId) : null;
 
@@ -188,6 +209,9 @@ function MessageBubble({ msg, isOwn, isFirstInGroup, isLastInGroup, color, allMe
             {new Date(msg.createdAt + "Z").toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
           </span>
           {msg.editedAt && <span className="text-[10px] text-gray-400 dark:text-slate-500 italic">edited</span>}
+          {isOwn && (
+            <CheckCheck className={`w-3.5 h-3.5 ${isRead ? "text-blue-500" : "text-gray-300 dark:text-slate-600"}`} />
+          )}
           <span className="text-[10px] text-gray-400 dark:text-slate-500 flex items-center gap-0.5">
             <Clock className="w-2.5 h-2.5" />{ttl}
           </span>
@@ -272,7 +296,7 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
     setInput("");
     lastMessageIdRef.current = null;
 
-    fetch(`/api/chat/${token}`)
+    fetch(`/api/chat/${token}?lastRead=${lastMessageIdRef.current || ""}`)
       .then((r) => { if (!r.ok) throw new Error(r.status === 404 ? "Chat not found" : "Failed to load chat"); return r.json(); })
       .then((data: { room: ChatRoomData; messages: ChatMessage[]; participants: Participant[] }) => {
         setRoom(data.room);
@@ -288,8 +312,11 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
   useEffect(() => {
     if (!room) return;
     const interval = setInterval(() => {
-      const afterParam = lastMessageIdRef.current ? `?after=${lastMessageIdRef.current}` : "";
-      fetch(`/api/chat/${token}${afterParam}`)
+      const params = new URLSearchParams();
+      if (lastMessageIdRef.current) params.set("after", lastMessageIdRef.current);
+      if (lastMessageIdRef.current) params.set("lastRead", lastMessageIdRef.current);
+      const qs = params.toString();
+      fetch(`/api/chat/${token}${qs ? `?${qs}` : ""}`)
         .then((r) => (r.ok ? r.json() : null))
         .then((data: { room: ChatRoomData; messages: ChatMessage[]; participants: Participant[] } | null) => {
           if (!data) return;
@@ -459,6 +486,24 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
     });
   }, [messages]);
 
+  const readMsgIds = useMemo(() => {
+    const otherReads = participants
+      .filter((p) => p.userId !== currentUserId && p.lastReadMsgId)
+      .map((p) => p.lastReadMsgId);
+    return new Set(otherReads);
+  }, [participants, currentUserId]);
+
+  const isMessageRead = useCallback((msgId: string) => {
+    if (readMsgIds.size === 0) return false;
+    const msgIndex = messages.findIndex((m) => m.id === msgId);
+    if (msgIndex < 0) return false;
+    for (const readId of readMsgIds) {
+      const readIndex = messages.findIndex((m) => m.id === readId);
+      if (readIndex >= msgIndex) return true;
+    }
+    return false;
+  }, [readMsgIds, messages]);
+
   if (loading) {
     return <div className={`flex items-center justify-center ${heightClass}`}><Loader2 className="w-8 h-8 animate-spin text-indigo-500" /></div>;
   }
@@ -487,7 +532,11 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
               {room?.label || "Private Chat"}
             </h1>
             <p className="text-xs text-gray-500 dark:text-slate-400">
-              Messages expire 24 hours after being sent
+              {(() => {
+                const other = participants.find((p) => p.userId !== currentUserId);
+                if (other?.lastSeenAt) return lastSeenText(other.lastSeenAt);
+                return "Messages expire 24 hours after being sent";
+              })()}
             </p>
           </div>
           {participants.length > 0 && (
@@ -496,9 +545,13 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
               <div className="flex -space-x-2">
                 {participants.map((p) => {
                   const c = USER_COLORS[userColorIndex(p.userId)];
+                  const online = isParticipantOnline(p.lastSeenAt);
                   return (
-                    <div key={p.userId} title={p.displayName} className={`w-7 h-7 rounded-full border-2 border-white dark:border-slate-900 flex items-center justify-center text-[10px] font-semibold overflow-hidden ring-1 ${c.ring} ${c.bg} ${c.text}`}>
-                      {p.avatarUrl ? <img src={p.avatarUrl} alt={p.displayName} className="w-full h-full object-cover" /> : p.displayName.charAt(0).toUpperCase()}
+                    <div key={p.userId} title={p.displayName} className="relative">
+                      <div className={`w-7 h-7 rounded-full border-2 border-white dark:border-slate-900 flex items-center justify-center text-[10px] font-semibold overflow-hidden ring-1 ${c.ring} ${c.bg} ${c.text}`}>
+                        {p.avatarUrl ? <img src={p.avatarUrl} alt={p.displayName} className="w-full h-full object-cover" /> : p.displayName.charAt(0).toUpperCase()}
+                      </div>
+                      <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-slate-900 ${online ? "bg-green-500" : "bg-gray-300 dark:bg-slate-600"}`} />
                     </div>
                   );
                 })}
@@ -518,7 +571,7 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
         )}
         {groupedMessages.map(({ msg, isFirstInGroup, isLastInGroup }) => (
           <div key={msg.id} className={isFirstInGroup ? "mt-3 first:mt-0" : "mt-0.5"}>
-            <MessageBubble msg={msg} isOwn={msg.senderId === currentUserId} isFirstInGroup={isFirstInGroup} isLastInGroup={isLastInGroup} color={USER_COLORS[userColorIndex(msg.senderId)]} allMessages={messages} onReply={startReply} onEdit={startEdit} />
+            <MessageBubble msg={msg} isOwn={msg.senderId === currentUserId} isRead={isMessageRead(msg.id)} isFirstInGroup={isFirstInGroup} isLastInGroup={isLastInGroup} color={USER_COLORS[userColorIndex(msg.senderId)]} allMessages={messages} onReply={startReply} onEdit={startEdit} />
           </div>
         ))}
         <div ref={bottomRef} />
@@ -575,7 +628,7 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
             <button type="button" onClick={() => fileInputRef.current?.click()} className="p-2 mb-0.5 rounded-lg text-gray-500 hover:text-indigo-600 hover:bg-gray-100 dark:hover:bg-slate-800 dark:text-slate-400 transition-colors" title="Upload image">
               <ImagePlus className="w-5 h-5" />
             </button>
-            <button type="button" onClick={() => cameraInputRef.current?.click()} className="p-2 mb-0.5 rounded-lg text-gray-500 hover:text-indigo-600 hover:bg-gray-100 dark:hover:bg-slate-800 dark:text-slate-400 transition-colors" title="Take photo">
+            <button type="button" onClick={() => cameraInputRef.current?.click()} className="p-2 mb-0.5 rounded-lg text-gray-500 hover:text-indigo-600 hover:bg-gray-100 dark:hover:bg-slate-800 dark:text-slate-400 transition-colors md:hidden" title="Take photo">
               <Camera className="w-5 h-5" />
             </button>
           </>

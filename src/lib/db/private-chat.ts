@@ -32,6 +32,8 @@ export interface PrivateChatParticipant {
   avatarUrl: string;
   joinedAt: string;
   lastTypingAt: string;
+  lastSeenAt: string;
+  lastReadMsgId: string;
 }
 
 export interface PrivateChatRoomListItem extends PrivateChatRoom {
@@ -222,12 +224,31 @@ export async function updateTypingStatus(
   });
 }
 
+export async function updateLastSeen(
+  roomId: string,
+  userId: string,
+  lastReadMsgId?: string
+): Promise<void> {
+  const client = await ensureInitialized();
+  if (lastReadMsgId) {
+    await client.execute({
+      sql: `UPDATE private_chat_participants SET last_seen_at = datetime('now'), last_read_msg_id = ? WHERE room_id = ? AND user_id = ?`,
+      args: [lastReadMsgId, roomId, userId],
+    });
+  } else {
+    await client.execute({
+      sql: `UPDATE private_chat_participants SET last_seen_at = datetime('now') WHERE room_id = ? AND user_id = ?`,
+      args: [roomId, userId],
+    });
+  }
+}
+
 export async function getPrivateChatParticipants(
   roomId: string
 ): Promise<PrivateChatParticipant[]> {
   const client = await ensureInitialized();
   const result = await client.execute({
-    sql: `SELECT p.user_id, p.joined_at, p.last_typing_at, u.display_name, u.avatar_url
+    sql: `SELECT p.user_id, p.joined_at, p.last_typing_at, p.last_seen_at, p.last_read_msg_id, u.display_name, u.avatar_url
           FROM private_chat_participants p
           JOIN users u ON u.id = p.user_id
           WHERE p.room_id = ?
@@ -240,6 +261,8 @@ export async function getPrivateChatParticipants(
     avatarUrl: str(r.avatar_url),
     joinedAt: str(r.joined_at),
     lastTypingAt: str(r.last_typing_at),
+    lastSeenAt: str(r.last_seen_at),
+    lastReadMsgId: str(r.last_read_msg_id),
   }));
 }
 
@@ -251,7 +274,7 @@ export interface UserChatRoomSummary {
   lastMessageType: PrivateChatMessageType;
   lastMessageAt: string;
   lastSenderName: string;
-  participants: { userId: string; displayName: string; avatarUrl: string }[];
+  participants: { userId: string; displayName: string; avatarUrl: string; lastSeenAt: string }[];
 }
 
 export async function listUserChatRooms(
@@ -283,7 +306,7 @@ export async function listUserChatRooms(
   const roomIds = roomsResult.rows.map((r) => str(r.id));
   const placeholders = roomIds.map(() => "?").join(",");
   const partResult = await client.execute({
-    sql: `SELECT p.room_id, p.user_id, u.display_name, u.avatar_url
+    sql: `SELECT p.room_id, p.user_id, p.last_seen_at, u.display_name, u.avatar_url
           FROM private_chat_participants p
           JOIN users u ON u.id = p.user_id
           WHERE p.room_id IN (${placeholders})
@@ -291,7 +314,7 @@ export async function listUserChatRooms(
     args: roomIds,
   });
 
-  const partsByRoom = new Map<string, { userId: string; displayName: string; avatarUrl: string }[]>();
+  const partsByRoom = new Map<string, { userId: string; displayName: string; avatarUrl: string; lastSeenAt: string }[]>();
   for (const r of partResult.rows) {
     const roomId = str(r.room_id);
     if (!partsByRoom.has(roomId)) partsByRoom.set(roomId, []);
@@ -299,6 +322,7 @@ export async function listUserChatRooms(
       userId: str(r.user_id),
       displayName: str(r.display_name) || str(r.user_id),
       avatarUrl: str(r.avatar_url),
+      lastSeenAt: str(r.last_seen_at),
     });
   }
 

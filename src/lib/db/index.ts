@@ -476,6 +476,7 @@ export {
   getPrivateChatMessages,
   joinPrivateChatRoom,
   updateTypingStatus,
+  updateLastSeen,
   getPrivateChatParticipants,
   listUserChatRooms,
   purgeExpiredPrivateChatMessages,

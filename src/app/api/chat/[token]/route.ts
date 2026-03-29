@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
 import { withMetrics } from "@/lib/with-metrics";
-import { getPrivateChatRoom, getPrivateChatMessages, joinPrivateChatRoom, getPrivateChatParticipants } from "@/lib/db";
+import { getPrivateChatRoom, getPrivateChatMessages, joinPrivateChatRoom, getPrivateChatParticipants, updateLastSeen } from "@/lib/db";
 
 export const GET = withMetrics("/api/chat/[token]", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
@@ -21,6 +21,10 @@ export const GET = withMetrics("/api/chat/[token]", async (req: NextRequest) => 
   await joinPrivateChatRoom(token, session.userId);
 
   const afterId = req.nextUrl.searchParams.get("after") || undefined;
+  const lastRead = req.nextUrl.searchParams.get("lastRead") || undefined;
+
+  await updateLastSeen(token, session.userId, lastRead);
+
   const [messages, participants] = await Promise.all([
     getPrivateChatMessages(token, afterId),
     getPrivateChatParticipants(token),

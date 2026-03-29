@@ -2646,6 +2646,20 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       }
     },
   },
+  {
+    version: 86,
+    description: "Chat presence tracking and read receipts",
+    up: async (client: Client) => {
+      const cols = await client.execute("PRAGMA table_info(private_chat_participants)");
+      const colNames = new Set(cols.rows.map((r) => String(r.name)));
+      if (!colNames.has("last_seen_at")) {
+        await client.execute("ALTER TABLE private_chat_participants ADD COLUMN last_seen_at TEXT");
+      }
+      if (!colNames.has("last_read_msg_id")) {
+        await client.execute("ALTER TABLE private_chat_participants ADD COLUMN last_read_msg_id TEXT");
+      }
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {
