@@ -382,9 +382,10 @@ interface BubbleProps {
   onEdit: (msg: ChatMessage) => void;
   onTickerClick: (symbol: string) => void;
   onReact: (messageId: string, emoji: string) => void;
+  onScrollToReply: (messageId: string) => void;
 }
 
-function MessageBubble({ msg, isOwn, isRead, isFirstInGroup, isLastInGroup, color, allMessages, reactions, currentUserId, onReply, onEdit, onTickerClick, onReact }: BubbleProps) {
+function MessageBubble({ msg, isOwn, isRead, isFirstInGroup, isLastInGroup, color, allMessages, reactions, currentUserId, onReply, onEdit, onTickerClick, onReact, onScrollToReply }: BubbleProps) {
   const [showActions, setShowActions] = useState(false);
   const actionsRef = useRef<HTMLDivElement>(null);
 
@@ -426,18 +427,22 @@ function MessageBubble({ msg, isOwn, isRead, isFirstInGroup, isLastInGroup, colo
       )}
 
       {repliedMsg && (
-        <div className={`text-[11px] px-3 py-1.5 mb-0.5 rounded-lg border-l-2 ${
-          isOwn
-            ? "bg-white/15 border-white/50 text-white"
-            : "bg-gray-100 dark:bg-slate-700/50 border-gray-300 dark:border-slate-500 text-gray-600 dark:text-slate-300"
-        }`}>
+        <button
+          type="button"
+          onClick={() => onScrollToReply(repliedMsg.id)}
+          className={`text-[11px] px-3 py-1.5 mb-0.5 rounded-lg border-l-2 text-left cursor-pointer transition-opacity hover:opacity-80 active:opacity-60 ${
+            isOwn
+              ? "bg-white/15 border-white/50 text-white"
+              : "bg-gray-100 dark:bg-slate-700/50 border-gray-300 dark:border-slate-500 text-gray-600 dark:text-slate-300"
+          }`}
+        >
           <span className="font-medium">{repliedMsg.senderName}</span>
           <span className="ml-1 opacity-90">
             {repliedMsg.type === "image" ? "Photo"
               : CARD_TYPES.has(repliedMsg.type) ? `Shared ${repliedMsg.type.replace("_", " ")}`
               : repliedMsg.content.slice(0, 60) + (repliedMsg.content.length > 60 ? "…" : "")}
           </span>
-        </div>
+        </button>
       )}
 
       <div className="group relative" ref={actionsRef}>
@@ -879,6 +884,14 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
     }
   }
 
+  function scrollToMessage(messageId: string) {
+    const el = document.getElementById(`msg-${messageId}`);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    el.classList.add("highlight-flash");
+    setTimeout(() => el.classList.remove("highlight-flash"), 1500);
+  }
+
   async function handleReact(messageId: string, emoji: string) {
     // Optimistic update
     setReactions((prev) => {
@@ -1125,8 +1138,8 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
           <p className="text-center text-sm text-gray-400 dark:text-slate-500 mt-12">No messages yet. Start the conversation!</p>
         )}
         {groupedMessages.map(({ msg, isFirstInGroup, isLastInGroup }) => (
-          <div key={msg.id} className={isFirstInGroup ? "mt-3 first:mt-0" : "mt-0.5"}>
-            <MessageBubble msg={msg} isOwn={msg.senderId === currentUserId} isRead={isMessageRead(msg.id)} isFirstInGroup={isFirstInGroup} isLastInGroup={isLastInGroup} color={USER_COLORS[userColorIndex(msg.senderId)]} allMessages={messages} reactions={reactions[msg.id] || []} currentUserId={currentUserId} onReply={startReply} onEdit={startEdit} onTickerClick={setPreviewTicker} onReact={handleReact} />
+          <div key={msg.id} id={`msg-${msg.id}`} className={isFirstInGroup ? "mt-3 first:mt-0" : "mt-0.5"}>
+            <MessageBubble msg={msg} isOwn={msg.senderId === currentUserId} isRead={isMessageRead(msg.id)} isFirstInGroup={isFirstInGroup} isLastInGroup={isLastInGroup} color={USER_COLORS[userColorIndex(msg.senderId)]} allMessages={messages} reactions={reactions[msg.id] || []} currentUserId={currentUserId} onReply={startReply} onEdit={startEdit} onTickerClick={setPreviewTicker} onReact={handleReact} onScrollToReply={scrollToMessage} />
           </div>
         ))}
         <div ref={bottomRef} />

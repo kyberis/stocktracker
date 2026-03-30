@@ -951,3 +951,13 @@ html.theme-studio .rounded-lg {
 .native-shell .safe-area-bottom {
   padding-bottom: env(safe-area-inset-bottom);
 }
+
+@keyframes highlightFlash {
+  0% { background-color: rgba(99, 102, 241, 0.25); }
+  100% { background-color: transparent; }
+}
+
+.highlight-flash {
+  animation: highlightFlash 1.5s ease-out;
+  border-radius: 0.75rem;
+}
