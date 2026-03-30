@@ -619,6 +619,7 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
   const [confirmClear, setConfirmClear] = useState(false);
   const [clearing, setClearing] = useState(false);
   const [reactions, setReactions] = useState<Record<string, ChatReaction[]>>({});
+  const [pendingImage, setPendingImage] = useState<string | null>(null);
   const tickerAbortRef = useRef<AbortController | null>(null);
   const tickerDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -961,11 +962,21 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
   async function processAndSendImage(file: File) {
     if (!file.type.startsWith("image/")) { setError("Only image files are allowed"); return; }
     try {
-      setSending(true);
       const dataUrl = await compressImage(file);
-      await sendMessage("image", dataUrl);
+      setPendingImage(dataUrl);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to process image");
+    }
+  }
+
+  async function confirmSendImage() {
+    if (!pendingImage) return;
+    try {
+      setSending(true);
+      await sendMessage("image", pendingImage);
+      setPendingImage(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to send image");
       setSending(false);
     }
   }
@@ -1187,6 +1198,45 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
         </div>
       )}
 
+      {/* Image preview before send */}
+      {pendingImage && (
+        <div className="px-4 py-3 border-t border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+          <div className="relative inline-block">
+            <img
+              src={pendingImage}
+              alt="Preview"
+              className="max-h-52 max-w-full rounded-xl border border-gray-200 dark:border-slate-700 object-contain"
+            />
+            <button
+              type="button"
+              onClick={() => setPendingImage(null)}
+              className="absolute -top-2 -right-2 p-1 rounded-full bg-gray-800/70 text-white hover:bg-gray-800 transition-colors"
+              aria-label="Remove image"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="flex items-center gap-2 mt-2.5">
+            <button
+              type="button"
+              onClick={confirmSendImage}
+              disabled={sending}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 disabled:opacity-40 transition-colors"
+            >
+              {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              Send
+            </button>
+            <button
+              type="button"
+              onClick={() => setPendingImage(null)}
+              className="px-4 py-2 rounded-xl text-sm font-medium text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Ticker autocomplete */}
       {tickerSuggestions.length > 0 && (
         <div className="px-4 pb-1">
@@ -1249,7 +1299,7 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
           onKeyDown={handleKeyDown}
           onPaste={handlePaste}
           placeholder={editingMsg ? "Edit your message… ⌥↵ send" : "Type a message… ⌥↵ send"}
-          className="flex-1 bg-gray-100 dark:bg-slate-800 text-gray-900 dark:text-slate-100 rounded-2xl px-4 py-2.5 text-sm placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none leading-snug"
+          className="flex-1 bg-gray-100 dark:bg-slate-800 text-gray-900 dark:text-slate-100 rounded-2xl px-4 py-2.5 text-base md:text-sm placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none leading-snug"
           style={{ maxHeight: "120px" }}
         />
         <button type="submit" disabled={!input.trim() || sending} className="p-2.5 mb-0.5 rounded-full bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
