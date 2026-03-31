@@ -6,11 +6,20 @@ import { useI18n } from "@/lib/i18n";
 import type { QuoteData } from "@/lib/types";
 
 const DISMISS_KEY = "market_move_toast_dismissed";
+const SHOWN_KEY = "market_move_toast_shown";
 const PUSH_SENT_KEY = "market_move_push_sent";
 const AUTO_DISMISS_MS = 15_000;
 const HOLDING_MOVE_THRESHOLD = 2;
 const MAX_HOLDING_MOVERS = 5;
 const QUOTES_CACHE_KEY = "trefolio-quotes-v3";
+
+function todayStr() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function isToday(stored: string | null): boolean {
+  return stored === todayStr();
+}
 
 interface HoldingMover {
   ticker: string;
@@ -54,9 +63,9 @@ function sendBrowserNotification(
   if (!("Notification" in window) || Notification.permission !== "granted") return;
 
   try {
-    const alreadySent = sessionStorage.getItem(PUSH_SENT_KEY);
-    if (alreadySent) return;
-    sessionStorage.setItem(PUSH_SENT_KEY, "1");
+    const alreadySent = localStorage.getItem(PUSH_SENT_KEY);
+    if (isToday(alreadySent)) return;
+    localStorage.setItem(PUSH_SENT_KEY, todayStr());
   } catch { /* private browsing */ }
 
   const fmt = (label: string, pct: number) =>
@@ -105,7 +114,8 @@ export default function MarketMoveToast({ demoMode = false }: Props) {
 
   useEffect(() => {
     try {
-      if (sessionStorage.getItem(DISMISS_KEY)) {
+      const dismissedDate = localStorage.getItem(DISMISS_KEY);
+      if (isToday(dismissedDate)) {
         setDismissed(true);
         return;
       }
@@ -114,15 +124,29 @@ export default function MarketMoveToast({ demoMode = false }: Props) {
 
   useEffect(() => {
     if (loading || dismissed) return;
-    if (hasAlerts) {
-      setExpanded(true);
-      setCollapsed(false);
-      timerRef.current = setTimeout(() => {
-        setExpanded(false);
-        setCollapsed(true);
-      }, AUTO_DISMISS_MS);
-      sendBrowserNotification(bigMovers, holdingMovers, t("marketAlertTitle") || "Market Alert");
+    if (!hasAlerts) return;
+
+    let alreadyShownToday = false;
+    try {
+      alreadyShownToday = isToday(localStorage.getItem(SHOWN_KEY));
+    } catch { /* private browsing */ }
+
+    if (alreadyShownToday) {
+      setExpanded(false);
+      setCollapsed(true);
+      return;
     }
+
+    setExpanded(true);
+    setCollapsed(false);
+    try { localStorage.setItem(SHOWN_KEY, todayStr()); } catch { /* ignore */ }
+
+    timerRef.current = setTimeout(() => {
+      setExpanded(false);
+      setCollapsed(true);
+    }, AUTO_DISMISS_MS);
+    sendBrowserNotification(bigMovers, holdingMovers, t("marketAlertTitle") || "Market Alert");
+
     return () => { if (timerRef.current) clearTimeout(timerRef.current); };
   }, [bigMovers, holdingMovers, hasAlerts, loading, dismissed, t]);
 
@@ -130,7 +154,7 @@ export default function MarketMoveToast({ demoMode = false }: Props) {
     setExpanded(false);
     setCollapsed(false);
     setDismissed(true);
-    try { sessionStorage.setItem(DISMISS_KEY, "1"); } catch { /* ignore */ }
+    try { localStorage.setItem(DISMISS_KEY, todayStr()); } catch { /* ignore */ }
     if (timerRef.current) clearTimeout(timerRef.current);
   }
 

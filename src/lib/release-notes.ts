@@ -29,6 +29,13 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "Nueva página de Análisis de Mercado con inteligencia de mercado curada por IA. Los resúmenes se procesan automáticamente de boletines financieros, se reescriben como contenido editorial original, se traducen a todos los idiomas activos y se publican tras revisión del administrador. Los tickers de tu portafolio se resaltan, y los administradores pueden enviar los resúmenes por email opcionalmente.",
         },
       },
+      {
+        type: "fix",
+        text: "Market move alert now shows expanded only once per day; subsequent page visits keep it minimized. Dismissing hides it for the rest of the day.",
+        translations: {
+          es: "La alerta de movimientos de mercado ahora se muestra expandida solo una vez al día; las visitas posteriores la mantienen minimizada. Al descartarla se oculta por el resto del día.",
+        },
+      },
     ],
   },
   {
