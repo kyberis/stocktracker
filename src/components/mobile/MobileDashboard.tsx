@@ -35,6 +35,8 @@ const DividendSummary = dynamic(() => import("@/components/DividendSummary"), { 
 const PerformancePage = dynamic(() => import("@/components/PerformancePage"), { ssr: false });
 const GrowthTab = dynamic(() => import("@/components/GrowthTab"), { ssr: false });
 const AddStockModal = dynamic(() => import("@/components/AddStockModal"), { ssr: false });
+const AddCryptoModal = dynamic(() => import("@/components/AddCryptoModal"), { ssr: false });
+const AddManualAssetModal = dynamic(() => import("@/components/AddManualAssetModal"), { ssr: false });
 const ProCompareCard = dynamic(() => import("@/components/ProCompareCard"), { ssr: false });
 const EventCalendar = dynamic(() => import("@/components/EventCalendar"), { ssr: false });
 const UpcomingEarnings = dynamic(() => import("@/components/UpcomingEarnings"), { ssr: false });
@@ -52,6 +54,9 @@ type DashboardTab = "portfolio" | "diversification" | "dividends" | "metrics" | 
 export default function MobileDashboard() {
   const [activeTab, setActiveTab] = useState<DashboardTab>("portfolio");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showAddMenu, setShowAddMenu] = useState(false);
+  const [showAddCrypto, setShowAddCrypto] = useState(false);
+  const [showAddAsset, setShowAddAsset] = useState(false);
   const [showReferralModal, setShowReferralModal] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
   const [paywallSurface, setPaywallSurface] = useState<string>("tab_gate");
@@ -187,9 +192,9 @@ export default function MobileDashboard() {
               </svg>
             </button>
             <button
-              onClick={() => setShowAddModal(true)}
+              onClick={() => setShowAddMenu(true)}
               className={`p-2 rounded-xl text-white ${holdingsAtLimit ? "bg-amber-500" : "bg-emerald-500"}`}
-              aria-label={t("addStock")}
+              aria-label={t("addAsset")}
             >
               {holdingsAtLimit ? (
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -331,8 +336,73 @@ export default function MobileDashboard() {
         )}
       </div>
 
+      {/* Add asset action sheet */}
+      {showAddMenu && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center">
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            onClick={() => setShowAddMenu(false)}
+          />
+          <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-t-3xl shadow-2xl animate-slide-up" style={{ paddingBottom: "env(safe-area-inset-bottom, 16px)" }}>
+            <div className="flex justify-center pt-3 pb-1">
+              <div className="w-10 h-1 rounded-full bg-gray-300 dark:bg-slate-600" />
+            </div>
+            <div className="px-5 pb-2 pt-1">
+              <h2 className="text-base font-bold text-gray-900 dark:text-white">{t("addAsset")}</h2>
+            </div>
+            <div className="px-2 pb-6 space-y-1">
+              <button
+                onClick={() => { setShowAddMenu(false); setShowAddModal(true); hapticImpact("Light"); }}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-left active:bg-gray-100 dark:active:bg-slate-800 transition-colors"
+              >
+                <div className="w-9 h-9 rounded-xl bg-emerald-500 flex items-center justify-center shrink-0">
+                  <svg className="w-4.5 h-4.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
+                  </svg>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">{t("addStock")}</p>
+                </div>
+              </button>
+              <button
+                onClick={() => { setShowAddMenu(false); setShowAddCrypto(true); hapticImpact("Light"); }}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-left active:bg-gray-100 dark:active:bg-slate-800 transition-colors"
+              >
+                <div className="w-9 h-9 rounded-xl bg-[#f7931a] flex items-center justify-center shrink-0">
+                  <span className="text-white text-sm font-bold">₿</span>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">{t("addCrypto")}</p>
+                </div>
+                <TierFeatureBadge requiredPlan="pro" size="xs" />
+              </button>
+              <button
+                onClick={() => { setShowAddMenu(false); setShowAddAsset(true); hapticImpact("Light"); }}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-left active:bg-gray-100 dark:active:bg-slate-800 transition-colors"
+              >
+                <div className="w-9 h-9 rounded-xl bg-violet-500 flex items-center justify-center shrink-0">
+                  <span className="text-white text-sm">🏠</span>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">{t("addManualAsset")}</p>
+                </div>
+                <TierFeatureBadge requiredPlan="starter" size="xs" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showAddModal && (
         <AddStockModal isOpen={showAddModal} onClose={() => setShowAddModal(false)} />
+      )}
+
+      {showAddCrypto && (
+        <AddCryptoModal isOpen={showAddCrypto} onClose={() => setShowAddCrypto(false)} />
+      )}
+
+      {showAddAsset && (
+        <AddManualAssetModal isOpen={showAddAsset} onClose={() => setShowAddAsset(false)} />
       )}
 
       {showPaywall && (

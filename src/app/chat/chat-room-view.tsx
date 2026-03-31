@@ -5,7 +5,7 @@ import Link from "next/link";
 import {
   Send, ImagePlus, Camera, Clock, AlertTriangle, Loader2,
   Link as LinkIcon, Users, Pencil, Reply, X, ChevronLeft, CheckCheck,
-  Pin, Share2, MoreVertical, Trash2, SmilePlus,
+  Pin, Share2, MoreVertical, Trash2, SmilePlus, Plus,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 
@@ -611,6 +611,8 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
   const [loading, setLoading] = useState(true);
   const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
   const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [showAttachMenu, setShowAttachMenu] = useState(false);
+  const attachMenuRef = useRef<HTMLDivElement>(null);
   const [previewTicker, setPreviewTicker] = useState<string | null>(null);
   const [editingMsg, setEditingMsg] = useState<ChatMessage | null>(null);
   const [tickerSuggestions, setTickerSuggestions] = useState<{ symbol: string; shortname: string; exchange: string }[]>([]);
@@ -641,6 +643,16 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
       .filter((p) => p.userId !== currentUserId && p.lastTypingAt && now - new Date(p.lastTypingAt + "Z").getTime() < TYPING_VISIBLE_MS)
       .map((p) => p.displayName);
   }, [participants, currentUserId]);
+
+  useEffect(() => {
+    if (!showAttachMenu) return;
+    function handleTap(e: MouseEvent | TouchEvent) {
+      if (attachMenuRef.current && !attachMenuRef.current.contains(e.target as Node)) setShowAttachMenu(false);
+    }
+    document.addEventListener("mousedown", handleTap);
+    document.addEventListener("touchstart", handleTap);
+    return () => { document.removeEventListener("mousedown", handleTap); document.removeEventListener("touchstart", handleTap); };
+  }, [showAttachMenu]);
 
   const [, setTick] = useState(0);
   useEffect(() => { const id = setInterval(() => setTick((t) => t + 1), 1000); return () => clearInterval(id); }, []);
@@ -1272,14 +1284,52 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
           <>
             <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
             <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleImageUpload} />
-            <button type="button" onClick={() => setShareModalOpen(true)} className="p-2 mb-0.5 rounded-lg text-gray-500 hover:text-indigo-600 hover:bg-gray-100 dark:hover:bg-slate-800 dark:text-slate-400 transition-colors" title="Share portfolio data">
+            {/* Mobile: single + button that opens a popover menu */}
+            <div className="relative md:hidden" ref={attachMenuRef}>
+              <button
+                type="button"
+                onClick={() => setShowAttachMenu((v) => !v)}
+                className={`p-2 mb-0.5 rounded-lg transition-colors ${showAttachMenu ? "text-indigo-600 bg-gray-100 dark:bg-slate-800" : "text-gray-500 hover:text-indigo-600 hover:bg-gray-100 dark:hover:bg-slate-800 dark:text-slate-400"}`}
+                aria-label="Attach"
+                aria-expanded={showAttachMenu}
+              >
+                <Plus className={`w-5 h-5 transition-transform ${showAttachMenu ? "rotate-45" : ""}`} />
+              </button>
+              {showAttachMenu && (
+                <div className="absolute bottom-full left-0 mb-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl shadow-lg z-50 py-1 w-48 overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => { setShareModalOpen(true); setShowAttachMenu(false); }}
+                    className="w-full text-left px-3 py-2.5 text-sm flex items-center gap-2.5 text-gray-700 dark:text-slate-300 active:bg-gray-100 dark:active:bg-slate-700 transition-colors"
+                  >
+                    <Share2 className="w-4 h-4 text-indigo-500 shrink-0" />
+                    Share portfolio
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { fileInputRef.current?.click(); setShowAttachMenu(false); }}
+                    className="w-full text-left px-3 py-2.5 text-sm flex items-center gap-2.5 text-gray-700 dark:text-slate-300 active:bg-gray-100 dark:active:bg-slate-700 transition-colors"
+                  >
+                    <ImagePlus className="w-4 h-4 text-emerald-500 shrink-0" />
+                    Upload image
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { cameraInputRef.current?.click(); setShowAttachMenu(false); }}
+                    className="w-full text-left px-3 py-2.5 text-sm flex items-center gap-2.5 text-gray-700 dark:text-slate-300 active:bg-gray-100 dark:active:bg-slate-700 transition-colors"
+                  >
+                    <Camera className="w-4 h-4 text-amber-500 shrink-0" />
+                    Take photo
+                  </button>
+                </div>
+              )}
+            </div>
+            {/* Desktop: individual action buttons */}
+            <button type="button" onClick={() => setShareModalOpen(true)} className="hidden md:block p-2 mb-0.5 rounded-lg text-gray-500 hover:text-indigo-600 hover:bg-gray-100 dark:hover:bg-slate-800 dark:text-slate-400 transition-colors" title="Share portfolio data">
               <Share2 className="w-5 h-5" />
             </button>
-            <button type="button" onClick={() => fileInputRef.current?.click()} className="p-2 mb-0.5 rounded-lg text-gray-500 hover:text-indigo-600 hover:bg-gray-100 dark:hover:bg-slate-800 dark:text-slate-400 transition-colors" title="Upload image">
+            <button type="button" onClick={() => fileInputRef.current?.click()} className="hidden md:block p-2 mb-0.5 rounded-lg text-gray-500 hover:text-indigo-600 hover:bg-gray-100 dark:hover:bg-slate-800 dark:text-slate-400 transition-colors" title="Upload image">
               <ImagePlus className="w-5 h-5" />
-            </button>
-            <button type="button" onClick={() => cameraInputRef.current?.click()} className="p-2 mb-0.5 rounded-lg text-gray-500 hover:text-indigo-600 hover:bg-gray-100 dark:hover:bg-slate-800 dark:text-slate-400 transition-colors md:hidden" title="Take photo">
-              <Camera className="w-5 h-5" />
             </button>
           </>
         )}
