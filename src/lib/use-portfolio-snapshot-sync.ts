@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef } from "react";
 import { usePortfolio } from "@/lib/portfolio-context";
-import { calculatePortfolioTotals, computeValueByAssetType } from "@/lib/portfolio-summary";
+import { computeValueByAssetType } from "@/lib/portfolio-summary";
 import { isAnyMarketActive } from "@/lib/market-hours";
 
 /** Match /api/portfolio/snapshot 5-minute UTC buckets — writes create new rows while the app stays open. */
@@ -15,7 +15,7 @@ const SNAPSHOT_INTERVAL_MS = 5 * 60 * 1000;
  */
 export function usePortfolioSnapshotSync(options: { demoMode: boolean }) {
   const { demoMode } = options;
-  const { holdings, cashEntries, quotes, exchangeRates, activePortfolioId } =
+  const { holdings, quotes, exchangeRates, activePortfolioId } =
     usePortfolio();
   const portfolioIdRef = useRef(activePortfolioId);
   portfolioIdRef.current = activePortfolioId;
@@ -30,16 +30,15 @@ export function usePortfolioSnapshotSync(options: { demoMode: boolean }) {
     );
     if (!allHaveFreshQuote) return;
 
-    const totals = calculatePortfolioTotals(holdings, cashEntries, quotes, exchangeRates, "EUR");
-    if (totals.totalCurrentEUR <= 0) return;
-
     const byType = computeValueByAssetType(holdings, quotes, exchangeRates, "EUR");
+    const holdingsValue = byType.stock + byType.etf + byType.crypto;
+    if (holdingsValue <= 0) return;
 
     fetch("/api/portfolio/snapshot", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        totalValueEUR: totals.totalCurrentEUR,
+        totalValueEUR: holdingsValue,
         portfolioId: portfolioIdRef.current || "",
         stockValueEUR: byType.stock,
         etfValueEUR: byType.etf,
@@ -48,7 +47,7 @@ export function usePortfolioSnapshotSync(options: { demoMode: boolean }) {
     }).catch(() => {});
     // activePortfolioId omitted from deps — portfolioIdRef avoids race when id updates before holdings.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [holdings, cashEntries, quotes, exchangeRates, demoMode]);
+  }, [holdings, quotes, exchangeRates, demoMode]);
 
   useEffect(() => {
     postSnapshot();

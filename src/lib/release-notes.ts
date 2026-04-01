@@ -31,6 +31,13 @@ export const releaseNotes: ReleaseEntry[] = [
       },
       {
         type: "fix",
+        text: "Portfolio chart no longer shows spikes when adding or removing cash and manual assets. The chart now tracks holdings value only, keeping it consistent with historical data.",
+        translations: {
+          es: "El gráfico del portafolio ya no muestra picos al añadir o eliminar efectivo y activos manuales. El gráfico ahora muestra solo el valor de las inversiones, manteniéndolo consistente con los datos históricos.",
+        },
+      },
+      {
+        type: "fix",
         text: "Market move alert now shows expanded only once per day; subsequent page visits keep it minimized. Dismissing hides it for the rest of the day.",
         translations: {
           es: "La alerta de movimientos de mercado ahora se muestra expandida solo una vez al día; las visitas posteriores la mantienen minimizada. Al descartarla se oculta por el resto del día.",

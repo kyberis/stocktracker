@@ -4,7 +4,6 @@ import {
   listDistinctHoldingTickersForUser,
   listUserIdsWithHoldings,
   listHoldings,
-  listCashEntries,
   listDistinctPortfolioIdsForUser,
 } from "@/lib/db";
 import type { DistinctHoldingTicker } from "@/lib/db/holdings";
@@ -14,7 +13,7 @@ import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
 import { computeValueByAssetType } from "@/lib/portfolio-summary";
 import { generateId } from "@/lib/utils";
 import { isAnyMarketActive } from "@/lib/market-hours";
-import type { ExchangeRates, Holding, QuoteData } from "@/lib/types";
+import type { CashEntry, ExchangeRates, Holding, QuoteData } from "@/lib/types";
 
 const QUOTE_BATCH_SIZE = 15;
 
@@ -138,8 +137,6 @@ async function writeLiveSnapshotsForUser(
   const hasQuote = (h: { ticker: string }) =>
     (quotes[h.ticker]?.regularMarketPrice ?? 0) > 0;
 
-  const cashAll = await listCashEntries(userId);
-
   interface SnapshotRow {
     portfolioId: string;
     value: number;
@@ -156,13 +153,16 @@ async function writeLiveSnapshotsForUser(
   }
 
   if (holdingsAll.every(hasQuote)) {
-    const totalsAll = calculatePortfolioTotals(holdingsAll, cashAll, quotes, exchangeRates, "EUR");
-    if (totalsAll.totalCurrentEUR > 0) {
+    const av = assetValues(holdingsAll);
+    const holdingsValue = av.stockValue + av.etfValue + av.cryptoValue;
+    const emptyCash: CashEntry[] = [];
+    const totalsAll = calculatePortfolioTotals(holdingsAll, emptyCash, quotes, exchangeRates, "EUR");
+    if (holdingsValue > 0) {
       rows.push({
         portfolioId: "",
-        value: totalsAll.totalCurrentEUR,
+        value: holdingsValue,
         invested: totalsAll.totalCostEUR,
-        ...assetValues(holdingsAll),
+        ...av,
       });
     }
   }
@@ -170,16 +170,18 @@ async function writeLiveSnapshotsForUser(
   const portfolioIds = await listDistinctPortfolioIdsForUser(userId);
   for (const pid of portfolioIds) {
     const h = await listHoldings(userId, pid);
-    const c = await listCashEntries(userId, pid);
-    if (h.length === 0 && c.length === 0) continue;
+    if (h.length === 0) continue;
     if (!h.every(hasQuote)) continue;
-    const t = calculatePortfolioTotals(h, c, quotes, exchangeRates, "EUR");
-    if (t.totalCurrentEUR <= 0) continue;
+    const av = assetValues(h);
+    const holdingsValue = av.stockValue + av.etfValue + av.cryptoValue;
+    if (holdingsValue <= 0) continue;
+    const emptyCash: CashEntry[] = [];
+    const t = calculatePortfolioTotals(h, emptyCash, quotes, exchangeRates, "EUR");
     rows.push({
       portfolioId: pid,
-      value: t.totalCurrentEUR,
+      value: holdingsValue,
       invested: t.totalCostEUR,
-      ...assetValues(h),
+      ...av,
     });
   }
 

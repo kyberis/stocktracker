@@ -341,12 +341,19 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
   const isFilteredSingle = assetFilter !== "all";
 
   const effectivePoints: SnapshotPoint[] = useMemo(() => {
-    if (!isFilteredSingle) return points;
-    const key = assetFilter === "stock" ? "stockValue" : assetFilter === "etf" ? "etfValue" : "cryptoValue";
     return points.map((p) => {
       const perTypeSum = (p.stockValue ?? 0) + (p.etfValue ?? 0) + (p.cryptoValue ?? 0);
       const hasPerType = perTypeSum > 0;
-      return { ...p, value: hasPerType ? (p[key] ?? 0) : p.value };
+      if (!hasPerType) return p;
+
+      if (isFilteredSingle) {
+        const key = assetFilter === "stock" ? "stockValue" : assetFilter === "etf" ? "etfValue" : "cryptoValue";
+        return { ...p, value: p[key] ?? 0 };
+      }
+
+      // "All" view: use holdings-only sum so the chart stays consistent with
+      // historical backfill snapshots (which never include manual cash/assets).
+      return { ...p, value: perTypeSum };
     });
   }, [points, isFilteredSingle, assetFilter]);
 
