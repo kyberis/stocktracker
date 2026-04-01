@@ -432,7 +432,7 @@ function MessageBubble({ msg, isOwn, isRead, isFirstInGroup, isLastInGroup, colo
           onClick={() => onScrollToReply(repliedMsg.id)}
           className={`text-[11px] px-3 py-1.5 mb-0.5 rounded-lg border-l-2 text-left cursor-pointer transition-opacity hover:opacity-80 active:opacity-60 ${
             isOwn
-              ? "bg-white/15 border-white/50 text-white"
+              ? "bg-white/15 border-white/50 text-white/70"
               : "bg-gray-100 dark:bg-slate-700/50 border-gray-300 dark:border-slate-500 text-gray-600 dark:text-slate-300"
           }`}
         >
