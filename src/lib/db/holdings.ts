@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
 import { ensureInitialized } from "./client";
-import { str, num, holdingAssetType, normalizeTickerForExchange, EXCHANGE_SUFFIX_MAP } from "./helpers";
+import { str, num, holdingAssetType, normalizeTickerForExchange, EXCHANGE_SUFFIX_MAP, normalizeCryptoTicker } from "./helpers";
 import type { Holding, HoldingAssetType, ExchangeRates } from "@/lib/types";
 import { deriveHoldingsFromTransactions } from "@/lib/derive-holdings";
 import { seedHoldingsForUser, seedCashForUser, seedTransactionsForUser } from "./seed";
@@ -20,10 +20,11 @@ const FX_PAIRS = ["EURUSD", "EURGBP", "EURDKK", "EURCAD"];
 function yahooTickerForHolding(h: { ticker: string; exchange: string }): string {
   if (h.ticker.includes(".")) return h.ticker;
   if (h.exchange) {
+    if (h.exchange.toUpperCase() === "CRYPTO") return normalizeCryptoTicker(h.ticker);
     const suffix = EXCHANGE_SUFFIX_MAP[h.exchange.toUpperCase()];
     if (suffix) return `${h.ticker}${suffix}`;
   }
-  return h.ticker;
+  return normalizeCryptoTicker(h.ticker);
 }
 
 async function enrichValueInEUR(derived: Holding[]): Promise<void> {

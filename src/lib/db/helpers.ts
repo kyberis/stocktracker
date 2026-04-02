@@ -259,6 +259,14 @@ export function normalizeTickerForExchange(ticker: string, exchange: string): st
 
 const KNOWN_SUFFIXES = new Set(Object.values(EXCHANGE_SUFFIX_MAP));
 
+/**
+ * Normalize a crypto ticker for Yahoo Finance: replace spaces with hyphens.
+ * "BTC USD" → "BTC-USD", "ETH EUR" → "ETH-EUR". Non-crypto tickers pass through unchanged.
+ */
+export function normalizeCryptoTicker(ticker: string): string {
+  return ticker.includes(" ") ? ticker.replace(/\s+/g, "-") : ticker;
+}
+
 /** Strip known exchange suffixes (.L, .DE, .TO, …) to get the base ticker. */
 export function baseTickerName(ticker: string): string {
   for (const sfx of KNOWN_SUFFIXES) {

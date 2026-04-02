@@ -80,7 +80,8 @@ export const GET = withMetrics("/api/quote", async (request: NextRequest) => {
     const toCache: Record<string, ProviderQuoteResult> = {};
 
     const stockPromises = misses.map(async (symbol) => {
-      const ticker = await resolveIsinToTicker(yahoo, symbol);
+      const resolved = await resolveIsinToTicker(yahoo, symbol);
+      const ticker = resolved.includes(" ") ? resolved.replace(/\s+/g, "-") : resolved;
       try {
         const quote = await yahoo.getQuote(ticker);
         if (quote.regularMarketPrice > 0) {

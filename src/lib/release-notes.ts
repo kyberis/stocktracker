@@ -23,6 +23,13 @@ export const releaseNotes: ReleaseEntry[] = [
     titleTranslations: { es: "Análisis de Mercado" },
     changes: [
       {
+        type: "fix",
+        text: "Fixed crypto holdings showing no EUR value and missing snapshots when the ticker contained spaces instead of hyphens (e.g. 'BTC USD' instead of 'BTC-USD'). Tickers are now normalized across all quote fetching, snapshot generation, and cron refresh paths.",
+        translations: {
+          es: "Corregido que las criptomonedas no mostraran valor en EUR ni generaran snapshots cuando el ticker contenía espacios en lugar de guiones (ej. 'BTC USD' en vez de 'BTC-USD'). Los tickers ahora se normalizan en todas las rutas de obtención de cotizaciones, generación de snapshots y cron de actualización.",
+        },
+      },
+      {
         type: "feature",
         text: "New Market Insights page with AI-curated market intelligence. Digests are automatically processed from financial newsletters, rewritten as original editorial content, translated into all active user languages, and published after admin review. Tickers in your portfolio are highlighted, and admins can optionally send digests via email.",
         translations: {

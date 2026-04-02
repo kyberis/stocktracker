@@ -99,7 +99,8 @@ async function buildQuotesAndExchangeRates(distinctTickers: DistinctHoldingTicke
     const batch = uniqueTickers.slice(i, i + QUOTE_BATCH_SIZE);
     const results = await Promise.allSettled(
       batch.map(async (ticker) => {
-        const q = await yahoo.getQuote(ticker);
+        const yahooTicker = ticker.includes(" ") ? ticker.replace(/\s+/g, "-") : ticker;
+        const q = await yahoo.getQuote(yahooTicker);
         return { ticker, q };
       }),
     );

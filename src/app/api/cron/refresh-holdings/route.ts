@@ -67,7 +67,8 @@ const runRefreshHoldings = withCronLogging("refresh-holdings", async () => {
     const batch = uniqueTickers.slice(i, i + QUOTE_BATCH_SIZE);
     const results = await Promise.allSettled(
       batch.map(async (ticker) => {
-        const resolved = await resolveIsinToTicker(yahoo, ticker);
+        let resolved = await resolveIsinToTicker(yahoo, ticker);
+        if (resolved.includes(" ")) resolved = resolved.replace(/\s+/g, "-");
         const q = await yahoo.getQuote(resolved);
         return { ticker, price: q.regularMarketPrice, currency: q.currency };
       }),

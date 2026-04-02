@@ -117,7 +117,7 @@ export default function AddCryptoModal({ isOpen, onClose }: AddCryptoModalProps)
     const shares = parseFloat(quantity);
     const pricePerShare = parseFloat(price);
     const totalAmount = shares * pricePerShare;
-    const tickerNorm = ticker.trim().toUpperCase();
+    const tickerNorm = ticker.trim().toUpperCase().replace(/\s+/g, "-");
 
     try {
       const qp = activePortfolioId ? `?portfolioId=${encodeURIComponent(activePortfolioId)}` : "";
