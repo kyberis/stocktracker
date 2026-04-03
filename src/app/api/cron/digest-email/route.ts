@@ -7,7 +7,7 @@ import { digestExistsByGmailId, insertMarketDigest, getActiveUserLanguages } fro
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
 
-const DIGEST_QUERY = "to:digest@trefolio.com is:unread";
+const DIGEST_QUERY = "to:digest@trefolio.com from:suarez84@gmail.com is:unread";
 
 const REWRITE_SYSTEM_PROMPT = `You are trefolio's market analyst. Given raw source material from a financial newsletter, produce an **original market insight article** in trefolio's editorial voice.
 
