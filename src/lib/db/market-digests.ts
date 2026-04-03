@@ -112,7 +112,7 @@ export async function insertMarketDigest(data: {
   const digestId = randomUUID();
 
   await client.execute({
-    sql: `INSERT INTO market_digests
+    sql: `INSERT OR IGNORE INTO market_digests
       (id, gmail_message_id, sender, original_subject, received_at, raw_text, raw_html,
        mentioned_tickers, sectors, sentiment, ai_model, tokens_used, status)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft')`,

@@ -160,15 +160,18 @@ function buildDigestEmailHtml(
 
   const ps = portfolioStats;
   const portfolioSection = ps ? buildPortfolioSection(ps) : "";
+  const baseUrl = process.env.APP_BASE_URL || "https://trefolio.com";
+  const logoUrl = `${baseUrl}/email-logo@2x.png`;
 
   return `<!DOCTYPE html><html><head><meta charset="utf-8"/></head><body style="margin:0;padding:0;background:#f8fafc;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
 <div style="max-width:560px;margin:24px auto;background:#fff;border-radius:12px;overflow:hidden;">
 
-<div style="padding:24px 28px;border-bottom:1px solid #e5e7eb;">
-  <div style="text-align:center;margin-bottom:12px;">
-    <div style="font-size:24px;margin-bottom:4px;">🍀</div>
-    <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;">trefolio Market Insight</div>
-  </div>
+<div style="background:linear-gradient(135deg,#059669 0%,#10b981 100%);padding:24px 28px;text-align:center;">
+  <img src="${logoUrl}" alt="trefolio" width="36" height="36" style="display:inline-block;width:36px;height:36px;border-radius:8px;vertical-align:middle;margin-right:8px;" /><span style="color:#fff;font-size:20px;font-weight:700;vertical-align:middle;letter-spacing:-0.3px;">trefolio</span>
+  <div style="font-size:11px;color:rgba(255,255,255,0.85);text-transform:uppercase;letter-spacing:0.05em;margin-top:8px;">Market Insight</div>
+</div>
+
+<div style="padding:20px 28px;border-bottom:1px solid #e5e7eb;text-align:center;">
   <h1 style="margin:0 0 8px;font-size:20px;color:#0f172a;text-align:center;line-height:1.3;">${title}</h1>
   <div style="text-align:center;">
     <span style="display:inline-block;padding:3px 12px;border-radius:12px;font-size:11px;font-weight:600;color:white;background:${sentimentColor};">

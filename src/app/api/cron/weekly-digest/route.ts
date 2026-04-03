@@ -79,10 +79,15 @@ function buildWeeklyDigestEmail(displayName: string, summaryText: string, stats:
     ? `${currencySymbol}${stats.dividendsReceived.toFixed(2)}`
     : "None this week";
 
+  const logoUrl = `${baseUrl}/email-logo@2x.png`;
+
   return `<!DOCTYPE html><html><head><meta charset="utf-8"/></head><body style="margin:0;padding:0;background:#f8fafc;font-family:'DM Sans',-apple-system,sans-serif;">
-<div style="max-width:520px;margin:24px auto;background:#fff;border-radius:12px;padding:28px;">
+<div style="max-width:520px;margin:24px auto;background:#fff;border-radius:12px;overflow:hidden;">
+<div style="background:linear-gradient(135deg,#059669 0%,#10b981 100%);padding:24px 28px;text-align:center;">
+<img src="${logoUrl}" alt="trefolio" width="36" height="36" style="display:inline-block;width:36px;height:36px;border-radius:8px;vertical-align:middle;margin-right:8px;" /><span style="color:#fff;font-size:20px;font-weight:700;vertical-align:middle;letter-spacing:-0.3px;">trefolio</span>
+</div>
+<div style="padding:28px;">
 <div style="text-align:center;margin-bottom:20px;">
-<div style="font-size:24px;margin-bottom:4px;">🍀</div>
 <div style="font-size:18px;font-weight:700;color:#0f172a;">Your Weekly Portfolio Digest</div>
 <div style="font-size:12px;color:#64748b;">${weekStart} — ${weekEnd}</div>
 </div>
@@ -107,7 +112,7 @@ function buildWeeklyDigestEmail(displayName: string, summaryText: string, stats:
 <div style="font-size:10px;color:#94a3b8;text-align:center;font-style:italic;">
 AI-generated summary. Not financial advice. <a href="{{unsubscribe_url}}" style="color:#94a3b8;">Unsubscribe</a>
 </div>
-</div></body></html>`;
+</div></div></body></html>`;
 }
 
 const runWeeklyDigest = withCronLogging("weekly-digest", async () => {
@@ -316,7 +321,7 @@ Week: ${weekStart} to ${weekEnd}`;
       incrementGlobalAiTokens(tokensUsed).catch(() => {});
 
       const baseUrl = process.env.APP_BASE_URL || "https://trefolio.com";
-      const digestSubject = `🍀 Your Weekly Portfolio Digest — ${weekStart} to ${weekEnd}`;
+      const digestSubject = `Your Weekly Portfolio Digest — ${weekStart} to ${weekEnd}`;
       const html = buildWeeklyDigestEmail(user.displayName, summaryText, stats, baseUrl, weekStart, weekEnd);
       const emailResult = await sendEmail({
         to: user.email,
