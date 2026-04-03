@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { trackEvent, getGlobalOpenAIApiKey, listHoldings, findUserById, incrementAiTokenUsage, incrementDailyAiTokenUsage, insertAiLog } from "@/lib/db";
+import { trackEvent, getGlobalOpenAIApiKey, listHoldings, findUserById, incrementAiTokenUsage, incrementDailyAiTokenUsage, insertAiLog, getAiModelForFlow } from "@/lib/db";
 import { checkAiImportRateLimit, checkGlobalAiCap, incrementGlobalAiCalls, incrementGlobalAiTokens } from "@/lib/rate-limit";
 import { withMetrics } from "@/lib/with-metrics";
 import { portfolioImportsTotal, rateLimitHitsTotal } from "@/lib/metrics";
@@ -164,6 +164,7 @@ export const POST = withMetrics("/api/import-portfolio", async (req: NextRequest
 
   const aiLogStart = Date.now();
   const promptUser = typeof messages[1]?.content === "string" ? messages[1].content : "[multimodal content]";
+  const model = await getAiModelForFlow("import_portfolio");
 
   try {
     const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -173,7 +174,7 @@ export const POST = withMetrics("/api/import-portfolio", async (req: NextRequest
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model,
         max_tokens: 8000,
         temperature: 0,
         messages,
@@ -185,7 +186,7 @@ export const POST = withMetrics("/api/import-portfolio", async (req: NextRequest
     if (!openaiRes.ok) {
       const errText = await openaiRes.text();
       console.error("OpenAI import error:", openaiRes.status, errText);
-      insertAiLog({ userId: session.userId, source: "import", model: "gpt-4o-mini", promptSystem: EXTRACTION_PROMPT, promptUser, durationMs, status: "error", errorMessage: errText.slice(0, 2000) }).catch(() => {});
+      insertAiLog({ userId: session.userId, source: "import", model, promptSystem: EXTRACTION_PROMPT, promptUser, durationMs, status: "error", errorMessage: errText.slice(0, 2000) }).catch(() => {});
       return NextResponse.json(
         { error: "AI service error. Check your API key and quota." },
         { status: 502 }
@@ -197,7 +198,7 @@ export const POST = withMetrics("/api/import-portfolio", async (req: NextRequest
     const importInputTokens = data.usage?.prompt_tokens ?? 0;
     const importOutputTokens = data.usage?.completion_tokens ?? 0;
     const responseContent = data.choices?.[0]?.message?.content || "";
-    insertAiLog({ userId: session.userId, source: "import", model: "gpt-4o-mini", promptSystem: EXTRACTION_PROMPT, promptUser, response: responseContent, tokensUsed: importTokens, tokensInput: importInputTokens, tokensOutput: importOutputTokens, durationMs }).catch(() => {});
+    insertAiLog({ userId: session.userId, source: "import", model, promptSystem: EXTRACTION_PROMPT, promptUser, response: responseContent, tokensUsed: importTokens, tokensInput: importInputTokens, tokensOutput: importOutputTokens, durationMs }).catch(() => {});
     Promise.all([
       incrementAiTokenUsage(session.userId, importTokens),
       incrementDailyAiTokenUsage(session.userId, importTokens),

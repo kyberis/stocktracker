@@ -26,6 +26,7 @@ interface BatchSettingsData {
   grafana?: { url: string; source: "cloud" | "local" | "none"; cloudConfigured: boolean };
   capacity?: { available: boolean; currentCount: number; maxCount: number; remaining: number };
   rateLimits?: { perUser: any[] };
+  aiModels?: Record<string, string>;
 }
 
 const BatchSettingsContext = createContext<BatchSettingsData | null | undefined>(undefined);
@@ -659,6 +660,160 @@ const EXTERNAL_SERVICES = [
     ),
   },
 ] as const;
+
+/* ── AI Model Config Card ─────────────────────────────────── */
+
+const AI_FLOW_META_UI: Record<string, { label: string; description: string }> = {
+  ai_analysis: { label: "AI Analysis", description: "Stock fundamentals, intelligence, crypto, tax" },
+  portfolio_chat: { label: "Portfolio Chat", description: "Interactive portfolio assistant" },
+  chart_chat: { label: "Chart Chat", description: "Chart context Q&A" },
+  portfolio_review: { label: "Portfolio Review", description: "Long-form portfolio review" },
+  portfolio_score: { label: "Portfolio Score", description: "Structured score (JSON)" },
+  import_portfolio: { label: "Import Parsing", description: "CSV/screenshot import" },
+  device_summary: { label: "Device Summary", description: "Desk display summary" },
+  support_chat: { label: "Support Chat", description: "In-app support assistant" },
+  weekly_digest: { label: "Weekly Digest", description: "Digest paragraph (cron)" },
+  weekly_digest_admin: { label: "Weekly Digest (Admin)", description: "Admin-triggered digest" },
+  digest_email: { label: "Market Digest Email", description: "Newsletter rewrite pipeline" },
+};
+
+const AI_FLOW_KEYS_UI = Object.keys(AI_FLOW_META_UI);
+
+const ALLOWED_MODELS_UI = [
+  { value: "gpt-4o-mini", label: "GPT-4o Mini", tier: "low" },
+  { value: "gpt-4o", label: "GPT-4o", tier: "high" },
+  { value: "gpt-4.1-nano", label: "GPT-4.1 Nano", tier: "low" },
+  { value: "gpt-4.1-mini", label: "GPT-4.1 Mini", tier: "medium" },
+  { value: "gpt-4.1", label: "GPT-4.1", tier: "high" },
+  { value: "o4-mini", label: "o4-mini", tier: "medium" },
+];
+
+const COST_TIER_COLORS: Record<string, string> = {
+  low: "text-green-600 dark:text-green-400",
+  medium: "text-yellow-600 dark:text-yellow-400",
+  high: "text-red-600 dark:text-red-400",
+};
+
+function AiModelConfigCard() {
+  const batch = useBatchSettings();
+  const [config, setConfig] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const loadedRef = useRef(false);
+
+  useEffect(() => {
+    if (loadedRef.current || batch === undefined) return;
+    loadedRef.current = true;
+    if (batch?.aiModels) {
+      setConfig(batch.aiModels);
+    } else {
+      fetch("/api/admin/ai-models")
+        .then((r) => r.json())
+        .then((d) => setConfig(d.config || {}))
+        .catch(() => {});
+    }
+  }, [batch]);
+
+  const handleChange = (flowKey: string, model: string) => {
+    setConfig((prev) => ({ ...prev, [flowKey]: model }));
+    setSaved(false);
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch("/api/admin/ai-models", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(config),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setConfig(data.config);
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2000);
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleReset = () => {
+    const defaults: Record<string, string> = {};
+    for (const key of AI_FLOW_KEYS_UI) defaults[key] = "gpt-4o-mini";
+    setConfig(defaults);
+    setSaved(false);
+  };
+
+  const getTier = (model: string) => ALLOWED_MODELS_UI.find((m) => m.value === model)?.tier || "low";
+
+  return (
+    <div className="card p-6">
+      <div className="flex items-start justify-between mb-4">
+        <div>
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-white">AI Model Configuration</h3>
+          <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">
+            Select which OpenAI model to use for each AI flow. Changes take effect within 5 minutes.
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <button onClick={handleReset} className="btn-secondary text-xs px-3 py-1.5">
+            Reset All
+          </button>
+          <button onClick={handleSave} disabled={saving} className="btn-primary text-xs px-3 py-1.5">
+            {saving ? "Saving…" : saved ? "Saved ✓" : "Save"}
+          </button>
+        </div>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="w-full text-xs">
+          <thead>
+            <tr className="border-b border-gray-200 dark:border-slate-700">
+              <th className="text-left py-2 pr-4 font-medium text-gray-500 dark:text-slate-400">Flow</th>
+              <th className="text-left py-2 pr-4 font-medium text-gray-500 dark:text-slate-400">Description</th>
+              <th className="text-left py-2 pr-4 font-medium text-gray-500 dark:text-slate-400">Model</th>
+              <th className="text-left py-2 font-medium text-gray-500 dark:text-slate-400">Cost</th>
+            </tr>
+          </thead>
+          <tbody>
+            {AI_FLOW_KEYS_UI.map((key) => {
+              const meta = AI_FLOW_META_UI[key];
+              const current = config[key] || "gpt-4o-mini";
+              const tier = getTier(current);
+              return (
+                <tr key={key} className="border-b border-gray-100 dark:border-slate-800">
+                  <td className="py-2 pr-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">
+                    {meta.label}
+                  </td>
+                  <td className="py-2 pr-4 text-gray-500 dark:text-slate-400">
+                    {meta.description}
+                  </td>
+                  <td className="py-2 pr-4">
+                    <select
+                      value={current}
+                      onChange={(e) => handleChange(key, e.target.value)}
+                      className="rounded border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-white text-xs px-2 py-1"
+                    >
+                      {ALLOWED_MODELS_UI.map((m) => (
+                        <option key={m.value} value={m.value}>
+                          {m.label}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td className={`py-2 font-medium ${COST_TIER_COLORS[tier]}`}>
+                    {tier === "low" ? "$ Low" : tier === "medium" ? "$$ Med" : "$$$ High"}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
 
 function ExternalServicesCard() {
   return (
@@ -2361,6 +2516,7 @@ export default function SettingsTab() {
   return (
     <BatchSettingsContext.Provider value={batch}>
       <div className="space-y-6">
+        <AiModelConfigCard />
         <ExternalServicesCard />
         <PromoBannerCard />
         <UtmTaxonomyCard />

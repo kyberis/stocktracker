@@ -3,7 +3,7 @@ export const maxDuration = 60;
 
 import { NextRequest } from "next/server";
 import { requireFeatureAccess } from "@/lib/auth/guards";
-import { findUserById, getGlobalOpenAIApiKey, incrementAiUsage, incrementDailyAiUsage, incrementAiTokenUsage, incrementDailyAiTokenUsage, insertAiLog } from "@/lib/db";
+import { findUserById, getGlobalOpenAIApiKey, incrementAiUsage, incrementDailyAiUsage, incrementAiTokenUsage, incrementDailyAiTokenUsage, insertAiLog, getAiModelForFlow } from "@/lib/db";
 import { aiCallsTotal, aiRequestDuration, rateLimitHitsTotal } from "@/lib/metrics";
 import { checkAiRateLimit, checkGlobalAiCap, incrementGlobalAiCalls, incrementGlobalAiTokens } from "@/lib/rate-limit";
 import { createAiStream } from "@/lib/ai-stream";
@@ -100,6 +100,7 @@ Rules:
     ...messages.map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
   ];
 
+  const model = await getAiModelForFlow("chart_chat");
   const endTimer = aiRequestDuration.startTimer({ analysis_type: "chart_chat" });
   const aiLogStart = Date.now();
   const lastUserMsg = messages[messages.length - 1]?.content || "";
@@ -112,7 +113,7 @@ Rules:
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model,
         stream: true,
         stream_options: { include_usage: true },
         max_tokens: 900,
@@ -128,7 +129,7 @@ Rules:
       aiCallsTotal.inc({ status: "error", analysis_type: "chart_chat" });
       const errText = await openaiRes.text();
       console.error("OpenAI chart-chat error:", openaiRes.status, errText);
-      insertAiLog({ userId: session.userId, source: "chart_chat", model: "gpt-4o-mini", promptSystem: systemPrompt, promptUser: lastUserMsg, durationMs, status: "error", errorMessage: errText.slice(0, 2000) }).catch(() => {});
+      insertAiLog({ userId: session.userId, source: "chart_chat", model, promptSystem: systemPrompt, promptUser: lastUserMsg, durationMs, status: "error", errorMessage: errText.slice(0, 2000) }).catch(() => {});
       return Response.json(
         { error: "AI service returned an error. Check your API key and quota." },
         { status: 502 },
@@ -136,7 +137,7 @@ Rules:
     }
 
     aiCallsTotal.inc({ status: "success", analysis_type: "chart_chat" });
-    const logId = await insertAiLog({ userId: session.userId, source: "chart_chat", model: "gpt-4o-mini", promptSystem: systemPrompt, promptUser: lastUserMsg, durationMs }).catch(() => "");
+    const logId = await insertAiLog({ userId: session.userId, source: "chart_chat", model, promptSystem: systemPrompt, promptUser: lastUserMsg, durationMs }).catch(() => "");
     await Promise.all([
       incrementAiUsage(session.userId),
       incrementDailyAiUsage(session.userId),
@@ -145,7 +146,7 @@ Rules:
 
     const stream = createAiStream(openaiRes.body, {
       aiLogId: logId || undefined,
-      aiLogModel: "gpt-4o-mini",
+      aiLogModel: model,
       onComplete: async (tokens) => {
         await Promise.all([
           incrementAiTokenUsage(session.userId, tokens),

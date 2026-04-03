@@ -10,7 +10,7 @@ import {
   insertAiLog,
   logEmailSend,
 } from "@/lib/db";
-import { getGlobalOpenAIApiKey } from "@/lib/db/settings";
+import { getGlobalOpenAIApiKey, getAiModelForFlow } from "@/lib/db/settings";
 import { sendEmail, getFromAddress } from "@/lib/email";
 import { withCronLogging, verifyCronAuth } from "@/lib/cron-logging";
 import { incrementGlobalAiCalls, incrementGlobalAiTokens } from "@/lib/rate-limit";
@@ -265,6 +265,7 @@ Worst performer: ${worstStr}
 Dividends received: ${divStr}
 Week: ${weekStart} to ${weekEnd}`;
 
+      const digestModel = await getAiModelForFlow("weekly_digest");
       const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -272,7 +273,7 @@ Week: ${weekStart} to ${weekEnd}`;
           Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: "gpt-4o-mini",
+          model: digestModel,
           max_tokens: 300,
           temperature: 0.4,
           messages: [
@@ -310,7 +311,7 @@ Week: ${weekStart} to ${weekEnd}`;
       insertAiLog({
         userId: user.id,
         source: "weekly_digest",
-        model: "gpt-4o-mini",
+        model: digestModel,
         promptSystem: systemPrompt,
         promptUser: userPrompt.slice(0, 2000),
         durationMs: 0,

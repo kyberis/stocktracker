@@ -17,6 +17,28 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.69.0",
+    date: "2026-04-04",
+    title: "AI Model Configuration",
+    titleTranslations: { es: "Configuración de Modelos de IA" },
+    changes: [
+      {
+        type: "feature",
+        text: "Admins can now select which OpenAI model powers each AI feature (analysis, portfolio score, digest, import, and more) from the Settings page. Models can be swapped per flow without code changes.",
+        translations: {
+          es: "Los administradores ahora pueden seleccionar qué modelo de OpenAI impulsa cada función de IA (análisis, puntuación de portafolio, resumen, importación y más) desde la página de Configuración. Los modelos se pueden cambiar por flujo sin modificar código.",
+        },
+      },
+      {
+        type: "feature",
+        text: "New AI Compare tool in the admin panel lets you replay real user prompts against multiple models side-by-side, comparing response quality, latency, and cost before switching production models.",
+        translations: {
+          es: "Nueva herramienta de Comparación de IA en el panel de administración permite reproducir prompts reales de usuarios contra múltiples modelos en paralelo, comparando calidad de respuesta, latencia y costo antes de cambiar los modelos en producción.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.68.1",
     date: "2026-04-03",
     title: "Broker Sync Fix",

@@ -515,6 +515,27 @@ export const satisfactionDismissSchema = z.object({
   action: z.literal("dismiss"),
 });
 
+/* ── AI Model Config (Admin) ───────────────────────────────── */
+
+const AI_FLOW_KEY_ENUM = z.enum([
+  "ai_analysis", "portfolio_chat", "chart_chat", "portfolio_review",
+  "portfolio_score", "import_portfolio", "device_summary", "support_chat",
+  "weekly_digest", "weekly_digest_admin", "digest_email",
+]);
+
+const ALLOWED_MODEL_ENUM = z.enum([
+  "gpt-4o-mini", "gpt-4o", "gpt-4.1-nano", "gpt-4.1-mini", "gpt-4.1", "o4-mini",
+]);
+
+export const aiModelConfigSchema = z.record(AI_FLOW_KEY_ENUM, ALLOWED_MODEL_ENUM);
+
+export const aiCompareSchema = z.object({
+  promptSystem: z.string().min(1).max(50_000),
+  promptUser: z.string().min(1).max(50_000),
+  flowKey: AI_FLOW_KEY_ENUM,
+  models: z.array(ALLOWED_MODEL_ENUM).min(1).max(4),
+});
+
 /** Portfolio chart Q&A — context is rebuilt client-side each request; keep samples bounded. */
 export const chartChatRequestSchema = z.object({
   messages: z.array(

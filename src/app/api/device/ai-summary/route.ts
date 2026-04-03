@@ -12,6 +12,7 @@ import {
   trackEvent,
   isFeatureEnabled,
   insertAiLog,
+  getAiModelForFlow,
 } from "@/lib/db";
 import { PLATFORM_LIMITS } from "@/lib/platform-config";
 import { checkGlobalAiCap, incrementGlobalAiCalls, checkDeviceAuthRateLimit, getClientIp } from "@/lib/rate-limit";
@@ -117,6 +118,7 @@ Rules:
     holdingsCount: String(holdings.length),
   });
 
+  const model = await getAiModelForFlow("device_summary");
   const endTimer = aiRequestDuration.startTimer({ analysis_type: "device_ai_summary" });
   const aiLogStart = Date.now();
 
@@ -128,7 +130,7 @@ Rules:
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model,
         stream: false,
         max_tokens: 300,
         temperature: 0.3,
@@ -146,7 +148,7 @@ Rules:
       aiCallsTotal.inc({ status: "error", analysis_type: "device_ai_summary" });
       const errText = await openaiRes.text();
       console.error("OpenAI error:", openaiRes.status, errText);
-      insertAiLog({ userId: user.id, source: "device_ai_summary", model: "gpt-4o-mini", promptSystem: systemPrompt, promptUser: userPrompt, durationMs, status: "error", errorMessage: errText.slice(0, 2000) }).catch(() => {});
+      insertAiLog({ userId: user.id, source: "device_ai_summary", model, promptSystem: systemPrompt, promptUser: userPrompt, durationMs, status: "error", errorMessage: errText.slice(0, 2000) }).catch(() => {});
       return Response.json(
         { error: "AI service error" },
         { status: 502 },
@@ -167,7 +169,7 @@ Rules:
     const totalTokens = result.usage?.total_tokens ?? 300;
     const deviceInputTokens = result.usage?.prompt_tokens ?? 0;
     const deviceOutputTokens = result.usage?.completion_tokens ?? 0;
-    insertAiLog({ userId: user.id, source: "device_ai_summary", model: "gpt-4o-mini", promptSystem: systemPrompt, promptUser: userPrompt, response: summary, tokensUsed: totalTokens, tokensInput: deviceInputTokens, tokensOutput: deviceOutputTokens, durationMs }).catch(() => {});
+    insertAiLog({ userId: user.id, source: "device_ai_summary", model, promptSystem: systemPrompt, promptUser: userPrompt, response: summary, tokensUsed: totalTokens, tokensInput: deviceInputTokens, tokensOutput: deviceOutputTokens, durationMs }).catch(() => {});
     const updatedUsage = await getPortfolioReviewUsage(user.id);
 
     return Response.json(

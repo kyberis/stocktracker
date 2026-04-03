@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { withCronLogging, verifyCronAuth } from "@/lib/cron-logging";
 import { isGmailConfigured, listUnreadByQuery, getMessageContent, markAsRead } from "@/lib/gmail";
-import { getGlobalOpenAIApiKey } from "@/lib/db/settings";
+import { getGlobalOpenAIApiKey, getAiModelForFlow } from "@/lib/db/settings";
 import { digestExistsByGmailId, insertMarketDigest, getActiveUserLanguages } from "@/lib/db";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 
@@ -120,7 +120,9 @@ async function callOpenAI(
   system: string,
   user: string,
   maxTokens = 3000,
+  modelOverride?: string,
 ): Promise<{ content: string; tokensUsed: number }> {
+  const aiModel = modelOverride || await getAiModelForFlow("digest_email");
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -128,7 +130,7 @@ async function callOpenAI(
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: "gpt-4o-mini",
+      model: aiModel,
       max_tokens: maxTokens,
       temperature: 0.4,
       response_format: { type: "json_object" },
@@ -157,6 +159,7 @@ async function processDigestEmail(): Promise<Record<string, unknown>> {
   }
 
   const apiKey = getGlobalOpenAIApiKey();
+  const digestEmailModel = await getAiModelForFlow("digest_email");
   if (!apiKey) {
     return { skipped: true, reason: "OpenAI API key not configured" };
   }
@@ -192,6 +195,8 @@ async function processDigestEmail(): Promise<Record<string, unknown>> {
       apiKey,
       REWRITE_SYSTEM_PROMPT,
       `Live market data (last 7 days):\n${marketContext}\n\nSource material:\n\n${bodyForAI.slice(0, 11000)}`,
+      3000,
+      digestEmailModel,
     );
 
     let rewrite: {
@@ -262,6 +267,7 @@ NOTE: Keep ticker symbols (e.g. AAPL, MSFT), numbers, percentages, and the â–²/â
             TRANSLATE_SYSTEM_PROMPT,
             translatePrompt,
             4000,
+            digestEmailModel,
           );
           translateTokens += tokensUsed;
 
@@ -293,7 +299,7 @@ NOTE: Keep ticker symbols (e.g. AAPL, MSFT), numbers, percentages, and the â–²/â
       mentionedTickers: rewrite.mentioned_tickers || [],
       sectors: rewrite.sectors || [],
       sentiment: rewrite.sentiment || "neutral",
-      aiModel: "gpt-4o-mini",
+      aiModel: digestEmailModel,
       tokensUsed: rewriteTokens + translateTokens,
       translations,
     });

@@ -41,6 +41,7 @@ const TAB_GROUPS: { category: string; tabs: Tab[] }[] = [
       { slug: "feature-flags", label: "Feature Flags" },
       { slug: "analytics", label: "Analytics" },
       { slug: "ai-logs", label: "AI Logs" },
+      { slug: "ai-compare", label: "AI Compare" },
       { slug: "snaptrade-logs", label: "SnapTrade Logs" },
       { slug: "docs", label: "Docs" },
     ],

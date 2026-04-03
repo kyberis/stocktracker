@@ -154,6 +154,9 @@ export {
   setAdConfig,
   getXKeys,
   setXKey,
+  getAiModelConfig,
+  setAiModelConfig,
+  getAiModelForFlow,
 } from "./settings";
 
 export {

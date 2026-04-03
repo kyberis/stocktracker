@@ -12,6 +12,7 @@ import {
   incrementAiTokenUsage,
   incrementDailyAiTokenUsage,
   insertAiLog,
+  getAiModelForFlow,
 } from "@/lib/db";
 import { supportChatTotal, supportChatDuration, rateLimitHitsTotal } from "@/lib/metrics";
 import { checkSupportChatRateLimit, checkGlobalAiCap, incrementGlobalAiCalls, incrementGlobalAiTokens } from "@/lib/rate-limit";
@@ -103,6 +104,7 @@ export const POST = withMetrics("/api/support-chat", async (request: NextRequest
     ...messages.map(m => ({ role: m.role as "user" | "assistant", content: m.content })),
   ];
 
+  const model = await getAiModelForFlow("support_chat");
   const endTimer = supportChatDuration.startTimer();
   const aiLogStart = Date.now();
   const lastUserContent = lastUserMsg?.content || "";
@@ -115,7 +117,7 @@ export const POST = withMetrics("/api/support-chat", async (request: NextRequest
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model,
         stream: true,
         stream_options: { include_usage: true },
         max_tokens: 800,
@@ -131,7 +133,7 @@ export const POST = withMetrics("/api/support-chat", async (request: NextRequest
       supportChatTotal.inc({ status: "error" });
       const errText = await openaiRes.text();
       console.error("Support chat OpenAI error:", openaiRes.status, errText);
-      insertAiLog({ userId: session.userId, source: "support_chat", model: "gpt-4o-mini", promptSystem: systemPrompt, promptUser: lastUserContent, durationMs, status: "error", errorMessage: errText.slice(0, 2000) }).catch(() => {});
+      insertAiLog({ userId: session.userId, source: "support_chat", model, promptSystem: systemPrompt, promptUser: lastUserContent, durationMs, status: "error", errorMessage: errText.slice(0, 2000) }).catch(() => {});
       return Response.json(
         { error: "AI service returned an error." },
         { status: 502 }
@@ -140,13 +142,13 @@ export const POST = withMetrics("/api/support-chat", async (request: NextRequest
 
     supportChatTotal.inc({ status: "success" });
     await incrementGlobalAiCalls();
-    const logId = await insertAiLog({ userId: session.userId, source: "support_chat", model: "gpt-4o-mini", promptSystem: systemPrompt, promptUser: lastUserContent, durationMs }).catch(() => "");
+    const logId = await insertAiLog({ userId: session.userId, source: "support_chat", model, promptSystem: systemPrompt, promptUser: lastUserContent, durationMs }).catch(() => "");
 
     let fullResponse = "";
 
     const stream = createAiStream(openaiRes.body, {
       aiLogId: logId || undefined,
-      aiLogModel: "gpt-4o-mini",
+      aiLogModel: model,
       onContent: (text) => { fullResponse += text; },
       onComplete: async (tokens) => {
         if (fullResponse) {

@@ -2,10 +2,13 @@ import { randomUUID } from "crypto";
 import { ensureInitialized } from "./client";
 import { str } from "./helpers";
 
-// gpt-4o-mini pricing (per token)
 const MODEL_PRICING: Record<string, { input: number; output: number }> = {
   "gpt-4o-mini": { input: 0.15 / 1_000_000, output: 0.60 / 1_000_000 },
   "gpt-4o": { input: 2.50 / 1_000_000, output: 10.00 / 1_000_000 },
+  "gpt-4.1-nano": { input: 0.10 / 1_000_000, output: 0.40 / 1_000_000 },
+  "gpt-4.1-mini": { input: 0.40 / 1_000_000, output: 1.60 / 1_000_000 },
+  "gpt-4.1": { input: 2.00 / 1_000_000, output: 8.00 / 1_000_000 },
+  "o4-mini": { input: 1.10 / 1_000_000, output: 4.40 / 1_000_000 },
 };
 
 function calcCost(model: string, inputTokens: number, outputTokens: number): number {

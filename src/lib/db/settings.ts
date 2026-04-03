@@ -688,6 +688,74 @@ export async function setAdConfig(config: Partial<AdConfig>): Promise<AdConfig> 
   return next;
 }
 
+/* ─── AI Model Config ─── */
+
+import {
+  AI_FLOW_KEYS,
+  ALLOWED_AI_MODELS,
+  DEFAULT_AI_MODEL,
+  getDefaultAiModelConfig,
+  type AiFlowKey,
+  type AllowedAiModel,
+} from "@/lib/ai-models";
+
+let _aiModelCache: { config: Record<AiFlowKey, AllowedAiModel>; ts: number } | null = null;
+const AI_MODEL_CACHE_TTL_MS = 5 * 60 * 1000;
+
+const AI_MODEL_CONFIG_KEY = "ai_model_config";
+
+export async function getAiModelConfig(): Promise<Record<AiFlowKey, AllowedAiModel>> {
+  if (_aiModelCache && Date.now() - _aiModelCache.ts < AI_MODEL_CACHE_TTL_MS) {
+    return _aiModelCache.config;
+  }
+
+  const raw = await getPlatformSetting(AI_MODEL_CONFIG_KEY);
+  const defaults = getDefaultAiModelConfig();
+
+  if (!raw) {
+    _aiModelCache = { config: defaults, ts: Date.now() };
+    return defaults;
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as Record<string, string>;
+    const config = { ...defaults };
+    const allowedSet = new Set<string>(ALLOWED_AI_MODELS);
+    for (const key of AI_FLOW_KEYS) {
+      if (parsed[key] && allowedSet.has(parsed[key])) {
+        config[key] = parsed[key] as AllowedAiModel;
+      }
+    }
+    _aiModelCache = { config, ts: Date.now() };
+    return config;
+  } catch {
+    _aiModelCache = { config: defaults, ts: Date.now() };
+    return defaults;
+  }
+}
+
+export async function setAiModelConfig(config: Record<string, string>): Promise<void> {
+  const defaults = getDefaultAiModelConfig();
+  const allowedSet = new Set<string>(ALLOWED_AI_MODELS);
+  const flowSet = new Set<string>(AI_FLOW_KEYS);
+  const next: Record<string, string> = {};
+  for (const [key, model] of Object.entries(config)) {
+    if (flowSet.has(key) && allowedSet.has(model)) {
+      next[key] = model;
+    }
+  }
+  for (const key of AI_FLOW_KEYS) {
+    if (!next[key]) next[key] = defaults[key];
+  }
+  await setPlatformSetting(AI_MODEL_CONFIG_KEY, JSON.stringify(next));
+  _aiModelCache = null;
+}
+
+export async function getAiModelForFlow(flow: AiFlowKey): Promise<string> {
+  const config = await getAiModelConfig();
+  return config[flow] || DEFAULT_AI_MODEL;
+}
+
 export async function getAllPlatformSettings(): Promise<Record<string, string>> {
   const client = await ensureInitialized();
   const result = await client.execute("SELECT key, value FROM platform_settings");

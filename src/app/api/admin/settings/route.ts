@@ -14,6 +14,7 @@ import {
   getUtmTaxonomyConfig,
   countProSubscribers,
   getRateLimitStats,
+  getAiModelConfig,
 } from "@/lib/db";
 import { getCronStats } from "@/lib/cron-logging";
 import { isGrafanaCloudConfigured } from "@/lib/grafana-push";
@@ -54,6 +55,7 @@ export const GET = withMetrics("/api/admin/settings", async (req: NextRequest) =
     cronData,
     proCount,
     rateLimits,
+    aiModels,
   ] = await Promise.all([
     Promise.all(ALLOWED_FLAGS.map(async (f) => [f, await isFeatureEnabled(f)] as const)),
     getGlobalResendApiKey(),
@@ -76,6 +78,7 @@ export const GET = withMetrics("/api/admin/settings", async (req: NextRequest) =
     getCronStats(),
     countProSubscribers(),
     getRateLimitStats(),
+    getAiModelConfig(),
   ]);
 
   const flags: Record<string, boolean> = {};
@@ -120,5 +123,6 @@ export const GET = withMetrics("/api/admin/settings", async (req: NextRequest) =
       remaining: Math.max(0, maxCount - proCount),
     },
     rateLimits,
+    aiModels,
   });
 });
