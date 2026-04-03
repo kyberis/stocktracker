@@ -83,12 +83,12 @@ async function processDigestEmail(): Promise<Record<string, unknown>> {
   }
 
   let processed = 0;
-  let skipped = 0;
+  const skipReasons: string[] = [];
 
   for (const msg of messages) {
     if (await digestExistsByGmailId(msg.id)) {
       await markAsRead(msg.id);
-      skipped++;
+      skipReasons.push(`duplicate:${msg.id}`);
       continue;
     }
 
@@ -97,7 +97,7 @@ async function processDigestEmail(): Promise<Record<string, unknown>> {
     const bodyForAI = email.textBody || stripHtml(email.htmlBody);
     if (!bodyForAI.trim()) {
       await markAsRead(msg.id);
-      skipped++;
+      skipReasons.push(`empty_body:${msg.id}:${email.subject.slice(0, 60)}`);
       continue;
     }
 
@@ -120,7 +120,7 @@ async function processDigestEmail(): Promise<Record<string, unknown>> {
     } catch {
       console.error("[digest-email] Failed to parse AI rewrite:", rewriteJson.slice(0, 300));
       await markAsRead(msg.id);
-      skipped++;
+      skipReasons.push(`parse_error:${msg.id}:${email.subject.slice(0, 60)}`);
       continue;
     }
 
@@ -198,7 +198,7 @@ ${(rewrite.key_points || []).map((p, idx) => `${idx + 1}. ${p}`).join("\n")}`;
     processed++;
   }
 
-  return { checked: true, newEmails: messages.length, processed, skipped };
+  return { checked: true, newEmails: messages.length, processed, skipped: skipReasons.length, skipReasons };
 }
 
 function stripHtml(html: string): string {
