@@ -267,12 +267,17 @@ export async function getActiveUserLanguages(): Promise<string[]> {
 }
 
 export async function getUsersForDigestEmail(): Promise<
-  { id: string; email: string; displayName: string; language: string }[]
+  { id: string; email: string; displayName: string; language: string; defaultPortfolioId: string }[]
 > {
   const client = await ensureInitialized();
   const res = await client.execute({
     sql: `SELECT u.id, u.email, u.display_name,
-            COALESCE((SELECT us.language FROM user_settings us WHERE us.user_id = u.id), 'en') AS language
+            COALESCE((SELECT us.language FROM user_settings us WHERE us.user_id = u.id), 'en') AS language,
+            COALESCE(
+              (SELECT p.id FROM portfolios p WHERE p.user_id = u.id AND p.is_default = 1 LIMIT 1),
+              (SELECT p.id FROM portfolios p WHERE p.user_id = u.id ORDER BY p.created_at ASC LIMIT 1),
+              ''
+            ) AS default_portfolio_id
           FROM users u
           WHERE u.email != ''
             AND u.email_verified = 1`,
@@ -283,6 +288,7 @@ export async function getUsersForDigestEmail(): Promise<
     email: str((r as unknown as Record<string, unknown>).email),
     displayName: str((r as unknown as Record<string, unknown>).display_name),
     language: str((r as unknown as Record<string, unknown>).language) || "en",
+    defaultPortfolioId: str((r as unknown as Record<string, unknown>).default_portfolio_id),
   }));
 }
 
