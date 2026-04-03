@@ -15,7 +15,6 @@
  */
 
 import http from "node:http";
-import { execSync } from "node:child_process";
 
 const CLIENT_ID = process.env.GMAIL_CLIENT_ID;
 const CLIENT_SECRET = process.env.GMAIL_CLIENT_SECRET;
@@ -35,14 +34,13 @@ const authUrl =
   `&response_type=code` +
   `&scope=${encodeURIComponent(SCOPES)}` +
   `&access_type=offline` +
-  `&prompt=consent`;
+  `&prompt=consent` +
+  `&login_hint=${encodeURIComponent("digest@trefolio.com")}`;
 
-console.log("\nOpening browser for Google consent...\n");
-try {
-  execSync(`open "${authUrl}"`);
-} catch {
-  console.log("Open this URL in your browser:\n", authUrl);
-}
+console.log("\n=== Open this URL in an INCOGNITO / private browser window ===");
+console.log("(Do NOT use `open` — corporate SSO will intercept it)\n");
+console.log(authUrl);
+console.log();
 
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url!, `http://localhost:${REDIRECT_PORT}`);

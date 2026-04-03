@@ -37,7 +37,11 @@ async function getAccessToken(): Promise<string> {
 
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`Gmail token refresh failed (${res.status}): ${text}`);
+    cachedToken = null;
+    throw new Error(
+      `Gmail token refresh failed (${res.status}): ${text}. ` +
+        `If the refresh token expired, re-run: npx tsx scripts/gmail-auth.ts`,
+    );
   }
 
   const data = await res.json();
@@ -58,6 +62,20 @@ async function gmailFetch(path: string, init?: RequestInit): Promise<Response> {
       ...init?.headers,
     },
   });
+
+  if (res.status === 401 && cachedToken) {
+    cachedToken = null;
+    const freshToken = await getAccessToken();
+    return fetch(`${GMAIL_API}${path}`, {
+      ...init,
+      headers: {
+        Authorization: `Bearer ${freshToken}`,
+        "Content-Type": "application/json",
+        ...init?.headers,
+      },
+    });
+  }
+
   return res;
 }
 
