@@ -278,6 +278,14 @@ export const POST = withMetrics("/api/snaptrade", async (req: NextRequest) => {
           .map((s) => [s.brokerageAuthorizationId, s.lastImportedAt]),
       );
 
+      // Refresh ALL active broker connections so SnapTrade pulls latest data
+      // from each broker before we read positions/activities.
+      await Promise.allSettled(
+        [...activeBrokerIds].map((bId) =>
+          refreshBrokerageConnection(conn.snapTradeUserId, userSecret, bId)
+        )
+      );
+
       const allTransactions: ExtractedTransaction[] = [];
       const fetchedBrokers: { id: string; name: string }[] = [];
       const truncatedBrokers: string[] = [];

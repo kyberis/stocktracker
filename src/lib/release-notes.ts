@@ -17,6 +17,21 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.68.1",
+    date: "2026-04-03",
+    title: "Broker Sync Fix",
+    titleTranslations: { es: "Corrección de Sincronización de Broker" },
+    changes: [
+      {
+        type: "fix",
+        text: "Fixed SnapTrade resync not picking up updated holdings or new transactions. Broker connections are now refreshed before fetching data, and positions held across multiple broker accounts are correctly aggregated instead of only counting the first occurrence.",
+        translations: {
+          es: "Corregido que la resincronización de SnapTrade no detectara posiciones actualizadas ni nuevas transacciones. Las conexiones de brokers ahora se actualizan antes de obtener datos, y las posiciones en múltiples cuentas de broker se agregan correctamente en lugar de contar solo la primera ocurrencia.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.68.0",
     date: "2026-03-22",
     title: "Market Insights",

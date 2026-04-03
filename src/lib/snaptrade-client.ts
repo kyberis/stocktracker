@@ -375,10 +375,9 @@ export async function fetchAllHoldings(
       durationMs: 0,
     }).catch(() => {});
 
-    const holdings: ExtractedHolding[] = [];
+    const holdingsByTicker = new Map<string, ExtractedHolding>();
     const cashBalances: CashBalance[] = [];
     const accounts: { id: string; name: string; institution: string }[] = [];
-    const seenTickers = new Set<string>();
 
     for (const acctHoldings of allAccountHoldings) {
       const acct = acctHoldings.account;
@@ -401,9 +400,16 @@ export async function fetchAllHoldings(
           if ((pos.units ?? 0) <= 0) continue;
 
           const holding = positionToHolding(pos);
-          if (holding && holding.shares > 0 && !seenTickers.has(holding.ticker)) {
-            seenTickers.add(holding.ticker);
-            holdings.push(holding);
+          if (!holding || holding.shares <= 0) continue;
+
+          const existing = holdingsByTicker.get(holding.ticker);
+          if (existing) {
+            const totalShares = existing.shares + holding.shares;
+            existing.purchasePrice =
+              (existing.purchasePrice * existing.shares + holding.purchasePrice * holding.shares) / totalShares;
+            existing.shares = totalShares;
+          } else {
+            holdingsByTicker.set(holding.ticker, holding);
           }
         }
       }
@@ -421,7 +427,7 @@ export async function fetchAllHoldings(
       }
     }
 
-    return { holdings, cashBalances, accounts };
+    return { holdings: [...holdingsByTicker.values()], cashBalances, accounts };
   });
 }
 

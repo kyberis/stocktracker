@@ -21,6 +21,7 @@ import {
   listAccounts,
   fetchActivities,
   fetchAllHoldings,
+  refreshBrokerageConnection,
 } from "@/lib/snaptrade-client";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { withCronLogging, verifyCronAuth } from "@/lib/cron-logging";
@@ -82,6 +83,13 @@ const runSync = withCronLogging("snaptrade-sync", async () => {
       }
       const targetPortfolios: (string | undefined)[] =
         allMappedPortfolioIds.size > 0 ? [...allMappedPortfolioIds] : [undefined];
+
+      // Refresh all active broker connections so SnapTrade pulls latest data.
+      await Promise.allSettled(
+        [...activeBrokerIds].map((bId) =>
+          refreshBrokerageConnection(conn.snapTradeUserId, userSecret, bId)
+        )
+      );
 
       let totalNewTx = 0;
       const fetchedBrokers: { id: string; name: string }[] = [];
