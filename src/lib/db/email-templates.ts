@@ -260,6 +260,24 @@ export async function updateEmailSendStatus(
   }
 }
 
+export async function hasEmailBeenSent(templateId: string, userId: string): Promise<boolean> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: "SELECT 1 FROM email_sends WHERE template_id = ? AND user_id = ? AND status != 'failed' LIMIT 1",
+    args: [templateId, userId],
+  });
+  return result.rows.length > 0;
+}
+
+export async function listEmailSendsByTemplateId(templateId: string): Promise<EmailSend[]> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: "SELECT * FROM email_sends WHERE template_id = ? ORDER BY sent_at DESC",
+    args: [templateId],
+  });
+  return result.rows.map(mapSendRow);
+}
+
 export async function getTemplateStats(templateId: string): Promise<{
   totalSent: number;
   delivered: number;

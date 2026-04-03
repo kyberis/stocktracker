@@ -7,6 +7,8 @@ import {
   listHoldings,
   listCashEntries,
   listPortfolios,
+  logEmailSend,
+  hasEmailBeenSent,
 } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
 import { withMetrics } from "@/lib/with-metrics";
@@ -315,11 +317,22 @@ export const POST = withMetrics("/api/admin/market-digests/[id]/send", async (
     return NextResponse.json({ ok: true, sent: 0, reason: "No eligible users" });
   }
 
+  const digestTemplateId = `digest:${id}`;
   let sent = 0;
   let failed = 0;
+  let skippedDuplicate = 0;
+  const results: { userId: string; email: string; status: string; resendId?: string; error?: string }[] = [];
 
   for (const user of users) {
+    const alreadySent = await hasEmailBeenSent(digestTemplateId, user.id);
+    if (alreadySent) {
+      skippedDuplicate++;
+      results.push({ userId: user.id, email: user.email, status: "skipped_duplicate" });
+      continue;
+    }
+
     const t = translationMap.get(user.language) || enTranslation;
+    const subject = `trefolio Market Insight: ${t.title}`;
 
     let userStats: PortfolioStats | null = null;
     if (user.defaultPortfolioId) {
@@ -342,17 +355,47 @@ export const POST = withMetrics("/api/admin/market-digests/[id]/send", async (
     try {
       const result = await sendEmail({
         to: user.email,
-        subject: `trefolio Market Insight: ${t.title}`,
+        subject,
         html,
         userId: user.id,
       });
-      if (result.success) sent++;
-      else failed++;
-    } catch {
+
+      const status = result.success ? "sent" : "failed";
+      const errorMsg = result.error || undefined;
+
+      logEmailSend({
+        resendId: result.messageId,
+        templateId: digestTemplateId,
+        userId: user.id,
+        emailTo: user.email,
+        subject,
+        bodyHtml: html,
+        status,
+      }).catch(() => {});
+
+      if (result.success) {
+        sent++;
+        results.push({ userId: user.id, email: user.email, status: "sent", resendId: result.messageId });
+      } else {
+        failed++;
+        results.push({ userId: user.id, email: user.email, status: "failed", error: errorMsg });
+      }
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : "Unknown error";
       failed++;
+      results.push({ userId: user.id, email: user.email, status: "failed", error: errorMsg });
+
+      logEmailSend({
+        templateId: digestTemplateId,
+        userId: user.id,
+        emailTo: user.email,
+        subject,
+        bodyHtml: html,
+        status: "failed",
+      }).catch(() => {});
     }
   }
 
   await markDigestEmailSent(id);
-  return NextResponse.json({ ok: true, sent, failed, total: users.length });
+  return NextResponse.json({ ok: true, sent, failed, skippedDuplicate, total: users.length, results });
 });
