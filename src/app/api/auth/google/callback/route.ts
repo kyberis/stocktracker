@@ -232,7 +232,9 @@ async function handleLoginFlow(
       }
     }
 
+    let isNewSignup = false;
     if (!dbUser) {
+      isNewSignup = true;
       const username = googleUser.email.split("@")[0].replace(/[^a-zA-Z0-9._-]/g, "").slice(0, 30) || "user";
       const publicUser = await createUser({
         username,
@@ -350,6 +352,17 @@ async function handleLoginFlow(
     const destination = oauthRedirect && oauthRedirect.startsWith("/") ? oauthRedirect : "/";
     const response = NextResponse.redirect(new URL(destination, req.nextUrl.origin));
     response.cookies.set(getSessionCookieConfig(sessionToken));
+    if (isNewSignup) {
+      response.cookies.set({
+        name: "trefolio_signup_conversion",
+        value: "google",
+        httpOnly: false,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        path: "/",
+        maxAge: 60,
+      });
+    }
     response.cookies.set({
       name: "google_oauth_state",
       value: "",

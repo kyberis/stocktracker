@@ -43,6 +43,20 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "Los resúmenes de mercado publicados ahora se publican automáticamente en X.com (Twitter) cada tarde. Un tweet generado por IA que resume el digest se programa para las 18:00 UTC y se publica a través del cron de X existente.",
         },
       },
+      {
+        type: "improvement",
+        text: "Market digests now combine multiple forwarded newsletters sent on the same day into a single cohesive article. Links from original sources are preserved in the generated content, and new emails arriving later automatically update the existing draft.",
+        translations: {
+          es: "Los resúmenes de mercado ahora combinan múltiples boletines reenviados del mismo día en un solo artículo coherente. Los enlaces de las fuentes originales se preservan en el contenido generado, y nuevos correos que lleguen después actualizan automáticamente el borrador existente.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Signup conversion events are now sent to Google Analytics for all signup methods (credentials, Google, and Apple), enabling accurate conversion tracking in GA4 and Google Ads.",
+        translations: {
+          es: "Los eventos de conversión de registro ahora se envían a Google Analytics para todos los métodos de registro (credenciales, Google y Apple), permitiendo un seguimiento preciso de conversiones en GA4 y Google Ads.",
+        },
+      },
     ],
   },
   {

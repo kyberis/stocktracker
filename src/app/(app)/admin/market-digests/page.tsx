@@ -12,6 +12,16 @@ interface Translation {
   createdAt: string;
 }
 
+interface DigestSource {
+  id: string;
+  gmailMessageId: string;
+  sender: string;
+  originalSubject: string;
+  originalDate: string;
+  receivedAt: string;
+  extractedLinks: { url: string; text: string }[];
+}
+
 interface Digest {
   id: string;
   gmailMessageId: string;
@@ -26,8 +36,10 @@ interface Digest {
   status: "draft" | "published" | "archived";
   publishedAt: string;
   emailSent: boolean;
+  digestDate: string;
   createdAt: string;
   translations?: Translation[];
+  sources?: DigestSource[];
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -224,10 +236,10 @@ export default function AdminMarketDigestsPage() {
                   {d.sentiment || "neutral"}
                 </span>
                 <span className="flex-1 text-sm font-medium text-gray-900 dark:text-white truncate">
-                  {d.originalSubject}
+                  {d.digestDate ? `Digest ${d.digestDate}` : d.originalSubject}
                 </span>
                 <span className="text-xs text-gray-500 dark:text-slate-400 shrink-0">
-                  {new Date(d.receivedAt).toLocaleDateString()}
+                  {d.digestDate || new Date(d.receivedAt).toLocaleDateString()}
                 </span>
                 {d.emailSent && (
                   <span className="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
@@ -244,11 +256,35 @@ export default function AdminMarketDigestsPage() {
 
               {expandedId === d.id && expandedDigest && (
                 <div className="border-t border-gray-200 dark:border-slate-700 p-4">
+                  {/* Sources */}
+                  {expandedDigest.sources && expandedDigest.sources.length > 0 && (
+                    <div className="mb-4 p-3 rounded-lg bg-gray-50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700">
+                      <div className="text-xs font-semibold text-gray-500 dark:text-slate-400 mb-2">
+                        Sources ({expandedDigest.sources.length})
+                      </div>
+                      <div className="space-y-1.5">
+                        {expandedDigest.sources.map((src) => (
+                          <div key={src.id} className="flex items-center gap-2 text-xs">
+                            <span className="font-mono text-gray-900 dark:text-white truncate max-w-[200px]">{src.sender}</span>
+                            <span className="text-gray-400 dark:text-slate-500">—</span>
+                            <span className="text-gray-700 dark:text-slate-300 truncate flex-1">{src.originalSubject}</span>
+                            <span className="text-gray-500 dark:text-slate-400 shrink-0">{src.originalDate}</span>
+                            {src.extractedLinks.length > 0 && (
+                              <span className="px-1.5 py-0.5 text-[10px] rounded bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
+                                {src.extractedLinks.length} links
+                              </span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Meta info */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 text-xs">
                     <div>
-                      <span className="text-gray-500 dark:text-slate-400">From:</span>
-                      <div className="text-gray-900 dark:text-white font-mono">{expandedDigest.sender}</div>
+                      <span className="text-gray-500 dark:text-slate-400">Date:</span>
+                      <div className="text-gray-900 dark:text-white">{expandedDigest.digestDate || new Date(expandedDigest.receivedAt).toLocaleDateString()}</div>
                     </div>
                     <div>
                       <span className="text-gray-500 dark:text-slate-400">Model:</span>

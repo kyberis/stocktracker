@@ -6,6 +6,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { cookies } from "next/headers";
 import CookieConsent from "@/components/CookieConsent";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
+import SignupConversionTracker from "@/components/SignupConversionTracker";
 import AdSenseScript from "@/components/AdSenseScript";
 import MetaPixel from "@/components/MetaPixel";
 import ServiceWorkerUpdater from "@/components/ServiceWorkerUpdater";
@@ -118,6 +119,7 @@ export default async function RootLayout({
         <NativeSplashGate />
         <CookieConsent />
         <GoogleAnalytics gaId={gaId} googleAdsId={googleAdsId} />
+        <SignupConversionTracker />
         <MetaPixel pixelId={metaPixelId} />
         <AdSenseScript clientId={adsClientId} />
         <Analytics />

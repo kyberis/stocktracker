@@ -24,6 +24,7 @@ export interface MarketDigest {
   publishedAt: string;
   emailSent: boolean;
   xScheduledPostId: string;
+  digestDate: string;
   createdAt: string;
 }
 
@@ -37,8 +38,23 @@ export interface DigestTranslation {
   createdAt: string;
 }
 
+export interface MarketDigestSource {
+  id: string;
+  digestId: string;
+  gmailMessageId: string;
+  sender: string;
+  originalSubject: string;
+  originalDate: string;
+  receivedAt: string;
+  rawText: string;
+  rawHtml: string;
+  extractedLinks: { url: string; text: string }[];
+  createdAt: string;
+}
+
 export interface MarketDigestWithTranslations extends MarketDigest {
   translations: DigestTranslation[];
+  sources: MarketDigestSource[];
 }
 
 /* ── Helpers ── */
@@ -69,6 +85,27 @@ function rowToDigest(r: Record<string, unknown>): MarketDigest {
     publishedAt: str(r.published_at),
     emailSent: num(r.email_sent) === 1,
     xScheduledPostId: str(r.x_scheduled_post_id),
+    digestDate: str(r.digest_date),
+    createdAt: str(r.created_at),
+  };
+}
+
+function rowToSource(r: Record<string, unknown>): MarketDigestSource {
+  let links: { url: string; text: string }[] = [];
+  try {
+    links = JSON.parse(str(r.extracted_links));
+  } catch { /* empty */ }
+  return {
+    id: str(r.id),
+    digestId: str(r.digest_id),
+    gmailMessageId: str(r.gmail_message_id),
+    sender: str(r.sender),
+    originalSubject: str(r.original_subject),
+    originalDate: str(r.original_date),
+    receivedAt: str(r.received_at),
+    rawText: str(r.raw_text),
+    rawHtml: str(r.raw_html),
+    extractedLinks: links,
     createdAt: str(r.created_at),
   };
 }
@@ -96,6 +133,110 @@ export async function digestExistsByGmailId(gmailMessageId: string): Promise<boo
   return res.rows.length > 0;
 }
 
+export async function digestSourceExistsByGmailId(gmailMessageId: string): Promise<boolean> {
+  const client = await ensureInitialized();
+  const res = await client.execute({
+    sql: "SELECT 1 FROM market_digest_sources WHERE gmail_message_id = ? LIMIT 1",
+    args: [gmailMessageId],
+  });
+  return res.rows.length > 0;
+}
+
+export async function getDigestByDate(digestDate: string): Promise<MarketDigest | null> {
+  const client = await ensureInitialized();
+  const res = await client.execute({
+    sql: "SELECT * FROM market_digests WHERE digest_date = ? LIMIT 1",
+    args: [digestDate],
+  });
+  if (res.rows.length === 0) return null;
+  return rowToDigest(res.rows[0] as unknown as Record<string, unknown>);
+}
+
+export async function addDigestSource(digestId: string, source: {
+  gmailMessageId: string;
+  sender: string;
+  originalSubject: string;
+  originalDate: string;
+  receivedAt: string;
+  rawText: string;
+  rawHtml: string;
+  extractedLinks: { url: string; text: string }[];
+}): Promise<string> {
+  const client = await ensureInitialized();
+  const id = randomUUID();
+  await client.execute({
+    sql: `INSERT OR IGNORE INTO market_digest_sources
+      (id, digest_id, gmail_message_id, sender, original_subject, original_date, received_at, raw_text, raw_html, extracted_links)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    args: [
+      id,
+      digestId,
+      source.gmailMessageId,
+      source.sender,
+      source.originalSubject,
+      source.originalDate,
+      source.receivedAt,
+      source.rawText,
+      source.rawHtml,
+      JSON.stringify(source.extractedLinks),
+    ],
+  });
+  return id;
+}
+
+export async function getDigestSources(digestId: string): Promise<MarketDigestSource[]> {
+  const client = await ensureInitialized();
+  const res = await client.execute({
+    sql: "SELECT * FROM market_digest_sources WHERE digest_id = ? ORDER BY original_date, created_at",
+    args: [digestId],
+  });
+  return res.rows.map((r) => rowToSource(r as unknown as Record<string, unknown>));
+}
+
+export async function updateDigestContent(digestId: string, data: {
+  mentionedTickers: string[];
+  sectors: string[];
+  sentiment: string;
+  aiModel: string;
+  tokensUsed: number;
+  translations: { language: string; title: string; summary: string; keyPoints: string[] }[];
+}): Promise<void> {
+  const client = await ensureInitialized();
+
+  await client.execute({
+    sql: `UPDATE market_digests
+      SET mentioned_tickers = ?, sectors = ?, sentiment = ?, ai_model = ?, tokens_used = ?
+      WHERE id = ?`,
+    args: [
+      JSON.stringify(data.mentionedTickers),
+      JSON.stringify(data.sectors),
+      data.sentiment,
+      data.aiModel,
+      data.tokensUsed,
+      digestId,
+    ],
+  });
+
+  for (const t of data.translations) {
+    const existing = await client.execute({
+      sql: "SELECT id FROM market_digest_translations WHERE digest_id = ? AND language = ?",
+      args: [digestId, t.language],
+    });
+    if (existing.rows.length > 0) {
+      await client.execute({
+        sql: "UPDATE market_digest_translations SET title = ?, summary = ?, key_points = ? WHERE id = ?",
+        args: [t.title, t.summary, JSON.stringify(t.keyPoints), str((existing.rows[0] as unknown as Record<string, unknown>).id)],
+      });
+    } else {
+      await client.execute({
+        sql: `INSERT INTO market_digest_translations (id, digest_id, language, title, summary, key_points)
+          VALUES (?, ?, ?, ?, ?, ?)`,
+        args: [randomUUID(), digestId, t.language, t.title, t.summary, JSON.stringify(t.keyPoints)],
+      });
+    }
+  }
+}
+
 export async function insertMarketDigest(data: {
   gmailMessageId: string;
   sender: string;
@@ -108,6 +249,7 @@ export async function insertMarketDigest(data: {
   sentiment: string;
   aiModel: string;
   tokensUsed: number;
+  digestDate?: string;
   translations: { language: string; title: string; summary: string; keyPoints: string[] }[];
 }): Promise<string> {
   const client = await ensureInitialized();
@@ -116,8 +258,8 @@ export async function insertMarketDigest(data: {
   await client.execute({
     sql: `INSERT OR IGNORE INTO market_digests
       (id, gmail_message_id, sender, original_subject, received_at, raw_text, raw_html,
-       mentioned_tickers, sectors, sentiment, ai_model, tokens_used, status)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft')`,
+       mentioned_tickers, sectors, sentiment, ai_model, tokens_used, status, digest_date)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft', ?)`,
     args: [
       digestId,
       data.gmailMessageId,
@@ -131,6 +273,7 @@ export async function insertMarketDigest(data: {
       data.sentiment,
       data.aiModel,
       data.tokensUsed,
+      data.digestDate ?? "",
     ],
   });
 
@@ -200,7 +343,16 @@ export async function getMarketDigestWithTranslations(
     rowToTranslation(r as unknown as Record<string, unknown>),
   );
 
-  return { ...digest, translations };
+  const sourceRes = await client.execute({
+    sql: "SELECT * FROM market_digest_sources WHERE digest_id = ? ORDER BY original_date, created_at",
+    args: [id],
+  });
+
+  const sources = sourceRes.rows.map((r) =>
+    rowToSource(r as unknown as Record<string, unknown>),
+  );
+
+  return { ...digest, translations, sources };
 }
 
 export async function updateTranslation(

@@ -2708,6 +2708,69 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       }
     },
   },
+  {
+    version: 91,
+    description: "Multi-source market digests: sources table, digest_date grouping, backfill",
+    up: async (client: Client) => {
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS market_digest_sources (
+          id TEXT PRIMARY KEY,
+          digest_id TEXT NOT NULL REFERENCES market_digests(id) ON DELETE CASCADE,
+          gmail_message_id TEXT NOT NULL UNIQUE,
+          sender TEXT NOT NULL,
+          original_subject TEXT NOT NULL,
+          original_date TEXT NOT NULL,
+          received_at DATETIME NOT NULL,
+          raw_text TEXT,
+          raw_html TEXT,
+          extracted_links TEXT NOT NULL DEFAULT '[]',
+          created_at DATETIME NOT NULL DEFAULT (datetime('now'))
+        )
+      `);
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_mds_digest ON market_digest_sources(digest_id)"
+      );
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_mds_gmail ON market_digest_sources(gmail_message_id)"
+      );
+
+      const cols = await client.execute("PRAGMA table_info(market_digests)");
+      const colNames = new Set(cols.rows.map((r) => String(r.name)));
+      if (!colNames.has("digest_date")) {
+        await client.execute("ALTER TABLE market_digests ADD COLUMN digest_date TEXT DEFAULT ''");
+        await client.execute(
+          "CREATE INDEX IF NOT EXISTS idx_market_digests_date ON market_digests(digest_date)"
+        );
+      }
+
+      const existing = await client.execute(
+        "SELECT id, gmail_message_id, sender, original_subject, received_at, raw_text, raw_html FROM market_digests WHERE gmail_message_id != ''"
+      );
+      for (const r of existing.rows) {
+        const receivedAt = String(r.received_at ?? "");
+        const digestDate = receivedAt.slice(0, 10);
+        await client.execute({
+          sql: "UPDATE market_digests SET digest_date = ? WHERE id = ?",
+          args: [digestDate, String(r.id)],
+        });
+        await client.execute({
+          sql: `INSERT OR IGNORE INTO market_digest_sources
+            (id, digest_id, gmail_message_id, sender, original_subject, original_date, received_at, raw_text, raw_html)
+            VALUES (lower(hex(randomblob(16))), ?, ?, ?, ?, ?, ?, ?, ?)`,
+          args: [
+            String(r.id),
+            String(r.gmail_message_id),
+            String(r.sender ?? ""),
+            String(r.original_subject ?? ""),
+            digestDate,
+            receivedAt,
+            String(r.raw_text ?? ""),
+            String(r.raw_html ?? ""),
+          ],
+        });
+      }
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

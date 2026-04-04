@@ -162,7 +162,9 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    let isNewSignup = false;
     if (!dbUser) {
+      isNewSignup = true;
       const emailBase = appleEmail ? appleEmail.split("@")[0] : "user";
       const username = emailBase.replace(/[^a-zA-Z0-9._-]/g, "").slice(0, 30) || "user";
       const publicUser = await createUser({
@@ -279,6 +281,17 @@ export async function POST(req: NextRequest) {
     const destination = oauthRedirect && oauthRedirect.startsWith("/") ? oauthRedirect : "/";
     const response = NextResponse.redirect(new URL(destination, req.nextUrl.origin));
     response.cookies.set(getSessionCookieConfig(token));
+    if (isNewSignup) {
+      response.cookies.set({
+        name: "trefolio_signup_conversion",
+        value: "apple",
+        httpOnly: false,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        path: "/",
+        maxAge: 60,
+      });
+    }
     response.cookies.set({
       name: "apple_oauth_state",
       value: "",

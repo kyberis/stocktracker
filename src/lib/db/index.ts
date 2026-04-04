@@ -455,9 +455,14 @@ export {
   hasDigestForWeek,
 } from "./weekly-digest";
 
-export type { MarketDigest, MarketDigestWithTranslations, DigestTranslation, DigestStatus } from "./market-digests";
+export type { MarketDigest, MarketDigestWithTranslations, DigestTranslation, DigestStatus, MarketDigestSource } from "./market-digests";
 export {
   digestExistsByGmailId,
+  digestSourceExistsByGmailId,
+  getDigestByDate,
+  addDigestSource,
+  getDigestSources,
+  updateDigestContent,
   insertMarketDigest,
   listMarketDigests,
   getMarketDigestWithTranslations,
