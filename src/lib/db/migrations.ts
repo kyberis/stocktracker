@@ -2697,6 +2697,17 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       `);
     },
   },
+  {
+    version: 90,
+    description: "Track scheduled X post for market digests",
+    up: async (client: Client) => {
+      const cols = await client.execute("PRAGMA table_info(market_digests)");
+      const colNames = new Set(cols.rows.map((r) => String(r.name)));
+      if (!colNames.has("x_scheduled_post_id")) {
+        await client.execute("ALTER TABLE market_digests ADD COLUMN x_scheduled_post_id TEXT DEFAULT ''");
+      }
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

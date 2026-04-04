@@ -23,6 +23,7 @@ export interface MarketDigest {
   status: DigestStatus;
   publishedAt: string;
   emailSent: boolean;
+  xScheduledPostId: string;
   createdAt: string;
 }
 
@@ -67,6 +68,7 @@ function rowToDigest(r: Record<string, unknown>): MarketDigest {
     status: str(r.status) as DigestStatus,
     publishedAt: str(r.published_at),
     emailSent: num(r.email_sent) === 1,
+    xScheduledPostId: str(r.x_scheduled_post_id),
     createdAt: str(r.created_at),
   };
 }
@@ -303,4 +305,12 @@ export async function getDigestTranslation(
   });
   if (res.rows.length === 0) return null;
   return rowToTranslation(res.rows[0] as unknown as Record<string, unknown>);
+}
+
+export async function markDigestXScheduled(digestId: string, xPostId: string): Promise<void> {
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: "UPDATE market_digests SET x_scheduled_post_id = ? WHERE id = ?",
+    args: [xPostId, digestId],
+  });
 }

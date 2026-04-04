@@ -468,6 +468,7 @@ export {
   getActiveUserLanguages,
   getDigestTranslation,
   getUsersForDigestEmail,
+  markDigestXScheduled,
 } from "./market-digests";
 
 export type { PrivateChatRoom, PrivateChatRoomListItem, PrivateChatMessage, PrivateChatMessageType, PrivateChatParticipant, UserChatRoomSummary, ChatReaction } from "./private-chat";

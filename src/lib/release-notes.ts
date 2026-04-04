@@ -36,6 +36,13 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "Nueva herramienta de Comparación de IA en el panel de administración permite reproducir prompts reales de usuarios contra múltiples modelos en paralelo, comparando calidad de respuesta, latencia y costo antes de cambiar los modelos en producción.",
         },
       },
+      {
+        type: "feature",
+        text: "Published market digests are now automatically posted to X.com (Twitter) each evening. An AI-generated tweet summarizing the digest is scheduled for 18:00 UTC and posted via the existing X cron.",
+        translations: {
+          es: "Los resúmenes de mercado publicados ahora se publican automáticamente en X.com (Twitter) cada tarde. Un tweet generado por IA que resume el digest se programa para las 18:00 UTC y se publica a través del cron de X existente.",
+        },
+      },
     ],
   },
   {

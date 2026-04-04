@@ -5,8 +5,13 @@ import {
   updateTranslation,
   publishDigest,
   archiveDigest,
+  getDigestTranslation,
+  markDigestXScheduled,
+  createXPost,
 } from "@/lib/db";
 import { withMetrics } from "@/lib/with-metrics";
+import { generateDigestTweet, buildDigestHashtags, computeEveningSchedule } from "@/lib/digest-to-tweet";
+import { hasXCredentials } from "@/lib/x-client";
 
 export const GET = withMetrics("/api/admin/market-digests/[id]", async (
   req: NextRequest,
@@ -50,7 +55,27 @@ export const PUT = withMetrics("/api/admin/market-digests/[id]", async (
 
   if (body.action === "publish") {
     await publishDigest(id);
-    return NextResponse.json({ ok: true, action: "published" });
+
+    let xPost: { id: string; scheduledAt: string } | null = null;
+    try {
+      const digest = await getMarketDigestWithTranslations(id);
+      const hasX = await hasXCredentials();
+      if (digest && !digest.xScheduledPostId && hasX) {
+        const enTranslation = await getDigestTranslation(id, "en");
+        if (enTranslation) {
+          const tweetContent = await generateDigestTweet(enTranslation, digest.mentionedTickers);
+          const hashtags = buildDigestHashtags(digest.mentionedTickers);
+          const scheduledAt = computeEveningSchedule();
+          const post = await createXPost({ content: tweetContent, hashtags, scheduledAt });
+          await markDigestXScheduled(id, post.id);
+          xPost = { id: post.id, scheduledAt };
+        }
+      }
+    } catch (err) {
+      console.error("[market-digest] X post scheduling failed:", err);
+    }
+
+    return NextResponse.json({ ok: true, action: "published", xPost });
   }
 
   if (body.action === "archive") {

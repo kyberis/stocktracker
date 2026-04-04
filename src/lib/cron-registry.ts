@@ -61,7 +61,7 @@ export const CRON_REGISTRY: CronJob[] = [
     name: "x-post",
     path: "/api/cron/x-post",
     schedule: "*/15 * * * *",
-    description: "Publish scheduled X/Twitter posts via the X API",
+    description: "Publish scheduled X/Twitter posts via the X API (includes auto-generated market digest posts)",
   },
   {
     name: "refresh-holdings",

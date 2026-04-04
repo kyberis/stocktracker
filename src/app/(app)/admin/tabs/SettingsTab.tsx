@@ -675,6 +675,7 @@ const AI_FLOW_META_UI: Record<string, { label: string; description: string }> = 
   weekly_digest: { label: "Weekly Digest", description: "Digest paragraph (cron)" },
   weekly_digest_admin: { label: "Weekly Digest (Admin)", description: "Admin-triggered digest" },
   digest_email: { label: "Market Digest Email", description: "Newsletter rewrite pipeline" },
+  digest_x_post: { label: "Digest X Post", description: "Generate X.com post from digest" },
 };
 
 const AI_FLOW_KEYS_UI = Object.keys(AI_FLOW_META_UI);
