@@ -20,6 +20,7 @@ export default function BackfillCTA({ holdingsCount, onComplete }: Props) {
   const [status, setStatus] = useState<BackfillStatus | null>(null);
   const [backfilling, setBackfilling] = useState(false);
   const [error, setError] = useState(false);
+  const [checkKey, setCheckKey] = useState(0);
 
   useEffect(() => {
     if (holdingsCount === 0) return;
@@ -31,21 +32,27 @@ export default function BackfillCTA({ holdingsCount, onComplete }: Props) {
       })
       .catch(() => {});
     return () => { cancelled = true; };
-  }, [holdingsCount]);
+  }, [holdingsCount, checkKey]);
 
   const runBackfill = useCallback(async () => {
     setBackfilling(true);
     setError(false);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 180_000);
     try {
       const res = await fetch("/api/portfolio/backfill-snapshots", {
         method: "POST",
         credentials: "include",
+        signal: controller.signal,
       });
+      clearTimeout(timeout);
       if (!res.ok) throw new Error("backfill failed");
+      setCheckKey((k) => k + 1);
       onComplete();
     } catch {
       setError(true);
     } finally {
+      clearTimeout(timeout);
       setBackfilling(false);
     }
   }, [onComplete]);
@@ -106,6 +113,14 @@ export default function BackfillCTA({ holdingsCount, onComplete }: Props) {
       <span className="text-amber-500 shrink-0">⚠</span>
       <span className="flex-1 text-gray-700 dark:text-slate-300">
         Portfolio history can be improved. {reasonText}
+        {error && (
+          <span className="block mt-1 text-red-500 dark:text-red-400">
+            Recalculation failed.{" "}
+            <button onClick={runBackfill} className="underline font-medium">
+              Retry
+            </button>
+          </span>
+        )}
       </span>
       <button
         onClick={runBackfill}

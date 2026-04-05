@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Satisfaction Survey — trefolio Mockup</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --background: #0f172a;
+    --foreground: #f1f5f9;
+    --card: #1e293b;
+    --card-hover: #334155;
+    --border: #334155;
+    --muted: #94a3b8;
+    --accent: #10b981;
+    --accent-hover: #059669;
+    --accent-light: rgba(16,185,129,0.1);
+    --star-active: #fbbf24;
+    --star-inactive: #475569;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: var(--background);
+    color: var(--foreground);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Fake dashboard background ── */
+  .dashboard-bg {
+    padding: 32px;
+    opacity: 0.35;
+    pointer-events: none;
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+  }
+  .dashboard-bg h2 { font-size: 20px; font-weight: 600; margin-bottom: 16px; color: var(--foreground); }
+  .fake-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .fake-row { height: 12px; background: var(--border); border-radius: 6px; margin-bottom: 10px; }
+  .fake-row.short { width: 60%; }
+  .fake-row.med { width: 80%; }
+
+  /* ── Annotations panel ── */
+  .annotations {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .anno-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+  }
+  .anno-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--foreground);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .anno-btn:hover { background: var(--card-hover); }
+  .anno-btn.active { border-color: var(--accent); background: var(--accent-light); color: var(--accent); }
+  .anno-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+  }
+  .anno-dot.yellow { background: #fbbf24; }
+  .anno-dot.violet { background: #8b5cf6; }
+  .anno-dot.blue { background: #3b82f6; }
+  .anno-dot.red { background: #ef4444; }
+
+  /* ── Survey widget ── */
+  .survey-wrapper {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 100;
+    width: 360px;
+  }
+
+  .survey-widget {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.03);
+    overflow: hidden;
+    animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .survey-header {
+    padding: 16px 16px 0 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .survey-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .survey-brand-icon {
+    width: 28px; height: 28px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .survey-brand-icon svg { width: 16px; height: 16px; }
+  .survey-brand-text {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+  }
+
+  .close-btn {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .close-btn:hover { background: var(--card-hover); color: var(--foreground); }
+
+  .survey-body {
+    padding: 12px 16px 16px;
+  }
+
+  .survey-question {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--foreground);
+    line-height: 1.4;
+    margin-bottom: 14px;
+  }
+
+  /* ── Stars ── */
+  .stars-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 4px;
+  }
+  .star-btn {
+    width: 40px; height: 40px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    padding: 0;
+    transition: transform 0.15s;
+  }
+  .star-btn:hover { transform: scale(1.15); }
+  .star-btn:active { transform: scale(0.95); }
+  .star-btn svg {
+    width: 36px; height: 36px;
+    transition: all 0.2s;
+  }
+  .star-btn .star-fill { fill: var(--star-inactive); }
+  .star-btn.active .star-fill { fill: var(--star-active); }
+  .star-btn.hover-active .star-fill { fill: var(--star-active); opacity: 0.7; }
+
+  .stars-labels {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 2px;
+    margin-bottom: 16px;
+  }
+  .stars-labels span {
+    font-size: 10px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  /* ── Text area (appears after rating) ── */
+  .feedback-textarea-wrap {
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    transition: max-height 0.35s ease, opacity 0.25s ease, margin 0.35s ease;
+    margin-bottom: 0;
+  }
+  .feedback-textarea-wrap.visible {
+    max-height: 200px;
+    opacity: 1;
+    margin-bottom: 12px;
+  }
+  .feedback-textarea {
+    width: 100%;
+    min-height: 72px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--background);
+    color: var(--foreground);
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 1.5;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .feedback-textarea::placeholder { color: #64748b; }
+  .feedback-textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(16,185,129,0.15); }
+  .feedback-textarea-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  /* ── Submit button ── */
+  .submit-wrap {
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    transition: max-height 0.35s ease, opacity 0.25s ease;
+  }
+  .submit-wrap.visible { max-height: 60px; opacity: 1; }
+  .submit-btn {
+    width: 100%;
+    padding: 10px 16px;
+    border-radius: 10px;
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+    box-shadow: 0 2px 8px rgba(16,185,129,0.25);
+  }
+  .submit-btn:hover { background: var(--accent-hover); }
+
+  /* ── Thank you state ── */
+  .thankyou {
+    text-align: center;
+    padding: 24px 16px;
+  }
+  .thankyou-icon {
+    width: 48px; height: 48px;
+    background: var(--accent-light);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 12px;
+  }
+  .thankyou-icon svg { width: 24px; height: 24px; color: var(--accent); }
+  .thankyou h3 {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .thankyou p {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.5;
+    margin-bottom: 14px;
+  }
+
+  /* ── Trustpilot CTA ── */
+  .trustpilot-cta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 10px;
+    border: 1px solid #00b67a;
+    background: rgba(0,182,122,0.08);
+    color: #00b67a;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-decoration: none;
+  }
+  .trustpilot-cta:hover { background: rgba(0,182,122,0.15); }
+  .trustpilot-cta svg { width: 16px; height: 16px; }
+  .trustpilot-skip {
+    display: block;
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--muted);
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-family: inherit;
+  }
+  .trustpilot-skip:hover { color: var(--foreground); }
+
+  /* ── Dismissed state ── */
+  .dismissed-state {
+    text-align: center;
+    padding: 20px 16px;
+  }
+  .dismissed-state p {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .dismissed-state .emoji { font-size: 24px; margin-bottom: 8px; display: block; }
+
+  /* ── Design notes sidebar ── */
+  .design-notes {
+    position: fixed;
+    top: 16px;
+    left: 240px;
+    width: 310px;
+    z-index: 200;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    font-size: 11px;
+    line-height: 1.6;
+    color: var(--muted);
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+  }
+  .design-notes h4 {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 12px;
+    margin-bottom: 4px;
+  }
+  .design-notes h4:first-child { margin-top: 0; }
+  .design-notes ul { padding-left: 14px; margin-bottom: 6px; }
+  .design-notes li { margin-bottom: 2px; }
+  .design-notes strong { color: var(--foreground); font-weight: 600; }
+  .design-notes .tp-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: rgba(0,182,122,0.1);
+    border: 1px solid rgba(0,182,122,0.2);
+    color: #00b67a;
+    font-weight: 600;
+    font-size: 10px;
+    margin: 4px 0;
+  }
+
+  @media (max-width: 900px) { .design-notes { display: none; } }
+  @media (max-width: 700px) {
+    .survey-wrapper { right: 12px; left: 12px; width: auto; bottom: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Fake dashboard background -->
+<div class="dashboard-bg">
+  <h2>Portfolio Overview</h2>
+  <div class="fake-card">
+    <div class="fake-row" style="width:40%"></div>
+    <div class="fake-row med"></div>
+    <div class="fake-row short"></div>
+  </div>
+  <div class="fake-card">
+    <div class="fake-row" style="width:50%"></div>
+    <div class="fake-row"></div>
+    <div class="fake-row med"></div>
+    <div class="fake-row short"></div>
+  </div>
+  <div class="fake-card">
+    <div class="fake-row" style="width:35%"></div>
+    <div class="fake-row med"></div>
+  </div>
+</div>
+
+<!-- State selector -->
+<div class="annotations">
+  <div class="anno-title">View State</div>
+  <button class="anno-btn active" data-state="rating" onclick="showState('rating')">
+    <span class="anno-dot"></span> 1. Star Rating (initial)
+  </button>
+  <button class="anno-btn" data-state="expanded" onclick="showState('expanded')">
+    <span class="anno-dot yellow"></span> 2. After Rating (expanded)
+  </button>
+  <button class="anno-btn" data-state="thankyou-high" onclick="showState('thankyou-high')">
+    <span class="anno-dot violet"></span> 3a. Thank You (4-5★)
+  </button>
+  <button class="anno-btn" data-state="thankyou-low" onclick="showState('thankyou-low')">
+    <span class="anno-dot blue"></span> 3b. Thank You (1-3★)
+  </button>
+  <button class="anno-btn" data-state="dismissed" onclick="showState('dismissed')">
+    <span class="anno-dot red"></span> 4. Dismissed
+  </button>
+</div>
+
+<!-- Design notes -->
+<div class="design-notes">
+  <h4>Trigger Logic</h4>
+  <ul>
+    <li>Show after <strong>8 meaningful interactions</strong> (holding add, import, AI review, export, alert, etc.)</li>
+    <li>Minimum <strong>3 days</strong> since account creation</li>
+    <li>If dismissed → reset counter, re-show after <strong>15 more interactions</strong></li>
+    <li>If submitted → <strong>never show again</strong> (DB flag)</li>
+    <li>Max <strong>3 lifetime dismissals</strong> → stop asking forever</li>
+  </ul>
+
+  <h4>Non-Invasive Design</h4>
+  <ul>
+    <li>Bottom-right <strong>slide-up widget</strong>, not a blocking modal</li>
+    <li><strong>No backdrop</strong> — dashboard stays fully usable</li>
+    <li>Close button always visible, Escape key works</li>
+    <li>Never shown during active workflows (import, checkout, onboarding)</li>
+    <li>Small footprint: 360px wide, compact height</li>
+  </ul>
+
+  <h4>Trustpilot Evaluation</h4>
+  <div class="tp-badge">★ Recommended</div>
+  <ul>
+    <li><strong>Pros:</strong> Strong in EU market (your users), social proof for landing page, SEO boost, trusted by investors</li>
+    <li><strong>Cons:</strong> €200-900/mo for business tools; free tier shows reviews only</li>
+    <li><strong>Strategy:</strong> Redirect only <strong>4-5★</strong> users to Trustpilot (deflection pattern). Keep low ratings internal.</li>
+    <li><strong>Start free:</strong> Claim your Trustpilot profile + add TrustBox widget to landing page. Upgrade later if needed.</li>
+  </ul>
+
+  <h4>Meaningful Interactions Tracked</h4>
+  <ul>
+    <li>holding_add / holding_delete</li>
+    <li>portfolio_import</li>
+    <li>alert_created</li>
+    <li>portfolio_review_completed</li>
+    <li>portfolio_score_completed</li>
+    <li>csv_exported</li>
+    <li>snaptrade_fetch / snaptrade_auto_sync</li>
+    <li>tax_report_generated</li>
+  </ul>
+
+  <h4>Data Model</h4>
+  <ul>
+    <li>New table: <strong>satisfaction_surveys</strong> (user_id, rating, comment, created_at)</li>
+    <li>New columns on users: <strong>satisfaction_completed</strong>, <strong>satisfaction_dismiss_count</strong>, <strong>satisfaction_interaction_count</strong></li>
+    <li>Counter incremented server-side on each qualifying trackEvent</li>
+  </ul>
+</div>
+
+<!-- Survey widget -->
+<div class="survey-wrapper" id="survey">
+  <div class="survey-widget">
+    <!-- Rating state -->
+    <div id="state-rating">
+      <div class="survey-header">
+        <div class="survey-brand">
+          <div class="survey-brand-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          </div>
+          <span class="survey-brand-text">Quick feedback</span>
+        </div>
+        <button class="close-btn" onclick="showState('dismissed')" title="Dismiss">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="survey-body">
+        <div class="survey-question">How would you rate your experience with trefolio?</div>
+        <div class="stars-row" id="stars-row"></div>
+        <div class="stars-labels">
+          <span>Not great</span>
+          <span>Excellent</span>
+        </div>
+        <div class="feedback-textarea-wrap" id="textarea-wrap">
+          <div class="feedback-textarea-label">Anything you'd like to share? <span style="color:#64748b">(optional)</span></div>
+          <textarea class="feedback-textarea" placeholder="What could we do better? What do you love?" maxlength="500"></textarea>
+        </div>
+        <div class="submit-wrap" id="submit-wrap">
+          <button class="submit-btn" onclick="showState('thankyou-high')">Send Feedback</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Thank you (high rating 4-5★) — shows Trustpilot CTA -->
+    <div id="state-thankyou-high" style="display:none">
+      <div class="survey-header">
+        <div class="survey-brand">
+          <div class="survey-brand-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          </div>
+          <span class="survey-brand-text">Thank you!</span>
+        </div>
+        <button class="close-btn" onclick="showState('rating')" title="Close">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="thankyou">
+        <div class="thankyou-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+        </div>
+        <h3>Thanks for your feedback!</h3>
+        <p>Your rating helps us improve trefolio for everyone.</p>
+        <a href="#" class="trustpilot-cta">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          Share your experience on Trustpilot
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;opacity:0.6"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+        </a>
+        <button class="trustpilot-skip">Maybe later</button>
+      </div>
+    </div>
+
+    <!-- Thank you (low rating 1-3★) — no Trustpilot, empathetic message -->
+    <div id="state-thankyou-low" style="display:none">
+      <div class="survey-header">
+        <div class="survey-brand">
+          <div class="survey-brand-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          </div>
+          <span class="survey-brand-text">Thank you!</span>
+        </div>
+        <button class="close-btn" onclick="showState('rating')" title="Close">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="thankyou">
+        <div class="thankyou-icon" style="background: rgba(59,130,246,0.1)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        </div>
+        <h3>We hear you.</h3>
+        <p>Your feedback is valuable — we'll use it to make trefolio better for you.</p>
+      </div>
+    </div>
+
+    <!-- Dismissed state -->
+    <div id="state-dismissed" style="display:none">
+      <div class="dismissed-state">
+        <span class="emoji">👋</span>
+        <p>No worries — we'll check back later.<br><span style="font-size:11px; opacity:0.7">Widget auto-hides after 3 seconds.</span></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const starsRow = document.getElementById('stars-row');
+  let selectedRating = 0;
+  let hoverRating = 0;
+
+  for (let i = 1; i <= 5; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'star-btn';
+    btn.dataset.value = i;
+    btn.setAttribute('aria-label', i + ' star' + (i > 1 ? 's' : ''));
+    btn.innerHTML = '<svg viewBox="0 0 24 24"><path class="star-fill" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';
+    btn.addEventListener('click', () => selectStar(i));
+    btn.addEventListener('mouseenter', () => hoverStar(i));
+    btn.addEventListener('mouseleave', () => hoverStar(0));
+    starsRow.appendChild(btn);
+  }
+
+  function updateStars() {
+    document.querySelectorAll('.star-btn').forEach(btn => {
+      const val = parseInt(btn.dataset.value);
+      btn.classList.remove('active', 'hover-active');
+      if (val <= selectedRating) btn.classList.add('active');
+      else if (val <= hoverRating) btn.classList.add('hover-active');
+    });
+  }
+
+  function selectStar(n) {
+    selectedRating = n;
+    hoverRating = 0;
+    updateStars();
+    document.getElementById('textarea-wrap').classList.add('visible');
+    document.getElementById('submit-wrap').classList.add('visible');
+    const submitBtn = document.querySelector('.submit-btn');
+    submitBtn.onclick = () => showState(n >= 4 ? 'thankyou-high' : 'thankyou-low');
+  }
+
+  function hoverStar(n) {
+    hoverRating = n;
+    updateStars();
+  }
+
+  function showState(state) {
+    if (state === 'expanded') {
+      document.getElementById('state-rating').style.display = '';
+      document.getElementById('state-thankyou-high').style.display = 'none';
+      document.getElementById('state-thankyou-low').style.display = 'none';
+      document.getElementById('state-dismissed').style.display = 'none';
+      selectedRating = 4;
+      hoverRating = 0;
+      updateStars();
+      document.getElementById('textarea-wrap').classList.add('visible');
+      document.getElementById('submit-wrap').classList.add('visible');
+    } else if (state === 'rating') {
+      document.getElementById('state-rating').style.display = '';
+      document.getElementById('state-thankyou-high').style.display = 'none';
+      document.getElementById('state-thankyou-low').style.display = 'none';
+      document.getElementById('state-dismissed').style.display = 'none';
+      selectedRating = 0;
+      hoverRating = 0;
+      updateStars();
+      document.getElementById('textarea-wrap').classList.remove('visible');
+      document.getElementById('submit-wrap').classList.remove('visible');
+    } else {
+      document.getElementById('state-rating').style.display = 'none';
+      document.getElementById('state-thankyou-high').style.display = state === 'thankyou-high' ? '' : 'none';
+      document.getElementById('state-thankyou-low').style.display = state === 'thankyou-low' ? '' : 'none';
+      document.getElementById('state-dismissed').style.display = state === 'dismissed' ? '' : 'none';
+    }
+
+    document.querySelectorAll('.anno-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.state === state);
+    });
+  }
+</script>
+</body>
+</html>

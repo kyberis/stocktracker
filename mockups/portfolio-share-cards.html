@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Portfolio Share Cards — Chat Mockup</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f172a;
+    --fg: #f1f5f9;
+    --card: #1e293b;
+    --card-hover: #334155;
+    --border: #334155;
+    --muted: #94a3b8;
+    --indigo: #6366f1;
+    --indigo-dark: #4f46e5;
+    --green: #10b981;
+    --red: #ef4444;
+    --blue: #3b82f6;
+    --amber: #f59e0b;
+    --violet: #8b5cf6;
+    --cyan: #06b6d4;
+    --teal-bg: rgba(20,184,166,0.15);
+    --teal-text: #5eead4;
+    --rose-bg: rgba(244,63,94,0.15);
+    --rose-text: #fda4af;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    height: 100vh;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Layout */
+  .chat-shell { display:flex; flex-direction:column; height:100vh; max-width:480px; margin:0 auto; position:relative; }
+
+  /* Header */
+  .chat-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--card);
+    display: flex; align-items:center; gap:12px;
+  }
+  .chat-header h1 { font-size:16px; font-weight:600; }
+  .chat-header .subtitle { font-size:11px; color:var(--green); margin-top:1px; }
+  .header-avatars { display:flex; margin-left:auto; gap:-4px; }
+  .avatar {
+    width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:10px; font-weight:600; border:2px solid var(--card); position:relative;
+  }
+  .avatar.teal { background: var(--teal-bg); color: var(--teal-text); }
+  .avatar.rose { background: var(--rose-bg); color: var(--rose-text); }
+  .avatar .dot {
+    position:absolute; bottom:-1px; right:-1px; width:8px; height:8px; border-radius:50%;
+    border:2px solid var(--card);
+  }
+  .dot.online { background: var(--green); }
+  .dot.offline { background: #475569; }
+
+  /* Messages area */
+  .messages {
+    flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:12px;
+    overscroll-behavior:none;
+  }
+
+  /* Bubbles */
+  .msg { max-width:85%; display:flex; flex-direction:column; }
+  .msg.own { align-self:flex-end; align-items:flex-end; }
+  .msg.other { align-self:flex-start; align-items:flex-start; }
+  .sender { font-size:11px; font-weight:500; color:var(--teal-text); margin-bottom:2px; padding-left:4px; }
+  .bubble {
+    padding:10px 14px; border-radius:16px; font-size:13px; line-height:1.45;
+    word-break:break-word; white-space:pre-wrap;
+  }
+  .bubble.own { background:var(--indigo); color:#fff; border-bottom-right-radius:6px; }
+  .bubble.other { background:var(--teal-bg); color:var(--teal-text); border-bottom-left-radius:6px; }
+  .meta { display:flex; align-items:center; gap:6px; margin-top:3px; padding:0 4px; }
+  .meta .time { font-size:9px; color:#64748b; }
+  .meta .checks { display:flex; }
+  .meta .checks svg { width:14px; height:14px; }
+  .meta .checks.read svg { color: var(--blue); }
+  .meta .checks.unread svg { color: #475569; }
+  .meta .pin { font-size:9px; color:var(--amber); display:flex; align-items:center; gap:2px; }
+  .meta .ttl { font-size:9px; color:#64748b; display:flex; align-items:center; gap:2px; }
+
+  /* ========== SHARE CARDS ========== */
+  .share-card {
+    border-radius:12px; overflow:hidden; width:280px;
+    border:1px solid var(--border); background:var(--card);
+  }
+  .share-card .card-header {
+    padding:8px 12px; font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;
+    display:flex; align-items:center; gap:6px;
+  }
+  .share-card .card-body { padding:12px; }
+
+  /* Holding card */
+  .holding-card .card-header { background:rgba(99,102,241,0.15); color:#a5b4fc; }
+  .holding-card .ticker-row { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+  .holding-card .ticker-badge {
+    background:var(--indigo); color:#fff; padding:3px 8px; border-radius:6px;
+    font-size:12px; font-weight:700; letter-spacing:0.5px;
+  }
+  .holding-card .company-name { font-size:13px; font-weight:500; color:var(--fg); }
+  .holding-card .exchange-tag { font-size:10px; color:var(--muted); }
+  .holding-card .stats { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .holding-card .stat-label { font-size:10px; color:var(--muted); margin-bottom:1px; }
+  .holding-card .stat-value { font-size:13px; font-weight:600; }
+  .holding-card .gain { color:var(--green); }
+  .holding-card .loss { color:var(--red); }
+
+  /* Allocation card */
+  .allocation-card .card-header { background:rgba(16,185,129,0.15); color:#6ee7b7; }
+  .allocation-card .bar-chart { display:flex; height:28px; border-radius:6px; overflow:hidden; margin-bottom:10px; }
+  .allocation-card .bar-segment { display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:600; color:#fff; min-width:20px; }
+  .allocation-card .legend { display:flex; flex-wrap:wrap; gap:8px; }
+  .allocation-card .legend-item { display:flex; align-items:center; gap:4px; font-size:11px; color:var(--muted); }
+  .allocation-card .legend-dot { width:8px; height:8px; border-radius:50%; }
+  .allocation-card .legend-pct { font-weight:600; color:var(--fg); }
+
+  /* Summary card */
+  .summary-card .card-header { background:rgba(139,92,246,0.15); color:#c4b5fd; }
+  .summary-card .big-number { font-size:28px; font-weight:700; margin-bottom:4px; }
+  .summary-card .sub-line { font-size:12px; color:var(--muted); margin-bottom:12px; }
+  .summary-card .summary-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px; }
+  .summary-card .summary-stat { background:rgba(255,255,255,0.03); padding:8px; border-radius:8px; }
+  .summary-card .summary-stat .label { font-size:10px; color:var(--muted); }
+  .summary-card .summary-stat .value { font-size:14px; font-weight:600; margin-top:2px; }
+  .summary-card .top-tickers { display:flex; gap:4px; flex-wrap:wrap; }
+  .summary-card .top-ticker {
+    background:rgba(255,255,255,0.06); padding:2px 8px; border-radius:10px;
+    font-size:10px; font-weight:600; color:var(--muted);
+  }
+
+  /* Stock pick card */
+  .stock-pick-card .card-header { background:rgba(59,130,246,0.15); color:#93c5fd; }
+  .stock-pick-card .pick-row { display:flex; align-items:center; gap:10px; }
+  .stock-pick-card .pick-icon {
+    width:40px; height:40px; border-radius:10px; background:rgba(59,130,246,0.15);
+    display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; color:var(--blue);
+  }
+  .stock-pick-card .pick-info { flex:1; }
+  .stock-pick-card .pick-name { font-size:13px; font-weight:600; color:var(--fg); }
+  .stock-pick-card .pick-exchange { font-size:10px; color:var(--muted); }
+  .stock-pick-card .pick-price { text-align:right; }
+  .stock-pick-card .pick-price .price { font-size:15px; font-weight:700; color:var(--fg); }
+  .stock-pick-card .pick-price .change { font-size:11px; font-weight:600; }
+
+  /* Privacy badge */
+  .privacy-badge {
+    font-size:9px; padding:2px 6px; border-radius:4px; font-weight:500;
+    background:rgba(255,255,255,0.06); color:var(--muted); margin-left:auto;
+  }
+
+  /* Input area */
+  .input-area {
+    padding:12px 16px; border-top:1px solid var(--border); background:var(--card);
+    display:flex; align-items:flex-end; gap:8px;
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+  }
+  .input-btns { display:flex; gap:2px; }
+  .input-btn {
+    width:36px; height:36px; border-radius:8px; border:none; background:none;
+    color:var(--muted); cursor:pointer; display:flex; align-items:center; justify-content:center;
+    transition: all 0.15s;
+  }
+  .input-btn:hover { background:rgba(255,255,255,0.06); color:var(--fg); }
+  .input-btn.share-btn { color:var(--indigo); }
+  .input-btn.share-btn:hover { background:rgba(99,102,241,0.15); }
+  .input-textarea {
+    flex:1; background:rgba(255,255,255,0.06); border:none; border-radius:16px;
+    padding:8px 14px; font-size:13px; color:var(--fg); resize:none; outline:none;
+    font-family:inherit; line-height:1.4; min-height:36px; max-height:100px;
+  }
+  .input-textarea::placeholder { color:#64748b; }
+  .send-btn {
+    width:36px; height:36px; border-radius:50%; border:none; background:var(--indigo);
+    color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center;
+    transition: background 0.15s;
+  }
+  .send-btn:hover { background:var(--indigo-dark); }
+
+  /* ========== SHARE MODAL ========== */
+  .modal-overlay {
+    position:absolute; inset:0; background:rgba(0,0,0,0.5); z-index:50;
+    display:none; align-items:flex-end; justify-content:center;
+    backdrop-filter:blur(4px);
+  }
+  .modal-overlay.open { display:flex; }
+  .modal {
+    background:var(--card); border-radius:16px 16px 0 0; width:100%; max-height:75vh;
+    display:flex; flex-direction:column; overflow:hidden;
+    animation: slideUp 0.25s ease-out;
+  }
+  @keyframes slideUp { from { transform:translateY(100%); } to { transform:translateY(0); } }
+  .modal-handle { width:32px; height:4px; border-radius:2px; background:#475569; margin:8px auto; }
+  .modal-header { padding:12px 16px 0; }
+  .modal-title { font-size:16px; font-weight:600; margin-bottom:12px; }
+  .modal-tabs { display:flex; gap:0; border-bottom:1px solid var(--border); }
+  .modal-tab {
+    flex:1; padding:10px 8px; text-align:center; font-size:11px; font-weight:600;
+    color:var(--muted); border:none; background:none; cursor:pointer; position:relative;
+    transition: color 0.15s;
+  }
+  .modal-tab.active { color:var(--indigo); }
+  .modal-tab.active::after {
+    content:''; position:absolute; bottom:-1px; left:10%; right:10%; height:2px;
+    background:var(--indigo); border-radius:1px;
+  }
+  .modal-body { padding:16px; flex:1; overflow-y:auto; }
+
+  /* Share form */
+  .share-form { display:flex; flex-direction:column; gap:14px; }
+  .form-group { display:flex; flex-direction:column; gap:4px; }
+  .form-label { font-size:11px; font-weight:500; color:var(--muted); }
+  .form-select {
+    background:rgba(255,255,255,0.06); border:1px solid var(--border); border-radius:8px;
+    padding:8px 12px; font-size:13px; color:var(--fg); font-family:inherit; outline:none;
+    cursor:pointer; appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 10px center;
+  }
+  .toggle-row {
+    display:flex; align-items:center; justify-content:space-between; padding:8px 0;
+  }
+  .toggle-row .toggle-label { font-size:13px; color:var(--fg); }
+  .toggle-row .toggle-desc { font-size:10px; color:var(--muted); margin-top:1px; }
+  .toggle {
+    width:40px; height:22px; border-radius:11px; border:none; cursor:pointer;
+    position:relative; transition: background 0.2s;
+  }
+  .toggle.off { background:#475569; }
+  .toggle.on { background:var(--indigo); }
+  .toggle::after {
+    content:''; position:absolute; top:2px; width:18px; height:18px; border-radius:50%;
+    background:#fff; transition: left 0.2s;
+  }
+  .toggle.off::after { left:2px; }
+  .toggle.on::after { left:20px; }
+
+  .preview-box {
+    background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:10px;
+    padding:12px;
+  }
+  .preview-label { font-size:10px; color:var(--muted); margin-bottom:8px; font-weight:500; text-transform:uppercase; letter-spacing:0.5px; }
+
+  .share-submit {
+    width:100%; padding:12px; border-radius:10px; border:none; background:var(--indigo);
+    color:#fff; font-size:14px; font-weight:600; cursor:pointer; transition:background 0.15s;
+    font-family:inherit;
+  }
+  .share-submit:hover { background:var(--indigo-dark); }
+
+  /* SVG icons inline */
+  .icon { width:18px; height:18px; }
+  .icon-sm { width:14px; height:14px; }
+</style>
+</head>
+<body>
+
+<div class="chat-shell">
+  <!-- Header -->
+  <div class="chat-header">
+    <div>
+      <h1>Investment Club</h1>
+      <div class="subtitle">Carlos is online</div>
+    </div>
+    <div class="header-avatars" style="display:flex;gap:0;">
+      <div class="avatar teal" style="z-index:2">
+        M
+        <span class="dot online"></span>
+      </div>
+      <div class="avatar rose" style="margin-left:-6px;z-index:1">
+        C
+        <span class="dot online"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Messages -->
+  <div class="messages" id="messages">
+    <!-- Text message from other -->
+    <div class="msg other">
+      <div class="sender">Carlos</div>
+      <div class="bubble other">Hey! Have you been watching NVDA lately? I think it's a great entry point right now</div>
+      <div class="meta"><span class="time">10:32</span></div>
+    </div>
+
+    <!-- Stock pick card from other -->
+    <div class="msg other">
+      <div class="sender">Carlos</div>
+      <div class="share-card stock-pick-card">
+        <div class="card-header">
+          <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          Stock Pick
+        </div>
+        <div class="card-body">
+          <div class="pick-row">
+            <div class="pick-icon">NV</div>
+            <div class="pick-info">
+              <div class="pick-name">NVIDIA Corporation</div>
+              <div class="pick-exchange">NASDAQ</div>
+            </div>
+            <div class="pick-price">
+              <div class="price">$892.40</div>
+              <div class="change" style="color:var(--green)">+3.24%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="meta"><span class="time">10:33</span><span class="ttl"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>23h</span></div>
+    </div>
+
+    <!-- Own text -->
+    <div class="msg own">
+      <div class="bubble own">Totally agree! Let me show you what I'm holding</div>
+      <div class="meta">
+        <span class="time">10:35</span>
+        <span class="checks read"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 7 17l-5-5"/><path d="m22 10-9.5 9.5L10 17"/></svg></span>
+      </div>
+    </div>
+
+    <!-- Holding card (full privacy) from own -->
+    <div class="msg own">
+      <div class="share-card holding-card">
+        <div class="card-header">
+          <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
+          Holding
+          <span class="privacy-badge">Full details</span>
+        </div>
+        <div class="card-body">
+          <div class="ticker-row">
+            <span class="ticker-badge">AAPL</span>
+            <span class="company-name">Apple Inc.</span>
+            <span class="exchange-tag">NASDAQ</span>
+          </div>
+          <div class="stats">
+            <div><div class="stat-label">Shares</div><div class="stat-value">45</div></div>
+            <div><div class="stat-label">Avg Price</div><div class="stat-value">$142.30</div></div>
+            <div><div class="stat-label">Current</div><div class="stat-value">$178.72</div></div>
+            <div><div class="stat-label">P&L</div><div class="stat-value gain">+25.6%</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="meta">
+        <span class="pin"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h-6v4.76Z"/><path d="M10 2v2m4-2v2"/></svg>Persistent</span>
+        <span class="time">10:36</span>
+        <span class="checks read"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 7 17l-5-5"/><path d="m22 10-9.5 9.5L10 17"/></svg></span>
+      </div>
+    </div>
+
+    <!-- Text from other -->
+    <div class="msg other">
+      <div class="sender">Carlos</div>
+      <div class="bubble other">Nice position! Here's my overall allocation</div>
+      <div class="meta"><span class="time">10:38</span></div>
+    </div>
+
+    <!-- Allocation card from other (anonymous) -->
+    <div class="msg other">
+      <div class="share-card allocation-card">
+        <div class="card-header">
+          <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+          Allocation
+          <span class="privacy-badge">Anonymous</span>
+        </div>
+        <div class="card-body">
+          <div class="bar-chart">
+            <div class="bar-segment" style="width:55%;background:var(--indigo)">55%</div>
+            <div class="bar-segment" style="width:25%;background:var(--green)">25%</div>
+            <div class="bar-segment" style="width:12%;background:var(--amber)">12%</div>
+            <div class="bar-segment" style="width:8%;background:var(--cyan)">8%</div>
+          </div>
+          <div class="legend">
+            <div class="legend-item"><span class="legend-dot" style="background:var(--indigo)"></span>Stocks <span class="legend-pct">55%</span></div>
+            <div class="legend-item"><span class="legend-dot" style="background:var(--green)"></span>ETFs <span class="legend-pct">25%</span></div>
+            <div class="legend-item"><span class="legend-dot" style="background:var(--amber)"></span>Crypto <span class="legend-pct">12%</span></div>
+            <div class="legend-item"><span class="legend-dot" style="background:var(--cyan)"></span>Savings <span class="legend-pct">8%</span></div>
+          </div>
+          <div style="margin-top:8px;font-size:11px;color:var(--muted)">18 holdings</div>
+        </div>
+      </div>
+      <div class="meta"><span class="time">10:39</span><span class="ttl"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>23h</span></div>
+    </div>
+
+    <!-- Own text -->
+    <div class="msg own">
+      <div class="bubble own">Great diversification! Here's my portfolio overview</div>
+      <div class="meta">
+        <span class="time">10:41</span>
+        <span class="checks read"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 7 17l-5-5"/><path d="m22 10-9.5 9.5L10 17"/></svg></span>
+      </div>
+    </div>
+
+    <!-- Summary card from own (percentages only) -->
+    <div class="msg own">
+      <div class="share-card summary-card">
+        <div class="card-header">
+          <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+          Portfolio Summary
+          <span class="privacy-badge">Percentages only</span>
+        </div>
+        <div class="card-body">
+          <div class="big-number" style="color:var(--green)">+34.2%</div>
+          <div class="sub-line">Total Return</div>
+          <div class="summary-grid">
+            <div class="summary-stat">
+              <div class="label">Today</div>
+              <div class="value" style="color:var(--green)">+1.8%</div>
+            </div>
+            <div class="summary-stat">
+              <div class="label">Holdings</div>
+              <div class="value">12</div>
+            </div>
+          </div>
+          <div style="font-size:10px;color:var(--muted);margin-bottom:6px">Top positions</div>
+          <div class="top-tickers">
+            <span class="top-ticker">AAPL</span>
+            <span class="top-ticker">MSFT</span>
+            <span class="top-ticker">NVDA</span>
+            <span class="top-ticker">VWCE</span>
+            <span class="top-ticker">BTC</span>
+          </div>
+        </div>
+      </div>
+      <div class="meta">
+        <span class="time">10:42</span>
+        <span class="checks read"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 7 17l-5-5"/><path d="m22 10-9.5 9.5L10 17"/></svg></span>
+      </div>
+    </div>
+
+    <!-- Holding card (ticker only privacy) -->
+    <div class="msg other">
+      <div class="sender">Carlos</div>
+      <div class="share-card holding-card">
+        <div class="card-header">
+          <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
+          Holding
+          <span class="privacy-badge">Ticker only</span>
+        </div>
+        <div class="card-body">
+          <div class="ticker-row">
+            <span class="ticker-badge">TSLA</span>
+            <span class="company-name">Tesla, Inc.</span>
+            <span class="exchange-tag">NASDAQ</span>
+          </div>
+          <div style="font-size:11px;color:var(--muted);padding:4px 0;">Position details hidden by sender</div>
+        </div>
+      </div>
+      <div class="meta">
+        <span class="pin"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h-6v4.76Z"/><path d="M10 2v2m4-2v2"/></svg>Persistent</span>
+        <span class="time">10:44</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Input area -->
+  <div class="input-area">
+    <div class="input-btns">
+      <button class="input-btn" title="Upload image">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+      </button>
+      <button class="input-btn share-btn" onclick="openModal()" title="Share portfolio">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
+      </button>
+    </div>
+    <textarea class="input-textarea" rows="1" placeholder="Type a message… ⌥↵ send"></textarea>
+    <button class="send-btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+    </button>
+  </div>
+
+  <!-- Share Modal -->
+  <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <div class="modal-title">Share Portfolio Data</div>
+        <div class="modal-tabs">
+          <button class="modal-tab active" onclick="switchTab(this, 'holding')">Holding</button>
+          <button class="modal-tab" onclick="switchTab(this, 'allocation')">Allocation</button>
+          <button class="modal-tab" onclick="switchTab(this, 'summary')">Summary</button>
+          <button class="modal-tab" onclick="switchTab(this, 'pick')">Stock Pick</button>
+        </div>
+      </div>
+      <div class="modal-body">
+        <!-- Holding tab -->
+        <div class="tab-content" id="tab-holding">
+          <div class="share-form">
+            <div class="form-group">
+              <label class="form-label">Select holding</label>
+              <select class="form-select">
+                <option>AAPL — Apple Inc.</option>
+                <option>MSFT — Microsoft Corp.</option>
+                <option>NVDA — NVIDIA Corp.</option>
+                <option>VWCE — Vanguard FTSE All-World</option>
+                <option>BTC — Bitcoin</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Privacy level</label>
+              <select class="form-select">
+                <option>Full details — shares, price, P&L</option>
+                <option>Ticker only — hide position details</option>
+              </select>
+            </div>
+            <div class="toggle-row">
+              <div>
+                <div class="toggle-label">Keep permanently</div>
+                <div class="toggle-desc">Disable 24h auto-delete</div>
+              </div>
+              <button class="toggle on" onclick="this.classList.toggle('on');this.classList.toggle('off')"></button>
+            </div>
+            <div class="preview-box">
+              <div class="preview-label">Preview</div>
+              <div class="share-card holding-card" style="width:100%;border:none;background:none;padding:0;">
+                <div class="card-body" style="padding:0">
+                  <div class="ticker-row">
+                    <span class="ticker-badge">AAPL</span>
+                    <span class="company-name">Apple Inc.</span>
+                    <span class="exchange-tag">NASDAQ</span>
+                  </div>
+                  <div class="stats">
+                    <div><div class="stat-label">Shares</div><div class="stat-value">45</div></div>
+                    <div><div class="stat-label">Avg Price</div><div class="stat-value">$142.30</div></div>
+                    <div><div class="stat-label">Current</div><div class="stat-value">$178.72</div></div>
+                    <div><div class="stat-label">P&L</div><div class="stat-value gain">+25.6%</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <button class="share-submit" onclick="closeModalDirect()">Share in Chat</button>
+          </div>
+        </div>
+        <!-- Allocation tab (hidden by default) -->
+        <div class="tab-content" id="tab-allocation" style="display:none">
+          <div class="share-form">
+            <div class="form-group">
+              <label class="form-label">Privacy level</label>
+              <select class="form-select">
+                <option>Anonymous — percentages only, no ticker names</option>
+                <option>Detailed — show asset type breakdown with tickers</option>
+              </select>
+            </div>
+            <div class="toggle-row">
+              <div>
+                <div class="toggle-label">Keep permanently</div>
+                <div class="toggle-desc">Disable 24h auto-delete</div>
+              </div>
+              <button class="toggle off" onclick="this.classList.toggle('on');this.classList.toggle('off')"></button>
+            </div>
+            <div class="preview-box">
+              <div class="preview-label">Preview</div>
+              <div class="allocation-card" style="border:none;background:none;">
+                <div style="padding:0">
+                  <div class="bar-chart">
+                    <div class="bar-segment" style="width:50%;background:var(--indigo)">50%</div>
+                    <div class="bar-segment" style="width:30%;background:var(--green)">30%</div>
+                    <div class="bar-segment" style="width:20%;background:var(--amber)">20%</div>
+                  </div>
+                  <div class="legend">
+                    <div class="legend-item"><span class="legend-dot" style="background:var(--indigo)"></span>Stocks <span class="legend-pct">50%</span></div>
+                    <div class="legend-item"><span class="legend-dot" style="background:var(--green)"></span>ETFs <span class="legend-pct">30%</span></div>
+                    <div class="legend-item"><span class="legend-dot" style="background:var(--amber)"></span>Crypto <span class="legend-pct">20%</span></div>
+                  </div>
+                  <div style="margin-top:6px;font-size:11px;color:var(--muted)">12 holdings</div>
+                </div>
+              </div>
+            </div>
+            <button class="share-submit" onclick="closeModalDirect()">Share in Chat</button>
+          </div>
+        </div>
+        <!-- Summary tab -->
+        <div class="tab-content" id="tab-summary" style="display:none">
+          <div class="share-form">
+            <div class="form-group">
+              <label class="form-label">Privacy level</label>
+              <select class="form-select">
+                <option>Percentages only — hide monetary values</option>
+                <option>Full — include total value and P&L amounts</option>
+              </select>
+            </div>
+            <div class="toggle-row">
+              <div>
+                <div class="toggle-label">Keep permanently</div>
+                <div class="toggle-desc">Disable 24h auto-delete</div>
+              </div>
+              <button class="toggle off" onclick="this.classList.toggle('on');this.classList.toggle('off')"></button>
+            </div>
+            <div class="preview-box">
+              <div class="preview-label">Preview</div>
+              <div style="text-align:center;padding:8px 0;">
+                <div style="font-size:28px;font-weight:700;color:var(--green)">+34.2%</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:2px;">Total Return · 12 holdings</div>
+                <div style="display:flex;gap:4px;justify-content:center;margin-top:10px;flex-wrap:wrap;">
+                  <span class="top-ticker">AAPL</span>
+                  <span class="top-ticker">MSFT</span>
+                  <span class="top-ticker">NVDA</span>
+                  <span class="top-ticker">VWCE</span>
+                  <span class="top-ticker">BTC</span>
+                </div>
+              </div>
+            </div>
+            <button class="share-submit" onclick="closeModalDirect()">Share in Chat</button>
+          </div>
+        </div>
+        <!-- Stock pick tab -->
+        <div class="tab-content" id="tab-pick" style="display:none">
+          <div class="share-form">
+            <div class="form-group">
+              <label class="form-label">Search ticker</label>
+              <input class="form-select" type="text" placeholder="e.g. NVDA, AAPL, BTC..." value="NVDA" style="appearance:auto;background-image:none;">
+            </div>
+            <div class="toggle-row">
+              <div>
+                <div class="toggle-label">Keep permanently</div>
+                <div class="toggle-desc">Disable 24h auto-delete</div>
+              </div>
+              <button class="toggle off" onclick="this.classList.toggle('on');this.classList.toggle('off')"></button>
+            </div>
+            <div class="preview-box">
+              <div class="preview-label">Preview</div>
+              <div class="stock-pick-card" style="border:none;background:none;">
+                <div style="padding:0">
+                  <div class="pick-row">
+                    <div class="pick-icon">NV</div>
+                    <div class="pick-info">
+                      <div class="pick-name">NVIDIA Corporation</div>
+                      <div class="pick-exchange">NASDAQ</div>
+                    </div>
+                    <div class="pick-price">
+                      <div class="price">$892.40</div>
+                      <div class="change" style="color:var(--green)">+3.24%</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <button class="share-submit" onclick="closeModalDirect()">Share in Chat</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function openModal() {
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function closeModal(e) {
+  if (e.target === e.currentTarget) closeModalDirect();
+}
+function closeModalDirect() {
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+function switchTab(btn, tab) {
+  document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+  document.getElementById('tab-' + tab).style.display = 'block';
+}
+// Scroll to bottom on load
+document.getElementById('messages').scrollTop = 99999;
+</script>
+
+</body>
+</html>
