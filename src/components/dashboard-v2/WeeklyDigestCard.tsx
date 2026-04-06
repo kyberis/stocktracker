@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth-context";
 import { usePortfolio } from "@/lib/portfolio-context";
-import { formatNumber } from "@/lib/utils";
+const fmtDigest = (n: number) =>
+  Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 import type { WeeklyDigestRow } from "@/lib/db/weekly-digest";
 
 function isDigestFreshDay(): boolean {
@@ -97,20 +98,20 @@ export default function WeeklyDigestCard({ position = "default" }: WeeklyDigestC
   if (stats.weekChange !== undefined) {
     statItems.push({
       label: t("weeklyDigestWeekChange"),
-      value: `${stats.weekChange >= 0 ? "+" : "-"}${sym}${formatNumber(Math.abs(stats.weekChange))}`,
+      value: `${stats.weekChange >= 0 ? "+" : "-"}${sym}${fmtDigest(stats.weekChange)}`,
       color: stats.weekChange >= 0 ? "text-emerald-500" : "text-red-500",
     });
   } else if (stats.totalValue !== undefined) {
     statItems.push({
       label: t("weeklyDigestPortfolioValue") ?? "Value",
-      value: `${sym}${formatNumber(stats.totalValue)}`,
+      value: `${sym}${fmtDigest(stats.totalValue)}`,
     });
   }
 
   if (stats.bestPerformer) {
     statItems.push({
       label: t("weeklyDigestBestPerformer"),
-      value: `${stats.bestPerformer.ticker} ${stats.bestPerformer.changePct >= 0 ? "+" : ""}${stats.bestPerformer.changePct.toFixed(1)}%`,
+      value: `${stats.bestPerformer.ticker} ${stats.bestPerformer.changePct >= 0 ? "+" : ""}${stats.bestPerformer.changePct.toFixed(2)}%`,
       color: stats.bestPerformer.changePct >= 0 ? "text-emerald-500" : "text-red-500",
     });
   } else if (stats.holdingCount !== undefined) {

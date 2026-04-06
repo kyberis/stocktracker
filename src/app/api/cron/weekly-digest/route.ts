@@ -60,7 +60,7 @@ function getWeekRange(): { weekStart: string; weekEnd: string } {
 function buildWeeklyDigestEmail(displayName: string, summaryText: string, stats: WeeklyDigestStats, baseUrl: string, weekStart: string, weekEnd: string): string {
   const currency = stats.currency || "EUR";
   const currencySymbol = currency === "USD" ? "$" : currency === "GBP" ? "£" : "€";
-  const fmtNum = (n: number) => Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  const fmtNum = (n: number) => Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const weekChange = stats.weekChange !== undefined
     ? `${stats.weekChange >= 0 ? "+" : "−"}${currencySymbol}${fmtNum(stats.weekChange)}`
     : "—";
@@ -71,7 +71,7 @@ function buildWeeklyDigestEmail(displayName: string, summaryText: string, stats:
     ? (stats.weekChange >= 0 ? "#f0fdf4" : "#fef2f2")
     : "#f8fafc";
   const best = stats.bestPerformer
-    ? `${stats.bestPerformer.ticker} ${stats.bestPerformer.changePct >= 0 ? "+" : ""}${stats.bestPerformer.changePct.toFixed(1)}%`
+    ? `${stats.bestPerformer.ticker} ${stats.bestPerformer.changePct >= 0 ? "+" : ""}${stats.bestPerformer.changePct.toFixed(2)}%`
     : "—";
   const bestColor = stats.bestPerformer
     ? (stats.bestPerformer.changePct >= 0 ? "#10b981" : "#ef4444")
