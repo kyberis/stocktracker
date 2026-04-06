@@ -11,11 +11,11 @@ import { trackCanonicalConversion } from "@/lib/ad-tracking";
 import ProCompareCard from "@/components/ProCompareCard";
 import TierIcon from "@/components/TierIcon";
 import TierFeatureBadge from "@/components/TierFeatureBadge";
-import { Smartphone, Monitor, Copy, Check, Trash2, User, CreditCard, Bell, FolderOpen, Gift, Share2 } from "lucide-react";
+import { Smartphone, Monitor, Copy, Check, Trash2, User, Users, CreditCard, Bell, FolderOpen, Gift, Share2, Eye, EyeOff, Globe } from "lucide-react";
 import NotificationChannels from "@/components/NotificationChannels";
 import { COUNTRIES } from "@/lib/countries";
 
-const PROFILE_TABS = ["account", "subscription", "notifications", "portfolios", "referrals", "devices"] as const;
+const PROFILE_TABS = ["account", "subscription", "notifications", "portfolios", "referrals", "social", "devices"] as const;
 type ProfileTab = (typeof PROFILE_TABS)[number];
 
 const TAB_ICONS: Record<ProfileTab, typeof User> = {
@@ -24,6 +24,7 @@ const TAB_ICONS: Record<ProfileTab, typeof User> = {
   notifications: Bell,
   portfolios: FolderOpen,
   referrals: Gift,
+  social: Users,
   devices: Monitor,
 };
 
@@ -33,6 +34,7 @@ const TAB_LABEL_KEYS: Record<ProfileTab, string> = {
   notifications: "profileTabNotifications",
   portfolios: "profileTabPortfolios",
   referrals: "profileTabReferrals",
+  social: "profileTabSocial",
   devices: "profileTabDevices",
 };
 
@@ -624,6 +626,407 @@ function PortfolioManagementSection() {
         </div>
       )}
     </div>
+  );
+}
+
+interface SocialFormState {
+  profileSlug: string;
+  bio: string;
+  headline: string;
+  socialVisibility: "public" | "private";
+  experienceLevel: string;
+  sharePortfolioValue: boolean;
+  shareHoldings: boolean;
+  allowComments: boolean;
+}
+
+const EXPERIENCE_OPTIONS = [
+  { value: "", label: "Not set", labelEs: "Sin definir" },
+  { value: "beginner", label: "Beginner", labelEs: "Principiante" },
+  { value: "intermediate", label: "Intermediate", labelEs: "Intermedio" },
+  { value: "experienced", label: "Experienced", labelEs: "Experimentado" },
+  { value: "professional", label: "Professional", labelEs: "Profesional" },
+];
+
+function SocialProfileSection() {
+  const { t, language } = useI18n();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
+  const [slugError, setSlugError] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const [form, setForm] = useState<SocialFormState>({
+    profileSlug: "",
+    bio: "",
+    headline: "",
+    socialVisibility: "private",
+    experienceLevel: "",
+    sharePortfolioValue: false,
+    shareHoldings: false,
+    allowComments: true,
+  });
+
+  useEffect(() => {
+    fetch("/api/social/profile")
+      .then((r) => {
+        if (!r.ok) throw new Error("Not found");
+        return r.json();
+      })
+      .then((p) => {
+        setForm({
+          profileSlug: p.profileSlug || "",
+          bio: p.bio || "",
+          headline: p.headline || "",
+          socialVisibility: p.socialVisibility || "private",
+          experienceLevel: p.experienceLevel || "",
+          sharePortfolioValue: !!p.sharePortfolioValue,
+          shareHoldings: !!p.shareHoldings,
+          allowComments: p.allowComments !== false,
+        });
+        setDisplayName(p.displayName || "");
+        setAvatarUrl(p.avatarUrl || "");
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const slugValid = form.profileSlug === "" || /^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$/.test(form.profileSlug);
+
+  const handleSlugChange = (raw: string) => {
+    const sanitized = raw.toLowerCase().replace(/[^a-z0-9-]/g, "");
+    setForm((f) => ({ ...f, profileSlug: sanitized }));
+    setSlugError("");
+  };
+
+  const handleSave = async () => {
+    setError("");
+    setSlugError("");
+    setSaved(false);
+
+    if (form.profileSlug && !slugValid) {
+      setSlugError("Slug must be 3-40 chars: lowercase letters, numbers, hyphens.");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const res = await fetch("/api/social/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        if (res.status === 409) setSlugError(data?.error || "Slug already taken.");
+        else setError(data?.error || "Failed to save.");
+        setSaving(false);
+        return;
+      }
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch {
+      setError("Network error.");
+    }
+    setSaving(false);
+  };
+
+  if (loading) {
+    return (
+      <div className="card p-6 animate-pulse space-y-4">
+        <div className="h-6 bg-gray-200 dark:bg-slate-700 rounded w-1/3" />
+        <div className="h-10 bg-gray-200 dark:bg-slate-700 rounded w-full" />
+        <div className="h-10 bg-gray-200 dark:bg-slate-700 rounded w-full" />
+        <div className="h-20 bg-gray-200 dark:bg-slate-700 rounded w-full" />
+      </div>
+    );
+  }
+
+  const profileUrl = form.profileSlug
+    ? `trefolio.app/u/${form.profileSlug}`
+    : "trefolio.app/u/...";
+
+  const initials = (displayName || "U")
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+
+  return (
+    <>
+      {/* Social Profile Settings */}
+      <div className="card p-6 space-y-5">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-500/15 flex items-center justify-center">
+            <Globe className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              {language === "es" ? "Perfil Social" : "Social Profile"}
+            </h2>
+            <p className="text-xs text-gray-500 dark:text-slate-400">
+              {language === "es" ? "Configura tu perfil público y visibilidad" : "Configure your public profile and visibility"}
+            </p>
+          </div>
+        </div>
+
+        <div className="grid gap-4">
+          {/* Profile Visibility */}
+          <div>
+            <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">
+              {language === "es" ? "Visibilidad del perfil" : "Profile Visibility"}
+            </label>
+            <select
+              value={form.socialVisibility}
+              onChange={(e) => setForm((f) => ({ ...f, socialVisibility: e.target.value as "public" | "private" }))}
+              className="w-full text-sm bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
+            >
+              <option value="public">{language === "es" ? "Público" : "Public"}</option>
+              <option value="private">{language === "es" ? "Privado" : "Private"}</option>
+            </select>
+          </div>
+
+          {/* Profile URL */}
+          <div>
+            <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">
+              {language === "es" ? "URL del perfil" : "Profile URL"}
+            </label>
+            <div className="flex items-center gap-0">
+              <span className="text-sm px-3 py-2 bg-gray-100 dark:bg-slate-600 border border-r-0 border-gray-200 dark:border-slate-600 rounded-l-lg text-gray-500 dark:text-slate-400 whitespace-nowrap">
+                trefolio.app/u/
+              </span>
+              <input
+                type="text"
+                value={form.profileSlug}
+                onChange={(e) => handleSlugChange(e.target.value)}
+                placeholder="your-name"
+                maxLength={40}
+                className={`flex-1 text-sm border rounded-r-lg px-3 py-2 bg-white dark:bg-slate-700 focus:ring-1 focus:ring-emerald-500 focus:outline-none ${
+                  slugError
+                    ? "border-red-300 dark:border-red-500"
+                    : "border-gray-200 dark:border-slate-600"
+                }`}
+              />
+            </div>
+            {slugError && <p className="text-xs text-red-500 dark:text-red-400 mt-1">{slugError}</p>}
+            {!slugError && form.profileSlug && !slugValid && (
+              <p className="text-xs text-amber-500 dark:text-amber-400 mt-1">
+                {language === "es" ? "Mín. 3 caracteres: letras minúsculas, números, guiones" : "Min 3 chars: lowercase letters, numbers, hyphens"}
+              </p>
+            )}
+          </div>
+
+          {/* Headline */}
+          <div>
+            <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">
+              {language === "es" ? "Titular" : "Headline"}
+            </label>
+            <input
+              type="text"
+              value={form.headline}
+              onChange={(e) => setForm((f) => ({ ...f, headline: e.target.value }))}
+              placeholder={language === "es" ? "Ej: Inversor particular en ETFs" : "e.g. Long-term ETF investor"}
+              maxLength={120}
+              className="w-full text-sm"
+            />
+          </div>
+
+          {/* Experience Level */}
+          <div>
+            <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">
+              {language === "es" ? "Nivel de experiencia" : "Experience Level"}
+            </label>
+            <select
+              value={form.experienceLevel}
+              onChange={(e) => setForm((f) => ({ ...f, experienceLevel: e.target.value }))}
+              className="w-full text-sm bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
+            >
+              {EXPERIENCE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {language === "es" ? opt.labelEs : opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Bio */}
+          <div>
+            <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">
+              {language === "es" ? "Biografía" : "Bio"}
+            </label>
+            <textarea
+              value={form.bio}
+              onChange={(e) => setForm((f) => ({ ...f, bio: e.target.value }))}
+              placeholder={language === "es" ? "Cuéntanos sobre ti y tu enfoque de inversión..." : "Tell us about yourself and your investing approach..."}
+              maxLength={500}
+              rows={4}
+              className="w-full text-sm rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 focus:ring-1 focus:ring-emerald-500 focus:outline-none placeholder:text-gray-400 dark:placeholder:text-slate-500 resize-none"
+            />
+            <p className="text-xs text-gray-400 dark:text-slate-500 text-right mt-0.5">
+              {form.bio.length}/500
+            </p>
+          </div>
+        </div>
+
+        {/* Sharing toggles */}
+        <div className="space-y-3 pt-2 border-t border-gray-200 dark:border-slate-700">
+          <p className="text-sm font-medium text-gray-900 dark:text-white">
+            {language === "es" ? "Compartir en perfil público" : "Public Profile Sharing"}
+          </p>
+
+          <label className="flex items-center justify-between gap-3 cursor-pointer">
+            <div>
+              <p className="text-sm text-gray-700 dark:text-slate-300">
+                {language === "es" ? "Compartir valor del portafolio" : "Share Portfolio Value"}
+              </p>
+              <p className="text-xs text-gray-400 dark:text-slate-500">
+                {language === "es" ? "Muestra tu valor total, ganancia/pérdida y gráfico" : "Shows your total value, gain/loss, and chart"}
+              </p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={form.sharePortfolioValue}
+              onClick={() => setForm((f) => ({ ...f, sharePortfolioValue: !f.sharePortfolioValue }))}
+              className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${
+                form.sharePortfolioValue ? "bg-emerald-500" : "bg-gray-200 dark:bg-slate-600"
+              }`}
+            >
+              <span className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                form.sharePortfolioValue ? "translate-x-5" : "translate-x-0"
+              }`} />
+            </button>
+          </label>
+
+          <label className="flex items-center justify-between gap-3 cursor-pointer">
+            <div>
+              <p className="text-sm text-gray-700 dark:text-slate-300">
+                {language === "es" ? "Compartir posiciones" : "Share Holdings"}
+              </p>
+              <p className="text-xs text-gray-400 dark:text-slate-500">
+                {language === "es" ? "Muestra tus tickers, asignación y desglose por sector" : "Shows your tickers, allocation, and sector breakdown"}
+              </p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={form.shareHoldings}
+              onClick={() => setForm((f) => ({ ...f, shareHoldings: !f.shareHoldings }))}
+              className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${
+                form.shareHoldings ? "bg-emerald-500" : "bg-gray-200 dark:bg-slate-600"
+              }`}
+            >
+              <span className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                form.shareHoldings ? "translate-x-5" : "translate-x-0"
+              }`} />
+            </button>
+          </label>
+
+          <label className="flex items-center justify-between gap-3 cursor-pointer">
+            <div>
+              <p className="text-sm text-gray-700 dark:text-slate-300">
+                {language === "es" ? "Permitir comentarios" : "Allow Comments"}
+              </p>
+              <p className="text-xs text-gray-400 dark:text-slate-500">
+                {language === "es" ? "Otros usuarios pueden comentar en tus publicaciones" : "Other users can comment on your posts"}
+              </p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={form.allowComments}
+              onClick={() => setForm((f) => ({ ...f, allowComments: !f.allowComments }))}
+              className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors ${
+                form.allowComments ? "bg-emerald-500" : "bg-gray-200 dark:bg-slate-600"
+              }`}
+            >
+              <span className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                form.allowComments ? "translate-x-5" : "translate-x-0"
+              }`} />
+            </button>
+          </label>
+        </div>
+
+        {error && <p className="text-xs text-red-500 dark:text-red-400" role="alert">{error}</p>}
+
+        <div className="flex justify-end">
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="btn-primary text-sm disabled:opacity-40"
+          >
+            {saving ? t("loading") : saved ? t("profileSaved") : t("saveProfile")}
+          </button>
+        </div>
+      </div>
+
+      {/* Profile Preview */}
+      <div className="card p-6 space-y-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-slate-700 flex items-center justify-center">
+            {form.socialVisibility === "public" ? (
+              <Eye className="w-5 h-5 text-gray-500 dark:text-slate-400" />
+            ) : (
+              <EyeOff className="w-5 h-5 text-gray-500 dark:text-slate-400" />
+            )}
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              {language === "es" ? "Vista previa del perfil" : "Profile Preview"}
+            </h2>
+            <p className="text-xs text-gray-500 dark:text-slate-400">
+              {language === "es" ? "Así se verá tu perfil público" : "This is how your public profile will look"}
+            </p>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-800/40 p-4 space-y-3">
+          <div className="flex items-center gap-3">
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="" className="w-12 h-12 rounded-full object-cover border border-gray-200 dark:border-slate-600" />
+            ) : (
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-white text-sm font-bold">
+                {initials}
+              </div>
+            )}
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                {displayName || (language === "es" ? "Tu nombre" : "Your name")}
+              </p>
+              {form.headline && (
+                <p className="text-xs text-gray-500 dark:text-slate-400 truncate">{form.headline}</p>
+              )}
+              {form.experienceLevel && (
+                <span className={`inline-block mt-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
+                  form.experienceLevel === "professional"
+                    ? "bg-violet-100 dark:bg-violet-500/15 text-violet-700 dark:text-violet-300"
+                    : form.experienceLevel === "experienced"
+                      ? "bg-blue-100 dark:bg-blue-500/15 text-blue-700 dark:text-blue-300"
+                      : form.experienceLevel === "intermediate"
+                        ? "bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
+                        : "bg-gray-100 dark:bg-slate-600 text-gray-600 dark:text-slate-300"
+                }`}>
+                  {EXPERIENCE_OPTIONS.find((o) => o.value === form.experienceLevel)?.[language === "es" ? "labelEs" : "label"] || form.experienceLevel}
+                </span>
+              )}
+            </div>
+          </div>
+          {form.bio && (
+            <p className="text-xs text-gray-600 dark:text-slate-300 line-clamp-3">{form.bio}</p>
+          )}
+          <p className="text-[10px] text-gray-400 dark:text-slate-500 font-mono">{profileUrl}</p>
+          <div className="flex items-center gap-3 text-[10px] text-gray-400 dark:text-slate-500">
+            {form.sharePortfolioValue && <span className="flex items-center gap-1"><Eye className="w-3 h-3" /> {language === "es" ? "Valor visible" : "Value visible"}</span>}
+            {form.shareHoldings && <span className="flex items-center gap-1"><Eye className="w-3 h-3" /> {language === "es" ? "Posiciones visibles" : "Holdings visible"}</span>}
+            {!form.sharePortfolioValue && !form.shareHoldings && (
+              <span>{language === "es" ? "Portafolio no compartido" : "Portfolio not shared"}</span>
+            )}
+          </div>
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -1766,6 +2169,9 @@ export default function ProfilePage() {
 
         {/* === Referrals Tab === */}
         {effectiveTab === "referrals" && <ReferralTab />}
+
+        {/* === Social Tab === */}
+        {effectiveTab === "social" && <SocialProfileSection />}
 
         {/* === Devices Tab === */}
         {effectiveTab === "devices" && <>

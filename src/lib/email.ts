@@ -659,7 +659,7 @@ export async function sendAdminSubscriptionNotification(
   userEmail: string,
   displayName: string,
   newPlan: string,
-  eventType: "new_subscription" | "plan_change",
+  eventType: "new_subscription" | "plan_change" | "cancellation",
 ): Promise<void> {
   if (process.env.NODE_ENV !== "production") return;
 
@@ -675,7 +675,10 @@ export async function sendAdminSubscriptionNotification(
     ? `<strong>${holdingCount}</strong> holding${holdingCount === 1 ? "" : "s"} in portfolio`
     : "No holdings yet";
 
-  const eventLabel = eventType === "new_subscription" ? "New Subscription" : "Plan Change";
+  const eventLabel =
+    eventType === "new_subscription" ? "New Subscription"
+    : eventType === "cancellation" ? "Subscription Cancelled"
+    : "Plan Change";
   const planLabel = newPlan.charAt(0).toUpperCase() + newPlan.slice(1);
 
   const html = `

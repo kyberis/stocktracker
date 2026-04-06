@@ -306,6 +306,13 @@ async function handleLoginFlow(
         trial_expired_notified: 0,
         checklist_dismissed_at: "",
         weekly_digest_enabled: 1,
+        profile_slug: "",
+        bio: "",
+        social_visibility: "private",
+        headline: "",
+        share_portfolio_value: 0,
+        share_holdings: 0,
+        allow_comments: 1,
       };
       trackEvent(publicUser.id, "signup", {
         source: attribution.source,

@@ -142,3 +142,79 @@ export async function loginAsAdmin(request: APIRequestContext) {
 
   return true;
 }
+
+/**
+ * Set up a social profile for the current session via API.
+ * Requires the user to be logged in (session cookie on `request`).
+ */
+export async function setupSocialProfile(
+  request: APIRequestContext,
+  slug: string,
+  bio: string,
+  headline: string,
+  visibility: "public" | "private" = "public",
+) {
+  const res = await request.put("/api/social/profile", {
+    data: {
+      profileSlug: slug,
+      bio,
+      headline,
+      socialVisibility: visibility,
+      experienceLevel: "intermediate",
+    },
+  });
+  expect(res.status()).toBe(200);
+  return res.json();
+}
+
+/**
+ * Create a social post for the current session via API.
+ */
+export async function createSocialPost(
+  request: APIRequestContext,
+  title: string,
+  content: string,
+  postType = "article",
+  visibility = "public",
+  isDraft = false,
+) {
+  const res = await request.post("/api/social/posts", {
+    data: {
+      title,
+      content: `<p>${content}</p>`,
+      contentFormat: "html",
+      visibility,
+      postType,
+      isDraft,
+    },
+  });
+  expect(res.status()).toBe(201);
+  return res.json();
+}
+
+/**
+ * Send a connection request from the current session to `targetUserId`.
+ */
+export async function sendConnectionRequest(
+  request: APIRequestContext,
+  targetUserId: string,
+) {
+  const res = await request.post("/api/social/connections", {
+    data: { targetUserId },
+  });
+  expect(res.status()).toBe(201);
+  return res.json();
+}
+
+/**
+ * Accept a pending connection request.
+ */
+export async function acceptConnection(
+  request: APIRequestContext,
+  connectionId: string,
+) {
+  const res = await request.put(`/api/social/connections/${connectionId}`, {
+    data: { action: "accept" },
+  });
+  expect(res.status()).toBe(200);
+}

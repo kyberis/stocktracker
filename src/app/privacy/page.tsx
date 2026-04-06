@@ -35,7 +35,7 @@ export default function PrivacyPolicyPage() {
             Privacy Policy
           </h1>
           <p className="text-slate-500">
-            Last updated: March 17, 2026
+            Last updated: April 5, 2026
           </p>
         </header>
 
@@ -171,6 +171,19 @@ export default function PrivacyPolicyPage() {
                 your browser push subscription endpoint and encryption keys. These
                 are used only to deliver price alert notifications and are deleted
                 when you unsubscribe.
+              </li>
+            </ul>
+
+            <h3>Social Data (optional)</h3>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>
+                <strong className="text-slate-800">Social profile data (optional)</strong> —
+                If you enable social features, we collect and display: a public profile URL (slug),
+                bio, headline, experience level, and your content posts. You control visibility
+                (public or private) and can opt in to sharing aggregated portfolio value and
+                holdings composition (allocation percentages only — exact share counts are never
+                exposed). Connection relationships with other users are stored to enable network
+                features and direct messaging.
               </li>
             </ul>
 
@@ -429,6 +442,13 @@ export default function PrivacyPolicyPage() {
               </li>
               <li>
                 <strong className="text-slate-800">Your responsibility:</strong> You are responsible for deciding what holdings to include in your shared portfolio. We recommend reviewing the excluded tickers option before sharing.
+              </li>
+              <li>
+                <strong className="text-slate-800">User-generated social content:</strong> Posts,
+                profiles, and connection data you create through social features are visible
+                according to your visibility settings. Public posts and profiles are accessible
+                to anyone, including search engines. Network-only posts are visible to your
+                connections. You can delete your posts and profile data at any time.
               </li>
             </ul>
           </section>

@@ -17,6 +17,71 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.71.0",
+    date: "2026-04-05",
+    title: "Post Comments",
+    titleTranslations: { es: "Comentarios en Publicaciones" },
+    changes: [
+      {
+        type: "feature",
+        text: "Comments on social posts: connected users can comment on posts, with threaded replies and real-time updates. Post authors can enable or disable comments from their profile settings (enabled by default).",
+        translations: {
+          es: "Comentarios en publicaciones sociales: los usuarios conectados pueden comentar en las publicaciones, con respuestas anidadas y actualizaciones en tiempo real. Los autores pueden activar o desactivar los comentarios desde la configuración de su perfil (activado por defecto).",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Comment counts are now displayed on post cards in the feed and profile pages.",
+        translations: {
+          es: "Los conteos de comentarios ahora se muestran en las tarjetas de publicaciones en el feed y perfiles.",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.70.0",
+    date: "2026-04-05",
+    title: "Social Network",
+    titleTranslations: { es: "Red Social" },
+    changes: [
+      {
+        type: "feature",
+        text: "Public investor profiles with unique URLs (/u/username): share your bio, headline, experience level, and optionally your portfolio value and holdings composition with the community.",
+        translations: {
+          es: "Perfiles públicos de inversor con URLs únicas (/u/usuario): comparte tu biografía, titular, nivel de experiencia, y opcionalmente el valor de tu portafolio y composición de participaciones con la comunidad.",
+        },
+      },
+      {
+        type: "feature",
+        text: "Rich-content posts: publish articles, analyses, trade ideas, and portfolio updates with full formatting. Choose public, network-only, or private visibility for each post.",
+        translations: {
+          es: "Publicaciones con contenido enriquecido: publica artículos, análisis, ideas de trading y actualizaciones de portafolio con formato completo. Elige visibilidad pública, solo red, o privada para cada publicación.",
+        },
+      },
+      {
+        type: "feature",
+        text: "Connection system: find investors, send connection requests, and message connected users directly through the existing private chat. Posts mentioning tickers automatically show financial disclaimers.",
+        translations: {
+          es: "Sistema de conexiones: encuentra inversores, envía solicitudes de conexión y envía mensajes directos a usuarios conectados a través del chat privado existente. Las publicaciones que mencionan tickers muestran automáticamente avisos financieros.",
+        },
+      },
+      {
+        type: "feature",
+        text: "People search with filters: search by name or username, filter by experience level, and find active investors who share content or have connections.",
+        translations: {
+          es: "Búsqueda de personas con filtros: busca por nombre o usuario, filtra por nivel de experiencia y encuentra inversores activos que comparten contenido o tienen conexiones.",
+        },
+      },
+      {
+        type: "feature",
+        text: "Network feed: see posts from your connections and discover public content from the community, all in a personalized timeline.",
+        translations: {
+          es: "Feed de red: ve publicaciones de tus conexiones y descubre contenido público de la comunidad, todo en una línea de tiempo personalizada.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.69.0",
     date: "2026-04-04",
     title: "AI Model Configuration",

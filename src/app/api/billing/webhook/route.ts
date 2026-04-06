@@ -209,6 +209,13 @@ export const POST = withMetrics("/api/billing/webhook", async (req: NextRequest)
             console.error("Plan-expired notification failed:", err),
           );
         }
+
+        const fullUser = await findUserById(user.id);
+        if (fullUser) {
+          sendAdminSubscriptionNotification(
+            fullUser.id, fullUser.email, fullUser.display_name || "", "free", "cancellation",
+          ).catch((err) => console.error("Admin cancellation notification failed:", err));
+        }
         break;
       }
       default:

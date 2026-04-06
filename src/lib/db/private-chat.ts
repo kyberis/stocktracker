@@ -433,3 +433,39 @@ export async function getReactionsForRoom(
   }
   return out;
 }
+
+export async function findOrCreateDirectRoom(userA: string, userB: string): Promise<string> {
+  const client = await ensureInitialized();
+
+  const result = await client.execute({
+    sql: `SELECT p1.room_id
+          FROM private_chat_participants p1
+          JOIN private_chat_participants p2 ON p1.room_id = p2.room_id
+          JOIN private_chat_rooms r ON r.id = p1.room_id
+          WHERE p1.user_id = ? AND p2.user_id = ? AND r.is_active = 1
+            AND (SELECT COUNT(*) FROM private_chat_participants WHERE room_id = p1.room_id) = 2
+          LIMIT 1`,
+    args: [userA, userB],
+  });
+
+  if (result.rows.length > 0) {
+    return str(result.rows[0].room_id);
+  }
+
+  const id = generateId();
+  await client.execute({
+    sql: "INSERT INTO private_chat_rooms (id, created_by, label) VALUES (?, ?, '')",
+    args: [id, userA],
+  });
+
+  await client.execute({
+    sql: "INSERT OR IGNORE INTO private_chat_participants (room_id, user_id) VALUES (?, ?)",
+    args: [id, userA],
+  });
+  await client.execute({
+    sql: "INSERT OR IGNORE INTO private_chat_participants (room_id, user_id) VALUES (?, ?)",
+    args: [id, userB],
+  });
+
+  return id;
+}

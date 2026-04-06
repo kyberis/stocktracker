@@ -61,6 +61,13 @@ export interface DbUser {
   trial_expired_notified: number;
   checklist_dismissed_at: string;
   weekly_digest_enabled: number;
+  profile_slug: string;
+  bio: string;
+  social_visibility: string;
+  headline: string;
+  share_portfolio_value: number;
+  share_holdings: number;
+  allow_comments: number;
 }
 
 export type PortfolioCurrency =
@@ -122,7 +129,14 @@ export interface PublicUser {
   lastActiveAt: string;
   experienceLevel: ExperienceLevel;
   referralCode: string;
-  referralRewardDays: number;
+    referralRewardDays: number;
+  profileSlug: string;
+  bio: string;
+  socialVisibility: string;
+  headline: string;
+  sharePortfolioValue: boolean;
+  shareHoldings: boolean;
+  allowComments: boolean;
 }
 
 export interface UserSettings {
@@ -323,6 +337,13 @@ export function rowToDbUser(row: Row): DbUser {
     trial_expired_notified: num(row.trial_expired_notified),
     checklist_dismissed_at: str(row.checklist_dismissed_at),
     weekly_digest_enabled: num(row.weekly_digest_enabled ?? 1),
+    profile_slug: str(row.profile_slug),
+    bio: str(row.bio),
+    social_visibility: str(row.social_visibility) || "private",
+    headline: str(row.headline),
+    share_portfolio_value: num(row.share_portfolio_value),
+    share_holdings: num(row.share_holdings),
+    allow_comments: num(row.allow_comments ?? 1),
   };
 }
 
@@ -370,6 +391,13 @@ export function mapUser(user: DbUser): PublicUser {
     experienceLevel: user.experience_level,
     referralCode: user.referral_code,
     referralRewardDays: user.referral_reward_days,
+    profileSlug: user.profile_slug,
+    bio: user.bio,
+    socialVisibility: user.social_visibility,
+    headline: user.headline,
+    sharePortfolioValue: user.share_portfolio_value === 1,
+    shareHoldings: user.share_holdings === 1,
+    allowComments: user.allow_comments === 1,
   };
 }
 

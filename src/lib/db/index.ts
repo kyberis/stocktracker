@@ -494,4 +494,60 @@ export {
   purgeExpiredPrivateChatMessages,
   toggleReaction,
   getReactionsForRoom,
+  findOrCreateDirectRoom,
 } from "./private-chat";
+
+export type { SocialVisibility, SocialProfile, PublicProfileData } from "./social-profiles";
+export {
+  isValidSlug,
+  getSocialProfile,
+  getPublicProfileBySlug,
+  updateSocialProfile,
+  isSlugAvailable,
+} from "./social-profiles";
+
+export type { PostType, PostVisibility, SocialPost, SocialPostWithAuthor, SocialPostImage, SocialPostComment } from "./social-posts";
+export {
+  createPost,
+  updatePost,
+  deletePost,
+  getPostById,
+  listPostsByUser,
+  getFeed,
+  addPostImage,
+  listPostImages,
+  addComment,
+  updateComment,
+  deleteComment,
+  listComments,
+  getCommentCount,
+  getCommentCountsForPosts,
+  isPostAuthorAllowingComments,
+} from "./social-posts";
+
+export type { ConnectionStatus, UserConnection, ConnectionWithUser } from "./social-connections";
+export {
+  getConnectionById,
+  getConnectionBetween,
+  requestConnection,
+  acceptConnection,
+  rejectConnection,
+  withdrawConnection,
+  removeConnection,
+  blockUser,
+  unblockUser,
+  isConnected,
+  listConnections,
+  countConnections,
+  searchPeople,
+} from "./social-connections";
+
+export {
+  fanOutPost,
+  removeFanOut,
+  refanOutPost,
+  backfillFeedForConnection,
+  cleanupFeedForDisconnection,
+  getFeedFromItems,
+  seedFeedItems,
+} from "./feed";

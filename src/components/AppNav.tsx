@@ -45,6 +45,11 @@ const NAV_LINKS = [
     match: (p: string) => p === "/economic-indicators",
     tierBadge: "pro" as const,
   },
+  {
+    href: "/network",
+    labelKey: "networkNav" as const,
+    match: (p: string) => p === "/network" || p.startsWith("/network/"),
+  },
 ];
 
 export default function AppNav() {

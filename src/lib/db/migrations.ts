@@ -2771,6 +2771,188 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       }
     },
   },
+  {
+    version: 92,
+    description:
+      "Social profiles: add profile_slug, bio, social_visibility, headline, share_portfolio_value, share_holdings to users",
+    up: async (client: Client) => {
+      const cols = await client.execute("PRAGMA table_info(users)");
+      const colNames = new Set(cols.rows.map((r) => String(r.name)));
+      if (!colNames.has("profile_slug")) {
+        await client.execute("ALTER TABLE users ADD COLUMN profile_slug TEXT NOT NULL DEFAULT ''");
+      }
+      if (!colNames.has("bio")) {
+        await client.execute("ALTER TABLE users ADD COLUMN bio TEXT NOT NULL DEFAULT ''");
+      }
+      if (!colNames.has("social_visibility")) {
+        await client.execute(
+          "ALTER TABLE users ADD COLUMN social_visibility TEXT NOT NULL DEFAULT 'private'"
+        );
+      }
+      if (!colNames.has("headline")) {
+        await client.execute("ALTER TABLE users ADD COLUMN headline TEXT NOT NULL DEFAULT ''");
+      }
+      if (!colNames.has("share_portfolio_value")) {
+        await client.execute(
+          "ALTER TABLE users ADD COLUMN share_portfolio_value INTEGER NOT NULL DEFAULT 0"
+        );
+      }
+      if (!colNames.has("share_holdings")) {
+        await client.execute(
+          "ALTER TABLE users ADD COLUMN share_holdings INTEGER NOT NULL DEFAULT 0"
+        );
+      }
+      await client.execute(
+        "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_profile_slug ON users(profile_slug) WHERE profile_slug != ''"
+      );
+    },
+  },
+  {
+    version: 93,
+    description: "Create user_connections table",
+    up: async (client: Client) => {
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS user_connections (
+          id TEXT PRIMARY KEY,
+          requester_id TEXT NOT NULL REFERENCES users(id),
+          receiver_id TEXT NOT NULL REFERENCES users(id),
+          status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'accepted', 'rejected', 'blocked')),
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+          UNIQUE(requester_id, receiver_id)
+        )
+      `);
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_uc_receiver_status ON user_connections(receiver_id, status)"
+      );
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_uc_requester_status ON user_connections(requester_id, status)"
+      );
+    },
+  },
+  {
+    version: 94,
+    description: "Create social_posts table",
+    up: async (client: Client) => {
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS social_posts (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL REFERENCES users(id),
+          title TEXT NOT NULL DEFAULT '',
+          content TEXT NOT NULL,
+          content_format TEXT NOT NULL DEFAULT 'html' CHECK(content_format IN ('markdown', 'html')),
+          visibility TEXT NOT NULL DEFAULT 'public' CHECK(visibility IN ('public', 'network', 'private')),
+          post_type TEXT NOT NULL DEFAULT 'article' CHECK(post_type IN ('article', 'analysis', 'trade_idea', 'portfolio_update', 'link')),
+          link_url TEXT NOT NULL DEFAULT '',
+          link_title TEXT NOT NULL DEFAULT '',
+          link_image TEXT NOT NULL DEFAULT '',
+          is_draft INTEGER NOT NULL DEFAULT 0,
+          published_at TEXT,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+      `);
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_sp_user_published ON social_posts(user_id, published_at)"
+      );
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_sp_visibility_published ON social_posts(visibility, published_at)"
+      );
+    },
+  },
+  {
+    version: 95,
+    description: "Create social_post_images table",
+    up: async (client: Client) => {
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS social_post_images (
+          id TEXT PRIMARY KEY,
+          post_id TEXT NOT NULL REFERENCES social_posts(id) ON DELETE CASCADE,
+          url TEXT NOT NULL,
+          alt_text TEXT NOT NULL DEFAULT '',
+          sort_order INTEGER NOT NULL DEFAULT 0,
+          created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+      `);
+    },
+  },
+  {
+    version: 96,
+    description: "Create social_post_comments table and add allow_comments to users",
+    up: async (client: Client) => {
+      await client.execute(
+        "ALTER TABLE users ADD COLUMN allow_comments INTEGER NOT NULL DEFAULT 1"
+      );
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS social_post_comments (
+          id TEXT PRIMARY KEY,
+          post_id TEXT NOT NULL REFERENCES social_posts(id) ON DELETE CASCADE,
+          user_id TEXT NOT NULL REFERENCES users(id),
+          parent_id TEXT,
+          content TEXT NOT NULL,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+      `);
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_spc_post_created ON social_post_comments(post_id, created_at)"
+      );
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_spc_parent ON social_post_comments(parent_id)"
+      );
+    },
+  },
+  {
+    version: 97,
+    description: "Create feed_items table for fan-out-on-write feed",
+    up: async (client: Client) => {
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS feed_items (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id TEXT NOT NULL,
+          post_id TEXT NOT NULL REFERENCES social_posts(id) ON DELETE CASCADE,
+          author_id TEXT NOT NULL,
+          published_at TEXT NOT NULL,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          UNIQUE(user_id, post_id)
+        )
+      `);
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_fi_user_published ON feed_items(user_id, published_at DESC)"
+      );
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_fi_post ON feed_items(post_id)"
+      );
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_fi_author ON feed_items(author_id)"
+      );
+
+      // Seed existing posts into feed_items
+      // 1. Every author gets their own published posts
+      await client.execute({
+        sql: `INSERT OR IGNORE INTO feed_items (user_id, post_id, author_id, published_at)
+              SELECT p.user_id, p.id, p.user_id, p.published_at
+              FROM social_posts p
+              WHERE p.is_draft = 0 AND p.published_at IS NOT NULL`,
+        args: [],
+      });
+      // 2. Connected users get public + network posts
+      await client.execute({
+        sql: `INSERT OR IGNORE INTO feed_items (user_id, post_id, author_id, published_at)
+              SELECT
+                CASE WHEN uc.requester_id = p.user_id THEN uc.receiver_id ELSE uc.requester_id END,
+                p.id, p.user_id, p.published_at
+              FROM social_posts p
+              JOIN user_connections uc ON (
+                (uc.requester_id = p.user_id OR uc.receiver_id = p.user_id)
+                AND uc.status = 'accepted'
+              )
+              WHERE p.is_draft = 0 AND p.published_at IS NOT NULL
+                AND p.visibility IN ('public', 'network')`,
+        args: [],
+      });
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

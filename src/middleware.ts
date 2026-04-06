@@ -41,6 +41,8 @@ const PUBLIC_API_ROUTES = new Set([
   "/api/notifications/push/vapid-key",
   "/api/email/unsubscribe",
   "/api/webhooks/resend",
+  "/api/social/profile",
+  "/api/social/posts",
 ]);
 
 function isPublicPath(pathname: string): boolean {
@@ -54,6 +56,8 @@ function isPublicPath(pathname: string): boolean {
   if (pathname === "/llms-full.txt") return true;
   // Public portfolio share pages
   if (pathname.startsWith("/p/")) return true;
+  // Public social profile pages
+  if (pathname.startsWith("/u/")) return true;
   // Trial activation page is public so email links work before login
   if (pathname.startsWith("/trial/")) return true;
   if (/\.(png|jpg|jpeg|gif|svg|webp|ico|mp4|webm|css|js|woff2?)$/.test(pathname)) return true;
@@ -69,6 +73,13 @@ export async function middleware(req: NextRequest) {
 
   // Public portfolio share API (dynamic route)
   if (pathname.startsWith("/api/p/")) {
+    return NextResponse.next();
+  }
+  // Public social APIs (dynamic routes)
+  if (pathname.startsWith("/api/social/profile/")) {
+    return NextResponse.next();
+  }
+  if (pathname.startsWith("/api/social/posts/") && req.method === "GET") {
     return NextResponse.next();
   }
 

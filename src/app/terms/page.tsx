@@ -36,7 +36,7 @@ export default function TermsOfServicePage() {
             Terms of Service
           </h1>
           <p className="text-slate-500">
-            Last updated: March 8, 2026
+            Last updated: April 5, 2026
           </p>
         </header>
 
@@ -241,6 +241,40 @@ export default function TermsOfServicePage() {
             <p>
               We reserve the right to suspend or terminate accounts that violate
               these terms.
+            </p>
+
+            <h3>Social Features &amp; Content</h3>
+            <p className="mb-4">
+              trefolio provides optional social networking features including public profiles,
+              content posts, and user connections. By using these features, you agree to:
+            </p>
+            <ul className="list-disc pl-6 space-y-2 mb-4">
+              <li>
+                Not post content that constitutes personal financial advice. All posts
+                containing investment analysis must be understood as personal opinions,
+                not professional recommendations.
+              </li>
+              <li>
+                Not use social features to harass, spam, or deceive other users.
+              </li>
+              <li>
+                Accept that content you mark as &quot;public&quot; will be visible to anyone,
+                including search engines.
+              </li>
+              <li>
+                Accept that shared portfolio data (when you opt in) shows aggregated
+                values and allocation percentages only. trefolio never exposes exact
+                share counts to other users.
+              </li>
+              <li>
+                Respect other users&apos; privacy settings and not attempt to circumvent
+                visibility controls.
+              </li>
+            </ul>
+            <p className="mb-8">
+              trefolio reserves the right to remove content or restrict social features
+              for users who violate these terms. Posts mentioning specific securities
+              will display an automated financial disclaimer.
             </p>
           </section>
 

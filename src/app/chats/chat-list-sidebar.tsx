@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Search, MessageSquare, Image, Link as LinkIcon } from "lucide-react";
+import Link from "next/link";
+import { Search, MessageSquare, Image, Link as LinkIcon, ArrowLeft } from "lucide-react";
 import { USER_COLORS, userColorIndex, isParticipantOnline } from "@/app/chat/chat-room-view";
 
 export interface ChatRoomSummary {
@@ -67,7 +68,12 @@ export function ChatListSidebar({ rooms, selectedToken, onSelect }: ChatListSide
     <div className="flex flex-col h-full bg-white dark:bg-slate-900">
       {/* Header */}
       <div className="shrink-0 px-4 pt-4 pb-3 border-b border-gray-200 dark:border-slate-800">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Chats</h2>
+        <div className="flex items-center gap-2 mb-3">
+          <Link href="/network" className="flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 dark:text-slate-500 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-700 dark:hover:text-slate-300 transition-colors" aria-label="Back to Network">
+            <ArrowLeft className="w-4 h-4" />
+          </Link>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Chats</h2>
+        </div>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-slate-500" />
           <input

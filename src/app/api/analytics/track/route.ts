@@ -8,6 +8,8 @@ import { z } from "zod";
 const ALLOWED_EVENTS = new Set([
   "referral_link_copied",
   "referral_link_shared",
+  "people_search",
+  "feed_view",
 ]);
 
 const schema = z.object({
