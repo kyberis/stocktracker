@@ -32,6 +32,7 @@ export default function StockEvaluation({ ticker, exchange, reportId: initialRep
 
   const [reportId, setReportId] = useState<string | null>(initialReportId || null);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [quote, setQuote] = useState<{ price: number; change: number; changePercent: number; currency: string } | null>(null);
 
   const fetchEvaluation = useCallback(async () => {
     setLoading(true);
@@ -54,6 +55,20 @@ export default function StockEvaluation({ ticker, exchange, reportId: initialRep
       }
       const data: MoatEvaluation = await res.json();
       setEvaluation(data);
+
+      fetch(`/api/quote?symbol=${encodeURIComponent(ticker)}`)
+        .then((r) => r.ok ? r.json() : null)
+        .then((q) => {
+          if (q?.regularMarketPrice) {
+            setQuote({
+              price: q.regularMarketPrice,
+              change: q.regularMarketChange || 0,
+              changePercent: q.regularMarketChangePercent || 0,
+              currency: q.currency || "USD",
+            });
+          }
+        })
+        .catch(() => {});
     } catch {
       setError("Network error — please try again");
     } finally {
@@ -235,17 +250,29 @@ export default function StockEvaluation({ ticker, exchange, reportId: initialRep
     <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-5">
       {/* Back link */}
       <button
-        onClick={() => router.push(`/stock/${encodeURIComponent(ticker)}${exchange ? `?exchange=${exchange}` : ""}`)}
+        onClick={() => router.push("/tools/evaluation")}
         className="text-xs text-[var(--muted)] hover:text-[var(--foreground)] flex items-center gap-1 transition-colors"
       >
         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
-        {t("back")} {ticker}
+        {t("back")} {t("moatEvalTitle")}
       </button>
 
       {/* Company Header */}
       <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold">{evaluation.companyName}</h1>
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="text-xl sm:text-2xl font-bold">{evaluation.companyName}</h1>
+            {quote && (
+              <div className="flex items-center gap-2">
+                <span className="text-xl font-bold tabular-nums">
+                  {quote.currency === "USD" ? "$" : quote.currency === "EUR" ? "€" : quote.currency === "GBP" ? "£" : ""}{quote.price.toFixed(2)}
+                </span>
+                <span className={`text-sm font-semibold tabular-nums ${quote.change >= 0 ? "text-emerald-500" : "text-red-500"}`}>
+                  {quote.change >= 0 ? "+" : ""}{quote.change.toFixed(2)} ({quote.changePercent >= 0 ? "+" : ""}{quote.changePercent.toFixed(2)}%)
+                </span>
+              </div>
+            )}
+          </div>
           <div className="flex flex-wrap gap-3 mt-1.5 text-[13px] text-[var(--muted)]">
             <span>{evaluation.symbol}</span>
             <span>{evaluation.sector}</span>

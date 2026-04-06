@@ -43,6 +43,13 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "Cada tarjeta de criterio de evaluación ahora tiene un icono de información que explica qué significa la métrica y por qué Buffett la considera importante.",
         },
       },
+      {
+        type: "improvement",
+        text: "Moat evaluation reports now show the live stock price, daily change, and percent change next to the company name.",
+        translations: {
+          es: "Los informes de evaluación de moat ahora muestran el precio de la acción en tiempo real, cambio diario y porcentaje junto al nombre de la empresa.",
+        },
+      },
     ],
   },
   {
