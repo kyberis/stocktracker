@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Save, Send, Globe, Users, Lock } from "lucide-react";
 import Link from "next/link";
+import { NetworkMobileNav } from "@/components/social/NetworkSidebar";
 
 const POST_TYPES = [
   { key: "article", label: "Article" },
@@ -53,6 +54,7 @@ export default function ComposePostPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-6">
+      <NetworkMobileNav profile={null} />
       <Link href="/network" className="mb-6 inline-flex items-center gap-1 text-sm text-[var(--muted)] hover:text-[var(--foreground)]">
         <ArrowLeft size={14} /> Back to feed
       </Link>

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Search, MessageCircle, UserMinus, Check, X } from "lucide-react";
 import { ExperienceBadge } from "@/components/social/ExperienceBadge";
+import { NetworkMobileNav } from "@/components/social/NetworkSidebar";
 
 interface ConnectionUser {
   id: string;
@@ -84,6 +85,7 @@ export default function ConnectionsPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-6">
+      <NetworkMobileNav profile={null} pendingCount={counts.pendingReceived} />
       <h1 className="mb-6 text-2xl font-extrabold tracking-tight text-[var(--foreground)]">Connections</h1>
 
       <div className="mb-6 flex gap-0.5 border-b border-[var(--border)]">

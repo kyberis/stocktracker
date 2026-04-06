@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { MessageSquare } from "lucide-react";
 import Link from "next/link";
-import { NetworkSidebar } from "@/components/social/NetworkSidebar";
+import { NetworkSidebar, NetworkMobileNav } from "@/components/social/NetworkSidebar";
 import { ChatRoomView } from "@/app/chat/chat-room-view";
 
 const LIST_POLL_MS = 5000;
@@ -100,7 +100,9 @@ export default function NetworkConversationsPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-6 flex gap-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-6">
+      <NetworkMobileNav profile={profile} pendingCount={pendingCount} />
+      <div className="flex gap-8">
       {/* Sidebar */}
       <div className="hidden w-[260px] shrink-0 lg:block">
         <NetworkSidebar profile={profile} pendingCount={pendingCount} />
@@ -174,6 +176,7 @@ export default function NetworkConversationsPage() {
             </div>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

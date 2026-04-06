@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Search, Users, FileText } from "lucide-react";
 import { ExperienceBadge } from "@/components/social/ExperienceBadge";
 import { ConnectionButton } from "@/components/social/ConnectionButton";
+import { NetworkMobileNav } from "@/components/social/NetworkSidebar";
 
 const LEVEL_FILTERS = [
   { key: "", label: "All Levels" },
@@ -56,6 +57,7 @@ export default function PeopleSearchPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-6">
+      <NetworkMobileNav profile={null} />
       <h1 className="mb-6 text-2xl font-extrabold tracking-tight text-[var(--foreground)]">Find People</h1>
 
       <div className="relative mb-4">
