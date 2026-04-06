@@ -116,7 +116,7 @@ export {
   getManualAssetCount,
 } from "./cash";
 
-export type { PlatformFeature, WhatsAppQuota, StripePriceKey, PromoBannerConfig, AdConfig, AdSlotConfig, XKeyName, UtmTaxonomyConfig, FeatureFlagOverride } from "./settings";
+export type { PlatformFeature, WhatsAppQuota, StripePriceKey, PromoBannerConfig, AdConfig, AdSlotConfig, XKeyName, UtmTaxonomyConfig, FeatureFlagOverride, DigestSenderDomain } from "./settings";
 export {
   getUserSettings,
   updateUserSettings,
@@ -157,6 +157,9 @@ export {
   getAiModelConfig,
   setAiModelConfig,
   getAiModelForFlow,
+  getDigestSenderDomains,
+  setDigestSenderDomains,
+  buildDigestGmailQuery,
 } from "./settings";
 
 export {
@@ -481,7 +484,7 @@ export {
   hasDigestForWeek,
 } from "./weekly-digest";
 
-export type { MarketDigest, MarketDigestWithTranslations, DigestTranslation, DigestStatus, MarketDigestSource } from "./market-digests";
+export type { MarketDigest, MarketDigestListItem, MarketDigestWithTranslations, DigestTranslation, DigestStatus, MarketDigestSource } from "./market-digests";
 export {
   digestExistsByGmailId,
   digestSourceExistsByGmailId,

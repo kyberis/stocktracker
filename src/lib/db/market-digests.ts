@@ -296,17 +296,22 @@ export async function insertMarketDigest(data: {
   return digestId;
 }
 
+export interface MarketDigestListItem extends MarketDigest {
+  sourceCount: number;
+  sourceDomains: string[];
+}
+
 export async function listMarketDigests(opts: {
   status?: DigestStatus;
   limit?: number;
   offset?: number;
-}): Promise<MarketDigest[]> {
+}): Promise<MarketDigestListItem[]> {
   const client = await ensureInitialized();
   const conditions: string[] = [];
   const args: InValue[] = [];
 
   if (opts.status) {
-    conditions.push("status = ?");
+    conditions.push("d.status = ?");
     args.push(opts.status);
   }
 
@@ -315,11 +320,33 @@ export async function listMarketDigests(opts: {
   const offset = opts.offset ?? 0;
 
   const res = await client.execute({
-    sql: `SELECT * FROM market_digests ${where} ORDER BY received_at DESC LIMIT ? OFFSET ?`,
+    sql: `SELECT d.*,
+            COALESCE((SELECT COUNT(*) FROM market_digest_sources s WHERE s.digest_id = d.id), 0) AS source_count,
+            COALESCE((SELECT GROUP_CONCAT(DISTINCT s.sender) FROM market_digest_sources s WHERE s.digest_id = d.id), '') AS source_senders
+          FROM market_digests d ${where}
+          ORDER BY d.received_at DESC LIMIT ? OFFSET ?`,
     args: [...args, limit, offset],
   });
 
-  return res.rows.map((r) => rowToDigest(r as unknown as Record<string, unknown>));
+  return res.rows.map((r) => {
+    const row = r as unknown as Record<string, unknown>;
+    const digest = rowToDigest(row);
+    const senders = str(row.source_senders).split(",").filter(Boolean);
+    const domains = [...new Set(senders.map(extractDomain).filter(Boolean))];
+    return {
+      ...digest,
+      sourceCount: num(row.source_count),
+      sourceDomains: domains,
+    };
+  });
+}
+
+function extractDomain(sender: string): string {
+  const emailMatch = sender.match(/@([\w.-]+)/);
+  if (emailMatch) return emailMatch[1];
+  const trimmed = sender.trim().toLowerCase();
+  if (trimmed.includes(".")) return trimmed;
+  return sender.trim();
 }
 
 export async function getMarketDigestWithTranslations(

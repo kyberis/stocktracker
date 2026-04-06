@@ -690,6 +690,62 @@ export async function setAdConfig(config: Partial<AdConfig>): Promise<AdConfig> 
   return next;
 }
 
+/* ─── Digest Sender Domains ─── */
+
+export interface DigestSenderDomain {
+  value: string;
+  label: string;
+  color: string;
+}
+
+const DIGEST_SENDERS_KEY = "digest_sender_domains";
+
+const DEFAULT_DIGEST_SENDERS: DigestSenderDomain[] = [
+  { value: "suarez84@gmail.com", label: "Gmail", color: "red" },
+  { value: "diariobitcoin.com", label: "DiarioBitcoin", color: "orange" },
+];
+
+export async function getDigestSenderDomains(): Promise<DigestSenderDomain[]> {
+  const raw = await getPlatformSetting(DIGEST_SENDERS_KEY);
+  if (!raw) return [...DEFAULT_DIGEST_SENDERS];
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed) || parsed.length === 0) return [...DEFAULT_DIGEST_SENDERS];
+    return parsed.map((d: Record<string, unknown>) => ({
+      value: String(d.value || "").trim().toLowerCase(),
+      label: String(d.label || d.value || "").trim(),
+      color: String(d.color || "purple").trim().toLowerCase(),
+    })).filter((d: DigestSenderDomain) => d.value);
+  } catch {
+    return [...DEFAULT_DIGEST_SENDERS];
+  }
+}
+
+export async function setDigestSenderDomains(domains: DigestSenderDomain[]): Promise<DigestSenderDomain[]> {
+  const cleaned = domains
+    .map((d) => ({
+      value: d.value.trim().toLowerCase(),
+      label: d.label.trim() || d.value.trim(),
+      color: d.color.trim().toLowerCase() || "purple",
+    }))
+    .filter((d) => d.value);
+  const deduped: DigestSenderDomain[] = [];
+  const seen = new Set<string>();
+  for (const d of cleaned) {
+    if (seen.has(d.value)) continue;
+    seen.add(d.value);
+    deduped.push(d);
+  }
+  await setPlatformSetting(DIGEST_SENDERS_KEY, JSON.stringify(deduped));
+  return deduped;
+}
+
+export function buildDigestGmailQuery(domains: DigestSenderDomain[]): string {
+  if (domains.length === 0) return "to:digest@trefolio.com is:unread";
+  const fromClauses = domains.map((d) => `from:${d.value}`).join(" OR ");
+  return `to:digest@trefolio.com (${fromClauses}) is:unread`;
+}
+
 /* ─── AI Model Config ─── */
 
 import {

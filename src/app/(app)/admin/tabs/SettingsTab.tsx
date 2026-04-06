@@ -2504,6 +2504,154 @@ function CronJobsCard() {
   );
 }
 
+const SENDER_COLOR_OPTIONS = [
+  { value: "red", label: "Red", bg: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300" },
+  { value: "orange", label: "Orange", bg: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300" },
+  { value: "amber", label: "Amber", bg: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300" },
+  { value: "emerald", label: "Green", bg: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300" },
+  { value: "blue", label: "Blue", bg: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300" },
+  { value: "indigo", label: "Indigo", bg: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300" },
+  { value: "purple", label: "Purple", bg: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300" },
+  { value: "pink", label: "Pink", bg: "bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300" },
+];
+
+function getColorBg(color: string): string {
+  return SENDER_COLOR_OPTIONS.find((c) => c.value === color)?.bg
+    ?? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300";
+}
+
+function DigestSendersCard() {
+  const [domains, setDomains] = useState<{ value: string; label: string; color: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [newValue, setNewValue] = useState("");
+  const [newLabel, setNewLabel] = useState("");
+  const [newColor, setNewColor] = useState("purple");
+
+  const load = () => {
+    fetch("/api/admin/digest-senders", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => setDomains(d.domains || []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const save = async (next: typeof domains) => {
+    setSaving(true);
+    try {
+      const res = await fetch("/api/admin/digest-senders", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ domains: next }),
+      });
+      const data = await res.json();
+      if (data.domains) setDomains(data.domains);
+    } catch { /* ignore */ }
+    setSaving(false);
+  };
+
+  const handleAdd = () => {
+    const val = newValue.trim().toLowerCase();
+    if (!val) return;
+    if (domains.some((d) => d.value === val)) return;
+    const next = [...domains, { value: val, label: newLabel.trim() || val, color: newColor }];
+    setNewValue("");
+    setNewLabel("");
+    setNewColor("purple");
+    save(next);
+  };
+
+  const handleRemove = (value: string) => {
+    save(domains.filter((d) => d.value !== value));
+  };
+
+  return (
+    <div className="card p-6 space-y-4">
+      <div>
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Digest Sender Domains</h3>
+        <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">
+          Email addresses or domains the digest cron will accept. The Gmail query is built dynamically from this list.
+        </p>
+      </div>
+
+      {loading ? (
+        <p className="text-xs text-gray-400 dark:text-slate-500">Loading…</p>
+      ) : (
+        <>
+          {domains.length > 0 && (
+            <div className="space-y-1.5">
+              {domains.map((d) => (
+                <div key={d.value} className="flex items-center gap-2 text-xs">
+                  <span className={`px-2 py-0.5 text-[10px] font-semibold rounded-full ${getColorBg(d.color)}`}>
+                    {d.label}
+                  </span>
+                  <span className="font-mono text-gray-700 dark:text-slate-300">{d.value}</span>
+                  <button
+                    onClick={() => handleRemove(d.value)}
+                    className="ml-auto text-gray-400 hover:text-red-500 transition-colors"
+                    aria-label={`Remove ${d.value}`}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="border-t border-gray-200 dark:border-slate-700 pt-3 space-y-2">
+            <p className="text-xs font-medium text-gray-700 dark:text-slate-300">Add sender</p>
+            <div className="grid grid-cols-[1fr_1fr_auto_auto] gap-2 items-end">
+              <div>
+                <label className="block text-[10px] text-gray-500 dark:text-slate-400 mb-0.5">Email or domain</label>
+                <input
+                  type="text"
+                  value={newValue}
+                  onChange={(e) => setNewValue(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+                  placeholder="user@example.com or example.com"
+                  className="w-full input-field text-xs"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] text-gray-500 dark:text-slate-400 mb-0.5">Label</label>
+                <input
+                  type="text"
+                  value={newLabel}
+                  onChange={(e) => setNewLabel(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+                  placeholder="Display name"
+                  className="w-full input-field text-xs"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] text-gray-500 dark:text-slate-400 mb-0.5">Color</label>
+                <select
+                  value={newColor}
+                  onChange={(e) => setNewColor(e.target.value)}
+                  className="input-field text-xs py-[7px]"
+                >
+                  {SENDER_COLOR_OPTIONS.map((c) => (
+                    <option key={c.value} value={c.value}>{c.label}</option>
+                  ))}
+                </select>
+              </div>
+              <button
+                onClick={handleAdd}
+                disabled={saving || !newValue.trim()}
+                className="btn-primary text-xs px-3 py-[7px]"
+              >
+                {saving ? "Saving…" : "Add"}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 function MoatAutoGenCard() {
   const [data, setData] = useState<{
     tickers: { symbol: string; addedBy: string; addedAt: string }[];
@@ -2685,6 +2833,7 @@ export default function SettingsTab() {
         <AdConfigCard />
         <StripePricesCard />
         <CapacityCard />
+        <DigestSendersCard />
         <CronJobsCard />
         <MoatAutoGenCard />
         <MetricsCard />

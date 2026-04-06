@@ -18,14 +18,14 @@ import {
   insertMarketDigest,
   updateDigestContent,
   getActiveUserLanguages,
+  getDigestSenderDomains,
+  buildDigestGmailQuery,
 } from "@/lib/db";
 import type { MarketDigestSource } from "@/lib/db";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
-
-const DIGEST_QUERY = "to:digest@trefolio.com from:suarez84@gmail.com is:unread";
 
 const REWRITE_SYSTEM_PROMPT = `You are trefolio's market analyst. Given raw source material from **one or more** financial newsletters (and optionally live market data), produce an **original market insight article** in trefolio's editorial voice.
 
@@ -321,7 +321,9 @@ async function processDigestEmail(): Promise<Record<string, unknown>> {
     return { skipped: true, reason: "OpenAI API key not configured" };
   }
 
-  const messages = await listUnreadByQuery(DIGEST_QUERY);
+  const senderDomains = await getDigestSenderDomains();
+  const digestQuery = buildDigestGmailQuery(senderDomains);
+  const messages = await listUnreadByQuery(digestQuery);
   if (messages.length === 0) {
     return { checked: true, newEmails: 0, processed: 0 };
   }

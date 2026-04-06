@@ -38,8 +38,47 @@ interface Digest {
   emailSent: boolean;
   digestDate: string;
   createdAt: string;
+  sourceCount?: number;
+  sourceDomains?: string[];
   translations?: Translation[];
   sources?: DigestSource[];
+}
+
+const COLOR_TO_BG: Record<string, string> = {
+  red: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300",
+  orange: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300",
+  amber: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300",
+  emerald: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300",
+  blue: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
+  indigo: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300",
+  purple: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300",
+  pink: "bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300",
+};
+
+const FALLBACK_BG = "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300";
+
+interface SenderDomain { value: string; label: string; color: string }
+
+function buildDomainStyleMap(
+  senders: SenderDomain[],
+): Record<string, { bg: string; label: string }> {
+  const map: Record<string, { bg: string; label: string }> = {};
+  for (const s of senders) {
+    const domain = extractDomain(s.value);
+    map[domain] = { bg: COLOR_TO_BG[s.color] ?? FALLBACK_BG, label: s.label };
+    if (s.value !== domain) {
+      map[s.value] = map[domain];
+    }
+  }
+  return map;
+}
+
+function extractDomain(sender: string): string {
+  const emailMatch = sender.match(/@([\w.-]+)/);
+  if (emailMatch) return emailMatch[1];
+  const trimmed = sender.trim().toLowerCase();
+  if (trimmed.includes(".")) return trimmed;
+  return sender.trim();
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -68,6 +107,18 @@ export default function AdminMarketDigestsPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [testEmail, setTestEmail] = useState("");
   const [showTestForm, setShowTestForm] = useState<string | null>(null);
+  const [domainStyleMap, setDomainStyleMap] = useState<Record<string, { bg: string; label: string }>>({});
+
+  useEffect(() => {
+    fetch("/api/admin/digest-senders", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => setDomainStyleMap(buildDomainStyleMap(d.domains || [])))
+      .catch(() => {});
+  }, []);
+
+  const getDomainStyle = useCallback((domain: string): { bg: string; label: string } => {
+    return domainStyleMap[domain] ?? { bg: FALLBACK_BG, label: domain };
+  }, [domainStyleMap]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -238,6 +289,23 @@ export default function AdminMarketDigestsPage() {
                 <span className="flex-1 text-sm font-medium text-gray-900 dark:text-white truncate">
                   {d.digestDate ? `Digest ${d.digestDate}` : d.originalSubject}
                 </span>
+                {(d.sourceDomains ?? []).length > 0 && (
+                  <span className="flex gap-1 shrink-0">
+                    {(d.sourceDomains ?? []).map((domain) => {
+                      const style = getDomainStyle(domain);
+                      return (
+                        <span key={domain} className={`px-1.5 py-0.5 text-[10px] font-semibold rounded-full ${style.bg}`}>
+                          {style.label}
+                        </span>
+                      );
+                    })}
+                    {(d.sourceCount ?? 0) > 0 && (
+                      <span className="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-gray-100 text-gray-500 dark:bg-slate-800 dark:text-slate-400">
+                        {d.sourceCount} src
+                      </span>
+                    )}
+                  </span>
+                )}
                 <span className="text-xs text-gray-500 dark:text-slate-400 shrink-0">
                   {d.digestDate || new Date(d.receivedAt).toLocaleDateString()}
                 </span>
@@ -263,19 +331,26 @@ export default function AdminMarketDigestsPage() {
                         Sources ({expandedDigest.sources.length})
                       </div>
                       <div className="space-y-1.5">
-                        {expandedDigest.sources.map((src) => (
-                          <div key={src.id} className="flex items-center gap-2 text-xs">
-                            <span className="font-mono text-gray-900 dark:text-white truncate max-w-[200px]">{src.sender}</span>
-                            <span className="text-gray-400 dark:text-slate-500">—</span>
-                            <span className="text-gray-700 dark:text-slate-300 truncate flex-1">{src.originalSubject}</span>
-                            <span className="text-gray-500 dark:text-slate-400 shrink-0">{src.originalDate}</span>
-                            {src.extractedLinks.length > 0 && (
-                              <span className="px-1.5 py-0.5 text-[10px] rounded bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
-                                {src.extractedLinks.length} links
+                        {expandedDigest.sources.map((src) => {
+                          const domain = extractDomain(src.sender);
+                          const style = getDomainStyle(domain);
+                          return (
+                            <div key={src.id} className="flex items-center gap-2 text-xs">
+                              <span className={`px-1.5 py-0.5 text-[10px] font-semibold rounded-full shrink-0 ${style.bg}`}>
+                                {style.label}
                               </span>
-                            )}
-                          </div>
-                        ))}
+                              <span className="font-mono text-gray-900 dark:text-white truncate max-w-[200px]">{src.sender}</span>
+                              <span className="text-gray-400 dark:text-slate-500">—</span>
+                              <span className="text-gray-700 dark:text-slate-300 truncate flex-1">{src.originalSubject}</span>
+                              <span className="text-gray-500 dark:text-slate-400 shrink-0">{src.originalDate}</span>
+                              {src.extractedLinks.length > 0 && (
+                                <span className="px-1.5 py-0.5 text-[10px] rounded bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
+                                  {src.extractedLinks.length} links
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
