@@ -41,11 +41,11 @@ export const GET = withMetrics("/api/stock-evaluation", async (request: NextRequ
     ]);
 
     if (!overview) {
-      return Response.json({ error: "Company not found or no data available" }, { status: 404 });
+      return Response.json({ error: `No fundamental data available for ${symbol}. Alpha Vantage may not cover this ticker — try a larger-cap stock (e.g. AAPL, KO, MSFT).` }, { status: 404 });
     }
     if (!income || !balance || !cashflow || !earnings) {
       return Response.json(
-        { error: "Insufficient fundamental data for evaluation" },
+        { error: `Insufficient fundamental data for ${symbol}. Alpha Vantage has partial coverage — income statements, balance sheet, or earnings data is missing.` },
         { status: 404 },
       );
     }
