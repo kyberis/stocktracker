@@ -60,7 +60,7 @@ export default function PostDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[var(--background)]">
+      <div className="flex min-h-[50vh] items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--accent)] border-t-transparent" />
       </div>
     );
@@ -68,9 +68,9 @@ export default function PostDetailPage() {
 
   if (!post) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-[var(--background)] text-[var(--foreground)]">
+      <div className="flex min-h-[50vh] flex-col items-center justify-center text-[var(--foreground)]">
         <h1 className="text-2xl font-bold">Post not found</h1>
-        <Link href="/" className="mt-4 text-[var(--accent)] hover:underline">← Go home</Link>
+        <Link href="/network" className="mt-4 text-[var(--accent)] hover:underline">← Back to Network</Link>
       </div>
     );
   }
@@ -82,8 +82,8 @@ export default function PostDetailPage() {
   const publishDate = post.publishedAt ? new Date(post.publishedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "";
 
   return (
-    <div className="min-h-screen bg-[var(--background)]">
-      <div className="mx-auto max-w-[720px] px-6 py-8">
+    <div>
+      <div className="mx-auto max-w-[720px] px-4 sm:px-6 py-3 sm:py-6">
         <Link href={`/u/${params.slug}`} className="mb-6 inline-flex items-center gap-1 text-sm text-[var(--muted)] hover:text-[var(--foreground)]">
           <ArrowLeft size={14} /> Back to profile
         </Link>
