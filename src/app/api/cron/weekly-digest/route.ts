@@ -116,6 +116,15 @@ AI-generated summary. Not financial advice. <a href="{{unsubscribe_url}}" style=
 </div></div></body></html>`;
 }
 
+interface UserContext {
+  user: { id: string; email: string; displayName: string; defaultPortfolioId: string };
+  holdings: Awaited<ReturnType<typeof listHoldings>>;
+  cashEntries: Awaited<ReturnType<typeof listCashEntries>>;
+  baseCurrency: string;
+}
+
+const DIGEST_CONCURRENCY = 3;
+
 const runWeeklyDigest = withCronLogging("weekly-digest", async () => {
   const apiKey = getGlobalOpenAIApiKey();
   if (!apiKey) {
@@ -125,51 +134,64 @@ const runWeeklyDigest = withCronLogging("weekly-digest", async () => {
   const { weekStart, weekEnd } = getWeekRange();
   const users = await getDigestEligibleUsers();
 
-  let sent = 0;
   let skipped = 0;
-  let errors = 0;
+
+  // -- Phase 1: load holdings for all eligible users and collect all tickers/currencies --
+  const allTickers = new Set<string>();
+  const allCurrencies = new Set<string>();
+  let hasGBX = false;
+  const prepared: UserContext[] = [];
 
   for (const user of users) {
+    if (!user.defaultPortfolioId) { skipped++; continue; }
+    if (await hasDigestForWeek(user.id, weekEnd)) { skipped++; continue; }
+
+    const [holdings, cashEntries, portfolios] = await Promise.all([
+      listHoldings(user.id, user.defaultPortfolioId),
+      listCashEntries(user.id, user.defaultPortfolioId),
+      listPortfolios(user.id),
+    ]);
+
+    if (holdings.length === 0) { skipped++; continue; }
+
+    const portfolio = portfolios.find((p) => p.id === user.defaultPortfolioId);
+    for (const h of holdings) {
+      if (h.ticker) allTickers.add(h.ticker);
+      const cur = h.displayCurrency.toUpperCase();
+      if (cur !== "EUR" && cur !== "GBX") allCurrencies.add(cur);
+      if (cur === "GBX" || cur === "GBP") hasGBX = true;
+    }
+
+    prepared.push({
+      user,
+      holdings,
+      cashEntries,
+      baseCurrency: portfolio?.currency || "EUR",
+    });
+  }
+
+  if (prepared.length === 0) {
+    return { weekStart, weekEnd, eligible: users.length, sent: 0, skipped, errors: 0 };
+  }
+
+  // -- Phase 2: single batch fetch of quotes & FX rates --
+  const neededPairs = FX_PAIRS.filter((pair) => allCurrencies.has(pair.substring(3)));
+  if (hasGBX && !neededPairs.includes("EURGBP")) neededPairs.push("EURGBP");
+
+  const [quotes, exchangeRates] = await Promise.all([
+    getQuotesWithCache([...allTickers]),
+    getRatesWithCache(neededPairs),
+  ]);
+
+  const digestModel = await getAiModelForFlow("weekly_digest");
+
+  // -- Phase 3: process users with bounded concurrency --
+  let sent = 0;
+  let errors = 0;
+
+  async function processUser(ctx: UserContext): Promise<void> {
+    const { user, holdings, cashEntries, baseCurrency } = ctx;
     try {
-      if (await hasDigestForWeek(user.id, weekEnd)) {
-        skipped++;
-        continue;
-      }
-
-      if (!user.defaultPortfolioId) {
-        skipped++;
-        continue;
-      }
-
-      const holdings = await listHoldings(user.id, user.defaultPortfolioId);
-      const cashEntries = await listCashEntries(user.id, user.defaultPortfolioId);
-
-      if (holdings.length === 0) {
-        skipped++;
-        continue;
-      }
-
-      // -- Resolve portfolio currency --
-      const portfolios = await listPortfolios(user.id);
-      const portfolio = portfolios.find((p) => p.id === user.defaultPortfolioId);
-      const baseCurrency = portfolio?.currency || "EUR";
-
-      // -- Fetch live quotes & exchange rates --
-      const tickers = [...new Set(holdings.map((h) => h.ticker).filter(Boolean))];
-      const neededCurrencies = new Set(
-        holdings.map((h) => h.displayCurrency.toUpperCase()).filter((c) => c !== "EUR" && c !== "GBX"),
-      );
-      const neededPairs = FX_PAIRS.filter((pair) => neededCurrencies.has(pair.substring(3)));
-      if (holdings.some((h) => h.displayCurrency === "GBX" || h.displayCurrency === "GBp")) {
-        if (!neededPairs.includes("EURGBP")) neededPairs.push("EURGBP");
-      }
-
-      const [quotes, exchangeRates] = await Promise.all([
-        getQuotesWithCache(tickers),
-        getRatesWithCache(neededPairs),
-      ]);
-
-      // -- Compute current portfolio value in EUR --
       let holdingsValueEUR = 0;
       const holdingPerformance: { ticker: string; changePct: number }[] = [];
 
@@ -190,7 +212,7 @@ const runWeeklyDigest = withCronLogging("weekly-digest", async () => {
       const totalCashEUR = cashEntries.reduce((sum, c) => sum + c.amountEUR, 0);
       const currentValueEUR = holdingsValueEUR + totalCashEUR;
 
-      // -- Week change from snapshots (compare holdings-only, since snapshots exclude cash) --
+      // Week change from snapshots (compare holdings-only, since snapshots exclude cash)
       const weekStartValue = await getSnapshotValue(user.id, user.defaultPortfolioId, weekStart);
       let weekChange: number | undefined;
       let weekChangePct: number | undefined;
@@ -199,12 +221,10 @@ const runWeeklyDigest = withCronLogging("weekly-digest", async () => {
         weekChangePct = (weekChange / weekStartValue) * 100;
       }
 
-      // -- Best & worst performer --
       holdingPerformance.sort((a, b) => b.changePct - a.changePct);
       const bestPerformer = holdingPerformance.length > 0 ? holdingPerformance[0] : undefined;
       const worstPerformer = holdingPerformance.length > 1 ? holdingPerformance[holdingPerformance.length - 1] : undefined;
 
-      // -- Dividends received this week --
       const allTransactions = await listTransactions(user.id, undefined, user.defaultPortfolioId);
       const weekDividends = allTransactions
         .filter((tx) => tx.type === "dividend" && tx.date >= weekStart && tx.date <= weekEnd)
@@ -221,7 +241,6 @@ const runWeeklyDigest = withCronLogging("weekly-digest", async () => {
         dividendsReceived: weekDividends,
       };
 
-      // -- Build AI summary with real data --
       const holdingsSummary = holdings.map((h) => {
         const q = quotes[h.ticker];
         return {
@@ -264,7 +283,6 @@ Worst performer: ${worstStr}
 Dividends received: ${divStr}
 Week: ${weekStart} to ${weekEnd}`;
 
-      const digestModel = await getAiModelForFlow("weekly_digest");
       const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -286,7 +304,7 @@ Week: ${weekStart} to ${weekEnd}`;
         const errText = await openaiRes.text();
         console.error(`Weekly digest OpenAI error for user ${user.id}:`, errText);
         errors++;
-        continue;
+        return;
       }
 
       const aiData = await openaiRes.json();
@@ -295,7 +313,7 @@ Week: ${weekStart} to ${weekEnd}`;
 
       if (!summaryText) {
         errors++;
-        continue;
+        return;
       }
 
       await insertDigest({
@@ -341,9 +359,14 @@ Week: ${weekStart} to ${weekEnd}`;
 
       sent++;
     } catch (err) {
-      console.error(`Weekly digest error for user ${user.id}:`, err instanceof Error ? err.message : err);
+      console.error(`Weekly digest error for user ${ctx.user.id}:`, err instanceof Error ? err.message : err);
       errors++;
     }
+  }
+
+  for (let i = 0; i < prepared.length; i += DIGEST_CONCURRENCY) {
+    const batch = prepared.slice(i, i + DIGEST_CONCURRENCY);
+    await Promise.all(batch.map(processUser));
   }
 
   return { weekStart, weekEnd, eligible: users.length, sent, skipped, errors };
