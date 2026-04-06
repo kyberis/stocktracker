@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
 import { useStealthMode } from "@/lib/stealth-context";
 import { useAuth } from "@/lib/auth-context";
+import { useFeatureFlags } from "@/lib/feature-flag-context";
 import TierFeatureBadge from "./TierFeatureBadge";
 import NotificationBell from "./NotificationBell";
 import GlobalPortfolioSelector from "./GlobalPortfolioSelector";
@@ -16,7 +17,7 @@ const NAV_LINKS = [
   { href: "/market-insights", labelKey: "marketInsightsNav" as const, icon: "newspaper" },
   { href: "/crypto", labelKey: "cryptoNav" as const, icon: "crypto", tierBadge: "pro" as const },
   { href: "/economic-indicators", labelKey: "indicatorsNav" as const, icon: "indicators", tierBadge: "pro" as const },
-  { href: "/network", labelKey: "networkNav" as const, icon: "network" },
+  { href: "/network", labelKey: "networkNav" as const, icon: "network", featureFlag: "social_network_enabled" as const },
 ];
 
 const ACCOUNT_LINKS = [
@@ -91,6 +92,9 @@ export default function SidebarNav() {
   const { t } = useI18n();
   const { stealthMode } = useStealthMode();
   const { user, logout } = useAuth();
+  const flags = useFeatureFlags();
+
+  const visibleNavLinks = NAV_LINKS.filter((link) => !link.featureFlag || flags[link.featureFlag]);
 
   const initials = user?.displayName
     ? user.displayName.split(" ").map((w: string) => w[0]).join("").toUpperCase().slice(0, 2)
@@ -123,7 +127,7 @@ export default function SidebarNav() {
         <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-600 px-2 mb-1" aria-hidden="true">
           Main
         </div>
-        {NAV_LINKS.map((link) => {
+        {visibleNavLinks.map((link) => {
           const active = link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
           return (
             <Link

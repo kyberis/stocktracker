@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
 import { listConnections, countConnections, requestConnection, getPublicProfileBySlug, trackEvent } from "@/lib/db";
+import { requireSocialEnabled } from "@/lib/social-gate";
 import { withMetrics } from "@/lib/with-metrics";
 
 export const GET = withMetrics("/api/social/connections", async (request: NextRequest) => {
   const { session, error } = await requireSession(request);
   if (error || !session) return error!;
+
+  const gated = await requireSocialEnabled(session.userId);
+  if (gated) return gated;
 
   const { searchParams } = new URL(request.url);
   const filter = (searchParams.get("filter") as "accepted" | "pending_received" | "pending_sent") || "accepted";
@@ -24,6 +28,9 @@ export const GET = withMetrics("/api/social/connections", async (request: NextRe
 export const POST = withMetrics("/api/social/connections", async (request: NextRequest) => {
   const { session, error } = await requireSession(request);
   if (error || !session) return error!;
+
+  const gated = await requireSocialEnabled(session.userId);
+  if (gated) return gated;
 
   const body = await request.json();
   const { targetUserId, targetSlug } = body;

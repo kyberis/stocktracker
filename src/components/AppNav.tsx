@@ -6,6 +6,7 @@ import { useI18n } from "@/lib/i18n";
 import { useTheme } from "@/lib/theme-context";
 import { useStealthMode } from "@/lib/stealth-context";
 import { useTrack } from "@/lib/use-track";
+import { useFeatureFlags } from "@/lib/feature-flag-context";
 import LanguageSwitcher from "./LanguageSwitcher";
 import UserDropdown from "./UserDropdown";
 import TierFeatureBadge from "./TierFeatureBadge";
@@ -49,6 +50,7 @@ const NAV_LINKS = [
     href: "/network",
     labelKey: "networkNav" as const,
     match: (p: string) => p === "/network" || p.startsWith("/network/"),
+    featureFlag: "social_network_enabled" as const,
   },
 ];
 
@@ -58,6 +60,9 @@ export default function AppNav() {
   const { isDark, canToggleMode, toggleTheme } = useTheme();
   const { stealthMode, toggleStealth } = useStealthMode();
   const track = useTrack();
+  const flags = useFeatureFlags();
+
+  const visibleLinks = NAV_LINKS.filter((link) => !link.featureFlag || flags[link.featureFlag]);
 
   function handleStealthToggle() {
     const next = !stealthMode;
@@ -96,7 +101,7 @@ export default function AppNav() {
           </div>
 
           <nav className="hidden sm:flex items-center gap-1">
-            {NAV_LINKS.map((link) => {
+            {visibleLinks.map((link) => {
               const active = link.match(pathname);
               return (
                 <Link

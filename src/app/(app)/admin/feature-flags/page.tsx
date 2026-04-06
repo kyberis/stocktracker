@@ -38,6 +38,7 @@ const FLAG_META: Record<string, { label: string; description: string; group: str
   pro_trial_enabled: { label: "7-Day Pro Trial", description: "Card-free Pro trial invitations, activation, and dashboard countdown", group: "Features" },
   ai_report_enabled: { label: "AI Portfolio Report", description: "AI-generated portfolio score, detailed analysis page, and streaming review", group: "Features" },
   portfolio_v2_chart_enabled: { label: "Portfolio V2 Chart", description: "New portfolio value/performance chart with market sessions, buy/sell dots, benchmarks, and backfill CTA on the homepage", group: "Features" },
+  social_network_enabled: { label: "Social Network", description: "Public profiles, posts, connections, feed, people search, and in-app conversations", group: "Features" },
 };
 
 export default function FeatureFlagsPage() {

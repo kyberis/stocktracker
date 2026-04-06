@@ -2,9 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
 import { verifySessionToken } from "@/lib/auth/session";
 import { createPost, listPostsByUser, getFeedFromItems, getPublicProfileBySlug, isConnected, trackEvent, getCommentCountsForPosts, fanOutPost } from "@/lib/db";
+import { requireSocialEnabled } from "@/lib/social-gate";
 import { withMetrics } from "@/lib/with-metrics";
 
 export const GET = withMetrics("/api/social/posts", async (request: NextRequest) => {
+  const gated = await requireSocialEnabled();
+  if (gated) return gated;
+
   const { searchParams } = new URL(request.url);
   const slug = searchParams.get("slug");
   const feed = searchParams.get("feed");
@@ -57,6 +61,9 @@ export const GET = withMetrics("/api/social/posts", async (request: NextRequest)
 export const POST = withMetrics("/api/social/posts", async (request: NextRequest) => {
   const { session, error } = await requireSession(request);
   if (error || !session) return error!;
+
+  const gated = await requireSocialEnabled(session.userId);
+  if (gated) return gated;
 
   const body = await request.json();
   const { title, content, contentFormat, visibility, postType, linkUrl, linkTitle, linkImage, isDraft } = body;

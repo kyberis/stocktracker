@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPublicProfileBySlug, listHoldings, listCashEntries } from "@/lib/db";
+import { requireSocialEnabled } from "@/lib/social-gate";
 import { calculatePortfolioTotals, computeAllocationByType } from "@/lib/portfolio-summary";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 import type { ExchangeRates, QuoteData } from "@/lib/types";
@@ -7,6 +8,9 @@ import type { ExchangeRates, QuoteData } from "@/lib/types";
 const FX_PAIRS = ["EURUSD", "EURGBP", "EURDKK", "EURCAD", "EURCHF", "EURSEK", "EURNOK"];
 
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
+  const gated = await requireSocialEnabled();
+  if (gated) return gated;
+
   const { slug } = await params;
   const profile = await getPublicProfileBySlug(slug);
   if (!profile) return NextResponse.json({ error: "Not found" }, { status: 404 });

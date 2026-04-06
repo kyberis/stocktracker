@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
 import { searchPeople, getConnectionBetween } from "@/lib/db";
+import { requireSocialEnabled } from "@/lib/social-gate";
 import { withMetrics } from "@/lib/with-metrics";
 
 export const GET = withMetrics("/api/social/search", async (request: NextRequest) => {
   const { session, error } = await requireSession(request);
   if (error || !session) return error!;
+
+  const gated = await requireSocialEnabled(session.userId);
+  if (gated) return gated;
 
   const { searchParams } = new URL(request.url);
   const query = searchParams.get("q") || "";

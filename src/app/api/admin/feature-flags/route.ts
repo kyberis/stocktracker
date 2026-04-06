@@ -15,6 +15,7 @@ const ALLOWED_FLAGS: PlatformFeature[] = [
   "pro_trial_enabled",
   "ai_report_enabled",
   "portfolio_v2_chart_enabled",
+  "social_network_enabled",
 ];
 
 export const GET = withMetrics("/api/admin/feature-flags", async (req: NextRequest) => {

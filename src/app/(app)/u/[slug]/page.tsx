@@ -173,10 +173,10 @@ export default function PublicProfilePage() {
 
   useEffect(() => {
     fetch(`/api/social/profile/${slug}`)
-      .then((r) => r.json())
+      .then((r) => (r.ok ? r.json() : null))
       .then((p) => {
         setProfile(p);
-        if ((p.sharePortfolioValue || p.shareHoldings) && !p.isPrivate) {
+        if (p && (p.sharePortfolioValue || p.shareHoldings) && !p.isPrivate) {
           fetch(`/api/social/profile/${slug}/portfolio`)
             .then((r) => (r.ok ? r.json() : null))
             .then((d) => d && setPortfolio(d))

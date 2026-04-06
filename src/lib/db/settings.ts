@@ -16,7 +16,8 @@ export type PlatformFeature =
   | "support_chat_enabled"
   | "pro_trial_enabled"
   | "ai_report_enabled"
-  | "portfolio_v2_chart_enabled";
+  | "portfolio_v2_chart_enabled"
+  | "social_network_enabled";
 
 const DEFAULT_ENABLED_FLAGS: Set<PlatformFeature> = new Set([
   "whatsapp_enabled",
@@ -307,6 +308,7 @@ const ALL_PLATFORM_FEATURES: PlatformFeature[] = [
   "pro_trial_enabled",
   "ai_report_enabled",
   "portfolio_v2_chart_enabled",
+  "social_network_enabled",
 ];
 
 export async function isFeatureEnabledForUser(feature: PlatformFeature, userId: string): Promise<boolean> {

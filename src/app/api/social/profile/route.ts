@@ -2,10 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
 import { getSocialProfile, updateSocialProfile, isValidSlug, isSlugAvailable, trackEvent } from "@/lib/db";
 import { withMetrics } from "@/lib/with-metrics";
+import { requireSocialEnabled } from "@/lib/social-gate";
 
 export const GET = withMetrics("/api/social/profile", async (request: NextRequest) => {
   const { session, error } = await requireSession(request);
   if (error || !session) return error!;
+  const gated = await requireSocialEnabled(session.userId);
+  if (gated) return gated;
 
   const profile = await getSocialProfile(session.userId);
   if (!profile) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -15,6 +18,8 @@ export const GET = withMetrics("/api/social/profile", async (request: NextReques
 export const PUT = withMetrics("/api/social/profile", async (request: NextRequest) => {
   const { session, error } = await requireSession(request);
   if (error || !session) return error!;
+  const gated = await requireSocialEnabled(session.userId);
+  if (gated) return gated;
 
   const body = await request.json();
   const { profileSlug, bio, headline, socialVisibility, sharePortfolioValue, shareHoldings, allowComments, experienceLevel } = body;

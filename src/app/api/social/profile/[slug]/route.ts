@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifySessionToken } from "@/lib/auth/session";
 import { getPublicProfileBySlug, isConnected, getConnectionBetween, trackEvent } from "@/lib/db";
+import { requireSocialEnabled } from "@/lib/social-gate";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
+  const gated = await requireSocialEnabled();
+  if (gated) return gated;
+
   const { slug } = await params;
   const profile = await getPublicProfileBySlug(slug);
   if (!profile) return NextResponse.json({ error: "Profile not found" }, { status: 404 });
