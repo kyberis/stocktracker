@@ -211,10 +211,17 @@ export default function StockEvaluation({ ticker, exchange, reportId: initialRep
     return (
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-10 text-center">
         <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-8">
-          <p className="text-red-500 text-sm mb-3">{error}</p>
-          <button onClick={fetchEvaluation} className="text-sm text-emerald-500 hover:underline">
-            {t("retry")}
-          </button>
+          <svg className="w-10 h-10 text-red-500/60 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>
+          <p className="text-red-500 text-sm mb-4">{error}</p>
+          <div className="flex items-center justify-center gap-3">
+            <button onClick={fetchEvaluation} className="text-sm text-emerald-500 hover:underline">
+              {t("retry")}
+            </button>
+            <span className="text-[var(--muted)]">·</span>
+            <button onClick={() => router.push("/tools/evaluation")} className="text-sm text-violet-500 hover:underline">
+              {t("moatEvalSearchAnother")}
+            </button>
+          </div>
         </div>
       </main>
     );

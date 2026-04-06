@@ -2388,6 +2388,7 @@ const en: TranslationStrings = {
   moatEvalPickerDesc: "Assess any stock's sustainable competitive advantage using the Buffett evaluation framework.",
   moatEvalSearchPlaceholder: "Search for a stock to evaluate (e.g. AAPL, KO, MSFT)...",
   moatEvalSearchNoResults: "No fundamental data available for this search. Try a different ticker — Alpha Vantage covers most US-listed and major international stocks.",
+  moatEvalSearchAnother: "Try another stock",
   moatEvalPickerNote: "Powered by Alpha Vantage fundamental data. Requires 5 API calls per evaluation.",
   moatEvalProRequired: "This feature requires a Trefolio (Pro) subscription.",
   moatEvalLoading: "Evaluating competitive moat...",

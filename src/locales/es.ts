@@ -2380,6 +2380,7 @@ const es: TranslationStrings = {
   moatEvalPickerDesc: "Evalúa la ventaja competitiva sostenible de cualquier acción usando el marco de evaluación de Buffett.",
   moatEvalSearchPlaceholder: "Buscar una acción para evaluar (ej. AAPL, KO, MSFT)...",
   moatEvalSearchNoResults: "No hay datos fundamentales disponibles para esta búsqueda. Prueba con otro ticker — Alpha Vantage cubre la mayoría de acciones de EE.UU. y las principales internacionales.",
+  moatEvalSearchAnother: "Probar otra acción",
   moatEvalPickerNote: "Impulsado por datos fundamentales de Alpha Vantage. Requiere 5 llamadas API por evaluación.",
   moatEvalProRequired: "Esta función requiere una suscripción Trefolio (Pro).",
   moatEvalLoading: "Evaluando ventaja competitiva...",
