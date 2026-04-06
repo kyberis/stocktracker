@@ -179,6 +179,27 @@ export default function AdminMarketDigestsPage() {
     await load();
   };
 
+  const handleRegenerate = async (id: string) => {
+    setActionLoading(`regen-${id}`);
+    try {
+      const res = await fetch(`/api/admin/market-digests/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "regenerate" }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        await loadDetail(id);
+        await load();
+      } else {
+        alert(`Regenerate failed: ${data.error}`);
+      }
+    } catch {
+      alert("Regenerate request failed.");
+    }
+    setActionLoading(null);
+  };
+
   const handleSendEmail = async (id: string) => {
     if (!confirm("Send this digest as an email to all verified users?")) return;
     setActionLoading(`send-${id}`);
@@ -521,6 +542,15 @@ export default function AdminMarketDigestsPage() {
                         className="px-4 py-1.5 text-xs font-medium bg-emerald-600 text-white rounded-md hover:bg-emerald-700 disabled:opacity-50"
                       >
                         {actionLoading === `publish-${expandedDigest.id}` ? "Publishing..." : "Approve & Publish"}
+                      </button>
+                    )}
+                    {expandedDigest.status === "draft" && (
+                      <button
+                        onClick={() => handleRegenerate(expandedDigest.id)}
+                        disabled={!!actionLoading}
+                        className="px-4 py-1.5 text-xs font-medium bg-violet-600 text-white rounded-md hover:bg-violet-700 disabled:opacity-50"
+                      >
+                        {actionLoading === `regen-${expandedDigest.id}` ? "Regenerating..." : "Regenerate"}
                       </button>
                     )}
                     <button
