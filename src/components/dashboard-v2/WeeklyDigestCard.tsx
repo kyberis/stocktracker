@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth-context";
 import { usePortfolio } from "@/lib/portfolio-context";
+import { formatNumber } from "@/lib/utils";
 import type { WeeklyDigestRow } from "@/lib/db/weekly-digest";
 
 function isDigestFreshDay(): boolean {
@@ -96,13 +97,13 @@ export default function WeeklyDigestCard({ position = "default" }: WeeklyDigestC
   if (stats.weekChange !== undefined) {
     statItems.push({
       label: t("weeklyDigestWeekChange"),
-      value: `${stats.weekChange >= 0 ? "+" : ""}${sym}${Math.abs(stats.weekChange).toFixed(0)}`,
+      value: `${stats.weekChange >= 0 ? "+" : "-"}${sym}${formatNumber(Math.abs(stats.weekChange))}`,
       color: stats.weekChange >= 0 ? "text-emerald-500" : "text-red-500",
     });
   } else if (stats.totalValue !== undefined) {
     statItems.push({
       label: t("weeklyDigestPortfolioValue") ?? "Value",
-      value: `${sym}${stats.totalValue.toFixed(0)}`,
+      value: `${sym}${formatNumber(stats.totalValue)}`,
     });
   }
 

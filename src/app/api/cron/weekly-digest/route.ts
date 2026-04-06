@@ -60,8 +60,9 @@ function getWeekRange(): { weekStart: string; weekEnd: string } {
 function buildWeeklyDigestEmail(displayName: string, summaryText: string, stats: WeeklyDigestStats, baseUrl: string, weekStart: string, weekEnd: string): string {
   const currency = stats.currency || "EUR";
   const currencySymbol = currency === "USD" ? "$" : currency === "GBP" ? "£" : "€";
+  const fmtNum = (n: number) => Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
   const weekChange = stats.weekChange !== undefined
-    ? `${stats.weekChange >= 0 ? "+" : "−"}${currencySymbol}${Math.abs(stats.weekChange).toFixed(0)}`
+    ? `${stats.weekChange >= 0 ? "+" : "−"}${currencySymbol}${fmtNum(stats.weekChange)}`
     : "—";
   const weekChangeColor = stats.weekChange !== undefined
     ? (stats.weekChange >= 0 ? "#10b981" : "#ef4444")
