@@ -12,13 +12,14 @@ Own all social features: public profiles, posts, connections, people search, fee
 ## Architecture
 
 ```
-/u/[slug]             -- Public profile page (SSR, no auth)
-/u/[slug]/posts/[id]  -- Post detail page (SSR, no auth, respects visibility)
-/network              -- Feed hub (auth required)
-/network/search       -- People search (auth required)
-/network/compose      -- Post composer (auth required)
-/network/connections  -- Manage connections (auth required)
-/profile              -- Social tab in existing profile settings
+(app)/u/[slug]             -- Public profile page (inside app layout, no auth required)
+(app)/u/[slug]/posts/[id]  -- Post detail page (inside app layout, no auth required, respects visibility)
+(app)/network              -- Feed hub (auth required)
+(app)/network/search       -- People search (auth required)
+(app)/network/compose      -- Post composer (auth required)
+(app)/network/connections  -- Manage connections (auth required)
+(app)/network/conversations -- In-app chat (auth required, mobile: list→detail pattern)
+/profile                   -- Social tab in existing profile settings
 ```
 
 ## File Map
@@ -27,14 +28,15 @@ Own all social features: public profiles, posts, connections, people search, fee
 
 | File | Purpose |
 |------|---------|
-| `src/app/u/[slug]/page.tsx` | Public profile (SSR): cover, avatar, bio, portfolio cards, posts |
-| `src/app/u/[slug]/layout.tsx` | SEO metadata, JSON-LD Person schema |
-| `src/app/u/[slug]/posts/[id]/page.tsx` | Post detail (Substack-style reader) |
-| `src/app/(app)/network/page.tsx` | Network feed: sidebar + post cards |
+| `src/app/(app)/u/[slug]/page.tsx` | Public profile: cover, avatar, bio, portfolio section, posts |
+| `src/app/(app)/u/[slug]/layout.tsx` | SEO metadata for profiles |
+| `src/app/(app)/u/[slug]/posts/[id]/page.tsx` | Post detail (Substack-style reader) + comments |
+| `src/app/(app)/network/page.tsx` | Network feed: sidebar + mobile nav + post cards |
 | `src/app/(app)/network/layout.tsx` | Network section layout |
 | `src/app/(app)/network/search/page.tsx` | People search with filters |
-| `src/app/(app)/network/compose/page.tsx` | Post composer with TipTap editor |
+| `src/app/(app)/network/compose/page.tsx` | Post composer |
 | `src/app/(app)/network/connections/page.tsx` | Connection management (3 tabs) |
+| `src/app/(app)/network/conversations/page.tsx` | In-app chat (list→detail on mobile, split view on desktop) |
 
 ### API Routes
 
@@ -56,6 +58,7 @@ Own all social features: public profiles, posts, connections, people search, fee
 | `/api/social/connections/[id]/message` | POST | session | Get/create DM room with connected user |
 | `/api/social/search` | GET | session | Search people |
 | `/api/social/feed` | GET | session | Get personalized feed |
+| `/api/social/profile/[slug]/portfolio` | GET | public | Public portfolio summary (respects sharing toggles) |
 
 ### Data Layer
 
@@ -79,7 +82,7 @@ Own all social features: public profiles, posts, connections, people search, fee
 | `src/components/social/PeopleSearchBox.tsx` | Search input + filter chips + results |
 | `src/components/social/ExperienceBadge.tsx` | Experience level colored badge |
 | `src/components/social/VisibilityBadge.tsx` | Post visibility indicator |
-| `src/components/social/NetworkSidebar.tsx` | Left sidebar on /network |
+| `src/components/social/NetworkSidebar.tsx` | Left sidebar on /network (desktop) + `NetworkMobileNav` (mobile pill bar) |
 | `src/components/social/FinancialDisclaimer.tsx` | Auto-generated disclaimer for ticker mentions |
 
 ## Database Schema

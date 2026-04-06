@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { NetworkSidebar, NetworkMobileNav } from "@/components/social/NetworkSidebar";
 import { ChatRoomView } from "@/app/chat/chat-room-view";
@@ -57,6 +57,65 @@ function lastMessagePreview(room: ChatRoomSummary): string {
   return room.lastMessageContent;
 }
 
+function RoomList({
+  rooms,
+  selectedToken,
+  onSelect,
+}: {
+  rooms: ChatRoomSummary[];
+  selectedToken: string | null;
+  onSelect: (token: string) => void;
+}) {
+  if (rooms.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 px-4 gap-2">
+        <MessageSquare className="w-8 h-8 text-[var(--muted)]" />
+        <p className="text-sm text-[var(--muted)]">No conversations yet</p>
+        <Link href="/network/connections" className="mt-2 text-xs text-[var(--accent)] hover:underline">
+          Connect with people to start chatting
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {rooms.map((room) => {
+        const isActive = room.id === selectedToken;
+        const title = roomTitle(room);
+        const preview = lastMessagePreview(room);
+        const time = relativeTime(room.lastMessageAt || room.createdAt);
+        const initial = (room.participants[0]?.displayName || "?").charAt(0).toUpperCase();
+
+        return (
+          <button
+            key={room.id}
+            onClick={() => onSelect(room.id)}
+            className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
+              isActive ? "bg-[var(--accent)]/10" : "hover:bg-[var(--card-hover)]"
+            }`}
+          >
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-blue-500 text-xs font-bold text-white">
+              {initial}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-2">
+                <span className={`text-sm font-medium truncate ${isActive ? "text-[var(--accent)]" : "text-[var(--foreground)]"}`}>
+                  {title}
+                </span>
+                {time && (
+                  <span className="text-[11px] text-[var(--muted)] shrink-0">{time}</span>
+                )}
+              </div>
+              <p className="text-xs text-[var(--muted)] truncate mt-0.5">{preview}</p>
+            </div>
+          </button>
+        );
+      })}
+    </>
+  );
+}
+
 export default function NetworkConversationsPage() {
   const [rooms, setRooms] = useState<ChatRoomSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -99,84 +158,76 @@ export default function NetworkConversationsPage() {
     );
   }
 
+  const selectedRoom = selectedToken ? rooms.find((r) => r.id === selectedToken) : undefined;
+  const selectedRoomTitle = selectedRoom ? roomTitle(selectedRoom) : "";
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-6">
       <NetworkMobileNav profile={profile} pendingCount={pendingCount} />
       <div className="flex gap-8">
-      {/* Sidebar */}
-      <div className="hidden w-[260px] shrink-0 lg:block">
-        <NetworkSidebar profile={profile} pendingCount={pendingCount} />
-      </div>
+        {/* Desktop sidebar */}
+        <div className="hidden w-[260px] shrink-0 lg:block">
+          <NetworkSidebar profile={profile} pendingCount={pendingCount} />
+        </div>
 
-      {/* Chat area */}
-      <div className="min-w-0 flex-1">
-        <div className="card overflow-hidden" style={{ height: "calc(100dvh - 10rem)" }}>
-          <div className="flex h-full">
-            {/* Room list */}
-            <div className="w-72 shrink-0 border-r border-[var(--border)] overflow-y-auto">
-              <div className="px-4 py-3 border-b border-[var(--border)]">
-                <h3 className="text-sm font-semibold text-[var(--foreground)]">Conversations</h3>
-              </div>
-              {rooms.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 px-4 gap-2">
-                  <MessageSquare className="w-8 h-8 text-[var(--muted)]" />
-                  <p className="text-sm text-[var(--muted)]">No conversations yet</p>
-                  <Link href="/network/connections" className="mt-2 text-xs text-[var(--accent)] hover:underline">
-                    Connect with people to start chatting
-                  </Link>
-                </div>
-              ) : (
-                rooms.map((room) => {
-                  const isActive = room.id === selectedToken;
-                  const title = roomTitle(room);
-                  const preview = lastMessagePreview(room);
-                  const time = relativeTime(room.lastMessageAt || room.createdAt);
-                  const initial = (room.participants[0]?.displayName || "?").charAt(0).toUpperCase();
-
-                  return (
+        {/* Chat area */}
+        <div className="min-w-0 flex-1">
+          {/* ── Mobile layout: list OR chat, not both ── */}
+          <div className="md:hidden">
+            {selectedToken ? (
+              <div className="card overflow-hidden" style={{ height: "calc(100dvh - 11rem)" }}>
+                <div className="flex h-full flex-col">
+                  <div className="flex items-center gap-2 border-b border-[var(--border)] px-4 py-3">
                     <button
-                      key={room.id}
-                      onClick={() => setSelectedToken(room.id)}
-                      className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
-                        isActive
-                          ? "bg-[var(--accent)]/10"
-                          : "hover:bg-[var(--card-hover)]"
-                      }`}
+                      onClick={() => setSelectedToken(null)}
+                      className="p-1 -ml-1 rounded-lg text-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
                     >
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-blue-500 text-xs font-bold text-white">
-                        {initial}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className={`text-sm font-medium truncate ${isActive ? "text-[var(--accent)]" : "text-[var(--foreground)]"}`}>
-                            {title}
-                          </span>
-                          {time && (
-                            <span className="text-[11px] text-[var(--muted)] shrink-0">{time}</span>
-                          )}
-                        </div>
-                        <p className="text-xs text-[var(--muted)] truncate mt-0.5">{preview}</p>
-                      </div>
+                      <ArrowLeft size={18} />
                     </button>
-                  );
-                })
-              )}
-            </div>
-
-            {/* Chat view */}
-            <div className="flex-1 min-w-0">
-              {selectedToken ? (
-                <ChatRoomView key={selectedToken} token={selectedToken} showBackButton={false} heightClass="h-full" />
-              ) : (
-                <div className="flex flex-col items-center justify-center h-full gap-3 text-[var(--muted)]">
-                  <MessageSquare className="w-12 h-12" />
-                  <p className="text-sm">Select a conversation to start chatting</p>
+                    <h3 className="text-sm font-semibold text-[var(--foreground)] truncate">{selectedRoomTitle}</h3>
+                  </div>
+                  <div className="flex-1 min-h-0">
+                    <ChatRoomView key={selectedToken} token={selectedToken} showBackButton={false} heightClass="h-full" />
+                  </div>
                 </div>
-              )}
+              </div>
+            ) : (
+              <div className="card overflow-hidden">
+                <div className="px-4 py-3 border-b border-[var(--border)]">
+                  <h3 className="text-sm font-semibold text-[var(--foreground)]">Conversations</h3>
+                </div>
+                <RoomList rooms={rooms} selectedToken={selectedToken} onSelect={setSelectedToken} />
+              </div>
+            )}
+          </div>
+
+          {/* ── Desktop layout: side-by-side ── */}
+          <div className="hidden md:block">
+            <div className="card overflow-hidden" style={{ height: "calc(100dvh - 10rem)" }}>
+              <div className="flex h-full">
+                {/* Room list */}
+                <div className="w-72 shrink-0 border-r border-[var(--border)] overflow-y-auto">
+                  <div className="px-4 py-3 border-b border-[var(--border)]">
+                    <h3 className="text-sm font-semibold text-[var(--foreground)]">Conversations</h3>
+                  </div>
+                  <RoomList rooms={rooms} selectedToken={selectedToken} onSelect={setSelectedToken} />
+                </div>
+
+                {/* Chat view */}
+                <div className="flex-1 min-w-0">
+                  {selectedToken ? (
+                    <ChatRoomView key={selectedToken} token={selectedToken} showBackButton={false} heightClass="h-full" />
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-full gap-3 text-[var(--muted)]">
+                      <MessageSquare className="w-12 h-12" />
+                      <p className="text-sm">Select a conversation to start chatting</p>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
       </div>
     </div>
   );
