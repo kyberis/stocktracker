@@ -17,6 +17,50 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.73.0",
+    date: "2026-04-06",
+    title: "Moat Reports & Portfolio Evaluation",
+    titleTranslations: { es: "Informes de Moat y Evaluación de Cartera" },
+    changes: [
+      {
+        type: "feature",
+        text: "Save moat evaluation reports so you can revisit them later like files — each report stores the full quantitative analysis and AI narrative. Open, regenerate, or delete saved reports from the evaluation picker.",
+        translations: {
+          es: "Guarda informes de evaluación de moat para revisarlos después como archivos — cada informe almacena el análisis cuantitativo completo y la narrativa IA. Abre, regenera o elimina informes guardados desde el selector de evaluación.",
+        },
+      },
+      {
+        type: "feature",
+        text: "Evaluate My Portfolio: one-click CTA to run a Buffett-style moat evaluation on all your current holdings at once, with a progress bar tracking each stock.",
+        translations: {
+          es: "Evaluar Mi Cartera: un CTA para ejecutar una evaluación de moat al estilo Buffett en todas tus posiciones actuales, con una barra de progreso para cada acción.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Each evaluation criterion card now has an info icon that reveals what the metric means and why Buffett considers it important.",
+        translations: {
+          es: "Cada tarjeta de criterio de evaluación ahora tiene un icono de información que explica qué significa la métrica y por qué Buffett la considera importante.",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.72.0",
+    date: "2026-04-06",
+    title: "Competitive Moat Evaluation",
+    titleTranslations: { es: "Evaluación de Ventaja Competitiva" },
+    changes: [
+      {
+        type: "feature",
+        text: "Buffett-style Competitive Moat Evaluation: select any stock and get a comprehensive assessment of its sustainable competitive advantage across 8 criteria (earnings consistency, gross margin, net margin, retained earnings, ROE, debt sustainability, CapEx efficiency, and product durability). Includes an AI-powered narrative assessment that explains the moat analysis in plain language. Pro tier only.",
+        translations: {
+          es: "Evaluación de Ventaja Competitiva al estilo Buffett: selecciona cualquier acción y obtén una evaluación integral de su ventaja competitiva sostenible en 8 criterios (consistencia de beneficios, margen bruto, margen neto, beneficios retenidos, ROE, sostenibilidad de deuda, eficiencia de CapEx y durabilidad del producto). Incluye una evaluación narrativa con IA que explica el análisis en lenguaje sencillo. Solo nivel Pro.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.71.0",
     date: "2026-04-05",
     title: "Post Comments",

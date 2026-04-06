@@ -3,7 +3,7 @@ import ToolsPageGate from "@/components/ToolsPageGate";
 
 const VALID_TABS = [
   "transactions", "dividends", "performance", "taxonomy",
-  "rebalancing", "accounts", "watchlist", "alerts", "tax", "simulator", "planning", "score",
+  "rebalancing", "accounts", "watchlist", "alerts", "tax", "simulator", "planning", "score", "evaluation",
 ] as const;
 
 type Tab = (typeof VALID_TABS)[number];

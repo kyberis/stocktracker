@@ -45,6 +45,7 @@ const PRO_FEATURES = new Set<SubscriptionFeature>([
   "tax-reports",
   "simulator",
   "planning",
+  "stock-evaluation",
 ]);
 
 export interface EntitlementInput {

@@ -4,7 +4,7 @@ import PortfolioTools from "@/components/PortfolioTools";
 import MobileToolsPage from "@/components/mobile/MobileToolsPage";
 import { useIsNative } from "@/lib/use-native";
 
-type Tab = "transactions" | "dividends" | "performance" | "taxonomy" | "rebalancing" | "accounts" | "watchlist" | "alerts" | "screener" | "tax" | "simulator" | "planning" | "score";
+type Tab = "transactions" | "dividends" | "performance" | "taxonomy" | "rebalancing" | "accounts" | "watchlist" | "alerts" | "screener" | "tax" | "simulator" | "planning" | "score" | "evaluation";
 
 export default function ToolsPageGate({ initialTab }: { initialTab?: Tab }) {
   const isNative = useIsNative();

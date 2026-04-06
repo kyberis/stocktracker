@@ -2953,6 +2953,33 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       });
     },
   },
+  {
+    version: 98,
+    description: "Create moat_reports table for stored Buffett evaluations",
+    up: async (client: Client) => {
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS moat_reports (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          symbol TEXT NOT NULL,
+          company_name TEXT NOT NULL DEFAULT '',
+          evaluation_json TEXT NOT NULL DEFAULT '{}',
+          ai_narrative TEXT NOT NULL DEFAULT '',
+          total_score REAL NOT NULL DEFAULT 0,
+          max_score REAL NOT NULL DEFAULT 100,
+          verdict TEXT NOT NULL DEFAULT '',
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+      `);
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_moat_reports_user ON moat_reports(user_id, created_at DESC)"
+      );
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_moat_reports_symbol ON moat_reports(user_id, symbol)"
+      );
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

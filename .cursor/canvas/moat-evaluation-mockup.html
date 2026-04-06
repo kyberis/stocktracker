@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stock Moat Evaluation — UI Mockup</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0f172a;
+      --fg: #f1f5f9;
+      --card: #1e293b;
+      --card-hover: #334155;
+      --border: #334155;
+      --muted: #94a3b8;
+      --gain: #10b981;
+      --loss: #ef4444;
+      --amber: #f59e0b;
+      --accent: #10b981;
+      --accent-light: rgba(16, 185, 129, 0.1);
+      --violet: #8b5cf6;
+      --violet-light: rgba(139, 92, 246, 0.12);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+      line-height: 1.5;
+      padding: 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1, h2, h3 { font-family: 'DM Serif Display', serif; }
+
+    .mockup-badge {
+      display: inline-block;
+      background: var(--violet);
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 3px 10px;
+      border-radius: 4px;
+      margin-bottom: 16px;
+    }
+
+    /* Search Bar */
+    .search-section {
+      margin-bottom: 24px;
+    }
+    .search-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 16px;
+    }
+    .search-bar svg { color: var(--muted); flex-shrink: 0; }
+    .search-bar input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--fg);
+      font-size: 15px;
+      width: 100%;
+      font-family: inherit;
+    }
+    .search-bar input::placeholder { color: var(--muted); }
+    .pro-pill {
+      background: var(--violet-light);
+      color: var(--violet);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+    }
+
+    /* Company Header */
+    .company-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      padding: 20px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+    .company-info h1 { font-size: 26px; margin-bottom: 2px; }
+    .company-meta {
+      display: flex;
+      gap: 16px;
+      margin-top: 6px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .company-meta span { display: flex; align-items: center; gap: 4px; }
+    .company-price {
+      text-align: right;
+    }
+    .company-price .price { font-size: 28px; font-weight: 700; }
+    .company-price .change {
+      font-size: 13px;
+      color: var(--gain);
+      font-weight: 600;
+    }
+
+    /* Score Section */
+    .score-section {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    .gauge-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    .gauge-wrapper {
+      position: relative;
+      width: 160px;
+      height: 160px;
+      margin-bottom: 12px;
+    }
+    .gauge-wrapper svg { width: 100%; height: 100%; }
+    .gauge-score {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 42px;
+      font-weight: 700;
+      font-family: 'DM Serif Display', serif;
+    }
+    .gauge-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .gauge-verdict {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--gain);
+    }
+
+    /* Criteria Grid */
+    .criteria-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .criterion-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: border-color 0.2s;
+    }
+    .criterion-card:hover { border-color: var(--accent); }
+
+    .criterion-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .criterion-name {
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .criterion-badge {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+    .badge-pass { background: rgba(16, 185, 129, 0.15); color: var(--gain); }
+    .badge-warning { background: rgba(245, 158, 11, 0.15); color: var(--amber); }
+    .badge-fail { background: rgba(239, 68, 68, 0.15); color: var(--loss); }
+
+    .criterion-value {
+      font-size: 22px;
+      font-weight: 700;
+      font-family: 'DM Serif Display', serif;
+    }
+    .criterion-benchmark {
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .criterion-sparkline {
+      height: 28px;
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+    }
+    .spark-bar {
+      flex: 1;
+      border-radius: 2px 2px 0 0;
+      min-width: 4px;
+      transition: height 0.3s;
+    }
+    .criterion-score-contrib {
+      font-size: 10px;
+      color: var(--muted);
+      text-align: right;
+    }
+
+    /* AI Narrative */
+    .ai-section {
+      margin-bottom: 24px;
+    }
+    .ai-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .ai-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .ai-header h2 { font-size: 18px; }
+    .ai-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: linear-gradient(135deg, var(--violet), #6d28d9);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .ai-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(139, 92, 246, 0.35); }
+
+    .ai-content {
+      font-size: 14px;
+      line-height: 1.7;
+      color: var(--fg);
+    }
+    .ai-content h3 {
+      font-size: 16px;
+      margin: 16px 0 8px;
+      color: var(--fg);
+    }
+    .ai-content p { margin-bottom: 10px; }
+    .ai-content strong { color: var(--gain); }
+    .ai-content .verdict-box {
+      margin-top: 16px;
+      padding: 14px 18px;
+      background: var(--accent-light);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 10px;
+    }
+    .ai-content .verdict-box h3 { margin-top: 0; color: var(--gain); }
+
+    .ai-disclaimer {
+      margin-top: 14px;
+      padding: 10px 14px;
+      background: rgba(245, 158, 11, 0.08);
+      border: 1px solid rgba(245, 158, 11, 0.2);
+      border-radius: 8px;
+      font-size: 11px;
+      color: var(--amber);
+    }
+
+    .typing-cursor {
+      display: inline-block;
+      width: 2px;
+      height: 14px;
+      background: var(--violet);
+      animation: blink 0.8s infinite;
+      vertical-align: middle;
+      margin-left: 2px;
+    }
+    @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+
+    /* Valuation Section */
+    .valuation-section {
+      margin-bottom: 24px;
+    }
+    .valuation-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    .val-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+    }
+    .val-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .val-value {
+      font-size: 24px;
+      font-weight: 700;
+      font-family: 'DM Serif Display', serif;
+    }
+    .val-note {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .val-warning {
+      margin-top: 10px;
+      padding: 10px 14px;
+      background: rgba(239, 68, 68, 0.08);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      border-radius: 8px;
+      font-size: 12px;
+      color: var(--loss);
+      text-align: center;
+    }
+
+    /* Charts placeholder */
+    .charts-section { margin-bottom: 24px; }
+    .section-title {
+      font-size: 18px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    .chart-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+    }
+    .chart-card h3 {
+      font-size: 13px;
+      font-weight: 600;
+      font-family: 'IBM Plex Sans', sans-serif;
+      margin-bottom: 12px;
+      color: var(--muted);
+    }
+    .chart-placeholder {
+      height: 120px;
+      position: relative;
+      overflow: hidden;
+    }
+    .chart-line {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 100%;
+    }
+
+    /* Disclaimer */
+    .disclaimer {
+      text-align: center;
+      font-size: 11px;
+      color: var(--muted);
+      padding: 20px;
+      border-top: 1px solid var(--border);
+      margin-top: 12px;
+    }
+
+    /* Animations */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .anim { animation: fadeUp 0.5s ease-out both; }
+    .anim-1 { animation-delay: 0.05s; }
+    .anim-2 { animation-delay: 0.1s; }
+    .anim-3 { animation-delay: 0.15s; }
+    .anim-4 { animation-delay: 0.2s; }
+    .anim-5 { animation-delay: 0.25s; }
+    .anim-6 { animation-delay: 0.3s; }
+    .anim-7 { animation-delay: 0.35s; }
+    .anim-8 { animation-delay: 0.4s; }
+    .anim-9 { animation-delay: 0.45s; }
+    .anim-10 { animation-delay: 0.5s; }
+
+    @media (max-width: 768px) {
+      .score-section { grid-template-columns: 1fr; }
+      .criteria-grid { grid-template-columns: 1fr; }
+      .valuation-grid { grid-template-columns: repeat(2, 1fr); }
+      .charts-grid { grid-template-columns: 1fr; }
+      .company-header { flex-direction: column; gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+  <span class="mockup-badge">UI Mockup — Stock Moat Evaluation</span>
+
+  <!-- Search -->
+  <div class="search-section anim anim-1">
+    <div class="search-bar">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" placeholder="Search for a stock to evaluate... (e.g. AAPL, KO, MSFT)" value="AAPL — Apple Inc." />
+      <span class="pro-pill">Trefolio</span>
+    </div>
+  </div>
+
+  <!-- Company Header -->
+  <div class="company-header anim anim-2">
+    <div class="company-info">
+      <h1>Apple Inc.</h1>
+      <div class="company-meta">
+        <span>AAPL</span>
+        <span>NASDAQ</span>
+        <span>Technology — Consumer Electronics</span>
+        <span>Market Cap: $3.45T</span>
+      </div>
+    </div>
+    <div class="company-price">
+      <div class="price">$228.52</div>
+      <div class="change">+$2.14 (+0.95%)</div>
+    </div>
+  </div>
+
+  <!-- Score + Criteria Grid -->
+  <div class="score-section anim anim-3">
+    <!-- Gauge -->
+    <div class="gauge-card">
+      <div class="gauge-label">Moat Score</div>
+      <div class="gauge-wrapper">
+        <svg viewBox="0 0 160 160">
+          <circle cx="80" cy="80" r="70" fill="none" stroke="var(--border)" stroke-width="10" stroke-dasharray="330 440" stroke-linecap="round" transform="rotate(135 80 80)" />
+          <circle cx="80" cy="80" r="70" fill="none" stroke="var(--gain)" stroke-width="10" stroke-dasharray="257 440" stroke-linecap="round" transform="rotate(135 80 80)" opacity="0.9">
+            <animate attributeName="stroke-dasharray" from="0 440" to="257 440" dur="1.2s" fill="freeze" calcMode="spline" keySplines="0.4 0 0.2 1" />
+          </circle>
+        </svg>
+        <div class="gauge-score" style="color: var(--gain);">78</div>
+      </div>
+      <div class="gauge-verdict">Strong Durable Competitive Advantage</div>
+      <div style="font-size: 11px; color: var(--muted); margin-top: 6px;">6 of 8 criteria passed</div>
+    </div>
+
+    <!-- Criteria Cards -->
+    <div class="criteria-grid">
+      <!-- 1. Earnings Consistency -->
+      <div class="criterion-card anim anim-3">
+        <div class="criterion-header">
+          <span class="criterion-name">Earnings Consistency</span>
+          <span class="criterion-badge badge-pass">Pass</span>
+        </div>
+        <div class="criterion-value" style="color: var(--gain);">10yr Growth</div>
+        <div class="criterion-benchmark">Benchmark: Steady growth, no erratic swings</div>
+        <div class="criterion-sparkline">
+          <div class="spark-bar" style="height:35%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:40%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:45%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:38%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:55%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:60%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:58%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:72%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:80%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:93%;background:var(--gain);"></div>
+        </div>
+        <div class="criterion-score-contrib">12.5 / 12.5 pts</div>
+      </div>
+
+      <!-- 2. Gross Margin -->
+      <div class="criterion-card anim anim-4">
+        <div class="criterion-header">
+          <span class="criterion-name">Gross Margin</span>
+          <span class="criterion-badge badge-pass">Pass</span>
+        </div>
+        <div class="criterion-value" style="color: var(--gain);">46.2%</div>
+        <div class="criterion-benchmark">Benchmark: ≥ 40% (10yr avg: 43.8%)</div>
+        <div class="criterion-sparkline">
+          <div class="spark-bar" style="height:78%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:76%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:74%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:75%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:80%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:82%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:84%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:85%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:87%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:92%;background:var(--gain);"></div>
+        </div>
+        <div class="criterion-score-contrib">12.5 / 12.5 pts</div>
+      </div>
+
+      <!-- 3. Net Margin -->
+      <div class="criterion-card anim anim-5">
+        <div class="criterion-header">
+          <span class="criterion-name">Net Margin</span>
+          <span class="criterion-badge badge-pass">Pass</span>
+        </div>
+        <div class="criterion-value" style="color: var(--gain);">26.3%</div>
+        <div class="criterion-benchmark">Benchmark: ≥ 20% (10yr avg: 23.1%)</div>
+        <div class="criterion-sparkline">
+          <div class="spark-bar" style="height:70%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:68%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:72%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:74%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:73%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:78%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:80%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:82%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:76%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:88%;background:var(--gain);"></div>
+        </div>
+        <div class="criterion-score-contrib">12.5 / 12.5 pts</div>
+      </div>
+
+      <!-- 4. Retained Earnings -->
+      <div class="criterion-card anim anim-5">
+        <div class="criterion-header">
+          <span class="criterion-name">Retained Earnings</span>
+          <span class="criterion-badge badge-warning">Warning</span>
+        </div>
+        <div class="criterion-value" style="color: var(--amber);">Declining</div>
+        <div class="criterion-benchmark">Benchmark: Steady upward trend (buyback adj.)</div>
+        <div class="criterion-sparkline">
+          <div class="spark-bar" style="height:90%;background:var(--amber);"></div>
+          <div class="spark-bar" style="height:85%;background:var(--amber);"></div>
+          <div class="spark-bar" style="height:78%;background:var(--amber);"></div>
+          <div class="spark-bar" style="height:65%;background:var(--amber);"></div>
+          <div class="spark-bar" style="height:50%;background:var(--amber);"></div>
+          <div class="spark-bar" style="height:40%;background:var(--amber);"></div>
+          <div class="spark-bar" style="height:30%;background:var(--loss);"></div>
+          <div class="spark-bar" style="height:25%;background:var(--loss);"></div>
+          <div class="spark-bar" style="height:20%;background:var(--loss);"></div>
+          <div class="spark-bar" style="height:18%;background:var(--loss);"></div>
+        </div>
+        <div class="criterion-score-contrib">6.0 / 12.5 pts</div>
+      </div>
+
+      <!-- 5. Return on Equity -->
+      <div class="criterion-card anim anim-6">
+        <div class="criterion-header">
+          <span class="criterion-name">Return on Equity</span>
+          <span class="criterion-badge badge-pass">Pass</span>
+        </div>
+        <div class="criterion-value" style="color: var(--gain);">171.9%</div>
+        <div class="criterion-benchmark">Benchmark: High ROE (industry-leading)</div>
+        <div class="criterion-sparkline">
+          <div class="spark-bar" style="height:45%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:50%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:55%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:60%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:72%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:85%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:90%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:92%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:95%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:100%;background:var(--gain);"></div>
+        </div>
+        <div class="criterion-score-contrib">12.5 / 12.5 pts</div>
+      </div>
+
+      <!-- 6. Debt Sustainability -->
+      <div class="criterion-card anim anim-6">
+        <div class="criterion-header">
+          <span class="criterion-name">Debt Sustainability</span>
+          <span class="criterion-badge badge-pass">Pass</span>
+        </div>
+        <div class="criterion-value" style="color: var(--gain);">0.9 yrs</div>
+        <div class="criterion-benchmark">Benchmark: LT Debt repayable in &lt; 4 yrs of earnings</div>
+        <div class="criterion-sparkline">
+          <div class="spark-bar" style="height:55%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:50%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:48%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:52%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:45%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:42%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:38%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:35%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:30%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:28%;background:var(--gain);"></div>
+        </div>
+        <div class="criterion-score-contrib">12.5 / 12.5 pts</div>
+      </div>
+
+      <!-- 7. CapEx Efficiency -->
+      <div class="criterion-card anim anim-7">
+        <div class="criterion-header">
+          <span class="criterion-name">CapEx Efficiency</span>
+          <span class="criterion-badge badge-pass">Pass</span>
+        </div>
+        <div class="criterion-value" style="color: var(--gain);">11.2%</div>
+        <div class="criterion-benchmark">Benchmark: CapEx &lt; 25% of earnings (Very Good)</div>
+        <div class="criterion-sparkline">
+          <div class="spark-bar" style="height:30%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:28%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:32%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:25%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:27%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:24%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:22%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:20%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:23%;background:var(--gain);"></div>
+          <div class="spark-bar" style="height:22%;background:var(--gain);"></div>
+        </div>
+        <div class="criterion-score-contrib">12.5 / 12.5 pts</div>
+      </div>
+
+      <!-- 8. Product Durability -->
+      <div class="criterion-card anim anim-7">
+        <div class="criterion-header">
+          <span class="criterion-name">Product Durability</span>
+          <span class="criterion-badge badge-warning">Warning</span>
+        </div>
+        <div class="criterion-value" style="color: var(--amber);">R&D: 8.1%</div>
+        <div class="criterion-benchmark">Benchmark: Minimal R&D = consistent product (tech exception)</div>
+        <div style="margin-top: 4px;">
+          <span style="font-size: 11px; color: var(--muted);">Sector: Technology</span>
+          <span style="font-size: 11px; color: var(--amber); margin-left: 8px;">Moderate R&D dependency</span>
+        </div>
+        <div class="criterion-score-contrib">9.0 / 12.5 pts</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Narrative Assessment -->
+  <div class="ai-section anim anim-8">
+    <div class="ai-card">
+      <div class="ai-header">
+        <h2>AI Investment Assessment</h2>
+        <button class="ai-btn" id="aiBtn" onclick="simulateStream()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15v-4H7l5-7v4h4l-5 7z"/></svg>
+          Generate AI Assessment
+        </button>
+      </div>
+      <div id="aiContent" class="ai-content" style="display:none;"></div>
+      <div id="aiPlaceholder" style="text-align:center;padding:24px;color:var(--muted);font-size:13px;">
+        Click "Generate AI Assessment" to get a Buffett-style narrative analysis powered by AI.
+        <br><span style="font-size:11px;">Uses AI tokens from your Pro quota.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Valuation -->
+  <div class="valuation-section anim anim-9">
+    <div class="section-title">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+      <h2>Valuation Assessment</h2>
+    </div>
+    <div class="valuation-grid">
+      <div class="val-card">
+        <div class="val-label">P/E Ratio</div>
+        <div class="val-value">33.8</div>
+        <div class="val-note">Expensive but below sell trigger</div>
+      </div>
+      <div class="val-card">
+        <div class="val-label">Forward P/E</div>
+        <div class="val-value">28.5</div>
+        <div class="val-note">Analyst est. FY+1</div>
+      </div>
+      <div class="val-card">
+        <div class="val-label">PEG Ratio</div>
+        <div class="val-value">2.75</div>
+        <div class="val-note">Growth-adjusted</div>
+      </div>
+      <div class="val-card">
+        <div class="val-label">Augmented Payout</div>
+        <div class="val-value" style="color: var(--gain);">112%</div>
+        <div class="val-note">Dividends + Buybacks / Earnings</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="charts-section anim anim-10">
+    <div class="section-title">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><path d="M3 3v18h18"/><path d="M19 9l-5 5-4-4-3 3"/></svg>
+      <h2>10-Year Trends</h2>
+    </div>
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h3>Net Income ($B)</h3>
+        <div class="chart-placeholder">
+          <svg width="100%" height="100%" viewBox="0 0 400 120" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--gain)" stop-opacity="0.3"/><stop offset="100%" stop-color="var(--gain)" stop-opacity="0.02"/></linearGradient>
+            </defs>
+            <path d="M0,100 L40,90 L80,85 L120,88 L160,72 L200,60 L240,55 L280,40 L320,30 L360,15 L400,10 L400,120 L0,120 Z" fill="url(#g1)"/>
+            <path d="M0,100 L40,90 L80,85 L120,88 L160,72 L200,60 L240,55 L280,40 L320,30 L360,15 L400,10" fill="none" stroke="var(--gain)" stroke-width="2"/>
+          </svg>
+        </div>
+      </div>
+      <div class="chart-card">
+        <h3>Gross / Net Margin (%)</h3>
+        <div class="chart-placeholder">
+          <svg width="100%" height="100%" viewBox="0 0 400 120" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="g2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--accent)" stop-opacity="0.2"/><stop offset="100%" stop-color="var(--accent)" stop-opacity="0.02"/></linearGradient>
+            </defs>
+            <path d="M0,40 L40,42 L80,44 L120,43 L160,38 L200,36 L240,34 L280,32 L320,30 L360,28 L400,25" fill="none" stroke="var(--gain)" stroke-width="2"/>
+            <path d="M0,72 L40,74 L80,70 L120,68 L160,70 L200,65 L240,62 L280,60 L320,64 L360,56 L400,50" fill="none" stroke="var(--violet)" stroke-width="2" stroke-dasharray="4 4"/>
+            <text x="370" y="22" fill="var(--gain)" font-size="10">Gross</text>
+            <text x="370" y="48" fill="var(--violet)" font-size="10">Net</text>
+          </svg>
+        </div>
+      </div>
+      <div class="chart-card">
+        <h3>Retained Earnings ($B)</h3>
+        <div class="chart-placeholder">
+          <svg width="100%" height="100%" viewBox="0 0 400 120" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="g3" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--amber)" stop-opacity="0.2"/><stop offset="100%" stop-color="var(--amber)" stop-opacity="0.02"/></linearGradient>
+            </defs>
+            <path d="M0,30 L40,28 L80,35 L120,42 L160,55 L200,65 L240,75 L280,85 L320,92 L360,100 L400,105 L400,120 L0,120 Z" fill="url(#g3)"/>
+            <path d="M0,30 L40,28 L80,35 L120,42 L160,55 L200,65 L240,75 L280,85 L320,92 L360,100 L400,105" fill="none" stroke="var(--amber)" stroke-width="2"/>
+          </svg>
+        </div>
+      </div>
+      <div class="chart-card">
+        <h3>CapEx as % of Earnings</h3>
+        <div class="chart-placeholder">
+          <svg width="100%" height="100%" viewBox="0 0 400 120" preserveAspectRatio="none">
+            <line x1="0" y1="30" x2="400" y2="30" stroke="var(--loss)" stroke-width="1" stroke-dasharray="4 4" opacity="0.3"/>
+            <text x="350" y="26" fill="var(--loss)" font-size="9" opacity="0.5">25%</text>
+            <line x1="0" y1="60" x2="400" y2="60" stroke="var(--amber)" stroke-width="1" stroke-dasharray="4 4" opacity="0.3"/>
+            <text x="350" y="56" fill="var(--amber)" font-size="9" opacity="0.5">50%</text>
+            <rect x="10" y="95" width="30" height="25" rx="3" fill="var(--gain)" opacity="0.8"/>
+            <rect x="50" y="90" width="30" height="30" rx="3" fill="var(--gain)" opacity="0.8"/>
+            <rect x="90" y="92" width="30" height="28" rx="3" fill="var(--gain)" opacity="0.8"/>
+            <rect x="130" y="97" width="30" height="23" rx="3" fill="var(--gain)" opacity="0.8"/>
+            <rect x="170" y="93" width="30" height="27" rx="3" fill="var(--gain)" opacity="0.8"/>
+            <rect x="210" y="96" width="30" height="24" rx="3" fill="var(--gain)" opacity="0.8"/>
+            <rect x="250" y="98" width="30" height="22" rx="3" fill="var(--gain)" opacity="0.8"/>
+            <rect x="290" y="100" width="30" height="20" rx="3" fill="var(--gain)" opacity="0.8"/>
+            <rect x="330" y="97" width="30" height="23" rx="3" fill="var(--gain)" opacity="0.8"/>
+            <rect x="370" y="98" width="25" height="22" rx="3" fill="var(--gain)" opacity="0.8"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Disclaimer -->
+  <div class="disclaimer anim anim-10">
+    This evaluation is for informational purposes only and does not constitute financial advice.
+    AI-generated assessments are based on historical data and may not reflect future performance.
+    Always consult a qualified financial advisor before making investment decisions.
+  </div>
+
+  <script>
+    function simulateStream() {
+      const btn = document.getElementById('aiBtn');
+      const content = document.getElementById('aiContent');
+      const placeholder = document.getElementById('aiPlaceholder');
+
+      btn.disabled = true;
+      btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Generating...';
+      placeholder.style.display = 'none';
+      content.style.display = 'block';
+      content.innerHTML = '<span class="typing-cursor"></span>';
+
+      const text = `<h3>Investment Thesis: Apple Inc. (AAPL)</h3>
+<p>Apple demonstrates <strong>strong characteristics of a durable competitive advantage</strong> based on the Buffett evaluation framework. With a composite moat score of 78/100, the company passes 6 of 8 criteria — placing it firmly in "Strong Moat" territory.</p>
+
+<h3>Key Strengths</h3>
+<p><strong>Exceptional profitability:</strong> Apple's gross margin of 46.2% and net margin of 26.3% both exceed the Buffett benchmarks (40% and 20% respectively). These margins have remained remarkably consistent over the past decade, indicating a business with genuine pricing power and operational efficiency that competitors struggle to match.</p>
+<p><strong>Capital efficiency:</strong> The return on equity of 171.9% is extraordinary — Samsung and other competitors operate at a fraction of this level. Combined with CapEx at just 11.2% of earnings (well within the "Very Good" tier of &lt;25%), Apple generates enormous free cash flow without needing to reinvest heavily just to maintain its position.</p>
+<p><strong>Conservative debt profile:</strong> Long-term debt can be retired in under 1 year of current earnings (0.9 years), far below the 4-year threshold. The company finances growth from internal cash flow, not leverage.</p>
+
+<h3>Areas of Caution</h3>
+<p><strong>Retained earnings decline:</strong> This is the "Apple Caveat" described in the framework — retained earnings are falling not because the business is deteriorating, but because Apple is aggressively distributing capital through buybacks ($90B+ annually) and dividends. The augmented payout ratio of 112% confirms this. While not a red flag, it means the company is prioritizing shareholder returns over reinvestment.</p>
+<p><strong>Product durability (moderate concern):</strong> As a technology company, Apple faces inherently higher disruption risk than a Coca-Cola or Gillette. R&D spending at 8.1% of revenue is significant. However, Apple's ecosystem lock-in (iOS, iCloud, Apple Watch, services) creates switching costs that function as a modern moat — even if individual products evolve, the platform persists.</p>
+
+<div class="verdict-box">
+<h3>Verdict: Strong Moat</h3>
+<p>Apple possesses a durable competitive advantage driven by brand power, ecosystem lock-in, and exceptional capital efficiency. The ideal holding period is long-term. At a P/E of 33.8, the stock is expensive but below the 40x "sell trigger." Consider accumulating on meaningful pullbacks rather than at current valuations.</p>
+</div>`;
+
+      let idx = 0;
+      const speed = 4;
+
+      function type() {
+        if (idx < text.length) {
+          let chunk = text.slice(idx, idx + speed);
+          if (chunk.includes('<')) {
+            const tagEnd = text.indexOf('>', idx);
+            if (tagEnd !== -1) {
+              chunk = text.slice(idx, tagEnd + 1);
+            }
+          }
+          idx += chunk.length;
+          content.innerHTML = text.slice(0, idx) + '<span class="typing-cursor"></span>';
+          requestAnimationFrame(type);
+        } else {
+          content.innerHTML = text;
+          content.innerHTML += `<div class="ai-disclaimer">This AI-generated assessment is not financial advice. It is based solely on the financial data provided and the Buffett evaluation framework. Always do your own research and consult a qualified financial advisor.</div>`;
+          btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15v-4H7l5-7v4h4l-5 7z"/></svg> Regenerate';
+          btn.disabled = false;
+        }
+      }
+
+      setTimeout(type, 500);
+    }
+  </script>
+
+  <style>
+    .spin { animation: spin 1s linear infinite; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  </style>
+
+</body>
+</html>

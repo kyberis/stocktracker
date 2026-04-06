@@ -31,6 +31,7 @@ export type SubscriptionFeature =
   | "tax-reports"
   | "simulator"
   | "planning"
+  | "stock-evaluation"
   | "support-chat";
 
 export type AlertCondition = "above" | "below";
@@ -414,6 +415,47 @@ export type Language =
 export type ExperienceLevel = "" | "beginner" | "intermediate" | "experienced" | "professional";
 
 export type RefreshInterval = 15 | 30 | 60;
+
+/* ── Moat Evaluation types ─────────────────────────────────── */
+
+export type CriterionStatus = "pass" | "warning" | "fail";
+
+export interface CriterionResult {
+  key: string;
+  name: string;
+  status: CriterionStatus;
+  value: string;
+  numericValue: number | null;
+  benchmark: string;
+  score: number;
+  maxScore: number;
+  trend: number[];
+}
+
+export interface MoatEvaluation {
+  symbol: string;
+  companyName: string;
+  sector: string;
+  industry: string;
+  totalScore: number;
+  maxScore: number;
+  verdict: string;
+  criteriaCount: number;
+  passedCount: number;
+  criteria: CriterionResult[];
+  valuation: {
+    peRatio: number | null;
+    forwardPE: number | null;
+    pegRatio: number | null;
+    augmentedPayoutRatio: number | null;
+    sellTrigger: boolean;
+  };
+  overview: Record<string, unknown>;
+  income: Record<string, unknown>;
+  balance: Record<string, unknown>;
+  cashflow: Record<string, unknown>;
+  earnings: Record<string, unknown>;
+}
 
 /* ── Alpha Intelligence types ──────────────────────────────── */
 

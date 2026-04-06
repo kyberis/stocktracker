@@ -419,6 +419,15 @@ export {
   deleteExpiredPortfolioScores,
 } from "./portfolio-scores";
 
+export type { MoatReport, MoatReportSummary } from "./moat-reports";
+export {
+  saveMoatReport,
+  updateMoatReportAiNarrative,
+  getMoatReport,
+  listMoatReports,
+  deleteMoatReport,
+} from "./moat-reports";
+
 export type { AiLogEntry, AiLogWithUser, InsertAiLogParams, GetAiLogsOptions } from "./ai-logs";
 export {
   insertAiLog,
