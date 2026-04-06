@@ -17,6 +17,28 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.75.0",
+    date: "2026-04-06",
+    title: "Automatic Moat Generation & Admin Controls",
+    titleTranslations: { es: "Generación Automática de Moat y Controles de Admin" },
+    changes: [
+      {
+        type: "feature",
+        text: "Automatic moat generation: a background cron evaluates all 600+ screener-universe stocks on a rolling 7-day cycle, so the moat screener is always pre-populated with fresh scores.",
+        translations: {
+          es: "Generación automática de moat: un cron en segundo plano evalúa más de 600 acciones del universo del screener en un ciclo de 7 días, para que el buscador de moat siempre tenga puntuaciones actualizadas.",
+        },
+      },
+      {
+        type: "feature",
+        text: "Admin moat controls: add custom tickers to the auto-generation queue, monitor coverage and staleness, and trigger manual sync runs from the admin settings panel.",
+        translations: {
+          es: "Controles admin de moat: añade tickers personalizados a la cola de generación automática, monitoriza cobertura y antigüedad, y activa ejecuciones manuales desde el panel de ajustes admin.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.74.0",
     date: "2026-04-06",
     title: "Shared Moat Cache & Moat Screener",

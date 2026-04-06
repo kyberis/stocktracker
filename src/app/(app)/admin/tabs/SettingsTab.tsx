@@ -2504,6 +2504,165 @@ function CronJobsCard() {
   );
 }
 
+function MoatAutoGenCard() {
+  const [data, setData] = useState<{
+    tickers: { symbol: string; addedBy: string; addedAt: string }[];
+    universeSize: number;
+    screenerCount: number;
+    customCount: number;
+    cacheStats: { evaluated: number; stale: number; fresh: number };
+  } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [input, setInput] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [triggering, setTriggering] = useState(false);
+
+  const load = () => {
+    fetch("/api/admin/moat-auto-tickers")
+      .then((r) => r.json())
+      .then(setData)
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const handleAdd = async () => {
+    const symbols = input.split(/[,\s]+/).map((s) => s.trim().toUpperCase()).filter(Boolean);
+    if (symbols.length === 0) return;
+    setSaving(true);
+    await fetch("/api/admin/moat-auto-tickers", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ symbols }),
+    }).catch(() => {});
+    setInput("");
+    setSaving(false);
+    load();
+  };
+
+  const handleRemove = async (symbol: string) => {
+    await fetch("/api/admin/moat-auto-tickers", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ symbol }),
+    }).catch(() => {});
+    load();
+  };
+
+  const handleTrigger = async () => {
+    setTriggering(true);
+    await fetch("/api/cron/moat-sync", {
+      headers: process.env.NEXT_PUBLIC_CRON_SECRET
+        ? { Authorization: `Bearer ${process.env.NEXT_PUBLIC_CRON_SECRET}` }
+        : {},
+    }).catch(() => {});
+    setTriggering(false);
+    setTimeout(load, 2000);
+  };
+
+  const stats = data?.cacheStats;
+  const coveragePct = data ? Math.round((stats?.evaluated ?? 0) / Math.max(data.universeSize, 1) * 100) : 0;
+
+  return (
+    <div className="card p-6 space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Moat Auto-Generation</h3>
+        <button
+          onClick={handleTrigger}
+          disabled={triggering}
+          className="btn-secondary text-xs px-3 py-1"
+        >
+          {triggering ? "Running…" : "Trigger Now"}
+        </button>
+      </div>
+
+      {loading ? (
+        <p className="text-xs text-gray-400 dark:text-slate-500">Loading…</p>
+      ) : data && stats ? (
+        <>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="bg-gray-50 dark:bg-slate-800/50 rounded-lg p-3">
+              <div className="text-lg font-bold text-gray-900 dark:text-white">{data.universeSize}</div>
+              <div className="text-[10px] text-gray-500 dark:text-slate-400">Universe</div>
+            </div>
+            <div className="bg-gray-50 dark:bg-slate-800/50 rounded-lg p-3">
+              <div className="text-lg font-bold text-emerald-600 dark:text-emerald-400">{stats.evaluated}</div>
+              <div className="text-[10px] text-gray-500 dark:text-slate-400">Evaluated</div>
+            </div>
+            <div className="bg-gray-50 dark:bg-slate-800/50 rounded-lg p-3">
+              <div className="text-lg font-bold text-blue-600 dark:text-blue-400">{stats.fresh}</div>
+              <div className="text-[10px] text-gray-500 dark:text-slate-400">Fresh (&lt;7d)</div>
+            </div>
+            <div className="bg-gray-50 dark:bg-slate-800/50 rounded-lg p-3">
+              <div className="text-lg font-bold text-amber-600 dark:text-amber-400">{stats.stale}</div>
+              <div className="text-[10px] text-gray-500 dark:text-slate-400">Stale</div>
+            </div>
+          </div>
+
+          <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2">
+            <div
+              className="bg-emerald-500 h-2 rounded-full transition-all"
+              style={{ width: `${coveragePct}%` }}
+            />
+          </div>
+          <p className="text-[10px] text-gray-500 dark:text-slate-400">
+            {coveragePct}% coverage — cron runs every 4h, 30 stocks/batch, 7-day TTL
+          </p>
+
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-gray-700 dark:text-slate-300">Add custom tickers</label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+                placeholder="TSLA, NVDA, BRK-A…"
+                className="flex-1 input-field text-xs"
+              />
+              <button
+                onClick={handleAdd}
+                disabled={saving || !input.trim()}
+                className="btn-primary text-xs px-3 py-1"
+              >
+                {saving ? "Adding…" : "Add"}
+              </button>
+            </div>
+          </div>
+
+          {data.tickers.length > 0 && (
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-gray-700 dark:text-slate-300">
+                Custom tickers ({data.tickers.length})
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {data.tickers.map((t) => (
+                  <span
+                    key={t.symbol}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400"
+                  >
+                    {t.symbol}
+                    <button
+                      onClick={() => handleRemove(t.symbol)}
+                      className="hover:text-red-500 transition-colors"
+                      aria-label={`Remove ${t.symbol}`}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      ) : (
+        <p className="text-xs text-red-500">Failed to load</p>
+      )}
+    </div>
+  );
+}
+
 export default function SettingsTab() {
   const [batch, setBatch] = useState<BatchSettingsData | null | undefined>(undefined);
 
@@ -2527,6 +2686,7 @@ export default function SettingsTab() {
         <StripePricesCard />
         <CapacityCard />
         <CronJobsCard />
+        <MoatAutoGenCard />
         <MetricsCard />
         <ApiKeyCard
           title="Resend API Key"

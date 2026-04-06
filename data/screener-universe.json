@@ -1,6 +1,6 @@
 {
-  "description": "Curated stock universe for the screener feature. S&P 500 + select STOXX Europe 600 components.",
-  "lastUpdated": "2026-03-12",
+  "description": "Curated stock universe for the screener feature. S&P 500 + select STOXX Europe 600 + major fund holdings (Berkshire, ARK, hedge fund favorites, China ADRs).",
+  "lastUpdated": "2026-04-06",
   "tickers": [
     "AAPL", "ABBV", "ABT", "ACN", "ADBE", "ADI", "ADM", "ADP", "ADSK", "AEP",
     "AFL", "AIG", "AIZ", "AJG", "AKAM", "ALB", "ALGN", "ALK", "ALL", "ALLE",
@@ -85,6 +85,18 @@
 
     "NOKIA.HE", "SAMPO.HE", "KNEBV.HE", "NESTE.HE", "UPM.HE", "STERV.HE",
 
-    "EQNR.OL", "DNB.OL", "TEL.OL", "ORK.OL", "MOWI.OL", "YAR.OL"
+    "EQNR.OL", "DNB.OL", "TEL.OL", "ORK.OL", "MOWI.OL", "YAR.OL",
+
+    "ALLY", "NU", "ROKU", "COIN", "SQ", "SHOP", "RBLX", "U", "TWLO", "ZM",
+    "CRWD", "DDOG", "PATH", "EXAS", "TDOC",
+
+    "UBER", "PLTR", "SNOW", "ABNB", "DASH", "SPOT", "ARM", "PANW", "NET",
+    "ZS", "MDB", "MELI", "SE", "DKNG",
+
+    "BABA", "JD", "PDD", "BIDU", "NIO", "XPEV", "LI",
+
+    "RIVN", "LCID", "SOFI", "HOOD", "AFRM", "BILL", "HUBS", "TTD", "TEAM",
+    "VEEV", "WDAY", "DOCU", "PINS", "SNAP", "LYFT", "SMCI", "MSTR", "CELH",
+    "FSLR"
   ]
 }

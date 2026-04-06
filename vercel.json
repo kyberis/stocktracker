@@ -15,6 +15,7 @@
     { "path": "/api/cron/trial-expiration", "schedule": "0 * * * *" },
     { "path": "/api/cron/weekly-digest", "schedule": "0 8 * * 1" },
     { "path": "/api/cron/compact-snapshots", "schedule": "0 4 * * *" },
-    { "path": "/api/cron/digest-email", "schedule": "*/15 * * * *" }
+    { "path": "/api/cron/digest-email", "schedule": "*/15 * * * *" },
+    { "path": "/api/cron/moat-sync", "schedule": "0 */4 * * *" }
   ]
 }

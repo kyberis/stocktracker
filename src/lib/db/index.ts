@@ -434,7 +434,16 @@ export {
   getMoatCache,
   queryMoatCache,
   getMoatCacheMeta,
+  getStaleMoatSymbols,
+  getMoatCacheStats,
 } from "./moat-cache";
+
+export type { MoatAutoTicker } from "./moat-auto-tickers";
+export {
+  listMoatAutoTickers,
+  addMoatAutoTickers,
+  removeMoatAutoTicker,
+} from "./moat-auto-tickers";
 
 export type { AiLogEntry, AiLogWithUser, InsertAiLogParams, GetAiLogsOptions } from "./ai-logs";
 export {

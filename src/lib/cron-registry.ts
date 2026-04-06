@@ -99,4 +99,10 @@ export const CRON_REGISTRY: CronJob[] = [
     schedule: "*/15 * * * *",
     description: "Poll Gmail for new market digest emails, rewrite with AI, and store as drafts for admin review",
   },
+  {
+    name: "moat-sync",
+    path: "/api/cron/moat-sync",
+    schedule: "0 */4 * * *",
+    description: "Evaluate stale/missing moat scores for screener-universe stocks using Alpha Vantage fundamentals",
+  },
 ];

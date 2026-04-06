@@ -26,6 +26,7 @@ export const GET = withMetrics("/api/stock-evaluation", async (request: NextRequ
       const evaluation = JSON.parse(cached.evaluationJson);
       evaluation._cached = true;
       evaluation._cachedAt = cached.updatedAt;
+      evaluation._evaluatedAt = cached.updatedAt;
       return Response.json(evaluation, {
         headers: { "Cache-Control": "private, max-age=3600" },
       });
@@ -65,12 +66,13 @@ export const GET = withMetrics("/api/stock-evaluation", async (request: NextRequ
     }
 
     const evaluation = evaluateMoat({ overview, income, balance, cashflow, earnings });
+    const enriched = { ...evaluation, _evaluatedAt: new Date().toISOString().replace("T", " ").slice(0, 19) };
 
     upsertMoatCache(evaluation).catch((err) => {
       console.error("[stock-evaluation] Cache write failed:", err instanceof Error ? err.message : err);
     });
 
-    return Response.json(evaluation, {
+    return Response.json(enriched, {
       headers: { "Cache-Control": "private, max-age=3600" },
     });
   } catch (err) {

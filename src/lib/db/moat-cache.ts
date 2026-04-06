@@ -284,3 +284,56 @@ export async function getMoatCacheMeta(): Promise<{
     total: Number(countRes.rows[0]?.cnt) || 0,
   };
 }
+
+/**
+ * Find symbols that are missing from moat_cache or have stale entries.
+ * Returns up to `limit` symbols ordered by staleness (missing first, then oldest).
+ */
+export async function getStaleMoatSymbols(
+  allSymbols: string[],
+  maxAgeDays: number,
+  limit: number,
+): Promise<string[]> {
+  if (allSymbols.length === 0) return [];
+  const client = await ensureInitialized();
+
+  const placeholders = allSymbols.map(() => "?").join(",");
+  const result = await client.execute({
+    sql: `
+      WITH universe(symbol) AS (
+        SELECT value FROM json_each(?)
+      )
+      SELECT u.symbol,
+             mc.updated_at
+      FROM universe u
+      LEFT JOIN moat_cache mc ON mc.symbol = u.symbol
+      WHERE mc.symbol IS NULL
+         OR mc.updated_at < datetime('now', ? || ' days')
+      ORDER BY
+        CASE WHEN mc.symbol IS NULL THEN 0 ELSE 1 END,
+        mc.updated_at ASC NULLS FIRST
+      LIMIT ?`,
+    args: [JSON.stringify(allSymbols), `-${maxAgeDays}`, limit],
+  });
+
+  return result.rows.map((row) => str(row.symbol));
+}
+
+export async function getMoatCacheStats(
+  universeSize: number,
+): Promise<{ evaluated: number; stale: number; fresh: number }> {
+  const client = await ensureInitialized();
+  const result = await client.execute(
+    `SELECT
+       COUNT(*) as total,
+       SUM(CASE WHEN updated_at >= datetime('now', '-7 days') THEN 1 ELSE 0 END) as fresh
+     FROM moat_cache`
+  );
+  const total = Number(result.rows[0]?.total) || 0;
+  const fresh = Number(result.rows[0]?.fresh) || 0;
+  return {
+    evaluated: total,
+    stale: total - fresh,
+    fresh,
+  };
+}

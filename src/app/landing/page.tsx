@@ -107,6 +107,7 @@ function getFeatureCards(t: T) {
   return [
     { icon: "shield", title: t("landingCardTaxTitle"), desc: t("landingCardTaxDesc"), badge: "Pro" },
     { icon: "search", title: t("landingCardScreenerTitle"), desc: t("landingCardScreenerDesc"), badge: "Pro" },
+    { icon: "castle", title: t("landingCardMoatTitle"), desc: t("landingCardMoatDesc"), badge: "Pro" },
     { icon: "wallet", title: t("landingCardNetWorthTitle"), desc: t("landingCardNetWorthDesc") },
     { icon: "sparkle", title: t("landingCardAiTitle"), desc: t("landingCardAiDesc"), badge: "Pro" },
     { icon: "upload", title: t("landingCardImportTitle"), desc: t("landingCardImportDesc") },
@@ -174,7 +175,7 @@ function getPricing(t: T): PricingTier[] {
       regularAnnual: "€79.99", annualPrice: "€59.99",
       annualSavePct: 37, launchDiscountPct: 20,
       description: t("landingPricingTrefolioDesc"),
-      features: Array.from({ length: 23 }, (_, i) => t(`landingPricingTrefolioFeature${i + 1}` as TranslationKey)),
+      features: Array.from({ length: 24 }, (_, i) => t(`landingPricingTrefolioFeature${i + 1}` as TranslationKey)),
       cta: t("landingPricingTrefolioCta"),
       highlighted: true,
     },
@@ -246,6 +247,12 @@ function FeatureIcon({ type }: { type: string }) {
     ),
     beaker: (
       <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M5 14.5l-1.047 2.094A1.125 1.125 0 005.004 18h13.992a1.125 1.125 0 001.05-1.406L19.8 15.3M5 14.5l14.8.8" />
+    ),
+    castle: (
+      <>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 21h18M4 21V10l2-2V4h2v2h2V4h2v2h2V4h2v2h2V4h2v4l2 2v11" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 21v-4a3 3 0 016 0v4" />
+      </>
     ),
   };
 

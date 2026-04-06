@@ -3025,6 +3025,19 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       );
     },
   },
+  {
+    version: 100,
+    description: "Create moat_auto_tickers table for admin-managed automatic moat generation",
+    up: async (client: Client) => {
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS moat_auto_tickers (
+          symbol TEXT PRIMARY KEY,
+          added_by TEXT NOT NULL DEFAULT '',
+          added_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+      `);
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

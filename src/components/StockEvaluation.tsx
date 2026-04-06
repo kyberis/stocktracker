@@ -35,6 +35,7 @@ export default function StockEvaluation({ ticker, exchange, reportId: initialRep
   const [quote, setQuote] = useState<{ price: number; change: number; changePercent: number; currency: string } | null>(null);
   const [fromCache, setFromCache] = useState(false);
   const [cachedAt, setCachedAt] = useState<string | null>(null);
+  const [evaluatedAt, setEvaluatedAt] = useState<string | null>(null);
 
   const fetchEvaluation = useCallback(async () => {
     setLoading(true);
@@ -57,11 +58,12 @@ export default function StockEvaluation({ ticker, exchange, reportId: initialRep
         }
         return;
       }
-      const data = await res.json() as MoatEvaluation & { _cached?: boolean; _cachedAt?: string };
+      const data = await res.json() as MoatEvaluation & { _cached?: boolean; _cachedAt?: string; _evaluatedAt?: string };
       if (data._cached) {
         setFromCache(true);
         setCachedAt(data._cachedAt || null);
       }
+      setEvaluatedAt(data._evaluatedAt || data._cachedAt || null);
       setEvaluation(data);
 
       fetch(`/api/quote?symbol=${encodeURIComponent(ticker)}`)
@@ -285,9 +287,14 @@ export default function StockEvaluation({ ticker, exchange, reportId: initialRep
             <span>{evaluation.symbol}</span>
             <span>{evaluation.sector}</span>
             <span>{evaluation.industry}</span>
+            {evaluatedAt && (
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-[var(--card-hover)] text-[var(--muted)]">
+                {t("moatEvaluatedOn")} {new Date(evaluatedAt + (evaluatedAt.includes("Z") ? "" : "Z")).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })}
+              </span>
+            )}
             {fromCache && (
               <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-blue-500/10 text-blue-500">
-                {t("moatScreenerCached")}{cachedAt ? ` · ${new Date(cachedAt + "Z").toLocaleDateString()}` : ""}
+                {t("moatScreenerCached")}
               </span>
             )}
           </div>
@@ -310,13 +317,14 @@ export default function StockEvaluation({ ticker, exchange, reportId: initialRep
           )}
           <button
             onClick={async () => {
-              setEvaluation(null); setAiText(""); setError(null); setReportId(null); setSaveStatus("idle"); setFromCache(false); setCachedAt(null);
+              setEvaluation(null); setAiText(""); setError(null); setReportId(null); setSaveStatus("idle"); setFromCache(false); setCachedAt(null); setEvaluatedAt(null);
               setLoading(true);
               try {
                 const res = await fetch(`/api/stock-evaluation?symbol=${encodeURIComponent(ticker)}&fresh=1`);
                 if (!res.ok) { const d = await res.json().catch(() => ({ error: "Request failed" })); setError(d.error || "Failed"); return; }
-                const data = await res.json();
+                const data = await res.json() as MoatEvaluation & { _evaluatedAt?: string };
                 setEvaluation(data);
+                setEvaluatedAt(data._evaluatedAt || null);
                 fetch(`/api/quote?symbol=${encodeURIComponent(ticker)}`).then((r) => r.ok ? r.json() : null).then((q) => { if (q?.regularMarketPrice) setQuote({ price: q.regularMarketPrice, change: q.regularMarketChange || 0, changePercent: q.regularMarketChangePercent || 0, currency: q.currency || "USD" }); }).catch(() => {});
               } catch { setError("Network error — please try again"); } finally { setLoading(false); }
             }}
