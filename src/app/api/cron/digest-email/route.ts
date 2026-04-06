@@ -323,9 +323,11 @@ async function processDigestEmail(): Promise<Record<string, unknown>> {
 
   const senderDomains = await getDigestSenderDomains();
   const digestQuery = buildDigestGmailQuery(senderDomains);
+  console.log("[digest-email] Gmail query:", digestQuery);
+  console.log("[digest-email] Configured senders:", senderDomains.map((d) => d.value).join(", "));
   const messages = await listUnreadByQuery(digestQuery);
   if (messages.length === 0) {
-    return { checked: true, newEmails: 0, processed: 0 };
+    return { checked: true, newEmails: 0, processed: 0, gmailQuery: digestQuery, configuredSenders: senderDomains.map((d) => d.value) };
   }
 
   const skipReasons: string[] = [];
@@ -480,6 +482,8 @@ async function processDigestEmail(): Promise<Record<string, unknown>> {
 
   return {
     checked: true,
+    gmailQuery: digestQuery,
+    configuredSenders: senderDomains.map((d) => d.value),
     newEmails: messages.length,
     digestsCreated,
     digestsUpdated,
