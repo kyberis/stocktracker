@@ -4,6 +4,7 @@ import { NextRequest } from "next/server";
 import { requireFeatureAccess, requireRateLimit } from "@/lib/auth/guards";
 import { AlphaVantageProvider } from "@/lib/api-providers/alphavantage";
 import { getGlobalAlphaVantageApiKey } from "@/lib/db/settings";
+import { getMoatCache, upsertMoatCache } from "@/lib/db/moat-cache";
 import { evaluateMoat } from "@/lib/moat-evaluator";
 import { withMetrics } from "@/lib/with-metrics";
 
@@ -11,15 +12,28 @@ export const GET = withMetrics("/api/stock-evaluation", async (request: NextRequ
   const { session, error } = await requireFeatureAccess(request, "stock-evaluation");
   if (error || !session) return error;
 
-  const rl = await requireRateLimit(request, "alphavantage");
-  if (rl.error) return rl.error;
-
   const { searchParams } = new URL(request.url);
   const symbol = searchParams.get("symbol");
+  const fresh = searchParams.get("fresh") === "1";
 
   if (!symbol) {
     return Response.json({ error: "symbol parameter required" }, { status: 400 });
   }
+
+  if (!fresh) {
+    const cached = await getMoatCache(symbol).catch(() => null);
+    if (cached) {
+      const evaluation = JSON.parse(cached.evaluationJson);
+      evaluation._cached = true;
+      evaluation._cachedAt = cached.updatedAt;
+      return Response.json(evaluation, {
+        headers: { "Cache-Control": "private, max-age=3600" },
+      });
+    }
+  }
+
+  const rl = await requireRateLimit(request, "alphavantage");
+  if (rl.error) return rl.error;
 
   const apiKey = getGlobalAlphaVantageApiKey();
   if (!apiKey) {
@@ -51,6 +65,10 @@ export const GET = withMetrics("/api/stock-evaluation", async (request: NextRequ
     }
 
     const evaluation = evaluateMoat({ overview, income, balance, cashflow, earnings });
+
+    upsertMoatCache(evaluation).catch((err) => {
+      console.error("[stock-evaluation] Cache write failed:", err instanceof Error ? err.message : err);
+    });
 
     return Response.json(evaluation, {
       headers: { "Cache-Control": "private, max-age=3600" },

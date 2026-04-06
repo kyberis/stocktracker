@@ -2980,6 +2980,51 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       );
     },
   },
+  {
+    version: 99,
+    description: "Create moat_cache table for global shared evaluations",
+    up: async (client: Client) => {
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS moat_cache (
+          symbol TEXT PRIMARY KEY,
+          company_name TEXT NOT NULL DEFAULT '',
+          sector TEXT NOT NULL DEFAULT '',
+          industry TEXT NOT NULL DEFAULT '',
+          evaluation_json TEXT NOT NULL DEFAULT '{}',
+          total_score REAL NOT NULL DEFAULT 0,
+          max_score REAL NOT NULL DEFAULT 100,
+          score_pct REAL NOT NULL DEFAULT 0,
+          verdict TEXT NOT NULL DEFAULT '',
+          passed_count INTEGER NOT NULL DEFAULT 0,
+          criteria_count INTEGER NOT NULL DEFAULT 8,
+          earnings_consistency_score REAL,
+          earnings_consistency_status TEXT,
+          gross_margin_score REAL,
+          gross_margin_status TEXT,
+          net_margin_score REAL,
+          net_margin_status TEXT,
+          retained_earnings_score REAL,
+          retained_earnings_status TEXT,
+          return_on_equity_score REAL,
+          return_on_equity_status TEXT,
+          debt_sustainability_score REAL,
+          debt_sustainability_status TEXT,
+          capex_efficiency_score REAL,
+          capex_efficiency_status TEXT,
+          product_durability_score REAL,
+          product_durability_status TEXT,
+          pe_ratio REAL,
+          updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+      `);
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_moat_cache_score ON moat_cache(score_pct DESC)"
+      );
+      await client.execute(
+        "CREATE INDEX IF NOT EXISTS idx_moat_cache_sector ON moat_cache(sector)"
+      );
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

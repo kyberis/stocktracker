@@ -428,6 +428,14 @@ export {
   deleteMoatReport,
 } from "./moat-reports";
 
+export type { MoatCacheEntry, MoatCacheRow, MoatScreenerFilters, MoatScreenerResponse } from "./moat-cache";
+export {
+  upsertMoatCache,
+  getMoatCache,
+  queryMoatCache,
+  getMoatCacheMeta,
+} from "./moat-cache";
+
 export type { AiLogEntry, AiLogWithUser, InsertAiLogParams, GetAiLogsOptions } from "./ai-logs";
 export {
   insertAiLog,

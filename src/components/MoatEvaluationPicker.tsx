@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/portfolio-context";
 import TierFeatureBadge from "./TierFeatureBadge";
+import MoatScreener from "./MoatScreener";
 
 interface SearchResult {
   symbol: string;
@@ -280,6 +281,9 @@ export default function MoatEvaluationPicker() {
           </div>
         )}
       </div>
+
+      {/* Moat Screener */}
+      <MoatScreener />
 
       <div className="text-center text-[11px] text-[var(--muted)]">
         {t("moatEvalPickerNote")}

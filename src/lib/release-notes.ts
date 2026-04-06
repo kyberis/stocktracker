@@ -17,6 +17,35 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.74.0",
+    date: "2026-04-06",
+    title: "Shared Moat Cache & Moat Screener",
+    titleTranslations: { es: "Caché Compartida de Moat y Buscador de Moat" },
+    changes: [
+      {
+        type: "feature",
+        text: "Moat evaluations are now globally cached — once any user evaluates a stock, the result is instantly available for everyone. No duplicate API calls, faster access for the whole community.",
+        translations: {
+          es: "Las evaluaciones de moat ahora se cachean globalmente — cuando cualquier usuario evalúa una acción, el resultado está disponible para todos. Sin llamadas API duplicadas, acceso más rápido para toda la comunidad.",
+        },
+      },
+      {
+        type: "feature",
+        text: "New Moat Screener: filter and search all previously evaluated stocks by moat score, individual criteria (pass/warning/fail), and sector. Find high-moat stocks at a glance.",
+        translations: {
+          es: "Nuevo Buscador de Moat: filtra y busca todas las acciones evaluadas por puntuación de moat, criterios individuales (aprobado/advertencia/fallo) y sector. Encuentra acciones con alto moat de un vistazo.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Cached evaluations show a 'Cached' badge with date. Use 'Regenerate Report' to force a fresh evaluation from Alpha Vantage.",
+        translations: {
+          es: "Las evaluaciones en caché muestran una insignia 'En caché' con fecha. Usa 'Regenerar Informe' para forzar una evaluación nueva de Alpha Vantage.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.73.0",
     date: "2026-04-06",
     title: "Moat Reports & Portfolio Evaluation",

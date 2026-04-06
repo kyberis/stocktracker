@@ -2432,6 +2432,19 @@ const en: TranslationStrings = {
   moatReportEvaluatePortfolioRunning: "Evaluating portfolio...",
   moatReportPortfolioProgress: "{done} of {total} stocks evaluated",
   moatReportPortfolioDone: "Portfolio evaluation complete!",
+
+  moatScreenerTitle: "Moat Screener",
+  moatScreenerStocksEvaluated: "stocks evaluated",
+  moatScreenerMinScore: "Min. score",
+  moatScreenerEmpty: "No evaluated stocks match your filters. Evaluate some stocks first to populate the screener.",
+  moatScreenerPassed: "Passed",
+  moatScreenerCriteria: "Criteria",
+  moatScreenerVerdict: "Verdict",
+  moatScreenerView: "View",
+  moatScreenerCached: "Cached",
+  any: "Any",
+  all: "All",
+  results: "results",
 };
 
 export default en;

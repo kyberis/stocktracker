@@ -33,6 +33,8 @@ export default function StockEvaluation({ ticker, exchange, reportId: initialRep
   const [reportId, setReportId] = useState<string | null>(initialReportId || null);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [quote, setQuote] = useState<{ price: number; change: number; changePercent: number; currency: string } | null>(null);
+  const [fromCache, setFromCache] = useState(false);
+  const [cachedAt, setCachedAt] = useState<string | null>(null);
 
   const fetchEvaluation = useCallback(async () => {
     setLoading(true);
@@ -41,6 +43,8 @@ export default function StockEvaluation({ ticker, exchange, reportId: initialRep
     setAiError(null);
     setReportId(null);
     setSaveStatus("idle");
+    setFromCache(false);
+    setCachedAt(null);
 
     try {
       const res = await fetch(`/api/stock-evaluation?symbol=${encodeURIComponent(ticker)}`);
@@ -53,7 +57,11 @@ export default function StockEvaluation({ ticker, exchange, reportId: initialRep
         }
         return;
       }
-      const data: MoatEvaluation = await res.json();
+      const data = await res.json() as MoatEvaluation & { _cached?: boolean; _cachedAt?: string };
+      if (data._cached) {
+        setFromCache(true);
+        setCachedAt(data._cachedAt || null);
+      }
       setEvaluation(data);
 
       fetch(`/api/quote?symbol=${encodeURIComponent(ticker)}`)
@@ -273,10 +281,15 @@ export default function StockEvaluation({ ticker, exchange, reportId: initialRep
               </div>
             )}
           </div>
-          <div className="flex flex-wrap gap-3 mt-1.5 text-[13px] text-[var(--muted)]">
+          <div className="flex flex-wrap gap-3 mt-1.5 text-[13px] text-[var(--muted)] items-center">
             <span>{evaluation.symbol}</span>
             <span>{evaluation.sector}</span>
             <span>{evaluation.industry}</span>
+            {fromCache && (
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-blue-500/10 text-blue-500">
+                {t("moatScreenerCached")}{cachedAt ? ` · ${new Date(cachedAt + "Z").toLocaleDateString()}` : ""}
+              </span>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
@@ -296,7 +309,17 @@ export default function StockEvaluation({ ticker, exchange, reportId: initialRep
             </button>
           )}
           <button
-            onClick={() => { setEvaluation(null); setAiText(""); setError(null); setReportId(null); setSaveStatus("idle"); fetchEvaluation(); }}
+            onClick={async () => {
+              setEvaluation(null); setAiText(""); setError(null); setReportId(null); setSaveStatus("idle"); setFromCache(false); setCachedAt(null);
+              setLoading(true);
+              try {
+                const res = await fetch(`/api/stock-evaluation?symbol=${encodeURIComponent(ticker)}&fresh=1`);
+                if (!res.ok) { const d = await res.json().catch(() => ({ error: "Request failed" })); setError(d.error || "Failed"); return; }
+                const data = await res.json();
+                setEvaluation(data);
+                fetch(`/api/quote?symbol=${encodeURIComponent(ticker)}`).then((r) => r.ok ? r.json() : null).then((q) => { if (q?.regularMarketPrice) setQuote({ price: q.regularMarketPrice, change: q.regularMarketChange || 0, changePercent: q.regularMarketChangePercent || 0, currency: q.currency || "USD" }); }).catch(() => {});
+              } catch { setError("Network error — please try again"); } finally { setLoading(false); }
+            }}
             className="text-[12px] font-semibold px-3 py-1.5 rounded-lg bg-[var(--card-hover)] hover:bg-[var(--border)] text-[var(--foreground)] transition-colors flex items-center gap-1.5"
           >
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M1 4v6h6" /><path d="M3.51 15a9 9 0 102.13-9.36L1 10" /></svg>

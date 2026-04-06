@@ -2424,6 +2424,19 @@ const es: TranslationStrings = {
   moatReportEvaluatePortfolioRunning: "Evaluando cartera...",
   moatReportPortfolioProgress: "{done} de {total} acciones evaluadas",
   moatReportPortfolioDone: "¡Evaluación de cartera completada!",
+
+  moatScreenerTitle: "Buscador de Moat",
+  moatScreenerStocksEvaluated: "acciones evaluadas",
+  moatScreenerMinScore: "Puntuación mín.",
+  moatScreenerEmpty: "Ninguna acción evaluada coincide con tus filtros. Evalúa algunas acciones primero para poblar el buscador.",
+  moatScreenerPassed: "Aprobados",
+  moatScreenerCriteria: "Criterios",
+  moatScreenerVerdict: "Veredicto",
+  moatScreenerView: "Ver",
+  moatScreenerCached: "En caché",
+  any: "Cualquiera",
+  all: "Todos",
+  results: "resultados",
 };
 
 export default es;
