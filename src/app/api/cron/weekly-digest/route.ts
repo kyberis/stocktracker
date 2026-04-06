@@ -170,7 +170,7 @@ const runWeeklyDigest = withCronLogging("weekly-digest", async () => {
       ]);
 
       // -- Compute current portfolio value in EUR --
-      let currentValueEUR = 0;
+      let holdingsValueEUR = 0;
       const holdingPerformance: { ticker: string; changePct: number }[] = [];
 
       for (const h of holdings) {
@@ -178,25 +178,24 @@ const runWeeklyDigest = withCronLogging("weekly-digest", async () => {
         if (q && q.regularMarketPrice > 0) {
           const quoteCurrency = resolveQuoteCurrency(h.displayCurrency, q.currency);
           const valueInQuoteCurrency = h.shares * q.regularMarketPrice;
-          currentValueEUR += convertToEUR(valueInQuoteCurrency, quoteCurrency, exchangeRates as ExchangeRates);
+          holdingsValueEUR += convertToEUR(valueInQuoteCurrency, quoteCurrency, exchangeRates as ExchangeRates);
 
           if (typeof q.regularMarketChangePercent === "number") {
             holdingPerformance.push({ ticker: h.ticker, changePct: q.regularMarketChangePercent });
           }
         } else if (h.valueInEUR > 0) {
-          currentValueEUR += h.valueInEUR;
+          holdingsValueEUR += h.valueInEUR;
         }
       }
-      for (const cash of cashEntries) {
-        currentValueEUR += cash.amountEUR;
-      }
+      const totalCashEUR = cashEntries.reduce((sum, c) => sum + c.amountEUR, 0);
+      const currentValueEUR = holdingsValueEUR + totalCashEUR;
 
-      // -- Week change from snapshots --
+      // -- Week change from snapshots (compare holdings-only, since snapshots exclude cash) --
       const weekStartValue = await getSnapshotValue(user.id, user.defaultPortfolioId, weekStart);
       let weekChange: number | undefined;
       let weekChangePct: number | undefined;
       if (weekStartValue && weekStartValue > 0) {
-        weekChange = currentValueEUR - weekStartValue;
+        weekChange = holdingsValueEUR - weekStartValue;
         weekChangePct = (weekChange / weekStartValue) * 100;
       }
 
@@ -237,7 +236,6 @@ const runWeeklyDigest = withCronLogging("weekly-digest", async () => {
       });
 
       const totalCost = holdings.reduce((sum, h) => sum + h.shares * h.purchasePrice, 0);
-      const totalCash = cashEntries.reduce((sum, c) => sum + c.amountEUR, 0);
 
       const systemPrompt = `You are a concise financial newsletter writer. Write a brief weekly portfolio digest (3-5 sentences) for the user. Be factual and encouraging.
 Rules:
@@ -259,7 +257,7 @@ Rules:
 Holdings: ${JSON.stringify(holdingsSummary.slice(0, 20))}
 Total cost basis: ~€${totalCost.toFixed(0)}
 Current value: ~€${currentValueEUR.toFixed(0)}
-Cash: ~€${totalCash.toFixed(0)}
+Cash: ~€${totalCashEUR.toFixed(0)}
 Week change: ${weekChangeStr}
 Best performer: ${bestStr}
 Worst performer: ${worstStr}

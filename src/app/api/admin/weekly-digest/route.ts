@@ -188,7 +188,7 @@ export const POST = withMetrics("/api/admin/weekly-digest", async (req: NextRequ
   ]);
 
   // -- Compute current portfolio value in EUR --
-  let currentValueEUR = 0;
+  let holdingsValueEUR = 0;
   const holdingPerformance: { ticker: string; changePct: number }[] = [];
 
   for (const h of holdings) {
@@ -196,25 +196,24 @@ export const POST = withMetrics("/api/admin/weekly-digest", async (req: NextRequ
     if (q && q.regularMarketPrice > 0) {
       const quoteCurrency = resolveQuoteCurrency(h.displayCurrency, q.currency);
       const valueInQuoteCurrency = h.shares * q.regularMarketPrice;
-      currentValueEUR += convertToEUR(valueInQuoteCurrency, quoteCurrency, exchangeRates as ExchangeRates);
+      holdingsValueEUR += convertToEUR(valueInQuoteCurrency, quoteCurrency, exchangeRates as ExchangeRates);
 
       if (typeof q.regularMarketChangePercent === "number") {
         holdingPerformance.push({ ticker: h.ticker, changePct: q.regularMarketChangePercent });
       }
     } else if (h.valueInEUR > 0) {
-      currentValueEUR += h.valueInEUR;
+      holdingsValueEUR += h.valueInEUR;
     }
   }
-  for (const cash of cashEntries) {
-    currentValueEUR += cash.amountEUR;
-  }
+  const totalCashEUR = cashEntries.reduce((sum, c) => sum + c.amountEUR, 0);
+  const currentValueEUR = holdingsValueEUR + totalCashEUR;
 
-  // -- Week change from snapshots --
+  // -- Week change from snapshots (compare holdings-only, since snapshots exclude cash) --
   const weekStartValue = await getSnapshotValue(userId, defaultPortfolio, weekStart);
   let weekChange: number | undefined;
   let weekChangePct: number | undefined;
   if (weekStartValue && weekStartValue > 0) {
-    weekChange = currentValueEUR - weekStartValue;
+    weekChange = holdingsValueEUR - weekStartValue;
     weekChangePct = (weekChange / weekStartValue) * 100;
   }
 
@@ -255,7 +254,6 @@ export const POST = withMetrics("/api/admin/weekly-digest", async (req: NextRequ
   });
 
   const totalCost = holdings.reduce((sum, h) => sum + h.shares * h.purchasePrice, 0);
-  const totalCash = cashEntries.reduce((sum, c) => sum + c.amountEUR, 0);
 
   const weekChangeStr = weekChange !== undefined ? `€${weekChange.toFixed(0)} (${weekChangePct!.toFixed(1)}%)` : "N/A";
   const bestStr = bestPerformer ? `${bestPerformer.ticker} ${bestPerformer.changePct.toFixed(1)}%` : "N/A";
@@ -277,7 +275,7 @@ Rules:
 Holdings: ${JSON.stringify(holdingsSummary.slice(0, 20))}
 Total cost basis: ~€${totalCost.toFixed(0)}
 Current value: ~€${currentValueEUR.toFixed(0)}
-Cash: ~€${totalCash.toFixed(0)}
+Cash: ~€${totalCashEUR.toFixed(0)}
 Week change: ${weekChangeStr}
 Best performer: ${bestStr}
 Worst performer: ${worstStr}

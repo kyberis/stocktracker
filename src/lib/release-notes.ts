@@ -23,6 +23,13 @@ export const releaseNotes: ReleaseEntry[] = [
     titleTranslations: { es: "Generación Automática de Moat y Controles de Admin" },
     changes: [
       {
+        type: "fix",
+        text: "Fixed weekly portfolio digest showing inflated week change by incorrectly counting cash balance as a weekly gain.",
+        translations: {
+          es: "Corregido el resumen semanal del portafolio que mostraba un cambio semanal inflado al contar incorrectamente el saldo en efectivo como ganancia semanal.",
+        },
+      },
+      {
         type: "feature",
         text: "Automatic moat generation: a background cron evaluates all 600+ screener-universe stocks on a rolling 7-day cycle, so the moat screener is always pre-populated with fresh scores.",
         translations: {
