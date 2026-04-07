@@ -4,7 +4,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth-context";
-import type { MoatEvaluation } from "@/lib/types";
+import type { MoatEvaluation, NewsArticle } from "@/lib/types";
 import MoatScoreGauge from "./MoatScoreGauge";
 import CriterionCard from "./CriterionCard";
 import AiMarkdown from "./AiMarkdown";
@@ -36,6 +36,10 @@ export default function StockEvaluation({ ticker, exchange, reportId: initialRep
   const [fromCache, setFromCache] = useState(false);
   const [cachedAt, setCachedAt] = useState<string | null>(null);
   const [evaluatedAt, setEvaluatedAt] = useState<string | null>(null);
+
+  const [sentimentArticles, setSentimentArticles] = useState<NewsArticle[] | null>(null);
+  const [sentimentLoading, setSentimentLoading] = useState(false);
+  const [sentimentError, setSentimentError] = useState(false);
 
   const fetchEvaluation = useCallback(async () => {
     setLoading(true);
@@ -213,6 +217,21 @@ export default function StockEvaluation({ ticker, exchange, reportId: initialRep
       })
       .catch(() => {});
   }, [evaluation, quote, ticker]);
+
+  const fetchSentiment = useCallback(async () => {
+    setSentimentLoading(true);
+    setSentimentError(false);
+    try {
+      const res = await fetch(`/api/intelligence?type=news&symbol=${encodeURIComponent(ticker)}`);
+      if (!res.ok) { setSentimentError(true); return; }
+      const data = await res.json();
+      setSentimentArticles(Array.isArray(data) ? data : []);
+    } catch {
+      setSentimentError(true);
+    } finally {
+      setSentimentLoading(false);
+    }
+  }, [ticker]);
 
   if (error === "upgrade") {
     return (
@@ -479,6 +498,19 @@ export default function StockEvaluation({ ticker, exchange, reportId: initialRep
         )}
       </div>
 
+      {/* Analyst Consensus */}
+      <AnalystConsensusSection overview={evaluation.overview} quote={quote} t={t} />
+
+      {/* News Sentiment */}
+      <NewsSentimentSection
+        articles={sentimentArticles}
+        loading={sentimentLoading}
+        error={sentimentError}
+        onLoad={fetchSentiment}
+        ticker={ticker}
+        t={t}
+      />
+
       {/* 10-Year Trends */}
       <div>
         <h2 className="text-lg font-bold mb-3 flex items-center gap-2">
@@ -559,6 +591,255 @@ function TrendChart({ label, data, status }: { label: string; data: number[]; st
         <polygon points={fillPoints} fill={`url(#grad-${label.replace(/\s/g, "")})`} />
         <polyline points={points.join(" ")} fill="none" stroke={lineColor} strokeWidth="2" />
       </svg>
+    </div>
+  );
+}
+
+/* ── Analyst Consensus ─────────────────────────────────────── */
+
+function AnalystConsensusSection({
+  overview,
+  quote,
+  t,
+}: {
+  overview: Record<string, unknown>;
+  quote: { price: number; currency: string } | null;
+  t: (key: string, vars?: Record<string, string | number>) => string;
+}) {
+  const ratings = overview.analystRatings as {
+    strongBuy: number; buy: number; hold: number; sell: number; strongSell: number;
+  } | null;
+  const targetPrice = typeof overview.analystTargetPrice === "number" ? overview.analystTargetPrice : null;
+  const totalRatings = ratings
+    ? ratings.strongBuy + ratings.buy + ratings.hold + ratings.sell + ratings.strongSell
+    : 0;
+
+  if (!ratings && targetPrice == null) return null;
+
+  const upsidePct = targetPrice != null && quote ? ((targetPrice - quote.price) / quote.price) * 100 : null;
+
+  const consensusLabel = (() => {
+    if (!ratings || totalRatings === 0) return null;
+    const weighted =
+      ratings.strongBuy * 5 + ratings.buy * 4 + ratings.hold * 3 + ratings.sell * 2 + ratings.strongSell * 1;
+    const avg = weighted / totalRatings;
+    if (avg >= 4.5) return t("moatAnalystStrongBuy");
+    if (avg >= 3.5) return t("buy");
+    if (avg >= 2.5) return t("hold");
+    return t("sell");
+  })();
+
+  const currencySymbol = quote?.currency === "USD" ? "$" : quote?.currency === "EUR" ? "€" : quote?.currency === "GBP" ? "£" : "";
+
+  return (
+    <div>
+      <h2 className="text-lg font-bold mb-3 flex items-center gap-2">
+        <svg className="w-5 h-5 text-[var(--muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4-4V7" /><path d="M16 3.13a4 4 0 010 7.75" /><path d="M21 21v-2a4 4 0 00-3-3.87" />
+        </svg>
+        {t("moatAnalystConsensus")}
+      </h2>
+      <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 space-y-4">
+        {/* Target price + upside/downside */}
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+          {targetPrice != null && (
+            <div>
+              <div className="text-[11px] uppercase tracking-wider text-[var(--muted)] mb-0.5">{t("moatAnalystTarget")}</div>
+              <div className="text-2xl font-bold">{currencySymbol}{targetPrice.toFixed(2)}</div>
+            </div>
+          )}
+          {upsidePct != null && (
+            <span className={`text-sm font-semibold px-3 py-1 rounded-full ${
+              upsidePct >= 0
+                ? "bg-emerald-500/10 text-emerald-500"
+                : "bg-red-500/10 text-red-500"
+            }`}>
+              {upsidePct >= 0 ? "+" : ""}{upsidePct.toFixed(1)}% {upsidePct >= 0 ? t("moatAnalystUpside") : t("moatAnalystDownside")}
+            </span>
+          )}
+          {consensusLabel && (
+            <span className="text-sm font-semibold px-3 py-1 rounded-full bg-blue-500/10 text-blue-500">
+              {consensusLabel}
+            </span>
+          )}
+        </div>
+
+        {/* Rating distribution bar */}
+        {ratings && totalRatings > 0 && (
+          <div>
+            <div className="flex gap-0.5 h-4 rounded-full overflow-hidden mb-2">
+              {ratings.strongBuy > 0 && <div className="bg-emerald-500" style={{ width: `${(ratings.strongBuy / totalRatings) * 100}%` }} />}
+              {ratings.buy > 0 && <div className="bg-green-400" style={{ width: `${(ratings.buy / totalRatings) * 100}%` }} />}
+              {ratings.hold > 0 && <div className="bg-amber-400" style={{ width: `${(ratings.hold / totalRatings) * 100}%` }} />}
+              {ratings.sell > 0 && <div className="bg-orange-400" style={{ width: `${(ratings.sell / totalRatings) * 100}%` }} />}
+              {ratings.strongSell > 0 && <div className="bg-red-500" style={{ width: `${(ratings.strongSell / totalRatings) * 100}%` }} />}
+            </div>
+            <div className="flex justify-between text-[12px]">
+              <span className="text-emerald-500">{t("buy")} {ratings.strongBuy + ratings.buy}</span>
+              <span className="text-amber-500">{t("hold")} {ratings.hold}</span>
+              <span className="text-red-500">{t("sell")} {ratings.sell + ratings.strongSell}</span>
+            </div>
+            <div className="text-[11px] text-[var(--muted)] mt-1">{t("moatAnalystCount", { count: totalRatings })}</div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ── News Sentiment ────────────────────────────────────────── */
+
+function NewsSentimentSection({
+  articles,
+  loading,
+  error,
+  onLoad,
+  ticker,
+  t,
+}: {
+  articles: NewsArticle[] | null;
+  loading: boolean;
+  error: boolean;
+  onLoad: () => void;
+  ticker: string;
+  t: (key: string, vars?: Record<string, string | number>) => string;
+}) {
+  if (articles === null && !loading) {
+    return (
+      <div>
+        <h2 className="text-lg font-bold mb-3 flex items-center gap-2">
+          <svg className="w-5 h-5 text-[var(--muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2" />
+          </svg>
+          {t("moatNewsSentiment")}
+        </h2>
+        <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 text-center">
+          <button
+            onClick={onLoad}
+            className="inline-flex items-center gap-1.5 bg-[var(--card-hover)] hover:bg-[var(--border)] text-[var(--foreground)] text-[13px] font-semibold px-4 py-2 rounded-lg transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2" />
+            </svg>
+            {t("moatLoadSentiment")}
+          </button>
+          <p className="text-[11px] text-[var(--muted)] mt-2">
+            {t("moatEvalAnalystEst")}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div>
+        <h2 className="text-lg font-bold mb-3 flex items-center gap-2">
+          <svg className="w-5 h-5 text-[var(--muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2" />
+          </svg>
+          {t("moatNewsSentiment")}
+        </h2>
+        <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 text-center">
+          <div className="flex items-center justify-center gap-2 text-sm text-[var(--muted)]">
+            <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-violet-500" />
+            {t("moatSentimentLoading")}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !articles || articles.length === 0) {
+    return (
+      <div>
+        <h2 className="text-lg font-bold mb-3 flex items-center gap-2">
+          <svg className="w-5 h-5 text-[var(--muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2" />
+          </svg>
+          {t("moatNewsSentiment")}
+        </h2>
+        <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 text-center text-sm text-[var(--muted)]">
+          {t("moatSentimentEmpty")}
+        </div>
+      </div>
+    );
+  }
+
+  const avgScore = articles.reduce((sum, a) => sum + a.overallSentimentScore, 0) / articles.length;
+  const sentimentLabel = avgScore >= 0.15 ? t("moatSentimentBullish")
+    : avgScore <= -0.15 ? t("moatSentimentBearish")
+    : Math.abs(avgScore) < 0.05 ? t("moatSentimentNeutral")
+    : t("moatSentimentMixed");
+  const sentimentColor = avgScore >= 0.15 ? "text-emerald-500 bg-emerald-500/10"
+    : avgScore <= -0.15 ? "text-red-500 bg-red-500/10"
+    : "text-blue-500 bg-blue-500/10";
+
+  const displayed = articles.slice(0, 5);
+
+  return (
+    <div>
+      <h2 className="text-lg font-bold mb-3 flex items-center gap-2">
+        <svg className="w-5 h-5 text-[var(--muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2" />
+        </svg>
+        {t("moatNewsSentiment")}
+      </h2>
+      <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 space-y-4">
+        {/* Aggregate sentiment badge */}
+        <div className="flex flex-wrap items-center gap-3">
+          <span className={`text-sm font-bold px-3 py-1.5 rounded-full ${sentimentColor}`}>
+            {sentimentLabel}
+          </span>
+          <span className="text-[12px] text-[var(--muted)]">
+            {t("moatSentimentArticles", { count: articles.length })}
+          </span>
+          <span className="text-[12px] text-[var(--muted)] tabular-nums">
+            ({avgScore >= 0 ? "+" : ""}{avgScore.toFixed(3)})
+          </span>
+        </div>
+
+        {/* Recent headlines */}
+        <div className="space-y-2">
+          {displayed.map((article, i) => {
+            const tickerSent = article.tickerSentiment.find(
+              (ts) => ts.ticker.toUpperCase() === ticker.toUpperCase()
+            );
+            const artLabel = tickerSent
+              ? tickerSent.sentimentLabel
+              : article.overallSentiment;
+            const artColor = artLabel === "Bullish" || artLabel === "Somewhat-Bullish"
+              ? "text-emerald-500"
+              : artLabel === "Bearish" || artLabel === "Somewhat-Bearish"
+                ? "text-red-500"
+                : "text-[var(--muted)]";
+
+            return (
+              <a
+                key={i}
+                href={article.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block rounded-lg border border-[var(--border)] px-4 py-3 hover:bg-[var(--card-hover)] transition-colors"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13px] font-medium leading-snug line-clamp-2">{article.title}</p>
+                    <div className="flex items-center gap-2 mt-1 text-[11px] text-[var(--muted)]">
+                      <span>{article.source}</span>
+                      <span>·</span>
+                      <span>{new Date(article.publishedAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span>
+                    </div>
+                  </div>
+                  <span className={`text-[11px] font-semibold shrink-0 ${artColor}`}>
+                    {artLabel}
+                  </span>
+                </div>
+              </a>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }

@@ -17,6 +17,28 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.76.0",
+    date: "2026-04-07",
+    title: "Analyst Consensus & News Sentiment on Moat Page",
+    titleTranslations: { es: "Consenso de Analistas y Sentimiento de Noticias en la Página de Moat" },
+    changes: [
+      {
+        type: "feature",
+        text: "Moat evaluation now shows analyst consensus: price target with upside/downside vs current price, rating distribution bar, and weighted consensus label.",
+        translations: {
+          es: "La evaluación de moat ahora muestra el consenso de analistas: precio objetivo con potencial alcista/bajista, barra de distribución de calificaciones y etiqueta de consenso ponderada.",
+        },
+      },
+      {
+        type: "feature",
+        text: "News sentiment section on moat page: load on-demand to see aggregated sentiment score and recent headlines with per-article sentiment badges.",
+        translations: {
+          es: "Sección de sentimiento de noticias en la página de moat: carga bajo demanda para ver la puntuación de sentimiento agregada y titulares recientes con insignias de sentimiento por artículo.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.75.0",
     date: "2026-04-06",
     title: "Automatic Moat Generation & Admin Controls",

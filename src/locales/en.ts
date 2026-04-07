@@ -2423,6 +2423,25 @@ const en: TranslationStrings = {
   moatEvalDivBuybacks: "Dividends + Buybacks / Earnings",
   moatEvalSellWarning: "P/E ratio is at or above 40 — the Buffett framework suggests considering a sale, as the price may have exceeded the long-term economic value of the business.",
   moatEvalTrendsTitle: "10-Year Trends",
+
+  moatAnalystConsensus: "Analyst Consensus",
+  moatAnalystTarget: "Price Target",
+  moatAnalystUpside: "upside",
+  moatAnalystDownside: "downside",
+  moatAnalystStrongBuy: "Strong Buy",
+  moatAnalystNoData: "No analyst coverage available for this stock.",
+  moatAnalystCount: "{count} analysts",
+
+  moatNewsSentiment: "News Sentiment",
+  moatSentimentBullish: "Bullish",
+  moatSentimentBearish: "Bearish",
+  moatSentimentNeutral: "Neutral",
+  moatSentimentMixed: "Mixed",
+  moatLoadSentiment: "Load News Sentiment",
+  moatSentimentLoading: "Fetching sentiment...",
+  moatSentimentEmpty: "No recent news sentiment available.",
+  moatSentimentArticles: "{count} recent articles",
+
   moatEvalDisclaimer: "This evaluation is for informational purposes only and does not constitute financial advice. Past performance does not guarantee future results. Always consult a qualified financial advisor before making investment decisions.",
 
   moatReportSaved: "Report saved",

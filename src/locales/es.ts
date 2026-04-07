@@ -2415,6 +2415,25 @@ const es: TranslationStrings = {
   moatEvalDivBuybacks: "Dividendos + Recompras / Beneficios",
   moatEvalSellWarning: "El ratio P/E está en 40 o superior — el marco de Buffett sugiere considerar una venta, ya que el precio puede haber superado el valor económico a largo plazo del negocio.",
   moatEvalTrendsTitle: "Tendencias de 10 Años",
+
+  moatAnalystConsensus: "Consenso de Analistas",
+  moatAnalystTarget: "Precio Objetivo",
+  moatAnalystUpside: "potencial alcista",
+  moatAnalystDownside: "potencial bajista",
+  moatAnalystStrongBuy: "Compra Fuerte",
+  moatAnalystNoData: "No hay cobertura de analistas disponible para esta acción.",
+  moatAnalystCount: "{count} analistas",
+
+  moatNewsSentiment: "Sentimiento de Noticias",
+  moatSentimentBullish: "Alcista",
+  moatSentimentBearish: "Bajista",
+  moatSentimentNeutral: "Neutral",
+  moatSentimentMixed: "Mixto",
+  moatLoadSentiment: "Cargar Sentimiento",
+  moatSentimentLoading: "Obteniendo sentimiento...",
+  moatSentimentEmpty: "No hay sentimiento de noticias reciente disponible.",
+  moatSentimentArticles: "{count} artículos recientes",
+
   moatEvalDisclaimer: "Esta evaluación es solo informativa y no constituye asesoramiento financiero. El rendimiento pasado no garantiza resultados futuros. Consulta siempre a un asesor financiero cualificado antes de tomar decisiones de inversión.",
 
   moatReportSaved: "Informe guardado",
