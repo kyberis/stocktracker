@@ -287,7 +287,8 @@ export default function MoatEvaluationPicker() {
               {savedReports.map((report) => (
                 <div
                   key={report.id}
-                  className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-3.5 hover:border-[var(--accent)] transition-colors"
+                  onClick={() => handleOpenReport(report)}
+                  className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-3.5 hover:border-[var(--accent)] transition-colors cursor-pointer"
                 >
                   <div className="flex items-center gap-3">
                     <div className="flex-1 min-w-0">
@@ -307,21 +308,13 @@ export default function MoatEvaluationPicker() {
                         <span>{new Date(report.createdAt).toLocaleDateString()}</span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1.5 flex-shrink-0">
-                      <button
-                        onClick={() => handleOpenReport(report)}
-                        className="text-[11px] font-semibold px-2.5 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 transition-colors"
-                      >
-                        {t("moatReportOpen")}
-                      </button>
-                      <button
-                        onClick={() => handleDeleteReport(report.id)}
-                        disabled={deletingId === report.id}
-                        className="text-[11px] font-semibold px-2.5 py-1.5 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors disabled:opacity-50"
-                      >
-                        {deletingId === report.id ? t("moatReportDeleting") : t("moatReportDelete")}
-                      </button>
-                    </div>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleDeleteReport(report.id); }}
+                      disabled={deletingId === report.id}
+                      className="text-[11px] font-semibold px-2.5 py-1.5 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors disabled:opacity-50 flex-shrink-0"
+                    >
+                      {deletingId === report.id ? t("moatReportDeleting") : t("moatReportDelete")}
+                    </button>
                   </div>
                 </div>
               ))}

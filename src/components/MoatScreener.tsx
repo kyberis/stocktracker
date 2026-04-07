@@ -51,6 +51,13 @@ const STATUS_DOT: Record<string, string> = {
   fail: "bg-red-500",
 };
 
+function getValuationSignal(pe: number | null): "undervalued" | "fair" | "overvalued" | null {
+  if (pe == null || pe <= 0) return null;
+  if (pe < 15) return "undervalued";
+  if (pe <= 25) return "fair";
+  return "overvalued";
+}
+
 const VERDICT_COLORS: Record<string, string> = {
   "Strong Durable Competitive Advantage": "text-emerald-500 bg-emerald-500/10",
   "Moderate Competitive Advantage": "text-blue-500 bg-blue-500/10",
@@ -274,82 +281,66 @@ export default function MoatScreener() {
             <span className="ml-auto">{total} {t("results")}</span>
           </div>
 
-          {/* Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-[11px] text-[var(--muted)] uppercase tracking-wider border-b border-[var(--border)]">
-                  <th className="text-left py-2 px-2 font-semibold">Symbol</th>
-                  <th className="text-left py-2 px-2 font-semibold hidden sm:table-cell">{t("sector")}</th>
-                  <th className="text-right py-2 px-2 font-semibold hidden sm:table-cell">{t("moatScreenerPrice")}</th>
-                  <th className="text-right py-2 px-2 font-semibold hidden sm:table-cell">P/E</th>
-                  <th className="text-center py-2 px-2 font-semibold">{t("moatReportSavedScore")}</th>
-                  <th className="text-center py-2 px-2 font-semibold">{t("moatScreenerCriteria")}</th>
-                  <th className="text-left py-2 px-2 font-semibold hidden md:table-cell">{t("moatScreenerVerdict")}</th>
-                  <th className="text-right py-2 px-2 font-semibold"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {results.map((row) => {
-                  const dots = getStatusDots(row);
-                  const vClass = VERDICT_COLORS[row.verdict] || "text-[var(--muted)] bg-[var(--card-hover)]";
-                  return (
-                    <tr key={row.symbol} className="border-b border-[var(--border)] hover:bg-[var(--card-hover)] transition-colors">
-                      <td className="py-2.5 px-2">
-                        <div className="font-bold">{row.symbol}</div>
-                        <div className="text-[11px] text-[var(--muted)] truncate max-w-[150px]">{row.companyName}</div>
-                      </td>
-                      <td className="py-2.5 px-2 text-[12px] text-[var(--muted)] hidden sm:table-cell">{row.sector}</td>
-                      <td className="py-2.5 px-2 text-right hidden sm:table-cell">
-                        {row.price != null ? (
-                          <span className="text-sm tabular-nums font-medium">
-                            {row.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            {row.currency && <span className="text-[10px] text-[var(--muted)] ml-0.5">{row.currency}</span>}
-                          </span>
-                        ) : (
-                          <span className="text-[11px] text-[var(--muted)]">—</span>
-                        )}
-                      </td>
-                      <td className="py-2.5 px-2 text-right hidden sm:table-cell">
-                        {row.peRatio != null ? (
-                          <span className={`text-sm tabular-nums font-medium ${row.peRatio >= 40 ? "text-red-500" : row.peRatio >= 25 ? "text-amber-500" : "text-[var(--foreground)]"}`}>
-                            {row.peRatio.toFixed(1)}
-                          </span>
-                        ) : (
-                          <span className="text-[11px] text-[var(--muted)]">—</span>
-                        )}
-                      </td>
-                      <td className="py-2.5 px-2 text-center">
-                        <span className={`text-base font-bold tabular-nums ${row.scorePct >= 70 ? "text-emerald-500" : row.scorePct >= 50 ? "text-blue-500" : row.scorePct >= 35 ? "text-amber-500" : "text-red-500"}`}>
-                          {row.scorePct.toFixed(0)}%
-                        </span>
-                      </td>
-                      <td className="py-2.5 px-2">
-                        <div className="flex items-center justify-center gap-0.5">
-                          {dots.map((s, i) => (
-                            <div key={i} className={`w-2 h-2 rounded-full ${STATUS_DOT[s || ""] || "bg-gray-400"}`} title={CRITERIA_KEYS[i]?.label} />
-                          ))}
-                        </div>
-                        <div className="text-[10px] text-[var(--muted)] text-center mt-0.5">{row.passedCount}/{row.criteriaCount}</div>
-                      </td>
-                      <td className="py-2.5 px-2 hidden md:table-cell">
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${vClass}`}>
+          {/* Result cards */}
+          <div className="space-y-2">
+            {results.map((row) => {
+              const dots = getStatusDots(row);
+              const vClass = VERDICT_COLORS[row.verdict] || "text-[var(--muted)] bg-[var(--card-hover)]";
+              const valSignal = getValuationSignal(row.peRatio);
+              return (
+                <button
+                  key={row.symbol}
+                  onClick={() => router.push(`/stock/${encodeURIComponent(row.symbol)}/evaluation`)}
+                  className="w-full text-left bg-[var(--card)] border border-[var(--border)] rounded-xl p-3 hover:border-[var(--accent)] transition-colors"
+                >
+                  <div className="flex items-start gap-3">
+                    {/* Score badge */}
+                    <div className={`text-lg font-bold tabular-nums leading-none pt-0.5 ${row.scorePct >= 70 ? "text-emerald-500" : row.scorePct >= 50 ? "text-blue-500" : row.scorePct >= 35 ? "text-amber-500" : "text-red-500"}`}>
+                      {row.scorePct.toFixed(0)}%
+                    </div>
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold">{row.symbol}</span>
+                        <span className="text-[11px] text-[var(--muted)] truncate">{row.companyName}</span>
+                      </div>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${vClass}`}>
                           {row.verdict.split(" — ")[0]}
                         </span>
-                      </td>
-                      <td className="py-2.5 px-2 text-right">
-                        <button
-                          onClick={() => router.push(`/stock/${encodeURIComponent(row.symbol)}/evaluation`)}
-                          className="text-[11px] font-semibold px-2.5 py-1.5 rounded-lg bg-violet-500/10 text-violet-500 hover:bg-violet-500/20 transition-colors"
-                        >
-                          {t("moatScreenerView")}
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                        {valSignal && (
+                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded inline-flex items-center gap-0.5 ${
+                            valSignal === "undervalued" ? "bg-emerald-500/10 text-emerald-500"
+                              : valSignal === "overvalued" ? "bg-red-500/10 text-red-500"
+                              : "bg-blue-500/10 text-blue-500"
+                          }`}>
+                            {valSignal === "undervalued" ? t("moatEvalUndervalued") : valSignal === "overvalued" ? t("moatEvalOvervalued") : t("moatEvalFairValue")}
+                          </span>
+                        )}
+                        {row.price != null && (
+                          <span className="text-[11px] text-[var(--muted)] tabular-nums">
+                            {row.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            {row.currency && <span className="ml-0.5">{row.currency}</span>}
+                          </span>
+                        )}
+                        {row.peRatio != null && (
+                          <span className={`text-[11px] tabular-nums ${row.peRatio >= 40 ? "text-red-500" : row.peRatio >= 25 ? "text-amber-500" : "text-[var(--muted)]"}`}>
+                            P/E {row.peRatio.toFixed(1)}
+                          </span>
+                        )}
+                        <span className="text-[11px] text-[var(--muted)]">{row.passedCount}/{row.criteriaCount}</span>
+                      </div>
+                      <div className="flex items-center gap-0.5 mt-1.5">
+                        {dots.map((s, i) => (
+                          <div key={i} className={`w-2 h-2 rounded-full ${STATUS_DOT[s || ""] || "bg-gray-400"}`} title={CRITERIA_KEYS[i]?.label} />
+                        ))}
+                        <span className="text-[10px] text-[var(--muted)] ml-1">{row.sector}</span>
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
           </div>
 
           {/* Pagination */}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth-context";
@@ -46,6 +46,7 @@ export default function StockEvaluation({ ticker, exchange, reportId: initialRep
     setSaveStatus("idle");
     setFromCache(false);
     setCachedAt(null);
+    setQuote(null);
 
     try {
       const res = await fetch(`/api/stock-evaluation?symbol=${encodeURIComponent(ticker)}`);
@@ -65,20 +66,6 @@ export default function StockEvaluation({ ticker, exchange, reportId: initialRep
       }
       setEvaluatedAt(data._evaluatedAt || data._cachedAt || null);
       setEvaluation(data);
-
-      fetch(`/api/quote?symbol=${encodeURIComponent(ticker)}`)
-        .then((r) => r.ok ? r.json() : null)
-        .then((q) => {
-          if (q?.regularMarketPrice) {
-            setQuote({
-              price: q.regularMarketPrice,
-              change: q.regularMarketChange || 0,
-              changePercent: q.regularMarketChangePercent || 0,
-              currency: q.currency || "USD",
-            });
-          }
-        })
-        .catch(() => {});
     } catch {
       setError("Network error — please try again");
     } finally {
@@ -89,6 +76,7 @@ export default function StockEvaluation({ ticker, exchange, reportId: initialRep
   const loadReport = useCallback(async (id: string) => {
     setLoading(true);
     setError(null);
+    setQuote(null);
     try {
       const res = await fetch(`/api/moat-reports/${id}`);
       if (!res.ok) throw new Error("Not found");
@@ -197,13 +185,34 @@ export default function StockEvaluation({ ticker, exchange, reportId: initialRep
     }
   }, [evaluation, language, reportId, updateReportNarrative]);
 
-  if (!evaluation && !loading && !error) {
+  const didInit = useRef(false);
+  useEffect(() => {
+    if (didInit.current) return;
+    didInit.current = true;
     if (initialReportId) {
       loadReport(initialReportId);
     } else {
       fetchEvaluation();
     }
-  }
+  }, [initialReportId, loadReport, fetchEvaluation]);
+
+  useEffect(() => {
+    if (!evaluation || quote) return;
+    fetch(`/api/quote?symbols=${encodeURIComponent(ticker)}`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        const q = data?.[ticker];
+        if (q?.regularMarketPrice) {
+          setQuote({
+            price: q.regularMarketPrice,
+            change: q.regularMarketChange || 0,
+            changePercent: q.regularMarketChangePercent || 0,
+            currency: q.currency || "USD",
+          });
+        }
+      })
+      .catch(() => {});
+  }, [evaluation, quote, ticker]);
 
   if (error === "upgrade") {
     return (
@@ -256,6 +265,37 @@ export default function StockEvaluation({ ticker, exchange, reportId: initialRep
 
   const v = evaluation.valuation;
 
+  const valuationSignal = (() => {
+    let score = 0;
+    let signals = 0;
+    if (v.peRatio != null) {
+      signals++;
+      if (v.peRatio < 15) score += 2;
+      else if (v.peRatio < 25) score += 1;
+      else if (v.peRatio >= 40) score -= 2;
+      else if (v.peRatio >= 30) score -= 1;
+    }
+    if (v.forwardPE != null) {
+      signals++;
+      if (v.forwardPE < 15) score += 2;
+      else if (v.forwardPE < 22) score += 1;
+      else if (v.forwardPE >= 35) score -= 2;
+      else if (v.forwardPE >= 28) score -= 1;
+    }
+    if (v.pegRatio != null) {
+      signals++;
+      if (v.pegRatio < 1) score += 2;
+      else if (v.pegRatio < 1.5) score += 1;
+      else if (v.pegRatio >= 3) score -= 2;
+      else if (v.pegRatio >= 2) score -= 1;
+    }
+    if (signals === 0) return null;
+    const avg = score / signals;
+    if (avg >= 0.8) return "undervalued" as const;
+    if (avg <= -0.8) return "overvalued" as const;
+    return "fair" as const;
+  })();
+
   return (
     <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-5">
       {/* Back link */}
@@ -287,6 +327,26 @@ export default function StockEvaluation({ ticker, exchange, reportId: initialRep
             <span>{evaluation.symbol}</span>
             <span>{evaluation.sector}</span>
             <span>{evaluation.industry}</span>
+            {valuationSignal && (
+              <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full inline-flex items-center gap-1 ${
+                valuationSignal === "undervalued"
+                  ? "bg-emerald-500/10 text-emerald-500"
+                  : valuationSignal === "overvalued"
+                    ? "bg-red-500/10 text-red-500"
+                    : "bg-blue-500/10 text-blue-500"
+              }`}>
+                {valuationSignal === "undervalued" && (
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
+                )}
+                {valuationSignal === "overvalued" && (
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg>
+                )}
+                {valuationSignal === "fair" && (
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14" /></svg>
+                )}
+                {valuationSignal === "undervalued" ? t("moatEvalUndervalued") : valuationSignal === "overvalued" ? t("moatEvalOvervalued") : t("moatEvalFairValue")}
+              </span>
+            )}
             {evaluatedAt && (
               <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-[var(--card-hover)] text-[var(--muted)]">
                 {t("moatEvaluatedOn")} {new Date(evaluatedAt + (evaluatedAt.includes("Z") ? "" : "Z")).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })}
@@ -400,10 +460,10 @@ export default function StockEvaluation({ ticker, exchange, reportId: initialRep
           {t("moatEvalValuationTitle")}
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <ValuationCard label={t("moatEvalPE")} value={v.peRatio != null ? v.peRatio.toFixed(1) : "N/A"} note={v.sellTrigger ? t("moatEvalSellTrigger") : t("moatEvalBelowTrigger")} warn={v.sellTrigger} />
-          <ValuationCard label={t("moatEvalForwardPE")} value={v.forwardPE != null ? v.forwardPE.toFixed(1) : "N/A"} note={t("moatEvalAnalystEst")} />
-          <ValuationCard label={t("moatEvalPEG")} value={v.pegRatio != null ? v.pegRatio.toFixed(2) : "N/A"} note={t("moatEvalGrowthAdj")} />
-          <ValuationCard label={t("moatEvalAugPayout")} value={v.augmentedPayoutRatio != null ? `${v.augmentedPayoutRatio.toFixed(0)}%` : "N/A"} note={t("moatEvalDivBuybacks")} highlight={v.augmentedPayoutRatio != null && v.augmentedPayoutRatio > 0} />
+          <ValuationCard label={t("moatEvalPE")} value={v.peRatio != null ? v.peRatio.toFixed(1) : "N/A"} note={v.sellTrigger ? t("moatEvalSellTrigger") : t("moatEvalBelowTrigger")} description={t("moatEvalPEDesc")} warn={v.sellTrigger} />
+          <ValuationCard label={t("moatEvalForwardPE")} value={v.forwardPE != null ? v.forwardPE.toFixed(1) : "N/A"} note={t("moatEvalAnalystEst")} description={t("moatEvalForwardPEDesc")} />
+          <ValuationCard label={t("moatEvalPEG")} value={v.pegRatio != null ? v.pegRatio.toFixed(2) : "N/A"} note={t("moatEvalGrowthAdj")} description={t("moatEvalPEGDesc")} />
+          <ValuationCard label={t("moatEvalAugPayout")} value={v.augmentedPayoutRatio != null ? `${v.augmentedPayoutRatio.toFixed(0)}%` : "N/A"} note={t("moatEvalDivBuybacks")} description={t("moatEvalAugPayoutDesc")} highlight={v.augmentedPayoutRatio != null && v.augmentedPayoutRatio > 0} />
         </div>
         {v.sellTrigger && (
           <div className="mt-3 p-3 bg-red-500/8 border border-red-500/20 rounded-lg text-[12px] text-red-500 text-center">
@@ -436,20 +496,26 @@ export default function StockEvaluation({ ticker, exchange, reportId: initialRep
   );
 }
 
-function ValuationCard({ label, value, note, warn, highlight }: {
+function ValuationCard({ label, value, note, description, warn, highlight }: {
   label: string;
   value: string;
   note: string;
+  description?: string;
   warn?: boolean;
   highlight?: boolean;
 }) {
   return (
-    <div className="bg-[var(--card)] border border-[var(--border)] rounded-[10px] p-4 text-center">
+    <div className="bg-[var(--card)] border border-[var(--border)] rounded-[10px] p-4 text-center group relative">
       <div className="text-[11px] uppercase tracking-wider text-[var(--muted)] mb-1">{label}</div>
       <div className={`text-2xl font-bold ${warn ? "text-red-500" : highlight ? "text-emerald-500" : ""}`}>
         {value}
       </div>
       <div className="text-[11px] text-[var(--muted)] mt-0.5">{note}</div>
+      {description && (
+        <div className="mt-2 pt-2 border-t border-[var(--border)] text-[11px] text-[var(--muted)] leading-relaxed text-left">
+          {description}
+        </div>
+      )}
     </div>
   );
 }
