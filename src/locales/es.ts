@@ -2381,6 +2381,7 @@ const es: TranslationStrings = {
   moatEvalNav: "Evaluación de Ventaja",
   moatEvalTitle: "Evaluación de Ventaja Competitiva",
   moatEvalPickerDesc: "Evalúa la ventaja competitiva sostenible de cualquier acción usando el marco de evaluación de Buffett.",
+  moatEvalSearchTab: "Buscar",
   moatEvalSearchPlaceholder: "Buscar una acción para evaluar (ej. AAPL, KO, MSFT)...",
   moatEvalSearchNoResults: "No hay datos fundamentales disponibles para esta búsqueda. Prueba con otro ticker — Alpha Vantage cubre la mayoría de acciones de EE.UU. y las principales internacionales.",
   moatEvalSearchAnother: "Probar otra acción",

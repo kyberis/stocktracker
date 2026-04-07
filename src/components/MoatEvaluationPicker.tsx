@@ -37,6 +37,7 @@ export default function MoatEvaluationPicker() {
   const [reportsLoading, setReportsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
+  const [leftTab, setLeftTab] = useState<"search" | "screener">("search");
   const [portfolioRunning, setPortfolioRunning] = useState(false);
   const [portfolioDone, setPortfolioDone] = useState(0);
   const [portfolioTotal, setPortfolioTotal] = useState(0);
@@ -132,8 +133,11 @@ export default function MoatEvaluationPicker() {
     return "text-red-500";
   };
 
+  const reportsRef = useRef<HTMLDivElement>(null);
+
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="space-y-6">
+      {/* Header */}
       <div className="text-center space-y-2">
         <div className="inline-flex items-center gap-2">
           <svg className="w-8 h-8 text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -145,148 +149,185 @@ export default function MoatEvaluationPicker() {
         <p className="text-sm text-[var(--muted)]">{t("moatEvalPickerDesc")}</p>
       </div>
 
-      {/* Portfolio CTA */}
-      {holdings.length > 0 && (
-        <div className="bg-gradient-to-r from-violet-500/10 to-indigo-500/10 border border-violet-500/20 rounded-xl p-4">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-bold flex items-center gap-2">
-                <svg className="w-4 h-4 text-violet-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
-                {t("moatReportEvaluatePortfolio")}
-              </h3>
-              <p className="text-[12px] text-[var(--muted)] mt-0.5">{t("moatReportEvaluatePortfolioDesc")}</p>
-              {portfolioRunning && (
-                <div className="mt-2">
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 h-1.5 bg-[var(--border)] rounded-full overflow-hidden">
-                      <div className="h-full bg-violet-500 rounded-full transition-all duration-500" style={{ width: `${portfolioTotal > 0 ? (portfolioDone / portfolioTotal) * 100 : 0}%` }} />
-                    </div>
-                    <span className="text-[11px] text-[var(--muted)] tabular-nums">
-                      {t("moatReportPortfolioProgress").replace("{done}", String(portfolioDone)).replace("{total}", String(portfolioTotal))}
-                    </span>
-                  </div>
-                </div>
-              )}
-            </div>
+      {/* Two-column layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        {/* ── Left column: Tabbed Search / Screener ── */}
+        <div className="space-y-4">
+          {/* Tabs */}
+          <div className="flex gap-1 bg-[var(--card)] border border-[var(--border)] rounded-xl p-1">
             <button
-              onClick={handleEvaluatePortfolio}
-              disabled={portfolioRunning}
-              className="flex-shrink-0 inline-flex items-center gap-1.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white text-[13px] font-semibold px-4 py-2.5 rounded-lg transition-all hover:shadow-lg hover:shadow-violet-500/25 disabled:opacity-50"
+              onClick={() => setLeftTab("search")}
+              className={`flex-1 flex items-center justify-center gap-1.5 text-[13px] font-semibold py-2 rounded-lg transition-colors ${
+                leftTab === "search"
+                  ? "bg-violet-500/10 text-violet-600 dark:text-violet-400"
+                  : "text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--card-hover)]"
+              }`}
             >
-              {portfolioRunning ? (
-                <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-              ) : (
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-              )}
-              {portfolioRunning ? t("moatReportEvaluatePortfolioRunning") : t("moatReportEvaluatePortfolio")}
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              {t("moatEvalSearchTab")}
+            </button>
+            <button
+              onClick={() => setLeftTab("screener")}
+              className={`flex-1 flex items-center justify-center gap-1.5 text-[13px] font-semibold py-2 rounded-lg transition-colors ${
+                leftTab === "screener"
+                  ? "bg-violet-500/10 text-violet-600 dark:text-violet-400"
+                  : "text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--card-hover)]"
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
+              {t("moatScreenerTitle")}
             </button>
           </div>
-        </div>
-      )}
 
-      {/* Stock Search */}
-      <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4">
-        <div className="flex items-center gap-3 mb-4">
-          <svg className="w-5 h-5 text-[var(--muted)] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={t("moatEvalSearchPlaceholder")}
-            className="w-full bg-transparent border-none outline-none text-[var(--foreground)] text-[15px] placeholder:text-[var(--muted)]"
-            autoFocus
-          />
-          {searching && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-500 flex-shrink-0" />}
-        </div>
-
-        {results.length > 0 && (
-          <div className="border-t border-[var(--border)] pt-2 space-y-0.5 max-h-80 overflow-y-auto">
-            {results.map((r) => (
-              <button
-                key={`${r.symbol}-${r.exchange}`}
-                onClick={() => handleSelect(r.symbol, r.exchange)}
-                className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-[var(--card-hover)] transition-colors flex items-center justify-between"
-              >
-                <div>
-                  <span className="text-sm font-semibold">{r.symbol}</span>
-                  <span className="text-xs text-[var(--muted)] ml-2">{r.shortname}</span>
+          {/* Search tab content */}
+          {leftTab === "search" && (
+            <div className="space-y-4">
+              <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <svg className="w-5 h-5 text-[var(--muted)] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                  <input
+                    type="text"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder={t("moatEvalSearchPlaceholder")}
+                    className="w-full bg-transparent border-none outline-none text-[var(--foreground)] text-[15px] placeholder:text-[var(--muted)]"
+                    autoFocus
+                  />
+                  {searching && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-500 flex-shrink-0" />}
                 </div>
-                <span className="text-[11px] text-[var(--muted)]">{r.exchange}</span>
-              </button>
-            ))}
-          </div>
-        )}
 
-        {query.length > 0 && results.length === 0 && !searching && (
-          <p className="text-center text-sm text-[var(--muted)] py-4">{t("moatEvalSearchNoResults")}</p>
-        )}
-      </div>
-
-      {/* Saved Reports */}
-      <div>
-        <h3 className="text-base font-bold mb-3 flex items-center gap-2">
-          <svg className="w-5 h-5 text-[var(--muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-          {t("moatReportSavedTitle")}
-        </h3>
-
-        {reportsLoading ? (
-          <div className="flex justify-center py-6">
-            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-emerald-500" />
-          </div>
-        ) : savedReports.length === 0 ? (
-          <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-6 text-center">
-            <p className="text-sm text-[var(--muted)]">{t("moatReportSavedEmpty")}</p>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {savedReports.map((report) => (
-              <div
-                key={report.id}
-                className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-3.5 flex items-center gap-3 hover:border-[var(--accent)] transition-colors"
-              >
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold">{report.symbol}</span>
-                    <span className="text-xs text-[var(--muted)] truncate">{report.companyName}</span>
+                {results.length > 0 && (
+                  <div className="border-t border-[var(--border)] pt-2 space-y-0.5 max-h-80 overflow-y-auto">
+                    {results.map((r) => (
+                      <button
+                        key={`${r.symbol}-${r.exchange}`}
+                        onClick={() => handleSelect(r.symbol, r.exchange)}
+                        className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-[var(--card-hover)] transition-colors flex items-center justify-between"
+                      >
+                        <div>
+                          <span className="text-sm font-semibold">{r.symbol}</span>
+                          <span className="text-xs text-[var(--muted)] ml-2">{r.shortname}</span>
+                        </div>
+                        <span className="text-[11px] text-[var(--muted)]">{r.exchange}</span>
+                      </button>
+                    ))}
                   </div>
-                  <div className="flex items-center gap-3 mt-0.5 text-[11px] text-[var(--muted)]">
-                    <span className={`font-semibold ${verdictColor(report.verdict)}`}>{report.verdict}</span>
-                    <span>{t("moatReportSavedScore")}: {report.totalScore.toFixed(1)}/{report.maxScore}</span>
-                    {report.hasAiNarrative && (
-                      <span className="text-violet-500 flex items-center gap-0.5">
-                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                        {t("moatReportSavedAi")}
-                      </span>
-                    )}
-                    <span>{new Date(report.createdAt).toLocaleDateString()}</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1.5 flex-shrink-0">
-                  <button
-                    onClick={() => handleOpenReport(report)}
-                    className="text-[11px] font-semibold px-2.5 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 transition-colors"
-                  >
-                    {t("moatReportOpen")}
-                  </button>
-                  <button
-                    onClick={() => handleDeleteReport(report.id)}
-                    disabled={deletingId === report.id}
-                    className="text-[11px] font-semibold px-2.5 py-1.5 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors disabled:opacity-50"
-                  >
-                    {deletingId === report.id ? t("moatReportDeleting") : t("moatReportDelete")}
-                  </button>
-                </div>
+                )}
+
+                {query.length > 0 && results.length === 0 && !searching && (
+                  <p className="text-center text-sm text-[var(--muted)] py-4">{t("moatEvalSearchNoResults")}</p>
+                )}
               </div>
-            ))}
-          </div>
-        )}
-      </div>
 
-      {/* Moat Screener */}
-      <MoatScreener />
+              {/* Portfolio CTA */}
+              {holdings.length > 0 && (
+                <div className="bg-gradient-to-r from-violet-500/10 to-indigo-500/10 border border-violet-500/20 rounded-xl p-4">
+                  <div className="space-y-3">
+                    <div>
+                      <h3 className="text-sm font-bold flex items-center gap-2">
+                        <svg className="w-4 h-4 text-violet-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                        {t("moatReportEvaluatePortfolio")}
+                      </h3>
+                      <p className="text-[12px] text-[var(--muted)] mt-0.5">{t("moatReportEvaluatePortfolioDesc")}</p>
+                    </div>
+                    {portfolioRunning && (
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 h-1.5 bg-[var(--border)] rounded-full overflow-hidden">
+                          <div className="h-full bg-violet-500 rounded-full transition-all duration-500" style={{ width: `${portfolioTotal > 0 ? (portfolioDone / portfolioTotal) * 100 : 0}%` }} />
+                        </div>
+                        <span className="text-[11px] text-[var(--muted)] tabular-nums">
+                          {t("moatReportPortfolioProgress").replace("{done}", String(portfolioDone)).replace("{total}", String(portfolioTotal))}
+                        </span>
+                      </div>
+                    )}
+                    <button
+                      onClick={handleEvaluatePortfolio}
+                      disabled={portfolioRunning}
+                      className="w-full inline-flex items-center justify-center gap-1.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white text-[13px] font-semibold px-4 py-2.5 rounded-lg transition-all hover:shadow-lg hover:shadow-violet-500/25 disabled:opacity-50"
+                    >
+                      {portfolioRunning ? (
+                        <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                      ) : (
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                      )}
+                      {portfolioRunning ? t("moatReportEvaluatePortfolioRunning") : t("moatReportEvaluatePortfolio")}
+                    </button>
+                  </div>
+                </div>
+              )}
 
-      <div className="text-center text-[11px] text-[var(--muted)]">
-        {t("moatEvalPickerNote")}
+              <p className="text-[11px] text-[var(--muted)] text-center">{t("moatEvalPickerNote")}</p>
+            </div>
+          )}
+
+          {/* Screener tab content */}
+          {leftTab === "screener" && <MoatScreener />}
+        </div>
+
+        {/* ── Right column: Saved Reports ── */}
+        <div ref={reportsRef}>
+          <h3 className="text-base font-bold mb-3 flex items-center gap-2">
+            <svg className="w-5 h-5 text-[var(--muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+            {t("moatReportSavedTitle")}
+            {!reportsLoading && savedReports.length > 0 && (
+              <span className="text-[11px] font-normal text-[var(--muted)] tabular-nums">{savedReports.length}</span>
+            )}
+          </h3>
+
+          {reportsLoading ? (
+            <div className="flex justify-center py-6">
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-emerald-500" />
+            </div>
+          ) : savedReports.length === 0 ? (
+            <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-6 text-center">
+              <p className="text-sm text-[var(--muted)]">{t("moatReportSavedEmpty")}</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {savedReports.map((report) => (
+                <div
+                  key={report.id}
+                  className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-3.5 hover:border-[var(--accent)] transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold">{report.symbol}</span>
+                        <span className="text-xs text-[var(--muted)] truncate">{report.companyName}</span>
+                      </div>
+                      <div className="flex items-center gap-3 mt-0.5 text-[11px] text-[var(--muted)]">
+                        <span className={`font-semibold ${verdictColor(report.verdict)}`}>{report.verdict}</span>
+                        <span>{t("moatReportSavedScore")}: {report.totalScore.toFixed(1)}/{report.maxScore}</span>
+                        {report.hasAiNarrative && (
+                          <span className="text-violet-500 flex items-center gap-0.5">
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                            {t("moatReportSavedAi")}
+                          </span>
+                        )}
+                        <span>{new Date(report.createdAt).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      <button
+                        onClick={() => handleOpenReport(report)}
+                        className="text-[11px] font-semibold px-2.5 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 transition-colors"
+                      >
+                        {t("moatReportOpen")}
+                      </button>
+                      <button
+                        onClick={() => handleDeleteReport(report.id)}
+                        disabled={deletingId === report.id}
+                        className="text-[11px] font-semibold px-2.5 py-1.5 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors disabled:opacity-50"
+                      >
+                        {deletingId === report.id ? t("moatReportDeleting") : t("moatReportDelete")}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

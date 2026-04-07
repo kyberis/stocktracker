@@ -855,7 +855,7 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
               />
             ))}
 
-            {/* Market session bands (1D) with staggered name labels */}
+            {/* Market session bands (1D) — labels shown in legend bar below chart */}
             {dayBounds && sessionOverlays.map((s, i) => {
               const x1 = findClosestDataDate(chartData, s.openDate.getTime());
               const x2 = findClosestDataDate(chartData, s.closeDate.getTime());
@@ -868,16 +868,6 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
                 fill={s.color}
                 fillOpacity={0.05}
                 ifOverflow="visible"
-                label={{
-                  value: s.name,
-                  position: "insideTopLeft" as const,
-                  fill: s.color,
-                  fontSize: 8,
-                  fontWeight: 600,
-                  opacity: 0.6,
-                  dy: 6 + i * 12,
-                  dx: 4,
-                }}
               />
               );
             })}
