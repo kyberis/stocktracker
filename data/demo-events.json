@@ -118,5 +118,35 @@
     "time": null,
     "details": { "exchange": "NYSE", "priceRange": "$22–$25", "shares": 75000000, "marketCap": null },
     "inPortfolio": false
+  },
+  {
+    "id": "splits:NVDA:2026-04-18",
+    "type": "splits",
+    "symbol": "NVDA",
+    "name": "NVDA",
+    "date": "2026-04-18",
+    "time": null,
+    "details": { "numerator": 10, "denominator": 1, "ratio": "10:1", "isReverse": false, "splitType": "Forward" },
+    "inPortfolio": true
+  },
+  {
+    "id": "splits:SIRI:2026-04-25",
+    "type": "splits",
+    "symbol": "SIRI",
+    "name": "SIRI",
+    "date": "2026-04-25",
+    "time": null,
+    "details": { "numerator": 1, "denominator": 10, "ratio": "1:10", "isReverse": true, "splitType": "Reverse" },
+    "inPortfolio": false
+  },
+  {
+    "id": "splits:GE:2026-04-28",
+    "type": "splits",
+    "symbol": "GE",
+    "name": "GE",
+    "date": "2026-04-28",
+    "time": null,
+    "details": { "numerator": 1, "denominator": 8, "ratio": "1:8", "isReverse": true, "splitType": "Reverse" },
+    "inPortfolio": false
   }
 ]

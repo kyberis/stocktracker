@@ -26,6 +26,7 @@ export type SubscriptionFeature =
   | "event-calendar-earnings"
   | "event-calendar-economic"
   | "event-calendar-ipo"
+  | "event-calendar-splits"
   | "net-worth"
   | "screener"
   | "tax-reports"

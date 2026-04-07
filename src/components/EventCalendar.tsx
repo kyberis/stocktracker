@@ -12,7 +12,7 @@ import EmptyState from "./EmptyState";
 
 interface EventItem {
   id: string;
-  type: "earnings" | "economic" | "ipo";
+  type: "earnings" | "economic" | "ipo" | "splits";
   symbol: string | null;
   name: string;
   date: string;
@@ -26,7 +26,7 @@ interface TierAccess {
 }
 
 type ViewMode = "calendar" | "list";
-type EventFilter = "earnings" | "economic" | "ipo";
+type EventFilter = "earnings" | "economic" | "ipo" | "splits";
 
 const DOW_KEYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -72,7 +72,7 @@ export default function EventCalendar() {
   const [tierAccess, setTierAccess] = useState<TierAccess>({});
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>("calendar");
-  const [filters, setFilters] = useState<Set<EventFilter>>(new Set(["earnings", "economic", "ipo"]));
+  const [filters, setFilters] = useState<Set<EventFilter>>(new Set(["earnings", "economic", "ipo", "splits"]));
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   const todayStr = toISODate(new Date());
@@ -89,6 +89,7 @@ export default function EventCalendar() {
   const canEarnings = canAccessFeature("event-calendar-earnings", entitlementInput).allowed;
   const canEconomic = canAccessFeature("event-calendar-economic", entitlementInput).allowed;
   const canIpo = canAccessFeature("event-calendar-ipo", entitlementInput).allowed;
+  const canSplits = canAccessFeature("event-calendar-splits", entitlementInput).allowed;
 
   const isDemo = !user;
 
@@ -99,7 +100,7 @@ export default function EventCalendar() {
         const demoData = await import("@/../data/demo-events.json");
         const all = (demoData.default || demoData) as EventItem[];
         setEvents(all);
-        setTierAccess({ earnings: { allowed: true }, economic: { allowed: true }, ipo: { allowed: true } });
+        setTierAccess({ earnings: { allowed: true }, economic: { allowed: true }, ipo: { allowed: true }, splits: { allowed: true } });
       } else {
         const from = new Date(calYear, calMonth, 1);
         const to = new Date(calYear, calMonth + 1, 0);
@@ -178,6 +179,7 @@ export default function EventCalendar() {
   const earningsCount = events.filter((e) => e.type === "earnings").length;
   const economicCount = events.filter((e) => e.type === "economic").length;
   const ipoCount = events.filter((e) => e.type === "ipo").length;
+  const splitsCount = events.filter((e) => e.type === "splits").length;
 
   const monthDays = getMonthDays(calYear, calMonth);
   const startOffset = getStartDayOffset(calYear, calMonth);
@@ -243,7 +245,7 @@ export default function EventCalendar() {
   }
 
   function renderEventCard(e: EventItem) {
-    const typeColor = e.type === "earnings" ? "bg-emerald-500" : e.type === "economic" ? "bg-violet-500" : "bg-amber-500";
+    const typeColor = e.type === "earnings" ? "bg-emerald-500" : e.type === "economic" ? "bg-violet-500" : e.type === "splits" ? "bg-rose-500" : "bg-amber-500";
 
     return (
       <div key={e.id} className="flex items-start gap-3 py-2.5">
@@ -258,6 +260,11 @@ export default function EventCalendar() {
             )}
             {e.symbol && e.type === "ipo" && (
               <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                {e.symbol}
+              </span>
+            )}
+            {e.symbol && e.type === "splits" && (
+              <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400">
                 {e.symbol}
               </span>
             )}
@@ -306,6 +313,25 @@ export default function EventCalendar() {
               {e.details.exchange ? <span>{String(e.details.exchange)}</span> : null}
             </div>
           )}
+
+          {e.type === "splits" && e.details && (
+            <div className="mt-1 flex items-center gap-2 flex-wrap">
+              <span
+                className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${
+                  e.details.isReverse
+                    ? "bg-red-500/10 text-red-600 dark:text-red-400"
+                    : "bg-sky-500/10 text-sky-600 dark:text-sky-400"
+                }`}
+              >
+                {e.details.isReverse ? t("reverseSplit") : t("forwardSplit")}
+              </span>
+              {e.details.ratio != null && (
+                <span className="text-xs text-gray-500 dark:text-slate-400">
+                  {t("splitRatio")}: <strong className="text-gray-700 dark:text-slate-300">{String(e.details.ratio)}</strong>
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
         {e.type === "earnings" && e.details?.epsEstimated != null && (
@@ -323,6 +349,15 @@ export default function EventCalendar() {
               {String(e.details.priceRange)}
             </div>
             <div className="text-[10px] text-gray-400 dark:text-slate-500">{t("priceRange")}</div>
+          </div>
+        )}
+
+        {e.type === "splits" && e.details?.ratio != null && (
+          <div className="text-right flex-shrink-0">
+            <div className={`text-sm font-semibold font-mono ${e.details.isReverse ? "text-red-600 dark:text-red-400" : "text-sky-600 dark:text-sky-400"}`}>
+              {String(e.details.ratio)}
+            </div>
+            <div className="text-[10px] text-gray-400 dark:text-slate-500">{t("splitRatio")}</div>
           </div>
         )}
       </div>
@@ -398,6 +433,19 @@ export default function EventCalendar() {
           {t("ipoCalendar")}
           {!canIpo && <TierFeatureBadge requiredPlan="pro" size="xs" className="ml-1" />}
           {canIpo && <span className="opacity-70">({ipoCount})</span>}
+        </button>
+        <button
+          onClick={() => canSplits && toggleFilter("splits")}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+            filters.has("splits") && canSplits
+              ? "bg-rose-500 text-white"
+              : "bg-rose-500/10 text-rose-600 dark:text-rose-400"
+          } ${!canSplits ? "opacity-60 cursor-not-allowed" : ""}`}
+        >
+          <span className={`w-2 h-2 rounded-full ${filters.has("splits") && canSplits ? "bg-white" : "bg-rose-500"}`} />
+          {t("stockSplits")}
+          {!canSplits && <TierFeatureBadge requiredPlan="pro" size="xs" className="ml-1" />}
+          {canSplits && <span className="opacity-70">({splitsCount})</span>}
         </button>
       </div>
 
@@ -499,6 +547,9 @@ export default function EventCalendar() {
                         )}
                         {dayEvents.some((e) => e.type === "ipo") && (
                           <span className="w-[5px] h-[5px] rounded-full bg-amber-500" />
+                        )}
+                        {dayEvents.some((e) => e.type === "splits") && (
+                          <span className="w-[5px] h-[5px] rounded-full bg-rose-500" />
                         )}
                       </div>
                     )}
@@ -622,6 +673,43 @@ export default function EventCalendar() {
             ) : (
               <ProCompareCard surface="intelligence_locked" reason="upgrade_required" compact />
             )}
+
+            {/* Stock Splits — gated */}
+            <div className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-slate-300">
+              <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+              {t("stockSplits")}
+              {!canSplits && <TierFeatureBadge requiredPlan="pro" size="sm" />}
+              {canSplits && (
+                <span className="text-[11px] font-bold bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-slate-400 px-2 py-0.5 rounded-full">
+                  {splitsCount} {t("upcoming")}
+                </span>
+              )}
+            </div>
+            {canSplits ? (
+              <div className="card divide-y divide-gray-100 dark:divide-slate-700">
+                {filteredEvents.filter((e) => e.type === "splits").length === 0 ? (
+                  <div className="px-5 py-8 text-center text-sm text-gray-400 dark:text-slate-500">
+                    {t("noUpcomingEvents")}
+                  </div>
+                ) : (
+                  groupedByDate
+                    .filter((g) => g.events.some((e) => e.type === "splits"))
+                    .filter((g) => !selectedDate || g.date === selectedDate)
+                    .map((group) => (
+                      <div key={group.date} className="px-5 py-4">
+                        <div className="text-[11px] font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+                          {formatEventDate(group.date, language)}
+                        </div>
+                        {group.events
+                          .filter((e) => e.type === "splits")
+                          .map((e) => renderEventCard(e))}
+                      </div>
+                    ))
+                )}
+              </div>
+            ) : (
+              <ProCompareCard surface="intelligence_locked" reason="upgrade_required" compact />
+            )}
           </div>
         </div>
       ) : (
@@ -675,6 +763,16 @@ export default function EventCalendar() {
               <div className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-slate-300 mb-3 px-1">
                 <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
                 {t("ipoCalendar")}
+                <TierFeatureBadge requiredPlan="pro" size="sm" />
+              </div>
+              <ProCompareCard surface="intelligence_locked" reason="upgrade_required" compact />
+            </div>
+          )}
+          {!canSplits && (
+            <div>
+              <div className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-slate-300 mb-3 px-1">
+                <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+                {t("stockSplits")}
                 <TierFeatureBadge requiredPlan="pro" size="sm" />
               </div>
               <ProCompareCard surface="intelligence_locked" reason="upgrade_required" compact />

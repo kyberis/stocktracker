@@ -17,7 +17,7 @@ export const GET = withMetrics("/api/events", async (req: NextRequest) => {
   }
 
   const url = new URL(req.url);
-  const typesParam = url.searchParams.get("type") || "earnings,economic,ipo";
+  const typesParam = url.searchParams.get("type") || "earnings,economic,ipo,splits";
   const requestedTypes = typesParam.split(",").map((t) => t.trim()).filter(Boolean);
   const from = url.searchParams.get("from") || new Date().toISOString().slice(0, 10);
   const to = url.searchParams.get("to") || (() => {
@@ -36,7 +36,7 @@ export const GET = withMetrics("/api/events", async (req: NextRequest) => {
   const tierInfo: Record<string, { allowed: boolean; requiredTier?: string }> = {};
 
   for (const type of requestedTypes) {
-    let feature: "event-calendar-earnings" | "event-calendar-economic" | "event-calendar-ipo";
+    let feature: "event-calendar-earnings" | "event-calendar-economic" | "event-calendar-ipo" | "event-calendar-splits";
     let requiredTier: string;
     if (type === "earnings") {
       feature = "event-calendar-earnings";
@@ -46,6 +46,9 @@ export const GET = withMetrics("/api/events", async (req: NextRequest) => {
       requiredTier = "starter";
     } else if (type === "ipo") {
       feature = "event-calendar-ipo";
+      requiredTier = "pro";
+    } else if (type === "splits") {
+      feature = "event-calendar-splits";
       requiredTier = "pro";
     } else {
       continue;

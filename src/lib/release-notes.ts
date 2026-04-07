@@ -17,6 +17,21 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.77.0",
+    date: "2026-04-07",
+    title: "Stock Splits Calendar",
+    titleTranslations: { es: "Calendario de Divisiones de Acciones" },
+    changes: [
+      {
+        type: "feature",
+        text: "Stock splits now appear in the event calendar — synced daily from FMP with reverse splits highlighted for opportunity screening. Available on Pro.",
+        translations: {
+          es: "Las divisiones de acciones ahora aparecen en el calendario de eventos — sincronizadas diariamente desde FMP con splits inversos destacados para búsqueda de oportunidades. Disponible en Pro.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.76.0",
     date: "2026-04-07",
     title: "Analyst Consensus & News Sentiment on Moat Page",

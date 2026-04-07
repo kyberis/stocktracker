@@ -4,6 +4,7 @@ import { getGlobalAlphaVantageApiKey } from "@/lib/db";
 import {
   fetchEconomicCalendar,
   fetchIpoCalendar,
+  fetchSplitsCalendar,
   type FmpEarningsEvent,
   type FmpEconomicEvent,
   type FmpIpoEvent,
@@ -75,7 +76,7 @@ const runEventSync = withCronLogging("event-sync", async () => {
   const fromStr = toISODate(from);
   const toStr = toISODate(to);
 
-  const stats = { earnings: 0, economic: 0, ipo: 0, deleted: 0, errors: [] as string[] };
+  const stats = { earnings: 0, economic: 0, ipo: 0, splits: 0, deleted: 0, errors: [] as string[] };
 
   // --- Earnings from Alpha Vantage ---
   const avKey = getGlobalAlphaVantageApiKey();
@@ -200,6 +201,40 @@ const runEventSync = withCronLogging("event-sync", async () => {
     } catch (e) {
       stats.errors.push(`ipo: ${e instanceof Error ? e.message : String(e)}`);
     }
+
+    // --- Stock splits from FMP ---
+    try {
+      const raw = await fetchSplitsCalendar(from, to);
+      const mapped = raw
+        .filter((e) => e.date >= fromStr && e.date <= toStr && e.symbol)
+        .map((e) => {
+          const isReverse = e.numerator < e.denominator;
+          const ratio = `${e.numerator}:${e.denominator}`;
+          return {
+            id: `splits:${e.symbol}:${e.date}`,
+            event_type: "splits",
+            symbol: e.symbol,
+            name: e.symbol,
+            event_date: e.date,
+            event_time: null,
+            details: JSON.stringify({
+              numerator: e.numerator,
+              denominator: e.denominator,
+              ratio,
+              isReverse,
+              splitType: e.splitType || (isReverse ? "Reverse" : "Forward"),
+            }),
+          };
+        });
+
+      const BATCH = 50;
+      for (let i = 0; i < mapped.length; i += BATCH) {
+        await upsertCalendarEventsBatch(mapped.slice(i, i + BATCH));
+      }
+      stats.splits = mapped.length;
+    } catch (e) {
+      stats.errors.push(`splits: ${e instanceof Error ? e.message : String(e)}`);
+    }
   }
 
   // --- Cleanup stale events (older than 7 days) ---
@@ -208,7 +243,7 @@ const runEventSync = withCronLogging("event-sync", async () => {
 
   return {
     ok: true,
-    synced: { earnings: stats.earnings, economic: stats.economic, ipo: stats.ipo },
+    synced: { earnings: stats.earnings, economic: stats.economic, ipo: stats.ipo, splits: stats.splits },
     deleted: stats.deleted,
     errors: stats.errors.length > 0 ? stats.errors : undefined,
   };

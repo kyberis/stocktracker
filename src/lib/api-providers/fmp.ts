@@ -115,3 +115,21 @@ export async function fetchIpoCalendar(
     to: toISODate(to),
   });
 }
+
+export interface FmpSplitEvent {
+  date: string;
+  symbol: string;
+  numerator: number;
+  denominator: number;
+  splitType?: string;
+}
+
+export async function fetchSplitsCalendar(
+  from: Date,
+  to: Date
+): Promise<FmpSplitEvent[]> {
+  return fmpFetch<FmpSplitEvent[]>("splits-calendar", {
+    from: toISODate(from),
+    to: toISODate(to),
+  });
+}
