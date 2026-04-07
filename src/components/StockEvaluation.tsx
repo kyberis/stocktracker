@@ -397,6 +397,13 @@ export default function StockEvaluation({ ticker, exchange, reportId: initialRep
         </div>
       </div>
 
+      {/* Company description */}
+      {typeof evaluation.overview?.description === "string" && evaluation.overview.description.length > 0 && (
+        <p className="text-[13px] leading-relaxed text-[var(--muted)] -mt-2">
+          {evaluation.overview.description}
+        </p>
+      )}
+
       {/* Score + Criteria Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-4">
         <MoatScoreGauge
