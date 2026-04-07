@@ -28,6 +28,8 @@ export interface MoatCacheRow {
   passedCount: number;
   criteriaCount: number;
   peRatio: number | null;
+  price: number | null;
+  currency: string | null;
   earningsConsistencyStatus: string | null;
   grossMarginStatus: string | null;
   netMarginStatus: string | null;
@@ -45,6 +47,10 @@ export interface MoatScreenerFilters {
   verdict?: string;
   sector?: string;
   industry?: string;
+  peMin?: number;
+  peMax?: number;
+  priceMin?: number;
+  priceMax?: number;
   earningsConsistency?: CriterionStatus;
   grossMargin?: CriterionStatus;
   netMargin?: CriterionStatus;
@@ -158,13 +164,14 @@ export async function getMoatCache(
 }
 
 const VALID_SORT_COLUMNS: Record<string, string> = {
-  score: "score_pct",
-  symbol: "symbol",
-  company: "company_name",
-  sector: "sector",
-  pe: "pe_ratio",
-  passed: "passed_count",
-  updated: "updated_at",
+  score: "mc.score_pct",
+  symbol: "mc.symbol",
+  company: "mc.company_name",
+  sector: "mc.sector",
+  pe: "mc.pe_ratio",
+  price: "sc.regular_market_price",
+  passed: "mc.passed_count",
+  updated: "mc.updated_at",
 };
 
 const VALID_STATUSES = new Set(["pass", "warning", "fail"]);
@@ -177,35 +184,51 @@ export async function queryMoatCache(
   const args: (string | number)[] = [];
 
   if (filters.scoreMin != null) {
-    conditions.push("score_pct >= ?");
+    conditions.push("mc.score_pct >= ?");
     args.push(filters.scoreMin);
   }
   if (filters.scoreMax != null) {
-    conditions.push("score_pct <= ?");
+    conditions.push("mc.score_pct <= ?");
     args.push(filters.scoreMax);
   }
   if (filters.verdict) {
-    conditions.push("verdict = ?");
+    conditions.push("mc.verdict = ?");
     args.push(filters.verdict);
   }
   if (filters.sector) {
-    conditions.push("sector = ?");
+    conditions.push("mc.sector = ?");
     args.push(filters.sector);
   }
   if (filters.industry) {
-    conditions.push("industry = ?");
+    conditions.push("mc.industry = ?");
     args.push(filters.industry);
+  }
+  if (filters.peMin != null) {
+    conditions.push("mc.pe_ratio >= ?");
+    args.push(filters.peMin);
+  }
+  if (filters.peMax != null) {
+    conditions.push("mc.pe_ratio <= ?");
+    args.push(filters.peMax);
+  }
+  if (filters.priceMin != null) {
+    conditions.push("sc.regular_market_price >= ?");
+    args.push(filters.priceMin);
+  }
+  if (filters.priceMax != null) {
+    conditions.push("sc.regular_market_price <= ?");
+    args.push(filters.priceMax);
   }
 
   const criterionFilters: [string, CriterionStatus | undefined][] = [
-    ["earnings_consistency_status", filters.earningsConsistency],
-    ["gross_margin_status", filters.grossMargin],
-    ["net_margin_status", filters.netMargin],
-    ["retained_earnings_status", filters.retainedEarnings],
-    ["return_on_equity_status", filters.returnOnEquity],
-    ["debt_sustainability_status", filters.debtSustainability],
-    ["capex_efficiency_status", filters.capexEfficiency],
-    ["product_durability_status", filters.productDurability],
+    ["mc.earnings_consistency_status", filters.earningsConsistency],
+    ["mc.gross_margin_status", filters.grossMargin],
+    ["mc.net_margin_status", filters.netMargin],
+    ["mc.retained_earnings_status", filters.retainedEarnings],
+    ["mc.return_on_equity_status", filters.returnOnEquity],
+    ["mc.debt_sustainability_status", filters.debtSustainability],
+    ["mc.capex_efficiency_status", filters.capexEfficiency],
+    ["mc.product_durability_status", filters.productDurability],
   ];
 
   for (const [col, val] of criterionFilters) {
@@ -215,22 +238,24 @@ export async function queryMoatCache(
     }
   }
 
+  const fromClause = "moat_cache mc LEFT JOIN screener_cache sc ON sc.symbol = mc.symbol";
   const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
-  const sortCol = VALID_SORT_COLUMNS[filters.sortBy || ""] || "score_pct";
+  const sortCol = VALID_SORT_COLUMNS[filters.sortBy || ""] || "mc.score_pct";
   const sortDir = filters.sortDir === "asc" ? "ASC" : "DESC";
   const page = Math.max(1, filters.page || 1);
   const limit = Math.min(100, Math.max(1, filters.limit || 20));
   const offset = (page - 1) * limit;
 
   const [countResult, dataResult] = await Promise.all([
-    client.execute({ sql: `SELECT COUNT(*) as cnt FROM moat_cache ${whereClause}`, args }),
+    client.execute({ sql: `SELECT COUNT(*) as cnt FROM ${fromClause} ${whereClause}`, args }),
     client.execute({
-      sql: `SELECT symbol, company_name, sector, industry, score_pct, verdict,
-              passed_count, criteria_count, pe_ratio,
-              earnings_consistency_status, gross_margin_status, net_margin_status,
-              retained_earnings_status, return_on_equity_status, debt_sustainability_status,
-              capex_efficiency_status, product_durability_status, updated_at
-            FROM moat_cache ${whereClause}
+      sql: `SELECT mc.symbol, mc.company_name, mc.sector, mc.industry, mc.score_pct, mc.verdict,
+              mc.passed_count, mc.criteria_count, mc.pe_ratio,
+              sc.regular_market_price, sc.currency,
+              mc.earnings_consistency_status, mc.gross_margin_status, mc.net_margin_status,
+              mc.retained_earnings_status, mc.return_on_equity_status, mc.debt_sustainability_status,
+              mc.capex_efficiency_status, mc.product_durability_status, mc.updated_at
+            FROM ${fromClause} ${whereClause}
             ORDER BY ${sortCol} ${sortDir} NULLS LAST
             LIMIT ? OFFSET ?`,
       args: [...args, limit, offset],
@@ -248,6 +273,8 @@ export async function queryMoatCache(
       passedCount: Number(row.passed_count),
       criteriaCount: Number(row.criteria_count),
       peRatio: row.pe_ratio != null ? Number(row.pe_ratio) : null,
+      price: row.regular_market_price != null ? Number(row.regular_market_price) : null,
+      currency: row.currency != null ? str(row.currency) : null,
       earningsConsistencyStatus: str(row.earnings_consistency_status) || null,
       grossMarginStatus: str(row.gross_margin_status) || null,
       netMarginStatus: str(row.net_margin_status) || null,

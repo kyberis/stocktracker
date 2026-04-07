@@ -2437,10 +2437,14 @@ const es: TranslationStrings = {
   moatScreenerVerdict: "Veredicto",
   moatScreenerView: "Ver",
   moatScreenerCached: "En caché",
+  moatScreenerPrice: "Precio",
+  moatScreenerPE: "Ratio P/E",
   moatEvaluatedOn: "Evaluado",
   any: "Cualquiera",
   all: "Todos",
   results: "resultados",
+  min: "Mín",
+  max: "Máx",
 };
 
 export default es;

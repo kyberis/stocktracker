@@ -37,6 +37,15 @@ export const GET = withMetrics("/api/moat-screener", async (request: NextRequest
   filters.sector = searchParams.get("sector") || undefined;
   filters.industry = searchParams.get("industry") || undefined;
 
+  const peMin = searchParams.get("peMin");
+  if (peMin) filters.peMin = Number(peMin);
+  const peMax = searchParams.get("peMax");
+  if (peMax) filters.peMax = Number(peMax);
+  const priceMin = searchParams.get("priceMin");
+  if (priceMin) filters.priceMin = Number(priceMin);
+  const priceMax = searchParams.get("priceMax");
+  if (priceMax) filters.priceMax = Number(priceMax);
+
   filters.earningsConsistency = parseStatus(searchParams.get("earningsConsistency"));
   filters.grossMargin = parseStatus(searchParams.get("grossMargin"));
   filters.netMargin = parseStatus(searchParams.get("netMargin"));

@@ -14,6 +14,8 @@ interface ScreenerRow {
   passedCount: number;
   criteriaCount: number;
   peRatio: number | null;
+  price: number | null;
+  currency: string | null;
   earningsConsistencyStatus: string | null;
   grossMarginStatus: string | null;
   netMarginStatus: string | null;
@@ -68,6 +70,10 @@ export default function MoatScreener() {
 
   const [scoreMin, setScoreMin] = useState(0);
   const [sector, setSector] = useState("");
+  const [peMin, setPeMin] = useState("");
+  const [peMax, setPeMax] = useState("");
+  const [priceMin, setPriceMin] = useState("");
+  const [priceMax, setPriceMax] = useState("");
   const [criteriaFilters, setCriteriaFilters] = useState<Record<string, string>>({});
   const [sortBy, setSortBy] = useState("score");
   const [sortDir, setSortDir] = useState<"desc" | "asc">("desc");
@@ -84,6 +90,10 @@ export default function MoatScreener() {
     const params = new URLSearchParams();
     if (scoreMin > 0) params.set("scoreMin", String(scoreMin));
     if (sector) params.set("sector", sector);
+    if (peMin) params.set("peMin", peMin);
+    if (peMax) params.set("peMax", peMax);
+    if (priceMin) params.set("priceMin", priceMin);
+    if (priceMax) params.set("priceMax", priceMax);
     for (const [k, v] of Object.entries(criteriaFilters)) {
       if (v) params.set(k, v);
     }
@@ -102,7 +112,7 @@ export default function MoatScreener() {
       }
     } catch { /* ignore */ }
     setLoading(false);
-  }, [scoreMin, sector, criteriaFilters, sortBy, sortDir]);
+  }, [scoreMin, sector, peMin, peMax, priceMin, priceMax, criteriaFilters, sortBy, sortDir]);
 
   useEffect(() => { runSearch(1); }, [runSearch]);
 
@@ -157,6 +167,54 @@ export default function MoatScreener() {
           </select>
         </div>
 
+        {/* Price & P/E range filters */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="flex items-center gap-2">
+            <label className="text-[12px] font-semibold text-[var(--muted)] w-24 flex-shrink-0">{t("moatScreenerPrice")}</label>
+            <input
+              type="number"
+              min={0}
+              step="any"
+              placeholder={t("min")}
+              value={priceMin}
+              onChange={(e) => setPriceMin(e.target.value)}
+              className="w-24 bg-[var(--card-hover)] border border-[var(--border)] rounded-lg px-2 py-1.5 text-sm text-[var(--foreground)] tabular-nums"
+            />
+            <span className="text-[var(--muted)] text-xs">–</span>
+            <input
+              type="number"
+              min={0}
+              step="any"
+              placeholder={t("max")}
+              value={priceMax}
+              onChange={(e) => setPriceMax(e.target.value)}
+              className="w-24 bg-[var(--card-hover)] border border-[var(--border)] rounded-lg px-2 py-1.5 text-sm text-[var(--foreground)] tabular-nums"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-[12px] font-semibold text-[var(--muted)] w-24 flex-shrink-0">{t("moatScreenerPE")}</label>
+            <input
+              type="number"
+              min={0}
+              step="any"
+              placeholder={t("min")}
+              value={peMin}
+              onChange={(e) => setPeMin(e.target.value)}
+              className="w-24 bg-[var(--card-hover)] border border-[var(--border)] rounded-lg px-2 py-1.5 text-sm text-[var(--foreground)] tabular-nums"
+            />
+            <span className="text-[var(--muted)] text-xs">–</span>
+            <input
+              type="number"
+              min={0}
+              step="any"
+              placeholder={t("max")}
+              value={peMax}
+              onChange={(e) => setPeMax(e.target.value)}
+              className="w-24 bg-[var(--card-hover)] border border-[var(--border)] rounded-lg px-2 py-1.5 text-sm text-[var(--foreground)] tabular-nums"
+            />
+          </div>
+        </div>
+
         {/* Criterion filters */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {CRITERIA_KEYS.map(({ key, label }) => (
@@ -194,6 +252,8 @@ export default function MoatScreener() {
             {[
               { key: "score", label: t("moatReportSavedScore") },
               { key: "symbol", label: "Symbol" },
+              { key: "price", label: t("moatScreenerPrice") },
+              { key: "pe", label: "P/E" },
               { key: "passed", label: t("moatScreenerPassed") },
             ].map(({ key, label }) => (
               <button
@@ -221,6 +281,8 @@ export default function MoatScreener() {
                 <tr className="text-[11px] text-[var(--muted)] uppercase tracking-wider border-b border-[var(--border)]">
                   <th className="text-left py-2 px-2 font-semibold">Symbol</th>
                   <th className="text-left py-2 px-2 font-semibold hidden sm:table-cell">{t("sector")}</th>
+                  <th className="text-right py-2 px-2 font-semibold hidden sm:table-cell">{t("moatScreenerPrice")}</th>
+                  <th className="text-right py-2 px-2 font-semibold hidden sm:table-cell">P/E</th>
                   <th className="text-center py-2 px-2 font-semibold">{t("moatReportSavedScore")}</th>
                   <th className="text-center py-2 px-2 font-semibold">{t("moatScreenerCriteria")}</th>
                   <th className="text-left py-2 px-2 font-semibold hidden md:table-cell">{t("moatScreenerVerdict")}</th>
@@ -238,6 +300,25 @@ export default function MoatScreener() {
                         <div className="text-[11px] text-[var(--muted)] truncate max-w-[150px]">{row.companyName}</div>
                       </td>
                       <td className="py-2.5 px-2 text-[12px] text-[var(--muted)] hidden sm:table-cell">{row.sector}</td>
+                      <td className="py-2.5 px-2 text-right hidden sm:table-cell">
+                        {row.price != null ? (
+                          <span className="text-sm tabular-nums font-medium">
+                            {row.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            {row.currency && <span className="text-[10px] text-[var(--muted)] ml-0.5">{row.currency}</span>}
+                          </span>
+                        ) : (
+                          <span className="text-[11px] text-[var(--muted)]">—</span>
+                        )}
+                      </td>
+                      <td className="py-2.5 px-2 text-right hidden sm:table-cell">
+                        {row.peRatio != null ? (
+                          <span className={`text-sm tabular-nums font-medium ${row.peRatio >= 40 ? "text-red-500" : row.peRatio >= 25 ? "text-amber-500" : "text-[var(--foreground)]"}`}>
+                            {row.peRatio.toFixed(1)}
+                          </span>
+                        ) : (
+                          <span className="text-[11px] text-[var(--muted)]">—</span>
+                        )}
+                      </td>
                       <td className="py-2.5 px-2 text-center">
                         <span className={`text-base font-bold tabular-nums ${row.scorePct >= 70 ? "text-emerald-500" : row.scorePct >= 50 ? "text-blue-500" : row.scorePct >= 35 ? "text-amber-500" : "text-red-500"}`}>
                           {row.scorePct.toFixed(0)}%

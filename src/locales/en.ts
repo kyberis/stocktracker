@@ -2445,10 +2445,14 @@ const en: TranslationStrings = {
   moatScreenerVerdict: "Verdict",
   moatScreenerView: "View",
   moatScreenerCached: "Cached",
+  moatScreenerPrice: "Price",
+  moatScreenerPE: "P/E Ratio",
   moatEvaluatedOn: "Evaluated",
   any: "Any",
   all: "All",
   results: "results",
+  min: "Min",
+  max: "Max",
 };
 
 export default en;
