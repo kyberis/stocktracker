@@ -2424,6 +2424,12 @@ const es: TranslationStrings = {
   moatAnalystNoData: "No hay cobertura de analistas disponible para esta acción.",
   moatAnalystCount: "{count} analistas",
 
+  moatDivYield: "Rentabilidad por Dividendo",
+  moatDivPerShare: "Dividendo / Acción",
+  moatDividends: "Dividendos",
+  moatBuybacks: "Recompras",
+  moatShareholderReturns: "Retorno al Accionista",
+
   moatNewsSentiment: "Sentimiento de Noticias",
   moatSentimentBullish: "Alcista",
   moatSentimentBearish: "Bajista",

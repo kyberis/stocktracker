@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth-context";
 import type { MoatEvaluation, NewsArticle } from "@/lib/types";
+import { formatCompactNumber } from "@/lib/utils";
 import MoatScoreGauge from "./MoatScoreGauge";
 import CriterionCard from "./CriterionCard";
 import AiMarkdown from "./AiMarkdown";
@@ -499,7 +500,7 @@ export default function StockEvaluation({ ticker, exchange, reportId: initialRep
       </div>
 
       {/* Analyst Consensus */}
-      <AnalystConsensusSection overview={evaluation.overview} quote={quote} t={t} />
+      <AnalystConsensusSection overview={evaluation.overview} cashflow={evaluation.cashflow} quote={quote} t={t} />
 
       {/* News Sentiment */}
       <NewsSentimentSection
@@ -599,10 +600,12 @@ function TrendChart({ label, data, status }: { label: string; data: number[]; st
 
 function AnalystConsensusSection({
   overview,
+  cashflow,
   quote,
   t,
 }: {
   overview: Record<string, unknown>;
+  cashflow: Record<string, unknown>;
   quote: { price: number; currency: string } | null;
   t: (key: string, vars?: Record<string, string | number>) => string;
 }) {
@@ -614,7 +617,32 @@ function AnalystConsensusSection({
     ? ratings.strongBuy + ratings.buy + ratings.hold + ratings.sell + ratings.strongSell
     : 0;
 
-  if (!ratings && targetPrice == null) return null;
+  const divYield = typeof overview.dividendYield === "number" ? overview.dividendYield : null;
+  const divPerShare = typeof overview.dividendPerShare === "number" ? overview.dividendPerShare : null;
+
+  type CfRow = { fiscalDateEnding?: string; dividendPayout?: number | null; shareRepurchase?: number | null; paymentsForRepurchaseOfEquity?: number | null };
+  const cfAnnual = (Array.isArray((cashflow as { annual?: unknown }).annual)
+    ? (cashflow as { annual: CfRow[] }).annual
+    : []
+  ).slice(0, 5);
+
+  const yearlyReturns = cfAnnual
+    .map((r) => {
+      const dividends = Math.abs(r.dividendPayout ?? 0);
+      const buybacks = Math.abs(r.shareRepurchase ?? r.paymentsForRepurchaseOfEquity ?? 0);
+      const year = r.fiscalDateEnding?.slice(0, 4) ?? "";
+      return { year, dividends, buybacks, total: dividends + buybacks };
+    })
+    .filter((r) => r.total > 0)
+    .reverse();
+
+  const maxReturn = Math.max(...yearlyReturns.map((r) => r.total), 1);
+
+  const hasDivData = (divYield != null && divYield > 0) || (divPerShare != null && divPerShare > 0);
+  const hasAnalystData = ratings != null || targetPrice != null;
+  const hasReturnBars = yearlyReturns.length > 0;
+
+  if (!hasAnalystData && !hasDivData && !hasReturnBars) return null;
 
   const upsidePct = targetPrice != null && quote ? ((targetPrice - quote.price) / quote.price) * 100 : null;
 
@@ -640,7 +668,7 @@ function AnalystConsensusSection({
         {t("moatAnalystConsensus")}
       </h2>
       <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 space-y-4">
-        {/* Target price + upside/downside */}
+        {/* Target price + upside/downside + dividend summary */}
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
           {targetPrice != null && (
             <div>
@@ -662,6 +690,22 @@ function AnalystConsensusSection({
               {consensusLabel}
             </span>
           )}
+          {hasDivData && (
+            <>
+              {divYield != null && divYield > 0 && (
+                <div>
+                  <div className="text-[11px] uppercase tracking-wider text-[var(--muted)] mb-0.5">{t("moatDivYield")}</div>
+                  <div className="text-2xl font-bold text-emerald-500">{(divYield * 100).toFixed(2)}%</div>
+                </div>
+              )}
+              {divPerShare != null && divPerShare > 0 && (
+                <div>
+                  <div className="text-[11px] uppercase tracking-wider text-[var(--muted)] mb-0.5">{t("moatDivPerShare")}</div>
+                  <div className="text-2xl font-bold">{currencySymbol}{divPerShare.toFixed(2)}</div>
+                </div>
+              )}
+            </>
+          )}
         </div>
 
         {/* Rating distribution bar */}
@@ -680,6 +724,45 @@ function AnalystConsensusSection({
               <span className="text-red-500">{t("sell")} {ratings.sell + ratings.strongSell}</span>
             </div>
             <div className="text-[11px] text-[var(--muted)] mt-1">{t("moatAnalystCount", { count: totalRatings })}</div>
+          </div>
+        )}
+
+        {/* Dividends vs Buybacks — multi-year bars */}
+        {hasReturnBars && (
+          <div className="pt-2 border-t border-[var(--border)]">
+            <div className="text-[12px] font-semibold text-[var(--muted)] mb-2">{t("moatShareholderReturns")}</div>
+            <div className="space-y-1.5">
+              {yearlyReturns.map((r) => {
+                const divPct = (r.dividends / maxReturn) * 100;
+                const bbPct = (r.buybacks / maxReturn) * 100;
+                return (
+                  <div key={r.year} className="flex items-center gap-2">
+                    <span className="text-[11px] text-[var(--muted)] w-10 shrink-0 tabular-nums">{r.year}</span>
+                    <div className="flex-1 flex h-3.5 rounded-full overflow-hidden bg-[var(--card-hover)]">
+                      {r.dividends > 0 && (
+                        <div className="bg-emerald-500" style={{ width: `${divPct}%` }} />
+                      )}
+                      {r.buybacks > 0 && (
+                        <div className="bg-violet-500" style={{ width: `${bbPct}%` }} />
+                      )}
+                    </div>
+                    <span className="text-[11px] text-[var(--muted)] w-14 shrink-0 text-right tabular-nums">
+                      {currencySymbol}{formatCompactNumber(r.total)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="flex items-center gap-4 mt-2 text-[11px] text-[var(--muted)]">
+              <span className="flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" />
+                {t("moatDividends")}
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-full bg-violet-500 inline-block" />
+                {t("moatBuybacks")}
+              </span>
+            </div>
           </div>
         )}
       </div>

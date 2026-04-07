@@ -36,6 +36,13 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "Sección de sentimiento de noticias en la página de moat: carga bajo demanda para ver la puntuación de sentimiento agregada y titulares recientes con insignias de sentimiento por artículo.",
         },
       },
+      {
+        type: "feature",
+        text: "Dividend yield, dividend per share, and a 5-year dividends vs buybacks breakdown now appear in the analyst consensus section of moat evaluations.",
+        translations: {
+          es: "Rentabilidad por dividendo, dividendo por acción y un desglose de 5 años de dividendos vs recompras ahora aparecen en la sección de consenso de analistas de las evaluaciones de moat.",
+        },
+      },
     ],
   },
   {
