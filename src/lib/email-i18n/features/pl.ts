@@ -177,6 +177,31 @@ export const features: Record<string, FeatureTemplateStrings> = {
     tierText: "Ekskluzywnie Trefolio Pro",
     ctaLabel: "Otw&oacute;rz filtr"
   },
+  "feature-moat-screener": {
+    heading: "Screener Moat",
+    intro: "Przeszukuj setki akcji, kt&oacute;re maj&#261; ju&#380; ocen&eogon; w stylu moat &mdash; osiem kryteri&oacute;w inspirowanych tym, jak do&sacute;wiadczeni inwestorzy my&#347;l&#261; o trwa&lstrok;ych firmach.",
+    sectionLabel: "Co otrzymujesz:",
+    features: [
+      {
+        title: "Ponad 680 wst&eogon;pnie ocenionych sp&oacute;&lstrok;ek",
+        desc: "Wsp&oacute;&lstrok;lne uniwersum ocen, na bie&zdot;&aogon;co aktualizowane, &zdot;eby nie zaczyna&cacute; od zera."
+      },
+      {
+        title: "Osiem kryteri&oacute;w od razu",
+        desc: "Ka&zdot;da akcja pokazuje zaliczenie, ostrze&zdot;enie lub niezaliczenie dla ca&lstrok;ej listy &mdash; jako&sacute;&cacute; zysk&oacute;w, mar&zdot;e, ROE, zad&lstrok;u&zdot;enie i wi&eogon;cej."
+      },
+      {
+        title: "Filtruj wed&lstrok;ug strategii",
+        desc: "Minimalny wynik, sektor i P/E &mdash; &lstrok;&#261;cz filtry, by znale&#378;&#263; pomys&lstrok;y pasuj&#261;ce do Twojego procesu."
+      },
+      {
+        title: "Gdzie to otworzy&cacute;",
+        desc: "Przejd&zacute; do <strong>Narz&eogon;dzia &rarr; Ocena akcji</strong> i wybierz kart&eogon; <strong>Screener Moat</strong>."
+      }
+    ],
+    tierText: "Ekskluzywnie Trefolio Pro",
+    ctaLabel: "Otw&oacute;rz ocen&eogon; akcji"
+  },
   "feature-tax-reports": {
     heading: "Raporty podatkowe",
     intro: "Rozliczenia podatkowe nie musz&aacute; by&cacute; bolesne. trefolio generuje raporty podatkowe specyficzne dla kraju i zawiera Asystenta Podatkowego IA do Twoich pyta&nacute;.",

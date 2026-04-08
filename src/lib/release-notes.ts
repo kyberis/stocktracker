@@ -29,6 +29,13 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "La sincronización del calendario de eventos ahora obtiene datos económicos, de OPV y divisiones de acciones para unos 90 días hacia adelante (y la semana pasada), para que la pestaña Eventos muestre mejor los datos del mes que ves.",
         },
       },
+      {
+        type: "improvement",
+        text: "The admin email template library includes a Moat Screener introduction template (English, Spanish, and major EU languages) for manual sends from the user admin page.",
+        translations: {
+          es: "La biblioteca de plantillas de email de administración incluye una plantilla de presentación del buscador de moat (inglés, español e idiomas principales de la UE) para envíos manuales desde la página de administración de usuarios.",
+        },
+      },
     ],
   },
   {

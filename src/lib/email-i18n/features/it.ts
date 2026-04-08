@@ -177,6 +177,31 @@ export const features: Record<string, FeatureTemplateStrings> = {
     tierText: "Esclusivo Trefolio Pro",
     ctaLabel: "Apri il filtro"
   },
+  "feature-moat-screener": {
+    heading: "Moat Screener",
+    intro: "Filtra centinaia di azioni che hanno gi&agrave; una valutazione in stile moat &mdash; otto criteri ispirati a come gli investitori ragionano sulle aziende durature.",
+    sectionLabel: "Cosa ottieni:",
+    features: [
+      {
+        title: "Oltre 680 titoli pre-valutati",
+        desc: "Un universo condiviso di punteggi, aggiornato nel tempo cos&igrave; non parti da zero."
+      },
+      {
+        title: "Otto criteri a colpo d'occhio",
+        desc: "Ogni azione mostra superato, avviso o non superato su tutta la checklist &mdash; qualit&agrave; degli utili, margini, ROE, debito e altro."
+      },
+      {
+        title: "Filtra come preferisci",
+        desc: "Punteggio minimo, settore e P/E &mdash; combina i filtri per trovare idee adatte al tuo processo."
+      },
+      {
+        title: "Dove si apre",
+        desc: "Vai su <strong>Strumenti &rarr; Valutazione azioni</strong> e seleziona la scheda <strong>Moat Screener</strong>."
+      }
+    ],
+    tierText: "Esclusivo Trefolio Pro",
+    ctaLabel: "Apri la valutazione azioni"
+  },
   "feature-tax-reports": {
     heading: "Report fiscali",
     intro: "Le dichiarazioni fiscali non devono essere dolorose. trefolio genera report fiscali specifici per paese e include un Assistente Fiscale IA per le tue domande.",

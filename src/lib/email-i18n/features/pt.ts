@@ -177,6 +177,31 @@ export const features: Record<string, FeatureTemplateStrings> = {
     tierText: "Exclusivo Trefolio Pro",
     ctaLabel: "Abrir o filtro"
   },
+  "feature-moat-screener": {
+    heading: "Filtro Moat",
+    intro: "Filtre centenas de ac&ccedil;&otilde;es que j&aacute; t&ecirc;m uma avalia&ccedil;&atilde;o ao estilo moat &mdash; oito crit&eacute;rios inspirados na forma como investidores experientes pensam em empresas duradouras.",
+    sectionLabel: "O que obt&eacute;m:",
+    features: [
+      {
+        title: "Mais de 680 nomes pr&eacute;-avaliados",
+        desc: "Um universo partilhado de pontua&ccedil;&otilde;es, actualizado de forma cont&iacute;nua para n&atilde;o come&ccedil;ar do zero."
+      },
+      {
+        title: "Oito crit&eacute;rios de relance",
+        desc: "Cada ac&ccedil;&atilde;o mostra aprovado, aviso ou reprovado em toda a lista &mdash; qualidade de lucros, margens, ROE, d&iacute;vida e mais."
+      },
+      {
+        title: "Filtre &agrave; sua medida",
+        desc: "Pontua&ccedil;&atilde;o m&iacute;nima, sector e P/E &mdash; combine filtros para encontrar ideias alinhadas com o seu processo."
+      },
+      {
+        title: "Onde abrir",
+        desc: "V&aacute; a <strong>Ferramentas &rarr; Avalia&ccedil;&atilde;o de ac&ccedil;&otilde;es</strong> e seleccione o separador <strong>Filtro Moat</strong>."
+      }
+    ],
+    tierText: "Exclusivo Trefolio Pro",
+    ctaLabel: "Abrir avalia&ccedil;&atilde;o de ac&ccedil;&otilde;es"
+  },
   "feature-tax-reports": {
     heading: "Relat&oacute;rios fiscais",
     intro: "As declara&ccedil;&otilde;es fiscais n&atilde;o t&ecirc;m de ser dolorosas. trefolio gera relat&oacute;rios fiscais por pa&iacute;s e inclui um Assistente Fiscal IA para as suas perguntas.",

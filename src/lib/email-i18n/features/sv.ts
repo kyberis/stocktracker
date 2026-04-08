@@ -177,6 +177,31 @@ export const features: Record<string, FeatureTemplateStrings> = {
     tierText: "Trefolio Pro exklusivt",
     ctaLabel: "&Ouml;ppna filtret"
   },
+  "feature-moat-screener": {
+    heading: "Moat-screener",
+    intro: "Filtrera hundratals aktier som redan har en moat-liknande bed&ouml;mning &mdash; &aring;tta kriterier inspirerade av hur erfarna investerare t&auml;nker kring h&aring;llbara bolag.",
+    sectionLabel: "Vad du f&aring;r:",
+    features: [
+      {
+        title: "&Ouml;ver 680 f&ouml;rb&ouml;v&auml;rderade bolag",
+        desc: "Ett delat universum av po&auml;ng som uppdateras l&ouml;pande s&aring; att du inte b&ouml;rjar fr&aring;n noll."
+      },
+      {
+        title: "&Aring;tta kriterier p&aring; en sk&auml;rm",
+        desc: "Varje aktie visar godk&auml;nt, varning eller underk&auml;nt f&ouml;r hela checklistan &mdash; resultatkvalitet, marginaler, ROE, skuld med mera."
+      },
+      {
+        title: "Filtrera efter din strategi",
+        desc: "Minimipo&auml;ng, sektor och P/E &mdash; kombinera filter f&ouml;r att lyfta fram id&eacute;er som passar dig."
+      },
+      {
+        title: "Var du &ouml;ppnar",
+        desc: "G&aring; till <strong>Verktyg &rarr; Aktiev&auml;rdering</strong> och v&auml;lj fliken <strong>Moat-screener</strong>."
+      }
+    ],
+    tierText: "Trefolio Pro exklusivt",
+    ctaLabel: "&Ouml;ppna aktiev&auml;rdering"
+  },
   "feature-tax-reports": {
     heading: "Skatterapporter",
     intro: "Skattedeklarationer beh&ouml;ver inte vara sm&auml;rtsamma. trefolio genererar landspecifika skatterapporter och inkluderar en AI Skatteassistent f&ouml;r dina fr&aring;gor.",

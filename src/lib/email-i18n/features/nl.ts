@@ -177,6 +177,31 @@ export const features: Record<string, FeatureTemplateStrings> = {
     tierText: "Trefolio Pro exclusief",
     ctaLabel: "Filter openen"
   },
+  "feature-moat-screener": {
+    heading: "Moat-screener",
+    intro: "Filter honderden aandelen die al een moat-achtige score hebben &mdash; acht criteria ge&iuml;nspireerd op hoe ervaren beleggers nadenken over duurzame bedrijven.",
+    sectionLabel: "Wat je krijgt:",
+    features: [
+      {
+        title: "680+ vooraf beoordeelde namen",
+        desc: "Een gedeeld universum van scores, voortdurend bijgewerkt zodat u niet bij nul begint."
+      },
+      {
+        title: "Acht criteria in &eacute;&eacute;n oogopslag",
+        desc: "Elk aandeel toont geslaagd, waarschuwing of niet geslaagd voor de volledige checklist &mdash; winstkwaliteit, marges, ROE, schuld en meer."
+      },
+      {
+        title: "Filter naar uw strategie",
+        desc: "Minimumscore, sector en K/W &mdash; combineer filters om idee&euml;n te vinden die bij uw proces passen."
+      },
+      {
+        title: "Waar u het opent",
+        desc: "Ga naar <strong>Tools &rarr; Aandelenbeoordeling</strong> en kies het tabblad <strong>Moat-screener</strong>."
+      }
+    ],
+    tierText: "Trefolio Pro exclusief",
+    ctaLabel: "Aandelenbeoordeling openen"
+  },
   "feature-tax-reports": {
     heading: "Belastingrapporten",
     intro: "Belastingaangifte hoeft niet pijnlijk te zijn. trefolio genereert land-specifieke belastingrapporten en bevat een AI Belastingassistent voor uw vragen.",

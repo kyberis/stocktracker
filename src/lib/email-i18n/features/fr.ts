@@ -177,6 +177,31 @@ export const features: Record<string, FeatureTemplateStrings> = {
     tierText: "Exclusif Trefolio Pro",
     ctaLabel: "Ouvrir le filtre"
   },
+  "feature-moat-screener": {
+    heading: "Filtre Moat",
+    intro: "Parcourez des centaines d'actions qui ont d&eacute;j&agrave; une &eacute;valuation de type moat &mdash; huit crit&egrave;res inspir&eacute;s de la fa&ccedil;on dont les investisseurs r&eacute;fl&eacute;chissent aux entreprises durables.",
+    sectionLabel: "Ce que vous obtenez :",
+    features: [
+      {
+        title: "Plus de 680 noms pr&eacute;-&eacute;valu&eacute;s",
+        desc: "Un univers partag&eacute; de scores, mis &agrave; jour en continu pour ne pas repartir de z&eacute;ro."
+      },
+      {
+        title: "Huit crit&egrave;res en un coup d'&oelig;il",
+        desc: "Chaque action affiche r&eacute;ussi, avertissement ou &eacute;chec sur toute la liste &mdash; qualit&eacute; des r&eacute;sultats, marges, ROE, dette et plus."
+      },
+      {
+        title: "Filtrez selon votre approche",
+        desc: "Score minimum, secteur et ratio P/E &mdash; combinez les filtres pour faire remonter les id&eacute;es qui vous conviennent."
+      },
+      {
+        title: "O&ugrave; l'ouvrir",
+        desc: "Allez dans <strong>Outils &rarr; &Eacute;valuation d'actions</strong>, puis l'onglet <strong>Filtre Moat</strong>."
+      }
+    ],
+    tierText: "Exclusif Trefolio Pro",
+    ctaLabel: "Ouvrir l'&eacute;valuation d'actions"
+  },
   "feature-tax-reports": {
     heading: "Rapports fiscaux",
     intro: "Les d&eacute;clarations fiscales n'ont pas besoin d'&ecirc;tre p&eacute;nibles. trefolio g&eacute;n&egrave;re des rapports fiscaux par pays et inclut un Assistant Fiscal IA pour vos questions.",

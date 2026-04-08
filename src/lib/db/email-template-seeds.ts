@@ -732,6 +732,38 @@ const featureTemplates: TemplateSeed[] = [
     bodyText: "Crypto Portfolio\n\nTrack crypto alongside stocks and ETFs.\n\n- Crypto market overview (all plans)\n- Full portfolio tracking (Trefolio)\n- Charts and price history\n- AI crypto analysis\n\nFolio: Market overview | Trefolio: Full tracking & AI",
     bodyTextEs: "Cartera Crypto\n\nSigue crypto junto a acciones y ETFs.\n\n- Vista de mercado crypto (todos los planes)\n- Seguimiento completo (Trefolio)\n- Gráficos e historial\n- Análisis IA crypto\n\nFolio: Vista de mercado | Trefolio: Tracking completo y IA",
   },
+  {
+    slug: "feature-moat-screener",
+    name: "Feature: Moat Screener",
+    subject: "Find durable businesses with the Moat Screener",
+    subjectEs: "Encuentra negocios duraderos con el buscador de moat",
+    category: "feature",
+    experienceLevel: "",
+    bodyHtml: featureEmail("Moat Screener", "&#x1F6E1;&#xFE0F;", `
+          ${intro("Screen hundreds of stocks that already carry a moat-style evaluation &mdash; eight criteria inspired by how great investors think about durable businesses.")}
+          ${intro("<strong>What you get:</strong>")}
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+            ${feature("&#x1F4CA;", "680+ pre-evaluated names", "A shared universe of scored stocks, refreshed on a rolling cycle so you are not starting from zero.")}
+            ${feature("&#x2705;", "Eight criteria at a glance", "Each stock shows pass, warning, or fail across the full checklist &mdash; earnings quality, margins, ROE, debt, and more.")}
+            ${feature("&#x1F50D;", "Filter to your edge", "Minimum score, sector, and P/E &mdash; combine filters to surface ideas that fit your process.")}
+            ${feature("&#x1F4CD;", "Where to open it", "Go to <strong>Tools &rarr; Stock evaluation</strong>, then select the <strong>Moat Screener</strong> tab.")}
+          </table>
+          <p style="margin:0 0 20px;font-size:13px;color:#64748b;text-align:center;">${TREFOLIO_BADGE} Trefolio Pro exclusive</p>
+          ${cta("Open Stock Evaluation", "{{base_url}}/tools/evaluation?utm_source=email&utm_medium=feature&utm_campaign=moat_screener")}`),
+    bodyHtmlEs: featureEmailEs("Moat Screener", "&#x1F6E1;&#xFE0F;", `
+          ${intro("Filtra cientos de acciones que ya tienen una evaluaci&oacute;n estilo moat &mdash; ocho criterios inspirados en c&oacute;mo los grandes inversores piensan en negocios duraderos.")}
+          ${intro("<strong>Lo que obtienes:</strong>")}
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+            ${feature("&#x1F4CA;", "M&aacute;s de 680 nombres pre-evaluados", "Un universo compartido de puntuaciones, actualizado de forma continua para que no empieces de cero.")}
+            ${feature("&#x2705;", "Ocho criterios de un vistazo", "Cada acci&oacute;n muestra aprobar, aviso o fallo en todo el checklist &mdash; calidad de beneficios, m&aacute;rgenes, ROE, deuda y m&aacute;s.")}
+            ${feature("&#x1F50D;", "Filtra seg&uacute;n tu criterio", "Puntuaci&oacute;n m&iacute;nima, sector y P/E &mdash; combina filtros para ver ideas que encajen con tu proceso.")}
+            ${feature("&#x1F4CD;", "D&oacute;nde abrirlo", "Ve a <strong>Herramientas &rarr; Evaluaci&oacute;n de acciones</strong> y elige la pesta&ntilde;a <strong>Buscador de Moat</strong>.")}
+          </table>
+          <p style="margin:0 0 20px;font-size:13px;color:#64748b;text-align:center;">${TREFOLIO_BADGE} Exclusivo de Trefolio Pro</p>
+          ${cta("Abrir evaluaci&oacute;n de acciones", "{{base_url}}/tools/evaluation?utm_source=email&utm_medium=feature&utm_campaign=moat_screener")}`),
+    bodyText: "Moat Screener\n\nScreen hundreds of pre-evaluated stocks with eight moat-style criteria.\n\n- 680+ names in a shared, rolling-updated universe\n- Pass / warning / fail per criterion\n- Filters: min score, sector, P/E\n- Tools → Stock evaluation → Moat Screener tab\n\nTrefolio Pro exclusive.",
+    bodyTextEs: "Moat Screener\n\nFiltra cientos de acciones pre-evaluadas con ocho criterios estilo moat.\n\n- Más de 680 valores en un universo compartido\n- Aprobado / aviso / fallo por criterio\n- Filtros: puntuación mínima, sector, P/E\n- Herramientas → Evaluación → pestaña Buscador de Moat\n\nExclusivo de Trefolio Pro.",
+  },
 ];
 
 /* ── 6. Referral Program ── */

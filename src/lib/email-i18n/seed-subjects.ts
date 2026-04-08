@@ -564,6 +564,15 @@ export const seedSubjects: Record<string, Record<string, string>> = {
     ca: "Les criptomonedes es troben amb el teu tauler d&#39;inversions",
     cy: "Mae crypto yn cyfarfod &#226;&#39;ch bwrdd gwaith buddsoddi",
   },
+  "feature-moat-screener": {
+    fr: "Trouvez des entreprises durables avec le filtre Moat",
+    de: "Finden Sie widerstandsf&#228;hige Gesch&#228;fte mit dem Moat-Screener",
+    it: "Trova aziende durature con lo screener Moat",
+    pt: "Encontre empresas duradouras com o filtro Moat",
+    nl: "Vind duurzame bedrijven met de Moat-screener",
+    pl: "Znajd&#378; trwa&#322;e sp&#243;&#322;ki dzi&#281;ki screenerowi Moat",
+    sv: "Hitta h&#229;llbara bolag med Moat-screener",
+  },
   "trial-invitation": {
     fr: "Votre essai Trefolio Pro de 7 jours est pr\u00eat",
     de: "Ihre 7-t\u00e4gige Trefolio Pro-Testphase ist bereit",

@@ -177,6 +177,31 @@ export const features: Record<string, FeatureTemplateStrings> = {
     tierText: "Trefolio Pro exklusiv",
     ctaLabel: "Filter &ouml;ffnen"
   },
+  "feature-moat-screener": {
+    heading: "Moat-Screener",
+    intro: "Filtern Sie Hunderte von Aktien, die bereits eine Moat-&auml;hnliche Bewertung tragen &mdash; acht Kriterien in der Tradition dessen, wie erfahrene Anleger &uuml;ber langlebige Gesch&auml;fte denken.",
+    sectionLabel: "Was Sie erhalten:",
+    features: [
+      {
+        title: "&Uuml;ber 680 vorab bewertete Titel",
+        desc: "Ein gemeinsam genutztes Universum von Bewertungen, fortlaufend aktualisiert, damit Sie nicht bei null starten."
+      },
+      {
+        title: "Acht Kriterien auf einen Blick",
+        desc: "Jede Aktie zeigt bestehen, Warnung oder nicht bestehen &uuml;ber die gesamte Pr&uuml;fliste &mdash; Ertragsqualit&auml;t, Margen, Eigenkapitalrendite, Verschuldung und mehr."
+      },
+      {
+        title: "Filter nach Ihrer Strategie",
+        desc: "Mindestscore, Sektor und KGV &mdash; kombinieren Sie Filter, um Ideen zu finden, die zu Ihrem Ansatz passen."
+      },
+      {
+        title: "So &ouml;ffnen Sie es",
+        desc: "&Ouml;ffnen Sie <strong>Tools &rarr; Aktienbewertung</strong> und w&auml;hlen Sie den Reiter <strong>Moat-Screener</strong>."
+      }
+    ],
+    tierText: "Trefolio Pro exklusiv",
+    ctaLabel: "Aktienbewertung &ouml;ffnen"
+  },
   "feature-tax-reports": {
     heading: "Steuerberichte",
     intro: "Steuererkl&auml;rungen m&uuml;ssen nicht schmerzhaft sein. trefolio erstellt l&auml;nderspezifische Steuerberichte und enth&auml;lt einen KI-Steuerassistenten f&uuml;r Ihre Fragen.",

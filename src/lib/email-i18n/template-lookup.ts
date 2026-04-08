@@ -69,6 +69,10 @@ const FEATURE_META: Record<string, { emoji: string; ctaUrl: string }> = {
     emoji: "&#x1FA99;",
     ctaUrl: "{{base_url}}/crypto?utm_source=email&utm_medium=feature&utm_campaign=crypto",
   },
+  "feature-moat-screener": {
+    emoji: "&#x1F6E1;&#xFE0F;",
+    ctaUrl: "{{base_url}}/tools/evaluation?utm_source=email&utm_medium=feature&utm_campaign=moat_screener",
+  },
 };
 
 const VALID_LOCALES = new Set([
