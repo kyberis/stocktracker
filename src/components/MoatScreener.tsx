@@ -4,6 +4,10 @@ import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
 
+interface MoatScreenerProps {
+  onReportSaved?: () => void;
+}
+
 interface ScreenerRow {
   symbol: string;
   companyName: string;
@@ -65,7 +69,7 @@ const VERDICT_COLORS: Record<string, string> = {
   "No Clear Moat Detected": "text-red-500 bg-red-500/10",
 };
 
-export default function MoatScreener() {
+export default function MoatScreener({ onReportSaved }: MoatScreenerProps) {
   const { t } = useI18n();
   const router = useRouter();
 
@@ -84,6 +88,58 @@ export default function MoatScreener() {
   const [criteriaFilters, setCriteriaFilters] = useState<Record<string, string>>({});
   const [sortBy, setSortBy] = useState("score");
   const [sortDir, setSortDir] = useState<"desc" | "asc">("desc");
+
+  const [saveModalRow, setSaveModalRow] = useState<ScreenerRow | null>(null);
+  const [saveTagInput, setSaveTagInput] = useState("");
+  const [saveSaving, setSaveSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!saveModalRow) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSaveModalRow(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [saveModalRow]);
+
+  const handleConfirmSaveToLibrary = useCallback(async () => {
+    if (!saveModalRow) return;
+    setSaveSaving(true);
+    setSaveError(null);
+    try {
+      const evalRes = await fetch(`/api/stock-evaluation?symbol=${encodeURIComponent(saveModalRow.symbol)}`);
+      const evalData = await evalRes.json().catch(() => ({}));
+      if (!evalRes.ok) {
+        throw new Error(typeof evalData.error === "string" ? evalData.error : "Failed to load evaluation");
+      }
+      const tags = saveTagInput.split(",").map((s) => s.trim()).filter(Boolean);
+      const post = await fetch("/api/moat-reports", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          symbol: evalData.symbol,
+          companyName: evalData.companyName,
+          evaluationJson: JSON.stringify(evalData),
+          totalScore: evalData.totalScore,
+          maxScore: evalData.maxScore,
+          verdict: evalData.verdict,
+          tags,
+        }),
+      });
+      const postData = await post.json().catch(() => ({}));
+      if (!post.ok) {
+        throw new Error(typeof postData.error === "string" ? postData.error : "Failed to save report");
+      }
+      onReportSaved?.();
+      setSaveModalRow(null);
+      setSaveTagInput("");
+    } catch (e) {
+      setSaveError((e as Error).message);
+    } finally {
+      setSaveSaving(false);
+    }
+  }, [saveModalRow, saveTagInput, onReportSaved]);
 
   useEffect(() => {
     fetch("/api/moat-screener?action=meta")
@@ -288,10 +344,14 @@ export default function MoatScreener() {
               const vClass = VERDICT_COLORS[row.verdict] || "text-[var(--muted)] bg-[var(--card-hover)]";
               const valSignal = getValuationSignal(row.peRatio);
               return (
-                <button
+                <div
                   key={row.symbol}
+                  className="flex w-full bg-[var(--card)] border border-[var(--border)] rounded-xl overflow-hidden hover:border-[var(--accent)] transition-colors"
+                >
+                <button
+                  type="button"
                   onClick={() => router.push(`/stock/${encodeURIComponent(row.symbol)}/evaluation`)}
-                  className="w-full text-left bg-[var(--card)] border border-[var(--border)] rounded-xl p-3 hover:border-[var(--accent)] transition-colors"
+                  className="flex-1 min-w-0 text-left p-3 hover:bg-[var(--card-hover)]/40 transition-colors"
                 >
                   <div className="flex items-start gap-3">
                     {/* Score badge */}
@@ -339,6 +399,22 @@ export default function MoatScreener() {
                     </div>
                   </div>
                 </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSaveError(null);
+                    setSaveTagInput("");
+                    setSaveModalRow(row);
+                  }}
+                  className="flex-shrink-0 px-3 py-3 border-l border-[var(--border)] hover:bg-violet-500/10 text-violet-500 transition-colors"
+                  aria-label={t("moatReportSaveToLibrary")}
+                  title={t("moatReportSaveToLibrary")}
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                  </svg>
+                </button>
+                </div>
               );
             })}
           </div>
@@ -365,6 +441,68 @@ export default function MoatScreener() {
               </button>
             </div>
           )}
+        </div>
+      )}
+
+      {saveModalRow && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+          role="presentation"
+          onClick={() => !saveSaving && setSaveModalRow(null)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="moat-save-modal-title"
+            className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 max-w-md w-full shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 id="moat-save-modal-title" className="text-base font-bold mb-1">
+              {t("moatReportSaveModalTitle")}
+            </h2>
+            <p className="text-sm text-[var(--muted)] mb-4">
+              {saveModalRow.symbol} — {saveModalRow.companyName}
+            </p>
+            <label htmlFor="moat-save-tags" className="block text-[12px] font-semibold text-[var(--muted)] mb-1">
+              {t("moatReportTagsLabel")}
+            </label>
+            <input
+              id="moat-save-tags"
+              type="text"
+              value={saveTagInput}
+              onChange={(e) => setSaveTagInput(e.target.value)}
+              placeholder={t("moatReportTagsPlaceholder")}
+              className="w-full bg-[var(--card-hover)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--foreground)]"
+              autoFocus
+              disabled={saveSaving}
+            />
+            <p className="text-[11px] text-[var(--muted)] mt-1.5">{t("moatReportTagsHint")}</p>
+            {saveError && <p className="text-sm text-red-500 mt-2">{saveError}</p>}
+            <div className="flex flex-wrap gap-2 mt-4">
+              <button
+                type="button"
+                onClick={() => !saveSaving && setSaveModalRow(null)}
+                className="text-[13px] font-semibold px-4 py-2 rounded-lg bg-[var(--card-hover)] hover:bg-[var(--border)] transition-colors"
+                disabled={saveSaving}
+              >
+                {t("moatReportSaveModalCancel")}
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmSaveToLibrary}
+                disabled={saveSaving}
+                className="text-[13px] font-semibold px-4 py-2 rounded-lg bg-violet-600 hover:bg-violet-700 text-white transition-colors disabled:opacity-50"
+              >
+                {saveSaving ? t("moatReportSaving") : t("moatReportSave")}
+              </button>
+            </div>
+            <a
+              href={`/stock/${encodeURIComponent(saveModalRow.symbol)}/evaluation`}
+              className="inline-block mt-3 text-[12px] text-violet-500 hover:underline"
+            >
+              {t("moatScreenerView")} — {t("moatEvalTitle")}
+            </a>
+          </div>
         </div>
       )}
     </div>

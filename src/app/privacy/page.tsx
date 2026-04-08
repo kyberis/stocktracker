@@ -122,6 +122,12 @@ export default function PrivacyPolicyPage() {
                 selected during onboarding).
               </li>
               <li>
+                <strong className="text-slate-800">Saved moat evaluation reports (optional labels)</strong> — if
+                you save a competitive moat evaluation to your library, we store the evaluation
+                content and scores. You may add optional text labels (&quot;tags&quot;) to organize reports;
+                these tags are chosen by you and stored with the saved report.
+              </li>
+              <li>
                 <strong className="text-slate-800">Broker connection credentials (optional)</strong> —
                 if you connect your Interactive Brokers account via the Flex Web
                 Service API, your access token and query ID are encrypted with

@@ -32,6 +32,7 @@ export default function StockEvaluation({ ticker, exchange, reportId: initialRep
   const abortRef = useRef<AbortController | null>(null);
 
   const [reportId, setReportId] = useState<string | null>(initialReportId || null);
+  const [reportTags, setReportTags] = useState("");
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [quote, setQuote] = useState<{ price: number; change: number; changePercent: number; currency: string } | null>(null);
   const [fromCache, setFromCache] = useState(false);
@@ -48,6 +49,7 @@ export default function StockEvaluation({ ticker, exchange, reportId: initialRep
     setAiText("");
     setAiError(null);
     setReportId(null);
+    setReportTags("");
     setSaveStatus("idle");
     setFromCache(false);
     setCachedAt(null);
@@ -89,6 +91,8 @@ export default function StockEvaluation({ ticker, exchange, reportId: initialRep
       setEvaluation(JSON.parse(data.evaluationJson));
       setAiText(data.aiNarrative || "");
       setReportId(id);
+      const loadedTags = Array.isArray(data.tags) ? data.tags : [];
+      setReportTags(loadedTags.length > 0 ? loadedTags.join(", ") : "");
       setSaveStatus("saved");
     } catch {
       setError("Failed to load report");
@@ -100,7 +104,19 @@ export default function StockEvaluation({ ticker, exchange, reportId: initialRep
   const saveReport = useCallback(async () => {
     if (!evaluation) return;
     setSaveStatus("saving");
+    const tagArr = reportTags.split(",").map((s) => s.trim()).filter(Boolean);
     try {
+      if (reportId) {
+        const res = await fetch(`/api/moat-reports/${reportId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ tags: tagArr }),
+        });
+        if (!res.ok) throw new Error("Save failed");
+        setSaveStatus("saved");
+        return;
+      }
+
       const res = await fetch("/api/moat-reports", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -111,6 +127,7 @@ export default function StockEvaluation({ ticker, exchange, reportId: initialRep
           totalScore: evaluation.totalScore,
           maxScore: evaluation.maxScore,
           verdict: evaluation.verdict,
+          tags: tagArr,
         }),
       });
       if (!res.ok) throw new Error("Save failed");
@@ -128,7 +145,7 @@ export default function StockEvaluation({ ticker, exchange, reportId: initialRep
     } catch {
       setSaveStatus("error");
     }
-  }, [evaluation, aiText]);
+  }, [evaluation, aiText, reportId, reportTags]);
 
   const updateReportNarrative = useCallback(async (narrative: string) => {
     if (!reportId) return;
@@ -379,25 +396,31 @@ export default function StockEvaluation({ ticker, exchange, reportId: initialRep
             )}
           </div>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          {saveStatus === "saved" ? (
+        <div className="flex flex-col items-stretch sm:items-end gap-2 w-full sm:w-auto">
+        <div className="flex items-center gap-2 flex-wrap justify-end">
+          {saveStatus === "saved" && (
             <span className="text-[11px] text-emerald-500 font-medium flex items-center gap-1">
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
               {t("moatReportSaved")}
             </span>
-          ) : (
-            <button
-              onClick={saveReport}
-              disabled={saveStatus === "saving"}
-              className="text-[12px] font-semibold px-3 py-1.5 rounded-lg bg-[var(--card-hover)] hover:bg-[var(--border)] text-[var(--foreground)] transition-colors disabled:opacity-50 flex items-center gap-1.5"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" /><polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" /></svg>
-              {saveStatus === "saving" ? t("moatReportSaving") : saveStatus === "error" ? t("moatReportSaveError") : t("moatReportSave")}
-            </button>
           )}
           <button
+            onClick={saveReport}
+            disabled={saveStatus === "saving"}
+            className="text-[12px] font-semibold px-3 py-1.5 rounded-lg bg-[var(--card-hover)] hover:bg-[var(--border)] text-[var(--foreground)] transition-colors disabled:opacity-50 flex items-center gap-1.5"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" /><polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" /></svg>
+            {saveStatus === "saving"
+              ? t("moatReportSaving")
+              : saveStatus === "error"
+                ? t("moatReportSaveError")
+                : reportId
+                  ? t("moatReportUpdateTags")
+                  : t("moatReportSave")}
+          </button>
+          <button
             onClick={async () => {
-              setEvaluation(null); setAiText(""); setError(null); setReportId(null); setSaveStatus("idle"); setFromCache(false); setCachedAt(null); setEvaluatedAt(null);
+              setEvaluation(null); setAiText(""); setError(null); setReportId(null); setReportTags(""); setSaveStatus("idle"); setFromCache(false); setCachedAt(null); setEvaluatedAt(null);
               setLoading(true);
               try {
                 const res = await fetch(`/api/stock-evaluation?symbol=${encodeURIComponent(ticker)}&fresh=1`);
@@ -414,6 +437,22 @@ export default function StockEvaluation({ ticker, exchange, reportId: initialRep
             {t("moatReportRegenerate")}
           </button>
           <TierFeatureBadge requiredPlan="pro" size="xs" />
+        </div>
+        <div className="w-full max-w-xs space-y-1">
+          <label htmlFor="moat-report-tags" className="text-[11px] font-medium text-[var(--muted)]">
+            {t("moatReportTagsLabel")}
+          </label>
+          <input
+            id="moat-report-tags"
+            type="text"
+            value={reportTags}
+            onChange={(e) => setReportTags(e.target.value)}
+            placeholder={t("moatReportTagsPlaceholder")}
+            className="w-full text-[12px] px-2.5 py-1.5 rounded-lg bg-[var(--card-hover)] border border-[var(--border)] text-[var(--foreground)]"
+            autoComplete="off"
+          />
+          <p className="text-[10px] text-[var(--muted)]">{t("moatReportTagsHint")}</p>
+        </div>
         </div>
       </div>
 

@@ -2,7 +2,13 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest } from "next/server";
 import { requireFeatureAccess } from "@/lib/auth/guards";
-import { getMoatReport, updateMoatReportAiNarrative, deleteMoatReport } from "@/lib/db";
+import {
+  getMoatReport,
+  normalizeMoatReportTags,
+  updateMoatReportAiNarrative,
+  updateMoatReportTags,
+  deleteMoatReport,
+} from "@/lib/db";
 import { withMetrics } from "@/lib/with-metrics";
 
 function extractId(req: NextRequest): string {
@@ -28,7 +34,7 @@ export const PATCH = withMetrics("/api/moat-reports/[id] PATCH", async (request:
   if (error || !session) return error;
 
   const id = extractId(request);
-  let body: { aiNarrative?: string };
+  let body: { aiNarrative?: string; tags?: string[] };
   try {
     body = await request.json();
   } catch {
@@ -37,6 +43,14 @@ export const PATCH = withMetrics("/api/moat-reports/[id] PATCH", async (request:
 
   if (typeof body.aiNarrative === "string") {
     await updateMoatReportAiNarrative(id, session.userId, body.aiNarrative);
+  }
+
+  if (body.tags !== undefined) {
+    const tags = normalizeMoatReportTags(body.tags);
+    const ok = await updateMoatReportTags(id, session.userId, tags);
+    if (!ok) {
+      return Response.json({ error: "Report not found" }, { status: 404 });
+    }
   }
 
   return Response.json({ ok: true });

@@ -3063,6 +3063,21 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       });
     },
   },
+  {
+    version: 102,
+    description: "Add tags JSON column to moat_reports for user-defined report labels",
+    up: async (client: Client) => {
+      try {
+        await client.execute({
+          sql: "ALTER TABLE moat_reports ADD COLUMN tags TEXT NOT NULL DEFAULT '[]'",
+          args: [],
+        });
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!msg.includes("duplicate column")) throw e;
+      }
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

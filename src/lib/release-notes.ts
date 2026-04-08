@@ -17,6 +17,21 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.77.2",
+    date: "2026-04-08",
+    title: "Moat report tags",
+    titleTranslations: { es: "Etiquetas en informes de moat" },
+    changes: [
+      {
+        type: "feature",
+        text: "Saved moat reports support optional tags: add labels when saving from the moat screener or the evaluation page, filter your saved list so reports must include every selected tag (AND), and edit tags on saved rows.",
+        translations: {
+          es: "Los informes de moat guardados admiten etiquetas opcionales: añade etiquetas al guardar desde el buscador de moat o la página de evaluación, filtra la lista guardada para que el informe incluya todas las etiquetas seleccionadas (Y), y edita etiquetas en cada fila.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.77.1",
     date: "2026-04-08",
     title: "Event calendar data coverage",

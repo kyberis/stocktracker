@@ -21,6 +21,7 @@ interface ReportSummary {
   maxScore: number;
   verdict: string;
   hasAiNarrative: boolean;
+  tags: string[];
   createdAt: string;
 }
 
@@ -36,24 +37,45 @@ export default function MoatEvaluationPicker() {
   const [savedReports, setSavedReports] = useState<ReportSummary[]>([]);
   const [reportsLoading, setReportsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [filterTags, setFilterTags] = useState<string[]>([]);
+  const [distinctTags, setDistinctTags] = useState<string[]>([]);
+  const [editingTagsFor, setEditingTagsFor] = useState<string | null>(null);
+  const [tagEditDraft, setTagEditDraft] = useState("");
+  const [tagSavingId, setTagSavingId] = useState<string | null>(null);
 
   const [leftTab, setLeftTab] = useState<"search" | "screener">("search");
   const [portfolioRunning, setPortfolioRunning] = useState(false);
   const [portfolioDone, setPortfolioDone] = useState(0);
   const [portfolioTotal, setPortfolioTotal] = useState(0);
 
+  const loadDistinctTags = useCallback(async () => {
+    try {
+      const res = await fetch("/api/moat-reports/tags");
+      if (res.ok) {
+        const data = (await res.json()) as { tags?: string[] };
+        if (Array.isArray(data.tags)) setDistinctTags(data.tags);
+      }
+    } catch { /* ignore */ }
+  }, []);
+
   const loadReports = useCallback(async () => {
     setReportsLoading(true);
     try {
-      const res = await fetch("/api/moat-reports");
+      const params = new URLSearchParams();
+      filterTags.forEach((tag) => params.append("tags", tag));
+      const qs = params.toString();
+      const res = await fetch(qs ? `/api/moat-reports?${qs}` : "/api/moat-reports");
       if (res.ok) {
-        setSavedReports(await res.json());
+        const list = (await res.json()) as ReportSummary[];
+        setSavedReports(list.map((r) => ({ ...r, tags: Array.isArray(r.tags) ? r.tags : [] })));
       }
     } catch { /* ignore */ }
     setReportsLoading(false);
-  }, []);
+  }, [filterTags]);
 
   useEffect(() => { loadReports(); }, [loadReports]);
+
+  useEffect(() => { loadDistinctTags(); }, [loadDistinctTags]);
 
   const search = useCallback(async (q: string) => {
     if (q.length < 1) { setResults([]); return; }
@@ -88,10 +110,38 @@ export default function MoatEvaluationPicker() {
       const res = await fetch(`/api/moat-reports/${id}`, { method: "DELETE" });
       if (res.ok) {
         setSavedReports((prev) => prev.filter((r) => r.id !== id));
+        loadDistinctTags();
       }
     } catch { /* ignore */ }
     setDeletingId(null);
   };
+
+  const toggleFilterTag = (tag: string) => {
+    setFilterTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]));
+  };
+
+  const handleSaveRowTags = async (reportId: string) => {
+    setTagSavingId(reportId);
+    try {
+      const tags = tagEditDraft.split(",").map((s) => s.trim()).filter(Boolean);
+      const res = await fetch(`/api/moat-reports/${reportId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tags }),
+      });
+      if (res.ok) {
+        setEditingTagsFor(null);
+        await loadReports();
+        loadDistinctTags();
+      }
+    } catch { /* ignore */ }
+    setTagSavingId(null);
+  };
+
+  const onMoatReportSavedFromScreener = useCallback(() => {
+    loadReports();
+    loadDistinctTags();
+  }, [loadReports, loadDistinctTags]);
 
   const handleEvaluatePortfolio = useCallback(async () => {
     const tickers = [...new Set(holdings.map((h) => h.ticker).filter(Boolean))];
@@ -125,7 +175,8 @@ export default function MoatEvaluationPicker() {
 
     setPortfolioRunning(false);
     loadReports();
-  }, [holdings, loadReports]);
+    loadDistinctTags();
+  }, [holdings, loadReports, loadDistinctTags]);
 
   const verdictColor = (verdict: string) => {
     if (verdict.toLowerCase().includes("strong")) return "text-emerald-500";
@@ -261,7 +312,7 @@ export default function MoatEvaluationPicker() {
           )}
 
           {/* Screener tab content */}
-          {leftTab === "screener" && <MoatScreener />}
+          {leftTab === "screener" && <MoatScreener onReportSaved={onMoatReportSavedFromScreener} />}
         </div>
 
         {/* ── Right column: Saved Reports ── */}
@@ -274,29 +325,66 @@ export default function MoatEvaluationPicker() {
             )}
           </h3>
 
+          {distinctTags.length > 0 && (
+            <div className="mb-3 space-y-1.5">
+              <div className="text-[11px] font-semibold text-[var(--muted)]">{t("moatReportFilterByTags")}</div>
+              <p className="text-[10px] text-[var(--muted)]">{t("moatReportTagFilterHint")}</p>
+              <div className="flex flex-wrap gap-1.5">
+                {distinctTags.map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => toggleFilterTag(tag)}
+                    className={`text-[11px] font-medium px-2 py-1 rounded-lg border transition-colors ${
+                      filterTags.includes(tag)
+                        ? "border-violet-500 bg-violet-500/15 text-violet-600 dark:text-violet-300"
+                        : "border-[var(--border)] bg-[var(--card-hover)] text-[var(--foreground)] hover:border-[var(--accent)]"
+                    }`}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+              {filterTags.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setFilterTags([])}
+                  className="text-[11px] text-violet-500 hover:underline"
+                >
+                  {t("moatReportClearTagFilter")}
+                </button>
+              )}
+            </div>
+          )}
+
           {reportsLoading ? (
             <div className="flex justify-center py-6">
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-emerald-500" />
             </div>
           ) : savedReports.length === 0 ? (
             <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-6 text-center">
-              <p className="text-sm text-[var(--muted)]">{t("moatReportSavedEmpty")}</p>
+              <p className="text-sm text-[var(--muted)]">
+                {filterTags.length > 0 ? t("moatReportNoTagMatches") : t("moatReportSavedEmpty")}
+              </p>
             </div>
           ) : (
             <div className="space-y-2">
               {savedReports.map((report) => (
                 <div
                   key={report.id}
-                  onClick={() => handleOpenReport(report)}
-                  className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-3.5 hover:border-[var(--accent)] transition-colors cursor-pointer"
+                  className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-3.5 hover:border-[var(--accent)] transition-colors"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="flex-1 min-w-0">
+                  <div className="flex items-start gap-3">
+                    <button
+                      type="button"
+                      onClick={() => handleOpenReport(report)}
+                      className="flex-1 min-w-0 text-left"
+                    >
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-bold">{report.symbol}</span>
                         <span className="text-xs text-[var(--muted)] truncate">{report.companyName}</span>
                       </div>
-                      <div className="flex items-center gap-3 mt-0.5 text-[11px] text-[var(--muted)]">
+                      <div className="flex items-center gap-3 mt-0.5 text-[11px] text-[var(--muted)] flex-wrap">
                         <span className={`font-semibold ${verdictColor(report.verdict)}`}>{report.verdict}</span>
                         <span>{t("moatReportSavedScore")}: {report.totalScore.toFixed(1)}/{report.maxScore}</span>
                         {report.hasAiNarrative && (
@@ -307,15 +395,71 @@ export default function MoatEvaluationPicker() {
                         )}
                         <span>{new Date(report.createdAt).toLocaleDateString()}</span>
                       </div>
-                    </div>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); handleDeleteReport(report.id); }}
-                      disabled={deletingId === report.id}
-                      className="text-[11px] font-semibold px-2.5 py-1.5 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors disabled:opacity-50 flex-shrink-0"
-                    >
-                      {deletingId === report.id ? t("moatReportDeleting") : t("moatReportDelete")}
+                      {report.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {report.tags.map((tag) => (
+                            <span
+                              key={tag}
+                              className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-[var(--card-hover)] border border-[var(--border)] text-[var(--muted)]"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </button>
+                    <div className="flex flex-col gap-1 flex-shrink-0 items-end">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingTagsFor(report.id);
+                          setTagEditDraft(report.tags.join(", "));
+                        }}
+                        className="text-[11px] font-semibold px-2.5 py-1.5 rounded-lg bg-[var(--card-hover)] text-[var(--foreground)] hover:bg-[var(--border)] transition-colors"
+                      >
+                        {t("moatReportEditTags")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); handleDeleteReport(report.id); }}
+                        disabled={deletingId === report.id}
+                        className="text-[11px] font-semibold px-2.5 py-1.5 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors disabled:opacity-50"
+                      >
+                        {deletingId === report.id ? t("moatReportDeleting") : t("moatReportDelete")}
+                      </button>
+                    </div>
                   </div>
+                  {editingTagsFor === report.id && (
+                    <div className="mt-3 pt-3 border-t border-[var(--border)] space-y-2" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="text"
+                        value={tagEditDraft}
+                        onChange={(e) => setTagEditDraft(e.target.value)}
+                        placeholder={t("moatReportTagsPlaceholder")}
+                        className="w-full bg-[var(--card-hover)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--foreground)]"
+                      />
+                      <p className="text-[10px] text-[var(--muted)]">{t("moatReportTagsHint")}</p>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setEditingTagsFor(null)}
+                          className="text-[12px] font-semibold px-3 py-1.5 rounded-lg bg-[var(--card-hover)]"
+                          disabled={tagSavingId === report.id}
+                        >
+                          {t("moatReportSaveModalCancel")}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleSaveRowTags(report.id)}
+                          disabled={tagSavingId === report.id}
+                          className="text-[12px] font-semibold px-3 py-1.5 rounded-lg bg-violet-600 text-white disabled:opacity-50"
+                        >
+                          {tagSavingId === report.id ? t("moatReportSaving") : t("moatReportSave")}
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

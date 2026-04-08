@@ -424,10 +424,13 @@ export {
 
 export type { MoatReport, MoatReportSummary } from "./moat-reports";
 export {
+  normalizeMoatReportTags,
   saveMoatReport,
   updateMoatReportAiNarrative,
+  updateMoatReportTags,
   getMoatReport,
   listMoatReports,
+  listDistinctMoatReportTags,
   deleteMoatReport,
 } from "./moat-reports";
 
