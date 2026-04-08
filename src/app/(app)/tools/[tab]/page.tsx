@@ -1,12 +1,9 @@
 import { notFound } from "next/navigation";
 import ToolsPageGate from "@/components/ToolsPageGate";
+import { VALID_DYNAMIC_TAB_IDS, type ToolTabId } from "@/lib/tools-registry";
 
-const VALID_TABS = [
-  "transactions", "dividends", "performance", "taxonomy",
-  "rebalancing", "accounts", "watchlist", "alerts", "tax", "simulator", "planning", "score", "evaluation",
-] as const;
-
-type Tab = (typeof VALID_TABS)[number];
+/** Tab ids for this segment; `screener` is served by `tools/screener/page.tsx` instead. */
+const validDynamicSet = new Set<string>(VALID_DYNAMIC_TAB_IDS);
 
 interface PageProps {
   params: Promise<{ tab: string }>;
@@ -15,9 +12,9 @@ interface PageProps {
 export default async function ToolsTabPage({ params }: PageProps) {
   const { tab } = await params;
 
-  if (!VALID_TABS.includes(tab as Tab)) {
+  if (!validDynamicSet.has(tab)) {
     notFound();
   }
 
-  return <ToolsPageGate initialTab={tab as Tab} />;
+  return <ToolsPageGate initialTab={tab as ToolTabId} />;
 }

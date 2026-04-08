@@ -24,6 +24,34 @@ export const releaseNotes: ReleaseEntry[] = [
     changes: [
       {
         type: "improvement",
+        text: "Desktop header navigation: primary links (Home, Evolution, Import, Tools) stay in the top bar; Market Insights, Crypto, Indicators, and Network move under a More menu — matching the mobile overflow pattern, avoiding horizontal page scroll, with flex layout fixes (min-w-0) and an accessible disclosure control.",
+        translations: {
+          es: "Navegación de escritorio: enlaces principales (Inicio, Evolución, Importar, Herramientas) en la barra superior; Mercado, Cripto, Indicadores y Red van al menú Más — alineado con el desbordamiento móvil, sin scroll horizontal de página, con flex (min-w-0) y un control accesible.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Clearer navigation between the app header and dashboard: Home in the top bar (was duplicated as Portfolio), Holdings as the first dashboard tab, a small Views label above the tab strip, Evolution (/portfolio) visible on desktop, and ?tab= deep links for dashboard sections (back/forward and sharing).",
+        translations: {
+          es: "Navegación más clara entre la cabecera y el panel: Inicio en la barra superior (antes duplicado como Portafolio), Posiciones como primera pestaña, una etiqueta Vistas sobre las pestañas, Evolución (/portfolio) visible en escritorio, y enlaces profundos ?tab= para las secciones (atrás/adelante y compartir).",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Navigation uses one shared config for the top bar, studio sidebar, and mobile tab bar — consistent section order (Insights before Crypto), a More menu on mobile for Market Insights, Indicators, Crypto, Network, and Profile, and clearer labels (Evolution vs return metrics in Tools).",
+        translations: {
+          es: "La navegación usa una configuración única para la barra superior, la barra lateral studio y la barra móvil — orden de secciones coherente (Insights antes que Cripto), menú Más en móvil para Mercado, Indicadores, Cripto, Red y Perfil, y etiquetas más claras (Evolución frente a métricas de rentabilidad en Herramientas).",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Tools hub: single tools registry drives routes, cards, and native tool lists; category headings inside each plan section; Planning translated; native app lists all non-interactive tools with links to open them in the app.",
+        translations: {
+          es: "Herramientas: un registro único define rutas, tarjetas y listas nativas; subtítulos por categoría en cada sección de plan; Planificación traducida; en la app nativa se listan todas las herramientas no interactivas con enlaces para abrirlas en la app.",
+        },
+      },
+      {
+        type: "improvement",
         text: "Event calendar sync now pulls economic, IPO, and stock split data for about 90 days ahead (and the past week), so the Events tab is more likely to show data for the month you are viewing.",
         translations: {
           es: "La sincronización del calendario de eventos ahora obtiene datos económicos, de OPV y divisiones de acciones para unos 90 días hacia adelante (y la semana pasada), para que la pestaña Eventos muestre mejor los datos del mes que ves.",

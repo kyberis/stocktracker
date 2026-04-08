@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useI18n } from "@/lib/i18n";
 import { useTheme } from "@/lib/theme-context";
 import { useStealthMode } from "@/lib/stealth-context";
@@ -12,47 +13,113 @@ import UserDropdown from "./UserDropdown";
 import TierFeatureBadge from "./TierFeatureBadge";
 import NotificationBell from "./NotificationBell";
 import GlobalPortfolioSelector from "./GlobalPortfolioSelector";
+import {
+  desktopOverflowNavActive,
+  getDesktopOverflowNavItems,
+  getDesktopTopStripNavItems,
+  type AppNavPrimaryItem,
+} from "@/lib/app-nav";
 
-const NAV_LINKS = [
-  {
-    href: "/",
-    labelKey: "portfolio" as const,
-    match: (p: string) => p === "/",
-  },
-  {
-    href: "/import",
-    labelKey: "importNav" as const,
-    match: (p: string) => p === "/import",
-  },
-  {
-    href: "/tools",
-    labelKey: "toolsNav" as const,
-    match: (p: string) => p === "/tools" || p.startsWith("/tools/"),
-  },
-  {
-    href: "/crypto",
-    labelKey: "cryptoNav" as const,
-    match: (p: string) => p === "/crypto",
-    tierBadge: "pro" as const,
-  },
-  {
-    href: "/market-insights",
-    labelKey: "marketInsightsNav" as const,
-    match: (p: string) => p === "/market-insights",
-  },
-  {
-    href: "/economic-indicators",
-    labelKey: "indicatorsNav" as const,
-    match: (p: string) => p === "/economic-indicators",
-    tierBadge: "pro" as const,
-  },
-  {
-    href: "/network",
-    labelKey: "networkNav" as const,
-    match: (p: string) => p === "/network" || p.startsWith("/network/"),
-    featureFlag: "social_network_enabled" as const,
-  },
-];
+function AppNavDesktopMoreMenu({
+  items,
+  pathname,
+}: {
+  items: AppNavPrimaryItem[];
+  pathname: string;
+}) {
+  const { t } = useI18n();
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuId = "desktop-nav-more-menu";
+  const triggerId = "desktop-nav-more-trigger";
+  const overflowActive = desktopOverflowNavActive(pathname, items);
+
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
+    };
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  const linkClass = useCallback(
+    (active: boolean) =>
+      `flex items-center gap-1 px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900 ${
+        active
+          ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+          : "text-gray-700 dark:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-800"
+      }`,
+    [],
+  );
+
+  if (items.length === 0) return null;
+
+  return (
+    <div className="relative shrink-0" ref={containerRef}>
+      <button
+        ref={triggerRef}
+        type="button"
+        id={triggerId}
+        aria-expanded={open}
+        aria-haspopup="true"
+        aria-controls={menuId}
+        onClick={() => setOpen((o) => !o)}
+        className={`inline-flex items-center gap-1 whitespace-nowrap px-3 py-1.5 rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900 ${
+          open || overflowActive
+            ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+            : "text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-800"
+        }`}
+      >
+        {t("moreNav")}
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {open ? (
+        <div
+          id={menuId}
+          role="menu"
+          aria-labelledby={triggerId}
+          className="absolute right-0 top-full z-50 mt-1 min-w-[12rem] rounded-xl border border-gray-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900"
+        >
+          {items.map((link) => {
+            const active = link.matches(pathname);
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                role="menuitem"
+                className={linkClass(active)}
+                onClick={() => setOpen(false)}
+              >
+                {t(link.labelKey)}
+                {link.tierBadge ? <TierFeatureBadge requiredPlan={link.tierBadge} size="xs" className="ml-auto" /> : null}
+              </Link>
+            );
+          })}
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 export default function AppNav() {
   const pathname = usePathname();
@@ -62,7 +129,8 @@ export default function AppNav() {
   const track = useTrack();
   const flags = useFeatureFlags();
 
-  const visibleLinks = NAV_LINKS.filter((link) => !link.featureFlag || flags[link.featureFlag]);
+  const primaryLinks = getDesktopTopStripNavItems(flags);
+  const overflowLinks = getDesktopOverflowNavItems(flags);
 
   function handleStealthToggle() {
     const next = !stealthMode;
@@ -73,10 +141,10 @@ export default function AppNav() {
   return (
     <>
     <header className="border-b border-gray-200 dark:border-slate-800 bg-white dark:bg-nav-bg sticky top-7 z-40" data-tour="nav">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between gap-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between gap-2 sm:gap-4 min-w-0">
         {/* Left: Logo + Nav */}
-        <div className="flex items-center gap-1 sm:gap-6">
-          <Link href="/" className="flex items-center gap-2 mr-2 sm:mr-0">
+        <div className="flex min-w-0 flex-1 items-center gap-1 sm:gap-4">
+          <Link href="/" className="flex shrink-0 items-center gap-2 mr-2 sm:mr-0">
             <svg className="w-7 h-7 rounded-lg" viewBox="0 0 32 32" aria-hidden="true">
               <defs>
                 <linearGradient id="nav-a" x1=".5" y1="0" x2=".5" y2="1"><stop offset="0%" stopColor="#6ee7b7"/><stop offset="100%" stopColor="#10b981"/></linearGradient>
@@ -96,35 +164,37 @@ export default function AppNav() {
             <span className="hidden sm:inline text-base font-bold text-gray-900 dark:text-white">{t("appTitle")}</span>
           </Link>
 
-          <div className="hidden sm:block">
+          <div className="hidden sm:block shrink-0 min-w-0">
             <GlobalPortfolioSelector />
           </div>
 
-          <nav className="hidden sm:flex items-center gap-1">
-            {visibleLinks.map((link) => {
-              const active = link.match(pathname);
+          <nav
+            className="hidden sm:flex min-w-0 flex-1 items-center gap-1 justify-start"
+            aria-label={t("primaryNavAriaLabel")}
+          >
+            {primaryLinks.map((link) => {
+              const active = link.matches(pathname);
               return (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`inline-flex items-center whitespace-nowrap px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  className={`inline-flex shrink-0 items-center whitespace-nowrap px-3 py-1.5 rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900 ${
                     active
                       ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
                       : "text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-800"
                   }`}
                 >
                   {t(link.labelKey)}
-                  {"tierBadge" in link && link.tierBadge && (
-                    <TierFeatureBadge requiredPlan={link.tierBadge} size="xs" className="ml-1" />
-                  )}
+                  {link.tierBadge ? <TierFeatureBadge requiredPlan={link.tierBadge} size="xs" className="ml-1" /> : null}
                 </Link>
               );
             })}
+            <AppNavDesktopMoreMenu items={overflowLinks} pathname={pathname} />
           </nav>
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           <NotificationBell />
           {/* Stealth mode toggle */}
           <button

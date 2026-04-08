@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useMemo, useRef, Suspense } from "react";
+import { useDashboardTabUrl, type DashboardTab } from "@/lib/use-dashboard-tab-url";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import PortfolioSummary from "@/components/PortfolioSummary";
@@ -49,10 +50,7 @@ const WeeklyDigestCard = dynamic(() => import("@/components/dashboard-v2/WeeklyD
 const OnboardingChecklist = dynamic(() => import("@/components/dashboard-v2/OnboardingChecklist"), { ssr: false });
 const AssetBreakdownCards = dynamic(() => import("@/components/dashboard-v2/AssetBreakdownCards"), { ssr: false });
 
-type DashboardTab = "portfolio" | "diversification" | "dividends" | "metrics" | "growth" | "events" | "news";
-
 export default function MobileDashboard() {
-  const [activeTab, setActiveTab] = useState<DashboardTab>("portfolio");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [showAddCrypto, setShowAddCrypto] = useState(false);
@@ -81,6 +79,12 @@ export default function MobileDashboard() {
   const holdingsLimit = getHoldingsLimit(userPlan);
   const holdingsAtLimit = !authLoading && holdingsLimit !== Infinity && holdingsCount >= holdingsLimit;
 
+  const { activeTab, navigateToTab } = useDashboardTabUrl({
+    holdingsCount,
+    tierGate: true,
+    userPlan,
+  });
+
   // Periodic paywall nudge for free users
   useEffect(() => {
     if (authLoading) return;
@@ -104,7 +108,7 @@ export default function MobileDashboard() {
   };
 
   const dashboardTabs: { key: DashboardTab; label: string; tierBadge?: "starter" | "pro"; disabled?: boolean }[] = [
-    { key: "portfolio", label: t("portfolioTab") },
+    { key: "portfolio", label: t("dashboardHoldingsTab") },
     { key: "diversification", label: t("diversificationTab"), disabled: holdingsCount === 0 },
     { key: "dividends", label: t("dividendsTab") },
     { key: "metrics", label: t("performanceTab"), tierBadge: "starter" as const },
@@ -125,17 +129,11 @@ export default function MobileDashboard() {
         return;
       }
     }
-    setActiveTab(tab);
+    navigateToTab(tab);
     window.scrollTo({ top: 0, behavior: "instant" });
     track(`${tab}_tab_viewed`);
     hapticSelectionChanged();
   }
-
-  useEffect(() => {
-    if (holdingsCount === 0 && activeTab === "diversification") {
-      setActiveTab("portfolio");
-    }
-  }, [holdingsCount, activeTab]);
 
   const quotesAvailable = holdingsCount === 0 || holdings.some((h) => quotes[h.ticker]);
   const hasLoadedOnce = useRef(false);
@@ -212,11 +210,15 @@ export default function MobileDashboard() {
 
       <div className="px-4 py-3 space-y-4">
         {/* Tab bar — horizontal scroll pills */}
-        <div
-          role="tablist"
-          aria-label={t("portfolioTab")}
-          className="flex gap-1.5 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1"
-        >
+        <div className="space-y-1.5 -mx-4 px-4 pb-1">
+          <p id="mobile-dashboard-views-heading" className="text-xs font-medium text-gray-500 dark:text-slate-500 px-0.5">
+            {t("dashboardViewsHeading")}
+          </p>
+          <div
+            role="tablist"
+            aria-labelledby="mobile-dashboard-views-heading"
+            className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-0.5"
+          >
           {dashboardTabs.map((tab) => (
             <button
               key={tab.key}
@@ -240,6 +242,7 @@ export default function MobileDashboard() {
               {tab.tierBadge && <TierFeatureBadge requiredPlan={tab.tierBadge} size="xs" className="ml-1" />}
             </button>
           ))}
+          </div>
         </div>
 
         <TrialCountdownBanner />

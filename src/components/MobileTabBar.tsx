@@ -2,107 +2,219 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useId, useMemo, useState } from "react";
 import { useI18n } from "@/lib/i18n";
 import { useIsNative } from "@/lib/use-native";
 import { useFeatureFlags } from "@/lib/feature-flag-context";
+import {
+  MOBILE_MORE_EXTRA,
+  MOBILE_TAB_ICON_PATH,
+  NATIVE_MOBILE_TABS,
+  getMobileWebMoreItems,
+  getMobileWebTabItems,
+} from "@/lib/app-nav";
+import TierFeatureBadge from "./TierFeatureBadge";
 
-const WEB_TABS = [
-  {
-    href: "/",
-    labelKey: "portfolio" as const,
-    icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6",
-    match: (p: string) => p === "/",
-  },
-  {
-    href: "/portfolio",
-    labelKey: "performanceNav" as const,
-    icon: "M13 7h8m0 0v8m0-8l-8 8-4-4-6 6",
-    match: (p: string) => p === "/portfolio",
-  },
-  {
-    href: "/import",
-    labelKey: "importNav" as const,
-    icon: "M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12",
-    match: (p: string) => p === "/import",
-  },
-  {
-    href: "/tools",
-    labelKey: "toolsNav" as const,
-    icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2",
-    match: (p: string) => p === "/tools" || p.startsWith("/tools/"),
-  },
-  {
-    href: "/crypto",
-    labelKey: "cryptoNav" as const,
-    icon: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
-    match: (p: string) => p === "/crypto",
-  },
-  {
-    href: "/network",
-    labelKey: "networkNav" as const,
-    icon: "M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z",
-    match: (p: string) => p === "/network" || p.startsWith("/network/"),
-    featureFlag: "social_network_enabled" as const,
-  },
-  {
-    href: "/profile",
-    labelKey: "profile" as const,
-    icon: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z",
-    match: (p: string) => p === "/profile",
-  },
-];
+function MobileNavMoreSheet({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
+  const pathname = usePathname();
+  const { t } = useI18n();
+  const flags = useFeatureFlags();
+  const titleId = useId();
 
-const NATIVE_TABS = [
-  {
-    href: "/",
-    labelKey: "portfolio" as const,
-    icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6",
-    match: (p: string) => p === "/",
-  },
-  {
-    href: "/tools",
-    labelKey: "toolsNav" as const,
-    icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2",
-    match: (p: string) => p === "/tools" || p.startsWith("/tools/"),
-  },
-  {
-    href: "/profile",
-    labelKey: "profile" as const,
-    icon: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z",
-    match: (p: string) => p === "/profile",
-  },
-];
+  const primaryMore = useMemo(() => getMobileWebMoreItems(flags), [flags]);
+  const extras = MOBILE_MORE_EXTRA;
+
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-[60] sm:hidden" role="presentation">
+      <button
+        type="button"
+        aria-label={t("close")}
+        className="absolute inset-0 bg-black/50 backdrop-blur-[1px]"
+        onClick={onClose}
+      />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className="absolute bottom-0 left-0 right-0 max-h-[min(70vh,420px)] overflow-y-auto rounded-t-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-2xl pb-[max(1rem,env(safe-area-inset-bottom))]"
+      >
+        <div className="px-4 pt-3 pb-2 border-b border-gray-100 dark:border-slate-800 flex items-center justify-between">
+          <h2 id={titleId} className="text-sm font-semibold text-gray-900 dark:text-white">
+            {t("moreNav")}
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800 dark:text-slate-400"
+            aria-label={t("close")}
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <nav className="p-2" aria-label={t("moreNav")}>
+          <ul className="space-y-0.5">
+            {primaryMore.map((item) => {
+              const active = item.matches(pathname);
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    onClick={onClose}
+                    className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-colors ${
+                      active
+                        ? "bg-emerald-50 dark:bg-emerald-500/15 text-emerald-800 dark:text-emerald-300"
+                        : "text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-800"
+                    }`}
+                    aria-current={active ? "page" : undefined}
+                  >
+                    <span className="flex-1">{t(item.labelKey)}</span>
+                    {item.tierBadge ? (
+                      <TierFeatureBadge requiredPlan={item.tierBadge} size="xs" className="shrink-0" />
+                    ) : null}
+                  </Link>
+                </li>
+              );
+            })}
+            {extras.map((item) => {
+              const active = item.matches(pathname);
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    onClick={onClose}
+                    className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-colors ${
+                      active
+                        ? "bg-emerald-50 dark:bg-emerald-500/15 text-emerald-800 dark:text-emerald-300"
+                        : "text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-800"
+                    }`}
+                    aria-current={active ? "page" : undefined}
+                  >
+                    {t(item.labelKey)}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+      </div>
+    </div>
+  );
+}
 
 export default function MobileTabBar() {
   const pathname = usePathname();
   const { t } = useI18n();
   const isNative = useIsNative();
   const flags = useFeatureFlags();
-  const tabs = (isNative ? NATIVE_TABS : WEB_TABS).filter((tab) => !("featureFlag" in tab) || !tab.featureFlag || flags[tab.featureFlag]);
+  const [moreOpen, setMoreOpen] = useState(false);
+
+  const webTabs = useMemo(() => getMobileWebTabItems(flags), [flags]);
+  const morePrimary = useMemo(() => getMobileWebMoreItems(flags), [flags]);
+
+  const moreActive = useMemo(() => {
+    const primaryHit = morePrimary.some((item) => item.matches(pathname));
+    const extraHit = MOBILE_MORE_EXTRA.some((item) => item.matches(pathname));
+    return primaryHit || extraHit;
+  }, [morePrimary, pathname]);
+
+  useEffect(() => {
+    setMoreOpen(false);
+  }, [pathname]);
+
+  if (isNative) {
+    return (
+      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-800 pb-[env(safe-area-inset-bottom)] sm:hidden">
+        <div className="flex items-stretch">
+          {NATIVE_MOBILE_TABS.map((tab) => {
+            const active = tab.match(pathname);
+            const iconPath = MOBILE_TAB_ICON_PATH[tab.href];
+            return (
+              <Link
+                key={tab.href}
+                href={tab.href}
+                className={`flex-1 flex flex-col items-center gap-0.5 py-2 text-[10px] font-medium transition-colors ${
+                  active ? "text-emerald-600 dark:text-emerald-400" : "text-gray-500 dark:text-slate-500"
+                }`}
+              >
+                {iconPath ? (
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={active ? 2.5 : 2} aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" d={iconPath} />
+                  </svg>
+                ) : null}
+                {t(tab.labelKey)}
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
+    );
+  }
 
   return (
-    <nav className={`fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-800 pb-[env(safe-area-inset-bottom)] ${isNative ? "" : "sm:hidden"}`}>
-      <div className="flex items-stretch">
-        {tabs.map((tab) => {
-          const active = tab.match(pathname);
-          return (
-            <Link
-              key={tab.href}
-              href={tab.href}
-              className={`flex-1 flex flex-col items-center gap-0.5 py-2 text-[10px] font-medium transition-colors ${
-                active
-                  ? "text-emerald-600 dark:text-emerald-400"
-                  : "text-gray-500 dark:text-slate-500"
-              }`}
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={active ? 2.5 : 2} aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" d={tab.icon} />
-              </svg>
-              {t(tab.labelKey)}
-            </Link>
-          );
-        })}
-      </div>
-    </nav>
+    <>
+      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-800 pb-[env(safe-area-inset-bottom)] sm:hidden">
+        <div className="flex items-stretch">
+          {webTabs.map((tab) => {
+            const active = tab.matches(pathname);
+            const iconPath = MOBILE_TAB_ICON_PATH[tab.href];
+            return (
+              <Link
+                key={tab.href}
+                href={tab.href}
+                className={`flex-1 flex flex-col items-center gap-0.5 py-2 text-[10px] font-medium transition-colors min-w-0 ${
+                  active ? "text-emerald-600 dark:text-emerald-400" : "text-gray-500 dark:text-slate-500"
+                }`}
+              >
+                {iconPath ? (
+                  <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={active ? 2.5 : 2} aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" d={iconPath} />
+                  </svg>
+                ) : null}
+                <span className="truncate px-0.5 text-center leading-tight">{t(tab.labelKey)}</span>
+              </Link>
+            );
+          })}
+          <button
+            type="button"
+            onClick={() => setMoreOpen(true)}
+            aria-expanded={moreOpen}
+            aria-haspopup="dialog"
+            className={`flex-1 flex flex-col items-center gap-0.5 py-2 text-[10px] font-medium transition-colors min-w-0 ${
+              moreActive ? "text-emerald-600 dark:text-emerald-400" : "text-gray-500 dark:text-slate-500"
+            }`}
+          >
+            <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={moreActive ? 2.5 : 2} aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d={MOBILE_TAB_ICON_PATH.more} />
+            </svg>
+            <span className="truncate px-0.5 text-center leading-tight">{t("moreNav")}</span>
+          </button>
+        </div>
+      </nav>
+      <MobileNavMoreSheet open={moreOpen} onClose={() => setMoreOpen(false)} />
+    </>
   );
 }

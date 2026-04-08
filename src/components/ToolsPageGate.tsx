@@ -3,10 +3,9 @@
 import PortfolioTools from "@/components/PortfolioTools";
 import MobileToolsPage from "@/components/mobile/MobileToolsPage";
 import { useIsNative } from "@/lib/use-native";
+import type { ToolTabId } from "@/lib/tools-registry";
 
-type Tab = "transactions" | "dividends" | "performance" | "taxonomy" | "rebalancing" | "accounts" | "watchlist" | "alerts" | "screener" | "tax" | "simulator" | "planning" | "score" | "evaluation";
-
-export default function ToolsPageGate({ initialTab }: { initialTab?: Tab }) {
+export default function ToolsPageGate({ initialTab }: { initialTab?: ToolTabId }) {
   const isNative = useIsNative();
 
   if (isNative) return <MobileToolsPage />;
