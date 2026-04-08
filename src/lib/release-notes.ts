@@ -17,6 +17,21 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.77.1",
+    date: "2026-04-08",
+    title: "Event calendar data coverage",
+    titleTranslations: { es: "Cobertura de datos del calendario de eventos" },
+    changes: [
+      {
+        type: "improvement",
+        text: "Event calendar sync now pulls economic, IPO, and stock split data for about 90 days ahead (and the past week), so the Events tab is more likely to show data for the month you are viewing.",
+        translations: {
+          es: "La sincronización del calendario de eventos ahora obtiene datos económicos, de OPV y divisiones de acciones para unos 90 días hacia adelante (y la semana pasada), para que la pestaña Eventos muestre mejor los datos del mes que ves.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.77.0",
     date: "2026-04-07",
     title: "Stock Splits Calendar",

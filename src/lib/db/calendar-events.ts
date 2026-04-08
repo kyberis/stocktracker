@@ -2,7 +2,7 @@ import { ensureInitialized } from "./client";
 
 export interface CalendarEvent {
   id: string;
-  event_type: "earnings" | "economic" | "ipo";
+  event_type: "earnings" | "economic" | "ipo" | "splits";
   symbol: string | null;
   name: string;
   event_date: string;

@@ -70,11 +70,17 @@ async function fetchAvEarningsCalendar(apiKey: string, horizon: string = "3month
   return events;
 }
 
+/** How far ahead to sync FMP calendars (economic, IPO, splits) so a full month view has data. */
+const SYNC_HORIZON_DAYS = 90;
+/** Match deleteStaleEvents: keep roughly a week of past dates so early-in-month views still show data. */
+const SYNC_PAST_DAYS = 7;
+
 const runEventSync = withCronLogging("event-sync", async () => {
-  const from = today();
-  const to = addDays(from, 30);
-  const fromStr = toISODate(from);
-  const toStr = toISODate(to);
+  const dayStart = today();
+  const syncFrom = addDays(dayStart, -SYNC_PAST_DAYS);
+  const syncTo = addDays(dayStart, SYNC_HORIZON_DAYS);
+  const syncFromStr = toISODate(syncFrom);
+  const syncToStr = toISODate(syncTo);
 
   const stats = { earnings: 0, economic: 0, ipo: 0, splits: 0, deleted: 0, errors: [] as string[] };
 
@@ -83,7 +89,7 @@ const runEventSync = withCronLogging("event-sync", async () => {
   if (avKey) {
     try {
       const raw = await fetchAvEarningsCalendar(avKey, "3month");
-      const filtered = raw.filter((e) => e.date >= fromStr && e.date <= toStr);
+      const filtered = raw.filter((e) => e.date >= syncFromStr && e.date <= syncToStr);
       const mapped = filtered.map((e) => ({
         id: `earnings:${e.symbol}:${e.date}`,
         event_type: "earnings",
@@ -110,9 +116,9 @@ const runEventSync = withCronLogging("event-sync", async () => {
   // --- Earnings from FMP (supplement with time-of-day data) ---
   if (process.env.FMP_API_KEY) {
     try {
-      const fmpEarnings = await fetchFmpEarnings(from, to);
+      const fmpEarnings = await fetchFmpEarnings(syncFrom, syncTo);
       const mapped = fmpEarnings
-        .filter((e) => e.date >= fromStr && e.date <= toStr && e.symbol)
+        .filter((e) => e.date >= syncFromStr && e.date <= syncToStr && e.symbol)
         .map((e) => ({
           id: `earnings:${e.symbol}:${e.date}`,
           event_type: "earnings",
@@ -142,9 +148,9 @@ const runEventSync = withCronLogging("event-sync", async () => {
   // --- Economic events from FMP ---
   if (process.env.FMP_API_KEY) {
     try {
-      const raw = await fetchEconomicCalendar(from, to);
+      const raw = await fetchEconomicCalendar(syncFrom, syncTo);
       const mapped = raw
-        .filter((e) => e.date >= fromStr && e.date <= toStr)
+        .filter((e) => e.date.slice(0, 10) >= syncFromStr && e.date.slice(0, 10) <= syncToStr)
         .map((e) => ({
           id: `economic:${slugify(e.event)}:${e.date}`,
           event_type: "economic",
@@ -174,9 +180,9 @@ const runEventSync = withCronLogging("event-sync", async () => {
 
     // --- IPO calendar from FMP ---
     try {
-      const raw = await fetchIpoCalendar(from, to);
+      const raw = await fetchIpoCalendar(syncFrom, syncTo);
       const mapped = raw
-        .filter((e) => e.date >= fromStr && e.date <= toStr)
+        .filter((e) => e.date >= syncFromStr && e.date <= syncToStr)
         .map((e) => ({
           id: `ipo:${e.symbol || slugify(e.company)}:${e.date}`,
           event_type: "ipo",
@@ -204,9 +210,9 @@ const runEventSync = withCronLogging("event-sync", async () => {
 
     // --- Stock splits from FMP ---
     try {
-      const raw = await fetchSplitsCalendar(from, to);
+      const raw = await fetchSplitsCalendar(syncFrom, syncTo);
       const mapped = raw
-        .filter((e) => e.date >= fromStr && e.date <= toStr && e.symbol)
+        .filter((e) => e.date >= syncFromStr && e.date <= syncToStr && e.symbol)
         .map((e) => {
           const isReverse = e.numerator < e.denominator;
           const ratio = `${e.numerator}:${e.denominator}`;
@@ -238,7 +244,7 @@ const runEventSync = withCronLogging("event-sync", async () => {
   }
 
   // --- Cleanup stale events (older than 7 days) ---
-  const staleDate = toISODate(addDays(from, -7));
+  const staleDate = toISODate(addDays(dayStart, -SYNC_PAST_DAYS));
   stats.deleted = await deleteStaleEvents(staleDate);
 
   return {
@@ -250,8 +256,9 @@ const runEventSync = withCronLogging("event-sync", async () => {
 });
 
 /**
- * Cron: sync event calendar data from Alpha Vantage (earnings) and FMP (economic + IPO).
- * Runs daily at 6 AM UTC. Stores 30 days of future events, removes stale entries.
+ * Cron: sync event calendar data from Alpha Vantage (earnings) and FMP (economic, IPO, splits).
+ * Runs daily at 6 AM UTC. Stores ~90 days ahead and 7 days back (aligned with stale cleanup).
+ * Requires FMP_API_KEY for economic, IPO, and stock splits.
  */
 export async function GET(req: NextRequest) {
   const denied = verifyCronAuth("event-sync", req.headers.get("authorization"));
