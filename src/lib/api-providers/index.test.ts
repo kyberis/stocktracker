@@ -23,15 +23,21 @@ vi.mock("@/lib/auth/session", () => ({
   getSessionFromRequest: vi.fn(),
 }));
 
+vi.mock("@/lib/market-data/resolve-provider", () => ({
+  getPremiumMarketDataFromRequest: vi.fn(),
+}));
+
 const { YahooProvider } = await import("./yahoo");
 const { AlphaVantageProvider } = await import("./alphavantage");
 const { getGlobalAlphaVantageApiKey } = await import("@/lib/db");
 const { getSessionFromRequest } = await import("@/lib/auth/session");
+const { getPremiumMarketDataFromRequest } = await import("@/lib/market-data/resolve-provider");
 
 describe("api-providers index", () => {
   beforeEach(() => {
     vi.mocked(getGlobalAlphaVantageApiKey).mockReturnValue("av-key");
     vi.mocked(getSessionFromRequest).mockResolvedValue(null);
+    vi.mocked(getPremiumMarketDataFromRequest).mockReset();
   });
 
   describe("createProvider", () => {
@@ -67,25 +73,21 @@ describe("api-providers index", () => {
   });
 
   describe("getAlphaVantageFromRequest", () => {
-    it("with pro session + key returns AV provider", async () => {
-      vi.mocked(getSessionFromRequest).mockResolvedValue({
-        userId: "u1",
-        plan: "pro",
-      } as never);
-      vi.mocked(getGlobalAlphaVantageApiKey).mockReturnValue("av-key");
+    it("with pro session + resolved provider returns provider", async () => {
+      vi.mocked(getPremiumMarketDataFromRequest).mockResolvedValue({
+        provider: { name: "alphavantage" } as never,
+        backend: "alphavantage",
+      });
 
       const req = {} as Request;
       const provider = await getAlphaVantageFromRequest(req as never);
 
       expect(provider).toEqual({ name: "alphavantage" });
-      expect(AlphaVantageProvider).toHaveBeenCalledWith("av-key");
+      expect(getPremiumMarketDataFromRequest).toHaveBeenCalledWith(req, "intelligence");
     });
 
     it("with free session returns null", async () => {
-      vi.mocked(getSessionFromRequest).mockResolvedValue({
-        userId: "u1",
-        plan: "free",
-      } as never);
+      vi.mocked(getPremiumMarketDataFromRequest).mockResolvedValue(null);
 
       const req = {} as Request;
       const provider = await getAlphaVantageFromRequest(req as never);
@@ -94,11 +96,7 @@ describe("api-providers index", () => {
     });
 
     it("with no key returns null", async () => {
-      vi.mocked(getSessionFromRequest).mockResolvedValue({
-        userId: "u1",
-        plan: "pro",
-      } as never);
-      vi.mocked(getGlobalAlphaVantageApiKey).mockReturnValue("");
+      vi.mocked(getPremiumMarketDataFromRequest).mockResolvedValue(null);
 
       const req = {} as Request;
       const provider = await getAlphaVantageFromRequest(req as never);

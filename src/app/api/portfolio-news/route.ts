@@ -1,11 +1,10 @@
 import { NextRequest } from "next/server";
-import { createProvider } from "@/lib/api-providers";
 import { jsonWithCallCount } from "@/lib/api-providers/response";
 import { fetchFinnhubPortfolioNews } from "@/lib/api-providers/finnhub-news";
 import { requireFeatureAccess, requireRateLimit } from "@/lib/auth/guards";
-import { getGlobalAlphaVantageApiKey } from "@/lib/db";
-import { listHoldings } from "@/lib/db";
-import { recordAvUsageAsync } from "@/lib/rate-limit";
+import { hasPremiumMarketDataConfigured, listHoldings } from "@/lib/db";
+import { getPremiumMarketDataFromRequest } from "@/lib/market-data/resolve-provider";
+import { recordMarketDataUsageAsync } from "@/lib/market-data/record-usage";
 import { withMetrics } from "@/lib/with-metrics";
 import { deferTask } from "@/lib/task-runner";
 
@@ -29,10 +28,7 @@ export const GET = withMetrics("/api/portfolio-news", async (request: NextReques
   const { session, error } = await requireFeatureAccess(request, "intelligence");
   if (error) return error;
 
-  const rl = await requireRateLimit(request, "alphavantage");
-  if (rl.error) return rl.error;
-
-  const userId = rl.session?.userId ?? session!.userId;
+  const userId = session!.userId;
   const portfolioId = request.nextUrl.searchParams.get("portfolioId") || undefined;
 
   const holdings = await listHoldings(userId, portfolioId);
@@ -45,27 +41,29 @@ export const GET = withMetrics("/api/portfolio-news", async (request: NextReques
     return Response.json([]);
   }
 
-  const avKey = getGlobalAlphaVantageApiKey();
+  const resolved = await getPremiumMarketDataFromRequest(request, "portfolio_news");
+  if (resolved) {
+    const { provider, backend } = resolved;
+    const rl = await requireRateLimit(request, backend === "fmp" ? "fmp" : "alphavantage");
+    if (rl.error) return rl.error;
 
-  if (avKey) {
-    const provider = createProvider("alphavantage", avKey);
     try {
       if (typeof provider.getPortfolioNewsSentiment === "function") {
         const articles = await provider.getPortfolioNewsSentiment(tickers);
         if (articles.length > 0) {
           const sorted = articles.sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
-          return jsonWithCallCount(provider, sorted.slice(0, 30));
+          const res = jsonWithCallCount(provider, sorted.slice(0, 30));
+          if (userId && provider.callCount) {
+            deferTask(() => recordMarketDataUsageAsync(userId, backend, provider.callCount!));
+          }
+          return res;
         }
       }
     } catch (err) {
       console.warn(
-        "Alpha Vantage news failed, trying Finnhub fallback:",
+        "Premium portfolio news failed, trying Finnhub fallback:",
         err instanceof Error ? err.message : err,
       );
-    } finally {
-      if (userId && provider.callCount) {
-        deferTask(() => recordAvUsageAsync(userId, provider.callCount!));
-      }
     }
   }
 
@@ -82,7 +80,7 @@ export const GET = withMetrics("/api/portfolio-news", async (request: NextReques
     }
   }
 
-  if (!avKey) {
+  if (!hasPremiumMarketDataConfigured()) {
     return Response.json(
       { error: "No news provider configured" },
       { status: 400 },

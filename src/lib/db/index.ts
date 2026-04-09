@@ -124,6 +124,8 @@ export {
   getWhatsAppQuota,
   incrementWhatsAppCounter,
   getGlobalAlphaVantageApiKey,
+  getGlobalFmpApiKey,
+  hasPremiumMarketDataConfigured,
   getGlobalOpenAIApiKey,
   getPlatformSetting,
   setPlatformSetting,

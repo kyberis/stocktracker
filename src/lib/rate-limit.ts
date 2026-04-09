@@ -6,7 +6,7 @@ import {
   getPlatformSetting,
   setPlatformSetting,
 } from "@/lib/db";
-import { avRateLimiter, aiImportRateLimiter, signupRateLimiter, loginRateLimiter, deviceAuthRateLimiter } from "@/lib/upstash";
+import { avRateLimiter, fmpRateLimiter, aiImportRateLimiter, signupRateLimiter, loginRateLimiter, deviceAuthRateLimiter } from "@/lib/upstash";
 import type { NextRequest } from "next/server";
 
 export interface RateLimitResult {
@@ -61,6 +61,38 @@ export async function recordAvUsageAsync(userId: string, callCount: number): Pro
   if (callCount <= 0) return;
   const windowKey = minuteWindowKey();
   await recordRateLimitUsage(userId, "alphavantage", callCount, windowKey);
+}
+
+async function checkFmpRateLimitTurso(userId: string): Promise<RateLimitResult> {
+  const limit = PLATFORM_LIMITS.FMP_PER_USER_PER_MINUTE;
+  const windowKey = minuteWindowKey();
+  const { allowed, remaining, resetAt } = await checkAndIncrementRateLimit(
+    userId,
+    "fmp",
+    limit,
+    windowKey,
+  );
+  return { allowed, remaining, limit, resetAt };
+}
+
+export async function checkFmpRateLimit(userId: string): Promise<RateLimitResult> {
+  const limiter = fmpRateLimiter();
+  if (limiter) {
+    const { success, limit, remaining, reset } = await limiter.limit(userId);
+    return {
+      allowed: success,
+      remaining,
+      limit,
+      resetAt: new Date(reset).toISOString(),
+    };
+  }
+  return checkFmpRateLimitTurso(userId);
+}
+
+export async function recordFmpUsageAsync(userId: string, callCount: number): Promise<void> {
+  if (callCount <= 0) return;
+  const windowKey = minuteWindowKey();
+  await recordRateLimitUsage(userId, "fmp", callCount, windowKey);
 }
 
 // ── AI Analysis (Pro daily / Free monthly) ───────────────────────
@@ -155,6 +187,7 @@ export async function checkSupportChatRateLimit(
 
 export function getRateLimitProvider(providerName: string): RateLimitProvider | null {
   if (providerName === "alphavantage") return "alphavantage";
+  if (providerName === "fmp") return "fmp";
   if (providerName === "openai") return "openai";
   if (providerName === "openai_import") return "openai_import";
   if (providerName === "support_chat") return "support_chat";

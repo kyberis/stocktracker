@@ -1,12 +1,14 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest } from "next/server";
+import { jsonWithCallCount } from "@/lib/api-providers/response";
 import { requireFeatureAccess, requireRateLimit } from "@/lib/auth/guards";
-import { AlphaVantageProvider } from "@/lib/api-providers/alphavantage";
-import { getGlobalAlphaVantageApiKey } from "@/lib/db/settings";
 import { getMoatCache, upsertMoatCache } from "@/lib/db/moat-cache";
 import { evaluateMoat } from "@/lib/moat-evaluator";
+import { resolvePremiumStockDataProvider } from "@/lib/market-data/resolve-provider";
+import { recordMarketDataUsageAsync } from "@/lib/market-data/record-usage";
 import { withMetrics } from "@/lib/with-metrics";
+import { deferTask } from "@/lib/task-runner";
 
 export const GET = withMetrics("/api/stock-evaluation", async (request: NextRequest) => {
   const { session, error } = await requireFeatureAccess(request, "stock-evaluation");
@@ -33,34 +35,40 @@ export const GET = withMetrics("/api/stock-evaluation", async (request: NextRequ
     }
   }
 
-  const rl = await requireRateLimit(request, "alphavantage");
-  if (rl.error) return rl.error;
-
-  const apiKey = getGlobalAlphaVantageApiKey();
-  if (!apiKey) {
+  const resolved = await resolvePremiumStockDataProvider(session.userId, "fundamentals");
+  if (!resolved) {
     return Response.json(
-      { error: "Alpha Vantage API key not configured" },
+      { error: "Market data API not configured. Ask your administrator to set FMP_API_KEY or Alpha Vantage." },
       { status: 501 },
     );
   }
+  const { provider, backend } = resolved;
 
-  const av = new AlphaVantageProvider(apiKey);
+  const rl = await requireRateLimit(request, backend === "fmp" ? "fmp" : "alphavantage");
+  if (rl.error) return rl.error;
 
   try {
     const [overview, income, balance, cashflow, earnings] = await Promise.all([
-      av.getOverview(symbol),
-      av.getIncomeStatement(symbol),
-      av.getBalanceSheet(symbol),
-      av.getCashFlow(symbol),
-      av.getEarnings(symbol),
+      provider.getOverview?.(symbol) ?? Promise.resolve(null),
+      provider.getIncomeStatement?.(symbol) ?? Promise.resolve(null),
+      provider.getBalanceSheet?.(symbol) ?? Promise.resolve(null),
+      provider.getCashFlow?.(symbol) ?? Promise.resolve(null),
+      provider.getEarnings?.(symbol) ?? Promise.resolve(null),
     ]);
 
     if (!overview) {
-      return Response.json({ error: `No fundamental data available for ${symbol}. Alpha Vantage may not cover this ticker — try a larger-cap stock (e.g. AAPL, KO, MSFT).` }, { status: 404 });
+      return Response.json(
+        {
+          error: `No fundamental data available for ${symbol}. Try a larger-cap liquid ticker (e.g. AAPL, KO, MSFT).`,
+        },
+        { status: 404 },
+      );
     }
     if (!income || !balance || !cashflow || !earnings) {
       return Response.json(
-        { error: `Insufficient fundamental data for ${symbol}. Alpha Vantage has partial coverage — income statements, balance sheet, or earnings data is missing.` },
+        {
+          error: `Insufficient fundamental data for ${symbol}. Income statement, balance sheet, cash flow, or earnings data is missing.`,
+        },
         { status: 404 },
       );
     }
@@ -72,11 +80,15 @@ export const GET = withMetrics("/api/stock-evaluation", async (request: NextRequ
       console.error("[stock-evaluation] Cache write failed:", err instanceof Error ? err.message : err);
     });
 
-    return Response.json(enriched, {
+    return jsonWithCallCount(provider, enriched, {
       headers: { "Cache-Control": "private, max-age=3600" },
     });
   } catch (err) {
     console.error("[stock-evaluation] Error:", err instanceof Error ? err.message : err);
     return Response.json({ error: "Failed to fetch evaluation data" }, { status: 500 });
+  } finally {
+    if (session.userId && provider.callCount) {
+      deferTask(() => recordMarketDataUsageAsync(session.userId, backend, provider.callCount!));
+    }
   }
 });

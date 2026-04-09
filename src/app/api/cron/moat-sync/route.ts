@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { withCronLogging, verifyCronAuth } from "@/lib/cron-logging";
-import { AlphaVantageProvider } from "@/lib/api-providers/alphavantage";
 import { getGlobalAlphaVantageApiKey } from "@/lib/db/settings";
+import { resolvePremiumStockDataProvider } from "@/lib/market-data/resolve-provider";
 import { evaluateMoat } from "@/lib/moat-evaluator";
 import { upsertMoatCache, getStaleMoatSymbols } from "@/lib/db/moat-cache";
 import { listMoatAutoTickers } from "@/lib/db/moat-auto-tickers";
@@ -14,10 +14,15 @@ const BATCH_SIZE = 30;
 const MAX_AGE_DAYS = 7;
 
 const runMoatSync = withCronLogging("moat-sync", async () => {
-  const apiKey = getGlobalAlphaVantageApiKey();
-  if (!apiKey) {
-    return { ok: false, error: "Alpha Vantage API key not configured" };
+  if (!getGlobalAlphaVantageApiKey() && !process.env.FMP_API_KEY) {
+    return { ok: false, error: "No market data API key configured (FMP_API_KEY or Alpha Vantage)" };
   }
+
+  const resolved = await resolvePremiumStockDataProvider(null, "moat_sync");
+  if (!resolved) {
+    return { ok: false, error: "Could not initialize market data provider" };
+  }
+  const { provider } = resolved;
 
   const autoTickers = await listMoatAutoTickers();
   const autoSymbols = autoTickers.map((t) => t.symbol);
@@ -27,8 +32,6 @@ const runMoatSync = withCronLogging("moat-sync", async () => {
   if (stale.length === 0) {
     return { ok: true, processed: 0, succeeded: 0, failed: 0, skipped: 0, remaining: 0, universe: allSymbols.length };
   }
-
-  const av = new AlphaVantageProvider(apiKey);
   let succeeded = 0;
   let failed = 0;
   let skipped = 0;
@@ -36,11 +39,11 @@ const runMoatSync = withCronLogging("moat-sync", async () => {
   for (const symbol of stale) {
     try {
       const [overview, income, balance, cashflow, earnings] = await Promise.all([
-        av.getOverview(symbol),
-        av.getIncomeStatement(symbol),
-        av.getBalanceSheet(symbol),
-        av.getCashFlow(symbol),
-        av.getEarnings(symbol),
+        provider.getOverview?.(symbol) ?? Promise.resolve(null),
+        provider.getIncomeStatement?.(symbol) ?? Promise.resolve(null),
+        provider.getBalanceSheet?.(symbol) ?? Promise.resolve(null),
+        provider.getCashFlow?.(symbol) ?? Promise.resolve(null),
+        provider.getEarnings?.(symbol) ?? Promise.resolve(null),
       ]);
 
       if (!overview || !income || !balance || !cashflow || !earnings) {

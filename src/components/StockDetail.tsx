@@ -54,7 +54,7 @@ interface StockDetailProps {
 export default function StockDetail({ ticker, exchange, fromScreener = false }: StockDetailProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { hasGlobalAvKey, getApiHeaders } = useSettings();
+  const { hasPremiumMarketData, getApiHeaders } = useSettings();
   const { holdings, quotes, exchangeRates } = usePortfolio();
   const { user } = useAuth();
   const { t, language } = useI18n();
@@ -107,7 +107,7 @@ export default function StockDetail({ ticker, exchange, fromScreener = false }: 
   const track = useTrack();
   const marketStatus = exchange ? getMarketStatus(exchange, now) : null;
   const isFree = user?.plan !== "pro";
-  const canAccessPremium = !isFree && hasGlobalAvKey;
+  const canAccessPremium = !isFree && hasPremiumMarketData;
 
   useEffect(() => {
     track("stock_view", { ticker });

@@ -16,18 +16,9 @@ import type {
   EarningsTranscript,
   EconIndicatorResult,
   EconDataPoint,
+  DividendEvent,
 } from "./types";
 import { providerRequestsTotal, providerRequestDuration } from "@/lib/metrics";
-
-export interface DividendEvent {
-  symbol: string;
-  exDividendDate: string;
-  declarationDate: string;
-  recordDate: string;
-  paymentDate: string;
-  amount: number;
-  currency: string;
-}
 
 const AV_BASE = "https://www.alphavantage.co/query";
 // 75 requests/minute ~= 800ms between calls. Keep slight safety buffer.

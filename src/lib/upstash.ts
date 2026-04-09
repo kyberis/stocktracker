@@ -33,6 +33,22 @@ export function avRateLimiter(): Ratelimit | null {
   return _avLimiter;
 }
 
+let _fmpLimiter: Ratelimit | null | undefined;
+export function fmpRateLimiter(): Ratelimit | null {
+  if (_fmpLimiter !== undefined) return _fmpLimiter;
+  const redis = getRedis();
+  if (!redis) {
+    _fmpLimiter = null;
+    return null;
+  }
+  _fmpLimiter = new Ratelimit({
+    redis,
+    limiter: Ratelimit.fixedWindow(PLATFORM_LIMITS.FMP_PER_USER_PER_MINUTE, "1m"),
+    prefix: "rl:fmp",
+  });
+  return _fmpLimiter;
+}
+
 let _aiImportLimiter: Ratelimit | null | undefined;
 export function aiImportRateLimiter(): Ratelimit | null {
   if (_aiImportLimiter !== undefined) return _aiImportLimiter;

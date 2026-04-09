@@ -20,6 +20,7 @@ async function syncRedisCountersToTurso(): Promise<number> {
 
   for (const { prefix, provider } of [
     { prefix: "rl:av", provider: "alphavantage" },
+    { prefix: "rl:fmp", provider: "fmp" },
     { prefix: "rl:ai-import", provider: "openai_import" },
   ] as const) {
     let cursor = 0;
@@ -43,7 +44,7 @@ async function syncRedisCountersToTurso(): Promise<number> {
         if (count <= 0) continue;
 
         const windowKey =
-          provider === "alphavantage"
+          provider === "alphavantage" || provider === "fmp"
             ? new Date().toISOString().slice(0, 16)
             : new Date().toISOString().slice(0, 10);
 

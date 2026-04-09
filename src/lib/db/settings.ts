@@ -17,7 +17,15 @@ export type PlatformFeature =
   | "pro_trial_enabled"
   | "ai_report_enabled"
   | "portfolio_v2_chart_enabled"
-  | "social_network_enabled";
+  | "social_network_enabled"
+  | "market_data_fmp_search"
+  | "market_data_fmp_fundamentals"
+  | "market_data_fmp_intelligence"
+  | "market_data_fmp_portfolio_news"
+  | "market_data_fmp_economic_indicators"
+  | "market_data_fmp_crypto"
+  | "market_data_fmp_dividends"
+  | "market_data_fmp_event_sync";
 
 const DEFAULT_ENABLED_FLAGS: Set<PlatformFeature> = new Set([
   "whatsapp_enabled",
@@ -263,6 +271,16 @@ export function getGlobalAlphaVantageApiKey(): string {
   return process.env.STOCKTRACKER_ALPHAVANTAGE_API_KEY || "";
 }
 
+/** Financial Modeling Prep API key (server-side). Used when FMP rollout flags are on. */
+export function getGlobalFmpApiKey(): string {
+  return process.env.FMP_API_KEY || "";
+}
+
+/** True if any premium market data backend is configured (Alpha Vantage and/or FMP). */
+export function hasPremiumMarketDataConfigured(): boolean {
+  return getGlobalAlphaVantageApiKey().length > 0 || getGlobalFmpApiKey().length > 0;
+}
+
 export function getGlobalOpenAIApiKey(): string {
   return process.env.STOCKTRACKER_OPENAI_API_KEY || "";
 }
@@ -309,6 +327,14 @@ const ALL_PLATFORM_FEATURES: PlatformFeature[] = [
   "ai_report_enabled",
   "portfolio_v2_chart_enabled",
   "social_network_enabled",
+  "market_data_fmp_search",
+  "market_data_fmp_fundamentals",
+  "market_data_fmp_intelligence",
+  "market_data_fmp_portfolio_news",
+  "market_data_fmp_economic_indicators",
+  "market_data_fmp_crypto",
+  "market_data_fmp_dividends",
+  "market_data_fmp_event_sync",
 ];
 
 export async function isFeatureEnabledForUser(feature: PlatformFeature, userId: string): Promise<boolean> {

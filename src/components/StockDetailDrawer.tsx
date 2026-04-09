@@ -48,12 +48,12 @@ export default function StockDetailDrawer({ holding, onClose }: StockDetailDrawe
     activePortfolioId,
     moveToPortfolio,
   } = usePortfolio();
-  const { hasGlobalAvKey, getApiHeaders } = useSettings();
+  const { hasPremiumMarketData, getApiHeaders } = useSettings();
   const { user } = useAuth();
   const { t } = useI18n();
   const panelRef = useRef<HTMLDivElement>(null);
 
-  const canAccessPremium = user?.plan === "pro" && hasGlobalAvKey;
+  const canAccessPremium = user?.plan === "pro" && hasPremiumMarketData;
   const [now, setNow] = useState(() => new Date());
   const [visible, setVisible] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);

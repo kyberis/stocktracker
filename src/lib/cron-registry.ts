@@ -43,7 +43,7 @@ export const CRON_REGISTRY: CronJob[] = [
     name: "event-sync",
     path: "/api/cron/event-sync",
     schedule: "0 6 * * *",
-    description: "Fetch earnings, economic events, and IPO calendar from Alpha Vantage & FMP",
+    description: "Fetch earnings (AV and/or FMP per flags), economic events, IPO, and splits from FMP",
   },
   {
     name: "screener-sync",

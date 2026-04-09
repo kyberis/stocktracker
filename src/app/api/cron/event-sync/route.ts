@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { upsertCalendarEventsBatch, deleteStaleEvents } from "@/lib/db";
-import { getGlobalAlphaVantageApiKey } from "@/lib/db";
+import { getGlobalAlphaVantageApiKey, isFeatureEnabled } from "@/lib/db";
 import {
   fetchEconomicCalendar,
   fetchIpoCalendar,
@@ -84,9 +84,10 @@ const runEventSync = withCronLogging("event-sync", async () => {
 
   const stats = { earnings: 0, economic: 0, ipo: 0, splits: 0, deleted: 0, errors: [] as string[] };
 
-  // --- Earnings from Alpha Vantage ---
+  // --- Earnings from Alpha Vantage (skipped when FMP-only rollout flag is on) ---
+  const fmpEarningsOnly = await isFeatureEnabled("market_data_fmp_event_sync");
   const avKey = getGlobalAlphaVantageApiKey();
-  if (avKey) {
+  if (!fmpEarningsOnly && avKey) {
     try {
       const raw = await fetchAvEarningsCalendar(avKey, "3month");
       const filtered = raw.filter((e) => e.date >= syncFromStr && e.date <= syncToStr);

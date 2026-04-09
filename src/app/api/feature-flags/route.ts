@@ -14,50 +14,25 @@ export const GET = withMetrics("/api/feature-flags", async (req: NextRequest) =>
     return NextResponse.json(publicFlags);
   }
 
-  const [
-    alertsEnabled, csvExportEnabled, appleSigninEnabled, deviceEnabled,
-    mobileAppEnabled, whatsappEnabled,
-    toolTransactions, toolDividends, toolPerformance,
-    toolTaxonomy, toolRebalancing, toolAccounts, toolWatchlist,
-    proTrialEnabled, aiReportEnabled, portfolioV2ChartEnabled,
-    socialNetworkEnabled,
-  ] = await Promise.all([
-    isFeatureEnabled("alerts_enabled"),
-    isFeatureEnabled("csv_export_enabled"),
-    isFeatureEnabled("apple_signin_enabled"),
-    isFeatureEnabled("device_enabled"),
-    isFeatureEnabled("mobile_app_enabled"),
-    isFeatureEnabled("whatsapp_enabled"),
-    isFeatureEnabled("tool_transactions_enabled"),
-    isFeatureEnabled("tool_dividends_enabled"),
-    isFeatureEnabled("tool_performance_enabled"),
-    isFeatureEnabled("tool_taxonomy_enabled"),
-    isFeatureEnabled("tool_rebalancing_enabled"),
-    isFeatureEnabled("tool_accounts_enabled"),
-    isFeatureEnabled("tool_watchlist_enabled"),
-    isFeatureEnabled("pro_trial_enabled"),
-    isFeatureEnabled("ai_report_enabled"),
-    isFeatureEnabled("portfolio_v2_chart_enabled"),
-    isFeatureEnabled("social_network_enabled"),
-  ]);
+  const ANONYMOUS_FLAGS = [
+    "alerts_enabled", "csv_export_enabled", "apple_signin_enabled", "device_enabled",
+    "mobile_app_enabled", "whatsapp_enabled",
+    "tool_transactions_enabled", "tool_dividends_enabled", "tool_performance_enabled",
+    "tool_taxonomy_enabled", "tool_rebalancing_enabled", "tool_accounts_enabled",
+    "tool_watchlist_enabled",
+    "pro_trial_enabled", "ai_report_enabled", "portfolio_v2_chart_enabled",
+    "social_network_enabled",
+    "market_data_fmp_search",
+    "market_data_fmp_fundamentals",
+    "market_data_fmp_intelligence",
+    "market_data_fmp_portfolio_news",
+    "market_data_fmp_economic_indicators",
+    "market_data_fmp_crypto",
+    "market_data_fmp_dividends",
+    "market_data_fmp_event_sync",
+  ] as const;
 
-  return NextResponse.json({
-    alerts_enabled: alertsEnabled,
-    csv_export_enabled: csvExportEnabled,
-    apple_signin_enabled: appleSigninEnabled,
-    device_enabled: deviceEnabled,
-    mobile_app_enabled: mobileAppEnabled,
-    whatsapp_enabled: whatsappEnabled,
-    tool_transactions_enabled: toolTransactions,
-    tool_dividends_enabled: toolDividends,
-    tool_performance_enabled: toolPerformance,
-    tool_taxonomy_enabled: toolTaxonomy,
-    tool_rebalancing_enabled: toolRebalancing,
-    tool_accounts_enabled: toolAccounts,
-    tool_watchlist_enabled: toolWatchlist,
-    pro_trial_enabled: proTrialEnabled,
-    ai_report_enabled: aiReportEnabled,
-    portfolio_v2_chart_enabled: portfolioV2ChartEnabled,
-    social_network_enabled: socialNetworkEnabled,
-  });
+  const flagValues = await Promise.all(ANONYMOUS_FLAGS.map((f) => isFeatureEnabled(f)));
+  const flags = Object.fromEntries(ANONYMOUS_FLAGS.map((f, i) => [f, flagValues[i]]));
+  return NextResponse.json(flags);
 });

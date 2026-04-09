@@ -3,7 +3,8 @@ import YahooFinance from "yahoo-finance2";
 import { requireSession } from "@/lib/auth/guards";
 import { getGlobalAlphaVantageApiKey } from "@/lib/db";
 import { AlphaVantageProvider } from "@/lib/api-providers/alphavantage";
-import type { DividendEvent } from "@/lib/api-providers/alphavantage";
+import { resolvePremiumStockDataProvider } from "@/lib/market-data/resolve-provider";
+import type { DividendEvent } from "@/lib/api-providers/types";
 import { looksLikeIsin } from "@/lib/api-providers/isin-resolver";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { withMetrics } from "@/lib/with-metrics";
@@ -91,19 +92,26 @@ export const GET = withMetrics("/api/ex-dividend", async (req: NextRequest) => {
   }
 
   if (events.length === 0) {
-    const apiKey = getGlobalAlphaVantageApiKey();
-    if (apiKey) {
-      try {
-        const provider = new AlphaVantageProvider(apiKey);
+    try {
+      const resolved = await resolvePremiumStockDataProvider(session.userId, "dividends");
+      if (resolved?.provider.getDividendSchedule) {
+        const results = await Promise.allSettled(
+          tickers.map((ticker) => resolved.provider.getDividendSchedule!(ticker))
+        );
+        results.forEach((r) => {
+          if (r.status === "fulfilled") events.push(...r.value);
+        });
+      } else if (getGlobalAlphaVantageApiKey()) {
+        const provider = new AlphaVantageProvider(getGlobalAlphaVantageApiKey());
         const results = await Promise.allSettled(
           tickers.map((ticker) => provider.getDividendSchedule(ticker))
         );
         results.forEach((r) => {
           if (r.status === "fulfilled") events.push(...r.value);
         });
-      } catch (err) {
-        console.error("[ex-dividend] AV fallback also failed:", err instanceof Error ? err.message : err);
       }
+    } catch (err) {
+      console.error("[ex-dividend] Market data fallback failed:", err instanceof Error ? err.message : err);
     }
   }
 

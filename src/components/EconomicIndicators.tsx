@@ -113,7 +113,7 @@ interface CachedResult {
 }
 
 export default function EconomicIndicators() {
-  const { hasGlobalAvKey, getApiHeaders } = useSettings();
+  const { hasPremiumMarketData, getApiHeaders } = useSettings();
   const { user } = useAuth();
   const { t, language } = useI18n();
   const { isDark } = useTheme();
@@ -136,7 +136,7 @@ export default function EconomicIndicators() {
   const config = INDICATORS[activeIdx];
   const isFree = user?.plan !== "pro";
   const isPro = user?.plan === "pro";
-  const canAccessEcon = isPro && hasGlobalAvKey;
+  const canAccessEcon = isPro && hasPremiumMarketData;
 
   const fetchIndicator = useCallback(async () => {
     setLoading(true);

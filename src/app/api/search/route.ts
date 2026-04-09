@@ -1,8 +1,8 @@
 import { NextRequest } from "next/server";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
-import { AlphaVantageProvider } from "@/lib/api-providers/alphavantage";
 import { getSessionFromRequest } from "@/lib/auth/session";
-import { findUserById, getGlobalAlphaVantageApiKey } from "@/lib/db";
+import { findUserById, getGlobalAlphaVantageApiKey, getGlobalFmpApiKey } from "@/lib/db";
+import { resolvePremiumStockDataProvider } from "@/lib/market-data/resolve-provider";
 import { withMetrics } from "@/lib/with-metrics";
 
 export const dynamic = "force-dynamic";
@@ -12,24 +12,28 @@ const yahoo = new YahooProvider();
 export const GET = withMetrics("/api/search", async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const query = searchParams.get("q");
-  const provider = searchParams.get("provider");
+  /** Premium symbol search for moat evaluation (FMP or Alpha Vantage — server-chosen). */
+  const premiumSearch = searchParams.get("premiumSearch") === "1";
   const wantsCrypto = searchParams.get("includeCrypto") === "true";
 
   if (!query || query.length < 1) {
     return Response.json([]);
   }
 
-  if (provider === "alphavantage") {
-    const apiKey = getGlobalAlphaVantageApiKey();
-    if (!apiKey) return Response.json([]);
+  if (premiumSearch) {
+    if (!getGlobalAlphaVantageApiKey() && !getGlobalFmpApiKey()) {
+      return Response.json([]);
+    }
+    const session = await getSessionFromRequest(request);
+    const resolved = await resolvePremiumStockDataProvider(session?.userId ?? null, "search");
+    if (!resolved) return Response.json([]);
     try {
-      const av = new AlphaVantageProvider(apiKey);
-      const results = await av.search(query);
+      const results = await resolved.provider.search(query);
       return Response.json(results, {
         headers: { "Cache-Control": "public, max-age=60, stale-while-revalidate=300" },
       });
     } catch (err) {
-      console.error("AV search failed:", err instanceof Error ? err.message : err);
+      console.error("Premium search failed:", err instanceof Error ? err.message : err);
       return Response.json([]);
     }
   }

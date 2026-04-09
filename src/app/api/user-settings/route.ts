@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { getUserSettings, updateUserSettings, findUserById, getGlobalAlphaVantageApiKey, getGlobalOpenAIApiKey, resolveAllFlagsForUser } from "@/lib/db";
+import { getUserSettings, updateUserSettings, findUserById, hasPremiumMarketDataConfigured, getGlobalOpenAIApiKey, resolveAllFlagsForUser } from "@/lib/db";
 import { parseBody } from "@/lib/api-response";
 import { userSettingsSchema } from "@/lib/schemas";
 import { canAccessTheme } from "@/lib/subscription";
@@ -29,7 +29,7 @@ export const GET = withMetrics("/api/user-settings", async (req: NextRequest) =>
     refreshInterval: settings.refreshInterval,
     dashboardTheme,
     defaultCurrency: settings.defaultCurrency,
-    hasGlobalAvKey: getGlobalAlphaVantageApiKey().length > 0,
+    hasPremiumMarketData: hasPremiumMarketDataConfigured(),
     hasOpenAIKey: getGlobalOpenAIApiKey().length > 0,
     alertsEnabled: flags.alerts_enabled,
     csvExportEnabled: flags.csv_export_enabled,

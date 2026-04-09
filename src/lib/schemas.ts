@@ -438,6 +438,14 @@ const PLATFORM_FEATURE_ENUM = z.enum([
   "ai_report_enabled",
   "portfolio_v2_chart_enabled",
   "social_network_enabled",
+  "market_data_fmp_search",
+  "market_data_fmp_fundamentals",
+  "market_data_fmp_intelligence",
+  "market_data_fmp_portfolio_news",
+  "market_data_fmp_economic_indicators",
+  "market_data_fmp_crypto",
+  "market_data_fmp_dividends",
+  "market_data_fmp_event_sync",
 ]);
 
 export const featureFlagSchema = z.object({

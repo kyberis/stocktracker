@@ -203,6 +203,17 @@ export interface SearchOptions {
   includeCrypto?: boolean;
 }
 
+/** Upcoming dividend schedule (ex-dividend tooling). */
+export interface DividendEvent {
+  symbol: string;
+  exDividendDate: string;
+  declarationDate: string;
+  recordDate: string;
+  paymentDate: string;
+  amount: number;
+  currency: string;
+}
+
 export interface StockDataProvider {
   getQuote(symbol: string): Promise<ProviderQuoteResult>;
   search(query: string, options?: SearchOptions): Promise<ProviderSearchResult[]>;
@@ -220,6 +231,7 @@ export interface StockDataProvider {
   getInstitutionalHoldings?(symbol: string): Promise<InstitutionalHolder[]>;
   getEarningsTranscript?(symbol: string, quarter: string): Promise<EarningsTranscript | null>;
   getEconomicIndicator?(func: string, interval?: string, maturity?: string): Promise<EconIndicatorResult | null>;
+  getDividendSchedule?(symbol: string): Promise<DividendEvent[]>;
   readonly name: string;
   readonly callCount?: number;
 }

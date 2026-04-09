@@ -22,7 +22,8 @@ interface SettingsContextType {
   refreshInterval: RefreshInterval;
   dashboardTheme: LayoutTheme;
   defaultCurrency: string;
-  hasGlobalAvKey: boolean;
+  /** True when the server has FMP and/or Alpha Vantage configured for premium market data. */
+  hasPremiumMarketData: boolean;
   alertsEnabled: boolean;
   csvExportEnabled: boolean;
   deviceEnabled: boolean;
@@ -47,7 +48,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const { setLayoutTheme } = useTheme();
   const [refreshInterval, setRefreshIntervalState] = useState<RefreshInterval>(15);
   const [dashboardTheme, setDashboardThemeState] = useState<LayoutTheme>(getInitialLayoutTheme);
-  const [hasGlobalAvKey, setHasGlobalAvKey] = useState(false);
+  const [hasPremiumMarketData, setHasPremiumMarketData] = useState(false);
   const [alertsEnabled, setAlertsEnabled] = useState(false);
   const [csvExportEnabled, setCsvExportEnabled] = useState(false);
   const [deviceEnabled, setDeviceEnabled] = useState(false);
@@ -82,8 +83,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
               }
             } catch {}
           }
-          if (typeof settings.hasGlobalAvKey === "boolean") {
-            setHasGlobalAvKey(settings.hasGlobalAvKey);
+          if (typeof settings.hasPremiumMarketData === "boolean") {
+            setHasPremiumMarketData(settings.hasPremiumMarketData);
           }
           if (typeof settings.alertsEnabled === "boolean") {
             setAlertsEnabled(settings.alertsEnabled);
@@ -188,7 +189,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       refreshInterval,
       dashboardTheme,
       defaultCurrency,
-      hasGlobalAvKey,
+      hasPremiumMarketData,
       alertsEnabled,
       csvExportEnabled,
       deviceEnabled,
@@ -207,7 +208,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       getApiParams,
     }),
     [
-      refreshInterval, dashboardTheme, defaultCurrency, hasGlobalAvKey, alertsEnabled, csvExportEnabled, deviceEnabled,
+      refreshInterval, dashboardTheme, defaultCurrency, hasPremiumMarketData, alertsEnabled, csvExportEnabled, deviceEnabled,
       whatsappEnabled, toolTransactionsEnabled, toolDividendsEnabled, toolPerformanceEnabled,
       toolTaxonomyEnabled, toolRebalancingEnabled, toolAccountsEnabled, toolWatchlistEnabled,
       setRefreshInterval, setDashboardTheme, setDefaultCurrency, getApiHeaders, getApiParams,

@@ -9,7 +9,13 @@ export function jsonWithCallCount(
   const res = NextResponse.json(data, init);
   const count = provider.callCount ?? 0;
   if (count > 0) {
-    res.headers.set("x-av-calls", String(count));
+    res.headers.set("x-market-data-calls", String(count));
+    if (provider.name === "alphavantage") {
+      res.headers.set("x-av-calls", String(count));
+    }
+    if (provider.name === "fmp") {
+      res.headers.set("x-fmp-calls", String(count));
+    }
   }
   if (init?.headers) {
     for (const [key, value] of Object.entries(init.headers)) {

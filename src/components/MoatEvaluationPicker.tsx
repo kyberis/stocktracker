@@ -81,7 +81,7 @@ export default function MoatEvaluationPicker() {
     if (q.length < 1) { setResults([]); return; }
     setSearching(true);
     try {
-      const res = await fetch(`/api/search?q=${encodeURIComponent(q)}&provider=alphavantage`);
+      const res = await fetch(`/api/search?q=${encodeURIComponent(q)}&premiumSearch=1`);
       if (res.ok) {
         const data = await res.json();
         setResults(data.results || data || []);

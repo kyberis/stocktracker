@@ -1,11 +1,11 @@
 import { NextRequest } from "next/server";
-import { AlphaVantageProvider } from "@/lib/api-providers/alphavantage";
 import { jsonWithCallCount } from "@/lib/api-providers/response";
 import { requireFeatureAccess, requireRateLimit } from "@/lib/auth/guards";
-import { recordAvUsageAsync } from "@/lib/rate-limit";
+import { getSessionFromRequest } from "@/lib/auth/session";
+import { resolvePremiumStockDataProvider } from "@/lib/market-data/resolve-provider";
+import { recordMarketDataUsageAsync } from "@/lib/market-data/record-usage";
 import { withMetrics } from "@/lib/with-metrics";
 import { deferTask } from "@/lib/task-runner";
-import { getGlobalAlphaVantageApiKey } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
@@ -29,25 +29,21 @@ export const GET = withMetrics("/api/economic-indicators", async (request: NextR
     );
   }
 
-  const apiKey = getGlobalAlphaVantageApiKey();
-  if (!apiKey) {
+  const session = await getSessionFromRequest(request);
+  const resolved = await resolvePremiumStockDataProvider(session?.userId ?? null, "economic_indicators");
+  if (!resolved) {
     return Response.json(
-      { error: "No Alpha Vantage API key configured. Please ask your administrator to add one." },
+      { error: "No market data API key configured. Ask your administrator to add FMP_API_KEY or Alpha Vantage." },
       { status: 503 }
     );
   }
 
-  let provider: AlphaVantageProvider;
-  try {
-    provider = new AlphaVantageProvider(apiKey);
-  } catch {
-    return Response.json(
-      { error: "Failed to initialize Alpha Vantage provider" },
-      { status: 503 }
-    );
+  const { provider, backend } = resolved;
+  if (!provider.getEconomicIndicator) {
+    return Response.json({ error: "Economic indicators not available" }, { status: 503 });
   }
 
-  const rl = await requireRateLimit(request, "alphavantage");
+  const rl = await requireRateLimit(request, backend === "fmp" ? "fmp" : "alphavantage");
   if (rl.error) return rl.error;
   const rateLimitUserId = rl.session?.userId ?? null;
 
@@ -72,7 +68,7 @@ export const GET = withMetrics("/api/economic-indicators", async (request: NextR
     return jsonWithCallCount(provider, { error: "Failed to fetch data" }, { status: 500 });
   } finally {
     if (rateLimitUserId && provider.callCount) {
-      deferTask(() => recordAvUsageAsync(rateLimitUserId, provider.callCount!));
+      deferTask(() => recordMarketDataUsageAsync(rateLimitUserId, backend, provider.callCount!));
     }
   }
 });

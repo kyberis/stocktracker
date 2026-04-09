@@ -39,7 +39,38 @@ const FLAG_META: Record<string, { label: string; description: string; group: str
   ai_report_enabled: { label: "AI Portfolio Report", description: "AI-generated portfolio score, detailed analysis page, and streaming review", group: "Features" },
   portfolio_v2_chart_enabled: { label: "Portfolio V2 Chart", description: "New portfolio value/performance chart with market sessions, buy/sell dots, benchmarks, and backfill CTA on the homepage", group: "Features" },
   social_network_enabled: { label: "Social Network", description: "Public profiles, posts, connections, feed, people search, and in-app conversations", group: "Features" },
+  market_data_fmp_search: { label: "FMP: symbol search (moat picker)", description: "Use Financial Modeling Prep for premium symbol search instead of Alpha Vantage", group: "Market data (FMP)" },
+  market_data_fmp_fundamentals: { label: "FMP: fundamentals & moat sync", description: "Stock evaluation / moat cron fundamentals from FMP", group: "Market data (FMP)" },
+  market_data_fmp_intelligence: { label: "FMP: intelligence tab", description: "News, insider, institutional, transcripts via FMP", group: "Market data (FMP)" },
+  market_data_fmp_portfolio_news: { label: "FMP: portfolio news", description: "Portfolio-level news sentiment via FMP", group: "Market data (FMP)" },
+  market_data_fmp_economic_indicators: { label: "FMP: economic indicators", description: "US macro series via FMP", group: "Market data (FMP)" },
+  market_data_fmp_crypto: { label: "FMP: Pro crypto history & FX", description: "Crypto OHLC and cross-rates via FMP", group: "Market data (FMP)" },
+  market_data_fmp_dividends: { label: "FMP: ex-dividend fallback", description: "When Yahoo has no dividend dates, use FMP dividend calendar", group: "Market data (FMP)" },
+  market_data_fmp_event_sync: { label: "FMP: earnings calendar cron", description: "Event-sync cron uses FMP-only for earnings (skip AV CSV)", group: "Market data (FMP)" },
 };
+
+const GROUP_DISPLAY_ORDER = ["Features", "Tools", "Market data (FMP)"] as const;
+
+function orderedFlagGroups(
+  meta: typeof FLAG_META,
+): string[] {
+  const present = new Set(Object.values(meta).map((m) => m.group));
+  const ordered: string[] = [];
+  for (const g of GROUP_DISPLAY_ORDER) {
+    if (present.has(g)) ordered.push(g);
+  }
+  for (const g of [...present].sort()) {
+    if (!ordered.includes(g)) ordered.push(g);
+  }
+  return ordered;
+}
+
+function sectionIdForGroup(group: string): string {
+  return `feature-flags-${group
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")}`;
+}
 
 export default function FeatureFlagsPage() {
   const { user } = useAuth();
@@ -182,19 +213,42 @@ export default function FeatureFlagsPage() {
       ).slice(0, 8)
     : [];
 
-  const groups = ["Features", "Tools"] as const;
+  const groups = orderedFlagGroups(FLAG_META);
 
   return (
     <div className="space-y-6">
+      <div className="scroll-mt-4">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Feature flags</h2>
+        <p className="text-xs text-gray-500 dark:text-slate-400 mt-1 mb-0">
+          <span className="text-gray-600 dark:text-slate-300">Jump to:</span>{" "}
+          {groups.map((group, i) => (
+            <span key={group}>
+              {i > 0 ? " · " : null}
+              <a
+                href={`#${sectionIdForGroup(group)}`}
+                className="text-indigo-600 dark:text-indigo-400 hover:underline underline-offset-2"
+              >
+                {group}
+              </a>
+            </span>
+          ))}
+        </p>
+      </div>
       {groups.map((group) => {
         const groupFlags = Object.entries(FLAG_META).filter(([, m]) => m.group === group);
         return (
-          <div key={group} className="card p-6">
+          <div
+            key={group}
+            id={sectionIdForGroup(group)}
+            className="card p-6 scroll-mt-20"
+          >
             <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">{group}</h3>
             <p className="text-xs text-gray-500 dark:text-slate-400 mb-4">
               {group === "Features"
                 ? "Enable or disable user-facing features globally, with optional per-user overrides."
-                : "Show or hide individual tools on the Tools page."}
+                : group === "Tools"
+                  ? "Show or hide individual tools on the Tools page."
+                  : "Roll out Financial Modeling Prep surface-by-surface; when off, Alpha Vantage is used when configured. Per-user overrides apply; the earnings calendar cron flag is global-only."}
             </p>
             <div className="divide-y divide-gray-200 dark:divide-slate-700">
               {groupFlags.map(([flag, meta]) => {

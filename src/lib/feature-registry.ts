@@ -123,14 +123,16 @@ export const featureDomains: FeatureDomain[] = [
     libs: [
       { path: "src/lib/api-providers/yahoo.ts", description: "Yahoo Finance API client" },
       { path: "src/lib/api-providers/alphavantage.ts", description: "Alpha Vantage API client" },
+      { path: "src/lib/api-providers/fmp-market-data.ts", description: "Financial Modeling Prep market data client" },
+      { path: "src/lib/market-data/resolve-provider.ts", description: "FMP vs Alpha Vantage resolution + rollout flags" },
     ],
     patterns: [
-      "Provider abstraction — Yahoo is default, AV is optional for Pro users",
-      "Admin-managed API keys stored in DB (not per-user)",
-      "Automatic Yahoo fallback when AV quota is exhausted",
-      "Rate limiting: 75 req/min for AV, custom per-customer limits",
+      "Provider abstraction — Yahoo is default; premium routes use FMP or Alpha Vantage per feature flags",
+      "Server env keys (FMP_API_KEY, STOCKTRACKER_ALPHAVANTAGE_API_KEY)",
+      "Automatic fallback to Alpha Vantage when FMP flag is on but key missing",
+      "Rate limiting: per-user buckets for AV and FMP",
     ],
-    tech: ["Yahoo Finance API", "Alpha Vantage API", "Server-side fetch"],
+    tech: ["Yahoo Finance API", "Alpha Vantage API", "Financial Modeling Prep", "Server-side fetch"],
     skillFile: ".cursor/skills/engineer-integrations/SKILL.md",
   },
   {

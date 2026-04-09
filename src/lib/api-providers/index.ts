@@ -3,7 +3,7 @@ import type { StockDataProvider } from "./types";
 import { YahooProvider } from "./yahoo";
 import { AlphaVantageProvider } from "./alphavantage";
 import { getGlobalAlphaVantageApiKey } from "@/lib/db";
-import { getSessionFromRequest } from "@/lib/auth/session";
+import { getPremiumMarketDataFromRequest } from "@/lib/market-data/resolve-provider";
 
 export type ApiProviderName = "yahoo" | "alphavantage";
 
@@ -39,20 +39,14 @@ export async function getProviderFromRequest(_request: NextRequest): Promise<Sto
 }
 
 /**
- * Returns an Alpha Vantage provider for Pro users when a global key is configured.
- * Used only by routes that need AV-exclusive data (intelligence, news sentiment, etc.).
+ * Returns a premium market data provider (FMP when rollout flags say so, else Alpha Vantage)
+ * for Pro users when a global key is configured.
  */
 export async function getAlphaVantageFromRequest(
   request: NextRequest
-): Promise<AlphaVantageProvider | null> {
-  const session = await getSessionFromRequest(request);
-  const avKey = getGlobalAlphaVantageApiKey();
-  if (session?.plan !== "pro" || !avKey) return null;
-  try {
-    return new AlphaVantageProvider(avKey);
-  } catch {
-    return null;
-  }
+): Promise<StockDataProvider | null> {
+  const resolved = await getPremiumMarketDataFromRequest(request, "intelligence");
+  return resolved?.provider ?? null;
 }
 
 export type { StockDataProvider, CompanyOverview } from "./types";

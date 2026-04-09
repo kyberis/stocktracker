@@ -72,12 +72,12 @@ import BlurredProSection from "@/components/BlurredProSection";
 
 export default function CryptoMarket() {
   const { user } = useAuth();
-  const { hasGlobalAvKey } = useSettings();
+  const { hasPremiumMarketData } = useSettings();
   const { t, language } = useI18n();
   const { isDark } = useTheme();
 
   const isPro = user?.plan === "pro";
-  const canAccessPro = isPro && hasGlobalAvKey;
+  const canAccessPro = isPro && hasPremiumMarketData;
 
   const [selectedCoin, setSelectedCoin] = useState("BTC");
   const [tickers, setTickers] = useState<NormalizedCryptoTicker[]>([]);

@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useI18n } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { convertToEUR, formatCurrency } from "@/lib/utils";
-import type { DividendEvent } from "@/lib/api-providers/alphavantage";
+import type { DividendEvent } from "@/lib/api-providers/types";
 
 export default function ExDividendCalendar() {
   const { t } = useI18n();

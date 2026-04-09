@@ -1,8 +1,8 @@
 import { NextRequest } from "next/server";
-import { getAlphaVantageFromRequest } from "@/lib/api-providers";
 import { jsonWithCallCount } from "@/lib/api-providers/response";
 import { requireFeatureAccess, requireRateLimit } from "@/lib/auth/guards";
-import { recordAvUsageAsync } from "@/lib/rate-limit";
+import { getPremiumMarketDataFromRequest } from "@/lib/market-data/resolve-provider";
+import { recordMarketDataUsageAsync } from "@/lib/market-data/record-usage";
 import { withMetrics } from "@/lib/with-metrics";
 import { deferTask } from "@/lib/task-runner";
 
@@ -25,16 +25,18 @@ export const GET = withMetrics("/api/intelligence", async (request: NextRequest)
     );
   }
 
-  const provider = await getAlphaVantageFromRequest(request);
+  const resolved = await getPremiumMarketDataFromRequest(request, "intelligence");
 
-  if (!provider) {
+  if (!resolved) {
     return Response.json(
-      { error: "Alpha Intelligence data requires a Pro subscription with Alpha Vantage configured" },
+      { error: "Premium market data requires Pro and a configured market data API key" },
       { status: 400 }
     );
   }
 
-  const rl = await requireRateLimit(request, "alphavantage");
+  const { provider, backend } = resolved;
+
+  const rl = await requireRateLimit(request, backend === "fmp" ? "fmp" : "alphavantage");
   if (rl.error) return rl.error;
   const rateLimitUserId = rl.session?.userId ?? null;
 
@@ -81,7 +83,7 @@ export const GET = withMetrics("/api/intelligence", async (request: NextRequest)
     return jsonWithCallCount(provider, { error: "Failed to fetch data" }, { status: 500 });
   } finally {
     if (rateLimitUserId && provider.callCount) {
-      deferTask(() => recordAvUsageAsync(rateLimitUserId, provider.callCount!));
+      deferTask(() => recordMarketDataUsageAsync(rateLimitUserId, backend, provider.callCount!));
     }
   }
 });

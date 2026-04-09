@@ -1,4 +1,5 @@
-const FMP_BASE = "https://financialmodelingprep.com/stable";
+export const FMP_STABLE_BASE = "https://financialmodelingprep.com/stable";
+const FMP_BASE = FMP_STABLE_BASE;
 
 export interface FmpEarningsEvent {
   date: string;

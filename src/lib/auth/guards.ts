@@ -5,7 +5,7 @@ import { findUserById, getAiUsage, getAiTokenUsage, trackEvent, updateLastActive
 import { canAccessFeature, effectivePlan } from "@/lib/subscription";
 import type { SubscriptionFeature } from "@/lib/types";
 import { paywallHitsTotal, rateLimitHitsTotal } from "@/lib/metrics";
-import { checkAvRateLimit, checkAiRateLimit, checkAiImportRateLimit } from "@/lib/rate-limit";
+import { checkAvRateLimit, checkFmpRateLimit, checkAiRateLimit, checkAiImportRateLimit } from "@/lib/rate-limit";
 import type { RateLimitProvider } from "@/lib/platform-config";
 
 const lastActiveCache = new Map<string, number>();
@@ -123,6 +123,8 @@ export async function requireRateLimit(
 
   if (provider === "alphavantage") {
     result = await checkAvRateLimit(session.userId);
+  } else if (provider === "fmp") {
+    result = await checkFmpRateLimit(session.userId);
   } else if (provider === "openai") {
     const user = await findUserById(session.userId);
     const plan = effectivePlan(user?.plan || "free", user?.plan_expires_at || "");
@@ -137,7 +139,7 @@ export async function requireRateLimit(
 
   rateLimitHitsTotal.inc({ provider });
 
-  const retryAfter = provider === "alphavantage" ? 60 : 86400;
+  const retryAfter = provider === "alphavantage" || provider === "fmp" ? 60 : 86400;
   const res = NextResponse.json(
     {
       error: "Rate limit exceeded",

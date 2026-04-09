@@ -12,6 +12,9 @@ export const PLATFORM_LIMITS = {
   /** Per-user AV budget per minute. Prevents a single user hogging the pool. */
   AV_PER_USER_PER_MINUTE: 15,
 
+  /** Per-user FMP budget per minute (mirrors AV until tuned for plan tier). */
+  FMP_PER_USER_PER_MINUTE: 15,
+
   /** Max AI analysis calls per day for Pro users (legacy call-count, kept for metrics). */
   AI_PRO_DAILY_LIMIT: 30,
 
@@ -113,4 +116,4 @@ export const PLATFORM_LIMITS = {
   REFERRAL_REWARD_DAYS: 30,
 } as const;
 
-export type RateLimitProvider = "alphavantage" | "openai" | "openai_import" | "support_chat";
+export type RateLimitProvider = "alphavantage" | "fmp" | "openai" | "openai_import" | "support_chat";

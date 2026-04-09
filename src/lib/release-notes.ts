@@ -17,6 +17,28 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.77.5",
+    date: "2026-04-09",
+    title: "Market data rollout",
+    titleTranslations: { es: "Despliegue de datos de mercado" },
+    changes: [
+      {
+        type: "improvement",
+        text: "Premium market data can use Financial Modeling Prep (FMP) behind the scenes: admins enable per-surface rollout flags, the app no longer exposes a provider in search URLs, and settings show when FMP or Alpha Vantage is configured. Privacy Policy lists FMP as a processor.",
+        translations: {
+          es: "Los datos de mercado premium pueden usar Financial Modeling Prep (FMP) internamente: los administradores activan banderas por superficie, la app ya no expone el proveedor en las URLs de búsqueda y los ajustes indican si FMP o Alpha Vantage está configurado. La política de privacidad incluye a FMP como encargado del tratamiento.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Admin → Feature flags now shows the \"Market data (FMP)\" section so rollout toggles are visible.",
+        translations: {
+          es: "Administración → Banderas de función muestra la sección «Datos de mercado (FMP)» para que las opciones de despliegue sean visibles.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.77.4",
     date: "2026-04-09",
     title: "Saved strategies",

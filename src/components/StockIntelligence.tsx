@@ -28,7 +28,7 @@ interface StockIntelligenceProps {
 }
 
 export default function StockIntelligence({ ticker, exchange }: StockIntelligenceProps) {
-  const { hasGlobalAvKey, getApiHeaders } = useSettings();
+  const { hasPremiumMarketData, getApiHeaders } = useSettings();
   const { holdings } = usePortfolio();
   const { user } = useAuth();
   const { t, language } = useI18n();
@@ -69,7 +69,7 @@ export default function StockIntelligence({ ticker, exchange }: StockIntelligenc
 
   const marketStatus = exchange ? getMarketStatus(exchange, now) : null;
   const isFree = user?.plan !== "pro";
-  const canAccessPremium = !isFree && hasGlobalAvKey;
+  const canAccessPremium = !isFree && hasPremiumMarketData;
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 60_000);

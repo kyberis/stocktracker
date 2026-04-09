@@ -381,9 +381,11 @@ function CapacityCard() {
 
   const capPercent = capacity ? Math.round((capacity.currentCount / capacity.maxCount) * 100) : 0;
   const avEntries = rateLimits.filter((r) => r.provider === "alphavantage");
+  const fmpEntries = rateLimits.filter((r) => r.provider === "fmp");
   const aiEntries = rateLimits.filter((r) => r.provider === "openai" || r.provider === "openai_import");
 
   const totalAvCalls = avEntries.reduce((sum, e) => sum + e.callCount, 0);
+  const totalFmpCalls = fmpEntries.reduce((sum, e) => sum + e.callCount, 0);
   const totalAiCalls = aiEntries.reduce((sum, e) => sum + e.callCount, 0);
 
   return (
@@ -422,13 +424,20 @@ function CapacityCard() {
       )}
 
       {/* Provider Usage Summary */}
-      {(avEntries.length > 0 || aiEntries.length > 0) && (
-        <div className="grid grid-cols-2 gap-3">
+      {(avEntries.length > 0 || fmpEntries.length > 0 || aiEntries.length > 0) && (
+        <div className={`grid gap-3 ${fmpEntries.length > 0 ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-2"}`}>
           <div className="rounded-lg bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 p-3">
             <p className="text-[10px] uppercase tracking-wide text-emerald-600 dark:text-emerald-400 font-medium">Alpha Vantage</p>
             <p className="text-lg font-bold text-emerald-700 dark:text-emerald-300 mt-0.5">{totalAvCalls}</p>
             <p className="text-[10px] text-emerald-600/70 dark:text-emerald-400/70">{avEntries.length} user{avEntries.length !== 1 ? "s" : ""}</p>
           </div>
+          {fmpEntries.length > 0 && (
+            <div className="rounded-lg bg-teal-50 dark:bg-teal-500/10 border border-teal-200 dark:border-teal-500/20 p-3">
+              <p className="text-[10px] uppercase tracking-wide text-teal-600 dark:text-teal-400 font-medium">FMP</p>
+              <p className="text-lg font-bold text-teal-700 dark:text-teal-300 mt-0.5">{totalFmpCalls}</p>
+              <p className="text-[10px] text-teal-600/70 dark:text-teal-400/70">{fmpEntries.length} user{fmpEntries.length !== 1 ? "s" : ""}</p>
+            </div>
+          )}
           <div className="rounded-lg bg-violet-50 dark:bg-violet-500/10 border border-violet-200 dark:border-violet-500/20 p-3">
             <p className="text-[10px] uppercase tracking-wide text-violet-600 dark:text-violet-400 font-medium">AI / Import</p>
             <p className="text-lg font-bold text-violet-700 dark:text-violet-300 mt-0.5">{totalAiCalls}</p>
@@ -511,7 +520,35 @@ function CapacityCard() {
         </div>
       )}
 
-      {avEntries.length === 0 && aiEntries.length === 0 && (
+      {fmpEntries.length > 0 && (
+        <div>
+          <p className="text-xs font-medium text-gray-700 dark:text-slate-300 mb-2">FMP usage (current window)</p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="text-left text-gray-500 dark:text-slate-400">
+                  <th className="pb-1 pr-4">User</th>
+                  <th className="pb-1 pr-4">Plan</th>
+                  <th className="pb-1 pr-4">Calls</th>
+                  <th className="pb-1">Window</th>
+                </tr>
+              </thead>
+              <tbody>
+                {fmpEntries.map((e) => (
+                  <tr key={e.userId + e.provider} className="text-gray-700 dark:text-slate-300">
+                    <td className="py-0.5 pr-4 font-mono">{e.username}</td>
+                    <td className="py-0.5 pr-4">{e.plan}</td>
+                    <td className="py-0.5 pr-4">{e.callCount}</td>
+                    <td className="py-0.5 text-gray-500 dark:text-slate-400">{e.windowStart}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {avEntries.length === 0 && fmpEntries.length === 0 && aiEntries.length === 0 && (
         <p className="text-xs text-gray-500 dark:text-slate-400">No rate limit usage data yet.</p>
       )}
     </div>
