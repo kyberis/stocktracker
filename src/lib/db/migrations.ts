@@ -3078,6 +3078,33 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       }
     },
   },
+  {
+    version: 103,
+    description: "Investment strategies: saved target/stop/purchase reference per ticker linked to price alerts",
+    up: async (client: Client) => {
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS investment_strategies (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          ticker TEXT NOT NULL,
+          exchange TEXT NOT NULL DEFAULT '',
+          name TEXT NOT NULL DEFAULT '',
+          purchase_price REAL NOT NULL DEFAULT 0,
+          currency TEXT NOT NULL DEFAULT 'USD',
+          target_price REAL NOT NULL DEFAULT 0,
+          stop_loss_price REAL NOT NULL DEFAULT 0,
+          target_alert_id TEXT NOT NULL DEFAULT '',
+          stop_alert_id TEXT NOT NULL DEFAULT '',
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+      `);
+      await client.execute(`
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_investment_strategies_user_ticker_ex
+        ON investment_strategies(user_id, ticker, exchange);
+      `);
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

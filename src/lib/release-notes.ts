@@ -17,6 +17,43 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.77.4",
+    date: "2026-04-09",
+    title: "Saved strategies",
+    titleTranslations: { es: "Estrategias guardadas" },
+    changes: [
+      {
+        type: "feature",
+        text: "Strategies you build in Tools → Strategies are now saved: purchase reference, target and stop prices, and links to the alerts you create—reload a ticker anytime from your saved list. Data is described in the Privacy Policy.",
+        translations: {
+          es: "Las estrategias que creas en Herramientas → Estrategias se guardan: precio de compra de referencia, objetivo y stop, y enlaces a las alertas creadas; puedes volver a abrir un valor desde la lista guardada. Los datos se describen en la Política de privacidad.",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.77.3",
+    date: "2026-04-09",
+    title: "Strategies tool",
+    titleTranslations: { es: "Herramienta Estrategias" },
+    changes: [
+      {
+        type: "feature",
+        text: "New Strategies tool under Tools: search a stock, see a live quote and moat valuation snapshot, set take-profit and optional stop-loss levels, and create matching price alerts (delivery uses your notification channels from Profile). A static design preview remains at /preview/strategies.",
+        translations: {
+          es: "Nueva herramienta Estrategias en Herramientas: busca un valor, cotización en vivo y resumen de moat, define toma de beneficios y stop-loss opcional, y crea alertas de precio (el envío usa tus canales en Perfil). Vista de diseño estática en /preview/strategies.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Strategies: target price is explicit (with analyst consensus shown on the quote row when available); the target field prefills from analyst consensus when empty.",
+        translations: {
+          es: "Estrategias: el precio objetivo es explícito (consenso de analistas en la fila de cotización si hay datos); el campo se rellena con el consenso si está vacío.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.77.2",
     date: "2026-04-08",
     title: "Moat report tags",

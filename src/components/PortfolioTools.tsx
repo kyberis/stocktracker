@@ -37,6 +37,7 @@ const PortfolioSimulator = dynamic(() => import("./PortfolioSimulator"), { ssr: 
 const FinancialPlanner = dynamic(() => import("./planning/FinancialPlanner"), { ssr: false });
 const PortfolioScorePage = dynamic(() => import("./PortfolioScorePage"), { ssr: false });
 const MoatEvaluationPicker = dynamic(() => import("./MoatEvaluationPicker"), { ssr: false });
+const StrategiesTool = dynamic(() => import("./StrategiesTool"), { ssr: false });
 
 const HUB_CATEGORY_LABEL: Record<ToolHubCategory, TranslationKey> = {
   portfolioActivity: "toolsHubCategoryPortfolioActivity",
@@ -316,6 +317,7 @@ export default function PortfolioTools({ initialTab }: PortfolioToolsProps) {
               {activeTab === "planning" && <FinancialPlanner />}
               {activeTab === "score" && <PortfolioScorePage />}
               {activeTab === "evaluation" && <MoatEvaluationPicker />}
+              {activeTab === "strategies" && <StrategiesTool />}
             </div>
           </Suspense>
         </ErrorBoundary>

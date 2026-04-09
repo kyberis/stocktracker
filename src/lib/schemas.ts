@@ -312,7 +312,10 @@ export const createAlertSchema = z.object({
   percentValue: z.number().nonnegative("Percent value must be non-negative").optional().default(0),
   isPortfolioWide: z.boolean().optional().default(false),
   portfolioId: z.string().optional().default(""),
-  source: z.enum(["alerts-tab", "watchlist", "stock-row", "stock-drawer", "profile"]).optional().default("alerts-tab"),
+  source: z
+    .enum(["alerts-tab", "watchlist", "stock-row", "stock-drawer", "profile", "strategies-tool"])
+    .optional()
+    .default("alerts-tab"),
 }).refine(
   (data) => {
     if (data.alertType === "threshold") return data.ticker.length > 0 && data.threshold > 0;
@@ -325,6 +328,18 @@ export const createAlertSchema = z.object({
 export const toggleAlertSchema = z.object({
   id: z.string().min(1, "Alert ID is required"),
   active: z.boolean(),
+});
+
+export const upsertInvestmentStrategySchema = z.object({
+  ticker: z.string().min(1),
+  exchange: z.string(),
+  name: z.string().optional().default(""),
+  purchasePrice: z.number().nonnegative().optional().default(0),
+  currency: z.string().min(1).default("USD"),
+  targetPrice: z.number().nonnegative().optional().default(0),
+  stopLossPrice: z.number().nonnegative().optional().default(0),
+  targetAlertId: z.string().optional().default(""),
+  stopAlertId: z.string().optional().default(""),
 });
 
 /* ── Notification Preferences ──────────────────────────────── */

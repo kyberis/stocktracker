@@ -58,6 +58,23 @@ export interface PriceAlert {
   portfolioId: string;
 }
 
+/** Saved row from Tools → Strategies (reference prices + links to threshold alerts). */
+export interface InvestmentStrategy {
+  id: string;
+  userId: string;
+  ticker: string;
+  exchange: string;
+  name: string;
+  purchasePrice: number;
+  currency: string;
+  targetPrice: number;
+  stopLossPrice: number;
+  targetAlertId: string;
+  stopAlertId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface PushSubscription {
   id: string;
   endpoint: string;

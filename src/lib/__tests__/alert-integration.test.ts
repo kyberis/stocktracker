@@ -65,6 +65,22 @@ describe("createAlertSchema — source field", () => {
     }
   });
 
+  it("accepts source 'strategies-tool'", () => {
+    const result = createAlertSchema.safeParse({
+      ticker: "NVDA",
+      name: "NVIDIA",
+      condition: "above",
+      threshold: 900,
+      currency: "USD",
+      alertType: "threshold",
+      source: "strategies-tool",
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.source).toBe("strategies-tool");
+    }
+  });
+
   it("accepts source 'profile' for portfolio-wide alerts", () => {
     const result = createAlertSchema.safeParse({
       condition: "above",

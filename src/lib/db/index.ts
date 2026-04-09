@@ -224,6 +224,14 @@ export {
   getUserHoldingsForAlerts,
 } from "./alerts";
 
+export type { UpsertInvestmentStrategyInput } from "./investment-strategies";
+export {
+  listInvestmentStrategies,
+  getInvestmentStrategyByTickerExchange,
+  upsertInvestmentStrategy,
+  deleteInvestmentStrategy,
+} from "./investment-strategies";
+
 export {
   checkAndIncrementRateLimit,
   recordRateLimitUsage,

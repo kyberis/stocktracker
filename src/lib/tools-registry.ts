@@ -15,7 +15,8 @@ export type ToolTabId =
   | "simulator"
   | "planning"
   | "score"
-  | "evaluation";
+  | "evaluation"
+  | "strategies";
 
 /** Which user-setting or flag controls hub card visibility (matches former `toolFlagMap`). */
 export type ToolHubVisibilitySource =
@@ -133,6 +134,18 @@ export const TOOLS_CATALOG: ToolCatalogEntry[] = [
     gradient: "from-violet-500 to-purple-600",
     hubVisibility: "toolWatchlistEnabled",
     nativeInteractive: true,
+    hubCategory: "analysis",
+  },
+  {
+    id: "strategies",
+    route: { kind: "dynamic" },
+    labelKey: "strategiesNav",
+    descKey: "toolDescStrategies",
+    icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z",
+    gradient: "from-fuchsia-500 to-violet-600",
+    tierBadge: "pro",
+    hubVisibility: "always",
+    nativeInteractive: false,
     hubCategory: "analysis",
   },
   {

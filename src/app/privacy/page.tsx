@@ -128,6 +128,13 @@ export default function PrivacyPolicyPage() {
                 these tags are chosen by you and stored with the saved report.
               </li>
               <li>
+                <strong className="text-slate-800">Saved investment strategies (Tools → Strategies)</strong> — if
+                you create price alerts from the Strategies tool, we store your reference purchase price,
+                target price, optional stop-loss level, ticker, exchange, and links to the associated
+                threshold alerts so you can reopen your plan later. This data is for your convenience only
+                and is not investment advice.
+              </li>
+              <li>
                 <strong className="text-slate-800">Broker connection credentials (optional)</strong> —
                 if you connect your Interactive Brokers account via the Flex Web
                 Service API, your access token and query ID are encrypted with
