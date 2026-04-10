@@ -244,6 +244,26 @@ function FeedbackTab() {
                 className="w-full text-xs min-h-[120px] resize-y font-mono"
                 placeholder="HTML email body…"
               />
+              <div className="space-y-1.5">
+                <p className="text-xs font-medium text-amber-900/90 dark:text-amber-200/90">
+                  Preview (renders like the sent email)
+                </p>
+                {(completionDraftMap[item.id] ?? "").trim() ? (
+                  <div className="rounded-lg border border-amber-200/80 dark:border-amber-500/25 overflow-hidden bg-white shadow-sm">
+                    <iframe
+                      title="Completion email HTML preview"
+                      srcDoc={completionDraftMap[item.id] ?? ""}
+                      className="w-full min-h-[min(480px,70vh)] border-0 block"
+                      sandbox="allow-popups allow-popups-to-escape-sandbox"
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
+                ) : (
+                  <p className="text-xs text-amber-800/70 dark:text-amber-300/70 py-2 px-1">
+                    No HTML yet — paste above or wait for the draft when the linked task is completed.
+                  </p>
+                )}
+              </div>
               <button
                 type="button"
                 onClick={() => handleSendCompletion(item.id)}
