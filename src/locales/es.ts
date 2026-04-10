@@ -735,6 +735,9 @@ const es: TranslationStrings = {
   assetAllocation: "Distribución de Activos",
   allocation: "Asignación",
   unclassified: "Sin clasificar",
+  etfSectorLookthroughLabel: "Usar desglose sectorial del ETF",
+  etfSectorLookthroughHint:
+    "Distribuye cada ETF entre sectores según datos del proveedor (puede desactualizarse). Desactiva para una etiqueta de sector por posición.",
   editClassification: "Editar Clasificación",
   rebalancing: "Rebalanceo",
   targetAllocation: "Asignación Objetivo",

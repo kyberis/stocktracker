@@ -17,6 +17,35 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.77.6",
+    date: "2026-04-09",
+    title: "ETF allocation and dividend calendar",
+    titleTranslations: { es: "Asignación de ETF y calendario de dividendos" },
+    changes: [
+      {
+        type: "improvement",
+        text: "Sector allocation (Taxonomy and Rebalancing) can use ETF sector look-through from fund data: toggle “Use ETF sector breakdown” to split ETFs across underlying sectors instead of a single label per position.",
+        translations: {
+          es: "La asignación por sector (Taxonomía y Rebalanceo) puede usar el desglose sectorial del ETF: activa «Usar desglose sectorial del ETF» para repartir los fondos entre sectores subyacentes en lugar de una sola etiqueta por posición.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Ex-dividend calendar: tickers that Yahoo does not return now fall back to premium or Alpha Vantage per ticker, so ETFs are no longer skipped when other holdings already have Yahoo calendar events.",
+        translations: {
+          es: "Calendario ex-dividendos: los valores que Yahoo no devuelve usan ahora el respaldo premium o Alpha Vantage por ticker, de modo que los ETF no se omiten cuando otras posiciones ya tienen eventos de Yahoo.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Playwright E2E: when the test runner starts the app (E2E=1), signup/login skip Redis rate limits and Turnstile so production-mode next start can run the full suite locally; disabled on Vercel production.",
+        translations: {
+          es: "Playwright E2E: si el runner arranca la app (E2E=1), registro e inicio omiten límites Redis y Turnstile para poder ejecutar la suite con next start en modo producción; desactivado en producción de Vercel.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.77.5",
     date: "2026-04-09",
     title: "Market data rollout",

@@ -7,7 +7,16 @@ import { usePortfolio } from "@/lib/portfolio-context";
 import { convertToEUR, resolveQuoteCurrency, formatCurrency } from "@/lib/utils";
 import BlurredProSection from "./BlurredProSection";
 import AiMarkdown from "./AiMarkdown";
-import type { Holding, QuoteData, RebalanceTarget, RebalanceDrift, RebalanceMove } from "@/lib/types";
+import type {
+  Holding,
+  QuoteData,
+  RebalanceTarget,
+  RebalanceDrift,
+  RebalanceMove,
+  ETFSectorWeight,
+} from "@/lib/types";
+import { computeTaxonomyAllocationsWithEtfSectorLookthrough } from "@/lib/services/taxonomy";
+import { holdingIsEtfLike } from "@/lib/services/etf-lookthrough";
 
 const PIE_COLORS = [
   "#10b981", "#6366f1", "#f59e0b", "#ef4444", "#8b5cf6",
@@ -69,6 +78,8 @@ export default function RebalancingView() {
   const [category, setCategory] = useState<Category>("sector");
   const [enriching, setEnriching] = useState(false);
   const enrichAttempted = useRef(false);
+  const [etfSectorLookthrough, setEtfSectorLookthrough] = useState(true);
+  const [etfSectorWeights, setEtfSectorWeights] = useState<Record<string, ETFSectorWeight[] | null>>({});
 
   useEffect(() => {
     fetch("/api/rebalance-targets").then((r) => r.ok ? r.json() : []).then(setTargets);
@@ -86,7 +97,59 @@ export default function RebalancingView() {
       .finally(() => setEnriching(false));
   }, [holdings, refreshHoldings]);
 
+  useEffect(() => {
+    if (category !== "sector" || !etfSectorLookthrough) return;
+    const tickers = [
+      ...new Set(
+        holdings
+          .filter((h) => holdingIsEtfLike(h, quotes[h.ticker]))
+          .map((h) => h.ticker.toUpperCase()),
+      ),
+    ];
+    let cancelled = false;
+    if (tickers.length === 0) {
+      queueMicrotask(() => {
+        if (!cancelled) setEtfSectorWeights({});
+      });
+      return () => {
+        cancelled = true;
+      };
+    }
+    fetch("/api/etf/sector-weights", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tickers }),
+    })
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((data: { byTicker?: Record<string, ETFSectorWeight[] | null> }) => {
+        if (!cancelled && data?.byTicker) setEtfSectorWeights(data.byTicker);
+      })
+      .catch(() => {
+        if (!cancelled) setEtfSectorWeights({});
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [holdings, quotes, category, etfSectorLookthrough]);
+
   const allocations = useMemo((): BucketAlloc[] => {
+    if (category === "sector" && etfSectorLookthrough) {
+      const tax = computeTaxonomyAllocationsWithEtfSectorLookthrough(
+        holdings,
+        quotes,
+        exchangeRates,
+        "sector",
+        t("unclassified"),
+        etfSectorWeights,
+        true,
+      );
+      return tax.map((a) => ({
+        label: a.label,
+        valueEUR: a.valueEUR,
+        percent: a.percent,
+        color: a.color,
+      }));
+    }
     const buckets: Record<string, number> = {};
     let total = 0;
     holdings.forEach((h) => {
@@ -117,7 +180,7 @@ export default function RebalancingView() {
         percent: total > 0 ? (valueEUR / total) * 100 : 0,
         color: PIE_COLORS[i % PIE_COLORS.length],
       }));
-  }, [holdings, quotes, exchangeRates, category, t]);
+  }, [holdings, quotes, exchangeRates, category, t, etfSectorLookthrough, etfSectorWeights]);
 
   const totalValue = useMemo(
     () => allocations.reduce((s, a) => s + a.valueEUR, 0),
@@ -179,6 +242,8 @@ export default function RebalancingView() {
         isPro={isPro}
         language={language}
         enriching={enriching}
+        etfSectorLookthrough={etfSectorLookthrough}
+        onEtfSectorLookthroughChange={setEtfSectorLookthrough}
       />
       <ExposureAnalysis drifts={drifts} isPro={isPro} />
       <RebalancingActions
@@ -208,7 +273,18 @@ export default function RebalancingView() {
 /* ═══════════════════════════════════════════════════════════ */
 
 function AllocationOverview({
-  allocations, drifts, totalValue, category, onCategoryChange, onSaveTarget, baseCurrency, isPro, language, enriching,
+  allocations,
+  drifts,
+  totalValue,
+  category,
+  onCategoryChange,
+  onSaveTarget,
+  baseCurrency,
+  isPro,
+  language,
+  enriching,
+  etfSectorLookthrough,
+  onEtfSectorLookthroughChange,
 }: {
   allocations: BucketAlloc[];
   drifts: (RebalanceDrift & { color: string })[];
@@ -220,6 +296,8 @@ function AllocationOverview({
   isPro: boolean;
   language: string;
   enriching: boolean;
+  etfSectorLookthrough: boolean;
+  onEtfSectorLookthroughChange: (v: boolean) => void;
 }) {
   const { t } = useI18n();
   const categories: { key: Category; label: string }[] = [
@@ -359,6 +437,20 @@ function AllocationOverview({
             </button>
           ))}
         </div>
+        {category === "sector" && (
+          <label className="flex items-start gap-2 ml-7 mt-2 max-w-lg text-left cursor-pointer">
+            <input
+              type="checkbox"
+              checked={etfSectorLookthrough}
+              onChange={(e) => onEtfSectorLookthroughChange(e.target.checked)}
+              className="mt-0.5 rounded border-gray-300 dark:border-slate-600"
+            />
+            <span className="text-[10px] text-gray-600 dark:text-slate-400">
+              <span className="font-medium text-gray-800 dark:text-slate-200">{t("etfSectorLookthroughLabel")}</span>
+              <span className="block text-gray-500 dark:text-slate-500 mt-0.5">{t("etfSectorLookthroughHint")}</span>
+            </span>
+          </label>
+        )}
       </div>
 
       {enriching && (

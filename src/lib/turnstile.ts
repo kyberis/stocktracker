@@ -1,3 +1,5 @@
+import { isE2EAuthBypassActive } from "@/lib/e2e-auth-bypass";
+
 const VERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
 
 /**
@@ -5,6 +7,7 @@ const VERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
  * Returns true when Turnstile is not configured (dev/optional).
  */
 export async function verifyTurnstileToken(token: string | null | undefined, ip: string): Promise<boolean> {
+  if (isE2EAuthBypassActive()) return true;
   const secret = process.env.TURNSTILE_SECRET_KEY;
   if (!secret) return true;
   if (!token) return false;

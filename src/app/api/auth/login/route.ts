@@ -12,13 +12,14 @@ import { parseBody } from "@/lib/api-response";
 import { loginSchema } from "@/lib/schemas";
 import { checkLoginRateLimit, getClientIp } from "@/lib/rate-limit";
 import { verifyTurnstileToken } from "@/lib/turnstile";
+import { isE2EAuthBypassActive } from "@/lib/e2e-auth-bypass";
 
 export const POST = withMetrics("/api/auth/login", async (req: NextRequest) => {
   ensureSessionSecret();
 
   const ip = getClientIp(req);
   const isDev = process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test";
-  if (!isDev) {
+  if (!isDev && !isE2EAuthBypassActive()) {
     const rl = await checkLoginRateLimit(ip);
     if (!rl.allowed) {
       return NextResponse.json(

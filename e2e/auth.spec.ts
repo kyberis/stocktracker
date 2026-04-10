@@ -9,7 +9,8 @@ test.describe("Authentication", () => {
   test("shows landing page for unauthenticated users", async ({ page }) => {
     await page.goto("/");
     await expect(page).toHaveURL("/");
-    await expect(page.getByText("Simple and Powerful")).toBeVisible();
+    // "/" rewrites to landing content; hero copy is i18n (EN: "Extra Leaf" + "Portfolio")
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(/Portfolio/i);
   });
 
   test("rejects invalid credentials", async ({ page }) => {

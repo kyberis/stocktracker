@@ -16,6 +16,7 @@ import { verifyTurnstileToken } from "@/lib/turnstile";
 import { createNotification } from "@/lib/db";
 import { welcomeNotification } from "@/lib/notification-templates";
 import { normalizeAttribution, parseFirstTouchAttributionCookie, FIRST_TOUCH_ATTRIBUTION_COOKIE } from "@/lib/attribution";
+import { isE2EAuthBypassActive } from "@/lib/e2e-auth-bypass";
 
 function deriveUsername(email: string): string {
   const prefix = email.split("@")[0].replace(/[^a-zA-Z0-9._-]/g, "");
@@ -27,7 +28,7 @@ export const POST = withMetrics("/api/auth/signup", async (req: NextRequest) => 
 
   const ip = getClientIp(req);
   const isDev = process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test";
-  if (!isDev) {
+  if (!isDev && !isE2EAuthBypassActive()) {
     const rl = await checkSignupRateLimit(ip);
     if (!rl.allowed) {
       return NextResponse.json(

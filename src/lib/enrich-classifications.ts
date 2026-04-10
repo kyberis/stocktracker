@@ -1,10 +1,9 @@
 import { listHoldings, updateHolding } from "@/lib/db";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 import type { Holding } from "@/lib/types";
+import { ETF_NAME_PATTERNS } from "@/lib/services/etf-lookthrough";
 
 const MAX_CONCURRENT = 10;
-
-const ETF_NAME_PATTERNS = /\bETF\b|\bUCITS\b|\biShares\b|\bVanguard\b|\bSPDR\b|\bAmundi\b|\bXtrackers\b|\bInvesco\b|\bWisdomTree\b/i;
 
 /** Best-effort classification from the holding's own metadata when Yahoo
  *  doesn't know the symbol at all. */

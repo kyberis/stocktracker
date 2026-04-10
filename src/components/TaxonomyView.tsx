@@ -1,16 +1,15 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useI18n } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/portfolio-context";
-import { convertToEUR, resolveQuoteCurrency, formatCurrency } from "@/lib/utils";
-import type { TaxonomyAllocation } from "@/lib/types";
-
-const PIE_COLORS = [
-  "#10b981", "#6366f1", "#f59e0b", "#ef4444", "#8b5cf6",
-  "#06b6d4", "#ec4899", "#84cc16", "#f97316", "#14b8a6",
-  "#a855f7", "#64748b",
-];
+import { formatCurrency } from "@/lib/utils";
+import type { TaxonomyAllocation, ETFSectorWeight } from "@/lib/types";
+import {
+  computeTaxonomyAllocations,
+  computeTaxonomyAllocationsWithEtfSectorLookthrough,
+} from "@/lib/services/taxonomy";
+import { holdingIsEtfLike } from "@/lib/services/etf-lookthrough";
 
 type Category = "sector" | "region" | "assetClass" | "assetType";
 
@@ -22,38 +21,59 @@ export default function TaxonomyView() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editVal, setEditVal] = useState("");
   const [autoClassifying, setAutoClassifying] = useState(false);
+  const [etfSectorLookthrough, setEtfSectorLookthrough] = useState(true);
+  const [etfSectorWeights, setEtfSectorWeights] = useState<Record<string, ETFSectorWeight[] | null>>({});
+
+  useEffect(() => {
+    if (category !== "sector" || !etfSectorLookthrough) return;
+    const tickers = [
+      ...new Set(
+        holdings
+          .filter((h) => holdingIsEtfLike(h, quotes[h.ticker]))
+          .map((h) => h.ticker.toUpperCase()),
+      ),
+    ];
+    let cancelled = false;
+    if (tickers.length === 0) {
+      queueMicrotask(() => {
+        if (!cancelled) setEtfSectorWeights({});
+      });
+      return () => {
+        cancelled = true;
+      };
+    }
+    fetch("/api/etf/sector-weights", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tickers }),
+    })
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((data: { byTicker?: Record<string, ETFSectorWeight[] | null> }) => {
+        if (!cancelled && data?.byTicker) setEtfSectorWeights(data.byTicker);
+      })
+      .catch(() => {
+        if (!cancelled) setEtfSectorWeights({});
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [holdings, quotes, category, etfSectorLookthrough]);
 
   const allocations = useMemo((): TaxonomyAllocation[] => {
-    const buckets: Record<string, number> = {};
-    let total = 0;
-
-    holdings.forEach((h) => {
-      const q = quotes[h.ticker];
-      let valueEUR = 0;
-      if (q && q.regularMarketPrice > 0) {
-        const qc = resolveQuoteCurrency(h.displayCurrency, q.currency);
-        valueEUR = convertToEUR(h.shares * q.regularMarketPrice, qc, exchangeRates);
-      }
-      total += valueEUR;
-
-      let label: string;
-      if (category === "assetType") {
-        label = h.assetType === "etf" ? "ETF" : "Stock";
-      } else {
-        label = (h[category] as string) || t("unclassified");
-      }
-      buckets[label] = (buckets[label] || 0) + valueEUR;
-    });
-
-    return Object.entries(buckets)
-      .sort((a, b) => b[1] - a[1])
-      .map(([label, valueEUR], i) => ({
-        label,
-        valueEUR,
-        percent: total > 0 ? (valueEUR / total) * 100 : 0,
-        color: PIE_COLORS[i % PIE_COLORS.length],
-      }));
-  }, [holdings, quotes, exchangeRates, category, t]);
+    const unclassified = t("unclassified");
+    if (category === "sector" && etfSectorLookthrough) {
+      return computeTaxonomyAllocationsWithEtfSectorLookthrough(
+        holdings,
+        quotes,
+        exchangeRates,
+        category,
+        unclassified,
+        etfSectorWeights,
+        true,
+      );
+    }
+    return computeTaxonomyAllocations(holdings, quotes, exchangeRates, category, unclassified);
+  }, [holdings, quotes, exchangeRates, category, t, etfSectorWeights, etfSectorLookthrough]);
 
   const { updateHolding } = usePortfolio();
 
@@ -85,7 +105,6 @@ export default function TaxonomyView() {
   ];
 
   // Build SVG donut chart
-  const total = allocations.reduce((s, a) => s + a.percent, 0);
   let cumulativePercent = 0;
   const donutSegments = allocations.map((a) => {
     const start = cumulativePercent;
@@ -121,20 +140,36 @@ export default function TaxonomyView() {
             </button>
           )}
         </div>
-        <div className="flex gap-1">
-          {categories.map((c) => (
-            <button
-              key={c.key}
-              onClick={() => setCategory(c.key)}
-              className={`text-[10px] font-medium px-2 py-1 rounded-lg transition-colors ${
-                category === c.key
-                  ? "bg-emerald-500 text-white"
-                  : "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300"
-              }`}
-            >
-              {c.label}
-            </button>
-          ))}
+        <div className="flex flex-col items-end gap-2">
+          <div className="flex gap-1">
+            {categories.map((c) => (
+              <button
+                key={c.key}
+                onClick={() => setCategory(c.key)}
+                className={`text-[10px] font-medium px-2 py-1 rounded-lg transition-colors ${
+                  category === c.key
+                    ? "bg-emerald-500 text-white"
+                    : "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300"
+                }`}
+              >
+                {c.label}
+              </button>
+            ))}
+          </div>
+          {category === "sector" && (
+            <label className="flex items-center gap-2 text-[10px] text-gray-600 dark:text-slate-400 cursor-pointer max-w-xs text-right">
+              <input
+                type="checkbox"
+                checked={etfSectorLookthrough}
+                onChange={(e) => setEtfSectorLookthrough(e.target.checked)}
+                className="rounded border-gray-300 dark:border-slate-600"
+              />
+              <span>
+                <span className="font-medium text-gray-800 dark:text-slate-200">{t("etfSectorLookthroughLabel")}</span>
+                <span className="block text-gray-500 dark:text-slate-500 mt-0.5">{t("etfSectorLookthroughHint")}</span>
+              </span>
+            </label>
+          )}
         </div>
       </div>
 

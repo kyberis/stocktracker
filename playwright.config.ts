@@ -15,6 +15,8 @@ export default defineConfig({
   projects: [
     { name: "chromium", use: { ...devices["Desktop Chrome"] } },
   ],
+  // E2E=1: skip Redis auth rate limits + Turnstile for API signup/login (next start is production).
+  // When using E2E_BASE_URL, start the app yourself with E2E=1 (e.g. E2E=1 npm start).
   webServer: process.env.E2E_BASE_URL
     ? undefined
     : {
@@ -22,5 +24,6 @@ export default defineConfig({
         port: 3000,
         timeout: 120_000,
         reuseExistingServer: !process.env.CI,
+        env: { E2E: "1" },
       },
 });

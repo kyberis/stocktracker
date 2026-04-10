@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import YahooFinance from "yahoo-finance2";
 import { requireSession } from "@/lib/auth/guards";
-import { getGlobalAlphaVantageApiKey } from "@/lib/db";
-import { AlphaVantageProvider } from "@/lib/api-providers/alphavantage";
 import { resolvePremiumStockDataProvider } from "@/lib/market-data/resolve-provider";
 import type { DividendEvent } from "@/lib/api-providers/types";
 import { looksLikeIsin } from "@/lib/api-providers/isin-resolver";
@@ -51,6 +49,51 @@ async function fetchDividendsFromYahoo(tickers: string[]): Promise<DividendEvent
   return events;
 }
 
+/** Premium dividend schedule: FMP or Alpha Vantage per {@link resolvePremiumStockDataProvider} (FMP when surface flag + key). */
+async function fetchDividendsFromFallback(
+  userId: string,
+  tickers: string[],
+): Promise<DividendEvent[]> {
+  if (tickers.length === 0) return [];
+  const out: DividendEvent[] = [];
+  try {
+    const resolved = await resolvePremiumStockDataProvider(userId, "dividends");
+    if (resolved?.provider.getDividendSchedule) {
+      const results = await Promise.allSettled(
+        tickers.map((ticker) => resolved.provider.getDividendSchedule!(ticker)),
+      );
+      results.forEach((r) => {
+        if (r.status === "fulfilled") out.push(...r.value);
+      });
+    }
+  } catch (err) {
+    console.error("[ex-dividend] Market data fallback failed:", err instanceof Error ? err.message : err);
+  }
+  return out;
+}
+
+/** Tickers that have at least one upcoming ex-dividend event (symbol match, case-insensitive). */
+function tickersWithEvents(events: DividendEvent[], requested: string[]): Set<string> {
+  const symbols = new Set(events.map((e) => e.symbol.toUpperCase()));
+  const covered = new Set<string>();
+  for (const t of requested) {
+    if (symbols.has(t.toUpperCase())) covered.add(t.toUpperCase());
+  }
+  return covered;
+}
+
+function dedupeEvents(events: DividendEvent[]): DividendEvent[] {
+  const seen = new Set<string>();
+  const out: DividendEvent[] = [];
+  for (const e of events) {
+    const key = `${e.symbol.toUpperCase()}|${e.exDividendDate}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(e);
+  }
+  return out;
+}
+
 export const GET = withMetrics("/api/ex-dividend", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
   if (error) return error;
@@ -83,6 +126,8 @@ export const GET = withMetrics("/api/ex-dividend", async (req: NextRequest) => {
     tickers = tickers.map((t) => isinMap.get(t) ?? t);
   }
 
+  tickers = [...new Set(tickers)];
+
   let events: DividendEvent[] = [];
 
   try {
@@ -91,30 +136,15 @@ export const GET = withMetrics("/api/ex-dividend", async (req: NextRequest) => {
     console.warn("[ex-dividend] Yahoo failed:", err instanceof Error ? err.message : err);
   }
 
-  if (events.length === 0) {
-    try {
-      const resolved = await resolvePremiumStockDataProvider(session.userId, "dividends");
-      if (resolved?.provider.getDividendSchedule) {
-        const results = await Promise.allSettled(
-          tickers.map((ticker) => resolved.provider.getDividendSchedule!(ticker))
-        );
-        results.forEach((r) => {
-          if (r.status === "fulfilled") events.push(...r.value);
-        });
-      } else if (getGlobalAlphaVantageApiKey()) {
-        const provider = new AlphaVantageProvider(getGlobalAlphaVantageApiKey());
-        const results = await Promise.allSettled(
-          tickers.map((ticker) => provider.getDividendSchedule(ticker))
-        );
-        results.forEach((r) => {
-          if (r.status === "fulfilled") events.push(...r.value);
-        });
-      }
-    } catch (err) {
-      console.error("[ex-dividend] Market data fallback failed:", err instanceof Error ? err.message : err);
-    }
+  const covered = tickersWithEvents(events, tickers);
+  const missingTickers = tickers.filter((t) => !covered.has(t.toUpperCase()));
+
+  if (missingTickers.length > 0) {
+    const fallbackEvents = await fetchDividendsFromFallback(session.userId, missingTickers);
+    events = events.concat(fallbackEvents);
   }
 
+  events = dedupeEvents(events);
   events.sort((a, b) => a.exDividendDate.localeCompare(b.exDividendDate));
   return NextResponse.json({ events });
 });

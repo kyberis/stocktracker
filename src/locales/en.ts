@@ -735,6 +735,9 @@ const en: TranslationStrings = {
   allocation: "Allocation",
   assetAllocation: "Asset Allocation",
   unclassified: "Unclassified",
+  etfSectorLookthroughLabel: "Use ETF sector breakdown",
+  etfSectorLookthroughHint:
+    "Splits each ETF across underlying sectors from provider data (may lag fund facts). Turn off to use one sector label per position.",
   editClassification: "Edit Classification",
   rebalancing: "Rebalancing",
   targetAllocation: "Target Allocation",
