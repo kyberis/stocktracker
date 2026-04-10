@@ -4,6 +4,24 @@ import { listCalendarEvents, listHoldings, findUserById } from "@/lib/db";
 import { canAccessFeature } from "@/lib/subscription";
 import { withMetrics } from "@/lib/with-metrics";
 import type { CalendarEvent } from "@/lib/db";
+import { syncFmpCalendarEventTypes, type FmpCalendarSyncType } from "@/lib/market-data/fmp-calendar-sync";
+
+/** Avoid calling FMP on every request when a range truly has no IPO/split rows (empty API result). */
+const FMP_HYDRATE_COOLDOWN_MS = 60 * 60 * 1000;
+const fmpHydrateCooldownUntil = new Map<string, number>();
+
+function fmpHydrateCacheKey(types: FmpCalendarSyncType[], from: string, to: string): string {
+  return `${[...types].sort().join(",")}|${from}|${to}`;
+}
+
+function shouldSkipFmpHydrate(key: string): boolean {
+  const until = fmpHydrateCooldownUntil.get(key);
+  return until != null && Date.now() < until;
+}
+
+function markFmpHydrateCooldown(key: string): void {
+  fmpHydrateCooldownUntil.set(key, Date.now() + FMP_HYDRATE_COOLDOWN_MS);
+}
 
 export const dynamic = "force-dynamic";
 
@@ -104,11 +122,33 @@ export const GET = withMetrics("/api/events", async (req: NextRequest) => {
     }
 
     if (otherTypes.length > 0) {
-      const otherEvents = await listCalendarEvents({
+      let otherEvents = await listCalendarEvents({
         types: otherTypes,
         from,
         to,
       });
+      const fmpSyncable: FmpCalendarSyncType[] = ["economic", "ipo", "splits"];
+      const missingFmpTypes = fmpSyncable.filter(
+        (t) => otherTypes.includes(t) && !otherEvents.some((e) => e.event_type === t)
+      );
+      if (missingFmpTypes.length > 0 && process.env.FMP_API_KEY) {
+        const hydrateKey = fmpHydrateCacheKey(missingFmpTypes, from, to);
+        if (!shouldSkipFmpHydrate(hydrateKey)) {
+          try {
+            const fromDate = new Date(`${from}T12:00:00.000Z`);
+            const toDate = new Date(`${to}T12:00:00.000Z`);
+            await syncFmpCalendarEventTypes(fromDate, toDate, missingFmpTypes);
+            otherEvents = await listCalendarEvents({
+              types: otherTypes,
+              from,
+              to,
+            });
+            markFmpHydrateCooldown(hydrateKey);
+          } catch {
+            /* keep DB-backed rows only; no cooldown so the next request may retry */
+          }
+        }
+      }
       events.push(...otherEvents);
     }
   }

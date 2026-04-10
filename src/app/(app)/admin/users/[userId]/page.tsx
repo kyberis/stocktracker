@@ -493,6 +493,7 @@ export default function AdminUserDetailPage() {
 
   const [resetPwd, setResetPwd] = useState("");
   const [actionMsg, setActionMsg] = useState("");
+  const [impersonating, setImpersonating] = useState(false);
 
   const fetchData = useCallback(async (portfolioId?: string) => {
     setLoading(true);
@@ -598,6 +599,29 @@ export default function AdminUserDetailPage() {
     if (res.ok) router.push("/admin/users");
   };
 
+  const handleImpersonate = async () => {
+    setImpersonating(true);
+    try {
+      const res = await fetch("/api/admin/impersonate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (res.ok) {
+        window.location.href = "/";
+        return;
+      }
+      setActionMsg(typeof json.error === "string" ? json.error : "Could not open session");
+      setTimeout(() => setActionMsg(""), 5000);
+    } catch {
+      setActionMsg("Could not open session");
+      setTimeout(() => setActionMsg(""), 5000);
+    } finally {
+      setImpersonating(false);
+    }
+  };
+
   const handleRoleChange = async (newRole: "admin" | "user") => {
     const res = await fetch("/api/admin/users", {
       method: "POST", headers: { "Content-Type": "application/json" },
@@ -682,9 +706,21 @@ export default function AdminUserDetailPage() {
               )}
             </div>
           </div>
-          <div className="text-right text-xs text-gray-400 dark:text-slate-500 shrink-0">
-            <div>Created {new Date(user.createdAt).toLocaleDateString()}</div>
-            <div>Last active {relativeTime(user.lastActiveAt)}</div>
+          <div className="flex flex-col items-end gap-2 shrink-0">
+            <div className="text-right text-xs text-gray-400 dark:text-slate-500">
+              <div>Created {new Date(user.createdAt).toLocaleDateString()}</div>
+              <div>Last active {relativeTime(user.lastActiveAt)}</div>
+            </div>
+            {user.role !== "admin" && user.username !== "admin" && (
+              <button
+                type="button"
+                onClick={handleImpersonate}
+                disabled={impersonating}
+                className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-violet-600 text-white hover:bg-violet-500 disabled:opacity-50 transition-colors"
+              >
+                {impersonating ? "Opening…" : "Open session as user"}
+              </button>
+            )}
           </div>
         </div>
 

@@ -99,6 +99,7 @@ export async function middleware(req: NextRequest) {
 
   if (
     session.mustChangePassword &&
+    !session.impersonatorUserId &&
     pathname !== "/change-password" &&
     pathname !== "/api/auth/change-password" &&
     pathname !== "/api/auth/logout"
@@ -139,6 +140,7 @@ export async function middleware(req: NextRequest) {
   if (
     !session.onboardingCompleted &&
     session.role !== "admin" &&
+    !session.impersonatorUserId &&
     !ONBOARDING_ALLOWED.has(pathname)
   ) {
     if (pathname.startsWith("/api/")) {

@@ -376,6 +376,8 @@ export const featureDomains: FeatureDomain[] = [
       { method: "GET", path: "/api/admin/grafana-url", auth: "admin", description: "Get Grafana push URL" },
       { method: "GET", path: "/api/admin/rate-limits", auth: "admin", description: "View rate limit status" },
       { method: "POST", path: "/api/admin/reset-data", auth: "admin", description: "Reset user data (seed/empty)" },
+      { method: "POST", path: "/api/admin/impersonate", auth: "admin", description: "Sign in as a non-admin user (support)" },
+      { method: "POST", path: "/api/auth/exit-impersonation", auth: "session", description: "Restore admin session after impersonation" },
     ],
     libs: [
       { path: "src/lib/auth/guards.ts", description: "requireAdmin guard" },

@@ -25,7 +25,7 @@ vi.mock("@/lib/rate-limit", () => ({
 }));
 
 import { getSessionFromRequest } from "./session";
-import { findUserById, getAiUsage, getAiTokenUsage } from "@/lib/db";
+import { findUserById, getAiUsage, getAiTokenUsage, updateLastActive } from "@/lib/db";
 import { canAccessFeature, effectivePlan } from "@/lib/subscription";
 import { checkAvRateLimit, checkAiRateLimit, checkAiImportRateLimit } from "@/lib/rate-limit";
 import { requireSession, requireAdmin, requirePro, requireFeatureAccess, requireRateLimit } from "./guards";
@@ -65,6 +65,13 @@ describe("requireSession", () => {
     expect(error).toBeNull();
     expect(session!.userId).toBe("u1");
   });
+
+  it("does not bump last active while impersonating", async () => {
+    mockGetSession.mockResolvedValue({ ...userSession, impersonatorUserId: "admin-1" });
+    vi.mocked(updateLastActive).mockClear();
+    await requireSession(fakeReq);
+    expect(updateLastActive).not.toHaveBeenCalled();
+  });
 });
 
 describe("requireAdmin", () => {
@@ -87,6 +94,14 @@ describe("requireAdmin", () => {
     const { session, error } = await requireAdmin(fakeReq);
     expect(error).toBeNull();
     expect(session!.role).toBe("admin");
+  });
+
+  it("returns 403 when session is impersonating (defense in depth)", async () => {
+    mockGetSession.mockResolvedValue({ ...adminSession, impersonatorUserId: "should-not-happen" });
+    const { error } = await requireAdmin(fakeReq);
+    expect(error).toBeTruthy();
+    const body = await error!.json();
+    expect(body.error).toBe("Forbidden");
   });
 });
 

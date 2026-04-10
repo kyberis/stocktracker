@@ -22,6 +22,7 @@ import NativePushBridge from "@/components/NativePushBridge";
 import DeviceInterestEnroller from "@/components/DeviceInterestEnroller";
 import ThemeWizard from "@/components/ThemeWizard";
 import EmailVerificationBanner from "@/components/EmailVerificationBanner";
+import ImpersonationBanner from "@/components/ImpersonationBanner";
 import NativeShell from "@/components/NativeShell";
 import SyncConfidenceBanner from "@/components/SyncConfidenceBanner";
 import { CURRENT_VERSION } from "@/lib/release-version";
@@ -62,6 +63,7 @@ function AppShell({ children }: { children: React.ReactNode }) {
       <div className="min-h-screen bg-[#09090b] flex" style={{ fontFamily: "var(--font-primary, inherit)" }}>
         <SidebarNav />
         <div className="flex-1 min-h-screen bg-[#18181b] pb-14 sm:pb-0 overflow-x-hidden">
+          <ImpersonationBanner />
           <EmailVerificationBanner />
           <SyncConfidenceBanner />
           <MarketTickerBar />
@@ -81,6 +83,7 @@ function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen pb-14 sm:pb-0 overflow-x-hidden" style={{ background: "var(--background)", fontFamily: "var(--font-primary, inherit)" }}>
+      <ImpersonationBanner />
       <EmailVerificationBanner />
       <SyncConfidenceBanner />
       <MarketTickerBar />

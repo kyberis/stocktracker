@@ -17,6 +17,36 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.77.8",
+    date: "2026-04-10",
+    title: "Admin impersonation",
+    titleTranslations: { es: "Suplantación de usuario para administradores" },
+    changes: [
+      {
+        type: "feature",
+        text: "Admins can open a real signed-in session as another user from the admin user detail page (non-admin accounts only), with a clear banner and one-click return to the admin panel. Impersonation is audited and does not update the user’s last-active timestamp.",
+        translations: {
+          es: "Los administradores pueden abrir una sesión real como otro usuario desde el detalle de usuario en admin (solo cuentas no administrador), con un banner visible y un clic para volver al panel. La suplantación queda registrada y no actualiza la marca de última actividad del usuario.",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.77.7",
+    date: "2026-04-10",
+    title: "Event calendar FMP hydration",
+    titleTranslations: { es: "Hidratación FMP del calendario de eventos" },
+    changes: [
+      {
+        type: "fix",
+        text: "Economic events, IPOs, and stock splits on the Event Calendar load reliably: when the database had no rows for the selected month, the app now pulls Financial Modeling Prep calendar data on demand (same source as the daily cron), and FMP JSON responses are parsed more defensively.",
+        translations: {
+          es: "Los eventos económicos, OPVs y splits en el calendario cargan de forma fiable: si la base no tenía filas para el mes elegido, la app obtiene ahora los datos del calendario de Financial Modeling Prep bajo demanda (misma fuente que el cron diario) y el JSON de FMP se analiza de forma más robusta.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.77.6",
     date: "2026-04-09",
     title: "ETF allocation and dividend calendar",

@@ -1,14 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { upsertCalendarEventsBatch, deleteStaleEvents } from "@/lib/db";
 import { getGlobalAlphaVantageApiKey, isFeatureEnabled } from "@/lib/db";
-import {
-  fetchEconomicCalendar,
-  fetchIpoCalendar,
-  fetchSplitsCalendar,
-  type FmpEarningsEvent,
-  type FmpEconomicEvent,
-  type FmpIpoEvent,
-} from "@/lib/api-providers/fmp";
+import type { FmpEarningsEvent } from "@/lib/api-providers/fmp";
+import { syncFmpCalendarEventTypes } from "@/lib/market-data/fmp-calendar-sync";
 import { withCronLogging, verifyCronAuth } from "@/lib/cron-logging";
 
 export const dynamic = "force-dynamic";
@@ -146,101 +140,15 @@ const runEventSync = withCronLogging("event-sync", async () => {
     }
   }
 
-  // --- Economic events from FMP ---
+  // --- Economic events, IPO, stock splits from FMP ---
   if (process.env.FMP_API_KEY) {
-    try {
-      const raw = await fetchEconomicCalendar(syncFrom, syncTo);
-      const mapped = raw
-        .filter((e) => e.date.slice(0, 10) >= syncFromStr && e.date.slice(0, 10) <= syncToStr)
-        .map((e) => ({
-          id: `economic:${slugify(e.event)}:${e.date}`,
-          event_type: "economic",
-          symbol: null,
-          name: e.event,
-          event_date: e.date.slice(0, 10),
-          event_time: e.date.length > 10 ? e.date.slice(11, 16) : null,
-          details: JSON.stringify({
-            country: e.country,
-            actual: e.actual,
-            previous: e.previous,
-            estimate: e.estimate,
-            change: e.change,
-            changePercentage: e.changePercentage,
-            impact: e.impact,
-          }),
-        }));
-
-      const BATCH = 50;
-      for (let i = 0; i < mapped.length; i += BATCH) {
-        await upsertCalendarEventsBatch(mapped.slice(i, i + BATCH));
+    for (const kind of ["economic", "ipo", "splits"] as const) {
+      try {
+        const s = await syncFmpCalendarEventTypes(syncFrom, syncTo, [kind]);
+        stats[kind] = s[kind];
+      } catch (e) {
+        stats.errors.push(`${kind}: ${e instanceof Error ? e.message : String(e)}`);
       }
-      stats.economic = mapped.length;
-    } catch (e) {
-      stats.errors.push(`economic: ${e instanceof Error ? e.message : String(e)}`);
-    }
-
-    // --- IPO calendar from FMP ---
-    try {
-      const raw = await fetchIpoCalendar(syncFrom, syncTo);
-      const mapped = raw
-        .filter((e) => e.date >= syncFromStr && e.date <= syncToStr)
-        .map((e) => ({
-          id: `ipo:${e.symbol || slugify(e.company)}:${e.date}`,
-          event_type: "ipo",
-          symbol: e.symbol || null,
-          name: e.company,
-          event_date: e.date,
-          event_time: null,
-          details: JSON.stringify({
-            exchange: e.exchange,
-            priceRange: e.priceRange,
-            shares: e.shares,
-            marketCap: e.marketCap,
-            actions: e.actions,
-          }),
-        }));
-
-      const BATCH = 50;
-      for (let i = 0; i < mapped.length; i += BATCH) {
-        await upsertCalendarEventsBatch(mapped.slice(i, i + BATCH));
-      }
-      stats.ipo = mapped.length;
-    } catch (e) {
-      stats.errors.push(`ipo: ${e instanceof Error ? e.message : String(e)}`);
-    }
-
-    // --- Stock splits from FMP ---
-    try {
-      const raw = await fetchSplitsCalendar(syncFrom, syncTo);
-      const mapped = raw
-        .filter((e) => e.date >= syncFromStr && e.date <= syncToStr && e.symbol)
-        .map((e) => {
-          const isReverse = e.numerator < e.denominator;
-          const ratio = `${e.numerator}:${e.denominator}`;
-          return {
-            id: `splits:${e.symbol}:${e.date}`,
-            event_type: "splits",
-            symbol: e.symbol,
-            name: e.symbol,
-            event_date: e.date,
-            event_time: null,
-            details: JSON.stringify({
-              numerator: e.numerator,
-              denominator: e.denominator,
-              ratio,
-              isReverse,
-              splitType: e.splitType || (isReverse ? "Reverse" : "Forward"),
-            }),
-          };
-        });
-
-      const BATCH = 50;
-      for (let i = 0; i < mapped.length; i += BATCH) {
-        await upsertCalendarEventsBatch(mapped.slice(i, i + BATCH));
-      }
-      stats.splits = mapped.length;
-    } catch (e) {
-      stats.errors.push(`splits: ${e instanceof Error ? e.message : String(e)}`);
     }
   }
 
@@ -265,14 +173,6 @@ export async function GET(req: NextRequest) {
   const denied = verifyCronAuth("event-sync", req.headers.get("authorization"));
   if (denied) return denied;
   return runEventSync();
-}
-
-function slugify(s: string): string {
-  return s
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "")
-    .slice(0, 60);
 }
 
 async function fetchFmpEarnings(from: Date, to: Date): Promise<FmpEarningsEvent[]> {

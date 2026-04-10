@@ -39,10 +39,12 @@ export const GET = withMetrics("/api/auth/me", async (req: NextRequest) => {
   const { session, error } = await requireSession(req);
   if (error || !session) return error;
 
-  const [user, passkeyCount, deviceOn] = await Promise.all([
+  const impersonatorId = session.impersonatorUserId;
+  const [user, passkeyCount, deviceOn, impersonator] = await Promise.all([
     findUserById(session.userId),
     countPasskeysByUserId(session.userId),
     isFeatureEnabledForUser("device_enabled", session.userId),
+    impersonatorId ? findUserById(impersonatorId) : Promise.resolve(null),
   ]);
 
   const storedPlan = user?.plan || session.plan || "free";
@@ -83,6 +85,10 @@ export const GET = withMetrics("/api/auth/me", async (req: NextRequest) => {
       taxResidency: user?.tax_residency || "",
       onboardingCompleted: user?.onboarding_completed === 1,
       trialActivatedAt: user?.trial_activated_at || "",
+      impersonation:
+        impersonatorId && impersonator
+          ? { impersonatorId, impersonatorUsername: impersonator.username }
+          : null,
     },
   });
 });

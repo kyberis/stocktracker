@@ -25,11 +25,26 @@ export interface SessionPayload {
   plan: SubscriptionPlan;
   emailVerified: boolean;
   onboardingCompleted: boolean;
+  /** When set, an admin is viewing the app as this user (see /api/admin/impersonate). */
+  impersonatorUserId?: string;
 }
 
 export async function createSessionToken(payload: SessionPayload): Promise<string> {
   const secret = new TextEncoder().encode(getSessionSecret());
-  return new SignJWT(payload as unknown as Record<string, unknown>)
+  const claims: Record<string, unknown> = {
+    userId: payload.userId,
+    username: payload.username,
+    email: payload.email,
+    role: payload.role,
+    mustChangePassword: payload.mustChangePassword,
+    plan: payload.plan,
+    emailVerified: payload.emailVerified,
+    onboardingCompleted: payload.onboardingCompleted,
+  };
+  if (payload.impersonatorUserId) {
+    claims.impersonatorUserId = payload.impersonatorUserId;
+  }
+  return new SignJWT(claims)
     .setProtectedHeader({ alg: "HS256", typ: "JWT" })
     .setIssuedAt()
     .setExpirationTime(`${SESSION_TTL_SECONDS}s`)
@@ -40,6 +55,9 @@ export async function verifySessionToken(token: string): Promise<SessionPayload 
   try {
     const secret = new TextEncoder().encode(getSessionSecret());
     const { payload } = await jwtVerify(token, secret, { algorithms: ["HS256"] });
+    const impersonatorRaw = payload.impersonatorUserId;
+    const impersonatorUserId =
+      typeof impersonatorRaw === "string" && impersonatorRaw.length > 0 ? impersonatorRaw : undefined;
     return {
       userId: String(payload.userId),
       username: String(payload.username),
@@ -49,6 +67,7 @@ export async function verifySessionToken(token: string): Promise<SessionPayload 
       plan: (payload.plan === "pro" ? "pro" : payload.plan === "starter" ? "starter" : "free") as SubscriptionPlan,
       emailVerified: Boolean(payload.emailVerified),
       onboardingCompleted: Boolean(payload.onboardingCompleted),
+      impersonatorUserId,
     };
   } catch {
     return null;

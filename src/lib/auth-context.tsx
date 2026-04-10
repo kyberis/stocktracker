@@ -36,6 +36,7 @@ interface AuthUser {
   taxResidency: string;
   onboardingCompleted: boolean;
   trialActivatedAt: string;
+  impersonation: { impersonatorId: string; impersonatorUsername: string } | null;
 }
 
 interface AuthContextType {
@@ -43,6 +44,7 @@ interface AuthContextType {
   isLoading: boolean;
   refreshUser: () => Promise<void>;
   logout: () => Promise<void>;
+  exitImpersonation: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -60,7 +62,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       const data = await res.json();
-      setUser(data.user || null);
+      const u = data.user;
+      setUser(
+        u
+          ? { ...u, impersonation: u.impersonation ?? null }
+          : null,
+      );
     } catch {
       setUser(null);
     } finally {
@@ -76,13 +83,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const exitImpersonation = useCallback(async () => {
+    const res = await fetch("/api/auth/exit-impersonation", { method: "POST" });
+    if (!res.ok) return;
+    setUser(null);
+    if (typeof window !== "undefined") {
+      window.location.href = "/admin/users";
+    }
+  }, []);
+
   useEffect(() => {
     refreshUser();
   }, [refreshUser]);
 
   const value = useMemo(
-    () => ({ user, isLoading, refreshUser, logout }),
-    [user, isLoading, refreshUser, logout]
+    () => ({ user, isLoading, refreshUser, logout, exitImpersonation }),
+    [user, isLoading, refreshUser, logout, exitImpersonation]
   );
 
   return (

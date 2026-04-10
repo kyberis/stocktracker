@@ -137,6 +137,10 @@ export const loginSchema = z.object({
   turnstileToken: z.string().optional(),
 });
 
+export const adminImpersonateSchema = z.object({
+  userId: z.string().min(1, "User ID is required"),
+});
+
 export const signupSchema = z.object({
   email: safeEmail,
   password: z.string().min(6, "Password must be at least 6 characters"),

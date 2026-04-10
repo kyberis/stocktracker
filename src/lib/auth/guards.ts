@@ -20,11 +20,13 @@ export async function requireSession(req: NextRequest) {
     };
   }
 
-  const now = Date.now();
-  const lastWrite = lastActiveCache.get(session.userId) ?? 0;
-  if (now - lastWrite > LAST_ACTIVE_THROTTLE_MS) {
-    lastActiveCache.set(session.userId, now);
-    updateLastActive(session.userId).catch(() => {});
+  if (!session.impersonatorUserId) {
+    const now = Date.now();
+    const lastWrite = lastActiveCache.get(session.userId) ?? 0;
+    if (now - lastWrite > LAST_ACTIVE_THROTTLE_MS) {
+      lastActiveCache.set(session.userId, now);
+      updateLastActive(session.userId).catch(() => {});
+    }
   }
 
   return { session, error: null };
@@ -33,6 +35,12 @@ export async function requireSession(req: NextRequest) {
 export async function requireAdmin(req: NextRequest) {
   const { session, error } = await requireSession(req);
   if (error || !session) return { session: null, error: error! };
+  if (session.impersonatorUserId) {
+    return {
+      session: null,
+      error: NextResponse.json({ error: "Forbidden" }, { status: 403 }),
+    };
+  }
   if (session.role !== "admin") {
     return {
       session: null,

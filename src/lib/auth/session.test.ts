@@ -69,6 +69,21 @@ describe("createSessionToken + verifySessionToken", () => {
     const result = await verifySessionToken(token);
     expect(result!.plan).toBe("starter");
   });
+
+  it("round-trips impersonatorUserId", async () => {
+    const token = await createSessionToken({
+      ...validPayload,
+      impersonatorUserId: "admin-uuid",
+    });
+    const result = await verifySessionToken(token);
+    expect(result!.impersonatorUserId).toBe("admin-uuid");
+  });
+
+  it("omits impersonator when not set", async () => {
+    const token = await createSessionToken(validPayload);
+    const result = await verifySessionToken(token);
+    expect(result!.impersonatorUserId).toBeUndefined();
+  });
 });
 
 describe("verifySessionToken", () => {

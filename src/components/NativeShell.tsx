@@ -5,6 +5,7 @@ import MobileTabBar from "./MobileTabBar";
 import CapacitorBridge from "./CapacitorBridge";
 import NativePushBridge from "./NativePushBridge";
 import NativeLoadingBar from "./mobile/NativeLoadingBar";
+import ImpersonationBanner from "./ImpersonationBanner";
 import { useNativePlatform } from "@/lib/use-native";
 
 function NativeAppBar() {
@@ -48,6 +49,7 @@ export default function NativeShell({ children }: { children: React.ReactNode })
         <NativeAppBar />
       </div>
       <div className="flex-1" style={{ background: "var(--background, #f9fafb)" }}>
+        <ImpersonationBanner />
         <Suspense>
           <NativeLoadingBar />
         </Suspense>

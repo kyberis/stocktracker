@@ -80,4 +80,31 @@ test.describe("Admin Panel", () => {
     const body = await res.json();
     expect(body).toHaveProperty("totalEvents");
   });
+
+  test("admin can impersonate a user and exit", async ({ request }) => {
+    await ensureLoggedOut(request);
+    const { userId } = await createTestUser(request);
+    await ensureLoggedOut(request);
+    const ok = await loginAsAdmin(request);
+    if (!ok) test.skip();
+
+    const imp = await request.post("/api/admin/impersonate", {
+      data: { userId },
+    });
+    expect(imp.status()).toBe(200);
+
+    const me = await request.get("/api/auth/me");
+    expect(me.status()).toBe(200);
+    const meBody = await me.json();
+    expect(meBody.user.impersonation).toBeTruthy();
+    expect(meBody.user.id).toBe(userId);
+
+    const exit = await request.post("/api/auth/exit-impersonation");
+    expect(exit.status()).toBe(200);
+
+    const me2 = await request.get("/api/auth/me");
+    const me2Body = await me2.json();
+    expect(me2Body.user.impersonation).toBeNull();
+    expect(me2Body.user.role).toBe("admin");
+  });
 });
