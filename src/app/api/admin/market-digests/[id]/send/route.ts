@@ -10,7 +10,7 @@ import {
   logEmailSend,
   hasEmailBeenSent,
 } from "@/lib/db";
-import { sendEmail } from "@/lib/email";
+import { isMarketingEmailAllowed, sendEmail } from "@/lib/email";
 import { withMetrics } from "@/lib/with-metrics";
 import { getQuotesWithCache, getRatesWithCache } from "@/lib/quote-cache";
 import { convertToEUR, resolveQuoteCurrency } from "@/lib/utils";
@@ -321,6 +321,7 @@ export const POST = withMetrics("/api/admin/market-digests/[id]/send", async (
   let sent = 0;
   let failed = 0;
   let skippedDuplicate = 0;
+  let skippedOptOut = 0;
   const results: { userId: string; email: string; status: string; resendId?: string; error?: string }[] = [];
 
   for (const user of users) {
@@ -333,6 +334,20 @@ export const POST = withMetrics("/api/admin/market-digests/[id]/send", async (
 
     const t = translationMap.get(user.language) || enTranslation;
     const subject = `trefolio Market Insight: ${t.title}`;
+
+    if (!(await isMarketingEmailAllowed(user.id))) {
+      skippedOptOut++;
+      results.push({ userId: user.id, email: user.email, status: "suppressed" });
+      logEmailSend({
+        templateId: digestTemplateId,
+        userId: user.id,
+        emailTo: user.email,
+        subject,
+        bodyHtml: "",
+        status: "suppressed",
+      }).catch(() => {});
+      continue;
+    }
 
     let userStats: PortfolioStats | null = null;
     if (user.defaultPortfolioId) {
@@ -360,7 +375,7 @@ export const POST = withMetrics("/api/admin/market-digests/[id]/send", async (
         userId: user.id,
       });
 
-      const status = result.success ? "sent" : "failed";
+      const status = result.suppressed ? "suppressed" : result.success ? "sent" : "failed";
       const errorMsg = result.error || undefined;
 
       logEmailSend({
@@ -373,7 +388,10 @@ export const POST = withMetrics("/api/admin/market-digests/[id]/send", async (
         status,
       }).catch(() => {});
 
-      if (result.success) {
+      if (result.suppressed) {
+        skippedOptOut++;
+        results.push({ userId: user.id, email: user.email, status: "suppressed" });
+      } else if (result.success) {
         sent++;
         results.push({ userId: user.id, email: user.email, status: "sent", resendId: result.messageId });
       } else {
@@ -397,5 +415,13 @@ export const POST = withMetrics("/api/admin/market-digests/[id]/send", async (
   }
 
   await markDigestEmailSent(id);
-  return NextResponse.json({ ok: true, sent, failed, skippedDuplicate, total: users.length, results });
+  return NextResponse.json({
+    ok: true,
+    sent,
+    failed,
+    skippedDuplicate,
+    skippedOptOut,
+    total: users.length,
+    results,
+  });
 });

@@ -461,7 +461,11 @@ export async function getUsersForDigestEmail(): Promise<
             ) AS default_portfolio_id
           FROM users u
           WHERE u.email != ''
-            AND u.email_verified = 1`,
+            AND u.email_verified = 1
+            AND NOT EXISTS (
+              SELECT 1 FROM user_settings us
+              WHERE us.user_id = u.id AND us.email_notifications_enabled = 0
+            )`,
     args: [],
   });
   return res.rows.map((r) => ({

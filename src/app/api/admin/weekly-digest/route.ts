@@ -347,7 +347,7 @@ Week: ${weekStart} to ${weekEnd}`;
         html,
         userId,
       });
-      emailSent = true;
+      emailSent = Boolean(emailResult.success && !emailResult.suppressed);
 
       logEmailSend({
         resendId: emailResult.messageId,
@@ -355,7 +355,7 @@ Week: ${weekStart} to ${weekEnd}`;
         emailTo: user.email,
         subject: digestSubject,
         bodyHtml: html,
-        status: emailResult.success ? "sent" : "failed",
+        status: emailResult.suppressed ? "suppressed" : emailResult.success ? "sent" : "failed",
       }).catch(() => {});
     } catch (e) {
       console.error("[admin/weekly-digest] email send failed:", e);

@@ -263,7 +263,7 @@ export async function updateEmailSendStatus(
 export async function hasEmailBeenSent(templateId: string, userId: string): Promise<boolean> {
   const client = await ensureInitialized();
   const result = await client.execute({
-    sql: "SELECT 1 FROM email_sends WHERE template_id = ? AND user_id = ? AND status != 'failed' LIMIT 1",
+    sql: "SELECT 1 FROM email_sends WHERE template_id = ? AND user_id = ? AND status NOT IN ('failed', 'suppressed') LIMIT 1",
     args: [templateId, userId],
   });
   return result.rows.length > 0;

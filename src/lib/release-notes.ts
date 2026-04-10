@@ -17,6 +17,54 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.77.17",
+    date: "2026-04-10",
+    title: "Respect email opt-out on all marketing sends",
+    titleTranslations: {
+      es: "Respeto del opt-out de email en todos los envíos de marketing",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Marketing and template emails (digests, trial invites, welcome/upgrade flows, Trustpilot follow-ups, and admin template sends) no longer go out after a user unsubscribes or disables email notifications. Transactional mail—verification, price alerts, refund/broker confirmations, and feedback acknowledgements—still delivers as before.",
+        translations: {
+          es: "Los correos de marketing y plantillas (digest, invitaciones de prueba, bienvenida/upsell, seguimiento Trustpilot y envíos desde plantillas de admin) ya no se envían si el usuario canceló la suscripción o desactivó las notificaciones por email. El correo transaccional (verificación, alertas de precio, confirmaciones de reembolso/broker y acuses de feedback) sigue igual.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Marketing opt-out is applied in sendEmail before the Resend API key check, so digest and other flows no longer skip unsubscribe when email is disabled in dev or when Resend is not configured. Market Insight digest sends skip opted-out users before portfolio stats.",
+        translations: {
+          es: "El opt-out de marketing se aplica en sendEmail antes de comprobar la clave de Resend, así que el digest y otros flujos ya no omiten la baja cuando el correo está desactivado en desarrollo o sin Resend. Los envíos de Market Insight omiten a quien se dio de baja antes de las estadísticas del portafolio.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Marketing email suppression uses the same preference for every plan (free, starter, pro). If userId is omitted, the recipient is resolved by email so unsubscribe still applies.",
+        translations: {
+          es: "La supresión de correo de marketing usa la misma preferencia en todos los planes (gratis, starter, pro). Si falta userId, el destinatario se resuelve por email para que la baja siga aplicándose.",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.77.16",
+    date: "2026-04-10",
+    title: "German, French, Portuguese & Dutch UI copy",
+    titleTranslations: {
+      es: "Textos de interfaz en alemán, francés, portugués y neerlandés",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "German, French, European Portuguese, and Dutch locale files now include full UI string tables (no English fallback from spread). A maintenance script can refresh gaps using OpenAI; several upsell, empty-state, and growth-tab strings were hand-polished.",
+        translations: {
+          es: "Los archivos de alemán, francés, portugués europeo y neerlandés incluyen tablas completas de cadenas de interfaz (sin respaldo en inglés vía spread). Un script de mantenimiento puede rellenar lagunas con OpenAI; varias cadenas de upsell, estado vacío y pestaña de crecimiento se revisaron a mano.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.77.15",
     date: "2026-04-10",
     title: "Feedback completion email: customer-only copy",

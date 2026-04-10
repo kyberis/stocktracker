@@ -1,6 +1,14 @@
 import { Resend } from "resend";
 import { SignJWT, jwtVerify } from "jose";
-import { getGlobalResendApiKey, countHoldings, generateUnsubscribeToken, getEmailTemplateBySlug, logEmailSend } from "@/lib/db";
+import {
+  findUserByEmail,
+  getGlobalResendApiKey,
+  countHoldings,
+  generateUnsubscribeToken,
+  getEmailTemplateBySlug,
+  getUserSettings,
+  logEmailSend,
+} from "@/lib/db";
 
 const VERIFICATION_TOKEN_TTL = 60 * 60 * 24; // 24 hours
 
@@ -85,13 +93,46 @@ export interface SendEmailOptions {
   from?: string;
   /** Skip List-Unsubscribe headers (e.g. verification or internal emails). */
   internal?: boolean;
+  /**
+   * When true, send even if the user turned off marketing/template emails.
+   * Use for verification, alerts, billing/support confirmations, and similar transactional mail.
+   */
+  transactional?: boolean;
   /** BCC recipients (e.g. Trustpilot AFS). */
   bcc?: string | string[];
 }
 
-export async function sendEmail(
-  opts: SendEmailOptions,
-): Promise<{ success: boolean; messageId?: string; error?: string }> {
+export interface SendEmailResult {
+  success: boolean;
+  messageId?: string;
+  error?: string;
+  /** User opted out of marketing/template emails; nothing was sent to Resend. */
+  suppressed?: boolean;
+}
+
+/** Profile / one-click unsubscribe: allowed to receive marketing & template email (digests, campaigns). */
+export async function isMarketingEmailAllowed(userId: string): Promise<boolean> {
+  const settings = await getUserSettings(userId);
+  return settings.emailNotificationsEnabled;
+}
+
+export async function sendEmail(opts: SendEmailOptions): Promise<SendEmailResult> {
+  // Marketing/template opt-out (user_settings.email_notifications_enabled) applies to every
+  // subscription tier (free, starter, pro). Plan does not bypass unsubscribe.
+  let recipientUserId = opts.userId;
+  if (!opts.internal && !opts.transactional && !recipientUserId && typeof opts.to === "string") {
+    const u = await findUserByEmail(opts.to.trim());
+    recipientUserId = u?.id;
+  }
+
+  // Must run before the Resend check so missing API keys do not skip unsubscribe.
+  if (!opts.internal && !opts.transactional && recipientUserId) {
+    const settings = await getUserSettings(recipientUserId);
+    if (!settings.emailNotificationsEnabled) {
+      return { success: true, suppressed: true };
+    }
+  }
+
   const resend = await getResendClient();
   if (!resend) {
     console.warn("Resend API key not configured; skipping email.");
@@ -106,8 +147,9 @@ export async function sendEmail(
     ...opts.headers,
   };
 
-  if (!opts.internal && opts.userId) {
-    const unsubUrl = await generateUnsubscribeUrl(opts.userId);
+  const listUnsubscribeUserId = opts.internal || opts.transactional ? opts.userId : (recipientUserId ?? opts.userId);
+  if (!opts.internal && listUnsubscribeUserId) {
+    const unsubUrl = await generateUnsubscribeUrl(listUnsubscribeUserId);
     headers["List-Unsubscribe"] = `<${unsubUrl}>`;
     headers["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click";
     html = html.replaceAll("{{unsubscribe_url}}", unsubUrl);
@@ -272,6 +314,7 @@ export async function sendAlertEmail(
     subject: `Price Alert: ${alert.ticker} ${direction} ${alert.currency} ${alert.threshold}`,
     html,
     userId,
+    transactional: true,
   });
   if (!result.success) console.error("Failed to send alert email:", result.error);
   return result;
@@ -328,6 +371,7 @@ export async function sendPercentAlertEmail(
     subject: `Price Alert: ${alert.ticker} ${direction} ${absPercent}% ${basisLabel}`,
     html,
     userId,
+    transactional: true,
   });
   if (!result.success) console.error("Failed to send percent alert email:", result.error);
   return result;
@@ -753,7 +797,7 @@ export async function sendTrialInvitationEmail(
   token: string,
   locale: EmailLocale = "en",
   userId?: string,
-): Promise<{ success: boolean; error?: string }> {
+): Promise<SendEmailResult> {
   if (isTestEmail(email)) return { success: true };
 
   const activateUrl = utm(`/trial/activate?token=${encodeURIComponent(token)}`, "trial_invitation");
@@ -781,7 +825,7 @@ export async function sendTrialInvitationEmail(
         subject,
         bodyHtml: html,
         bodyText: htmlToPlainText(html),
-        status: result.success ? "sent" : "failed",
+        status: result.suppressed ? "suppressed" : result.success ? "sent" : "failed",
       });
     } catch (e) {
       console.error("[trial-invitation] Failed to log email send:", e);
@@ -854,7 +898,7 @@ export async function sendTrialExpiredEmail(
   locale: EmailLocale = "en",
   userId?: string,
   growthPct?: number,
-): Promise<{ success: boolean; error?: string }> {
+): Promise<SendEmailResult> {
   if (isTestEmail(email)) return { success: true };
 
   const html = trialExpiredHtml(displayName, locale, growthPct);
@@ -881,7 +925,7 @@ export async function sendTrialExpiredEmail(
         subject,
         bodyHtml: html,
         bodyText: htmlToPlainText(html),
-        status: result.success ? "sent" : "failed",
+        status: result.suppressed ? "suppressed" : result.success ? "sent" : "failed",
       });
     } catch (e) {
       console.error("[trial-expired] Failed to log email send:", e);
@@ -971,7 +1015,7 @@ export async function sendSatisfactionTrustpilotEmail(
         subject: c.subject,
         bodyHtml: html,
         bodyText: htmlToPlainText(html),
-        status: result.success ? "sent" : "failed",
+        status: result.suppressed ? "suppressed" : result.success ? "sent" : "failed",
       });
     } catch (e) {
       console.error("[satisfaction-trustpilot] Failed to log email send:", e);
@@ -1062,6 +1106,7 @@ export async function sendFeedbackAutoAckEmail(
     subject: c.subject,
     html,
     userId,
+    transactional: true,
   });
   if (!result.success) console.error("Failed to send feedback auto-ack email:", result.error);
 
@@ -1074,7 +1119,7 @@ export async function sendFeedbackAutoAckEmail(
       subject: c.subject,
       bodyHtml: html,
       bodyText: htmlToPlainText(html),
-      status: result.success ? "sent" : "failed",
+      status: result.suppressed ? "suppressed" : result.success ? "sent" : "failed",
     });
   } catch (e) {
     console.error("[feedback-auto-ack] logEmailSend:", e);
@@ -1096,6 +1141,7 @@ export async function sendFeedbackCompletionEmail(
     subject: subjectLine,
     html: htmlBody,
     userId,
+    transactional: true,
   });
   if (!result.success) console.error("Failed to send feedback completion email:", result.error);
 
@@ -1108,7 +1154,7 @@ export async function sendFeedbackCompletionEmail(
       subject: subjectLine,
       bodyHtml: htmlBody,
       bodyText: htmlToPlainText(htmlBody),
-      status: result.success ? "sent" : "failed",
+      status: result.suppressed ? "suppressed" : result.success ? "sent" : "failed",
     });
   } catch (e) {
     console.error("[feedback-completion] logEmailSend:", e);

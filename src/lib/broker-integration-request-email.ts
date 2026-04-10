@@ -106,6 +106,7 @@ export async function sendBrokerIntegrationRequestReceivedEmail(input: {
     html,
     text,
     userId: input.userId,
+    transactional: true,
   });
 
   await logEmailSend({

@@ -188,6 +188,7 @@ const runWeeklyDigest = withCronLogging("weekly-digest", async () => {
   // -- Phase 3: process users with bounded concurrency --
   let sent = 0;
   let errors = 0;
+  let skippedOptOut = 0;
 
   async function processUser(ctx: UserContext): Promise<void> {
     const { user, holdings, cashEntries, baseCurrency } = ctx;
@@ -341,6 +342,7 @@ Week: ${weekStart} to ${weekEnd}`;
       const baseUrl = process.env.APP_BASE_URL || "https://trefolio.com";
       const digestSubject = `Your Weekly Portfolio Digest — ${weekStart} to ${weekEnd}`;
       const html = buildWeeklyDigestEmail(user.displayName, summaryText, stats, baseUrl, weekStart, weekEnd);
+      // sendEmail enforces profile / one-click unsubscribe before Resend (see isMarketingEmailAllowed + sendEmail).
       const emailResult = await sendEmail({
         to: user.email,
         subject: digestSubject,
@@ -348,16 +350,23 @@ Week: ${weekStart} to ${weekEnd}`;
         userId: user.id,
       });
 
+      const emailStatus = emailResult.suppressed ? "suppressed" : emailResult.success ? "sent" : "failed";
       logEmailSend({
         resendId: emailResult.messageId,
         userId: user.id,
         emailTo: user.email,
         subject: digestSubject,
         bodyHtml: html,
-        status: emailResult.success ? "sent" : "failed",
+        status: emailStatus,
       }).catch(() => {});
 
-      sent++;
+      if (emailResult.suppressed) {
+        skippedOptOut++;
+      } else if (emailResult.success) {
+        sent++;
+      } else {
+        errors++;
+      }
     } catch (err) {
       console.error(`Weekly digest error for user ${ctx.user.id}:`, err instanceof Error ? err.message : err);
       errors++;
@@ -369,7 +378,7 @@ Week: ${weekStart} to ${weekEnd}`;
     await Promise.all(batch.map(processUser));
   }
 
-  return { weekStart, weekEnd, eligible: users.length, sent, skipped, errors };
+  return { weekStart, weekEnd, eligible: users.length, sent, skipped, skippedOptOut, errors };
 });
 
 export async function GET(req: NextRequest) {

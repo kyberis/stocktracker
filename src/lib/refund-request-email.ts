@@ -148,6 +148,7 @@ async function sendRefundTemplateEmail(
     html,
     text,
     userId: input.userId,
+    transactional: true,
   });
 
   await logEmailSend({

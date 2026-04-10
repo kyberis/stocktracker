@@ -83,6 +83,10 @@ export async function getDigestEligibleUsers(): Promise<{ id: string; email: str
             AND u.weekly_digest_enabled = 1
             AND u.email != ''
             AND u.email_verified = 1
+            AND NOT EXISTS (
+              SELECT 1 FROM user_settings us
+              WHERE us.user_id = u.id AND us.email_notifications_enabled = 0
+            )
             AND EXISTS (SELECT 1 FROM holdings h WHERE h.user_id = u.id)`,
     args: [],
   });

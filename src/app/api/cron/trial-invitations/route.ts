@@ -52,14 +52,16 @@ LIMIT 100`,
           ? String(langRes.rows[0].language)
           : "en";
       const locale = getEmailLocale(lang || "en");
-      await sendTrialInvitationEmail(
+      const sendResult = await sendTrialInvitationEmail(
         str(row.email),
         str(row.display_name),
         token,
         locale,
         userId,
       );
-      invited++;
+      if (!sendResult.suppressed) {
+        invited++;
+      }
     } catch (err) {
       console.error(`[cron:trial-invitations] user ${userId}:`, err);
       errors++;
