@@ -110,9 +110,11 @@ export const POST = withMetrics("/api/portfolio/backfill-snapshots", async (req:
   // backfill row onto every intraday snapshot. Uses the most recent daily row
   // on-or-before the intraday date. Fixes stale invested/per-type values from
   // past cron writes or pre-migration snapshots.
+  // Scalar subqueries return NULL when no daily row exists (e.g. backfill wrote
+  // zero rows). COALESCE preserves NOT NULL columns and avoids SQLITE_CONSTRAINT.
   const syncResult = await client.execute({
     sql: `UPDATE portfolio_snapshots
-          SET total_invested_eur = (
+          SET total_invested_eur = COALESCE((
             SELECT d.total_invested_eur
             FROM portfolio_snapshots d
             WHERE d.user_id = portfolio_snapshots.user_id
@@ -122,9 +124,9 @@ export const POST = withMetrics("/api/portfolio/backfill-snapshots", async (req:
               AND d.date <= substr(portfolio_snapshots.date, 1, 10)
             ORDER BY d.date DESC
             LIMIT 1
-          ),
+          ), portfolio_snapshots.total_invested_eur, 0),
           stock_value_eur = CASE
-            WHEN stock_value_eur = 0 AND etf_value_eur = 0 AND crypto_value_eur = 0 THEN (
+            WHEN stock_value_eur = 0 AND etf_value_eur = 0 AND crypto_value_eur = 0 THEN COALESCE((
               SELECT d.stock_value_eur
               FROM portfolio_snapshots d
               WHERE d.user_id = portfolio_snapshots.user_id
@@ -135,11 +137,11 @@ export const POST = withMetrics("/api/portfolio/backfill-snapshots", async (req:
                 AND (d.stock_value_eur > 0 OR d.etf_value_eur > 0 OR d.crypto_value_eur > 0)
               ORDER BY d.date DESC
               LIMIT 1
-            )
+            ), portfolio_snapshots.stock_value_eur, 0)
             ELSE stock_value_eur
           END,
           etf_value_eur = CASE
-            WHEN stock_value_eur = 0 AND etf_value_eur = 0 AND crypto_value_eur = 0 THEN (
+            WHEN stock_value_eur = 0 AND etf_value_eur = 0 AND crypto_value_eur = 0 THEN COALESCE((
               SELECT d.etf_value_eur
               FROM portfolio_snapshots d
               WHERE d.user_id = portfolio_snapshots.user_id
@@ -150,11 +152,11 @@ export const POST = withMetrics("/api/portfolio/backfill-snapshots", async (req:
                 AND (d.stock_value_eur > 0 OR d.etf_value_eur > 0 OR d.crypto_value_eur > 0)
               ORDER BY d.date DESC
               LIMIT 1
-            )
+            ), portfolio_snapshots.etf_value_eur, 0)
             ELSE etf_value_eur
           END,
           crypto_value_eur = CASE
-            WHEN stock_value_eur = 0 AND etf_value_eur = 0 AND crypto_value_eur = 0 THEN (
+            WHEN stock_value_eur = 0 AND etf_value_eur = 0 AND crypto_value_eur = 0 THEN COALESCE((
               SELECT d.crypto_value_eur
               FROM portfolio_snapshots d
               WHERE d.user_id = portfolio_snapshots.user_id
@@ -165,7 +167,7 @@ export const POST = withMetrics("/api/portfolio/backfill-snapshots", async (req:
                 AND (d.stock_value_eur > 0 OR d.etf_value_eur > 0 OR d.crypto_value_eur > 0)
               ORDER BY d.date DESC
               LIMIT 1
-            )
+            ), portfolio_snapshots.crypto_value_eur, 0)
             ELSE crypto_value_eur
           END
           WHERE user_id = ?

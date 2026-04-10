@@ -189,6 +189,7 @@ async function writeLiveSnapshotsForUser(
   if (rows.length === 0) return 0;
 
   const client = await ensureInitialized();
+  const fin = (n: number) => (typeof n === "number" && Number.isFinite(n) ? n : 0);
   const stmts = rows.map((r) => ({
     sql: `INSERT INTO portfolio_snapshots (id, user_id, portfolio_id, date, total_value_eur, total_invested_eur, stock_value_eur, etf_value_eur, crypto_value_eur)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -198,7 +199,17 @@ async function writeLiveSnapshotsForUser(
             stock_value_eur = excluded.stock_value_eur,
             etf_value_eur = excluded.etf_value_eur,
             crypto_value_eur = excluded.crypto_value_eur`,
-    args: [generateId(), userId, r.portfolioId, dateBucket, r.value, r.invested, r.stockValue, r.etfValue, r.cryptoValue],
+    args: [
+      generateId(),
+      userId,
+      r.portfolioId,
+      dateBucket,
+      fin(r.value),
+      fin(r.invested),
+      fin(r.stockValue),
+      fin(r.etfValue),
+      fin(r.cryptoValue),
+    ],
   }));
   await client.batch(stmts, "write");
 

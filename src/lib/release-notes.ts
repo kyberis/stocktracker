@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.77.14",
+    date: "2026-04-10",
+    title: "Snapshot backfill NOT NULL fix",
+    titleTranslations: {
+      es: "Corrección NOT NULL en backfill de snapshots",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Portfolio snapshot backfill no longer fails with SQLITE_CONSTRAINT on total_invested_eur when intraday rows exist but no matching daily row was written (scalar subqueries now COALESCE). Live snapshot writes coerce non-finite totals to 0 so inserts never bind NULL.",
+        translations: {
+          es: "El backfill de snapshots del portafolio ya no falla con SQLITE_CONSTRAINT en total_invested_eur cuando hay filas intradía pero no hay fila diaria (las subconsultas usan COALESCE). Las escrituras de snapshot en vivo convierten totales no finitos a 0 para no insertar NULL.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.77.13",
     date: "2026-04-10",
     title: "AI import: position-only rows (e.g. bonds)",
