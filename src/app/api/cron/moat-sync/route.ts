@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { withCronLogging, verifyCronAuth } from "@/lib/cron-logging";
-import { getGlobalAlphaVantageApiKey } from "@/lib/db/settings";
+import { hasPremiumMarketDataConfigured } from "@/lib/db";
 import { resolvePremiumStockDataProvider } from "@/lib/market-data/resolve-provider";
 import { evaluateMoat } from "@/lib/moat-evaluator";
 import { upsertMoatCache, getStaleMoatSymbols } from "@/lib/db/moat-cache";
@@ -14,8 +14,11 @@ const BATCH_SIZE = 30;
 const MAX_AGE_DAYS = 7;
 
 const runMoatSync = withCronLogging("moat-sync", async () => {
-  if (!getGlobalAlphaVantageApiKey() && !process.env.FMP_API_KEY) {
-    return { ok: false, error: "No market data API key configured (FMP_API_KEY or Alpha Vantage)" };
+  if (!(await hasPremiumMarketDataConfigured())) {
+    return {
+      ok: false,
+      error: "No market data API key configured (FMP_API_KEY, or Alpha Vantage when market_data_alpha_vantage is enabled)",
+    };
   }
 
   const resolved = await resolvePremiumStockDataProvider(null, "moat_sync");

@@ -106,7 +106,7 @@ export const featureDomains: FeatureDomain[] = [
     id: "integrations",
     name: "Market Data Integrations",
     description:
-      "Yahoo Finance (free quotes, search, historical) and Alpha Vantage (fundamentals, intelligence, economic indicators) provider integrations.",
+      "Yahoo Finance (free quotes, search, historical); premium data via Financial Modeling Prep (FMP) with optional Alpha Vantage fallback behind `market_data_alpha_vantage`.",
     status: "stable",
     version: "0.7.0",
     components: [
@@ -127,9 +127,9 @@ export const featureDomains: FeatureDomain[] = [
       { path: "src/lib/market-data/resolve-provider.ts", description: "FMP vs Alpha Vantage resolution + rollout flags" },
     ],
     patterns: [
-      "Provider abstraction — Yahoo is default; premium routes use FMP or Alpha Vantage per feature flags",
+      "Provider abstraction — Yahoo is default; premium routes use FMP when `market_data_alpha_vantage` is off (FMP-only), else FMP per-surface flags with AV fallback",
       "Server env keys (FMP_API_KEY, STOCKTRACKER_ALPHAVANTAGE_API_KEY)",
-      "Automatic fallback to Alpha Vantage when FMP flag is on but key missing",
+      "Alpha Vantage disabled globally when `market_data_alpha_vantage` is false so FMP covers all premium surfaces",
       "Rate limiting: per-user buckets for AV and FMP",
     ],
     tech: ["Yahoo Finance API", "Alpha Vantage API", "Financial Modeling Prep", "Server-side fetch"],

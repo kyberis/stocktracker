@@ -24,6 +24,7 @@ const ALLOWED_FLAGS: PlatformFeature[] = [
   "market_data_fmp_crypto",
   "market_data_fmp_dividends",
   "market_data_fmp_event_sync",
+  "market_data_alpha_vantage",
 ];
 
 export const GET = withMetrics("/api/admin/feature-flags", async (req: NextRequest) => {

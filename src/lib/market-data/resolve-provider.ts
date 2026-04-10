@@ -27,15 +27,17 @@ export async function shouldUseFmpForSurface(
 }
 
 /**
- * Resolves the stock data provider for premium routes. When the FMP flag is on
- * and `FMP_API_KEY` is set, uses FMP; otherwise falls back to Alpha Vantage
- * when `STOCKTRACKER_ALPHAVANTAGE_API_KEY` is set.
+ * Resolves the stock data provider for premium routes. When `market_data_alpha_vantage`
+ * is off, only FMP is used (all surfaces). When on: uses FMP if the surface FMP flag
+ * is on and `FMP_API_KEY` is set; otherwise falls back to Alpha Vantage when configured.
  */
 export async function resolvePremiumStockDataProvider(
   userId: string | null,
   surface: MarketDataSurface
 ): Promise<{ provider: StockDataProvider; backend: MarketDataBackend } | null> {
-  const useFmp = await shouldUseFmpForSurface(userId, surface);
+  const avAllowed = await isFeatureEnabled("market_data_alpha_vantage");
+  /** When AV is disabled, every premium surface uses FMP only (no per-surface FMP flags required). */
+  const useFmp = !avAllowed || (await shouldUseFmpForSurface(userId, surface));
   const fmpKey = getGlobalFmpApiKey();
   const avKey = getGlobalAlphaVantageApiKey();
 
@@ -46,7 +48,7 @@ export async function resolvePremiumStockDataProvider(
       /* fall through */
     }
   }
-  if (avKey) {
+  if (avAllowed && avKey) {
     try {
       return { provider: new AlphaVantageProvider(avKey), backend: "alphavantage" };
     } catch {
@@ -66,6 +68,6 @@ export async function getPremiumMarketDataFromRequest(
 ): Promise<{ provider: StockDataProvider; backend: MarketDataBackend } | null> {
   const session = await getSessionFromRequest(request);
   if (session?.plan !== "pro") return null;
-  if (!hasPremiumMarketDataConfigured()) return null;
+  if (!(await hasPremiumMarketDataConfigured())) return null;
   return resolvePremiumStockDataProvider(session.userId, surface);
 }

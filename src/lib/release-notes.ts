@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.77.19",
+    date: "2026-04-10",
+    title: "Alpha Vantage behind feature flag (FMP-only mode)",
+    titleTranslations: {
+      es: "Alpha Vantage tras bandera de función (solo FMP)",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Admins can turn off the new “Alpha Vantage: allow fallback” flag so premium market data uses only Financial Modeling Prep (all surfaces), the event-sync cron skips AV earnings CSV, and no Alpha Vantage calls are made — ready for removing the integration when FMP covers your deployment.",
+        translations: {
+          es: "Los administradores pueden desactivar la nueva bandera «Alpha Vantage: permitir respaldo» para que los datos de mercado premium usen solo Financial Modeling Prep (todas las superficies), el cron de event-sync omita el CSV de resultados de AV y no se llame a Alpha Vantage — listo para retirar la integración cuando FMP cubra el despliegue.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.77.18",
     date: "2026-04-10",
     title: "Admin: grant membership by email with activation",

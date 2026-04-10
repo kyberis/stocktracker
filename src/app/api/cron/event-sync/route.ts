@@ -78,10 +78,11 @@ const runEventSync = withCronLogging("event-sync", async () => {
 
   const stats = { earnings: 0, economic: 0, ipo: 0, splits: 0, deleted: 0, errors: [] as string[] };
 
-  // --- Earnings from Alpha Vantage (skipped when FMP-only rollout flag is on) ---
+  // --- Earnings from Alpha Vantage (skipped when FMP-only rollout flag is on or AV is disabled) ---
   const fmpEarningsOnly = await isFeatureEnabled("market_data_fmp_event_sync");
+  const avAllowed = await isFeatureEnabled("market_data_alpha_vantage");
   const avKey = getGlobalAlphaVantageApiKey();
-  if (!fmpEarningsOnly && avKey) {
+  if (avAllowed && !fmpEarningsOnly && avKey) {
     try {
       const raw = await fetchAvEarningsCalendar(avKey, "3month");
       const filtered = raw.filter((e) => e.date >= syncFromStr && e.date <= syncToStr);

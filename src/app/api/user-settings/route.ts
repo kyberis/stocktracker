@@ -29,7 +29,7 @@ export const GET = withMetrics("/api/user-settings", async (req: NextRequest) =>
     refreshInterval: settings.refreshInterval,
     dashboardTheme,
     defaultCurrency: settings.defaultCurrency,
-    hasPremiumMarketData: hasPremiumMarketDataConfigured(),
+    hasPremiumMarketData: await hasPremiumMarketDataConfigured(),
     hasOpenAIKey: getGlobalOpenAIApiKey().length > 0,
     alertsEnabled: flags.alerts_enabled,
     csvExportEnabled: flags.csv_export_enabled,

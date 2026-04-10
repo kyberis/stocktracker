@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
-import { AlphaVantageProvider } from "@/lib/api-providers/alphavantage";
-import { FmpMarketDataProvider } from "@/lib/api-providers/fmp-market-data";
+import type { AlphaVantageProvider } from "@/lib/api-providers/alphavantage";
+import type { FmpMarketDataProvider } from "@/lib/api-providers/fmp-market-data";
 import { jsonWithCallCount } from "@/lib/api-providers/response";
 import {
   getTopCryptoTickers,

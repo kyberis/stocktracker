@@ -80,7 +80,7 @@ export const GET = withMetrics("/api/portfolio-news", async (request: NextReques
     }
   }
 
-  if (!hasPremiumMarketDataConfigured()) {
+  if (!(await hasPremiumMarketDataConfigured())) {
     return Response.json(
       { error: "No news provider configured" },
       { status: 400 },

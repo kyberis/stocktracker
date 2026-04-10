@@ -25,7 +25,8 @@ export type PlatformFeature =
   | "market_data_fmp_economic_indicators"
   | "market_data_fmp_crypto"
   | "market_data_fmp_dividends"
-  | "market_data_fmp_event_sync";
+  | "market_data_fmp_event_sync"
+  | "market_data_alpha_vantage";
 
 const DEFAULT_ENABLED_FLAGS: Set<PlatformFeature> = new Set([
   "whatsapp_enabled",
@@ -36,6 +37,7 @@ const DEFAULT_ENABLED_FLAGS: Set<PlatformFeature> = new Set([
   "tool_accounts_enabled",
   "tool_watchlist_enabled",
   "ai_report_enabled",
+  "market_data_alpha_vantage",
 ]);
 
 const VALID_THEMES = new Set(["default", "terminal", "canvas", "studio"]);
@@ -276,8 +278,23 @@ export function getGlobalFmpApiKey(): string {
   return process.env.FMP_API_KEY || "";
 }
 
-/** True if any premium market data backend is configured (Alpha Vantage and/or FMP). */
-export function hasPremiumMarketDataConfigured(): boolean {
+/**
+ * True when a premium backend is effectively available: FMP key, or Alpha Vantage key
+ * when the `market_data_alpha_vantage` feature flag is enabled.
+ */
+export async function hasPremiumMarketDataConfigured(): Promise<boolean> {
+  if (getGlobalFmpApiKey().length > 0) return true;
+  if (
+    getGlobalAlphaVantageApiKey().length > 0 &&
+    (await isFeatureEnabled("market_data_alpha_vantage"))
+  ) {
+    return true;
+  }
+  return false;
+}
+
+/** Env keys only (ignores AV kill-switch). For metrics/cron pre-checks. */
+export function hasPremiumMarketDataKeysInEnv(): boolean {
   return getGlobalAlphaVantageApiKey().length > 0 || getGlobalFmpApiKey().length > 0;
 }
 
@@ -335,6 +352,7 @@ const ALL_PLATFORM_FEATURES: PlatformFeature[] = [
   "market_data_fmp_crypto",
   "market_data_fmp_dividends",
   "market_data_fmp_event_sync",
+  "market_data_alpha_vantage",
 ];
 
 export async function isFeatureEnabledForUser(feature: PlatformFeature, userId: string): Promise<boolean> {

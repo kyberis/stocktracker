@@ -47,6 +47,12 @@ const FLAG_META: Record<string, { label: string; description: string; group: str
   market_data_fmp_crypto: { label: "FMP: Pro crypto history & FX", description: "Crypto OHLC and cross-rates via FMP", group: "Market data (FMP)" },
   market_data_fmp_dividends: { label: "FMP: ex-dividend fallback", description: "When Yahoo has no dividend dates, use FMP dividend calendar", group: "Market data (FMP)" },
   market_data_fmp_event_sync: { label: "FMP: earnings calendar cron", description: "Event-sync cron uses FMP-only for earnings (skip AV CSV)", group: "Market data (FMP)" },
+  market_data_alpha_vantage: {
+    label: "Alpha Vantage: allow fallback",
+    description:
+      "When on, premium data can fall back to Alpha Vantage if FMP is unavailable or a surface flag is off. When off, only FMP is used (set FMP_API_KEY); AV is never called — safe before removing the integration.",
+    group: "Market data (FMP)",
+  },
 };
 
 const GROUP_DISPLAY_ORDER = ["Features", "Tools", "Market data (FMP)"] as const;
@@ -248,7 +254,7 @@ export default function FeatureFlagsPage() {
                 ? "Enable or disable user-facing features globally, with optional per-user overrides."
                 : group === "Tools"
                   ? "Show or hide individual tools on the Tools page."
-                  : "Roll out Financial Modeling Prep surface-by-surface; when off, Alpha Vantage is used when configured. Per-user overrides apply; the earnings calendar cron flag is global-only."}
+                  : "FMP per-surface rollout and Alpha Vantage fallback: disable “Alpha Vantage: allow fallback” for FMP-only (requires FMP_API_KEY). When fallback is on, AV is used if a surface FMP flag is off. Per-user overrides apply; the earnings calendar cron flag is global-only."}
             </p>
             <div className="divide-y divide-gray-200 dark:divide-slate-700">
               {groupFlags.map(([flag, meta]) => {
