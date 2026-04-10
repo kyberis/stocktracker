@@ -13,6 +13,8 @@ export interface ChatRoomSummary {
   lastMessageType: string;
   lastMessageAt: string;
   lastSenderName: string;
+  /** Current user's membership; pending = invite not accepted yet */
+  myMembership?: "active" | "pending";
   participants: { userId: string; displayName: string; avatarUrl: string; lastSeenAt: string }[];
 }
 
@@ -36,6 +38,7 @@ function relativeTime(dateStr: string): string {
 }
 
 function lastMessagePreview(room: ChatRoomSummary): string {
+  if (room.myMembership === "pending") return "Invitation pending — tap to accept";
   if (!room.lastMessageContent) return "No messages yet";
   if (room.lastMessageType === "image") return "Shared a photo";
   if (room.lastMessageType === "link") return room.lastMessageContent;

@@ -39,6 +39,7 @@ import type {
   ETFHoldingsData,
   HoldingAssetType,
 } from "@/lib/types";
+import { holdingIsEtfLike } from "@/lib/services/etf-lookthrough";
 
 type MainTab = "overview" | "financials" | "earnings" | "holdings";
 type FinancialSub = "income" | "balance" | "cashflow";
@@ -55,7 +56,7 @@ export default function StockDetail({ ticker, exchange, fromScreener = false }: 
   const router = useRouter();
   const searchParams = useSearchParams();
   const { hasPremiumMarketData, getApiHeaders } = useSettings();
-  const { holdings, quotes, exchangeRates } = usePortfolio();
+  const { holdings, quotes, exchangeRates, updateHolding } = usePortfolio();
   const { user } = useAuth();
   const { t, language } = useI18n();
   const { stealthMode } = useStealthMode();
@@ -98,6 +99,8 @@ export default function StockDetail({ ticker, exchange, fromScreener = false }: 
 
   const [etfHoldings, setEtfHoldings] = useState<ETFHoldingsData | null>(null);
   const [etfHoldingsLoading, setEtfHoldingsLoading] = useState(false);
+  const [assetTypeDraft, setAssetTypeDraft] = useState<HoldingAssetType>("stock");
+  const [assetTypeSaving, setAssetTypeSaving] = useState(false);
 
   const [aiStatus, setAiStatus] = useState<AiStatus>("idle");
   const [aiText, setAiText] = useState("");
@@ -117,6 +120,10 @@ export default function StockDetail({ ticker, exchange, fromScreener = false }: 
     const id = setInterval(() => setNow(new Date()), 60_000);
     return () => clearInterval(id);
   }, []);
+
+  useEffect(() => {
+    if (holding) setAssetTypeDraft(holding.assetType ?? "stock");
+  }, [holding?.id, holding?.assetType]);
 
   const overviewFetchedRef = useRef(false);
 
@@ -304,6 +311,32 @@ export default function StockDetail({ ticker, exchange, fromScreener = false }: 
     { key: "cashflow", label: t("cashFlow") },
   ];
 
+  const suggestEtfFix =
+    !!holding &&
+    (holding.assetType ?? "stock") === "stock" &&
+    holdingIsEtfLike(holding, quote);
+
+  const handleSaveAssetType = async () => {
+    if (!holding || assetTypeDraft === (holding.assetType ?? "stock")) return;
+    setAssetTypeSaving(true);
+    try {
+      await updateHolding(holding.id, { assetType: assetTypeDraft });
+    } finally {
+      setAssetTypeSaving(false);
+    }
+  };
+
+  const handleSetAsEtf = async () => {
+    if (!holding || assetTypeSaving) return;
+    setAssetTypeSaving(true);
+    try {
+      await updateHolding(holding.id, { assetType: "etf" });
+      setAssetTypeDraft("etf");
+    } finally {
+      setAssetTypeSaving(false);
+    }
+  };
+
   return (
     <main className="max-w-6xl mx-auto px-4 py-6 space-y-6">
         {/* Back button */}
@@ -372,6 +405,52 @@ export default function StockDetail({ ticker, exchange, fromScreener = false }: 
               )}
             </div>
           </div>
+          {holding && (
+            <div className="mt-5 pt-5 border-t border-gray-100 dark:border-slate-800 space-y-4">
+              {suggestEtfFix && (
+                <div
+                  className="rounded-lg px-4 py-3 border border-amber-200/80 dark:border-amber-500/30 bg-amber-50/90 dark:bg-amber-500/10"
+                  role="region"
+                  aria-label={t("assetTypeSuggestEtf")}
+                >
+                  <p className="text-sm text-amber-950 dark:text-amber-100/95 leading-snug">{t("assetTypeSuggestEtf")}</p>
+                  <button
+                    type="button"
+                    onClick={handleSetAsEtf}
+                    disabled={assetTypeSaving}
+                    className="mt-3 btn-primary text-sm px-3 py-1.5 disabled:opacity-60"
+                  >
+                    {assetTypeSaving ? "…" : t("setAssetTypeEtf")}
+                  </button>
+                </div>
+              )}
+              <div className="flex flex-col sm:flex-row sm:items-end gap-3 flex-wrap">
+                <div className="min-w-[200px] flex-1 max-w-xs">
+                  <label htmlFor="stock-detail-asset-type" className="block text-xs text-gray-500 dark:text-slate-400 mb-1">
+                    {t("assetType")}
+                  </label>
+                  <select
+                    id="stock-detail-asset-type"
+                    value={assetTypeDraft}
+                    onChange={(e) => setAssetTypeDraft(e.target.value as HoldingAssetType)}
+                    className="w-full rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-white text-sm px-3 py-2"
+                  >
+                    <option value="stock">{t("stockType")}</option>
+                    <option value="etf">{t("etfType")}</option>
+                    <option value="crypto">{t("cryptoType")}</option>
+                  </select>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleSaveAssetType}
+                  disabled={assetTypeSaving || assetTypeDraft === (holding.assetType ?? "stock")}
+                  className="btn-primary text-sm px-4 py-2 self-start sm:self-auto disabled:opacity-50"
+                >
+                  {assetTypeSaving ? "…" : t("save")}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Position Summary */}

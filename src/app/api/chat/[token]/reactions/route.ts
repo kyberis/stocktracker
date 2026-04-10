@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
 import { withMetrics } from "@/lib/with-metrics";
-import { getPrivateChatRoom, toggleReaction, getReactionsForRoom } from "@/lib/db";
+import { getPrivateChatRoom, toggleReaction, getReactionsForRoom, getParticipantMembership } from "@/lib/db";
 
 function extractToken(pathname: string): string {
   const segments = pathname.split("/");
@@ -22,6 +22,11 @@ export const POST = withMetrics(
     const room = await getPrivateChatRoom(token);
     if (!room) {
       return NextResponse.json({ error: "Chat not found" }, { status: 404 });
+    }
+
+    const membership = await getParticipantMembership(token, session.userId);
+    if (membership !== "active") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     let body: { messageId?: string; emoji?: string };

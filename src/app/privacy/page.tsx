@@ -348,6 +348,11 @@ export default function PrivacyPolicyPage() {
                     <td className="py-3">Email address (for verification, password resets, service notifications, and contact form submissions)</td>
                   </tr>
                   <tr>
+                    <td className="py-3 pr-6">Linear</td>
+                    <td className="py-3 pr-6">Issue tracking for in-app feedback</td>
+                    <td className="py-3">Feedback subject, message, and type may be synced as issue content when our automated feedback pipeline creates a task (no portfolio or payment data)</td>
+                  </tr>
+                  <tr>
                     <td className="py-3 pr-6">Interactive Brokers (Flex Web Service)</td>
                     <td className="py-3 pr-6">Portfolio import via API (Trefolio)</td>
                     <td className="py-3">User-provided Flex token and Query ID (encrypted at rest); IBKR returns portfolio data directly to our server</td>
@@ -594,7 +599,7 @@ export default function PrivacyPolicyPage() {
             <h2>10. International Transfers</h2>
             <p>
               Your data may be processed outside the EEA by our third-party
-              service providers (Vercel, OpenAI, Stripe, Cloudflare, Google Analytics, Google AdSense, Finnhub, Interactive Brokers, SnapTrade, Resend, Twilio). Where
+              service providers (Vercel, OpenAI, Stripe, Cloudflare, Google Analytics, Google AdSense, Finnhub, Interactive Brokers, SnapTrade, Resend, Twilio, Linear). Where
               this occurs, we ensure appropriate safeguards are in place,
               including Standard Contractual Clauses (SCCs) approved by the
               European Commission.

@@ -3105,6 +3105,50 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       `);
     },
   },
+  {
+    version: 104,
+    description: "Private chat room kind and participant membership (social invite vs admin link)",
+    up: async (client: Client) => {
+      const roomCols = await client.execute("PRAGMA table_info(private_chat_rooms)");
+      const hasKind = roomCols.rows.some((row) => str(row.name) === "kind");
+      if (!hasKind) {
+        await client.execute(
+          "ALTER TABLE private_chat_rooms ADD COLUMN kind TEXT NOT NULL DEFAULT 'admin_link'"
+        );
+      }
+      const partCols = await client.execute("PRAGMA table_info(private_chat_participants)");
+      const hasMembership = partCols.rows.some((row) => str(row.name) === "membership_status");
+      if (!hasMembership) {
+        await client.execute(
+          "ALTER TABLE private_chat_participants ADD COLUMN membership_status TEXT NOT NULL DEFAULT 'active'"
+        );
+      }
+    },
+  },
+  {
+    version: 105,
+    description: "Feedback pipeline: Linear id, auto pipeline timestamps, completion draft, ack email tracking",
+    up: async (client: Client) => {
+      for (const [col, sql] of [
+        ["linear_issue_id", `ALTER TABLE feedback ADD COLUMN linear_issue_id TEXT NOT NULL DEFAULT ''`],
+        ["auto_pipeline_at", `ALTER TABLE feedback ADD COLUMN auto_pipeline_at TEXT NOT NULL DEFAULT ''`],
+        ["completion_email_draft", `ALTER TABLE feedback ADD COLUMN completion_email_draft TEXT NOT NULL DEFAULT ''`],
+        ["completion_draft_ready_at", `ALTER TABLE feedback ADD COLUMN completion_draft_ready_at TEXT NOT NULL DEFAULT ''`],
+        ["completion_email_sent_at", `ALTER TABLE feedback ADD COLUMN completion_email_sent_at TEXT NOT NULL DEFAULT ''`],
+        ["ack_email_sent_at", `ALTER TABLE feedback ADD COLUMN ack_email_sent_at TEXT NOT NULL DEFAULT ''`],
+        ["linear_issue_url", `ALTER TABLE feedback ADD COLUMN linear_issue_url TEXT NOT NULL DEFAULT ''`],
+      ] as const) {
+        try {
+          const cols = await client.execute("PRAGMA table_info(feedback)");
+          const colNames = new Set(cols.rows.map((r) => str(r.name)));
+          if (!colNames.has(col)) await client.execute(sql);
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : String(e);
+          if (!msg.includes("duplicate column")) throw e;
+        }
+      }
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

@@ -10,6 +10,7 @@ import StockRow from "./StockRow";
 import { useTheme } from "@/lib/theme-context";
 import { useTrack } from "@/lib/use-track";
 import EmptyState from "./EmptyState";
+import { AssetTypeReviewLauncher } from "./AssetTypeReviewModal";
 import type { Holding } from "@/lib/types";
 
 const StockDetailDrawer = dynamic(() => import("./StockDetailDrawer"), { ssr: false });
@@ -241,6 +242,8 @@ export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: P
     </div>
   );
 
+  const reviewTypesBtn = <AssetTypeReviewLauncher />;
+
   const addTransactionBtn = onAddStock && (
     <button
       onClick={onAddStock}
@@ -269,6 +272,7 @@ export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: P
           <div className="px-3 py-2 border-b border-zinc-800 flex items-center justify-between gap-3">
             {searchInput}
             <div className="flex items-center gap-2 shrink-0">
+              {reviewTypesBtn}
               {addTransactionBtn}
               <select
                 value={sortField}
@@ -307,6 +311,7 @@ export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: P
           <div className="bg-white border border-slate-200 rounded-2xl p-4 mb-4 flex items-center justify-between gap-3">
             {searchInput}
             <div className="flex items-center gap-2 shrink-0">
+              {reviewTypesBtn}
               {addTransactionBtn}
               <select
                 value={sortField}
@@ -344,6 +349,7 @@ export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: P
           <div className="p-4 border-b border-white/5 flex items-center justify-between gap-3">
             {searchInput}
             <div className="flex items-center gap-2 shrink-0">
+              {reviewTypesBtn}
               {addTransactionBtn}
               <select
                 value={sortField}
@@ -380,6 +386,7 @@ export default function PortfolioTable({ holdings: holdingsProp, onAddStock }: P
         <div className="p-4 border-b border-gray-100 dark:border-slate-700 flex items-center justify-between gap-3 flex-wrap">
           {searchInput}
           <div className="flex items-center gap-2 shrink-0">
+            {reviewTypesBtn}
             {addTransactionBtn}
             <select
               value={sortField}

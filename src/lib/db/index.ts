@@ -207,6 +207,7 @@ export type { FeedbackEntry, FeedbackType } from "./feedback";
 export {
   createFeedback,
   getFeedbackByUser,
+  getFeedbackById,
   getAllFeedback,
   getAllFeedbackPaginated,
   replyToFeedback,
@@ -518,7 +519,18 @@ export {
   markDigestXScheduled,
 } from "./market-digests";
 
-export type { PrivateChatRoom, PrivateChatRoomListItem, PrivateChatMessage, PrivateChatMessageType, PrivateChatParticipant, UserChatRoomSummary, ChatReaction } from "./private-chat";
+export type {
+  PrivateChatRoom,
+  PrivateChatRoomKind,
+  PrivateChatMembershipStatus,
+  PrivateChatRoomListItem,
+  PrivateChatMessage,
+  PrivateChatMessageType,
+  PrivateChatParticipant,
+  UserChatRoomSummary,
+  ChatReaction,
+  FindOrCreateDirectRoomResult,
+} from "./private-chat";
 export {
   createPrivateChatRoom,
   getPrivateChatRoom,
@@ -531,6 +543,10 @@ export {
   updateTypingStatus,
   updateLastSeen,
   getPrivateChatParticipants,
+  getParticipantMembership,
+  acceptSocialChatInvite,
+  declineSocialChatInvite,
+  removeParticipantFromAdminLinkRoom,
   listUserChatRooms,
   clearChatForUser,
   purgeExpiredPrivateChatMessages,

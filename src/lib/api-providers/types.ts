@@ -11,6 +11,7 @@ export interface ProviderQuoteResult {
   marketCap: number;
   trailingAnnualDividendRate?: number;
   trailingAnnualDividendYield?: number;
+  quoteType?: string;
   error?: boolean;
 }
 

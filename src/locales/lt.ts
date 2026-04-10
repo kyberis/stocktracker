@@ -1,6 +1,8 @@
 import type { TranslationStrings } from "./types";
+import en from "./en";
 
 const lt: TranslationStrings = {
+  ...en,
   appTitle: "trefolio",
   portfolio: "Portfelis",
   totalValue: "Bendra vertė",
@@ -148,6 +150,21 @@ const lt: TranslationStrings = {
   editExchange: "Birža",
   editCurrency: "Valiuta",
   assetType: "Tipas",
+  assetTypeSuggestEtf:
+    "Market data or the name suggests this is an ETF, but the position is saved as a stock. Set the correct type for fund views and analytics.",
+  setAssetTypeEtf: "Set as ETF",
+  changeAssetType: "Change asset type",
+  reviewAssetTypes: "Review types",
+  reviewAssetTypesShort: "Types",
+  reviewAssetTypesTitle: "Review asset types",
+  reviewAssetTypesDescription:
+    "Correct stock, ETF, or crypto for each position. Suggested highlights likely ETFs or funds saved as stocks.",
+  reviewAssetTypesFilterSuggested: "Suggested",
+  reviewAssetTypesFilterAll: "All",
+  reviewAssetTypesViewLabel: "Show",
+  reviewAssetTypesEmpty: "Nothing in this view. Switch to “All” or add positions.",
+  reviewAssetTypesSuggestedBadge: "Suggested",
+  applyAllSuggestedEtf: "Set all suggested as ETF",
   stockType: "Akcija",
   etfType: "ETF",
   stocksGroup: "Akcijos",

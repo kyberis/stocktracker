@@ -4,12 +4,18 @@ import { generateId } from "@/lib/utils";
 
 export type PrivateChatMessageType = "text" | "link" | "image" | "holding" | "allocation" | "summary" | "stock_pick";
 
+/** `admin_link`: join via shared URL (max 2). `social_direct`: 1:1 network chat; invitee must accept. */
+export type PrivateChatRoomKind = "admin_link" | "social_direct";
+
+export type PrivateChatMembershipStatus = "active" | "pending";
+
 export interface PrivateChatRoom {
   id: string;
   createdBy: string;
   label: string;
   isActive: boolean;
   createdAt: string;
+  kind: PrivateChatRoomKind;
 }
 
 export interface PrivateChatMessage {
@@ -36,6 +42,7 @@ export interface PrivateChatParticipant {
   lastSeenAt: string;
   lastReadMsgId: string;
   clearedAt: string;
+  membershipStatus: PrivateChatMembershipStatus;
 }
 
 export interface PrivateChatRoomListItem extends PrivateChatRoom {
@@ -67,6 +74,11 @@ function mapMessageRow(r: Record<string, unknown>): PrivateChatMessage {
   };
 }
 
+function parseRoomKind(val: unknown): PrivateChatRoomKind {
+  const s = String(val || "admin_link");
+  return s === "social_direct" ? "social_direct" : "admin_link";
+}
+
 export async function createPrivateChatRoom(
   createdBy: string,
   label: string
@@ -74,10 +86,10 @@ export async function createPrivateChatRoom(
   const client = await ensureInitialized();
   const id = generateId();
   await client.execute({
-    sql: `INSERT INTO private_chat_rooms (id, created_by, label) VALUES (?, ?, ?)`,
+    sql: `INSERT INTO private_chat_rooms (id, created_by, label, kind) VALUES (?, ?, ?, 'admin_link')`,
     args: [id, createdBy, label],
   });
-  return { id, createdBy, label, isActive: true, createdAt: new Date().toISOString() };
+  return { id, createdBy, label, isActive: true, createdAt: new Date().toISOString(), kind: "admin_link" };
 }
 
 export async function getPrivateChatRoom(id: string): Promise<PrivateChatRoom | null> {
@@ -94,6 +106,7 @@ export async function getPrivateChatRoom(id: string): Promise<PrivateChatRoom | 
     label: str(r.label),
     isActive: true,
     createdAt: str(r.created_at),
+    kind: parseRoomKind(r.kind),
   };
 }
 
@@ -125,6 +138,7 @@ export async function listPrivateChatRooms(
     label: str(r.label),
     isActive: Number(r.is_active) === 1,
     createdAt: str(r.created_at),
+    kind: parseRoomKind(r.kind),
     messageCount: Number(r.message_count) || 0,
   }));
 }
@@ -213,15 +227,37 @@ export async function getPrivateChatMessages(
   return result.rows.map((r) => mapMessageRow(r as Record<string, unknown>));
 }
 
+/** Admin link rooms only. Max 2 participants. Returns `full` if a third user tries to join. */
 export async function joinPrivateChatRoom(
   roomId: string,
   userId: string
-): Promise<void> {
+): Promise<"joined" | "already" | "full"> {
   const client = await ensureInitialized();
-  await client.execute({
-    sql: `INSERT OR IGNORE INTO private_chat_participants (room_id, user_id) VALUES (?, ?)`,
+  const roomRow = await client.execute({
+    sql: `SELECT kind FROM private_chat_rooms WHERE id = ? AND is_active = 1`,
+    args: [roomId],
+  });
+  if (roomRow.rows.length === 0) return "full";
+  if (parseRoomKind(roomRow.rows[0].kind) !== "admin_link") return "already";
+
+  const existing = await client.execute({
+    sql: `SELECT 1 FROM private_chat_participants WHERE room_id = ? AND user_id = ?`,
     args: [roomId, userId],
   });
+  if (existing.rows.length > 0) return "already";
+
+  const countResult = await client.execute({
+    sql: `SELECT COUNT(*) as c FROM private_chat_participants WHERE room_id = ?`,
+    args: [roomId],
+  });
+  const count = Number(countResult.rows[0]?.c ?? 0);
+  if (count >= 2) return "full";
+
+  await client.execute({
+    sql: `INSERT INTO private_chat_participants (room_id, user_id, membership_status) VALUES (?, ?, 'active')`,
+    args: [roomId, userId],
+  });
+  return "joined";
 }
 
 export async function updateTypingStatus(
@@ -254,12 +290,17 @@ export async function updateLastSeen(
   }
 }
 
+function parseMembershipStatus(val: unknown): PrivateChatMembershipStatus {
+  const s = String(val || "active");
+  return s === "pending" ? "pending" : "active";
+}
+
 export async function getPrivateChatParticipants(
   roomId: string
 ): Promise<PrivateChatParticipant[]> {
   const client = await ensureInitialized();
   const result = await client.execute({
-    sql: `SELECT p.user_id, p.joined_at, p.last_typing_at, p.last_seen_at, p.last_read_msg_id, p.cleared_at, u.display_name, u.avatar_url
+    sql: `SELECT p.user_id, p.joined_at, p.last_typing_at, p.last_seen_at, p.last_read_msg_id, p.cleared_at, p.membership_status, u.display_name, u.avatar_url
           FROM private_chat_participants p
           JOIN users u ON u.id = p.user_id
           WHERE p.room_id = ?
@@ -275,6 +316,7 @@ export async function getPrivateChatParticipants(
     lastSeenAt: str(r.last_seen_at),
     lastReadMsgId: str(r.last_read_msg_id),
     clearedAt: str(r.cleared_at),
+    membershipStatus: parseMembershipStatus(r.membership_status),
   }));
 }
 
@@ -286,6 +328,8 @@ export interface UserChatRoomSummary {
   lastMessageType: PrivateChatMessageType;
   lastMessageAt: string;
   lastSenderName: string;
+  /** Current user's membership in this room */
+  myMembership: PrivateChatMembershipStatus;
   participants: { userId: string; displayName: string; avatarUrl: string; lastSeenAt: string }[];
 }
 
@@ -307,6 +351,7 @@ export async function listUserChatRooms(
 
   const roomsResult = await client.execute({
     sql: `SELECT r.id, r.label, r.created_at,
+                 p.membership_status AS my_membership,
                  last_msg.content AS last_content,
                  last_msg.type AS last_type,
                  last_msg.created_at AS last_msg_at,
@@ -358,6 +403,7 @@ export async function listUserChatRooms(
     lastMessageType: parseMessageType(r.last_type),
     lastMessageAt: str(r.last_msg_at),
     lastSenderName: str(r.last_sender_name),
+    myMembership: parseMembershipStatus(r.my_membership),
     participants: partsByRoom.get(str(r.id)) || [],
   }));
 }
@@ -434,38 +480,118 @@ export async function getReactionsForRoom(
   return out;
 }
 
-export async function findOrCreateDirectRoom(userA: string, userB: string): Promise<string> {
+export interface FindOrCreateDirectRoomResult {
+  roomId: string;
+  /** True when the invitee should receive a new-invite notification */
+  shouldNotifyInvitee: boolean;
+}
+
+export async function getParticipantMembership(
+  roomId: string,
+  userId: string
+): Promise<PrivateChatMembershipStatus | null> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: `SELECT membership_status FROM private_chat_participants WHERE room_id = ? AND user_id = ?`,
+    args: [roomId, userId],
+  });
+  if (result.rows.length === 0) return null;
+  return parseMembershipStatus(result.rows[0].membership_status);
+}
+
+export async function acceptSocialChatInvite(roomId: string, userId: string): Promise<boolean> {
+  const client = await ensureInitialized();
+  const room = await getPrivateChatRoom(roomId);
+  if (!room || room.kind !== "social_direct") return false;
+  const result = await client.execute({
+    sql: `UPDATE private_chat_participants SET membership_status = 'active'
+          WHERE room_id = ? AND user_id = ? AND membership_status = 'pending'`,
+    args: [roomId, userId],
+  });
+  return (result.rowsAffected ?? 0) > 0;
+}
+
+export async function declineSocialChatInvite(roomId: string, userId: string): Promise<boolean> {
+  const client = await ensureInitialized();
+  const room = await getPrivateChatRoom(roomId);
+  if (!room || room.kind !== "social_direct") return false;
+  const result = await client.execute({
+    sql: `DELETE FROM private_chat_participants WHERE room_id = ? AND user_id = ? AND membership_status = 'pending'`,
+    args: [roomId, userId],
+  });
+  return (result.rowsAffected ?? 0) > 0;
+}
+
+/** Remove a participant from an admin link room (creator must match admin). */
+export async function removeParticipantFromAdminLinkRoom(
+  roomId: string,
+  targetUserId: string,
+  adminUserId: string
+): Promise<boolean> {
+  const client = await ensureInitialized();
+  const room = await getPrivateChatRoom(roomId);
+  if (!room || room.kind !== "admin_link" || room.createdBy !== adminUserId) return false;
+  if (targetUserId === adminUserId) return false;
+  const result = await client.execute({
+    sql: `DELETE FROM private_chat_participants WHERE room_id = ? AND user_id = ?`,
+    args: [roomId, targetUserId],
+  });
+  return (result.rowsAffected ?? 0) > 0;
+}
+
+export async function findOrCreateDirectRoom(
+  userA: string,
+  userB: string
+): Promise<FindOrCreateDirectRoomResult> {
   const client = await ensureInitialized();
 
-  const result = await client.execute({
+  const existingPair = await client.execute({
     sql: `SELECT p1.room_id
           FROM private_chat_participants p1
-          JOIN private_chat_participants p2 ON p1.room_id = p2.room_id
+          JOIN private_chat_participants p2 ON p1.room_id = p2.room_id AND p2.user_id = ?
           JOIN private_chat_rooms r ON r.id = p1.room_id
-          WHERE p1.user_id = ? AND p2.user_id = ? AND r.is_active = 1
-            AND (SELECT COUNT(*) FROM private_chat_participants WHERE room_id = p1.room_id) = 2
+          WHERE p1.user_id = ? AND r.is_active = 1 AND r.kind = 'social_direct'
           LIMIT 1`,
-    args: [userA, userB],
+    args: [userB, userA],
   });
 
-  if (result.rows.length > 0) {
-    return str(result.rows[0].room_id);
+  if (existingPair.rows.length > 0) {
+    return { roomId: str(existingPair.rows[0].room_id), shouldNotifyInvitee: false };
+  }
+
+  const orphan = await client.execute({
+    sql: `SELECT r.id
+          FROM private_chat_rooms r
+          WHERE r.kind = 'social_direct' AND r.is_active = 1 AND r.created_by = ?
+            AND (SELECT COUNT(*) FROM private_chat_participants p WHERE p.room_id = r.id) = 1
+            AND EXISTS (SELECT 1 FROM private_chat_participants p WHERE p.room_id = r.id AND p.user_id = ?)
+          LIMIT 1`,
+    args: [userA, userA],
+  });
+
+  if (orphan.rows.length > 0) {
+    const oid = str(orphan.rows[0].id);
+    await client.execute({
+      sql: `INSERT INTO private_chat_participants (room_id, user_id, membership_status) VALUES (?, ?, 'pending')`,
+      args: [oid, userB],
+    });
+    return { roomId: oid, shouldNotifyInvitee: true };
   }
 
   const id = generateId();
   await client.execute({
-    sql: "INSERT INTO private_chat_rooms (id, created_by, label) VALUES (?, ?, '')",
+    sql: "INSERT INTO private_chat_rooms (id, created_by, label, kind) VALUES (?, ?, '', 'social_direct')",
     args: [id, userA],
   });
 
   await client.execute({
-    sql: "INSERT OR IGNORE INTO private_chat_participants (room_id, user_id) VALUES (?, ?)",
+    sql: "INSERT INTO private_chat_participants (room_id, user_id, membership_status) VALUES (?, ?, 'active')",
     args: [id, userA],
   });
   await client.execute({
-    sql: "INSERT OR IGNORE INTO private_chat_participants (room_id, user_id) VALUES (?, ?)",
+    sql: "INSERT INTO private_chat_participants (room_id, user_id, membership_status) VALUES (?, ?, 'pending')",
     args: [id, userB],
   });
 
-  return id;
+  return { roomId: id, shouldNotifyInvitee: true };
 }

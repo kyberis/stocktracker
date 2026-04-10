@@ -3,6 +3,13 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { Plus, Copy, Check, Trash2, MessageSquare, ExternalLink } from "lucide-react";
 
+interface ChatParticipant {
+  userId: string;
+  displayName: string;
+  avatarUrl: string;
+  membershipStatus?: string;
+}
+
 interface ChatRoom {
   id: string;
   createdBy: string;
@@ -10,6 +17,7 @@ interface ChatRoom {
   isActive: boolean;
   createdAt: string;
   messageCount: number;
+  participants?: ChatParticipant[];
 }
 
 function PrivateChatsTab() {
@@ -19,14 +27,37 @@ function PrivateChatsTab() {
   const [label, setLabel] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [adminUserId, setAdminUserId] = useState<string | null>(null);
+  const [kickingId, setKickingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/auth/me", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d?.user?.id) setAdminUserId(d.user.id);
+      })
+      .catch(() => {});
+  }, []);
 
   const loadRooms = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch("/api/admin/chats", { cache: "no-store" });
       if (res.ok) {
-        const data = await res.json();
-        setRooms(data);
+        const data: ChatRoom[] = await res.json();
+        const withParts = await Promise.all(
+          data.map(async (room) => {
+            try {
+              const pr = await fetch(`/api/admin/chats/${room.id}/participants`, { cache: "no-store" });
+              if (!pr.ok) return { ...room, participants: [] as ChatParticipant[] };
+              const pj = await pr.json();
+              return { ...room, participants: pj.participants || [] };
+            } catch {
+              return { ...room, participants: [] as ChatParticipant[] };
+            }
+          })
+        );
+        setRooms(withParts);
       }
     } catch {
       // ignore
@@ -77,6 +108,19 @@ function PrivateChatsTab() {
       setCopiedId(id);
       setTimeout(() => setCopiedId(null), 2000);
     });
+  }
+
+  async function kickParticipant(roomId: string, userId: string, displayName: string) {
+    if (!window.confirm(`Remove ${displayName || userId} from this chat? They can rejoin if a slot opens.`)) return;
+    setKickingId(`${roomId}:${userId}`);
+    try {
+      const res = await fetch(`/api/admin/chats/${roomId}/participants/${userId}`, { method: "DELETE" });
+      if (res.ok) loadRooms();
+    } catch {
+      // ignore
+    } finally {
+      setKickingId(null);
+    }
   }
 
   const activeRooms = rooms.filter((r) => r.isActive);
@@ -139,6 +183,28 @@ function PrivateChatsTab() {
                           {room.messageCount} messages · Created{" "}
                           {new Date(room.createdAt + "Z").toLocaleDateString()}
                         </p>
+                        {room.participants && room.participants.length > 0 && (
+                          <ul className="mt-2 text-xs text-gray-600 dark:text-slate-400 space-y-1">
+                            {room.participants.map((p) => (
+                              <li key={p.userId} className="flex items-center justify-between gap-2">
+                                <span className="truncate">
+                                  {p.displayName}
+                                  <span className="text-gray-400 dark:text-slate-500 font-mono ml-1">({p.userId.slice(0, 8)}…)</span>
+                                </span>
+                                {adminUserId && p.userId !== adminUserId && (
+                                  <button
+                                    type="button"
+                                    onClick={() => kickParticipant(room.id, p.userId, p.displayName)}
+                                    disabled={kickingId === `${room.id}:${p.userId}`}
+                                    className="shrink-0 text-xs text-red-600 dark:text-red-400 hover:underline disabled:opacity-50"
+                                  >
+                                    {kickingId === `${room.id}:${p.userId}` ? "Removing…" : "Remove"}
+                                  </button>
+                                )}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">

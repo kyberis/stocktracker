@@ -279,6 +279,8 @@ export interface QuoteData {
   marketCap?: number;
   trailingAnnualDividendRate?: number;
   trailingAnnualDividendYield?: number;
+  /** Yahoo / provider instrument class (e.g. EQUITY, ETF) — used for classification hints */
+  quoteType?: string;
   providerUsed?: string;
   fetchedAt?: number;
 }

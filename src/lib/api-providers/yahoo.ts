@@ -73,6 +73,10 @@ export class YahooProvider implements StockDataProvider {
     try {
       const quote = await yahooFinance.quote(symbol);
       ok = true;
+      const qt =
+        quote && typeof quote === "object" && "quoteType" in quote
+          ? String((quote as { quoteType?: string }).quoteType || "")
+          : "";
       const result: ProviderQuoteResult = {
         symbol: quote.symbol ?? symbol,
         shortName: quote.shortName || quote.longName || symbol,
@@ -86,6 +90,7 @@ export class YahooProvider implements StockDataProvider {
         marketCap: quote.marketCap ?? 0,
         trailingAnnualDividendRate: quote.trailingAnnualDividendRate ?? undefined,
         trailingAnnualDividendYield: quote.trailingAnnualDividendYield ?? undefined,
+        ...(qt ? { quoteType: qt } : {}),
       };
       setCache(cacheKey, result);
       return result;

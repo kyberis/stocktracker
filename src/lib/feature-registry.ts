@@ -378,6 +378,7 @@ export const featureDomains: FeatureDomain[] = [
       { method: "POST", path: "/api/admin/reset-data", auth: "admin", description: "Reset user data (seed/empty)" },
       { method: "POST", path: "/api/admin/impersonate", auth: "admin", description: "Sign in as a non-admin user (support)" },
       { method: "POST", path: "/api/auth/exit-impersonation", auth: "session", description: "Restore admin session after impersonation" },
+      { method: "POST", path: "/api/admin/feedback/send-completion", auth: "admin", description: "Send feedback completion email to user" },
     ],
     libs: [
       { path: "src/lib/auth/guards.ts", description: "requireAdmin guard" },
@@ -404,6 +405,8 @@ export const featureDomains: FeatureDomain[] = [
       { method: "POST", path: "/api/events", auth: "session", description: "Track client-side events" },
       { method: "GET", path: "/api/metrics", auth: "public", description: "Prometheus metrics endpoint" },
       { method: "POST", path: "/api/cron/push-metrics", auth: "public", description: "Push metrics to Grafana Cloud" },
+      { method: "POST", path: "/api/cron/feedback-pipeline", auth: "public", description: "Feedback auto-ack + Linear issue (cron secret)" },
+      { method: "POST", path: "/api/webhooks/linear", auth: "public", description: "Linear webhook — completion email draft (HMAC signature)" },
     ],
     libs: [],
     patterns: [

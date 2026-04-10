@@ -18,6 +18,7 @@ import {
 } from "@/lib/utils";
 import { getMarketStatus } from "@/lib/market-hours";
 import type { Holding, QuoteData, CompanyOverview } from "@/lib/types";
+import { holdingIsEtfLike } from "@/lib/services/etf-lookthrough";
 import OverviewSection from "./stock-row/OverviewSection";
 import EditForm from "./stock-row/EditForm";
 import TradePanel from "./stock-row/TradePanel";
@@ -77,6 +78,7 @@ export default function StockDetailDrawer({ holding, onClose }: StockDetailDrawe
   const [showAlertForm, setShowAlertForm] = useState(false);
   const [showMoveMenu, setShowMoveMenu] = useState(false);
   const [moveLoading, setMoveLoading] = useState(false);
+  const [assetTypeSaving, setAssetTypeSaving] = useState(false);
   const hasAlert = alertedTickers.has(holding.ticker);
 
   const isPro = user?.plan === "pro";
@@ -106,6 +108,10 @@ export default function StockDetailDrawer({ holding, onClose }: StockDetailDrawe
   const isCashHolding =
     holding.exchange.trim().toUpperCase() === "CASH" ||
     holding.ticker.trim().toUpperCase().startsWith("CASH-");
+  const suggestEtfFix =
+    !isCashHolding &&
+    (holding.assetType ?? "stock") === "stock" &&
+    holdingIsEtfLike(holding, quote);
   const isRefreshing = refreshingTickers.has(holding.ticker);
   const marketStatus = isCashHolding ? null : getMarketStatus(holding.exchange, now);
   const lastFetchedAt = quoteUpdatedAt[holding.ticker] ?? quote?.fetchedAt;
@@ -259,6 +265,16 @@ export default function StockDetailDrawer({ holding, onClose }: StockDetailDrawe
     setIsEditing(false);
   };
 
+  const handleSetAsEtf = async () => {
+    if (assetTypeSaving) return;
+    setAssetTypeSaving(true);
+    try {
+      await updateHolding(holding.id, { assetType: "etf" });
+    } finally {
+      setAssetTypeSaving(false);
+    }
+  };
+
   const handleApplyTrade = async () => {
     const qty = parseFloat(tradeQuantity);
     const price = parseFloat(tradePrice);
@@ -398,6 +414,33 @@ export default function StockDetailDrawer({ holding, onClose }: StockDetailDrawe
             </button>
           </div>
         </div>
+
+        {suggestEtfFix && !isEditing && (
+          <div
+            className="px-5 py-3 border-b border-amber-200/80 dark:border-amber-500/30 bg-amber-50/90 dark:bg-amber-500/10"
+            role="region"
+            aria-label={t("assetTypeSuggestEtf")}
+          >
+            <p className="text-sm text-amber-950 dark:text-amber-100/95 leading-snug">{t("assetTypeSuggestEtf")}</p>
+            <div className="flex flex-wrap gap-2 mt-3">
+              <button
+                type="button"
+                onClick={handleSetAsEtf}
+                disabled={assetTypeSaving}
+                className="btn-primary text-sm px-3 py-1.5 disabled:opacity-60"
+              >
+                {assetTypeSaving ? "…" : t("setAssetTypeEtf")}
+              </button>
+              <button
+                type="button"
+                onClick={handleStartEdit}
+                className="btn-secondary text-sm px-3 py-1.5"
+              >
+                {t("changeAssetType")}
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Price hero */}
         <div className="px-5 py-4 border-b border-gray-100 dark:border-slate-800">

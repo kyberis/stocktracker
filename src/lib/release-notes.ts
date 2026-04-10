@@ -17,6 +17,88 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.77.12",
+    date: "2026-04-10",
+    title: "Private chat invites and admin link limits",
+    titleTranslations: {
+      es: "Invitaciones al chat privado y límites en enlaces de admin",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Network direct messages now require the recipient to accept an invitation before they can read or send messages; opening a shared URL alone no longer adds you to a 1:1 social chat. Link-based admin chat rooms are capped at two participants, and admins can remove a participant from those rooms.",
+        translations: {
+          es: "Los mensajes directos en la red exigen que el destinatario acepte una invitación antes de leer o enviar; abrir solo un enlace ya no te une a un chat social 1:1. Las salas por enlace del administrador admiten como máximo dos participantes y el administrador puede expulsar a un participante.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Sector diversification with ETF sector breakdown enabled now merges Yahoo fund sector keys (e.g. realestate) with stock sector names (e.g. Real Estate) so the same sector no longer appears twice.",
+        translations: {
+          es: "En la diversificación por sector con desglose sectorial de ETF activado, las claves de sector de los fondos de Yahoo (p. ej. realestate) se unifican con los nombres de sector de las acciones (p. ej. Real Estate) para que el mismo sector no aparezca duplicado.",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.77.11",
+    date: "2026-04-10",
+    title: "Feedback pipeline and Linear integration",
+    titleTranslations: {
+      es: "Pipeline de feedback e integración con Linear",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "User feedback left open for 6+ hours is automatically acknowledged by email, tracked as a structured Linear issue, and can be closed with a second email drafted when the issue moves to Done (admin reviews and sends from the Feedback admin tab).",
+        translations: {
+          es: "Los comentarios que siguen abiertos más de 6 horas reciben un acuse por correo, se registran como tarea en Linear con plantilla estructurada y pueden cerrarse con un segundo correo cuando el issue pasa a Hecho (el admin revisa y envía desde la pestaña Feedback).",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.77.10",
+    date: "2026-04-10",
+    title: "Fix asset type for misclassified funds",
+    titleTranslations: {
+      es: "Corregir tipo de activo en fondos mal clasificados",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "When a holding is saved as a stock but market data or the name indicates an ETF, the stock drawer and stock detail page show a one-click “Set as ETF” action plus an explicit asset-type control so imports can be corrected without re-entering the full edit form.",
+        translations: {
+          es: "Si una posición está como acción pero los datos o el nombre indican un ETF, el panel del valor y la página de detalle muestran «Marcar como ETF» con un clic y un control de tipo de activo para corregir importaciones sin rellenar todo el formulario de edición.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Portfolio tab: “Review types” opens a bulk editor (desktop holdings table, mobile portfolio, and /portfolio page) with suggested misclassified ETFs and per-row saves, plus “Set all suggested as ETF” for one pass.",
+        translations: {
+          es: "Pestaña Portafolio: «Revisar tipos» abre un editor por lotes (tabla en escritorio, portafolio móvil y página /portfolio) con ETF mal clasificados sugeridos y guardado por fila, además de «Marcar todos los sugeridos como ETF».",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.77.9",
+    date: "2026-04-10",
+    title: "Full UI string coverage per language",
+    titleTranslations: {
+      es: "Cobertura completa de cadenas de interfaz por idioma",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Every supported language now resolves all UI translation keys: partial locales merge with English as a base, and Spanish includes the latest landing and upsell strings. A parity test ensures new keys cannot ship only in English.",
+        translations: {
+          es: "Los idiomas soportados resuelven todas las claves de traducción de la interfaz: los locales parciales se fusionan con el inglés como base, y el español incluye las últimas cadenas de landing y upsell. Un test de paridad evita que nuevas claves solo lleguen en inglés.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.77.8",
     date: "2026-04-10",
     title: "Admin impersonation",

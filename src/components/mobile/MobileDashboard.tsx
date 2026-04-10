@@ -24,6 +24,7 @@ import TrialCountdownBanner from "@/components/TrialCountdownBanner";
 import CloverToLogo from "@/components/CloverToLogo";
 import { HeroSkeleton, ChartSkeleton } from "@/components/Skeleton";
 import type { Account } from "@/lib/types";
+import { AssetTypeReviewLauncher } from "@/components/AssetTypeReviewModal";
 
 const PortfolioValueChart = dynamic(() => import("@/components/portfolio-v2/PortfolioValueChart"), {
   ssr: false,
@@ -266,6 +267,9 @@ export default function MobileDashboard() {
             ) : (
               <>
                 <WeeklyDigestCard position="promoted" />
+                <div className="flex justify-end">
+                  <AssetTypeReviewLauncher />
+                </div>
                 <PortfolioSummary holdings={filteredHoldings} cashEntries={investmentCashEntries} allCashEntries={cashEntries} />
                 <PortfolioValueChart holdings={filteredHoldings} assetFilter="all" />
                 <AssetBreakdownCards holdings={filteredHoldings} cashEntries={investmentCashEntries} />

@@ -10,6 +10,7 @@ import PortfolioValueChart from "./PortfolioValueChart";
 import BackfillCTA from "./BackfillCTA";
 import MarketAwareBreakdown from "./MarketAwareBreakdown";
 import PortfolioAiDrawer from "@/components/dashboard-v2/PortfolioAiDrawer";
+import { AssetTypeReviewLauncher } from "@/components/AssetTypeReviewModal";
 import type { Holding, QuoteData, ExchangeRates, HoldingAssetType } from "@/lib/types";
 
 /**
@@ -140,6 +141,12 @@ export default function PortfolioPage() {
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-4">
       {/* Backfill CTA */}
       <BackfillCTA holdingsCount={holdings.length} onComplete={handleBackfillComplete} />
+
+      {holdings.length > 0 && (
+        <div className="flex justify-end -mt-1">
+          <AssetTypeReviewLauncher />
+        </div>
+      )}
 
       {/* Chart (with integrated header + filter) */}
       <PortfolioValueChart

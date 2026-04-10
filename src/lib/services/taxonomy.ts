@@ -23,6 +23,36 @@ const PIE_COLORS = [
 
 export type TaxonomyCategory = "sector" | "region" | "assetClass" | "assetType";
 
+/** Normalize sector strings so Yahoo ETF keys (e.g. realestate) match stock labels (e.g. "Real Estate"). */
+export function sectorAggregationKey(label: string): string {
+  return label.toLowerCase().replace(/[\s_-]/g, "").replace(/[^a-z0-9]/g, "");
+}
+
+function pickPreferredSectorLabel(a: string, b: string): string {
+  const aSpace = a.includes(" ");
+  const bSpace = b.includes(" ");
+  if (aSpace !== bSpace) return aSpace ? a : b;
+  if (a.length !== b.length) return a.length > b.length ? a : b;
+  const capCount = (s: string) => (s.match(/[A-Z]/g) ?? []).length;
+  if (capCount(a) !== capCount(b)) return capCount(a) > capCount(b) ? a : b;
+  return a;
+}
+
+function addMergedSectorBucket(
+  buckets: Map<string, { valueEUR: number; displayLabel: string }>,
+  rawLabel: string,
+  deltaEUR: number,
+): void {
+  const key = sectorAggregationKey(rawLabel) || "\0";
+  const prev = buckets.get(key);
+  if (!prev) {
+    buckets.set(key, { valueEUR: deltaEUR, displayLabel: rawLabel });
+    return;
+  }
+  prev.valueEUR += deltaEUR;
+  prev.displayLabel = pickPreferredSectorLabel(prev.displayLabel, rawLabel);
+}
+
 export function computeTaxonomyAllocations(
   holdings: Holding[],
   quotes: Record<string, QuoteData>,
@@ -78,7 +108,7 @@ export function computeTaxonomyAllocationsWithEtfSectorLookthrough(
     return computeTaxonomyAllocations(holdings, quotes, exchangeRates, category, unclassifiedLabel);
   }
 
-  const buckets: Record<string, number> = {};
+  const buckets = new Map<string, { valueEUR: number; displayLabel: string }>();
   let total = 0;
 
   for (const h of holdings) {
@@ -93,22 +123,21 @@ export function computeTaxonomyAllocationsWithEtfSectorLookthrough(
       for (const { sector, weight } of weights) {
         if (!sector || weight <= 0) continue;
         sumW += weight;
-        buckets[sector] = (buckets[sector] || 0) + valueEUR * (weight / 100);
+        addMergedSectorBucket(buckets, sector, valueEUR * (weight / 100));
       }
       if (sumW < 99.5 && sumW > 0) {
-        buckets[unclassifiedLabel] =
-          (buckets[unclassifiedLabel] || 0) + valueEUR * ((100 - sumW) / 100);
+        addMergedSectorBucket(buckets, unclassifiedLabel, valueEUR * ((100 - sumW) / 100));
       }
       continue;
     }
 
     const label = (h.sector as string) || unclassifiedLabel;
-    buckets[label] = (buckets[label] || 0) + valueEUR;
+    addMergedSectorBucket(buckets, label, valueEUR);
   }
 
-  return Object.entries(buckets)
-    .sort((a, b) => b[1] - a[1])
-    .map(([label, valueEUR], i) => ({
+  return [...buckets.values()]
+    .sort((a, b) => b.valueEUR - a.valueEUR)
+    .map(({ displayLabel: label, valueEUR }, i) => ({
       label,
       valueEUR,
       percent: total > 0 ? (valueEUR / total) * 100 : 0,

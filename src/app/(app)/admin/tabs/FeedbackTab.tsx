@@ -16,6 +16,13 @@ interface FeedbackItem {
   createdAt: string;
   repliedAt: string;
   userContext: string;
+  linearIssueId?: string;
+  linearIssueUrl?: string;
+  autoPipelineAt?: string;
+  completionEmailDraft?: string;
+  completionDraftReadyAt?: string;
+  completionEmailSentAt?: string;
+  ackEmailSentAt?: string;
 }
 
 function FeedbackContextPanel({ raw }: { raw: string }) {
@@ -70,6 +77,8 @@ function FeedbackTab() {
   const [replyMap, setReplyMap] = useState<Record<string, string>>({});
   const [statusMap, setStatusMap] = useState<Record<string, string>>({});
   const [sendingMap, setSendingMap] = useState<Record<string, boolean>>({});
+  const [completionDraftMap, setCompletionDraftMap] = useState<Record<string, string>>({});
+  const [sendingCompletionMap, setSendingCompletionMap] = useState<Record<string, boolean>>({});
 
   const loadFeedback = useCallback(async () => {
     setLoading(true);
@@ -82,12 +91,15 @@ function FeedbackTab() {
         setTotal(data.total ?? feedbackItems.length);
         const rMap: Record<string, string> = {};
         const sMap: Record<string, string> = {};
+        const cMap: Record<string, string> = {};
         for (const item of feedbackItems) {
           rMap[item.id] = item.adminReply || "";
           sMap[item.id] = item.status;
+          cMap[item.id] = item.completionEmailDraft || "";
         }
         setReplyMap(rMap);
         setStatusMap(sMap);
+        setCompletionDraftMap(cMap);
       }
     } catch {
       // ignore
@@ -97,6 +109,25 @@ function FeedbackTab() {
   }, [page]);
 
   useEffect(() => { loadFeedback(); }, [loadFeedback]);
+
+  const handleSendCompletion = async (id: string) => {
+    setSendingCompletionMap((prev) => ({ ...prev, [id]: true }));
+    try {
+      const html = completionDraftMap[id] ?? "";
+      const res = await fetch("/api/admin/feedback/send-completion", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, html: html.trim() || undefined }),
+      });
+      if (res.ok) {
+        await loadFeedback();
+      }
+    } catch {
+      // ignore
+    } finally {
+      setSendingCompletionMap((prev) => ({ ...prev, [id]: false }));
+    }
+  };
 
   const handleReply = async (id: string) => {
     setSendingMap((prev) => ({ ...prev, [id]: true }));
@@ -174,6 +205,60 @@ function FeedbackTab() {
 
           {item.type === "bug" && item.userContext && (
             <FeedbackContextPanel raw={item.userContext} />
+          )}
+
+          {(item.linearIssueUrl || item.linearIssueId) && (
+            <p className="text-xs text-gray-600 dark:text-slate-400">
+              <span className="font-medium text-gray-700 dark:text-slate-300">Linear:</span>{" "}
+              {item.linearIssueUrl ? (
+                <a
+                  href={item.linearIssueUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-emerald-600 dark:text-emerald-400 underline"
+                >
+                  Open issue
+                </a>
+              ) : (
+                <span className="font-mono text-[11px]">{item.linearIssueId}</span>
+              )}
+            </p>
+          )}
+
+          {item.autoPipelineAt && !item.completionEmailSentAt && (
+            <div className="border border-amber-200 dark:border-amber-500/30 rounded-lg p-3 space-y-2 bg-amber-50/50 dark:bg-amber-500/5">
+              <p className="text-xs font-medium text-amber-900 dark:text-amber-200">
+                Completion email draft (review before sending)
+                {item.completionDraftReadyAt && (
+                  <span className="font-normal text-amber-800/80 dark:text-amber-300/80">
+                    {" "}
+                    &middot; ready {new Date(item.completionDraftReadyAt).toLocaleString()}
+                  </span>
+                )}
+              </p>
+              <textarea
+                value={completionDraftMap[item.id] ?? ""}
+                onChange={(e) =>
+                  setCompletionDraftMap((prev) => ({ ...prev, [item.id]: e.target.value }))
+                }
+                className="w-full text-xs min-h-[120px] resize-y font-mono"
+                placeholder="HTML email body…"
+              />
+              <button
+                type="button"
+                onClick={() => handleSendCompletion(item.id)}
+                disabled={sendingCompletionMap[item.id]}
+                className="btn-primary text-xs disabled:opacity-50"
+              >
+                {sendingCompletionMap[item.id] ? "Sending…" : "Send completion email to user"}
+              </button>
+            </div>
+          )}
+
+          {item.completionEmailSentAt && (
+            <p className="text-xs text-emerald-700 dark:text-emerald-400">
+              Completion email sent {new Date(item.completionEmailSentAt).toLocaleString()}
+            </p>
           )}
 
           {/* Reply form */}

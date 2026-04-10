@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
 import { withMetrics } from "@/lib/with-metrics";
-import { getPrivateChatRoom, addPrivateChatMessage, editPrivateChatMessage } from "@/lib/db";
+import { getPrivateChatRoom, addPrivateChatMessage, editPrivateChatMessage, getParticipantMembership } from "@/lib/db";
 import type { PrivateChatMessageType } from "@/lib/db";
 
 const MAX_IMAGE_BYTES = 3.5 * 1024 * 1024;
@@ -26,6 +26,11 @@ export const POST = withMetrics(
     const room = await getPrivateChatRoom(token);
     if (!room) {
       return NextResponse.json({ error: "Chat not found or has been disabled" }, { status: 404 });
+    }
+
+    const membership = await getParticipantMembership(token, session.userId);
+    if (membership !== "active") {
+      return NextResponse.json({ error: "You do not have access to post in this chat" }, { status: 403 });
     }
 
     let body: { type?: string; content?: string; replyToId?: string; persistent?: boolean };
@@ -75,6 +80,11 @@ export const PATCH = withMetrics(
     const room = await getPrivateChatRoom(token);
     if (!room) {
       return NextResponse.json({ error: "Chat not found or has been disabled" }, { status: 404 });
+    }
+
+    const membership = await getParticipantMembership(token, session.userId);
+    if (membership !== "active") {
+      return NextResponse.json({ error: "You do not have access to edit messages in this chat" }, { status: 403 });
     }
 
     let body: { messageId?: string; content?: string };

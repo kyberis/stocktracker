@@ -402,6 +402,13 @@ export const replyFeedbackSchema = z.object({
   status: z.enum(["open", "answered", "closed"]),
 });
 
+export const sendFeedbackCompletionSchema = z.object({
+  id: z.string().min(1, "Feedback ID is required"),
+  /** When omitted, uses stored `completion_email_draft`. */
+  html: z.string().max(500_000).optional(),
+  subject: z.string().min(1).max(200).optional(),
+});
+
 /* ── Admin ─────────────────────────────────────────────────── */
 
 export const adminUserActionSchema = z.discriminatedUnion("action", [

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
 import { withMetrics } from "@/lib/with-metrics";
-import { updateTypingStatus } from "@/lib/db";
+import { updateTypingStatus, getParticipantMembership } from "@/lib/db";
 
 export const POST = withMetrics(
   "/api/chat/[token]/typing",
@@ -13,6 +13,11 @@ export const POST = withMetrics(
     const token = segments[segments.indexOf("chat") + 1] || "";
     if (!token || token.length < 8) {
       return NextResponse.json({ error: "Invalid token" }, { status: 404 });
+    }
+
+    const membership = await getParticipantMembership(token, session.userId);
+    if (membership !== "active") {
+      return new NextResponse(null, { status: 403 });
     }
 
     await updateTypingStatus(token, session.userId);

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Send, ImagePlus, Camera, Clock, AlertTriangle, Loader2,
   Link as LinkIcon, Users, Pencil, Reply, X, ChevronLeft, CheckCheck,
@@ -44,6 +45,7 @@ interface ChatRoomData {
   label: string;
   isActive: boolean;
   createdAt: string;
+  kind?: string;
 }
 
 interface Participant {
@@ -54,6 +56,7 @@ interface Participant {
   lastTypingAt: string;
   lastSeenAt: string;
   lastReadMsgId: string;
+  membershipStatus?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -601,6 +604,7 @@ export interface ChatRoomViewProps {
 }
 
 export function ChatRoomView({ token, showBackButton = false, heightClass = "h-dvh" }: ChatRoomViewProps) {
+  const router = useRouter();
   const [room, setRoom] = useState<ChatRoomData | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [participants, setParticipants] = useState<Participant[]>([]);
@@ -622,6 +626,9 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
   const [clearing, setClearing] = useState(false);
   const [reactions, setReactions] = useState<Record<string, ChatReaction[]>>({});
   const [pendingImage, setPendingImage] = useState<string | null>(null);
+  const [membership, setMembership] = useState<"active" | "pending" | null>(null);
+  const [inviterPreview, setInviterPreview] = useState<{ userId: string; displayName: string; avatarUrl: string } | null>(null);
+  const [inviteActionLoading, setInviteActionLoading] = useState(false);
   const tickerAbortRef = useRef<AbortController | null>(null);
   const tickerDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -674,27 +681,46 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
     setEditingMsg(null);
     setInput("");
     lastMessageIdRef.current = null;
+    setMembership(null);
+    setInviterPreview(null);
 
     fetch(`/api/chat/${token}`)
-      .then((r) => { if (!r.ok) throw new Error(r.status === 404 ? "Chat not found" : "Failed to load chat"); return r.json(); })
-      .then((data: { room: ChatRoomData; messages: ChatMessage[]; participants: Participant[]; reactions?: Record<string, ChatReaction[]> }) => {
+      .then(async (r) => {
+        if (r.status === 403) {
+          const errBody = await r.json().catch(() => ({}));
+          throw new Error(typeof errBody.error === "string" ? errBody.error : "You do not have access to this chat");
+        }
+        if (!r.ok) throw new Error(r.status === 404 ? "Chat not found" : "Failed to load chat");
+        return r.json() as Promise<{
+          room: ChatRoomData;
+          messages: ChatMessage[];
+          participants: Participant[];
+          reactions?: Record<string, ChatReaction[]>;
+          membership?: "active" | "pending";
+          inviter?: { userId: string; displayName: string; avatarUrl: string } | null;
+        }>;
+      })
+      .then((data) => {
         setRoom(data.room);
-        setMessages(data.messages);
+        setMessages(data.messages || []);
         setParticipants(data.participants || []);
         if (data.reactions) setReactions(data.reactions);
-        if (data.messages.length > 0) {
+        const m = data.membership ?? "active";
+        setMembership(m);
+        setInviterPreview(data.inviter ?? null);
+        if (m === "active" && data.messages.length > 0) {
           const lastId = data.messages[data.messages.length - 1].id;
           lastMessageIdRef.current = lastId;
           fetch(`/api/chat/${token}?lastRead=${lastId}`).catch(() => {});
         }
         setError(null);
       })
-      .catch((e) => setError(e.message))
+      .catch((e) => setError(e instanceof Error ? e.message : "Failed to load chat"))
       .finally(() => setLoading(false));
   }, [token]);
 
   useEffect(() => {
-    if (!room) return;
+    if (!room || membership !== "active") return;
     const interval = setInterval(() => {
       const params = new URLSearchParams();
       if (lastMessageIdRef.current) params.set("after", lastMessageIdRef.current);
@@ -702,8 +728,9 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
       const qs = params.toString();
       fetch(`/api/chat/${token}${qs ? `?${qs}` : ""}`)
         .then((r) => (r.ok ? r.json() : null))
-        .then((data: { room: ChatRoomData; messages: ChatMessage[]; participants: Participant[]; reactions?: Record<string, ChatReaction[]> } | null) => {
+        .then((data: { room: ChatRoomData; messages: ChatMessage[]; participants: Participant[]; reactions?: Record<string, ChatReaction[]>; membership?: string } | null) => {
           if (!data) return;
+          if (data.membership === "pending") return;
           if (data.participants) setParticipants(data.participants);
           if (data.reactions) setReactions(data.reactions);
           if (data.messages.length === 0) return;
@@ -724,7 +751,7 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
         .catch(() => {});
     }, POLL_INTERVAL_MS);
     return () => clearInterval(interval);
-  }, [room, token]);
+  }, [room, token, membership]);
 
   useEffect(() => { scrollToBottom(); }, [messages, scrollToBottom]);
 
@@ -734,6 +761,7 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
   }, []);
 
   function sendTypingHeartbeat() {
+    if (membership !== "active") return;
     const now = Date.now();
     if (now - lastTypingSentRef.current < TYPING_HEARTBEAT_MS) return;
     lastTypingSentRef.current = now;
@@ -1051,6 +1079,59 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
     return false;
   }, [readMsgIds, messages]);
 
+  async function acceptInvitation() {
+    setInviteActionLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/chat/${token}/invite/accept`, { method: "POST" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(typeof data.error === "string" ? data.error : "Could not accept invitation");
+      }
+      const chatRes = await fetch(`/api/chat/${token}`);
+      if (!chatRes.ok) throw new Error("Failed to reload chat");
+      const data = await chatRes.json() as {
+        room: ChatRoomData;
+        messages: ChatMessage[];
+        participants: Participant[];
+        reactions?: Record<string, ChatReaction[]>;
+        membership?: "active" | "pending";
+      };
+      setRoom(data.room);
+      setMessages(data.messages || []);
+      setParticipants(data.participants || []);
+      if (data.reactions) setReactions(data.reactions);
+      setMembership(data.membership ?? "active");
+      setInviterPreview(null);
+      if (data.messages && data.messages.length > 0) {
+        const lastId = data.messages[data.messages.length - 1].id;
+        lastMessageIdRef.current = lastId;
+        fetch(`/api/chat/${token}?lastRead=${lastId}`).catch(() => {});
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to accept");
+    } finally {
+      setInviteActionLoading(false);
+    }
+  }
+
+  async function declineInvitation() {
+    setInviteActionLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/chat/${token}/invite/decline`, { method: "POST" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(typeof data.error === "string" ? data.error : "Could not decline invitation");
+      }
+      router.push("/chats");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to decline");
+    } finally {
+      setInviteActionLoading(false);
+    }
+  }
+
   if (loading) {
     return <div className={`flex items-center justify-center ${heightClass}`}><Loader2 className="w-8 h-8 animate-spin text-indigo-500" /></div>;
   }
@@ -1060,6 +1141,60 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
       <div className={`flex flex-col items-center justify-center ${heightClass} gap-3 px-4`}>
         <AlertTriangle className="w-10 h-10 text-red-500" />
         <p className="text-gray-700 dark:text-slate-300 text-center">{error}</p>
+      </div>
+    );
+  }
+
+  if (room && membership === "pending") {
+    const inv =
+      inviterPreview ||
+      participants.find((p) => p.userId !== currentUserId && p.membershipStatus === "active");
+    const name = inv?.displayName || "Someone";
+    return (
+      <div className={`flex flex-col ${heightClass} overflow-hidden bg-white dark:bg-slate-900`}>
+        <header className="shrink-0 border-b border-gray-200 dark:border-slate-800 px-4 py-3">
+          <div className="flex items-center gap-3">
+            {showBackButton && (
+              <Link href="/chats" className="p-1 -ml-1 rounded-lg text-gray-500 hover:text-gray-900 dark:text-slate-400 dark:hover:text-white transition-colors">
+                <ChevronLeft className="w-5 h-5" />
+              </Link>
+            )}
+            <h1 className="text-base font-semibold text-gray-900 dark:text-white truncate">Chat invitation</h1>
+          </div>
+        </header>
+        <div className="flex-1 flex flex-col items-center justify-center px-6 gap-6">
+          <div className="text-center space-y-2 max-w-sm">
+            <p className="text-gray-800 dark:text-slate-200">
+              <span className="font-semibold">{name}</span> invited you to a private chat on Trefolio.
+            </p>
+            <p className="text-sm text-gray-500 dark:text-slate-400">
+              Accept to see messages and reply. If you decline, this conversation stays closed until they send a new invite.
+            </p>
+          </div>
+          {error && (
+            <p className="text-sm text-red-600 dark:text-red-400 text-center" role="alert">
+              {error}
+            </p>
+          )}
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={declineInvitation}
+              disabled={inviteActionLoading}
+              className="px-5 py-2.5 rounded-lg border border-gray-300 dark:border-slate-600 text-gray-800 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-800 disabled:opacity-50 text-sm font-medium transition-colors"
+            >
+              Decline
+            </button>
+            <button
+              type="button"
+              onClick={acceptInvitation}
+              disabled={inviteActionLoading}
+              className="px-5 py-2.5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 text-sm font-medium transition-colors"
+            >
+              {inviteActionLoading ? "Working…" : "Accept"}
+            </button>
+          </div>
+        </div>
       </div>
     );
   }

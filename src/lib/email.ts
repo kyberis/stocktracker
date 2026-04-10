@@ -980,3 +980,139 @@ export async function sendSatisfactionTrustpilotEmail(
 
   return result;
 }
+
+// ---------------------------------------------------------------------------
+// Feedback pipeline (auto-ack + completion) — copy aligns with automated-user-comms skill
+// ---------------------------------------------------------------------------
+
+type FeedbackMailLocale = "en" | "es";
+
+export function feedbackMailLocaleFromAppLanguage(language: string | undefined): FeedbackMailLocale {
+  const l = (language || "en").toLowerCase();
+  return l.startsWith("es") ? "es" : "en";
+}
+
+const feedbackAutoAckCopy: Record<
+  FeedbackMailLocale,
+  { subject: string; heading: string; line1: string; line2: string; disclaimer: string }
+> = {
+  en: {
+    subject: "We received your feedback",
+    heading: "Thank you",
+    line1: "Thanks for taking the time to write to us about:",
+    line2:
+      "We've logged your message and our team will take it into account when prioritizing improvements. You don't need to do anything else.",
+    disclaimer:
+      "This is an automated confirmation. If you need urgent help, reply to this email or contact support.",
+  },
+  es: {
+    subject: "Hemos recibido tu comentario",
+    heading: "Gracias",
+    line1: "Gracias por escribirnos sobre:",
+    line2:
+      "Hemos registrado tu mensaje y lo tendremos en cuenta al priorizar mejoras. No necesitas hacer nada más.",
+    disclaimer:
+      "Este es un correo automático de confirmación. Si necesitas ayuda urgente, responde a este correo o contacta con soporte.",
+  },
+};
+
+/** Plain-text reply stored in `feedback.admin_reply` and reflected in the app. */
+export function buildFeedbackAutoAckAdminReply(locale: FeedbackMailLocale, subject: string): string {
+  const s = subject.trim() || "your message";
+  if (locale === "es") {
+    return `Gracias por tu mensaje sobre "${s}". Lo tendremos en cuenta mientras priorizamos el trabajo en el producto.`;
+  }
+  return `Thanks for your message about "${s}". We'll take it into account as we prioritize work on the product.`;
+}
+
+function feedbackAutoAckHtml(locale: FeedbackMailLocale, subjectLine: string): string {
+  const c = feedbackAutoAckCopy[locale];
+  const esc = (t: string) =>
+    t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  const subj = esc(subjectLine.trim() || "—");
+  return `${emailHeader()}
+        <tr><td style="padding:32px 32px 0;">
+          <h1 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#0f172a;">${c.heading}</h1>
+          <p style="margin:0 0 12px;font-size:15px;color:#475569;line-height:1.6;">${c.line1}</p>
+          <p style="margin:0 0 24px;font-size:15px;font-weight:600;color:#0f172a;line-height:1.5;">${subj}</p>
+          <p style="margin:0 0 24px;font-size:15px;color:#475569;line-height:1.6;">${c.line2}</p>
+          <p style="margin:0;font-size:13px;color:#94a3b8;line-height:1.5;">${c.disclaimer}</p>
+        </td></tr>
+${emailFooter(
+    "You're receiving this because you submitted feedback in trefolio.",
+    `${getBaseUrl()}/`,
+    "Open dashboard",
+    "{{unsubscribe_url}}",
+  )}`;
+}
+
+export async function sendFeedbackAutoAckEmail(
+  email: string,
+  userId: string,
+  subjectLine: string,
+  locale: FeedbackMailLocale,
+): Promise<{ success: boolean; error?: string }> {
+  if (isTestEmail(email)) return { success: true };
+
+  const c = feedbackAutoAckCopy[locale];
+  const html = feedbackAutoAckHtml(locale, subjectLine);
+
+  const result = await sendEmail({
+    to: email,
+    subject: c.subject,
+    html,
+    userId,
+  });
+  if (!result.success) console.error("Failed to send feedback auto-ack email:", result.error);
+
+  try {
+    await logEmailSend({
+      resendId: result.messageId || "",
+      templateId: "",
+      userId,
+      emailTo: email,
+      subject: c.subject,
+      bodyHtml: html,
+      bodyText: htmlToPlainText(html),
+      status: result.success ? "sent" : "failed",
+    });
+  } catch (e) {
+    console.error("[feedback-auto-ack] logEmailSend:", e);
+  }
+
+  return result;
+}
+
+export async function sendFeedbackCompletionEmail(
+  email: string,
+  userId: string,
+  subjectLine: string,
+  htmlBody: string,
+): Promise<{ success: boolean; error?: string }> {
+  if (isTestEmail(email)) return { success: true };
+
+  const result = await sendEmail({
+    to: email,
+    subject: subjectLine,
+    html: htmlBody,
+    userId,
+  });
+  if (!result.success) console.error("Failed to send feedback completion email:", result.error);
+
+  try {
+    await logEmailSend({
+      resendId: result.messageId || "",
+      templateId: "",
+      userId,
+      emailTo: email,
+      subject: subjectLine,
+      bodyHtml: htmlBody,
+      bodyText: htmlToPlainText(htmlBody),
+      status: result.success ? "sent" : "failed",
+    });
+  } catch (e) {
+    console.error("[feedback-completion] logEmailSend:", e);
+  }
+
+  return result;
+}
