@@ -25,24 +25,39 @@ function verifyLinearSignature(rawBody: Buffer, headerSig: string | null, secret
   return timingSafeEqual(computed, sigBuf);
 }
 
-function buildCompletionDraft(params: {
-  feedbackSubject: string;
-  identifier: string;
-  issueUrl: string;
-  issueTitle: string;
-}): string {
+function getAppBaseUrl(): string {
+  const raw = process.env.APP_BASE_URL || "https://trefolio.com";
+  return raw.replace(/\/$/, "");
+}
+
+/**
+ * Customer-facing draft only — no internal tools, ticket IDs, or links meant for staff.
+ * Admin may edit before send; default invites the user back into the product.
+ */
+function buildCompletionDraft(params: { feedbackSubject: string }): string {
   const subj = escapeHtml(params.feedbackSubject);
-  const id = escapeHtml(params.identifier);
-  const title = escapeHtml(params.issueTitle);
-  const url = escapeHtml(params.issueUrl);
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"/></head><body style="font-family:system-ui,sans-serif;max-width:560px;line-height:1.5;color:#0f172a;">
-<p>Hi,</p>
-<p>Thanks again for your feedback about <strong>${subj}</strong>. We've completed the related work tracked in Linear as <strong>${id}</strong> (${title}).</p>
-<p><strong>Please review this draft before sending.</strong> Add specific release notes or product changes below, then send from the admin Feedback tab.</p>
-<p style="padding:12px;background:#f8fafc;border-radius:8px;border:1px dashed #cbd5e1;">[Add what shipped / change summary here]</p>
-<p>— The trefolio team</p>
-<p style="font-size:13px;color:#64748b;"><a href="${url}">Linear issue</a> (internal reference)</p>
-</body></html>`;
+  const base = escapeHtml(getAppBaseUrl());
+  return `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
+<body style="margin:0;padding:24px 16px;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#0f172a;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
+    <tr><td style="padding:28px 28px 8px;">
+      <p style="margin:0 0 16px;font-size:16px;line-height:1.6;">Hi,</p>
+      <p style="margin:0 0 16px;font-size:16px;line-height:1.6;">Thank you again for writing to us about <strong>${subj}</strong>. We have acted on your feedback and shipped updates on our side that should reflect what you were looking for.</p>
+      <p style="margin:0 0 16px;font-size:16px;line-height:1.6;"><strong>We’d love you to come back to trefolio</strong> and see what’s new — open the app, check your portfolio and the areas you use most, and see if things feel better aligned with what you had in mind.</p>
+      <p style="margin:0 0 24px;font-size:16px;line-height:1.6;">Your input helps us improve; if something still doesn’t feel right, reply to this email or send us another message from the app’s feedback option.</p>
+      <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 28px;">
+        <tr><td align="left">
+          <a href="${base}/" style="display:inline-block;padding:12px 24px;background:#10b981;color:#fff;font-size:15px;font-weight:600;text-decoration:none;border-radius:10px;">Open trefolio</a>
+        </td></tr>
+      </table>
+      <p style="margin:0;font-size:15px;line-height:1.5;color:#475569;">— The trefolio team</p>
+    </td></tr>
+  </table>
+  <p style="max-width:560px;margin:16px auto 0;font-size:12px;color:#94a3b8;text-align:center;line-height:1.5;">This message is about feedback you sent us. If you did not expect it, you can ignore this email.</p>
+</body>
+</html>`;
 }
 
 interface LinearIssuePayload {
@@ -114,14 +129,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, ignored: true, reason: "feedback not found" });
   }
 
-  const identifier = payload.data?.identifier || (title.match(/\b([A-Z][A-Z]+-\d+)\b/) || [])[1] || "Linear";
-  const issueUrl = payload.data?.url || "";
-  const cleanTitle = title.replace(/\[feedback-[a-f0-9-]{36}\]/i, "").trim() || title;
   const draftHtml = buildCompletionDraft({
     feedbackSubject: fb.subject,
-    identifier,
-    issueUrl: issueUrl || "https://linear.app",
-    issueTitle: cleanTitle,
   });
 
   await upsertFeedbackCompletionDraft({ feedbackId, draftHtml });

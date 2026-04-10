@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.77.15",
+    date: "2026-04-10",
+    title: "Feedback completion email: customer-only copy",
+    titleTranslations: {
+      es: "Correo de cierre de feedback: solo texto para el cliente",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "When a feedback-linked task is completed, the default completion email draft no longer mentions internal tools or ticket details; it thanks the user, explains we acted on their feedback, and invites them back to trefolio with a clear call to open the app.",
+        translations: {
+          es: "Cuando se completa una tarea vinculada a un comentario, el borrador de correo de cierre ya no menciona herramientas internas ni detalles de tickets; agradece, indica que actuamos sobre su feedback e invita a volver a trefolio con un botón claro para abrir la app.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.77.14",
     date: "2026-04-10",
     title: "Snapshot backfill NOT NULL fix",
