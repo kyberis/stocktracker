@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth-context";
 import { downloadImportTemplate } from "@/lib/download-import-template";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import ProCompareCard from "@/components/ProCompareCard";
+import { mergeHoldingsIntoTransactions } from "@/lib/merge-ai-import-rows";
 
 type CsvFormat = "degiro" | "interactive_brokers" | "trading_212" | "revolut" | "charles_schwab" | "fidelity" | "nordnet" | "tastytrade" | "freetrade" | "etoro" | "wealthsimple" | "questrade" | "firstrade" | "simple" | "ai_import";
 
@@ -290,19 +291,7 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
   };
 
   const handleImportAll = async () => {
-    const unsorted: ExtractedTransaction[] = transactions.length > 0
-      ? transactions
-      : holdings.map((h) => ({
-          date: new Date().toISOString().slice(0, 10),
-          type: "buy" as const,
-          ticker: h.ticker,
-          name: h.name,
-          shares: h.shares,
-          pricePerShare: h.purchasePrice,
-          totalAmount: h.shares * h.purchasePrice,
-          fees: 0,
-          currency: h.displayCurrency || "EUR",
-        }));
+    const unsorted = mergeHoldingsIntoTransactions(holdings, transactions);
 
     // Sort chronologically so buys happen before sells for correct holding sync
     const derivedTransactions = [...unsorted].sort((a, b) => a.date.localeCompare(b.date));

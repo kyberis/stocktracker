@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.77.13",
+    date: "2026-04-10",
+    title: "AI import: position-only rows (e.g. bonds)",
+    titleTranslations: {
+      es: "Importación IA: filas solo de posición (p. ej. bonos)",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "AI portfolio import now creates holdings from the holdings list even when transactions were also extracted, so bonds and other position-only rows (e.g. Italian BTP with ISIN) are no longer dropped. Extraction accepts ISIN as ticker when no symbol exists.",
+        translations: {
+          es: "La importación por IA ahora crea posiciones a partir de la lista de holdings aunque también haya transacciones, de modo que bonos y otras filas solo de posición (p. ej. BTP italiano con ISIN) ya no se descartan. La extracción acepta el ISIN como ticker si no hay símbolo.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.77.12",
     date: "2026-04-10",
     title: "Private chat invites and admin link limits",

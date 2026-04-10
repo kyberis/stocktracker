@@ -3,6 +3,7 @@ import type {
   ExtractedTransaction,
   ExtractedHolding,
 } from "./import-types";
+import { mergeHoldingsIntoTransactions } from "@/lib/merge-ai-import-rows";
 
 export type { ExtractedTransaction, ExtractedHolding };
 
@@ -135,21 +136,7 @@ export function useImportAI(): UseImportAIReturn {
   }, []);
 
   const importAll = useCallback(async (portfolioId?: string | null) => {
-    const unsorted: ExtractedTransaction[] =
-      transactions.length > 0
-        ? transactions
-        : holdings.map((h) => ({
-            date: new Date().toISOString().slice(0, 10),
-            type: "buy" as const,
-            ticker: h.ticker,
-            name: h.name,
-            isin: undefined,
-            shares: h.shares,
-            pricePerShare: h.purchasePrice,
-            totalAmount: h.shares * h.purchasePrice,
-            fees: 0,
-            currency: h.displayCurrency || "EUR",
-          }));
+    const unsorted = mergeHoldingsIntoTransactions(holdings, transactions);
 
     const derivedTransactions = [...unsorted].sort((a, b) =>
       a.date.localeCompare(b.date)

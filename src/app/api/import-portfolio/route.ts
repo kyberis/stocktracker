@@ -19,7 +19,8 @@ Return a JSON object with two arrays:
 
 **holdings** array — each object:
 - name: string (company/ETF name)
-- ticker: string (stock ticker symbol, e.g. AAPL, MSFT, AMZN)
+- ticker: string (stock ticker symbol, e.g. AAPL, MSFT, AMZN). For government bonds and other instruments with no exchange symbol, use the 12-character ISIN as ticker.
+- isin: optional string (include when shown; helps when ticker is unknown)
 - shares: number (quantity currently held — net after buys and sells)
 - purchasePrice: number (average cost per share)
 - displayCurrency: string (currency code, e.g. USD, EUR, GBP)
@@ -39,7 +40,8 @@ Return a JSON object with two arrays:
 
 Rules:
 - Extract ALL rows/entries you can identify.
-- For tickers, use the standard symbol (e.g. AAPL not Apple Inc).
+- For tickers, use the standard symbol (e.g. AAPL not Apple Inc). For bonds and similar, put the ISIN in ticker if no Yahoo symbol is known.
+- Put current **positions** (including bonds) in **holdings** when there is no trade date; use **transactions** only when you have a real trade date.
 - If the exchange is not clear, infer it from the ticker suffix or market context.
 - If the currency is not explicit, infer it from the exchange (NYSE/NASDAQ -> USD, LSE -> GBP, XETRA -> EUR, etc.).
 - For dividends: set type="dividend", shares=0, pricePerShare=0, totalAmount=gross dividend amount.
@@ -234,7 +236,7 @@ export const POST = withMetrics("/api/import-portfolio", async (req: NextRequest
     const holdings = rawHoldings
       .map((h: Record<string, unknown>) => ({
         name: String(h.name || "Unknown"),
-        ticker: String(h.ticker || "").toUpperCase(),
+        ticker: String(h.ticker || h.isin || "").toUpperCase(),
         shares: Number(h.shares) || 0,
         purchasePrice: Number(h.purchasePrice) || 0,
         displayCurrency: String(h.displayCurrency || "USD").toUpperCase(),
@@ -245,11 +247,11 @@ export const POST = withMetrics("/api/import-portfolio", async (req: NextRequest
 
     const validTypes = new Set(["buy", "sell", "dividend", "fee"]);
     const transactions = rawTxs
-      .filter((t: Record<string, unknown>) => t.ticker && t.date)
+      .filter((t: Record<string, unknown>) => (t.ticker || t.isin) && t.date)
       .map((t: Record<string, unknown>) => ({
         date: String(t.date || ""),
         type: validTypes.has(String(t.type)) ? String(t.type) : "buy",
-        ticker: String(t.ticker || "").toUpperCase(),
+        ticker: String(t.ticker || t.isin || "").toUpperCase(),
         name: String(t.name || ""),
         shares: Math.abs(Number(t.shares) || 0),
         pricePerShare: Math.abs(Number(t.pricePerShare) || 0),
