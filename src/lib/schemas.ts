@@ -431,6 +431,12 @@ export const adminUserActionSchema = z.discriminatedUnion("action", [
     action: z.literal("resetChecklist"),
     userId: z.string().min(1),
   }),
+  z.object({
+    action: z.literal("grantMembership"),
+    userId: z.string().min(1),
+    plan: z.enum(["starter", "pro"]),
+    days: z.number().int().min(1).max(730),
+  }),
 ]);
 
 export const adminResetDataSchema = z.object({

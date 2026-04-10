@@ -418,6 +418,7 @@ describe("holdings", () => {
       mockExecute
         .mockResolvedValueOnce({ rowsAffected: 5 })
         .mockResolvedValueOnce({ rowsAffected: 2 })
+        .mockResolvedValueOnce({ rowsAffected: 3 })
         .mockResolvedValueOnce({ rowsAffected: 10 });
 
       const result = await holdings.resetUserHoldings("user-1", true);
@@ -431,8 +432,12 @@ describe("holdings", () => {
         args: ["user-1", "portfolio-1"],
       });
       expect(mockExecute).toHaveBeenNthCalledWith(3, {
-        sql: expect.stringContaining("DELETE FROM transactions"),
+        sql: expect.stringContaining("DELETE FROM transaction_portfolio_map"),
         args: ["user-1", "portfolio-1"],
+      });
+      expect(mockExecute).toHaveBeenNthCalledWith(4, {
+        sql: expect.stringContaining("DELETE FROM transactions"),
+        args: ["user-1", "portfolio-1", "user-1"],
       });
       expect(seedHoldingsForUser).toHaveBeenCalledWith(mockClient, "user-1", "portfolio-1");
       expect(seedCashForUser).toHaveBeenCalledWith(mockClient, "user-1", "portfolio-1");
@@ -446,7 +451,8 @@ describe("holdings", () => {
       mockExecute
         .mockResolvedValueOnce({ rowsAffected: 3 })
         .mockResolvedValueOnce({ rowsAffected: 1 })
-        .mockResolvedValueOnce({ rowsAffected: 8 });
+        .mockResolvedValueOnce({ rowsAffected: 8 })
+        .mockResolvedValueOnce({ rowsAffected: 0 });
 
       const result = await holdings.resetUserHoldings("user-1", false);
 
@@ -457,6 +463,7 @@ describe("holdings", () => {
     it("uses portfolioId when provided", async () => {
       const { resolvePortfolioId } = await import("./portfolios");
       mockExecute
+        .mockResolvedValueOnce({ rowsAffected: 0 })
         .mockResolvedValueOnce({ rowsAffected: 0 })
         .mockResolvedValueOnce({ rowsAffected: 0 })
         .mockResolvedValueOnce({ rowsAffected: 0 });

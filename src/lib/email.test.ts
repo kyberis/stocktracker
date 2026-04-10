@@ -14,9 +14,13 @@ vi.mock("resend", () => ({
   })),
 }));
 
-vi.mock("@/lib/db", () => ({
-  getGlobalResendApiKey: mockGetGlobalResendApiKey,
-}));
+vi.mock("@/lib/db", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/db")>();
+  return {
+    ...actual,
+    getGlobalResendApiKey: mockGetGlobalResendApiKey,
+  };
+});
 
 import {
   isTreefolioTestEmail,
@@ -127,7 +131,7 @@ describe("email", () => {
         "user@real-domain.com",
         "some-token"
       );
-      expect(result).toEqual({ success: true });
+      expect(result).toMatchObject({ success: true });
       expect(mockSend).not.toHaveBeenCalled();
     });
   });
@@ -138,7 +142,7 @@ describe("email", () => {
         "test+foo@trefolio.com",
         "token-123"
       );
-      expect(result).toEqual({ success: true });
+      expect(result).toMatchObject({ success: true });
       expect(mockSend).not.toHaveBeenCalled();
     });
 
@@ -147,7 +151,7 @@ describe("email", () => {
         "user@test.example.com",
         "token-123"
       );
-      expect(result).toEqual({ success: true });
+      expect(result).toMatchObject({ success: true });
       expect(mockSend).not.toHaveBeenCalled();
     });
 
@@ -157,7 +161,7 @@ describe("email", () => {
         "user@real-domain.com",
         "token-123"
       );
-      expect(result).toEqual({ success: true });
+      expect(result).toMatchObject({ success: true });
       expect(mockSend).toHaveBeenCalled();
     });
 
@@ -183,14 +187,14 @@ describe("email", () => {
 
     it("returns success for test emails", async () => {
       const result = await sendAlertEmail("test+foo@trefolio.com", alert);
-      expect(result).toEqual({ success: true });
+      expect(result).toMatchObject({ success: true });
       expect(mockSend).not.toHaveBeenCalled();
     });
 
     it("returns success when sending succeeds", async () => {
       mockSend.mockResolvedValue({ data: { id: "email-1" }, error: null });
       const result = await sendAlertEmail("user@real-domain.com", alert);
-      expect(result).toEqual({ success: true });
+      expect(result).toMatchObject({ success: true });
       expect(mockSend).toHaveBeenCalled();
     });
 
@@ -217,7 +221,7 @@ describe("email", () => {
         "user@test.example.com",
         alert
       );
-      expect(result).toEqual({ success: true });
+      expect(result).toMatchObject({ success: true });
       expect(mockSend).not.toHaveBeenCalled();
     });
 
@@ -227,7 +231,7 @@ describe("email", () => {
         "user@real-domain.com",
         alert
       );
-      expect(result).toEqual({ success: true });
+      expect(result).toMatchObject({ success: true });
       expect(mockSend).toHaveBeenCalled();
     });
 
@@ -248,7 +252,7 @@ describe("email", () => {
         "Alice",
         "en"
       );
-      expect(result).toEqual({ success: true });
+      expect(result).toMatchObject({ success: true });
       expect(mockSend).not.toHaveBeenCalled();
     });
 
@@ -259,7 +263,7 @@ describe("email", () => {
         "Bob",
         "en"
       );
-      expect(result).toEqual({ success: true });
+      expect(result).toMatchObject({ success: true });
       expect(mockSend).toHaveBeenCalled();
     });
 
@@ -281,7 +285,7 @@ describe("email", () => {
         "Alice",
         "en"
       );
-      expect(result).toEqual({ success: true });
+      expect(result).toMatchObject({ success: true });
       expect(mockSend).not.toHaveBeenCalled();
     });
 
@@ -292,7 +296,7 @@ describe("email", () => {
         "Bob",
         "en"
       );
-      expect(result).toEqual({ success: true });
+      expect(result).toMatchObject({ success: true });
       expect(mockSend).toHaveBeenCalled();
     });
 
@@ -317,7 +321,7 @@ describe("email", () => {
         "Alice",
         "en"
       );
-      expect(result).toEqual({ success: true });
+      expect(result).toMatchObject({ success: true });
       expect(mockSend).not.toHaveBeenCalled();
     });
 
@@ -328,7 +332,7 @@ describe("email", () => {
         "Bob",
         "en"
       );
-      expect(result).toEqual({ success: true });
+      expect(result).toMatchObject({ success: true });
       expect(mockSend).toHaveBeenCalled();
     });
 

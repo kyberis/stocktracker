@@ -140,12 +140,13 @@ describe("createHoldingSchema", () => {
     const result = createHoldingSchema.safeParse({
       ticker: "AAPL",
       name: "Apple Inc",
+      shares: 1,
     });
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data.ticker).toBe("AAPL");
       expect(result.data.name).toBe("Apple Inc");
-      expect(result.data.shares).toBe(0);
+      expect(result.data.shares).toBe(1);
       expect(result.data.purchasePrice).toBe(0);
       expect(result.data.assetType).toBe("stock");
     }
@@ -190,14 +191,15 @@ describe("createHoldingSchema", () => {
   });
 
   it("accepts assetType stock or etf", () => {
-    expect(createHoldingSchema.safeParse({ ticker: "AAPL", name: "A", assetType: "stock" }).success).toBe(true);
-    expect(createHoldingSchema.safeParse({ ticker: "VOO", name: "V", assetType: "etf" }).success).toBe(true);
+    expect(createHoldingSchema.safeParse({ ticker: "AAPL", name: "A", shares: 1, assetType: "stock" }).success).toBe(true);
+    expect(createHoldingSchema.safeParse({ ticker: "VOO", name: "V", shares: 1, assetType: "etf" }).success).toBe(true);
   });
 
   it("fails when assetType is invalid", () => {
     const result = createHoldingSchema.safeParse({
       ticker: "AAPL",
       name: "Apple",
+      shares: 1,
       assetType: "bond_invalid",
     });
     expect(result.success).toBe(false);

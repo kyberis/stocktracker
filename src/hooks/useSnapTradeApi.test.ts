@@ -5,6 +5,8 @@ import { useSnapTradeApi } from "./useSnapTradeApi";
 
 let fetchSpy: ReturnType<typeof vi.fn>;
 
+const backfillOk = { ok: true };
+
 beforeEach(() => {
   fetchSpy = vi.fn();
   vi.stubGlobal("fetch", fetchSpy);
@@ -26,6 +28,7 @@ describe("useSnapTradeApi", () => {
       ok: true,
       json: () =>
         Promise.resolve({
+          connected: true,
           registered: true,
           redirectUri: "https://example.com",
           brokerageConnections: [],
@@ -177,7 +180,8 @@ describe("useSnapTradeApi importAll", () => {
       .mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve({ inserted: 1, skipped: 0 }),
-      });
+      })
+      .mockResolvedValueOnce(backfillOk);
 
     const { result } = renderHook(() => useSnapTradeApi());
     await act(async () => {
@@ -195,14 +199,16 @@ describe("useSnapTradeApi importAll", () => {
 
     expect(result.current.step).toBe("done");
     expect(result.current.importedCount).toBe(1);
-    expect(fetchSpy).toHaveBeenCalledTimes(3);
-    expect(fetchSpy).toHaveBeenLastCalledWith(
+    expect(fetchSpy).toHaveBeenCalledTimes(4);
+    expect(fetchSpy).toHaveBeenNthCalledWith(
+      3,
       "/api/transactions/bulk",
       expect.objectContaining({
         method: "POST",
         headers: { "Content-Type": "application/json" },
       })
     );
+    expect(fetchSpy).toHaveBeenNthCalledWith(4, "/api/portfolio/backfill-snapshots", { method: "POST" });
   });
 
   it("importAll when bulk API returns errors sets error state", async () => {
@@ -340,7 +346,8 @@ describe("useSnapTradeApi importAll", () => {
       .mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve({ inserted: 1, skipped: 0 }),
-      });
+      })
+      .mockResolvedValueOnce(backfillOk);
 
     const { result } = renderHook(() => useSnapTradeApi());
     await act(async () => {
@@ -354,7 +361,8 @@ describe("useSnapTradeApi importAll", () => {
       await result.current.importAll("portfolio-789");
     });
 
-    expect(fetchSpy).toHaveBeenLastCalledWith(
+    expect(fetchSpy).toHaveBeenNthCalledWith(
+      3,
       "/api/transactions/bulk?portfolioId=portfolio-789",
       expect.any(Object)
     );
@@ -390,7 +398,8 @@ describe("useSnapTradeApi importAll", () => {
       .mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve({ inserted: 50, skipped: 0, holdingsCapped: 5 }),
-      });
+      })
+      .mockResolvedValueOnce(backfillOk);
 
     const { result } = renderHook(() => useSnapTradeApi());
     await act(async () => {
@@ -406,7 +415,7 @@ describe("useSnapTradeApi importAll", () => {
 
     expect(result.current.holdingsCapped).toBe(5);
     expect(result.current.step).toBe("done");
-    expect(fetchSpy).toHaveBeenCalledTimes(3);
+    expect(fetchSpy).toHaveBeenCalledTimes(4);
   });
 
   it("importAll filters out transactions without date", async () => {
@@ -434,7 +443,8 @@ describe("useSnapTradeApi importAll", () => {
       .mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve({ inserted: 1, skipped: 0 }),
-      });
+      })
+      .mockResolvedValueOnce(backfillOk);
 
     const { result } = renderHook(() => useSnapTradeApi());
     await act(async () => {

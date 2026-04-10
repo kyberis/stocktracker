@@ -16,6 +16,7 @@ import {
 import { seedHoldingsForUser, seedCashForUser, seedTransactionsForUser } from "./seed";
 import { resolvePortfolioId } from "./portfolios";
 import { normalizeAttribution, type FirstTouchAttribution } from "@/lib/attribution";
+import { effectivePlan } from "@/lib/subscription";
 
 export async function findUserByUsername(username: string): Promise<DbUser | null> {
   const client = await ensureInitialized();
@@ -547,6 +548,86 @@ export async function checkTrialToken(token: string): Promise<TrialTokenStatus> 
   if (result.rows.length === 0) return "invalid";
   const activated = String(result.rows[0].trial_activated_at ?? "");
   return activated !== "" ? "already_used" : "valid";
+}
+
+export const MEMBERSHIP_GRANT_MIN_DAYS = 1;
+export const MEMBERSHIP_GRANT_MAX_DAYS = 730;
+
+/** Expiry for a complimentary grant activated now; stacks when same effective tier has a future end date. */
+export function computeMembershipGrantExpiry(user: DbUser, grantPlan: UserPlan, days: number): Date {
+  const now = new Date();
+  const eff = effectivePlan(user.plan, user.plan_expires_at);
+  const currentExpiry = user.plan_expires_at ? new Date(user.plan_expires_at) : null;
+  const ms = days * 86400000;
+  if (
+    grantPlan === eff &&
+    currentExpiry &&
+    !Number.isNaN(currentExpiry.getTime()) &&
+    currentExpiry > now
+  ) {
+    return new Date(currentExpiry.getTime() + ms);
+  }
+  return new Date(now.getTime() + ms);
+}
+
+export async function setPendingMembershipGrant(
+  userId: string,
+  grantPlan: "starter" | "pro",
+  days: number,
+): Promise<{ token: string }> {
+  const token = randomBytes(32).toString("hex");
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: `UPDATE users SET membership_grant_token = ?, membership_grant_plan = ?, membership_grant_days = ?, membership_grant_created_at = datetime('now') WHERE id = ?`,
+    args: [token, grantPlan, days, userId],
+  });
+  return { token };
+}
+
+export async function clearMembershipGrantFields(userId: string): Promise<void> {
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: `UPDATE users SET membership_grant_token = '', membership_grant_plan = '', membership_grant_days = 0, membership_grant_created_at = '' WHERE id = ?`,
+    args: [userId],
+  });
+}
+
+export type MembershipGrantTokenStatus = "valid" | "invalid";
+
+export async function checkMembershipGrantToken(token: string): Promise<MembershipGrantTokenStatus> {
+  if (!token) return "invalid";
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: "SELECT 1 FROM users WHERE membership_grant_token = ? AND membership_grant_token != ''",
+    args: [token],
+  });
+  return result.rows.length > 0 ? "valid" : "invalid";
+}
+
+export async function applyPendingMembershipGrant(
+  userId: string,
+  token: string,
+): Promise<{ ok: true; planExpiresAt: string; plan: UserPlan } | { ok: false; error: string }> {
+  const user = await findUserById(userId);
+  if (!user) return { ok: false, error: "User not found" };
+  if (!token || user.membership_grant_token !== token) {
+    return { ok: false, error: "Invalid or expired activation link" };
+  }
+  const rawPlan = user.membership_grant_plan;
+  if (rawPlan !== "starter" && rawPlan !== "pro") {
+    return { ok: false, error: "No pending membership grant" };
+  }
+  const days = user.membership_grant_days;
+  if (days < MEMBERSHIP_GRANT_MIN_DAYS || days > MEMBERSHIP_GRANT_MAX_DAYS) {
+    return { ok: false, error: "Invalid grant" };
+  }
+  const grantPlan = rawPlan as UserPlan;
+  const planExpiresAt = computeMembershipGrantExpiry(user, grantPlan, days).toISOString();
+
+  await updateUserSubscription(userId, { plan: grantPlan, planExpiresAt });
+  await clearMembershipGrantFields(userId);
+
+  return { ok: true, planExpiresAt, plan: grantPlan };
 }
 
 export async function markDeviceLinked(userId: string): Promise<void> {

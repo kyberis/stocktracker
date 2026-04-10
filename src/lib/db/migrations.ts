@@ -3149,6 +3149,34 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       }
     },
   },
+  {
+    version: 106,
+    description: "Admin membership grant: pending token, plan, days, created_at on users",
+    up: async (client: Client) => {
+      const cols = await client.execute("PRAGMA table_info(users)");
+      const colNames = new Set(cols.rows.map((r) => str(r.name)));
+      if (!colNames.has("membership_grant_token")) {
+        await client.execute(
+          "ALTER TABLE users ADD COLUMN membership_grant_token TEXT NOT NULL DEFAULT ''",
+        );
+      }
+      if (!colNames.has("membership_grant_plan")) {
+        await client.execute(
+          "ALTER TABLE users ADD COLUMN membership_grant_plan TEXT NOT NULL DEFAULT ''",
+        );
+      }
+      if (!colNames.has("membership_grant_days")) {
+        await client.execute(
+          "ALTER TABLE users ADD COLUMN membership_grant_days INTEGER NOT NULL DEFAULT 0",
+        );
+      }
+      if (!colNames.has("membership_grant_created_at")) {
+        await client.execute(
+          "ALTER TABLE users ADD COLUMN membership_grant_created_at TEXT NOT NULL DEFAULT ''",
+        );
+      }
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

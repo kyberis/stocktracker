@@ -77,3 +77,18 @@ export interface EmailBatch {
   bifolio: Record<string, BifolioStrings>;
   trefolio: Record<string, TrefolioStrings>;
 }
+
+/** Admin-issued complimentary membership; use {{name}}, {{days}}, {{planName}} in strings. */
+export interface MembershipGrantStrings {
+  subject: string;
+  heading: string;
+  greetingLine: string;
+  supportGrantLine: string;
+  planDaysLine: string;
+  activateCta: string;
+  footer: string;
+  managePreferences: string;
+  fallbackName: string;
+  planNameStarter: string;
+  planNamePro: string;
+}

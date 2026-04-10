@@ -5,6 +5,8 @@ import { useImportBrokerCSV } from "./useImportBrokerCSV";
 
 let fetchSpy: ReturnType<typeof vi.fn>;
 
+const backfillOk = { ok: true };
+
 beforeEach(() => {
   fetchSpy = vi.fn();
   vi.stubGlobal("fetch", fetchSpy);
@@ -205,7 +207,8 @@ describe("useImportBrokerCSV importAll", () => {
       .mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve({ inserted: 1, skipped: 0 }),
-      });
+      })
+      .mockResolvedValueOnce(backfillOk);
 
     const { result } = renderHook(() => useImportBrokerCSV());
     await act(async () => {
@@ -222,14 +225,16 @@ describe("useImportBrokerCSV importAll", () => {
 
     expect(result.current.step).toBe("done");
     expect(result.current.importedTxCount).toBe(1);
-    expect(fetchSpy).toHaveBeenCalledTimes(2);
-    expect(fetchSpy).toHaveBeenLastCalledWith(
+    expect(fetchSpy).toHaveBeenCalledTimes(3);
+    expect(fetchSpy).toHaveBeenNthCalledWith(
+      2,
       "/api/transactions/bulk",
       expect.objectContaining({
         method: "POST",
         headers: { "Content-Type": "application/json" },
       })
     );
+    expect(fetchSpy).toHaveBeenNthCalledWith(3, "/api/portfolio/backfill-snapshots", { method: "POST" });
   });
 
   it("importAll when bulk API returns errors sets error state", async () => {
@@ -340,7 +345,8 @@ describe("useImportBrokerCSV importAll", () => {
       .mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve({ inserted: 1, skipped: 0 }),
-      });
+      })
+      .mockResolvedValueOnce(backfillOk);
 
     const { result } = renderHook(() => useImportBrokerCSV());
     await act(async () => {
@@ -354,7 +360,8 @@ describe("useImportBrokerCSV importAll", () => {
       await result.current.importAll("degiro", false, "portfolio-456");
     });
 
-    expect(fetchSpy).toHaveBeenLastCalledWith(
+    expect(fetchSpy).toHaveBeenNthCalledWith(
+      2,
       "/api/transactions/bulk?portfolioId=portfolio-456",
       expect.any(Object)
     );
@@ -376,7 +383,8 @@ describe("useImportBrokerCSV importAll", () => {
       .mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve({ inserted: 1, skipped: 0, holdingsCapped: 3 }),
-      });
+      })
+      .mockResolvedValueOnce(backfillOk);
 
     const { result } = renderHook(() => useImportBrokerCSV());
     await act(async () => {
@@ -455,7 +463,8 @@ describe("useImportBrokerCSV importAll", () => {
       .mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve({ imported: 1 }),
-      });
+      })
+      .mockResolvedValueOnce(backfillOk);
 
     const { result } = renderHook(() => useImportBrokerCSV());
     await act(async () => {

@@ -404,6 +404,7 @@ import {
   thresholdAlertStrings,
   percentAlertStrings,
 } from "./email-i18n/alert-strings";
+import { getMembershipGrantStrings } from "./email-i18n/membership-grant-copy";
 export type { EmailLocale } from "./email-i18n";
 export { getEmailLocale } from "./email-i18n";
 
@@ -833,6 +834,105 @@ export async function sendTrialInvitationEmail(
   }
 
   return result;
+}
+
+// ---------------------------------------------------------------------------
+// 6b. Admin membership grant (pending activation; transactional, user locale)
+// ---------------------------------------------------------------------------
+
+function membershipGrantInvitationHtml(
+  displayName: string,
+  locale: EmailLocale,
+  plan: "starter" | "pro",
+  days: number,
+  activateUrl: string,
+): string {
+  const c = getMembershipGrantStrings(locale);
+  const name = displayName || c.fallbackName;
+  const planName = plan === "starter" ? c.planNameStarter : c.planNamePro;
+  const fill = (s: string) =>
+    s
+      .replace(/\{\{name\}\}/g, name)
+      .replace(/\{\{days\}\}/g, String(days))
+      .replace(/\{\{planName\}\}/g, planName);
+  const campaign = "membership_grant_invitation";
+  return `${emailHeader()}
+        <tr><td style="padding:36px 32px 16px;">
+          <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#0f172a;text-align:center;">${fill(c.heading)}</h1>
+          <p style="margin:0 0 12px;font-size:15px;color:#475569;text-align:left;line-height:1.6;">${fill(c.greetingLine)}</p>
+          <p style="margin:0 0 12px;font-size:15px;color:#475569;text-align:left;line-height:1.6;">${fill(c.supportGrantLine)}</p>
+          <p style="margin:0 0 24px;font-size:15px;color:#475569;text-align:left;line-height:1.6;">${fill(c.planDaysLine)}</p>
+          ${primaryCta(fill(c.activateCta), activateUrl)}
+        </td></tr>
+${emailFooter(fill(c.footer), utm("/profile", campaign), c.managePreferences, "{{unsubscribe_url}}")}`;
+}
+
+function membershipGrantPlainText(
+  displayName: string,
+  locale: EmailLocale,
+  plan: "starter" | "pro",
+  days: number,
+  activateUrl: string,
+): string {
+  const c = getMembershipGrantStrings(locale);
+  const name = displayName || c.fallbackName;
+  const planName = plan === "starter" ? c.planNameStarter : c.planNamePro;
+  const fill = (s: string) =>
+    s
+      .replace(/\{\{name\}\}/g, name)
+      .replace(/\{\{days\}\}/g, String(days))
+      .replace(/\{\{planName\}\}/g, planName)
+      .replace(/&mdash;/g, "—")
+      .replace(/&rsquo;/g, "'")
+      .replace(/&nbsp;/g, " ");
+  return [
+    fill(c.heading),
+    "",
+    fill(c.greetingLine),
+    "",
+    fill(c.supportGrantLine),
+    "",
+    fill(c.planDaysLine),
+    "",
+    `${fill(c.activateCta)}: ${activateUrl}`,
+    "",
+    fill(c.footer),
+  ].join("\n");
+}
+
+export async function sendMembershipGrantInvitationEmail(opts: {
+  to: string;
+  displayName: string;
+  userId: string;
+  locale: EmailLocale;
+  plan: "starter" | "pro";
+  days: number;
+  token: string;
+  baseUrl?: string;
+}): Promise<SendEmailResult> {
+  if (isTestEmail(opts.to)) return { success: true };
+  const base = (opts.baseUrl || getBaseUrl()).replace(/\/$/, "");
+  const activateUrl = `${base}/membership-grant/activate?token=${encodeURIComponent(opts.token)}&utm_source=email&utm_medium=transactional&utm_campaign=membership_grant_invitation`;
+  const c = getMembershipGrantStrings(opts.locale);
+  const name = opts.displayName || c.fallbackName;
+  const planName = opts.plan === "starter" ? c.planNameStarter : c.planNamePro;
+  const fillSubject = (s: string) =>
+    s
+      .replace(/\{\{name\}\}/g, name)
+      .replace(/\{\{days\}\}/g, String(opts.days))
+      .replace(/\{\{planName\}\}/g, planName);
+  const html = membershipGrantInvitationHtml(opts.displayName, opts.locale, opts.plan, opts.days, activateUrl);
+  const text = membershipGrantPlainText(opts.displayName, opts.locale, opts.plan, opts.days, activateUrl);
+  const subject = fillSubject(c.subject);
+
+  return sendEmail({
+    to: opts.to,
+    subject,
+    html,
+    text,
+    userId: opts.userId,
+    transactional: true,
+  });
 }
 
 function growthBox(pct: number): string {

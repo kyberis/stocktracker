@@ -34,6 +34,7 @@ const DEFAULT_SETTINGS = {
   alertDeviceEnabled: false,
   dashboardTheme: "default",
   defaultCurrency: "EUR",
+  emailNotificationsEnabled: true,
 };
 
 const settingsRow = {
@@ -45,6 +46,7 @@ const settingsRow = {
   alert_device_enabled: 0,
   dashboard_theme: "default",
   default_currency: "EUR",
+  email_notifications_enabled: 1,
 };
 
 describe("settings", () => {
@@ -57,7 +59,7 @@ describe("settings", () => {
       const result = await settings.getUserSettings("u1");
 
       expect(mockExecute).toHaveBeenNthCalledWith(1, {
-        sql: "SELECT language, refresh_interval, alert_channels, whatsapp_phone, whatsapp_verified, alert_device_enabled, dashboard_theme, default_currency FROM user_settings WHERE user_id = ?",
+        sql: "SELECT language, refresh_interval, alert_channels, whatsapp_phone, whatsapp_verified, alert_device_enabled, dashboard_theme, default_currency, email_notifications_enabled FROM user_settings WHERE user_id = ?",
         args: ["u1"],
       });
       expect(mockExecute).toHaveBeenNthCalledWith(2, {
@@ -73,7 +75,7 @@ describe("settings", () => {
       const result = await settings.getUserSettings("u1");
 
       expect(mockExecute).toHaveBeenCalledWith({
-        sql: "SELECT language, refresh_interval, alert_channels, whatsapp_phone, whatsapp_verified, alert_device_enabled, dashboard_theme, default_currency FROM user_settings WHERE user_id = ?",
+        sql: "SELECT language, refresh_interval, alert_channels, whatsapp_phone, whatsapp_verified, alert_device_enabled, dashboard_theme, default_currency, email_notifications_enabled FROM user_settings WHERE user_id = ?",
         args: ["u1"],
       });
       expect(result).toEqual(DEFAULT_SETTINGS);
@@ -105,6 +107,7 @@ describe("settings", () => {
         alertDeviceEnabled: true,
         dashboardTheme: "terminal",
         defaultCurrency: "USD",
+        emailNotificationsEnabled: true,
       });
     });
 
@@ -154,7 +157,7 @@ describe("settings", () => {
       expect(mockExecute).toHaveBeenCalledTimes(2);
       expect(mockExecute).toHaveBeenNthCalledWith(2, {
         sql: expect.stringContaining("UPDATE user_settings SET"),
-        args: expect.arrayContaining(["es", 30, "email", "", 0, 0, "default", "EUR", "u1"]),
+        args: expect.arrayContaining(["es", 30, "email", "", 0, 0, "default", "EUR", 1, "u1"]),
       });
       expect(result).toMatchObject({
         language: "es",

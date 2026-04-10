@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.77.18",
+    date: "2026-04-10",
+    title: "Admin: grant membership by email with activation",
+    titleTranslations: {
+      es: "Admin: conceder membresía por correo con activación",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Admins can grant Bifolio or Trefolio for a number of days from the user detail page. The user receives a localized transactional email and must tap Activate before the period starts; users with an active Stripe subscription are blocked until billing is managed in Stripe.",
+        translations: {
+          es: "Los administradores pueden conceder Bifolio o Trefolio por un número de días desde la ficha del usuario. El usuario recibe un correo transaccional localizado y debe pulsar Activar antes de que empiece el periodo; quien tenga suscripción activa en Stripe queda bloqueado hasta gestionar la facturación en Stripe.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.77.17",
     date: "2026-04-10",
     title: "Respect email opt-out on all marketing sends",

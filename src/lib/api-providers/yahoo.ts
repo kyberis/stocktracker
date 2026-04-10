@@ -36,6 +36,11 @@ interface CacheEntry<T> {
 
 const quoteCache = new Map<string, CacheEntry<unknown>>();
 
+/** Clears in-memory quote/rate/history cache (used by unit tests). */
+export function clearYahooApiMemoryCache(): void {
+  quoteCache.clear();
+}
+
 function getCached<T>(key: string): T | undefined {
   const entry = quoteCache.get(key);
   if (!entry) return undefined;

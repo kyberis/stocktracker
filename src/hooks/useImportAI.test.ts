@@ -5,6 +5,9 @@ import { useImportAI } from "./useImportAI";
 
 let fetchSpy: ReturnType<typeof vi.fn>;
 
+/** Resolved by importAll after a successful bulk POST (triggers backfill fetch). */
+const backfillOk = { ok: true };
+
 beforeEach(() => {
   fetchSpy = vi.fn();
   vi.stubGlobal("fetch", fetchSpy);
@@ -188,7 +191,8 @@ describe("useImportAI importAll", () => {
       .mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve({ inserted: 1, skipped: 0 }),
-      });
+      })
+      .mockResolvedValueOnce(backfillOk);
 
     const { result } = renderHook(() => useImportAI());
     await act(async () => {
@@ -202,14 +206,16 @@ describe("useImportAI importAll", () => {
 
     expect(result.current.step).toBe("done");
     expect(result.current.importedTxCount).toBe(1);
-    expect(fetchSpy).toHaveBeenCalledTimes(2);
-    expect(fetchSpy).toHaveBeenLastCalledWith(
+    expect(fetchSpy).toHaveBeenCalledTimes(3);
+    expect(fetchSpy).toHaveBeenNthCalledWith(
+      2,
       "/api/transactions/bulk",
       expect.objectContaining({
         method: "POST",
         headers: { "Content-Type": "application/json" },
       })
     );
+    expect(fetchSpy).toHaveBeenNthCalledWith(3, "/api/portfolio/backfill-snapshots", { method: "POST" });
   });
 
   it("importAll with transactions uses existing transactions", async () => {
@@ -238,7 +244,8 @@ describe("useImportAI importAll", () => {
       .mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve({ inserted: 1, skipped: 0 }),
-      });
+      })
+      .mockResolvedValueOnce(backfillOk);
 
     const { result } = renderHook(() => useImportAI());
     await act(async () => {
@@ -324,7 +331,8 @@ describe("useImportAI importAll", () => {
       .mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve({ inserted: 1, skipped: 0 }),
-      });
+      })
+      .mockResolvedValueOnce(backfillOk);
 
     const { result } = renderHook(() => useImportAI());
     await act(async () => {
@@ -335,7 +343,8 @@ describe("useImportAI importAll", () => {
       await result.current.importAll("portfolio-123");
     });
 
-    expect(fetchSpy).toHaveBeenLastCalledWith(
+    expect(fetchSpy).toHaveBeenNthCalledWith(
+      2,
       "/api/transactions/bulk?portfolioId=portfolio-123",
       expect.any(Object)
     );

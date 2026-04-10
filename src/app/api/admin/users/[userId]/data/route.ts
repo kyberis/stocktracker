@@ -64,6 +64,10 @@ export const GET = withMetrics("/api/admin/users/[userId]/data", async (
     trialActivatedAt: dbUser.trial_activated_at,
     trialToken: dbUser.trial_token,
     trialExpiredNotified: dbUser.trial_expired_notified === 1,
+    membershipGrantPending: Boolean(dbUser.membership_grant_token),
+    membershipGrantPlan: dbUser.membership_grant_plan || null,
+    membershipGrantDays: dbUser.membership_grant_days > 0 ? dbUser.membership_grant_days : null,
+    membershipGrantCreatedAt: dbUser.membership_grant_created_at || null,
   };
 
   return NextResponse.json({

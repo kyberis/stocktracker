@@ -25,7 +25,12 @@ vi.mock("@/lib/metrics", () => ({
   providerRequestDuration: { startTimer: () => vi.fn() },
 }));
 
-import { YahooProvider } from "@/lib/api-providers/yahoo";
+vi.mock("@/lib/db/historical-cache", () => ({
+  getCachedHistorical: vi.fn().mockResolvedValue([]),
+  cacheHistoricalPoints: vi.fn().mockResolvedValue(undefined),
+}));
+
+import { YahooProvider, clearYahooApiMemoryCache } from "@/lib/api-providers/yahoo";
 import { providerRequestsTotal } from "@/lib/metrics";
 
 const {
@@ -40,6 +45,11 @@ describe("Yahoo Finance chaos", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    clearYahooApiMemoryCache();
+    mockQuote.mockReset();
+    mockChart.mockReset();
+    mockSearch.mockReset();
+    mockQuoteSummary.mockReset();
     provider = new YahooProvider();
   });
 

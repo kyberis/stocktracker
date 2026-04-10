@@ -59,6 +59,10 @@ export interface DbUser {
   trial_activated_at: string;
   trial_token: string;
   trial_expired_notified: number;
+  membership_grant_token: string;
+  membership_grant_plan: string;
+  membership_grant_days: number;
+  membership_grant_created_at: string;
   checklist_dismissed_at: string;
   weekly_digest_enabled: number;
   profile_slug: string;
@@ -335,6 +339,10 @@ export function rowToDbUser(row: Row): DbUser {
     trial_activated_at: str(row.trial_activated_at),
     trial_token: str(row.trial_token),
     trial_expired_notified: num(row.trial_expired_notified),
+    membership_grant_token: str(row.membership_grant_token),
+    membership_grant_plan: str(row.membership_grant_plan),
+    membership_grant_days: num(row.membership_grant_days),
+    membership_grant_created_at: str(row.membership_grant_created_at),
     checklist_dismissed_at: str(row.checklist_dismissed_at),
     weekly_digest_enabled: num(row.weekly_digest_enabled ?? 1),
     profile_slug: str(row.profile_slug),

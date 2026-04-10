@@ -31,6 +31,10 @@ interface UserInfo {
   trialActivatedAt: string;
   trialToken: string;
   trialExpiredNotified: boolean;
+  membershipGrantPending?: boolean;
+  membershipGrantPlan?: string | null;
+  membershipGrantDays?: number | null;
+  membershipGrantCreatedAt?: string | null;
 }
 
 interface AllPortfolio {
@@ -638,6 +642,36 @@ export default function AdminUserDetailPage() {
     if (res.ok && data) setData({ ...data, user: { ...data.user, plan: newPlan } });
   };
 
+  const [grantPlan, setGrantPlan] = useState<"starter" | "pro">("pro");
+  const [grantDays, setGrantDays] = useState(30);
+  const [grantLoading, setGrantLoading] = useState(false);
+  const [grantError, setGrantError] = useState<string | null>(null);
+
+  const handleGrantMembership = async (e: FormEvent) => {
+    e.preventDefault();
+    setGrantLoading(true);
+    setGrantError(null);
+    try {
+      const res = await fetch("/api/admin/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, action: "grantMembership", plan: grantPlan, days: grantDays }),
+      });
+      const body = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        setGrantError(typeof body.error === "string" ? body.error : "Request failed");
+        return;
+      }
+      setActionMsg("Invitation email sent");
+      setTimeout(() => setActionMsg(""), 4000);
+      await fetchData(selectedPortfolio);
+    } catch {
+      setGrantError("Failed to send invitation");
+    } finally {
+      setGrantLoading(false);
+    }
+  };
+
   const parseImportMeta = (metadata: string): { broker?: string; method?: string; count?: string } => {
     try { return JSON.parse(metadata); } catch { return {}; }
   };
@@ -746,6 +780,12 @@ export default function AdminUserDetailPage() {
               ["Trial Activated", user.trialActivatedAt ? new Date(user.trialActivatedAt).toLocaleDateString() : "—"],
               ["Trial Token", user.trialToken ? <span key="tt" className="font-mono text-[11px] select-all break-all">{user.trialToken}</span> : "—"],
               ["Trial Expired Notified", user.trialExpiredNotified ? <span key="te" className="text-amber-500">Yes</span> : <span key="te" className="text-gray-400">No</span>],
+              [
+                "Membership grant pending",
+                user.membershipGrantPending
+                  ? <span key="mg" className="text-amber-500">Yes ({user.membershipGrantPlan === "starter" ? "Bifolio" : "Trefolio"}, {user.membershipGrantDays ?? "—"} d)</span>
+                  : <span key="mg" className="text-gray-400">No</span>,
+              ],
             ] as [string, React.ReactNode][]).map(([label, value]) => (
               <div key={label} className="flex justify-between items-center text-xs gap-2">
                 <span className="text-gray-500 dark:text-slate-400 shrink-0">{label}</span>
@@ -842,6 +882,52 @@ export default function AdminUserDetailPage() {
                   <option value="pro">Trefolio (pro)</option>
                 </select>
               </div>
+              <form onSubmit={handleGrantMembership} className="rounded-lg border border-dashed border-slate-300 dark:border-slate-600 p-3 space-y-2 bg-slate-50/50 dark:bg-slate-800/30">
+                <div className="text-[10px] font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">
+                  Grant membership (email + activate)
+                </div>
+                {user.membershipGrantPending ? (
+                  <p className="text-[11px] text-amber-600 dark:text-amber-400">
+                    Pending: {user.membershipGrantPlan === "starter" ? "Bifolio" : "Trefolio"} · {user.membershipGrantDays ?? "—"} days
+                    {user.membershipGrantCreatedAt ? ` · sent ${new Date(user.membershipGrantCreatedAt).toLocaleString()}` : ""}
+                  </p>
+                ) : null}
+                <div className="flex flex-wrap gap-2 items-end">
+                  <label className="flex flex-col gap-0.5 text-[10px] text-gray-500 dark:text-slate-400">
+                    Plan
+                    <select
+                      value={grantPlan}
+                      onChange={(e) => setGrantPlan(e.target.value as "starter" | "pro")}
+                      className="text-xs px-2 py-1 rounded-lg bg-white dark:bg-slate-900"
+                    >
+                      <option value="starter">Bifolio</option>
+                      <option value="pro">Trefolio</option>
+                    </select>
+                  </label>
+                  <label className="flex flex-col gap-0.5 text-[10px] text-gray-500 dark:text-slate-400">
+                    Days
+                    <input
+                      type="number"
+                      min={1}
+                      max={730}
+                      value={grantDays}
+                      onChange={(e) => setGrantDays(Math.max(1, Math.min(730, parseInt(e.target.value, 10) || 1)))}
+                      className="text-xs px-2 py-1 rounded-lg w-20 bg-white dark:bg-slate-900"
+                    />
+                  </label>
+                  <button
+                    type="submit"
+                    disabled={grantLoading}
+                    className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-500 disabled:opacity-50"
+                  >
+                    {grantLoading ? "Sending…" : "Send invitation"}
+                  </button>
+                </div>
+                {grantError ? <p className="text-[11px] text-red-500">{grantError}</p> : null}
+                <p className="text-[10px] text-gray-400 dark:text-slate-500 leading-relaxed">
+                  Sends an email in the user&apos;s language. The period starts when they activate. Blocked if Stripe subscription is active.
+                </p>
+              </form>
               <form className="flex items-center gap-2" onSubmit={handlePwdReset}>
                 <input type="password" placeholder="New password" value={resetPwd} onChange={(e) => setResetPwd(e.target.value)} className="text-xs px-2 py-1.5 rounded-lg flex-1" />
                 <button type="submit" className="btn-secondary text-xs px-2 py-1">Reset pwd</button>

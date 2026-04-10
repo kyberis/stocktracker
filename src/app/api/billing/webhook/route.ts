@@ -8,13 +8,8 @@ import {
   trackEvent,
   updateUserSubscription,
   getStripePriceConfig,
-  getSnapTradeConnection,
-  scheduleSnapTradeDeletion,
-  clearSnapTradeDeletion,
-  getUserSettings,
-  updateUserSettings,
 } from "@/lib/db";
-import { canAccessTheme } from "@/lib/subscription";
+import { reconcileSnapTrade, reconcileTheme } from "@/lib/billing-reconcile";
 import { sendBifolioUpgradeEmail, sendTrefolioUpgradeEmail, sendAdminSubscriptionNotification } from "@/lib/email";
 import { billingEventsTotal } from "@/lib/metrics";
 import { getStripeClient } from "@/lib/stripe";
@@ -228,39 +223,3 @@ export const POST = withMetrics("/api/billing/webhook", async (req: NextRequest)
 
   return NextResponse.json({ received: true });
 });
-
-/**
- * Reset dashboard theme to default if the user's current theme
- * is no longer available on their new plan.
- */
-async function reconcileTheme(userId: string, newPlan: string): Promise<void> {
-  try {
-    const settings = await getUserSettings(userId);
-    const plan = (newPlan || "free") as import("@/lib/types").SubscriptionPlan;
-    if (!canAccessTheme(settings.dashboardTheme, plan)) {
-      await updateUserSettings(userId, { dashboardTheme: "default" });
-    }
-  } catch (err) {
-    console.error("[billing/webhook] Theme reconcile error:", err instanceof Error ? err.message : err);
-  }
-}
-
-/**
- * Schedule or cancel SnapTrade user deletion based on plan change.
- * When a user drops to Free: schedule deletion after 1 hour (stops $2/user/month).
- * When a user gains Starter or Pro: cancel any pending deletion.
- */
-async function reconcileSnapTrade(userId: string, newPlan: string): Promise<void> {
-  try {
-    const conn = await getSnapTradeConnection(userId);
-    if (!conn) return;
-
-    if (newPlan === "pro" || newPlan === "starter") {
-      await clearSnapTradeDeletion(userId);
-    } else {
-      await scheduleSnapTradeDeletion(userId);
-    }
-  } catch (err) {
-    console.error("[billing/webhook] SnapTrade reconcile error:", err instanceof Error ? err.message : err);
-  }
-}

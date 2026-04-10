@@ -57,6 +57,13 @@ export {
   revokeDevicePasskey,
   findUserByDevicePasskey,
   checkTrialToken,
+  checkMembershipGrantToken,
+  setPendingMembershipGrant,
+  applyPendingMembershipGrant,
+  computeMembershipGrantExpiry,
+  clearMembershipGrantFields,
+  MEMBERSHIP_GRANT_MIN_DAYS,
+  MEMBERSHIP_GRANT_MAX_DAYS,
   markDeviceLinked,
   markDeviceProRedeemed,
   updateDeviceTemplate,
@@ -69,6 +76,7 @@ export {
   getUserDetailData,
 } from "./users";
 export type { AdminUserWithStats } from "./users";
+export type { MembershipGrantTokenStatus } from "./users";
 
 export type { DistinctHoldingTicker } from "./holdings";
 export {

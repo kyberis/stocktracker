@@ -1,6 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/guards";
-import { deleteUser, findUserById, listUsers, updateUserPassword, updateUserRole, updateUserSubscription } from "@/lib/db";
+import {
+  deleteUser,
+  findUserById,
+  getUserSettings,
+  listUsers,
+  setPendingMembershipGrant,
+  trackEvent,
+  updateUserPassword,
+  updateUserRole,
+  updateUserSubscription,
+} from "@/lib/db";
+import { getEmailLocale, sendMembershipGrantInvitationEmail } from "@/lib/email";
+import { hasActiveManagedStripeSubscription } from "@/lib/stripe";
 import { resetChecklist } from "@/lib/db/checklist";
 import { hashPassword } from "@/lib/auth/password";
 import { parseBody } from "@/lib/api-response";
@@ -58,6 +70,37 @@ export const POST = withMetrics("/api/admin/users", async (req: NextRequest) => 
 
   if (data.action === "resetChecklist") {
     await resetChecklist(user.id);
+    return NextResponse.json({ ok: true });
+  }
+
+  if (data.action === "grantMembership") {
+    if (await hasActiveManagedStripeSubscription(user.stripe_subscription_id)) {
+      return NextResponse.json(
+        {
+          error:
+            "This user has an active Stripe subscription. Manage billing in Stripe before granting complimentary access.",
+        },
+        { status: 409 },
+      );
+    }
+    const { token } = await setPendingMembershipGrant(user.id, data.plan, data.days);
+    const settings = await getUserSettings(user.id);
+    const locale = getEmailLocale(settings.language || "en");
+    const baseUrl = process.env.APP_BASE_URL || new URL(req.url).origin;
+    await sendMembershipGrantInvitationEmail({
+      to: user.email,
+      displayName: user.display_name,
+      userId: user.id,
+      locale,
+      plan: data.plan,
+      days: data.days,
+      token,
+      baseUrl,
+    });
+    await trackEvent(user.id, "admin_membership_grant_sent", {
+      plan: data.plan,
+      days: String(data.days),
+    });
     return NextResponse.json({ ok: true });
   }
 

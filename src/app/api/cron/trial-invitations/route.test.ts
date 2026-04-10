@@ -10,10 +10,23 @@ vi.mock("@/lib/email", () => ({
   getEmailLocale: vi.fn().mockReturnValue("en"),
 }));
 
-vi.mock("@/lib/cron-logging", () => ({
-  withCronLogging: (_name: string, handler: () => Promise<unknown>) => handler,
-  verifyCronAuth: vi.fn().mockReturnValue(null),
-}));
+vi.mock("@/lib/db", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/db")>();
+  return {
+    ...actual,
+    isFeatureEnabled: vi.fn().mockResolvedValue(true),
+  };
+});
+
+vi.mock("@/lib/cron-logging", async () => {
+  const { NextResponse } = await import("next/server");
+  return {
+    withCronLogging: (_name: string, handler: () => Promise<Record<string, unknown>>) => {
+      return async () => NextResponse.json(await handler());
+    },
+    verifyCronAuth: vi.fn().mockReturnValue(null),
+  };
+});
 
 import { ensureInitialized } from "@/lib/db/client";
 import { sendTrialInvitationEmail } from "@/lib/email";
