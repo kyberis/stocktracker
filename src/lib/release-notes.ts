@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.77.26",
+    date: "2026-04-11",
+    title: "Build: React.cache shim and react-dom resolution",
+    titleTranslations: {
+      es: "Compilación: shim React.cache y resolución de react-dom",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Production build: webpack aliases bare `react` imports to a small shim that adds `React.cache` for Next 14.2 dedupe-fetch on React 18, and stops overriding `react-dom` so Next can provide `ReactDOM.preload` during prerender.",
+        translations: {
+          es: "Compilación de producción: alias de webpack para importaciones de `react` hacia un shim que añade `React.cache` (dedupe-fetch de Next 14.2 en React 18) y sin sobrescribir `react-dom` para que Next pueda exponer `ReactDOM.preload` en prerender.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.77.25",
     date: "2026-04-11",
     title: "Build: safe dynamic params for admin API routes",

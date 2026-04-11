@@ -1,11 +1,12 @@
 import { readFileSync, writeFileSync } from "fs";
-import { createRequire } from "module";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 
-const require = createRequire(import.meta.url);
-const reactPkgDir = dirname(require.resolve("react/package.json"));
-const reactDomPkgDir = dirname(require.resolve("react-dom/package.json"));
+const reactCacheShim = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "scripts",
+  "react-cache-shim.cjs",
+);
 
 /* ─── Stamp sw.js with a unique build ID so the browser detects new deploys ─── */
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -24,13 +25,12 @@ try {
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // Avoid duplicate React / wrong react-dom server bundle (ReactCurrentDispatcher undefined on Vercel).
-  // Alias package roots (not react/index.js) so `react/jsx-runtime` still resolves.
+  // react$ → shim adds React.cache for Next 14.2 dedupe-fetch on React 18. Do not alias react-dom
+  // (Next maps it for ReactDOM.preload; forcing node_modules/react-dom breaks prerender).
   webpack: (config) => {
     config.resolve.alias = {
       ...config.resolve.alias,
-      react: reactPkgDir,
-      "react-dom": reactDomPkgDir,
+      "react$": reactCacheShim,
     };
     return config;
   },

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getAppRouteParam } from "@/lib/api-route-params";
 import { requireAdmin } from "@/lib/auth/guards";
 import { withMetrics } from "@/lib/with-metrics";
 import { getPrivateChatRoom, getPrivateChatParticipants } from "@/lib/db";
@@ -9,7 +10,7 @@ export const GET = withMetrics(
     const { session, error } = await requireAdmin(req);
     if (error || !session) return error!;
 
-    const { id: roomId } = await (ctx as { params: Promise<{ id: string }> }).params;
+    const roomId = getAppRouteParam(req, ctx, "id");
     if (!roomId) {
       return NextResponse.json({ error: "Missing room id" }, { status: 400 });
     }
