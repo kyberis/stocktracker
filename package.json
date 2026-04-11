@@ -36,7 +36,7 @@
     "@capacitor/ios": "^8.2.0",
     "@capacitor/push-notifications": "^8.0.2",
     "@capacitor/splash-screen": "^8.0.1",
-    "@capacitor/status-bar": "^8.0.1",
+    "@capacitor/status-bar": "^8.0.2",
     "@libsql/client": "^0.17.0",
     "@simplewebauthn/browser": "^13.2.2",
     "@simplewebauthn/server": "^9.0.3",
