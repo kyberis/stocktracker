@@ -32,7 +32,7 @@ export function matchTools(pathname: string): boolean {
 
 /**
  * Single ordering for the whole app: Home → Portfolio page → Import → Tools →
- * Market Insights → Crypto → Economic Indicators → Network.
+ * Daily digests → Crypto → Economic Indicators → Network.
  */
 export const APP_NAV_PRIMARY: AppNavPrimaryItem[] = [
   {
@@ -72,13 +72,13 @@ export const APP_NAV_PRIMARY: AppNavPrimaryItem[] = [
     mobileWebMore: false,
   },
   {
-    href: "/market-insights",
-    labelKey: "marketInsightsNav",
-    matches: exactOrChild("/market-insights"),
+    href: "/daily-digests",
+    labelKey: "dailyDigestsNav",
+    matches: exactOrChild("/daily-digests"),
     desktop: true,
-    desktopTopStrip: false,
-    mobileWebTab: false,
-    mobileWebMore: true,
+    desktopTopStrip: true,
+    mobileWebTab: true,
+    mobileWebMore: false,
   },
   {
     href: "/crypto",
@@ -180,6 +180,8 @@ export const MOBILE_TAB_ICON_PATH: Record<string, string> = {
     "M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12",
   "/tools":
     "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2",
+  "/daily-digests":
+    "M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25M16.5 7.5V18a2.25 2.25 0 002.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 002.25 2.25h13.5M6 7.5h3v3H6v-3z",
   more: "M4 6h16M4 12h16M4 18h16",
   "/profile":
     "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z",
@@ -201,7 +203,7 @@ export const APP_NAV_SIDEBAR_ICON: Record<string, AppNavSidebarIconId> = {
   "/portfolio": "portfolio",
   "/import": "import",
   "/tools": "tools",
-  "/market-insights": "newspaper",
+  "/daily-digests": "newspaper",
   "/crypto": "crypto",
   "/economic-indicators": "indicators",
   "/network": "network",

@@ -18,5 +18,7 @@ export const GET = withMetrics("/api/admin/market-digests", async (req: NextRequ
     offset,
   });
 
-  return NextResponse.json({ digests });
+  const emailBroadcastDisabled = process.env.MARKET_DIGEST_EMAIL_BROADCAST_DISABLED === "1";
+
+  return NextResponse.json({ digests, emailBroadcastDisabled });
 });

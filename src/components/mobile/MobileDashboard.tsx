@@ -48,6 +48,7 @@ const FeedbackModal = dynamic(() => import("@/components/FeedbackModal"), { ssr:
 const PortfolioScoreCard = dynamic(() => import("@/components/dashboard-v2/PortfolioScoreCard"), { ssr: false });
 const GoalPromptCard = dynamic(() => import("@/components/dashboard-v2/GoalPromptCard"), { ssr: false });
 const WeeklyDigestCard = dynamic(() => import("@/components/dashboard-v2/WeeklyDigestCard"), { ssr: false });
+const DailyDigestsTeaserCard = dynamic(() => import("@/components/dashboard-v2/DailyDigestsTeaserCard"), { ssr: false });
 const OnboardingChecklist = dynamic(() => import("@/components/dashboard-v2/OnboardingChecklist"), { ssr: false });
 const AssetBreakdownCards = dynamic(() => import("@/components/dashboard-v2/AssetBreakdownCards"), { ssr: false });
 
@@ -266,6 +267,7 @@ export default function MobileDashboard() {
               <MobileEmptyState onAdd={() => setShowAddModal(true)} />
             ) : (
               <>
+                <DailyDigestsTeaserCard />
                 <WeeklyDigestCard position="promoted" />
                 <div className="flex justify-end">
                   <AssetTypeReviewLauncher />

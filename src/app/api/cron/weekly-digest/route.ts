@@ -189,6 +189,8 @@ const runWeeklyDigest = withCronLogging("weekly-digest", async () => {
   let sent = 0;
   let errors = 0;
   let skippedOptOut = 0;
+  let emailSkippedByConfig = 0;
+  const weeklyEmailDisabledGlobal = process.env.WEEKLY_DIGEST_EMAIL_DISABLED === "1";
 
   async function processUser(ctx: UserContext): Promise<void> {
     const { user, holdings, cashEntries, baseCurrency } = ctx;
@@ -339,33 +341,37 @@ Week: ${weekStart} to ${weekEnd}`;
       incrementGlobalAiCalls().catch(() => {});
       incrementGlobalAiTokens(tokensUsed).catch(() => {});
 
-      const baseUrl = process.env.APP_BASE_URL || "https://trefolio.com";
-      const digestSubject = `Your Weekly Portfolio Digest — ${weekStart} to ${weekEnd}`;
-      const html = buildWeeklyDigestEmail(user.displayName, summaryText, stats, baseUrl, weekStart, weekEnd);
-      // sendEmail enforces profile / one-click unsubscribe before Resend (see isMarketingEmailAllowed + sendEmail).
-      const emailResult = await sendEmail({
-        to: user.email,
-        subject: digestSubject,
-        html,
-        userId: user.id,
-      });
-
-      const emailStatus = emailResult.suppressed ? "suppressed" : emailResult.success ? "sent" : "failed";
-      logEmailSend({
-        resendId: emailResult.messageId,
-        userId: user.id,
-        emailTo: user.email,
-        subject: digestSubject,
-        bodyHtml: html,
-        status: emailStatus,
-      }).catch(() => {});
-
-      if (emailResult.suppressed) {
-        skippedOptOut++;
-      } else if (emailResult.success) {
-        sent++;
+      if (weeklyEmailDisabledGlobal) {
+        emailSkippedByConfig++;
       } else {
-        errors++;
+        const baseUrl = process.env.APP_BASE_URL || "https://trefolio.com";
+        const digestSubject = `Your Weekly Portfolio Digest — ${weekStart} to ${weekEnd}`;
+        const html = buildWeeklyDigestEmail(user.displayName, summaryText, stats, baseUrl, weekStart, weekEnd);
+        // sendEmail enforces profile / one-click unsubscribe before Resend (see isMarketingEmailAllowed + sendEmail).
+        const emailResult = await sendEmail({
+          to: user.email,
+          subject: digestSubject,
+          html,
+          userId: user.id,
+        });
+
+        const emailStatus = emailResult.suppressed ? "suppressed" : emailResult.success ? "sent" : "failed";
+        logEmailSend({
+          resendId: emailResult.messageId,
+          userId: user.id,
+          emailTo: user.email,
+          subject: digestSubject,
+          bodyHtml: html,
+          status: emailStatus,
+        }).catch(() => {});
+
+        if (emailResult.suppressed) {
+          skippedOptOut++;
+        } else if (emailResult.success) {
+          sent++;
+        } else {
+          errors++;
+        }
       }
     } catch (err) {
       console.error(`Weekly digest error for user ${ctx.user.id}:`, err instanceof Error ? err.message : err);
@@ -378,7 +384,17 @@ Week: ${weekStart} to ${weekEnd}`;
     await Promise.all(batch.map(processUser));
   }
 
-  return { weekStart, weekEnd, eligible: users.length, sent, skipped, skippedOptOut, errors };
+  return {
+    weekStart,
+    weekEnd,
+    eligible: users.length,
+    sent,
+    skipped,
+    skippedOptOut,
+    errors,
+    weeklyDigestEmailDisabled: weeklyEmailDisabledGlobal,
+    emailSkippedByConfig,
+  };
 });
 
 export async function GET(req: NextRequest) {

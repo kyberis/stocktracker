@@ -305,6 +305,16 @@ export const POST = withMetrics("/api/admin/market-digests/[id]/send", async (
   }
 
   // ── Full send: all verified users ──
+  if (process.env.MARKET_DIGEST_EMAIL_BROADCAST_DISABLED === "1") {
+    return NextResponse.json(
+      {
+        error:
+          "Bulk market digest email is disabled (MARKET_DIGEST_EMAIL_BROADCAST_DISABLED=1). Users can read digests in the app under Daily digests.",
+      },
+      { status: 403 },
+    );
+  }
+
   if (digest.status !== "published") {
     return NextResponse.json({ error: "Digest must be published before sending" }, { status: 400 });
   }

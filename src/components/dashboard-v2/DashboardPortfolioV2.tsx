@@ -33,6 +33,7 @@ const CompactEarningsCard = dynamic(() => import("./CompactEarningsCard"), { ssr
 const PortfolioScoreCard = dynamic(() => import("./PortfolioScoreCard"), { ssr: false, loading: () => <CardSkeleton /> });
 const PortfolioAiTrigger = dynamic(() => import("./PortfolioAiTrigger"), { ssr: false });
 const WeeklyDigestCard = dynamic(() => import("./WeeklyDigestCard"), { ssr: false });
+const DailyDigestsTeaserCard = dynamic(() => import("./DailyDigestsTeaserCard"), { ssr: false });
 const PortfolioAiDrawer = dynamic(() => import("./PortfolioAiDrawer"), { ssr: false });
 const PortfolioTable = dynamic(() => import("../PortfolioTable"), { ssr: false, loading: () => <TableSkeleton /> });
 const PortfolioGrowthPeriods = dynamic(() => import("../PortfolioGrowthPeriods"), { ssr: false, loading: () => <CardSkeleton /> });
@@ -101,6 +102,7 @@ function ExpandedLayout({ chartBlock, holdings, cashEntries, allCashEntries, onA
           </div>
           <div className="flex flex-col gap-3">
             <OnboardingChecklist onOpenAddStock={onAddStock} />
+            <DailyDigestsTeaserCard />
             <WeeklyDigestCard position="promoted" />
             <CompactReferralCard onShare={onShareReferral} />
             <GoalPromptCard holdings={holdings} />
@@ -150,6 +152,7 @@ function CollapsedLayout({ chartBlock, breakdownBlock, holdings, cashEntries, al
         </div>
         <div className="flex flex-col gap-3">
           <OnboardingChecklist onOpenAddStock={onAddStock} />
+          <DailyDigestsTeaserCard />
           <WeeklyDigestCard position="promoted" />
           <CompactReferralCard onShare={onShareReferral} />
           <GoalPromptCard holdings={holdings} />

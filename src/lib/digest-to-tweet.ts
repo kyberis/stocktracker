@@ -11,7 +11,7 @@ Rules:
 - No emojis.
 - Use a confident, informative tone — not clickbait.
 - If the digest mentions specific tickers, include 1-2 cashtags (e.g. $AAPL).
-- End with: trefolio.com/market-insights
+- End with: trefolio.com/daily-digests
 - Return ONLY the post text, nothing else.`;
 
 export async function generateDigestTweet(

@@ -336,7 +336,8 @@ Week: ${weekStart} to ${weekEnd}`;
   incrementGlobalAiTokens(tokensUsed).catch(() => {});
 
   let emailSent = false;
-  if (sendEmail_ && user.email) {
+  const weeklyEmailDisabled = process.env.WEEKLY_DIGEST_EMAIL_DISABLED === "1";
+  if (sendEmail_ && user.email && !weeklyEmailDisabled) {
     try {
       const baseUrl = process.env.APP_BASE_URL || "https://trefolio.com";
       const digestSubject = `Your Weekly Portfolio Digest — ${weekStart} to ${weekEnd}`;
@@ -370,6 +371,7 @@ Week: ${weekStart} to ${weekEnd}`;
     summaryText,
     stats,
     emailSent,
+    weeklyDigestEmailSkipped: weeklyEmailDisabled,
     tokensUsed,
   });
 });

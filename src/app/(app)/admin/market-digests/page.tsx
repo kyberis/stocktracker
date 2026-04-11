@@ -108,6 +108,7 @@ export default function AdminMarketDigestsPage() {
   const [testEmail, setTestEmail] = useState("");
   const [showTestForm, setShowTestForm] = useState<string | null>(null);
   const [domainStyleMap, setDomainStyleMap] = useState<Record<string, { bg: string; label: string }>>({});
+  const [emailBroadcastDisabled, setEmailBroadcastDisabled] = useState(false);
 
   useEffect(() => {
     fetch("/api/admin/digest-senders", { cache: "no-store" })
@@ -127,6 +128,7 @@ export default function AdminMarketDigestsPage() {
       const res = await fetch(`/api/admin/market-digests${params}`, { cache: "no-store" });
       const data = await res.json();
       setDigests(data.digests || []);
+      setEmailBroadcastDisabled(Boolean(data.emailBroadcastDisabled));
     } catch { /* ignore */ }
     setLoading(false);
   }, [filter]);
@@ -270,6 +272,16 @@ export default function AdminMarketDigestsPage() {
 
   return (
     <div>
+      {emailBroadcastDisabled && (
+        <div
+          className="mb-4 px-4 py-3 rounded-lg border border-amber-200 dark:border-amber-800/60 bg-amber-50 dark:bg-amber-950/40 text-amber-950 dark:text-amber-100 text-sm"
+          role="status"
+        >
+          <strong className="font-semibold">Bulk email disabled.</strong>{" "}
+          <code className="text-xs bg-amber-100/80 dark:bg-amber-900/50 px-1 rounded">MARKET_DIGEST_EMAIL_BROADCAST_DISABLED=1</code> is set.
+          Users read digests in the app at <span className="font-mono">/daily-digests</span>. Test sends to a single address still work.
+        </div>
+      )}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-bold text-gray-900 dark:text-white">Market Digests</h2>
         <div className="flex gap-1">

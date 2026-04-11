@@ -17,6 +17,30 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.77.21",
+    date: "2026-04-11",
+    title: "Daily digests in the app + optional digest email controls",
+    titleTranslations: {
+      es: "Resúmenes diarios en la app y control opcional del correo de digests",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Market digest reading moved to Daily digests (/daily-digests) with a teaser on the home dashboard; /market-insights redirects there. Mobile bottom nav includes Daily digests.",
+        translations: {
+          es: "La lectura del resumen de mercado pasa a Resúmenes diarios (/daily-digests) con un aviso en el inicio del panel; /market-insights redirige allí. La barra inferior móvil incluye Resúmenes diarios.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Optional env flags: MARKET_DIGEST_EMAIL_BROADCAST_DISABLED blocks bulk market digest email to all users; WEEKLY_DIGEST_EMAIL_DISABLED skips the weekly portfolio digest email while keeping in-app digests. Documented in .env.local.example; admin Market Digests shows a banner when bulk send is off.",
+        translations: {
+          es: "Variables de entorno opcionales: MARKET_DIGEST_EMAIL_BROADCAST_DISABLED bloquea el envío masivo del resumen de mercado; WEEKLY_DIGEST_EMAIL_DISABLED omite el correo del resumen semanal del portafolio manteniendo los resúmenes en la app. Documentado en .env.local.example; el admin de Market Digests muestra un aviso si el envío masivo está desactivado.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.77.20",
     date: "2026-04-11",
     title: "Two subscription tiers: Folio + Trefolio",
