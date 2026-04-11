@@ -11,6 +11,7 @@ import {
   hasEmailBeenSent,
 } from "@/lib/db";
 import { isMarketingEmailAllowed, sendEmail } from "@/lib/email";
+import { getAppRouteParam } from "@/lib/api-route-params";
 import { withMetrics } from "@/lib/with-metrics";
 import { getQuotesWithCache, getRatesWithCache } from "@/lib/quote-cache";
 import { convertToEUR, resolveQuoteCurrency } from "@/lib/utils";
@@ -245,7 +246,7 @@ export const POST = withMetrics("/api/admin/market-digests/[id]/send", async (
   const { session, error } = await requireAdmin(req);
   if (error || !session) return error!;
 
-  const { id } = (ctx as { params: { id: string } }).params;
+  const id = getAppRouteParam(req, ctx, "id");
 
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 

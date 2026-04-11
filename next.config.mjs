@@ -2,6 +2,12 @@ import { readFileSync, writeFileSync } from "fs";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 
+const reactCacheShim = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "scripts",
+  "react-cache-shim.cjs",
+);
+
 /* ─── Stamp sw.js with a unique build ID so the browser detects new deploys ─── */
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const swPath = join(__dirname, "public", "sw.js");
@@ -19,6 +25,15 @@ try {
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // react$ → shim adds React.cache for Next 14.2 dedupe-fetch on React 18. Do not alias react-dom
+  // (Next maps it for ReactDOM.preload; forcing node_modules/react-dom breaks prerender).
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      "react$": reactCacheShim,
+    };
+    return config;
+  },
   images: {
     remotePatterns: [
       {

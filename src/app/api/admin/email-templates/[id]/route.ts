@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/guards";
 import { getEmailTemplate, updateEmailTemplate, deleteEmailTemplate, getTemplateStats } from "@/lib/db";
+import { getAppRouteParam } from "@/lib/api-route-params";
 import { withMetrics } from "@/lib/with-metrics";
 
 export const GET = withMetrics("/api/admin/email-templates/[id]", async (
@@ -10,7 +11,7 @@ export const GET = withMetrics("/api/admin/email-templates/[id]", async (
   const { error } = await requireAdmin(req);
   if (error) return error;
 
-  const { id } = (ctx as { params: { id: string } }).params;
+  const id = getAppRouteParam(req, ctx, "id");
   const template = await getEmailTemplate(id);
   if (!template) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
@@ -25,7 +26,7 @@ export const PUT = withMetrics("/api/admin/email-templates/[id]", async (
   const { error } = await requireAdmin(req);
   if (error) return error;
 
-  const { id } = (ctx as { params: { id: string } }).params;
+  const id = getAppRouteParam(req, ctx, "id");
   const body = await req.json();
 
   const updated = await updateEmailTemplate(id, body);
@@ -41,7 +42,7 @@ export const DELETE = withMetrics("/api/admin/email-templates/[id]", async (
   const { error } = await requireAdmin(req);
   if (error) return error;
 
-  const { id } = (ctx as { params: { id: string } }).params;
+  const id = getAppRouteParam(req, ctx, "id");
   await deleteEmailTemplate(id);
   return NextResponse.json({ ok: true });
 });
