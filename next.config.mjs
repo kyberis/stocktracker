@@ -1,6 +1,11 @@
 import { readFileSync, writeFileSync } from "fs";
+import { createRequire } from "module";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
+
+const require = createRequire(import.meta.url);
+const reactPkgDir = dirname(require.resolve("react/package.json"));
+const reactDomPkgDir = dirname(require.resolve("react-dom/package.json"));
 
 /* ─── Stamp sw.js with a unique build ID so the browser detects new deploys ─── */
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -19,6 +24,16 @@ try {
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Avoid duplicate React / wrong react-dom server bundle (ReactCurrentDispatcher undefined on Vercel).
+  // Alias package roots (not react/index.js) so `react/jsx-runtime` still resolves.
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      react: reactPkgDir,
+      "react-dom": reactDomPkgDir,
+    };
+    return config;
+  },
   images: {
     remotePatterns: [
       {
