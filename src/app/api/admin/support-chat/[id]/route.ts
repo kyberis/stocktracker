@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/guards";
 import { getSupportChatConversation, updateSupportChatStatus } from "@/lib/db";
+import { getAppRouteParam } from "@/lib/api-route-params";
 import { withMetrics } from "@/lib/with-metrics";
 
 export const GET = withMetrics("/api/admin/support-chat/[id]", async (
@@ -10,7 +11,7 @@ export const GET = withMetrics("/api/admin/support-chat/[id]", async (
   const { error } = await requireAdmin(req);
   if (error) return error;
 
-  const { id } = (ctx as { params: { id: string } }).params;
+  const id = getAppRouteParam(req, ctx, "id");
   const conversation = await getSupportChatConversation(id);
   if (!conversation) {
     return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
@@ -25,7 +26,7 @@ export const PUT = withMetrics("/api/admin/support-chat/[id]", async (
   const { error } = await requireAdmin(req);
   if (error) return error;
 
-  const { id } = (ctx as { params: { id: string } }).params;
+  const id = getAppRouteParam(req, ctx, "id");
   const body = await req.json();
   const status = body.status;
   if (!status || !["active", "resolved", "escalated"].includes(status)) {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/guards";
 import { listEmailSendsByTemplateId, getTemplateStats } from "@/lib/db";
+import { getAppRouteParam } from "@/lib/api-route-params";
 import { withMetrics } from "@/lib/with-metrics";
 
 export const dynamic = "force-dynamic";
@@ -12,7 +13,7 @@ export const GET = withMetrics("/api/admin/market-digests/[id]/send-report", asy
   const { error } = await requireAdmin(req);
   if (error) return error;
 
-  const { id } = (ctx as { params: { id: string } }).params;
+  const id = getAppRouteParam(req, ctx, "id");
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
   const templateId = `digest:${id}`;

@@ -12,6 +12,7 @@ import {
   sendRefundRequestApprovedEmail,
   sendRefundRequestRejectedEmail,
 } from "@/lib/refund-request-email";
+import { getAppRouteParam } from "@/lib/api-route-params";
 import { withMetrics } from "@/lib/with-metrics";
 
 const resolveSchema = z.object({
@@ -26,7 +27,7 @@ export const PUT = withMetrics("/api/admin/refund-requests/[id]", async (
   const { error } = await requireAdmin(req);
   if (error) return error;
 
-  const { id } = (ctx as { params: { id: string } }).params;
+  const id = getAppRouteParam(req, ctx, "id");
 
   const existing = await getRefundRequestById(id);
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });

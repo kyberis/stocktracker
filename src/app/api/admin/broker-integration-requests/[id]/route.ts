@@ -5,6 +5,7 @@ import {
   updateBrokerIntegrationRequestStatus,
   type BrokerIntegrationRequestStatus,
 } from "@/lib/db";
+import { getAppRouteParam } from "@/lib/api-route-params";
 import { withMetrics } from "@/lib/with-metrics";
 
 const statusSchema = z.object({
@@ -18,7 +19,7 @@ export const PUT = withMetrics("/api/admin/broker-integration-requests/[id]", as
   const { error } = await requireAdmin(req);
   if (error) return error;
 
-  const { id } = (ctx as { params: { id: string } }).params;
+  const id = getAppRouteParam(req, ctx, "id");
   let body: unknown;
   try {
     body = await req.json();

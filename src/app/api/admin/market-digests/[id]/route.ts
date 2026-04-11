@@ -13,6 +13,7 @@ import {
 } from "@/lib/db";
 import type { MarketDigestSource } from "@/lib/db";
 import { getGlobalOpenAIApiKey, getAiModelForFlow } from "@/lib/db/settings";
+import { getAppRouteParam } from "@/lib/api-route-params";
 import { withMetrics } from "@/lib/with-metrics";
 import { generateDigestFromSources } from "@/lib/digest-generation";
 import { generateDigestTweet, buildDigestHashtags, computeEveningSchedule } from "@/lib/digest-to-tweet";
@@ -25,7 +26,7 @@ export const GET = withMetrics("/api/admin/market-digests/[id]", async (
   const { error } = await requireAdmin(req);
   if (error) return error;
 
-  const { id } = (ctx as { params: { id: string } }).params;
+  const id = getAppRouteParam(req, ctx, "id");
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
   const digest = await getMarketDigestWithTranslations(id);
@@ -41,7 +42,7 @@ export const PUT = withMetrics("/api/admin/market-digests/[id]", async (
   const { error } = await requireAdmin(req);
   if (error) return error;
 
-  const { id } = (ctx as { params: { id: string } }).params;
+  const id = getAppRouteParam(req, ctx, "id");
 
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 

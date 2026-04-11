@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.77.25",
+    date: "2026-04-11",
+    title: "Build: safe dynamic params for admin API routes",
+    titleTranslations: {
+      es: "Compilación: parámetros dinámicos seguros en rutas API admin",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Next.js build no longer fails collecting page data for dynamic API routes when `context.params` is missing — use `getAppRouteParam` with URL fallback (broker integration requests, refunds, email templates, market digests, support chat, passkeys).",
+        translations: {
+          es: "La compilación de Next.js ya no falla al recopilar datos cuando `context.params` falta en rutas API dinámicas: `getAppRouteParam` con respaldo por URL (solicitudes de bróker, reembolsos, plantillas, digests, chat de soporte, passkeys).",
+        },
+      },
+    ],
+  },
+  {
     version: "1.77.24",
     date: "2026-04-11",
     title: "Build: Stripe API version and Tailwind v3 pin",
