@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.77.24",
+    date: "2026-04-11",
+    title: "Build: Stripe API version and Tailwind v3 pin",
+    titleTranslations: {
+      es: "Compilación: versión de API de Stripe y Tailwind v3 fijado",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Align Stripe client apiVersion with stripe-node v22 (2026-03-25.dahlia). Pin tailwindcss to 3.4.x and ignore Dependabot major bumps until Tailwind v4 PostCSS migration.",
+        translations: {
+          es: "Alineada la apiVersion del cliente Stripe con stripe-node v22 (2026-03-25.dahlia). tailwindcss fijado en 3.4.x; Dependabot ignora major hasta migrar PostCSS a Tailwind v4.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.77.23",
     date: "2026-04-11",
     title: "Security: social HTML sanitization and cron hardening",

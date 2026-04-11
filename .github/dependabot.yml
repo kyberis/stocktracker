@@ -8,3 +8,7 @@ updates:
     open-pull-requests-limit: 10
     labels:
       - "dependencies"
+    # Tailwind v4 needs @tailwindcss/postcss + config migration; ignore major until then.
+    ignore:
+      - dependency-name: "tailwindcss"
+        update-types: ["version-update:semver-major"]
