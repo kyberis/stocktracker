@@ -42,7 +42,7 @@
     "@simplewebauthn/server": "^9.0.3",
     "@types/bcryptjs": "^3.0.0",
     "@upstash/ratelimit": "^2.0.8",
-    "@upstash/redis": "^1.36.3",
+    "@upstash/redis": "^1.37.0",
     "@vercel/analytics": "^1.6.1",
     "@vercel/blob": "^1.1.1",
     "@vercel/functions": "^2.2.13",
