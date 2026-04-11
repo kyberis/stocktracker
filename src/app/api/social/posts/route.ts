@@ -3,6 +3,7 @@ import { requireSession } from "@/lib/auth/guards";
 import { verifySessionToken } from "@/lib/auth/session";
 import { createPost, listPostsByUser, getFeedFromItems, getPublicProfileBySlug, isConnected, trackEvent, getCommentCountsForPosts, fanOutPost } from "@/lib/db";
 import { requireSocialEnabled } from "@/lib/social-gate";
+import { sanitizeSocialPostHtml } from "@/lib/sanitize-social-html";
 import { withMetrics } from "@/lib/with-metrics";
 
 export const GET = withMetrics("/api/social/posts", async (request: NextRequest) => {
@@ -72,9 +73,12 @@ export const POST = withMetrics("/api/social/posts", async (request: NextRequest
     return NextResponse.json({ error: "Content is required" }, { status: 400 });
   }
 
+  const format = typeof contentFormat === "string" ? contentFormat : "html";
+  const safeContent = format === "html" || !contentFormat ? sanitizeSocialPostHtml(content) : content;
+
   const post = await createPost(session.userId, {
     title: title || "",
-    content,
+    content: safeContent,
     contentFormat,
     visibility,
     postType,

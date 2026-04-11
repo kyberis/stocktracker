@@ -65,7 +65,7 @@ describe("createSessionToken + verifySessionToken", () => {
   });
 
   it("maps legacy starter plan in JWT to pro", async () => {
-    const token = await createSessionToken({ ...validPayload, plan: "starter" } as SessionPayload);
+    const token = await createSessionToken({ ...validPayload, plan: "starter" } as unknown as SessionPayload);
     const result = await verifySessionToken(token);
     expect(result!.plan).toBe("pro");
   });

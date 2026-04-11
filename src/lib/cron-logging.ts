@@ -68,8 +68,26 @@ export function withCronLogging(
 
 /* ── Auth helper for cron routes ── */
 
+function isProductionDeployment(): boolean {
+  return (
+    process.env.NODE_ENV === "production" ||
+    process.env.VERCEL_ENV === "production" ||
+    process.env.VERCEL_ENV === "preview"
+  );
+}
+
+/**
+ * Cron routes must not run without authentication in production/preview.
+ * Local dev: omit CRON_SECRET to allow unauthenticated cron (e.g. manual curl).
+ */
 export function verifyCronAuth(jobName: string, authHeader: string | null): NextResponse | null {
   const cronSecret = process.env.CRON_SECRET;
+
+  if (isProductionDeployment() && !cronSecret) {
+    console.error(`[cron:${jobName}] 500 — CRON_SECRET is required but not set`);
+    return NextResponse.json({ error: "Server misconfiguration" }, { status: 500 });
+  }
+
   if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
     console.warn(
       `[cron:${jobName}] 401 — ${!authHeader ? "missing Authorization header" : "secret mismatch"}`,
