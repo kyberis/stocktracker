@@ -12,3 +12,8 @@ updates:
     ignore:
       - dependency-name: "tailwindcss"
         update-types: ["version-update:semver-major"]
+      # Bump vitest major together with @vitest/coverage-v8 (peer must match).
+      - dependency-name: "vitest"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@vitest/coverage-v8"
+        update-types: ["version-update:semver-major"]
