@@ -5,6 +5,9 @@
     },
     "notion-workspace": {
       "enabled": true
+    },
+    "linear": {
+      "enabled": true
     }
   }
 }
