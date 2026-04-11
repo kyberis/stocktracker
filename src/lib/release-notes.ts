@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.77.23",
+    date: "2026-04-11",
+    title: "Security: social HTML sanitization and cron hardening",
+    titleTranslations: {
+      es: "Seguridad: sanitización HTML en redes y refuerzo de cron",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Social posts: rich-text HTML is sanitized on save to reduce stored XSS risk. Cron jobs on production and Vercel preview now require CRON_SECRET to be set (otherwise the endpoint returns an error). Added Dependabot, security audit notes, and optional API smoke tests.",
+        translations: {
+          es: "Publicaciones sociales: el HTML enriquecido se sanitiza al guardar para reducir riesgo de XSS persistente. Los cron en producción y en preview de Vercel exigen CRON_SECRET (si falta, el endpoint devuelve error). Añadidos Dependabot, notas de auditoría y pruebas de humo opcionales de API.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.77.22",
     date: "2026-04-11",
     title: "All portfolios: period returns instead of empty chart",

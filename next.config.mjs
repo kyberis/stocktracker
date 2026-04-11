@@ -39,6 +39,11 @@ const nextConfig = {
     },
   },
   async headers() {
+    /* CSP roadmap (security): Next.js 15+ middleware or App Router headers() can attach
+       per-request nonces — replace 'unsafe-inline'/'unsafe-eval' in script-src incrementally.
+       Order of work: (1) inventory inline scripts, (2) move to external files or nonces,
+       (3) tighten connect-src/frame-src as third-party domains change.
+       See docs/SECURITY_AUDIT.md */
     return [
       {
         source: "/(.*)",

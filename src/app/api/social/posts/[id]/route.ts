@@ -1,7 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
 import { verifySessionToken } from "@/lib/auth/session";
-import { getPostById, updatePost, deletePost, isConnected, trackEvent, fanOutPost, removeFanOut, refanOutPost } from "@/lib/db";
+import {
+  getPostById,
+  updatePost,
+  deletePost,
+  isConnected,
+  trackEvent,
+  fanOutPost,
+  removeFanOut,
+  refanOutPost,
+} from "@/lib/db";
+import type { PostType, PostVisibility } from "@/lib/db/social-posts";
+import { sanitizeSocialPostHtml } from "@/lib/sanitize-social-html";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -34,9 +45,34 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   const { session, error } = await requireSession(request);
   if (error || !session) return error!;
 
-  const body = await request.json();
+  const body = await request.json() as {
+    title?: string;
+    content?: string;
+    contentFormat?: string;
+    visibility?: PostVisibility;
+    postType?: PostType;
+    linkUrl?: string;
+    linkTitle?: string;
+    linkImage?: string;
+    isDraft?: boolean;
+  };
   const postBefore = await getPostById(id);
-  const success = await updatePost(id, session.userId, body);
+
+  let safeContent: string | undefined = body.content;
+  if (typeof safeContent === "string" && (body.contentFormat === "html" || body.contentFormat === undefined)) {
+    safeContent = sanitizeSocialPostHtml(safeContent);
+  }
+
+  const success = await updatePost(id, session.userId, {
+    title: body.title,
+    content: safeContent,
+    visibility: body.visibility,
+    postType: body.postType,
+    linkUrl: body.linkUrl,
+    linkTitle: body.linkTitle,
+    linkImage: body.linkImage,
+    isDraft: body.isDraft,
+  });
   if (!success) return NextResponse.json({ error: "Post not found or not authorized" }, { status: 404 });
 
   const updated = await getPostById(id);
