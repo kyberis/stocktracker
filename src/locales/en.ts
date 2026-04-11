@@ -585,6 +585,8 @@ const en: TranslationStrings = {
   roleUser: "User",
   roleUpdated: "Role updated",
   allPortfolios: "All Portfolios",
+  allPortfoliosEvolutionNote:
+    "Evolution chart is available when you select a single portfolio. Period returns below use your combined holdings.",
   newPortfolio: "New portfolio name",
   createPortfolio: "Create",
   creatingPortfolio: "Creating...",

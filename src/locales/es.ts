@@ -585,6 +585,8 @@ const es: TranslationStrings = {
   roleUser: "Usuario",
   roleUpdated: "Rol actualizado",
   allPortfolios: "Todos los Portafolios",
+  allPortfoliosEvolutionNote:
+    "El gráfico de evolución está disponible al seleccionar un solo portafolio. Los rendimientos por periodo usan tus posiciones combinadas.",
   newPortfolio: "Nombre del nuevo portafolio",
   createPortfolio: "Crear",
   creatingPortfolio: "Creando...",

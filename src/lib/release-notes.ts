@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.77.22",
+    date: "2026-04-11",
+    title: "All portfolios: period returns instead of empty chart",
+    titleTranslations: {
+      es: "Todos los portafolios: rendimientos por periodo en lugar del gráfico vacío",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "When “All Portfolios” is selected, the dashboard shows Pro period returns (1W, 3M, 6M, YTD, 1Y) from combined holdings instead of a blank evolution chart; the snapshot-based chart remains when you pick one portfolio.",
+        translations: {
+          es: "Al elegir «Todos los portafolios», el panel muestra los rendimientos Pro por periodo (1S, 3M, 6M, YTD, 1A) a partir de las posiciones combinadas en lugar de un gráfico de evolución vacío; el gráfico basado en instantáneas sigue disponible al elegir un portafolio.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.77.21",
     date: "2026-04-11",
     title: "Daily digests in the app + optional digest email controls",

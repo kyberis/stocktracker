@@ -34,6 +34,7 @@ import ChartTooltip from "./ChartTooltip";
 import AssetTypeFilter from "@/components/dashboard-v2/AssetTypeFilter";
 import type { AssetFilter } from "@/components/dashboard-v2/AssetTypeFilter";
 import type { Holding } from "@/lib/types";
+import AggregatedPortfolioPeriodMetrics from "./AggregatedPortfolioPeriodMetrics";
 
 // ── Types ──
 
@@ -321,20 +322,29 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
   }, [portfolioId]);
 
   useEffect(() => {
+    if (activePortfolioId == null) {
+      setLoading(false);
+      setPoints([]);
+      setEvents([]);
+    }
+  }, [activePortfolioId]);
+
+  useEffect(() => {
+    if (activePortfolioId == null) return;
     if (!isPaid && !["1d", "1w"].includes(range)) {
       setRange("1d");
       return;
     }
     fetchHistory(range, range === "1d" ? debugDate : null);
-  }, [range, isPaid, fetchHistory, mutationVersion, refreshKey, debugDate]);
+  }, [activePortfolioId, range, isPaid, fetchHistory, mutationVersion, refreshKey, debugDate]);
 
   // ── Auto-refresh for 1D (every 5 min) ──
 
   useEffect(() => {
-    if (range !== "1d" || debugDate) return;
+    if (activePortfolioId == null || range !== "1d" || debugDate) return;
     const interval = setInterval(() => fetchHistory("1d"), 5 * 60 * 1000);
     return () => clearInterval(interval);
-  }, [range, fetchHistory, debugDate]);
+  }, [activePortfolioId, range, fetchHistory, debugDate]);
 
   // ── Derive effective points (must be before benchmark fetch) ──
 
@@ -724,6 +734,70 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
       )}
     </div>
   ) : null;
+
+  const aggregatedTopButtons = onToggleExpand ? (
+    <div className="absolute top-3 right-3 z-10 flex items-center gap-1">
+      <button
+        onClick={onToggleExpand}
+        className="p-1.5 rounded-lg text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors"
+        title={expanded ? t("chartMinimize") : t("chartExpand")}
+        aria-label={expanded ? t("chartMinimize") : t("chartExpand")}
+      >
+        {expanded ? (
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25" />
+          </svg>
+        ) : (
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+          </svg>
+        )}
+      </button>
+    </div>
+  ) : null;
+
+  if (activePortfolioId == null) {
+    return (
+      <div className="card overflow-hidden relative">
+        {aggregatedTopButtons}
+        {inlineHeader}
+        <div className="min-h-[280px] flex flex-col justify-center">
+          <AggregatedPortfolioPeriodMetrics holdings={relevantHoldings} refreshKey={refreshKey} />
+        </div>
+        <div className="flex items-center justify-between px-5 py-2 border-t border-gray-100 dark:border-white/[0.04] text-[11px] text-gray-500 dark:text-slate-500">
+          <span>{t("allPortfoliosEvolutionNote")}</span>
+          <div className="flex items-center gap-3">
+            {onRecalculate && (
+              <button
+                type="button"
+                onClick={onRecalculate}
+                disabled={recalculating}
+                className="inline-flex items-center gap-1 font-medium text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 transition-colors disabled:opacity-50"
+              >
+                <svg
+                  width="11"
+                  height="11"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className={recalculating ? "animate-spin" : ""}
+                >
+                  <path d="M21 2v6h-6" />
+                  <path d="M3 12a9 9 0 0115.36-6.36L21 8" />
+                  <path d="M3 22v-6h6" />
+                  <path d="M21 12a9 9 0 01-15.36 6.36L3 16" />
+                </svg>
+                {recalculating ? "Recalculating…" : "Recalculate"}
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (loading && points.length === 0) {
     return (
