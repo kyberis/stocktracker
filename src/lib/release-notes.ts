@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.77.27",
+    date: "2026-04-11",
+    title: "Build: npm peer overrides for React 18",
+    titleTranslations: {
+      es: "Compilación: overrides npm para React 18",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Added npm `overrides` for `react` and `react-dom` (18.3.1) so `npm install` / Dependabot / Vercel resolve peers consistently. Added `npm run verify:vercel` (default install + `next build`) and `verify:vercel:ci` (`npm ci` + build).",
+        translations: {
+          es: "Añadidos `overrides` en npm para `react` y `react-dom` (18.3.1) para que `npm install`, Dependabot y Vercel resuelvan peers de forma coherente. Añadidos `npm run verify:vercel` (instalación por defecto + `next build`) y `verify:vercel:ci` (`npm ci` + build).",
+        },
+      },
+    ],
+  },
+  {
     version: "1.77.26",
     date: "2026-04-11",
     title: "Build: React.cache shim and react-dom resolution",
