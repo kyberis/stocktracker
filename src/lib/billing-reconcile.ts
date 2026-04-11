@@ -32,7 +32,7 @@ export async function reconcileSnapTrade(userId: string, newPlan: string): Promi
     const conn = await getSnapTradeConnection(userId);
     if (!conn) return;
 
-    if (newPlan === "pro" || newPlan === "starter") {
+    if (newPlan === "pro") {
       await clearSnapTradeDeletion(userId);
     } else {
       await scheduleSnapTradeDeletion(userId);

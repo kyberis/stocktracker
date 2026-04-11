@@ -62,7 +62,6 @@ const TOOL_DESC_KEYS = [
 
 const TOOL_SECTION_KEYS = [
   "toolsSectionFree",
-  "toolsSectionBifolio",
   "toolsSectionTrefolio",
   "toolsSectionUpgrade",
 ] as const;

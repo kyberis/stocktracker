@@ -9,12 +9,7 @@ import { parseBody } from "@/lib/api-response";
 import { checkoutSchema } from "@/lib/schemas";
 import { withMetrics } from "@/lib/with-metrics";
 
-async function getPriceId(plan: "starter" | "pro", interval: "monthly" | "annual"): Promise<string> {
-  if (plan === "starter") {
-    return interval === "annual"
-      ? getStripePriceConfig("stripe_price_starter_annual")
-      : getStripePriceConfig("stripe_price_starter_monthly");
-  }
+async function getPriceId(interval: "monthly" | "annual"): Promise<string> {
   return interval === "annual"
     ? getStripePriceConfig("stripe_price_pro_annual")
     : getStripePriceConfig("stripe_price_pro_monthly");
@@ -27,10 +22,9 @@ export const POST = withMetrics("/api/billing/checkout", async (req: NextRequest
   const result = await parseBody(req, checkoutSchema);
   if (!result.success) return result.error;
   const { deviceGrant } = result.data;
-  const targetPlan = deviceGrant ? "pro" as const : result.data.plan;
   const interval = deviceGrant ? "annual" : result.data.interval;
 
-  const priceId = await getPriceId(targetPlan, interval);
+  const priceId = await getPriceId(interval);
   if (!priceId) {
     return NextResponse.json({ error: "Billing plan is not configured" }, { status: 501 });
   }
@@ -56,7 +50,7 @@ export const POST = withMetrics("/api/billing/checkout", async (req: NextRequest
     }
   }
 
-  if (user.plan !== "pro" && user.plan !== "starter") {
+  if (user.plan !== "pro") {
     const proCount = await countProSubscribers();
     if (proCount >= PLATFORM_LIMITS.MAX_PRO_SUBSCRIBERS) {
       billingEventsTotal.inc({ event: "checkout_capacity_blocked" });
@@ -93,7 +87,7 @@ export const POST = withMetrics("/api/billing/checkout", async (req: NextRequest
       cancel_url: `${baseUrl}/profile?billing=cancelled`,
       metadata: {
         userId: user.id,
-        plan: targetPlan,
+        plan: "pro",
         interval,
         ...(deviceGrant ? { deviceGrant: "true" } : {}),
       },
@@ -107,17 +101,18 @@ export const POST = withMetrics("/api/billing/checkout", async (req: NextRequest
     const checkout = await stripe.checkout.sessions.create(checkoutParams);
 
     trackEvent(user.id, "billing_checkout_started", {
-      plan: targetPlan,
+      plan: "pro",
       interval,
       source: deviceGrant ? "device_grant" : "billing_api",
     });
     trackEvent(user.id, "checkout_started", {
-      plan: targetPlan,
+      plan: "pro",
       interval,
       source: deviceGrant ? "device_grant" : "billing_api",
     });
 
     billingEventsTotal.inc({ event: deviceGrant ? "device_grant_checkout_started" : "checkout_started" });
+
     return NextResponse.json({ url: checkout.url });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);

@@ -47,7 +47,7 @@ export default function PortfolioGrowthPeriods({ holdings: holdingsProp }: Props
   const { t } = useI18n();
   const { user } = useAuth();
   const track = useTrack();
-  const isPaid = user?.plan === "starter" || user?.plan === "pro";
+  const isPaid = user?.plan === "pro";
   const tracked = useRef(false);
 
   const [showHelp, setShowHelp] = useState(false);
@@ -154,11 +154,11 @@ export default function PortfolioGrowthPeriods({ holdings: holdingsProp }: Props
       <div className="card">
         <div className="mb-3">
           <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-1.5">
-            {t("portfolioGrowth")} <TierFeatureBadge requiredPlan="starter" size="sm" />
+            {t("portfolioGrowth")} <TierFeatureBadge requiredPlan="pro" size="sm" />
           </h3>
           <p className="text-[10px] text-gray-400 dark:text-slate-500 mt-0.5">{t("portfolioGrowthSubtitle")}</p>
         </div>
-        <BlurredProSection blurb="Upgrade to Bifolio for YTD, 1M, and 1Y portfolio growth tracking." ctaLabel="Upgrade to Bifolio">
+        <BlurredProSection blurb="Upgrade to Trefolio for YTD, 1M, and 1Y portfolio growth tracking." ctaLabel="Upgrade to Trefolio">
           <div className="grid grid-cols-3 gap-3">
             {["YTD", "1M", "1Y"].map((label) => (
               <div key={label} className="bg-gray-50 dark:bg-slate-800/50 rounded-xl p-3 text-center">
@@ -177,7 +177,7 @@ export default function PortfolioGrowthPeriods({ holdings: holdingsProp }: Props
       <div className="mb-3">
         <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-1.5">
           {t("portfolioGrowth")}
-          <TierFeatureBadge requiredPlan="starter" size="sm" />
+          <TierFeatureBadge requiredPlan="pro" size="sm" />
           <button
           onClick={() => setShowHelp((v) => !v)}
           className="ml-auto p-1 rounded-full text-gray-400 dark:text-slate-500 hover:text-emerald-500 dark:hover:text-emerald-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"

@@ -64,10 +64,10 @@ describe("createSessionToken + verifySessionToken", () => {
     expect(result!.plan).toBe("pro");
   });
 
-  it("preserves starter plan", async () => {
-    const token = await createSessionToken({ ...validPayload, plan: "starter" });
+  it("maps legacy starter plan in JWT to pro", async () => {
+    const token = await createSessionToken({ ...validPayload, plan: "starter" } as SessionPayload);
     const result = await verifySessionToken(token);
-    expect(result!.plan).toBe("starter");
+    expect(result!.plan).toBe("pro");
   });
 
   it("round-trips impersonatorUserId", async () => {

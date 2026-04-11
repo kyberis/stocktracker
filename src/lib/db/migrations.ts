@@ -42,7 +42,7 @@ async function bootstrapSchema(client: Client): Promise<void> {
       role TEXT NOT NULL CHECK(role IN ('admin', 'user')),
       must_change_password INTEGER NOT NULL DEFAULT 0,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
-      plan TEXT NOT NULL DEFAULT 'free' CHECK(plan IN ('free', 'starter', 'pro')),
+      plan TEXT NOT NULL DEFAULT 'free' CHECK(plan IN ('free', 'pro')),
       stripe_customer_id TEXT NOT NULL DEFAULT '',
       stripe_subscription_id TEXT NOT NULL DEFAULT '',
       plan_expires_at TEXT NOT NULL DEFAULT '',
@@ -642,7 +642,7 @@ const MIGRATIONS: Migration[] = [
               def += ` DEFAULT '${d}'`;
             }
           }
-          if (c.name === "plan") def += " CHECK(plan IN ('free', 'starter', 'pro'))";
+          if (c.name === "plan") def += " CHECK(plan IN ('free', 'pro'))";
           if (c.name === "role") def += " CHECK(role IN ('admin', 'user'))";
           return def;
         })
@@ -3175,6 +3175,16 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
           "ALTER TABLE users ADD COLUMN membership_grant_created_at TEXT NOT NULL DEFAULT ''",
         );
       }
+    },
+  },
+  {
+    version: 107,
+    description: "Two-tier subscriptions: migrate starter users and grants to pro",
+    up: async (client: Client) => {
+      await client.execute("UPDATE users SET plan = 'pro' WHERE plan = 'starter'");
+      await client.execute(
+        "UPDATE users SET membership_grant_plan = 'pro' WHERE membership_grant_plan = 'starter'",
+      );
     },
   },
 ];

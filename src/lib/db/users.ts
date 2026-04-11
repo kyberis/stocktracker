@@ -383,7 +383,7 @@ export async function incrementDailyAiTokenUsage(userId: string, tokens: number)
 
 export async function countProSubscribers(): Promise<number> {
   const client = await ensureInitialized();
-  const result = await client.execute("SELECT COUNT(*) as cnt FROM users WHERE plan IN ('starter', 'pro')");
+  const result = await client.execute("SELECT COUNT(*) as cnt FROM users WHERE plan = 'pro'");
   return num(result.rows[0]?.cnt);
 }
 
@@ -572,7 +572,7 @@ export function computeMembershipGrantExpiry(user: DbUser, grantPlan: UserPlan, 
 
 export async function setPendingMembershipGrant(
   userId: string,
-  grantPlan: "starter" | "pro",
+  grantPlan: "pro",
   days: number,
 ): Promise<{ token: string }> {
   const token = randomBytes(32).toString("hex");
@@ -614,7 +614,7 @@ export async function applyPendingMembershipGrant(
     return { ok: false, error: "Invalid or expired activation link" };
   }
   const rawPlan = user.membership_grant_plan;
-  if (rawPlan !== "starter" && rawPlan !== "pro") {
+  if (rawPlan !== "pro") {
     return { ok: false, error: "No pending membership grant" };
   }
   const days = user.membership_grant_days;

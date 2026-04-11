@@ -79,7 +79,7 @@ function AddMenu({ onAddStock, onAddCrypto, onAddAsset }: { onAddStock: () => vo
             >
               <span className="w-4 h-4 flex items-center justify-center text-sm shrink-0">🏠</span>
               {t("addManualAsset")}
-              <TierFeatureBadge requiredPlan="starter" size="xs" className="ml-auto" />
+              <TierFeatureBadge requiredPlan="pro" size="xs" className="ml-auto" />
             </button>
           )}
         </div>

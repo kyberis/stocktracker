@@ -27,7 +27,7 @@ export default function PerformanceMetrics({ holdings: holdingsProp, cashEntries
   const holdings = holdingsProp ?? ctxHoldings;
   const cashEntries = cashEntriesProp ?? ctxCashEntries;
   const baseCurrency = activePortfolioCurrency;
-  const isPaid = user?.plan === "starter" || user?.plan === "pro";
+  const isPaid = user?.plan === "pro";
   const [txs, setTxs] = useState<Transaction[]>([]);
   const [showHelp, setShowHelp] = useState(false);
   const [showExplainer, setShowExplainer] = useState(false);
@@ -66,8 +66,8 @@ export default function PerformanceMetrics({ holdings: holdingsProp, cashEntries
   if (!isPaid) {
     return (
       <div className="card">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-1.5">{t("portfolioPerformance")} <TierFeatureBadge requiredPlan="starter" size="sm" /></h3>
-        <BlurredProSection blurb="Upgrade to Bifolio for TTWROR, IRR, and advanced portfolio performance metrics." ctaLabel="Upgrade to Bifolio">
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-1.5">{t("portfolioPerformance")} <TierFeatureBadge requiredPlan="pro" size="sm" /></h3>
+        <BlurredProSection blurb="Upgrade to Trefolio for TTWROR, IRR, and advanced portfolio performance metrics." ctaLabel="Upgrade to Trefolio">
           <div className="grid grid-cols-2 gap-3">
             {["TTWROR", "IRR"].map((label) => (
               <div key={label} className="bg-gray-50 dark:bg-slate-800/50 rounded-xl p-3 text-center">
@@ -85,7 +85,7 @@ export default function PerformanceMetrics({ holdings: holdingsProp, cashEntries
     <div className="card">
       <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-1.5">
         {t("portfolioPerformance")}
-        <TierFeatureBadge requiredPlan="starter" size="sm" />
+        <TierFeatureBadge requiredPlan="pro" size="sm" />
         <button
           onClick={() => {
             track("performance_help_toggled");

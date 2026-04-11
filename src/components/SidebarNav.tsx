@@ -189,7 +189,7 @@ export default function SidebarNav() {
               {stealthMode ? "••••" : (user?.displayName || user?.email || "User")}
             </div>
             <div className="text-xs text-zinc-600 truncate">
-              {user?.plan === "pro" ? "Trefolio (Pro)" : user?.plan === "starter" ? "Bifolio (Starter)" : "Folio (Free)"}
+              {user?.plan === "pro" ? "Trefolio (Pro)" : "Folio (Free)"}
             </div>
           </div>
           <NotificationBell />

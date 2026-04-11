@@ -134,7 +134,6 @@ function SupportChatTab() {
 
   const planColor = (plan: string) => {
     if (plan === "pro") return "bg-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-400";
-    if (plan === "starter") return "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400";
     return "bg-gray-100 text-gray-600 dark:bg-slate-600/30 dark:text-slate-400";
   };
 

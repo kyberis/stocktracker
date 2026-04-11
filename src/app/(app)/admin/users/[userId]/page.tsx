@@ -11,7 +11,7 @@ interface UserInfo {
   id: string;
   username: string;
   role: "admin" | "user";
-  plan: "free" | "starter" | "pro";
+  plan: "free" | "pro";
   email: string;
   displayName: string;
   authProvider: "credentials" | "google" | "apple";
@@ -80,7 +80,6 @@ function AuthBadge({ provider }: { provider: string }) {
 
 function PlanBadge({ plan }: { plan: string }) {
   if (plan === "pro") return <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-500">Trefolio</span>;
-  if (plan === "starter") return <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-500/10 text-blue-400">Bifolio</span>;
   return <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold bg-gray-100 dark:bg-slate-700/50 text-gray-500 dark:text-slate-400">Folio</span>;
 }
 
@@ -634,7 +633,7 @@ export default function AdminUserDetailPage() {
     if (res.ok && data) setData({ ...data, user: { ...data.user, role: newRole } });
   };
 
-  const handlePlanChange = async (newPlan: "free" | "starter" | "pro") => {
+  const handlePlanChange = async (newPlan: "free" | "pro") => {
     const res = await fetch("/api/admin/users", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId, action: "setPlan", plan: newPlan }),
@@ -642,7 +641,6 @@ export default function AdminUserDetailPage() {
     if (res.ok && data) setData({ ...data, user: { ...data.user, plan: newPlan } });
   };
 
-  const [grantPlan, setGrantPlan] = useState<"starter" | "pro">("pro");
   const [grantDays, setGrantDays] = useState(30);
   const [grantLoading, setGrantLoading] = useState(false);
   const [grantError, setGrantError] = useState<string | null>(null);
@@ -655,7 +653,7 @@ export default function AdminUserDetailPage() {
       const res = await fetch("/api/admin/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, action: "grantMembership", plan: grantPlan, days: grantDays }),
+        body: JSON.stringify({ userId, action: "grantMembership", plan: "pro", days: grantDays }),
       });
       const body = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
@@ -769,7 +767,7 @@ export default function AdminUserDetailPage() {
               ["Email", user.email || "—"],
               ["Display Name", user.displayName || "—"],
               ["Email Verified", user.emailVerified ? <span key="v" className="text-emerald-500">Yes</span> : <span key="v" className="text-gray-400">No</span>],
-              ["Plan", `${user.plan === "pro" ? "Trefolio" : user.plan === "starter" ? "Bifolio" : "Folio"} (${user.plan})`],
+              ["Plan", `${user.plan === "pro" ? "Trefolio" : "Folio"} (${user.plan})`],
               ["Plan Expires", user.planExpiresAt ? new Date(user.planExpiresAt).toLocaleDateString() : "—"],
               ["Stripe Customer", user.stripeCustomerId ? <span key="sc" className="font-mono text-[11px]">{user.stripeCustomerId}</span> : "—"],
               ["Tax Residency", user.taxResidency || "—"],
@@ -783,7 +781,7 @@ export default function AdminUserDetailPage() {
               [
                 "Membership grant pending",
                 user.membershipGrantPending
-                  ? <span key="mg" className="text-amber-500">Yes ({user.membershipGrantPlan === "starter" ? "Bifolio" : "Trefolio"}, {user.membershipGrantDays ?? "—"} d)</span>
+                  ? <span key="mg" className="text-amber-500">Yes (Trefolio, {user.membershipGrantDays ?? "—"} d)</span>
                   : <span key="mg" className="text-gray-400">No</span>,
               ],
             ] as [string, React.ReactNode][]).map(([label, value]) => (
@@ -876,9 +874,8 @@ export default function AdminUserDetailPage() {
                     <option value="admin">Role: admin</option>
                   </select>
                 )}
-                <select value={user.plan} onChange={(e) => handlePlanChange(e.target.value as "free" | "starter" | "pro")} className="text-xs px-2 py-1 rounded-lg">
+                <select value={user.plan} onChange={(e) => handlePlanChange(e.target.value as "free" | "pro")} className="text-xs px-2 py-1 rounded-lg">
                   <option value="free">Folio (free)</option>
-                  <option value="starter">Bifolio (starter)</option>
                   <option value="pro">Trefolio (pro)</option>
                 </select>
               </div>
@@ -888,22 +885,14 @@ export default function AdminUserDetailPage() {
                 </div>
                 {user.membershipGrantPending ? (
                   <p className="text-[11px] text-amber-600 dark:text-amber-400">
-                    Pending: {user.membershipGrantPlan === "starter" ? "Bifolio" : "Trefolio"} · {user.membershipGrantDays ?? "—"} days
+                    Pending: Trefolio · {user.membershipGrantDays ?? "—"} days
                     {user.membershipGrantCreatedAt ? ` · sent ${new Date(user.membershipGrantCreatedAt).toLocaleString()}` : ""}
                   </p>
                 ) : null}
                 <div className="flex flex-wrap gap-2 items-end">
-                  <label className="flex flex-col gap-0.5 text-[10px] text-gray-500 dark:text-slate-400">
-                    Plan
-                    <select
-                      value={grantPlan}
-                      onChange={(e) => setGrantPlan(e.target.value as "starter" | "pro")}
-                      className="text-xs px-2 py-1 rounded-lg bg-white dark:bg-slate-900"
-                    >
-                      <option value="starter">Bifolio</option>
-                      <option value="pro">Trefolio</option>
-                    </select>
-                  </label>
+                  <span className="text-[10px] text-gray-500 dark:text-slate-400 self-end pb-1">
+                    Plan: <span className="font-semibold text-emerald-600 dark:text-emerald-400">Trefolio</span>
+                  </span>
                   <label className="flex flex-col gap-0.5 text-[10px] text-gray-500 dark:text-slate-400">
                     Days
                     <input

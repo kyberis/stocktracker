@@ -1,10 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { PLATFORM_LIMITS } from "./platform-config";
 import {
-  FREE_AI_MONTHLY_LIMIT,
-  STARTER_AI_MONTHLY_LIMIT,
   FREE_AI_MONTHLY_TOKEN_LIMIT,
-  STARTER_AI_MONTHLY_TOKEN_LIMIT,
   PRO_AI_MONTHLY_TOKEN_LIMIT,
   getAiTokenLimit,
   canAccessFeature,
@@ -19,7 +16,7 @@ import {
   getThemeUpgradeTarget,
   planDisplayName,
 } from "./subscription";
-import type { LayoutTheme, SubscriptionFeature } from "./types";
+import type { SubscriptionFeature } from "./types";
 
 describe("canAccessFeature", () => {
   it("allows free features for free users", () => {
@@ -78,50 +75,21 @@ describe("canAccessFeature", () => {
     expect(result.reason).toBe("ai_limit_reached");
   });
 
-  it("allows starter features for starter users", () => {
+  it("allows former starter-tier features for pro users", () => {
     const result = canAccessFeature("portfolio-sharing", {
-      plan: "starter",
-      aiCallsThisMonth: 0,
-    });
-    expect(result.allowed).toBe(true);
-  });
-
-  it("allows starter features for pro users", () => {
-    const result = canAccessFeature("csv-export", {
       plan: "pro",
       aiCallsThisMonth: 0,
     });
     expect(result.allowed).toBe(true);
   });
 
-  it("blocks starter features for free users with upgrade reason", () => {
+  it("blocks paid features for free users", () => {
     const result = canAccessFeature("metrics", {
       plan: "free",
       aiCallsThisMonth: 0,
     });
     expect(result.allowed).toBe(false);
     expect(result.reason).toBe("upgrade_required");
-  });
-
-  it("allows AI for starter users under monthly token limit", () => {
-    const result = canAccessFeature("ai", {
-      plan: "starter",
-      aiCallsThisMonth: 0,
-      aiTokensThisMonth: STARTER_AI_MONTHLY_TOKEN_LIMIT - 1,
-    });
-    expect(result.allowed).toBe(true);
-  });
-
-  it("blocks AI for starter users at monthly token limit", () => {
-    const result = canAccessFeature("ai", {
-      plan: "starter",
-      aiCallsThisMonth: 0,
-      aiTokensThisMonth: STARTER_AI_MONTHLY_TOKEN_LIMIT,
-    });
-    expect(result.allowed).toBe(false);
-    expect(result.reason).toBe("ai_limit_reached");
-    expect(result.limit).toBe(STARTER_AI_MONTHLY_TOKEN_LIMIT);
-    expect(result.used).toBe(STARTER_AI_MONTHLY_TOKEN_LIMIT);
   });
 
   it("uses freeAiMonthlyTokenLimit override for free users", () => {
@@ -161,10 +129,6 @@ describe("getHoldingsLimit", () => {
     expect(getHoldingsLimit("free")).toBe(PLATFORM_LIMITS.FREE_HOLDINGS_LIMIT);
   });
 
-  it("returns STARTER_HOLDINGS_LIMIT for starter plan", () => {
-    expect(getHoldingsLimit("starter")).toBe(PLATFORM_LIMITS.STARTER_HOLDINGS_LIMIT);
-  });
-
   it("returns Infinity for pro plan", () => {
     expect(getHoldingsLimit("pro")).toBe(Infinity);
   });
@@ -173,10 +137,6 @@ describe("getHoldingsLimit", () => {
 describe("getAlertLimit", () => {
   it("returns FREE_ALERT_LIMIT for free plan", () => {
     expect(getAlertLimit("free")).toBe(PLATFORM_LIMITS.FREE_ALERT_LIMIT);
-  });
-
-  it("returns STARTER_ALERT_LIMIT for starter plan", () => {
-    expect(getAlertLimit("starter")).toBe(PLATFORM_LIMITS.STARTER_ALERT_LIMIT);
   });
 
   it("returns Infinity for pro plan", () => {
@@ -189,10 +149,6 @@ describe("getPortfolioLimit", () => {
     expect(getPortfolioLimit("free")).toBe(PLATFORM_LIMITS.FREE_PORTFOLIO_LIMIT);
   });
 
-  it("returns STARTER_PORTFOLIO_LIMIT for starter plan", () => {
-    expect(getPortfolioLimit("starter")).toBe(PLATFORM_LIMITS.STARTER_PORTFOLIO_LIMIT);
-  });
-
   it("returns PRO_PORTFOLIO_LIMIT for pro plan", () => {
     expect(getPortfolioLimit("pro")).toBe(PLATFORM_LIMITS.PRO_PORTFOLIO_LIMIT);
   });
@@ -201,10 +157,6 @@ describe("getPortfolioLimit", () => {
 describe("getManualAssetLimit", () => {
   it("returns FREE_MANUAL_ASSET_LIMIT for free plan", () => {
     expect(getManualAssetLimit("free")).toBe(PLATFORM_LIMITS.FREE_MANUAL_ASSET_LIMIT);
-  });
-
-  it("returns STARTER_MANUAL_ASSET_LIMIT for starter plan", () => {
-    expect(getManualAssetLimit("starter")).toBe(PLATFORM_LIMITS.STARTER_MANUAL_ASSET_LIMIT);
   });
 
   it("returns PRO_MANUAL_ASSET_LIMIT for pro plan", () => {
@@ -217,39 +169,29 @@ describe("getSnapTradeConnectionLimit", () => {
     expect(getSnapTradeConnectionLimit("free")).toBe(PLATFORM_LIMITS.FREE_SNAPTRADE_LIMIT);
   });
 
-  it("returns STARTER_SNAPTRADE_LIMIT for starter plan", () => {
-    expect(getSnapTradeConnectionLimit("starter")).toBe(PLATFORM_LIMITS.STARTER_SNAPTRADE_LIMIT);
-  });
-
   it("returns PRO_SNAPTRADE_LIMIT for pro plan", () => {
     expect(getSnapTradeConnectionLimit("pro")).toBe(PLATFORM_LIMITS.PRO_SNAPTRADE_LIMIT);
   });
 });
 
 describe("canAccessTheme", () => {
-  const themes: LayoutTheme[] = ["default", "canvas", "terminal", "studio"];
-
-  it("allows default theme for free, starter, and pro", () => {
+  it("allows default theme for free and pro", () => {
     expect(canAccessTheme("default", "free")).toBe(true);
-    expect(canAccessTheme("default", "starter")).toBe(true);
     expect(canAccessTheme("default", "pro")).toBe(true);
   });
 
-  it("allows canvas theme for starter and pro only", () => {
+  it("allows canvas theme for pro only", () => {
     expect(canAccessTheme("canvas", "free")).toBe(false);
-    expect(canAccessTheme("canvas", "starter")).toBe(true);
     expect(canAccessTheme("canvas", "pro")).toBe(true);
   });
 
   it("allows terminal theme for pro only", () => {
     expect(canAccessTheme("terminal", "free")).toBe(false);
-    expect(canAccessTheme("terminal", "starter")).toBe(false);
     expect(canAccessTheme("terminal", "pro")).toBe(true);
   });
 
   it("allows studio theme for pro only", () => {
     expect(canAccessTheme("studio", "free")).toBe(false);
-    expect(canAccessTheme("studio", "starter")).toBe(false);
     expect(canAccessTheme("studio", "pro")).toBe(true);
   });
 });
@@ -259,18 +201,14 @@ describe("getAvailableThemes", () => {
     expect(getAvailableThemes("free")).toEqual(["default"]);
   });
 
-  it("returns default and canvas for starter plan", () => {
-    expect(getAvailableThemes("starter")).toEqual(["default", "canvas"]);
-  });
-
   it("returns all themes for pro plan", () => {
     expect(getAvailableThemes("pro")).toEqual(["default", "canvas", "terminal", "studio"]);
   });
 });
 
 describe("getThemeUpgradeTarget", () => {
-  it("returns starter for canvas theme", () => {
-    expect(getThemeUpgradeTarget("canvas")).toBe("starter");
+  it("returns pro for canvas theme", () => {
+    expect(getThemeUpgradeTarget("canvas")).toBe("pro");
   });
 
   it("returns pro for terminal theme", () => {
@@ -294,31 +232,24 @@ describe("effectivePlan", () => {
 
   it("returns plan when planExpiresAt is empty string", () => {
     expect(effectivePlan("pro", "")).toBe("pro");
-    expect(effectivePlan("starter", "")).toBe("starter");
   });
 
   it("returns plan when planExpiresAt is in the future", () => {
     const future = new Date();
     future.setFullYear(future.getFullYear() + 1);
     expect(effectivePlan("pro", future.toISOString())).toBe("pro");
-    expect(effectivePlan("starter", future.toISOString())).toBe("starter");
   });
 
   it("returns free when planExpiresAt is in the past", () => {
     const past = new Date();
     past.setFullYear(past.getFullYear() - 1);
     expect(effectivePlan("pro", past.toISOString())).toBe("free");
-    expect(effectivePlan("starter", past.toISOString())).toBe("free");
   });
 });
 
 describe("planDisplayName", () => {
   it("returns Folio for free plan", () => {
     expect(planDisplayName("free")).toBe("Folio");
-  });
-
-  it("returns Bifolio for starter plan", () => {
-    expect(planDisplayName("starter")).toBe("Bifolio");
   });
 
   it("returns Trefolio for pro plan", () => {
@@ -329,10 +260,6 @@ describe("planDisplayName", () => {
 describe("getAiTokenLimit", () => {
   it("returns FREE_AI_MONTHLY_TOKEN_LIMIT for free plan", () => {
     expect(getAiTokenLimit("free")).toBe(PLATFORM_LIMITS.AI_FREE_MONTHLY_TOKEN_LIMIT);
-  });
-
-  it("returns STARTER_AI_MONTHLY_TOKEN_LIMIT for starter plan", () => {
-    expect(getAiTokenLimit("starter")).toBe(PLATFORM_LIMITS.AI_STARTER_MONTHLY_TOKEN_LIMIT);
   });
 
   it("returns PRO_AI_MONTHLY_TOKEN_LIMIT for pro plan", () => {

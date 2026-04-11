@@ -31,23 +31,23 @@ export default function MobilePaywall({ onDismiss, surface }: MobilePaywallProps
   const { user } = useAuth();
   const { t } = useI18n();
   const track = useTrack();
-  const [checkingOut, setCheckingOut] = useState<string | null>(null);
+  const [checkingOut, setCheckingOut] = useState(false);
 
-  const startCheckout = useCallback(async (plan: "starter" | "pro") => {
-    setCheckingOut(plan);
-    track("mobile_paywall_checkout", { plan, surface: surface ?? "unknown" });
+  const startCheckout = useCallback(async () => {
+    setCheckingOut(true);
+    track("mobile_paywall_checkout", { plan: "pro", surface: surface ?? "unknown" });
     try {
       const res = await fetch("/api/billing/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan, interval: "monthly" }),
+        body: JSON.stringify({ plan: "pro", interval: "monthly" }),
       });
       const data = await res.json();
       if (data.url) {
         window.location.href = data.url;
       }
     } catch {
-      setCheckingOut(null);
+      setCheckingOut(false);
     }
   }, [track, surface]);
 
@@ -57,6 +57,8 @@ export default function MobilePaywall({ onDismiss, surface }: MobilePaywallProps
     const fb = BENEFIT_FALLBACK[key];
     return fb?.en ?? key;
   };
+
+  void user;
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-gradient-to-b from-slate-900 via-slate-900 to-emerald-950 safe-area-top">
@@ -90,7 +92,7 @@ export default function MobilePaywall({ onDismiss, surface }: MobilePaywallProps
             </svg>
           </div>
           <h1 className="text-2xl font-bold text-white mb-2">Unlock Full Power</h1>
-          <p className="text-sm text-emerald-200/70">Upgrade your portfolio tracking experience</p>
+          <p className="text-sm text-emerald-200/70">One subscription — everything included</p>
         </div>
 
         {/* Benefits */}
@@ -103,55 +105,30 @@ export default function MobilePaywall({ onDismiss, surface }: MobilePaywallProps
           ))}
         </div>
 
-        {/* Pricing cards */}
-        <div className="space-y-3">
-          {/* Bifolio (Starter) */}
-          <button
-            onClick={() => startCheckout("starter")}
-            disabled={checkingOut !== null}
-            className="w-full p-4 rounded-2xl border border-blue-400/30 bg-blue-500/10 text-left active:scale-[0.98] transition-transform"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <TierIcon plan="starter" size={20} />
-                <span className="text-base font-bold text-white">Bifolio</span>
-              </div>
-              <div className="text-right">
-                <span className="text-lg font-bold text-white">€2.99</span>
-                <span className="text-xs text-blue-300">/mo</span>
-              </div>
+        {/* Trefolio */}
+        <button
+          onClick={() => startCheckout()}
+          disabled={checkingOut}
+          className="w-full p-4 rounded-2xl border-2 border-emerald-400/50 bg-emerald-500/15 text-left relative active:scale-[0.98] transition-transform disabled:opacity-60"
+        >
+          <div className="absolute -top-2.5 right-4 px-2.5 py-0.5 rounded-full bg-emerald-500 text-[10px] font-bold text-white uppercase tracking-wide">
+            Most Popular
+          </div>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <TierIcon plan="pro" size={20} />
+              <span className="text-base font-bold text-white">Trefolio</span>
             </div>
-            <p className="text-xs text-blue-200/80">50 holdings, alerts, metrics, broker sync</p>
-            {checkingOut === "starter" && (
-              <p className="text-xs text-blue-300 mt-2 animate-pulse">Redirecting to checkout...</p>
-            )}
-          </button>
-
-          {/* Trefolio (Pro) — highlighted */}
-          <button
-            onClick={() => startCheckout("pro")}
-            disabled={checkingOut !== null}
-            className="w-full p-4 rounded-2xl border-2 border-emerald-400/50 bg-emerald-500/15 text-left relative active:scale-[0.98] transition-transform"
-          >
-            <div className="absolute -top-2.5 right-4 px-2.5 py-0.5 rounded-full bg-emerald-500 text-[10px] font-bold text-white uppercase tracking-wide">
-              Most Popular
+            <div className="text-right">
+              <span className="text-lg font-bold text-white">€7.99</span>
+              <span className="text-xs text-emerald-300">/mo</span>
             </div>
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <TierIcon plan="pro" size={20} />
-                <span className="text-base font-bold text-white">Trefolio</span>
-              </div>
-              <div className="text-right">
-                <span className="text-lg font-bold text-white">€7.99</span>
-                <span className="text-xs text-emerald-300">/mo</span>
-              </div>
-            </div>
-            <p className="text-xs text-emerald-200/80">Unlimited everything, AI analysis, tax reports, screener</p>
-            {checkingOut === "pro" && (
-              <p className="text-xs text-emerald-300 mt-2 animate-pulse">Redirecting to checkout...</p>
-            )}
-          </button>
-        </div>
+          </div>
+          <p className="text-xs text-emerald-200/80">Unlimited everything — premium data, AI, tax reports, screener</p>
+          {checkingOut && (
+            <p className="text-xs text-emerald-300 mt-2 animate-pulse">Redirecting to checkout...</p>
+          )}
+        </button>
 
         {/* Trial info */}
         <p className="text-center text-xs text-white/40 mt-4">

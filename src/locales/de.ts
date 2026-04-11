@@ -1646,7 +1646,6 @@ const de: TranslationStrings = {
   landingPricingTrefolioFeature20: "Alle 4 Dashboard-Themen (Standard, Canvas, Terminal, Studio)",
   landingPricingTrefolioFeature21: "Portfolio-Simulator — Backtesting, Was-wäre-wenn-Analysen und Krisen-Stresstests",
   landingPricingTrefolioFeature22: "Finanzplanung — FIRE-Rechner (5 Varianten), Monte-Carlo-Projektionen und Multi-Ziel-Tracking",
-  landingPricingTrefolioFeature23: "7-tägige kostenlose Testversion — testen Sie jede Pro-Funktion, keine Kreditkarte erforderlich",
   landingPricingTrefolioFeature4: "Unternehmenskennzahlen (Gewinn, Bilanz, Cashflow)",
   landingPricingTrefolioFeature5: "Aktienintelligenz (Nachrichten, Insidergeschäfte)",
   landingPricingTrefolioFeature6: "Portfolio-Nachrichtenfeed für alle Bestände",

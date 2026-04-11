@@ -49,7 +49,7 @@ trefolio is a web-based portfolio tracking application designed for European ret
 ### Performance Metrics
 - TTWROR (Time-Weighted Rate of Return) using the Modified Dietz method
 - IRR (Internal Rate of Return) using the XIRR method
-- Sharpe Ratio, Max Drawdown, Volatility, Beta (Bifolio+)
+- Sharpe Ratio, Max Drawdown, Volatility, Beta (Trefolio)
 - Performance explainer showing step-by-step calculations from your real transactions
 
 ### Dividend Tracking
@@ -67,7 +67,7 @@ trefolio is a web-based portfolio tracking application designed for European ret
 
 ### Broker Import & Sync
 - 14 broker CSV formats: DEGIRO, Interactive Brokers, Trading 212, Revolut, Schwab, Fidelity, Nordnet, Tastytrade, Freetrade, eToro, Wealthsimple, Questrade, Firstrade, and Simple CSV
-- SnapTrade auto-sync with 20+ brokerages (Bifolio: 1 connection, Trefolio: unlimited)
+- SnapTrade auto-sync with 20+ brokerages (Trefolio; connection limits per account — see app)
 - Auto-sync every 6 hours with dashboard reconnect banner for expired credentials
 - AI-powered smart import from screenshots, PDFs, and unstructured data
 - Country-aware broker suggestions during onboarding
@@ -94,9 +94,9 @@ trefolio is a web-based portfolio tracking application designed for European ret
 ### Additional Features
 - Crypto portfolio tracking with dedicated tab, transaction management, and market section
 - Price alerts (2 free, unlimited for Pro) via email, push, WhatsApp, and trefolio Leaf device
-- CSV export of holdings, transactions, and cash balances (Bifolio+)
-- Multiple portfolios (up to 3 with Trefolio) with switcher and combined view
-- Portfolio sharing with public read-only links (Bifolio+)
+- CSV export of holdings, transactions, and cash balances (Trefolio)
+- Multiple portfolios (up to 5 with Trefolio) with switcher and combined view
+- Portfolio sharing with public read-only links (Trefolio)
 - Stealth mode — hide all monetary values with one click
 - 35 European languages
 - Privacy-first: no tracking cookies, no data selling, GDPR-compliant
@@ -107,7 +107,7 @@ trefolio is a web-based portfolio tracking application designed for European ret
 ## Pricing Details
 
 ### Free Plan (Folio — €0 forever)
-- Up to 20 stocks & ETFs
+- Up to 20 stocks & ETFs (limits may change — see app)
 - Real-time Yahoo Finance quotes
 - Historical price charts
 - Cash balance tracking
@@ -117,27 +117,12 @@ trefolio is a web-based portfolio tracking application designed for European ret
 - Earnings calendar for your holdings
 - Dark & light mode
 - 35 European languages
-- 5 AI analysis calls/month
-- 2 price alerts (in-app)
+- Limited AI usage per month (token-based)
+- Limited price alerts (in-app)
 
-### Bifolio Plan (€2.99/month or €23.99/year)
-Everything in Free, plus:
-- Up to 50 holdings
-- 20 AI analysis calls/month
-- 10 price alerts + email & push notifications
-- Full portfolio growth history (all time)
-- Advanced metrics (Sharpe Ratio, Max Drawdown, Volatility)
-- Portfolio sharing (public link)
-- CSV export of holdings & transactions
-- 1 SnapTrade broker sync connection with auto-sync
-- Canvas dashboard theme
-- Full market earnings + economic events calendar
-- Net worth tracking (manual assets)
-
-### Trefolio Plan (€7.99/month or €59.99/year)
-Everything in Bifolio, plus:
-- Unlimited holdings
-- Unlimited AI analysis
+### Trefolio Plan (paid — see landing page for EUR launch vs regular monthly/annual pricing)
+Everything in Folio, plus higher limits and premium capabilities, including for example:
+- Unlimited or high holdings and AI usage (fair use)
 - Tax reports for 17 countries (DE, FR, ES, NL, IT, GB, US, CH, AT, PT, BE, IE, SE, DK, NO, FI, PL)
 - AI Tax Assistant with optimization suggestions
 - Portfolio simulator (backtesting, what-if scenarios, crisis stress testing)
@@ -146,10 +131,13 @@ Everything in Bifolio, plus:
 - Stock intelligence (news sentiment, insider trades)
 - Economic indicators dashboard
 - All 4 dashboard themes (Default, Canvas, Terminal, Studio)
-- Unlimited SnapTrade broker sync connections
+- SnapTrade broker sync (many brokerages)
 - IPO calendar
 - Up to 5 portfolios
-- Unlimited price alerts + all notification channels
+- Price alerts across email, push, WhatsApp, and device
+- Full portfolio history and advanced metrics
+- Portfolio sharing and CSV export
+- Net worth tracking (manual assets)
 - trefolio Leaf device support
 - Priority support
 
@@ -194,7 +182,7 @@ NYSE, NASDAQ, XETRA, LSE, Amsterdam (AMS), Madrid (MAD), Copenhagen (OMK), and a
 ## Frequently Asked Questions
 
 ### How do I import my portfolio?
-Go to the unified /import page to access all import methods: 14 broker CSV formats (DEGIRO, IBKR, Trading 212, Revolut, Schwab, Fidelity, Nordnet, and more), SnapTrade auto-sync with 20+ brokerages, and AI Import from screenshots or any file. New users are guided through import during onboarding. Bifolio users get 1 broker sync connection, Trefolio gets unlimited.
+Go to the unified /import page to access all import methods: 14 broker CSV formats (DEGIRO, IBKR, Trading 212, Revolut, Schwab, Fidelity, Nordnet, and more), SnapTrade auto-sync with 20+ brokerages, and AI Import from screenshots or any file. New users are guided through import during onboarding. Broker Sync (SnapTrade) requires Trefolio.
 
 ### What CSV formats are supported?
 14 broker CSV formats: DEGIRO, Interactive Brokers, Trading 212, Revolut, Schwab, Fidelity, Nordnet, Tastytrade, Freetrade, eToro, Wealthsimple, Questrade, Firstrade, and Simple CSV. For any other format, use AI Import — upload or paste your file and AI will parse it.
@@ -206,16 +194,16 @@ Yes. All data is encrypted at rest, passwords are hashed with bcrypt, and sessio
 trefolio supports NYSE, NASDAQ, XETRA, LSE, Amsterdam (AMS), Madrid (MAD), Copenhagen (OMK), and more. Multi-currency conversion between 21 currencies (EUR, USD, GBP, CHF, SEK, NOK, DKK, CAD, AUD, NZD, JPY, and more) is handled automatically.
 
 ### How are performance metrics calculated?
-TTWROR uses the Modified Dietz method, which weights each cash flow by the fraction of the period remaining — so returns reflect market performance only, not deposit timing. IRR (XIRR) finds the annualized rate that makes the net present value of all dated cash flows equal zero. Advanced metrics (Sharpe, Drawdown, Volatility) are available from Bifolio.
+TTWROR uses the Modified Dietz method, which weights each cash flow by the fraction of the period remaining — so returns reflect market performance only, not deposit timing. IRR (XIRR) finds the annualized rate that makes the net present value of all dated cash flows equal zero. Advanced metrics (Sharpe, Drawdown, Volatility) are available on Trefolio.
 
 ### What's the difference between the plans?
-Folio (free) includes up to 20 holdings, real-time quotes, charts, growth projection, broker import, earnings calendar, and 5 AI calls/month. Bifolio (€2.99/month) adds 50 holdings, 20 AI calls, full portfolio history, advanced metrics, portfolio sharing, CSV export, 1 broker sync, and Canvas theme. Trefolio (€7.99/month) adds unlimited holdings, unlimited AI, tax reports for 17 countries, stock screener, portfolio simulator, net worth tracking, fundamentals, all 4 dashboard themes, unlimited broker sync, and IPO calendar.
+Folio (free) includes up to 20 holdings, real-time quotes, charts, growth projection, broker import, earnings calendar for your holdings, and limited AI usage. Trefolio (paid) is a single subscription that unlocks premium data, higher limits, tax reports, screener, simulator, SnapTrade sync, themes, advanced metrics, and more — see current EUR pricing on the landing page.
 
 ### What tax reports are available?
 Trefolio includes country-specific tax reports for 17 countries: Germany (Anlage KAP, Vorabpauschale, Teilfreistellung), France (Déclaration 2074), Spain (Modelo 100/720), Netherlands (Box 3), Italy (Quadro RT/RW, IVAFE), UK (CGT), US (Schedule D), Switzerland (Verrechnungssteuer), Austria (KESt), Portugal (IRS Anexo J), Belgium (TOB), Ireland (CGT 33%), Sweden (K4), Denmark (Aktieindkomst), Norway (RF-1159), Finland (capital income 30%), and Poland (PIT-38). Reports include FIFO/LIFO/average cost basis, dividend income, withholding tax, and form field mapping. An AI Tax Assistant provides optimization suggestions.
 
 ### Can I cancel anytime?
-Yes. Bifolio and Trefolio are billed monthly or annually (save ~37%). You can cancel anytime from the billing portal — your paid features remain active until the end of the billing period.
+Yes. Trefolio is billed monthly or annually. You can cancel anytime from the billing portal — your paid features remain active until the end of the billing period.
 
 ### How do dividends and fees get tracked?
 When you import a broker CSV or connect via SnapTrade, dividends, withholding taxes, and broker fees are parsed automatically. For Simple CSV imports, use the type column with 'dividend' or 'fee' values. All transactions are stored in your ledger and reflected in performance metrics and tax reports.

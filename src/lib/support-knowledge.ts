@@ -11,48 +11,26 @@ trefolio is a portfolio tracker for European investors. It tracks stocks, ETFs, 
 
 ## Subscription Tiers
 
+There are two tiers: **Folio (free)** and **Trefolio (paid)**. One paid subscription includes all premium features.
+
 ### Folio (Free)
-- Up to 15 holdings
-- 5 AI analysis calls/month
-- 2 price alerts (email only)
-- 1 portfolio
-- Basic charts, benchmarks, crypto overview
-- Earnings calendar
+- Limited holdings (see app for current limit)
+- Limited AI usage per month (token-based)
+- Limited price alerts
+- One portfolio
+- Yahoo-backed quotes, charts, benchmarks, crypto overview, earnings calendar for your holdings
 
-### Bifolio (Starter) — €4.99/month or €49.99/year
-- Up to 50 holdings
-- 20 AI analysis calls/month
-- 10 alerts with email and push notifications
-- 1 portfolio
-- Portfolio sharing, CSV export
-- Performance metrics and full history
-- Economic calendar
-- Net worth tracking (10 manual assets)
-- AI Support chat
-- Broker Sync (1 brokerage via SnapTrade)
-
-### Trefolio (Pro) — €9.99/month or €99.99/year
-- Unlimited holdings
-- 30 AI analysis calls/day
-- Unlimited alerts with WhatsApp, push, email, and device notifications
-- Up to 5 portfolios
-- Everything in Starter, plus:
-- Company fundamentals (income, balance sheet, cash flow)
-- Stock intelligence (news, insider trades, institutional holdings)
-- Portfolio news feed
-- Economic indicators dashboard
-- Full crypto portfolio tracking with AI analysis
-- Alpha Vantage premium data
-- AI Portfolio Review (5/month)
-- Stock screener (600+ stocks, 6 filters, 5 strategies)
-- EU tax reports (DE, FR, ES, NL, IT) with AI Tax Assistant
-- Portfolio simulator (backtesting, what-if, crisis stress testing)
-- 4 dashboard themes (Default, Canvas, Terminal, Studio)
-- Broker Sync (20+ brokerages, unlimited connections)
-- AI-powered portfolio import (any file or screenshot)
-- Full event calendar with IPO tracking
-- Unlimited manual assets for net worth
-- Priority support
+### Trefolio (Paid)
+- Unlimited holdings (fair use)
+- Higher AI limits than Folio
+- Unlimited or high alert limits with email, push, WhatsApp, and device notifications (subject to fair use)
+- Multiple portfolios (see app for limit)
+- Portfolio sharing, CSV export, performance metrics, full history, economic calendar, net worth tracking
+- AI Support chat (when enabled)
+- Broker Sync via SnapTrade (multiple brokerages, subject to plan limits)
+- Premium data (e.g. Alpha Vantage / FMP where configured), fundamentals, intelligence, economic indicators
+- Tools: screener, tax reports, simulator, planning, stock evaluation, full crypto portfolio, IPO/splits calendars, premium dashboard themes (Canvas, Terminal, Studio)
+- Typical launch pricing is shown on the landing page (e.g. €7.99/mo promotional / €9.99/mo regular); confirm current prices in-app
 
 ## Common Tasks
 
@@ -71,7 +49,7 @@ trefolio is a portfolio tracker for European investors. It tracks stocks, ETFs, 
 
 ### Importing from a Broker
 - **File import:** CSV, Excel, PDF, or screenshot — the AI parser auto-detects your broker format
-- **Broker Sync (Starter+):** Connect your brokerage via SnapTrade for automatic sync with 20+ supported brokerages
+- **Broker Sync (Trefolio):** Connect your brokerage via SnapTrade for automatic sync with many supported brokerages
 - Supported brokers include Interactive Brokers, Degiro, Trade Republic, Scalable Capital, eToro, and many more
 
 ### Managing Subscriptions
@@ -81,14 +59,12 @@ trefolio is a portfolio tracker for European investors. It tracks stocks, ETFs, 
 - Change plan: Monthly ↔ Annual through the billing portal
 
 ### Dashboard Themes
-- **Default:** Clean, modern light/dark theme
-- **Canvas (Starter+):** Warm, artistic theme
-- **Terminal (Pro):** Hacker-style green-on-black
-- **Studio (Pro):** Professional dark theme
+- **Default:** Clean, modern light/dark theme (all users)
+- **Canvas, Terminal, Studio (Trefolio):** Additional premium themes
 - Change in Settings > Appearance
 
 ### Exporting Data
-- **CSV Export (Starter+):** Dashboard toolbar > Export button
+- **CSV Export (Trefolio):** Dashboard toolbar > Export button
 - Exports holdings, transactions, and cash balances as separate CSV files
 
 ## Troubleshooting

@@ -1,6 +1,6 @@
 import type { TranslationKey } from "@/lib/i18n";
 
-export type AppNavTierBadge = "pro" | "starter";
+export type AppNavTierBadge = "pro";
 
 export interface AppNavPrimaryItem {
   href: string;

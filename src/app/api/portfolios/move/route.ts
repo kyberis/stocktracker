@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
 import { moveHoldingToPortfolio, moveCashToPortfolio, findPortfolioById } from "@/lib/db";
 import { withMetrics } from "@/lib/with-metrics";
+import type { SubscriptionPlan } from "@/lib/types";
 import { deferTask } from "@/lib/task-runner";
 import { materializeCurrentSnapshotsForUser } from "@/lib/cron-portfolio-snapshots";
 
@@ -16,7 +17,7 @@ export const POST = withMetrics("/api/portfolios/move", async (req: NextRequest)
   const { session, error } = await requireSession(req);
   if (error || !session) return error!;
 
-  const plan = (session.plan ?? "free") as "free" | "starter" | "pro";
+  const plan = (session.plan ?? "free") as SubscriptionPlan;
   if (plan !== "pro") {
     return NextResponse.json({ error: "Pro plan required to move holdings between portfolios" }, { status: 403 });
   }

@@ -48,17 +48,17 @@ const FEATURES: Record<FeatureKey, FeatureConfig> = {
   "dashboard.diversification":  { platforms: ALL_PLATFORMS, requiredPlan: "free" },
   "dashboard.dividends":        { platforms: ALL_PLATFORMS, requiredPlan: "free" },
   "dashboard.news":             { platforms: ALL_PLATFORMS, requiredPlan: "free" },
-  "dashboard.metrics":          { platforms: ALL_PLATFORMS, requiredPlan: "starter" },
-  "dashboard.growth":           { platforms: ALL_PLATFORMS, requiredPlan: "starter" },
+  "dashboard.metrics":          { platforms: ALL_PLATFORMS, requiredPlan: "pro" },
+  "dashboard.growth":           { platforms: ALL_PLATFORMS, requiredPlan: "pro" },
   "dashboard.events":           { platforms: ALL_PLATFORMS, requiredPlan: "free" },
   "dashboard.crypto":           { platforms: ALL_PLATFORMS, requiredPlan: "pro" },
 
   // Tools — 5 on mobile, 11 on desktop
   "tools.watchlist":     { platforms: ALL_PLATFORMS, requiredPlan: "free" },
   "tools.dividends":     { platforms: ALL_PLATFORMS, requiredPlan: "free" },
-  "tools.alerts":        { platforms: ALL_PLATFORMS, requiredPlan: "starter" },
+  "tools.alerts":        { platforms: ALL_PLATFORMS, requiredPlan: "pro" },
   "tools.transactions":  { platforms: ALL_PLATFORMS, requiredPlan: "free" },
-  "tools.performance":   { platforms: ALL_PLATFORMS, requiredPlan: "starter" },
+  "tools.performance":   { platforms: ALL_PLATFORMS, requiredPlan: "pro" },
   "tools.accounts":      { platforms: DESKTOP_ONLY,  requiredPlan: "free" },
   "tools.rebalancing":   { platforms: DESKTOP_ONLY,  requiredPlan: "free" },
   "tools.tax":           { platforms: DESKTOP_ONLY,  requiredPlan: "pro" },
@@ -69,7 +69,7 @@ const FEATURES: Record<FeatureKey, FeatureConfig> = {
   "import.manual":    { platforms: ALL_PLATFORMS, requiredPlan: "free" },
   "import.csv":       { platforms: DESKTOP_ONLY,  requiredPlan: "free" },
   "import.ai":        { platforms: DESKTOP_ONLY,  requiredPlan: "pro" },
-  "import.snaptrade": { platforms: ALL_PLATFORMS, requiredPlan: "starter" },
+  "import.snaptrade": { platforms: ALL_PLATFORMS, requiredPlan: "pro" },
 
   // Pages
   "stock.detail":              { platforms: ALL_PLATFORMS, requiredPlan: "free" },
@@ -78,7 +78,7 @@ const FEATURES: Record<FeatureKey, FeatureConfig> = {
   "page.economic-indicators":  { platforms: DESKTOP_ONLY,  requiredPlan: "pro" },
 };
 
-const PLAN_RANK: Record<SubscriptionPlan, number> = { free: 0, starter: 1, pro: 2 };
+const PLAN_RANK: Record<SubscriptionPlan, number> = { free: 0, pro: 1 };
 
 /**
  * Whether a feature is available on the given platform, regardless of subscription tier.

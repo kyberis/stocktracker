@@ -14,9 +14,9 @@ const FREE_FEATURES = new Set<SubscriptionFeature>([
 ]);
 
 /**
- * Features available on Starter and Pro (not Free).
+ * All features included in the single paid tier (former Starter + Pro).
  */
-const STARTER_FEATURES = new Set<SubscriptionFeature>([
+const PAID_FEATURES = new Set<SubscriptionFeature>([
   "portfolio-sharing",
   "csv-export",
   "alerts-email",
@@ -26,12 +26,6 @@ const STARTER_FEATURES = new Set<SubscriptionFeature>([
   "event-calendar-economic",
   "net-worth",
   "support-chat",
-]);
-
-/**
- * Features only available on Pro.
- */
-const PRO_FEATURES = new Set<SubscriptionFeature>([
   "alphavantage",
   "fundamentals",
   "intelligence",
@@ -67,15 +61,12 @@ export interface EntitlementResult {
 }
 
 export const FREE_AI_MONTHLY_LIMIT = PLATFORM_LIMITS.AI_FREE_MONTHLY_LIMIT;
-export const STARTER_AI_MONTHLY_LIMIT = PLATFORM_LIMITS.AI_STARTER_MONTHLY_LIMIT;
 
 export const FREE_AI_MONTHLY_TOKEN_LIMIT = PLATFORM_LIMITS.AI_FREE_MONTHLY_TOKEN_LIMIT;
-export const STARTER_AI_MONTHLY_TOKEN_LIMIT = PLATFORM_LIMITS.AI_STARTER_MONTHLY_TOKEN_LIMIT;
 export const PRO_AI_MONTHLY_TOKEN_LIMIT = PLATFORM_LIMITS.AI_PRO_MONTHLY_TOKEN_LIMIT;
 
 export function getAiTokenLimit(plan: SubscriptionPlan): number {
   if (plan === "pro") return PRO_AI_MONTHLY_TOKEN_LIMIT;
-  if (plan === "starter") return STARTER_AI_MONTHLY_TOKEN_LIMIT;
   return FREE_AI_MONTHLY_TOKEN_LIMIT;
 }
 
@@ -87,12 +78,7 @@ export function canAccessFeature(
     return { allowed: true };
   }
 
-  if (STARTER_FEATURES.has(feature)) {
-    if (input.plan === "starter" || input.plan === "pro") return { allowed: true };
-    return { allowed: false, reason: "upgrade_required" };
-  }
-
-  if (PRO_FEATURES.has(feature)) {
+  if (PAID_FEATURES.has(feature)) {
     if (input.plan === "pro") return { allowed: true };
     return { allowed: false, reason: "upgrade_required" };
   }
@@ -121,7 +107,6 @@ export function canAccessFeature(
  */
 export function getHoldingsLimit(plan: SubscriptionPlan): number {
   if (plan === "pro") return Infinity;
-  if (plan === "starter") return PLATFORM_LIMITS.STARTER_HOLDINGS_LIMIT;
   return PLATFORM_LIMITS.FREE_HOLDINGS_LIMIT;
 }
 
@@ -131,47 +116,43 @@ export function getHoldingsLimit(plan: SubscriptionPlan): number {
  */
 export function getAlertLimit(plan: SubscriptionPlan): number {
   if (plan === "pro") return Infinity;
-  if (plan === "starter") return PLATFORM_LIMITS.STARTER_ALERT_LIMIT;
   return PLATFORM_LIMITS.FREE_ALERT_LIMIT;
 }
 
 /**
  * Returns the portfolio limit for a given plan.
- * Free/Starter: 1 portfolio. Pro: up to 5.
+ * Free: 1 portfolio. Pro: up to 5.
  */
 export function getPortfolioLimit(plan: SubscriptionPlan): number {
   if (plan === "pro") return PLATFORM_LIMITS.PRO_PORTFOLIO_LIMIT;
-  if (plan === "starter") return PLATFORM_LIMITS.STARTER_PORTFOLIO_LIMIT;
   return PLATFORM_LIMITS.FREE_PORTFOLIO_LIMIT;
 }
 
 /**
  * Returns the manual asset limit (non-cash types) for a given plan.
- * Free: 0. Starter: 10. Pro: unlimited.
+ * Free: 0. Pro: unlimited.
  */
 export function getManualAssetLimit(plan: SubscriptionPlan): number {
   if (plan === "pro") return PLATFORM_LIMITS.PRO_MANUAL_ASSET_LIMIT;
-  if (plan === "starter") return PLATFORM_LIMITS.STARTER_MANUAL_ASSET_LIMIT;
   return PLATFORM_LIMITS.FREE_MANUAL_ASSET_LIMIT;
 }
 
 /**
  * Returns the SnapTrade broker connection limit for a given plan.
- * Free: 0 (no access). Starter: 1. Pro: unlimited.
+ * Free: 0 (no access). Pro: unlimited.
  */
 export function getSnapTradeConnectionLimit(plan: SubscriptionPlan): number {
   if (plan === "pro") return PLATFORM_LIMITS.PRO_SNAPTRADE_LIMIT;
-  if (plan === "starter") return PLATFORM_LIMITS.STARTER_SNAPTRADE_LIMIT;
   return PLATFORM_LIMITS.FREE_SNAPTRADE_LIMIT;
 }
 
 /**
  * Theme access rules per plan.
- * Default: all tiers. Canvas: starter+. Terminal/Studio: pro only.
+ * Default: all tiers. Canvas: paid. Terminal/Studio: paid.
  */
 const THEME_ACCESS: Record<LayoutTheme, Set<SubscriptionPlan>> = {
-  default: new Set(["free", "starter", "pro"]),
-  canvas: new Set(["starter", "pro"]),
+  default: new Set(["free", "pro"]),
+  canvas: new Set(["pro"]),
   terminal: new Set(["pro"]),
   studio: new Set(["pro"]),
 };
@@ -185,8 +166,7 @@ export function getAvailableThemes(plan: SubscriptionPlan): LayoutTheme[] {
 }
 
 export function getThemeUpgradeTarget(theme: LayoutTheme): SubscriptionPlan | null {
-  if (theme === "canvas") return "starter";
-  if (theme === "terminal" || theme === "studio") return "pro";
+  if (theme === "canvas" || theme === "terminal" || theme === "studio") return "pro";
   return null;
 }
 
@@ -205,10 +185,7 @@ export function planDisplayName(plan: SubscriptionPlan): string {
   switch (plan) {
     case "free":
       return "Folio";
-    case "starter":
-      return "Bifolio";
     case "pro":
       return "Trefolio";
   }
 }
-

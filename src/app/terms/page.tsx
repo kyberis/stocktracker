@@ -96,36 +96,33 @@ export default function TermsOfServicePage() {
               The Folio tier provides core portfolio tracking functionality,
               including Yahoo Finance market data, historical charts, cash
               balance tracking, benchmark comparisons, and limited AI analysis
-              (5 requests per month). The free tier is ad-supported: Google
+              (subject to monthly limits). The free tier is ad-supported: Google
               AdSense advertisements may be displayed if you have consented to
-              advertising cookies. Paid tiers (Bifolio and Trefolio) are
-              completely ad-free.
+              advertising cookies. The paid Trefolio tier is completely ad-free.
             </p>
 
-            <h3>Bifolio Tier</h3>
+            <h3>Trefolio (Paid Tier)</h3>
             <p>
-              The Bifolio tier is available for a monthly subscription fee
-              (currently €2.99/month, inclusive of applicable VAT). Bifolio
-              includes everything in Folio, plus up to 50 holdings, 20 AI
-              analysis calls per month, portfolio sharing, CSV export, and
-              1-year portfolio growth history.
-            </p>
-
-            <h3>Trefolio Tier</h3>
-            <p>
-              The Trefolio tier is available for a monthly subscription fee (currently
-              €7.99/month, inclusive of applicable VAT). Trefolio includes everything
-              in Bifolio, plus:
+              The Trefolio tier is available for a subscription fee (currently from
+              €7.99/month for new subscribers during promotional periods, or €9.99/month
+              at the regular rate, inclusive of applicable VAT; annual plans may be
+              offered at a discount). Trefolio includes everything in Folio, plus
+              higher usage limits and premium capabilities, including for example:
             </p>
             <ul className="list-disc pl-6 space-y-2">
-              <li>Alpha Vantage real-time market data.</li>
-              <li>SnapTrade brokerage aggregation (connect 20+ brokerages via OAuth for portfolio import).</li>
+              <li>Portfolio sharing, CSV export, performance metrics, and extended portfolio history.</li>
+              <li>Price alerts across email, push, WhatsApp, and device notifications (subject to fair-use limits).</li>
+              <li>SnapTrade brokerage aggregation (connect multiple brokerages via OAuth for portfolio import, subject to plan limits).</li>
+              <li>Alpha Vantage and other premium market data where configured.</li>
               <li>Company fundamentals (income statements, balance sheets, cash flow).</li>
               <li>Stock Intelligence (news sentiment, insider trades, institutional holdings).</li>
-              <li>Economic Indicators dashboard.</li>
-              <li>Unlimited AI analysis.</li>
-              <li>CSV export of portfolio data.</li>
+              <li>Economic Indicators dashboard and extended event calendars.</li>
+              <li>Higher AI usage limits than Folio.</li>
+              <li>Additional tools such as stock screener, tax reports, portfolio simulator, and financial planning features, as described on the website.</li>
             </ul>
+            <p>
+              Exact limits and included features may change; the in-app subscription and pricing pages at the time of purchase prevail for your account.
+            </p>
 
             <h3>Price Changes</h3>
             <p>
@@ -164,7 +161,7 @@ export default function TermsOfServicePage() {
                 . We do not store your credit card details.
               </li>
               <li>
-                Paid subscriptions (Bifolio and Trefolio) renew automatically each billing cycle unless
+                Paid Trefolio subscriptions renew automatically each billing cycle unless
                 cancelled.
               </li>
               <li>

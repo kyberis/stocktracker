@@ -5,7 +5,7 @@ import { withMetrics } from "@/lib/with-metrics";
 import type { NotificationType, SubscriptionPlan } from "@/lib/types";
 
 const VALID_TYPES: NotificationType[] = ["admin", "info"];
-const VALID_PLANS: SubscriptionPlan[] = ["free", "starter", "pro"];
+const VALID_PLANS: SubscriptionPlan[] = ["free", "pro"];
 
 export const POST = withMetrics("/api/admin/notifications", async (req: NextRequest) => {
   const { error } = await requireAdmin(req);

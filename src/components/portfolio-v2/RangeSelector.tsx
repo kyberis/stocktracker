@@ -22,7 +22,7 @@ interface Props {
 
 export default function RangeSelector({ value, onChange }: Props) {
   const { user } = useAuth();
-  const isPaid = user?.plan === "starter" || user?.plan === "pro";
+  const isPaid = user?.plan === "pro";
 
   return (
     <div className="flex gap-0.5 rounded-lg bg-gray-100/60 dark:bg-white/[0.04] p-0.5">

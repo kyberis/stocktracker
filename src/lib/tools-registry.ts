@@ -47,12 +47,12 @@ export interface ToolCatalogEntry {
   descKey: TranslationKey;
   icon: string;
   gradient: string;
-  tierBadge?: "starter" | "pro";
+  tierBadge?: "pro";
   hubVisibility: ToolHubVisibilitySource;
   /** Native shell: full in-page tool vs listed under “desktop only”. */
   nativeInteractive: boolean;
   /** Optional badge on native chips (e.g. starter-gated tools). */
-  nativeTierBadge?: "starter" | "pro";
+  nativeTierBadge?: "pro";
   hubCategory: ToolHubCategory;
 }
 
@@ -86,10 +86,10 @@ export const TOOLS_CATALOG: ToolCatalogEntry[] = [
     descKey: "toolDescPerformance",
     icon: "M13 7h8m0 0v8m0-8l-8 8-4-4-6 6",
     gradient: "from-orange-500 to-red-500",
-    tierBadge: "starter",
+    tierBadge: "pro",
     hubVisibility: "toolPerformanceEnabled",
     nativeInteractive: true,
-    nativeTierBadge: "starter",
+    nativeTierBadge: "pro",
     hubCategory: "analysis",
   },
   {
@@ -157,7 +157,7 @@ export const TOOLS_CATALOG: ToolCatalogEntry[] = [
     gradient: "from-amber-500 to-yellow-600",
     hubVisibility: "alertsEnabled",
     nativeInteractive: true,
-    nativeTierBadge: "starter",
+    nativeTierBadge: "pro",
     hubCategory: "portfolioActivity",
   },
   {
@@ -252,8 +252,8 @@ export function getToolPath(id: ToolTabId): string {
 /** Tabs accepted by `app/(app)/tools/[tab]/page.tsx` — excludes nested-only routes. */
 export const VALID_DYNAMIC_TAB_IDS = TOOLS_CATALOG.filter((e) => e.route.kind === "dynamic").map((e) => e.id);
 
-/** Tier requirement for hub upgrade badges (same semantics as former `TIER_BADGE_MAP`). */
-export function getTierBadgeForTool(id: ToolTabId): "starter" | "pro" | undefined {
+/** Tier requirement for hub upgrade badges (Trefolio = pro). */
+export function getTierBadgeForTool(id: ToolTabId): "pro" | undefined {
   return CATALOG_BY_ID[id].tierBadge;
 }
 

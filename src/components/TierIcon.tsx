@@ -26,31 +26,6 @@ function OneLeaf({ size, className }: { size: number; className?: string }) {
   );
 }
 
-function TwoLeaves({ size, className }: { size: number; className?: string }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      className={className}
-      aria-hidden="true"
-    >
-      <path
-        d="M10 4C10 4 6 7 6 11c0 2.8 1.6 4.6 3.4 5.4L12 17l2.6-.6C16.4 15.6 18 13.8 18 11c0-4-4-7-4-7s-1.5 1.2-2 2c-.5-.8-2-2-2-2z"
-        fill="currentColor"
-        opacity={0.85}
-      />
-      <path
-        d="M12 4.5c0 0-1 1.5-1 4s.5 4 1 5.5c.5-1.5 1-3 1-5.5s-1-4-1-4z"
-        fill="currentColor"
-        opacity={0.15}
-      />
-      <path d="M12 17v4" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" />
-    </svg>
-  );
-}
-
 function ThreeLeaves({ size, className }: { size: number; className?: string }) {
   return (
     <svg
@@ -88,8 +63,6 @@ export default function TierIcon({ plan, size = 20, className }: TierIconProps) 
   switch (plan) {
     case "free":
       return <OneLeaf size={size} className={className} />;
-    case "starter":
-      return <TwoLeaves size={size} className={className} />;
     case "pro":
       return <ThreeLeaves size={size} className={className} />;
   }

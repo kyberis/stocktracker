@@ -3,6 +3,7 @@ import { requireSession } from "@/lib/auth/guards";
 import { findPortfolioById, renamePortfolio, updatePortfolioCurrency, deletePortfolio, setDefaultPortfolio, countPortfolios, SUPPORTED_PORTFOLIO_CURRENCIES } from "@/lib/db";
 import type { PortfolioCurrency } from "@/lib/db";
 import { getPortfolioLimit } from "@/lib/subscription";
+import type { SubscriptionPlan } from "@/lib/types";
 import { withMetrics } from "@/lib/with-metrics";
 
 export const dynamic = "force-dynamic";
@@ -32,7 +33,7 @@ export const PUT = withMetrics("/api/portfolios/[id] PUT", async (req: NextReque
 
   const id = req.nextUrl.pathname.split("/").pop()!;
 
-  const plan = (session.plan ?? "free") as "free" | "starter" | "pro";
+  const plan = (session.plan ?? "free") as SubscriptionPlan;
   const limit = getPortfolioLimit(plan);
   const count = await countPortfolios(session.userId);
 

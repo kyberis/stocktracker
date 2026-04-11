@@ -10,6 +10,7 @@ import { useFocusTrap } from "@/hooks/useFocusTrap";
 import TierIcon from "@/components/TierIcon";
 import ThemeSelector from "@/components/ThemeSelector";
 import { SUPPORTED_PORTFOLIO_CURRENCIES } from "@/lib/db/helpers";
+import type { SubscriptionPlan } from "@/lib/types";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -31,7 +32,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     if (!isOpen) openedRef.current = false;
   }, [isOpen, track]);
 
-  const plan = (user?.plan ?? "free") as "free" | "starter" | "pro";
+  const plan: SubscriptionPlan = user?.plan ?? "free";
   const isPro = plan === "pro";
 
   const focusTrapRef = useFocusTrap(isOpen, onClose);
@@ -50,7 +51,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             {t("currentPlan")}:{" "}
             <span className="inline-flex items-center gap-1 font-semibold">
               <TierIcon plan={plan} size={14} />
-              {isPro ? t("planPro") : plan === "starter" ? t("planStarter") : t("planFree")}
+              {isPro ? t("planPro") : t("planFree")}
             </span>
           </p>
           {!isPro && (
@@ -59,7 +60,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               onClick={onClose}
               className="shrink-0 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline"
             >
-              {plan === "starter" ? t("upgradeToPro") : t("upgradeToStarter")} →
+              {t("upgradeToPro")} →
             </Link>
           )}
         </div>

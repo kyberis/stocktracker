@@ -1,5 +1,5 @@
 export type ApiProviderName = "yahoo" | "alphavantage";
-export type SubscriptionPlan = "free" | "starter" | "pro";
+export type SubscriptionPlan = "free" | "pro";
 export type LayoutTheme = "default" | "terminal" | "canvas" | "studio";
 export type BillingInterval = "monthly" | "annual";
 export type SubscriptionFeature =

@@ -1151,7 +1151,7 @@ export default function ProfilePage() {
         await refreshUser();
         const fresh = await fetch("/api/auth/me", { cache: "no-store" });
         const me = await fresh.json().catch(() => null);
-        if (me?.user?.plan === "pro" || me?.user?.plan === "starter") {
+        if (me?.user?.plan === "pro") {
           if (!cancelled) setBillingSync("done");
           return;
         }
@@ -1471,8 +1471,7 @@ export default function ProfilePage() {
     .toUpperCase()
     .slice(0, 2);
   const isPro = user?.plan === "pro";
-  const isStarter = user?.plan === "starter";
-  const isPaid = isPro || isStarter;
+  const isPaid = isPro;
   const deviceProEligible = user?.deviceProEligible ?? false;
 
   const handleActivateDeviceGrant = useCallback(async () => {
@@ -1951,17 +1950,15 @@ export default function ProfilePage() {
           <div className="rounded-xl border border-gray-200 dark:border-slate-600 p-4 bg-gray-50 dark:bg-slate-800/40">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-1.5">
-                <TierIcon plan={isPro ? "pro" : isStarter ? "starter" : "free"} size={16} />
-                {isPro ? t("planPro") : isStarter ? t("planStarter") : t("planFree")}
+                <TierIcon plan={isPro ? "pro" : "free"} size={16} />
+                {isPro ? t("planPro") : t("planFree")}
               </p>
               <span className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full ${
                 isPro
                   ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"
-                  : isStarter
-                    ? "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300"
-                    : "bg-gray-200 text-gray-700 dark:bg-slate-700 dark:text-slate-200"
+                  : "bg-gray-200 text-gray-700 dark:bg-slate-700 dark:text-slate-200"
               }`}>
-                {isPro ? t("proBadge") : isStarter ? t("starterBadge") : t("freeBadge")}
+                {isPro ? t("proBadge") : t("freeBadge")}
               </span>
             </div>
           </div>
@@ -2155,7 +2152,7 @@ export default function ProfilePage() {
         {/* Portfolio Sharing */}
         {isPaid ? (
           <div className="card p-6 space-y-4">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">{t("portfolioSharing")} <TierFeatureBadge requiredPlan="starter" size="sm" /></h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">{t("portfolioSharing")} <TierFeatureBadge requiredPlan="pro" size="sm" /></h2>
             <p className="text-sm text-gray-500 dark:text-slate-400">{t("portfolioSharingDesc")}</p>
             <PortfolioShareSection />
           </div>

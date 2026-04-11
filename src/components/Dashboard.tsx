@@ -226,12 +226,12 @@ function DesktopDashboard() {
     userPlan: user?.plan ?? "free",
   });
 
-  const dashboardTabs: { key: DashboardTab; label: string; tierBadge?: "starter" | "pro"; disabled?: boolean }[] = [
+  const dashboardTabs: { key: DashboardTab; label: string; tierBadge?: "pro"; disabled?: boolean }[] = [
     { key: "portfolio", label: t("dashboardHoldingsTab") },
     { key: "diversification", label: t("diversificationTab"), disabled: holdingsCount === 0 },
     { key: "dividends", label: t("dividendsTab") },
-    { key: "metrics", label: t("performanceTab"), tierBadge: "starter" as const },
-    { key: "growth", label: t("growthTab"), tierBadge: "starter" as const },
+    { key: "metrics", label: t("performanceTab"), tierBadge: "pro" as const },
+    { key: "growth", label: t("growthTab"), tierBadge: "pro" as const },
     { key: "events", label: t("eventsTab") },
     { key: "news", label: t("newsTab") },
   ];
@@ -594,7 +594,7 @@ function DesktopDashboard() {
 
       {/* Floating buttons */}
       <div className="fixed bottom-20 sm:bottom-6 right-6 z-30 flex flex-col gap-2 items-end">
-        {supportChatEnabled && (user?.plan === "starter" || user?.plan === "pro") && (
+        {supportChatEnabled && (user?.plan === "pro") && (
           <button
             onClick={() => setShowSupportChat((v) => !v)}
             className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium shadow-lg transition-colors"

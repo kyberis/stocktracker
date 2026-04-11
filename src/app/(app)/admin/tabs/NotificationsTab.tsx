@@ -127,7 +127,6 @@ function NotificationsTab() {
               <select value={targetPlan} onChange={(e) => setTargetPlan(e.target.value)} className="px-3 py-2 rounded-lg border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
                 <option value="">All users</option>
                 <option value="free">Folio (Free)</option>
-                <option value="starter">Bifolio (Starter)</option>
                 <option value="pro">Trefolio (Pro)</option>
               </select>
             </div>

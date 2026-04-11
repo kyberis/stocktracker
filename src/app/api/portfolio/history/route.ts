@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
 import { ensureInitialized } from "@/lib/db/client";
 import { canAccessFeature } from "@/lib/subscription";
+import type { SubscriptionPlan } from "@/lib/types";
 import { withMetrics } from "@/lib/with-metrics";
 
 export const dynamic = "force-dynamic";
@@ -243,7 +244,7 @@ export const GET = withMetrics("/api/portfolio/history", async (req: NextRequest
   const range = url.searchParams.get("range") || "1m";
   const portfolioId = url.searchParams.get("portfolioId") || "";
 
-  const plan = (session.plan ?? "free") as "free" | "starter" | "pro";
+  const plan = (session.plan ?? "free") as SubscriptionPlan;
   const isPro = plan === "pro";
   const canViewFull = canAccessFeature("portfolio-history-full", {
     plan,

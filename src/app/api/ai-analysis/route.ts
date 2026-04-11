@@ -8,13 +8,14 @@ import { checkAiRateLimit, checkGlobalAiCap, incrementGlobalAiCalls, incrementGl
 import { createAiStream } from "@/lib/ai-stream";
 import { languageCodeToName } from "@/lib/languages";
 import { withMetrics } from "@/lib/with-metrics";
+import type { SubscriptionPlan } from "@/lib/types";
 
 export const POST = withMetrics("/api/ai-analysis", async (request: NextRequest) => {
   const { session, error } = await requireFeatureAccess(request, "ai");
   if (error || !session) return error;
 
   const user = await findUserById(session.userId);
-  const plan = (user?.plan || session?.plan || "free") as "free" | "starter" | "pro";
+  const plan = (user?.plan || session?.plan || "free") as SubscriptionPlan;
   if (plan === "pro") {
     const rl = await checkAiRateLimit(session.userId, plan, session.role);
     if (!rl.allowed) {

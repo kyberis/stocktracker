@@ -64,7 +64,7 @@ export async function verifySessionToken(token: string): Promise<SessionPayload 
       email: String(payload.email || ""),
       role: payload.role === "admin" ? "admin" : "user",
       mustChangePassword: Boolean(payload.mustChangePassword),
-      plan: (payload.plan === "pro" ? "pro" : payload.plan === "starter" ? "starter" : "free") as SubscriptionPlan,
+      plan: (payload.plan === "pro" || payload.plan === "starter" ? "pro" : "free") as SubscriptionPlan,
       emailVerified: Boolean(payload.emailVerified),
       onboardingCompleted: Boolean(payload.onboardingCompleted),
       impersonatorUserId,

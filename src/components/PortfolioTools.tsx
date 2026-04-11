@@ -78,7 +78,7 @@ export default function PortfolioTools({ initialTab }: PortfolioToolsProps) {
   const router = useRouter();
   const activeTab: ToolTabId | null = initialTab ?? null;
   const isMenuMode = !activeTab;
-  const isPaid = user?.plan === "starter" || user?.plan === "pro";
+  const isPaid = user?.plan === "pro";
 
   const setActiveTab = (tab: ToolTabId) => {
     router.push(getToolPath(tab));
@@ -148,12 +148,12 @@ export default function PortfolioTools({ initialTab }: PortfolioToolsProps) {
                 <button onClick={() => handleExport("holdings")} className="text-xs text-gray-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
                   {t("exportCSV")}
-                  <TierFeatureBadge requiredPlan="starter" size="xs" className="ml-0.5" />
+                  <TierFeatureBadge requiredPlan="pro" size="xs" className="ml-0.5" />
                 </button>
                 <button onClick={() => handleExport("transactions")} className="text-xs text-gray-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
                   {t("transactions")}
-                  <TierFeatureBadge requiredPlan="starter" size="xs" className="ml-0.5" />
+                  <TierFeatureBadge requiredPlan="pro" size="xs" className="ml-0.5" />
                 </button>
               </div>
             )}
@@ -174,8 +174,8 @@ export default function PortfolioTools({ initialTab }: PortfolioToolsProps) {
       {isMenuMode && (() => {
         const userPlan = user?.plan ?? "free";
         const isAdmin = user?.role === "admin";
-        const tierRank = { free: 0, starter: 1, pro: 2 } as const;
-        const userRank = isAdmin ? 2 : tierRank[userPlan as keyof typeof tierRank] ?? 0;
+        const tierRank = { free: 0, pro: 1 } as const;
+        const userRank = isAdmin ? 1 : tierRank[userPlan as keyof typeof tierRank] ?? 0;
 
         const isIncluded = (key: ToolTabId) => {
           const required = getTierBadgeForTool(key);
@@ -184,7 +184,6 @@ export default function PortfolioTools({ initialTab }: PortfolioToolsProps) {
         };
 
         const includedTabs = visibleTabs.filter((tab) => isIncluded(tab.id));
-        const starterTabs = visibleTabs.filter((tab) => !isIncluded(tab.id) && getTierBadgeForTool(tab.id) === "starter");
         const proTabs = visibleTabs.filter((tab) => !isIncluded(tab.id) && getTierBadgeForTool(tab.id) === "pro");
 
         const renderCard = (entry: ToolCatalogEntry) => {
@@ -208,12 +207,8 @@ export default function PortfolioTools({ initialTab }: PortfolioToolsProps) {
                 {t(entry.descKey)}
               </span>
               {upgradeTier && (
-                <span className={`mt-1.5 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md ${
-                  upgradeTier === "starter"
-                    ? "bg-amber-100 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400"
-                    : "bg-violet-100 dark:bg-violet-500/15 text-violet-600 dark:text-violet-400"
-                }`}>
-                  {upgradeTier === "starter" ? "Bifolio" : "Trefolio"}
+                <span className="mt-1.5 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-violet-100 dark:bg-violet-500/15 text-violet-600 dark:text-violet-400">
+                  Trefolio
                 </span>
               )}
             </button>
@@ -250,28 +245,6 @@ export default function PortfolioTools({ initialTab }: PortfolioToolsProps) {
             {renderTierBlock(
               includedTabs,
               t("toolsSectionFree")
-            )}
-
-            {starterTabs.length > 0 && (
-              <div>
-                <h2 className="flex items-center gap-1.5 text-[11px] sm:text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-2 px-0.5">
-                  <span className="text-sm">☘️</span>
-                  {t("toolsSectionBifolio")}
-                  <a href="/billing" className="ml-1 text-[9px] sm:text-[10px] font-bold bg-amber-500 text-white px-1.5 py-0.5 rounded-md uppercase hover:bg-amber-600 transition-colors">{t("toolsSectionUpgrade")}</a>
-                </h2>
-                <div className="space-y-4">
-                  {groupCatalogByCategory(starterTabs).map(({ category, items }) => (
-                    <div key={`st-${category}`}>
-                      <h3 className="text-[10px] font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide mb-2 px-0.5">
-                        {t(HUB_CATEGORY_LABEL[category])}
-                      </h3>
-                      <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2 sm:gap-3">
-                        {items.map(renderCard)}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
             )}
 
             {proTabs.length > 0 && (

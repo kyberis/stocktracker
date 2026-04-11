@@ -59,10 +59,6 @@ export default function UserDropdown() {
                 <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-bold rounded bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
                   <TierIcon plan="pro" size={12} />{t("proBadge")}
                 </span>
-              ) : user.plan === "starter" ? (
-                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-bold rounded bg-blue-50 dark:bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-300 dark:border-blue-500/30">
-                  <TierIcon plan="starter" size={12} />{t("starterBadge")}
-                </span>
               ) : (
                 <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-slate-400 border border-gray-200 dark:border-slate-600">
                   <TierIcon plan="free" size={12} />{t("freeBadge")}

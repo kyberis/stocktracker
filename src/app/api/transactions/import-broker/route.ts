@@ -12,6 +12,7 @@ import { deferTask, submitJob, getJobStatus } from "@/lib/task-runner";
 import { runBackfillForUser } from "@/lib/backfill-snapshots";
 import { materializeCurrentSnapshotsForUser } from "@/lib/cron-portfolio-snapshots";
 import { getHoldingsLimit } from "@/lib/subscription";
+import type { SubscriptionPlan } from "@/lib/types";
 
 const KNOWN_ISINS: Record<string, string> = {
   "US0378331005": "AAPL",
@@ -136,7 +137,7 @@ async function importTransactions(
   broker: string,
   csv: string,
   parseCashBalances?: (csv: string) => { currency: string; amount: number }[],
-  plan?: "free" | "starter" | "pro",
+  plan?: SubscriptionPlan,
   brokerLabel?: string,
   portfolioId?: string,
 ): Promise<{ imported: number; cashImported: number; holdingsCapped?: number }> {

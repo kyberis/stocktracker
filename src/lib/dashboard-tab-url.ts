@@ -36,14 +36,14 @@ export interface ClampDashboardTabContext {
   holdingsCount: number;
   /** When true, free users cannot land on metrics/growth via URL (mobile paywall flow). */
   tierGate: boolean;
-  userPlan: "free" | "starter" | "pro";
+  userPlan: "free" | "pro";
 }
 
 export function clampDashboardTab(tab: DashboardTab, ctx: ClampDashboardTabContext): DashboardTab {
   if (tab === "diversification" && ctx.holdingsCount === 0) return "portfolio";
   if (ctx.tierGate) {
-    const rank = { free: 0, starter: 1, pro: 2 };
-    if ((tab === "metrics" || tab === "growth") && rank[ctx.userPlan] < rank.starter) {
+    const rank = { free: 0, pro: 1 };
+    if ((tab === "metrics" || tab === "growth") && rank[ctx.userPlan] < rank.pro) {
       return "portfolio";
     }
   }

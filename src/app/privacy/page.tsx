@@ -139,7 +139,7 @@ export default function PrivacyPolicyPage() {
                 if you connect your Interactive Brokers account via the Flex Web
                 Service API, your access token and query ID are encrypted with
                 AES-256-GCM and stored so you can re-sync your portfolio on demand.
-                If you connect brokerage accounts via SnapTrade (Bifolio and Trefolio plans), we store your
+                If you connect brokerage accounts via SnapTrade (Trefolio plan), we store your
                 SnapTrade userId and encrypted userSecret; your brokerage credentials
                 are handled by SnapTrade via OAuth, not by us. We only request read-only access
                 to your brokerage data. You can disconnect at
@@ -180,7 +180,7 @@ export default function PrivacyPolicyPage() {
               </li>
               <li>
                 <strong className="text-slate-800">Push notification subscription</strong> — 
-                if you opt in to browser push notifications (Starter/Pro), we store
+                if you opt in to browser push notifications (paid plan), we store
                 your browser push subscription endpoint and encryption keys. These
                 are used only to deliver price alert notifications and are deleted
                 when you unsubscribe.
@@ -359,7 +359,7 @@ export default function PrivacyPolicyPage() {
                   </tr>
                   <tr>
                     <td className="py-3 pr-6">SnapTrade (Passiv Financial Inc.)</td>
-                    <td className="py-3 pr-6">Brokerage aggregation (Bifolio &amp; Trefolio)</td>
+                    <td className="py-3 pr-6">Brokerage aggregation (Trefolio)</td>
                     <td className="py-3">Brokerage account data (positions, balances) via OAuth read-only; we store only SnapTrade userId and encrypted userSecret</td>
                   </tr>
                   <tr>
@@ -450,7 +450,7 @@ export default function PrivacyPolicyPage() {
           <section>
             <h2>7a. Public Portfolio Sharing</h2>
             <p>
-              Bifolio and Trefolio subscribers may choose to generate a shareable link that allows anyone with the link to view a
+              Trefolio subscribers may choose to generate a shareable link that allows anyone with the link to view a
               read-only snapshot of their portfolio holdings. This feature is <strong className="text-slate-800">opt-in</strong> and disabled by default.
             </p>
             <ul className="list-disc pl-6 space-y-2">
@@ -579,7 +579,7 @@ export default function PrivacyPolicyPage() {
               the free plan, we use{" "}
               <strong className="text-slate-900">Google AdSense</strong> to display
               relevant advertisements. Google AdSense may set cookies to serve
-              ads based on your browsing history. Paid plan users (Starter and Pro)
+              ads based on your browsing history. Paid Trefolio subscribers
               are never shown ads and no advertising cookies are set.
             </p>
             <p>

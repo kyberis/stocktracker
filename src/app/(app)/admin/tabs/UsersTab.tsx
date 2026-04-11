@@ -21,7 +21,6 @@ function AuthBadge({ provider }: { provider: string }) {
 
 function PlanBadge({ plan }: { plan: string }) {
   if (plan === "pro") return <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-500">Trefolio</span>;
-  if (plan === "starter") return <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-500/10 text-blue-400">Bifolio</span>;
   return <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold bg-gray-100 dark:bg-slate-700/50 text-gray-500 dark:text-slate-400">Folio</span>;
 }
 
@@ -148,7 +147,6 @@ export default function UsersTab() {
         <select value={filterPlan} onChange={handleFilterChange(setFilterPlan)} className="text-xs px-3 py-2 rounded-lg">
           <option value="all">All Plans</option>
           <option value="free">Folio (free)</option>
-          <option value="starter">Bifolio (starter)</option>
           <option value="pro">Trefolio (pro)</option>
         </select>
         <select value={filterAuth} onChange={handleFilterChange(setFilterAuth)} className="text-xs px-3 py-2 rounded-lg">

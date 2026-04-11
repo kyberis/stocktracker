@@ -8,6 +8,7 @@ import {
   getUserSettings,
 } from "@/lib/db";
 import { effectivePlan } from "@/lib/subscription";
+import type { SubscriptionPlan } from "@/lib/types";
 import { sendRefundRequestReceivedEmail } from "@/lib/refund-request-email";
 import { withMetrics } from "@/lib/with-metrics";
 
@@ -32,7 +33,7 @@ export const POST = withMetrics("/api/refund-requests", async (req: NextRequest)
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  const plan = effectivePlan(user.plan as "free" | "starter" | "pro", user.plan_expires_at);
+  const plan = effectivePlan(user.plan as SubscriptionPlan, user.plan_expires_at);
   if (plan === "free") {
     return NextResponse.json({ error: "Refund requests are only available for paid plans" }, { status: 403 });
   }

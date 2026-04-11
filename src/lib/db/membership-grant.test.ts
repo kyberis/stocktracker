@@ -72,9 +72,9 @@ describe("computeMembershipGrantExpiry", () => {
     expect(out.getTime()).toBe(expected);
   });
 
-  it("starts from now when switching tier (no stack)", () => {
-    const future = new Date(Date.now() + 10 * 86400000).toISOString();
-    const user = mockUser({ plan: "starter", plan_expires_at: future });
+  it("starts from now when effective tier differs from stacked-pro case (lapsed paid → complimentary pro)", () => {
+    const past = new Date(Date.now() - 86400000).toISOString();
+    const user = mockUser({ plan: "pro", plan_expires_at: past });
     const before = Date.now();
     const out = computeMembershipGrantExpiry(user, "pro", 14);
     const after = Date.now() + 15 * 86400000;

@@ -1,10 +1,10 @@
 # trefolio — Commercialization Plan
 
-> **Plan version:** 2.0 — March 2026
-> **App version:** v1.29.0
-> **Price:** Bifolio 2.99 EUR/month | Trefolio 7.99 EUR/month | Free tier available
-> **Annual:** Bifolio 23.99 EUR/year | Trefolio 59.99 EUR/year (save up to 37%)
-> **Status:** Technical foundation ready — remaining items are legal entity, domain purchase, and production Stripe configuration
+> **Plan version:** 2.1 — April 2026
+> **App version:** v1.77.20+
+> **Price (current product):** **Folio (free)** | **Trefolio (paid)** — launch €7.99/mo · regular €9.99/mo · annual launch €59.99/yr · regular €79.99/yr (see landing page)
+> **Legacy Stripe:** Existing Bifolio (starter) price IDs still bill in Stripe; the app maps them to **Trefolio** entitlements.
+> **Status:** Two-tier model implemented in code; remaining items are legal entity, domain purchase, and production Stripe configuration. Sections below include **historical three-tier analysis** for reference.
 
 ---
 
@@ -28,7 +28,7 @@
 
 ### One-liner
 
-**trefolio** — The European investor's portfolio tracker with EU tax reports, stock screener, AI insights, and net worth tracking in 35 languages, starting at 2.99 EUR/month.
+**trefolio** — The European investor's portfolio tracker with EU tax reports, stock screener, AI insights, and net worth tracking in 35 languages. Free Folio tier; full product on Trefolio (paid).
 
 ### Why trefolio?
 
@@ -59,7 +59,7 @@
 | Simply Wall St | $10/mo | 2x more expensive, no broker import, limited languages |
 | Portfolio Performance | Free (desktop) | No web/mobile, no AI, steep learning curve, no broker CSV import |
 | Snowball Analytics | $8/mo | More expensive, no AI analysis, fewer languages |
-| **trefolio** | **2.99-7.99 EUR/mo** | Simple, AI-powered, EU tax reports, stock screener, 35 languages, 14 broker imports + auto-sync, net worth tracking, 3-tier model with free tier |
+| **trefolio** | **Free + Trefolio (paid)** | Simple, AI-powered, EU tax reports, stock screener, 35 languages, 14 broker imports + auto-sync, net worth tracking, two-tier model (Folio + Trefolio) |
 
 ---
 

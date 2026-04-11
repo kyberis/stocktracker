@@ -418,7 +418,7 @@ export default function EventCalendar() {
         >
           <span className={`w-2 h-2 rounded-full ${filters.has("economic") && canEconomic ? "bg-white" : "bg-violet-500"}`} />
           {t("economicEvents")}
-          {!canEconomic && <TierFeatureBadge requiredPlan="starter" size="xs" className="ml-1" />}
+          {!canEconomic && <TierFeatureBadge requiredPlan="pro" size="xs" className="ml-1" />}
           {canEconomic && <span className="opacity-70">({economicCount})</span>}
         </button>
         <button
@@ -604,7 +604,7 @@ export default function EventCalendar() {
             <div className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-slate-300">
               <span className="w-2.5 h-2.5 rounded-full bg-violet-500" />
               {t("economicEvents")}
-              {!canEconomic && <TierFeatureBadge requiredPlan="starter" size="sm" />}
+              {!canEconomic && <TierFeatureBadge requiredPlan="pro" size="sm" />}
               {canEconomic && (
                 <span className="text-[11px] font-bold bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-slate-400 px-2 py-0.5 rounded-full">
                   {economicCount} {t("upcoming")}
@@ -753,7 +753,7 @@ export default function EventCalendar() {
               <div className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-slate-300 mb-3 px-1">
                 <span className="w-2.5 h-2.5 rounded-full bg-violet-500" />
                 {t("economicEvents")}
-                <TierFeatureBadge requiredPlan="starter" size="sm" />
+                <TierFeatureBadge requiredPlan="pro" size="sm" />
               </div>
               <ProCompareCard surface="intelligence_locked" reason="upgrade_required" compact />
             </div>

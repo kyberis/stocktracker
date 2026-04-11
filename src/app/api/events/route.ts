@@ -61,7 +61,7 @@ export const GET = withMetrics("/api/events", async (req: NextRequest) => {
       requiredTier = "free";
     } else if (type === "economic") {
       feature = "event-calendar-economic";
-      requiredTier = "starter";
+      requiredTier = "pro";
     } else if (type === "ipo") {
       feature = "event-calendar-ipo";
       requiredTier = "pro";

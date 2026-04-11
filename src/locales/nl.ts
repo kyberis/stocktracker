@@ -1645,7 +1645,6 @@ const nl: TranslationStrings = {
   landingPricingTrefolioFeature20: "Alle 4 dashboard thema's (Standaard, Canvas, Terminal, Studio)",
   landingPricingTrefolioFeature21: "Portefeuille simulator — backtest, wat-als, en crisis stress testen",
   landingPricingTrefolioFeature22: "Financiële Planning — FIRE calculator (5 varianten), Monte Carlo projecties, en multi-doel tracking",
-  landingPricingTrefolioFeature23: "7-daagse gratis proefperiode — probeer elke Pro functie, geen creditcard vereist",
   landingPricingTrefolioFeature4: "Bedrijfsfundamentals (inkomen, balans, kasstroom)",
   landingPricingTrefolioFeature5: "Aandeleninformatie (nieuws, insider transacties)",
   landingPricingTrefolioFeature6: "Portefeuille nieuwsfeed over alle bezittingen",

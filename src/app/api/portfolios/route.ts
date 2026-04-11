@@ -3,6 +3,7 @@ import { requireSession } from "@/lib/auth/guards";
 import { listPortfolios, createPortfolio, countPortfolios, SUPPORTED_PORTFOLIO_CURRENCIES } from "@/lib/db";
 import type { PortfolioCurrency } from "@/lib/db";
 import { getPortfolioLimit } from "@/lib/subscription";
+import type { SubscriptionPlan } from "@/lib/types";
 import { withMetrics } from "@/lib/with-metrics";
 
 export const dynamic = "force-dynamic";
@@ -25,7 +26,7 @@ export const POST = withMetrics("/api/portfolios POST", async (req: NextRequest)
   const { session, error } = await requireSession(req);
   if (error || !session) return error!;
 
-  const plan = (session.plan ?? "free") as "free" | "starter" | "pro";
+  const plan = (session.plan ?? "free") as SubscriptionPlan;
   const limit = getPortfolioLimit(plan);
   const current = await countPortfolios(session.userId);
 

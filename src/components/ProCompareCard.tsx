@@ -19,9 +19,15 @@ const CAPACITY_CACHE_MS = 60_000;
 
 type BillingPeriod = "monthly" | "annual";
 
+/** Matches landing Trefolio list: 1–22 and 24 (23 omitted). */
+const TREFOLIO_COMPARE_FEATURE_KEYS = [
+  ...Array.from({ length: 22 }, (_, i) => `landingPricingTrefolioFeature${i + 1}` as TranslationKey),
+  "landingPricingTrefolioFeature24" as TranslationKey,
+];
+
 interface TierInfo {
   name: string;
-  plan: "free" | "starter" | "pro";
+  plan: "free" | "pro";
   regularMonthly: string;
   monthlyPrice: string;
   regularAnnualMonthly: string;
@@ -48,16 +54,6 @@ const TIERS: TierInfo[] = [
     featureKeys: Array.from({ length: 15 }, (_, i) => `landingPricingFolioFeature${i + 1}` as TranslationKey),
   },
   {
-    name: "Bifolio",
-    plan: "starter",
-    regularMonthly: "€3.99", monthlyPrice: "€2.99",
-    regularAnnualMonthly: "€2.67", annualMonthly: "€2.00",
-    regularAnnual: "€31.99", annualPrice: "€23.99",
-    annualSavePct: 33, launchDiscountPct: 25,
-    descriptionKey: "landingPricingBifolioDesc",
-    featureKeys: Array.from({ length: 11 }, (_, i) => `landingPricingBifolioFeature${i + 1}` as TranslationKey),
-  },
-  {
     name: "Trefolio",
     plan: "pro",
     regularMonthly: "€9.99", monthlyPrice: "€7.99",
@@ -65,7 +61,7 @@ const TIERS: TierInfo[] = [
     regularAnnual: "€79.99", annualPrice: "€59.99",
     annualSavePct: 37, launchDiscountPct: 20,
     descriptionKey: "landingPricingTrefolioDesc",
-    featureKeys: Array.from({ length: 16 }, (_, i) => `landingPricingTrefolioFeature${i + 1}` as TranslationKey),
+    featureKeys: TREFOLIO_COMPARE_FEATURE_KEYS,
     highlighted: true,
   },
 ];
@@ -98,8 +94,7 @@ export default function ProCompareCard({
   const hasTrackedShown = useRef(false);
 
   const isPro = user?.plan === "pro";
-  const isStarter = user?.plan === "starter";
-  const isFree = !isPro && !isStarter;
+  const isFree = !isPro;
   const config = getUpsellConfig(surface);
   const reasonLabel = t(getUpsellReasonKey(reason));
   const isAnnual = billingPeriod === "annual";
@@ -135,18 +130,18 @@ export default function ProCompareCard({
     });
   }, [track, surface, config.feature, reason]);
 
-  const startCheckout = async (plan: "starter" | "pro", interval: BillingPeriod) => {
+  const startCheckout = async (interval: BillingPeriod) => {
     setBillingError("");
-    setBillingLoading(`${plan}_${interval}`);
+    setBillingLoading(`pro_${interval}`);
     track("upgrade_compare_clicked", {
       surface,
-      plan,
+      plan: "pro",
       planInterval: interval,
       reason: reason || "upgrade_required",
     });
-    track("billing_checkout_started", { interval, source: "compare_card", plan });
+    track("billing_checkout_started", { interval, source: "compare_card", plan: "pro" });
     await trackCanonicalConversion("checkout_started", {
-      plan,
+      plan: "pro",
       interval,
       source: "compare_card",
     });
@@ -154,7 +149,7 @@ export default function ProCompareCard({
       const res = await fetch("/api/billing/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan, interval }),
+        body: JSON.stringify({ plan: "pro", interval }),
       });
       const data = await res.json().catch(() => null);
       if (!res.ok || !data?.url) {
@@ -177,25 +172,17 @@ export default function ProCompareCard({
   };
 
   const atCapacity = capacity !== null && !capacity.available;
-  const currentPlan = isPro ? "pro" : isStarter ? "starter" : "free";
+  const currentPlan = isPro ? "pro" : "free";
 
-  const currentTier = TIERS.find((t) => t.plan === currentPlan)!;
-  const upgradeTiers = TIERS.filter((t) => {
-    if (t.plan === currentPlan) return false;
-    if (isFree) return t.plan === "starter" || t.plan === "pro";
-    if (isStarter) return t.plan === "pro";
-    return false;
-  }).sort((a, b) => (b.highlighted ? 1 : 0) - (a.highlighted ? 1 : 0));
+  const currentTier = TIERS.find((x) => x.plan === currentPlan)!;
+  const upgradeTiers = TIERS.filter((x) => x.plan === "pro" && currentPlan === "free");
 
   const maxFeatures = compact ? 5 : Infinity;
 
   const renderTierCard = (tier: TierInfo, options: { isCurrent: boolean; mobilePill?: string }) => {
     const { isCurrent } = options;
     const isHighlighted = tier.highlighted && !isCurrent;
-    const canUpgradeTo = !isCurrent && (
-      (isFree && (tier.plan === "starter" || tier.plan === "pro")) ||
-      (isStarter && tier.plan === "pro")
-    );
+    const canUpgradeTo = !isCurrent && isFree && tier.plan === "pro";
     const displayPrice = tier.isFree ? "€0" : isAnnual ? tier.annualMonthly : tier.monthlyPrice;
     const regularPrice = isAnnual ? tier.regularAnnualMonthly : tier.regularMonthly;
     const visibleFeatures = tier.featureKeys.slice(0, maxFeatures);
@@ -218,9 +205,7 @@ export default function ProCompareCard({
           </div>
         )}
         {!isHighlighted && !isCurrent && canUpgradeTo && options.mobilePill && (
-          <div className={`absolute -top-3 left-1/2 -translate-x-1/2 text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-md whitespace-nowrap ${
-            tier.plan === "starter" ? "bg-blue-500 shadow-blue-500/25" : "bg-gray-600 dark:bg-slate-500"
-          }`}>
+          <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-600 text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-md shadow-emerald-500/25 whitespace-nowrap">
             {options.mobilePill}
           </div>
         )}
@@ -235,7 +220,6 @@ export default function ProCompareCard({
             size={18}
             className={
               tier.plan === "pro" ? "text-emerald-500" :
-              tier.plan === "starter" ? "text-blue-500" :
               "text-gray-500 dark:text-slate-400"
             }
           />
@@ -298,17 +282,15 @@ export default function ProCompareCard({
           )
         ) : canUpgradeTo && !atCapacity ? (
           <button
-            onClick={() => startCheckout(tier.plan as "starter" | "pro", billingPeriod)}
+            onClick={() => startCheckout(billingPeriod)}
             disabled={billingLoading !== ""}
             className={`w-full text-xs font-semibold py-2.5 rounded-lg transition-all disabled:opacity-60 ${
               tier.highlighted
                 ? "bg-emerald-500 hover:bg-emerald-600 text-white shadow-md shadow-emerald-500/20"
-                : tier.plan === "starter"
-                  ? "bg-blue-500 hover:bg-blue-600 text-white shadow-md shadow-blue-500/20"
-                  : "bg-gray-800 dark:bg-slate-600 hover:bg-gray-700 dark:hover:bg-slate-500 text-white"
+                : "bg-gray-800 dark:bg-slate-600 hover:bg-gray-700 dark:hover:bg-slate-500 text-white"
             }`}
           >
-            {billingLoading === `${tier.plan}_${billingPeriod}`
+            {billingLoading === `pro_${billingPeriod}`
               ? t("billingRedirecting")
               : isAnnual
                 ? `${tier.name} — ${tier.annualPrice}/yr`
@@ -436,14 +418,14 @@ export default function ProCompareCard({
         {upgradeTiers.map((tier, i) =>
           renderTierCard(tier, {
             isCurrent: false,
-            mobilePill: i === 0 ? t("upsellRecommended") : t("upsellBudgetPick"),
+            mobilePill: i === 0 ? t("upsellRecommended") : undefined,
           })
         )}
       </div>
 
-      {/* Desktop: full 3-column grid (hidden in compact mode) */}
+      {/* Desktop: 2-column grid */}
       {!compact && (
-        <div className="hidden sm:grid gap-3 sm:grid-cols-3">
+        <div className="hidden sm:grid gap-3 sm:grid-cols-2">
           {TIERS.map((tier) =>
             renderTierCard(tier, { isCurrent: tier.plan === currentPlan })
           )}

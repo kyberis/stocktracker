@@ -1646,7 +1646,6 @@ const pt: TranslationStrings = {
   landingPricingTrefolioFeature20: "Todos os 4 temas de painel (Padrão, Canvas, Terminal, Estúdio)",
   landingPricingTrefolioFeature21: "Simulador de portfólio — backtest, cenários hipotéticos e testes de estresse em crises",
   landingPricingTrefolioFeature22: "Planeamento Financeiro — calculadora FIRE (5 variantes), projeções de Monte Carlo e acompanhamento de múltiplos objetivos",
-  landingPricingTrefolioFeature23: "Teste gratuito de 7 dias — experimente todas as funcionalidades Pro, sem necessidade de cartão de crédito",
   landingPricingTrefolioFeature4: "Fundamentos da empresa (rendimento, balanço, fluxo de caixa)",
   landingPricingTrefolioFeature5: "Inteligência de ações (notícias, negociações internas)",
   landingPricingTrefolioFeature6: "Feed de notícias do portfólio em todos os ativos",

@@ -58,7 +58,7 @@ export default function GrowthTab() {
   const [showPaywall, setShowPaywall] = useState(false);
   const [showExplainer, setShowExplainer] = useState(false);
 
-  const isPaid = user?.plan === "starter" || user?.plan === "pro";
+  const isPaid = user?.plan === "pro";
 
   useEffect(() => {
     const isFreeRange = range === FREE_RANGE;
@@ -124,7 +124,7 @@ export default function GrowthTab() {
         <div className="flex items-center gap-1.5">
           <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-1.5">
             {t("growthTab")}
-            <TierFeatureBadge requiredPlan="starter" size="sm" />
+            <TierFeatureBadge requiredPlan="pro" size="sm" />
           </h3>
           <button
             onClick={() => setShowExplainer((v) => !v)}
@@ -209,7 +209,7 @@ export default function GrowthTab() {
           subtitle={t("growthTabEmpty")}
         />
       ) : showPaywall ? (
-        <BlurredProSection blurb="Upgrade to Bifolio for full portfolio history with 3M, 6M, 1Y, and All-time views." ctaLabel="Upgrade to Bifolio">
+        <BlurredProSection blurb="Upgrade to Trefolio for full portfolio history with 3M, 6M, 1Y, and All-time views." ctaLabel="Upgrade to Trefolio">
           <div className="h-64 rounded-xl bg-gradient-to-b from-emerald-500/10 to-transparent" />
         </BlurredProSection>
       ) : loading ? (

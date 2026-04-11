@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { findUserById, updateUserSubscription, getStripePriceConfig } from "@/lib/db";
+import { findUserById, updateUserSubscription } from "@/lib/db";
 import { effectivePlan } from "@/lib/subscription";
 import { getStripeClient } from "@/lib/stripe";
 import { withMetrics } from "@/lib/with-metrics";
@@ -34,13 +34,8 @@ export const POST = withMetrics("/api/billing/sync", async (req: NextRequest) =>
     const activeSub = subs.data[0];
     const resolvedPlan = effectivePlan(user.plan, user.plan_expires_at);
     if (activeSub && resolvedPlan === "free") {
-      const starterPriceIds = new Set(
-        [await getStripePriceConfig("stripe_price_starter_monthly"), await getStripePriceConfig("stripe_price_starter_annual")].filter(Boolean)
-      );
-      const items = activeSub.items?.data;
-      const priceId = items?.[0]?.price?.id;
-      const syncedPlan = priceId && starterPriceIds.has(priceId) ? "starter" as const : "pro" as const;
       const periodEnd = (activeSub as unknown as { current_period_end?: number }).current_period_end;
+      const syncedPlan = "pro" as const;
       await updateUserSubscription(user.id, {
         plan: syncedPlan,
         stripeSubscriptionId: activeSub.id,

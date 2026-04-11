@@ -142,6 +142,9 @@ interface PricingTier {
 
 const LAUNCH_DISCOUNT_PCT = 25;
 
+/** Trefolio tier bullets: 1–22 and 24 (23 unused). */
+const TREFOLIO_PRICING_FEATURE_NUMS = [...Array.from({ length: 22 }, (_, i) => i + 1), 24] as const;
+
 function getPricing(t: T): PricingTier[] {
   return [
     {
@@ -156,18 +159,6 @@ function getPricing(t: T): PricingTier[] {
       cta: t("landingPricingFolioCta"),
     },
     {
-      name: "Bifolio",
-      plan: "starter" as SubscriptionPlan,
-      regularMonthly: "€3.99", monthlyPrice: "€2.99",
-      regularAnnualMonthly: "€2.67", annualMonthly: "€2.00",
-      regularAnnual: "€31.99", annualPrice: "€23.99",
-      annualSavePct: 33, launchDiscountPct: 25,
-      description: t("landingPricingBifolioDesc"),
-      features: Array.from({ length: 14 }, (_, i) => t(`landingPricingBifolioFeature${i + 1}` as TranslationKey)),
-      cta: t("landingPricingBifolioCta"),
-      highlighted: false,
-    },
-    {
       name: "Trefolio",
       plan: "pro" as SubscriptionPlan,
       regularMonthly: "€9.99", monthlyPrice: "€7.99",
@@ -175,7 +166,9 @@ function getPricing(t: T): PricingTier[] {
       regularAnnual: "€79.99", annualPrice: "€59.99",
       annualSavePct: 37, launchDiscountPct: 20,
       description: t("landingPricingTrefolioDesc"),
-      features: Array.from({ length: 24 }, (_, i) => t(`landingPricingTrefolioFeature${i + 1}` as TranslationKey)),
+      features: TREFOLIO_PRICING_FEATURE_NUMS.map((n) =>
+        t(`landingPricingTrefolioFeature${n}` as TranslationKey),
+      ),
       cta: t("landingPricingTrefolioCta"),
       highlighted: true,
     },
@@ -1923,6 +1916,9 @@ function PricingSection() {
           <p className="text-lg text-slate-500 max-w-xl mx-auto">
             {t("landingPricingSubtitle")}
           </p>
+          <p className="text-base font-medium text-slate-700 max-w-lg mx-auto mt-3">
+            {t("landingPricingTagline")}
+          </p>
           <div className="inline-flex items-center gap-2 mt-4 bg-amber-500/10 border border-amber-500/20 rounded-full px-4 py-1.5">
             <svg className="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
@@ -1941,7 +1937,7 @@ function PricingSection() {
           {t("landingPricingTierExplainer")}
         </p>
 
-        <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
           {pricing.map((tier) => {
             const displayPrice = tier.isFree
               ? "€0"
@@ -1972,7 +1968,11 @@ function PricingSection() {
 
                 <div className="mb-6">
                   <h3 className="text-xl font-bold text-slate-900 mb-2 flex items-center gap-2">
-                    <TierIcon plan={tier.plan} size={22} className="text-emerald-600" />
+                    <TierIcon
+                      plan={tier.plan}
+                      size={22}
+                      className={tier.plan === "pro" ? "text-emerald-600" : "text-slate-500"}
+                    />
                     {tier.name}
                     {!tier.isFree && tier.launchDiscountPct > 0 && (
                       <span className="text-xs font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">

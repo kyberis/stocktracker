@@ -267,7 +267,7 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
   const { user } = useAuth();
   const { stealthMode } = useStealthMode();
   const { t } = useI18n();
-  const isPaid = user?.plan === "starter" || user?.plan === "pro";
+  const isPaid = user?.plan === "pro";
 
   const isAdmin = user?.role === "admin";
 

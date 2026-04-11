@@ -843,13 +843,13 @@ export async function sendTrialInvitationEmail(
 function membershipGrantInvitationHtml(
   displayName: string,
   locale: EmailLocale,
-  plan: "starter" | "pro",
+  plan: "pro",
   days: number,
   activateUrl: string,
 ): string {
   const c = getMembershipGrantStrings(locale);
   const name = displayName || c.fallbackName;
-  const planName = plan === "starter" ? c.planNameStarter : c.planNamePro;
+  const planName = c.planNamePro;
   const fill = (s: string) =>
     s
       .replace(/\{\{name\}\}/g, name)
@@ -870,13 +870,13 @@ ${emailFooter(fill(c.footer), utm("/profile", campaign), c.managePreferences, "{
 function membershipGrantPlainText(
   displayName: string,
   locale: EmailLocale,
-  plan: "starter" | "pro",
+  plan: "pro",
   days: number,
   activateUrl: string,
 ): string {
   const c = getMembershipGrantStrings(locale);
   const name = displayName || c.fallbackName;
-  const planName = plan === "starter" ? c.planNameStarter : c.planNamePro;
+  const planName = c.planNamePro;
   const fill = (s: string) =>
     s
       .replace(/\{\{name\}\}/g, name)
@@ -905,7 +905,7 @@ export async function sendMembershipGrantInvitationEmail(opts: {
   displayName: string;
   userId: string;
   locale: EmailLocale;
-  plan: "starter" | "pro";
+  plan: "pro";
   days: number;
   token: string;
   baseUrl?: string;
@@ -915,7 +915,7 @@ export async function sendMembershipGrantInvitationEmail(opts: {
   const activateUrl = `${base}/membership-grant/activate?token=${encodeURIComponent(opts.token)}&utm_source=email&utm_medium=transactional&utm_campaign=membership_grant_invitation`;
   const c = getMembershipGrantStrings(opts.locale);
   const name = opts.displayName || c.fallbackName;
-  const planName = opts.plan === "starter" ? c.planNameStarter : c.planNamePro;
+  const planName = c.planNamePro;
   const fillSubject = (s: string) =>
     s
       .replace(/\{\{name\}\}/g, name)

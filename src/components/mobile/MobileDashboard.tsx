@@ -71,7 +71,7 @@ export default function MobileDashboard() {
 
   const userPlan = user?.plan ?? "free";
   const isPro = userPlan === "pro";
-  const isPaid = userPlan === "starter" || userPlan === "pro";
+  const isPaid = userPlan === "pro";
   const holdingsCount = holdings.length;
   const hasMultiplePortfolios = portfolios.length > 1;
   const activeName = activePortfolioId
@@ -103,17 +103,17 @@ export default function MobileDashboard() {
     [cashEntries],
   );
 
-  const TIER_GATE: Partial<Record<DashboardTab, "starter" | "pro">> = {
-    metrics: "starter",
-    growth: "starter",
+  const TIER_GATE: Partial<Record<DashboardTab, "pro">> = {
+    metrics: "pro",
+    growth: "pro",
   };
 
-  const dashboardTabs: { key: DashboardTab; label: string; tierBadge?: "starter" | "pro"; disabled?: boolean }[] = [
+  const dashboardTabs: { key: DashboardTab; label: string; tierBadge?: "pro"; disabled?: boolean }[] = [
     { key: "portfolio", label: t("dashboardHoldingsTab") },
     { key: "diversification", label: t("diversificationTab"), disabled: holdingsCount === 0 },
     { key: "dividends", label: t("dividendsTab") },
-    { key: "metrics", label: t("performanceTab"), tierBadge: "starter" as const },
-    { key: "growth", label: t("growthTab"), tierBadge: "starter" as const },
+    { key: "metrics", label: t("performanceTab"), tierBadge: "pro" as const },
+    { key: "growth", label: t("growthTab"), tierBadge: "pro" as const },
     { key: "events", label: t("eventsTab") },
     { key: "news", label: t("newsTab") },
   ];
@@ -123,8 +123,8 @@ export default function MobileDashboard() {
     if (tabDef?.disabled) return;
     const requiredTier = TIER_GATE[tab];
     if (requiredTier) {
-      const rank = { free: 0, starter: 1, pro: 2 };
-      if (rank[userPlan] < rank[requiredTier]) {
+      const rank = { free: 0, pro: 1 };
+      if (rank[userPlan as "free" | "pro"] < rank[requiredTier]) {
         setPaywallSurface(`tab_${tab}`);
         setShowPaywall(true);
         return;
@@ -393,7 +393,7 @@ export default function MobileDashboard() {
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-gray-900 dark:text-white">{t("addManualAsset")}</p>
                 </div>
-                <TierFeatureBadge requiredPlan="starter" size="xs" />
+                <TierFeatureBadge requiredPlan="pro" size="xs" />
               </button>
             </div>
           </div>

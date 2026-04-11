@@ -133,7 +133,7 @@ export default function ImportPageContent() {
     ? portfolios.find((p) => p.id === activePortfolioId)?.name
     : undefined;
   const isPro = user?.plan === "pro";
-  const canUseBrokerSync = user?.plan === "pro" || user?.plan === "starter";
+  const canUseBrokerSync = user?.plan === "pro";
 
   // Wizard state
   const [step, setStep] = useState<WizardStep>("method");
@@ -447,7 +447,7 @@ export default function ImportPageContent() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-semibold text-gray-900 dark:text-white">{methodLabel(card.key)}</span>
-                    {card.key === "snaptrade_api" && <TierFeatureBadge requiredPlan="starter" size="xs" />}
+                    {card.key === "snaptrade_api" && <TierFeatureBadge requiredPlan="pro" size="xs" />}
                     {card.key === "ai_import" && <TierFeatureBadge requiredPlan="pro" size="xs" />}
                   </div>
                   <p className="text-[11px] text-gray-500 dark:text-slate-400 mt-0.5 leading-relaxed">{t(card.descKey)}</p>
@@ -907,7 +907,7 @@ function SnapTradeGate({ t }: { t: (key: string) => string }) {
           href="/billing"
           className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold transition-colors shadow-sm min-h-[44px]"
         >
-          {t("brokerSyncGateCta") || "Upgrade to Bifolio — €2.99/mo"}
+          {t("brokerSyncGateCta") || "Upgrade to Trefolio — from €7.99/mo"}
         </a>
         <p className="text-xs text-gray-400 dark:text-slate-500 mt-3">
           {t("brokerSyncGateAlt") || "or"}{" "}
@@ -1161,7 +1161,7 @@ function SnapTradeContent({
                 <div className="rounded-xl border border-violet-300/25 dark:border-violet-500/25 bg-gradient-to-br from-violet-500/[0.06] to-violet-500/[0.02] dark:from-violet-500/10 dark:to-violet-500/[0.03] p-3.5 flex items-center justify-between gap-4">
                   <div>
                     <div className="flex items-center gap-2 mb-0.5">
-                      <TierFeatureBadge requiredPlan="starter" size="xs" />
+                      <TierFeatureBadge requiredPlan="pro" size="xs" />
                       <span className="text-xs font-semibold text-gray-700 dark:text-slate-300">{snapTradeApi.activeBrokerCount} / {snapTradeApi.connectionLimit} {t("brokerSyncConnectionUsed") || "connection used"}</span>
                     </div>
                     <p className="text-[11px] text-gray-500 dark:text-slate-400">{t("brokerSyncUpgradeForUnlimited") || "Upgrade to Trefolio for unlimited broker connections"}</p>

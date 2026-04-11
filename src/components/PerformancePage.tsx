@@ -197,7 +197,7 @@ export default function PerformancePage({ holdings: holdingsProp, cashEntries: c
   const holdings = holdingsProp ?? ctxHoldings;
   const cashEntries = cashEntriesProp ?? ctxCashEntries;
   const baseCurrency = activePortfolioCurrency;
-  const isPaid = user?.plan === "starter" || user?.plan === "pro";
+  const isPaid = user?.plan === "pro";
 
   const [txs, setTxs] = useState<Transaction[]>([]);
   const [snapshots, setSnapshots] = useState<SnapshotPoint[]>([]);
@@ -317,7 +317,7 @@ export default function PerformancePage({ holdings: holdingsProp, cashEntries: c
         <div className="card">
           <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-1.5">
             {t("perfBreakdownTitle")}
-            <TierFeatureBadge requiredPlan="starter" size="sm" />
+            <TierFeatureBadge requiredPlan="pro" size="sm" />
           </h3>
           <BlurredProSection blurb={t("perfBreakdownUpgradeBlurb")} ctaLabel={t("perfBreakdownUpgradeCta")}>
             <div className="space-y-5">
@@ -344,7 +344,7 @@ export default function PerformancePage({ holdings: holdingsProp, cashEntries: c
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-1.5">
             {t("perfBreakdownTitle")}
-            <TierFeatureBadge requiredPlan="starter" size="sm" />
+            <TierFeatureBadge requiredPlan="pro" size="sm" />
           </h3>
         </div>
 

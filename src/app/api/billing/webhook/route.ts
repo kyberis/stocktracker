@@ -10,14 +10,13 @@ import {
   getStripePriceConfig,
 } from "@/lib/db";
 import { reconcileSnapTrade, reconcileTheme } from "@/lib/billing-reconcile";
-import { sendBifolioUpgradeEmail, sendTrefolioUpgradeEmail, sendAdminSubscriptionNotification } from "@/lib/email";
+import { sendTrefolioUpgradeEmail, sendAdminSubscriptionNotification } from "@/lib/email";
 import { billingEventsTotal } from "@/lib/metrics";
 import { getStripeClient } from "@/lib/stripe";
 import { ensureInitialized } from "@/lib/db/client";
 import { withMetrics } from "@/lib/with-metrics";
 import { createNotification } from "@/lib/db";
 import {
-  bifolioUpgradeNotification,
   trefolioUpgradeNotification,
   downgradeNotification,
   planExpiredNotification,
@@ -47,22 +46,8 @@ function periodEndIso(subscription: Stripe.Subscription): string {
   return new Date(end * 1000).toISOString();
 }
 
-async function getStarterPriceIds(): Promise<Set<string>> {
-  const ids = [
-    await getStripePriceConfig("stripe_price_starter_monthly"),
-    await getStripePriceConfig("stripe_price_starter_annual"),
-  ].filter(Boolean);
-  return new Set(ids);
-}
-
-async function planFromSubscription(subscription: Stripe.Subscription, metadataPlan?: string): Promise<"starter" | "pro"> {
-  if (metadataPlan === "starter") return "starter";
-  const items = subscription.items?.data;
-  if (items?.length) {
-    const priceId = typeof items[0].price === "string" ? items[0].price : items[0].price?.id;
-    const starterIds = await getStarterPriceIds();
-    if (priceId && starterIds.has(priceId)) return "starter";
-  }
+/** Legacy Bifolio (starter) Stripe prices map to pro entitlements. */
+async function planFromSubscription(_subscription: Stripe.Subscription, _metadataPlan?: string): Promise<"pro"> {
   return "pro";
 }
 
@@ -101,7 +86,7 @@ export const POST = withMetrics("/api/billing/webhook", async (req: NextRequest)
         const customerId = stripeCustomerId(session.customer as string | Stripe.Customer | null);
         const subscriptionId =
           typeof session.subscription === "string" ? session.subscription : session.subscription?.id || "";
-        const checkoutPlan = (session.metadata?.plan === "starter" ? "starter" : "pro") as "starter" | "pro";
+        const checkoutPlan = "pro" as const;
         if (userId) {
           const user = await findUserById(userId);
           if (user) {
@@ -131,13 +116,10 @@ export const POST = withMetrics("/api/billing/webhook", async (req: NextRequest)
               plan: checkoutPlan,
               mode: session.metadata?.deviceGrant === "true" ? "device_grant" : "subscription",
             });
-            const sendUpgradeEmail =
-              checkoutPlan === "starter" ? sendBifolioUpgradeEmail : sendTrefolioUpgradeEmail;
-            sendUpgradeEmail(user.email, user.display_name || "", "en", user.id).catch((err) =>
+            sendTrefolioUpgradeEmail(user.email, user.display_name || "", "en", user.id).catch((err) =>
               console.error("Upgrade email failed:", err),
             );
-            const upgradeNotif =
-              checkoutPlan === "starter" ? bifolioUpgradeNotification() : trefolioUpgradeNotification();
+            const upgradeNotif = trefolioUpgradeNotification();
             createNotification(user.id, upgradeNotif).catch((err) =>
               console.error("Upgrade notification failed:", err),
             );

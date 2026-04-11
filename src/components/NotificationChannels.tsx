@@ -28,7 +28,7 @@ export default function NotificationChannels() {
   const { user } = useAuth();
   const { whatsappEnabled } = useSettings();
   const plan = user?.plan || "free";
-  const isStarter = plan === "starter" || plan === "pro";
+  const isPaid = plan === "pro";
   const isPro = plan === "pro";
   const hasDevice = !!user?.devicePortfolioId || !!user?.deviceProEligible;
 
@@ -253,12 +253,12 @@ export default function NotificationChannels() {
             <svg className="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-1">{t("channelEmail")} <TierFeatureBadge requiredPlan="starter" size="xs" /></p>
-            {!isStarter && <p className="text-[10px] text-amber-500">{t("channelRequiresStarter")}</p>}
+            <p className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-1">{t("channelEmail")} <TierFeatureBadge requiredPlan="pro" size="xs" /></p>
+            {!isPaid && <p className="text-[10px] text-amber-500">{t("channelRequiresStarter")}</p>}
           </div>
         </div>
         <label className="relative inline-flex items-center cursor-pointer">
-          <input type="checkbox" checked={channels.includes("email")} onChange={(e) => toggleChannel("email", e.target.checked)} disabled={!isStarter} className="sr-only peer" />
+          <input type="checkbox" checked={channels.includes("email")} onChange={(e) => toggleChannel("email", e.target.checked)} disabled={!isPaid} className="sr-only peer" />
           <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-emerald-300 dark:peer-focus:ring-emerald-800 rounded-full peer dark:bg-slate-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500 peer-disabled:opacity-40" />
         </label>
       </div>
@@ -270,18 +270,18 @@ export default function NotificationChannels() {
             <svg className="w-4 h-4 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-1">{t("channelPush")} <TierFeatureBadge requiredPlan="starter" size="xs" /></p>
-            {!isStarter && <p className="text-[10px] text-amber-500">{t("channelRequiresStarter")}</p>}
+            <p className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-1">{t("channelPush")} <TierFeatureBadge requiredPlan="pro" size="xs" /></p>
+            {!isPaid && <p className="text-[10px] text-amber-500">{t("channelRequiresStarter")}</p>}
           </div>
         </div>
-        {isStarter && pushSupported && (
+        {isPaid && pushSupported && (
           pushSubscribed ? (
             <button onClick={handleDisablePush} className="text-xs text-red-500 hover:text-red-700">{t("pushDisable")}</button>
           ) : (
             <button onClick={handleEnablePush} className="btn-primary text-xs">{t("pushEnable")}</button>
           )
         )}
-        {!pushSupported && isStarter && (
+        {!pushSupported && isPaid && (
           <span className="text-xs text-gray-400">Not supported</span>
         )}
       </div>

@@ -6,10 +6,10 @@ import { planDisplayName } from "@/lib/subscription";
 import TierIcon from "./TierIcon";
 import type { SubscriptionPlan } from "@/lib/types";
 
-const PLAN_RANK: Record<SubscriptionPlan, number> = { free: 0, starter: 1, pro: 2 };
+const PLAN_RANK: Record<SubscriptionPlan, number> = { free: 0, pro: 1 };
 
 interface TierFeatureBadgeProps {
-  requiredPlan: "starter" | "pro";
+  requiredPlan: "pro";
   size?: "xs" | "sm";
   className?: string;
 }
@@ -37,7 +37,7 @@ export default function TierFeatureBadge({
         className={`inline-flex items-center opacity-40 hover:opacity-75 transition-opacity cursor-default ${
           userPlan === "pro"
             ? "text-emerald-500 dark:text-emerald-400"
-            : "text-blue-500 dark:text-blue-400"
+            : "text-gray-500 dark:text-slate-400"
         } ${className}`}
         aria-label={label}
         title={label}

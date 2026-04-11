@@ -51,7 +51,7 @@ export default function MetricsTab({ holdings: holdingsProp, cashEntries: cashEn
   const [txs, setTxs] = useState<Transaction[]>([]);
   const [historySeries, setHistorySeries] = useState<Record<string, HistoricalDataPoint[]>>({});
 
-  const isPaid = user?.plan === "starter" || user?.plan === "pro";
+  const isPaid = user?.plan === "pro";
 
   useEffect(() => {
     track("metrics_tab_viewed");
@@ -146,7 +146,7 @@ export default function MetricsTab({ holdings: holdingsProp, cashEntries: cashEn
 
   return (
     <div className="card space-y-6">
-      <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-1.5">{t("portfolioPerformance")} <TierFeatureBadge requiredPlan="starter" size="sm" /></h3>
+      <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-1.5">{t("portfolioPerformance")} <TierFeatureBadge requiredPlan="pro" size="sm" /></h3>
 
       {/* Free metrics (TTWROR + IRR) */}
       <div className="grid grid-cols-2 gap-3">
@@ -176,7 +176,7 @@ export default function MetricsTab({ holdings: holdingsProp, cashEntries: cashEn
 
       {/* Pro metrics */}
       {!isPaid ? (
-        <BlurredProSection blurb="Upgrade to Bifolio for Sharpe Ratio, Max Drawdown, Volatility, and Beta." ctaLabel="Upgrade to Bifolio">
+        <BlurredProSection blurb="Upgrade to Trefolio for Sharpe Ratio, Max Drawdown, Volatility, and Beta." ctaLabel="Upgrade to Trefolio">
           <div className="grid grid-cols-3 gap-3">
             {["Sharpe Ratio", "Max Drawdown", "Volatility"].map((label) => (
               <div key={label} className="bg-gray-50 dark:bg-slate-800 rounded-xl p-3">

@@ -38,7 +38,7 @@ describe("upsell mapping", () => {
     expect(config.feature).toBe("portfolio_score");
     expect(config.attemptedActionKey).toBe("upsellAttemptPortfolioScore");
     expect(config.subtitleKey).toBe("upsellCompareSubtitleLocked");
-    expect(config.proItems).toContain("upsellProItemPortfolioScore");
+    expect(config.paidItems).toContain("upsellProItemPortfolioScore");
   });
 
   it("provides locked-feature context for tax report", () => {
@@ -46,14 +46,14 @@ describe("upsell mapping", () => {
     expect(config.feature).toBe("tax_report");
     expect(config.attemptedActionKey).toBe("upsellAttemptTaxReport");
     expect(config.subtitleKey).toBe("upsellCompareSubtitleLocked");
-    expect(config.proItems).toContain("upsellProItemTaxReport");
+    expect(config.paidItems).toContain("upsellProItemTaxReport");
   });
 
   it("provides locked-feature context for screener", () => {
     const config = getUpsellConfig("screener_locked");
     expect(config.feature).toBe("screener");
     expect(config.attemptedActionKey).toBe("upsellAttemptScreener");
-    expect(config.proItems).toContain("upsellProItemScreener");
+    expect(config.paidItems).toContain("upsellProItemScreener");
   });
 
   it("every declared surface has a valid config with required fields", () => {
@@ -74,8 +74,7 @@ describe("upsell mapping", () => {
       expect(config.subtitleKey).toBeTruthy();
       expect(config.attemptedActionKey).toBeTruthy();
       expect(config.freeItems.length).toBeGreaterThan(0);
-      expect(config.starterItems.length).toBeGreaterThan(0);
-      expect(config.proItems.length).toBeGreaterThan(0);
+      expect(config.paidItems.length).toBeGreaterThan(0);
     }
   });
 });

@@ -481,9 +481,9 @@ describe("rowToDbUser", () => {
     expect(user.plan).toBe("pro");
   });
 
-  it("maps starter plan correctly", () => {
+  it("maps legacy starter plan to pro", () => {
     const user = rowToDbUser(mockRow({ plan: "starter" }));
-    expect(user.plan).toBe("starter");
+    expect(user.plan).toBe("pro");
   });
 
   it("maps free plan for invalid plan", () => {
@@ -727,15 +727,15 @@ describe("mapUser", () => {
     expect(publicUser.deviceProEligible).toBe(true);
   });
 
-  it("deviceProEligible is true when plan is starter", () => {
+  it("deviceProEligible is false when plan is pro (including former starter)", () => {
     const dbUser = {
       ...baseDbUser,
-      plan: "starter" as const,
+      plan: "pro" as const,
       device_linked_at: "2025-03-01T00:00:00Z",
       device_pro_redeemed_at: "",
     };
     const publicUser = mapUser(dbUser);
-    expect(publicUser.deviceProEligible).toBe(true);
+    expect(publicUser.deviceProEligible).toBe(false);
   });
 
   it("deviceProEligible is false when device_pro_redeemed_at is set", () => {

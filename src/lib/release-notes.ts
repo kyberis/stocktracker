@@ -17,6 +17,30 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.77.20",
+    date: "2026-04-11",
+    title: "Two subscription tiers: Folio + Trefolio",
+    titleTranslations: {
+      es: "Dos planes de suscripción: Folio y Trefolio",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Subscriptions are simplified to Folio (free) and Trefolio (paid): one paid plan includes all premium features and limits. Legacy Bifolio subscriptions are treated as Trefolio in the app; Stripe starter price IDs still map to full paid access.",
+        translations: {
+          es: "Las suscripciones se simplifican a Folio (gratis) y Trefolio (de pago): un plan de pago incluye todas las funciones y límites premium. Las suscripciones antiguas de Bifolio se tratan como Trefolio en la app; los precios de Stripe «starter» siguen mapeando al acceso de pago completo.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Removed the 7-day free trial bullet from the Trefolio pricing comparison on the landing page and dashboard upsell card.",
+        translations: {
+          es: "Se eliminó la viñeta de prueba gratuita de 7 días de la comparación de precios de Trefolio en la página de inicio y en la tarjeta de mejora del panel.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.77.19",
     date: "2026-04-10",
     title: "Alpha Vantage behind feature flag (FMP-only mode)",
