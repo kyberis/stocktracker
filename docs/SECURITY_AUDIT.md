@@ -25,7 +25,8 @@ npm audit fix --registry https://registry.npmjs.org
 
 **Automation**
 
-- [Dependabot](../.github/dependabot.yml) opens weekly PRs for npm dependencies.
+- [Dependabot](../.github/dependabot.yml) opens weekly PRs for npm dependencies. Each merged or preview PR can trigger a Vercel deployment; batching or lowering `open-pull-requests-limit` reduces noise.
+- `tailwindcss` major updates are ignored until the project migrates to Tailwind v4’s PostCSS setup (`@tailwindcss/postcss`).
 
 ## Environment (production)
 
