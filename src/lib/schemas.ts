@@ -1,4 +1,8 @@
 import { z } from "zod";
+import type { ToolTabId } from "@/lib/tools-registry";
+import { TOOLS_CATALOG } from "@/lib/tools-registry";
+
+const VALID_FAVORITE_TOOL_ID = new Set<ToolTabId>(TOOLS_CATALOG.map((e) => e.id));
 
 /* ── Disposable / fake-email domain blocklist ─────────────── */
 
@@ -301,6 +305,13 @@ export const userSettingsSchema = z.object({
     "AUD", "NZD", "JPY", "PLN", "CZK", "HUF", "RON",
     "SGD", "HKD", "ZAR", "TRY", "BRL", "MXN",
   ]).optional(),
+});
+
+export const favoriteToolIdsBodySchema = z.object({
+  favoriteToolIds: z.array(z.string()).refine(
+    (arr) => arr.every((id) => VALID_FAVORITE_TOOL_ID.has(id as ToolTabId)),
+    { message: "Invalid tool id" }
+  ),
 });
 
 /* ── Alerts ────────────────────────────────────────────────── */

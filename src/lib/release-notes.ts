@@ -17,6 +17,40 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.77.28",
+    date: "2026-04-12",
+    title: "Tools: favorite tools synced to account",
+    titleTranslations: {
+      es: "Herramientas: favoritos sincronizados con la cuenta",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Favorite tools are stored in the database (per user) so they follow you across devices; existing browser-only favorites migrate once on next visit.",
+        translations: {
+          es: "Las herramientas favoritas se guardan en la base de datos (por usuario) para que sigan disponibles en todos los dispositivos; los favoritos solo del navegador se migran una vez en la siguiente visita.",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.77.27",
+    date: "2026-04-12",
+    title: "Tools: favorite tools",
+    titleTranslations: {
+      es: "Herramientas: favoritos",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Mark tools as favorites from the Tools hub (star control); favorites appear first in the grid and native tool chips stay in sync via local storage.",
+        translations: {
+          es: "Marca herramientas como favoritas en el hub de Herramientas (control de estrella); los favoritos aparecen primero en la cuadrícula y los chips nativos se sincronizan con almacenamiento local.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.77.26",
     date: "2026-04-11",
     title: "Build: React.cache shim and react-dom resolution",

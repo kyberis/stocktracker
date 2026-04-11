@@ -2,6 +2,8 @@ import { ensureInitialized } from "./client";
 import { str, num, parseRefreshInterval, parseAlertChannels, monthWindowKey, shouldResetDailyAiWindow, SUPPORTED_PORTFOLIO_CURRENCIES } from "./helpers";
 import type { UserSettings, PortfolioCurrency } from "./helpers";
 import type { Language, NotificationChannel } from "@/lib/types";
+import type { ToolTabId } from "@/lib/tools-registry";
+import { TOOLS_CATALOG } from "@/lib/tools-registry";
 import { isValidLanguage } from "@/lib/languages";
 import { encrypt, tryDecryptOrPlaintext } from "@/lib/crypto";
 import { PLATFORM_LIMITS } from "@/lib/platform-config";
@@ -52,6 +54,21 @@ function parseCurrency(val: unknown): PortfolioCurrency {
   return SUPPORTED_PORTFOLIO_CURRENCIES.includes(s) ? s : "EUR";
 }
 
+const VALID_FAVORITE_TOOL_IDS = new Set<ToolTabId>(TOOLS_CATALOG.map((e) => e.id));
+
+function parseFavoriteToolIdsColumn(raw: unknown): ToolTabId[] {
+  if (raw == null || raw === "") return [];
+  try {
+    const parsed = JSON.parse(String(raw)) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (id): id is ToolTabId => typeof id === "string" && VALID_FAVORITE_TOOL_IDS.has(id as ToolTabId)
+    );
+  } catch {
+    return [];
+  }
+}
+
 const DEFAULT_SETTINGS: UserSettings = {
   language: "en",
   refreshInterval: 15,
@@ -62,12 +79,13 @@ const DEFAULT_SETTINGS: UserSettings = {
   dashboardTheme: "default",
   defaultCurrency: "EUR",
   emailNotificationsEnabled: true,
+  favoriteToolIds: [],
 };
 
 export async function getUserSettings(userId: string): Promise<UserSettings> {
   const client = await ensureInitialized();
   const result = await client.execute({
-    sql: "SELECT language, refresh_interval, alert_channels, whatsapp_phone, whatsapp_verified, alert_device_enabled, dashboard_theme, default_currency, email_notifications_enabled FROM user_settings WHERE user_id = ?",
+    sql: "SELECT language, refresh_interval, alert_channels, whatsapp_phone, whatsapp_verified, alert_device_enabled, dashboard_theme, default_currency, email_notifications_enabled, favorite_tool_ids FROM user_settings WHERE user_id = ?",
     args: [userId],
   });
 
@@ -91,6 +109,7 @@ export async function getUserSettings(userId: string): Promise<UserSettings> {
     dashboardTheme: parseTheme(row.dashboard_theme),
     defaultCurrency: parseCurrency(row.default_currency),
     emailNotificationsEnabled: row.email_notifications_enabled === undefined ? true : num(row.email_notifications_enabled) !== 0,
+    favoriteToolIds: parseFavoriteToolIdsColumn(row.favorite_tool_ids),
   };
 }
 
@@ -109,19 +128,23 @@ export async function updateUserSettings(
     dashboardTheme: updates.dashboardTheme ?? current.dashboardTheme,
     defaultCurrency: updates.defaultCurrency ?? current.defaultCurrency,
     emailNotificationsEnabled: updates.emailNotificationsEnabled ?? current.emailNotificationsEnabled,
+    favoriteToolIds: updates.favoriteToolIds ?? current.favoriteToolIds,
   };
 
   const client = await ensureInitialized();
   await client.execute({
     sql: `UPDATE user_settings SET language = ?, refresh_interval = ?,
           alert_channels = ?, whatsapp_phone = ?, whatsapp_verified = ?, alert_device_enabled = ?,
-          dashboard_theme = ?, default_currency = ?, email_notifications_enabled = ?
+          dashboard_theme = ?, default_currency = ?, email_notifications_enabled = ?,
+          favorite_tool_ids = ?
           WHERE user_id = ?`,
     args: [
       next.language, next.refreshInterval,
       next.alertChannels.join(","), next.whatsappPhone, next.whatsappVerified ? 1 : 0,
       next.alertDeviceEnabled ? 1 : 0, next.dashboardTheme, next.defaultCurrency,
-      next.emailNotificationsEnabled ? 1 : 0, userId,
+      next.emailNotificationsEnabled ? 1 : 0,
+      JSON.stringify(next.favoriteToolIds),
+      userId,
     ],
   });
 

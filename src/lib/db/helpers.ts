@@ -10,6 +10,7 @@ import type {
   RefreshInterval,
   TransactionType,
 } from "@/lib/types";
+import type { ToolTabId } from "@/lib/tools-registry";
 
 export type UserRole = "admin" | "user";
 export type UserPlan = "free" | "pro";
@@ -153,6 +154,8 @@ export interface UserSettings {
   dashboardTheme: import("@/lib/types").LayoutTheme;
   defaultCurrency: PortfolioCurrency;
   emailNotificationsEnabled: boolean;
+  /** Tool hub favorites; persisted in `user_settings.favorite_tool_ids` as JSON. */
+  favoriteToolIds: ToolTabId[];
 }
 
 export const ADMIN_DEFAULT_USERNAME = "admin";

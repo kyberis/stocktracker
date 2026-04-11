@@ -3187,6 +3187,19 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       );
     },
   },
+  {
+    version: 108,
+    description: "User favorite tool IDs (JSON) on user_settings",
+    up: async (client: Client) => {
+      const cols = await client.execute("PRAGMA table_info(user_settings)");
+      const colNames = new Set(cols.rows.map((r) => String(r.name)));
+      if (!colNames.has("favorite_tool_ids")) {
+        await client.execute(
+          "ALTER TABLE user_settings ADD COLUMN favorite_tool_ids TEXT NOT NULL DEFAULT '[]'",
+        );
+      }
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

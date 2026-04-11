@@ -1,5 +1,6 @@
 {
   "framework": "nextjs",
+  "buildCommand": "npm run build",
   "crons": [
     { "path": "/api/cron/push-gauges", "schedule": "0 0 * * *" },
     { "path": "/api/cron/check-alerts", "schedule": "*/15 * * * *" },

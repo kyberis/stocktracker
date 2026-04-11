@@ -22,6 +22,7 @@ import {
   resolveHubVisibility,
   sortTabsByHubCategory,
 } from "@/lib/tools-registry";
+import { catalogOrderIndex, useFavoriteTools } from "@/lib/favorite-tools";
 
 const TransactionHistory = dynamic(() => import("./TransactionHistory"), { ssr: false });
 const DividendSummary = dynamic(() => import("./DividendSummary"), { ssr: false });
@@ -75,6 +76,7 @@ export default function PortfolioTools({ initialTab }: PortfolioToolsProps) {
     toolTaxonomyEnabled, toolRebalancingEnabled, toolAccountsEnabled, toolWatchlistEnabled,
   } = settings;
   const aiReportEnabled = useFeatureFlag("ai_report_enabled");
+  const { favoriteIds, toggleFavorite, isFavorite } = useFavoriteTools();
   const router = useRouter();
   const activeTab: ToolTabId | null = initialTab ?? null;
   const isMenuMode = !activeTab;
@@ -186,32 +188,66 @@ export default function PortfolioTools({ initialTab }: PortfolioToolsProps) {
         const includedTabs = visibleTabs.filter((tab) => isIncluded(tab.id));
         const proTabs = visibleTabs.filter((tab) => !isIncluded(tab.id) && getTierBadgeForTool(tab.id) === "pro");
 
+        const sortEntriesByCatalog = (entries: ToolCatalogEntry[]) =>
+          [...entries].sort((a, b) => catalogOrderIndex(a.id) - catalogOrderIndex(b.id));
+
+        const favoriteAmongVisible = sortEntriesByCatalog(
+          visibleTabs.filter((tab) => favoriteIds.has(tab.id))
+        );
+        const includedTabsRest = includedTabs.filter((tab) => !favoriteIds.has(tab.id));
+        const proTabsRest = proTabs.filter((tab) => !favoriteIds.has(tab.id));
+
         const renderCard = (entry: ToolCatalogEntry) => {
           const upgradeTier = !isIncluded(entry.id) ? getTierBadgeForTool(entry.id) : undefined;
+          const fav = isFavorite(entry.id);
           return (
-            <button
+            <div
               key={entry.id}
-              type="button"
-              onClick={() => setActiveTab(entry.id)}
-              className="relative flex flex-col items-center text-center p-3 sm:p-4 rounded-xl border transition-all bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-700 hover:border-gray-300 dark:hover:border-slate-600 hover:shadow-sm"
+              className="relative rounded-xl border transition-all bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-700 hover:border-gray-300 dark:hover:border-slate-600 hover:shadow-sm"
             >
-              <div className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br ${entry.gradient} flex items-center justify-center mb-2 shadow-sm`}>
-                <svg className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d={entry.icon} />
-                </svg>
-              </div>
-              <span className="text-xs sm:text-sm font-semibold leading-tight text-gray-900 dark:text-white">
-                {tabLabel(entry)}
-              </span>
-              <span className="text-[10px] sm:text-xs text-gray-500 dark:text-slate-400 mt-0.5 leading-tight line-clamp-2">
-                {t(entry.descKey)}
-              </span>
-              {upgradeTier && (
-                <span className="mt-1.5 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-violet-100 dark:bg-violet-500/15 text-violet-600 dark:text-violet-400">
-                  Trefolio
+              <button
+                type="button"
+                aria-pressed={fav}
+                aria-label={fav ? t("toolFavoriteRemove") : t("toolFavoriteAdd")}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleFavorite(entry.id);
+                }}
+                className="absolute top-1.5 right-1.5 z-10 rounded-lg p-1 text-amber-500 hover:bg-amber-500/10 dark:hover:bg-amber-400/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-800"
+              >
+                {fav ? (
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.006 5.404.434c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.434 2.082-5.005z" />
+                  </svg>
+                ) : (
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
+                  </svg>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab(entry.id)}
+                className="flex w-full flex-col items-center text-center p-3 sm:p-4 pt-5 sm:pt-6"
+              >
+                <div className={`mb-2 flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-xl bg-gradient-to-br ${entry.gradient} shadow-sm`}>
+                  <svg className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d={entry.icon} />
+                  </svg>
+                </div>
+                <span className="text-xs sm:text-sm font-semibold leading-tight text-gray-900 dark:text-white">
+                  {tabLabel(entry)}
                 </span>
-              )}
-            </button>
+                <span className="text-[10px] sm:text-xs text-gray-500 dark:text-slate-400 mt-0.5 leading-tight line-clamp-2">
+                  {t(entry.descKey)}
+                </span>
+                {upgradeTier && (
+                  <span className="mt-1.5 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-violet-100 dark:bg-violet-500/15 text-violet-600 dark:text-violet-400">
+                    Trefolio
+                  </span>
+                )}
+              </button>
+            </div>
           );
         };
 
@@ -242,12 +278,26 @@ export default function PortfolioTools({ initialTab }: PortfolioToolsProps) {
 
         return (
           <div className="mb-6 space-y-6">
+            {favoriteAmongVisible.length > 0 && (
+              <div>
+                <h2 className="mb-2 flex items-center gap-1.5 px-0.5 text-[11px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 sm:text-xs">
+                  <span className="text-sm" aria-hidden>
+                    ★
+                  </span>
+                  {t("toolsSectionFavorites")}
+                </h2>
+                <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-3 lg:grid-cols-6 xl:grid-cols-8">
+                  {favoriteAmongVisible.map(renderCard)}
+                </div>
+              </div>
+            )}
+
             {renderTierBlock(
-              includedTabs,
+              includedTabsRest,
               t("toolsSectionFree")
             )}
 
-            {proTabs.length > 0 && (
+            {proTabsRest.length > 0 && (
               <div>
                 <h2 className="flex items-center gap-1.5 text-[11px] sm:text-xs font-bold text-violet-600 dark:text-violet-400 uppercase tracking-wider mb-2 px-0.5">
                   <span className="text-sm">🍀</span>
@@ -255,7 +305,7 @@ export default function PortfolioTools({ initialTab }: PortfolioToolsProps) {
                   <a href="/billing" className="ml-1 text-[9px] sm:text-[10px] font-bold bg-violet-500 text-white px-1.5 py-0.5 rounded-md uppercase hover:bg-violet-600 transition-colors">{t("toolsSectionUpgrade")}</a>
                 </h2>
                 <div className="space-y-4">
-                  {groupCatalogByCategory(proTabs).map(({ category, items }) => (
+                  {groupCatalogByCategory(proTabsRest).map(({ category, items }) => (
                     <div key={`pro-${category}`}>
                       <h3 className="text-[10px] font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide mb-2 px-0.5">
                         {t(HUB_CATEGORY_LABEL[category])}
