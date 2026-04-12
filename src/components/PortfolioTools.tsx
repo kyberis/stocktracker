@@ -3,6 +3,7 @@
 import { useMemo, useEffect, Suspense } from "react";
 import type { TranslationKey } from "@/lib/i18n";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth-context";
@@ -170,6 +171,20 @@ export default function PortfolioTools({ initialTab }: PortfolioToolsProps) {
             </div>
             <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 whitespace-nowrap">{t("importGoToPage")} →</span>
           </a>
+
+          <Link
+            href="/explore"
+            className="flex items-center gap-3 mb-4 px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-gray-200 dark:border-slate-600 hover:border-emerald-300 dark:hover:border-emerald-500/40 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          >
+            <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+            </svg>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-gray-900 dark:text-white">{t("exploreToolsBannerTitle")}</p>
+              <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">{t("exploreToolsBannerDesc")}</p>
+            </div>
+            <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 whitespace-nowrap">{t("exploreGoToPage")} →</span>
+          </Link>
         </>
       )}
 

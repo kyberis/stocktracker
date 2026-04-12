@@ -15,6 +15,7 @@ import { resolvePremiumStockDataProvider } from "@/lib/market-data/resolve-provi
 import { withMetrics } from "@/lib/with-metrics";
 import { deferTask } from "@/lib/task-runner";
 import { apiCache, CACHE_TTL } from "@/lib/api-cache";
+import { CRYPTO_PAGE_SUPPORTED_SYMBOLS } from "@/lib/crypto-page-symbols";
 
 export const dynamic = "force-dynamic";
 
@@ -22,10 +23,7 @@ type CryptoPd = AlphaVantageProvider | FmpMarketDataProvider;
 
 type CryptoAction = "tickers" | "detail" | "history" | "exchange-rates";
 
-const VALID_SYMBOLS = new Set([
-  "BTC", "ETH", "SOL", "ADA", "XRP", "DOT", "AVAX", "LINK",
-  "BNB", "DOGE", "MATIC", "SHIB",
-]);
+const VALID_SYMBOLS = CRYPTO_PAGE_SUPPORTED_SYMBOLS;
 
 const VALID_RANGES = new Set(["1m", "3m", "1y", "all"]);
 

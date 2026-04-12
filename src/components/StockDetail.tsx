@@ -23,6 +23,7 @@ import { useAuth } from "@/lib/auth-context";
 import ProCompareCard from "@/components/ProCompareCard";
 import AdSlot from "@/components/AdSlot";
 import TierFeatureBadge from "./TierFeatureBadge";
+import HoldingTagsField from "./HoldingTagsField";
 import TransactionHistory from "./TransactionHistory";
 import type { UpsellReason } from "@/lib/upsell";
 import StockChart from "./StockChart";
@@ -453,6 +454,23 @@ export default function StockDetail({ ticker, exchange, fromScreener = false }: 
           )}
         </div>
 
+        {canAccessPremium && assetType === "stock" && (
+          <div className="card px-6 py-4 border border-emerald-200/60 dark:border-emerald-500/25 bg-emerald-50/50 dark:bg-emerald-500/[0.07]">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-gray-900 dark:text-white">{t("stockDetailMoatCtaTitle")}</p>
+                <p className="text-sm text-gray-600 dark:text-slate-400 mt-0.5">{t("stockDetailMoatCtaDesc")}</p>
+              </div>
+              <Link
+                href={`/stock/${encodeURIComponent(ticker)}/evaluation?exchange=${encodeURIComponent(exchange)}`}
+                className="inline-flex items-center justify-center shrink-0 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium px-4 py-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900"
+              >
+                {t("stockDetailMoatCtaButton")}
+              </Link>
+            </div>
+          </div>
+        )}
+
         {/* Position Summary */}
         {holding && (
           <PositionSummary
@@ -461,6 +479,21 @@ export default function StockDetail({ ticker, exchange, fromScreener = false }: 
             exchangeRates={exchangeRates}
             stealthMode={stealthMode}
           />
+        )}
+
+        {holding && (holding.assetType ?? "stock") !== "crypto" && (
+          <div className="card px-6 py-4">
+            <HoldingTagsField
+              tags={holding.tags ?? []}
+              onChange={(next) => {
+                void updateHolding(holding.id, { tags: next });
+              }}
+              holdings={holdings}
+              excludeHoldingId={holding.id}
+              label={t("holdingTagsLabel")}
+              hint={t("holdingTagsStockPageHint")}
+            />
+          </div>
         )}
 
         {/* Chart */}

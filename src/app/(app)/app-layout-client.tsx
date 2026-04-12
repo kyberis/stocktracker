@@ -11,6 +11,7 @@ import { PortfolioProvider } from "@/lib/portfolio-context";
 import { useIsNative } from "@/lib/use-native";
 import NavigationProgress from "@/components/NavigationProgress";
 import AppNav from "@/components/AppNav";
+import NavAssetSearch, { NavAssetSearchIconLink } from "@/components/NavAssetSearch";
 import SidebarNav from "@/components/SidebarNav";
 import MarketTickerBar from "@/components/MarketTickerBar";
 import MobileTabBar from "@/components/MobileTabBar";
@@ -67,6 +68,14 @@ function AppShell({ children }: { children: React.ReactNode }) {
           <EmailVerificationBanner />
           <SyncConfidenceBanner />
           <MarketTickerBar />
+          <div className="flex items-center gap-2 px-3 sm:px-4 py-2 border-b border-white/5 bg-[#09090b]">
+            <div className="hidden sm:flex flex-1 min-w-0 max-w-2xl">
+              <NavAssetSearch variant="studio" />
+            </div>
+            <div className="sm:hidden flex-1 min-w-0 flex justify-start text-zinc-400">
+              <NavAssetSearchIconLink className="sm:hidden hover:bg-white/10 hover:text-white dark:hover:bg-white/10" />
+            </div>
+          </div>
           <main id="main-content">{children}</main>
           <AppFooter />
           <MobileTabBar />

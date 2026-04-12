@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
+import { CRYPTO_PAGE_SUPPORTED_SYMBOLS } from "@/lib/crypto-page-symbols";
 import {
   LineChart,
   Line,
@@ -71,6 +73,7 @@ function pctStr(val: number): string {
 import BlurredProSection from "@/components/BlurredProSection";
 
 export default function CryptoMarket() {
+  const searchParams = useSearchParams();
   const { user } = useAuth();
   const { hasPremiumMarketData } = useSettings();
   const { t, language } = useI18n();
@@ -80,6 +83,7 @@ export default function CryptoMarket() {
   const canAccessPro = isPro && hasPremiumMarketData;
 
   const [selectedCoin, setSelectedCoin] = useState("BTC");
+  const [symbolFromQueryInvalid, setSymbolFromQueryInvalid] = useState(false);
   const [tickers, setTickers] = useState<NormalizedCryptoTicker[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -148,6 +152,21 @@ export default function CryptoMarket() {
   }, [canAccessPro, selectedCoin]);
 
   useEffect(() => { fetchTickers(); }, [fetchTickers]);
+
+  useEffect(() => {
+    const raw = searchParams.get("symbol")?.trim().toUpperCase();
+    if (!raw) {
+      setSymbolFromQueryInvalid(false);
+      return;
+    }
+    if (CRYPTO_PAGE_SUPPORTED_SYMBOLS.has(raw)) {
+      setSelectedCoin(raw);
+      setSymbolFromQueryInvalid(false);
+    } else {
+      setSymbolFromQueryInvalid(true);
+    }
+  }, [searchParams]);
+
   useEffect(() => { fetchHistory(); }, [fetchHistory]);
   useEffect(() => { fetchRates(); }, [fetchRates]);
 
@@ -211,6 +230,14 @@ export default function CryptoMarket() {
 
   return (
     <main className="max-w-6xl mx-auto px-4 py-6 space-y-6">
+      {symbolFromQueryInvalid && (
+        <div
+          className="rounded-lg border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-4 py-3 text-sm text-amber-950 dark:text-amber-100/95"
+          role="alert"
+        >
+          {t("cryptoSymbolQueryInvalid")}
+        </div>
+      )}
       {/* A: Header */}
       <div className="card p-5">
         <div className="flex items-center gap-3 mb-1">

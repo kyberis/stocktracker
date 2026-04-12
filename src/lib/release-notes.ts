@@ -17,6 +17,40 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.77.33",
+    date: "2026-04-12",
+    title: "Stock page: edit holding tags",
+    titleTranslations: {
+      es: "Ficha de acción: editar etiquetas de la posición",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "When you own a stock or ETF, you can add or edit portfolio tags directly on the stock detail page (same tags as in Diversification and the position drawer).",
+        translations: {
+          es: "Si tienes una acción o ETF en cartera, puedes añadir o editar las etiquetas del portafolio en la ficha del activo (las mismas que en Diversificación y en el panel de la posición).",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.77.32",
+    date: "2026-04-12",
+    title: "Explore: search assets (Yahoo) and moat CTA on stocks",
+    titleTranslations: {
+      es: "Explorar: búsqueda de activos (Yahoo) y CTA de moat en acciones",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "New Explore section in the sidebar: search stocks, ETFs, and (for Pro) crypto via Yahoo Finance-style results, then jump to the asset page. Unsupported crypto symbols show a clear message with a link to the crypto hub; /crypto accepts ?symbol= for supported coins. Pro stock detail pages include a prompt to run moat analysis.",
+        translations: {
+          es: "Nueva sección Explorar en la barra lateral: busca acciones, ETFs y (en Pro) cripto con resultados al estilo Yahoo Finance y salta a la ficha del activo. Los símbolos cripto no admitidos muestran un mensaje claro con enlace al hub de cripto; /crypto acepta ?symbol= para monedas admitidas. Las fichas de acciones Pro incluyen un acceso para ejecutar el análisis de moat.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.77.31",
     date: "2026-04-12",
     title: "Portfolio: custom tags and tag-based diversification",

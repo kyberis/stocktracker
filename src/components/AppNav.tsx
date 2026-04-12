@@ -13,6 +13,7 @@ import UserDropdown from "./UserDropdown";
 import TierFeatureBadge from "./TierFeatureBadge";
 import NotificationBell from "./NotificationBell";
 import GlobalPortfolioSelector from "./GlobalPortfolioSelector";
+import NavAssetSearch, { NavAssetSearchIconLink } from "./NavAssetSearch";
 import {
   desktopOverflowNavActive,
   getDesktopOverflowNavItems,
@@ -191,10 +192,15 @@ export default function AppNav() {
             })}
             <AppNavDesktopMoreMenu items={overflowLinks} pathname={pathname} />
           </nav>
+
+          <div className="hidden md:flex flex-1 min-w-0 max-w-lg mx-1 lg:mx-3">
+            <NavAssetSearch />
+          </div>
         </div>
 
         {/* Right: Actions */}
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+          <NavAssetSearchIconLink />
           <NotificationBell />
           {/* Stealth mode toggle */}
           <button

@@ -32,7 +32,7 @@ export function matchTools(pathname: string): boolean {
 
 /**
  * Single ordering for the whole app: Home → Portfolio page → Import → Tools →
- * Daily digests → Crypto → Economic Indicators → Network.
+ * Explore → Daily digests → Crypto → Economic Indicators → Network.
  */
 export const APP_NAV_PRIMARY: AppNavPrimaryItem[] = [
   {
@@ -70,6 +70,15 @@ export const APP_NAV_PRIMARY: AppNavPrimaryItem[] = [
     desktopTopStrip: true,
     mobileWebTab: true,
     mobileWebMore: false,
+  },
+  {
+    href: "/explore",
+    labelKey: "exploreNav",
+    matches: exactOrChild("/explore"),
+    desktop: true,
+    desktopTopStrip: false,
+    mobileWebTab: false,
+    mobileWebMore: true,
   },
   {
     href: "/daily-digests",
@@ -193,6 +202,7 @@ export type AppNavSidebarIconId =
   | "portfolio"
   | "import"
   | "tools"
+  | "explore"
   | "newspaper"
   | "crypto"
   | "indicators"
@@ -203,6 +213,7 @@ export const APP_NAV_SIDEBAR_ICON: Record<string, AppNavSidebarIconId> = {
   "/portfolio": "portfolio",
   "/import": "import",
   "/tools": "tools",
+  "/explore": "explore",
   "/daily-digests": "newspaper",
   "/crypto": "crypto",
   "/economic-indicators": "indicators",
