@@ -117,6 +117,11 @@ export default function PrivacyPolicyPage() {
                 import.
               </li>
               <li>
+                <strong className="text-slate-800">Holding tags (optional)</strong> — if you add
+                user-defined text labels to stock or ETF positions for your own organization, we store
+                those labels with the position so diversification views can reflect them.
+              </li>
+              <li>
                 User preferences (language, theme, display currency, selected
                 benchmarks, product usage interests, and referral source
                 selected during onboarding).

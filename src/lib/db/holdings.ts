@@ -1,6 +1,16 @@
 import { randomUUID } from "crypto";
 import { ensureInitialized } from "./client";
-import { str, num, holdingAssetType, normalizeTickerForExchange, EXCHANGE_SUFFIX_MAP, normalizeCryptoTicker } from "./helpers";
+import {
+  str,
+  num,
+  holdingAssetType,
+  normalizeTickerForExchange,
+  EXCHANGE_SUFFIX_MAP,
+  normalizeCryptoTicker,
+  parseHoldingTagsJson,
+  serializeHoldingTags,
+  mergeHoldingTags,
+} from "./helpers";
 import type { Holding, HoldingAssetType, ExchangeRates } from "@/lib/types";
 import { deriveHoldingsFromTransactions } from "@/lib/derive-holdings";
 import { seedHoldingsForUser, seedCashForUser, seedTransactionsForUser } from "./seed";
@@ -113,7 +123,7 @@ export async function listHoldings(userId: string, portfolioId?: string): Promis
   const portfolioFilter = portfolioId ? " AND portfolio_id = ?" : "";
   const portfolioArgs = portfolioId ? [portfolioId] : [];
   const holdingsResult = await client.execute({
-    sql: `SELECT id, name, ticker, isin, asset_type, shares, purchase_price, display_currency, exchange, value_in_eur, sector, region, asset_class, account_id
+    sql: `SELECT id, name, ticker, isin, asset_type, shares, purchase_price, display_currency, exchange, value_in_eur, sector, region, asset_class, account_id, tags
           FROM holdings WHERE user_id = ?${portfolioFilter} ORDER BY name ASC`,
     args: [userId, ...portfolioArgs],
   });
@@ -134,6 +144,7 @@ export async function listHoldings(userId: string, portfolioId?: string): Promis
       region: str(row.region),
       assetClass: str(row.asset_class),
       accountId: str(row.account_id),
+      tags: parseHoldingTagsJson(row.tags),
     }));
     const byTicker = new Map<string, Holding>();
     for (const h of rows) {
@@ -144,6 +155,7 @@ export async function listHoldings(userId: string, portfolioId?: string): Promis
         const addCost = h.shares * h.purchasePrice;
         prev.shares += h.shares;
         prev.purchasePrice = prev.shares > 0 ? (oldCost + addCost) / prev.shares : 0;
+        prev.tags = mergeHoldingTags(prev.tags, h.tags);
       } else {
         byTicker.set(key, { ...h });
       }
@@ -217,14 +229,15 @@ export async function addHolding(
   const id = randomUUID();
   await client.execute({
     sql: `INSERT INTO holdings (
-            id, user_id, name, ticker, isin, asset_type, shares, purchase_price, display_currency, exchange, value_in_eur, portfolio_id
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            id, user_id, name, ticker, isin, asset_type, shares, purchase_price, display_currency, exchange, value_in_eur, portfolio_id, tags
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       id, userId, holding.name, ticker, holding.isin,
       holding.assetType ?? "stock",
       holding.shares, holding.purchasePrice, holding.displayCurrency,
       holding.exchange, holding.valueInEUR,
       resolved,
+      serializeHoldingTags(holding.tags),
     ],
   });
   return { ...holding, id, ticker };
@@ -237,7 +250,7 @@ export async function updateHolding(
 ): Promise<Holding | null> {
   const client = await ensureInitialized();
   const result = await client.execute({
-    sql: `SELECT id, name, ticker, isin, asset_type, shares, purchase_price, display_currency, exchange, value_in_eur, sector, region, asset_class, account_id
+    sql: `SELECT id, name, ticker, isin, asset_type, shares, purchase_price, display_currency, exchange, value_in_eur, sector, region, asset_class, account_id, tags
           FROM holdings WHERE id = ? AND user_id = ?`,
     args: [holdingId, userId],
   });
@@ -261,18 +274,22 @@ export async function updateHolding(
     region: updates.region ?? str(current.region),
     assetClass: updates.assetClass ?? str(current.asset_class),
     accountId: updates.accountId ?? str(current.account_id),
+    tags:
+      updates.tags !== undefined
+        ? mergeHoldingTags(updates.tags, [])
+        : parseHoldingTagsJson(current.tags),
   };
 
   await client.execute({
     sql: `UPDATE holdings
           SET name = ?, ticker = ?, isin = ?, asset_type = ?, shares = ?, purchase_price = ?,
               display_currency = ?, exchange = ?, value_in_eur = ?,
-              sector = ?, region = ?, asset_class = ?, account_id = ?
+              sector = ?, region = ?, asset_class = ?, account_id = ?, tags = ?
           WHERE id = ? AND user_id = ?`,
     args: [
       next.name, next.ticker, next.isin, next.assetType, next.shares, next.purchasePrice,
       next.displayCurrency, next.exchange, next.valueInEUR,
-      next.sector, next.region, next.assetClass, next.accountId,
+      next.sector, next.region, next.assetClass, next.accountId, serializeHoldingTags(next.tags),
       holdingId, userId,
     ],
   });
@@ -341,7 +358,7 @@ export async function upsertHoldingsFromPositions(
   const resolved = await resolvePortfolioId(userId, portfolioId);
 
   const existingRows = await client.execute({
-    sql: `SELECT id, ticker, exchange, name, isin, asset_type, sector, region, asset_class, account_id, source, value_in_eur, figi_share_class
+    sql: `SELECT id, ticker, exchange, name, isin, asset_type, sector, region, asset_class, account_id, source, value_in_eur, figi_share_class, tags
           FROM holdings WHERE user_id = ? AND portfolio_id = ?`,
     args: [userId, resolved],
   });
@@ -349,7 +366,7 @@ export async function upsertHoldingsFromPositions(
   interface ExistingMeta {
     id: string; name: string; isin: string; sector: string; region: string;
     assetClass: string; accountId: string; source: string; valueInEUR: number;
-    ticker: string; exchange: string; figiShareClass: string;
+    ticker: string; exchange: string; figiShareClass: string; tags: string[];
   }
 
   const existingByKey = new Map<string, ExistingMeta>();
@@ -363,6 +380,7 @@ export async function upsertHoldingsFromPositions(
       valueInEUR: num(row.value_in_eur),
       ticker: str(row.ticker), exchange: str(row.exchange),
       figiShareClass: str(row.figi_share_class),
+      tags: parseHoldingTagsJson(row.tags),
     };
     const key = `${meta.ticker.toUpperCase()}|${meta.exchange.toUpperCase()}`;
     existingByKey.set(key, meta);
@@ -437,6 +455,7 @@ export async function upsertHoldingsFromPositions(
         displayCurrency: pos.displayCurrency, exchange: pos.exchange,
         valueInEUR: 0, sector: existing.sector, region: existing.region,
         assetClass: existing.assetClass, accountId: existing.accountId,
+        tags: existing.tags,
       });
     } else {
       const id = randomUUID();
@@ -452,6 +471,7 @@ export async function upsertHoldingsFromPositions(
         id, name: pos.name, ticker, isin: "", assetType: holdingAssetType(pos.assetType),
         shares: pos.shares, purchasePrice: pos.purchasePrice,
         displayCurrency: pos.displayCurrency, exchange: pos.exchange, valueInEUR: 0,
+        tags: [],
       });
     }
   }
@@ -503,7 +523,7 @@ export async function rebuildHoldings(userId: string, portfolioId?: string): Pro
   const portfolioArgs = [resolved];
 
   const metadataRows = await client.execute({
-    sql: `SELECT id, name, ticker, isin, asset_type, display_currency, exchange, sector, region, asset_class, account_id, value_in_eur, source
+    sql: `SELECT id, name, ticker, isin, asset_type, display_currency, exchange, sector, region, asset_class, account_id, value_in_eur, source, tags
           FROM holdings WHERE user_id = ?${portfolioFilter}`,
     args: [userId, ...portfolioArgs],
   });
@@ -511,6 +531,7 @@ export async function rebuildHoldings(userId: string, portfolioId?: string): Pro
   const metadataByKey = new Map<string, {
     id: string; name: string; isin: string; assetType: HoldingAssetType;
     displayCurrency: string; sector: string; region: string; assetClass: string; accountId: string;
+    tags: string[];
   }>();
   const prevValueByKey = new Map<string, number>();
   // Tickers owned by snaptrade positions — transaction-derived holdings for
@@ -524,6 +545,7 @@ export async function rebuildHoldings(userId: string, portfolioId?: string): Pro
         assetType: holdingAssetType(row.asset_type), displayCurrency: str(row.display_currency),
         sector: str(row.sector), region: str(row.region), assetClass: str(row.asset_class),
         accountId: str(row.account_id),
+        tags: parseHoldingTagsJson(row.tags),
       });
     }
     const val = num(row.value_in_eur);
@@ -587,10 +609,10 @@ export async function rebuildHoldings(userId: string, portfolioId?: string): Pro
     }
     h.valueInEUR = valueEUR;
     await client.execute({
-      sql: `INSERT INTO holdings (id, user_id, name, ticker, isin, asset_type, shares, purchase_price, display_currency, exchange, value_in_eur, sector, region, asset_class, account_id, portfolio_id, source)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'transaction')
-            ON CONFLICT(id) DO UPDATE SET shares = excluded.shares, purchase_price = excluded.purchase_price, value_in_eur = excluded.value_in_eur`,
-      args: [id, userId, h.name, h.ticker, h.isin || "", h.assetType || "stock", h.shares, h.purchasePrice, h.displayCurrency, h.exchange, valueEUR, h.sector || "", h.region || "", h.assetClass || "", h.accountId || "", resolved],
+      sql: `INSERT INTO holdings (id, user_id, name, ticker, isin, asset_type, shares, purchase_price, display_currency, exchange, value_in_eur, sector, region, asset_class, account_id, portfolio_id, source, tags)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'transaction', ?)
+            ON CONFLICT(id) DO UPDATE SET shares = excluded.shares, purchase_price = excluded.purchase_price, value_in_eur = excluded.value_in_eur, tags = excluded.tags`,
+      args: [id, userId, h.name, h.ticker, h.isin || "", h.assetType || "stock", h.shares, h.purchasePrice, h.displayCurrency, h.exchange, valueEUR, h.sector || "", h.region || "", h.assetClass || "", h.accountId || "", resolved, serializeHoldingTags(h.tags)],
     });
   }
 

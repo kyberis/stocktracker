@@ -2268,6 +2268,14 @@ const en: TranslationStrings = {
   v2AllocType: "Type",
   v2AllocSectors: "Sectors",
   v2AllocRegions: "Regions",
+  v2AllocTags: "Tags",
+  tagAllocationUntagged: "Untagged",
+  holdingTagsSectionTitle: "Tags (stocks & ETFs)",
+  holdingTagsLabel: "Tags",
+  holdingTagsHint:
+    "Add labels to group positions in the chart above. Cash and crypto appear as fixed buckets.",
+  holdingTagsCryptoNote:
+    "Crypto is grouped under Crypto in the chart; tags apply to stocks and ETFs only.",
   v2ShowMore: "Show more",
   v2MyGoal: "My Goal",
   v2UpcomingEarnings: "Upcoming Earnings",

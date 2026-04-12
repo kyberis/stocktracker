@@ -2268,6 +2268,14 @@ const es: TranslationStrings = {
   v2AllocType: "Tipo",
   v2AllocSectors: "Sectores",
   v2AllocRegions: "Regiones",
+  v2AllocTags: "Etiquetas",
+  tagAllocationUntagged: "Sin etiqueta",
+  holdingTagsSectionTitle: "Etiquetas (acciones y ETFs)",
+  holdingTagsLabel: "Etiquetas",
+  holdingTagsHint:
+    "Añade etiquetas para agrupar posiciones en el gráfico. El efectivo y la cripto aparecen como bloques fijos.",
+  holdingTagsCryptoNote:
+    "La cripto se agrupa en Cripto en el gráfico; las etiquetas solo aplican a acciones y ETFs.",
   v2ShowMore: "Ver más",
   v2MyGoal: "Mi Objetivo",
   v2UpcomingEarnings: "Próximos Resultados",

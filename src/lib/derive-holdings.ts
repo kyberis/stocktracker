@@ -10,6 +10,7 @@ interface HoldingMetadata {
   region?: string;
   assetClass?: string;
   accountId?: string;
+  tags?: string[];
 }
 
 interface AggregateState {
@@ -99,6 +100,7 @@ export function deriveHoldingsFromTransactions(
       region: meta?.region || "",
       assetClass: meta?.assetClass || "",
       accountId: meta?.accountId || state.accountId || "",
+      tags: meta?.tags?.length ? [...meta.tags] : undefined,
     });
   }
 

@@ -241,6 +241,12 @@ async function bootstrapSchema(client: Client): Promise<void> {
     await client.execute({ sql: "ALTER TABLE holdings ADD COLUMN account_id TEXT NOT NULL DEFAULT ''" });
   }
 
+  const holdingColsTags = await client.execute("PRAGMA table_info(holdings)");
+  const holdingColNamesTags = new Set(holdingColsTags.rows.map((r) => str(r.name)));
+  if (!holdingColNamesTags.has("tags")) {
+    await client.execute({ sql: "ALTER TABLE holdings ADD COLUMN tags TEXT NOT NULL DEFAULT '[]'" });
+  }
+
   const txCols = await client.execute("PRAGMA table_info(transactions)");
   const txColNames = new Set(txCols.rows.map((r) => str(r.name)));
   if (!txColNames.has("name")) await client.execute({ sql: "ALTER TABLE transactions ADD COLUMN name TEXT NOT NULL DEFAULT ''" });
@@ -3196,6 +3202,19 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       if (!colNames.has("favorite_tool_ids")) {
         await client.execute(
           "ALTER TABLE user_settings ADD COLUMN favorite_tool_ids TEXT NOT NULL DEFAULT '[]'",
+        );
+      }
+    },
+  },
+  {
+    version: 109,
+    description: "holdings.tags JSON array for user-defined portfolio labels",
+    up: async (client: Client) => {
+      const cols = await client.execute("PRAGMA table_info(holdings)");
+      const colNames = new Set(cols.rows.map((r) => String(r.name)));
+      if (!colNames.has("tags")) {
+        await client.execute(
+          "ALTER TABLE holdings ADD COLUMN tags TEXT NOT NULL DEFAULT '[]'",
         );
       }
     },

@@ -9,13 +9,15 @@ import {
   computeTaxonomyAllocations,
   computeTaxonomyAllocationsWithEtfSectorLookthrough,
 } from "@/lib/services/taxonomy";
+import { computeTagAllocations } from "@/lib/services/tag-allocation";
 import { holdingIsEtfLike } from "@/lib/services/etf-lookthrough";
+import HoldingTagsField from "@/components/HoldingTagsField";
 
-type Category = "sector" | "region" | "assetClass" | "assetType";
+type Category = "sector" | "region" | "assetClass" | "assetType" | "tags";
 
 export default function TaxonomyView() {
   const { t } = useI18n();
-  const { holdings, quotes, exchangeRates, refreshHoldings, activePortfolioCurrency } = usePortfolio();
+  const { holdings, cashEntries, quotes, exchangeRates, refreshHoldings, activePortfolioCurrency } = usePortfolio();
   const baseCurrency = activePortfolioCurrency;
   const [category, setCategory] = useState<Category>("sector");
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -61,6 +63,18 @@ export default function TaxonomyView() {
 
   const allocations = useMemo((): TaxonomyAllocation[] => {
     const unclassified = t("unclassified");
+    if (category === "tags") {
+      return computeTagAllocations(holdings, cashEntries, quotes, exchangeRates, baseCurrency, {
+        untagged: t("tagAllocationUntagged"),
+        crypto: t("cryptoType"),
+        manual: {
+          cash: t("assetTypeCash"),
+          real_estate: t("realEstate"),
+          savings: t("assetTypeSavings"),
+          pension: t("assetTypePension"),
+        },
+      });
+    }
     if (category === "sector" && etfSectorLookthrough) {
       return computeTaxonomyAllocationsWithEtfSectorLookthrough(
         holdings,
@@ -73,11 +87,12 @@ export default function TaxonomyView() {
       );
     }
     return computeTaxonomyAllocations(holdings, quotes, exchangeRates, category, unclassified);
-  }, [holdings, quotes, exchangeRates, category, t, etfSectorWeights, etfSectorLookthrough]);
+  }, [holdings, cashEntries, quotes, exchangeRates, category, t, etfSectorWeights, etfSectorLookthrough, baseCurrency]);
 
   const { updateHolding } = usePortfolio();
 
   const handleSaveClassification = async (holdingId: string) => {
+    if (category === "tags") return;
     await updateHolding(holdingId, { [category]: editVal } as Record<string, string>);
     setEditingId(null);
     setEditVal("");
@@ -102,6 +117,7 @@ export default function TaxonomyView() {
     { key: "region", label: t("region") },
     { key: "assetClass", label: t("assetClass") },
     { key: "assetType", label: t("assetType") },
+    { key: "tags", label: t("v2AllocTags") },
   ];
 
   // Build SVG donut chart
@@ -206,7 +222,43 @@ export default function TaxonomyView() {
       </div>
 
       {/* Inline classification editor */}
-      {category !== "assetType" && (
+      {category === "tags" && (
+        <div className="mt-4 border-t border-gray-100 dark:border-slate-700 pt-3">
+          <p className="text-[10px] text-gray-500 dark:text-slate-400 mb-2 uppercase font-medium">{t("holdingTagsSectionTitle")}</p>
+          <div className="space-y-3 max-h-[min(28rem,70vh)] overflow-y-auto pr-1">
+            {holdings.map((h) => {
+              const at = h.assetType ?? "stock";
+              if (at === "crypto") {
+                return (
+                  <div key={h.id} className="flex flex-col gap-1 text-xs border-b border-gray-100 dark:border-slate-700 pb-2 last:border-0">
+                    <span className="font-mono text-gray-700 dark:text-slate-300">{h.ticker}</span>
+                    <span className="text-gray-400 dark:text-slate-500">{t("holdingTagsCryptoNote")}</span>
+                  </div>
+                );
+              }
+              if (at !== "stock" && at !== "etf") return null;
+              return (
+                <div key={h.id} className="border-b border-gray-100 dark:border-slate-700 pb-3 last:border-0">
+                  <span className="font-mono text-gray-700 dark:text-slate-300 text-xs block mb-1">{h.ticker}</span>
+                  <HoldingTagsField
+                    tags={h.tags ?? []}
+                    onChange={(next) => {
+                      void updateHolding(h.id, { tags: next });
+                    }}
+                    holdings={holdings}
+                    excludeHoldingId={h.id}
+                    label={t("holdingTagsLabel")}
+                    hint={t("holdingTagsHint")}
+                    compact
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {category !== "assetType" && category !== "tags" && (
         <div className="mt-4 border-t border-gray-100 dark:border-slate-700 pt-3">
           <p className="text-[10px] text-gray-500 dark:text-slate-400 mb-2 uppercase font-medium">{t("editClassification")}</p>
           <div className="space-y-1 max-h-40 overflow-y-auto">

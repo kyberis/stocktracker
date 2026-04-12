@@ -21,6 +21,7 @@ import type { Holding, QuoteData, CompanyOverview } from "@/lib/types";
 import { holdingIsEtfLike } from "@/lib/services/etf-lookthrough";
 import OverviewSection from "./stock-row/OverviewSection";
 import EditForm from "./stock-row/EditForm";
+import HoldingTagsField from "./HoldingTagsField";
 import TradePanel from "./stock-row/TradePanel";
 import AlertForm from "./AlertForm";
 import AlertBadge from "./AlertBadge";
@@ -40,6 +41,7 @@ export default function StockDetailDrawer({ holding, onClose }: StockDetailDrawe
     quoteUpdatedAt,
     refreshingTickers,
     exchangeRates,
+    holdings,
     removeHolding,
     updateHolding,
     refreshSingleQuote,
@@ -69,6 +71,7 @@ export default function StockDetailDrawer({ holding, onClose }: StockDetailDrawe
   const [editDisplayCurrency, setEditDisplayCurrency] = useState(holding.displayCurrency);
   const [editExchange, setEditExchange] = useState(holding.exchange);
   const [editAssetType, setEditAssetType] = useState<"stock" | "etf" | "crypto">(holding.assetType ?? "stock");
+  const [editTags, setEditTags] = useState<string[]>(holding.tags ?? []);
   const [tradeAction, setTradeAction] = useState<"buy" | "sell">("buy");
   const [tradeQuantity, setTradeQuantity] = useState("");
   const [tradePrice, setTradePrice] = useState("");
@@ -240,6 +243,7 @@ export default function StockDetailDrawer({ holding, onClose }: StockDetailDrawe
     setEditDisplayCurrency(holding.displayCurrency);
     setEditExchange(holding.exchange);
     setEditAssetType(holding.assetType ?? "stock");
+    setEditTags(holding.tags ?? []);
     setIsEditing(true);
     setShowDeleteConfirm(false);
   };
@@ -261,6 +265,7 @@ export default function StockDetailDrawer({ holding, onClose }: StockDetailDrawe
       purchasePrice: parsedPurchasePrice,
       displayCurrency: editDisplayCurrency.trim().toUpperCase(),
       exchange: editExchange.trim().toUpperCase(),
+      ...(editAssetType === "stock" || editAssetType === "etf" ? { tags: editTags } : {}),
     });
     setIsEditing(false);
   };
@@ -581,17 +586,31 @@ export default function StockDetailDrawer({ holding, onClose }: StockDetailDrawe
 
           {/* Edit form */}
           {isEditing && (
-            <EditForm
-              isCashHolding={isCashHolding}
-              editName={editName} setEditName={setEditName}
-              editTicker={editTicker} setEditTicker={setEditTicker}
-              editIsin={editIsin} setEditIsin={setEditIsin}
-              editExchange={editExchange} setEditExchange={setEditExchange}
-              editAssetType={editAssetType} setEditAssetType={setEditAssetType}
-              editShares={editShares} setEditShares={setEditShares}
-              editPurchasePrice={editPurchasePrice} setEditPurchasePrice={setEditPurchasePrice}
-              editDisplayCurrency={editDisplayCurrency} setEditDisplayCurrency={setEditDisplayCurrency}
-            />
+            <>
+              <EditForm
+                isCashHolding={isCashHolding}
+                editName={editName} setEditName={setEditName}
+                editTicker={editTicker} setEditTicker={setEditTicker}
+                editIsin={editIsin} setEditIsin={setEditIsin}
+                editExchange={editExchange} setEditExchange={setEditExchange}
+                editAssetType={editAssetType} setEditAssetType={setEditAssetType}
+                editShares={editShares} setEditShares={setEditShares}
+                editPurchasePrice={editPurchasePrice} setEditPurchasePrice={setEditPurchasePrice}
+                editDisplayCurrency={editDisplayCurrency} setEditDisplayCurrency={setEditDisplayCurrency}
+              />
+              {!isCashHolding && (editAssetType === "stock" || editAssetType === "etf") && (
+                <div className="mb-4">
+                  <HoldingTagsField
+                    tags={editTags}
+                    onChange={setEditTags}
+                    holdings={holdings}
+                    excludeHoldingId={holding.id}
+                    label={t("holdingTagsLabel")}
+                    hint={t("holdingTagsHint")}
+                  />
+                </div>
+              )}
+            </>
           )}
 
           {/* Last updated */}

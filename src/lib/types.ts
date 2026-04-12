@@ -128,6 +128,8 @@ export interface Holding {
   sector?: string;
   region?: string;
   assetClass?: string;
+  /** User-defined labels for stock/ETF positions; JSON array in DB */
+  tags?: string[];
 }
 
 export interface CashEntry {

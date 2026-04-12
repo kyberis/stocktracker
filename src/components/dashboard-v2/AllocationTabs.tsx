@@ -6,11 +6,12 @@ import { usePortfolio } from "@/lib/portfolio-context";
 import { useStealthMode } from "@/lib/stealth-context";
 import { computeAllocationByType } from "@/lib/portfolio-summary";
 import { computeTaxonomyAllocations, computeDonutSegments, getDonutArc } from "@/lib/services/taxonomy";
+import { computeTagAllocations } from "@/lib/services/tag-allocation";
 import { formatCurrency } from "@/lib/utils";
 import type { Holding, CashEntry, TaxonomyAllocation } from "@/lib/types";
 import type { AllocationSlice } from "@/lib/portfolio-summary";
 
-type AllocTab = "type" | "sectors" | "regions";
+type AllocTab = "type" | "sectors" | "regions" | "tags";
 
 interface Props {
   holdings: Holding[];
@@ -91,20 +92,48 @@ export default function AllocationTabs({ holdings, cashEntries, onShowMore }: Pr
     [holdings, quotes, exchangeRates, t],
   );
 
+  const tagAlloc = useMemo(
+    () =>
+      computeTagAllocations(holdings, cashEntries, quotes, exchangeRates, activePortfolioCurrency, {
+        untagged: t("tagAllocationUntagged"),
+        crypto: t("cryptoType"),
+        manual: {
+          cash: t("assetTypeCash"),
+          real_estate: t("realEstate"),
+          savings: t("assetTypeSavings"),
+          pension: t("assetTypePension"),
+        },
+      }),
+    [holdings, cashEntries, quotes, exchangeRates, activePortfolioCurrency, t],
+  );
+
   const current =
-    tab === "type" ? toTaxonomy(typeAlloc) : tab === "sectors" ? sectorAlloc : regionAlloc;
+    tab === "type"
+      ? toTaxonomy(typeAlloc)
+      : tab === "sectors"
+        ? sectorAlloc
+        : tab === "regions"
+          ? regionAlloc
+          : tagAlloc;
 
   const segments = useMemo(() => computeDonutSegments(current), [current]);
 
   const total = typeAlloc.reduce((s, a) => s + a.valueEUR, 0);
   const centerValue = stealthMode ? "•••••" : formatCurrency(total, activePortfolioCurrency);
   const centerLabel =
-    tab === "type" ? t("v2NetWorth") : tab === "sectors" ? t("v2AllocSectors") : t("v2AllocRegions");
+    tab === "type"
+      ? t("v2NetWorth")
+      : tab === "sectors"
+        ? t("v2AllocSectors")
+        : tab === "regions"
+          ? t("v2AllocRegions")
+          : t("v2AllocTags");
 
   const tabs: { key: AllocTab; label: string }[] = [
     { key: "type", label: t("v2AllocType") },
     { key: "sectors", label: t("v2AllocSectors") },
     { key: "regions", label: t("v2AllocRegions") },
+    { key: "tags", label: t("v2AllocTags") },
   ];
 
   return (

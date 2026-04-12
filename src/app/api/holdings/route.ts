@@ -87,6 +87,7 @@ export const POST = withMetrics("/api/holdings", async (req: NextRequest) => {
     region: "",
     assetClass: "",
     accountId,
+    tags: [] as string[],
   };
   trackEvent(session.userId, "holding_add", { ticker: createdTx.ticker });
   holdingsOpsTotal.inc({ operation: "add" });

@@ -7,7 +7,9 @@
     "purchasePrice": 225.00,
     "displayCurrency": "USD",
     "exchange": "NDQ",
-    "valueInEUR": 1365.00
+    "valueInEUR": 1365.00,
+    "assetType": "stock",
+    "tags": ["Long-term", "Core"]
   },
   {
     "name": "ADR on Novo Nordisk A/S",
@@ -17,7 +19,9 @@
     "purchasePrice": 31.50,
     "displayCurrency": "USD",
     "exchange": "NSY",
-    "valueInEUR": 246.00
+    "valueInEUR": 246.00,
+    "assetType": "stock",
+    "tags": ["Long-term", "Healthcare"]
   },
   {
     "name": "ADR on Taiwan Semiconductor",

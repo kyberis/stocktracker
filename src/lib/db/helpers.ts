@@ -199,6 +199,45 @@ export function holdingAssetType(val: unknown): HoldingAssetType {
   return "stock";
 }
 
+/** Parse JSON array from `holdings.tags`; invalid input yields []. */
+export function parseHoldingTagsJson(raw: unknown): string[] {
+  if (raw == null || raw === "") return [];
+  try {
+    const parsed = JSON.parse(String(raw));
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter((x): x is string => typeof x === "string")
+      .map((x) => x.trim())
+      .filter(Boolean)
+      .slice(0, 20);
+  } catch {
+    return [];
+  }
+}
+
+export function serializeHoldingTags(tags: string[] | undefined): string {
+  const arr = (tags ?? [])
+    .map((t) => t.trim())
+    .filter(Boolean)
+    .slice(0, 20);
+  return JSON.stringify(arr);
+}
+
+/** Union tags from duplicate ticker rows; dedupe case-insensitively, keep first spelling. */
+export function mergeHoldingTags(a: string[] | undefined, b: string[] | undefined): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const t of [...(a ?? []), ...(b ?? [])]) {
+    const trimmed = t.trim();
+    if (!trimmed) continue;
+    const k = trimmed.toLowerCase();
+    if (seen.has(k)) continue;
+    seen.add(k);
+    out.push(trimmed);
+  }
+  return out;
+}
+
 export function txType(val: unknown): TransactionType {
   const v = String(val);
   if (v === "sell" || v === "dividend" || v === "fee") return v;

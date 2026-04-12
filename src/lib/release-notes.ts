@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.77.31",
+    date: "2026-04-12",
+    title: "Portfolio: custom tags and tag-based diversification",
+    titleTranslations: {
+      es: "Cartera: etiquetas personalizadas y diversificación por etiquetas",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Add optional custom tags to stocks and ETFs; see allocation by tag in Diversification (and the dashboard allocation card), with suggestions from tags you already use. Cash and crypto appear as fixed buckets without tagging.",
+        translations: {
+          es: "Añade etiquetas opcionales a acciones y ETFs; ve la asignación por etiqueta en Diversificación (y en la tarjeta de asignación del panel), con sugerencias a partir de etiquetas que ya usas. El efectivo y la cripto aparecen como bloques fijos sin etiquetar.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.77.30",
     date: "2026-04-12",
     title: "Feedback: Linear issue without email",

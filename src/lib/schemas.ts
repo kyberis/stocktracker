@@ -220,6 +220,7 @@ export const updateHoldingSchema = z.object({
     sector: z.string().optional(),
     region: z.string().optional(),
     assetClass: z.string().optional(),
+    tags: z.array(z.string().max(40)).max(20).optional(),
   }),
 });
 
