@@ -61,10 +61,6 @@ const runFeedbackPipeline = withCronLogging("feedback-pipeline", async () => {
   for (const row of ready) {
     try {
       const user = await findUserById(row.userId);
-      if (!user?.email) {
-        console.warn(`[cron:feedback-pipeline] skip ${row.id}: user has no email`);
-        continue;
-      }
       const settings = await getUserSettings(row.userId);
       const locale = feedbackMailLocaleFromAppLanguage(settings.language);
       const adminReply = buildFeedbackAutoAckAdminReply(locale, row.subject);
@@ -83,6 +79,15 @@ const runFeedbackPipeline = withCronLogging("feedback-pipeline", async () => {
         linearIssueUrl: linear.url,
       });
       if (!updated) {
+        continue;
+      }
+
+      if (!user?.email) {
+        console.warn(
+          `[cron:feedback-pipeline] ${row.id}: Linear created; no user email for ack (marking ack queue cleared)`
+        );
+        await markFeedbackAckEmailSent(row.id);
+        pipelines++;
         continue;
       }
 

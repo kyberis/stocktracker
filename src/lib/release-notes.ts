@@ -17,6 +17,40 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.77.30",
+    date: "2026-04-12",
+    title: "Feedback: Linear issue without email",
+    titleTranslations: {
+      es: "Feedback: issue en Linear sin correo",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "The feedback cron now creates the Linear issue (and marks the row processed) even when the account has no email, so triage is not skipped; acknowledgement email is only sent when an address exists.",
+        translations: {
+          es: "El cron de feedback ahora crea el issue en Linear (y marca la fila como procesada) aunque la cuenta no tenga correo, para no saltarse el triage; el acuse por correo solo se envía si hay dirección.",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.77.29",
+    date: "2026-04-12",
+    title: "Dashboard: weekend 1D portfolio chart",
+    titleTranslations: {
+      es: "Panel: gráfico 1D del fin de semana",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "1D portfolio value chart on weekends no longer strips all points when equity markets are closed — snapshot evolution stays visible (markets-closed banner unchanged).",
+        translations: {
+          es: "El gráfico de valor del portafolio 1D los fines de semana ya no elimina todos los puntos cuando los mercados de renta variable están cerrados: la evolución de las instantáneas sigue visible (el aviso de mercado cerrado se mantiene).",
+        },
+      },
+    ],
+  },
+  {
     version: "1.77.28",
     date: "2026-04-12",
     title: "Tools: favorite tools synced to account",

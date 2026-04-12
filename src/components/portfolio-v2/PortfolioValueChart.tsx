@@ -569,7 +569,10 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
     const isInOpenSession = (ms: number) =>
       openRanges.some((r) => ms >= r.start && ms <= r.end);
 
-    const masked = (shouldMask || allClosed)
+    // No session windows (e.g. weekend): do not strip values — `allClosed` alone would wipe the series.
+    const applyIntradayMask = (shouldMask || allClosed) && sessionOverlays.length > 0;
+
+    const masked = applyIntradayMask
       ? realPoints.map((p) => {
           if (allClosed || !isInOpenSession(parseTime(p.date))) {
             const kept: ChartPoint = { date: p.date };
@@ -603,7 +606,7 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
     }
 
     return result;
-  }, [effectivePoints, hasBenchmarks, benchmarkEntries, benchmarkData, range, dayBounds, sessionOverlays, assetFilter, holdings]);
+  }, [effectivePoints, hasBenchmarks, benchmarkEntries, benchmarkData, range, dayBounds, sessionOverlays, assetFilter, holdings, allMarketsClosed]);
 
   const chartDataWithEvents = useMemo(
     () => events.length > 0 ? attachEventsToPoints(chartData, events) : chartData,
