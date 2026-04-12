@@ -17,6 +17,200 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.77.44",
+    date: "2026-04-12",
+    title: "Mobile dashboard: same shortcuts menu",
+    titleTranslations: {
+      es: "Panel móvil: mismos accesos",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "The mobile home and demo dashboards use the same Holdings / Tools / News / Import / Views / More strip as desktop (replacing the long tab row); the header portfolio picker is hidden on those routes to avoid duplication with the dashboard portfolio row.",
+        translations: {
+          es: "El inicio y la demo en móvil usan la misma franja Posiciones / Herramientas / Noticias / Importar / Vistas / Más que en escritorio (sustituye la fila larga de pestañas); el selector de cartera del encabezado se oculta ahí para no duplicar la fila de cartera del panel.",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.77.43",
+    date: "2026-04-12",
+    title: "Portfolio switcher on the dashboard bar",
+    titleTranslations: {
+      es: "Selector de cartera en la barra del panel",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "On the home and demo dashboards (desktop), the active portfolio control moved from the header into the gray strip with Holdings / Sync / Add (Studio theme keeps the sidebar control only).",
+        translations: {
+          es: "En el inicio y la demo (escritorio), el selector de cartera pasó del encabezado a la franja gris con Posiciones / Sincronizar / Añadir (el tema Studio solo lo muestra en la barra lateral).",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.77.42",
+    date: "2026-04-12",
+    title: "Header search: live asset suggestions",
+    titleTranslations: {
+      es: "Búsqueda en cabecera: sugerencias en vivo",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "The header ticker search now shows debounced suggestions (stocks, ETFs, crypto) from the same search API as Explore; pick one to open the asset page, or press Enter to run a full Explore search.",
+        translations: {
+          es: "La búsqueda de tickers en la cabecera muestra sugerencias con debounce (acciones, ETFs, crypto) con la misma API que Explorar; elige una para abrir el activo o pulsa Intro para buscar en Explorar.",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.77.41",
+    date: "2026-04-12",
+    title: "Dashboard: shortcuts in the top bar",
+    titleTranslations: {
+      es: "Panel: accesos en la barra superior",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Dashboard shortcuts (Holdings, Tools, News, Import, Views, More) now sit in the same strip as Sync and Add, below the header.",
+        translations: {
+          es: "Los accesos del panel (Posiciones, Herramientas, Noticias, Importar, Vistas, Más) están ahora en la misma franja que Sincronizar y Añadir, debajo del encabezado.",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.77.40",
+    date: "2026-04-12",
+    title: "Dashboard: one navigation row",
+    titleTranslations: {
+      es: "Panel: una sola fila de navegación",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Removed the duplicate portfolio tab strip; Diversification, Dividends, Performance, Growth, and Events are now under the “Views” menu next to Import, alongside Tools and More.",
+        translations: {
+          es: "Se eliminó la segunda fila de pestañas; Diversificación, Dividendos, Rendimiento, Crecimiento y Eventos están en el menú «Vistas» junto a Importar, con Herramientas y Más.",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.77.39",
+    date: "2026-04-12",
+    title: "Dashboard: shortcuts to tools, import, and news",
+    titleTranslations: {
+      es: "Panel: accesos a herramientas, importación y noticias",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "The dashboard adds quick shortcuts for Holdings, Tools, News, and Import above the Portfolio views tabs, plus a “More” menu listing every tool from the tools hub (respecting your settings).",
+        translations: {
+          es: "El panel incluye accesos rápidos a Posiciones, Herramientas, Noticias e Importar encima de las pestañas de vistas del portafolio, y un menú «Más» con todas las herramientas del hub (según tu configuración).",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.77.38",
+    date: "2026-04-12",
+    title: "Dashboard: single pill row on home",
+    titleTranslations: {
+      es: "Panel: una sola franja de píldoras en inicio",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "The home and demo dashboard toolbar no longer repeats the global app destinations (Home, Tools, Explore, etc.); only the Portfolio views tab strip appears as the main pill navigation. Use search or the account menu to jump elsewhere.",
+        translations: {
+          es: "La barra de acciones del panel principal y la demo ya no repite los destinos globales de la app (Inicio, Herramientas, Explorar, etc.); solo la franja de pestañas «Vistas del portafolio» actúa como navegación principal en píldoras. Para ir a otras secciones, usa la búsqueda o el menú de cuenta.",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.77.37",
+    date: "2026-04-12",
+    title: "Dashboard: one primary pill row on home",
+    titleTranslations: {
+      es: "Panel: una sola franja de enlaces principales en inicio",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "On the home and demo dashboards (desktop), app-wide navigation pills move to the toolbar row so the sticky header is not a second pill strip above the Portfolio views tabs.",
+        translations: {
+          es: "En el panel principal y la demo (escritorio), los enlaces de la app pasan a la barra de acciones para que la cabecera no duplique otra franja de píldoras encima de las pestañas «Vistas del portafolio».",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.77.36",
+    date: "2026-04-12",
+    title: "Dashboard: nav in header, quote freshness by chart",
+    titleTranslations: {
+      es: "Panel: navegación en cabecera, frescura de cotizaciones junto al gráfico",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Primary navigation pills live in the app header on every screen (including home and demo); the dashboard toolbar is only quick actions. Quote and holdings sync timestamps appear next to the portfolio value chart.",
+        translations: {
+          es: "Los enlaces principales de la app están siempre en la cabecera (también en inicio y demo); la barra del panel solo muestra acciones rápidas. Las marcas de cotizaciones y sincronización de posiciones aparecen junto al gráfico de valor del portafolio.",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.77.35",
+    date: "2026-04-12",
+    title: "Dashboard: clearer navigation layers",
+    titleTranslations: {
+      es: "Panel: capas de navegación más claras",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "The portfolio tab bar is labeled “Portfolio views” for accessibility (same on mobile), and the app links in the dashboard toolbar use a distinct underline style so they read as site navigation rather than a second set of tabs.",
+        translations: {
+          es: "La barra de pestañas del portafolio usa la etiqueta accesible «Vistas del portafolio» (también en móvil), y los enlaces de la app en la barra del dashboard tienen un estilo distinto (subrayado) para distinguirlos de las pestañas del panel.",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.77.34",
+    date: "2026-04-12",
+    title: "Command bar navigation",
+    titleTranslations: {
+      es: "Barra de navegación tipo command bar",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "The web app header uses a clearer command-bar layout: search and primary destinations as pills on desktop; on smaller screens you get a full-width search plus a horizontal strip of the same destinations. Studio layout matches with compact pills under search.",
+        translations: {
+          es: "La cabecera web usa un diseño tipo command bar: búsqueda y destinos principales en píldoras en escritorio; en pantallas pequeñas, búsqueda a ancho completo y una franja horizontal con los mismos enlaces. El modo Studio alinea la franja de búsqueda y muestra píldoras compactas debajo.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "On the home dashboard (and demo), primary navigation pills sit in the dashboard toolbar under the sticky header—next to quotes and sync—so the header stays compact; narrow mobile layouts still show pills in the header.",
+        translations: {
+          es: "En el panel principal (y en la demo), los enlaces de navegación en píldoras van en la barra del dashboard bajo la cabecera fija, junto a cotizaciones y sincronización, para que el encabezado ocupe menos; en móviles estrechos siguen en la cabecera.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.77.33",
     date: "2026-04-12",
     title: "Stock page: edit holding tags",

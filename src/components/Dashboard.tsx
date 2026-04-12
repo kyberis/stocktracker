@@ -49,7 +49,6 @@ const AddManualAssetModal = dynamic(() => import("./AddManualAssetModal"), { ssr
 const SupportChatWidget = dynamic(() => import("./SupportChatWidget"), { ssr: false });
 const ReferralShareModal = dynamic(() => import("./ReferralShareModal"), { ssr: false });
 import { usePortfolioSnapshotSync } from "@/lib/use-portfolio-snapshot-sync";
-import TierFeatureBadge from "./TierFeatureBadge";
 import SampleDataBanner from "./SampleDataBanner";
 import SecureAccountPrompt from "./SecureAccountPrompt";
 
@@ -226,16 +225,6 @@ function DesktopDashboard() {
     userPlan: user?.plan ?? "free",
   });
 
-  const dashboardTabs: { key: DashboardTab; label: string; tierBadge?: "pro"; disabled?: boolean }[] = [
-    { key: "portfolio", label: t("dashboardHoldingsTab") },
-    { key: "diversification", label: t("diversificationTab"), disabled: holdingsCount === 0 },
-    { key: "dividends", label: t("dividendsTab") },
-    { key: "metrics", label: t("performanceTab"), tierBadge: "pro" as const },
-    { key: "growth", label: t("growthTab"), tierBadge: "pro" as const },
-    { key: "events", label: t("eventsTab") },
-    { key: "news", label: t("newsTab") },
-  ];
-
   function handleTabChange(tab: DashboardTab) {
     navigateToTab(tab);
     window.scrollTo({ top: 0, behavior: "instant" });
@@ -244,27 +233,6 @@ function DesktopDashboard() {
     if (tab === "metrics") track("metrics_tab_viewed");
     if (tab === "growth") track("growth_tab_viewed");
     if (tab === "events") track("events_tab_viewed");
-  }
-
-  function handleTabKeyDown(e: React.KeyboardEvent) {
-    const enabledTabs = dashboardTabs.filter((dt) => !dt.disabled);
-    const keys = enabledTabs.map((dt) => dt.key);
-    const idx = keys.indexOf(activeTab);
-    let next = -1;
-    if (e.key === "ArrowRight" || e.key === "ArrowDown") {
-      next = (idx + 1) % keys.length;
-    } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
-      next = (idx - 1 + keys.length) % keys.length;
-    } else if (e.key === "Home") {
-      next = 0;
-    } else if (e.key === "End") {
-      next = keys.length - 1;
-    }
-    if (next >= 0) {
-      e.preventDefault();
-      handleTabChange(keys[next]);
-      document.getElementById(`tab-${keys[next]}`)?.focus();
-    }
   }
 
   const hasLoadedOnce = useRef(false);
@@ -293,68 +261,14 @@ function DesktopDashboard() {
         onAddAsset={() => gatedAdd("asset")}
         onOpenSettings={() => setShowSettings(true)}
         onResetPortfolio={() => setShowReset(true)}
+        quickNav={{
+          activeTab,
+          onSelectTab: handleTabChange,
+          holdingsCount,
+        }}
       />
 
       <main className={`max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-6 ${layoutTheme === "terminal" ? "space-y-2 sm:space-y-4" : layoutTheme === "canvas" ? "space-y-5 sm:space-y-10" : "space-y-4 sm:space-y-8"}`}>
-        {/* Dashboard Tab Bar — theme-aware */}
-        {layoutTheme === "terminal" ? (
-          <div role="tablist" aria-label={t("dashboardTablistLabel")} className="flex gap-0 overflow-x-auto scrollbar-hide border-b border-zinc-800 font-mono" data-testid="tabbar-terminal" data-tour="tabs" onKeyDown={handleTabKeyDown}>
-            {dashboardTabs.map((tab) => (
-              <button key={tab.key} role="tab" id={`tab-${tab.key}`} aria-selected={activeTab === tab.key} aria-controls={`tabpanel-${tab.key}`} tabIndex={activeTab === tab.key ? 0 : -1} disabled={tab.disabled} aria-disabled={tab.disabled} onClick={() => !tab.disabled && handleTabChange(tab.key)}
-                className={`shrink-0 px-3 py-1.5 text-xs transition-colors focus-visible:ring-1 focus-visible:ring-green-500 focus-visible:outline-none border-b-2 ${tab.disabled ? "border-transparent text-zinc-700 opacity-40 cursor-not-allowed" : activeTab === tab.key ? "border-green-500 text-green-400" : "border-transparent text-zinc-600 hover:text-zinc-300"}`}
-              >
-                {tab.label.toLowerCase()}
-                {tab.tierBadge && <TierFeatureBadge requiredPlan={tab.tierBadge} size="xs" className="ml-1" />}
-              </button>
-            ))}
-          </div>
-        ) : layoutTheme === "canvas" ? (
-          <div role="tablist" aria-label={t("dashboardTablistLabel")} className="flex gap-2 overflow-x-auto sm:flex-wrap sm:overflow-visible scrollbar-hide" data-testid="tabbar-canvas" data-tour="tabs" onKeyDown={handleTabKeyDown}>
-            {dashboardTabs.map((tab) => (
-              <button key={tab.key} role="tab" id={`tab-${tab.key}`} aria-selected={activeTab === tab.key} aria-controls={`tabpanel-${tab.key}`} tabIndex={activeTab === tab.key ? 0 : -1} disabled={tab.disabled} aria-disabled={tab.disabled} onClick={() => !tab.disabled && handleTabChange(tab.key)}
-                className={`shrink-0 px-5 py-2.5 text-sm font-medium rounded-full transition-all focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:outline-none ${tab.disabled ? "bg-white text-slate-300 border border-slate-100 opacity-50 cursor-not-allowed" : activeTab === tab.key ? "bg-slate-900 text-white shadow-md" : "bg-white text-slate-500 border border-slate-200 hover:border-slate-300 hover:text-slate-800"}`}
-              >
-                {tab.label}
-                {tab.tierBadge && <TierFeatureBadge requiredPlan={tab.tierBadge} size="xs" className="ml-1" />}
-              </button>
-            ))}
-          </div>
-        ) : layoutTheme === "studio" ? (
-          <div role="tablist" aria-label={t("dashboardTablistLabel")} className="flex gap-0 overflow-x-auto scrollbar-hide border-b border-white/10" data-testid="tabbar-studio" data-tour="tabs" onKeyDown={handleTabKeyDown}>
-            {dashboardTabs.map((tab) => (
-              <button key={tab.key} role="tab" id={`tab-${tab.key}`} aria-selected={activeTab === tab.key} aria-controls={`tabpanel-${tab.key}`} tabIndex={activeTab === tab.key ? 0 : -1} disabled={tab.disabled} aria-disabled={tab.disabled} onClick={() => !tab.disabled && handleTabChange(tab.key)}
-                className={`shrink-0 px-4 py-2.5 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none border-b-2 ${tab.disabled ? "border-transparent text-zinc-700 opacity-40 cursor-not-allowed" : activeTab === tab.key ? "border-emerald-400 text-white" : "border-transparent text-zinc-500 hover:text-zinc-300"}`}
-              >
-                {tab.label}
-                {tab.tierBadge && <TierFeatureBadge requiredPlan={tab.tierBadge} size="xs" className="ml-1" />}
-              </button>
-            ))}
-          </div>
-        ) : (
-          <div className="space-y-1.5">
-            <p id="dashboard-views-heading" className="text-xs font-medium text-gray-500 dark:text-slate-500 px-0.5">
-              {t("dashboardViewsHeading")}
-            </p>
-            <div
-              role="tablist"
-              aria-labelledby="dashboard-views-heading"
-              className="flex gap-1 overflow-x-auto sm:flex-wrap sm:overflow-visible scrollbar-hide bg-white dark:bg-slate-800 rounded-2xl p-1.5 border border-gray-200 dark:border-slate-700 shadow-sm"
-              data-testid="tabbar-default"
-              data-tour="tabs"
-              onKeyDown={handleTabKeyDown}
-            >
-              {dashboardTabs.map((tab) => (
-                <button key={tab.key} role="tab" id={`tab-${tab.key}`} aria-selected={activeTab === tab.key} aria-controls={`tabpanel-${tab.key}`} tabIndex={activeTab === tab.key ? 0 : -1} disabled={tab.disabled} aria-disabled={tab.disabled} onClick={() => !tab.disabled && handleTabChange(tab.key)}
-                  className={`shrink-0 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium rounded-xl transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none ${tab.disabled ? "text-gray-400 dark:text-slate-600 opacity-50 cursor-not-allowed" : activeTab === tab.key ? "bg-emerald-500 text-white shadow-sm" : "text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-700"}`}
-                >
-                  {tab.label}
-                  {tab.tierBadge && <TierFeatureBadge requiredPlan={tab.tierBadge} size="xs" className="ml-1" />}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
         <TrialCountdownBanner />
         <SnapTradeReconnectBanner />
         <LeafPromoBanner />
@@ -366,7 +280,7 @@ function DesktopDashboard() {
           <div
             role="tabpanel"
             id="tabpanel-portfolio"
-            aria-labelledby="tab-portfolio"
+            aria-label={t("dashboardHoldingsTab")}
             tabIndex={0}
             className="focus-visible:outline-none space-y-6 animate-tab-fade"
           >
@@ -417,7 +331,7 @@ function DesktopDashboard() {
           <div
             role="tabpanel"
             id="tabpanel-diversification"
-            aria-labelledby="tab-diversification"
+            aria-label={t("diversificationTab")}
             tabIndex={0}
             className="focus-visible:outline-none space-y-6 animate-tab-fade"
           >
@@ -434,7 +348,7 @@ function DesktopDashboard() {
           <div
             role="tabpanel"
             id="tabpanel-dividends"
-            aria-labelledby="tab-dividends"
+            aria-label={t("dividendsTab")}
             tabIndex={0}
             className="focus-visible:outline-none animate-tab-fade"
           >
@@ -450,7 +364,7 @@ function DesktopDashboard() {
           <div
             role="tabpanel"
             id="tabpanel-metrics"
-            aria-labelledby="tab-metrics"
+            aria-label={t("performanceTab")}
             tabIndex={0}
             className="focus-visible:outline-none animate-tab-fade"
           >
@@ -466,7 +380,7 @@ function DesktopDashboard() {
           <div
             role="tabpanel"
             id="tabpanel-growth"
-            aria-labelledby="tab-growth"
+            aria-label={t("growthTab")}
             tabIndex={0}
             className="focus-visible:outline-none animate-tab-fade"
           >
@@ -482,7 +396,7 @@ function DesktopDashboard() {
           <div
             role="tabpanel"
             id="tabpanel-events"
-            aria-labelledby="tab-events"
+            aria-label={t("eventsTab")}
             tabIndex={0}
             className="focus-visible:outline-none animate-tab-fade"
           >
@@ -498,7 +412,7 @@ function DesktopDashboard() {
           <div
             role="tabpanel"
             id="tabpanel-news"
-            aria-labelledby="tab-news"
+            aria-label={t("newsTab")}
             tabIndex={0}
             className="focus-visible:outline-none animate-tab-fade"
           >

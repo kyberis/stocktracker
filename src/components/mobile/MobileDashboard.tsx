@@ -19,6 +19,7 @@ import { hideNativeSplash } from "@/lib/native-splash";
 import { useIsNative } from "@/lib/use-native";
 import { usePortfolioSnapshotSync } from "@/lib/use-portfolio-snapshot-sync";
 import TierFeatureBadge from "@/components/TierFeatureBadge";
+import DashboardTabBarQuickLinks from "@/components/DashboardTabBarQuickLinks";
 import SampleDataBanner from "@/components/SampleDataBanner";
 import TrialCountdownBanner from "@/components/TrialCountdownBanner";
 import CloverToLogo from "@/components/CloverToLogo";
@@ -211,40 +212,16 @@ export default function MobileDashboard() {
       </div>
 
       <div className="px-4 py-3 space-y-4">
-        {/* Tab bar — horizontal scroll pills */}
-        <div className="space-y-1.5 -mx-4 px-4 pb-1">
-          <p id="mobile-dashboard-views-heading" className="text-xs font-medium text-gray-500 dark:text-slate-500 px-0.5">
-            {t("dashboardViewsHeading")}
-          </p>
-          <div
-            role="tablist"
-            aria-labelledby="mobile-dashboard-views-heading"
-            className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-0.5"
-          >
-          {dashboardTabs.map((tab) => (
-            <button
-              key={tab.key}
-              role="tab"
-              id={`mtab-${tab.key}`}
-              aria-selected={activeTab === tab.key}
-              aria-controls={`mtabpanel-${tab.key}`}
-              tabIndex={activeTab === tab.key ? 0 : -1}
-              disabled={tab.disabled}
-              aria-disabled={tab.disabled}
-              onClick={() => handleTabChange(tab.key)}
-              className={`shrink-0 px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
-                tab.disabled
-                  ? "bg-gray-100 dark:bg-slate-800 text-gray-400 dark:text-slate-600 opacity-50 cursor-not-allowed"
-                  : activeTab === tab.key
-                    ? "bg-emerald-500 text-white shadow-sm"
-                    : "bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400"
-              }`}
-            >
-              {tab.label}
-              {tab.tierBadge && <TierFeatureBadge requiredPlan={tab.tierBadge} size="xs" className="ml-1" />}
-            </button>
-          ))}
-          </div>
+        {/* Same shortcuts as desktop: Holdings, Tools, News, Import, Views, More */}
+        <div className="-mx-4 border-b border-gray-100 dark:border-slate-800 bg-gray-50/95 dark:bg-slate-800/50 px-3 py-2 sm:px-4">
+          <DashboardTabBarQuickLinks
+            variant="default"
+            activeTab={activeTab}
+            onSelectTab={handleTabChange}
+            holdingsCount={holdingsCount}
+            dataTestId="tabbar-mobile"
+            dataTour="tabs"
+          />
         </div>
 
         <TrialCountdownBanner />
@@ -259,7 +236,7 @@ export default function MobileDashboard() {
           <div
             role="tabpanel"
             id="mtabpanel-portfolio"
-            aria-labelledby="mtab-portfolio"
+            aria-label={t("dashboardHoldingsTab")}
             tabIndex={0}
             className="focus-visible:outline-none space-y-4 animate-tab-fade"
           >
@@ -292,7 +269,7 @@ export default function MobileDashboard() {
 
         {/* Diversification tab */}
         {activeTab === "diversification" && (
-          <div role="tabpanel" id="mtabpanel-diversification" aria-labelledby="mtab-diversification" tabIndex={0} className="focus-visible:outline-none space-y-4 animate-tab-fade">
+          <div role="tabpanel" id="mtabpanel-diversification" aria-label={t("diversificationTab")} tabIndex={0} className="focus-visible:outline-none space-y-4 animate-tab-fade">
             <Suspense fallback={<ChartSkeleton />}>
               <TaxonomyView />
             </Suspense>
@@ -301,7 +278,7 @@ export default function MobileDashboard() {
 
         {/* Dividends tab */}
         {activeTab === "dividends" && (
-          <div role="tabpanel" id="mtabpanel-dividends" aria-labelledby="mtab-dividends" tabIndex={0} className="focus-visible:outline-none animate-tab-fade">
+          <div role="tabpanel" id="mtabpanel-dividends" aria-label={t("dividendsTab")} tabIndex={0} className="focus-visible:outline-none animate-tab-fade">
             <Suspense fallback={<ChartSkeleton />}>
               <DividendSummary />
             </Suspense>
@@ -310,7 +287,7 @@ export default function MobileDashboard() {
 
         {/* Metrics tab */}
         {activeTab === "metrics" && (
-          <div role="tabpanel" id="mtabpanel-metrics" aria-labelledby="mtab-metrics" tabIndex={0} className="focus-visible:outline-none animate-tab-fade">
+          <div role="tabpanel" id="mtabpanel-metrics" aria-label={t("performanceTab")} tabIndex={0} className="focus-visible:outline-none animate-tab-fade">
             <Suspense fallback={<ChartSkeleton />}>
               <PerformancePage holdings={filteredHoldings} cashEntries={investmentCashEntries} />
             </Suspense>
@@ -319,7 +296,7 @@ export default function MobileDashboard() {
 
         {/* Growth tab */}
         {activeTab === "growth" && (
-          <div role="tabpanel" id="mtabpanel-growth" aria-labelledby="mtab-growth" tabIndex={0} className="focus-visible:outline-none animate-tab-fade">
+          <div role="tabpanel" id="mtabpanel-growth" aria-label={t("growthTab")} tabIndex={0} className="focus-visible:outline-none animate-tab-fade">
             <Suspense fallback={<ChartSkeleton />}>
               <GrowthTab />
             </Suspense>
@@ -328,7 +305,7 @@ export default function MobileDashboard() {
 
         {/* Events tab */}
         {activeTab === "events" && (
-          <div role="tabpanel" id="mtabpanel-events" aria-labelledby="mtab-events" tabIndex={0} className="focus-visible:outline-none animate-tab-fade">
+          <div role="tabpanel" id="mtabpanel-events" aria-label={t("eventsTab")} tabIndex={0} className="focus-visible:outline-none animate-tab-fade">
             <Suspense fallback={<ChartSkeleton />}>
               <EventCalendar />
             </Suspense>
@@ -337,7 +314,7 @@ export default function MobileDashboard() {
 
         {/* News tab */}
         {activeTab === "news" && (
-          <div role="tabpanel" id="mtabpanel-news" aria-labelledby="mtab-news" tabIndex={0} className="focus-visible:outline-none animate-tab-fade">
+          <div role="tabpanel" id="mtabpanel-news" aria-label={t("newsTab")} tabIndex={0} className="focus-visible:outline-none animate-tab-fade">
             <Suspense fallback={<ChartSkeleton />}>
               <PortfolioNewsFeed />
             </Suspense>

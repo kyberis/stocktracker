@@ -11,7 +11,12 @@ import { PortfolioProvider } from "@/lib/portfolio-context";
 import { useIsNative } from "@/lib/use-native";
 import NavigationProgress from "@/components/NavigationProgress";
 import AppNav from "@/components/AppNav";
-import NavAssetSearch, { NavAssetSearchIconLink } from "@/components/NavAssetSearch";
+import NavAssetSearch from "@/components/NavAssetSearch";
+import AppNavPrimaryPills from "@/components/AppNavPrimaryPills";
+import { usePathname } from "next/navigation";
+import { useFeatureFlags } from "@/lib/feature-flag-context";
+import { useI18n } from "@/lib/i18n";
+import { getDesktopNavItems } from "@/lib/app-nav";
 import SidebarNav from "@/components/SidebarNav";
 import MarketTickerBar from "@/components/MarketTickerBar";
 import MobileTabBar from "@/components/MobileTabBar";
@@ -29,6 +34,25 @@ import SyncConfidenceBanner from "@/components/SyncConfidenceBanner";
 import { CURRENT_VERSION } from "@/lib/release-version";
 import Link from "next/link";
 import type { LayoutTheme } from "@/lib/types";
+
+function StudioCommandStrip() {
+  const pathname = usePathname();
+  const flags = useFeatureFlags();
+  const { t } = useI18n();
+  return (
+    <div className="border-b border-white/5 bg-[#09090b] px-3 sm:px-4 py-2">
+      <div className="mx-auto flex w-full min-w-0 max-w-2xl flex-col gap-2">
+        <NavAssetSearch variant="studio" />
+        <AppNavPrimaryPills
+          variant="studio"
+          items={getDesktopNavItems(flags)}
+          pathname={pathname}
+          navAriaLabel={t("primaryNavAriaLabel")}
+        />
+      </div>
+    </div>
+  );
+}
 
 function AppFooter() {
   return (
@@ -68,14 +92,7 @@ function AppShell({ children }: { children: React.ReactNode }) {
           <EmailVerificationBanner />
           <SyncConfidenceBanner />
           <MarketTickerBar />
-          <div className="flex items-center gap-2 px-3 sm:px-4 py-2 border-b border-white/5 bg-[#09090b]">
-            <div className="hidden sm:flex flex-1 min-w-0 max-w-2xl">
-              <NavAssetSearch variant="studio" />
-            </div>
-            <div className="sm:hidden flex-1 min-w-0 flex justify-start text-zinc-400">
-              <NavAssetSearchIconLink className="sm:hidden hover:bg-white/10 hover:text-white dark:hover:bg-white/10" />
-            </div>
-          </div>
+          <StudioCommandStrip />
           <main id="main-content">{children}</main>
           <AppFooter />
           <MobileTabBar />

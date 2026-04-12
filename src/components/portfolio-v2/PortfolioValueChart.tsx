@@ -35,6 +35,7 @@ import AssetTypeFilter from "@/components/dashboard-v2/AssetTypeFilter";
 import type { AssetFilter } from "@/components/dashboard-v2/AssetTypeFilter";
 import type { Holding } from "@/lib/types";
 import AggregatedPortfolioPeriodMetrics from "./AggregatedPortfolioPeriodMetrics";
+import PortfolioQuoteFreshness from "@/components/PortfolioQuoteFreshness";
 
 // ── Types ──
 
@@ -764,6 +765,7 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
       <div className="card overflow-hidden relative">
         {aggregatedTopButtons}
         {inlineHeader}
+        <PortfolioQuoteFreshness className="px-5 pb-2" />
         <div className="min-h-[280px] flex flex-col justify-center">
           <AggregatedPortfolioPeriodMetrics holdings={relevantHoldings} refreshKey={refreshKey} />
         </div>
@@ -808,6 +810,7 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
         {topButtons}
         {showGuide && <ChartGuideModal mode={mode} onClose={() => setShowGuide(false)} />}
         {inlineHeader}
+        <PortfolioQuoteFreshness className="px-5 pb-2" />
         <div className="h-[340px] flex items-center justify-center">
           <svg className="animate-spin h-6 w-6 text-gray-400" viewBox="0 0 24 24" fill="none">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -830,6 +833,7 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
       {topButtons}
       {showGuide && <ChartGuideModal mode={mode} onClose={() => setShowGuide(false)} />}
       {inlineHeader}
+      <PortfolioQuoteFreshness className="px-5 pb-2" />
 
       {/* Chart */}
       <div className={`h-[340px] px-2 ${hasHeader ? "pt-1" : "pt-3"} relative`}>

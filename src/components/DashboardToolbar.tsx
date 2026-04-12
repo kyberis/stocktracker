@@ -1,16 +1,17 @@
 "use client";
 
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { usePortfolio } from "@/lib/portfolio-context";
-import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n";
 import TierFeatureBadge from "./TierFeatureBadge";
 import { useTheme } from "@/lib/theme-context";
+import type { DashboardTab } from "@/lib/use-dashboard-tab-url";
+import DashboardTabBarQuickLinks, { type DashboardTabBarQuickVariant } from "./DashboardTabBarQuickLinks";
+import GlobalPortfolioSelector from "./GlobalPortfolioSelector";
 
 function AddMenu({ onAddStock, onAddCrypto, onAddAsset }: { onAddStock: () => void; onAddCrypto?: () => void; onAddAsset?: () => void }) {
   const { t } = useI18n();
-  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -88,18 +89,10 @@ function AddMenu({ onAddStock, onAddCrypto, onAddAsset }: { onAddStock: () => vo
   );
 }
 
-function formatDateAgo(date: Date): string {
-  const diffMs = Date.now() - date.getTime();
-  const minutes = Math.floor(diffMs / 60000);
-  if (minutes < 1) return "just now";
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.floor(hours / 24)}d ago`;
-}
-
-function isStale(date: Date): boolean {
-  return Date.now() - date.getTime() > 30 * 60 * 1000;
+export interface DashboardToolbarQuickNavProps {
+  activeTab: DashboardTab;
+  onSelectTab: (tab: DashboardTab) => void;
+  holdingsCount: number;
 }
 
 interface DashboardToolbarProps {
@@ -109,6 +102,8 @@ interface DashboardToolbarProps {
   onOpenSettings: () => void;
   onImportPortfolio?: () => void;
   onResetPortfolio?: () => void;
+  /** Desktop dashboard shortcuts (Holdings, Tools, Views, …); when set, renders in this bar next to Sync / Add. */
+  quickNav?: DashboardToolbarQuickNavProps;
 }
 
 export default function DashboardToolbar({
@@ -117,21 +112,30 @@ export default function DashboardToolbar({
   onAddAsset,
   onOpenSettings,
   onResetPortfolio,
+  quickNav,
 }: DashboardToolbarProps) {
   const router = useRouter();
-  const { isLoading, refreshQuotes, lastUpdated, holdingsLastFetchedAt } = usePortfolio();
+  const { isLoading, refreshQuotes } = usePortfolio();
   const { t } = useI18n();
   const { layoutTheme } = useTheme();
 
-  const [, setTick] = useState(0);
+  const quickNavVariant: DashboardTabBarQuickVariant =
+    layoutTheme === "terminal"
+      ? "terminal"
+      : layoutTheme === "canvas"
+        ? "canvas"
+        : layoutTheme === "studio"
+          ? "studio"
+          : "default";
 
-  useEffect(() => {
-    const id = setInterval(() => setTick((n) => n + 1), 30_000);
-    return () => clearInterval(id);
-  }, []);
-
-  const quotesStale = useMemo(() => lastUpdated ? isStale(lastUpdated) : false, [lastUpdated]);
-  const holdingsStale = useMemo(() => holdingsLastFetchedAt ? isStale(holdingsLastFetchedAt) : false, [holdingsLastFetchedAt]);
+  const tabbarTestId =
+    layoutTheme === "terminal"
+      ? "tabbar-terminal"
+      : layoutTheme === "canvas"
+        ? "tabbar-canvas"
+        : layoutTheme === "studio"
+          ? "tabbar-studio"
+          : "tabbar-default";
 
   return (
     <div className={
@@ -143,35 +147,33 @@ export default function DashboardToolbar({
         ? "border-b border-white/5 bg-transparent"
         : "bg-gray-50 dark:bg-slate-800/50 border-b border-gray-200 dark:border-slate-800"
     } data-testid="dashboard-toolbar">
-      <div className={`max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between gap-3 ${layoutTheme === "terminal" ? "py-1.5" : "py-2"}`}>
-        <div className="flex items-center gap-2 min-w-0">
-          {(lastUpdated || holdingsLastFetchedAt) && (
-            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/5 dark:bg-white/5 border border-black/[0.06] dark:border-white/[0.06] shrink-0">
-              {lastUpdated && (
-                <span className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-slate-500 font-mono">
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${quotesStale ? "bg-amber-400" : "bg-emerald-400"}`} />
-                  <span className="text-gray-400 dark:text-slate-600">{t("quotesAsOf")}</span>
-                  <span className={quotesStale ? "text-amber-400" : ""}>{`${String(lastUpdated.getHours()).padStart(2, "0")}:${String(lastUpdated.getMinutes()).padStart(2, "0")}`}</span>
-                </span>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div
+          className={`flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1.5 py-1.5 sm:gap-x-3 ${quickNav ? "justify-between" : "justify-end"}`}
+        >
+          {quickNav && (
+            <div className="flex min-w-0 flex-1 basis-0 items-center gap-2 sm:gap-3">
+              {layoutTheme !== "studio" && (
+                <div className="shrink-0" data-tour="portfolio-switcher">
+                  <GlobalPortfolioSelector />
+                </div>
               )}
-              {lastUpdated && holdingsLastFetchedAt && (
-                <span className="w-px h-3 bg-gray-200 dark:bg-slate-700 shrink-0" aria-hidden="true" />
-              )}
-              {holdingsLastFetchedAt && (
-                <span className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-slate-500 font-mono">
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${holdingsStale ? "bg-amber-400" : "bg-emerald-400"}`} />
-                  <span className="text-gray-400 dark:text-slate-600">{t("holdingsSynced")}</span>
-                  <span className={holdingsStale ? "text-amber-400" : ""}>{formatDateAgo(holdingsLastFetchedAt)}</span>
-                </span>
-              )}
+              <div className="min-w-0 flex-1">
+                <DashboardTabBarQuickLinks
+                  variant={quickNavVariant}
+                  activeTab={quickNav.activeTab}
+                  onSelectTab={quickNav.onSelectTab}
+                  holdingsCount={quickNav.holdingsCount}
+                  dataTestId={tabbarTestId}
+                  dataTour="tabs"
+                />
+              </div>
             </div>
           )}
-        </div>
-
-        <div className="flex items-center gap-1.5" data-tour="actions">
+          <div className="flex shrink-0 items-center gap-1 sm:gap-1.5" data-tour="actions">
           <button
             onClick={onOpenSettings}
-            className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-500 dark:text-slate-400 transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"
+            className="flex min-h-[32px] min-w-[32px] items-center justify-center rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-200 dark:text-slate-400 dark:hover:bg-slate-700 sm:min-h-[36px] sm:min-w-[36px] sm:p-2"
             title={t("settings")}
             aria-label={t("settings")}
           >
@@ -184,7 +186,7 @@ export default function DashboardToolbar({
           <button
             onClick={refreshQuotes}
             disabled={isLoading}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 bg-black/5 dark:bg-white/5 border border-black/[0.06] dark:border-white/[0.06] hover:bg-black/10 dark:hover:bg-white/10 text-gray-700 dark:text-slate-300"
+            className="flex items-center gap-1 rounded-lg border border-black/[0.06] bg-black/5 px-2 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-black/10 disabled:opacity-50 dark:border-white/[0.06] dark:bg-white/5 dark:text-slate-300 dark:hover:bg-white/10 sm:gap-1.5 sm:px-2.5 sm:py-1.5 sm:text-sm"
             title={t("syncButton")}
             aria-label={t("syncButton")}
           >
@@ -207,7 +209,7 @@ export default function DashboardToolbar({
 
           <button
             onClick={() => router.push("/import")}
-            className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-500 dark:text-slate-400 transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"
+            className="flex min-h-[32px] min-w-[32px] items-center justify-center rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-200 dark:text-slate-400 dark:hover:bg-slate-700 sm:min-h-[36px] sm:min-w-[36px] sm:p-2"
             title={t("importPortfolio")}
             aria-label={t("importPortfolio")}
           >
@@ -219,7 +221,7 @@ export default function DashboardToolbar({
           {onResetPortfolio && (
             <button
               onClick={onResetPortfolio}
-              className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-500 dark:text-slate-400 transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"
+              className="flex min-h-[32px] min-w-[32px] items-center justify-center rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-200 dark:text-slate-400 dark:hover:bg-slate-700 sm:min-h-[36px] sm:min-w-[36px] sm:p-2"
               title={t("resetPortfolio")}
               aria-label={t("resetPortfolio")}
             >
@@ -230,6 +232,7 @@ export default function DashboardToolbar({
           )}
 
           <AddMenu onAddStock={onAddStock} onAddCrypto={onAddCrypto} onAddAsset={onAddAsset} />
+          </div>
         </div>
       </div>
     </div>
