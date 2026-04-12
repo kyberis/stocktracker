@@ -8,6 +8,7 @@ import { StealthProvider } from "@/lib/stealth-context";
 import { PlatformProvider } from "@/lib/platform-context";
 import { FeatureFlagProvider } from "@/lib/feature-flag-context";
 import { PortfolioProvider } from "@/lib/portfolio-context";
+import { PortfolioCommandProvider } from "@/contexts/portfolio-command-context";
 import { useIsNative } from "@/lib/use-native";
 import NavigationProgress from "@/components/NavigationProgress";
 import AppNav from "@/components/AppNav";
@@ -152,8 +153,10 @@ export default function AppLayoutClient({
               <SettingsProvider>
                 <StealthProvider>
                   <PortfolioProvider>
-                    <NavigationProgress />
-                    <AppShell>{children}</AppShell>
+                    <PortfolioCommandProvider>
+                      <NavigationProgress />
+                      <AppShell>{children}</AppShell>
+                    </PortfolioCommandProvider>
                   </PortfolioProvider>
                   <ThemeWizard />
                 </StealthProvider>

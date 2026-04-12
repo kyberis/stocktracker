@@ -15,7 +15,7 @@ Update the demo when any change:
 - Adds, removes, or renames props on `DashboardShell` or `PortfolioProvider`
 - Adds new data requirements to the Dashboard (new context fields, new API data the dashboard expects)
 - Changes the `Holding`, `CashEntry`, `QuoteData`, or `ExchangeRates` types in `src/lib/types.ts`
-- Adds a new provider wrapper in `src/app/(app)/layout.tsx` that the dashboard depends on (must be mirrored in `src/app/demo/demo-shell.tsx`)
+- Adds a new provider wrapper in `src/app/(app)/layout.tsx` that the dashboard depends on (must be mirrored in `src/app/demo/demo-shell.tsx`), including `PortfolioCommandProvider` from `src/contexts/portfolio-command-context.tsx`
 - Changes the seed data format in `data/seed-holdings.json` or `data/seed-cash.json`
 
 ## Key Files

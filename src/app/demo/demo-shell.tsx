@@ -7,6 +7,7 @@ import { I18nProvider } from "@/lib/i18n";
 import { SettingsProvider } from "@/lib/settings-context";
 import { StealthProvider } from "@/lib/stealth-context";
 import { PortfolioProvider } from "@/lib/portfolio-context";
+import { PortfolioCommandProvider } from "@/contexts/portfolio-command-context";
 import Dashboard from "@/components/Dashboard";
 import AppNav from "@/components/AppNav";
 import MarketTickerBar from "@/components/MarketTickerBar";
@@ -66,15 +67,17 @@ export default function DemoShell({
                 initialExchangeRates={initialExchangeRates}
                 initialGoal={DEMO_GOAL}
               >
-                <div className="min-h-screen bg-gray-50 dark:bg-slate-900 pb-14 sm:pb-0">
-                  <DemoBanner />
-                  <MarketTickerBar demoMode />
-                  <AppNav />
-                  <main id="main-content">
-                    <Dashboard />
-                  </main>
-                  <MobileTabBar />
-                </div>
+                <PortfolioCommandProvider>
+                  <div className="min-h-screen bg-gray-50 dark:bg-slate-900 pb-14 sm:pb-0">
+                    <DemoBanner />
+                    <MarketTickerBar demoMode />
+                    <AppNav />
+                    <main id="main-content">
+                      <Dashboard />
+                    </main>
+                    <MobileTabBar />
+                  </div>
+                </PortfolioCommandProvider>
               </PortfolioProvider>
             </StealthProvider>
           </SettingsProvider>

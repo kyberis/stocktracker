@@ -17,6 +17,74 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.77.48",
+    date: "2026-04-13",
+    title: "Mobile dashboard: horizontal shortcut strip",
+    titleTranslations: {
+      es: "Panel móvil: accesos en franja horizontal",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Dashboard shortcuts (Holdings, Tools, News, Import, Views, More) stay on one row on small screens: swipe horizontally with a hidden scrollbar; Views and More menus open in a fixed overlay so they are not clipped.",
+        translations: {
+          es: "Los accesos del panel (Posiciones, Herramientas, Noticias, Importar, Vistas, Más) permanecen en una sola fila en pantallas estrechas: desliza horizontalmente con barra oculta; los menús Vistas y Más se abren en una capa fija para que no se recorten.",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.77.47",
+    date: "2026-04-12",
+    title: "Header: no secondary nav pill row",
+    titleTranslations: {
+      es: "Cabecera: sin fila de accesos secundarios",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Removed the scrollable pill row under the header search (Evolution, Explore, Daily digests, etc.); use the portfolio command strip, Tools, or the user menu to reach those destinations.",
+        translations: {
+          es: "Se quitó la fila de píldoras bajo la búsqueda del encabezado (Evolución, Explorar, Resúmenes diarios, etc.); usa la barra de cartera, Herramientas o el menú de usuario para ir a esas secciones.",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.77.46",
+    date: "2026-04-12",
+    title: "Header nav pills without command-strip duplicates",
+    titleTranslations: {
+      es: "Píldoras de navegación sin duplicar la barra de cartera",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "The main nav pill row under the search bar no longer repeats Home, Tools, and Import — those routes are in the portfolio command strip — so the row lists only Evolution, Explore, Daily digests, Crypto, Indicators, and Network (when enabled).",
+        translations: {
+          es: "La fila de accesos bajo la búsqueda ya no repite Inicio, Herramientas e Importar (están en la barra de cartera); solo muestra Evolución, Explorar, Resúmenes diarios, Cripto, Indicadores y Red (si aplica).",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.77.45",
+    date: "2026-04-12",
+    title: "Global portfolio command bar in the header",
+    titleTranslations: {
+      es: "Barra de cartera global en el encabezado",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "The portfolio strip (Holdings, Tools, News, Import, Views, More, Sync, Add) now lives in the main app header on every page, not only above the dashboard; tab highlights apply on Home and Demo, and choosing a view from other routes navigates to Home with the right tab.",
+        translations: {
+          es: "La franja de cartera (Posiciones, Herramientas, Noticias, Importar, Vistas, Más, Sincronizar, Añadir) está ahora en el encabezado principal en todas las páginas, no solo encima del panel; el resaltado de pestañas aplica en Inicio y Demo, y desde otras rutas se abre Inicio con la pestaña elegida.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.77.44",
     date: "2026-04-12",
     title: "Mobile dashboard: same shortcuts menu",

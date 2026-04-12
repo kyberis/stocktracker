@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useCallback, useEffect, useMemo, useRef, Suspense } from "react";
+import { useState, useEffect, useMemo, useRef, Suspense } from "react";
 import { useDashboardTabUrl, type DashboardTab } from "@/lib/use-dashboard-tab-url";
 import dynamic from "next/dynamic";
-import DashboardToolbar from "./DashboardToolbar";
 import { useI18n } from "@/lib/i18n";
+import { usePortfolioCommand } from "@/contexts/portfolio-command-context";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useAuth } from "@/lib/auth-context";
 import { getHoldingsLimit } from "@/lib/subscription";
@@ -13,7 +13,6 @@ import { useTheme } from "@/lib/theme-context";
 import { useIsNative } from "@/lib/use-native";
 import { useIsMobileViewport } from "@/lib/use-mobile-viewport";
 import CloverToLogo from "./CloverToLogo";
-import PortfolioPickerModal from "./PortfolioPickerModal";
 
 const MobileDashboard = dynamic(() => import("./mobile/MobileDashboard"), {
   ssr: false,
@@ -35,17 +34,11 @@ const RebalancingView = dynamic(() => import("./RebalancingView"), { ssr: false 
 const DividendSummary = dynamic(() => import("./DividendSummary"), { ssr: false });
 const PerformancePage = dynamic(() => import("./PerformancePage"), { ssr: false });
 const GrowthTab = dynamic(() => import("./GrowthTab"), { ssr: false });
-const AddStockModal = dynamic(() => import("./AddStockModal"), { ssr: false });
-const SettingsModal = dynamic(() => import("./SettingsModal"), { ssr: false });
-const ImportPortfolioModal = dynamic(() => import("./ImportPortfolioModal"), { ssr: false });
-const ResetPortfolioModal = dynamic(() => import("./ResetPortfolioModal"), { ssr: false });
 const FeedbackModal = dynamic(() => import("./FeedbackModal"), { ssr: false });
 const ProCompareCard = dynamic(() => import("./ProCompareCard"), { ssr: false });
 const LeafPromoBanner = dynamic(() => import("./LeafPromoBanner"), { ssr: false });
 const SnapTradeReconnectBanner = dynamic(() => import("./SnapTradeReconnectBanner"), { ssr: false });
-const AddCryptoModal = dynamic(() => import("./AddCryptoModal"), { ssr: false });
 const EventCalendar = dynamic(() => import("./EventCalendar"), { ssr: false });
-const AddManualAssetModal = dynamic(() => import("./AddManualAssetModal"), { ssr: false });
 const SupportChatWidget = dynamic(() => import("./SupportChatWidget"), { ssr: false });
 const ReferralShareModal = dynamic(() => import("./ReferralShareModal"), { ssr: false });
 import { usePortfolioSnapshotSync } from "@/lib/use-portfolio-snapshot-sync";
@@ -151,41 +144,18 @@ const DashboardPortfolioV2 = dynamic(() => import("./dashboard-v2/DashboardPortf
 });
 
 function DesktopDashboard() {
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showAddCrypto, setShowAddCrypto] = useState(false);
-  const [showAddAsset, setShowAddAsset] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
-  const [showImport, setShowImport] = useState(false);
-  const [showReset, setShowReset] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [showSupportChat, setShowSupportChat] = useState(false);
   const [showReferralModal, setShowReferralModal] = useState(false);
   const [supportChatEnabled, setSupportChatEnabled] = useState(false);
   const [supportChatWelcome, setSupportChatWelcome] = useState("");
-  const [showPortfolioPicker, setShowPortfolioPicker] = useState(false);
-  const [pendingAction, setPendingAction] = useState<"stock" | "crypto" | "asset" | null>(null);
   const { t } = useI18n();
-  const { holdings, cashEntries, isInitializing, refreshHoldings, refreshQuotes, activePortfolioId, portfolios, demoMode } =
-    usePortfolio();
+  const { holdings, cashEntries, isInitializing, demoMode } = usePortfolio();
   usePortfolioSnapshotSync({ demoMode });
   const { user, isLoading: authLoading } = useAuth();
+  const { gatedAdd } = usePortfolioCommand();
   const track = useTrack();
   const { layoutTheme } = useTheme();
-
-  const needsPortfolioPick = !activePortfolioId && portfolios.length > 1;
-
-  const gatedAdd = useCallback((action: "stock" | "crypto" | "asset") => {
-    if (needsPortfolioPick) {
-      setPendingAction(action);
-      setShowPortfolioPicker(true);
-    } else if (action === "stock") {
-      setShowAddModal(true);
-    } else if (action === "crypto") {
-      setShowAddCrypto(true);
-    } else {
-      setShowAddAsset(true);
-    }
-  }, [needsPortfolioPick]);
 
 
   useEffect(() => {
@@ -208,12 +178,6 @@ function DesktopDashboard() {
     [cashEntries],
   );
 
-  const handleImportComplete = useCallback(async () => {
-    await refreshHoldings();
-    await refreshQuotes();
-  }, [refreshHoldings, refreshQuotes]);
-
-  const isPro = user?.plan === "pro";
   const holdingsCount = holdings.length;
   const holdingsLimit = getHoldingsLimit(user?.plan ?? "free");
   const showHoldingsBanner = !authLoading && holdingsLimit !== Infinity && holdingsCount >= Math.ceil(holdingsLimit / 2) && holdingsCount > 0;
@@ -255,19 +219,6 @@ function DesktopDashboard() {
 
   return (
     <>
-      <DashboardToolbar
-        onAddStock={() => gatedAdd("stock")}
-        onAddCrypto={() => gatedAdd("crypto")}
-        onAddAsset={() => gatedAdd("asset")}
-        onOpenSettings={() => setShowSettings(true)}
-        onResetPortfolio={() => setShowReset(true)}
-        quickNav={{
-          activeTab,
-          onSelectTab: handleTabChange,
-          holdingsCount,
-        }}
-      />
-
       <main className={`max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-6 ${layoutTheme === "terminal" ? "space-y-2 sm:space-y-4" : layoutTheme === "canvas" ? "space-y-5 sm:space-y-10" : "space-y-4 sm:space-y-8"}`}>
         <TrialCountdownBanner />
         <SnapTradeReconnectBanner />
@@ -424,61 +375,6 @@ function DesktopDashboard() {
           </div>
         )}
       </main>
-
-      <PortfolioPickerModal
-        isOpen={showPortfolioPicker}
-        onClose={() => { setShowPortfolioPicker(false); setPendingAction(null); }}
-        onSelect={() => {
-          setShowPortfolioPicker(false);
-          if (pendingAction === "stock") setShowAddModal(true);
-          else if (pendingAction === "crypto") setShowAddCrypto(true);
-          else if (pendingAction === "asset") setShowAddAsset(true);
-          setPendingAction(null);
-        }}
-      />
-
-      {showAddModal && (
-        <AddStockModal
-          isOpen={showAddModal}
-          onClose={() => setShowAddModal(false)}
-        />
-      )}
-
-      {showAddCrypto && (
-        <AddCryptoModal
-          isOpen={showAddCrypto}
-          onClose={() => setShowAddCrypto(false)}
-        />
-      )}
-
-      {showAddAsset && (
-        <AddManualAssetModal
-          isOpen={showAddAsset}
-          onClose={() => setShowAddAsset(false)}
-        />
-      )}
-
-      {showSettings && (
-        <SettingsModal
-          isOpen={showSettings}
-          onClose={() => setShowSettings(false)}
-        />
-      )}
-
-      {showImport && (
-        <ImportPortfolioModal
-          isOpen={showImport}
-          onClose={() => setShowImport(false)}
-          onImportComplete={handleImportComplete}
-        />
-      )}
-
-      {showReset && (
-        <ResetPortfolioModal
-          isOpen={showReset}
-          onClose={() => setShowReset(false)}
-        />
-      )}
 
       {showFeedback && (
         <FeedbackModal

@@ -213,7 +213,7 @@ export default function MobileDashboard() {
 
       <div className="px-4 py-3 space-y-4">
         {/* Same shortcuts as desktop: Holdings, Tools, News, Import, Views, More */}
-        <div className="-mx-4 border-b border-gray-100 dark:border-slate-800 bg-gray-50/95 dark:bg-slate-800/50 px-3 py-2 sm:px-4">
+        <div className="-mx-4 min-w-0 border-b border-gray-100 dark:border-slate-800 bg-gray-50/95 dark:bg-slate-800/50 px-3 py-2 sm:px-4">
           <DashboardTabBarQuickLinks
             variant="default"
             activeTab={activeTab}

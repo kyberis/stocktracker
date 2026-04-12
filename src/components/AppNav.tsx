@@ -1,21 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useId } from "react";
 import { useI18n } from "@/lib/i18n";
 import { useTheme } from "@/lib/theme-context";
 import { useStealthMode } from "@/lib/stealth-context";
 import { useTrack } from "@/lib/use-track";
-import { useFeatureFlags } from "@/lib/feature-flag-context";
-import { useIsMobileViewport } from "@/lib/use-mobile-viewport";
 import LanguageSwitcher from "./LanguageSwitcher";
 import UserDropdown from "./UserDropdown";
 import NotificationBell from "./NotificationBell";
-import GlobalPortfolioSelector from "./GlobalPortfolioSelector";
 import NavAssetSearch from "./NavAssetSearch";
-import AppNavPrimaryPills from "./AppNavPrimaryPills";
-import { getDesktopNavItems } from "@/lib/app-nav";
+import AppPortfolioCommandStrip from "./AppPortfolioCommandStrip";
 
 function NavLogoWordmark() {
   const { t } = useI18n();
@@ -138,21 +133,10 @@ function HeaderActions({
 }
 
 export default function AppNav() {
-  const pathname = usePathname();
-  const isMobileViewport = useIsMobileViewport();
   const { t } = useI18n();
   const { isDark, canToggleMode, toggleTheme } = useTheme();
   const { stealthMode, toggleStealth } = useStealthMode();
   const track = useTrack();
-  const flags = useFeatureFlags();
-
-  const desktopNavItems = getDesktopNavItems(flags);
-  /** Home / demo + desktop: skip global nav pills here (dashboard toolbar / mobile strip has shortcuts). Other routes: show pills on mobile too. */
-  const showPrimaryPillsInHeader =
-    isMobileViewport || (pathname !== "/" && pathname !== "/demo");
-  /** Desktop lg+: portfolio switcher lives in DashboardToolbar on home/demo; keep header selector on other routes. */
-  const showPortfolioSelectorInHeader = pathname !== "/" && pathname !== "/demo";
-
   function handleStealthToggle() {
     const next = !stealthMode;
     toggleStealth();
@@ -171,26 +155,14 @@ export default function AppNav() {
     <>
       <header className="border-b border-gray-200 dark:border-slate-800 bg-white dark:bg-nav-bg sticky top-7 z-40" data-tour="nav">
         <div className="max-w-7xl mx-auto min-w-0 px-3 py-1.5 sm:px-6 sm:py-2">
-          {/* Desktop (lg+): command bar — three columns, items-start; pills single row + scroll */}
-          <div className="hidden lg:grid lg:grid-cols-[minmax(0,auto)_minmax(0,1fr)_auto] lg:items-start lg:gap-x-6">
+          {/* Desktop (lg+): logo | search | actions */}
+          <div className="hidden lg:grid lg:grid-cols-[minmax(0,auto)_minmax(0,1fr)_auto] lg:items-center lg:gap-x-6">
             <div className="flex min-w-0 items-center gap-3">
               <NavLogoWordmark />
-              {showPortfolioSelectorInHeader && (
-                <div className="min-w-0 shrink-0">
-                  <GlobalPortfolioSelector />
-                </div>
-              )}
             </div>
 
-            <div className="flex min-w-0 flex-col gap-1 px-0 sm:px-1">
+            <div className="flex min-w-0 items-center px-0 sm:px-1">
               <NavAssetSearch variant="command" />
-              {showPrimaryPillsInHeader ? (
-                <AppNavPrimaryPills
-                  items={desktopNavItems}
-                  pathname={pathname}
-                  navAriaLabel={t("primaryNavAriaLabel")}
-                />
-              ) : null}
             </div>
 
             <div className="flex shrink-0 items-center justify-end gap-1 sm:gap-1.5">
@@ -198,15 +170,10 @@ export default function AppNav() {
             </div>
           </div>
 
-          {/* Mobile / tablet: compact top row + full-width search + scroll pills */}
+          {/* Mobile / tablet: compact top row + full-width search */}
           <div className="lg:hidden flex flex-col gap-1.5">
             <div className="flex min-w-0 items-center gap-2">
               <NavLogoWordmark />
-              {showPortfolioSelectorInHeader && (
-                <div className="hidden sm:block min-w-0 shrink-0 max-w-[40%]">
-                  <GlobalPortfolioSelector />
-                </div>
-              )}
               <div className="flex-1 min-w-0" aria-hidden />
               <div className="flex shrink-0 items-center gap-1">
                 <HeaderActions {...actionsProps} />
@@ -214,17 +181,9 @@ export default function AppNav() {
             </div>
 
             <NavAssetSearch variant="command" />
-
-            {showPrimaryPillsInHeader ? (
-              <AppNavPrimaryPills
-                items={desktopNavItems}
-                pathname={pathname}
-                variant="scroll"
-                navAriaLabel={t("primaryNavAriaLabel")}
-              />
-            ) : null}
           </div>
         </div>
+        <AppPortfolioCommandStrip />
       </header>
       <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
         {stealthMode ? t("stealthModeOnAnnounce") : ""}

@@ -90,7 +90,8 @@ function AddMenu({ onAddStock, onAddCrypto, onAddAsset }: { onAddStock: () => vo
 }
 
 export interface DashboardToolbarQuickNavProps {
-  activeTab: DashboardTab;
+  /** Null when not on the home or demo dashboard (no tab highlight). */
+  activeTab: DashboardTab | null;
   onSelectTab: (tab: DashboardTab) => void;
   holdingsCount: number;
 }

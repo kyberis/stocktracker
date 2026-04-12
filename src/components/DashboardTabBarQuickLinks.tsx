@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
+import { createPortal } from "react-dom";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { useI18n } from "@/lib/i18n";
 import { useSettings } from "@/lib/settings-context";
 import { useFeatureFlag } from "@/lib/feature-flag-context";
@@ -33,15 +34,35 @@ function isDashboardViewTab(tab: DashboardTab): boolean {
   return DASHBOARD_VIEW_TABS.some((v) => v.key === tab);
 }
 
-function useClickOutside(ref: RefObject<HTMLElement | null>, onOutside: () => void, active: boolean) {
-  useEffect(() => {
-    if (!active) return;
-    function handle(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) onOutside();
+function useMenuFixedPosition(
+  open: boolean,
+  triggerRef: RefObject<HTMLElement | null>,
+): { top: number; left: number; width: number } | null {
+  const [box, setBox] = useState<{ top: number; left: number; width: number } | null>(null);
+
+  useLayoutEffect(() => {
+    if (!open || !triggerRef.current) {
+      setBox(null);
+      return;
     }
-    document.addEventListener("mousedown", handle);
-    return () => document.removeEventListener("mousedown", handle);
-  }, [active, onOutside, ref]);
+    function update() {
+      const el = triggerRef.current;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      const w = Math.max(220, r.width);
+      const left = Math.min(Math.max(8, r.right - w), window.innerWidth - w - 8);
+      setBox({ top: r.bottom + 4, left, width: w });
+    }
+    update();
+    window.addEventListener("resize", update);
+    window.addEventListener("scroll", update, true);
+    return () => {
+      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", update, true);
+    };
+  }, [open, triggerRef]);
+
+  return box;
 }
 
 export default function DashboardTabBarQuickLinks({
@@ -52,7 +73,7 @@ export default function DashboardTabBarQuickLinks({
   dataTestId,
   dataTour,
 }: {
-  activeTab: DashboardTab;
+  activeTab: DashboardTab | null;
   onSelectTab: (tab: DashboardTab) => void;
   holdingsCount: number;
   variant: DashboardTabBarQuickVariant;
@@ -75,10 +96,54 @@ export default function DashboardTabBarQuickLinks({
 
   const [moreOpen, setMoreOpen] = useState(false);
   const [viewsOpen, setViewsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const moreWrapRef = useRef<HTMLDivElement>(null);
   const viewsWrapRef = useRef<HTMLDivElement>(null);
-  useClickOutside(moreWrapRef, () => setMoreOpen(false), moreOpen);
-  useClickOutside(viewsWrapRef, () => setViewsOpen(false), viewsOpen);
+  const viewsBtnRef = useRef<HTMLButtonElement>(null);
+  const moreBtnRef = useRef<HTMLButtonElement>(null);
+  const viewsMenuRef = useRef<HTMLDivElement>(null);
+  const moreMenuRef = useRef<HTMLDivElement>(null);
+
+  const viewsMenuBox = useMenuFixedPosition(viewsOpen, viewsBtnRef);
+  const moreMenuBox = useMenuFixedPosition(moreOpen, moreBtnRef);
+
+  useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    if (!viewsOpen) return;
+    function handle(e: MouseEvent) {
+      const t = e.target as Node;
+      if (viewsWrapRef.current?.contains(t)) return;
+      if (viewsMenuRef.current?.contains(t)) return;
+      setViewsOpen(false);
+    }
+    document.addEventListener("mousedown", handle);
+    return () => document.removeEventListener("mousedown", handle);
+  }, [viewsOpen]);
+
+  useEffect(() => {
+    if (!moreOpen) return;
+    function handle(e: MouseEvent) {
+      const t = e.target as Node;
+      if (moreWrapRef.current?.contains(t)) return;
+      if (moreMenuRef.current?.contains(t)) return;
+      setMoreOpen(false);
+    }
+    document.addEventListener("mousedown", handle);
+    return () => document.removeEventListener("mousedown", handle);
+  }, [moreOpen]);
+
+  useEffect(() => {
+    if (!viewsOpen && !moreOpen) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setViewsOpen(false);
+        setMoreOpen(false);
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [viewsOpen, moreOpen]);
 
   const visibilitySettings = useMemo(
     () => ({
@@ -144,14 +209,14 @@ export default function DashboardTabBarQuickLinks({
           ? "shrink-0 px-3 py-1.5 text-xs sm:text-sm font-medium border border-white/15 text-zinc-400 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
           : "shrink-0 px-2.5 py-1 sm:px-3 sm:py-1.5 text-xs sm:text-sm font-medium rounded-xl border border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500";
 
-  const panelClass =
+  const panelSurfaceClass =
     variant === "terminal"
-      ? "absolute right-0 top-full z-50 mt-1 min-w-[220px] max-h-[min(70vh,420px)] overflow-y-auto rounded-lg border border-zinc-700 bg-zinc-950 py-1 shadow-xl"
+      ? "max-h-[min(70vh,420px)] overflow-y-auto rounded-lg border border-zinc-700 bg-zinc-950 py-1 shadow-xl"
       : variant === "canvas"
-        ? "absolute right-0 top-full z-50 mt-1 min-w-[220px] max-h-[min(70vh,420px)] overflow-y-auto rounded-xl border border-slate-200 bg-white py-1 shadow-xl"
+        ? "max-h-[min(70vh,420px)] overflow-y-auto rounded-xl border border-slate-200 bg-white py-1 shadow-xl"
         : variant === "studio"
-          ? "absolute right-0 top-full z-50 mt-1 min-w-[220px] max-h-[min(70vh,420px)] overflow-y-auto rounded-lg border border-white/10 bg-zinc-950 py-1 shadow-xl"
-          : "absolute right-0 top-full z-50 mt-1 min-w-[220px] max-h-[min(70vh,420px)] overflow-y-auto rounded-xl border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-900 py-1 shadow-xl";
+          ? "max-h-[min(70vh,420px)] overflow-y-auto rounded-lg border border-white/10 bg-zinc-950 py-1 shadow-xl"
+          : "max-h-[min(70vh,420px)] overflow-y-auto rounded-xl border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-900 py-1 shadow-xl";
 
   const itemClass =
     variant === "terminal"
@@ -162,39 +227,115 @@ export default function DashboardTabBarQuickLinks({
           ? "flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm text-zinc-200 hover:bg-white/5"
           : "flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm text-gray-800 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-800";
 
+  const toolbarScrollClass =
+    "flex flex-nowrap items-center gap-1 sm:gap-1.5 overflow-x-auto overflow-y-hidden overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden touch-pan-x snap-x snap-mandatory";
+
+  const viewsMenuPortal =
+    mounted &&
+    viewsOpen &&
+    viewsMenuBox &&
+    createPortal(
+      <div
+        ref={viewsMenuRef}
+        className={`${panelSurfaceClass} fixed z-[100] min-w-[220px]`}
+        style={{ top: viewsMenuBox.top, left: viewsMenuBox.left, width: viewsMenuBox.width }}
+        role="menu"
+        aria-label={t("dashboardTablistLabel")}
+        data-testid="dashboard-views-menu"
+      >
+        {DASHBOARD_VIEW_TABS.map((row) => {
+          const disabled = row.key === "diversification" && holdingsCount === 0;
+          return (
+            <button
+              key={row.key}
+              type="button"
+              role="menuitem"
+              disabled={disabled}
+              className={`${itemClass} ${disabled ? "opacity-40 cursor-not-allowed" : ""}`}
+              onClick={() => {
+                if (disabled) return;
+                onSelectTab(row.key);
+                setViewsOpen(false);
+              }}
+            >
+              <span>{t(row.labelKey)}</span>
+              {row.tierBadge && <TierFeatureBadge requiredPlan={row.tierBadge} size="xs" />}
+            </button>
+          );
+        })}
+      </div>,
+      document.body,
+    );
+
+  const moreMenuPortal =
+    mounted &&
+    moreOpen &&
+    moreMenuBox &&
+    createPortal(
+      <div
+        ref={moreMenuRef}
+        className={`${panelSurfaceClass} fixed z-[100] min-w-[220px]`}
+        style={{ top: moreMenuBox.top, left: moreMenuBox.left, width: moreMenuBox.width }}
+        role="menu"
+        aria-label={t("dashboardToolsMoreMenu")}
+        data-testid="dashboard-tools-more-menu"
+      >
+        {visibleTools.map((entry) => {
+          const href = getToolPath(entry.id);
+          const badge = getTierBadgeForTool(entry.id);
+          return (
+            <Link
+              key={entry.id}
+              href={href}
+              role="menuitem"
+              className={itemClass}
+              onClick={() => setMoreOpen(false)}
+            >
+              <span>{t(entry.labelKey)}</span>
+              {badge && <TierFeatureBadge requiredPlan={badge} size="xs" />}
+            </Link>
+          );
+        })}
+      </div>,
+      document.body,
+    );
+
   return (
     <div
-      className="flex flex-wrap items-center gap-1 sm:gap-1.5"
+      className={toolbarScrollClass}
       role="toolbar"
       aria-label={t("dashboardQuickNavAriaLabel")}
       data-testid={dataTestId}
       data-tour={dataTour}
     >
+      {viewsMenuPortal}
+      {moreMenuPortal}
       <button
         type="button"
         onClick={() => onSelectTab("portfolio")}
-        className={ctaClass(activeTab === "portfolio")}
+        className={`${ctaClass(activeTab === "portfolio")} snap-start`}
       >
         {t("dashboardHoldingsTab")}
       </button>
-      <Link href="/tools" className={ctaClass(false)}>
+      <Link href="/tools" className={`${ctaClass(false)} snap-start`}>
         {t("toolsNav")}
       </Link>
       <button
         type="button"
         onClick={() => onSelectTab("news")}
-        className={ctaClass(activeTab === "news")}
+        className={`${ctaClass(activeTab === "news")} snap-start`}
       >
         {t("newsTab")}
       </button>
-      <Link href="/import" className={ctaClass(false)}>
+      <Link href="/import" className={`${ctaClass(false)} snap-start`}>
         {t("importNav")}
       </Link>
 
-      <div className="relative" ref={viewsWrapRef}>
+      <div className="relative shrink-0 snap-start" ref={viewsWrapRef}>
         <button
+          ref={viewsBtnRef}
           type="button"
-          className={ctaClass(isDashboardViewTab(activeTab))}
+          className={ctaClass(activeTab != null && isDashboardViewTab(activeTab))}
           aria-haspopup="menu"
           aria-expanded={viewsOpen}
           onClick={() => {
@@ -207,41 +348,13 @@ export default function DashboardTabBarQuickLinks({
             ▾
           </span>
         </button>
-        {viewsOpen && (
-          <div
-            className={panelClass}
-            role="menu"
-            aria-label={t("dashboardTablistLabel")}
-            data-testid="dashboard-views-menu"
-          >
-            {DASHBOARD_VIEW_TABS.map((row) => {
-              const disabled = row.key === "diversification" && holdingsCount === 0;
-              return (
-                <button
-                  key={row.key}
-                  type="button"
-                  role="menuitem"
-                  disabled={disabled}
-                  className={`${itemClass} ${disabled ? "opacity-40 cursor-not-allowed" : ""}`}
-                  onClick={() => {
-                    if (disabled) return;
-                    onSelectTab(row.key);
-                    setViewsOpen(false);
-                  }}
-                >
-                  <span>{t(row.labelKey)}</span>
-                  {row.tierBadge && <TierFeatureBadge requiredPlan={row.tierBadge} size="xs" />}
-                </button>
-              );
-            })}
-          </div>
-        )}
       </div>
 
-      <div className="relative" ref={moreWrapRef}>
+      <div className="relative shrink-0 snap-start" ref={moreWrapRef}>
         <button
+          ref={moreBtnRef}
           type="button"
-          className={moreBtnClass}
+          className={`${moreBtnClass} snap-start`}
           aria-haspopup="menu"
           aria-expanded={moreOpen}
           onClick={() => {
@@ -254,31 +367,6 @@ export default function DashboardTabBarQuickLinks({
             ▾
           </span>
         </button>
-        {moreOpen && (
-          <div
-            className={panelClass}
-            role="menu"
-            aria-label={t("dashboardToolsMoreMenu")}
-            data-testid="dashboard-tools-more-menu"
-          >
-            {visibleTools.map((entry) => {
-              const href = getToolPath(entry.id);
-              const badge = getTierBadgeForTool(entry.id);
-              return (
-                <Link
-                  key={entry.id}
-                  href={href}
-                  role="menuitem"
-                  className={itemClass}
-                  onClick={() => setMoreOpen(false)}
-                >
-                  <span>{t(entry.labelKey)}</span>
-                  {badge && <TierFeatureBadge requiredPlan={badge} size="xs" />}
-                </Link>
-              );
-            })}
-          </div>
-        )}
       </div>
     </div>
   );
