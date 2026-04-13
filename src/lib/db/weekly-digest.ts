@@ -1,5 +1,5 @@
 import { ensureInitialized } from "./client";
-import { str } from "./helpers";
+import { num, str } from "./helpers";
 
 export interface WeeklyDigestRow {
   id: string;
@@ -15,6 +15,10 @@ export interface WeeklyDigestRow {
 export interface WeeklyDigestStats {
   weekChange?: number;
   weekChangePct?: number;
+  /** Calendar day (YYYY-MM-DD) of the portfolio snapshot used as baseline for weekChange. */
+  weekChangeBaselineDate?: string;
+  /** Estimated buy minus sell amounts in EUR for the digest week (excludes dividends/fees). */
+  netBuyFlowEUR?: number;
   bestPerformer?: { ticker: string; changePct: number };
   worstPerformer?: { ticker: string; changePct: number };
   dividendsReceived?: number;
@@ -105,4 +109,28 @@ export async function hasDigestForWeek(userId: string, weekEnd: string): Promise
     args: [userId, weekEnd],
   });
   return result.rows.length > 0;
+}
+
+/**
+ * Latest holdings snapshot on or before week start (holdings only; cash excluded).
+ * Uses calendar date comparison so intraday rows on the week-start day are included.
+ */
+export async function getDigestBaselineSnapshot(
+  userId: string,
+  portfolioId: string,
+  weekStart: string,
+): Promise<{ totalValueEur: number; snapshotDay: string } | null> {
+  const client = await ensureInitialized();
+  const result = await client.execute({
+    sql: `SELECT total_value_eur, date FROM portfolio_snapshots
+          WHERE user_id = ? AND portfolio_id = ? AND substr(date, 1, 10) <= ?
+          ORDER BY date DESC LIMIT 1`,
+    args: [userId, portfolioId, weekStart],
+  });
+  if (result.rows.length === 0) return null;
+  const rawDate = str(result.rows[0].date);
+  const snapshotDay = rawDate.length >= 10 ? rawDate.slice(0, 10) : rawDate;
+  const totalValueEur = num(result.rows[0].total_value_eur);
+  if (!Number.isFinite(totalValueEur) || totalValueEur <= 0) return null;
+  return { totalValueEur, snapshotDay };
 }

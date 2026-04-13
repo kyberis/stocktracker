@@ -28,7 +28,8 @@ export type PlatformFeature =
   | "market_data_fmp_crypto"
   | "market_data_fmp_dividends"
   | "market_data_fmp_event_sync"
-  | "market_data_alpha_vantage";
+  | "market_data_alpha_vantage"
+  | "weekly_digest_enabled";
 
 const DEFAULT_ENABLED_FLAGS: Set<PlatformFeature> = new Set([
   "whatsapp_enabled",
@@ -40,6 +41,7 @@ const DEFAULT_ENABLED_FLAGS: Set<PlatformFeature> = new Set([
   "tool_watchlist_enabled",
   "ai_report_enabled",
   "market_data_alpha_vantage",
+  "weekly_digest_enabled",
 ]);
 
 const VALID_THEMES = new Set(["default", "terminal", "canvas", "studio"]);
@@ -376,6 +378,7 @@ const ALL_PLATFORM_FEATURES: PlatformFeature[] = [
   "market_data_fmp_dividends",
   "market_data_fmp_event_sync",
   "market_data_alpha_vantage",
+  "weekly_digest_enabled",
 ];
 
 export async function isFeatureEnabledForUser(feature: PlatformFeature, userId: string): Promise<boolean> {

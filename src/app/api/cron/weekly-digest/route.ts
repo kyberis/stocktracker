@@ -1,8 +1,10 @@
 import { NextRequest } from "next/server";
 import {
   getDigestEligibleUsers,
+  getDigestBaselineSnapshot,
   hasDigestForWeek,
   insertDigest,
+  isFeatureEnabledForUser,
   listHoldings,
   listCashEntries,
   listTransactions,
@@ -11,13 +13,13 @@ import {
   logEmailSend,
 } from "@/lib/db";
 import { getGlobalOpenAIApiKey, getAiModelForFlow } from "@/lib/db/settings";
-import { sendEmail, getFromAddress } from "@/lib/email";
+import { sendEmail } from "@/lib/email";
 import { withCronLogging, verifyCronAuth } from "@/lib/cron-logging";
 import { incrementGlobalAiCalls, incrementGlobalAiTokens } from "@/lib/rate-limit";
 import { getQuotesWithCache, getRatesWithCache } from "@/lib/quote-cache";
 import { convertToEUR, resolveQuoteCurrency } from "@/lib/utils";
-import { ensureInitialized } from "@/lib/db/client";
-import { num } from "@/lib/db/helpers";
+import { buildWeeklyDigestEmailHtml } from "@/lib/weekly-digest-email";
+import { computeNetBuyFlowEUR, isDigestBaselineTooOld } from "@/lib/weekly-digest-math";
 import type { WeeklyDigestStats } from "@/lib/db/weekly-digest";
 import type { ExchangeRates } from "@/lib/types";
 
@@ -31,18 +33,6 @@ const FX_PAIRS = [
   "EURHKD", "EURZAR", "EURTRY", "EURBRL", "EURMXN",
 ];
 
-async function getSnapshotValue(userId: string, portfolioId: string, date: string): Promise<number | null> {
-  const client = await ensureInitialized();
-  const result = await client.execute({
-    sql: `SELECT total_value_eur FROM portfolio_snapshots
-          WHERE user_id = ? AND portfolio_id = ? AND date <= ?
-          ORDER BY date DESC LIMIT 1`,
-    args: [userId, portfolioId, date],
-  });
-  if (result.rows.length === 0) return null;
-  return num(result.rows[0].total_value_eur);
-}
-
 function getWeekRange(): { weekStart: string; weekEnd: string } {
   const now = new Date();
   const day = now.getUTCDay();
@@ -55,65 +45,6 @@ function getWeekRange(): { weekStart: string; weekEnd: string } {
     weekStart: start.toISOString().slice(0, 10),
     weekEnd: end.toISOString().slice(0, 10),
   };
-}
-
-function buildWeeklyDigestEmail(displayName: string, summaryText: string, stats: WeeklyDigestStats, baseUrl: string, weekStart: string, weekEnd: string): string {
-  const currency = stats.currency || "EUR";
-  const currencySymbol = currency === "USD" ? "$" : currency === "GBP" ? "£" : "€";
-  const fmtNum = (n: number) => Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const weekChange = stats.weekChange !== undefined
-    ? `${stats.weekChange >= 0 ? "+" : "−"}${currencySymbol}${fmtNum(stats.weekChange)}`
-    : "—";
-  const weekChangeColor = stats.weekChange !== undefined
-    ? (stats.weekChange >= 0 ? "#10b981" : "#ef4444")
-    : "#64748b";
-  const weekChangeBg = stats.weekChange !== undefined
-    ? (stats.weekChange >= 0 ? "#f0fdf4" : "#fef2f2")
-    : "#f8fafc";
-  const best = stats.bestPerformer
-    ? `${stats.bestPerformer.ticker} ${stats.bestPerformer.changePct >= 0 ? "+" : ""}${stats.bestPerformer.changePct.toFixed(2)}%`
-    : "—";
-  const bestColor = stats.bestPerformer
-    ? (stats.bestPerformer.changePct >= 0 ? "#10b981" : "#ef4444")
-    : "#64748b";
-  const divs = stats.dividendsReceived && stats.dividendsReceived > 0
-    ? `${currencySymbol}${stats.dividendsReceived.toFixed(2)}`
-    : "None this week";
-
-  const logoUrl = `${baseUrl}/email-logo@2x.png`;
-
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"/></head><body style="margin:0;padding:0;background:#f8fafc;font-family:'DM Sans',-apple-system,sans-serif;">
-<div style="max-width:520px;margin:24px auto;background:#fff;border-radius:12px;overflow:hidden;">
-<div style="background:linear-gradient(135deg,#059669 0%,#10b981 100%);padding:24px 28px;text-align:center;">
-<img src="${logoUrl}" alt="trefolio" width="36" height="36" style="display:inline-block;width:36px;height:36px;border-radius:8px;vertical-align:middle;margin-right:8px;" /><span style="color:#fff;font-size:20px;font-weight:700;vertical-align:middle;letter-spacing:-0.3px;">trefolio</span>
-</div>
-<div style="padding:28px;">
-<div style="text-align:center;margin-bottom:20px;">
-<div style="font-size:18px;font-weight:700;color:#0f172a;">Your Weekly Portfolio Digest</div>
-<div style="font-size:12px;color:#64748b;">${weekStart} — ${weekEnd}</div>
-</div>
-<div style="display:flex;gap:8px;margin-bottom:20px;">
-<div style="flex:1;background:${weekChangeBg};border-radius:8px;padding:10px;text-align:center;">
-<div style="font-size:10px;color:#64748b;text-transform:uppercase;">Week Change</div>
-<div style="font-size:16px;font-weight:700;color:${weekChangeColor};">${weekChange}</div>
-</div>
-<div style="flex:1;background:#f0fdf4;border-radius:8px;padding:10px;text-align:center;">
-<div style="font-size:10px;color:#64748b;text-transform:uppercase;">Best</div>
-<div style="font-size:16px;font-weight:700;color:${bestColor};">${best}</div>
-</div>
-<div style="flex:1;background:#f8fafc;border-radius:8px;padding:10px;text-align:center;">
-<div style="font-size:10px;color:#64748b;text-transform:uppercase;">Dividends</div>
-<div style="font-size:16px;font-weight:700;color:#0f172a;">${divs}</div>
-</div>
-</div>
-<div style="font-size:14px;color:#475569;line-height:1.7;margin-bottom:20px;">${summaryText}</div>
-<div style="text-align:center;margin-bottom:16px;">
-<a href="${baseUrl}" style="display:inline-block;padding:10px 28px;border-radius:10px;background:#10b981;color:#fff;font-size:14px;font-weight:600;text-decoration:none;">View full dashboard</a>
-</div>
-<div style="font-size:10px;color:#94a3b8;text-align:center;font-style:italic;">
-AI-generated summary. Not financial advice. <a href="{{unsubscribe_url}}" style="color:#94a3b8;">Unsubscribe</a>
-</div>
-</div></div></body></html>`;
 }
 
 interface UserContext {
@@ -144,6 +75,7 @@ const runWeeklyDigest = withCronLogging("weekly-digest", async () => {
 
   for (const user of users) {
     if (!user.defaultPortfolioId) { skipped++; continue; }
+    if (!(await isFeatureEnabledForUser("weekly_digest_enabled", user.id))) { skipped++; continue; }
     if (await hasDigestForWeek(user.id, weekEnd)) { skipped++; continue; }
 
     const [holdings, cashEntries, portfolios] = await Promise.all([
@@ -215,23 +147,26 @@ const runWeeklyDigest = withCronLogging("weekly-digest", async () => {
       const totalCashEUR = cashEntries.reduce((sum, c) => sum + c.amountEUR, 0);
       const currentValueEUR = holdingsValueEUR + totalCashEUR;
 
-      // Week change from snapshots (compare holdings-only, since snapshots exclude cash)
-      const weekStartValue = await getSnapshotValue(user.id, user.defaultPortfolioId, weekStart);
+      const allTransactions = await listTransactions(user.id, undefined, user.defaultPortfolioId);
+      const weekDividends = allTransactions
+        .filter((tx) => tx.type === "dividend" && tx.date >= weekStart && tx.date <= weekEnd)
+        .reduce((sum, tx) => sum + tx.shares * tx.pricePerShare, 0);
+      const netBuyFlowEUR = computeNetBuyFlowEUR(allTransactions, weekStart, weekEnd);
+
+      // Holdings vs snapshot baseline (holdings-only; snapshots exclude cash). Stale baselines omitted.
+      const baseline = await getDigestBaselineSnapshot(user.id, user.defaultPortfolioId, weekStart);
       let weekChange: number | undefined;
       let weekChangePct: number | undefined;
-      if (weekStartValue && weekStartValue > 0) {
-        weekChange = holdingsValueEUR - weekStartValue;
-        weekChangePct = (weekChange / weekStartValue) * 100;
+      let weekChangeBaselineDate: string | undefined;
+      if (baseline && !isDigestBaselineTooOld(baseline.snapshotDay, weekStart)) {
+        weekChange = holdingsValueEUR - baseline.totalValueEur;
+        weekChangePct = (weekChange / baseline.totalValueEur) * 100;
+        weekChangeBaselineDate = baseline.snapshotDay;
       }
 
       holdingPerformance.sort((a, b) => b.changePct - a.changePct);
       const bestPerformer = holdingPerformance.length > 0 ? holdingPerformance[0] : undefined;
       const worstPerformer = holdingPerformance.length > 1 ? holdingPerformance[holdingPerformance.length - 1] : undefined;
-
-      const allTransactions = await listTransactions(user.id, undefined, user.defaultPortfolioId);
-      const weekDividends = allTransactions
-        .filter((tx) => tx.type === "dividend" && tx.date >= weekStart && tx.date <= weekEnd)
-        .reduce((sum, tx) => sum + tx.shares * tx.pricePerShare, 0);
 
       const stats: WeeklyDigestStats = {
         currency: baseCurrency,
@@ -239,6 +174,8 @@ const runWeeklyDigest = withCronLogging("weekly-digest", async () => {
         holdingCount: holdings.length,
         weekChange,
         weekChangePct,
+        weekChangeBaselineDate,
+        netBuyFlowEUR,
         bestPerformer,
         worstPerformer,
         dividendsReceived: weekDividends,
@@ -261,7 +198,9 @@ const runWeeklyDigest = withCronLogging("weekly-digest", async () => {
 
       const systemPrompt = `You are a concise financial newsletter writer. Write a brief weekly portfolio digest (3-5 sentences) for the user. Be factual and encouraging.
 Rules:
-- Use the provided performance data (week change, best/worst performer, dividends).
+- Use the provided performance data (holdings vs snapshot, best/worst session move, dividends, estimated net buy flow).
+- The "holdings vs snapshot" figure is NOT realized profit or "money made" — it is the change in holdings value versus a saved portfolio snapshot and can include trades, deposits deployed into stocks, or market moves. Do not describe it as profit, gain you earned, or money you made.
+- Best/worst tickers use the provider's latest session % change, not a full calendar week.
 - Focus on portfolio composition and general observations.
 - Mention top holdings by weight.
 - Suggest one actionable insight if appropriate.
@@ -270,19 +209,23 @@ Rules:
 - Write in English.
 - Never give specific financial advice.`;
 
-      const weekChangeStr = weekChange !== undefined ? `€${weekChange.toFixed(0)} (${weekChangePct!.toFixed(1)}%)` : "N/A";
-      const bestStr = bestPerformer ? `${bestPerformer.ticker} ${bestPerformer.changePct.toFixed(1)}%` : "N/A";
-      const worstStr = worstPerformer ? `${worstPerformer.ticker} ${worstPerformer.changePct.toFixed(1)}%` : "N/A";
+      const weekChangeStr = weekChange !== undefined
+        ? `€${weekChange.toFixed(0)} (${weekChangePct!.toFixed(1)}%) vs snapshot${weekChangeBaselineDate ? ` (${weekChangeBaselineDate})` : ""}`
+        : "N/A (no recent snapshot baseline — omitted)";
+      const bestStr = bestPerformer ? `${bestPerformer.ticker} ${bestPerformer.changePct.toFixed(1)}% (session)` : "N/A";
+      const worstStr = worstPerformer ? `${worstPerformer.ticker} ${worstPerformer.changePct.toFixed(1)}% (session)` : "N/A";
       const divStr = weekDividends > 0 ? `€${weekDividends.toFixed(2)}` : "None";
+      const flowStr = `€${netBuyFlowEUR.toFixed(0)} (buys minus sells, estimate)`;
 
       const userPrompt = `Weekly digest for portfolio with ${holdings.length} positions:
 Holdings: ${JSON.stringify(holdingsSummary.slice(0, 20))}
 Total cost basis: ~€${totalCost.toFixed(0)}
 Current value: ~€${currentValueEUR.toFixed(0)}
 Cash: ~€${totalCashEUR.toFixed(0)}
-Week change: ${weekChangeStr}
-Best performer: ${bestStr}
-Worst performer: ${worstStr}
+Holdings vs prior snapshot (not realized P/L): ${weekChangeStr}
+Estimated net buy flow this week: ${flowStr}
+Best performer (session %): ${bestStr}
+Worst performer (session %): ${worstStr}
 Dividends received: ${divStr}
 Week: ${weekStart} to ${weekEnd}`;
 
@@ -346,7 +289,7 @@ Week: ${weekStart} to ${weekEnd}`;
       } else {
         const baseUrl = process.env.APP_BASE_URL || "https://trefolio.com";
         const digestSubject = `Your Weekly Portfolio Digest — ${weekStart} to ${weekEnd}`;
-        const html = buildWeeklyDigestEmail(user.displayName, summaryText, stats, baseUrl, weekStart, weekEnd);
+        const html = buildWeeklyDigestEmailHtml(summaryText, stats, baseUrl, weekStart, weekEnd, { fractionDigits: 2 });
         // sendEmail enforces profile / one-click unsubscribe before Resend (see isMarketingEmailAllowed + sendEmail).
         const emailResult = await sendEmail({
           to: user.email,

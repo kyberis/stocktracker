@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth-context";
 import { usePortfolio } from "@/lib/portfolio-context";
+import { useFeatureFlagContext } from "@/lib/feature-flag-context";
 const fmtDigest = (n: number) =>
   Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 import type { WeeklyDigestRow } from "@/lib/db/weekly-digest";
@@ -19,6 +20,9 @@ interface WeeklyDigestCardProps {
 }
 
 export default function WeeklyDigestCard({ position = "default" }: WeeklyDigestCardProps) {
+  const { flags, isLoaded } = useFeatureFlagContext();
+  if (isLoaded && flags.weekly_digest_enabled === false) return null;
+
   const fresh = isDigestFreshDay();
   if (position === "promoted" && !fresh) return null;
   if (position === "default" && fresh) return null;
@@ -101,6 +105,13 @@ export default function WeeklyDigestCard({ position = "default" }: WeeklyDigestC
       value: `${stats.weekChange >= 0 ? "+" : "-"}${sym}${fmtDigest(stats.weekChange)}`,
       color: stats.weekChange >= 0 ? "text-emerald-500" : "text-red-500",
     });
+    if (stats.netBuyFlowEUR !== undefined && Math.abs(stats.netBuyFlowEUR) >= 1) {
+      statItems.push({
+        label: t("weeklyDigestNetBuyFlow"),
+        value: `${stats.netBuyFlowEUR >= 0 ? "+" : "-"}${sym}${fmtDigest(stats.netBuyFlowEUR)}`,
+        color: stats.netBuyFlowEUR >= 0 ? "text-slate-600 dark:text-slate-300" : "text-slate-600 dark:text-slate-300",
+      });
+    }
   } else if (stats.totalValue !== undefined) {
     statItems.push({
       label: t("weeklyDigestPortfolioValue") ?? "Value",
@@ -144,7 +155,7 @@ export default function WeeklyDigestCard({ position = "default" }: WeeklyDigestC
       </div>
 
       {statItems.length > 0 && (
-        <div className={`grid gap-1.5 mb-2`} style={{ gridTemplateColumns: `repeat(${statItems.length}, 1fr)` }}>
+        <div className="grid grid-cols-2 gap-1.5 mb-2">
           {statItems.map((s, i) => (
             <div key={i} className="rounded-lg bg-white/40 dark:bg-white/[0.03] p-2 text-center">
               <div className="text-[9px] uppercase tracking-wider text-gray-400 dark:text-slate-500">{s.label}</div>
@@ -152,6 +163,10 @@ export default function WeeklyDigestCard({ position = "default" }: WeeklyDigestC
             </div>
           ))}
         </div>
+      )}
+
+      {stats.weekChange !== undefined && (
+        <p className="text-[9px] text-gray-500 dark:text-slate-500 leading-snug mb-2">{t("weeklyDigestSnapshotNote")}</p>
       )}
 
       <p className="text-[11px] text-gray-600 dark:text-slate-300 leading-relaxed mb-2">

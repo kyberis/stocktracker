@@ -2420,8 +2420,11 @@ const es: TranslationStrings = {
 
   // AI weekly digest
   weeklyDigestTitle: "Resumen Semanal del Portafolio",
-  weeklyDigestWeekChange: "Cambio Semanal",
-  weeklyDigestBestPerformer: "Mejor Rendimiento",
+  weeklyDigestWeekChange: "Posiciones vs instantánea",
+  weeklyDigestBestPerformer: "Mejor (sesión)",
+  weeklyDigestSnapshotNote:
+    "Comparado con tu última instantánea de posiciones guardada (excluye efectivo). Cifras altas pueden deberse a operaciones o depósitos, no solo al mercado.",
+  weeklyDigestNetBuyFlow: "Flujo neto compras (est., semana)",
   weeklyDigestDividendsReceived: "Dividendos",
   weeklyDigestPortfolioValue: "Valor",
   weeklyDigestHoldings: "Posiciones",

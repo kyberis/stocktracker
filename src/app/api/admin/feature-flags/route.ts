@@ -25,6 +25,7 @@ const ALLOWED_FLAGS: PlatformFeature[] = [
   "market_data_fmp_dividends",
   "market_data_fmp_event_sync",
   "market_data_alpha_vantage",
+  "weekly_digest_enabled",
 ];
 
 export const GET = withMetrics("/api/admin/feature-flags", async (req: NextRequest) => {

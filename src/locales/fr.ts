@@ -2346,8 +2346,11 @@ const fr: TranslationStrings = {
   goalPromptSubtitle: "Définissez une valeur cible pour votre portefeuille et suivez vos progrès au fil du temps. Restez motivé et sur la bonne voie.",
   goalPromptCta: "Définir l'objectif",
   weeklyDigestTitle: "Résumé hebdomadaire du portefeuille",
-  weeklyDigestWeekChange: "Changement de la semaine",
-  weeklyDigestBestPerformer: "Meilleur Performeur",
+  weeklyDigestWeekChange: "Titres vs instantané",
+  weeklyDigestBestPerformer: "Meilleur (séance)",
+  weeklyDigestSnapshotNote:
+    "Par rapport à votre dernier instantané de titres enregistré (hors liquidités). Les montants élevés peuvent refléter des opérations ou des dépôts, pas seulement le marché.",
+  weeklyDigestNetBuyFlow: "Flux net d’achats estimé (semaine)",
   weeklyDigestDividendsReceived: "Dividendes",
   weeklyDigestPortfolioValue: "Valeur",
   weeklyDigestHoldings: "Actifs",

@@ -2346,8 +2346,11 @@ const de: TranslationStrings = {
   goalPromptSubtitle: "Definieren Sie einen Zielwert für Ihr Portfolio und verfolgen Sie Ihren Fortschritt im Laufe der Zeit. Bleiben Sie motiviert und auf Kurs.",
   goalPromptCta: "Ziel setzen",
   weeklyDigestTitle: "Wöchentlicher Portfolio-Digest",
-  weeklyDigestWeekChange: "Woche Veränderung",
-  weeklyDigestBestPerformer: "Bester Performer",
+  weeklyDigestWeekChange: "Bestände vs. Snapshot",
+  weeklyDigestBestPerformer: "Bester (Session)",
+  weeklyDigestSnapshotNote:
+    "Verglichen mit deinem letzten gespeicherten Bestände-Snapshot (ohne Bargeld). Große Werte können Trades oder Einlagen widerspiegeln, nicht nur Marktbewegungen.",
+  weeklyDigestNetBuyFlow: "Geschätzter Netto-Kauffluss (Woche)",
   weeklyDigestDividendsReceived: "Dividenden",
   weeklyDigestPortfolioValue: "Wert",
   weeklyDigestHoldings: "Bestände",

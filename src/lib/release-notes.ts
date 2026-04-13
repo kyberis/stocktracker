@@ -17,6 +17,40 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.77.50",
+    date: "2026-04-13",
+    title: "Feature flag: Weekly Portfolio Digest",
+    titleTranslations: {
+      es: "Feature flag: resumen semanal del portafolio",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Added platform feature flag `weekly_digest_enabled` (on by default): toggle the weekly digest card on the home dashboard and Monday digest emails from Admin → Feature flags, with optional per-user overrides.",
+        translations: {
+          es: "Nuevo flag de plataforma `weekly_digest_enabled` (activo por defecto): controla la tarjeta del resumen semanal en el inicio y los correos del lunes desde Admin → Feature flags, con anulaciones opcionales por usuario.",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.77.49",
+    date: "2026-04-13",
+    title: "Weekly digest: clearer holdings delta and baseline",
+    titleTranslations: {
+      es: "Resumen semanal: delta de posiciones y línea base más claros",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Weekly portfolio digest no longer treats a very old snapshot as the week-start baseline: if the latest holdings snapshot is more than 14 days before the digest week, the headline delta is omitted. Baseline selection uses calendar dates so intraday snapshot rows on the week-start day count correctly. The email and AI prompt explain that the figure is holdings vs a saved snapshot (not realized profit), label the mover as session %, and include estimated net buy flow from ledger trades.",
+        translations: {
+          es: "El resumen semanal del portafolio ya no usa una instantánea demasiado antigua como línea base: si la última instantánea de posiciones es de más de 14 días antes de la semana del digest, se omite el delta del titular. La línea base usa fechas de calendario para incluir bien las filas intradía. El correo y el prompt de IA aclaran que la cifra es posiciones vs instantánea guardada (no beneficio realizado), etiquetan el movimiento como % de sesión e incluyen el flujo neto de compras estimado desde el libro de operaciones.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.77.48",
     date: "2026-04-13",
     title: "Mobile dashboard: horizontal shortcut strip",

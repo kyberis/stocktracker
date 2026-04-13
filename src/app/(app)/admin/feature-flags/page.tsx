@@ -39,6 +39,11 @@ const FLAG_META: Record<string, { label: string; description: string; group: str
   ai_report_enabled: { label: "AI Portfolio Report", description: "AI-generated portfolio score, detailed analysis page, and streaming review", group: "Features" },
   portfolio_v2_chart_enabled: { label: "Portfolio V2 Chart", description: "New portfolio value/performance chart with market sessions, buy/sell dots, benchmarks, and backfill CTA on the homepage", group: "Features" },
   social_network_enabled: { label: "Social Network", description: "Public profiles, posts, connections, feed, people search, and in-app conversations", group: "Features" },
+  weekly_digest_enabled: {
+    label: "Weekly Portfolio Digest",
+    description: "AI weekly digest card on the home dashboard and Monday digest emails (Pro). When off, the card is hidden and the cron does not generate or send digests.",
+    group: "Features",
+  },
   market_data_fmp_search: { label: "FMP: symbol search (moat picker)", description: "Use Financial Modeling Prep for premium symbol search instead of Alpha Vantage", group: "Market data (FMP)" },
   market_data_fmp_fundamentals: { label: "FMP: fundamentals & moat sync", description: "Stock evaluation / moat cron fundamentals from FMP", group: "Market data (FMP)" },
   market_data_fmp_intelligence: { label: "FMP: intelligence tab", description: "News, insider, institutional, transcripts via FMP", group: "Market data (FMP)" },

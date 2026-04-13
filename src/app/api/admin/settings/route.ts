@@ -39,6 +39,7 @@ const ALLOWED_FLAGS: PlatformFeature[] = [
   "market_data_fmp_crypto",
   "market_data_fmp_dividends",
   "market_data_fmp_event_sync",
+  "weekly_digest_enabled",
 ];
 
 export const dynamic = "force-dynamic";

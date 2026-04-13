@@ -2345,8 +2345,11 @@ const nl: TranslationStrings = {
   goalPromptSubtitle: "Definieer een doelwaarde voor je portfolio en volg je voortgang in de loop van de tijd. Blijf gemotiveerd en op koers.",
   goalPromptCta: "Stel doel in",
   weeklyDigestTitle: "Wekelijks Portfolio Overzicht",
-  weeklyDigestWeekChange: "Wekelijkse Verandering",
-  weeklyDigestBestPerformer: "Beste Presteerder",
+  weeklyDigestWeekChange: "Posities vs momentopname",
+  weeklyDigestBestPerformer: "Beste (sessie)",
+  weeklyDigestSnapshotNote:
+    "Vergeleken met je laatst opgeslagen posities-momentopname (exclusief cash). Grote bedragen kunnen trades of stortingen weerspiegelen, niet alleen de markt.",
+  weeklyDigestNetBuyFlow: "Geschat netto koopvolume (week)",
   weeklyDigestDividendsReceived: "Dividenden",
   weeklyDigestPortfolioValue: "Waarde",
   weeklyDigestHoldings: "Beleggingen",

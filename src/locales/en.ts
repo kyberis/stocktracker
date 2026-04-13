@@ -2419,8 +2419,11 @@ const en: TranslationStrings = {
 
   // AI weekly digest
   weeklyDigestTitle: "Weekly Portfolio Digest",
-  weeklyDigestWeekChange: "Week Change",
-  weeklyDigestBestPerformer: "Best Performer",
+  weeklyDigestWeekChange: "Holdings vs snapshot",
+  weeklyDigestBestPerformer: "Best (session)",
+  weeklyDigestSnapshotNote:
+    "Compared to your last saved holdings snapshot (excludes cash). Large figures can reflect trades or deposits, not only market moves.",
+  weeklyDigestNetBuyFlow: "Est. net buy flow (week)",
   weeklyDigestDividendsReceived: "Dividends",
   weeklyDigestPortfolioValue: "Value",
   weeklyDigestHoldings: "Holdings",

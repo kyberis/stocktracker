@@ -476,6 +476,7 @@ const PLATFORM_FEATURE_ENUM = z.enum([
   "market_data_fmp_dividends",
   "market_data_fmp_event_sync",
   "market_data_alpha_vantage",
+  "weekly_digest_enabled",
 ]);
 
 export const featureFlagSchema = z.object({

@@ -504,6 +504,7 @@ export {
   insertDigest,
   getDigestEligibleUsers,
   hasDigestForWeek,
+  getDigestBaselineSnapshot,
 } from "./weekly-digest";
 
 export type { MarketDigest, MarketDigestListItem, MarketDigestWithTranslations, DigestTranslation, DigestStatus, MarketDigestSource } from "./market-digests";
