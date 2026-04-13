@@ -1,16 +1,20 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { createPortal } from "react-dom";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { useI18n } from "@/lib/i18n";
 import { useSettings } from "@/lib/settings-context";
 import { useFeatureFlag } from "@/lib/feature-flag-context";
+import { useFavoriteTools } from "@/lib/favorite-tools";
 import TierFeatureBadge from "@/components/TierFeatureBadge";
 import {
   TOOLS_CATALOG,
   getTierBadgeForTool,
+  getToolEntry,
   getToolPath,
+  type ToolCatalogEntry,
   resolveHubVisibility,
   sortTabsByHubCategory,
 } from "@/lib/tools-registry";
@@ -81,6 +85,8 @@ export default function DashboardTabBarQuickLinks({
   dataTour?: string;
 }) {
   const { t } = useI18n();
+  const pathname = usePathname();
+  const { favoriteIdsOrdered } = useFavoriteTools();
   const aiReportEnabled = useFeatureFlag("ai_report_enabled");
   const settings = useSettings();
   const {
@@ -174,6 +180,26 @@ export default function DashboardTabBarQuickLinks({
     );
     return sortTabsByHubCategory(filtered);
   }, [visibilitySettings, aiReportEnabled]);
+
+  const visibleToolIdSet = useMemo(() => new Set(visibleTools.map((e) => e.id)), [visibleTools]);
+
+  const favoriteQuickLinks = useMemo((): ToolCatalogEntry[] => {
+    return favoriteIdsOrdered
+      .filter((id) => visibleToolIdSet.has(id))
+      .map((id) => getToolEntry(id))
+      .filter((e): e is ToolCatalogEntry => e != null);
+  }, [favoriteIdsOrdered, visibleToolIdSet]);
+
+  /** Favorites first (user order), then remaining tools in hub order — used only for the More menu. */
+  const moreMenuTools = useMemo(() => {
+    const favoriteIdsInMenu = favoriteIdsOrdered.filter((id) => visibleToolIdSet.has(id));
+    const favSet = new Set(favoriteIdsInMenu);
+    const favoriteEntries = favoriteIdsInMenu
+      .map((id) => getToolEntry(id))
+      .filter((e): e is ToolCatalogEntry => e != null);
+    const rest = visibleTools.filter((e) => !favSet.has(e.id));
+    return [...favoriteEntries, ...rest];
+  }, [visibleTools, favoriteIdsOrdered, visibleToolIdSet]);
 
   const ctaClass = (active: boolean) => {
     if (variant === "terminal") {
@@ -280,7 +306,7 @@ export default function DashboardTabBarQuickLinks({
         aria-label={t("dashboardToolsMoreMenu")}
         data-testid="dashboard-tools-more-menu"
       >
-        {visibleTools.map((entry) => {
+        {moreMenuTools.map((entry) => {
           const href = getToolPath(entry.id);
           const badge = getTierBadgeForTool(entry.id);
           return (
@@ -320,6 +346,25 @@ export default function DashboardTabBarQuickLinks({
       <Link href="/tools" className={`${ctaClass(false)} snap-start`}>
         {t("toolsNav")}
       </Link>
+      {favoriteQuickLinks.map((entry) => {
+        const href = getToolPath(entry.id);
+        const toolActive =
+          pathname === href || (href.length > 1 && pathname.startsWith(`${href}/`));
+        const badge = getTierBadgeForTool(entry.id);
+        return (
+          <Link
+            key={entry.id}
+            href={href}
+            className={`${ctaClass(toolActive)} snap-start`}
+            title={t(entry.descKey)}
+          >
+            <span className="inline-flex max-w-[9rem] sm:max-w-none items-center gap-1 truncate">
+              {t(entry.labelKey)}
+              {badge && <TierFeatureBadge requiredPlan={badge} size="xs" />}
+            </span>
+          </Link>
+        );
+      })}
       <button
         type="button"
         onClick={() => onSelectTab("news")}

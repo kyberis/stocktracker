@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.77.51",
+    date: "2026-04-13",
+    title: "Dashboard: favorite tools in tab bar",
+    titleTranslations: {
+      es: "Panel: herramientas favoritas en la barra",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Tool favorites from the Tools hub appear as quick links on the dashboard tab bar (after Tools), and the More ▸ tools menu lists favorites first in your saved order.",
+        translations: {
+          es: "Las herramientas marcadas como favoritas en el hub Herramientas aparecen como accesos rápidos en la barra del panel (después de Herramientas), y el menú Más ▸ herramientas muestra primero los favoritos en el orden guardado.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.77.50",
     date: "2026-04-13",
     title: "Feature flag: Weekly Portfolio Digest",
