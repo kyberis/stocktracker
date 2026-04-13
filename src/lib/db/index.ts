@@ -114,6 +114,12 @@ export {
 } from "./transactions";
 
 export {
+  listHoldingsRaw,
+  listTransactionsRaw,
+  listTransactionPortfolioMapRaw,
+} from "./admin-raw-export";
+
+export {
   listCashEntries,
   addCashEntry,
   updateCashEntry,

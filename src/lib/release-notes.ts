@@ -17,6 +17,57 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.77.54",
+    date: "2026-04-13",
+    title: "Dashboard: overflow shortcuts into More",
+    titleTranslations: {
+      es: "Panel: accesos que no caben van a Más",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "The dashboard shortcut bar no longer relies on horizontal scrolling: favorite tool chips, News, and Import move into the More ▸ menu when the row would not fit, with News and Import duplicated at the top of that menu when overflowed.",
+        translations: {
+          es: "La barra de accesos del panel ya no depende del desplazamiento horizontal: los accesos de herramientas favoritas, Noticias e Importar pasan al menú Más ▸ cuando no caben en la fila; Noticias e Importar se repiten arriba en ese menú cuando quedan fuera de la barra.",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.77.53",
+    date: "2026-04-13",
+    title: "Admin: raw DB snapshot download",
+    titleTranslations: {
+      es: "Admin: descarga de instantánea cruda de la BD",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Admin user detail page can download a JSON file of literal holdings, transactions, and transaction-portfolio map rows from the database (optional portfolio filter) for debugging, without merged holdings or read-time transaction fixes.",
+        translations: {
+          es: "La ficha de usuario en Admin permite descargar un JSON con filas literales de posiciones, transacciones y mapa transacción–cartera (filtro de cartera opcional) para depuración, sin fusionar posiciones ni autocorrecciones al leer transacciones.",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.77.52",
+    date: "2026-04-13",
+    title: "Dashboard: Views before favorite tools",
+    titleTranslations: {
+      es: "Panel: Vistas antes de herramientas favoritas",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "The Views menu (Portfolio, Diversification, Dividends, Metrics, Growth, Events) now sits right after Tools on the dashboard tab bar, before favorited tool shortcuts, so it stays visible when many tools are starred instead of scrolling off-screen.",
+        translations: {
+          es: "El menú Vistas (Cartera, Diversificación, Dividendos, Métricas, Crecimiento, Eventos) queda justo después de Herramientas en la barra del panel, antes de los accesos de herramientas favoritas, para que siga visible al marcar muchas herramientas y no quede fuera por el desplazamiento horizontal.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.77.51",
     date: "2026-04-13",
     title: "Dashboard: favorite tools in tab bar",

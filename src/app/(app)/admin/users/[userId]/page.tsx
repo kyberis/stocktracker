@@ -493,6 +493,7 @@ export default function AdminUserDetailPage() {
 
   const [selectedPortfolio, setSelectedPortfolio] = useState<string>("all");
   const [dataTab, setDataTab] = useState<DataTab>("holdings");
+  const [rawExporting, setRawExporting] = useState(false);
 
   const [resetPwd, setResetPwd] = useState("");
   const [actionMsg, setActionMsg] = useState("");
@@ -518,6 +519,43 @@ export default function AdminUserDetailPage() {
   }, [userId]);
 
   useEffect(() => { fetchData(selectedPortfolio); }, [fetchData, selectedPortfolio]);
+
+  const handleDownloadRawDbSnapshot = async () => {
+    setRawExporting(true);
+    try {
+      const params = new URLSearchParams();
+      if (selectedPortfolio && selectedPortfolio !== "all") params.set("portfolioId", selectedPortfolio);
+      const res = await fetch(
+        `/api/admin/users/${encodeURIComponent(userId)}/data-raw?${params}`,
+        { cache: "no-store" },
+      );
+      if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as { error?: string };
+        setActionMsg(typeof body.error === "string" ? body.error : "Raw export failed");
+        setTimeout(() => setActionMsg(""), 4000);
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const cd = res.headers.get("Content-Disposition");
+      const match = cd?.match(/filename="([^"]+)"/);
+      a.download = match?.[1] ?? `user-${userId}-db-snapshot.json`;
+      a.rel = "noopener";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      setActionMsg("Downloaded raw DB snapshot");
+      setTimeout(() => setActionMsg(""), 3000);
+    } catch {
+      setActionMsg("Raw export failed");
+      setTimeout(() => setActionMsg(""), 4000);
+    } finally {
+      setRawExporting(false);
+    }
+  };
 
   const handlePwdReset = async (e: FormEvent) => {
     e.preventDefault();
@@ -1066,7 +1104,16 @@ export default function AdminUserDetailPage() {
               ))}
             </div>
 
-            <div className="ml-auto flex items-center gap-2">
+            <div className="ml-auto flex items-center gap-2 flex-wrap justify-end">
+              <button
+                type="button"
+                onClick={handleDownloadRawDbSnapshot}
+                disabled={rawExporting}
+                title="Download unmerged holdings and transactions rows as JSON (literal SQLite data for debugging)."
+                className="text-xs font-medium px-2.5 py-1 rounded-lg border border-gray-200 dark:border-slate-600 text-gray-700 dark:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-700/80 disabled:opacity-50"
+              >
+                {rawExporting ? "Preparing…" : "Download raw DB snapshot"}
+              </button>
               <label className="text-[11px] text-gray-500 dark:text-slate-400">Portfolio:</label>
               <select
                 value={selectedPortfolio}

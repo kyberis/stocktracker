@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { createPortal } from "react-dom";
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { useI18n } from "@/lib/i18n";
 import { useSettings } from "@/lib/settings-context";
 import { useFeatureFlag } from "@/lib/feature-flag-context";
@@ -21,6 +21,11 @@ import {
 import type { DashboardTab } from "@/lib/use-dashboard-tab-url";
 
 export type DashboardTabBarQuickVariant = "default" | "terminal" | "canvas" | "studio";
+
+type TailItem =
+  | { kind: "fav"; entry: ToolCatalogEntry }
+  | { kind: "news" }
+  | { kind: "import" };
 
 const DASHBOARD_VIEW_TABS: {
   key: DashboardTab;
@@ -190,6 +195,11 @@ export default function DashboardTabBarQuickLinks({
       .filter((e): e is ToolCatalogEntry => e != null);
   }, [favoriteIdsOrdered, visibleToolIdSet]);
 
+  const tailItems = useMemo((): TailItem[] => {
+    const favs = favoriteQuickLinks.map((entry) => ({ kind: "fav" as const, entry }));
+    return [...favs, { kind: "news" as const }, { kind: "import" as const }];
+  }, [favoriteQuickLinks]);
+
   /** Favorites first (user order), then remaining tools in hub order — used only for the More menu. */
   const moreMenuTools = useMemo(() => {
     const favoriteIdsInMenu = favoriteIdsOrdered.filter((id) => visibleToolIdSet.has(id));
@@ -200,6 +210,66 @@ export default function DashboardTabBarQuickLinks({
     const rest = visibleTools.filter((e) => !favSet.has(e.id));
     return [...favoriteEntries, ...rest];
   }, [visibleTools, favoriteIdsOrdered, visibleToolIdSet]);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const coreWrapRef = useRef<HTMLDivElement>(null);
+  const tailMeasureRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [visibleTailCount, setVisibleTailCount] = useState<number | null>(null);
+
+  const recomputeTailVisibility = useCallback(() => {
+    const container = containerRef.current;
+    const core = coreWrapRef.current;
+    const moreEl = moreBtnRef.current;
+    if (!container || !core || !moreEl) return;
+
+    const cw = container.clientWidth;
+    const gapRaw = getComputedStyle(container).gap;
+    const gap = gapRaw ? parseFloat(gapRaw) : 6;
+    const coreW = core.offsetWidth;
+    const moreW = moreEl.offsetWidth;
+
+    const widths = tailItems.map((_, i) => tailMeasureRefs.current[i]?.offsetWidth ?? 0);
+
+    /** Row: core | gap | (tail[i] gap)* | more — same as flex `gap` between siblings. */
+    let k = widths.length;
+    while (k >= 0) {
+      let sum = coreW;
+      for (let i = 0; i < k; i++) {
+        sum += gap;
+        sum += widths[i];
+      }
+      sum += gap;
+      sum += moreW;
+      if (sum <= cw + 0.5) break;
+      k--;
+    }
+    setVisibleTailCount(k);
+  }, [tailItems]);
+
+  useLayoutEffect(() => {
+    recomputeTailVisibility();
+  }, [recomputeTailVisibility, pathname, activeTab, variant]);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => recomputeTailVisibility());
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [recomputeTailVisibility]);
+
+  const shownTail = useMemo(() => {
+    const n = visibleTailCount ?? tailItems.length;
+    return tailItems.slice(0, Math.min(n, tailItems.length));
+  }, [tailItems, visibleTailCount]);
+
+  const overflowTail = useMemo(() => {
+    const n = visibleTailCount ?? tailItems.length;
+    return tailItems.slice(Math.min(n, tailItems.length));
+  }, [tailItems, visibleTailCount]);
+
+  const showNewsInMore = overflowTail.some((x) => x.kind === "news");
+  const showImportInMore = overflowTail.some((x) => x.kind === "import");
 
   const ctaClass = (active: boolean) => {
     if (variant === "terminal") {
@@ -253,8 +323,8 @@ export default function DashboardTabBarQuickLinks({
           ? "flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm text-zinc-200 hover:bg-white/5"
           : "flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm text-gray-800 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-800";
 
-  const toolbarScrollClass =
-    "flex flex-nowrap items-center gap-1 sm:gap-1.5 overflow-x-auto overflow-y-hidden overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden touch-pan-x snap-x snap-mandatory";
+  const toolbarRowClass =
+    "flex min-w-0 flex-nowrap items-center gap-1 sm:gap-1.5 overflow-x-hidden overflow-y-hidden";
 
   const viewsMenuPortal =
     mounted &&
@@ -306,6 +376,31 @@ export default function DashboardTabBarQuickLinks({
         aria-label={t("dashboardToolsMoreMenu")}
         data-testid="dashboard-tools-more-menu"
       >
+        {showNewsInMore && (
+          <button
+            type="button"
+            role="menuitem"
+            className={itemClass}
+            onClick={() => {
+              onSelectTab("news");
+              setMoreOpen(false);
+            }}
+          >
+            {t("newsTab")}
+          </button>
+        )}
+        {showImportInMore && (
+          <Link href="/import" role="menuitem" className={itemClass} onClick={() => setMoreOpen(false)}>
+            {t("importNav")}
+          </Link>
+        )}
+        {(showNewsInMore || showImportInMore) && moreMenuTools.length > 0 ? (
+          <div
+            className="mx-2 my-1 border-t border-gray-200 dark:border-slate-600"
+            role="separator"
+            aria-hidden
+          />
+        ) : null}
         {moreMenuTools.map((entry) => {
           const href = getToolPath(entry.id);
           const badge = getTierBadgeForTool(entry.id);
@@ -327,92 +422,155 @@ export default function DashboardTabBarQuickLinks({
     );
 
   return (
-    <div
-      className={toolbarScrollClass}
-      role="toolbar"
-      aria-label={t("dashboardQuickNavAriaLabel")}
-      data-testid={dataTestId}
-      data-tour={dataTour}
-    >
-      {viewsMenuPortal}
-      {moreMenuPortal}
-      <button
-        type="button"
-        onClick={() => onSelectTab("portfolio")}
-        className={`${ctaClass(activeTab === "portfolio")} snap-start`}
+    <>
+      {/* Off-screen width probes — must mirror visible tail chips for overflow math. */}
+      <div
+        className="pointer-events-none fixed left-[-9999px] top-0 z-[-1] flex flex-nowrap items-center gap-1 sm:gap-1.5"
+        aria-hidden
       >
-        {t("dashboardHoldingsTab")}
-      </button>
-      <Link href="/tools" className={`${ctaClass(false)} snap-start`}>
-        {t("toolsNav")}
-      </Link>
-      {favoriteQuickLinks.map((entry) => {
-        const href = getToolPath(entry.id);
-        const toolActive =
-          pathname === href || (href.length > 1 && pathname.startsWith(`${href}/`));
-        const badge = getTierBadgeForTool(entry.id);
-        return (
-          <Link
-            key={entry.id}
-            href={href}
-            className={`${ctaClass(toolActive)} snap-start`}
-            title={t(entry.descKey)}
+        {tailItems.map((item, i) => (
+          <div
+            key={`tail-measure-${item.kind === "fav" ? item.entry.id : item.kind}`}
+            ref={(el) => {
+              tailMeasureRefs.current[i] = el;
+            }}
+            className="shrink-0"
           >
-            <span className="inline-flex max-w-[9rem] sm:max-w-none items-center gap-1 truncate">
-              {t(entry.labelKey)}
-              {badge && <TierFeatureBadge requiredPlan={badge} size="xs" />}
-            </span>
-          </Link>
-        );
-      })}
-      <button
-        type="button"
-        onClick={() => onSelectTab("news")}
-        className={`${ctaClass(activeTab === "news")} snap-start`}
+            {item.kind === "fav" ? (
+              (() => {
+                const entry = item.entry;
+                const href = getToolPath(entry.id);
+                const toolActive =
+                  pathname === href || (href.length > 1 && pathname.startsWith(`${href}/`));
+                const badge = getTierBadgeForTool(entry.id);
+                return (
+                  <Link
+                    href={href}
+                    className={`${ctaClass(toolActive)} snap-start`}
+                    title={t(entry.descKey)}
+                    tabIndex={-1}
+                  >
+                    <span className="inline-flex max-w-[9rem] sm:max-w-none items-center gap-1 truncate">
+                      {t(entry.labelKey)}
+                      {badge && <TierFeatureBadge requiredPlan={badge} size="xs" />}
+                    </span>
+                  </Link>
+                );
+              })()
+            ) : item.kind === "news" ? (
+              <button type="button" tabIndex={-1} className={`${ctaClass(activeTab === "news")} snap-start`}>
+                {t("newsTab")}
+              </button>
+            ) : (
+              <Link href="/import" className={`${ctaClass(false)} snap-start`} tabIndex={-1}>
+                {t("importNav")}
+              </Link>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div
+        ref={containerRef}
+        className={toolbarRowClass}
+        role="toolbar"
+        aria-label={t("dashboardQuickNavAriaLabel")}
+        data-testid={dataTestId}
+        data-tour={dataTour}
       >
-        {t("newsTab")}
-      </button>
-      <Link href="/import" className={`${ctaClass(false)} snap-start`}>
-        {t("importNav")}
-      </Link>
+        {viewsMenuPortal}
+        {moreMenuPortal}
+        <div ref={coreWrapRef} className="flex shrink-0 items-center gap-1 sm:gap-1.5">
+          <button
+            type="button"
+            onClick={() => onSelectTab("portfolio")}
+            className={`${ctaClass(activeTab === "portfolio")} snap-start`}
+          >
+            {t("dashboardHoldingsTab")}
+          </button>
+          <Link href="/tools" className={`${ctaClass(false)} snap-start`}>
+            {t("toolsNav")}
+          </Link>
 
-      <div className="relative shrink-0 snap-start" ref={viewsWrapRef}>
-        <button
-          ref={viewsBtnRef}
-          type="button"
-          className={ctaClass(activeTab != null && isDashboardViewTab(activeTab))}
-          aria-haspopup="menu"
-          aria-expanded={viewsOpen}
-          onClick={() => {
-            setViewsOpen((o) => !o);
-            setMoreOpen(false);
-          }}
-        >
-          {t("dashboardViewsHeading")}
-          <span className="inline-block ml-0.5 opacity-70" aria-hidden>
-            ▾
-          </span>
-        </button>
-      </div>
+          <div className="relative shrink-0 snap-start" ref={viewsWrapRef}>
+            <button
+              ref={viewsBtnRef}
+              type="button"
+              className={ctaClass(activeTab != null && isDashboardViewTab(activeTab))}
+              aria-haspopup="menu"
+              aria-expanded={viewsOpen}
+              onClick={() => {
+                setViewsOpen((o) => !o);
+                setMoreOpen(false);
+              }}
+            >
+              {t("dashboardViewsHeading")}
+              <span className="inline-block ml-0.5 opacity-70" aria-hidden>
+                ▾
+              </span>
+            </button>
+          </div>
+        </div>
 
-      <div className="relative shrink-0 snap-start" ref={moreWrapRef}>
-        <button
-          ref={moreBtnRef}
-          type="button"
-          className={`${moreBtnClass} snap-start`}
-          aria-haspopup="menu"
-          aria-expanded={moreOpen}
-          onClick={() => {
-            setMoreOpen((o) => !o);
-            setViewsOpen(false);
-          }}
-        >
-          {t("dashboardMoreTools")}
-          <span className="inline-block ml-0.5 opacity-70" aria-hidden>
-            ▾
-          </span>
-        </button>
+        {shownTail.map((item) => {
+          if (item.kind === "fav") {
+            const entry = item.entry;
+            const href = getToolPath(entry.id);
+            const toolActive =
+              pathname === href || (href.length > 1 && pathname.startsWith(`${href}/`));
+            const badge = getTierBadgeForTool(entry.id);
+            return (
+              <Link
+                key={`tail-fav-${entry.id}`}
+                href={href}
+                className={`${ctaClass(toolActive)} shrink-0 snap-start`}
+                title={t(entry.descKey)}
+              >
+                <span className="inline-flex max-w-[9rem] sm:max-w-none items-center gap-1 truncate">
+                  {t(entry.labelKey)}
+                  {badge && <TierFeatureBadge requiredPlan={badge} size="xs" />}
+                </span>
+              </Link>
+            );
+          }
+          if (item.kind === "news") {
+            return (
+              <button
+                key="tail-news"
+                type="button"
+                onClick={() => onSelectTab("news")}
+                className={`${ctaClass(activeTab === "news")} shrink-0 snap-start`}
+              >
+                {t("newsTab")}
+              </button>
+            );
+          }
+          return (
+            <Link key="tail-import" href="/import" className={`${ctaClass(false)} shrink-0 snap-start`}>
+              {t("importNav")}
+            </Link>
+          );
+        })}
+
+        <div className="relative shrink-0 snap-start" ref={moreWrapRef}>
+          <button
+            ref={moreBtnRef}
+            type="button"
+            className={`${moreBtnClass} snap-start`}
+            aria-haspopup="menu"
+            aria-expanded={moreOpen}
+            onClick={() => {
+              setMoreOpen((o) => !o);
+              setViewsOpen(false);
+            }}
+          >
+            {t("dashboardMoreTools")}
+            <span className="inline-block ml-0.5 opacity-70" aria-hidden>
+              ▾
+            </span>
+          </button>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

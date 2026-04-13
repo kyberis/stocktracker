@@ -364,6 +364,12 @@ export const featureDomains: FeatureDomain[] = [
       { method: "GET", path: "/api/admin/users", auth: "admin", description: "List all users" },
       { method: "POST", path: "/api/admin/users", auth: "admin", description: "Update user role/plan, reset password" },
       { method: "DELETE", path: "/api/admin/users", auth: "admin", description: "Delete user" },
+      {
+        method: "GET",
+        path: "/api/admin/users/[userId]/data-raw",
+        auth: "admin",
+        description: "Download raw SQLite rows (holdings, transactions, transaction_portfolio_map) for debugging",
+      },
       { method: "GET", path: "/api/admin/analytics", auth: "admin", description: "Usage analytics" },
       { method: "GET", path: "/api/admin/feature-flags", auth: "admin", description: "Get feature flags" },
       { method: "PUT", path: "/api/admin/feature-flags", auth: "admin", description: "Update feature flags" },
