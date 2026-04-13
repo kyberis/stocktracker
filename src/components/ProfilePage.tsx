@@ -611,7 +611,7 @@ function PortfolioManagementSection() {
             Device & Widget Portfolio
           </label>
           <p className="text-xs text-gray-500 dark:text-slate-400">
-            Choose which portfolio your widget and trefolio Leaf show. Leave on &quot;All Portfolios&quot; for a combined view.
+            Choose which portfolio the home screen widget and trefolio Leaf use. This is separate from the portfolio picker on the dashboard—each place shows totals for its own scope. Leave on &quot;All Portfolios&quot; for a combined view on device and widget.
           </p>
           <select
             value={devicePortfolioId}

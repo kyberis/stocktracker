@@ -433,9 +433,9 @@ function MessageBubble({ msg, isOwn, isRead, isFirstInGroup, isLastInGroup, colo
         <button
           type="button"
           onClick={() => onScrollToReply(repliedMsg.id)}
-          className={`text-[11px] px-3 py-1.5 mb-0.5 rounded-lg border-l-2 text-left cursor-pointer transition-opacity hover:opacity-80 active:opacity-60 ${
+          className={`text-[11px] px-3 py-1.5 mb-0.5 rounded-lg border-l-2 text-left cursor-pointer transition-opacity hover:opacity-90 active:opacity-80 ${
             isOwn
-              ? "bg-white/15 border-white/50 text-white/70"
+              ? "bg-indigo-50 dark:bg-indigo-950/60 border-indigo-300 dark:border-indigo-500 text-gray-800 dark:text-slate-200"
               : "bg-gray-100 dark:bg-slate-700/50 border-gray-300 dark:border-slate-500 text-gray-600 dark:text-slate-300"
           }`}
         >
@@ -1328,10 +1328,10 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
         <div className="px-4 pt-2 flex items-center gap-2 bg-white dark:bg-slate-900 border-t border-gray-100 dark:border-slate-800">
           <div className="flex-1 min-w-0">
             {replyTo && (
-              <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-slate-400">
-                <Reply className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
-                <span className="font-medium text-gray-700 dark:text-slate-300">{replyTo.senderName}</span>
-                <span className="truncate opacity-70">{replyTo.type === "image" ? "Photo" : replyTo.content.slice(0, 50)}</span>
+              <div className="flex items-center gap-1.5 text-xs text-gray-700 dark:text-slate-300">
+                <Reply className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                <span className="font-medium text-gray-900 dark:text-slate-100">{replyTo.senderName}</span>
+                <span className="truncate text-gray-600 dark:text-slate-400">{replyTo.type === "image" ? "Photo" : replyTo.content.slice(0, 50)}</span>
               </div>
             )}
             {editingMsg && (

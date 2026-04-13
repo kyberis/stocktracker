@@ -189,6 +189,7 @@ export const GET = withMetrics("/api/portfolio/summary", async (req: NextRequest
     ? (totals.dayGainLossEUR / (totals.totalCurrentEUR - totals.dayGainLossEUR)) * 100
     : 0;
 
+  // Legacy field names (*EUR): amounts are in `portfolioCurrency` (see calculatePortfolioTotals baseCurrency).
   return NextResponse.json({
     totalValueEUR: Math.round(totals.totalCurrentEUR * 100) / 100,
     costBasis: Math.round(totals.totalCostEUR * 100) / 100,

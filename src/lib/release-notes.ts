@@ -17,6 +17,57 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.77.58",
+    date: "2026-04-13",
+    title: "Private chat: readable reply previews",
+    titleTranslations: {
+      es: "Chat privado: vistas previas de respuesta legibles",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Reply quote chips on your own messages and the reply bar above the composer use higher-contrast colors so quoted text stays readable in light and dark themes.",
+        translations: {
+          es: "Las citas de respuesta en tus mensajes y la barra sobre el compositor usan colores con más contraste para que el texto citado se lea bien en tema claro y oscuro.",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.77.57",
+    date: "2026-04-13",
+    title: "Independent scopes for dashboard, widget, and Leaf",
+    titleTranslations: {
+      es: "Ámbitos independientes para panel, widget y Leaf",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "The dashboard portfolio picker and the Device & Widget portfolio setting are independent again: each surface shows totals for its own scope. Use Profile to choose what the Scriptable widget and Leaf display; the home page follows the in-app picker.",
+        translations: {
+          es: "El selector de cartera del panel y la opción Dispositivo y widget vuelven a ser independientes: cada vista muestra totales para su propio ámbito. Usa Perfil para elegir qué muestran el widget de Scriptable y Leaf; la página principal sigue el selector en la app.",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.77.56",
+    date: "2026-04-13",
+    title: "Widget scope matches dashboard portfolio",
+    titleTranslations: {
+      es: "El widget usa la misma cartera que el panel",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Changing the active portfolio on the dashboard (including mobile) now updates the server preference used by the home screen widget and Leaf device, so totals match what you see on the home page.",
+        translations: {
+          es: "Al cambiar la cartera activa en el panel (incluido móvil) se actualiza la preferencia en el servidor que usa el widget de la pantalla de inicio y el dispositivo Leaf, de modo que los totales coincidan con la página principal.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.77.55",
     date: "2026-04-13",
     title: "Admin: raw DB snapshot includes cash and crypto",

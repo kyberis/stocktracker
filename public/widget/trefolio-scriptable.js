@@ -1,6 +1,8 @@
 // trefolio — Portfolio Widget for Scriptable (iOS)
 // Paste this script in the Scriptable app, then add a Scriptable widget to your home screen.
 // Set your widget token below (generate one at trefolio.com → Profile → Widget Access).
+// Portfolio scope: Profile → Device & Widget (independent from the in-app portfolio picker).
+// Display amounts use `currency`; totalValueEUR is a legacy JSON key (value is in that currency).
 
 const TOKEN = "YOUR_TOKEN_HERE";
 const API_URL = "https://trefolio.com/api/portfolio/summary";

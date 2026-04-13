@@ -171,13 +171,22 @@ export function PortfolioProvider({
   const [alertedTickers, setAlertedTickers] = useState<Set<string>>(new Set());
   const [mutationVersion, setMutationVersion] = useState(0);
   const [goals, setGoals] = useState<Goal[]>(initialGoal ? [initialGoal] : []);
+
+  const setActivePortfolio = useCallback((id: string | null) => {
+    setActivePortfolioId(id);
+    if (typeof window !== "undefined") {
+      if (id) localStorage.setItem(ACTIVE_PORTFOLIO_KEY, id);
+      else localStorage.removeItem(ACTIVE_PORTFOLIO_KEY);
+    }
+  }, []);
+
   const restoredPortfolioRef = useRef(false);
   useEffect(() => {
     if (demoMode || restoredPortfolioRef.current) return;
     restoredPortfolioRef.current = true;
     const stored = localStorage.getItem(ACTIVE_PORTFOLIO_KEY);
-    if (stored) setActivePortfolioId(stored);
-  }, [demoMode]);
+    if (stored) setActivePortfolio(stored);
+  }, [demoMode, setActivePortfolio]);
   const fetchingRef = useRef(false);
   const fetchPortfolios = useCallback(async (): Promise<PortfolioInfo[]> => {
     try {
@@ -219,14 +228,6 @@ export function PortfolioProvider({
     }
   }, [activePortfolioId]);
 
-  const setActivePortfolio = useCallback((id: string | null) => {
-    setActivePortfolioId(id);
-    if (typeof window !== "undefined") {
-      if (id) localStorage.setItem(ACTIVE_PORTFOLIO_KEY, id);
-      else localStorage.removeItem(ACTIVE_PORTFOLIO_KEY);
-    }
-  }, []);
-
   const mountedRef = useRef(false);
   const switchVersionRef = useRef(0);
 
@@ -246,14 +247,13 @@ export function PortfolioProvider({
 
       const defaultP = loadedPortfolios.find(p => p.isDefault) ?? loadedPortfolios[0];
 
-      let resolvedPortfolioId = activePortfolioId;
+      const storedFromDisk =
+        typeof window !== "undefined" ? localStorage.getItem(ACTIVE_PORTFOLIO_KEY) : null;
+      let resolvedPortfolioId = activePortfolioId ?? storedFromDisk ?? null;
       const storedIsValid = resolvedPortfolioId && loadedPortfolios.some((p) => p.id === resolvedPortfolioId);
       if ((!resolvedPortfolioId || !storedIsValid) && loadedPortfolios.length > 0) {
         resolvedPortfolioId = defaultP.id;
-        setActivePortfolioId(resolvedPortfolioId);
-        if (typeof window !== "undefined") {
-          localStorage.setItem(ACTIVE_PORTFOLIO_KEY, resolvedPortfolioId);
-        }
+        setActivePortfolio(resolvedPortfolioId);
       }
 
       // page.tsx fetches unscoped holdings which covers the default portfolio.
