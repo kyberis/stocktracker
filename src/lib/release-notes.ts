@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.77.55",
+    date: "2026-04-13",
+    title: "Admin: raw DB snapshot includes cash and crypto",
+    titleTranslations: {
+      es: "Admin: instantánea cruda incluye efectivo y cripto",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "The admin raw DB JSON export now includes separate `cash` (`cash_entries` rows) and `crypto` (holdings with asset type crypto) nodes alongside holdings and transactions.",
+        translations: {
+          es: "La exportación JSON de instantánea cruda en Admin incluye nodos separados `cash` (filas de cash_entries) y `crypto` (posiciones con tipo cripto), además de posiciones y transacciones.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.77.54",
     date: "2026-04-13",
     title: "Dashboard: overflow shortcuts into More",

@@ -368,7 +368,8 @@ export const featureDomains: FeatureDomain[] = [
         method: "GET",
         path: "/api/admin/users/[userId]/data-raw",
         auth: "admin",
-        description: "Download raw SQLite rows (holdings, transactions, transaction_portfolio_map) for debugging",
+        description:
+          "Download raw SQLite rows (holdings, transactions, transaction_portfolio_map, cash_entries, crypto holdings) for debugging",
       },
       { method: "GET", path: "/api/admin/analytics", auth: "admin", description: "Usage analytics" },
       { method: "GET", path: "/api/admin/feature-flags", auth: "admin", description: "Get feature flags" },

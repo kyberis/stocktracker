@@ -71,3 +71,31 @@ export async function listTransactionPortfolioMapRaw(
   });
   return rowsToPlain(result.rows as { [key: string]: unknown }[]);
 }
+
+/**
+ * Literal `cash_entries` table rows (cash & manual assets: savings, pension, real estate, etc.).
+ */
+export async function listCashEntriesRaw(userId: string, portfolioId?: string): Promise<Record<string, unknown>[]> {
+  const client = await ensureInitialized();
+  const portfolioFilter = portfolioId ? " AND portfolio_id = ?" : "";
+  const portfolioArgs = portfolioId ? [portfolioId] : [];
+  const result = await client.execute({
+    sql: `SELECT * FROM cash_entries WHERE user_id = ?${portfolioFilter} ORDER BY type ASC, created_at ASC, id ASC`,
+    args: [userId, ...portfolioArgs],
+  });
+  return rowsToPlain(result.rows as { [key: string]: unknown }[]);
+}
+
+/**
+ * Literal `holdings` rows with `asset_type = 'crypto'` (separate from merged listHoldings output).
+ */
+export async function listCryptoHoldingsRaw(userId: string, portfolioId?: string): Promise<Record<string, unknown>[]> {
+  const client = await ensureInitialized();
+  const portfolioFilter = portfolioId ? " AND portfolio_id = ?" : "";
+  const portfolioArgs = portfolioId ? [portfolioId] : [];
+  const result = await client.execute({
+    sql: `SELECT * FROM holdings WHERE user_id = ? AND UPPER(COALESCE(asset_type,'')) = 'CRYPTO'${portfolioFilter} ORDER BY created_at ASC, id ASC`,
+    args: [userId, ...portfolioArgs],
+  });
+  return rowsToPlain(result.rows as { [key: string]: unknown }[]);
+}

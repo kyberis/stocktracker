@@ -81,4 +81,32 @@ describe("admin-raw-export", () => {
       });
     });
   });
+
+  describe("listCashEntriesRaw", () => {
+    it("SELECT from cash_entries", async () => {
+      mockExecute.mockResolvedValueOnce({ rows: [{ id: "c1", user_id: "u1", type: "cash" }] });
+
+      const rows = await raw.listCashEntriesRaw("user-1");
+
+      expect(mockExecute).toHaveBeenCalledWith({
+        sql: expect.stringContaining("SELECT * FROM cash_entries"),
+        args: ["user-1"],
+      });
+      expect(rows[0]).toMatchObject({ type: "cash" });
+    });
+  });
+
+  describe("listCryptoHoldingsRaw", () => {
+    it("SELECT crypto holdings only", async () => {
+      mockExecute.mockResolvedValueOnce({ rows: [] });
+
+      await raw.listCryptoHoldingsRaw("user-1", "portfolio-1");
+
+      expect(mockExecute).toHaveBeenCalledWith({
+        sql: expect.stringContaining("asset_type"),
+        args: ["user-1", "portfolio-1"],
+      });
+      expect(mockExecute.mock.calls[0][0].sql).toContain("CRYPTO");
+    });
+  });
 });

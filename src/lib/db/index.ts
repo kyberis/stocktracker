@@ -117,6 +117,8 @@ export {
   listHoldingsRaw,
   listTransactionsRaw,
   listTransactionPortfolioMapRaw,
+  listCashEntriesRaw,
+  listCryptoHoldingsRaw,
 } from "./admin-raw-export";
 
 export {

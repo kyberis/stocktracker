@@ -1109,7 +1109,7 @@ export default function AdminUserDetailPage() {
                 type="button"
                 onClick={handleDownloadRawDbSnapshot}
                 disabled={rawExporting}
-                title="Download unmerged holdings and transactions rows as JSON (literal SQLite data for debugging)."
+                title="Download literal SQLite rows as JSON: holdings, transactions, maps, cash_entries, and crypto holdings (separate nodes), for debugging."
                 className="text-xs font-medium px-2.5 py-1 rounded-lg border border-gray-200 dark:border-slate-600 text-gray-700 dark:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-700/80 disabled:opacity-50"
               >
                 {rawExporting ? "Preparing…" : "Download raw DB snapshot"}

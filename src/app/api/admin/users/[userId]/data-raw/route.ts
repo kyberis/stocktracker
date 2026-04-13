@@ -5,6 +5,8 @@ import {
   listHoldingsRaw,
   listTransactionsRaw,
   listTransactionPortfolioMapRaw,
+  listCashEntriesRaw,
+  listCryptoHoldingsRaw,
 } from "@/lib/db";
 import { withMetrics } from "@/lib/with-metrics";
 
@@ -24,10 +26,12 @@ export const GET = withMetrics("/api/admin/users/[userId]/data-raw", async (
 
   const portfolioId = req.nextUrl.searchParams.get("portfolioId") || undefined;
 
-  const [holdings, transactions, transactionPortfolioMap] = await Promise.all([
+  const [holdings, transactions, transactionPortfolioMap, cash, crypto] = await Promise.all([
     listHoldingsRaw(userId, portfolioId),
     listTransactionsRaw(userId, portfolioId),
     listTransactionPortfolioMapRaw(userId, portfolioId),
+    listCashEntriesRaw(userId, portfolioId),
+    listCryptoHoldingsRaw(userId, portfolioId),
   ]);
 
   const body = {
@@ -37,6 +41,8 @@ export const GET = withMetrics("/api/admin/users/[userId]/data-raw", async (
     holdings,
     transactions,
     transactionPortfolioMap,
+    cash,
+    crypto,
   };
 
   const safeId = userId.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 64);
