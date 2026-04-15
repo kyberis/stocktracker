@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import dynamic from "next/dynamic";
 
+import { VoiceMessagePlayer } from "./voice-message-player";
+
 const SharePortfolioModal = dynamic(() => import("./share-portfolio-modal"), { ssr: false });
 const TickerPreviewPanel = dynamic(() => import("./ticker-preview-panel"), { ssr: false });
 
@@ -546,19 +548,11 @@ function MessageBubble({ msg, isOwn, isRead, isFirstInGroup, isLastInGroup, colo
               (() => {
                 const a = tryParseAudioPayload(msg.content);
                 return a ? (
-                  /* Light chip + color-scheme: controls visible on colored bubbles. Shrink-wrapped width + fixed control height avoids WebKit stretching the <audio> to a tall strip. */
                   <div
-                    className="rounded-xl bg-white px-2 py-1.5 shadow-sm ring-1 ring-black/10 dark:bg-slate-100 dark:ring-white/15 overflow-hidden w-[min(100%,280px)] max-w-[85vw]"
-                    style={{ colorScheme: "light" }}
+                    className="rounded-xl bg-white px-3 py-2 shadow-sm ring-1 ring-black/10 dark:bg-slate-100 dark:ring-white/15 w-fit max-w-[min(100%,320px)]"
+                    onClick={(e) => e.stopPropagation()}
                   >
-                    <audio
-                      controls
-                      src={a.url}
-                      preload="metadata"
-                      className="block w-full h-9 max-h-9 min-h-0"
-                      style={{ height: 36, maxHeight: 36 }}
-                      aria-label={`Voice message, ${formatVoiceDurationMmSs(a.durationSec)}`}
-                    />
+                    <VoiceMessagePlayer src={a.url} durationSec={a.durationSec} />
                   </div>
                 ) : (
                   <span className="text-xs opacity-80">Voice message unavailable</span>
@@ -1726,19 +1720,8 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
       {pendingAudio && (
         <div className="px-4 py-3 border-t border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900">
           <div className="relative inline-flex flex-col gap-2 max-w-full">
-            <div className="flex items-baseline gap-2 flex-wrap">
-              <span className="text-base font-semibold tabular-nums text-gray-900 dark:text-slate-100">
-                {formatVoiceDurationMmSs(pendingAudio.durationSec)}
-              </span>
-              <span className="text-xs text-gray-500 dark:text-slate-400">Voice clip · preview before sending</span>
-            </div>
-            <audio
-              src={pendingAudio.previewUrl}
-              controls
-              preload="metadata"
-              className="w-full max-w-xs h-10"
-              aria-label={`Voice message preview, ${formatVoiceDurationMmSs(pendingAudio.durationSec)}`}
-            />
+            <span className="text-xs text-gray-500 dark:text-slate-400">Voice clip · preview before sending</span>
+            <VoiceMessagePlayer src={pendingAudio.previewUrl} durationSec={pendingAudio.durationSec} />
             <button
               type="button"
               onClick={cancelPendingAudio}

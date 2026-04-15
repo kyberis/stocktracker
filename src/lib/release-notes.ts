@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.77.64",
+    date: "2026-04-14",
+    title: "Custom voice player in chat",
+    titleTranslations: {
+      es: "Reproductor de voz personalizado en el chat",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Sent and preview voice messages use a custom play/pause bar (like the preview) instead of the native audio control, which broke on WebKit inside bubbles.",
+        translations: {
+          es: "Los mensajes de voz enviados y la vista previa usan una barra de reproducción personalizada (como la vista previa) en lugar del control de audio nativo, que fallaba en WebKit dentro de las burbujas.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.77.63",
     date: "2026-04-14",
     title: "Voice bubble layout",
