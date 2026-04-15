@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.77.62",
+    date: "2026-04-14",
+    title: "Voice message player visibility",
+    titleTranslations: {
+      es: "Visibilidad del reproductor de voz",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Sent voice messages now show the audio controls on a light chip inside the bubble so the native player is visible on colored message backgrounds.",
+        translations: {
+          es: "Los mensajes de voz enviados muestran los controles de audio sobre una franja clara dentro de la burbuja para que el reproductor nativo se vea sobre fondos de mensaje de color.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.77.61",
     date: "2026-04-14",
     title: "Blob upload errors",

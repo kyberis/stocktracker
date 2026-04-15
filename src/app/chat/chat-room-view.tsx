@@ -542,13 +542,19 @@ function MessageBubble({ msg, isOwn, isRead, isFirstInGroup, isLastInGroup, colo
               (() => {
                 const a = tryParseAudioPayload(msg.content);
                 return a ? (
-                  <audio
-                    controls
-                    src={a.url}
-                    preload="metadata"
-                    className="w-full max-w-[min(100%,280px)] h-10"
-                    aria-label="Voice message"
-                  />
+                  /* Native <audio> controls are often invisible on indigo/pastel bubbles; light chip + color-scheme keeps play/stop visible. */
+                  <div
+                    className="rounded-xl bg-white px-2 py-1.5 shadow-sm ring-1 ring-black/10 dark:bg-slate-100 dark:ring-white/15 w-full max-w-[min(100%,288px)]"
+                    style={{ colorScheme: "light" }}
+                  >
+                    <audio
+                      controls
+                      src={a.url}
+                      preload="metadata"
+                      className="block w-full min-w-0 h-9"
+                      aria-label={`Voice message, ${formatVoiceDurationMmSs(a.durationSec)}`}
+                    />
+                  </div>
                 ) : (
                   <span className="text-xs opacity-80">Voice message unavailable</span>
                 );
