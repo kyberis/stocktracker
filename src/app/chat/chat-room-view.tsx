@@ -531,6 +531,10 @@ function MessageBubble({ msg, isOwn, isRead, isFirstInGroup, isLastInGroup, colo
           <div
             onClick={() => setShowActions((v) => !v)}
             className={`px-4 py-2.5 text-sm break-words select-none ${
+              msg.type === "audio"
+                ? "inline-block w-fit max-w-[min(100%,320px)] shrink-0 align-top"
+                : ""
+            } ${
               isOwn
                 ? `bg-indigo-600 text-white ${ownRadius}`
                 : `${color.bg} ${color.text} ${otherRadius}`
@@ -542,16 +546,17 @@ function MessageBubble({ msg, isOwn, isRead, isFirstInGroup, isLastInGroup, colo
               (() => {
                 const a = tryParseAudioPayload(msg.content);
                 return a ? (
-                  /* Native <audio> controls are often invisible on indigo/pastel bubbles; light chip + color-scheme keeps play/stop visible. */
+                  /* Light chip + color-scheme: controls visible on colored bubbles. Shrink-wrapped width + fixed control height avoids WebKit stretching the <audio> to a tall strip. */
                   <div
-                    className="rounded-xl bg-white px-2 py-1.5 shadow-sm ring-1 ring-black/10 dark:bg-slate-100 dark:ring-white/15 w-full max-w-[min(100%,288px)]"
+                    className="rounded-xl bg-white px-2 py-1.5 shadow-sm ring-1 ring-black/10 dark:bg-slate-100 dark:ring-white/15 overflow-hidden w-[min(100%,280px)] max-w-[85vw]"
                     style={{ colorScheme: "light" }}
                   >
                     <audio
                       controls
                       src={a.url}
                       preload="metadata"
-                      className="block w-full min-w-0 h-9"
+                      className="block w-full h-9 max-h-9 min-h-0"
+                      style={{ height: 36, maxHeight: 36 }}
                       aria-label={`Voice message, ${formatVoiceDurationMmSs(a.durationSec)}`}
                     />
                   </div>

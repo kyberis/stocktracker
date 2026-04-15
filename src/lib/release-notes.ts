@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.77.63",
+    date: "2026-04-14",
+    title: "Voice bubble layout",
+    titleTranslations: {
+      es: "Diseño de burbuja de voz",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Voice messages no longer render as a tall distorted strip: the bubble is shrink-wrapped and the audio bar has a fixed height so native controls layout correctly.",
+        translations: {
+          es: "Los mensajes de voz ya no se muestran como una franja alta distorsionada: la burbuja se ajusta al contenido y la barra de audio tiene altura fija para que los controles nativos se vean bien.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.77.62",
     date: "2026-04-14",
     title: "Voice message player visibility",
