@@ -134,6 +134,13 @@ function isUrl(text: string): boolean {
 
 const MAX_RECORDING_SEC = 60;
 
+function formatVoiceDurationMmSs(totalSec: number): string {
+  const s = Math.max(0, Math.floor(totalSec));
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return `${m}:${String(r).padStart(2, "0")}`;
+}
+
 function tryParseAudioPayload(content: string): { url: string; durationSec: number } | null {
   try {
     const o = JSON.parse(content) as { url?: unknown; durationSec?: unknown };
@@ -1708,10 +1715,19 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
       {pendingAudio && (
         <div className="px-4 py-3 border-t border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900">
           <div className="relative inline-flex flex-col gap-2 max-w-full">
-            <audio src={pendingAudio.previewUrl} controls className="w-full max-w-xs h-10" aria-label="Voice message preview" />
-            <span className="text-xs text-gray-500 dark:text-slate-400">
-              {pendingAudio.durationSec}s · preview before sending
-            </span>
+            <div className="flex items-baseline gap-2 flex-wrap">
+              <span className="text-base font-semibold tabular-nums text-gray-900 dark:text-slate-100">
+                {formatVoiceDurationMmSs(pendingAudio.durationSec)}
+              </span>
+              <span className="text-xs text-gray-500 dark:text-slate-400">Voice clip · preview before sending</span>
+            </div>
+            <audio
+              src={pendingAudio.previewUrl}
+              controls
+              preload="metadata"
+              className="w-full max-w-xs h-10"
+              aria-label={`Voice message preview, ${formatVoiceDurationMmSs(pendingAudio.durationSec)}`}
+            />
             <button
               type="button"
               onClick={cancelPendingAudio}

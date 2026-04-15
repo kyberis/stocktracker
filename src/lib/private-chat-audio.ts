@@ -10,6 +10,21 @@ export function isAllowedPrivateChatBlobUrl(url: string): boolean {
   }
 }
 
+const MAX_DEV_INLINE_DATA_URL_CHARS = 3_500_000;
+
+/** Blob HTTPS URL, or in development only an inline data:audio URL from the local no-Blob fallback. */
+export function isAllowedAudioMessageUrl(url: string): boolean {
+  if (isAllowedPrivateChatBlobUrl(url)) return true;
+  if (
+    process.env.NODE_ENV === "development" &&
+    url.startsWith("data:audio/") &&
+    url.length <= MAX_DEV_INLINE_DATA_URL_CHARS
+  ) {
+    return true;
+  }
+  return false;
+}
+
 const MAX_AUDIO_DURATION_SEC = 60;
 
 export interface PrivateChatAudioPayload {
@@ -36,7 +51,7 @@ export function parseAndValidateAudioMessageContent(
   const durationSec = typeof o.durationSec === "number" ? o.durationSec : NaN;
   const mime = typeof o.mime === "string" ? o.mime : undefined;
 
-  if (!url || !isAllowedPrivateChatBlobUrl(url)) {
+  if (!url || !isAllowedAudioMessageUrl(url)) {
     return { ok: false, error: "Invalid audio URL" };
   }
   if (!Number.isFinite(durationSec) || durationSec <= 0 || durationSec > MAX_AUDIO_DURATION_SEC) {

@@ -59,11 +59,35 @@ export const POST = withMetrics("/api/chat/[token]/audio", async (req: NextReque
   const ext = extForAudioMime(file.type);
   const path = `private-chat/${token}/${Date.now()}-${generateId()}.${ext}`;
 
+  const arrayBuffer = await file.arrayBuffer();
+  const buf = Buffer.from(arrayBuffer);
+  const uploadFile = new File([buf], `voice.${ext}`, { type: file.type });
+
+  const hasBlobToken = Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+
+  if (!hasBlobToken) {
+    if (process.env.NODE_ENV === "development" && buf.length <= 2 * 1024 * 1024) {
+      const dataUrl = `data:${file.type};base64,${buf.toString("base64")}`;
+      return NextResponse.json({ url: dataUrl, contentType: file.type });
+    }
+    return NextResponse.json(
+      {
+        error:
+          "Voice upload storage is not configured. In the Vercel dashboard: Storage → Blob → create or link a store to this project (adds BLOB_READ_WRITE_TOKEN), then redeploy.",
+      },
+      { status: 503 }
+    );
+  }
+
   try {
     const { put } = await import("@vercel/blob");
-    const blob = await put(path, file, { access: "public" });
+    const blob = await put(path, uploadFile, { access: "public" });
     return NextResponse.json({ url: blob.url, contentType: file.type });
-  } catch {
-    return NextResponse.json({ error: "Audio upload not configured" }, { status: 500 });
+  } catch (err) {
+    console.error("[chat/audio] Vercel Blob put failed:", err);
+    return NextResponse.json(
+      { error: "Could not upload voice message. Check Blob storage and try again." },
+      { status: 500 }
+    );
   }
 });
