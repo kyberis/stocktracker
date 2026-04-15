@@ -146,16 +146,39 @@ function tryParseAudioPayload(content: string): { url: string; durationSec: numb
   return null;
 }
 
+/** Best-effort duration from blob URL; WebM/Opus often reports 0 or Infinity until fully buffered — returns 0 so callers can use wall-clock fallback. */
 function getBlobDurationSeconds(objectUrl: string): Promise<number> {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const a = document.createElement("audio");
     a.preload = "metadata";
-    a.src = objectUrl;
+    let settled = false;
+    const finish = (d: number) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeout);
+      const ok = Number.isFinite(d) && d > 0 && d !== Infinity;
+      resolve(ok ? d : 0);
+    };
+    const timeout = setTimeout(() => finish(0), 4000);
     a.onloadedmetadata = () => {
       const d = a.duration;
-      resolve(Number.isFinite(d) && d > 0 ? d : 0);
+      if (Number.isFinite(d) && d > 0 && d !== Infinity) finish(d);
     };
-    a.onerror = () => reject(new Error("Could not read audio"));
+    a.ondurationchange = () => {
+      const d = a.duration;
+      if (Number.isFinite(d) && d > 0 && d !== Infinity) finish(d);
+    };
+    a.oncanplaythrough = () => {
+      const d = a.duration;
+      if (Number.isFinite(d) && d > 0 && d !== Infinity) finish(d);
+    };
+    a.onerror = () => finish(0);
+    a.src = objectUrl;
+    try {
+      a.load();
+    } catch {
+      finish(0);
+    }
   });
 }
 
@@ -693,6 +716,8 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
   const recordStreamRef = useRef<MediaStream | null>(null);
   const recordChunksRef = useRef<Blob[]>([]);
   const recordTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  /** Wall-clock start for the current take — used when <audio> metadata is wrong for WebM/Opus (common on Safari). */
+  const recordingStartedAtRef = useRef<number | null>(null);
   const [membership, setMembership] = useState<"active" | "pending" | null>(null);
   const [inviterPreview, setInviterPreview] = useState<{ userId: string; displayName: string; avatarUrl: string } | null>(null);
   const [inviteActionLoading, setInviteActionLoading] = useState(false);
@@ -1097,16 +1122,32 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
   }
 
   async function finalizeRecordedBlob(blob: Blob, mime: string) {
+    const startedAt = recordingStartedAtRef.current;
+    recordingStartedAtRef.current = null;
+    const wallSec =
+      startedAt != null ? Math.min(MAX_RECORDING_SEC + 0.5, Math.max(0, (Date.now() - startedAt) / 1000)) : 0;
+
     if (blob.size < 64) {
       setError("Recording too short.");
       return;
     }
     const previewUrl = URL.createObjectURL(blob);
     try {
-      const duration = await getBlobDurationSeconds(previewUrl);
-      if (duration <= 0 || duration > MAX_RECORDING_SEC + 0.75) {
+      let duration = await getBlobDurationSeconds(previewUrl);
+      if (!Number.isFinite(duration) || duration <= 0 || duration === Infinity) {
+        duration = wallSec;
+      }
+      if (duration <= 0 && wallSec > 0) {
+        duration = wallSec;
+      }
+      if (duration <= 0) {
         URL.revokeObjectURL(previewUrl);
-        setError(duration > MAX_RECORDING_SEC + 0.75 ? "Recording is too long (max 1 minute)." : "Could not read recording.");
+        setError("Could not read recording.");
+        return;
+      }
+      if (duration > MAX_RECORDING_SEC + 0.75) {
+        URL.revokeObjectURL(previewUrl);
+        setError("Recording is too long (max 1 minute).");
         return;
       }
       const durationSec = Math.min(Math.max(Math.ceil(duration), 1), MAX_RECORDING_SEC);
@@ -1146,6 +1187,7 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
         recordChunksRef.current = [];
         void finalizeRecordedBlob(blob, mime);
       };
+      recordingStartedAtRef.current = Date.now();
       mr.start(250);
       setIsRecording(true);
       setRecordElapsedSec(0);
@@ -1638,14 +1680,24 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
           className="px-4 py-2.5 flex items-center justify-between gap-3 border-t border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/40"
           role="status"
           aria-live="polite"
+          aria-label={`Recording voice message, ${recordElapsedSec} seconds of 60 maximum`}
         >
-          <span className="text-sm font-medium text-red-800 dark:text-red-200 tabular-nums">
-            Recording {Math.floor(recordElapsedSec / 60)}:{String(recordElapsedSec % 60).padStart(2, "0")} / 1:00
-          </span>
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+            <span className="relative flex h-2.5 w-2.5 shrink-0" aria-hidden>
+              <span className="absolute inline-flex h-full w-full animate-ping motion-reduce:animate-none rounded-full bg-red-400 opacity-60" />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-600 dark:bg-red-400" />
+            </span>
+            <div className="flex flex-col gap-0.5 min-w-0 sm:flex-row sm:items-center sm:gap-2">
+              <span className="text-sm font-semibold text-red-900 dark:text-red-100">Recording…</span>
+              <span className="text-xs sm:text-sm font-medium text-red-800/90 dark:text-red-200/95 tabular-nums">
+                {Math.floor(recordElapsedSec / 60)}:{String(recordElapsedSec % 60).padStart(2, "0")} / 1:00
+              </span>
+            </div>
+          </div>
           <button
             type="button"
             onClick={() => void stopRecording()}
-            className="px-3 py-1.5 rounded-lg text-sm font-medium bg-red-600 text-white hover:bg-red-700 transition-colors"
+            className="shrink-0 px-3 py-1.5 rounded-lg text-sm font-medium bg-red-600 text-white hover:bg-red-700 transition-colors"
             aria-label="Stop recording"
           >
             Stop
