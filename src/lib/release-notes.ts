@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.77.61",
+    date: "2026-04-14",
+    title: "Blob upload errors",
+    titleTranslations: {
+      es: "Errores de subida a Blob",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Voice and image uploads now return clearer errors when Vercel Blob reports a missing store or invalid token (re-link Storage → Blob and redeploy).",
+        translations: {
+          es: "Las subidas de voz e imagen devuelven errores más claros cuando Vercel Blob indica que falta el almacén o el token no es válido (vuelve a vincular Storage → Blob y redespliega).",
+        },
+      },
+    ],
+  },
+  {
     version: "1.77.60",
     date: "2026-04-14",
     title: "CSP: analytics, ads, and voice preview",

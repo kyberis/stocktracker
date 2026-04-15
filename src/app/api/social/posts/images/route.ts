@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
+import { httpResponseForBlobPutError } from "@/lib/vercel-blob-errors";
 import { withMetrics } from "@/lib/with-metrics";
 
 export const POST = withMetrics("/api/social/posts/images", async (request: NextRequest) => {
@@ -20,7 +21,9 @@ export const POST = withMetrics("/api/social/posts/images", async (request: Next
     const { put } = await import("@vercel/blob");
     const blob = await put(`social/${session.userId}/${Date.now()}-${file.name}`, file, { access: "public" });
     return NextResponse.json({ url: blob.url });
-  } catch {
-    return NextResponse.json({ error: "Image upload not configured" }, { status: 500 });
+  } catch (err) {
+    console.error("[social/posts/images] Vercel Blob put failed:", err);
+    const { status, error } = httpResponseForBlobPutError(err);
+    return NextResponse.json({ error }, { status });
   }
 });

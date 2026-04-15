@@ -3,6 +3,7 @@ import { requireSession } from "@/lib/auth/guards";
 import { withMetrics } from "@/lib/with-metrics";
 import { getPrivateChatRoom, getParticipantMembership } from "@/lib/db";
 import { extForAudioMime } from "@/lib/private-chat-audio";
+import { httpResponseForBlobPutError } from "@/lib/vercel-blob-errors";
 import { generateId } from "@/lib/utils";
 
 const MAX_AUDIO_BYTES = 8 * 1024 * 1024;
@@ -85,9 +86,7 @@ export const POST = withMetrics("/api/chat/[token]/audio", async (req: NextReque
     return NextResponse.json({ url: blob.url, contentType: file.type });
   } catch (err) {
     console.error("[chat/audio] Vercel Blob put failed:", err);
-    return NextResponse.json(
-      { error: "Could not upload voice message. Check Blob storage and try again." },
-      { status: 500 }
-    );
+    const { status, error } = httpResponseForBlobPutError(err);
+    return NextResponse.json({ error }, { status });
   }
 });
