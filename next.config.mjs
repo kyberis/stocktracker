@@ -69,7 +69,8 @@ const nextConfig = {
           { key: "X-DNS-Prefetch-Control", value: "on" },
           {
             key: "Permissions-Policy",
-            value: "camera=(), microphone=(), geolocation=()",
+            /* (self) required for private-chat voice (MediaRecorder) and image capture; empty () blocks APIs entirely */
+            value: "camera=(self), microphone=(self), geolocation=()",
           },
           {
             key: "Strict-Transport-Security",
