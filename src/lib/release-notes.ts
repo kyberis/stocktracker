@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.77.60",
+    date: "2026-04-14",
+    title: "CSP: analytics, ads, and voice preview",
+    titleTranslations: {
+      es: "CSP: analítica, anuncios y vista previa de voz",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Relaxed Content-Security-Policy so Google Analytics regional collect endpoints and Google Ads measurement requests are not blocked, and so voice message previews can play blob: audio in the browser.",
+        translations: {
+          es: "Se ajustó la Política de seguridad de contenido para no bloquear los puntos de recogida regionales de Google Analytics ni las peticiones de medición de Google Ads, y para permitir la reproducción de audio blob: en la vista previa de mensajes de voz.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.77.59",
     date: "2026-04-14",
     title: "Private chat: voice messages",
