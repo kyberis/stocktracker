@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.77.59",
+    date: "2026-04-14",
+    title: "Private chat: voice messages",
+    titleTranslations: {
+      es: "Chat privado: mensajes de voz",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Send voice messages in private chats (up to 1 minute): record in the browser or attach an audio file; playback uses the standard audio controls.",
+        translations: {
+          es: "Envía mensajes de voz en chats privados (hasta 1 minuto): graba en el navegador o adjunta un archivo de audio; la reproducción usa los controles de audio habituales.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.77.58",
     date: "2026-04-13",
     title: "Private chat: readable reply previews",

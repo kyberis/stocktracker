@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import { checkMembershipGrantToken } from "@/lib/db";
 import MembershipGrantActivateClient from "./membership-grant-activate-client";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Activate membership | trefolio",
   description: "Activate complimentary membership granted by the trefolio team.",

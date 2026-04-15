@@ -3,9 +3,19 @@ import { requireSession } from "@/lib/auth/guards";
 import { withMetrics } from "@/lib/with-metrics";
 import { getPrivateChatRoom, addPrivateChatMessage, editPrivateChatMessage, getParticipantMembership } from "@/lib/db";
 import type { PrivateChatMessageType } from "@/lib/db";
+import { parseAndValidateAudioMessageContent } from "@/lib/private-chat-audio";
 
 const MAX_IMAGE_BYTES = 3.5 * 1024 * 1024;
-const VALID_TYPES = new Set<PrivateChatMessageType>(["text", "link", "image", "holding", "allocation", "summary", "stock_pick"]);
+const VALID_TYPES = new Set<PrivateChatMessageType>([
+  "text",
+  "link",
+  "image",
+  "audio",
+  "holding",
+  "allocation",
+  "summary",
+  "stock_pick",
+]);
 
 function extractToken(pathname: string): string {
   const segments = pathname.split("/");
@@ -51,6 +61,7 @@ export const POST = withMetrics(
     if (!content.trim()) {
       return NextResponse.json({ error: "Content is required" }, { status: 400 });
     }
+    let outboundContent = content;
     if (type === "image") {
       const sizeEstimate = Math.ceil((content.length * 3) / 4);
       if (sizeEstimate > MAX_IMAGE_BYTES) {
@@ -60,8 +71,15 @@ export const POST = withMetrics(
         );
       }
     }
+    if (type === "audio") {
+      const audio = parseAndValidateAudioMessageContent(content);
+      if (!audio.ok) {
+        return NextResponse.json({ error: audio.error }, { status: 400 });
+      }
+      outboundContent = audio.content;
+    }
 
-    const message = await addPrivateChatMessage(token, session.userId, type, content, replyToId, persistent);
+    const message = await addPrivateChatMessage(token, session.userId, type, outboundContent, replyToId, persistent);
     return NextResponse.json(message, { status: 201 });
   }
 );

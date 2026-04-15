@@ -52,6 +52,7 @@ function lastMessagePreview(room: ChatRoomSummary): string {
   if (room.myMembership === "pending") return "Invitation pending — open to accept";
   if (!room.lastMessageContent) return "No messages yet";
   if (room.lastMessageType === "image") return "Shared a photo";
+  if (room.lastMessageType === "audio") return "Voice message";
   if (room.lastMessageType === "link") return room.lastMessageContent;
   if (["holding", "allocation", "summary", "stock_pick"].includes(room.lastMessageType)) {
     return `Shared ${room.lastMessageType.replace("_", " ")}`;

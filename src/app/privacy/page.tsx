@@ -239,7 +239,9 @@ export default function PrivacyPolicyPage() {
                 Answer optional chart Q&amp;A (your question and the chart snapshot — values, invested capital, time range, and trade markers — are sent to OpenAI; see Section 5).
               </li>
               <li>Provide AI-powered support chat (your messages and optional portfolio summary are sent to OpenAI; see Section 5). Support chat conversations are stored for up to 90 days to enable admin review and improve support quality.</li>
-              <li>Enable private chat rooms for direct communication between you and trefolio support. Messages (text, links, and images) are stored in our database and automatically deleted after 24 hours.</li>
+              <li>
+                Enable private chat rooms for direct communication between you and trefolio support, and between connected users. Messages (text, links, images, and voice) are stored in our database; voice audio files are stored in our Vercel Blob storage and are removed when the message expires. Non-persistent messages are automatically deleted 24 hours after being sent.
+              </li>
               <li>Process subscription payments through Stripe (see Section 5).</li>
               <li>Send essential service communications (e.g., password resets, critical security notices).</li>
               <li>Respond to customer support inquiries submitted via the contact form.</li>
@@ -440,9 +442,11 @@ export default function PrivacyPolicyPage() {
               </li>
               <li>
                 <strong className="text-slate-800">Private chat messages</strong> — 
-                messages sent in admin-created private chat rooms (text, links, and images)
-                are automatically deleted 24 hours after being sent. No third-party services
-                receive this data; messages are stored only in our database.
+                messages in private chat rooms (text, links, images, and voice) are automatically
+                deleted 24 hours after being sent unless marked persistent. Message metadata and text
+                are stored in our database; voice audio is stored in Vercel Blob object storage (same
+                infrastructure provider as the rest of the service) and deleted when the message
+                record is purged.
               </li>
               <li>
                 <strong className="text-slate-800">After account deletion</strong>{" "}

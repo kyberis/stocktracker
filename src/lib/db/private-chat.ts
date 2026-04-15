@@ -1,8 +1,17 @@
+import type { Client } from "@libsql/client";
 import { ensureInitialized } from "./client";
 import { str } from "./helpers";
 import { generateId } from "@/lib/utils";
 
-export type PrivateChatMessageType = "text" | "link" | "image" | "holding" | "allocation" | "summary" | "stock_pick";
+export type PrivateChatMessageType =
+  | "text"
+  | "link"
+  | "image"
+  | "audio"
+  | "holding"
+  | "allocation"
+  | "summary"
+  | "stock_pick";
 
 /** `admin_link`: join via shared URL (max 2). `social_direct`: 1:1 network chat; invitee must accept. */
 export type PrivateChatRoomKind = "admin_link" | "social_direct";
@@ -49,7 +58,16 @@ export interface PrivateChatRoomListItem extends PrivateChatRoom {
   messageCount: number;
 }
 
-const VALID_MSG_TYPES = new Set<PrivateChatMessageType>(["text", "link", "image", "holding", "allocation", "summary", "stock_pick"]);
+const VALID_MSG_TYPES = new Set<PrivateChatMessageType>([
+  "text",
+  "link",
+  "image",
+  "audio",
+  "holding",
+  "allocation",
+  "summary",
+  "stock_pick",
+]);
 
 function parseMessageType(val: unknown): PrivateChatMessageType {
   const s = String(val || "text");
@@ -182,7 +200,7 @@ export async function editPrivateChatMessage(
   const result = await client.execute({
     sql: `UPDATE private_chat_messages
           SET content = ?, edited_at = datetime('now')
-          WHERE id = ? AND sender_id = ? AND expires_at > datetime('now')`,
+          WHERE id = ? AND sender_id = ? AND type = 'text' AND expires_at > datetime('now')`,
     args: [newContent, messageId, senderId],
   });
   if ((result.rowsAffected ?? 0) === 0) return null;
@@ -408,8 +426,43 @@ export async function listUserChatRooms(
   }));
 }
 
+/** Best-effort delete Vercel Blob objects referenced by expiring audio messages. */
+async function deleteAudioBlobsForExpiredMessages(client: Client): Promise<void> {
+  const sel = await client.execute({
+    sql: `SELECT content FROM private_chat_messages
+          WHERE expires_at < datetime('now') AND is_persistent = 0 AND type = 'audio'`,
+    args: [],
+  });
+  let delBlob: ((url: string) => Promise<void>) | null = null;
+  for (const row of sel.rows) {
+    const raw = str(row.content);
+    let url: string | undefined;
+    try {
+      const parsed = JSON.parse(raw) as { url?: string };
+      if (typeof parsed.url === "string") url = parsed.url;
+    } catch {
+      continue;
+    }
+    if (!url || !url.startsWith("https://")) continue;
+    if (!delBlob) {
+      try {
+        const { del } = await import("@vercel/blob");
+        delBlob = (u: string) => del(u);
+      } catch {
+        return;
+      }
+    }
+    try {
+      await delBlob(url);
+    } catch {
+      /* ignore per blob */
+    }
+  }
+}
+
 export async function purgeExpiredPrivateChatMessages(): Promise<number> {
   const client = await ensureInitialized();
+  await deleteAudioBlobsForExpiredMessages(client);
   const result = await client.execute(
     `DELETE FROM private_chat_messages WHERE expires_at < datetime('now') AND is_persistent = 0`
   );

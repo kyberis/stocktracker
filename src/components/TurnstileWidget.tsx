@@ -50,6 +50,7 @@ export default function TurnstileWidget({ onToken, onError }: TurnstileWidgetPro
   }, [siteKey, onToken, onError]);
 
   useEffect(() => {
+    if (process.env.NODE_ENV === "development") return;
     if (!siteKey) return;
 
     if (window.turnstile) {
@@ -84,6 +85,7 @@ export default function TurnstileWidget({ onToken, onError }: TurnstileWidgetPro
     };
   }, []);
 
+  if (process.env.NODE_ENV === "development") return null;
   if (!siteKey) return null;
 
   return <div ref={containerRef} className="flex justify-center" />;

@@ -328,13 +328,20 @@ export function getGlobalOpenAIApiKey(): string {
 }
 
 export async function getPlatformSetting(key: string): Promise<string> {
-  const client = await ensureInitialized();
-  const result = await client.execute({
-    sql: "SELECT value FROM platform_settings WHERE key = ?",
-    args: [key],
-  });
-  if (result.rows.length === 0) return "";
-  return str(result.rows[0].value);
+  try {
+    const client = await ensureInitialized();
+    const result = await client.execute({
+      sql: "SELECT value FROM platform_settings WHERE key = ?",
+      args: [key],
+    });
+    if (result.rows.length === 0) return "";
+    return str(result.rows[0].value);
+  } catch {
+    /* During `next build` static generation, many pages load the root layout in parallel and
+     * can overwhelm or drop the Turso connection (ECONNRESET). Fall back to env defaults
+     * via empty string so prerender can complete; runtime requests retry on the next request. */
+    return "";
+  }
 }
 
 export async function setPlatformSetting(key: string, value: string): Promise<void> {

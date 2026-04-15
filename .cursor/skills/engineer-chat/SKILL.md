@@ -129,11 +129,11 @@ All in `src/lib/db/private-chat.ts`, re-exported from `src/lib/db/index.ts`.
 | `updateLastSeen` | `(roomId, userId, lastReadMsgId?) => void` | Updates presence + read pointer |
 | `getPrivateChatParticipants` | `(roomId) => PrivateChatParticipant[]` | Joined with `users` for display name/avatar |
 | `listUserChatRooms` | `(userId) => UserChatRoomSummary[]` | Inbox: rooms + last message + participants |
-| `purgeExpiredPrivateChatMessages` | `() => number` | Deletes where `expires_at < now AND is_persistent = 0` |
+| `purgeExpiredPrivateChatMessages` | `() => number` | Deletes where `expires_at < now AND is_persistent = 0`; best-effort `del()` on Vercel Blob URLs for `type = audio` |
 
 ### Types
 
-- `PrivateChatMessageType`: `"text" | "link" | "image" | "holding" | "allocation" | "summary" | "stock_pick"`
+- `PrivateChatMessageType`: `"text" | "link" | "image" | "audio" | "holding" | "allocation" | "summary" | "stock_pick"`
 - `PrivateChatRoom`, `PrivateChatMessage`, `PrivateChatParticipant`, `PrivateChatRoomListItem`, `UserChatRoomSummary`
 
 ## Message Types
@@ -143,6 +143,7 @@ All in `src/lib/db/private-chat.ts`, re-exported from `src/lib/db/index.ts`.
 | `text` | Plain string | Multiline, whitespace-pre-wrap |
 | `link` | URL string | Auto-detected via `isUrl()` or explicit |
 | `image` | Base64 data URL | Client compresses to max 1920px, JPEG 80%, 3.5MB limit |
+| `audio` | JSON `{ url, durationSec, mime? }` | `url` from `POST /api/chat/[token]/audio` (Vercel Blob); max 60s duration; 8MB upload cap |
 | `holding` | JSON (`HoldingCardData`) | Privacy: `full`, `anonymous`, `ticker_only` |
 | `allocation` | JSON (`AllocationCardData`) | Privacy: `full`, `percentages`, `categories` |
 | `summary` | JSON (`SummaryCardData`) | Privacy: `full`, `percentages`, `count_only` |

@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import { checkTrialToken } from "@/lib/db";
 import TrialActivateClient from "./trial-activate-client";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Activate Your Free Trial | trefolio",
   description: "Activate your 7-day Trefolio Pro trial — no credit card required.",

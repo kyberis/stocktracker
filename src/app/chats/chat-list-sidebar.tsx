@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Search, MessageSquare, Image, Link as LinkIcon, ArrowLeft } from "lucide-react";
+import { Search, MessageSquare, Image, Link as LinkIcon, ArrowLeft, Mic } from "lucide-react";
 import { USER_COLORS, userColorIndex, isParticipantOnline } from "@/app/chat/chat-room-view";
 
 export interface ChatRoomSummary {
@@ -41,6 +41,7 @@ function lastMessagePreview(room: ChatRoomSummary): string {
   if (room.myMembership === "pending") return "Invitation pending — tap to accept";
   if (!room.lastMessageContent) return "No messages yet";
   if (room.lastMessageType === "image") return "Shared a photo";
+  if (room.lastMessageType === "audio") return "Voice message";
   if (room.lastMessageType === "link") return room.lastMessageContent;
   if (["holding", "allocation", "summary", "stock_pick"].includes(room.lastMessageType)) {
     return `Shared ${room.lastMessageType.replace("_", " ")}`;
@@ -159,6 +160,7 @@ export function ChatListSidebar({ rooms, selectedToken, onSelect }: ChatListSide
                   )}
                   <span className="text-xs text-gray-400 dark:text-slate-500 truncate flex items-center gap-1">
                     {room.lastMessageType === "image" && <Image className="w-3 h-3 shrink-0" />}
+                    {room.lastMessageType === "audio" && <Mic className="w-3 h-3 shrink-0" />}
                     {room.lastMessageType === "link" && <LinkIcon className="w-3 h-3 shrink-0" />}
                     {preview}
                   </span>
