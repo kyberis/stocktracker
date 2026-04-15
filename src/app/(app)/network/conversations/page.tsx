@@ -178,19 +178,25 @@ export default function NetworkConversationsPage() {
           {/* ── Mobile layout: list OR chat, not both ── */}
           <div className="md:hidden">
             {selectedToken ? (
-              <div className="card overflow-hidden" style={{ height: "calc(100dvh - 11rem)" }}>
-                <div className="flex h-full flex-col">
-                  <div className="flex items-center gap-2 border-b border-[var(--border)] px-4 py-3">
-                    <button
-                      onClick={() => setSelectedToken(null)}
-                      className="p-1 -ml-1 rounded-lg text-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
-                    >
-                      <ArrowLeft size={18} />
-                    </button>
-                    <h3 className="text-sm font-semibold text-[var(--foreground)] truncate">{selectedRoomTitle}</h3>
-                  </div>
-                  <div className="flex-1 min-h-0">
-                    <ChatRoomView key={selectedToken} token={selectedToken} showBackButton={false} heightClass="h-full" />
+              /* Break out of page px-4 so chat uses full viewport width on mobile (same pattern as NetworkMobileNav). */
+              <div className="-mx-4 sm:-mx-6">
+                <div
+                  className="card overflow-hidden p-0 max-md:rounded-none max-md:border-x-0"
+                  style={{ height: "calc(100dvh - 11rem)" }}
+                >
+                  <div className="flex h-full flex-col">
+                    <div className="flex items-center gap-2 border-b border-[var(--border)] px-4 py-3">
+                      <button
+                        onClick={() => setSelectedToken(null)}
+                        className="p-1 -ml-1 rounded-lg text-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
+                      >
+                        <ArrowLeft size={18} />
+                      </button>
+                      <h3 className="text-sm font-semibold text-[var(--foreground)] truncate">{selectedRoomTitle}</h3>
+                    </div>
+                    <div className="flex-1 min-h-0">
+                      <ChatRoomView key={selectedToken} token={selectedToken} showBackButton={false} heightClass="h-full" />
+                    </div>
                   </div>
                 </div>
               </div>

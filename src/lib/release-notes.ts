@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.77.65",
+    date: "2026-04-14",
+    title: "Network chat full width on mobile",
+    titleTranslations: {
+      es: "Chat de red a ancho completo en móvil",
+    },
+    changes: [
+      {
+        type: "fix",
+        text: "Opening a conversation under Network → Conversations on a phone now uses the full screen width; the chat card breaks out of the page gutters and drops default card padding so the thread isn’t squeezed on the right.",
+        translations: {
+          es: "Al abrir una conversación en Red → Conversaciones en el móvil, el chat usa ya todo el ancho de pantalla; la tarjeta sale de los márgenes de la página y sin el padding por defecto del card para que el hilo no quede estrecho a la derecha.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.77.64",
     date: "2026-04-14",
     title: "Custom voice player in chat",
