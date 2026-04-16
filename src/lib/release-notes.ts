@@ -38,6 +38,13 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "El chat privado ya no deja una franja vacía a la derecha: las conversaciones de Red usan todo el ancho del contenido (sin columna max-width), las vistas de chat sueltas llenan el viewport y el shell nativo pinta el fondo del tema en el padding de las zonas seguras para que no se vea el blanco del body junto al hilo.",
         },
       },
+      {
+        type: "fix",
+        text: "Outgoing chat bubbles align correctly: each message row is a horizontal flex container so your messages sit flush right instead of leaving a blank band beside short bubbles (self-end had no effect when the wrapper wasn’t a flex parent).",
+        translations: {
+          es: "Las burbujas propias se alinean bien: cada fila de mensaje es un flex horizontal para que tus mensajes queden pegados a la derecha sin una franja vacía junto a burbujas cortas (self-end no surtía efecto si el contenedor no era flex).",
+        },
+      },
     ],
   },
   {

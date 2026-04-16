@@ -497,7 +497,7 @@ function MessageBubble({ msg, isOwn, isRead, isFirstInGroup, isLastInGroup, colo
         : "rounded-2xl rounded-tl-sm rounded-bl-sm";
 
   return (
-    <div className={`flex flex-col max-w-[75%] ${isOwn ? "self-end items-end" : "self-start items-start"}`}>
+    <div className={`flex max-w-[75%] min-w-0 flex-col ${isOwn ? "items-end" : "items-start"}`}>
       {isFirstInGroup && !isOwn && (
         <span className={`text-xs font-medium px-1 mb-0.5 ${color.name}`}>
           {msg.senderName}
@@ -1603,11 +1603,33 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
         {messages.length === 0 && (
           <p className="text-center text-sm text-gray-400 dark:text-slate-500 mt-12">No messages yet. Start the conversation!</p>
         )}
-        {groupedMessages.map(({ msg, isFirstInGroup, isLastInGroup }) => (
-          <div key={msg.id} id={`msg-${msg.id}`} className={isFirstInGroup ? "mt-3 first:mt-0" : "mt-0.5"}>
-            <MessageBubble msg={msg} isOwn={msg.senderId === currentUserId} isRead={isMessageRead(msg.id)} isFirstInGroup={isFirstInGroup} isLastInGroup={isLastInGroup} color={USER_COLORS[userColorIndex(msg.senderId)]} allMessages={messages} reactions={reactions[msg.id] || []} currentUserId={currentUserId} onReply={startReply} onEdit={startEdit} onTickerClick={setPreviewTicker} onReact={handleReact} onScrollToReply={scrollToMessage} />
-          </div>
-        ))}
+        {groupedMessages.map(({ msg, isFirstInGroup, isLastInGroup }) => {
+          const isOwn = msg.senderId === currentUserId;
+          return (
+            <div
+              key={msg.id}
+              id={`msg-${msg.id}`}
+              className={`flex w-full min-w-0 ${isOwn ? "justify-end" : "justify-start"} ${isFirstInGroup ? "mt-3 first:mt-0" : "mt-0.5"}`}
+            >
+              <MessageBubble
+                msg={msg}
+                isOwn={isOwn}
+                isRead={isMessageRead(msg.id)}
+                isFirstInGroup={isFirstInGroup}
+                isLastInGroup={isLastInGroup}
+                color={USER_COLORS[userColorIndex(msg.senderId)]}
+                allMessages={messages}
+                reactions={reactions[msg.id] || []}
+                currentUserId={currentUserId}
+                onReply={startReply}
+                onEdit={startEdit}
+                onTickerClick={setPreviewTicker}
+                onReact={handleReact}
+                onScrollToReply={scrollToMessage}
+              />
+            </div>
+          );
+        })}
         <div ref={bottomRef} />
       </div>
 
