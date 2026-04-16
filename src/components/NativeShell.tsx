@@ -37,7 +37,7 @@ export default function NativeShell({ children }: { children: React.ReactNode })
 
   return (
     <div
-      className={`min-h-screen pb-14 native-shell ${platform === "ios" ? "native-ios" : platform === "android" ? "native-android" : ""}`}
+      className={`min-h-screen bg-[var(--background)] pb-14 native-shell ${platform === "ios" ? "native-ios" : platform === "android" ? "native-android" : ""}`}
       style={{
         fontFamily: "var(--font-primary, inherit)",
         paddingLeft: "env(safe-area-inset-left)",

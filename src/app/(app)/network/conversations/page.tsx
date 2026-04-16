@@ -165,7 +165,7 @@ export default function NetworkConversationsPage() {
   const selectedRoomTitle = selectedRoom ? roomTitle(selectedRoom) : "";
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-6">
+    <div className="w-full px-4 sm:px-6 lg:px-8 py-3 sm:py-6">
       <NetworkMobileNav profile={profile} pendingCount={pendingCount} />
       <div className="flex gap-8">
         {/* Desktop sidebar */}

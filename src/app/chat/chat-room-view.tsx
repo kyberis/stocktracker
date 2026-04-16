@@ -1434,12 +1434,16 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
   }
 
   if (loading) {
-    return <div className={`flex items-center justify-center ${heightClass}`}><Loader2 className="w-8 h-8 animate-spin text-indigo-500" /></div>;
+    return (
+      <div className={`flex w-full min-w-0 items-center justify-center bg-gray-50 dark:bg-slate-950 ${heightClass}`}>
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+      </div>
+    );
   }
 
   if (error && !room) {
     return (
-      <div className={`flex flex-col items-center justify-center ${heightClass} gap-3 px-4`}>
+      <div className={`flex w-full min-w-0 flex-col items-center justify-center bg-gray-50 dark:bg-slate-950 ${heightClass} gap-3 px-4`}>
         <AlertTriangle className="w-10 h-10 text-red-500" />
         <p className="text-gray-700 dark:text-slate-300 text-center">{error}</p>
       </div>
@@ -1452,7 +1456,7 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
       participants.find((p) => p.userId !== currentUserId && p.membershipStatus === "active");
     const name = inv?.displayName || "Someone";
     return (
-      <div className={`flex flex-col ${heightClass} overflow-hidden bg-white dark:bg-slate-900`}>
+      <div className={`flex w-full min-w-0 flex-col ${heightClass} overflow-hidden bg-white dark:bg-slate-900`}>
         <header className="shrink-0 border-b border-gray-200 dark:border-slate-800 px-4 py-3">
           <div className="flex items-center gap-3">
             {showBackButton && (
@@ -1501,7 +1505,10 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
   }
 
   return (
-    <div className={`flex flex-col ${heightClass} overflow-hidden`} style={{ overscrollBehavior: "none" }}>
+    <div
+      className={`flex w-full min-w-0 flex-col ${heightClass} overflow-hidden bg-gray-50 dark:bg-slate-950`}
+      style={{ overscrollBehavior: "none" }}
+    >
       {/* Header */}
       <header className="shrink-0 border-b border-gray-200 dark:border-slate-800 px-4 py-3 bg-white dark:bg-slate-900">
         <div className="flex items-center gap-3">

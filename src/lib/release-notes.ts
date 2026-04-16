@@ -31,6 +31,13 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "Al abrir una conversación en Red → Conversaciones en el móvil, el chat usa ya todo el ancho de pantalla; la tarjeta sale de los márgenes de la página y sin el padding por defecto del card para que el hilo no quede estrecho a la derecha.",
         },
       },
+      {
+        type: "fix",
+        text: "Private chat no longer leaves an empty strip on the right: Network conversations use the full app content width (no max-width column), standalone chat shells fill the viewport, and the native app shell paints the theme background in safe-area padding so body white doesn’t show beside the thread.",
+        translations: {
+          es: "El chat privado ya no deja una franja vacía a la derecha: las conversaciones de Red usan todo el ancho del contenido (sin columna max-width), las vistas de chat sueltas llenan el viewport y el shell nativo pinta el fondo del tema en el padding de las zonas seguras para que no se vea el blanco del body junto al hilo.",
+        },
+      },
     ],
   },
   {
