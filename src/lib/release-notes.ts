@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.77.66",
+    date: "2026-04-18",
+    title: "Longer voice messages in chat",
+    titleTranslations: {
+      es: "Mensajes de voz más largos en el chat",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Private chat voice recording and file uploads now allow up to 2 minutes instead of 1.",
+        translations: {
+          es: "La grabación de voz y los archivos adjuntos en el chat privado permiten hasta 2 minutos en lugar de 1.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.77.65",
     date: "2026-04-14",
     title: "Network chat full width on mobile",

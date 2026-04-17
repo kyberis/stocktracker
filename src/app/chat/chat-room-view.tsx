@@ -134,7 +134,7 @@ function isUrl(text: string): boolean {
   }
 }
 
-const MAX_RECORDING_SEC = 60;
+const MAX_RECORDING_SEC = 120;
 
 function formatVoiceDurationMmSs(totalSec: number): string {
   const s = Math.max(0, Math.floor(totalSec));
@@ -1159,7 +1159,7 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
       }
       if (duration > MAX_RECORDING_SEC + 0.75) {
         URL.revokeObjectURL(previewUrl);
-        setError("Recording is too long (max 1 minute).");
+        setError("Recording is too long (max 2 minutes).");
         return;
       }
       const durationSec = Math.min(Math.max(Math.ceil(duration), 1), MAX_RECORDING_SEC);
@@ -1288,7 +1288,7 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
       const duration = await getBlobDurationSeconds(previewUrl);
       if (duration <= 0 || duration > MAX_RECORDING_SEC + 0.75) {
         URL.revokeObjectURL(previewUrl);
-        setError(duration > MAX_RECORDING_SEC + 0.75 ? "Audio must be 1 minute or less." : "Could not read audio file.");
+        setError(duration > MAX_RECORDING_SEC + 0.75 ? "Audio must be 2 minutes or less." : "Could not read audio file.");
         return;
       }
       const durationSec = Math.min(Math.max(Math.ceil(duration), 1), MAX_RECORDING_SEC);
@@ -1721,7 +1721,7 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
           className="px-4 py-2.5 flex items-center justify-between gap-3 border-t border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/40"
           role="status"
           aria-live="polite"
-          aria-label={`Recording voice message, ${recordElapsedSec} seconds of 60 maximum`}
+          aria-label={`Recording voice message, ${recordElapsedSec} seconds of ${MAX_RECORDING_SEC} maximum`}
         >
           <div className="flex items-center gap-2.5 min-w-0 flex-1">
             <span className="relative flex h-2.5 w-2.5 shrink-0" aria-hidden>
@@ -1731,7 +1731,8 @@ export function ChatRoomView({ token, showBackButton = false, heightClass = "h-d
             <div className="flex flex-col gap-0.5 min-w-0 sm:flex-row sm:items-center sm:gap-2">
               <span className="text-sm font-semibold text-red-900 dark:text-red-100">Recording…</span>
               <span className="text-xs sm:text-sm font-medium text-red-800/90 dark:text-red-200/95 tabular-nums">
-                {Math.floor(recordElapsedSec / 60)}:{String(recordElapsedSec % 60).padStart(2, "0")} / 1:00
+                {Math.floor(recordElapsedSec / 60)}:{String(recordElapsedSec % 60).padStart(2, "0")} /{" "}
+                {Math.floor(MAX_RECORDING_SEC / 60)}:{String(MAX_RECORDING_SEC % 60).padStart(2, "0")}
               </span>
             </div>
           </div>

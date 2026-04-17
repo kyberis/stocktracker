@@ -25,7 +25,7 @@ export function isAllowedAudioMessageUrl(url: string): boolean {
   return false;
 }
 
-const MAX_AUDIO_DURATION_SEC = 60;
+const MAX_AUDIO_DURATION_SEC = 120;
 
 export interface PrivateChatAudioPayload {
   url: string;

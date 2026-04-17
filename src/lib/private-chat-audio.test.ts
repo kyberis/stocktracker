@@ -63,7 +63,7 @@ describe("private-chat-audio", () => {
 
   it("rejects duration out of range", () => {
     const url = "https://abc.public.blob.vercel-storage.com/voice.webm";
-    const r = parseAndValidateAudioMessageContent(JSON.stringify({ url, durationSec: 61 }));
+    const r = parseAndValidateAudioMessageContent(JSON.stringify({ url, durationSec: 121 }));
     expect(r.ok).toBe(false);
   });
 
