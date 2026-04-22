@@ -36,6 +36,7 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
   const [exchange, setExchange] = useState("");
   const [assetType, setAssetType] = useState<"stock" | "etf" | "">("");
   const [purchaseDate, setPurchaseDate] = useState(todayLocal);
+  const [successToast, setSuccessToast] = useState(false);
   const searchTimeout = useRef<NodeJS.Timeout | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const track = useTrack();
@@ -120,7 +121,13 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
       valueInEUR: 0,
     });
 
-    onClose();
+    setSuccessToast(true);
+    // Give the screen reader a moment to announce the aria-live toast before
+    // the modal unmounts, then close.
+    setTimeout(() => {
+      setSuccessToast(false);
+      onClose();
+    }, 900);
   };
 
   const focusTrapRef = useFocusTrap(isOpen, onClose);
@@ -140,7 +147,7 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
         <div className="px-5 pt-5 pb-3 sm:px-6 sm:pt-6 sm:pb-4 border-b border-gray-100 dark:border-slate-700 flex-shrink-0">
           <div className="flex items-center justify-between">
             <h2 id="addstock-modal-title" className="text-lg font-bold text-gray-900 dark:text-white">{t("addStock")}</h2>
-            <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 dark:text-slate-500 dark:hover:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors" aria-label="Close">
+            <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 dark:text-slate-500 dark:hover:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors" aria-label={t("close")}>
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
           </div>
@@ -344,13 +351,28 @@ export default function AddStockModal({ isOpen, onClose }: AddStockModalProps) {
               </button>
               <button
                 onClick={handleSubmit}
-                disabled={!stockName.trim() || !ticker.trim() || !exchange.trim() || !shares || parseFloat(shares) <= 0 || !price || !assetType}
+                disabled={!stockName.trim() || !ticker.trim() || !exchange.trim() || !shares || parseFloat(shares) <= 0 || !price || !assetType || successToast}
                 className="btn-primary flex-1 sm:flex-none sm:ml-auto disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {t("addToPortfolio")}
               </button>
             </div>
           </>
+        )}
+
+        {/* Live region for screen readers + visual confirmation toast */}
+        <div aria-live="polite" role="status" className="sr-only">
+          {successToast ? t("addStockSuccessToast") : ""}
+        </div>
+        {successToast && (
+          <div className="pointer-events-none absolute left-1/2 bottom-20 sm:bottom-24 -translate-x-1/2 z-10">
+            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500 text-white text-sm font-medium shadow-lg">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+              {t("addStockSuccessToast")}
+            </div>
+          </div>
         )}
       </div>
     </div>

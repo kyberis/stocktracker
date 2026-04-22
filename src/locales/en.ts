@@ -2441,6 +2441,9 @@ const en: TranslationStrings = {
   // Chart expand/minimize
   chartExpand: "Maximize",
   chartMinimize: "Minimize",
+  chartDeepDive: "Show deep dive graph",
+  chartDeepDiveHint: "Open the interactive portfolio chart with time ranges, benchmarks and spike analysis.",
+  chartHideGraph: "Hide graph",
 
   // Asset type breakdown
   allAssets: "All Assets",
@@ -2625,6 +2628,24 @@ const en: TranslationStrings = {
   results: "results",
   min: "Min",
   max: "Max",
+
+  // Phase 2 UX sweep — aria-labels, toasts, AI drawer error copy
+  refreshPrices: "Refresh prices",
+  mainNavigation: "Main navigation",
+  chartGuide: "Chart guide",
+  chartGuideSubtitle: "How to read your portfolio chart",
+  closeGuide: "Close guide",
+  portfoliosCount: "{count} portfolios",
+  defaultPortfolioLabel: "Default",
+  addStockSuccessToast: "Holding added to your portfolio",
+  aiErrorGeneric: "Sorry, something went wrong. Please try again.",
+  aiErrorConnection: "Connection error. Please try again.",
+  aiQBest: "What's my best performing stock this month?",
+  aiQConcentrated: "Am I too concentrated in any sector?",
+  aiQDividends: "How much dividend income can I expect this year?",
+  aiQEarnings: "Which holdings have upcoming earnings?",
+  aiQSP500: "How does my portfolio compare to the S&P 500?",
+  aiQRisk: "What's my biggest risk right now?",
 };
 
 export default en;

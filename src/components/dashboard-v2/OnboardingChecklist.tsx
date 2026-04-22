@@ -68,9 +68,11 @@ export default function OnboardingChecklist({ onOpenAddStock }: Props) {
       if (res.ok) {
         const json = await res.json();
         setData(json);
+      } else {
+        console.error("[OnboardingChecklist] Failed to load checklist:", res.status);
       }
-    } catch {
-      // ignore
+    } catch (err) {
+      console.error("[OnboardingChecklist] Error loading checklist:", err);
     } finally {
       setLoading(false);
     }
@@ -90,9 +92,11 @@ export default function OnboardingChecklist({ onOpenAddStock }: Props) {
       if (res.ok) {
         const json = await res.json();
         setData(json);
+      } else {
+        console.error("[OnboardingChecklist] Failed to mark step:", step, res.status);
       }
-    } catch {
-      // ignore
+    } catch (err) {
+      console.error("[OnboardingChecklist] Error marking step:", step, err);
     }
   }, []);
 
@@ -104,8 +108,8 @@ export default function OnboardingChecklist({ onOpenAddStock }: Props) {
         body: JSON.stringify({ dismiss: true }),
       });
       setData((prev) => (prev ? { ...prev, dismissed: true } : prev));
-    } catch {
-      // ignore
+    } catch (err) {
+      console.error("[OnboardingChecklist] Error dismissing checklist:", err);
     }
   }, []);
 

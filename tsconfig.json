@@ -39,6 +39,7 @@
   "exclude": [
     "node_modules",
     "ios",
-    "android"
+    "android",
+    "scripts"
   ]
 }

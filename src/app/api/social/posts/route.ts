@@ -1,7 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { requireSession } from "@/lib/auth/guards";
 import { verifySessionToken } from "@/lib/auth/session";
 import { createPost, listPostsByUser, getFeedFromItems, getPublicProfileBySlug, isConnected, trackEvent, getCommentCountsForPosts, fanOutPost } from "@/lib/db";
+import { isPostType, type PostType } from "@/lib/db/social-posts";
+
+const PostTypeSchema = z.enum(["article", "analysis", "trade_idea", "portfolio_update", "link"]);
+const VisibilitySchema = z.enum(["public", "network", "private"]);
+
+const CreatePostBodySchema = z.object({
+  title: z.string().optional(),
+  content: z.string().min(1),
+  contentFormat: z.string().optional(),
+  visibility: VisibilitySchema.optional(),
+  postType: PostTypeSchema.optional(),
+  linkUrl: z.string().optional(),
+  linkTitle: z.string().optional(),
+  linkImage: z.string().optional(),
+  isDraft: z.boolean().optional(),
+});
 import { requireSocialEnabled } from "@/lib/social-gate";
 import { sanitizeSocialPostHtml } from "@/lib/sanitize-social-html";
 import { withMetrics } from "@/lib/with-metrics";
@@ -13,7 +30,8 @@ export const GET = withMetrics("/api/social/posts", async (request: NextRequest)
   const { searchParams } = new URL(request.url);
   const slug = searchParams.get("slug");
   const feed = searchParams.get("feed");
-  const postType = searchParams.get("type") as any;
+  const rawPostType = searchParams.get("type");
+  const postType: PostType | undefined = isPostType(rawPostType) ? rawPostType : undefined;
   const cursor = searchParams.get("cursor") || undefined;
   const limit = parseInt(searchParams.get("limit") || "20");
 
@@ -47,7 +65,7 @@ export const GET = withMetrics("/api/social/posts", async (request: NextRequest)
     const posts = await listPostsByUser(profile.userId, {
       viewerId: viewerId || undefined,
       isConnected: connected,
-      postType: postType || undefined,
+      postType,
       limit,
       cursor,
     });
@@ -66,12 +84,12 @@ export const POST = withMetrics("/api/social/posts", async (request: NextRequest
   const gated = await requireSocialEnabled(session.userId);
   if (gated) return gated;
 
-  const body = await request.json();
-  const { title, content, contentFormat, visibility, postType, linkUrl, linkTitle, linkImage, isDraft } = body;
-
-  if (!content || typeof content !== "string") {
-    return NextResponse.json({ error: "Content is required" }, { status: 400 });
+  const rawBody = await request.json().catch(() => null);
+  const parsed = CreatePostBodySchema.safeParse(rawBody);
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
+  const { title, content, contentFormat, visibility, postType, linkUrl, linkTitle, linkImage, isDraft } = parsed.data;
 
   const format = typeof contentFormat === "string" ? contentFormat : "html";
   const safeContent = format === "html" || !contentFormat ? sanitizeSocialPostHtml(content) : content;

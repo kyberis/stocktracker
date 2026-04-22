@@ -66,7 +66,7 @@ export const POST = withMetrics("/api/contact", async (req: NextRequest) => {
     return NextResponse.json({ error: "Disposable email addresses are not allowed. Please use a real email." }, { status: 400 });
   }
 
-  const turnstileOk = await verifyTurnstileToken(turnstileToken, ip);
+  const turnstileOk = await verifyTurnstileToken(turnstileToken, ip, req.headers.get("host"));
   if (!turnstileOk) {
     return NextResponse.json({ error: "CAPTCHA verification failed. Please try again." }, { status: 400 });
   }

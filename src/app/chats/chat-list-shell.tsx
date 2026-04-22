@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { ChatListSidebar, type ChatRoomSummary } from "./chat-list-sidebar";
 import { ChatRoomView } from "@/app/chat/chat-room-view";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 const LIST_POLL_MS = 5000;
 
@@ -74,7 +75,9 @@ export function ChatListShell() {
       </div>
       <div className="flex-1 min-w-0">
         {selectedToken ? (
-          <ChatRoomView key={selectedToken} token={selectedToken} showBackButton={false} heightClass="h-full" />
+          <ErrorBoundary>
+            <ChatRoomView key={selectedToken} token={selectedToken} showBackButton={false} heightClass="h-full" />
+          </ErrorBoundary>
         ) : (
           <div className="flex flex-col items-center justify-center h-full gap-3 text-gray-400 dark:text-slate-500">
             <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-slate-800 flex items-center justify-center">

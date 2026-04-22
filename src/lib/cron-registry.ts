@@ -72,8 +72,8 @@ export const CRON_REGISTRY: CronJob[] = [
   {
     name: "portfolio-snapshots",
     path: "/api/cron/portfolio-snapshots",
-    schedule: "10 * * * *",
-    description: "Compute and store portfolio value snapshots for all users",
+    schedule: "*/5 * * * *",
+    description: "Compute and store portfolio value snapshots for all users (every 5 min for dense intraday charts)",
   },
   {
     name: "trial-invitations",
@@ -104,5 +104,17 @@ export const CRON_REGISTRY: CronJob[] = [
     path: "/api/cron/moat-sync",
     schedule: "0 */4 * * *",
     description: "Evaluate stale/missing moat scores for screener-universe stocks using Alpha Vantage fundamentals",
+  },
+  {
+    name: "compact-snapshots",
+    path: "/api/cron/compact-snapshots",
+    schedule: "0 4 * * *",
+    description: "Compact old hourly portfolio snapshots into daily (and weekly) rows to bound storage",
+  },
+  {
+    name: "feedback-pipeline",
+    path: "/api/cron/feedback-pipeline",
+    schedule: "*/15 * * * *",
+    description: "Process queued user feedback into Linear issues via the feedback pipeline",
   },
 ];

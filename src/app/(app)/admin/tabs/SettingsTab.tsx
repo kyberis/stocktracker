@@ -72,7 +72,7 @@ function ApiKeyCard({
         setHasKey(d.hasKey);
         setMaskedKey(d.maskedKey || "");
       })
-      .catch(() => {});
+      .catch((err) => console.error("[SettingsTab] request failed:", err));
   }, [batch, endpoint]);
 
   const handleSave = async () => {
@@ -187,7 +187,7 @@ function MetricsCard() {
         setGrafanaSource(d.source || "none");
         setCloudConfigured(d.cloudConfigured || false);
       })
-      .catch(() => {});
+      .catch((err) => console.error("[SettingsTab] request failed:", err));
   }, [batch]);
 
   const loadPreview = async () => {
@@ -748,7 +748,7 @@ function AiModelConfigCard() {
       fetch("/api/admin/ai-models")
         .then((r) => r.json())
         .then((d) => setConfig(d.config || {}))
-        .catch(() => {});
+        .catch((err) => console.error("[SettingsTab] request failed:", err));
     }
   }, [batch]);
 
@@ -965,7 +965,7 @@ function SupportChatConfigCard() {
         setCustomInstructions(configData.customInstructions ?? "");
         setFlags(flagsData.flags ?? {});
       })
-      .catch(() => {})
+      .catch((err) => console.error("[SettingsTab] request failed:", err))
       .finally(() => setLoading(false));
   }, [batch]);
 
@@ -1141,7 +1141,7 @@ function StripePricesCard() {
     fetch("/api/admin/stripe-prices", { cache: "no-store" })
       .then((r) => r.json())
       .then((d) => { setValues(d); setDraft(d); setLoaded(true); })
-      .catch(() => {});
+      .catch((err) => console.error("[SettingsTab] request failed:", err));
   }, [batch]);
 
   const hasChanges = loaded && FIELDS.some((f) => (draft[f.key] ?? "") !== (values[f.key] ?? ""));
@@ -1234,7 +1234,7 @@ function PromoBannerCard() {
           setDraft(data.config);
         }
       })
-      .catch(() => {})
+      .catch((err) => console.error("[SettingsTab] request failed:", err))
       .finally(() => setLoading(false));
   }, [batch]);
 
@@ -1256,7 +1256,9 @@ function PromoBannerCard() {
         setSaved(true);
         setTimeout(() => setSaved(false), 3000);
       }
-    } catch { /* ignore */ }
+    } catch (err) {
+      console.error("[SettingsTab] promo-banner save failed:", err);
+    }
     setSaving(false);
   }
 
@@ -1402,7 +1404,7 @@ function GaConfigCard() {
         setAdsDraft(d.googleAdsId || "");
         setAdsSource(d.googleAdsSource || "env");
       })
-      .catch(() => {})
+      .catch((err) => console.error("[SettingsTab] request failed:", err))
       .finally(() => setLoading(false));
   }, [batch]);
 
@@ -1722,7 +1724,7 @@ function UtmTaxonomyCard() {
         setConfig(d.config);
         setDraft(JSON.parse(JSON.stringify(d.config)));
       })
-      .catch(() => {})
+      .catch((err) => console.error("[SettingsTab] request failed:", err))
       .finally(() => setLoading(false));
   }, [batch]);
 
@@ -1985,7 +1987,7 @@ function AdConfigCard() {
         setConfig(d);
         setDraft(JSON.parse(JSON.stringify(d)));
       })
-      .catch(() => {})
+      .catch((err) => console.error("[SettingsTab] request failed:", err))
       .finally(() => setLoading(false));
   }, [batch]);
 
@@ -2386,7 +2388,7 @@ function CronJobsCard() {
         setStats(data.stats || []);
         setRecent(data.recent || []);
       })
-      .catch(() => {})
+      .catch((err) => console.error("[SettingsTab] request failed:", err))
       .finally(() => setLoading(false));
   }, [batch]);
 
@@ -2569,7 +2571,7 @@ function DigestSendersCard() {
     fetch("/api/admin/digest-senders", { cache: "no-store" })
       .then((r) => r.json())
       .then((d) => setDomains(d.domains || []))
-      .catch(() => {})
+      .catch((err) => console.error("[SettingsTab] request failed:", err))
       .finally(() => setLoading(false));
   };
 
@@ -2585,7 +2587,9 @@ function DigestSendersCard() {
       });
       const data = await res.json();
       if (data.domains) setDomains(data.domains);
-    } catch { /* ignore */ }
+    } catch (err) {
+      console.error("[SettingsTab] digest-senders save failed:", err);
+    }
     setSaving(false);
   };
 
@@ -2706,7 +2710,7 @@ function MoatAutoGenCard() {
     fetch("/api/admin/moat-auto-tickers")
       .then((r) => r.json())
       .then(setData)
-      .catch(() => {})
+      .catch((err) => console.error("[SettingsTab] request failed:", err))
       .finally(() => setLoading(false));
   };
 
@@ -2720,7 +2724,7 @@ function MoatAutoGenCard() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ symbols }),
-    }).catch(() => {});
+    }).catch((err) => console.error("[SettingsTab] request failed:", err));
     setInput("");
     setSaving(false);
     load();
@@ -2731,7 +2735,7 @@ function MoatAutoGenCard() {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ symbol }),
-    }).catch(() => {});
+    }).catch((err) => console.error("[SettingsTab] request failed:", err));
     load();
   };
 
@@ -2741,7 +2745,7 @@ function MoatAutoGenCard() {
       headers: process.env.NEXT_PUBLIC_CRON_SECRET
         ? { Authorization: `Bearer ${process.env.NEXT_PUBLIC_CRON_SECRET}` }
         : {},
-    }).catch(() => {});
+    }).catch((err) => console.error("[SettingsTab] request failed:", err));
     setTriggering(false);
     setTimeout(load, 2000);
   };

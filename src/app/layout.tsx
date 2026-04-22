@@ -4,6 +4,8 @@ import { GeistMono } from "geist/font/mono";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { cookies } from "next/headers";
+
+const IS_VERCEL_DEPLOYMENT = Boolean(process.env.VERCEL);
 import CookieConsent from "@/components/CookieConsent";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import SignupConversionTracker from "@/components/SignupConversionTracker";
@@ -79,6 +81,7 @@ export default async function RootLayout({
   return (
     <html lang="en" className={htmlClass || undefined}>
       <head>
+        <meta name="mobile-web-app-capable" content="yes" />
         {/* Apply dark class from cookie before paint to prevent flash */}
         <script
           dangerouslySetInnerHTML={{
@@ -122,8 +125,12 @@ export default async function RootLayout({
         <SignupConversionTracker />
         <MetaPixel pixelId={metaPixelId} />
         <AdSenseScript clientId={adsClientId} />
-        <Analytics />
-        <SpeedInsights />
+        {IS_VERCEL_DEPLOYMENT && (
+          <>
+            <Analytics />
+            <SpeedInsights />
+          </>
+        )}
         <ServiceWorkerUpdater />
       </body>
     </html>

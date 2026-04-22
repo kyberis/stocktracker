@@ -47,7 +47,7 @@ export default function SampleDataBanner() {
       <button
         onClick={() => { localStorage.setItem(DISMISSED_KEY, "1"); setDismissed(true); }}
         className="text-amber-400 dark:text-amber-500/60 hover:text-amber-600 dark:hover:text-amber-300 transition-colors shrink-0"
-        aria-label="Dismiss"
+        aria-label={t("dismiss")}
       >
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />

@@ -30,6 +30,7 @@ export default function StockScreener() {
   const [results, setResults] = useState<ScreenerCacheRow[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [filters, setFilters] = useState<ScreenerFiltersType>(() => {
     const defaults: ScreenerFiltersType = { sortBy: "dividendYield", sortDir: "desc", limit: 50, page: 1 };
     try {
@@ -52,13 +53,20 @@ export default function StockScreener() {
     if (!isPro) return;
     const headers = getApiHeaders();
     fetch("/api/screener?action=meta", { headers })
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(`Failed to load screener metadata: ${r.status}`);
+        return r.json();
+      })
       .then(setMeta)
-      .catch(() => {});
+      .catch((err) => {
+        console.error("[StockScreener] Failed to load metadata:", err);
+        setFetchError("Unable to load screener filters. Please try again later.");
+      });
   }, [isPro, getApiHeaders]);
 
   const runScreen = useCallback(async (f: ScreenerFiltersType) => {
     setLoading(true);
+    setFetchError(null);
     try {
       const headers = getApiHeaders();
       const params = new URLSearchParams();
@@ -80,7 +88,15 @@ export default function StockScreener() {
         const data = await res.json();
         setResults(data.results);
         setTotal(data.total);
+      } else {
+        const body = await res.json().catch(() => null);
+        const message = body?.error || `Screener request failed (${res.status})`;
+        console.error("[StockScreener] Screen request failed:", res.status, body);
+        setFetchError(message);
       }
+    } catch (err) {
+      console.error("[StockScreener] Screen request error:", err);
+      setFetchError("Unable to run the screener. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -167,6 +183,16 @@ export default function StockScreener() {
         meta={meta}
         onChange={handleFiltersChange}
       />
+
+      {fetchError && (
+        <div
+          role="alert"
+          aria-live="polite"
+          className="rounded-lg border border-red-200 dark:border-red-900/40 bg-red-50 dark:bg-red-900/10 px-4 py-3 text-sm text-red-700 dark:text-red-300"
+        >
+          {fetchError}
+        </div>
+      )}
 
       <ScreenerResults
         results={results}

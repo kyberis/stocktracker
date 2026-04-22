@@ -1,4 +1,5 @@
 import { AdminNav } from "./admin-nav";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -8,7 +9,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           Admin
         </h1>
         <AdminNav />
-        {children}
+        <ErrorBoundary>{children}</ErrorBoundary>
       </div>
     </main>
   );

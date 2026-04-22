@@ -2364,6 +2364,9 @@ const fr: TranslationStrings = {
   blurScoreTeaser: "Obtenez votre score de santé de portefeuille alimenté par IA avec des recommandations personnalisées",
   chartExpand: "Maximiser",
   chartMinimize: "Minimiser",
+  chartDeepDive: "Afficher le graphique détaillé",
+  chartDeepDiveHint: "Ouvrez le graphique interactif avec plages de temps, indices de référence et analyse des pics.",
+  chartHideGraph: "Masquer le graphique",
   allAssets: "Tous les actifs",
   stocksLabel: "Actions",
   etfsLabel: "ETFs",
@@ -2531,6 +2534,23 @@ const fr: TranslationStrings = {
   results: "résultats",
   min: "Min",
   max: "Max",
+
+  refreshPrices: "Actualiser les prix",
+  mainNavigation: "Navigation principale",
+  chartGuide: "Guide du graphique",
+  chartGuideSubtitle: "Comment lire le graphique de votre portefeuille",
+  closeGuide: "Fermer le guide",
+  portfoliosCount: "{count} portefeuilles",
+  defaultPortfolioLabel: "Par défaut",
+  addStockSuccessToast: "Position ajoutée à votre portefeuille",
+  aiErrorGeneric: "Désolé, une erreur s'est produite. Veuillez réessayer.",
+  aiErrorConnection: "Erreur de connexion. Veuillez réessayer.",
+  aiQBest: "Quelle est ma meilleure action ce mois-ci ?",
+  aiQConcentrated: "Suis-je trop concentré dans un secteur ?",
+  aiQDividends: "Combien de dividendes puis-je espérer cette année ?",
+  aiQEarnings: "Quelles positions ont des résultats à venir ?",
+  aiQSP500: "Comment mon portefeuille se compare-t-il au S&P 500 ?",
+  aiQRisk: "Quel est mon plus grand risque actuellement ?",
 };
 
 export default fr;

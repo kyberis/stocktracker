@@ -55,7 +55,7 @@ export default function ReferralBanner({ onShare }: ReferralBannerProps) {
           <button
             onClick={dismiss}
             className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/50 dark:text-slate-500 dark:hover:text-slate-300 dark:hover:bg-slate-700/50 transition-colors"
-            aria-label="Dismiss"
+            aria-label={t("dismiss")}
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />

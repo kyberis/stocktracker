@@ -170,7 +170,7 @@ export default function PortfolioAiDrawer({ isOpen, onClose, autoAnalyze }: Prop
         });
 
         if (!res.ok || !res.body) {
-          setMessages((prev) => [...prev, { role: "assistant", content: "Sorry, something went wrong. Please try again." }]);
+          setMessages((prev) => [...prev, { role: "assistant", content: t("aiErrorGeneric") }]);
           setStreaming(false);
           return;
         }
@@ -200,12 +200,12 @@ export default function PortfolioAiDrawer({ isOpen, onClose, autoAnalyze }: Prop
           refreshUser();
         }
       } catch {
-        setMessages((prev) => [...prev, { role: "assistant", content: "Connection error. Please try again." }]);
+        setMessages((prev) => [...prev, { role: "assistant", content: t("aiErrorConnection") }]);
       } finally {
         setStreaming(false);
       }
     },
-    [messages, streaming, demoMode, stealthMode, holdings, cashEntries, quotes, exchangeRates, activePortfolioCurrency, goals, language],
+    [messages, streaming, demoMode, stealthMode, holdings, cashEntries, quotes, exchangeRates, activePortfolioCurrency, goals, language, t, refreshUser],
   );
 
   useEffect(() => {
@@ -216,12 +216,12 @@ export default function PortfolioAiDrawer({ isOpen, onClose, autoAnalyze }: Prop
   }, [isOpen, autoAnalyze, messages.length, holdings.length, sendMessage, t]);
 
   const suggestions = [
-    { label: t("v2AiChipBest"), q: "What's my best performing stock this month?" },
-    { label: t("v2AiChipConcentrated"), q: "Am I too concentrated in any sector?" },
-    { label: t("v2AiChipDividends"), q: "How much dividend income can I expect this year?" },
-    { label: t("v2AiChipEarnings"), q: "Which holdings have upcoming earnings?" },
-    { label: t("v2AiChipSP500"), q: "How does my portfolio compare to the S&P 500?" },
-    { label: t("v2AiChipRisk"), q: "What's my biggest risk right now?" },
+    { label: t("v2AiChipBest"), q: t("aiQBest") },
+    { label: t("v2AiChipConcentrated"), q: t("aiQConcentrated") },
+    { label: t("v2AiChipDividends"), q: t("aiQDividends") },
+    { label: t("v2AiChipEarnings"), q: t("aiQEarnings") },
+    { label: t("v2AiChipSP500"), q: t("aiQSP500") },
+    { label: t("v2AiChipRisk"), q: t("aiQRisk") },
   ];
 
   const contextLine = stealthMode

@@ -1,0 +1,46 @@
+# Knowledge Base Maintenance
+
+The `knowledge/` folder is the system of record for this codebase. It lives
+alongside `AGENTS.md` and `ARCHITECTURE.md` at the repository root.
+
+> Read [`AGENTS.md`](../../AGENTS.md) and [`knowledge/product-specs/index.md`](../../knowledge/product-specs/index.md) at the start of any non-trivial task.
+
+## When to update
+
+Update the knowledge base when you:
+
+1. Add a new feature → create a spec in `knowledge/product-specs/` using
+   [`knowledge/templates/product-spec.template.md`](../../knowledge/templates/product-spec.template.md)
+   and add it to the index.
+2. Change an existing feature's data model, API shape, tier gating, or telemetry
+   → edit its spec.
+3. Add or change a DB table, cron job, or feature flag → run
+   `npm run knowledge:gen` and commit the resulting changes under
+   `knowledge/generated/`.
+4. Introduce an architectural pattern worth preserving → add a design doc at
+   `knowledge/design-docs/<slug>.md`.
+5. Change `.cursor/skills/` or `.cursor/rules/` → cross-link the relevant spec
+   to the updated skill or rule.
+
+## Required sections
+
+Every product spec must contain the numbered sections from
+[`knowledge/templates/product-spec.template.md`](../../knowledge/templates/product-spec.template.md).
+The linter (`npm run knowledge:lint`) warns on missing sections.
+
+## Do not edit
+
+Files under `knowledge/generated/` are produced by `npm run knowledge:gen`.
+Edit the source (migrations, cron registry, skills) instead.
+
+## CI
+
+`.github/workflows/knowledge-lint.yml` runs on every push:
+
+- `npm run knowledge:lint` (broken links fail CI).
+- `npm run knowledge:gen` — any drift fails CI with the diff.
+
+## When in doubt
+
+Link instead of inlining. The knowledge base works because it's a graph, not a
+single document.

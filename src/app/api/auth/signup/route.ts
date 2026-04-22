@@ -52,7 +52,7 @@ export const POST = withMetrics("/api/auth/signup", async (req: NextRequest) => 
   const attribution = normalizeAttribution(attributionFromBody ?? attributionFromCookie ?? undefined);
 
   const cfToken = (result.data as Record<string, unknown>).turnstileToken as string | undefined;
-  const captchaOk = await verifyTurnstileToken(cfToken, ip);
+  const captchaOk = await verifyTurnstileToken(cfToken, ip, req.headers.get("host"));
   if (!captchaOk) {
     return NextResponse.json({ error: "CAPTCHA verification failed. Please try again." }, { status: 403 });
   }

@@ -5,8 +5,16 @@ import { generateId } from "@/lib/utils";
 export type PostType = "article" | "analysis" | "trade_idea" | "portfolio_update" | "link";
 export type PostVisibility = "public" | "network" | "private";
 
-const VALID_POST_TYPES = new Set<PostType>(["article", "analysis", "trade_idea", "portfolio_update", "link"]);
-const VALID_VISIBILITIES = new Set<PostVisibility>(["public", "network", "private"]);
+export const VALID_POST_TYPES = new Set<PostType>(["article", "analysis", "trade_idea", "portfolio_update", "link"]);
+export const VALID_VISIBILITIES = new Set<PostVisibility>(["public", "network", "private"]);
+
+export function isPostType(val: unknown): val is PostType {
+  return typeof val === "string" && VALID_POST_TYPES.has(val as PostType);
+}
+
+export function isVisibility(val: unknown): val is PostVisibility {
+  return typeof val === "string" && VALID_VISIBILITIES.has(val as PostVisibility);
+}
 
 export interface SocialPost {
   id: string;
@@ -40,12 +48,12 @@ export interface SocialPostImage {
   sortOrder: number;
 }
 
-function parsePostType(val: unknown): PostType {
+export function parsePostType(val: unknown): PostType {
   const s = String(val || "article");
   return VALID_POST_TYPES.has(s as PostType) ? (s as PostType) : "article";
 }
 
-function parseVisibility(val: unknown): PostVisibility {
+export function parseVisibility(val: unknown): PostVisibility {
   const s = String(val || "public");
   return VALID_VISIBILITIES.has(s as PostVisibility) ? (s as PostVisibility) : "public";
 }

@@ -1,15 +1,23 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
 import { getMarketStatus, wasMarketOpenToday } from "@/lib/market-hours";
 import { convertCurrency, resolveQuoteCurrency } from "@/lib/utils";
 import type { AssetFilter } from "@/components/dashboard-v2/AssetTypeFilter";
-import PortfolioValueChart from "./PortfolioValueChart";
 import BackfillCTA from "./BackfillCTA";
 import MarketAwareBreakdown from "./MarketAwareBreakdown";
 import PortfolioAiDrawer from "@/components/dashboard-v2/PortfolioAiDrawer";
+import ErrorBoundary from "@/components/ErrorBoundary";
+
+const PortfolioValueChart = dynamic(() => import("./PortfolioValueChart"), {
+  ssr: false,
+  loading: () => (
+    <div className="card rounded-xl h-[480px] animate-pulse bg-gray-50 dark:bg-white/[0.02]" />
+  ),
+});
 import { AssetTypeReviewLauncher } from "@/components/AssetTypeReviewModal";
 import type { Holding, QuoteData, ExchangeRates, HoldingAssetType } from "@/lib/types";
 
@@ -149,24 +157,26 @@ export default function PortfolioPage() {
       )}
 
       {/* Chart (with integrated header + filter) */}
-      <PortfolioValueChart
-        holdings={holdings}
-        assetFilter={assetFilter}
-        refreshKey={refreshKey}
-        onRecalculate={handleRecalculate}
-        recalculating={recalculating}
-        onOpenAi={() => setAiDrawerOpen(true)}
-        totalValue={totals.totalCurrentEUR}
-        dayGainLoss={dayGainLoss}
-        dayGainLossPercent={
-          totals.totalCurrentEUR > 0
-            ? (dayGainLoss / (totals.totalCurrentEUR - dayGainLoss)) * 100
-            : 0
-        }
-        totalGainLossPercent={totals.totalGainLossPercent}
-        onAssetFilterChange={setAssetFilter}
-        dayChangePctByType={dayChangePctByType}
-      />
+      <ErrorBoundary>
+        <PortfolioValueChart
+          holdings={holdings}
+          assetFilter={assetFilter}
+          refreshKey={refreshKey}
+          onRecalculate={handleRecalculate}
+          recalculating={recalculating}
+          onOpenAi={() => setAiDrawerOpen(true)}
+          totalValue={totals.totalCurrentEUR}
+          dayGainLoss={dayGainLoss}
+          dayGainLossPercent={
+            totals.totalCurrentEUR > 0
+              ? (dayGainLoss / (totals.totalCurrentEUR - dayGainLoss)) * 100
+              : 0
+          }
+          totalGainLossPercent={totals.totalGainLossPercent}
+          onAssetFilterChange={setAssetFilter}
+          dayChangePctByType={dayChangePctByType}
+        />
+      </ErrorBoundary>
 
       {/* Asset Breakdown Cards */}
       <MarketAwareBreakdown

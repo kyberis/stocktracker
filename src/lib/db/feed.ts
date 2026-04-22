@@ -1,6 +1,6 @@
 import { ensureInitialized } from "./client";
 import { str, num, parseExperienceLevel } from "./helpers";
-import type { SocialPostWithAuthor } from "./social-posts";
+import { parsePostType, parseVisibility, type SocialPostWithAuthor } from "./social-posts";
 
 /**
  * Fan-out-on-write feed system.
@@ -193,8 +193,8 @@ export async function getFeedFromItems(
       title: str(row.title),
       content: str(row.content),
       contentFormat: str(row.content_format) || "html",
-      visibility: str(row.visibility) as "public" | "network" | "private",
-      postType: str(row.post_type) as any,
+      visibility: parseVisibility(row.visibility),
+      postType: parsePostType(row.post_type),
       linkUrl: str(row.link_url),
       linkTitle: str(row.link_title),
       linkImage: str(row.link_image),

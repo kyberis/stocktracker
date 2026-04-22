@@ -6,6 +6,7 @@ import { MessageSquare, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { NetworkSidebar, NetworkMobileNav } from "@/components/social/NetworkSidebar";
 import { ChatRoomView } from "@/app/chat/chat-room-view";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 const LIST_POLL_MS = 5000;
 
@@ -195,7 +196,9 @@ export default function NetworkConversationsPage() {
                       <h3 className="text-sm font-semibold text-[var(--foreground)] truncate">{selectedRoomTitle}</h3>
                     </div>
                     <div className="flex-1 min-h-0">
-                      <ChatRoomView key={selectedToken} token={selectedToken} showBackButton={false} heightClass="h-full" />
+                      <ErrorBoundary>
+                        <ChatRoomView key={selectedToken} token={selectedToken} showBackButton={false} heightClass="h-full" />
+                      </ErrorBoundary>
                     </div>
                   </div>
                 </div>
@@ -225,7 +228,9 @@ export default function NetworkConversationsPage() {
                 {/* Chat view */}
                 <div className="flex-1 min-w-0">
                   {selectedToken ? (
-                    <ChatRoomView key={selectedToken} token={selectedToken} showBackButton={false} heightClass="h-full" />
+                    <ErrorBoundary>
+                      <ChatRoomView key={selectedToken} token={selectedToken} showBackButton={false} heightClass="h-full" />
+                    </ErrorBoundary>
                   ) : (
                     <div className="flex flex-col items-center justify-center h-full gap-3 text-[var(--muted)]">
                       <MessageSquare className="w-12 h-12" />

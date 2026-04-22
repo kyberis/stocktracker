@@ -47,6 +47,7 @@ const PUBLIC_API_ROUTES = new Set([
   "/api/webhooks/resend",
   "/api/social/profile",
   "/api/social/posts",
+  "/api/device-interest/count",
 ]);
 
 function isPublicPath(pathname: string): boolean {
@@ -58,6 +59,7 @@ function isPublicPath(pathname: string): boolean {
   if (pathname === "/sitemap.xml") return true;
   if (pathname === "/llms.txt") return true;
   if (pathname === "/llms-full.txt") return true;
+  if (pathname === "/manifest.json") return true;
   // Public portfolio share pages
   if (pathname.startsWith("/p/")) return true;
   // Public social profile pages

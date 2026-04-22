@@ -2364,6 +2364,9 @@ const pt: TranslationStrings = {
   blurScoreTeaser: "Obtenha a sua pontuação de saúde do portfólio impulsionada por IA com recomendações personalizadas",
   chartExpand: "Maximizar",
   chartMinimize: "Minimizar",
+  chartDeepDive: "Mostrar gráfico detalhado",
+  chartDeepDiveHint: "Abra o gráfico interativo com intervalos de tempo, índices de referência e análise de picos.",
+  chartHideGraph: "Ocultar gráfico",
   allAssets: "Todos os Ativos",
   stocksLabel: "Ações",
   etfsLabel: "ETFs",
@@ -2531,6 +2534,23 @@ const pt: TranslationStrings = {
   results: "resultados",
   min: "Mín",
   max: "Máx",
+
+  refreshPrices: "Atualizar preços",
+  mainNavigation: "Navegação principal",
+  chartGuide: "Guia do gráfico",
+  chartGuideSubtitle: "Como ler o gráfico da sua carteira",
+  closeGuide: "Fechar guia",
+  portfoliosCount: "{count} carteiras",
+  defaultPortfolioLabel: "Predefinida",
+  addStockSuccessToast: "Posição adicionada à sua carteira",
+  aiErrorGeneric: "Desculpe, algo correu mal. Tente novamente.",
+  aiErrorConnection: "Erro de ligação. Tente novamente.",
+  aiQBest: "Qual é a minha melhor ação este mês?",
+  aiQConcentrated: "Estou demasiado concentrado num setor?",
+  aiQDividends: "Quantos dividendos posso esperar este ano?",
+  aiQEarnings: "Que posições têm resultados a chegar?",
+  aiQSP500: "Como é que a minha carteira se compara ao S&P 500?",
+  aiQRisk: "Qual é o meu maior risco neste momento?",
 };
 
 export default pt;

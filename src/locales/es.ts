@@ -2442,6 +2442,9 @@ const es: TranslationStrings = {
   // Chart expand/minimize
   chartExpand: "Maximizar",
   chartMinimize: "Minimizar",
+  chartDeepDive: "Mostrar gráfico detallado",
+  chartDeepDiveHint: "Abre el gráfico interactivo con rangos de tiempo, comparativas y análisis de picos.",
+  chartHideGraph: "Ocultar gráfico",
 
   // Asset type breakdown
   allAssets: "Todos los activos",
@@ -2626,6 +2629,23 @@ const es: TranslationStrings = {
   results: "resultados",
   min: "Mín",
   max: "Máx",
+
+  refreshPrices: "Actualizar precios",
+  mainNavigation: "Navegación principal",
+  chartGuide: "Guía del gráfico",
+  chartGuideSubtitle: "Cómo leer el gráfico de tu portafolio",
+  closeGuide: "Cerrar guía",
+  portfoliosCount: "{count} portafolios",
+  defaultPortfolioLabel: "Predeterminado",
+  addStockSuccessToast: "Posición añadida a tu portafolio",
+  aiErrorGeneric: "Lo sentimos, algo salió mal. Inténtalo de nuevo.",
+  aiErrorConnection: "Error de conexión. Inténtalo de nuevo.",
+  aiQBest: "¿Cuál es mi mejor acción este mes?",
+  aiQConcentrated: "¿Estoy demasiado concentrado en algún sector?",
+  aiQDividends: "¿Cuántos dividendos puedo esperar este año?",
+  aiQEarnings: "¿Qué posiciones tienen próximos informes de resultados?",
+  aiQSP500: "¿Cómo se compara mi portafolio con el S&P 500?",
+  aiQRisk: "¿Cuál es mi mayor riesgo ahora mismo?",
 };
 
 export default es;

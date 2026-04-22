@@ -23,9 +23,9 @@ import DashboardTabBarQuickLinks from "@/components/DashboardTabBarQuickLinks";
 import SampleDataBanner from "@/components/SampleDataBanner";
 import TrialCountdownBanner from "@/components/TrialCountdownBanner";
 import CloverToLogo from "@/components/CloverToLogo";
-import { HeroSkeleton, ChartSkeleton } from "@/components/Skeleton";
-import type { Account } from "@/lib/types";
+import { ChartSkeleton } from "@/components/Skeleton";
 import { AssetTypeReviewLauncher } from "@/components/AssetTypeReviewModal";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 const PortfolioValueChart = dynamic(() => import("@/components/portfolio-v2/PortfolioValueChart"), {
   ssr: false,
@@ -53,6 +53,10 @@ const DailyDigestsTeaserCard = dynamic(() => import("@/components/dashboard-v2/D
 const OnboardingChecklist = dynamic(() => import("@/components/dashboard-v2/OnboardingChecklist"), { ssr: false });
 const AssetBreakdownCards = dynamic(() => import("@/components/dashboard-v2/AssetBreakdownCards"), { ssr: false });
 
+// Shared with the desktop dashboard so a user's chart preference carries over
+// between platforms. Keep in sync with DashboardPortfolioV2.
+const CHART_VISIBLE_STORAGE_KEY = "trefolio.dashboardChartVisible";
+
 export default function MobileDashboard() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showAddMenu, setShowAddMenu] = useState(false);
@@ -63,17 +67,48 @@ export default function MobileDashboard() {
   const [paywallSurface, setPaywallSurface] = useState<string>("tab_gate");
   const [showPortfolioPicker, setShowPortfolioPicker] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const { t } = useI18n();
-  const { holdings, cashEntries, quotes, isLoading, refreshHoldings, refreshQuotes, activePortfolioId, portfolios, setActivePortfolio, demoMode } =
+  const { holdings, cashEntries, quotes, isLoading, refreshQuotes, activePortfolioId, portfolios, setActivePortfolio, demoMode } =
     usePortfolio();
   usePortfolioSnapshotSync({ demoMode });
   const { user, isLoading: authLoading } = useAuth();
   const track = useTrack();
   const isNative = useIsNative();
 
+  // Default to collapsed; demo mode always shows the chart for a polished demo.
+  // MobileDashboard is `dynamic(..., { ssr: false })` so it's safe to read
+  // localStorage in the lazy initializer without hydration mismatch.
+  const [chartVisible, setChartVisible] = useState<boolean>(() => {
+    if (demoMode) return true;
+    if (typeof window === "undefined") return false;
+    try {
+      return localStorage.getItem(CHART_VISIBLE_STORAGE_KEY) === "true";
+    } catch {
+      return false;
+    }
+  });
+  const hasTrackedDeepDiveRef = useRef(false);
+
+  useEffect(() => {
+    if (demoMode) return;
+    try {
+      localStorage.setItem(CHART_VISIBLE_STORAGE_KEY, chartVisible ? "true" : "false");
+    } catch {}
+  }, [chartVisible, demoMode]);
+
+  const handleToggleChartVisible = useCallback(() => {
+    setChartVisible((v) => {
+      const next = !v;
+      if (next && !hasTrackedDeepDiveRef.current) {
+        hasTrackedDeepDiveRef.current = true;
+        track("dashboard_chart_deep_dive_opened");
+      }
+      return next;
+    });
+  }, [track]);
+
   const userPlan = user?.plan ?? "free";
-  const isPro = userPlan === "pro";
-  const isPaid = userPlan === "pro";
   const holdingsCount = holdings.length;
   const hasMultiplePortfolios = portfolios.length > 1;
   const activeName = activePortfolioId
@@ -88,12 +123,14 @@ export default function MobileDashboard() {
     userPlan,
   });
 
-  // Periodic paywall nudge for free users
+  // Periodic paywall nudge for free users. State updates here drive the nudge
+  // modal visibility; they run once per matching auth/plan transition.
   useEffect(() => {
     if (authLoading) return;
     initNudgeTracking();
     if (userPlan === "free" && shouldShowPaywallNudge()) {
       recordPaywallNudgeShown();
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPaywallSurface("periodic_nudge");
       setShowPaywall(true);
     }
@@ -139,20 +176,32 @@ export default function MobileDashboard() {
   }
 
   const quotesAvailable = holdingsCount === 0 || holdings.some((h) => quotes[h.ticker]);
-  const hasLoadedOnce = useRef(false);
-  const mountTime = useRef(Date.now());
-  const timedOut = Date.now() - mountTime.current > 12_000;
-  if (!isLoading && (quotesAvailable || timedOut) && (holdingsCount > 0 || cashEntries.length > 0)) {
-    if (!hasLoadedOnce.current) hideNativeSplash();
-    hasLoadedOnce.current = true;
-  }
+  // Safety net: force-show the dashboard after 12s even if quotes never arrive,
+  // so users aren't stuck on the loading splash. Driven by a timer in effect so
+  // we don't call Date.now() during render.
+  const [timedOut, setTimedOut] = useState(false);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+  useEffect(() => {
+    const id = setTimeout(() => setTimedOut(true), 12_000);
+    return () => clearTimeout(id);
+  }, []);
 
-  // Also hide splash for empty portfolios once loading finishes
-  if (!isLoading && holdingsCount === 0 && cashEntries.length === 0 && !hasLoadedOnce.current) {
-    hideNativeSplash();
-  }
+  const isDashboardReady =
+    !isLoading && (quotesAvailable || timedOut) && (holdingsCount > 0 || cashEntries.length > 0);
+  const isEmptyLoaded = !isLoading && holdingsCount === 0 && cashEntries.length === 0;
 
-  if ((isLoading || (!quotesAvailable && !timedOut)) && !hasLoadedOnce.current) {
+  useEffect(() => {
+    if (hasLoadedOnce) return;
+    if (isDashboardReady || isEmptyLoaded) {
+      // Synchronize with the native splash (external system) and latch the
+      // one-shot flag so we don't flash back to the loading spinner.
+      hideNativeSplash();
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setHasLoadedOnce(true);
+    }
+  }, [hasLoadedOnce, isDashboardReady, isEmptyLoaded]);
+
+  if ((isLoading || (!quotesAvailable && !timedOut)) && !hasLoadedOnce) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-5" role="status" aria-label={t("loading")}>
         <CloverToLogo className="w-16 h-16" once delay={200} transitionMs={1400} />
@@ -184,17 +233,27 @@ export default function MobileDashboard() {
           </button>
           <div className="flex items-center gap-2">
             <button
-              onClick={async () => { await refreshQuotes(); }}
-              className="p-2 rounded-xl text-gray-400 hover:text-gray-600 dark:hover:text-slate-300"
-              aria-label={t("refreshing")}
+              onClick={async () => {
+                if (isRefreshing) return;
+                setIsRefreshing(true);
+                try {
+                  await refreshQuotes();
+                } finally {
+                  setIsRefreshing(false);
+                }
+              }}
+              className="p-2.5 rounded-xl text-gray-400 hover:text-gray-600 dark:hover:text-slate-300 disabled:opacity-60"
+              aria-label={isRefreshing ? t("refreshing") : t("refreshPrices")}
+              aria-busy={isRefreshing}
+              disabled={isRefreshing}
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <svg className={`w-5 h-5 ${isRefreshing ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
             </button>
             <button
               onClick={() => setShowAddMenu(true)}
-              className={`p-2 rounded-xl text-white ${holdingsAtLimit ? "bg-amber-500" : "bg-emerald-500"}`}
+              className={`p-2.5 rounded-xl text-white ${holdingsAtLimit ? "bg-amber-500" : "bg-emerald-500"}`}
               aria-label={t("addAsset")}
             >
               {holdingsAtLimit ? (
@@ -250,7 +309,14 @@ export default function MobileDashboard() {
                   <AssetTypeReviewLauncher />
                 </div>
                 <PortfolioSummary holdings={filteredHoldings} cashEntries={investmentCashEntries} allCashEntries={cashEntries} />
-                <PortfolioValueChart holdings={filteredHoldings} assetFilter="all" />
+                <ErrorBoundary>
+                  <PortfolioValueChart
+                    holdings={filteredHoldings}
+                    assetFilter="all"
+                    chartVisible={chartVisible}
+                    onToggleChartVisible={handleToggleChartVisible}
+                  />
+                </ErrorBoundary>
                 <AssetBreakdownCards holdings={filteredHoldings} cashEntries={investmentCashEntries} />
                 <PortfolioCards holdings={filteredHoldings} />
                 <UpcomingEarnings onNavigateToEvents={() => handleTabChange("events")} />
@@ -329,12 +395,19 @@ export default function MobileDashboard() {
             className="absolute inset-0 bg-black/40 backdrop-blur-sm"
             onClick={() => setShowAddMenu(false)}
           />
-          <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-t-3xl shadow-2xl animate-slide-up" style={{ paddingBottom: "env(safe-area-inset-bottom, 16px)" }}>
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="mobile-add-asset-title"
+            className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-t-3xl shadow-2xl animate-slide-up"
+            style={{ paddingBottom: "env(safe-area-inset-bottom, 16px)" }}
+            onKeyDown={(e) => { if (e.key === "Escape") setShowAddMenu(false); }}
+          >
             <div className="flex justify-center pt-3 pb-1">
               <div className="w-10 h-1 rounded-full bg-gray-300 dark:bg-slate-600" />
             </div>
             <div className="px-5 pb-2 pt-1">
-              <h2 className="text-base font-bold text-gray-900 dark:text-white">{t("addAsset")}</h2>
+              <h2 id="mobile-add-asset-title" className="text-base font-bold text-gray-900 dark:text-white">{t("addAsset")}</h2>
             </div>
             <div className="px-2 pb-6 space-y-1">
               <button
@@ -452,12 +525,19 @@ export default function MobileDashboard() {
             className="absolute inset-0 bg-black/40 backdrop-blur-sm"
             onClick={() => setShowPortfolioPicker(false)}
           />
-          <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-t-3xl shadow-2xl animate-slide-up" style={{ paddingBottom: "env(safe-area-inset-bottom, 16px)" }}>
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="mobile-portfolio-picker-title"
+            className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-t-3xl shadow-2xl animate-slide-up"
+            style={{ paddingBottom: "env(safe-area-inset-bottom, 16px)" }}
+            onKeyDown={(e) => { if (e.key === "Escape") setShowPortfolioPicker(false); }}
+          >
             <div className="flex justify-center pt-3 pb-1">
               <div className="w-10 h-1 rounded-full bg-gray-300 dark:bg-slate-600" />
             </div>
             <div className="px-5 pb-2 pt-1">
-              <h2 className="text-base font-bold text-gray-900 dark:text-white">{t("portfolio")}</h2>
+              <h2 id="mobile-portfolio-picker-title" className="text-base font-bold text-gray-900 dark:text-white">{t("portfolio")}</h2>
             </div>
             <div className="max-h-[60vh] overflow-y-auto px-2 pb-6">
               {hasMultiplePortfolios && (
@@ -483,7 +563,7 @@ export default function MobileDashboard() {
                       {t("allPortfolios")}
                     </p>
                     <p className="text-xs text-gray-500 dark:text-slate-400">
-                      {portfolios.length} portfolios
+                      {t("portfoliosCount").replace("{count}", String(portfolios.length))}
                     </p>
                   </div>
                   {!activePortfolioId && (
@@ -517,7 +597,7 @@ export default function MobileDashboard() {
                       {p.name}
                     </p>
                     <p className="text-xs text-gray-500 dark:text-slate-400">
-                      {p.currency}{p.isDefault ? " · Default" : ""}
+                      {p.currency}{p.isDefault ? ` · ${t("defaultPortfolioLabel")}` : ""}
                     </p>
                   </div>
                   {activePortfolioId === p.id && (

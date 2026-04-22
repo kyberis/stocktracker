@@ -17,6 +17,131 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.77.68",
+    date: "2026-04-22",
+    title: "Platform hardening",
+    titleTranslations: {
+      es: "Endurecimiento de la plataforma",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Typed the social posts, intelligence, and fundamentals API routes with Zod parsers and a typed provider-method map, removing runtime `any` casts that could have masked bad inputs.",
+        translations: {
+          es: "Las rutas de la API para publicaciones sociales, 'intelligence' y fundamentales ahora usan validación Zod y mapas tipados de métodos de proveedor, eliminando conversiones de tipo 'any' que podían ocultar entradas inválidas.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Wrapped the portfolio value chart, private chat room, and the admin tabs area in error boundaries so a crash in one panel no longer blanks out the surrounding page.",
+        translations: {
+          es: "El gráfico de valor de cartera, la sala de chat privado y el área de pestañas de administración ahora están protegidos por límites de error, de modo que un fallo en un panel no deja en blanco el resto de la página.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Failed admin and profile fetches now log the underlying error so regressions surface in observability instead of being silently swallowed.",
+        translations: {
+          es: "Las peticiones fallidas de administración y de perfil ahora registran el error original para que las regresiones aparezcan en la observabilidad en lugar de quedarse en silencio.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "The stock screener shows an inline, screen-reader-friendly error banner when the filter metadata or results request fails, instead of a silent empty state.",
+        translations: {
+          es: "El screener de acciones muestra un banner de error en línea, compatible con lectores de pantalla, cuando falla la petición de metadatos o resultados, en lugar de un estado vacío silencioso.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Heavy chart and stock detail bundles are now lazy-loaded on dashboard and portfolio pages, making initial render lighter.",
+        translations: {
+          es: "Los paquetes pesados del gráfico y del detalle de acción ahora se cargan bajo demanda en el panel y en las páginas de cartera, aligerando el render inicial.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Added API route tests for chat send and read-receipt flows and unit tests for chat-room helpers, raising the Private Chat domain's automated coverage.",
+        translations: {
+          es: "Se añadieron pruebas de rutas API para el envío de mensajes y el acuse de lectura del chat, y pruebas unitarias de los ayudantes del chat, elevando la cobertura automatizada del dominio Chat Privado.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Aligned the Capacitor CLI with the @capacitor/* v8 runtime, pinned eslint-config-next to Next 14, and raised the minimum Node engine to 22 LTS so local and Vercel builds use the same toolchain.",
+        translations: {
+          es: "Se alineó el CLI de Capacitor con el runtime v8 de @capacitor/*, se fijó eslint-config-next a la serie de Next 14 y se elevó el motor Node mínimo a 22 LTS para que las compilaciones locales y en Vercel usen la misma cadena de herramientas.",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.77.67",
+    date: "2026-04-21",
+    title: "Build reliability",
+    titleTranslations: {
+      es: "Fiabilidad de compilación",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "The home dashboard now hides the portfolio chart and the asset-type breakdown cards by default, and loads them on demand via a 'Show deep dive graph' CTA — making the initial view faster and less busy.",
+        translations: {
+          es: "El panel principal ahora oculta el gráfico del portafolio y las tarjetas de desglose por tipo de activo de forma predeterminada, y los carga bajo demanda con un botón 'Mostrar gráfico detallado', para una vista inicial más rápida y menos cargada.",
+        },
+      },
+      {
+        type: "fix",
+        text: "The device interest count API route is marked dynamic so production builds do not prerender it against the database.",
+        translations: {
+          es: "La ruta de recuento de interés en dispositivos se marca como dinámica para que las compilaciones de producción no la prerendericen contra la base de datos.",
+        },
+      },
+      {
+        type: "fix",
+        text: "The public waitlist counter on the landing and Leaf pages now loads for signed-out visitors — the API route is no longer behind the auth gate.",
+        translations: {
+          es: "El contador público de la lista de espera en las páginas de inicio y Leaf ahora se carga para visitantes sin sesión — la ruta de API ya no requiere autenticación.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Reconciled the cron registry with vercel.json: portfolio snapshots now correctly run every 5 minutes, and the compact-snapshots and feedback-pipeline jobs are registered with the admin cron view.",
+        translations: {
+          es: "Se reconcilió el registro de crons con vercel.json: los snapshots de portafolio corren cada 5 minutos y los jobs compact-snapshots y feedback-pipeline están registrados en la vista de administración.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Accessibility and localization sweep on mobile: the dashboard refresh button now announces the correct action (not 'refreshing' when idle), hit targets are larger, bottom sheets have proper dialog semantics with Escape support, and the portfolio picker 'Default' label and count are fully translated.",
+        translations: {
+          es: "Mejora de accesibilidad y localización en móvil: el botón de actualizar del panel ahora anuncia la acción correcta (no dice 'actualizando' en reposo), las áreas de toque son más grandes, las hojas inferiores tienen semántica de diálogo con soporte de Escape y la etiqueta 'Predeterminado' del selector de portafolio está totalmente traducida.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "The Portfolio AI drawer now localizes its error messages and suggested questions, so non-English users see the chat in their own language.",
+        translations: {
+          es: "El panel de IA del portafolio ahora traduce sus mensajes de error y las preguntas sugeridas, para que los usuarios en otros idiomas vean el chat en su propio idioma.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Adding a stock now shows a brief 'Holding added to your portfolio' confirmation — with a screen-reader announcement — before the modal closes.",
+        translations: {
+          es: "Al añadir una acción ahora aparece una confirmación breve 'Posición añadida a tu portafolio' — con anuncio para lectores de pantalla — antes de cerrarse el modal.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Turnstile CAPTCHA is automatically skipped on localhost (both next dev and local npm start), and operators can opt out in any environment with TURNSTILE_DISABLED=1.",
+        translations: {
+          es: "El CAPTCHA de Turnstile ahora se omite automáticamente en localhost (tanto en next dev como en npm start local), y los operadores pueden desactivarlo en cualquier entorno con TURNSTILE_DISABLED=1.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.77.66",
     date: "2026-04-18",
     title: "Longer voice messages in chat",

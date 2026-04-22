@@ -2363,6 +2363,9 @@ const nl: TranslationStrings = {
   blurScoreTeaser: "Krijg je AI-gestuurde portfolio gezondheidsscore met gepersonaliseerde aanbevelingen",
   chartExpand: "Maximaliseren",
   chartMinimize: "Minimaliseren",
+  chartDeepDive: "Gedetailleerde grafiek tonen",
+  chartDeepDiveHint: "Open de interactieve portfolio-grafiek met tijdsbereiken, benchmarks en piekanalyse.",
+  chartHideGraph: "Grafiek verbergen",
   allAssets: "Alle Activa",
   stocksLabel: "Aandelen",
   etfsLabel: "ETF's",
@@ -2530,6 +2533,23 @@ const nl: TranslationStrings = {
   results: "resultaten",
   min: "Min",
   max: "Max",
+
+  refreshPrices: "Koersen verversen",
+  mainNavigation: "Hoofdnavigatie",
+  chartGuide: "Grafiekgids",
+  chartGuideSubtitle: "Hoe lees je je portefeuillegrafiek",
+  closeGuide: "Gids sluiten",
+  portfoliosCount: "{count} portefeuilles",
+  defaultPortfolioLabel: "Standaard",
+  addStockSuccessToast: "Positie toegevoegd aan je portefeuille",
+  aiErrorGeneric: "Sorry, er ging iets mis. Probeer het opnieuw.",
+  aiErrorConnection: "Verbindingsfout. Probeer het opnieuw.",
+  aiQBest: "Welk aandeel presteert deze maand het best?",
+  aiQConcentrated: "Ben ik te veel geconcentreerd in één sector?",
+  aiQDividends: "Hoeveel dividendinkomen kan ik dit jaar verwachten?",
+  aiQEarnings: "Welke posities hebben binnenkort kwartaalcijfers?",
+  aiQSP500: "Hoe verhoudt mijn portefeuille zich tot de S&P 500?",
+  aiQRisk: "Wat is nu mijn grootste risico?",
 };
 
 export default nl;

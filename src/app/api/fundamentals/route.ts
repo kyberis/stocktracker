@@ -1,18 +1,23 @@
 import { NextRequest } from "next/server";
+import { z } from "zod";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { resolveIsinToTicker } from "@/lib/api-providers/isin-resolver";
 import { requireFeatureAccess } from "@/lib/auth/guards";
 import { withMetrics } from "@/lib/with-metrics";
+import type { StockDataProvider } from "@/lib/api-providers/types";
 
 export const dynamic = "force-dynamic";
 
-const VALID_TYPES = new Set(["income", "balance", "cashflow", "earnings"]);
+const FundamentalTypeSchema = z.enum(["income", "balance", "cashflow", "earnings"]);
+type FundamentalType = z.infer<typeof FundamentalTypeSchema>;
 
-const METHOD_MAP: Record<string, string> = {
-  income: "getIncomeStatement",
-  balance: "getBalanceSheet",
-  cashflow: "getCashFlow",
-  earnings: "getEarnings",
+type FundamentalInvoker = (provider: StockDataProvider, ticker: string) => Promise<unknown> | null;
+
+const FUNDAMENTAL_INVOKERS: Record<FundamentalType, FundamentalInvoker> = {
+  income: (provider, ticker) => provider.getIncomeStatement?.(ticker) ?? null,
+  balance: (provider, ticker) => provider.getBalanceSheet?.(ticker) ?? null,
+  cashflow: (provider, ticker) => provider.getCashFlow?.(ticker) ?? null,
+  earnings: (provider, ticker) => provider.getEarnings?.(ticker) ?? null,
 };
 
 const yahoo = new YahooProvider();
@@ -23,25 +28,27 @@ export const GET = withMetrics("/api/fundamentals", async (request: NextRequest)
 
   const { searchParams } = new URL(request.url);
   const symbol = searchParams.get("symbol");
-  const type = searchParams.get("type");
+  const rawType = searchParams.get("type");
+  const typeParse = FundamentalTypeSchema.safeParse(rawType);
 
-  if (!symbol || !type || !VALID_TYPES.has(type)) {
+  if (!symbol || !typeParse.success) {
     return Response.json(
       { error: "symbol and type (income|balance|cashflow|earnings) parameters required" },
       { status: 400 }
     );
   }
 
-  const methodName = METHOD_MAP[type];
+  const type = typeParse.data;
   const ticker = await resolveIsinToTicker(yahoo, symbol);
+  const invocation = FUNDAMENTAL_INVOKERS[type](yahoo, ticker);
+
+  if (!invocation) {
+    return Response.json({ error: "Failed to fetch data" }, { status: 500 });
+  }
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const method = (yahoo as any)[methodName];
-    if (typeof method === "function") {
-      const result = await (method as (s: string) => Promise<unknown>).call(yahoo, ticker);
-      if (result) return Response.json(result);
-    }
+    const result = await invocation;
+    if (result) return Response.json(result);
     return Response.json({ error: "Failed to fetch data" }, { status: 500 });
   } catch (err) {
     console.error(`[fundamentals] Failed for ${symbol}/${type}:`, err instanceof Error ? err.message : err);

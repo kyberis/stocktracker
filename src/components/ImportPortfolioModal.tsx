@@ -424,7 +424,7 @@ export default function ImportPortfolioModal({ isOpen, onClose, onImportComplete
           <button
             onClick={handleClose}
             disabled={isBusy}
-            aria-label="Close"
+            aria-label={t("close")}
             className={`p-1.5 rounded-lg transition-colors ${isBusy ? "opacity-30 cursor-not-allowed text-gray-400 dark:text-slate-500" : "hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-400 dark:text-slate-500"}`}
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">

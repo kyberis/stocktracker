@@ -688,7 +688,7 @@ function SocialProfileSection() {
         setDisplayName(p.displayName || "");
         setAvatarUrl(p.avatarUrl || "");
       })
-      .catch(() => {})
+      .catch((err) => console.error("[ProfilePage] request failed:", err))
       .finally(() => setLoading(false));
   }, []);
 
@@ -1175,18 +1175,18 @@ export default function ProfilePage() {
     fetch("/api/widget-token")
       .then((r) => r.json())
       .then((d) => setWidgetHasToken(!!d.hasToken))
-      .catch(() => {});
+      .catch((err) => console.error("[ProfilePage] request failed:", err));
     fetch("/api/device-passkey")
       .then((r) => r.json())
       .then((d) => {
         setDeviceHasPasskey(!!d.hasPasskey);
         setDeviceLinked(!!d.deviceLinked);
       })
-      .catch(() => {});
+      .catch((err) => console.error("[ProfilePage] request failed:", err));
     fetch("/api/device-passkey/template")
       .then((r) => r.json())
       .then((d) => { if (d.templateId) setDeviceTemplate(d.templateId); })
-      .catch(() => {});
+      .catch((err) => console.error("[ProfilePage] request failed:", err));
   }, []);
 
   const fetchPasskeys = useCallback(async () => {
@@ -1498,7 +1498,7 @@ export default function ProfilePage() {
     fetch("/api/refund-requests")
       .then((r) => r.json())
       .then((d) => { if (d.pending) setRefundStatus("pending"); })
-      .catch(() => {});
+      .catch((err) => console.error("[ProfilePage] request failed:", err));
   }, [isPaid]);
 
   const handleRefundSubmit = useCallback(async () => {
@@ -2405,7 +2405,7 @@ function ReferralTab() {
     fetch("/api/referral/code")
       .then((r) => r.json())
       .then(setData)
-      .catch(() => {})
+      .catch((err) => console.error("[ProfilePage] request failed:", err))
       .finally(() => setLoading(false));
   }, []);
 
@@ -2414,7 +2414,7 @@ function ReferralTab() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ event }),
-    }).catch(() => {});
+    }).catch((err) => console.error("[ProfilePage] request failed:", err));
   }, []);
 
   const handleCopy = useCallback(async () => {

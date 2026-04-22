@@ -2364,6 +2364,9 @@ const de: TranslationStrings = {
   blurScoreTeaser: "Erhalten Sie Ihre KI-gestützte Portfolio-Gesundheitsbewertung mit personalisierten Empfehlungen",
   chartExpand: "Maximieren",
   chartMinimize: "Minimieren",
+  chartDeepDive: "Detailgrafik anzeigen",
+  chartDeepDiveHint: "Öffne das interaktive Portfolio-Diagramm mit Zeiträumen, Benchmarks und Ausschlag-Analyse.",
+  chartHideGraph: "Diagramm ausblenden",
   allAssets: "Alle Vermögenswerte",
   stocksLabel: "Aktien",
   etfsLabel: "ETFs",
@@ -2531,6 +2534,23 @@ const de: TranslationStrings = {
   results: "Ergebnisse",
   min: "Min",
   max: "Max",
+
+  refreshPrices: "Kurse aktualisieren",
+  mainNavigation: "Hauptnavigation",
+  chartGuide: "Diagramm-Leitfaden",
+  chartGuideSubtitle: "So lesen Sie Ihr Portfolio-Diagramm",
+  closeGuide: "Leitfaden schließen",
+  portfoliosCount: "{count} Portfolios",
+  defaultPortfolioLabel: "Standard",
+  addStockSuccessToast: "Position zu Ihrem Portfolio hinzugefügt",
+  aiErrorGeneric: "Entschuldigung, etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
+  aiErrorConnection: "Verbindungsfehler. Bitte versuchen Sie es erneut.",
+  aiQBest: "Welche Aktie läuft diesen Monat am besten?",
+  aiQConcentrated: "Bin ich in einem Sektor zu stark konzentriert?",
+  aiQDividends: "Wie viel Dividendeneinkommen kann ich dieses Jahr erwarten?",
+  aiQEarnings: "Welche Positionen haben anstehende Quartalszahlen?",
+  aiQSP500: "Wie schneidet mein Portfolio im Vergleich zum S&P 500 ab?",
+  aiQRisk: "Was ist gerade mein größtes Risiko?",
 };
 
 export default de;

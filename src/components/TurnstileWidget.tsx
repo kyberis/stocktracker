@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
+
+/** Widget is skipped on localhost (any port) so dev/local-prod builds don't block forms. */
+function isLocalhostOrigin(): boolean {
+  if (typeof window === "undefined") return false;
+  const h = window.location.hostname;
+  return h === "localhost" || h === "127.0.0.1" || h === "::1" || h === "[::1]";
+}
 
 declare global {
   interface Window {
@@ -34,6 +41,11 @@ export default function TurnstileWidget({ onToken, onError }: TurnstileWidgetPro
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+  const disabled = process.env.NEXT_PUBLIC_TURNSTILE_DISABLED === "1";
+  const [localhost, setLocalhost] = useState(false);
+  useEffect(() => {
+    setLocalhost(isLocalhostOrigin());
+  }, []);
 
   const renderWidget = useCallback(() => {
     if (!siteKey || !containerRef.current || !window.turnstile) return;
@@ -51,6 +63,8 @@ export default function TurnstileWidget({ onToken, onError }: TurnstileWidgetPro
 
   useEffect(() => {
     if (process.env.NODE_ENV === "development") return;
+    if (disabled) return;
+    if (localhost) return;
     if (!siteKey) return;
 
     if (window.turnstile) {
@@ -74,7 +88,7 @@ export default function TurnstileWidget({ onToken, onError }: TurnstileWidgetPro
       }, 100);
       return () => clearInterval(check);
     }
-  }, [siteKey, renderWidget]);
+  }, [siteKey, renderWidget, disabled, localhost]);
 
   useEffect(() => {
     return () => {
@@ -86,6 +100,8 @@ export default function TurnstileWidget({ onToken, onError }: TurnstileWidgetPro
   }, []);
 
   if (process.env.NODE_ENV === "development") return null;
+  if (disabled) return null;
+  if (localhost) return null;
   if (!siteKey) return null;
 
   return <div ref={containerRef} className="flex justify-center" />;

@@ -124,7 +124,7 @@ export default function SidebarNav() {
       </div>
 
       {/* Main nav */}
-      <nav className="px-3 mt-2" aria-label="Main navigation">
+      <nav className="px-3 mt-2" aria-label={t("mainNavigation")}>
         <h2 className="sr-only">Main</h2>
         <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-600 px-2 mb-1" aria-hidden="true">
           Main
