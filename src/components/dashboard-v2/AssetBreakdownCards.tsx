@@ -8,7 +8,7 @@ import { calculateTotalsByAssetType } from "@/lib/portfolio-summary";
 import { formatCurrency, formatPercent } from "@/lib/utils";
 import { ASSET_COLORS } from "./AssetTypeFilter";
 import type { AssetFilter } from "./AssetTypeFilter";
-import type { Holding, CashEntry, HoldingAssetType } from "@/lib/types";
+import type { Holding, CashEntry } from "@/lib/types";
 
 interface Props {
   holdings: Holding[];
@@ -16,12 +16,6 @@ interface Props {
   onFilterChange?: (type: AssetFilter) => void;
   activeFilter?: AssetFilter;
 }
-
-const TYPES: { key: HoldingAssetType; labelKey: "stocksLabel" | "etfsLabel" | "cryptoLabel" }[] = [
-  { key: "stock", labelKey: "stocksLabel" },
-  { key: "etf", labelKey: "etfsLabel" },
-  { key: "crypto", labelKey: "cryptoLabel" },
-];
 
 export default function AssetBreakdownCards({ holdings, cashEntries, onFilterChange, activeFilter }: Props) {
   const { t } = useI18n();
@@ -35,79 +29,139 @@ export default function AssetBreakdownCards({ holdings, cashEntries, onFilterCha
     [holdings, cashEntries, quotes, exchangeRates, cur],
   );
 
-  const hasAnyValue = byType.stock.totalCurrentEUR > 0 || byType.etf.totalCurrentEUR > 0 || byType.crypto.totalCurrentEUR > 0;
+  const investedTotal =
+    byType.stock.totalCurrentEUR + byType.etf.totalCurrentEUR + byType.crypto.totalCurrentEUR;
+  const allDayPL =
+    byType.stock.dayGainLossEUR + byType.etf.dayGainLossEUR + byType.crypto.dayGainLossEUR;
+  const allPriorClose = investedTotal - allDayPL;
+  const allDayPct = allPriorClose > 0 ? (allDayPL / allPriorClose) * 100 : 0;
+
+  const hasAnyValue = investedTotal > 0;
   if (!hasAnyValue) return null;
 
+  const activeKey: AssetFilter = activeFilter ?? "all";
+
+  type Entry = {
+    key: AssetFilter;
+    label: string;
+    value: number;
+    alloc: number;
+    dayPct: number;
+  };
+
+  // When the portfolio holds only a single asset type, the "All Assets" pill
+  // would mirror the lone type pill exactly. Suppress it to keep the strip
+  // honest and free up horizontal space.
+  const activeTypeCount =
+    (byType.stock.totalCurrentEUR > 0 ? 1 : 0) +
+    (byType.etf.totalCurrentEUR > 0 ? 1 : 0) +
+    (byType.crypto.totalCurrentEUR > 0 ? 1 : 0);
+  const showAllPill = activeTypeCount > 1;
+
+  const entries: Entry[] = [
+    ...(showAllPill
+      ? [{ key: "all" as AssetFilter, label: t("allAssets"), value: investedTotal, alloc: 100, dayPct: allDayPct }]
+      : []),
+    {
+      key: "stock",
+      label: t("stocksLabel"),
+      value: byType.stock.totalCurrentEUR,
+      alloc: byType.allocations.stock,
+      dayPct: byType.stock.totalCurrentEUR > 0 && (byType.stock.totalCurrentEUR - byType.stock.dayGainLossEUR) > 0
+        ? (byType.stock.dayGainLossEUR / (byType.stock.totalCurrentEUR - byType.stock.dayGainLossEUR)) * 100
+        : 0,
+    },
+    {
+      key: "etf",
+      label: t("etfsLabel"),
+      value: byType.etf.totalCurrentEUR,
+      alloc: byType.allocations.etf,
+      dayPct: byType.etf.totalCurrentEUR > 0 && (byType.etf.totalCurrentEUR - byType.etf.dayGainLossEUR) > 0
+        ? (byType.etf.dayGainLossEUR / (byType.etf.totalCurrentEUR - byType.etf.dayGainLossEUR)) * 100
+        : 0,
+    },
+    {
+      key: "crypto",
+      label: t("cryptoLabel"),
+      value: byType.crypto.totalCurrentEUR,
+      alloc: byType.allocations.crypto,
+      dayPct: byType.crypto.totalCurrentEUR > 0 && (byType.crypto.totalCurrentEUR - byType.crypto.dayGainLossEUR) > 0
+        ? (byType.crypto.dayGainLossEUR / (byType.crypto.totalCurrentEUR - byType.crypto.dayGainLossEUR)) * 100
+        : 0,
+    },
+  ];
+
+  const visibleEntries = entries.filter((e) => e.key === "all" || e.value > 0);
+  const colsClass =
+    visibleEntries.length <= 1
+      ? "grid-cols-1"
+      : visibleEntries.length === 2
+        ? "grid-cols-2"
+        : visibleEntries.length === 3
+          ? "grid-cols-3 sm:grid-cols-3"
+          : "grid-cols-2 sm:grid-cols-4";
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-      {TYPES.map(({ key, labelKey }) => {
-        const totals = byType[key];
-        if (totals.totalCurrentEUR <= 0) return null;
-        const alloc = byType.allocations[key];
-        const isPos = totals.dayGainLossEUR >= 0;
-        const isTotalPos = totals.totalGainLoss >= 0;
-        const isSelected = activeFilter === key;
-        const color = ASSET_COLORS[key];
+    <div
+      className={`grid ${colsClass} gap-2`}
+      role="group"
+      aria-label={t("allAssets")}
+    >
+      {visibleEntries.map((e) => {
+        const color = ASSET_COLORS[e.key];
+        const isSelected = activeKey === e.key;
+        const dayIsPos = e.dayPct >= 0;
 
         return (
           <button
-            key={key}
-            onClick={() => onFilterChange?.(isSelected ? "all" : key)}
-            className={`relative overflow-hidden text-left rounded-xl border p-4 transition-all ${
+            key={e.key}
+            type="button"
+            onClick={() => onFilterChange?.(isSelected ? "all" : e.key)}
+            aria-pressed={isSelected}
+            className={`relative overflow-hidden text-left rounded-lg border p-2.5 transition-colors ${
               isSelected
-                ? "border-transparent ring-1 bg-opacity-5"
-                : "border-gray-200 dark:border-slate-700 hover:border-gray-300 dark:hover:border-slate-600 hover:-translate-y-px"
+                ? "border-transparent"
+                : "border-gray-200 dark:border-slate-700 hover:border-gray-300 dark:hover:border-slate-600"
             }`}
             style={isSelected ? {
               borderColor: `color-mix(in srgb, ${color} 40%, transparent)`,
-              background: `color-mix(in srgb, ${color} 4%, var(--card))`,
+              background: `color-mix(in srgb, ${color} 5%, var(--card))`,
               boxShadow: `0 0 0 1px color-mix(in srgb, ${color} 30%, transparent)`,
             } : { background: "var(--card)" }}
           >
-            {/* Left accent bar */}
             <span
-              className="absolute top-0 left-0 w-[3px] h-full rounded-r"
+              className="absolute top-0 left-0 w-[3px] h-full"
               style={{ background: color }}
+              aria-hidden="true"
             />
-
-            <div className="flex items-center justify-between mb-2.5">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-slate-500">
-                {t(labelKey)}
-              </span>
-              <span
-                className={`text-[10px] font-semibold px-2 py-0.5 rounded-md ${
-                  isTotalPos
-                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                    : "bg-red-500/10 text-red-500 dark:text-red-400"
-                }`}
-              >
-                {isTotalPos ? "+" : ""}{formatPercent(totals.totalGainLossPercent)}
-              </span>
-            </div>
-
-            <p className="text-lg font-bold tabular-nums text-gray-900 dark:text-white mb-1">
-              {stealthMode ? "•••••" : formatCurrency(totals.totalCurrentEUR, cur)}
-            </p>
-
-            <div className="flex items-center gap-1.5 text-[11px]">
-              <span className={isPos ? "text-emerald-600 dark:text-emerald-400 font-medium" : "text-red-500 dark:text-red-400 font-medium"}>
-                {stealthMode ? "•••" : `${isPos ? "+" : ""}${formatCurrency(totals.dayGainLossEUR, cur)}`}
-                {" "}{t("todayChange")}
-              </span>
-              <span className="text-gray-300 dark:text-slate-600">·</span>
-              <span className={isTotalPos ? "text-emerald-600 dark:text-emerald-400 font-medium" : "text-red-500 dark:text-red-400 font-medium"}>
-                {stealthMode ? "•••" : `${isTotalPos ? "+" : ""}${formatCurrency(totals.totalGainLoss, cur)}`}
-                {" "}{t("totalGainLabel")}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-2 mt-2.5 text-[10px] text-gray-500 dark:text-slate-500">
-              <span>{formatPercent(alloc)} {t("ofPortfolio")}</span>
-              <div className="flex-1 h-[3px] rounded-full bg-gray-100 dark:bg-slate-700 overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-all duration-500"
-                  style={{ width: `${Math.min(alloc, 100)}%`, background: color }}
-                />
+            <div className="pl-1.5">
+              <div className="flex items-center justify-between gap-2 min-h-[14px]">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-slate-500 truncate">
+                  {e.label}
+                </span>
+                <span
+                  className={`text-[10px] font-semibold tabular-nums shrink-0 ${
+                    dayIsPos
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : "text-red-500 dark:text-red-400"
+                  }`}
+                >
+                  {dayIsPos ? "+" : ""}{e.dayPct.toFixed(2)}%
+                </span>
+              </div>
+              <p className="mt-1 text-sm font-bold tabular-nums text-gray-900 dark:text-white truncate">
+                {stealthMode ? "•••••" : formatCurrency(e.value, cur)}
+              </p>
+              <div className="mt-1.5 flex items-center gap-1.5">
+                <div className="flex-1 h-[2px] rounded-full bg-gray-100 dark:bg-slate-700 overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{ width: `${Math.min(Math.max(e.alloc, 0), 100)}%`, background: color }}
+                  />
+                </div>
+                <span className="text-[10px] tabular-nums text-gray-500 dark:text-slate-500 shrink-0">
+                  {formatPercent(e.alloc)}
+                </span>
               </div>
             </div>
           </button>

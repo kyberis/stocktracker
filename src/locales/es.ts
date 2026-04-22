@@ -2446,6 +2446,19 @@ const es: TranslationStrings = {
   chartDeepDiveHint: "Abre el gráfico interactivo con rangos de tiempo, comparativas y análisis de picos.",
   chartHideGraph: "Ocultar gráfico",
 
+  // Hero: invertido vs efectivo
+  investedAssets: "Activos invertidos",
+  cashAvailableForInvestment: "Efectivo disponible para invertir",
+  netWorthInline: "Patrimonio neto",
+  investCta: "Invertir",
+  updateCashCta: "Actualizar",
+  updateCashCtaAria: "Actualizar saldo de efectivo",
+  addFirstHoldingCta: "Añade tu primera posición",
+  noGainsYetInvestedEmpty: "Sin ganancias hoy \u2014 aún no hay nada invertido",
+  todayLabel: "hoy",
+  sparkline1WLabel: "\u00DAltima semana",
+  sparkline1MLabel: "\u00DAltimo mes",
+
   // Asset type breakdown
   allAssets: "Todos los activos",
   stocksLabel: "Acciones",

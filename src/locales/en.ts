@@ -2445,6 +2445,19 @@ const en: TranslationStrings = {
   chartDeepDiveHint: "Open the interactive portfolio chart with time ranges, benchmarks and spike analysis.",
   chartHideGraph: "Hide graph",
 
+  // Hero: invested vs cash split
+  investedAssets: "Invested assets",
+  cashAvailableForInvestment: "Cash available for investment",
+  netWorthInline: "Net worth",
+  investCta: "Invest",
+  updateCashCta: "Update",
+  updateCashCtaAria: "Update cash balance",
+  addFirstHoldingCta: "Add your first holding",
+  noGainsYetInvestedEmpty: "No gains today \u2014 nothing invested yet",
+  todayLabel: "today",
+  sparkline1WLabel: "Past week",
+  sparkline1MLabel: "Past month",
+
   // Asset type breakdown
   allAssets: "All Assets",
   stocksLabel: "Stocks",

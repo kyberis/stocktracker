@@ -139,9 +139,8 @@ function ExpandedLayout({ chartBlock, holdings, cashEntries, allCashEntries, onA
   );
 }
 
-function CollapsedLayout({ chartBlock, breakdownBlock, holdings, cashEntries, allCashEntries, onAddStock, onNavigateToEvents, onNavigateToDividends, onNavigateToDiversification, onShareReferral, aiDrawerOpen, setAiDrawerOpen, sidebarExtra }: {
+function CollapsedLayout({ chartBlock, holdings, cashEntries, allCashEntries, onAddStock, onNavigateToEvents, onNavigateToDividends, onNavigateToDiversification, onShareReferral, aiDrawerOpen, setAiDrawerOpen, sidebarExtra }: {
   chartBlock: React.ReactNode;
-  breakdownBlock?: React.ReactNode;
   holdings: Holding[];
   cashEntries: CashEntry[];
   allCashEntries: CashEntry[];
@@ -159,7 +158,6 @@ function CollapsedLayout({ chartBlock, breakdownBlock, holdings, cashEntries, al
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4 items-start">
         <div className="flex flex-col gap-4 min-w-0">
           {chartBlock}
-          {breakdownBlock}
           <AssetPerformanceTable holdings={holdings} cashEntries={cashEntries} />
           <PortfolioTable holdings={holdings} onAddStock={onAddStock} />
           <MarketAndCash holdings={holdings} cashEntries={allCashEntries} />
@@ -250,6 +248,19 @@ function V2Dashboard(props: Props) {
     [filteredHoldings, effectiveCash, quotes, exchangeRates, baseCurrency],
   );
 
+  // Split the headline into "invested assets" and "cash available". Cash never
+  // gains or loses daily so including it in the day-% denominator under-reports
+  // real performance. See mockup proposal asset-list-hero-mockup.
+  const cashValueBase = useMemo(
+    () =>
+      effectiveCash.reduce(
+        (sum, c) => sum + convertCurrency(c.amountEUR, "EUR", baseCurrency, exchangeRates),
+        0,
+      ),
+    [effectiveCash, baseCurrency, exchangeRates],
+  );
+  const investedValueBase = Math.max(0, totals.totalCurrentEUR - cashValueBase);
+
   const dayGainLoss = useMemo(
     () => computeMarketAwareDayPL(filteredHoldings, quotes, exchangeRates, baseCurrency),
     [filteredHoldings, quotes, exchangeRates, baseCurrency],
@@ -313,23 +324,36 @@ function V2Dashboard(props: Props) {
           expanded={chartExpanded}
           onToggleExpand={() => setChartExpanded(!chartExpanded)}
           totalValue={totals.totalCurrentEUR}
+          investedValue={investedValueBase}
+          cashValue={cashValueBase}
+          onUpdateCash={() => {
+            if (typeof document === "undefined") return;
+            const el = document.getElementById("dashboard-cash-assets");
+            if (!el) return;
+            el.scrollIntoView({ behavior: "smooth", block: "start" });
+            // Briefly highlight so the user sees which widget opened.
+            el.classList.add("ring-2", "ring-emerald-400/60", "transition");
+            window.setTimeout(() => {
+              el.classList.remove("ring-2", "ring-emerald-400/60", "transition");
+            }, 1600);
+          }}
           dayGainLoss={dayGainLoss}
-          dayGainLossPercent={totals.totalCurrentEUR > 0 ? (dayGainLoss / (totals.totalCurrentEUR - dayGainLoss)) * 100 : 0}
+          dayGainLossPercent={investedValueBase - dayGainLoss > 0 ? (dayGainLoss / (investedValueBase - dayGainLoss)) * 100 : 0}
           totalGainLossPercent={totals.totalGainLossPercent}
           onAssetFilterChange={setAssetFilter}
           dayChangePctByType={dayChangePctByType}
           chartVisible={chartVisible || chartExpanded}
           onToggleChartVisible={handleToggleChartVisible}
+          breakdownSlot={
+            <MarketAwareBreakdown
+              holdings={holdings}
+              cashEntries={cashEntries}
+              onFilterChange={setAssetFilter}
+              activeFilter={assetFilter}
+            />
+          }
         />
       </ErrorBoundary>
-      {(chartVisible || chartExpanded) && (
-        <MarketAwareBreakdown
-          holdings={holdings}
-          cashEntries={cashEntries}
-          onFilterChange={setAssetFilter}
-          activeFilter={assetFilter}
-        />
-      )}
     </>
   );
 

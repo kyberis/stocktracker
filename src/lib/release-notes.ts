@@ -17,6 +17,88 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.77.72",
+    date: "2026-04-22",
+    title: "Mini sparkline on the collapsed hero chart",
+    titleTranslations: {
+      es: "Mini gr\u00E1fico en la tarjeta colapsada",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "When the main portfolio chart is collapsed, the hero card now shows a compact sparkline with the last week (or month for Pro) of portfolio value plus the period return. Tap the sparkline to open the full interactive chart.",
+        translations: {
+          es: "Cuando el gr\u00E1fico principal de la cartera est\u00E1 colapsado, la tarjeta hero muestra ahora un mini gr\u00E1fico con la \u00FAltima semana (o el \u00FAltimo mes para Pro) del valor de la cartera junto con el retorno del periodo. Toca el mini gr\u00E1fico para abrir el gr\u00E1fico interactivo completo.",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.77.71",
+    date: "2026-04-22",
+    title: "Smarter asset breakdown for single\u2011type portfolios",
+    titleTranslations: {
+      es: "Desglose m\u00E1s inteligente para carteras de un solo tipo",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "If your portfolio holds only one asset type, the \u201CAll Assets\u201D pill is no longer shown \u2014 it would just duplicate the single type. The breakdown strip now also resizes to match however many types you actually hold, so it stays tidy with one, two, three or four pills.",
+        translations: {
+          es: "Si tu cartera solo tiene un tipo de activo, el chip \u201CTodos los Activos\u201D ya no aparece: ser\u00EDa id\u00E9ntico al chip del \u00FAnico tipo. La tira de desglose tambi\u00E9n se ajusta al n\u00FAmero de tipos que realmente tienes, para mantenerse limpia con uno, dos, tres o cuatro chips.",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.77.70",
+    date: "2026-04-22",
+    title: "Unified asset filter and breakdown inside the hero",
+    titleTranslations: {
+      es: "Filtro y desglose de activos unificados dentro del hero",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Merged the asset-type filter chips (All / Stocks / ETFs / Crypto) with the breakdown cards and moved the resulting compact strip inside the portfolio hero, right below the invested\u2011assets headline. One surface now shows value, day change and allocation per type and also acts as the chart filter \u2014 saving two rows of vertical space on the dashboard.",
+        translations: {
+          es: "Hemos unido los chips de filtro por tipo de activo (Todos / Acciones / ETFs / Cripto) con las tarjetas de desglose y hemos movido la tira compacta resultante dentro del hero de la cartera, justo debajo del titular de activos invertidos. Una sola superficie muestra ahora valor, cambio del d\u00EDa y asignaci\u00F3n por tipo y a la vez act\u00FAa como filtro del gr\u00E1fico, ahorrando dos filas verticales en el panel.",
+        },
+      },
+    ],
+  },
+  {
+    version: "1.77.69",
+    date: "2026-04-22",
+    title: "Invested vs cash split on the dashboard hero",
+    titleTranslations: {
+      es: "Hero del panel: separación entre invertido y efectivo",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "The portfolio hero now leads with your invested assets instead of your net worth, so the day-change percent only measures capital at risk \u2014 cash no longer dilutes the headline.",
+        translations: {
+          es: "El hero de la cartera ahora muestra primero los activos invertidos en lugar del patrimonio neto, de modo que el cambio diario en porcentaje solo mide el capital en riesgo: el efectivo ya no dilu\u00EDa el titular.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Cash available for investment is shown just below the headline, with a one-click \u201CUpdate\u201D action that jumps to the cash editor so you can correct the balance after a deposit or withdrawal. Net worth (invested + cash) is still visible as a tooltip.",
+        translations: {
+          es: "El efectivo disponible para invertir aparece justo debajo del titular, con una acci\u00F3n directa de \u201CActualizar\u201D que salta al editor de efectivo para que puedas corregir el saldo tras un ingreso o retirada. El patrimonio neto (invertido + efectivo) sigue visible como tooltip.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "The asset list now has aligned column headers (Name \u00B7 Value \u00B7 Return), a quieter search field and a slimmer deep-dive call-to-action on the portfolio chart card.",
+        translations: {
+          es: "La lista de activos ahora tiene cabeceras de columna alineadas (Nombre \u00B7 Valor \u00B7 Rentabilidad), un buscador m\u00E1s discreto y una invitaci\u00F3n al gr\u00E1fico detallado m\u00E1s ligera en la tarjeta de la cartera.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.77.68",
     date: "2026-04-22",
     title: "Platform hardening",

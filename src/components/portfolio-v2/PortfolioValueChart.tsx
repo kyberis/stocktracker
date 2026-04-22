@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ChartGuideModal from "./ChartGuideModal";
+import HeroMiniSparkline from "./HeroMiniSparkline";
 import {
   AreaChart,
   Area,
@@ -31,7 +32,6 @@ import BenchmarkDropdown from "@/components/dashboard-v2/BenchmarkDropdown";
 import RangeSelector from "./RangeSelector";
 import type { EvolutionRange } from "./RangeSelector";
 import ChartTooltip from "./ChartTooltip";
-import AssetTypeFilter from "@/components/dashboard-v2/AssetTypeFilter";
 import type { AssetFilter } from "@/components/dashboard-v2/AssetTypeFilter";
 import type { Holding } from "@/lib/types";
 import AggregatedPortfolioPeriodMetrics from "./AggregatedPortfolioPeriodMetrics";
@@ -256,6 +256,21 @@ interface Props {
   onToggleExpand?: () => void;
   /** Inline header data (renders inside the card) */
   totalValue?: number;
+  /**
+   * Invested value (totalValue − cash). When omitted, the header falls back to
+   * rendering `totalValue`. Passing both lets the hero split cash out of the
+   * headline figure while keeping `totalValue` available for callers that still
+   * need total-including-cash (e.g. derived hints).
+   */
+  investedValue?: number;
+  /** Sum of cash entries in `activePortfolioCurrency`. Hides the cash row when 0 or undefined. */
+  cashValue?: number;
+  /**
+   * Invoked when the user clicks the "Update" CTA on the cash row. Expected to
+   * reveal the cash editor (e.g. scroll to the MarketAndCash widget) so the user
+   * can correct the stored amount after a deposit/withdrawal.
+   */
+  onUpdateCash?: () => void;
   dayGainLoss?: number;
   dayGainLossPercent?: number;
   totalGainLossPercent?: number;
@@ -270,9 +285,15 @@ interface Props {
    */
   chartVisible?: boolean;
   onToggleChartVisible?: () => void;
+  /**
+   * Optional content rendered inside the hero header, below the cash row.
+   * Callers use this to co-locate the per-asset-type breakdown pills with the
+   * hero headline so filtering + summary share the same surface.
+   */
+  breakdownSlot?: React.ReactNode;
 }
 
-export default function PortfolioValueChart({ holdings, assetFilter, refreshKey, onRecalculate, recalculating, onOpenAi, expanded, onToggleExpand, totalValue, dayGainLoss, dayGainLossPercent, onAssetFilterChange, dayChangePctByType, chartVisible, onToggleChartVisible }: Props) {
+export default function PortfolioValueChart({ holdings, assetFilter, refreshKey, onRecalculate, recalculating, onOpenAi, expanded, onToggleExpand, totalValue, investedValue, cashValue, onUpdateCash, dayGainLoss, dayGainLossPercent, onAssetFilterChange, dayChangePctByType, chartVisible, onToggleChartVisible, breakdownSlot }: Props) {
   const { activePortfolioId, activePortfolioCurrency, mutationVersion, quotes } = usePortfolio();
   const { user } = useAuth();
   const { stealthMode } = useStealthMode();
@@ -747,28 +768,97 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
 
   const hasHeader = totalValue != null;
   const isPositiveDay = (dayGainLoss ?? 0) >= 0;
+  const dayDelta = dayGainLoss ?? 0;
+  const dayPct = dayGainLossPercent ?? 0;
+  const isFlatDay = dayDelta === 0;
+  // When `investedValue` is supplied we lead with it; otherwise fall back to
+  // `totalValue` to preserve behaviour for callers that haven't migrated yet.
+  const headlineValue = investedValue != null ? investedValue : totalValue;
+  const hasInvestedSplit = investedValue != null;
+  const hasCash = cashValue != null && cashValue > 0;
+  const netWorthValue = hasInvestedSplit && cashValue != null
+    ? (headlineValue ?? 0) + cashValue
+    : totalValue;
+  const investedEmpty = hasInvestedSplit && (headlineValue ?? 0) <= 0;
+
+  const dayChangeColor = isFlatDay
+    ? "text-gray-500 dark:text-slate-400"
+    : isPositiveDay
+      ? "text-emerald-600 dark:text-emerald-400"
+      : "text-red-500 dark:text-red-400";
+  const dayArrow = isFlatDay ? "•" : isPositiveDay ? "▲" : "▼";
 
   const inlineHeader = hasHeader ? (
     <div className="px-5 pt-4 pb-2">
-      <div className="flex items-baseline gap-2.5 flex-wrap">
-        <h2 className="text-[28px] font-extrabold tracking-tight leading-none text-gray-900 dark:text-white tabular-nums">
-          {stealthMode ? "•••••" : formatCurrency(totalValue!, activePortfolioCurrency)}
-        </h2>
-        <span
-          className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-md ${
-            isPositiveDay
-              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-              : "bg-red-500/10 text-red-500 dark:text-red-400"
-          }`}
-        >
-          {stealthMode
-            ? "•••"
-            : `${isPositiveDay ? "+" : ""}${formatCurrency(dayGainLoss ?? 0, activePortfolioCurrency)} (${formatPercent(dayGainLossPercent ?? 0)})`}
-        </span>
+      <div className="text-[10.5px] font-medium tracking-[0.14em] uppercase text-gray-400 dark:text-slate-500 mb-1.5">
+        {t("investedAssets")}
       </div>
-      {onAssetFilterChange && (
-        <div className="mt-2.5">
-          <AssetTypeFilter value={assetFilter} onChange={onAssetFilterChange} dayChangePct={dayChangePctByType} />
+      <div className="flex items-baseline gap-3 flex-wrap">
+        <h2 className={`text-[30px] font-semibold tracking-tight leading-none tabular-nums ${investedEmpty ? "text-gray-400 dark:text-slate-500" : "text-gray-900 dark:text-white"}`}>
+          {stealthMode ? "•••••" : formatCurrency(headlineValue ?? 0, activePortfolioCurrency)}
+        </h2>
+        {!investedEmpty && (
+          <span className={`inline-flex items-center gap-1 text-xs font-medium tabular-nums ${dayChangeColor}`}>
+            <span className="text-[10px] leading-none" aria-hidden="true">{dayArrow}</span>
+            {stealthMode
+              ? "•••"
+              : `${isPositiveDay && !isFlatDay ? "+" : ""}${formatCurrency(dayDelta, activePortfolioCurrency)}`}
+            <span>
+              {stealthMode ? "" : `${isPositiveDay && !isFlatDay ? "+" : ""}${formatPercent(dayPct)}`}
+            </span>
+            <span className="text-gray-400 dark:text-slate-500 font-normal ml-0.5">{t("todayLabel")}</span>
+          </span>
+        )}
+        {investedEmpty && (
+          <span className="text-xs text-gray-500 dark:text-slate-400">
+            {t("noGainsYetInvestedEmpty")}
+          </span>
+        )}
+      </div>
+      {hasCash && (
+        <div className="mt-3 flex items-center gap-3 rounded-lg border border-gray-100 dark:border-white/[0.06] bg-gray-50/60 dark:bg-white/[0.02] px-3 py-2">
+          <span className="flex-shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-md bg-slate-200/60 text-slate-600 dark:bg-slate-500/15 dark:text-slate-300">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 7h18M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7M3 7l2-3h14l2 3M9 13h6" />
+            </svg>
+          </span>
+          <div className="flex-1 min-w-0">
+            <div className="text-[11px] text-gray-500 dark:text-slate-500 leading-tight">
+              {t("cashAvailableForInvestment")}
+            </div>
+            <div className="flex items-baseline gap-2 flex-wrap">
+              <span className="text-sm font-semibold tabular-nums text-gray-900 dark:text-white">
+                {stealthMode ? "•••" : formatCurrency(cashValue!, activePortfolioCurrency)}
+              </span>
+              {netWorthValue != null && (
+                <span
+                  className="text-[11px] text-gray-400 dark:text-slate-500 border-b border-dashed border-gray-300 dark:border-slate-600 cursor-help"
+                  title={`${t("netWorthInline")}: ${formatCurrency(netWorthValue, activePortfolioCurrency)}`}
+                >
+                  {t("netWorthInline")} {stealthMode ? "•••" : formatCurrency(netWorthValue, activePortfolioCurrency)}
+                </span>
+              )}
+            </div>
+          </div>
+          {onUpdateCash && (
+            <button
+              type="button"
+              onClick={onUpdateCash}
+              aria-label={t("updateCashCtaAria")}
+              title={t("updateCashCtaAria")}
+              className="flex-shrink-0 inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-md text-gray-600 dark:text-slate-300 border border-gray-200 dark:border-white/[0.08] hover:border-gray-300 dark:hover:border-white/[0.16] hover:bg-white dark:hover:bg-white/[0.04] transition-colors"
+            >
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+              </svg>
+              {t("updateCashCta")}
+            </button>
+          )}
+        </div>
+      )}
+      {breakdownSlot && (
+        <div className="mt-3">
+          {breakdownSlot}
         </div>
       )}
     </div>
@@ -797,31 +887,35 @@ export default function PortfolioValueChart({ holdings, assetFilter, refreshKey,
       <div className="card overflow-hidden relative">
         {collapsedTopButtons}
         {inlineHeader}
-        <PortfolioQuoteFreshness className="px-5 pb-2" />
-        <div className="px-5 pb-5 pt-1">
-          <button
-            type="button"
-            onClick={onToggleChartVisible}
-            className="w-full flex items-center gap-3 rounded-xl border border-dashed border-gray-200 dark:border-white/[0.08] bg-gray-50/60 dark:bg-white/[0.02] hover:bg-gray-100 dark:hover:bg-white/[0.04] hover:border-gray-300 dark:hover:border-white/[0.12] transition-colors px-4 py-3 text-left"
-          >
-            <span className="flex-shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 3v18h18M7 14l4-4 4 4 5-7" />
-              </svg>
-            </span>
-            <span className="flex-1 min-w-0">
-              <span className="block text-sm font-semibold text-gray-900 dark:text-white">
-                {t("chartDeepDive")}
-              </span>
-              <span className="block text-xs text-gray-500 dark:text-slate-400 mt-0.5">
-                {t("chartDeepDiveHint")}
-              </span>
-            </span>
-            <svg className="w-4 h-4 text-gray-400 dark:text-slate-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+        <PortfolioQuoteFreshness className="px-5 pb-3" />
+        <HeroMiniSparkline
+          onOpen={onToggleChartVisible}
+          range={isPaid ? "1m" : "1w"}
+          refreshKey={refreshKey}
+          ariaLabel={t("chartDeepDive")}
+        />
+        <button
+          type="button"
+          onClick={onToggleChartVisible}
+          className="group w-full flex items-center gap-3 px-5 py-3 border-t border-gray-100 dark:border-white/[0.05] hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors text-left"
+        >
+          <span className="flex-shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 3v18h18M7 14l4-4 4 4 5-7" />
             </svg>
-          </button>
-        </div>
+          </span>
+          <span className="flex-1 min-w-0">
+            <span className="block text-sm font-semibold text-gray-900 dark:text-white">
+              {t("chartDeepDive")}
+            </span>
+            <span className="block text-xs text-gray-500 dark:text-slate-400 mt-0.5">
+              {t("chartDeepDiveHint")}
+            </span>
+          </span>
+          <svg className="w-4 h-4 text-gray-400 dark:text-slate-500 flex-shrink-0 transition-transform group-hover:translate-x-0.5 group-hover:text-gray-600 dark:group-hover:text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
       </div>
     );
   }

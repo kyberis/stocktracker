@@ -135,6 +135,15 @@ function StockRow({ holding, onSelect }: StockRowProps) {
 
   const awaitingQuote = !hasQuote && !isCashHolding;
   const priceInfo = `${holding.exchange ? `${holding.exchange} | ` : ""}${holding.ticker} | ${hasQuote ? formatCurrency(currentPriceInDisplay, cur) : formatCurrency(holding.purchasePrice, cur)} × ${holding.shares}`;
+  // Same info but with bullet separators; used by the default (clean) layout so
+  // the row sits on a single visual baseline with the hero/column headers.
+  const priceInfoDefault = [
+    holding.ticker,
+    holding.exchange || null,
+    `${hasQuote ? formatCurrency(currentPriceInDisplay, cur) : formatCurrency(holding.purchasePrice, cur)} × ${holding.shares}`,
+  ]
+    .filter(Boolean)
+    .join(" · ");
   const dayText = hasQuote ? `${dayIsPositive ? "+" : ""}${formatCurrency(dayChangeAmountEUR, "EUR")} (${formatPercent(dayChangePercent)})` : "--";
   const returnText = hasQuote
     ? showDayChange
@@ -290,50 +299,56 @@ function StockRow({ holding, onSelect }: StockRowProps) {
     </span>
   ) : null;
 
-  /* ── DEFAULT: Original layout ──────────────────────────────── */
+  /* ── DEFAULT: Single-line grid layout ──────────────────────── */
   return (
-    <div className="border-b border-gray-100 dark:border-slate-700 last:border-b-0" data-testid="stock-row-default">
+    <div className="border-b border-gray-50 dark:border-white/[0.04] last:border-b-0" data-testid="stock-row-default">
       <div
         role="button"
         tabIndex={0}
-        className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+        className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50/70 dark:hover:bg-white/[0.02] cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-500"
         aria-label={rowLabel}
         onClick={handleClick}
         onKeyDown={handleKeyDown}
       >
-        <div className="min-w-0 flex-1 mr-4">
-          <div className="flex items-center gap-1.5">
-            <p className="font-medium text-gray-900 dark:text-white text-sm truncate">{holding.name}</p>
-            {assetTypeBadge}
-            <AlertBadge ticker={holding.ticker} />
-            {refreshSpinner}
+        <div className="min-w-0 flex-1 flex items-start gap-2">
+          <span className="mt-1.5 flex-shrink-0">
+            {marketDot ?? <span className="inline-block w-1.5 h-1.5 rounded-full bg-transparent" />}
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5">
+              <p className="font-medium text-gray-900 dark:text-white text-sm truncate">{holding.name}</p>
+              {assetTypeBadge}
+              <AlertBadge ticker={holding.ticker} />
+              {refreshSpinner}
+            </div>
+            <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-0.5 truncate">{priceInfoDefault}</p>
           </div>
-          <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5">{priceInfo}</p>
         </div>
-        <div className="flex items-center gap-3 flex-shrink-0">
-          <HoldingHealthBadge holding={holding} size={28} />
-          <Sparkline ticker={holding.ticker} width={64} height={24} positive={hasQuote ? dayIsPositive : undefined} className="hidden sm:block shrink-0" />
-          <div className="text-right min-w-[120px] tabular-nums">
-            <p className="text-sm font-semibold text-gray-900 dark:text-white">{awaitingQuote ? valueShimmer : formatCurrency(totalValueEUR, "EUR")}</p>
-            {awaitingQuote ? (
-              <div className="mt-1 flex justify-end">{dayShimmer}</div>
-            ) : hasQuote ? (
-              <p
-                role="button"
-                tabIndex={0}
-                onClick={(e) => { e.stopPropagation(); toggleReturnMode(); }}
-                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); toggleReturnMode(); } }}
-                className={`text-xs mt-0.5 flex items-center justify-end gap-1 cursor-pointer hover:underline ${displayColor}`}
-                title={returnMode === "pct" ? "Click for absolute" : "Click for %"}
-              >
-                {marketDot}
-                {returnText}
-                {fxTag}
-              </p>
-            ) : (
-              <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5">--</p>
-            )}
-          </div>
+        <HoldingHealthBadge holding={holding} size={24} />
+        <Sparkline ticker={holding.ticker} width={56} height={20} positive={hasQuote ? dayIsPositive : undefined} className="hidden md:block shrink-0" />
+        <div className="w-[110px] text-right tabular-nums shrink-0">
+          <p className="text-sm font-semibold text-gray-900 dark:text-white">
+            {awaitingQuote ? valueShimmer : formatCurrency(totalValueEUR, "EUR")}
+          </p>
+        </div>
+        <div className="w-[110px] text-right tabular-nums shrink-0">
+          {awaitingQuote ? (
+            <div className="flex justify-end">{dayShimmer}</div>
+          ) : hasQuote ? (
+            <p
+              role="button"
+              tabIndex={0}
+              onClick={(e) => { e.stopPropagation(); toggleReturnMode(); }}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); toggleReturnMode(); } }}
+              className={`text-sm font-medium flex items-center justify-end gap-1 cursor-pointer hover:underline ${displayColor}`}
+              title={returnMode === "pct" ? "Click for absolute" : "Click for %"}
+            >
+              {returnText}
+              {fxTag}
+            </p>
+          ) : (
+            <p className="text-sm text-gray-400 dark:text-slate-500">--</p>
+          )}
         </div>
       </div>
     </div>

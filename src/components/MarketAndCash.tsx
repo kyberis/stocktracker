@@ -373,7 +373,7 @@ export default function MarketAndCash({ holdings: holdingsProp, cashEntries: cas
         </div>
 
         {/* Assets & Cash Balances */}
-        <div className={`${sectionPad} border-t lg:border-t-0 ${dividerClass}`}>
+        <div id="dashboard-cash-assets" className={`${sectionPad} border-t lg:border-t-0 ${dividerClass} scroll-mt-24`}>
           <div className="flex items-center justify-between mb-1">
             <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{t("manualAssets")}</h3>
           </div>

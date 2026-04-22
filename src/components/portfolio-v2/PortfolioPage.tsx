@@ -75,6 +75,16 @@ export default function PortfolioPage() {
     [filteredHoldings, effectiveCash, quotes, exchangeRates, baseCurrency],
   );
 
+  const cashValueBase = useMemo(
+    () =>
+      effectiveCash.reduce(
+        (sum, c) => sum + convertCurrency(c.amountEUR, "EUR", baseCurrency, exchangeRates),
+        0,
+      ),
+    [effectiveCash, baseCurrency, exchangeRates],
+  );
+  const investedValueBase = Math.max(0, totals.totalCurrentEUR - cashValueBase);
+
   const dayGainLoss = useMemo(
     () => computeMarketAwareDayPL(filteredHoldings, quotes, exchangeRates, baseCurrency),
     [filteredHoldings, quotes, exchangeRates, baseCurrency],
@@ -166,25 +176,27 @@ export default function PortfolioPage() {
           recalculating={recalculating}
           onOpenAi={() => setAiDrawerOpen(true)}
           totalValue={totals.totalCurrentEUR}
+          investedValue={investedValueBase}
+          cashValue={cashValueBase}
           dayGainLoss={dayGainLoss}
           dayGainLossPercent={
-            totals.totalCurrentEUR > 0
-              ? (dayGainLoss / (totals.totalCurrentEUR - dayGainLoss)) * 100
+            investedValueBase - dayGainLoss > 0
+              ? (dayGainLoss / (investedValueBase - dayGainLoss)) * 100
               : 0
           }
           totalGainLossPercent={totals.totalGainLossPercent}
           onAssetFilterChange={setAssetFilter}
           dayChangePctByType={dayChangePctByType}
+          breakdownSlot={
+            <MarketAwareBreakdown
+              holdings={holdings}
+              cashEntries={cashEntries}
+              onFilterChange={setAssetFilter}
+              activeFilter={assetFilter}
+            />
+          }
         />
       </ErrorBoundary>
-
-      {/* Asset Breakdown Cards */}
-      <MarketAwareBreakdown
-        holdings={holdings}
-        cashEntries={cashEntries}
-        onFilterChange={setAssetFilter}
-        activeFilter={assetFilter}
-      />
 
       <PortfolioAiDrawer
         isOpen={aiDrawerOpen}
