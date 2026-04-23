@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useCallback, useEffect, useMemo, useRef, Suspense } from "react";
+import { useState, useEffect, useMemo, Suspense } from "react";
 import { useDashboardTabUrl, type DashboardTab } from "@/lib/use-dashboard-tab-url";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import PortfolioSummary from "@/components/PortfolioSummary";
 import MarketAndCash from "@/components/MarketAndCash";
 import PortfolioCards from "./PortfolioCards";
 import MobilePaywall from "./MobilePaywall";
@@ -22,18 +21,31 @@ import TierFeatureBadge from "@/components/TierFeatureBadge";
 import DashboardTabBarQuickLinks from "@/components/DashboardTabBarQuickLinks";
 import SampleDataBanner from "@/components/SampleDataBanner";
 import TrialCountdownBanner from "@/components/TrialCountdownBanner";
+import SecureAccountPrompt from "@/components/SecureAccountPrompt";
 import CloverToLogo from "@/components/CloverToLogo";
 import { ChartSkeleton } from "@/components/Skeleton";
-import { AssetTypeReviewLauncher } from "@/components/AssetTypeReviewModal";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import BackfillCTA from "@/components/portfolio-v2/BackfillCTA";
+import MarketAwareBreakdown from "@/components/portfolio-v2/MarketAwareBreakdown";
+import { usePortfolioHomeData } from "@/components/dashboard-v2/use-portfolio-home-data";
+import type { AssetFilter } from "@/components/dashboard-v2/AssetTypeFilter";
+import type { CashEntry } from "@/lib/types";
 
 const PortfolioValueChart = dynamic(() => import("@/components/portfolio-v2/PortfolioValueChart"), {
   ssr: false,
   loading: () => <div className="card rounded-xl h-[480px] animate-pulse bg-gray-50 dark:bg-white/[0.02]" />,
 });
 
+function CardSkeleton({ h = "h-24" }: { h?: string }) {
+  return <div className={`card rounded-xl ${h} animate-pulse bg-gray-50 dark:bg-white/[0.02]`} />;
+}
+function TableSkeleton() {
+  return <div className="card rounded-xl h-48 animate-pulse bg-gray-50 dark:bg-white/[0.02]" />;
+}
+
 const PortfolioNewsFeed = dynamic(() => import("@/components/PortfolioNewsFeed"), { ssr: false });
 const TaxonomyView = dynamic(() => import("@/components/TaxonomyView"), { ssr: false });
+const RebalancingView = dynamic(() => import("@/components/RebalancingView"), { ssr: false });
 const DividendSummary = dynamic(() => import("@/components/DividendSummary"), { ssr: false });
 const PerformancePage = dynamic(() => import("@/components/PerformancePage"), { ssr: false });
 const GrowthTab = dynamic(() => import("@/components/GrowthTab"), { ssr: false });
@@ -42,20 +54,29 @@ const AddCryptoModal = dynamic(() => import("@/components/AddCryptoModal"), { ss
 const AddManualAssetModal = dynamic(() => import("@/components/AddManualAssetModal"), { ssr: false });
 const ProCompareCard = dynamic(() => import("@/components/ProCompareCard"), { ssr: false });
 const EventCalendar = dynamic(() => import("@/components/EventCalendar"), { ssr: false });
-const UpcomingEarnings = dynamic(() => import("@/components/UpcomingEarnings"), { ssr: false });
 const ReferralShareModal = dynamic(() => import("@/components/ReferralShareModal"), { ssr: false });
-const ReferralBanner = dynamic(() => import("@/components/ReferralBanner"), { ssr: false });
 const FeedbackModal = dynamic(() => import("@/components/FeedbackModal"), { ssr: false });
-const PortfolioScoreCard = dynamic(() => import("@/components/dashboard-v2/PortfolioScoreCard"), { ssr: false });
+const SnapTradeReconnectBanner = dynamic(() => import("@/components/SnapTradeReconnectBanner"), { ssr: false });
+const LeafPromoBanner = dynamic(() => import("@/components/LeafPromoBanner"), { ssr: false });
+const DashboardUpgradeNudge = dynamic(() => import("@/components/DashboardUpgradeNudge"), { ssr: false });
+
+// Sidebar/sections shared with desktop portfolio home
+const PortfolioScoreCard = dynamic(() => import("@/components/dashboard-v2/PortfolioScoreCard"), { ssr: false, loading: () => <CardSkeleton /> });
 const GoalPromptCard = dynamic(() => import("@/components/dashboard-v2/GoalPromptCard"), { ssr: false });
+const GoalProgressCard = dynamic(() => import("@/components/dashboard-v2/GoalProgressCard"), { ssr: false });
 const WeeklyDigestCard = dynamic(() => import("@/components/dashboard-v2/WeeklyDigestCard"), { ssr: false });
 const DailyDigestsTeaserCard = dynamic(() => import("@/components/dashboard-v2/DailyDigestsTeaserCard"), { ssr: false });
 const OnboardingChecklist = dynamic(() => import("@/components/dashboard-v2/OnboardingChecklist"), { ssr: false });
-const AssetBreakdownCards = dynamic(() => import("@/components/dashboard-v2/AssetBreakdownCards"), { ssr: false });
-
-// Shared with the desktop dashboard so a user's chart preference carries over
-// between platforms. Keep in sync with DashboardPortfolioV2.
-const CHART_VISIBLE_STORAGE_KEY = "trefolio.dashboardChartVisible";
+const StatsGrid = dynamic(() => import("@/components/dashboard-v2/StatsGrid"), { ssr: false, loading: () => <CardSkeleton /> });
+const AssetPerformanceTable = dynamic(() => import("@/components/dashboard-v2/AssetPerformanceTable"), { ssr: false, loading: () => <TableSkeleton /> });
+const AllocationTabs = dynamic(() => import("@/components/dashboard-v2/AllocationTabs"), { ssr: false, loading: () => <CardSkeleton h="h-48" /> });
+const CompactDividendCard = dynamic(() => import("@/components/dashboard-v2/CompactDividendCard"), { ssr: false, loading: () => <CardSkeleton /> });
+const CompactEarningsCard = dynamic(() => import("@/components/dashboard-v2/CompactEarningsCard"), { ssr: false, loading: () => <CardSkeleton /> });
+const CompactReferralCard = dynamic(() => import("@/components/dashboard-v2/CompactReferralCard"), { ssr: false });
+const PortfolioGrowthPeriods = dynamic(() => import("@/components/PortfolioGrowthPeriods"), { ssr: false, loading: () => <CardSkeleton /> });
+const PerformanceMetrics = dynamic(() => import("@/components/PerformanceMetrics"), { ssr: false, loading: () => <CardSkeleton /> });
+const PortfolioProjection = dynamic(() => import("@/components/PortfolioProjection"), { ssr: false, loading: () => <CardSkeleton h="h-32" /> });
+const GoalCelebration = dynamic(() => import("@/components/GoalCelebration"), { ssr: false });
 
 export default function MobileDashboard() {
   const [showAddModal, setShowAddModal] = useState(false);
@@ -76,38 +97,6 @@ export default function MobileDashboard() {
   const track = useTrack();
   const isNative = useIsNative();
 
-  // Default to collapsed; demo mode always shows the chart for a polished demo.
-  // MobileDashboard is `dynamic(..., { ssr: false })` so it's safe to read
-  // localStorage in the lazy initializer without hydration mismatch.
-  const [chartVisible, setChartVisible] = useState<boolean>(() => {
-    if (demoMode) return true;
-    if (typeof window === "undefined") return false;
-    try {
-      return localStorage.getItem(CHART_VISIBLE_STORAGE_KEY) === "true";
-    } catch {
-      return false;
-    }
-  });
-  const hasTrackedDeepDiveRef = useRef(false);
-
-  useEffect(() => {
-    if (demoMode) return;
-    try {
-      localStorage.setItem(CHART_VISIBLE_STORAGE_KEY, chartVisible ? "true" : "false");
-    } catch {}
-  }, [chartVisible, demoMode]);
-
-  const handleToggleChartVisible = useCallback(() => {
-    setChartVisible((v) => {
-      const next = !v;
-      if (next && !hasTrackedDeepDiveRef.current) {
-        hasTrackedDeepDiveRef.current = true;
-        track("dashboard_chart_deep_dive_opened");
-      }
-      return next;
-    });
-  }, [track]);
-
   const userPlan = user?.plan ?? "free";
   const holdingsCount = holdings.length;
   const hasMultiplePortfolios = portfolios.length > 1;
@@ -116,6 +105,8 @@ export default function MobileDashboard() {
     : hasMultiplePortfolios ? t("allPortfolios") : (portfolios[0]?.name ?? t("portfolio"));
   const holdingsLimit = getHoldingsLimit(userPlan);
   const holdingsAtLimit = !authLoading && holdingsLimit !== Infinity && holdingsCount >= holdingsLimit;
+  const showHoldingsUsageBanner =
+    !authLoading && holdingsLimit !== Infinity && holdingsCount >= Math.ceil(holdingsLimit / 2) && holdingsCount > 0 && !holdingsAtLimit;
 
   const { activeTab, navigateToTab } = useDashboardTabUrl({
     holdingsCount,
@@ -136,11 +127,34 @@ export default function MobileDashboard() {
     }
   }, [authLoading, userPlan]);
 
-  const filteredHoldings = holdings;
-  const investmentCashEntries = useMemo(
+  const investmentCashEntries = useMemo<CashEntry[]>(
     () => cashEntries.filter((c) => !c.type || c.type === "cash"),
     [cashEntries],
   );
+
+  // Shared data-prep with desktop DashboardPortfolioV2 — guarantees mobile and
+  // desktop pass identical props to PortfolioValueChart / StatsGrid / etc.
+  const home = usePortfolioHomeData({ holdings, cashEntries: investmentCashEntries });
+  const {
+    chartVisible,
+    handleToggleChartVisible,
+    assetFilter,
+    setAssetFilter,
+    filteredHoldings,
+    totals,
+    cashValueBase,
+    investedValueBase,
+    dayGainLoss,
+    dayChangePctByType,
+    refreshKey,
+    recalculating,
+    handleRecalculate,
+    handleBackfillComplete,
+  } = home;
+
+  // Used to scope sidebar-style widgets (compact cards, projections, goals) to
+  // the currently-filtered slice when the user toggles asset-type pills.
+  const filteredCash: CashEntry[] = assetFilter === "all" ? investmentCashEntries : [];
 
   const TIER_GATE: Partial<Record<DashboardTab, "pro">> = {
     metrics: "pro",
@@ -284,11 +298,14 @@ export default function MobileDashboard() {
         </div>
 
         <TrialCountdownBanner />
+        <SnapTradeReconnectBanner />
+        <LeafPromoBanner />
         <SampleDataBanner />
+        <DashboardUpgradeNudge />
+        <SecureAccountPrompt />
         <OnboardingChecklist
           onOpenAddStock={() => setShowAddModal(true)}
         />
-        <ReferralBanner onShare={() => setShowReferralModal(true)} />
 
         {/* Portfolio tab */}
         {activeTab === "portfolio" && (
@@ -303,25 +320,77 @@ export default function MobileDashboard() {
               <MobileEmptyState onAdd={() => setShowAddModal(true)} />
             ) : (
               <>
+                {showHoldingsUsageBanner && (
+                  <div className="rounded-lg border border-amber-300 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 p-3 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <svg className="w-5 h-5 text-amber-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                      </svg>
+                      <span className="text-sm text-amber-800 dark:text-amber-200">
+                        {t("holdingsUsage").replace("{used}", String(holdingsCount)).replace("{limit}", String(holdingsLimit))}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
                 <DailyDigestsTeaserCard />
                 <WeeklyDigestCard position="promoted" />
-                <div className="flex justify-end">
-                  <AssetTypeReviewLauncher />
-                </div>
-                <PortfolioSummary holdings={filteredHoldings} cashEntries={investmentCashEntries} allCashEntries={cashEntries} />
+                <CompactReferralCard onShare={() => setShowReferralModal(true)} />
+
+                <BackfillCTA holdingsCount={holdingsCount} onComplete={handleBackfillComplete} />
                 <ErrorBoundary>
                   <PortfolioValueChart
-                    holdings={filteredHoldings}
-                    assetFilter="all"
+                    holdings={holdings}
+                    assetFilter={assetFilter}
+                    refreshKey={refreshKey}
+                    onRecalculate={handleRecalculate}
+                    recalculating={recalculating}
+                    totalValue={totals.totalCurrentEUR}
+                    investedValue={investedValueBase}
+                    cashValue={cashValueBase}
+                    onUpdateCash={() => {
+                      if (typeof document === "undefined") return;
+                      const el = document.getElementById("dashboard-cash-assets");
+                      if (!el) return;
+                      el.scrollIntoView({ behavior: "smooth", block: "start" });
+                      el.classList.add("ring-2", "ring-emerald-400/60", "transition");
+                      window.setTimeout(() => {
+                        el.classList.remove("ring-2", "ring-emerald-400/60", "transition");
+                      }, 1600);
+                    }}
+                    dayGainLoss={dayGainLoss}
+                    dayGainLossPercent={investedValueBase - dayGainLoss > 0 ? (dayGainLoss / (investedValueBase - dayGainLoss)) * 100 : 0}
+                    totalGainLossPercent={totals.totalGainLossPercent}
+                    onAssetFilterChange={setAssetFilter}
+                    dayChangePctByType={dayChangePctByType as Partial<Record<AssetFilter, number>>}
                     chartVisible={chartVisible}
                     onToggleChartVisible={handleToggleChartVisible}
+                    breakdownSlot={
+                      <MarketAwareBreakdown
+                        holdings={holdings}
+                        cashEntries={investmentCashEntries}
+                        onFilterChange={setAssetFilter}
+                        activeFilter={assetFilter}
+                      />
+                    }
                   />
                 </ErrorBoundary>
-                <AssetBreakdownCards holdings={filteredHoldings} cashEntries={investmentCashEntries} />
+
+                <StatsGrid holdings={filteredHoldings} cashEntries={filteredCash} />
+                <AssetPerformanceTable holdings={filteredHoldings} cashEntries={filteredCash} />
+                <AllocationTabs holdings={filteredHoldings} cashEntries={cashEntries} onShowMore={() => handleTabChange("diversification")} />
+                <CompactDividendCard holdings={filteredHoldings} cashEntries={filteredCash} onNavigateToDividends={() => handleTabChange("dividends")} />
+                <CompactEarningsCard onNavigateToEvents={() => handleTabChange("events")} />
+                <PortfolioGrowthPeriods holdings={filteredHoldings} />
+                <PerformanceMetrics holdings={filteredHoldings} cashEntries={filteredCash} />
+
                 <PortfolioCards holdings={filteredHoldings} />
-                <UpcomingEarnings onNavigateToEvents={() => handleTabChange("events")} />
                 <MarketAndCash holdings={filteredHoldings} cashEntries={cashEntries} />
-                <PortfolioScoreCard holdings={filteredHoldings} cashEntries={investmentCashEntries} />
+                <PortfolioProjection holdings={filteredHoldings} cashEntries={filteredCash} />
+                <GoalCelebration holdings={filteredHoldings} cashEntries={filteredCash} />
+
+                <PortfolioScoreCard holdings={filteredHoldings} cashEntries={filteredCash} />
+                <GoalProgressCard holdings={filteredHoldings} cashEntries={filteredCash} />
                 <GoalPromptCard holdings={filteredHoldings} />
                 <WeeklyDigestCard position="default" />
 
@@ -338,6 +407,7 @@ export default function MobileDashboard() {
           <div role="tabpanel" id="mtabpanel-diversification" aria-label={t("diversificationTab")} tabIndex={0} className="focus-visible:outline-none space-y-4 animate-tab-fade">
             <Suspense fallback={<ChartSkeleton />}>
               <TaxonomyView />
+              <RebalancingView />
             </Suspense>
           </div>
         )}

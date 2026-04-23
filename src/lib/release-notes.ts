@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.77.73",
+    date: "2026-04-23",
+    title: "Mobile home matches desktop",
+    titleTranslations: {
+      es: "La pantalla principal m\u00F3vil ahora refleja la del escritorio",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "The mobile portfolio home now shows the same data and sections as the desktop dashboard: fully-wired hero chart with invested vs cash split, asset-type filter pills with day change, market-aware breakdown, stats grid, asset performance table, allocation tabs, compact dividend and earnings cards, period returns, performance metrics, projection, goal celebration and progress, plus the full banner stack (SnapTrade reconnect, Leaf promo, upgrade nudge, secure account prompt and holdings-usage warning). The diversification tab now also includes the rebalancing view.",
+        translations: {
+          es: "La pantalla principal m\u00F3vil ahora muestra los mismos datos y secciones que el panel de escritorio: gr\u00E1fico principal completo con separaci\u00F3n entre invertido y efectivo, chips de filtro por tipo de activo con cambio del d\u00EDa, desglose con estado de mercado, cuadr\u00EDcula de estad\u00EDsticas, tabla de rendimiento por activo, pesta\u00F1as de asignaci\u00F3n, tarjetas compactas de dividendos y resultados, rentabilidades por periodo, m\u00E9tricas de rendimiento, proyecci\u00F3n, celebraci\u00F3n y progreso del objetivo, adem\u00E1s de la pila completa de avisos (reconexi\u00F3n de SnapTrade, promo Leaf, empuj\u00F3n de actualizaci\u00F3n, solicitud de cuenta segura y aviso de l\u00EDmite de posiciones). La pesta\u00F1a de diversificaci\u00F3n ahora tambi\u00E9n incluye la vista de rebalanceo.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.77.72",
     date: "2026-04-22",
     title: "Mini sparkline on the collapsed hero chart",
