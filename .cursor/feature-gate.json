@@ -1,0 +1,4 @@
+{
+  "landingPageReviewed": false,
+  "notes": "Set landingPageReviewed=true in feature PRs when landing page update is intentionally not required."
+}

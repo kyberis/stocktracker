@@ -255,7 +255,7 @@ export default function NavAssetSearch({ variant = "default" }: { variant?: Vari
           }}
           placeholder={t("navAssetSearchPlaceholder")}
           autoComplete="off"
-          className={`min-w-0 flex-1 bg-transparent outline-none placeholder:text-gray-400 dark:placeholder:text-slate-500 ${
+          className={`min-w-0 flex-1 border-0 bg-transparent shadow-none outline-none ring-0 focus:ring-0 appearance-none placeholder:text-gray-400 dark:placeholder:text-slate-500 [&::-webkit-search-cancel-button]:hidden ${
             variant === "studio"
               ? "text-sm text-white"
               : variant === "command"

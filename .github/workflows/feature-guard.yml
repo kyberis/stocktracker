@@ -1,0 +1,25 @@
+name: Feature guard
+
+on:
+  pull_request:
+    paths:
+      - "src/**"
+      - "knowledge/**"
+      - ".cursor/feature-gate.json"
+      - "scripts/check-feature-guard.mjs"
+      - ".github/workflows/feature-guard.yml"
+
+jobs:
+  enforce-feature-requirements:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+      - run: npm ci
+      - name: Enforce feature release/spec/landing checks
+        run: npm run feature:guard

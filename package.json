@@ -10,6 +10,7 @@
     "build": "npm run db:migrate && next build",
     "build:next": "next build",
     "start": "next start",
+    "feature:guard": "node scripts/check-feature-guard.mjs",
     "lint": "eslint src/",
     "typecheck": "tsc --noEmit",
     "db:migrate": "tsx scripts/run-migrations.ts",
