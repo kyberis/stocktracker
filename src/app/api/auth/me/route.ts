@@ -12,6 +12,7 @@ import {
   createNotification,
 } from "@/lib/db";
 import { effectivePlan, canAccessTheme, getAiTokenLimit } from "@/lib/subscription";
+import { getAllFeatureQuotas } from "@/lib/feature-quotas";
 import { planExpiredNotification } from "@/lib/notification-templates";
 import { withMetrics } from "@/lib/with-metrics";
 
@@ -55,6 +56,16 @@ export const GET = withMetrics("/api/auth/me", async (req: NextRequest) => {
     lazyDowngrade(user.id);
   }
 
+  // Expose all per-feature quota usage so the UI can render "X / Y" badges
+  // without making one round-trip per feature.
+  const rawQuotas = await getAllFeatureQuotas(session.userId, resolvedPlan);
+  const quotas = Object.fromEntries(
+    Object.entries(rawQuotas).map(([k, v]) => [
+      k,
+      { used: v.used, limit: v.limit, remaining: v.remaining, resetAt: v.resetAt, window: v.window },
+    ]),
+  );
+
   return NextResponse.json({
     user: {
       id: session.userId,
@@ -79,6 +90,7 @@ export const GET = withMetrics("/api/auth/me", async (req: NextRequest) => {
       passkeyCount,
       portfolioReviewCount: user?.portfolio_review_count || 0,
       portfolioReviewResetAt: user?.portfolio_review_reset_at || "",
+      quotas,
       deviceProEligible: deviceOn && !!user?.device_linked_at && !user?.device_pro_redeemed_at && resolvedPlan === "free",
       devicePortfolioId: user?.device_portfolio_id || "",
       lastActiveAt: user?.last_active_at || "",

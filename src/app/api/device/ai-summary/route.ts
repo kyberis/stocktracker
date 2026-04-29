@@ -7,19 +7,18 @@ import {
   getGlobalOpenAIApiKey,
   listHoldings,
   listCashEntries,
-  getPortfolioReviewUsage,
-  incrementPortfolioReviewUsage,
   trackEvent,
   isFeatureEnabled,
   insertAiLog,
   getAiModelForFlow,
 } from "@/lib/db";
-import { PLATFORM_LIMITS } from "@/lib/platform-config";
+import { effectivePlan } from "@/lib/subscription";
+import { checkAndIncrementFeatureQuota, refundFeatureQuota } from "@/lib/feature-quotas";
 import { checkGlobalAiCap, incrementGlobalAiCalls, checkDeviceAuthRateLimit, getClientIp } from "@/lib/rate-limit";
 import { aiCallsTotal, aiRequestDuration, deviceApiCalls } from "@/lib/metrics";
 import { withMetrics } from "@/lib/with-metrics";
 
-async function resolveProUser(req: NextRequest) {
+async function resolveAuthedUser(req: NextRequest) {
   const auth = req.headers.get("authorization");
   if (!auth?.startsWith("Bearer ")) return null;
 
@@ -29,8 +28,7 @@ async function resolveProUser(req: NextRequest) {
 
   const token = auth.slice(7);
   const user = await findUserByWidgetToken(token) ?? await findUserByDevicePasskey(token);
-  if (!user || user.plan !== "pro") return null;
-  return user;
+  return user || null;
 }
 
 export const POST = withMetrics("/api/device/ai-summary", async (request: NextRequest) => {
@@ -41,31 +39,40 @@ export const POST = withMetrics("/api/device/ai-summary", async (request: NextRe
   const fwVersion = request.headers.get("x-firmware-version");
   if (fwVersion) deviceApiCalls.inc({ fw_version: fwVersion, route: "/api/device/ai-summary", status: "attempt" });
 
-  const user = await resolveProUser(request);
+  const user = await resolveAuthedUser(request);
   if (!user) {
     if (fwVersion) deviceApiCalls.inc({ fw_version: fwVersion, route: "/api/device/ai-summary", status: "auth_failed" });
     return Response.json(
-      { error: "Unauthorized or Pro subscription required" },
+      { error: "Unauthorized" },
       { status: 401 },
     );
   }
 
-  const isDev = process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test";
-  const usage = await getPortfolioReviewUsage(user.id);
-  const limit = PLATFORM_LIMITS.PORTFOLIO_REVIEW_MONTHLY_LIMIT;
-  if (!isDev && usage.count >= limit) {
+  const plan = effectivePlan(user.plan, user.plan_expires_at);
+  const quota = await checkAndIncrementFeatureQuota(user.id, "ai_portfolio_review", plan);
+  if (!quota.allowed) {
     trackEvent(user.id, "device_ai_summary_limit_reached", {
-      used: String(usage.count),
-      limit: String(limit),
+      used: String(quota.used),
+      limit: String(quota.limit),
     });
     return Response.json(
-      { error: "Monthly AI summary limit reached", used: usage.count, limit },
+      {
+        error: "Monthly AI summary limit reached",
+        paywall: true,
+        reason: "quota_exceeded",
+        feature: "ai_portfolio_review",
+        used: quota.used,
+        limit: quota.limit,
+        resetAt: quota.resetAt,
+      },
       { status: 429 },
     );
   }
+  const limit = quota.limit;
 
   const globalCap = await checkGlobalAiCap();
   if (!globalCap.allowed) {
+    await refundFeatureQuota(user.id, "ai_portfolio_review");
     return Response.json(
       { error: "Platform AI limit reached. Try again next month." },
       { status: 429 },
@@ -74,6 +81,7 @@ export const POST = withMetrics("/api/device/ai-summary", async (request: NextRe
 
   const apiKey = getGlobalOpenAIApiKey();
   if (!apiKey) {
+    await refundFeatureQuota(user.id, "ai_portfolio_review");
     return Response.json(
       { error: "AI service not configured" },
       { status: 501 },
@@ -86,6 +94,7 @@ export const POST = withMetrics("/api/device/ai-summary", async (request: NextRe
   ]);
 
   if (holdings.length === 0 && cashEntries.length === 0) {
+    await refundFeatureQuota(user.id, "ai_portfolio_review");
     return Response.json({ error: "No holdings to review" }, { status: 400 });
   }
 
@@ -149,6 +158,7 @@ Rules:
       const errText = await openaiRes.text();
       console.error("OpenAI error:", openaiRes.status, errText);
       insertAiLog({ userId: user.id, source: "device_ai_summary", model, promptSystem: systemPrompt, promptUser: userPrompt, durationMs, status: "error", errorMessage: errText.slice(0, 2000) }).catch(() => {});
+      await refundFeatureQuota(user.id, "ai_portfolio_review");
       return Response.json(
         { error: "AI service error" },
         { status: 502 },
@@ -156,10 +166,7 @@ Rules:
     }
 
     aiCallsTotal.inc({ status: "success", analysis_type: "device_ai_summary" });
-    await Promise.all([
-      incrementPortfolioReviewUsage(user.id),
-      incrementGlobalAiCalls(),
-    ]);
+    await incrementGlobalAiCalls();
     trackEvent(user.id, "device_ai_summary_completed", {
       holdingsCount: String(holdings.length),
     });
@@ -170,14 +177,14 @@ Rules:
     const deviceInputTokens = result.usage?.prompt_tokens ?? 0;
     const deviceOutputTokens = result.usage?.completion_tokens ?? 0;
     insertAiLog({ userId: user.id, source: "device_ai_summary", model, promptSystem: systemPrompt, promptUser: userPrompt, response: summary, tokensUsed: totalTokens, tokensInput: deviceInputTokens, tokensOutput: deviceOutputTokens, durationMs }).catch(() => {});
-    const updatedUsage = await getPortfolioReviewUsage(user.id);
 
     return Response.json(
-      { summary, used: updatedUsage.count, limit },
+      { summary, used: quota.used, limit },
       { headers: { "Cache-Control": "private, max-age=300" } },
     );
   } catch (err) {
     console.error("Device AI summary error:", err instanceof Error ? err.message : err);
+    await refundFeatureQuota(user.id, "ai_portfolio_review");
     return Response.json({ error: "Failed to contact AI service" }, { status: 500 });
   }
 });

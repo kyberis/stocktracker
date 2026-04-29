@@ -36,6 +36,7 @@ import {
   checkGlobalAiCap,
   incrementGlobalAiCalls,
 } from "./rate-limit";
+import { PLATFORM_LIMITS } from "./platform-config";
 
 describe("rate-limit", () => {
   beforeEach(() => {
@@ -135,12 +136,12 @@ describe("rate-limit", () => {
       const result = await checkAiRateLimit("user-1", "pro");
 
       expect(result.allowed).toBe(true);
-      expect(result.remaining).toBe(20);
+      expect(result.remaining).toBe(PLATFORM_LIMITS.AI_PRO_DAILY_LIMIT - 10);
     });
 
     it("pro + over limit blocked", async () => {
       vi.mocked(getDailyAiUsage).mockResolvedValue({
-        aiCallsToday: 30,
+        aiCallsToday: PLATFORM_LIMITS.AI_PRO_DAILY_LIMIT,
         aiDailyResetAt: new Date().toISOString(),
       });
 

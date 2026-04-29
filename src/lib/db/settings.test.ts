@@ -556,9 +556,9 @@ describe("settings", () => {
       const result = await settings.getAllStripePriceConfig();
 
       expect(mockExecute).toHaveBeenCalled();
-      expect(result).toHaveProperty("stripe_price_starter_monthly");
+      expect(result).toHaveProperty("stripe_price_pro_monthly");
       expect(result).toHaveProperty("stripe_price_pro_annual");
-      expect(Object.keys(result)).toHaveLength(5);
+      expect(Object.keys(result)).toHaveLength(3);
     });
   });
 

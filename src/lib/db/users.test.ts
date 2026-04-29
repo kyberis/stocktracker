@@ -382,11 +382,11 @@ describe("users", () => {
   });
 
   describe("countProSubscribers", () => {
-    it("returns count of starter and pro users", async () => {
+    it("returns count of pro users", async () => {
       mockExecute.mockResolvedValue({ rows: [{ cnt: 42 }] });
       const result = await users.countProSubscribers();
       expect(mockExecute).toHaveBeenCalledWith(
-        "SELECT COUNT(*) as cnt FROM users WHERE plan IN ('starter', 'pro')"
+        "SELECT COUNT(*) as cnt FROM users WHERE plan = 'pro'"
       );
       expect(result).toBe(42);
     });

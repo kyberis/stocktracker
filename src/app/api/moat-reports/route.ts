@@ -1,12 +1,12 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest } from "next/server";
-import { requireFeatureAccess } from "@/lib/auth/guards";
+import { requireSession } from "@/lib/auth/guards";
 import { normalizeMoatReportTags, saveMoatReport, listMoatReports } from "@/lib/db";
 import { withMetrics } from "@/lib/with-metrics";
 
 export const GET = withMetrics("/api/moat-reports", async (request: NextRequest) => {
-  const { session, error } = await requireFeatureAccess(request, "stock-evaluation");
+  const { session, error } = await requireSession(request);
   if (error || !session) return error;
 
   const url = request.nextUrl;
@@ -27,7 +27,7 @@ export const GET = withMetrics("/api/moat-reports", async (request: NextRequest)
 });
 
 export const POST = withMetrics("/api/moat-reports", async (request: NextRequest) => {
-  const { session, error } = await requireFeatureAccess(request, "stock-evaluation");
+  const { session, error } = await requireSession(request);
   if (error || !session) return error;
 
   let body: {

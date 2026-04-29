@@ -1,10 +1,10 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest } from "next/server";
-import { requireFeatureAccess } from "@/lib/auth/guards";
+import { requireFeatureQuota } from "@/lib/auth/guards";
+import { refundFeatureQuota } from "@/lib/feature-quotas";
 import {
   getGlobalOpenAIApiKey,
-  findUserById,
   isFeatureEnabledForUser,
   getPlatformSetting,
   createSupportChatConversation,
@@ -14,58 +14,37 @@ import {
   insertAiLog,
   getAiModelForFlow,
 } from "@/lib/db";
-import { supportChatTotal, supportChatDuration, rateLimitHitsTotal } from "@/lib/metrics";
-import { checkSupportChatRateLimit, checkGlobalAiCap, incrementGlobalAiCalls, incrementGlobalAiTokens } from "@/lib/rate-limit";
+import { supportChatTotal, supportChatDuration } from "@/lib/metrics";
+import { checkGlobalAiCap, incrementGlobalAiCalls, incrementGlobalAiTokens } from "@/lib/rate-limit";
 import { createAiStream } from "@/lib/ai-stream";
 import { languageCodeToName } from "@/lib/languages";
 import { withMetrics } from "@/lib/with-metrics";
 import { parseBody } from "@/lib/api-response";
 import { supportChatMessageSchema } from "@/lib/schemas";
 import { buildSupportSystemPrompt } from "@/lib/support-knowledge";
-import { PLATFORM_LIMITS } from "@/lib/platform-config";
 import type { ChatMessage } from "@/lib/db";
 
 export const POST = withMetrics("/api/support-chat", async (request: NextRequest) => {
-  const { session, error } = await requireFeatureAccess(request, "support-chat");
-  if (error || !session) return error;
+  const { session, error } = await requireFeatureQuota(request, "support_chat");
+  if (error) return error;
+  if (!session) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   const enabled = await isFeatureEnabledForUser("support_chat_enabled", session.userId);
   if (!enabled) {
+    await refundFeatureQuota(session.userId, "support_chat");
     return Response.json({ error: "Support chat is not available" }, { status: 404 });
   }
 
   const parsed = await parseBody(request, supportChatMessageSchema);
-  if (!parsed.success) return parsed.error;
-  const { conversationId, messages, language, portfolioContext } = parsed.data;
-
-  const user = await findUserById(session.userId);
-  const plan = user?.plan || session.plan || "free";
-
-  const [starterLimitStr, proLimitStr] = await Promise.all([
-    getPlatformSetting("support_chat_starter_daily"),
-    getPlatformSetting("support_chat_pro_daily"),
-  ]);
-  const configuredLimit = plan === "pro"
-    ? (proLimitStr ? parseInt(proLimitStr, 10) : PLATFORM_LIMITS.SUPPORT_CHAT_PRO_DAILY_DEFAULT)
-    : (starterLimitStr ? parseInt(starterLimitStr, 10) : PLATFORM_LIMITS.SUPPORT_CHAT_STARTER_DAILY_DEFAULT);
-
-  const rl = await checkSupportChatRateLimit(session.userId, plan, configuredLimit, session.role);
-  if (!rl.allowed) {
-    rateLimitHitsTotal.inc({ provider: "support_chat" });
-    return Response.json(
-      {
-        error: "Daily support chat limit reached",
-        reason: "rate_limited",
-        limit: rl.limit,
-        remaining: 0,
-        retryAfter: 86400,
-      },
-      { status: 429, headers: { "Retry-After": "86400" } }
-    );
+  if (!parsed.success) {
+    await refundFeatureQuota(session.userId, "support_chat");
+    return parsed.error;
   }
+  const { conversationId, messages, language, portfolioContext } = parsed.data;
 
   const globalCap = await checkGlobalAiCap(session.role);
   if (!globalCap.allowed) {
+    await refundFeatureQuota(session.userId, "support_chat");
     return Response.json(
       { error: "Platform AI usage limit reached. Please try again next month.", used: globalCap.used, cap: globalCap.cap },
       { status: 429, headers: { "Retry-After": "86400" } },
@@ -74,6 +53,7 @@ export const POST = withMetrics("/api/support-chat", async (request: NextRequest
 
   const apiKey = getGlobalOpenAIApiKey();
   if (!apiKey) {
+    await refundFeatureQuota(session.userId, "support_chat");
     return Response.json(
       { error: "AI service not configured." },
       { status: 501 }
@@ -134,6 +114,7 @@ export const POST = withMetrics("/api/support-chat", async (request: NextRequest
       const errText = await openaiRes.text();
       console.error("Support chat OpenAI error:", openaiRes.status, errText);
       insertAiLog({ userId: session.userId, source: "support_chat", model, promptSystem: systemPrompt, promptUser: lastUserContent, durationMs, status: "error", errorMessage: errText.slice(0, 2000) }).catch(() => {});
+      await refundFeatureQuota(session.userId, "support_chat");
       return Response.json(
         { error: "AI service returned an error." },
         { status: 502 }
@@ -177,6 +158,7 @@ export const POST = withMetrics("/api/support-chat", async (request: NextRequest
     });
   } catch (err) {
     console.error("Support chat error:", err instanceof Error ? err.message : err);
+    await refundFeatureQuota(session.userId, "support_chat");
     return Response.json({ error: "Failed to contact AI service" }, { status: 500 });
   }
 });

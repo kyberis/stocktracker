@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { jsonWithCallCount } from "@/lib/api-providers/response";
-import { requireFeatureAccess, requireRateLimit } from "@/lib/auth/guards";
+import { requireFeatureQuota, requireRateLimit } from "@/lib/auth/guards";
 import { getSessionFromRequest } from "@/lib/auth/session";
 import { resolvePremiumStockDataProvider } from "@/lib/market-data/resolve-provider";
 import { recordMarketDataUsageAsync } from "@/lib/market-data/record-usage";
@@ -16,7 +16,7 @@ const VALID_FUNCTIONS = new Set([
 ]);
 
 export const GET = withMetrics("/api/economic-indicators", async (request: NextRequest) => {
-  const { error } = await requireFeatureAccess(request, "economic-indicators");
+  const { error } = await requireFeatureQuota(request, "economic_indicators");
   if (error) return error;
 
   const { searchParams } = new URL(request.url);

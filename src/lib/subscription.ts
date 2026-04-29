@@ -1,172 +1,95 @@
 import type { SubscriptionFeature, SubscriptionPlan, LayoutTheme } from "@/lib/types";
-import { PLATFORM_LIMITS } from "@/lib/platform-config";
+import { PLATFORM_LIMITS, SOFT_CAPS } from "@/lib/platform-config";
 
 /**
- * Features always available to every plan.
+ * In the universal-access model every feature is reachable from every plan.
+ * Pro pays for *more* of the cost-bearing features (AI consultations and
+ * paid-API requests) — see `FEATURE_QUOTAS` in `platform-config.ts`.
+ *
+ * `canAccessFeature` is kept as a thin compatibility shim for legacy callers,
+ * but it always returns `{ allowed: true }` now. Per-feature quota checks live
+ * in `feature-quotas.ts` and are enforced via `requireFeatureQuota` in guards.
  */
-const FREE_FEATURES = new Set<SubscriptionFeature>([
-  "yahoo",
-  "charts",
-  "cash",
-  "benchmarks",
-  "crypto",
-  "event-calendar-earnings",
-]);
-
-/**
- * All features included in the single paid tier (former Starter + Pro).
- */
-const PAID_FEATURES = new Set<SubscriptionFeature>([
-  "portfolio-sharing",
-  "csv-export",
-  "alerts-email",
-  "alerts-push",
-  "metrics",
-  "portfolio-history-full",
-  "event-calendar-economic",
-  "net-worth",
-  "support-chat",
-  "alphavantage",
-  "fundamentals",
-  "intelligence",
-  "economic-indicators",
-  "alerts-whatsapp",
-  "alerts-device",
-  "crypto-pro",
-  "crypto-portfolio",
-  "event-calendar-ipo",
-  "event-calendar-splits",
-  "screener",
-  "tax-reports",
-  "simulator",
-  "planning",
-  "stock-evaluation",
-]);
 
 export interface EntitlementInput {
   plan: SubscriptionPlan;
-  /** @deprecated Use aiTokensThisMonth for token-based limits */
-  aiCallsThisMonth: number;
-  /** Monthly token usage — primary AI limit check */
+  /** @deprecated Kept for backward compatibility; ignored under the quota model. */
+  aiCallsThisMonth?: number;
+  /** @deprecated Kept for backward compatibility; ignored under the quota model. */
   aiTokensThisMonth?: number;
+  /** @deprecated Ignored. */
   freeAiMonthlyLimit?: number;
+  /** @deprecated Ignored. */
   freeAiMonthlyTokenLimit?: number;
 }
 
 export interface EntitlementResult {
   allowed: boolean;
-  reason?: "upgrade_required" | "ai_limit_reached";
+  reason?: "upgrade_required" | "ai_limit_reached" | "quota_exceeded";
   limit?: number;
   used?: number;
 }
 
-export const FREE_AI_MONTHLY_LIMIT = PLATFORM_LIMITS.AI_FREE_MONTHLY_LIMIT;
-
+/** @deprecated Kept for analytics and `/me` exposure; not used as a gate. */
 export const FREE_AI_MONTHLY_TOKEN_LIMIT = PLATFORM_LIMITS.AI_FREE_MONTHLY_TOKEN_LIMIT;
+/** @deprecated Kept for analytics and `/me` exposure; not used as a gate. */
 export const PRO_AI_MONTHLY_TOKEN_LIMIT = PLATFORM_LIMITS.AI_PRO_MONTHLY_TOKEN_LIMIT;
 
+/** @deprecated Returns the legacy informational token budget for the plan. */
 export function getAiTokenLimit(plan: SubscriptionPlan): number {
   if (plan === "pro") return PRO_AI_MONTHLY_TOKEN_LIMIT;
   return FREE_AI_MONTHLY_TOKEN_LIMIT;
 }
 
+/**
+ * Universal-access shim. Always allows. New code should call
+ * `checkFeatureQuota` from `feature-quotas.ts` instead.
+ */
 export function canAccessFeature(
-  feature: SubscriptionFeature,
-  input: EntitlementInput
+  _feature: SubscriptionFeature,
+  _input: EntitlementInput,
 ): EntitlementResult {
-  if (FREE_FEATURES.has(feature)) {
-    return { allowed: true };
-  }
-
-  if (PAID_FEATURES.has(feature)) {
-    if (input.plan === "pro") return { allowed: true };
-    return { allowed: false, reason: "upgrade_required" };
-  }
-
-  if (feature === "ai") {
-    const tokensUsed = input.aiTokensThisMonth ?? 0;
-    const tokenLimit = input.freeAiMonthlyTokenLimit != null && input.plan === "free"
-      ? input.freeAiMonthlyTokenLimit
-      : getAiTokenLimit(input.plan);
-
-    if (tokensUsed < tokenLimit) return { allowed: true };
-    return {
-      allowed: false,
-      reason: "ai_limit_reached",
-      limit: tokenLimit,
-      used: tokensUsed,
-    };
-  }
-
-  return { allowed: false, reason: "upgrade_required" };
+  return { allowed: true };
 }
 
-/**
- * Returns the holdings limit for a given plan.
- * Pro has no limit (returns Infinity).
- */
+/* ── Soft caps (storage anti-abuse, not API quotas) ─────────────── */
+
 export function getHoldingsLimit(plan: SubscriptionPlan): number {
-  if (plan === "pro") return Infinity;
-  return PLATFORM_LIMITS.FREE_HOLDINGS_LIMIT;
+  return plan === "pro" ? SOFT_CAPS.holdings.pro : SOFT_CAPS.holdings.free;
 }
 
-/**
- * Returns the price alert limit for a given plan.
- * Pro has no limit (returns Infinity).
- */
 export function getAlertLimit(plan: SubscriptionPlan): number {
-  if (plan === "pro") return Infinity;
-  return PLATFORM_LIMITS.FREE_ALERT_LIMIT;
+  return plan === "pro" ? SOFT_CAPS.alerts.pro : SOFT_CAPS.alerts.free;
 }
 
-/**
- * Returns the portfolio limit for a given plan.
- * Free: 1 portfolio. Pro: up to 5.
- */
 export function getPortfolioLimit(plan: SubscriptionPlan): number {
-  if (plan === "pro") return PLATFORM_LIMITS.PRO_PORTFOLIO_LIMIT;
-  return PLATFORM_LIMITS.FREE_PORTFOLIO_LIMIT;
+  return plan === "pro" ? SOFT_CAPS.portfolios.pro : SOFT_CAPS.portfolios.free;
 }
 
-/**
- * Returns the manual asset limit (non-cash types) for a given plan.
- * Free: 0. Pro: unlimited.
- */
 export function getManualAssetLimit(plan: SubscriptionPlan): number {
-  if (plan === "pro") return PLATFORM_LIMITS.PRO_MANUAL_ASSET_LIMIT;
-  return PLATFORM_LIMITS.FREE_MANUAL_ASSET_LIMIT;
+  return plan === "pro" ? SOFT_CAPS.manualAssets.pro : SOFT_CAPS.manualAssets.free;
 }
 
-/**
- * Returns the SnapTrade broker connection limit for a given plan.
- * Free: 0 (no access). Pro: unlimited.
- */
 export function getSnapTradeConnectionLimit(plan: SubscriptionPlan): number {
-  if (plan === "pro") return PLATFORM_LIMITS.PRO_SNAPTRADE_LIMIT;
-  return PLATFORM_LIMITS.FREE_SNAPTRADE_LIMIT;
+  return plan === "pro" ? SOFT_CAPS.snaptradeConnections.pro : SOFT_CAPS.snaptradeConnections.free;
 }
 
-/**
- * Theme access rules per plan.
- * Default: all tiers. Canvas: paid. Terminal/Studio: paid.
- */
-const THEME_ACCESS: Record<LayoutTheme, Set<SubscriptionPlan>> = {
-  default: new Set(["free", "pro"]),
-  canvas: new Set(["pro"]),
-  terminal: new Set(["pro"]),
-  studio: new Set(["pro"]),
-};
-
-export function canAccessTheme(theme: LayoutTheme, plan: SubscriptionPlan): boolean {
-  return THEME_ACCESS[theme]?.has(plan) ?? false;
+export function getShareLinkLimit(plan: SubscriptionPlan): number {
+  return plan === "pro" ? SOFT_CAPS.shareLinks.pro : SOFT_CAPS.shareLinks.free;
 }
 
-export function getAvailableThemes(plan: SubscriptionPlan): LayoutTheme[] {
-  return (Object.keys(THEME_ACCESS) as LayoutTheme[]).filter((t) => THEME_ACCESS[t].has(plan));
+/* ── Themes: open to everyone ──────────────────────────────────── */
+
+export function canAccessTheme(_theme: LayoutTheme, _plan: SubscriptionPlan): boolean {
+  return true;
 }
 
-export function getThemeUpgradeTarget(theme: LayoutTheme): SubscriptionPlan | null {
-  if (theme === "canvas" || theme === "terminal" || theme === "studio") return "pro";
+export function getAvailableThemes(_plan: SubscriptionPlan): LayoutTheme[] {
+  return ["default", "canvas", "terminal", "studio"];
+}
+
+/** @deprecated No theme requires upgrade in the universal-access model. */
+export function getThemeUpgradeTarget(_theme: LayoutTheme): SubscriptionPlan | null {
   return null;
 }
 

@@ -8,7 +8,7 @@ import {
   normalizeTicker,
   type NormalizedCryptoTicker,
 } from "@/lib/api-providers/coinlore";
-import { requireFeatureAccess, requireRateLimit } from "@/lib/auth/guards";
+import { requireFeatureQuota, requireRateLimit } from "@/lib/auth/guards";
 import { getSessionFromRequest } from "@/lib/auth/session";
 import { recordMarketDataUsageAsync } from "@/lib/market-data/record-usage";
 import { resolvePremiumStockDataProvider } from "@/lib/market-data/resolve-provider";
@@ -42,7 +42,7 @@ export const GET = withMetrics("/api/crypto", async (request: NextRequest) => {
   }
 
   if (action === "history" || action === "exchange-rates") {
-    const { error } = await requireFeatureAccess(request, "crypto-pro");
+    const { error } = await requireFeatureQuota(request, "crypto_pro");
     if (error) return error;
 
     if (action === "history") {

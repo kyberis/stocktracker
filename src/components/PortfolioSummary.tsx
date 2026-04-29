@@ -9,7 +9,7 @@ import { formatCurrency, formatPercent, formatStealthCurrency, hasExchangeRate, 
 import { calculatePortfolioTotals, computeAllocationByType, type AllocationSlice } from "@/lib/portfolio-summary";
 import { useStealthMode } from "@/lib/stealth-context";
 import { useFeatureFlag } from "@/lib/feature-flag-context";
-import { PLATFORM_LIMITS } from "@/lib/platform-config";
+import { FEATURE_QUOTAS } from "@/lib/platform-config";
 import { getHoldingsLimit } from "@/lib/subscription";
 import type { Holding, CashEntry, ManualAssetType, HoldingAssetType } from "@/lib/types";
 import PortfolioReviewCard from "./PortfolioReviewCard";
@@ -188,8 +188,9 @@ export default function PortfolioSummary({ holdings: holdingsProp, cashEntries: 
   const isAdmin = user?.role === "admin";
   const isPro = user?.plan === "pro" || isAdmin;
   const aiReportEnabled = useFeatureFlag("ai_report_enabled");
-  const limit = PLATFORM_LIMITS.PORTFOLIO_REVIEW_MONTHLY_LIMIT;
-  const used = user?.portfolioReviewCount ?? 0;
+  const reviewQuota = user?.quotas?.ai_portfolio_review;
+  const limit = reviewQuota?.limit ?? FEATURE_QUOTAS.ai_portfolio_review[isPro ? "pro" : "free"];
+  const used = reviewQuota?.used ?? 0;
   const remaining = isAdmin ? Infinity : Math.max(0, limit - used);
   const hasHoldings = holdings.length > 0;
 

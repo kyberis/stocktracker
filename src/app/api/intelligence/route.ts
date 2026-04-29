@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { jsonWithCallCount } from "@/lib/api-providers/response";
-import { requireFeatureAccess, requireRateLimit } from "@/lib/auth/guards";
+import { requireFeatureQuota, requireRateLimit } from "@/lib/auth/guards";
 import { getPremiumMarketDataFromRequest } from "@/lib/market-data/resolve-provider";
 import { recordMarketDataUsageAsync } from "@/lib/market-data/record-usage";
 import { withMetrics } from "@/lib/with-metrics";
@@ -28,7 +28,7 @@ const INTELLIGENCE_INVOKERS: Record<IntelligenceType, IntelligenceInvoker> = {
 };
 
 export const GET = withMetrics("/api/intelligence", async (request: NextRequest) => {
-  const { error } = await requireFeatureAccess(request, "intelligence");
+  const { error } = await requireFeatureQuota(request, "intelligence");
   if (error) return error;
 
   const { searchParams } = new URL(request.url);

@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/auth-context";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useFeatureFlag } from "@/lib/feature-flag-context";
 import { useI18n } from "@/lib/i18n";
-import { PLATFORM_LIMITS } from "@/lib/platform-config";
+import { FEATURE_QUOTAS } from "@/lib/platform-config";
 
 type ReviewStatus = "idle" | "loading" | "streaming" | "done" | "error" | "limit-reached";
 
@@ -22,9 +22,11 @@ export default function PortfolioReviewCard() {
   const abortRef = useRef<AbortController | null>(null);
 
   const isAdmin = user?.role === "admin";
+  const plan = user?.plan === "pro" || isAdmin ? "pro" : "free";
   const isPro = user?.plan === "pro" || isAdmin;
-  const limit = PLATFORM_LIMITS.PORTFOLIO_REVIEW_MONTHLY_LIMIT;
-  const used = user?.portfolioReviewCount ?? 0;
+  const reviewQuota = user?.quotas?.ai_portfolio_review;
+  const limit = reviewQuota?.limit ?? FEATURE_QUOTAS.ai_portfolio_review[plan];
+  const used = reviewQuota?.used ?? 0;
   const remaining = isAdmin ? Infinity : Math.max(0, limit - used);
 
   const runReview = useCallback(async () => {

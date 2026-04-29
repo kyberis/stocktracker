@@ -21,7 +21,7 @@ export const GET = withMetrics("/api/admin/support-chat-config", async (req: Nex
 
   return NextResponse.json({
     enabled,
-    starterDailyLimit: starterDaily ? parseInt(starterDaily, 10) : PLATFORM_LIMITS.SUPPORT_CHAT_STARTER_DAILY_DEFAULT,
+    starterDailyLimit: starterDaily ? parseInt(starterDaily, 10) : PLATFORM_LIMITS.SUPPORT_CHAT_FREE_DAILY_DEFAULT,
     proDailyLimit: proDaily ? parseInt(proDaily, 10) : PLATFORM_LIMITS.SUPPORT_CHAT_PRO_DAILY_DEFAULT,
     welcomeMessage: welcome || "",
     customInstructions: instructions || "",

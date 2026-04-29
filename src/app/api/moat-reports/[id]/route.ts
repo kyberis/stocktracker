@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest } from "next/server";
-import { requireFeatureAccess } from "@/lib/auth/guards";
+import { requireSession } from "@/lib/auth/guards";
 import {
   getMoatReport,
   normalizeMoatReportTags,
@@ -17,7 +17,7 @@ function extractId(req: NextRequest): string {
 }
 
 export const GET = withMetrics("/api/moat-reports/[id]", async (request: NextRequest) => {
-  const { session, error } = await requireFeatureAccess(request, "stock-evaluation");
+  const { session, error } = await requireSession(request);
   if (error || !session) return error;
 
   const id = extractId(request);
@@ -30,7 +30,7 @@ export const GET = withMetrics("/api/moat-reports/[id]", async (request: NextReq
 });
 
 export const PATCH = withMetrics("/api/moat-reports/[id] PATCH", async (request: NextRequest) => {
-  const { session, error } = await requireFeatureAccess(request, "stock-evaluation");
+  const { session, error } = await requireSession(request);
   if (error || !session) return error;
 
   const id = extractId(request);
@@ -57,7 +57,7 @@ export const PATCH = withMetrics("/api/moat-reports/[id] PATCH", async (request:
 });
 
 export const DELETE = withMetrics("/api/moat-reports/[id] DELETE", async (request: NextRequest) => {
-  const { session, error } = await requireFeatureAccess(request, "stock-evaluation");
+  const { session, error } = await requireSession(request);
   if (error || !session) return error;
 
   const id = extractId(request);

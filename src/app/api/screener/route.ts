@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireFeatureAccess } from "@/lib/auth/guards";
+import { requireFeatureQuota, requireSession } from "@/lib/auth/guards";
 import {
   queryScreener,
   getScreenerDistinctSectors,
@@ -13,13 +13,13 @@ import type { ScreenerFilters } from "@/lib/db";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
-  const { session, error } = await requireFeatureAccess(request, "screener");
-  if (error) return error;
-
   const url = new URL(request.url);
   const action = url.searchParams.get("action");
 
+  // Meta lookups (filter dropdowns) don't count toward the screener quota.
   if (action === "meta") {
+    const { error: metaError } = await requireSession(request);
+    if (metaError) return metaError;
     const sectorParam = url.searchParams.get("sector") || undefined;
     const [sectors, countries, exchanges, industries, total] = await Promise.all([
       getScreenerDistinctSectors(),
@@ -30,6 +30,9 @@ export async function GET(request: NextRequest) {
     ]);
     return NextResponse.json({ sectors, countries, exchanges, industries, total });
   }
+
+  const { error } = await requireFeatureQuota(request, "screener");
+  if (error) return error;
 
   const filters: ScreenerFilters = {};
 

@@ -17,6 +17,44 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.0.0",
+    date: "2026-04-29",
+    title: "All features for everyone — Pro now means more headroom",
+    titleTranslations: {
+      es: "Todas las funciones para todos — Pro ahora significa m\u00E1s margen",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Every feature in trefolio is now available on the Free Folio plan — fundamentals, intelligence, screener, moat reports, tax reports, AI analysis, exports, share links and more. Trefolio Pro multiplies your monthly quotas for AI consultations and premium-data lookups instead of unlocking new screens.",
+        translations: {
+          es: "Todas las funciones de trefolio est\u00E1n ahora disponibles en el plan Folio gratuito — fundamentals, intelligence, screener, moat reports, informes fiscales, an\u00E1lisis con IA, exportaciones, enlaces de compartir y m\u00E1s. Trefolio Pro multiplica tus cuotas mensuales de consultas de IA y datos premium en lugar de desbloquear nuevas pantallas.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "AI usage is now measured in consultations (calls) instead of tokens, so the limit you see matches what you do: ask the AI a question, that's one consultation. Each query is internally capped at 6,000 tokens to keep responses fast and predictable.",
+        translations: {
+          es: "El uso de IA ahora se mide en consultas (llamadas) en lugar de tokens, para que el l\u00EDmite que ves coincida con lo que haces: hacer una pregunta a la IA es una consulta. Cada consulta tiene un tope interno de 6.000 tokens para mantener respuestas r\u00E1pidas y predecibles.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "New per-feature usage badges show \"X / Y this period\" on every quota-bearing screen, with a friendly upgrade nudge only when you've used 80% or more of the period.",
+        translations: {
+          es: "Nuevas insignias de uso por funci\u00F3n muestran \"X / Y este per\u00EDodo\" en cada pantalla con cuota, con un aviso amigable de mejora solo cuando has usado el 80% o m\u00E1s del per\u00EDodo.",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Existing Trefolio Pro subscribers keep their plan unchanged — Pro quotas are large enough that normal use never hits a wall.",
+        translations: {
+          es: "Los suscriptores actuales de Trefolio Pro mantienen su plan sin cambios — las cuotas Pro son lo bastante amplias para que el uso normal nunca se tope con un l\u00EDmite.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.77.74",
     date: "2026-04-28",
     title: "Bigger, more readable text on the Leaf device",

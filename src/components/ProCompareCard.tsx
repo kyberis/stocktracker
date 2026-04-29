@@ -9,6 +9,7 @@ import { getUpsellConfig, getUpsellReasonKey } from "@/lib/upsell";
 import type { UpsellReason, UpsellSurface } from "@/lib/upsell";
 import type { TranslationKey } from "@/lib/i18n";
 import TierIcon from "@/components/TierIcon";
+import QuotaCompareTable from "@/components/QuotaCompareTable";
 
 interface CapacityInfo {
   available: boolean;
@@ -431,6 +432,11 @@ export default function ProCompareCard({
           )}
         </div>
       )}
+
+      {/* Quota comparison table — replaces "Pro only" feature lists with explicit quotas */}
+      <div className="mt-5 pt-5 border-t border-gray-100 dark:border-slate-700/60">
+        <QuotaCompareTable />
+      </div>
 
       {/* Billing error */}
       {billingError && (

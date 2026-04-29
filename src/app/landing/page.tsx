@@ -10,6 +10,7 @@ import { SUPPORTED_LANGUAGES } from "@/lib/languages";
 import { event as gtagEvent } from "@/lib/gtag";
 import { captureFirstTouchAttributionFromWindow } from "@/lib/attribution";
 import CloverToLogo from "@/components/CloverToLogo";
+import QuotaCompareTable from "@/components/QuotaCompareTable";
 
 /* ─── anonymous analytics helper ─── */
 
@@ -2026,6 +2027,16 @@ function PricingSection() {
               </div>
             );
           })}
+        </div>
+
+        <div className="mt-12 max-w-3xl mx-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h3 className="text-base sm:text-lg font-semibold text-slate-900 mb-1">
+            {t("landingPricingQuotasHeading")}
+          </h3>
+          <p className="text-sm text-slate-500 mb-4">
+            {t("landingPricingQuotasSubtitle")}
+          </p>
+          <QuotaCompareTable compact />
         </div>
 
         <p className="text-center text-sm text-slate-400 mt-8">

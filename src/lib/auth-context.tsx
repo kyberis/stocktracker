@@ -2,6 +2,17 @@
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { SubscriptionPlan } from "@/lib/types";
+import type { FeatureQuotaKey, QuotaWindow } from "@/lib/platform-config";
+
+export interface AuthQuotaUsage {
+  used: number;
+  limit: number;
+  remaining: number;
+  resetAt: string;
+  window: QuotaWindow;
+}
+
+export type AuthQuotas = Partial<Record<FeatureQuotaKey, AuthQuotaUsage>>;
 
 type AuthUserRole = "admin" | "user";
 
@@ -37,6 +48,7 @@ interface AuthUser {
   onboardingCompleted: boolean;
   trialActivatedAt: string;
   impersonation: { impersonatorId: string; impersonatorUsername: string } | null;
+  quotas?: AuthQuotas;
 }
 
 interface AuthContextType {

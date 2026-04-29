@@ -31,7 +31,7 @@ order a new user encounters them.
 | **Social** | public profiles (/u), posts (/p), connections, network feed | [`engineer-social`](.cursor/skills/engineer-social/SKILL.md) |
 | **Private Chat** | rooms, messages, typing/presence/reads, share cards, 24h TTL | [`engineer-chat`](.cursor/skills/engineer-chat/SKILL.md) |
 | **Sharing & Widgets** | /p/[slug] public portfolio, embeddable widget, dev API keys | [`engineer-data`](.cursor/skills/engineer-data/SKILL.md) |
-| **Billing & Tiers** | Stripe checkout, portal, webhook, paywalls, refunds | [`engineer-payments-subscriptions`](.cursor/skills/engineer-payments-subscriptions/SKILL.md) |
+| **Billing & Tiers** | Stripe checkout, portal, webhook, **per-feature quotas (universal access)**, refunds | [`engineer-payments-subscriptions`](.cursor/skills/engineer-payments-subscriptions/SKILL.md) |
 | **Feature Flags** | per-user overrides, polling, admin UI | [`engineer-feature-flags`](.cursor/skills/engineer-feature-flags/SKILL.md) |
 | **Admin** | users, flags, AI logs, cron stats, emails, digests, settings, reset | [`engineer-user-auth`](.cursor/skills/engineer-user-auth/SKILL.md) |
 | **Analytics & Ads** | GA, Meta Pixel, conversion events, UTM, AdSense, promo banners | [`analytics-instrumentation`](.cursor/skills/analytics-instrumentation/SKILL.md) |
@@ -109,6 +109,22 @@ flowchart LR
 - Every external provider response is normalized through
   [`src/lib/api-providers/response.ts`](src/lib/api-providers/response.ts).
 - Every CSV broker row goes through [`src/lib/broker-parsers/types.ts`](src/lib/broker-parsers/types.ts) normalization.
+
+## Subscription tiers (v2: universal access with quotas)
+
+As of release 2.0.0 the app uses a **single paid tier** plus a quota model:
+
+- **Folio (Free)** — every feature unlocked with conservative monthly/daily quotas.
+- **Trefolio (Pro)** — €7.99/mo or €59.99/yr; same features, ~20× higher quotas.
+
+Per-feature limits live in
+[`src/lib/platform-config.ts`](src/lib/platform-config.ts) (`FEATURE_QUOTAS` and
+`SOFT_CAPS`). API routes enforce them with `requireFeatureQuota` from
+[`src/lib/auth/guards.ts`](src/lib/auth/guards.ts), backed by counters in
+[`src/lib/feature-quotas.ts`](src/lib/feature-quotas.ts) (reusing the
+`rate_limits` table). See
+[`knowledge/product-specs/subscription-model-v2.md`](knowledge/product-specs/subscription-model-v2.md)
+for the full design.
 
 ## Quality grades by domain
 

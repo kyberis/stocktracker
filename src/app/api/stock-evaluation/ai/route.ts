@@ -1,7 +1,8 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest } from "next/server";
-import { requireFeatureAccess } from "@/lib/auth/guards";
+import { requireFeatureQuota } from "@/lib/auth/guards";
+import { refundFeatureQuota } from "@/lib/feature-quotas";
 import {
   getGlobalOpenAIApiKey,
   incrementAiUsage,
@@ -20,8 +21,9 @@ import { withMetrics } from "@/lib/with-metrics";
 import type { SubscriptionPlan } from "@/lib/types";
 
 export const POST = withMetrics("/api/stock-evaluation/ai", async (request: NextRequest) => {
-  const { session, error } = await requireFeatureAccess(request, "ai");
-  if (error || !session) return error;
+  const { session, error } = await requireFeatureQuota(request, "ai_consult");
+  if (error) return error;
+  if (!session) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   const user = await findUserById(session.userId);
   const plan = (user?.plan || session?.plan || "free") as SubscriptionPlan;
@@ -38,6 +40,7 @@ export const POST = withMetrics("/api/stock-evaluation/ai", async (request: Next
 
   const globalCap = await checkGlobalAiCap(session.role);
   if (!globalCap.allowed) {
+    await refundFeatureQuota(session.userId, "ai_consult");
     return Response.json(
       { error: "Platform AI usage limit reached for this month." },
       { status: 429, headers: { "Retry-After": "86400" } },
@@ -46,6 +49,7 @@ export const POST = withMetrics("/api/stock-evaluation/ai", async (request: Next
 
   const apiKey = getGlobalOpenAIApiKey();
   if (!apiKey) {
+    await refundFeatureQuota(session.userId, "ai_consult");
     return Response.json(
       { error: "OpenAI API key not configured." },
       { status: 501 },
@@ -60,10 +64,12 @@ export const POST = withMetrics("/api/stock-evaluation/ai", async (request: Next
   try {
     body = await request.json();
   } catch {
+    await refundFeatureQuota(session.userId, "ai_consult");
     return Response.json({ error: "Invalid request body" }, { status: 400 });
   }
 
   if (!body.evaluation) {
+    await refundFeatureQuota(session.userId, "ai_consult");
     return Response.json({ error: "evaluation data required" }, { status: 400 });
   }
 
@@ -128,6 +134,7 @@ Please provide your narrative assessment based on this data.`;
       const errText = await openaiRes.text();
       console.error("OpenAI error:", openaiRes.status, errText);
       insertAiLog({ userId: session.userId, source: "moat_evaluation", model, promptSystem: systemPrompt, promptUser: userPrompt, durationMs, status: "error", errorMessage: errText.slice(0, 2000) }).catch(() => {});
+      await refundFeatureQuota(session.userId, "ai_consult");
       return Response.json(
         { error: "AI service returned an error." },
         { status: 502 },
@@ -164,6 +171,7 @@ Please provide your narrative assessment based on this data.`;
     });
   } catch (err) {
     console.error("Moat AI error:", err instanceof Error ? err.message : err);
+    await refundFeatureQuota(session.userId, "ai_consult");
     return Response.json({ error: "Failed to contact AI service" }, { status: 500 });
   }
 });

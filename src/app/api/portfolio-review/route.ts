@@ -1,13 +1,12 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest } from "next/server";
-import { requirePro } from "@/lib/auth/guards";
+import { requireFeatureQuota } from "@/lib/auth/guards";
+import { refundFeatureQuota } from "@/lib/feature-quotas";
 import {
   getGlobalOpenAIApiKey,
   listHoldings,
   listCashEntries,
-  getPortfolioReviewUsage,
-  incrementPortfolioReviewUsage,
   incrementAiTokenUsage,
   incrementDailyAiTokenUsage,
   trackEvent,
@@ -15,7 +14,6 @@ import {
   isFeatureEnabledForUser,
   getAiModelForFlow,
 } from "@/lib/db";
-import { PLATFORM_LIMITS } from "@/lib/platform-config";
 import { checkGlobalAiCap, incrementGlobalAiCalls, incrementGlobalAiTokens } from "@/lib/rate-limit";
 import { createAiStream } from "@/lib/ai-stream";
 import { aiCallsTotal, aiRequestDuration } from "@/lib/metrics";
@@ -23,32 +21,18 @@ import { languageCodeToName } from "@/lib/languages";
 import { withMetrics } from "@/lib/with-metrics";
 
 export const POST = withMetrics("/api/portfolio-review", async (request: NextRequest) => {
-  const { session, error } = await requirePro(request);
-  if (error || !session) return error;
+  const { session, error } = await requireFeatureQuota(request, "ai_portfolio_review");
+  if (error) return error;
+  if (!session) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   if (!await isFeatureEnabledForUser("ai_report_enabled", session.userId)) {
+    await refundFeatureQuota(session.userId, "ai_portfolio_review");
     return Response.json({ error: "AI report is currently disabled" }, { status: 404 });
-  }
-
-  const isAdmin = session.role === "admin";
-  const isDev = process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test";
-  const usage = await getPortfolioReviewUsage(session.userId);
-  const limit = PLATFORM_LIMITS.PORTFOLIO_REVIEW_MONTHLY_LIMIT;
-  if (!isAdmin && !isDev && usage.count >= limit) {
-    trackEvent(session.userId, "portfolio_review_limit_reached", { used: String(usage.count), limit: String(limit) });
-    return Response.json(
-      {
-        error: "Monthly portfolio review limit reached",
-        reason: "review_limit_reached",
-        limit,
-        used: usage.count,
-      },
-      { status: 429 }
-    );
   }
 
   const globalCap = await checkGlobalAiCap(session.role);
   if (!globalCap.allowed) {
+    await refundFeatureQuota(session.userId, "ai_portfolio_review");
     return Response.json(
       { error: "Platform AI usage limit reached for this month. Please try again next month." },
       { status: 429, headers: { "Retry-After": "86400" } },
@@ -57,6 +41,7 @@ export const POST = withMetrics("/api/portfolio-review", async (request: NextReq
 
   const apiKey = getGlobalOpenAIApiKey();
   if (!apiKey) {
+    await refundFeatureQuota(session.userId, "ai_portfolio_review");
     return Response.json(
       { error: "OpenAI API key not configured. Ask your admin to set it in the Admin panel." },
       { status: 501 }
@@ -75,6 +60,7 @@ export const POST = withMetrics("/api/portfolio-review", async (request: NextReq
   const cashEntries = await listCashEntries(session.userId, portfolioId);
 
   if (holdings.length === 0 && cashEntries.length === 0) {
+    await refundFeatureQuota(session.userId, "ai_portfolio_review");
     return Response.json({ error: "No holdings or cash to review" }, { status: 400 });
   }
 
@@ -172,6 +158,7 @@ ${portfolioData}`;
       const errText = await openaiRes.text();
       console.error("OpenAI error:", openaiRes.status, errText);
       insertAiLog({ userId: session.userId, source: "portfolio_review", model, promptSystem: systemPrompt, promptUser: userPrompt, durationMs, status: "error", errorMessage: errText.slice(0, 2000) }).catch(() => {});
+      await refundFeatureQuota(session.userId, "ai_portfolio_review");
       return Response.json(
         { error: "AI service returned an error. Check your API key and quota." },
         { status: 502 }
@@ -180,10 +167,7 @@ ${portfolioData}`;
 
     aiCallsTotal.inc({ status: "success", analysis_type: "portfolio_review" });
     const logId = await insertAiLog({ userId: session.userId, source: "portfolio_review", model, promptSystem: systemPrompt, promptUser: userPrompt, durationMs }).catch(() => "");
-    await Promise.all([
-      incrementPortfolioReviewUsage(session.userId),
-      incrementGlobalAiCalls(),
-    ]);
+    await incrementGlobalAiCalls();
     trackEvent(session.userId, "portfolio_review_completed", {
       holdingsCount: String(holdings.length),
     });
@@ -210,6 +194,7 @@ ${portfolioData}`;
     });
   } catch (err) {
     console.error("Portfolio review error:", err instanceof Error ? err.message : err);
+    await refundFeatureQuota(session.userId, "ai_portfolio_review");
     return Response.json({ error: "Failed to contact AI service" }, { status: 500 });
   }
 });

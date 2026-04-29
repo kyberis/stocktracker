@@ -105,59 +105,56 @@ describe("requireAdmin", () => {
   });
 });
 
-describe("requirePro", () => {
-  it("returns 403 for free user", async () => {
+/**
+ * Deprecated guards under the universal-access quota model: `requirePro` and
+ * `requireFeatureAccess` are now thin shims around `requireSession`. Real
+ * gating lives in `requireFeatureQuota`. We assert here that the deprecated
+ * guards no longer reject signed-in free users (everyone is in).
+ */
+describe("requirePro (deprecated shim)", () => {
+  it("allows free user (universal access)", async () => {
     mockGetSession.mockResolvedValue(userSession);
-    mockFindUser.mockResolvedValue({ plan: "free", plan_expires_at: "" });
-    mockEffectivePlan.mockReturnValue("free");
-    const { session, error } = await requirePro(fakeReq);
-    expect(session).toBeNull();
-    const body = await error!.json();
-    expect(body.reason).toBe("upgrade_required");
-  });
-
-  it("allows pro user", async () => {
-    mockGetSession.mockResolvedValue(proSession);
-    mockFindUser.mockResolvedValue({ plan: "pro", plan_expires_at: "" });
-    mockEffectivePlan.mockReturnValue("pro");
     const { session, error } = await requirePro(fakeReq);
     expect(error).toBeNull();
     expect(session).toBeTruthy();
   });
+
+  it("allows pro user", async () => {
+    mockGetSession.mockResolvedValue(proSession);
+    const { session, error } = await requirePro(fakeReq);
+    expect(error).toBeNull();
+    expect(session).toBeTruthy();
+  });
+
+  it("rejects when no session", async () => {
+    mockGetSession.mockResolvedValue(null);
+    const { session, error } = await requirePro(fakeReq);
+    expect(session).toBeNull();
+    expect(error).toBeTruthy();
+  });
 });
 
-describe("requireFeatureAccess", () => {
-  it("returns 401 when user not found", async () => {
-    mockGetSession.mockResolvedValue(userSession);
-    mockFindUser.mockResolvedValue(null);
+describe("requireFeatureAccess (deprecated shim)", () => {
+  it("rejects when no session", async () => {
+    mockGetSession.mockResolvedValue(null);
     const { error } = await requireFeatureAccess(fakeReq, "ai");
+    expect(error).toBeTruthy();
     const body = await error!.json();
     expect(body.error).toBe("Unauthorized");
   });
 
-  it("allows when entitlement is allowed", async () => {
+  it("allows any signed-in user regardless of feature", async () => {
     mockGetSession.mockResolvedValue(userSession);
-    mockFindUser.mockResolvedValue({ plan: "free", plan_expires_at: "" });
-    mockGetAiUsage.mockResolvedValue({ aiCallsThisMonth: 0 });
-    mockGetAiTokenUsage.mockResolvedValue({ aiTokensThisMonth: 0, aiTokensToday: 0 });
-    mockEffectivePlan.mockReturnValue("free");
-    mockCanAccess.mockReturnValue({ allowed: true });
     const { session, error } = await requireFeatureAccess(fakeReq, "charts");
     expect(error).toBeNull();
     expect(session).toBeTruthy();
   });
 
-  it("returns 403 when feature blocked", async () => {
+  it("allows even for premium-style features (no plan gating)", async () => {
     mockGetSession.mockResolvedValue(userSession);
-    mockFindUser.mockResolvedValue({ plan: "free", plan_expires_at: "" });
-    mockGetAiUsage.mockResolvedValue({ aiCallsThisMonth: 10 });
-    mockGetAiTokenUsage.mockResolvedValue({ aiTokensThisMonth: 30000, aiTokensToday: 5000 });
-    mockEffectivePlan.mockReturnValue("free");
-    mockCanAccess.mockReturnValue({ allowed: false, reason: "ai_limit_reached", limit: 25000, used: 30000 });
-    const { error } = await requireFeatureAccess(fakeReq, "ai");
-    const body = await error!.json();
-    expect(body.reason).toBe("ai_limit_reached");
-    expect(body.limit).toBe(25000);
+    const { session, error } = await requireFeatureAccess(fakeReq, "ai");
+    expect(error).toBeNull();
+    expect(session).toBeTruthy();
   });
 });
 

@@ -2,7 +2,8 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 import { NextRequest } from "next/server";
-import { requireFeatureAccess } from "@/lib/auth/guards";
+import { requireFeatureQuota } from "@/lib/auth/guards";
+import { refundFeatureQuota } from "@/lib/feature-quotas";
 import { findUserById, getGlobalOpenAIApiKey, incrementAiUsage, incrementDailyAiUsage, incrementAiTokenUsage, incrementDailyAiTokenUsage, insertAiLog, getAiModelForFlow } from "@/lib/db";
 import { aiCallsTotal, aiRequestDuration, rateLimitHitsTotal } from "@/lib/metrics";
 import { checkAiRateLimit, checkGlobalAiCap, incrementGlobalAiCalls, incrementGlobalAiTokens } from "@/lib/rate-limit";
@@ -14,8 +15,9 @@ import { chartChatRequestSchema } from "@/lib/schemas";
 import type { SubscriptionPlan } from "@/lib/types";
 
 export const POST = withMetrics("/api/portfolio/chart-chat", async (request: NextRequest) => {
-  const { session, error } = await requireFeatureAccess(request, "ai");
-  if (error || !session) return error;
+  const { session, error } = await requireFeatureQuota(request, "ai_consult");
+  if (error) return error;
+  if (!session) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   const user = await findUserById(session.userId);
   const plan = (user?.plan || session?.plan || "free") as SubscriptionPlan;
@@ -39,6 +41,7 @@ export const POST = withMetrics("/api/portfolio/chart-chat", async (request: Nex
 
   const globalCap = await checkGlobalAiCap(session.role);
   if (!globalCap.allowed) {
+    await refundFeatureQuota(session.userId, "ai_consult");
     return Response.json(
       {
         error: "Platform AI usage limit reached for this month. Please try again next month.",
@@ -51,6 +54,7 @@ export const POST = withMetrics("/api/portfolio/chart-chat", async (request: Nex
 
   const apiKey = getGlobalOpenAIApiKey();
   if (!apiKey) {
+    await refundFeatureQuota(session.userId, "ai_consult");
     return Response.json(
       { error: "OpenAI API key not configured. Ask your admin to set it in the Admin panel." },
       { status: 501 },
@@ -58,7 +62,10 @@ export const POST = withMetrics("/api/portfolio/chart-chat", async (request: Nex
   }
 
   const parsed = await parseBody(request, chartChatRequestSchema);
-  if (!parsed.success) return parsed.error;
+  if (!parsed.success) {
+    await refundFeatureQuota(session.userId, "ai_consult");
+    return parsed.error;
+  }
 
   const { messages, language, context: ctx } = parsed.data;
   const lang = languageCodeToName(language || "en");
@@ -131,6 +138,7 @@ Rules:
       const errText = await openaiRes.text();
       console.error("OpenAI chart-chat error:", openaiRes.status, errText);
       insertAiLog({ userId: session.userId, source: "chart_chat", model, promptSystem: systemPrompt, promptUser: lastUserMsg, durationMs, status: "error", errorMessage: errText.slice(0, 2000) }).catch(() => {});
+      await refundFeatureQuota(session.userId, "ai_consult");
       return Response.json(
         { error: "AI service returned an error. Check your API key and quota." },
         { status: 502 },
@@ -167,6 +175,7 @@ Rules:
     });
   } catch (err) {
     console.error("Chart chat error:", err instanceof Error ? err.message : err);
+    await refundFeatureQuota(session.userId, "ai_consult");
     return Response.json({ error: "Failed to contact AI service" }, { status: 500 });
   }
 });

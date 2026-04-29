@@ -5,8 +5,6 @@ import type { StripePriceKey } from "@/lib/db";
 import { withMetrics } from "@/lib/with-metrics";
 
 const VALID_KEYS = new Set<StripePriceKey>([
-  "stripe_price_starter_monthly",
-  "stripe_price_starter_annual",
   "stripe_price_pro_monthly",
   "stripe_price_pro_annual",
   "stripe_coupon_device_free_year",

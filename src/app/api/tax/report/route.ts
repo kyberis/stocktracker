@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { requireFeatureAccess } from "@/lib/auth/guards";
+import { requireFeatureQuota } from "@/lib/auth/guards";
+import { refundFeatureQuota } from "@/lib/feature-quotas";
 import { listTransactions } from "@/lib/db/transactions";
 import { listHoldings } from "@/lib/db/holdings";
 import { listCashEntries } from "@/lib/db/cash";
@@ -27,7 +28,7 @@ async function getSnapshotValue(
 }
 
 export async function GET(request: NextRequest) {
-  const { session, error } = await requireFeatureAccess(request, "tax-reports");
+  const { session, error } = await requireFeatureQuota(request, "tax_report");
   if (error || !session) return error!;
 
   const url = new URL(request.url);
@@ -41,6 +42,7 @@ export async function GET(request: NextRequest) {
   const swissCanton = url.searchParams.get("swissCanton") || "ZH";
 
   if (!TAX_COUNTRIES.includes(countryParam)) {
+    await refundFeatureQuota(session.userId, "tax_report");
     return NextResponse.json(
       { error: "Unsupported country", supported: TAX_COUNTRIES },
       { status: 400 },
@@ -48,6 +50,7 @@ export async function GET(request: NextRequest) {
   }
 
   if (taxYear < 2000 || taxYear > new Date().getFullYear()) {
+    await refundFeatureQuota(session.userId, "tax_report");
     return NextResponse.json({ error: "Invalid tax year" }, { status: 400 });
   }
 
@@ -123,6 +126,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(report);
   } catch (err) {
     console.error("Tax report generation failed:", err);
+    await refundFeatureQuota(session.userId, "tax_report");
     return NextResponse.json(
       { error: "Failed to generate tax report" },
       { status: 500 },

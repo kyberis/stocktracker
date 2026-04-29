@@ -174,7 +174,7 @@ export async function checkSupportChatRateLimit(
     configuredLimit ??
     (plan === "pro"
       ? PLATFORM_LIMITS.SUPPORT_CHAT_PRO_DAILY_DEFAULT
-      : PLATFORM_LIMITS.SUPPORT_CHAT_STARTER_DAILY_DEFAULT);
+      : PLATFORM_LIMITS.SUPPORT_CHAT_FREE_DAILY_DEFAULT);
   const windowKey = dayWindowKey();
   const { allowed, remaining, resetAt } = await checkAndIncrementRateLimit(
     userId,

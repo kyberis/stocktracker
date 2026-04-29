@@ -513,15 +513,11 @@ export async function setXKey(name: XKeyName, value: string): Promise<void> {
 }
 
 export type StripePriceKey =
-  | "stripe_price_starter_monthly"
-  | "stripe_price_starter_annual"
   | "stripe_price_pro_monthly"
   | "stripe_price_pro_annual"
   | "stripe_coupon_device_free_year";
 
 const STRIPE_ENV_MAP: Record<StripePriceKey, string> = {
-  stripe_price_starter_monthly: "STRIPE_PRICE_STARTER_MONTHLY",
-  stripe_price_starter_annual: "STRIPE_PRICE_STARTER_ANNUAL",
   stripe_price_pro_monthly: "STRIPE_PRICE_PRO_MONTHLY",
   stripe_price_pro_annual: "STRIPE_PRICE_PRO_ANNUAL",
   stripe_coupon_device_free_year: "STRIPE_COUPON_DEVICE_FREE_YEAR",

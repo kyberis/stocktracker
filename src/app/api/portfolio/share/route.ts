@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requirePro } from "@/lib/auth/guards";
+import { requireSession } from "@/lib/auth/guards";
 import { ensureInitialized } from "@/lib/db/client";
 import { generateId } from "@/lib/utils";
 import { trackEvent } from "@/lib/db";
@@ -8,10 +8,13 @@ import { withMetrics } from "@/lib/with-metrics";
 export const dynamic = "force-dynamic";
 
 /**
- * POST /api/portfolio/share — create or regenerate share token (Pro only)
+ * POST /api/portfolio/share — create or regenerate the user's share token.
+ * Available to all signed-in users. The `portfolio_shares` table has a unique
+ * constraint on `user_id`, so each user has at most one active share link
+ * (free=1, pro=1 per `SOFT_CAPS.shareLinks`).
  */
 export const POST = withMetrics("/api/portfolio/share POST", async (req: NextRequest) => {
-  const { session, error } = await requirePro(req);
+  const { session, error } = await requireSession(req);
   if (error || !session) return error!;
 
   let showValues = false;
@@ -51,10 +54,10 @@ export const POST = withMetrics("/api/portfolio/share POST", async (req: NextReq
 });
 
 /**
- * DELETE /api/portfolio/share — deactivate share (Pro only)
+ * DELETE /api/portfolio/share — deactivate share.
  */
 export const DELETE = withMetrics("/api/portfolio/share DELETE", async (req: NextRequest) => {
-  const { session, error } = await requirePro(req);
+  const { session, error } = await requireSession(req);
   if (error || !session) return error!;
 
   const client = await ensureInitialized();
@@ -68,10 +71,10 @@ export const DELETE = withMetrics("/api/portfolio/share DELETE", async (req: Nex
 });
 
 /**
- * GET /api/portfolio/share — get current share info (Pro only)
+ * GET /api/portfolio/share — get current share info.
  */
 export const GET = withMetrics("/api/portfolio/share GET", async (req: NextRequest) => {
-  const { session, error } = await requirePro(req);
+  const { session, error } = await requireSession(req);
   if (error || !session) return error!;
 
   const client = await ensureInitialized();

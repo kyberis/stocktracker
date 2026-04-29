@@ -2,7 +2,8 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest } from "next/server";
 import { jsonWithCallCount } from "@/lib/api-providers/response";
-import { requireFeatureAccess, requireRateLimit } from "@/lib/auth/guards";
+import { requireFeatureQuota, requireRateLimit, requireSession } from "@/lib/auth/guards";
+import { refundFeatureQuota } from "@/lib/feature-quotas";
 import { getMoatCache, upsertMoatCache } from "@/lib/db/moat-cache";
 import { evaluateMoat } from "@/lib/moat-evaluator";
 import { resolvePremiumStockDataProvider } from "@/lib/market-data/resolve-provider";
@@ -11,20 +12,22 @@ import { withMetrics } from "@/lib/with-metrics";
 import { deferTask } from "@/lib/task-runner";
 
 export const GET = withMetrics("/api/stock-evaluation", async (request: NextRequest) => {
-  const { session, error } = await requireFeatureAccess(request, "stock-evaluation");
-  if (error || !session) return error;
-
   const { searchParams } = new URL(request.url);
   const symbol = searchParams.get("symbol");
   const fresh = searchParams.get("fresh") === "1";
 
+  // Cached evaluations are free to read for any signed-in user.
   if (!symbol) {
+    const { error: sessionErr } = await requireSession(request);
+    if (sessionErr) return sessionErr;
     return Response.json({ error: "symbol parameter required" }, { status: 400 });
   }
 
   if (!fresh) {
     const cached = await getMoatCache(symbol).catch(() => null);
     if (cached) {
+      const { error: sessionErr } = await requireSession(request);
+      if (sessionErr) return sessionErr;
       const evaluation = JSON.parse(cached.evaluationJson);
       evaluation._cached = true;
       evaluation._cachedAt = cached.updatedAt;
@@ -35,8 +38,14 @@ export const GET = withMetrics("/api/stock-evaluation", async (request: NextRequ
     }
   }
 
+  // Generating a fresh evaluation hits paid market-data — gate behind quota.
+  const { session, error } = await requireFeatureQuota(request, "stock_evaluation");
+  if (error) return error;
+  if (!session) return Response.json({ error: "Unauthorized" }, { status: 401 });
+
   const resolved = await resolvePremiumStockDataProvider(session.userId, "fundamentals");
   if (!resolved) {
+    await refundFeatureQuota(session.userId, "stock_evaluation");
     return Response.json(
       { error: "Market data API not configured. Ask your administrator to set FMP_API_KEY or Alpha Vantage." },
       { status: 501 },
@@ -45,7 +54,10 @@ export const GET = withMetrics("/api/stock-evaluation", async (request: NextRequ
   const { provider, backend } = resolved;
 
   const rl = await requireRateLimit(request, backend === "fmp" ? "fmp" : "alphavantage");
-  if (rl.error) return rl.error;
+  if (rl.error) {
+    await refundFeatureQuota(session.userId, "stock_evaluation");
+    return rl.error;
+  }
 
   try {
     const [overview, income, balance, cashflow, earnings] = await Promise.all([
@@ -57,6 +69,7 @@ export const GET = withMetrics("/api/stock-evaluation", async (request: NextRequ
     ]);
 
     if (!overview) {
+      await refundFeatureQuota(session.userId, "stock_evaluation");
       return Response.json(
         {
           error: `No fundamental data available for ${symbol}. Try a larger-cap liquid ticker (e.g. AAPL, KO, MSFT).`,
@@ -65,6 +78,7 @@ export const GET = withMetrics("/api/stock-evaluation", async (request: NextRequ
       );
     }
     if (!income || !balance || !cashflow || !earnings) {
+      await refundFeatureQuota(session.userId, "stock_evaluation");
       return Response.json(
         {
           error: `Insufficient fundamental data for ${symbol}. Income statement, balance sheet, cash flow, or earnings data is missing.`,
@@ -85,6 +99,7 @@ export const GET = withMetrics("/api/stock-evaluation", async (request: NextRequ
     });
   } catch (err) {
     console.error("[stock-evaluation] Error:", err instanceof Error ? err.message : err);
+    await refundFeatureQuota(session.userId, "stock_evaluation");
     return Response.json({ error: "Failed to fetch evaluation data" }, { status: 500 });
   } finally {
     if (session.userId && provider.callCount) {

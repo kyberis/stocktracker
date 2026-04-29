@@ -91,37 +91,45 @@ export default function TermsOfServicePage() {
           <section>
             <h2>4. Subscription Tiers</h2>
 
+            <h3>Universal Access with Quotas</h3>
+            <p>
+              From version 2.0.0 onwards (April 2026), every feature in the
+              Service is available on both the Folio (Free) and Trefolio (Paid)
+              tiers. Tiers differ in the <strong>per-feature monthly, daily, or
+              yearly quota</strong> applied to cost-bearing endpoints (AI
+              consultations, premium market-data lookups, AI-assisted imports,
+              tax reports, exports, and support chat). The current quotas for
+              each tier are published in the in-app pricing page and may be
+              adjusted from time to time at our discretion.
+            </p>
+
             <h3>Folio (Free Tier)</h3>
             <p>
-              The Folio tier provides core portfolio tracking functionality,
-              including Yahoo Finance market data, historical charts, cash
-              balance tracking, benchmark comparisons, and limited AI analysis
-              (subject to monthly limits). The free tier is ad-supported: Google
-              AdSense advertisements may be displayed if you have consented to
-              advertising cookies. The paid Trefolio tier is completely ad-free.
+              The Folio tier provides full access to every feature of the
+              Service, subject to the published Free-tier quotas and to soft
+              storage caps (e.g. number of holdings, portfolios, alerts, share
+              links, manual assets, and brokerage connections). The free tier
+              is ad-supported: Google AdSense advertisements may be displayed
+              if you have consented to advertising cookies. The paid Trefolio
+              tier is completely ad-free.
             </p>
 
             <h3>Trefolio (Paid Tier)</h3>
             <p>
-              The Trefolio tier is available for a subscription fee (currently from
-              €7.99/month for new subscribers during promotional periods, or €9.99/month
-              at the regular rate, inclusive of applicable VAT; annual plans may be
-              offered at a discount). Trefolio includes everything in Folio, plus
-              higher usage limits and premium capabilities, including for example:
+              The Trefolio tier is available for a subscription fee (currently
+              from €7.99/month for new subscribers during promotional periods,
+              or €9.99/month at the regular rate, inclusive of applicable VAT;
+              annual plans may be offered at a discount). Trefolio includes
+              every feature in the Service with substantially higher quotas than
+              Folio (typically ~20× the Free-tier monthly limits for AI and
+              premium-data features, and significantly higher soft caps for
+              storage entities). Trefolio is also ad-free.
             </p>
-            <ul className="list-disc pl-6 space-y-2">
-              <li>Portfolio sharing, CSV export, performance metrics, and extended portfolio history.</li>
-              <li>Price alerts across email, push, WhatsApp, and device notifications (subject to fair-use limits).</li>
-              <li>SnapTrade brokerage aggregation (connect multiple brokerages via OAuth for portfolio import, subject to plan limits).</li>
-              <li>Alpha Vantage and other premium market data where configured.</li>
-              <li>Company fundamentals (income statements, balance sheets, cash flow).</li>
-              <li>Stock Intelligence (news sentiment, insider trades, institutional holdings).</li>
-              <li>Economic Indicators dashboard and extended event calendars.</li>
-              <li>Higher AI usage limits than Folio.</li>
-              <li>Additional tools such as stock screener, tax reports, portfolio simulator, and financial planning features, as described on the website.</li>
-            </ul>
             <p>
-              Exact limits and included features may change; the in-app subscription and pricing pages at the time of purchase prevail for your account.
+              Exact limits per feature and per tier may change; the in-app
+              subscription and pricing pages at the time of purchase prevail for
+              your account. Existing Trefolio subscribers retain their plan and
+              are not affected by the v2.0 model change in any negative way.
             </p>
 
             <h3>Price Changes</h3>

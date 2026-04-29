@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requirePro } from "@/lib/auth/guards";
+import { requireFeatureQuota } from "@/lib/auth/guards";
+import { refundFeatureQuota } from "@/lib/feature-quotas";
 import { listHoldings, listTransactions, listCashEntries, trackEvent, isFeatureEnabled } from "@/lib/db";
 import { withMetrics } from "@/lib/with-metrics";
 
@@ -11,10 +12,12 @@ function escapeCsv(val: string): string {
 }
 
 export const GET = withMetrics("/api/export/portfolio", async (req: NextRequest) => {
-  const { session, error } = await requirePro(req);
-  if (error || !session) return error;
+  const { session, error } = await requireFeatureQuota(req, "csv_export");
+  if (error) return error;
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   if (!(await isFeatureEnabled("csv_export_enabled"))) {
+    await refundFeatureQuota(session.userId, "csv_export");
     return NextResponse.json({ error: "CSV export is not enabled" }, { status: 403 });
   }
 

@@ -1114,8 +1114,6 @@ function SupportChatConfigCard() {
 
 function StripePricesCard() {
   const FIELDS: { key: string; label: string; placeholder: string; hint?: string }[] = [
-    { key: "stripe_price_starter_monthly", label: "Starter Monthly", placeholder: "price_...", hint: "€2.99/mo (launch) · €3.99 regular" },
-    { key: "stripe_price_starter_annual", label: "Starter Annual", placeholder: "price_...", hint: "€23.99/yr (launch) · €31.99 regular" },
     { key: "stripe_price_pro_monthly", label: "Pro Monthly", placeholder: "price_...", hint: "€7.99/mo (launch) · €9.99 regular" },
     { key: "stripe_price_pro_annual", label: "Pro Annual", placeholder: "price_...", hint: "€59.99/yr (launch) · €79.99 regular" },
     { key: "stripe_coupon_device_free_year", label: "Device Free Year Coupon", placeholder: "coupon ID" },

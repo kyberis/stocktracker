@@ -12,7 +12,7 @@ import {
 } from "@/lib/db";
 import { withMetrics } from "@/lib/with-metrics";
 import { deviceApiCalls } from "@/lib/metrics";
-import { PLATFORM_LIMITS } from "@/lib/platform-config";
+import { SOFT_CAPS } from "@/lib/platform-config";
 
 const AVAILABLE_TEMPLATES = [
   { id: "classic-dark", name: "Classic Dark" },
@@ -67,7 +67,7 @@ export const GET = withMetrics("/api/device/config", async (req: NextRequest) =>
       topHoldingsCount: isPro ? 10 : 5,
       refreshIntervalSec: isPro ? 60 : 120,
       templates: isPro ? proTemplates.map((t) => t.id) : freeTemplates.map((t) => t.id),
-      holdingsLimit: isPro ? -1 : PLATFORM_LIMITS.FREE_HOLDINGS_LIMIT,
+      holdingsLimit: isPro ? SOFT_CAPS.holdings.pro : SOFT_CAPS.holdings.free,
     },
     templateId,
     availableTemplates: isPro ? proTemplates : freeTemplates,

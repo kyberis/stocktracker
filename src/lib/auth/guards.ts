@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getSessionFromRequest } from "./session";
-import { findUserById, getAiUsage, getAiTokenUsage, trackEvent, updateLastActive } from "@/lib/db";
-import { canAccessFeature, effectivePlan } from "@/lib/subscription";
+import { findUserById, trackEvent, updateLastActive } from "@/lib/db";
+import { effectivePlan } from "@/lib/subscription";
 import type { SubscriptionFeature } from "@/lib/types";
 import { paywallHitsTotal, rateLimitHitsTotal } from "@/lib/metrics";
 import { checkAvRateLimit, checkFmpRateLimit, checkAiRateLimit, checkAiImportRateLimit } from "@/lib/rate-limit";
 import type { RateLimitProvider } from "@/lib/platform-config";
+import { checkAndIncrementFeatureQuota } from "@/lib/feature-quotas";
+import type { FeatureQuotaKey } from "@/lib/platform-config";
 
 const lastActiveCache = new Map<string, number>();
 const LAST_ACTIVE_THROTTLE_MS = 5 * 60_000;
@@ -50,30 +52,54 @@ export async function requireAdmin(req: NextRequest) {
   return { session, error: null };
 }
 
+/**
+ * @deprecated Universal-access model: every feature is reachable from every
+ * plan; what differs is the per-feature quota. Use `requireFeatureQuota`
+ * instead. This wrapper now only checks that the caller is signed in.
+ */
 export async function requirePro(req: NextRequest) {
   const { session, error } = await requireSession(req);
   if (error || !session) return { session: null, error: error! };
-  if (session.role === "admin") return { session, error: null };
-  const user = await findUserById(session.userId);
-  const plan = effectivePlan(user?.plan || session.plan || "free", user?.plan_expires_at || "");
-  const isPro = plan === "pro";
-  if (!isPro) {
-    return {
-      session: null,
-      error: NextResponse.json(
-        { error: "Pro subscription required", reason: "upgrade_required", feature: "pro" },
-        { status: 403 }
-      ),
-    };
-  }
   return { session, error: null };
 }
 
-export async function requireFeatureAccess(req: NextRequest, feature: SubscriptionFeature) {
+/**
+ * @deprecated Universal-access model: pre-flight feature gating is replaced by
+ * per-feature quota counters. Use `requireFeatureQuota(req, "<feature_key>")`
+ * which enforces the quota AND increments the counter. This wrapper now only
+ * authenticates the caller.
+ */
+export async function requireFeatureAccess(req: NextRequest, _feature: SubscriptionFeature) {
+  const { session, error } = await requireSession(req);
+  if (error || !session) return { session: null, error: error! };
+  return { session, error: null };
+}
+
+/**
+ * Enforce a per-user, per-feature quota and increment the counter on success.
+ *
+ * - Admins bypass the quota.
+ * - When the quota is exhausted the caller receives a 429 with body
+ *   `{ paywall: true, reason: "quota_exceeded", feature, used, limit, resetAt, upgradeUrl }`
+ *   so the UI can render an upgrade prompt that's specific to which quota ran out.
+ * - On the rare case the downstream call fails (provider 500, etc.) the caller
+ *   should `refundFeatureQuota(userId, feature)` to avoid charging users for
+ *   nothing — see usages in API route handlers.
+ */
+export async function requireFeatureQuota(
+  req: NextRequest,
+  feature: FeatureQuotaKey,
+): Promise<{
+  session: import("./session").SessionPayload | null;
+  error: NextResponse | null;
+  quota?: Awaited<ReturnType<typeof checkAndIncrementFeatureQuota>>;
+}> {
   const { session, error } = await requireSession(req);
   if (error || !session) return { session: null, error: error! };
 
-  if (session.role === "admin") return { session, error: null };
+  if (session.role === "admin") {
+    return { session, error: null };
+  }
 
   const user = await findUserById(session.userId);
   if (!user) {
@@ -83,37 +109,31 @@ export async function requireFeatureAccess(req: NextRequest, feature: Subscripti
     };
   }
 
-  const [usage, tokenUsage] = await Promise.all([
-    getAiUsage(session.userId),
-    getAiTokenUsage(session.userId),
-  ]);
   const plan = effectivePlan(user.plan, user.plan_expires_at);
-  const entitlement = canAccessFeature(feature, {
-    plan,
-    aiCallsThisMonth: usage.aiCallsThisMonth,
-    aiTokensThisMonth: tokenUsage.aiTokensThisMonth,
-  });
-  if (entitlement.allowed) return { session, error: null };
+  const result = await checkAndIncrementFeatureQuota(session.userId, feature, plan);
 
-  const reason = entitlement.reason || "upgrade_required";
-  paywallHitsTotal.inc({ feature, reason });
-  trackEvent(session.userId, "paywall_shown", { feature, reason });
+  if (result.allowed) {
+    return { session, error: null, quota: result };
+  }
 
-  return {
-    session: null,
-    error: NextResponse.json(
-      {
-        error: entitlement.reason === "ai_limit_reached"
-          ? "Free AI monthly limit reached"
-          : "Pro subscription required",
-        reason: entitlement.reason || "upgrade_required",
-        feature,
-        limit: entitlement.limit,
-        used: entitlement.used,
-      },
-      { status: 403 }
-    ),
-  };
+  paywallHitsTotal.inc({ feature, reason: "quota_exceeded" });
+  trackEvent(session.userId, "paywall_shown", { feature, reason: "quota_exceeded" });
+
+  const res = NextResponse.json(
+    {
+      error: "Monthly limit reached for this feature",
+      paywall: true,
+      reason: "quota_exceeded",
+      feature,
+      used: result.used,
+      limit: result.limit,
+      resetAt: result.resetAt,
+      upgradeUrl: "/billing",
+    },
+    { status: 429 },
+  );
+  res.headers.set("Retry-After", "86400");
+  return { session: null, error: res, quota: result };
 }
 
 export async function requireRateLimit(

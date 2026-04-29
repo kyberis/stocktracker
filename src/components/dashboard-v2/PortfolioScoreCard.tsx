@@ -6,7 +6,7 @@ import { useI18n } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useAuth } from "@/lib/auth-context";
 import { useFeatureFlag } from "@/lib/feature-flag-context";
-import { PLATFORM_LIMITS } from "@/lib/platform-config";
+import { FEATURE_QUOTAS } from "@/lib/platform-config";
 import { buildScorePayload, type PortfolioScoreResponse, type CategoryScore } from "@/lib/portfolio-score";
 import type { Holding, CashEntry } from "@/lib/types";
 
@@ -131,8 +131,9 @@ export default function PortfolioScoreCard({ holdings, cashEntries }: Props) {
 
   const isAdmin = user?.role === "admin";
   const isPro = user?.plan === "pro" || isAdmin;
-  const limit = PLATFORM_LIMITS.PORTFOLIO_REVIEW_MONTHLY_LIMIT;
-  const used = user?.portfolioReviewCount ?? 0;
+  const scoreQuota = user?.quotas?.portfolio_score;
+  const limit = scoreQuota?.limit ?? FEATURE_QUOTAS.portfolio_score[isPro ? "pro" : "free"];
+  const used = scoreQuota?.used ?? 0;
   const remaining = isAdmin ? Infinity : Math.max(0, limit - used);
 
   const loadCachedScore = useCallback(async () => {

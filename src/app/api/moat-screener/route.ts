@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest } from "next/server";
-import { requireFeatureAccess } from "@/lib/auth/guards";
+import { requireSession } from "@/lib/auth/guards";
 import { queryMoatCache, getMoatCacheMeta } from "@/lib/db";
 import type { MoatScreenerFilters } from "@/lib/db";
 import type { CriterionStatus } from "@/lib/types";
@@ -14,7 +14,7 @@ function parseStatus(val: string | null): CriterionStatus | undefined {
 }
 
 export const GET = withMetrics("/api/moat-screener", async (request: NextRequest) => {
-  const { session, error } = await requireFeatureAccess(request, "stock-evaluation");
+  const { session, error } = await requireSession(request);
   if (error || !session) return error;
 
   const { searchParams } = new URL(request.url);

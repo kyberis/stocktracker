@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { YahooProvider } from "@/lib/api-providers/yahoo";
 import { resolveIsinToTicker } from "@/lib/api-providers/isin-resolver";
-import { requireFeatureAccess } from "@/lib/auth/guards";
+import { requireFeatureQuota } from "@/lib/auth/guards";
 import { withMetrics } from "@/lib/with-metrics";
 import type { StockDataProvider } from "@/lib/api-providers/types";
 
@@ -23,7 +23,7 @@ const FUNDAMENTAL_INVOKERS: Record<FundamentalType, FundamentalInvoker> = {
 const yahoo = new YahooProvider();
 
 export const GET = withMetrics("/api/fundamentals", async (request: NextRequest) => {
-  const { error } = await requireFeatureAccess(request, "fundamentals");
+  const { error } = await requireFeatureQuota(request, "fundamentals");
   if (error) return error;
 
   const { searchParams } = new URL(request.url);

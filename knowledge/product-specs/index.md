@@ -158,6 +158,7 @@ Organized by domain; domains match [`../../ARCHITECTURE.md`](../../ARCHITECTURE.
 - [stripe-checkout](stripe-checkout.md) — checkout session creation.
 - [stripe-webhook](stripe-webhook.md) — webhook reconciliation.
 - [subscription-tiers](subscription-tiers.md) — tier and feature registry.
+- [subscription-model-v2](subscription-model-v2.md) — universal-access quotas (current model).
 
 ## Admin
 

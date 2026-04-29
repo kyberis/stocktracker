@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { jsonWithCallCount } from "@/lib/api-providers/response";
 import { fetchFinnhubPortfolioNews } from "@/lib/api-providers/finnhub-news";
-import { requireFeatureAccess, requireRateLimit } from "@/lib/auth/guards";
+import { requireFeatureQuota, requireRateLimit } from "@/lib/auth/guards";
 import { hasPremiumMarketDataConfigured, listHoldings } from "@/lib/db";
 import { getPremiumMarketDataFromRequest } from "@/lib/market-data/resolve-provider";
 import { recordMarketDataUsageAsync } from "@/lib/market-data/record-usage";
@@ -25,7 +25,7 @@ function deriveTickers(holdings: { ticker: string; valueInEUR?: number | null }[
 }
 
 export const GET = withMetrics("/api/portfolio-news", async (request: NextRequest) => {
-  const { session, error } = await requireFeatureAccess(request, "intelligence");
+  const { session, error } = await requireFeatureQuota(request, "intelligence");
   if (error) return error;
 
   const userId = session!.userId;

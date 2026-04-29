@@ -1,11 +1,10 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest } from "next/server";
-import { requirePro } from "@/lib/auth/guards";
+import { requireFeatureQuota, requireSession } from "@/lib/auth/guards";
+import { refundFeatureQuota } from "@/lib/feature-quotas";
 import {
   getGlobalOpenAIApiKey,
-  getPortfolioReviewUsage,
-  incrementPortfolioReviewUsage,
   incrementAiTokenUsage,
   incrementDailyAiTokenUsage,
   getCachedPortfolioScore,
@@ -16,7 +15,6 @@ import {
   isFeatureEnabledForUser,
   getAiModelForFlow,
 } from "@/lib/db";
-import { PLATFORM_LIMITS } from "@/lib/platform-config";
 import { checkGlobalAiCap, incrementGlobalAiCalls, incrementGlobalAiTokens } from "@/lib/rate-limit";
 import { aiCallsTotal, aiRequestDuration } from "@/lib/metrics";
 import { languageCodeToName } from "@/lib/languages";
@@ -29,7 +27,7 @@ import {
 } from "@/lib/portfolio-score";
 
 export const GET = withMetrics("/api/portfolio/score", async (request: NextRequest) => {
-  const { session, error } = await requirePro(request);
+  const { session, error } = await requireSession(request);
   if (error || !session) return error;
 
   if (!await isFeatureEnabledForUser("ai_report_enabled", session.userId)) {
@@ -69,35 +67,18 @@ export const GET = withMetrics("/api/portfolio/score", async (request: NextReque
 });
 
 export const POST = withMetrics("/api/portfolio/score", async (request: NextRequest) => {
-  const { session, error } = await requirePro(request);
-  if (error || !session) return error;
+  const { session, error } = await requireFeatureQuota(request, "portfolio_score");
+  if (error) return error;
+  if (!session) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   if (!await isFeatureEnabledForUser("ai_report_enabled", session.userId)) {
+    await refundFeatureQuota(session.userId, "portfolio_score");
     return Response.json({ error: "AI report is currently disabled" }, { status: 404 });
-  }
-
-  const isAdmin = session.role === "admin";
-  const isDev = process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test";
-  const usage = await getPortfolioReviewUsage(session.userId);
-  const limit = PLATFORM_LIMITS.PORTFOLIO_REVIEW_MONTHLY_LIMIT;
-  if (!isAdmin && !isDev && usage.count >= limit) {
-    trackEvent(session.userId, "portfolio_score_limit_reached", {
-      used: String(usage.count),
-      limit: String(limit),
-    });
-    return Response.json(
-      {
-        error: "Monthly portfolio score limit reached",
-        reason: "review_limit_reached",
-        limit,
-        used: usage.count,
-      },
-      { status: 429 },
-    );
   }
 
   const globalCap = await checkGlobalAiCap(session.role);
   if (!globalCap.allowed) {
+    await refundFeatureQuota(session.userId, "portfolio_score");
     return Response.json(
       { error: "Platform AI usage limit reached for this month. Please try again next month." },
       { status: 429, headers: { "Retry-After": "86400" } },
@@ -106,6 +87,7 @@ export const POST = withMetrics("/api/portfolio/score", async (request: NextRequ
 
   const apiKey = getGlobalOpenAIApiKey();
   if (!apiKey) {
+    await refundFeatureQuota(session.userId, "portfolio_score");
     return Response.json(
       { error: "OpenAI API key not configured. Ask your admin to set it in the Admin panel." },
       { status: 501 },
@@ -116,10 +98,12 @@ export const POST = withMetrics("/api/portfolio/score", async (request: NextRequ
   try {
     body = await request.json();
   } catch {
+    await refundFeatureQuota(session.userId, "portfolio_score");
     return Response.json({ error: "Invalid request body" }, { status: 400 });
   }
 
   if (!body.payload || typeof body.payload !== "object") {
+    await refundFeatureQuota(session.userId, "portfolio_score");
     return Response.json({ error: "Missing portfolio payload" }, { status: 400 });
   }
 
@@ -163,6 +147,7 @@ export const POST = withMetrics("/api/portfolio/score", async (request: NextRequ
       const errText = await openaiRes.text();
       console.error("OpenAI portfolio score error:", openaiRes.status, errText);
       insertAiLog({ userId: session.userId, source: "portfolio_score", model, promptSystem: system, promptUser: user, durationMs, status: "error", errorMessage: errText.slice(0, 2000) }).catch(() => {});
+      await refundFeatureQuota(session.userId, "portfolio_score");
       return Response.json(
         { error: "AI service returned an error. Check your API key and quota." },
         { status: 502 },
@@ -183,6 +168,7 @@ export const POST = withMetrics("/api/portfolio/score", async (request: NextRequ
     } catch {
       console.error("Failed to parse portfolio score response:", content.slice(0, 200));
       insertAiLog({ userId: session.userId, source: "portfolio_score", model, promptSystem: system, promptUser: user, response: content, tokensUsed: totalTokens, tokensInput: scoreInputTokens, tokensOutput: scoreOutputTokens, durationMs, status: "error", errorMessage: "JSON parse failed" }).catch(() => {});
+      await refundFeatureQuota(session.userId, "portfolio_score");
       return Response.json({ error: "AI returned invalid response" }, { status: 502 });
     }
 
@@ -190,7 +176,6 @@ export const POST = withMetrics("/api/portfolio/score", async (request: NextRequ
 
     const [scoreId] = await Promise.all([
       savePortfolioScore(session.userId, portfolioId, JSON.stringify(score)),
-      incrementPortfolioReviewUsage(session.userId),
       incrementGlobalAiCalls(),
       incrementAiTokenUsage(session.userId, totalTokens),
       incrementDailyAiTokenUsage(session.userId, totalTokens),
@@ -205,6 +190,7 @@ export const POST = withMetrics("/api/portfolio/score", async (request: NextRequ
     return Response.json({ score, scoreId, cachedAt: new Date().toISOString() });
   } catch (err) {
     console.error("Portfolio score error:", err instanceof Error ? err.message : err);
+    await refundFeatureQuota(session.userId, "portfolio_score");
     return Response.json({ error: "Failed to contact AI service" }, { status: 500 });
   }
 });
