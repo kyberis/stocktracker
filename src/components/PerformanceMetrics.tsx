@@ -34,9 +34,8 @@ export default function PerformanceMetrics({ holdings: holdingsProp, cashEntries
   const track = useTrack();
 
   useEffect(() => {
-    if (!isPaid) return;
     fetch("/api/transactions").then((r) => r.ok ? r.json() : []).then(setTxs);
-  }, [isPaid]);
+  }, []);
 
   const { totalCurrentEUR, totalCostEUR } = calculatePortfolioTotals(holdings, cashEntries, quotes, exchangeRates, baseCurrency);
 
@@ -62,24 +61,6 @@ export default function PerformanceMetrics({ holdings: holdingsProp, cashEntries
       active: hasTxData,
     },
   ];
-
-  if (!isPaid) {
-    return (
-      <div className="card">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-1.5">{t("portfolioPerformance")} <TierFeatureBadge requiredPlan="pro" size="sm" /></h3>
-        <BlurredProSection blurb="Upgrade to Trefolio for TTWROR, IRR, and advanced portfolio performance metrics." ctaLabel="Upgrade to Trefolio">
-          <div className="grid grid-cols-2 gap-3">
-            {["TTWROR", "IRR"].map((label) => (
-              <div key={label} className="bg-gray-50 dark:bg-slate-800/50 rounded-xl p-3 text-center">
-                <p className="text-[10px] text-gray-500 dark:text-slate-400 font-medium uppercase mb-1">{label}</p>
-                <div className="h-7 w-16 mx-auto rounded bg-gray-200 dark:bg-slate-700" />
-              </div>
-            ))}
-          </div>
-        </BlurredProSection>
-      </div>
-    );
-  }
 
   return (
     <div className="card">

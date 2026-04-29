@@ -52,6 +52,13 @@ export const releaseNotes: ReleaseEntry[] = [
           es: "Los suscriptores actuales de Trefolio Pro mantienen su plan sin cambios — las cuotas Pro son lo bastante amplias para que el uso normal nunca se tope con un l\u00EDmite.",
         },
       },
+      {
+        type: "improvement",
+        text: "Refreshed landing page, pricing comparison and in-app paywall copy to reflect the universal-access model: same features on Folio and Trefolio, with Trefolio multiplying the monthly AI and premium-data quotas roughly 20\u00D7. Removed all \u201CPro only\u201D blurred overlays from in-app screens.",
+        translations: {
+          es: "Renovamos la landing, la comparativa de precios y los textos de paywall en la app para reflejar el modelo de acceso universal: mismas funciones en Folio y Trefolio, con Trefolio multiplicando las cuotas mensuales de IA y datos premium aproximadamente 20\u00D7. Eliminamos todas las superposiciones difuminadas de \u201Csolo Pro\u201D dentro de la app.",
+        },
+      },
     ],
   },
   {

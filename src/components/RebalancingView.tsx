@@ -46,8 +46,7 @@ function SectionBadge({ n, variant = "default" }: { n: number; variant?: "defaul
   );
 }
 
-function AiInsightStrip({ text, cta, isPro, onClick }: { text: React.ReactNode; cta: string; isPro: boolean; onClick?: () => void }) {
-  if (!isPro) return null;
+function AiInsightStrip({ text, cta, onClick }: { text: React.ReactNode; cta: string; isPro?: boolean; onClick?: () => void }) {
   return (
     <button
       onClick={onClick}
@@ -813,7 +812,6 @@ function RebalancingActions({ drifts, totalValue, baseCurrency, isPro, language,
   };
 
   const requestAiEvaluation = useCallback(async () => {
-    if (!isPro) return;
     aiAbortRef.current?.abort();
     const controller = new AbortController();
     aiAbortRef.current = controller;
@@ -1131,22 +1129,20 @@ function RebalancingScreener({ isPro }: { isPro: boolean }) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!isPro) return;
     fetch("/api/screener?action=meta").then((r) => r.ok ? r.json() : {}).then((d: Record<string, unknown>) => {
       if (Array.isArray(d.sectors)) setSectors(d.sectors as string[]);
       if (Array.isArray(d.industries)) setIndustries(d.industries as string[]);
     });
-  }, [isPro]);
+  }, []);
 
   useEffect(() => {
-    if (!isPro || !sector) return;
+    if (!sector) return;
     fetch(`/api/screener?action=meta&sector=${encodeURIComponent(sector)}`)
       .then((r) => r.ok ? r.json() : {})
       .then((d: Record<string, unknown>) => { if (Array.isArray(d.industries)) setIndustries(d.industries as string[]); });
-  }, [isPro, sector]);
+  }, [sector]);
 
   const doSearch = useCallback(() => {
-    if (!isPro) return;
     setLoading(true);
     const params = new URLSearchParams({ limit: "10", sortBy: "dividendYield", sortDir: "desc" });
     if (sector) params.set("sector", sector);
@@ -1154,7 +1150,7 @@ function RebalancingScreener({ isPro }: { isPro: boolean }) {
     fetch(`/api/screener?${params}`).then((r) => r.ok ? r.json() : { results: [] }).then((d) => {
       setResults(d.results || []);
     }).finally(() => setLoading(false));
-  }, [isPro, sector, industry]);
+  }, [sector, industry]);
 
   useEffect(() => { if (sector) doSearch(); }, [sector, industry, doSearch]);
 
@@ -1243,11 +1239,7 @@ function RebalancingScreener({ isPro }: { isPro: boolean }) {
         </div>
       </div>
 
-      {isPro ? content : (
-        <BlurredProSection blurb={t("upgradeScreenerBlurb")}>
-          {content}
-        </BlurredProSection>
-      )}
+      {content}
     </div>
   );
 }
@@ -1269,7 +1261,6 @@ function AiRebalancingPanel({ drifts, totalValue, isPro, language, category }: {
   const aiAbortRef = useRef<AbortController | null>(null);
 
   const requestAnalysis = useCallback(async () => {
-    if (!isPro) return;
     aiAbortRef.current?.abort();
     const controller = new AbortController();
     aiAbortRef.current = controller;
@@ -1356,11 +1347,7 @@ function AiRebalancingPanel({ drifts, totalValue, isPro, language, category }: {
 
   return (
     <div className="card border-violet-200 dark:border-violet-500/20 bg-violet-50/30 dark:bg-violet-500/5">
-      {isPro ? content : (
-        <BlurredProSection blurb={t("upgradeAiBlurb")}>
-          {content}
-        </BlurredProSection>
-      )}
+      {content}
     </div>
   );
 }

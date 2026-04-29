@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useI18n } from "@/lib/i18n";
-import { useAuth } from "@/lib/auth-context";
 import { usePortfolio } from "@/lib/portfolio-context";
 import { useFeatureFlagContext } from "@/lib/feature-flag-context";
 const fmtDigest = (n: number) =>
@@ -27,14 +26,12 @@ export default function WeeklyDigestCard({ position = "default" }: WeeklyDigestC
   if (position === "promoted" && !fresh) return null;
   if (position === "default" && fresh) return null;
   const { t } = useI18n();
-  const { user } = useAuth();
   const { activePortfolioId, demoMode } = usePortfolio();
-  const isPro = user?.plan === "pro" || user?.role === "admin";
   const [digest, setDigest] = useState<WeeklyDigestRow | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (demoMode || !isPro) {
+    if (demoMode) {
       setLoading(false);
       return;
     }
@@ -46,36 +43,9 @@ export default function WeeklyDigestCard({ position = "default" }: WeeklyDigestC
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [isPro, activePortfolioId, demoMode]);
+  }, [activePortfolioId, demoMode]);
 
   if (loading) return <div className="card rounded-2xl h-24 animate-pulse bg-gray-50 dark:bg-white/[0.02]" />;
-
-  if (!isPro) {
-    return (
-      <div className="rounded-2xl border border-dashed border-violet-500/20 bg-gradient-to-br from-violet-500/[0.04] to-cyan-500/[0.03] p-4 text-center">
-        <span className="inline-block text-[10px] font-bold uppercase tracking-wider bg-violet-500/10 text-violet-400 px-2 py-0.5 rounded-md mb-2">
-          Trefolio
-        </span>
-        <div className="flex justify-center mb-2">
-          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-violet-500 to-cyan-500 flex items-center justify-center">
-            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#fff" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
-            </svg>
-          </div>
-        </div>
-        <div className="text-xs font-bold text-gray-900 dark:text-white mb-1">{t("weeklyDigestTeaserTitle")}</div>
-        <p className="text-[10px] text-gray-500 dark:text-slate-400 leading-relaxed mb-3 max-w-[240px] mx-auto">
-          {t("weeklyDigestTeaserDesc")}
-        </p>
-        <a
-          href="/profile?section=subscription"
-          className="inline-block px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[11px] font-semibold hover:brightness-110 transition-all"
-        >
-          {t("weeklyDigestUpgrade")}
-        </a>
-      </div>
-    );
-  }
 
   if (!digest) {
     return (

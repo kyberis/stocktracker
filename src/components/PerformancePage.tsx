@@ -311,32 +311,6 @@ export default function PerformancePage({ holdings: holdingsProp, cashEntries: c
   const arrowFor = (value: number) =>
     value >= 0 ? "\u2197" : "\u2198";
 
-  if (!isPaid) {
-    return (
-      <div className="space-y-4">
-        <div className="card">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-1.5">
-            {t("perfBreakdownTitle")}
-            <TierFeatureBadge requiredPlan="pro" size="sm" />
-          </h3>
-          <BlurredProSection blurb={t("perfBreakdownUpgradeBlurb")} ctaLabel={t("perfBreakdownUpgradeCta")}>
-            <div className="space-y-5">
-              <div className="h-48 bg-gray-100 dark:bg-slate-800 rounded-xl" />
-              <div className="space-y-3">
-                {["TTWROR", "IRR", "Price Gain", "Dividends"].map((label) => (
-                  <div key={label} className="flex items-center justify-between py-2">
-                    <span className="text-sm text-gray-500">{label}</span>
-                    <div className="h-5 w-20 rounded bg-gray-200 dark:bg-slate-700" />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </BlurredProSection>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-4">
       {/* Header */}

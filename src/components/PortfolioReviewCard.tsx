@@ -87,13 +87,11 @@ export default function PortfolioReviewCard() {
 
   const autoRanRef = useRef(false);
   useEffect(() => {
-    if (!autoRanRef.current && status === "idle" && isPro && hasHoldings && remaining > 0) {
+    if (!autoRanRef.current && status === "idle" && hasHoldings && remaining > 0) {
       autoRanRef.current = true;
       runReview();
     }
-  }, [status, isPro, hasHoldings, remaining, runReview]);
-
-  if (!isPro) return null;
+  }, [status, hasHoldings, remaining, runReview]);
 
   const isRunning = status === "loading" || status === "streaming";
 

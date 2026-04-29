@@ -193,41 +193,6 @@ export default function PortfolioScoreCard({ holdings, cashEntries }: Props) {
 
   const goToDetails = () => router.push("/tools/score");
 
-  if (!isPro) {
-    return (
-      <div className="card p-3 relative overflow-hidden border-amber-500/20">
-        <div className="blur-[6px] pointer-events-none select-none opacity-60">
-          <div className="flex flex-col items-center">
-            <svg viewBox="0 0 112 80" className="w-24 h-auto">
-              <path d={describeArc(56, 56, 46, -210, 30)} fill="none" stroke="currentColor" strokeWidth={8} strokeLinecap="round" className="text-gray-200 dark:text-white/[0.06]" />
-              <path d={describeArc(56, 56, 46, -210, -42)} fill="none" stroke="#10b981" strokeWidth={8} strokeLinecap="round" />
-              <text x={56} y={64} textAnchor="middle" className="fill-gray-900 dark:fill-white" fontSize={24} fontWeight={700}>7</text>
-            </svg>
-            <div className="w-full space-y-1.5 mt-2">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="h-2 rounded bg-gray-100 dark:bg-white/[0.04]" />
-              ))}
-            </div>
-          </div>
-        </div>
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/60 dark:bg-slate-900/70">
-          <div className="w-8 h-8 rounded-[10px] bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center text-white mb-2">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-            </svg>
-          </div>
-          <p className="text-xs font-semibold text-gray-800 dark:text-white">{t("portfolioScore")}</p>
-          <a
-            href="/billing"
-            className="mt-2 px-3 py-1 text-[10px] font-semibold text-white bg-gradient-to-r from-amber-500 to-orange-500 rounded-full hover:opacity-90 transition-opacity"
-          >
-            {t("portfolioScoreProOnly")}
-          </a>
-        </div>
-      </div>
-    );
-  }
-
   if (status === "idle" || status === "error" || status === "limit-reached") {
     return (
       <div className="card p-3 border-amber-500/20">

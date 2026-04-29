@@ -149,29 +149,6 @@ export default function PortfolioGrowthPeriods({ holdings: holdingsProp }: Props
     { label: t("oneYear"), value: results.oneYear },
   ];
 
-  if (!isPaid) {
-    return (
-      <div className="card">
-        <div className="mb-3">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-1.5">
-            {t("portfolioGrowth")} <TierFeatureBadge requiredPlan="pro" size="sm" />
-          </h3>
-          <p className="text-[10px] text-gray-400 dark:text-slate-500 mt-0.5">{t("portfolioGrowthSubtitle")}</p>
-        </div>
-        <BlurredProSection blurb="Upgrade to Trefolio for YTD, 1M, and 1Y portfolio growth tracking." ctaLabel="Upgrade to Trefolio">
-          <div className="grid grid-cols-3 gap-3">
-            {["YTD", "1M", "1Y"].map((label) => (
-              <div key={label} className="bg-gray-50 dark:bg-slate-800/50 rounded-xl p-3 text-center">
-                <p className="text-[10px] text-gray-500 dark:text-slate-400 font-medium uppercase mb-1">{label}</p>
-                <div className="h-7 w-16 mx-auto rounded bg-gray-200 dark:bg-slate-700" />
-              </div>
-            ))}
-          </div>
-        </BlurredProSection>
-      </div>
-    );
-  }
-
   return (
     <div className="card">
       <div className="mb-3">

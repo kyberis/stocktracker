@@ -1,9 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import dynamic from "next/dynamic";
 import { usePortfolio } from "@/lib/portfolio-context";
-import { useAuth } from "@/lib/auth-context";
 import { useI18n } from "@/lib/i18n";
 import { convertCurrency, formatPercent } from "@/lib/utils";
 import TierFeatureBadge from "@/components/TierFeatureBadge";
@@ -13,8 +11,6 @@ import {
   type HoldingSeriesEntry,
 } from "@/lib/performance";
 import type { HistoricalDataPoint, Holding } from "@/lib/types";
-
-const BlurredProSection = dynamic(() => import("@/components/BlurredProSection"), { ssr: false });
 
 type HistoricalApiResponse = {
   data?: HistoricalDataPoint[];
@@ -59,8 +55,6 @@ export default function AggregatedPortfolioPeriodMetrics({ holdings, refreshKey 
   const { exchangeRates, quotes, activePortfolioCurrency, demoMode } = usePortfolio();
   const baseCurrency = activePortfolioCurrency;
   const { t } = useI18n();
-  const { user } = useAuth();
-  const isPaid = user?.plan === "pro";
 
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<{
@@ -110,7 +104,7 @@ export default function AggregatedPortfolioPeriodMetrics({ holdings, refreshKey 
   }, []);
 
   useEffect(() => {
-    if (!isPaid || tickers.length === 0 || demoMode) {
+    if (tickers.length === 0 || demoMode) {
       setResults({
         oneWeek: null,
         threeMonth: null,
@@ -166,7 +160,7 @@ export default function AggregatedPortfolioPeriodMetrics({ holdings, refreshKey 
     return () => {
       cancelled = true;
     };
-  }, [isPaid, tickers, holdings, exchangeRates, currentEquity, fetchHistorical, baseCurrency, refreshKey, demoMode]);
+  }, [tickers, holdings, exchangeRates, currentEquity, fetchHistorical, baseCurrency, refreshKey, demoMode]);
 
   const periods: { label: string; value: number | null }[] = [
     { label: t("period1w"), value: results.oneWeek },
@@ -180,32 +174,6 @@ export default function AggregatedPortfolioPeriodMetrics({ holdings, refreshKey 
     return (
       <div className="px-5 pb-4 flex items-center justify-center min-h-[200px] text-sm text-gray-500 dark:text-slate-400">
         {t("noHoldings")}
-      </div>
-    );
-  }
-
-  if (!isPaid) {
-    return (
-      <div className="px-5 pb-4">
-        <div className="mb-3 flex items-center gap-1.5">
-          <h3 className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide">
-            {t("portfolioGrowth")}
-          </h3>
-          <TierFeatureBadge requiredPlan="pro" size="sm" />
-        </div>
-        <BlurredProSection
-          blurb="Upgrade to Trefolio for period returns (1W–1Y) when viewing all portfolios."
-          ctaLabel="Upgrade to Trefolio"
-        >
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
-            {periods.map((p) => (
-              <div key={p.label} className="bg-gray-50 dark:bg-slate-800/50 rounded-xl p-3 text-center">
-                <p className="text-[10px] text-gray-500 dark:text-slate-400 font-medium uppercase mb-1">{p.label}</p>
-                <div className="h-7 w-16 mx-auto rounded bg-gray-200 dark:bg-slate-700" />
-              </div>
-            ))}
-          </div>
-        </BlurredProSection>
       </div>
     );
   }

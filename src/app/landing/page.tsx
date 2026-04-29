@@ -105,15 +105,17 @@ function getHeroFeatures(t: T) {
 }
 
 function getFeatureCards(t: T) {
+  // Subscription model v2: every feature is universal. No "Pro only" badges —
+  // tier differences live in the quota table below the pricing cards.
   return [
-    { icon: "shield", title: t("landingCardTaxTitle"), desc: t("landingCardTaxDesc"), badge: "Pro" },
-    { icon: "search", title: t("landingCardScreenerTitle"), desc: t("landingCardScreenerDesc"), badge: "Pro" },
-    { icon: "castle", title: t("landingCardMoatTitle"), desc: t("landingCardMoatDesc"), badge: "Pro" },
+    { icon: "shield", title: t("landingCardTaxTitle"), desc: t("landingCardTaxDesc") },
+    { icon: "search", title: t("landingCardScreenerTitle"), desc: t("landingCardScreenerDesc") },
+    { icon: "castle", title: t("landingCardMoatTitle"), desc: t("landingCardMoatDesc") },
     { icon: "wallet", title: t("landingCardNetWorthTitle"), desc: t("landingCardNetWorthDesc") },
-    { icon: "sparkle", title: t("landingCardAiTitle"), desc: t("landingCardAiDesc"), badge: "Pro" },
+    { icon: "sparkle", title: t("landingCardAiTitle"), desc: t("landingCardAiDesc") },
     { icon: "upload", title: t("landingCardImportTitle"), desc: t("landingCardImportDesc") },
     { icon: "chart", title: t("landingCardPerfTitle"), desc: t("landingCardPerfDesc") },
-    { icon: "beaker", title: t("landingCardSimulatorTitle"), desc: t("landingCardSimulatorDesc"), badge: "Pro" },
+    { icon: "beaker", title: t("landingCardSimulatorTitle"), desc: t("landingCardSimulatorDesc") },
     { icon: "calendar", title: t("landingCardEventsTitle"), desc: t("landingCardEventsDesc") },
     { icon: "globe", title: t("landingCardLangsTitle"), desc: t("landingCardLangsDesc"), badge: t("landingCardLangsBadge") },
   ];

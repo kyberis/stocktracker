@@ -127,14 +127,6 @@ export default function CryptoPortfolioTab({ holdings: allHoldings }: Props) {
 
   const COL_COUNT = 7;
 
-  if (!isPro) {
-    return (
-      <div className="space-y-4">
-        <ProCompareCard surface="crypto_portfolio" reason="upgrade_required" />
-      </div>
-    );
-  }
-
   if (cryptoHoldings.length === 0) {
     return (
       <div className="card px-6 py-12 text-center space-y-4">

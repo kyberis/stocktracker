@@ -1,10 +1,8 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import dynamic from "next/dynamic";
 import { useI18n } from "@/lib/i18n";
 import { usePortfolio } from "@/lib/portfolio-context";
-import { useAuth } from "@/lib/auth-context";
 import { useTrack } from "@/lib/use-track";
 import TierFeatureBadge from "./TierFeatureBadge";
 import { calculatePortfolioTotals } from "@/lib/portfolio-summary";
@@ -21,8 +19,6 @@ import {
 } from "@/lib/performance";
 import { formatPercent } from "@/lib/utils";
 import type { Transaction, Holding, CashEntry, HistoricalDataPoint } from "@/lib/types";
-
-const BlurredProSection = dynamic(() => import("./BlurredProSection"), { ssr: false });
 
 // ECB deposit rate (risk-free rate approximation, updated periodically)
 const RISK_FREE_RATE_PCT = 3.5;
@@ -46,12 +42,9 @@ export default function MetricsTab({ holdings: holdingsProp, cashEntries: cashEn
   const baseCurrency = activePortfolioCurrency;
   const holdings = holdingsProp ?? ctxHoldings;
   const cashEntries = cashEntriesProp ?? ctxCashEntries;
-  const { user } = useAuth();
   const track = useTrack();
   const [txs, setTxs] = useState<Transaction[]>([]);
   const [historySeries, setHistorySeries] = useState<Record<string, HistoricalDataPoint[]>>({});
-
-  const isPaid = user?.plan === "pro";
 
   useEffect(() => {
     track("metrics_tab_viewed");
@@ -60,7 +53,6 @@ export default function MetricsTab({ holdings: holdingsProp, cashEntries: cashEn
   }, []);
 
   useEffect(() => {
-    if (!isPaid) return;
     const tickers = holdings.map((h) => h.ticker).slice(0, 10);
     Promise.allSettled(
       tickers.map((ticker) =>
@@ -75,7 +67,7 @@ export default function MetricsTab({ holdings: holdingsProp, cashEntries: cashEn
       });
       setHistorySeries(map);
     });
-  }, [holdings, isPaid]);
+  }, [holdings]);
 
   const { totalCurrentEUR, totalCostEUR } = calculatePortfolioTotals(
     holdings, cashEntries, quotes, exchangeRates, baseCurrency
@@ -89,7 +81,7 @@ export default function MetricsTab({ holdings: holdingsProp, cashEntries: cashEn
     : 0;
 
   const { sharpe, maxDrawdown, volatility } = useMemo(() => {
-    if (!isPaid || Object.keys(historySeries).length === 0) {
+    if (Object.keys(historySeries).length === 0) {
       return { sharpe: null, maxDrawdown: null, volatility: null };
     }
 
@@ -116,7 +108,7 @@ export default function MetricsTab({ holdings: holdingsProp, cashEntries: cashEn
       maxDrawdown: calculateMaxDrawdown(values),
       volatility: calculateAnnualizedVolatility(dailyReturns),
     };
-  }, [isPaid, historySeries, holdings, exchangeRates, baseCurrency]);
+  }, [historySeries, holdings, exchangeRates, baseCurrency]);
 
   const proMetrics: MetricCard[] = [
     {
@@ -174,20 +166,8 @@ export default function MetricsTab({ holdings: holdingsProp, cashEntries: cashEn
         })}
       </div>
 
-      {/* Pro metrics */}
-      {!isPaid ? (
-        <BlurredProSection blurb="Upgrade to Trefolio for Sharpe Ratio, Max Drawdown, Volatility, and Beta." ctaLabel="Upgrade to Trefolio">
-          <div className="grid grid-cols-3 gap-3">
-            {["Sharpe Ratio", "Max Drawdown", "Volatility"].map((label) => (
-              <div key={label} className="bg-gray-50 dark:bg-slate-800 rounded-xl p-3">
-                <p className="text-[10px] text-gray-500 dark:text-slate-400 font-medium uppercase mb-1">{label}</p>
-                <div className="h-7 w-16 rounded bg-gray-200 dark:bg-slate-700" />
-              </div>
-            ))}
-          </div>
-        </BlurredProSection>
-      ) : (
-        <div className="grid grid-cols-3 gap-3">
+      {/* Advanced metrics — universal access in subscription model v2 */}
+      <div className="grid grid-cols-3 gap-3">
           {proMetrics.map((m) => {
             const isPositive = m.value != null && !m.value.startsWith("-");
             const colorClass = m.value == null
@@ -211,8 +191,7 @@ export default function MetricsTab({ holdings: holdingsProp, cashEntries: cashEn
               </button>
             );
           })}
-        </div>
-      )}
+      </div>
 
       <p className="text-[10px] text-gray-400 dark:text-slate-500">
         {t("financialDataDisclaimer")}

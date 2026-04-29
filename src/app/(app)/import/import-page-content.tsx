@@ -638,8 +638,6 @@ export default function ImportPageContent() {
 
               {authLoading ? (
                 <div className="py-12"><div className="w-8 h-8 mx-auto border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" /></div>
-              ) : !isPro ? (
-                <ProCompareCard surface="ai_import" reason="upgrade_required" compact />
               ) : (
                 <>
                   {aiGuide && aiImport.step === "idle" && <InlineGuide guide={aiGuide} locale={locale} />}
