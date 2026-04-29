@@ -115,6 +115,14 @@ flowchart LR
 See [`knowledge/QUALITY_SCORE.md`](knowledge/QUALITY_SCORE.md) for per-domain
 grades (test coverage, churn, known gaps).
 
+## External dependencies / Sister projects
+
+- **Clara** (`kyberis/etracker`) — financial-agents codebase, lives as a pinned
+  git submodule at [`external/etracker`](external/etracker). Trefolio **never
+  builds Clara**; it calls Clara as a separate Vercel deployment over HTTP/MCP
+  via `CLARA_BASE_URL`. Read-only context for the coding agent. See
+  [`knowledge/design-docs/etracker-clara-integration.md`](knowledge/design-docs/etracker-clara-integration.md).
+
 ## Where to read next
 
 - Per-feature: [`knowledge/product-specs/index.md`](knowledge/product-specs/index.md)
@@ -122,3 +130,4 @@ grades (test coverage, churn, known gaps).
 - UI principles: [`knowledge/FRONTEND.md`](knowledge/FRONTEND.md)
 - Reliability: [`knowledge/RELIABILITY.md`](knowledge/RELIABILITY.md)
 - Security: [`knowledge/SECURITY.md`](knowledge/SECURITY.md)
+- Clara integration: [`knowledge/design-docs/etracker-clara-integration.md`](knowledge/design-docs/etracker-clara-integration.md)

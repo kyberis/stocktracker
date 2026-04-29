@@ -4,7 +4,7 @@ import path from "path";
 export default defineConfig({
   test: {
     include: ["src/**/*.test.ts"],
-    exclude: ["node_modules", ".next"],
+    exclude: ["node_modules", ".next", "external/**"],
     coverage: {
       provider: "v8",
       reporter: ["text", "text-summary", "lcov"],

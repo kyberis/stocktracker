@@ -40,6 +40,7 @@
     "node_modules",
     "ios",
     "android",
-    "scripts"
+    "scripts",
+    "external"
   ]
 }

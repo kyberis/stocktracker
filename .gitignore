@@ -61,6 +61,13 @@ android/capacitor-cordova-android-plugins/build/
 # vercel
 .vercel
 
+# external submodules (Clara/etracker) — submodule files tracked via .gitmodules,
+# but artifacts/deps inside the submodule must never leak into trefolio's tree
+external/**/node_modules
+external/**/.next
+external/**/.env*
+!external/**/.env.example
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

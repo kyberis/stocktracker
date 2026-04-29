@@ -18,14 +18,18 @@ Capacitor for iOS/Android, plus a physical "trefolio Leaf" ESP32-S3 device.
 
 1. [`ARCHITECTURE.md`](ARCHITECTURE.md) — domain map, layering, permitted edges.
 2. [`knowledge/product-specs/index.md`](knowledge/product-specs/index.md) — every
-   feature, one spec per file. Start here when working on a specific capability.
+ feature, one spec per file. Start here when working on a specific capability.
 3. [`knowledge/design-docs/index.md`](knowledge/design-docs/index.md) — core
-   beliefs and cross-cutting patterns (EUR base currency, snapshots, demo mode,
-   feature flags, broker parsers, AI streaming).
+ beliefs and cross-cutting patterns (EUR base currency, snapshots, demo mode,
+ feature flags, broker parsers, AI streaming).
 4. [`knowledge/QUALITY_SCORE.md`](knowledge/QUALITY_SCORE.md) — per-domain grades
-   and known gaps. Read before making large changes.
+ and known gaps. Read before making large changes.
 5. [`knowledge/exec-plans/active/`](knowledge/exec-plans/active) — in-flight
-   multi-step plans.
+ multi-step plans.
+6. [`knowledge/design-docs/etracker-clara-integration.md`](knowledge/design-docs/etracker-clara-integration.md)
+ — how trefolio links to Clara (the financial-agents sister codebase at
+ `external/etracker`). Read before touching anything related to financial
+ agents or `external/`.
 
 ## Repository layout (high level)
 
@@ -51,6 +55,13 @@ ios/ android/         Capacitor native shells
 data/                 Seed + demo static JSON
 docs/                 Marketing, launch, commercial plans (NOT agent knowledge)
 knowledge/            Agent knowledge base (this is the system of record)
+external/
+  etracker/           Clara — financial-agents sister repo (kyberis/etracker),
+                      pinned git submodule, READ-ONLY context for the agent.
+                      Trefolio never builds it; calls it as separate Vercel
+                      deploy via CLARA_BASE_URL. Excluded from tsconfig, eslint,
+                      vitest, .vercelignore. See
+                      knowledge/design-docs/etracker-clara-integration.md
 .cursor/
   rules/              Cursor rules (always-applied)
   skills/             Expert skills by domain
