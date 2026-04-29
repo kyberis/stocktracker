@@ -34,6 +34,10 @@ bool ota_check_and_update() {
     client.setCACert(ISRG_ROOT_X1_PEM);
 
     HTTPClient http;
+    // Force HTTP/1.0 to avoid chunked transfer encoding: writeStream() copies
+    // raw socket bytes into flash, so chunk-size headers would corrupt the
+    // firmware image. With HTTP/1.0 the server sends Content-Length + body.
+    http.useHTTP10(true);
     if (!http.begin(client, fw.url)) {
         Serial.println("[OTA] Failed to connect to firmware URL.");
         return false;

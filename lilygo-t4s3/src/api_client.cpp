@@ -288,6 +288,10 @@ static int http_get_json(const char *path, JsonDocument &doc) {
     HTTPClient http;
     http.setTimeout(10000);
     http.setReuse(true);
+    // Force HTTP/1.0 so Vercel/Cloudflare reply with Content-Length instead
+    // of Transfer-Encoding: chunked. getStreamPtr() returns the raw socket
+    // and does not de-chunk, which breaks JSON parsing.
+    http.useHTTP10(true);
 
     if (!http.begin(client, url)) return -1;
 
@@ -326,6 +330,9 @@ static int http_post_json(const char *path, JsonDocument &doc) {
     HTTPClient http;
     http.setTimeout(30000);
     http.setReuse(true);
+    // See note in http_get_json: HTTP/1.1 chunked encoding breaks
+    // deserializeJson(getStreamPtr()).
+    http.useHTTP10(true);
 
     if (!http.begin(client, url)) return -1;
 

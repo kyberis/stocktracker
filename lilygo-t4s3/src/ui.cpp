@@ -265,7 +265,7 @@ static void build_loading() {
 
     loading_label = lv_label_create(scr_loading);
     lv_label_set_text(loading_label, "Loading...");
-    lv_obj_set_style_text_font(loading_label, &lv_font_montserrat_14, 0);
+    lv_obj_set_style_text_font(loading_label, &lv_font_montserrat_16, 0);
     lv_obj_set_style_text_color(loading_label, COL_TEXT_SEC(), 0);
     lv_obj_align(loading_label, LV_ALIGN_CENTER, 0, 42);
 }
@@ -295,13 +295,13 @@ static void build_error() {
 
     lv_obj_t *icon = lv_label_create(icon_bg);
     lv_label_set_text(icon, LV_SYMBOL_WARNING);
-    lv_obj_set_style_text_font(icon, &lv_font_montserrat_22, 0);
+    lv_obj_set_style_text_font(icon, &lv_font_montserrat_24, 0);
     lv_obj_set_style_text_color(icon, COL_RED(), 0);
     lv_obj_center(icon);
 
     lv_obj_t *err_title = lv_label_create(card);
     lv_label_set_text(err_title, "Connection Error");
-    lv_obj_set_style_text_font(err_title, &lv_font_montserrat_16, 0);
+    lv_obj_set_style_text_font(err_title, &lv_font_montserrat_18, 0);
     lv_obj_set_style_text_color(err_title, COL_TEXT(), 0);
     lv_obj_set_style_text_align(err_title, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_set_width(err_title, 300);
@@ -309,7 +309,7 @@ static void build_error() {
 
     error_label = lv_label_create(card);
     lv_label_set_text(error_label, "Could not reach trefolio.com");
-    lv_obj_set_style_text_font(error_label, &lv_font_montserrat_14, 0);
+    lv_obj_set_style_text_font(error_label, &lv_font_montserrat_16, 0);
     lv_obj_set_style_text_color(error_label, COL_TEXT_SEC(), 0);
     lv_obj_set_style_text_align(error_label, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_set_width(error_label, 300);
@@ -327,7 +327,7 @@ static void build_error() {
 
     lv_obj_t *btn_lbl = lv_label_create(btn);
     lv_label_set_text(btn_lbl, "Try Again");
-    lv_obj_set_style_text_font(btn_lbl, &lv_font_montserrat_14, 0);
+    lv_obj_set_style_text_font(btn_lbl, &lv_font_montserrat_16, 0);
     lv_obj_set_style_text_color(btn_lbl, lv_color_white(), 0);
     lv_obj_center(btn_lbl);
 }
@@ -421,7 +421,7 @@ static void build_token() {
 
     lv_obj_t *token_logo_text = lv_label_create(lpanel);
     lv_label_set_text(token_logo_text, "trefolio");
-    lv_obj_set_style_text_font(token_logo_text, &lv_font_montserrat_16, 0);
+    lv_obj_set_style_text_font(token_logo_text, &lv_font_montserrat_18, 0);
     lv_obj_set_style_text_color(token_logo_text, COL_TEXT(), 0);
     lv_obj_align_to(token_logo_text, token_logo, LV_ALIGN_OUT_RIGHT_MID, 8, 0);
 
@@ -436,19 +436,19 @@ static void build_token() {
 
     lv_obj_t *icon = lv_label_create(icon_circle);
     lv_label_set_text(icon, LV_SYMBOL_EYE_OPEN);
-    lv_obj_set_style_text_font(icon, &lv_font_montserrat_20, 0);
+    lv_obj_set_style_text_font(icon, &lv_font_montserrat_22, 0);
     lv_obj_set_style_text_color(icon, COL_ACCENT(), 0);
     lv_obj_center(icon);
 
     lv_obj_t *title = lv_label_create(lpanel);
     lv_label_set_text(title, "Device Passkey");
-    lv_obj_set_style_text_font(title, &lv_font_montserrat_22, 0);
+    lv_obj_set_style_text_font(title, &lv_font_montserrat_24, 0);
     lv_obj_set_style_text_color(title, COL_TEXT(), 0);
     lv_obj_align(title, LV_ALIGN_TOP_LEFT, 16, 126);
 
     lv_obj_t *hint = lv_label_create(lpanel);
     lv_label_set_text(hint, "Generate a passkey in\nyour profile at\ntrefolio.com");
-    lv_obj_set_style_text_font(hint, &lv_font_montserrat_14, 0);
+    lv_obj_set_style_text_font(hint, &lv_font_montserrat_16, 0);
     lv_obj_set_style_text_color(hint, COL_TEXT_SEC(), 0);
     lv_obj_set_style_text_line_space(hint, 4, 0);
     lv_obj_align(hint, LV_ALIGN_TOP_LEFT, 16, 158);
@@ -461,7 +461,7 @@ static void build_token() {
     lv_obj_set_style_border_width(display_card, 1, 0);
 
     token_display = lv_label_create(display_card);
-    lv_obj_set_style_text_font(token_display, &lv_font_montserrat_16, 0);
+    lv_obj_set_style_text_font(token_display, &lv_font_montserrat_18, 0);
     lv_obj_set_style_text_color(token_display, COL_TEXT(), 0);
     lv_obj_set_style_text_letter_space(token_display, 2, 0);
     lv_obj_center(token_display);
@@ -469,7 +469,7 @@ static void build_token() {
 
     lv_obj_t *stored_hint = lv_label_create(lpanel);
     lv_label_set_text(stored_hint, "Stored locally on device");
-    lv_obj_set_style_text_font(stored_hint, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(stored_hint, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(stored_hint, COL_DIM(), 0);
     lv_obj_align(stored_hint, LV_ALIGN_BOTTOM_LEFT, 16, -16);
 
@@ -501,7 +501,7 @@ static void build_token() {
                 lv_obj_add_event_cb(btn, on_numpad_backspace, LV_EVENT_CLICKED, nullptr);
                 lv_obj_t *lbl = lv_label_create(btn);
                 lv_label_set_text(lbl, LV_SYMBOL_BACKSPACE);
-                lv_obj_set_style_text_font(lbl, &lv_font_montserrat_20, 0);
+                lv_obj_set_style_text_font(lbl, &lv_font_montserrat_22, 0);
                 lv_obj_set_style_text_color(lbl, COL_RED(), 0);
                 lv_obj_center(lbl);
             } else {
@@ -510,7 +510,7 @@ static void build_token() {
                 lv_obj_t *lbl = lv_label_create(btn);
                 char digit_str[2] = { (char)('0' + val), '\0' };
                 lv_label_set_text(lbl, digit_str);
-                lv_obj_set_style_text_font(lbl, &lv_font_montserrat_24, 0);
+                lv_obj_set_style_text_font(lbl, &lv_font_montserrat_26, 0);
                 lv_obj_set_style_text_color(lbl, COL_TEXT(), 0);
                 lv_obj_center(lbl);
             }
@@ -528,7 +528,7 @@ static void build_token() {
 
     lv_obj_t *conn_lbl = lv_label_create(connect_btn);
     lv_label_set_text(conn_lbl, "Connect");
-    lv_obj_set_style_text_font(conn_lbl, &lv_font_montserrat_16, 0);
+    lv_obj_set_style_text_font(conn_lbl, &lv_font_montserrat_18, 0);
     lv_obj_set_style_text_color(conn_lbl, lv_color_white(), 0);
     lv_obj_center(conn_lbl);
 }
@@ -566,7 +566,7 @@ static void build_dashboard() {
 
     lv_obj_t *logo_text = lv_label_create(hdr);
     lv_label_set_text(logo_text, "trefolio");
-    lv_obj_set_style_text_font(logo_text, &lv_font_montserrat_16, 0);
+    lv_obj_set_style_text_font(logo_text, &lv_font_montserrat_18, 0);
     lv_obj_set_style_text_color(logo_text, COL_ACCENT(), 0);
     lv_obj_set_style_text_letter_space(logo_text, 0, 0);
     lv_obj_align_to(logo_text, logo_icon, LV_ALIGN_OUT_RIGHT_MID, 8, 0);
@@ -582,7 +582,7 @@ static void build_dashboard() {
 
     dash_live_lbl = lv_label_create(hdr);
     lv_label_set_text(dash_live_lbl, "LIVE");
-    lv_obj_set_style_text_font(dash_live_lbl, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(dash_live_lbl, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(dash_live_lbl, COL_GREEN(), 0);
     lv_obj_set_style_text_letter_space(dash_live_lbl, 1, 0);
     lv_obj_align(dash_live_lbl, LV_ALIGN_RIGHT_MID, -14, 0);
@@ -590,7 +590,7 @@ static void build_dashboard() {
     // Battery indicator (right side, between logo and LIVE)
     dash_batt_lbl = lv_label_create(hdr);
     lv_label_set_text(dash_batt_lbl, "");
-    lv_obj_set_style_text_font(dash_batt_lbl, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(dash_batt_lbl, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(dash_batt_lbl, COL_DIM(), 0);
     lv_obj_align(dash_batt_lbl, LV_ALIGN_RIGHT_MID, -100, 0);
 
@@ -609,7 +609,7 @@ static void build_dashboard() {
 
     lv_obj_t *gear_icon = lv_label_create(gear_btn);
     lv_label_set_text(gear_icon, LV_SYMBOL_SETTINGS);
-    lv_obj_set_style_text_font(gear_icon, &lv_font_montserrat_14, 0);
+    lv_obj_set_style_text_font(gear_icon, &lv_font_montserrat_16, 0);
     lv_obj_set_style_text_color(gear_icon, COL_DIM(), 0);
     lv_obj_center(gear_icon);
 
@@ -625,13 +625,13 @@ static void build_dashboard() {
 
     dash_status_lbl = lv_label_create(ftr);
     lv_label_set_text(dash_status_lbl, "Connecting...");
-    lv_obj_set_style_text_font(dash_status_lbl, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(dash_status_lbl, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(dash_status_lbl, COL_DIM(), 0);
     lv_obj_align(dash_status_lbl, LV_ALIGN_LEFT_MID, 0, 0);
 
     lv_obj_t *ftr_brand = lv_label_create(ftr);
     lv_label_set_text(ftr_brand, "trefolio.com");
-    lv_obj_set_style_text_font(ftr_brand, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(ftr_brand, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(ftr_brand, COL_DIM(), 0);
     lv_obj_align(ftr_brand, LV_ALIGN_RIGHT_MID, -16, 0);
 
@@ -648,21 +648,21 @@ static void build_dashboard() {
 
     lv_obj_t *tv_lbl = lv_label_create(lcard);
     lv_label_set_text(tv_lbl, "Total Value");
-    lv_obj_set_style_text_font(tv_lbl, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(tv_lbl, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(tv_lbl, COL_TEXT_SEC(), 0);
     lv_obj_set_style_text_letter_space(tv_lbl, 0, 0);
     lv_obj_align(tv_lbl, LV_ALIGN_TOP_LEFT, 0, 0);
 
     dash_total_val = lv_label_create(lcard);
     lv_label_set_text(dash_total_val, "---");
-    lv_obj_set_style_text_font(dash_total_val, &lv_font_montserrat_30, 0);
+    lv_obj_set_style_text_font(dash_total_val, &lv_font_montserrat_32, 0);
     lv_obj_set_style_text_color(dash_total_val, COL_TEXT(), 0);
     lv_obj_align(dash_total_val, LV_ALIGN_TOP_LEFT, 0, 16);
 
     // Day change pill badge
     dash_day_change = lv_label_create(lcard);
     lv_label_set_text(dash_day_change, "---");
-    lv_obj_set_style_text_font(dash_day_change, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(dash_day_change, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(dash_day_change, COL_GREEN(), 0);
     lv_obj_set_style_bg_color(dash_day_change, COL_GREEN(), 0);
     lv_obj_set_style_bg_opa(dash_day_change, 25, 0);
@@ -676,7 +676,7 @@ static void build_dashboard() {
     // Cost label
     dash_day_pct = lv_label_create(lcard);
     lv_label_set_text(dash_day_pct, "");
-    lv_obj_set_style_text_font(dash_day_pct, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(dash_day_pct, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(dash_day_pct, COL_DIM(), 0);
     lv_obj_align(dash_day_pct, LV_ALIGN_TOP_LEFT, 0, 80);
 
@@ -691,26 +691,26 @@ static void build_dashboard() {
 
     lv_obj_t *pl_lbl = lv_label_create(lcard);
     lv_label_set_text(pl_lbl, "Gain / Loss");
-    lv_obj_set_style_text_font(pl_lbl, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(pl_lbl, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(pl_lbl, COL_TEXT_SEC(), 0);
     lv_obj_set_style_text_letter_space(pl_lbl, 0, 0);
     lv_obj_align(pl_lbl, LV_ALIGN_TOP_LEFT, 0, 110);
 
     dash_pl_val = lv_label_create(lcard);
     lv_label_set_text(dash_pl_val, "---");
-    lv_obj_set_style_text_font(dash_pl_val, &lv_font_montserrat_20, 0);
+    lv_obj_set_style_text_font(dash_pl_val, &lv_font_montserrat_22, 0);
     lv_obj_set_style_text_color(dash_pl_val, COL_TEXT_SEC(), 0);
     lv_obj_align(dash_pl_val, LV_ALIGN_TOP_LEFT, 0, 126);
 
     dash_pl_pct = lv_label_create(lcard);
     lv_label_set_text(dash_pl_pct, "");
-    lv_obj_set_style_text_font(dash_pl_pct, &lv_font_montserrat_14, 0);
+    lv_obj_set_style_text_font(dash_pl_pct, &lv_font_montserrat_16, 0);
     lv_obj_set_style_text_color(dash_pl_pct, COL_TEXT_SEC(), 0);
     lv_obj_align(dash_pl_pct, LV_ALIGN_TOP_LEFT, 0, 152);
 
     dash_count_lbl = lv_label_create(lcard);
     lv_label_set_text(dash_count_lbl, "");
-    lv_obj_set_style_text_font(dash_count_lbl, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(dash_count_lbl, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(dash_count_lbl, COL_DIM(), 0);
     lv_obj_align(dash_count_lbl, LV_ALIGN_BOTTOM_LEFT, 0, 0);
 
@@ -726,14 +726,14 @@ static void build_dashboard() {
     // Holdings header inside card
     lv_obj_t *hh_t = lv_label_create(hcard);
     lv_label_set_text(hh_t, "Top Holdings");
-    lv_obj_set_style_text_font(hh_t, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(hh_t, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(hh_t, COL_TEXT_SEC(), 0);
     lv_obj_set_style_text_letter_space(hh_t, 0, 0);
     lv_obj_align(hh_t, LV_ALIGN_TOP_LEFT, 14, 10);
 
     lv_obj_t *hh_d = lv_label_create(hcard);
     lv_label_set_text(hh_d, "Day");
-    lv_obj_set_style_text_font(hh_d, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(hh_d, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(hh_d, COL_TEXT_SEC(), 0);
     lv_obj_align(hh_d, LV_ALIGN_TOP_RIGHT, -14, 10);
 
@@ -773,33 +773,33 @@ static void build_dashboard() {
 
         hold_rows[i].ticker = lv_label_create(row);
         lv_label_set_text(hold_rows[i].ticker, "---");
-        lv_obj_set_style_text_font(hold_rows[i].ticker, &lv_font_montserrat_14, 0);
+        lv_obj_set_style_text_font(hold_rows[i].ticker, &lv_font_montserrat_16, 0);
         lv_obj_set_style_text_color(hold_rows[i].ticker, COL_TEXT(), 0);
         lv_obj_align(hold_rows[i].ticker, LV_ALIGN_LEFT_MID, 0, -9);
 
         hold_rows[i].name = lv_label_create(row);
         lv_label_set_text(hold_rows[i].name, "");
-        lv_obj_set_style_text_font(hold_rows[i].name, &lv_font_montserrat_12, 0);
+        lv_obj_set_style_text_font(hold_rows[i].name, &lv_font_montserrat_14, 0);
         lv_obj_set_style_text_color(hold_rows[i].name, COL_DIM(), 0);
         lv_obj_align(hold_rows[i].name, LV_ALIGN_LEFT_MID, 0, 9);
-        lv_obj_set_size(hold_rows[i].name, card_inner_w - 160, 14);
+        lv_obj_set_size(hold_rows[i].name, card_inner_w - 160, 16);
         lv_label_set_long_mode(hold_rows[i].name, LV_LABEL_LONG_DOT);
 
         hold_rows[i].weight = lv_label_create(row);
         lv_label_set_text(hold_rows[i].weight, "");
-        lv_obj_set_style_text_font(hold_rows[i].weight, &lv_font_montserrat_12, 0);
+        lv_obj_set_style_text_font(hold_rows[i].weight, &lv_font_montserrat_14, 0);
         lv_obj_set_style_text_color(hold_rows[i].weight, COL_TEXT_SEC(), 0);
         lv_obj_align(hold_rows[i].weight, LV_ALIGN_RIGHT_MID, -80, 0);
 
         hold_rows[i].arrow = lv_label_create(row);
         lv_label_set_text(hold_rows[i].arrow, LV_SYMBOL_UP);
-        lv_obj_set_style_text_font(hold_rows[i].arrow, &lv_font_montserrat_12, 0);
+        lv_obj_set_style_text_font(hold_rows[i].arrow, &lv_font_montserrat_14, 0);
         lv_obj_set_style_text_color(hold_rows[i].arrow, COL_DIM(), 0);
         lv_obj_align(hold_rows[i].arrow, LV_ALIGN_RIGHT_MID, -62, 0);
 
         hold_rows[i].change = lv_label_create(row);
         lv_label_set_text(hold_rows[i].change, "");
-        lv_obj_set_style_text_font(hold_rows[i].change, &lv_font_montserrat_12, 0);
+        lv_obj_set_style_text_font(hold_rows[i].change, &lv_font_montserrat_14, 0);
         lv_obj_set_style_text_color(hold_rows[i].change, COL_TEXT_SEC(), 0);
         lv_obj_align(hold_rows[i].change, LV_ALIGN_RIGHT_MID, 0, 0);
     }
@@ -829,20 +829,20 @@ static void build_dashboard() {
 
     lv_obj_t *ai_icon = lv_label_create(ai_icon_bg);
     lv_label_set_text(ai_icon, "*");
-    lv_obj_set_style_text_font(ai_icon, &lv_font_montserrat_16, 0);
+    lv_obj_set_style_text_font(ai_icon, &lv_font_montserrat_18, 0);
     lv_obj_set_style_text_color(ai_icon, lv_color_white(), 0);
     lv_obj_center(ai_icon);
 
     lv_obj_t *ai_title = lv_label_create(ai_card);
     lv_label_set_text(ai_title, "AI Portfolio Review");
-    lv_obj_set_style_text_font(ai_title, &lv_font_montserrat_14, 0);
+    lv_obj_set_style_text_font(ai_title, &lv_font_montserrat_16, 0);
     lv_obj_set_style_text_color(ai_title, COL_TEXT(), 0);
     lv_obj_align(ai_title, LV_ALIGN_TOP_LEFT, 30, 2);
 
     // Usage counter (e.g. "2/5")
     dash_ai_usage = lv_label_create(ai_card);
     lv_label_set_text(dash_ai_usage, "");
-    lv_obj_set_style_text_font(dash_ai_usage, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(dash_ai_usage, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(dash_ai_usage, COL_DIM(), 0);
     lv_obj_align(dash_ai_usage, LV_ALIGN_TOP_RIGHT, -42, 5);
 
@@ -859,13 +859,13 @@ static void build_dashboard() {
 
     lv_obj_t *pro_lbl = lv_label_create(pro_bg);
     lv_label_set_text(pro_lbl, "Pro");
-    lv_obj_set_style_text_font(pro_lbl, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(pro_lbl, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(pro_lbl, COL_GREEN(), 0);
     lv_obj_center(pro_lbl);
 
     dash_ai_text = lv_label_create(ai_card);
     lv_label_set_text(dash_ai_text, "Tap to request AI summary");
-    lv_obj_set_style_text_font(dash_ai_text, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(dash_ai_text, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(dash_ai_text, COL_TEXT_SEC(), 0);
     lv_obj_set_width(dash_ai_text, right_w - card_m * 2 - 28);
     lv_label_set_long_mode(dash_ai_text, LV_LABEL_LONG_WRAP);
@@ -884,7 +884,7 @@ static void build_dashboard() {
 
     dash_ai_btn_lbl = lv_label_create(dash_ai_btn);
     lv_label_set_text(dash_ai_btn_lbl, "Ask AI");
-    lv_obj_set_style_text_font(dash_ai_btn_lbl, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(dash_ai_btn_lbl, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(dash_ai_btn_lbl, lv_color_white(), 0);
     lv_obj_center(dash_ai_btn_lbl);
 
@@ -933,13 +933,13 @@ static void build_holdings_list() {
 
     lv_obj_t *back_icon = lv_label_create(back_btn);
     lv_label_set_text(back_icon, LV_SYMBOL_LEFT);
-    lv_obj_set_style_text_font(back_icon, &lv_font_montserrat_16, 0);
+    lv_obj_set_style_text_font(back_icon, &lv_font_montserrat_18, 0);
     lv_obj_set_style_text_color(back_icon, COL_ACCENT(), 0);
     lv_obj_center(back_icon);
 
     lv_obj_t *title = lv_label_create(hdr);
     lv_label_set_text(title, "All Holdings");
-    lv_obj_set_style_text_font(title, &lv_font_montserrat_16, 0);
+    lv_obj_set_style_text_font(title, &lv_font_montserrat_18, 0);
     lv_obj_set_style_text_color(title, COL_TEXT(), 0);
     lv_obj_align(title, LV_ALIGN_LEFT_MID, 38, 0);
 
@@ -956,25 +956,25 @@ static void build_holdings_list() {
 
     lv_obj_t *ch1 = lv_label_create(col_bar);
     lv_label_set_text(ch1, "Stock");
-    lv_obj_set_style_text_font(ch1, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(ch1, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(ch1, COL_DIM(), 0);
     lv_obj_align(ch1, LV_ALIGN_LEFT_MID, 14, 0);
 
     lv_obj_t *ch2 = lv_label_create(col_bar);
     lv_label_set_text(ch2, "Shares");
-    lv_obj_set_style_text_font(ch2, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(ch2, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(ch2, COL_DIM(), 0);
     lv_obj_align(ch2, LV_ALIGN_LEFT_MID, 220, 0);
 
     lv_obj_t *ch3 = lv_label_create(col_bar);
     lv_label_set_text(ch3, "Price");
-    lv_obj_set_style_text_font(ch3, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(ch3, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(ch3, COL_DIM(), 0);
     lv_obj_align(ch3, LV_ALIGN_LEFT_MID, 360, 0);
 
     lv_obj_t *ch4 = lv_label_create(col_bar);
     lv_label_set_text(ch4, "Day");
-    lv_obj_set_style_text_font(ch4, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(ch4, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(ch4, COL_DIM(), 0);
     lv_obj_align(ch4, LV_ALIGN_RIGHT_MID, -14, 0);
 
@@ -1026,19 +1026,19 @@ static void build_stock_detail() {
 
     lv_obj_t *back_icon = lv_label_create(back_btn);
     lv_label_set_text(back_icon, LV_SYMBOL_LEFT);
-    lv_obj_set_style_text_font(back_icon, &lv_font_montserrat_16, 0);
+    lv_obj_set_style_text_font(back_icon, &lv_font_montserrat_18, 0);
     lv_obj_set_style_text_color(back_icon, COL_ACCENT(), 0);
     lv_obj_center(back_icon);
 
     det_ticker_lbl = lv_label_create(hdr);
     lv_label_set_text(det_ticker_lbl, "");
-    lv_obj_set_style_text_font(det_ticker_lbl, &lv_font_montserrat_16, 0);
+    lv_obj_set_style_text_font(det_ticker_lbl, &lv_font_montserrat_18, 0);
     lv_obj_set_style_text_color(det_ticker_lbl, COL_TEXT(), 0);
     lv_obj_align(det_ticker_lbl, LV_ALIGN_LEFT_MID, 38, 0);
 
     det_name_lbl = lv_label_create(hdr);
     lv_label_set_text(det_name_lbl, "");
-    lv_obj_set_style_text_font(det_name_lbl, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(det_name_lbl, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(det_name_lbl, COL_DIM(), 0);
     lv_obj_set_width(det_name_lbl, sw - 200);
     lv_label_set_long_mode(det_name_lbl, LV_LABEL_LONG_DOT);
@@ -1058,7 +1058,7 @@ static void build_stock_detail() {
                                 const lv_font_t *val_font, lv_obj_t **val_out) {
         lv_obj_t *lbl = lv_label_create(parent);
         lv_label_set_text(lbl, label_text);
-        lv_obj_set_style_text_font(lbl, &lv_font_montserrat_12, 0);
+        lv_obj_set_style_text_font(lbl, &lv_font_montserrat_14, 0);
         lv_obj_set_style_text_color(lbl, COL_TEXT_SEC(), 0);
         lv_obj_set_style_text_letter_space(lbl, 1, 0);
         lv_obj_align(lbl, LV_ALIGN_TOP_LEFT, 0, y);
@@ -1070,8 +1070,8 @@ static void build_stock_detail() {
         lv_obj_align(*val_out, LV_ALIGN_TOP_LEFT, 0, y + 16);
     };
 
-    make_metric_pair(metrics_card, "SHARES", 0, &lv_font_montserrat_24, &det_shares_lbl);
-    make_metric_pair(metrics_card, "CURRENT PRICE", 54, &lv_font_montserrat_20, &det_price_lbl);
+    make_metric_pair(metrics_card, "SHARES", 0, &lv_font_montserrat_26, &det_shares_lbl);
+    make_metric_pair(metrics_card, "CURRENT PRICE", 54, &lv_font_montserrat_22, &det_price_lbl);
 
     // Separator
     lv_obj_t *sep = lv_obj_create(metrics_card);
@@ -1082,8 +1082,8 @@ static void build_stock_detail() {
     lv_obj_set_style_border_width(sep, 0, 0);
     lv_obj_set_style_pad_all(sep, 0, 0);
 
-    make_metric_pair(metrics_card, "TOTAL VALUE", 112, &lv_font_montserrat_20, &det_value_lbl);
-    make_metric_pair(metrics_card, "DAY CHANGE", 168, &lv_font_montserrat_16, &det_daychange_lbl);
+    make_metric_pair(metrics_card, "TOTAL VALUE", 112, &lv_font_montserrat_22, &det_value_lbl);
+    make_metric_pair(metrics_card, "DAY CHANGE", 168, &lv_font_montserrat_18, &det_daychange_lbl);
 
     // Separator 2
     lv_obj_t *sep2 = lv_obj_create(metrics_card);
@@ -1094,7 +1094,7 @@ static void build_stock_detail() {
     lv_obj_set_style_border_width(sep2, 0, 0);
     lv_obj_set_style_pad_all(sep2, 0, 0);
 
-    make_metric_pair(metrics_card, "WEIGHT", 220, &lv_font_montserrat_16, &det_weight_lbl);
+    make_metric_pair(metrics_card, "WEIGHT", 220, &lv_font_montserrat_18, &det_weight_lbl);
 
     // Right: sparkline chart card
     lv_coord_t chart_x = card_m + left_w;
@@ -1107,14 +1107,14 @@ static void build_stock_detail() {
 
     lv_obj_t *chart_title = lv_label_create(det_chart_card);
     lv_label_set_text(chart_title, "1 MONTH TREND");
-    lv_obj_set_style_text_font(chart_title, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(chart_title, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(chart_title, COL_TEXT_SEC(), 0);
     lv_obj_set_style_text_letter_space(chart_title, 1, 0);
     lv_obj_align(chart_title, LV_ALIGN_TOP_LEFT, 0, 0);
 
     det_max_lbl = lv_label_create(det_chart_card);
     lv_label_set_text(det_max_lbl, "");
-    lv_obj_set_style_text_font(det_max_lbl, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(det_max_lbl, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(det_max_lbl, COL_DIM(), 0);
     lv_obj_align(det_max_lbl, LV_ALIGN_TOP_RIGHT, 0, 0);
 
@@ -1136,7 +1136,7 @@ static void build_stock_detail() {
 
     det_min_lbl = lv_label_create(det_chart_card);
     lv_label_set_text(det_min_lbl, "");
-    lv_obj_set_style_text_font(det_min_lbl, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(det_min_lbl, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(det_min_lbl, COL_DIM(), 0);
     lv_obj_align(det_min_lbl, LV_ALIGN_BOTTOM_LEFT, 0, 0);
 
@@ -1231,7 +1231,7 @@ static lv_obj_t *make_settings_section(lv_obj_t *body, const char *title, lv_coo
 
     lv_obj_t *lbl = lv_label_create(card);
     lv_label_set_text(lbl, title);
-    lv_obj_set_style_text_font(lbl, &lv_font_montserrat_14, 0);
+    lv_obj_set_style_text_font(lbl, &lv_font_montserrat_16, 0);
     lv_obj_set_style_text_color(lbl, COL_TEXT(), 0);
     lv_obj_align(lbl, LV_ALIGN_TOP_LEFT, 0, 0);
 
@@ -1266,13 +1266,13 @@ static void build_settings() {
 
     lv_obj_t *back_icon = lv_label_create(back_btn);
     lv_label_set_text(back_icon, LV_SYMBOL_LEFT);
-    lv_obj_set_style_text_font(back_icon, &lv_font_montserrat_16, 0);
+    lv_obj_set_style_text_font(back_icon, &lv_font_montserrat_18, 0);
     lv_obj_set_style_text_color(back_icon, COL_ACCENT(), 0);
     lv_obj_center(back_icon);
 
     lv_obj_t *title = lv_label_create(hdr);
     lv_label_set_text(title, "Settings");
-    lv_obj_set_style_text_font(title, &lv_font_montserrat_16, 0);
+    lv_obj_set_style_text_font(title, &lv_font_montserrat_18, 0);
     lv_obj_set_style_text_color(title, COL_TEXT(), 0);
     lv_obj_align(title, LV_ALIGN_LEFT_MID, 38, 0);
 
@@ -1305,13 +1305,13 @@ static void build_settings() {
 
     set_batt_lbl = lv_label_create(batt_card);
     lv_label_set_text(set_batt_lbl, "--");
-    lv_obj_set_style_text_font(set_batt_lbl, &lv_font_montserrat_14, 0);
+    lv_obj_set_style_text_font(set_batt_lbl, &lv_font_montserrat_16, 0);
     lv_obj_set_style_text_color(set_batt_lbl, COL_TEXT(), 0);
     lv_obj_align(set_batt_lbl, LV_ALIGN_TOP_LEFT, 0, 46);
 
     set_batt_volt_lbl = lv_label_create(batt_card);
     lv_label_set_text(set_batt_volt_lbl, "");
-    lv_obj_set_style_text_font(set_batt_volt_lbl, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(set_batt_volt_lbl, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(set_batt_volt_lbl, COL_DIM(), 0);
     lv_obj_align(set_batt_volt_lbl, LV_ALIGN_TOP_LEFT, 0, 64);
 
@@ -1360,7 +1360,7 @@ static void build_settings() {
             lv_obj_set_style_bg_opa(set_theme_btns[i], 80, 0);
             lv_obj_t *pro_tag = lv_label_create(set_theme_btns[i]);
             lv_label_set_text(pro_tag, "Pro");
-            lv_obj_set_style_text_font(pro_tag, &lv_font_montserrat_12, 0);
+            lv_obj_set_style_text_font(pro_tag, &lv_font_montserrat_14, 0);
             lv_obj_set_style_text_color(pro_tag, COL_DIM(), 0);
             lv_obj_align(pro_tag, LV_ALIGN_BOTTOM_MID, 0, -2);
         }
@@ -1372,7 +1372,7 @@ static void build_settings() {
     // Theme name labels below swatches
     lv_obj_t *tname_lbl = lv_label_create(theme_card);
     lv_label_set_text(tname_lbl, "");
-    lv_obj_set_style_text_font(tname_lbl, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(tname_lbl, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(tname_lbl, COL_DIM(), 0);
     lv_obj_align(tname_lbl, LV_ALIGN_TOP_RIGHT, 0, 5);
     // Show current theme name
@@ -1399,7 +1399,7 @@ static void build_settings() {
 
     set_bright_val_lbl = lv_label_create(bright_card);
     lv_label_set_text(set_bright_val_lbl, "255");
-    lv_obj_set_style_text_font(set_bright_val_lbl, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(set_bright_val_lbl, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(set_bright_val_lbl, COL_TEXT_SEC(), 0);
     lv_obj_align(set_bright_val_lbl, LV_ALIGN_TOP_RIGHT, 0, 26);
 
@@ -1408,7 +1408,7 @@ static void build_settings() {
 
     lv_obj_t *dim_lbl = lv_label_create(timeout_card);
     lv_label_set_text(dim_lbl, "Idle dimming");
-    lv_obj_set_style_text_font(dim_lbl, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(dim_lbl, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(dim_lbl, COL_TEXT_SEC(), 0);
     lv_obj_align(dim_lbl, LV_ALIGN_TOP_LEFT, 0, 22);
 
@@ -1441,14 +1441,14 @@ static void build_settings() {
 
         lv_obj_t *lbl = lv_label_create(set_dim_btns[i]);
         lv_label_set_text(lbl, dim_opt_lbl[i]);
-        lv_obj_set_style_text_font(lbl, &lv_font_montserrat_12, 0);
+        lv_obj_set_style_text_font(lbl, &lv_font_montserrat_14, 0);
         lv_obj_set_style_text_color(lbl, lv_color_white(), 0);
         lv_obj_center(lbl);
     }
 
     lv_obj_t *sleep_lbl = lv_label_create(timeout_card);
     lv_label_set_text(sleep_lbl, "Auto sleep");
-    lv_obj_set_style_text_font(sleep_lbl, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(sleep_lbl, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(sleep_lbl, COL_TEXT_SEC(), 0);
     lv_obj_align(sleep_lbl, LV_ALIGN_TOP_LEFT, 0, 68);
 
@@ -1477,7 +1477,7 @@ static void build_settings() {
 
         lv_obj_t *lbl = lv_label_create(set_sleep_btns[i]);
         lv_label_set_text(lbl, sleep_opt_lbl[i]);
-        lv_obj_set_style_text_font(lbl, &lv_font_montserrat_12, 0);
+        lv_obj_set_style_text_font(lbl, &lv_font_montserrat_14, 0);
         lv_obj_set_style_text_color(lbl, lv_color_white(), 0);
         lv_obj_center(lbl);
     }
@@ -1489,13 +1489,13 @@ static void build_settings() {
                              lv_obj_t **val_out) {
         lv_obj_t *k = lv_label_create(parent);
         lv_label_set_text(k, label);
-        lv_obj_set_style_text_font(k, &lv_font_montserrat_12, 0);
+        lv_obj_set_style_text_font(k, &lv_font_montserrat_14, 0);
         lv_obj_set_style_text_color(k, COL_TEXT_SEC(), 0);
         lv_obj_align(k, LV_ALIGN_TOP_LEFT, 0, y);
 
         *val_out = lv_label_create(parent);
         lv_label_set_text(*val_out, "---");
-        lv_obj_set_style_text_font(*val_out, &lv_font_montserrat_12, 0);
+        lv_obj_set_style_text_font(*val_out, &lv_font_montserrat_14, 0);
         lv_obj_set_style_text_color(*val_out, COL_TEXT(), 0);
         lv_obj_align(*val_out, LV_ALIGN_TOP_LEFT, 120, y);
     };
@@ -1522,7 +1522,7 @@ static void build_settings() {
 
     set_unlink_lbl = lv_label_create(set_unlink_btn);
     lv_label_set_text(set_unlink_lbl, "Unlink Device");
-    lv_obj_set_style_text_font(set_unlink_lbl, &lv_font_montserrat_14, 0);
+    lv_obj_set_style_text_font(set_unlink_lbl, &lv_font_montserrat_16, 0);
     lv_obj_set_style_text_color(set_unlink_lbl, COL_RED(), 0);
     lv_obj_center(set_unlink_lbl);
 }
@@ -1536,7 +1536,7 @@ void ui_init() {
 
     lv_theme_t *th = lv_theme_default_init(
         lv_disp_get_default(), COL_ACCENT(), COL_GREEN(),
-        true, &lv_font_montserrat_14);
+        true, &lv_font_montserrat_16);
     lv_disp_set_theme(lv_disp_get_default(), th);
 
     build_loading();
@@ -1810,16 +1810,16 @@ void ui_update_holdings_list(const PortfolioData &d) {
         // Ticker
         hl_rows[i].ticker = lv_label_create(row);
         lv_label_set_text(hl_rows[i].ticker, d.top[i].ticker);
-        lv_obj_set_style_text_font(hl_rows[i].ticker, &lv_font_montserrat_14, 0);
+        lv_obj_set_style_text_font(hl_rows[i].ticker, &lv_font_montserrat_16, 0);
         lv_obj_set_style_text_color(hl_rows[i].ticker, COL_TEXT(), 0);
         lv_obj_align(hl_rows[i].ticker, LV_ALIGN_LEFT_MID, 0, -8);
 
         // Name
         hl_rows[i].name = lv_label_create(row);
         lv_label_set_text(hl_rows[i].name, d.top[i].name);
-        lv_obj_set_style_text_font(hl_rows[i].name, &lv_font_montserrat_12, 0);
+        lv_obj_set_style_text_font(hl_rows[i].name, &lv_font_montserrat_14, 0);
         lv_obj_set_style_text_color(hl_rows[i].name, COL_DIM(), 0);
-        lv_obj_set_size(hl_rows[i].name, 190, 14);
+        lv_obj_set_size(hl_rows[i].name, 190, 16);
         lv_label_set_long_mode(hl_rows[i].name, LV_LABEL_LONG_DOT);
         lv_obj_align(hl_rows[i].name, LV_ALIGN_LEFT_MID, 0, 8);
 
@@ -1832,7 +1832,7 @@ void ui_update_holdings_list(const PortfolioData &d) {
         else
             snprintf(buf, sizeof(buf), "-");
         lv_label_set_text(hl_rows[i].shares_lbl, buf);
-        lv_obj_set_style_text_font(hl_rows[i].shares_lbl, &lv_font_montserrat_12, 0);
+        lv_obj_set_style_text_font(hl_rows[i].shares_lbl, &lv_font_montserrat_14, 0);
         lv_obj_set_style_text_color(hl_rows[i].shares_lbl, COL_TEXT_SEC(), 0);
         lv_obj_align(hl_rows[i].shares_lbl, LV_ALIGN_LEFT_MID, 210, 0);
 
@@ -1844,7 +1844,7 @@ void ui_update_holdings_list(const PortfolioData &d) {
             snprintf(buf, sizeof(buf), "-");
         }
         lv_label_set_text(hl_rows[i].price_lbl, buf);
-        lv_obj_set_style_text_font(hl_rows[i].price_lbl, &lv_font_montserrat_12, 0);
+        lv_obj_set_style_text_font(hl_rows[i].price_lbl, &lv_font_montserrat_14, 0);
         lv_obj_set_style_text_color(hl_rows[i].price_lbl, COL_TEXT_SEC(), 0);
         lv_obj_align(hl_rows[i].price_lbl, LV_ALIGN_LEFT_MID, 350, 0);
 
@@ -1854,7 +1854,7 @@ void ui_update_holdings_list(const PortfolioData &d) {
         snprintf(buf, sizeof(buf), "%s%.2f%%",
                  pos ? "+" : "", d.top[i].dayChange);
         lv_label_set_text(hl_rows[i].change, buf);
-        lv_obj_set_style_text_font(hl_rows[i].change, &lv_font_montserrat_12, 0);
+        lv_obj_set_style_text_font(hl_rows[i].change, &lv_font_montserrat_14, 0);
         lv_obj_set_style_text_color(hl_rows[i].change, pos ? COL_GREEN() : COL_RED(), 0);
         lv_obj_align(hl_rows[i].change, LV_ALIGN_RIGHT_MID, 0, 0);
 

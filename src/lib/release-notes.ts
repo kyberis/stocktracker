@@ -17,6 +17,23 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "1.77.74",
+    date: "2026-04-28",
+    title: "Bigger, more readable text on the Leaf device",
+    titleTranslations: {
+      es: "Texto m\u00E1s grande y legible en el dispositivo Leaf",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Increased font sizes across the entire trefolio Leaf interface — dashboard, holdings list, stock detail, settings, passkey screen and error/loading screens — so portfolio numbers, tickers and labels are easier to read at a glance.",
+        translations: {
+          es: "Aumentamos el tama\u00F1o de las fuentes en toda la interfaz del trefolio Leaf — panel principal, lista de posiciones, detalle de acci\u00F3n, ajustes, pantalla de passkey y pantallas de error/carga — para que los n\u00FAmeros de la cartera, los tickers y las etiquetas se lean mejor de un vistazo.",
+        },
+      },
+    ],
+  },
+  {
     version: "1.77.73",
     date: "2026-04-23",
     title: "Mobile home matches desktop",

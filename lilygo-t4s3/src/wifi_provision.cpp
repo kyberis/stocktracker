@@ -154,11 +154,88 @@ void wifi_provision_start() {
     server.begin();
 
     Serial.printf("[Provision] Portal at http://%s/\n", WiFi.softAPIP().toString().c_str());
+    Serial.println("[Provision] USB serial fallback also available.");
+    Serial.println("[Provision] Type one of:");
+    Serial.println("[Provision]   WIFI <ssid> <password>");
+    Serial.println("[Provision]   WIFI <ssid> <password> <passkey>     (e.g. 12345678 or 1234-5678)");
+    Serial.println("[Provision]   STATUS                               (re-prints AP info)");
+    Serial.println("[Provision] (Spaces inside ssid/password are not supported via serial.)");
+
+    String serial_buf;
+    serial_buf.reserve(160);
+
+    auto handle_serial_line = [&](String line) {
+        line.trim();
+        if (line.length() == 0) return;
+
+        if (line.equalsIgnoreCase("STATUS")) {
+            Serial.printf("[Provision] AP=%s  IP=%s  clients=%d\n",
+                          ap_name,
+                          WiFi.softAPIP().toString().c_str(),
+                          WiFi.softAPgetStationNum());
+            return;
+        }
+
+        if (line.startsWith("WIFI ") || line.startsWith("wifi ")) {
+            String rest = line.substring(5);
+            rest.trim();
+
+            int sp1 = rest.indexOf(' ');
+            if (sp1 < 0) {
+                Serial.println("[Provision] usage: WIFI <ssid> <password> [passkey]");
+                return;
+            }
+            String s_ssid = rest.substring(0, sp1);
+            String tail = rest.substring(sp1 + 1);
+            tail.trim();
+
+            int sp2 = tail.indexOf(' ');
+            String s_pass, s_token;
+            if (sp2 < 0) {
+                s_pass = tail;
+            } else {
+                s_pass = tail.substring(0, sp2);
+                s_token = tail.substring(sp2 + 1);
+                s_token.trim();
+            }
+
+            if (s_ssid.length() == 0 || s_pass.length() == 0) {
+                Serial.println("[Provision] ssid and password are required");
+                return;
+            }
+
+            config_save_wifi(s_ssid.c_str(), s_pass.c_str());
+            Serial.printf("[Provision] Saved WiFi: ssid=%s\n", s_ssid.c_str());
+
+            if (s_token.length() > 0) {
+                s_token.toUpperCase();
+                config_save_token(s_token.c_str());
+                Serial.printf("[Provision] Saved passkey (%d chars)\n", s_token.length());
+            }
+
+            provisioned = true;
+            return;
+        }
+
+        Serial.printf("[Provision] unknown command: %s\n", line.c_str());
+    };
 
     provisioned = false;
     while (!provisioned) {
         dns.processNextRequest();
         server.handleClient();
+
+        while (Serial.available() > 0) {
+            char c = (char)Serial.read();
+            if (c == '\r') continue;
+            if (c == '\n') {
+                handle_serial_line(serial_buf);
+                serial_buf = "";
+            } else {
+                if (serial_buf.length() < 150) serial_buf += c;
+            }
+        }
+
         lv_task_handler();
         delay(10);
     }
