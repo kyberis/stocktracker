@@ -148,8 +148,10 @@ export interface UserSettings {
   language: Language;
   refreshInterval: RefreshInterval;
   alertChannels: NotificationChannel[];
-  whatsappPhone: string;
-  whatsappVerified: boolean;
+  /** Linked Telegram chat id (from Bot API) when the user completed /start with a link token. */
+  telegramChatId: string;
+  telegramLinkToken: string;
+  telegramLinkExpiresAt: string;
   alertDeviceEnabled: boolean;
   dashboardTheme: import("@/lib/types").LayoutTheme;
   defaultCurrency: PortfolioCurrency;
@@ -265,9 +267,9 @@ export function parseExperienceLevel(val: unknown): ExperienceLevel {
 }
 
 export function parseAlertChannels(val: unknown): NotificationChannel[] {
-  const raw = String(val || "email");
+  const raw = String(val || "email").replace(/whatsapp/g, "telegram");
   return raw.split(",").filter((c): c is NotificationChannel =>
-    ["email", "push", "whatsapp", "device"].includes(c)
+    ["email", "push", "telegram", "device"].includes(c)
   );
 }
 

@@ -628,13 +628,13 @@ export default function StrategiesTool() {
             <div>
               <p className="text-xs font-medium text-gray-500 dark:text-slate-400 mb-2">{t("strategiesNotifyLegend")}</p>
               <div className="flex flex-wrap gap-2">
-                {(["email", "whatsapp", "push", "device"] as const).map((ch) => {
+                {(["email", "telegram", "push", "device"] as const).map((ch) => {
                   const enabled = channelsPreview.includes(ch);
                   const labelKey =
                     ch === "email"
                       ? "channelEmail"
-                      : ch === "whatsapp"
-                        ? "channelWhatsApp"
+                      : ch === "telegram"
+                        ? "channelTelegram"
                         : ch === "push"
                           ? "channelPush"
                           : "channelDevice";

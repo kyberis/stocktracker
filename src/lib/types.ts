@@ -14,7 +14,7 @@ export type SubscriptionFeature =
   | "ai"
   | "alerts-email"
   | "alerts-push"
-  | "alerts-whatsapp"
+  | "alerts-telegram"
   | "alerts-device"
   | "metrics"
   | "portfolio-history-full"
@@ -38,7 +38,7 @@ export type SubscriptionFeature =
 export type AlertCondition = "above" | "below";
 export type AlertType = "threshold" | "percent_change";
 export type PercentBasis = "daily" | "purchase";
-export type NotificationChannel = "email" | "push" | "whatsapp" | "device";
+export type NotificationChannel = "email" | "push" | "telegram" | "device";
 
 export interface PriceAlert {
   id: string;

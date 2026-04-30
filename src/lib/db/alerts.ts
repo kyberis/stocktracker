@@ -116,8 +116,7 @@ export interface CronAlert extends PriceAlert {
   emailVerified: boolean;
   plan: string;
   alertChannels: NotificationChannel[];
-  whatsappPhone: string;
-  whatsappVerified: boolean;
+  telegramChatId: string;
   alertDeviceEnabled: boolean;
   lastNotifiedTicker: string;
   lastNotifiedAt: string;
@@ -129,8 +128,7 @@ export async function listActiveAlertsForCron(): Promise<CronAlert[]> {
   const result = await client.execute(
     `SELECT pa.*, u.email, u.email_verified, u.plan,
             COALESCE(us.alert_channels, 'email') as alert_channels,
-            COALESCE(us.whatsapp_phone, '') as whatsapp_phone,
-            COALESCE(us.whatsapp_verified, 0) as whatsapp_verified,
+            COALESCE(us.telegram_chat_id, '') as telegram_chat_id,
             COALESCE(us.alert_device_enabled, 0) as alert_device_enabled,
             COALESCE(us.language, 'en') as language
      FROM price_alerts pa
@@ -145,8 +143,7 @@ export async function listActiveAlertsForCron(): Promise<CronAlert[]> {
     emailVerified: num(r.email_verified) === 1,
     plan: str(r.plan),
     alertChannels: parseAlertChannels(r.alert_channels),
-    whatsappPhone: str(r.whatsapp_phone),
-    whatsappVerified: num(r.whatsapp_verified) === 1,
+    telegramChatId: str(r.telegram_chat_id),
     alertDeviceEnabled: num(r.alert_device_enabled) === 1,
     lastNotifiedTicker: str(r.last_notified_ticker),
     lastNotifiedAt: str(r.last_notified_at),

@@ -1,12 +1,12 @@
 import { sendAlertEmail, sendPercentAlertEmail, type EmailLocale } from "@/lib/email";
-import { sendWhatsAppAlert } from "@/lib/whatsapp";
+import { sendTelegramAlert } from "@/lib/telegram";
 import { sendPushNotification } from "@/lib/web-push";
 import {
   listPushSubscriptions,
   deletePushSubscription,
   createDeviceNotification,
-  getWhatsAppQuota,
-  incrementWhatsAppCounter,
+  getTelegramQuota,
+  incrementTelegramCounter,
   isFeatureEnabled,
   trackEvent,
 } from "@/lib/db";
@@ -19,8 +19,7 @@ export interface AlertDispatchContext {
   emailVerified: boolean;
   plan: SubscriptionPlan;
   alertChannels: NotificationChannel[];
-  whatsappPhone: string;
-  whatsappVerified: boolean;
+  telegramChatId: string;
   locale?: EmailLocale;
 }
 
@@ -82,7 +81,7 @@ export async function dispatchAlert(
   for (const channel of ctx.alertChannels) {
     const featureKey = channel === "email" ? "alerts-email"
       : channel === "push" ? "alerts-push"
-      : channel === "whatsapp" ? "alerts-whatsapp"
+      : channel === "telegram" ? "alerts-telegram"
       : "alerts-device";
 
     const access = canAccessFeature(featureKey, { plan: ctx.plan, aiCallsThisMonth: 0 });
@@ -131,13 +130,13 @@ export async function dispatchAlert(
         }
       }
 
-      if (channel === "whatsapp" && ctx.whatsappPhone && ctx.whatsappVerified && await isFeatureEnabled("whatsapp_enabled")) {
-        const quota = await getWhatsAppQuota(ctx.userId);
+      if (channel === "telegram" && ctx.telegramChatId && await isFeatureEnabled("telegram_enabled")) {
+        const quota = await getTelegramQuota(ctx.userId);
         if (!quota.allowed) {
-          console.warn(`WhatsApp quota exceeded for user ${ctx.userId}: ${quota.reason}`);
+          console.warn(`Telegram quota exceeded for user ${ctx.userId}: ${quota.reason}`);
           continue;
         }
-        const result = await sendWhatsAppAlert(ctx.whatsappPhone, {
+        const result = await sendTelegramAlert(ctx.telegramChatId, {
           ticker: payload.ticker,
           name: payload.name,
           currentPrice: payload.currentPrice,
@@ -145,9 +144,9 @@ export async function dispatchAlert(
           changeDescription: buildChangeDescription(payload),
         });
         if (result.success) {
-          await incrementWhatsAppCounter(ctx.userId);
-          sent.push("whatsapp");
-          trackEvent(ctx.userId, "alert_whatsapp_sent", { ticker: payload.ticker });
+          await incrementTelegramCounter(ctx.userId);
+          sent.push("telegram");
+          trackEvent(ctx.userId, "alert_telegram_sent", { ticker: payload.ticker });
         }
       }
 

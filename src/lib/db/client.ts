@@ -11,17 +11,44 @@ let _client: Client | null = null;
 let _initPromise: Promise<Client> | null = null;
 let _isLocal = false;
 
+function tursoDatabaseUrl(): string | undefined {
+  return (
+    process.env.TREFOLIO_TURSO_DATABASE_URL ||
+    process.env.STOCKTRACKER_TURSO_DATABASE_URL ||
+    process.env.stocktracker_TURSO_DATABASE_URL
+  );
+}
+
+function tursoAuthToken(): string | undefined {
+  return (
+    process.env.TREFOLIO_TURSO_AUTH_TOKEN ||
+    process.env.STOCKTRACKER_TURSO_AUTH_TOKEN ||
+    process.env.stocktracker_TURSO_AUTH_TOKEN
+  );
+}
+
 function getClient(): Client {
   if (_client) return _client;
 
-  const tursoUrl =
-    process.env.TREFOLIO_TURSO_DATABASE_URL ||
-    process.env.STOCKTRACKER_TURSO_DATABASE_URL ||
-    process.env.stocktracker_TURSO_DATABASE_URL;
-  const tursoToken =
-    process.env.TREFOLIO_TURSO_AUTH_TOKEN ||
-    process.env.STOCKTRACKER_TURSO_AUTH_TOKEN ||
-    process.env.stocktracker_TURSO_AUTH_TOKEN;
+  const tursoUrl = tursoDatabaseUrl();
+  const tursoToken = tursoAuthToken();
+
+  if (process.env.VERCEL && !tursoUrl) {
+    throw new Error(
+      "Turso database URL is required on Vercel (npm run build runs migrations). Set TREFOLIO_TURSO_DATABASE_URL or STOCKTRACKER_TURSO_DATABASE_URL for Production, Preview, and Development scopes so the build step can reach your database."
+    );
+  }
+
+  if (
+    process.env.VERCEL &&
+    tursoUrl &&
+    !tursoToken &&
+    /^(libsql:|https:)/i.test(tursoUrl.trim())
+  ) {
+    throw new Error(
+      "Turso auth token is required on Vercel when using a remote libsql URL. Set TREFOLIO_TURSO_AUTH_TOKEN or STOCKTRACKER_TURSO_AUTH_TOKEN for the same scopes as the database URL."
+    );
+  }
 
   if (tursoUrl) {
     _client = createClient({
@@ -115,7 +142,8 @@ export async function ensureInitialized(): Promise<Client> {
     } catch (err) {
       _initPromise = null;
       console.error("Database initialization failed:", err);
-      throw new Error("Database initialization failed after retries");
+      const detail = err instanceof Error ? err.message : String(err);
+      throw new Error(`Database initialization failed after retries: ${detail}`, { cause: err });
     }
     return client;
   })();

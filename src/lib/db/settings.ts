@@ -7,11 +7,11 @@ import { TOOLS_CATALOG } from "@/lib/tools-registry";
 import { isValidLanguage } from "@/lib/languages";
 import { encrypt, tryDecryptOrPlaintext } from "@/lib/crypto";
 import { PLATFORM_LIMITS } from "@/lib/platform-config";
-import { randomUUID } from "crypto";
+import { randomUUID, randomBytes } from "crypto";
 
 export type PlatformFeature =
   | "alerts_enabled" | "csv_export_enabled" | "apple_signin_enabled" | "device_enabled"
-  | "mobile_app_enabled" | "whatsapp_enabled"
+  | "mobile_app_enabled" | "telegram_enabled"
   | "tool_transactions_enabled" | "tool_dividends_enabled" | "tool_performance_enabled"
   | "tool_taxonomy_enabled" | "tool_rebalancing_enabled" | "tool_accounts_enabled"
   | "tool_watchlist_enabled"
@@ -33,7 +33,7 @@ export type PlatformFeature =
   | "telegram_bot_enabled";
 
 const DEFAULT_ENABLED_FLAGS: Set<PlatformFeature> = new Set([
-  "whatsapp_enabled",
+  "telegram_enabled",
   "tool_transactions_enabled",
   "tool_dividends_enabled",
   "tool_performance_enabled",
@@ -77,8 +77,9 @@ const DEFAULT_SETTINGS: UserSettings = {
   language: "en",
   refreshInterval: 15,
   alertChannels: ["email"],
-  whatsappPhone: "",
-  whatsappVerified: false,
+  telegramChatId: "",
+  telegramLinkToken: "",
+  telegramLinkExpiresAt: "",
   alertDeviceEnabled: false,
   dashboardTheme: "default",
   defaultCurrency: "EUR",
@@ -89,7 +90,7 @@ const DEFAULT_SETTINGS: UserSettings = {
 export async function getUserSettings(userId: string): Promise<UserSettings> {
   const client = await ensureInitialized();
   const result = await client.execute({
-    sql: "SELECT language, refresh_interval, alert_channels, whatsapp_phone, whatsapp_verified, alert_device_enabled, dashboard_theme, default_currency, email_notifications_enabled, favorite_tool_ids FROM user_settings WHERE user_id = ?",
+    sql: "SELECT language, refresh_interval, alert_channels, telegram_chat_id, telegram_link_token, telegram_link_expires_at, alert_device_enabled, dashboard_theme, default_currency, email_notifications_enabled, favorite_tool_ids FROM user_settings WHERE user_id = ?",
     args: [userId],
   });
 
@@ -107,8 +108,9 @@ export async function getUserSettings(userId: string): Promise<UserSettings> {
     language: (isValidLanguage(String(row.language)) ? String(row.language) : "en") as Language,
     refreshInterval: parseRefreshInterval(row.refresh_interval),
     alertChannels: parseAlertChannels(row.alert_channels),
-    whatsappPhone: str(row.whatsapp_phone),
-    whatsappVerified: num(row.whatsapp_verified) === 1,
+    telegramChatId: str(row.telegram_chat_id),
+    telegramLinkToken: str(row.telegram_link_token),
+    telegramLinkExpiresAt: str(row.telegram_link_expires_at),
     alertDeviceEnabled: num(row.alert_device_enabled) === 1,
     dashboardTheme: parseTheme(row.dashboard_theme),
     defaultCurrency: parseCurrency(row.default_currency),
@@ -126,8 +128,9 @@ export async function updateUserSettings(
     language: updates.language ?? current.language,
     refreshInterval: updates.refreshInterval ?? current.refreshInterval,
     alertChannels: updates.alertChannels ?? current.alertChannels,
-    whatsappPhone: updates.whatsappPhone ?? current.whatsappPhone,
-    whatsappVerified: updates.whatsappVerified ?? current.whatsappVerified,
+    telegramChatId: updates.telegramChatId ?? current.telegramChatId,
+    telegramLinkToken: updates.telegramLinkToken ?? current.telegramLinkToken,
+    telegramLinkExpiresAt: updates.telegramLinkExpiresAt ?? current.telegramLinkExpiresAt,
     alertDeviceEnabled: updates.alertDeviceEnabled ?? current.alertDeviceEnabled,
     dashboardTheme: updates.dashboardTheme ?? current.dashboardTheme,
     defaultCurrency: updates.defaultCurrency ?? current.defaultCurrency,
@@ -138,13 +141,13 @@ export async function updateUserSettings(
   const client = await ensureInitialized();
   await client.execute({
     sql: `UPDATE user_settings SET language = ?, refresh_interval = ?,
-          alert_channels = ?, whatsapp_phone = ?, whatsapp_verified = ?, alert_device_enabled = ?,
+          alert_channels = ?, telegram_chat_id = ?, telegram_link_token = ?, telegram_link_expires_at = ?, alert_device_enabled = ?,
           dashboard_theme = ?, default_currency = ?, email_notifications_enabled = ?,
           favorite_tool_ids = ?
           WHERE user_id = ?`,
     args: [
       next.language, next.refreshInterval,
-      next.alertChannels.join(","), next.whatsappPhone, next.whatsappVerified ? 1 : 0,
+      next.alertChannels.join(","), next.telegramChatId, next.telegramLinkToken, next.telegramLinkExpiresAt,
       next.alertDeviceEnabled ? 1 : 0, next.dashboardTheme, next.defaultCurrency,
       next.emailNotificationsEnabled ? 1 : 0,
       JSON.stringify(next.favoriteToolIds),
@@ -155,15 +158,55 @@ export async function updateUserSettings(
   return next;
 }
 
-export async function markWhatsAppVerified(userId: string, phone: string): Promise<void> {
+export async function setTelegramLinkToken(userId: string): Promise<{ token: string; deepLink: string }> {
+  const bot = process.env.TELEGRAM_BOT_USERNAME?.replace(/^@/, "");
+  if (!bot) throw new Error("TELEGRAM_BOT_USERNAME not configured");
+  const token = randomBytes(18).toString("hex");
+  const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
   const client = await ensureInitialized();
   await client.execute({
-    sql: "UPDATE user_settings SET whatsapp_phone = ?, whatsapp_verified = 1 WHERE user_id = ?",
-    args: [phone, userId],
+    sql: `UPDATE user_settings SET telegram_link_token = ?, telegram_link_expires_at = ? WHERE user_id = ?`,
+    args: [token, expiresAt, userId],
+  });
+  return { token, deepLink: `https://t.me/${bot}?start=${token}` };
+}
+
+export async function completeTelegramLink(
+  token: string,
+  chatId: string
+): Promise<{ userId: string; language: Language } | null> {
+  const client = await ensureInitialized();
+  const now = new Date().toISOString();
+  const match = await client.execute({
+    sql: `SELECT user_id, language FROM user_settings WHERE telegram_link_token = ? AND telegram_link_expires_at > ?`,
+    args: [token, now],
+  });
+  if (match.rows.length === 0) return null;
+  const userId = str(match.rows[0].user_id);
+  const language = (isValidLanguage(String(match.rows[0].language)) ? String(match.rows[0].language) : "en") as Language;
+
+  await client.execute({
+    sql: `UPDATE user_settings SET telegram_chat_id = '', telegram_link_token = '', telegram_link_expires_at = '' WHERE telegram_chat_id = ? AND user_id != ?`,
+    args: [chatId, userId],
+  });
+  await client.execute({
+    sql: `UPDATE user_settings SET telegram_chat_id = ?, telegram_link_token = '', telegram_link_expires_at = '' WHERE user_id = ?`,
+    args: [chatId, userId],
+  });
+  return { userId, language };
+}
+
+export async function disconnectTelegram(userId: string): Promise<void> {
+  const current = await getUserSettings(userId);
+  const nextChannels = current.alertChannels.filter((c) => c !== "telegram");
+  const client = await ensureInitialized();
+  await client.execute({
+    sql: `UPDATE user_settings SET telegram_chat_id = '', telegram_link_token = '', telegram_link_expires_at = '', alert_channels = ? WHERE user_id = ?`,
+    args: [nextChannels.join(","), userId],
   });
 }
 
-export interface WhatsAppQuota {
+export interface TelegramQuota {
   allowed: boolean;
   reason?: string;
   userToday: number;
@@ -185,7 +228,7 @@ function shouldResetDay(resetAt: string): boolean {
   return shouldResetDailyAiWindow(resetAt);
 }
 
-export async function getWhatsAppQuota(userId: string): Promise<WhatsAppQuota> {
+export async function getTelegramQuota(userId: string): Promise<TelegramQuota> {
   const client = await ensureInitialized();
   const result = await client.execute({
     sql: "SELECT wa_msgs_today, wa_daily_reset_at, wa_msgs_month, wa_monthly_reset_at FROM user_settings WHERE user_id = ?",
@@ -239,7 +282,7 @@ export async function getWhatsAppQuota(userId: string): Promise<WhatsAppQuota> {
   };
 }
 
-export async function incrementWhatsAppCounter(userId: string): Promise<void> {
+export async function incrementTelegramCounter(userId: string): Promise<void> {
   const client = await ensureInitialized();
   const now = new Date().toISOString();
 
@@ -369,7 +412,7 @@ export async function setFeatureEnabled(feature: PlatformFeature, enabled: boole
 
 const ALL_PLATFORM_FEATURES: PlatformFeature[] = [
   "alerts_enabled", "csv_export_enabled", "apple_signin_enabled", "device_enabled",
-  "mobile_app_enabled", "whatsapp_enabled",
+  "mobile_app_enabled", "telegram_enabled",
   "tool_transactions_enabled", "tool_dividends_enabled", "tool_performance_enabled",
   "tool_taxonomy_enabled", "tool_rebalancing_enabled", "tool_accounts_enabled",
   "tool_watchlist_enabled",

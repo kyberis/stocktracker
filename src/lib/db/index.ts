@@ -132,13 +132,15 @@ export {
   getManualAssetCount,
 } from "./cash";
 
-export type { PlatformFeature, WhatsAppQuota, StripePriceKey, PromoBannerConfig, AdConfig, AdSlotConfig, XKeyName, UtmTaxonomyConfig, FeatureFlagOverride, DigestSenderDomain } from "./settings";
+export type { PlatformFeature, TelegramQuota, StripePriceKey, PromoBannerConfig, AdConfig, AdSlotConfig, XKeyName, UtmTaxonomyConfig, FeatureFlagOverride, DigestSenderDomain } from "./settings";
 export {
   getUserSettings,
   updateUserSettings,
-  markWhatsAppVerified,
-  getWhatsAppQuota,
-  incrementWhatsAppCounter,
+  setTelegramLinkToken,
+  completeTelegramLink,
+  disconnectTelegram,
+  getTelegramQuota,
+  incrementTelegramCounter,
   getGlobalAlphaVantageApiKey,
   getGlobalFmpApiKey,
   hasPremiumMarketDataConfigured,

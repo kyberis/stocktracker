@@ -796,7 +796,7 @@ export default function AnalyticsTab() {
                   <th className="px-4 py-2.5 font-medium">Email</th>
                   <th className="px-4 py-2.5 font-medium">Plan</th>
                   <th className="px-4 py-2.5 font-medium text-right">Email</th>
-                  <th className="px-4 py-2.5 font-medium text-right">WhatsApp</th>
+                  <th className="px-4 py-2.5 font-medium text-right">Telegram</th>
                   <th className="px-4 py-2.5 font-medium text-right">Push</th>
                   <th className="px-4 py-2.5 font-medium text-right">Device</th>
                   <th className="px-4 py-2.5 font-medium text-right">Total</th>
@@ -816,7 +816,7 @@ export default function AnalyticsTab() {
                       </span>
                     </td>
                     <td className="px-4 py-2.5 text-right tabular-nums text-gray-700 dark:text-slate-300">{row.emailSent || "—"}</td>
-                    <td className="px-4 py-2.5 text-right tabular-nums text-gray-700 dark:text-slate-300">{row.whatsappSent || "—"}</td>
+                    <td className="px-4 py-2.5 text-right tabular-nums text-gray-700 dark:text-slate-300">{row.telegramSent || "—"}</td>
                     <td className="px-4 py-2.5 text-right tabular-nums text-gray-700 dark:text-slate-300">{row.pushSent || "—"}</td>
                     <td className="px-4 py-2.5 text-right tabular-nums text-gray-700 dark:text-slate-300">{row.deviceSent || "—"}</td>
                     <td className="px-4 py-2.5 text-right tabular-nums font-semibold text-gray-900 dark:text-white">{row.total}</td>

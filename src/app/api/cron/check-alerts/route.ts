@@ -39,8 +39,7 @@ function buildContext(alert: CronAlert): AlertDispatchContext {
     emailVerified: alert.emailVerified,
     plan: alert.plan as SubscriptionPlan,
     alertChannels: alert.alertChannels,
-    whatsappPhone: alert.whatsappPhone,
-    whatsappVerified: alert.whatsappVerified,
+    telegramChatId: alert.telegramChatId,
     locale: getEmailLocale(alert.language),
   };
 }

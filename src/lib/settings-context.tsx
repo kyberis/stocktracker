@@ -27,7 +27,7 @@ interface SettingsContextType {
   alertsEnabled: boolean;
   csvExportEnabled: boolean;
   deviceEnabled: boolean;
-  whatsappEnabled: boolean;
+  telegramEnabled: boolean;
   toolTransactionsEnabled: boolean;
   toolDividendsEnabled: boolean;
   toolPerformanceEnabled: boolean;
@@ -52,7 +52,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [alertsEnabled, setAlertsEnabled] = useState(false);
   const [csvExportEnabled, setCsvExportEnabled] = useState(false);
   const [deviceEnabled, setDeviceEnabled] = useState(false);
-  const [whatsappEnabled, setWhatsappEnabled] = useState(true);
+  const [telegramEnabled, setTelegramEnabled] = useState(true);
   const [toolTransactionsEnabled, setToolTransactionsEnabled] = useState(true);
   const [toolDividendsEnabled, setToolDividendsEnabled] = useState(true);
   const [toolPerformanceEnabled, setToolPerformanceEnabled] = useState(true);
@@ -95,8 +95,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
           if (typeof settings.deviceEnabled === "boolean") {
             setDeviceEnabled(settings.deviceEnabled);
           }
-          if (typeof settings.whatsappEnabled === "boolean") {
-            setWhatsappEnabled(settings.whatsappEnabled);
+          if (typeof settings.telegramEnabled === "boolean") {
+            setTelegramEnabled(settings.telegramEnabled);
           }
           if (typeof settings.toolTransactionsEnabled === "boolean") {
             setToolTransactionsEnabled(settings.toolTransactionsEnabled);
@@ -193,7 +193,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       alertsEnabled,
       csvExportEnabled,
       deviceEnabled,
-      whatsappEnabled,
+      telegramEnabled,
       toolTransactionsEnabled,
       toolDividendsEnabled,
       toolPerformanceEnabled,
@@ -209,7 +209,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     }),
     [
       refreshInterval, dashboardTheme, defaultCurrency, hasPremiumMarketData, alertsEnabled, csvExportEnabled, deviceEnabled,
-      whatsappEnabled, toolTransactionsEnabled, toolDividendsEnabled, toolPerformanceEnabled,
+      telegramEnabled, toolTransactionsEnabled, toolDividendsEnabled, toolPerformanceEnabled,
       toolTaxonomyEnabled, toolRebalancingEnabled, toolAccountsEnabled, toolWatchlistEnabled,
       setRefreshInterval, setDashboardTheme, setDefaultCurrency, getApiHeaders, getApiParams,
     ]

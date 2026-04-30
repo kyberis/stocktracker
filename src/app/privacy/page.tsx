@@ -178,10 +178,10 @@ export default function PrivacyPolicyPage() {
             <h3>Notification Data</h3>
             <ul className="list-disc pl-6 space-y-2">
               <li>
-                <strong className="text-slate-800">WhatsApp phone number</strong> — 
-                if you opt in to WhatsApp alert notifications (Pro plan), we collect
-                your phone number in E.164 format and verify it via Twilio Verify.
-                The number is used solely for delivering price alert messages.
+                <strong className="text-slate-800">Telegram chat identifier</strong> — 
+                if you opt in to Telegram alert notifications (Pro plan), we store
+                your Telegram chat id after you open our bot and tap Start with a one-time link.
+                It is used solely for delivering price alert messages via the Telegram Bot API.
               </li>
               <li>
                 <strong className="text-slate-800">Push notification subscription</strong> — 
@@ -370,9 +370,9 @@ export default function PrivacyPolicyPage() {
                     <td className="py-3">Brokerage account data (positions, balances) via OAuth read-only; we store only SnapTrade userId and encrypted userSecret</td>
                   </tr>
                   <tr>
-                    <td className="py-3 pr-6">Twilio Inc.</td>
-                    <td className="py-3 pr-6">WhatsApp alert notifications (Trefolio)</td>
-                    <td className="py-3">Phone number (E.164 format) for WhatsApp message delivery and verification; messages contain stock ticker and price data only</td>
+                    <td className="py-3 pr-6">Telegram (Telegram Bot API)</td>
+                    <td className="py-3 pr-6">Telegram alert notifications (Trefolio)</td>
+                    <td className="py-3">Telegram chat id for outbound price alerts; messages contain stock ticker and price data only</td>
                   </tr>
                   <tr>
                     <td className="py-3 pr-6">Telegram Messenger Inc.</td>

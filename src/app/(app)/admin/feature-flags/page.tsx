@@ -26,7 +26,7 @@ const FLAG_META: Record<string, { label: string; description: string; group: str
   apple_signin_enabled: { label: "Sign in with Apple", description: "Apple OAuth on login and signup pages", group: "Features" },
   device_enabled: { label: "trefolio Leaf Device", description: "Hardware device linking, themes, and OTA", group: "Features" },
   mobile_app_enabled: { label: "Mobile App Promotion", description: "Native app section on landing page", group: "Features" },
-  whatsapp_enabled: { label: "WhatsApp Notifications", description: "WhatsApp alert delivery for Pro users", group: "Features" },
+  telegram_enabled: { label: "Telegram Notifications", description: "Telegram alert delivery for Pro users", group: "Features" },
   support_chat_enabled: { label: "AI Support Chat", description: "AI-powered support chat for users", group: "Features" },
   tool_transactions_enabled: { label: "Transactions", description: "Transaction history tool", group: "Tools" },
   tool_dividends_enabled: { label: "Dividends", description: "Dividend summary and projections tool", group: "Tools" },

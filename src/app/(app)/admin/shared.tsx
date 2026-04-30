@@ -71,7 +71,7 @@ export interface NotificationUserStats {
   email: string;
   plan: string;
   emailSent: number;
-  whatsappSent: number;
+  telegramSent: number;
   pushSent: number;
   deviceSent: number;
   total: number;

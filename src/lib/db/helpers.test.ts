@@ -179,16 +179,17 @@ describe("parseAlertChannels", () => {
   it("parses single channel", () => {
     expect(parseAlertChannels("email")).toEqual(["email"]);
     expect(parseAlertChannels("push")).toEqual(["push"]);
-    expect(parseAlertChannels("whatsapp")).toEqual(["whatsapp"]);
+    expect(parseAlertChannels("telegram")).toEqual(["telegram"]);
+    expect(parseAlertChannels("whatsapp")).toEqual(["telegram"]);
     expect(parseAlertChannels("device")).toEqual(["device"]);
   });
 
   it("parses comma-separated channels", () => {
     expect(parseAlertChannels("email,push")).toEqual(["email", "push"]);
-    expect(parseAlertChannels("email,push,whatsapp,device")).toEqual([
+    expect(parseAlertChannels("email,push,telegram,device")).toEqual([
       "email",
       "push",
-      "whatsapp",
+      "telegram",
       "device",
     ]);
   });

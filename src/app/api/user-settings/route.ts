@@ -34,7 +34,7 @@ export const GET = withMetrics("/api/user-settings", async (req: NextRequest) =>
     alertsEnabled: flags.alerts_enabled,
     csvExportEnabled: flags.csv_export_enabled,
     deviceEnabled: flags.device_enabled,
-    whatsappEnabled: flags.whatsapp_enabled,
+    telegramEnabled: flags.telegram_enabled,
     toolTransactionsEnabled: flags.tool_transactions_enabled,
     toolDividendsEnabled: flags.tool_dividends_enabled,
     toolPerformanceEnabled: flags.tool_performance_enabled,

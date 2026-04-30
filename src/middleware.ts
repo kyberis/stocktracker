@@ -36,6 +36,7 @@ const PUBLIC_API_ROUTES = new Set([
   "/api/cron/feedback-pipeline",
   "/api/cron/compact-snapshots",
   "/api/webhooks/linear",
+  "/api/webhooks/telegram",
   "/api/portfolio/summary",
   "/api/device/ai-summary",
   "/api/device/firmware",

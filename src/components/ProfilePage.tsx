@@ -1529,6 +1529,7 @@ export default function ProfilePage() {
   const visibleTabs = deviceEnabled
     ? PROFILE_TABS
     : PROFILE_TABS.filter((tab) => tab !== "devices");
+  const portfolioPlanLimit = isPro ? 3 : 1;
 
   return (
     <main className="px-4 py-8">
@@ -1537,32 +1538,43 @@ export default function ProfilePage() {
 
         {/* Tab navigation */}
         <div className="sticky top-0 z-10 -mx-4 px-4 py-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm">
-          <div role="tablist" aria-label={t("profile")} className="flex flex-wrap gap-1 bg-white dark:bg-slate-800 rounded-2xl p-1.5 border border-gray-200 dark:border-slate-700 shadow-sm">
+          <div className="overflow-x-auto no-scrollbar">
+          <div role="tablist" aria-label={t("profile")} className="flex flex-nowrap gap-1 min-w-max bg-white dark:bg-slate-800 rounded-2xl p-1.5 border border-gray-200 dark:border-slate-700 shadow-sm">
             {visibleTabs.map((tab) => {
               const Icon = TAB_ICONS[tab];
               return (
                 <button
                   key={tab}
+                  id={`profile-tab-${tab}`}
                   role="tab"
                   aria-selected={effectiveTab === tab}
                   aria-controls={`profile-tabpanel-${tab}`}
                   onClick={() => handleTabChange(tab)}
-                  className={`flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-xl transition-all ${
+                  className={`flex items-center gap-1.5 whitespace-nowrap text-xs font-medium px-3 py-2 rounded-xl transition-all ${
                     effectiveTab === tab
                       ? "bg-emerald-500 text-white shadow-sm"
                       : "text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-slate-700"
                   }`}
                 >
                   <Icon className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">{t(TAB_LABEL_KEYS[tab] as TranslationKey)}</span>
+                  <span>{t(TAB_LABEL_KEYS[tab] as TranslationKey)}</span>
                 </button>
               );
             })}
           </div>
+          </div>
         </div>
 
         {/* === Account Tab === */}
-        {effectiveTab === "account" && <>
+        {effectiveTab === "account" && <section
+          id="profile-tabpanel-account"
+          role="tabpanel"
+          aria-labelledby="profile-tab-account"
+          className="space-y-6"
+        >
+        <div>
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">{t("profileSectionIdentity")}</h2>
+        </div>
         {/* Profile Card */}
         <div className="card p-6 space-y-5">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t("profileSettings")}</h2>
@@ -1635,6 +1647,9 @@ export default function ProfilePage() {
           </div>
         </div>
 
+        <div>
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">{t("profileSectionAccess")}</h2>
+        </div>
         {/* Connected Accounts */}
         <div className="card p-6 space-y-4">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t("connectedAccounts")}</h2>
@@ -1813,7 +1828,9 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {/* Delete Account */}
+        <div>
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">{t("profileSectionActivitySecurity")}</h2>
+        </div>
         {/* Security — last activity */}
         <div className="card p-6 space-y-3">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t("profileSecurityTitle") || "Security"}</h2>
@@ -1830,6 +1847,10 @@ export default function ProfilePage() {
         </div>
 
         {user?.role !== "admin" && (
+          <>
+          <div>
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-red-600 dark:text-red-400">{t("profileSectionDanger")}</h2>
+          </div>
           <div className="card p-6 space-y-4 border-red-200 dark:border-red-500/20">
             <h2 className="text-lg font-semibold text-red-600 dark:text-red-400">{t("deleteAccount")}</h2>
             <p className="text-sm text-gray-600 dark:text-slate-400">{t("deleteAccountWarning")}</p>
@@ -1877,11 +1898,17 @@ export default function ProfilePage() {
               </form>
             )}
           </div>
+          </>
         )}
-        </>}
+        </section>}
 
         {/* === Subscription Tab === */}
-        {effectiveTab === "subscription" && <>
+        {effectiveTab === "subscription" && <section
+          id="profile-tabpanel-subscription"
+          role="tabpanel"
+          aria-labelledby="profile-tab-subscription"
+          className="space-y-6"
+        >
         <div className="card p-6 space-y-4">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t("subscription")}</h2>
 
@@ -2076,10 +2103,15 @@ export default function ProfilePage() {
             )}
           </div>
         )}
-        </>}
+        </section>}
 
         {/* === Notifications Tab === */}
-        {effectiveTab === "notifications" && <>
+        {effectiveTab === "notifications" && <section
+          id="profile-tabpanel-notifications"
+          role="tabpanel"
+          aria-labelledby="profile-tab-notifications"
+          className="space-y-6"
+        >
         {/* Email Verification */}
         <div className="card p-6 space-y-3">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t("notificationSettings")}</h2>
@@ -2141,14 +2173,19 @@ export default function ProfilePage() {
 
         {/* Portfolio-wide Alert */}
         <PortfolioAlertSection />
-        </>}
+        </section>}
 
         {/* === Portfolios Tab === */}
-        {effectiveTab === "portfolios" && <>
+        {effectiveTab === "portfolios" && <section
+          id="profile-tabpanel-portfolios"
+          role="tabpanel"
+          aria-labelledby="profile-tab-portfolios"
+          className="space-y-6"
+        >
         <div className="card p-6 space-y-4">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Portfolios</h2>
           <p className="text-sm text-gray-500 dark:text-slate-400">
-            Manage your portfolios. Pro users can create up to 5 portfolios.
+            {t("profilePortfolioLimitBlurb").replace("{limit}", String(portfolioPlanLimit))}
           </p>
           <PortfolioManagementSection />
         </div>
@@ -2166,16 +2203,39 @@ export default function ProfilePage() {
             <ProCompareCard surface="portfolio_history_locked" reason="upgrade_required" compact />
           </div>
         )}
-        </>}
+        </section>}
 
         {/* === Referrals Tab === */}
-        {effectiveTab === "referrals" && <ReferralTab />}
+        {effectiveTab === "referrals" && (
+          <section
+            id="profile-tabpanel-referrals"
+            role="tabpanel"
+            aria-labelledby="profile-tab-referrals"
+            className="space-y-6"
+          >
+            <ReferralTab />
+          </section>
+        )}
 
         {/* === Social Tab === */}
-        {effectiveTab === "social" && <SocialProfileSection />}
+        {effectiveTab === "social" && (
+          <section
+            id="profile-tabpanel-social"
+            role="tabpanel"
+            aria-labelledby="profile-tab-social"
+            className="space-y-6"
+          >
+            <SocialProfileSection />
+          </section>
+        )}
 
         {/* === Devices Tab === */}
-        {effectiveTab === "devices" && <>
+        {effectiveTab === "devices" && <section
+          id="profile-tabpanel-devices"
+          role="tabpanel"
+          aria-labelledby="profile-tab-devices"
+          className="space-y-6"
+        >
         {/* Widget Access */}
         <div className="card p-6 space-y-4">
           <div className="flex items-center gap-3">
@@ -2375,7 +2435,7 @@ export default function ProfilePage() {
             </p>
           </div>
         )}
-        </>}
+        </section>}
 
       </div>
 

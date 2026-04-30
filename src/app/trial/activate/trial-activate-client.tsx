@@ -25,7 +25,7 @@ const ROWS: { feature: string; free: string; pro: string }[] = [
   { feature: "Stock Screener", free: "—", pro: "600+ stocks" },
   { feature: "Tax Reports", free: "—", pro: "5 EU countries" },
   { feature: "Portfolio Sharing", free: "—", pro: "Public link" },
-  { feature: "WhatsApp Alerts", free: "—", pro: "Included" },
+  { feature: "Telegram Alerts", free: "—", pro: "Included" },
 ];
 
 function TrialUnavailablePage({ reason }: { reason: "already_used" | "invalid" }) {

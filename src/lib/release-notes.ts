@@ -17,6 +17,30 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.2.1",
+    date: "2026-04-30",
+    title: "Telegram replaces WhatsApp for alert delivery",
+    titleTranslations: {
+      es: "Telegram sustituye a WhatsApp en los avisos",
+    },
+    changes: [
+      {
+        type: "improvement",
+        text: "Price alerts now use Telegram (Bot API) instead of WhatsApp/Twilio: connect from Profile → Notifications via deep link, optional webhook secret, and the same per-user rate limits as before.",
+        translations: {
+          es: "Las alertas de precio usan Telegram (Bot API) en lugar de WhatsApp/Twilio: con\u00e9ctate desde Perfil \u2192 Notificaciones con enlace profundo, secreto opcional del webhook y los mismos l\u00edmites por usuario que antes.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Restored missing Telegram notification and profile settings strings in Spanish, Portuguese, and Dutch so all locales match English keys again.",
+        translations: {
+          es: "Se recuperaron cadenas faltantes de Telegram y del perfil en espa\u00f1ol, portugu\u00e9s y neerland\u00e9s para que todos los idiomas vuelvan a alinearse con las claves en ingl\u00e9s.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.2.0",
     date: "2026-04-30",
     title: "Warren on Telegram",
@@ -36,6 +60,20 @@ export const releaseNotes: ReleaseEntry[] = [
         text: "Telegram replies share Warren's quota (ai_consult), so free users still get 15/month and Pro users 500/month across web and Telegram combined.",
         translations: {
           es: "Las respuestas en Telegram comparten la cuota de Warren (ai_consult): los usuarios Free siguen con 15/mes y los Pro con 500/mes, combinando web y Telegram.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Vercel builds: require Turso env vars instead of falling back to local file SQLite during `npm run build`, and surface DB errors in logs with the underlying message.",
+        translations: {
+          es: "Builds en Vercel: se exigen variables de entorno de Turso en lugar de usar SQLite local durante `npm run build`, y los errores de BD muestran el mensaje original en los logs.",
+        },
+      },
+      {
+        type: "fix",
+        text: "Warren on Telegram: send every rendered card (allocation, summary, holdings, snapshots), not only the first one, and allow the model up to three cards per turn like the web drawer.",
+        translations: {
+          es: "Warren en Telegram: se env\u00edan todas las tarjetas renderizadas (asignaci\u00f3n, resumen, posiciones, snapshots), no solo la primera, y el modelo puede usar hasta tres tarjetas por turno como en el panel web.",
         },
       },
     ],

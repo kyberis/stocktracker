@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth-context";
 import { useSettings } from "@/lib/settings-context";
 import type { NotificationChannel } from "@/lib/types";
 import TierFeatureBadge from "./TierFeatureBadge";
 
-interface WhatsAppQuotaInfo {
+interface TelegramQuotaInfo {
   remainingToday: number;
   remainingMonth: number;
   dailyLimit: number;
@@ -16,17 +16,17 @@ interface WhatsAppQuotaInfo {
 
 interface NotificationPrefs {
   alertChannels: NotificationChannel[];
-  whatsappPhone: string;
-  whatsappVerified: boolean;
+  telegramChatId: string;
+  telegramLinked: boolean;
   alertDeviceEnabled: boolean;
   emailNotificationsEnabled: boolean;
-  whatsappQuota?: WhatsAppQuotaInfo;
+  telegramQuota?: TelegramQuotaInfo;
 }
 
 export default function NotificationChannels() {
   const { t } = useI18n();
   const { user } = useAuth();
-  const { whatsappEnabled } = useSettings();
+  const { telegramEnabled } = useSettings();
   const plan = user?.plan || "free";
   const isPaid = plan === "pro";
   const isPro = plan === "pro";
@@ -34,38 +34,43 @@ export default function NotificationChannels() {
 
   const [prefs, setPrefs] = useState<NotificationPrefs | null>(null);
   const [loading, setLoading] = useState(true);
-  const [phone, setPhone] = useState("");
-  const [verifyCode, setVerifyCode] = useState("");
-  const [verifying, setVerifying] = useState(false);
-  const [confirming, setConfirming] = useState(false);
-  const [verifySent, setVerifySent] = useState(false);
-  const [verifyChannel, setVerifyChannel] = useState<"whatsapp" | "sms">("whatsapp");
-  const [changingNumber, setChangingNumber] = useState(false);
-  const [verifyError, setVerifyError] = useState("");
-  const [confirmError, setConfirmError] = useState("");
-  const [pushSupported] = useState(() => typeof window !== "undefined" && "Notification" in window && "serviceWorker" in navigator);
-  const [pushPermission, setPushPermission] = useState<NotificationPermission>("default");
-  const [pushSubscribed, setPushSubscribed] = useState(false);
+  const [linking, setLinking] = useState(false);
+  const [linkError, setLinkError] = useState("");
+  const [linkPending, setLinkPending] = useState(false);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fetchPrefs = useCallback(async () => {
     try {
       const res = await fetch("/api/notifications/preferences");
       if (res.ok) {
         const data = await res.json();
-        setPrefs(data);
-        setPhone(data.whatsappPhone || "");
+        setPrefs({
+          alertChannels: data.alertChannels,
+          telegramChatId: data.telegramChatId || "",
+          telegramLinked: !!data.telegramLinked,
+          alertDeviceEnabled: data.alertDeviceEnabled,
+          emailNotificationsEnabled: data.emailNotificationsEnabled,
+          telegramQuota: data.telegramQuota,
+        });
+        if (data.telegramLinked && pollRef.current) {
+          clearInterval(pollRef.current);
+          pollRef.current = null;
+          setLinkPending(false);
+        }
       }
     } catch { /* ignore */ }
     setLoading(false);
   }, []);
 
-  useEffect(() => { fetchPrefs(); }, [fetchPrefs]);
-
   useEffect(() => {
-    if (typeof window !== "undefined" && "Notification" in window) {
-      setPushPermission(Notification.permission);
-    }
-  }, []);
+    fetchPrefs();
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, [fetchPrefs]);
+
+  const [pushSupported] = useState(() => typeof window !== "undefined" && "Notification" in window && "serviceWorker" in navigator);
+  const [pushSubscribed, setPushSubscribed] = useState(false);
 
   const toggleChannel = async (channel: NotificationChannel, enabled: boolean) => {
     if (!prefs) return;
@@ -82,71 +87,74 @@ export default function NotificationChannels() {
       });
       if (res.ok) {
         const data = await res.json();
-        setPrefs(data);
+        setPrefs({
+          alertChannels: data.alertChannels,
+          telegramChatId: data.telegramChatId || "",
+          telegramLinked: !!data.telegramLinked,
+          alertDeviceEnabled: data.alertDeviceEnabled,
+          emailNotificationsEnabled: data.emailNotificationsEnabled,
+          telegramQuota: prefs.telegramQuota,
+        });
+        void fetchPrefs();
       }
     } catch { /* ignore */ }
   };
 
-  const handleVerifyWhatsApp = async () => {
-    if (!phone || phone.length < 10) return;
-    setVerifying(true);
-    setVerifyError("");
+  const startTelegramLink = async () => {
+    setLinking(true);
+    setLinkError("");
     try {
-      const res = await fetch("/api/notifications/whatsapp/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone }),
-      });
-      if (res.ok) {
-        const data = await res.json().catch(() => null);
-        setVerifyChannel(data?.channel || "whatsapp");
-        setVerifySent(true);
-        setConfirmError("");
-      } else {
-        setVerifyError(t("whatsappSendError"));
+      const res = await fetch("/api/notifications/telegram/link", { method: "POST" });
+      if (!res.ok) {
+        setLinkError(t("telegramLinkError"));
+        setLinking(false);
+        return;
+      }
+      const data = await res.json();
+      if (data.deepLink && typeof window !== "undefined") {
+        window.open(data.deepLink, "_blank", "noopener,noreferrer");
+        setLinkPending(true);
+        if (pollRef.current) clearInterval(pollRef.current);
+        pollRef.current = setInterval(() => { void fetchPrefs(); }, 2500);
+        setTimeout(() => {
+          if (pollRef.current) {
+            clearInterval(pollRef.current);
+            pollRef.current = null;
+          }
+          setLinkPending(false);
+        }, 120_000);
       }
     } catch {
-      setVerifyError(t("whatsappSendError"));
+      setLinkError(t("telegramLinkError"));
     }
-    setVerifying(false);
+    setLinking(false);
   };
 
-  const handleConfirmWhatsApp = async () => {
-    if (!verifyCode) return;
-    setConfirming(true);
-    setConfirmError("");
+  const disconnectTelegram = async () => {
     try {
-      const res = await fetch("/api/notifications/whatsapp/confirm", {
-        method: "POST",
+      const res = await fetch("/api/notifications/preferences", {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code: verifyCode }),
+        body: JSON.stringify({ telegramDisconnect: true }),
       });
       if (res.ok) {
-        setVerifySent(false);
-        setVerifyCode("");
-        setChangingNumber(false);
-        setConfirmError("");
-        fetchPrefs();
-      } else {
-        const data = await res.json().catch(() => null);
-        if (data?.error?.includes("expired")) {
-          setConfirmError(t("whatsappCodeExpired"));
-          setVerifySent(false);
-        } else {
-          setConfirmError(t("whatsappConfirmError"));
-        }
+        const data = await res.json();
+        setPrefs({
+          alertChannels: data.alertChannels,
+          telegramChatId: data.telegramChatId || "",
+          telegramLinked: !!data.telegramLinked,
+          alertDeviceEnabled: data.alertDeviceEnabled,
+          emailNotificationsEnabled: data.emailNotificationsEnabled,
+          telegramQuota: prefs?.telegramQuota,
+        });
       }
-    } catch {
-      setConfirmError(t("whatsappConfirmError"));
-    }
-    setConfirming(false);
+    } catch { /* ignore */ }
   };
 
   const handleEnablePush = async () => {
     if (!pushSupported) return;
     try {
       const permission = await Notification.requestPermission();
-      setPushPermission(permission);
       if (permission !== "granted") return;
 
       const vapidRes = await fetch("/api/notifications/push/vapid-key");
@@ -211,7 +219,6 @@ export default function NotificationChannels() {
     <div className="card p-6 space-y-4">
       <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t("notificationChannels")}</h2>
 
-      {/* Master email notifications toggle */}
       <div className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-slate-700">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-slate-700 flex items-center justify-center">
@@ -236,7 +243,7 @@ export default function NotificationChannels() {
                 });
                 if (res.ok) {
                   const data = await res.json();
-                  setPrefs(data);
+                  setPrefs((p) => p ? { ...p, emailNotificationsEnabled: data.emailNotificationsEnabled } : p);
                 }
               } catch { /* ignore */ }
             }}
@@ -246,7 +253,6 @@ export default function NotificationChannels() {
         </label>
       </div>
 
-      {/* Email */}
       <div className="flex items-center justify-between py-2">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-500/15 flex items-center justify-center">
@@ -263,7 +269,6 @@ export default function NotificationChannels() {
         </label>
       </div>
 
-      {/* Push */}
       <div className="flex items-center justify-between py-2">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-500/15 flex items-center justify-center">
@@ -276,9 +281,9 @@ export default function NotificationChannels() {
         </div>
         {isPaid && pushSupported && (
           pushSubscribed ? (
-            <button onClick={handleDisablePush} className="text-xs text-red-500 hover:text-red-700">{t("pushDisable")}</button>
+            <button type="button" onClick={handleDisablePush} className="text-xs text-red-500 hover:text-red-700">{t("pushDisable")}</button>
           ) : (
-            <button onClick={handleEnablePush} className="btn-primary text-xs">{t("pushEnable")}</button>
+            <button type="button" onClick={handleEnablePush} className="btn-primary text-xs">{t("pushEnable")}</button>
           )
         )}
         {!pushSupported && isPaid && (
@@ -286,93 +291,55 @@ export default function NotificationChannels() {
         )}
       </div>
 
-      {/* WhatsApp */}
-      {whatsappEnabled && <div className="py-2 space-y-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-green-100 dark:bg-green-500/15 flex items-center justify-center">
-              <svg className="w-4 h-4 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+      {telegramEnabled && (
+        <div className="py-2 space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-sky-100 dark:bg-sky-500/15 flex items-center justify-center">
+                <svg className="w-4 h-4 text-sky-600 dark:text-sky-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-1">{t("channelTelegram")} <TierFeatureBadge requiredPlan="pro" size="xs" /></p>
+                {!isPro && <p className="text-[10px] text-amber-500">{t("channelRequiresPro")}</p>}
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-1">{t("channelWhatsApp")} <TierFeatureBadge requiredPlan="pro" size="xs" /></p>
-              {!isPro && <p className="text-[10px] text-amber-500">{t("channelRequiresPro")}</p>}
-            </div>
+            {isPro && prefs?.telegramLinked && (
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" checked={channels.includes("telegram")} onChange={(e) => toggleChannel("telegram", e.target.checked)} className="sr-only peer" />
+                <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-emerald-300 dark:peer-focus:ring-emerald-800 rounded-full peer dark:bg-slate-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500" />
+              </label>
+            )}
           </div>
-          {isPro && prefs?.whatsappVerified && (
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" checked={channels.includes("whatsapp")} onChange={(e) => toggleChannel("whatsapp", e.target.checked)} className="sr-only peer" />
-              <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-emerald-300 dark:peer-focus:ring-emerald-800 rounded-full peer dark:bg-slate-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500" />
-            </label>
+          {isPro && !prefs?.telegramLinked && (
+            <div className="ml-11 space-y-2">
+              <p className="text-[10px] text-gray-500 dark:text-slate-400">{t("telegramConnectHint")}</p>
+              <button type="button" onClick={() => void startTelegramLink()} disabled={linking} className="btn-primary text-xs disabled:opacity-40">
+                {linking ? t("loading") : t("telegramOpenBot")}
+              </button>
+              {linkPending && <p className="text-[10px] text-emerald-600 dark:text-emerald-400">{t("telegramLinkPending")}</p>}
+              {linkError && <p className="text-[10px] text-red-500">{linkError}</p>}
+            </div>
+          )}
+          {isPro && prefs?.telegramLinked && (
+            <>
+              <div className="ml-11 flex flex-wrap items-center gap-2">
+                <p className="text-[10px] text-emerald-500">{t("telegramLinked")}</p>
+                <button type="button" onClick={() => void disconnectTelegram()} className="text-[10px] text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 underline">
+                  {t("telegramDisconnect")}
+                </button>
+              </div>
+              {prefs.telegramQuota && (
+                <p className="ml-11 text-[10px] text-gray-400 dark:text-gray-500">
+                  {prefs.telegramQuota.remainingToday}/{prefs.telegramQuota.dailyLimit} {t("tgQuotaToday")}
+                  {" · "}
+                  {prefs.telegramQuota.remainingMonth}/{prefs.telegramQuota.monthlyLimit} {t("tgQuotaMonth")}
+                </p>
+              )}
+            </>
           )}
         </div>
-        {isPro && (!prefs?.whatsappVerified || changingNumber) && (
-          <div className="ml-11 space-y-2">
-            {!verifySent ? (
-              <>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => { setPhone(e.target.value); setVerifyError(""); }}
-                    placeholder={t("whatsappPhonePlaceholder")}
-                    className="flex-1 text-sm"
-                  />
-                  <button onClick={handleVerifyWhatsApp} disabled={verifying || phone.length < 10} className="btn-primary text-xs disabled:opacity-40">
-                    {verifying ? t("loading") : t("whatsappVerify")}
-                  </button>
-                  {changingNumber && (
-                    <button onClick={() => { setChangingNumber(false); setVerifySent(false); setPhone(prefs?.whatsappPhone || ""); setVerifyError(""); }} className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                      {t("cancel")}
-                    </button>
-                  )}
-                </div>
-                {verifyError && <p className="text-[10px] text-red-500">{verifyError}</p>}
-              </>
-            ) : (
-              <>
-                <p className="text-[10px] text-emerald-500">{verifyChannel === "sms" ? t("whatsappCodeSentSms") : t("whatsappCodeSent")}</p>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={6}
-                    value={verifyCode}
-                    onChange={(e) => { setVerifyCode(e.target.value.replace(/\D/g, "").slice(0, 6)); setConfirmError(""); }}
-                    placeholder={t("whatsappCodePlaceholder")}
-                    className="flex-1 text-sm"
-                  />
-                  <button onClick={handleConfirmWhatsApp} disabled={confirming || verifyCode.length < 6} className="btn-primary text-xs disabled:opacity-40">
-                    {confirming ? t("loading") : t("whatsappConfirm")}
-                  </button>
-                  <button onClick={() => { setVerifySent(false); setVerifyCode(""); setConfirmError(""); }} className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                    {t("cancel")}
-                  </button>
-                </div>
-                {confirmError && <p className="text-[10px] text-red-500">{confirmError}</p>}
-              </>
-            )}
-          </div>
-        )}
-        {isPro && prefs?.whatsappVerified && !changingNumber && (
-          <>
-            <div className="ml-11 flex items-center gap-2">
-              <p className="text-[10px] text-emerald-500">{t("whatsappVerified")}: {prefs.whatsappPhone}</p>
-              <button onClick={() => { setChangingNumber(true); setVerifySent(false); setVerifyCode(""); }} className="text-[10px] text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 underline">
-                {t("whatsappChangeNumber")}
-              </button>
-            </div>
-            {prefs.whatsappQuota && (
-              <p className="ml-11 text-[10px] text-gray-400 dark:text-gray-500">
-                {prefs.whatsappQuota.remainingToday}/{prefs.whatsappQuota.dailyLimit} {t("waQuotaToday")}
-                {" · "}
-                {prefs.whatsappQuota.remainingMonth}/{prefs.whatsappQuota.monthlyLimit} {t("waQuotaMonth")}
-              </p>
-            )}
-          </>
-        )}
-      </div>}
+      )}
 
-      {/* Device */}
       {hasDevice && (
         <div className="flex items-center justify-between py-2">
           <div className="flex items-center gap-3">

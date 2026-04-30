@@ -67,6 +67,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
         {/* Theme selector */}
         <div className="mt-5">
+          <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-slate-400 mb-2">{t("settingsQuickPreferences")}</p>
           <label className="block text-sm text-gray-500 dark:text-slate-400 mb-2">{t("dashboardTheme")}</label>
           <ThemeSelector />
         </div>
@@ -88,6 +89,13 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             ))}
           </select>
           <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">{t("defaultCurrencyHint")}</p>
+        </div>
+
+        <div className="mt-5 rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-800/40 p-3">
+          <p className="text-xs text-gray-500 dark:text-slate-400 mb-2">{t("settingsAccountLinkHint")}</p>
+          <Link href="/profile" onClick={onClose} className="text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:underline">
+            {t("settingsOpenFullProfile")}
+          </Link>
         </div>
 
         {/* Footer actions */}

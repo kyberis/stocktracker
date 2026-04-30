@@ -3221,7 +3221,8 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
   },
   {
     version: 110,
-    description: "Telegram bot integration: link tokens, chats, pending proposals, message history",
+    description:
+      "Telegram: Warren bot tables; alert channel columns on user_settings; migrate WhatsApp flags to Telegram",
     up: async (client: Client) => {
       await client.executeMultiple(`
         CREATE TABLE IF NOT EXISTS telegram_link_tokens (
@@ -3268,6 +3269,29 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
         CREATE INDEX IF NOT EXISTS idx_telegram_messages_chat_created
           ON telegram_messages(chat_id, created_at);
       `);
+
+      const cols = await client.execute("PRAGMA table_info(user_settings)");
+      const colNames = new Set(cols.rows.map((r) => String(r.name)));
+      for (const [col, def] of [
+        ["telegram_chat_id", "ALTER TABLE user_settings ADD COLUMN telegram_chat_id TEXT NOT NULL DEFAULT ''"],
+        ["telegram_link_token", "ALTER TABLE user_settings ADD COLUMN telegram_link_token TEXT NOT NULL DEFAULT ''"],
+        ["telegram_link_expires_at", "ALTER TABLE user_settings ADD COLUMN telegram_link_expires_at TEXT NOT NULL DEFAULT ''"],
+      ] as const) {
+        if (!colNames.has(col)) {
+          await client.execute({ sql: def });
+        }
+      }
+      await client.execute(
+        "UPDATE user_settings SET alert_channels = REPLACE(alert_channels, 'whatsapp', 'telegram') WHERE alert_channels LIKE '%whatsapp%'",
+      );
+      await client.execute(`
+        INSERT INTO platform_settings (key, value)
+        SELECT 'telegram_enabled', value FROM platform_settings WHERE key = 'whatsapp_enabled'
+        AND NOT EXISTS (SELECT 1 FROM platform_settings WHERE key = 'telegram_enabled')
+      `);
+      await client.execute(
+        "UPDATE feature_flag_overrides SET flag = 'telegram_enabled' WHERE flag = 'whatsapp_enabled'",
+      );
     },
   },
 ];

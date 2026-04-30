@@ -362,17 +362,9 @@ export const upsertInvestmentStrategySchema = z.object({
 
 export const updateNotificationPrefsSchema = z.object({
   alertChannels: z.string().optional(),
-  whatsappPhone: z.string().optional(),
   alertDeviceEnabled: z.boolean().optional(),
   emailNotificationsEnabled: z.boolean().optional(),
-});
-
-export const whatsappVerifySchema = z.object({
-  phone: z.string().min(10, "Phone number must be at least 10 characters"),
-});
-
-export const whatsappConfirmSchema = z.object({
-  code: z.string().min(4, "Verification code required"),
+  telegramDisconnect: z.boolean().optional(),
 });
 
 /* ── Accounts ──────────────────────────────────────────────── */
@@ -458,7 +450,7 @@ export const adminResetDataSchema = z.object({
 
 const PLATFORM_FEATURE_ENUM = z.enum([
   "alerts_enabled", "csv_export_enabled", "apple_signin_enabled", "device_enabled",
-  "mobile_app_enabled", "whatsapp_enabled",
+  "mobile_app_enabled", "telegram_enabled",
   "tool_transactions_enabled", "tool_dividends_enabled", "tool_performance_enabled",
   "tool_taxonomy_enabled", "tool_rebalancing_enabled", "tool_accounts_enabled",
   "tool_watchlist_enabled",

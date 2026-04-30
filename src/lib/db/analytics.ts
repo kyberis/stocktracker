@@ -36,7 +36,7 @@ export interface NotificationUserStats {
   email: string;
   plan: string;
   emailSent: number;
-  whatsappSent: number;
+  telegramSent: number;
   pushSent: number;
   deviceSent: number;
   total: number;
@@ -265,13 +265,13 @@ export async function getAnalyticsSummary(days = 30): Promise<AnalyticsSummary> 
             u.email,
             u.plan,
             SUM(CASE WHEN ae.event = 'alert_email_sent' THEN 1 ELSE 0 END) as email_sent,
-            SUM(CASE WHEN ae.event = 'alert_whatsapp_sent' THEN 1 ELSE 0 END) as whatsapp_sent,
+            SUM(CASE WHEN ae.event = 'alert_telegram_sent' THEN 1 ELSE 0 END) as telegram_sent,
             SUM(CASE WHEN ae.event = 'alert_push_sent' THEN 1 ELSE 0 END) as push_sent,
             SUM(CASE WHEN ae.event = 'alert_device_sent' THEN 1 ELSE 0 END) as device_sent,
             COUNT(*) as total
           FROM analytics_events ae
           JOIN users u ON u.id = ae.user_id
-          WHERE ae.event IN ('alert_email_sent', 'alert_whatsapp_sent', 'alert_push_sent', 'alert_device_sent')
+          WHERE ae.event IN ('alert_email_sent', 'alert_telegram_sent', 'alert_push_sent', 'alert_device_sent')
             AND ae.created_at >= datetime('now', ?)
           GROUP BY ae.user_id
           ORDER BY total DESC`,
@@ -338,7 +338,7 @@ export async function getAnalyticsSummary(days = 30): Promise<AnalyticsSummary> 
       email: str(r.email),
       plan: str(r.plan),
       emailSent: num(r.email_sent),
-      whatsappSent: num(r.whatsapp_sent),
+      telegramSent: num(r.telegram_sent),
       pushSent: num(r.push_sent),
       deviceSent: num(r.device_sent),
       total: num(r.total),

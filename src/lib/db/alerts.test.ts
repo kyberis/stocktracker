@@ -206,8 +206,7 @@ describe("alerts", () => {
             email_verified: 1,
             plan: "pro",
             alert_channels: "email,push",
-            whatsapp_phone: "",
-            whatsapp_verified: 0,
+            telegram_chat_id: "",
             alert_device_enabled: 1,
             last_notified_ticker: "",
             last_notified_at: "",
@@ -224,8 +223,7 @@ describe("alerts", () => {
         email: "u@example.com",
         emailVerified: true,
         plan: "pro",
-        whatsappPhone: "",
-        whatsappVerified: false,
+        telegramChatId: "",
         alertDeviceEnabled: true,
       });
       expect(result[0].alertChannels).toEqual(["email", "push"]);

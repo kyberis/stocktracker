@@ -157,7 +157,7 @@ const SOFTWARE_APP_SCHEMA = {
     "35 European languages with AI insights in your native language",
     "4 dashboard themes (Default, Canvas, Terminal, Studio)",
     "Event calendars for earnings, economic events, and IPOs",
-    "Price alerts via email, push, WhatsApp, and trefolio Leaf device",
+    "Price alerts via email, push, Telegram, and trefolio Leaf device",
     "Guided onboarding wizard with country-aware broker suggestions",
     "In-app notification center for updates and alerts",
   ],

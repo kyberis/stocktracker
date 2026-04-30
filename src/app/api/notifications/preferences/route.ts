@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth/guards";
-import { getUserSettings, updateUserSettings, findUserById, getWhatsAppQuota } from "@/lib/db";
+import {
+  getUserSettings,
+  updateUserSettings,
+  findUserById,
+  getTelegramQuota,
+  disconnectTelegram,
+} from "@/lib/db";
 import { parseBody } from "@/lib/api-response";
 import { updateNotificationPrefsSchema } from "@/lib/schemas";
 import { canAccessFeature } from "@/lib/subscription";
@@ -11,18 +17,18 @@ export async function GET(req: NextRequest) {
   if (error || !session) return error;
 
   const settings = await getUserSettings(session.userId);
-  const waQuota = await getWhatsAppQuota(session.userId);
+  const tgQuota = await getTelegramQuota(session.userId);
   return NextResponse.json({
     alertChannels: settings.alertChannels,
-    whatsappPhone: settings.whatsappPhone,
-    whatsappVerified: settings.whatsappVerified,
+    telegramChatId: settings.telegramChatId,
+    telegramLinked: settings.telegramChatId.length > 0,
     alertDeviceEnabled: settings.alertDeviceEnabled,
     emailNotificationsEnabled: settings.emailNotificationsEnabled,
-    whatsappQuota: {
-      remainingToday: Math.max(0, waQuota.userDailyLimit - waQuota.userToday),
-      remainingMonth: Math.max(0, waQuota.userMonthlyLimit - waQuota.userMonth),
-      dailyLimit: waQuota.userDailyLimit,
-      monthlyLimit: waQuota.userMonthlyLimit,
+    telegramQuota: {
+      remainingToday: Math.max(0, tgQuota.userDailyLimit - tgQuota.userToday),
+      remainingMonth: Math.max(0, tgQuota.userMonthlyLimit - tgQuota.userMonth),
+      dailyLimit: tgQuota.userDailyLimit,
+      monthlyLimit: tgQuota.userMonthlyLimit,
     },
   });
 }
@@ -37,6 +43,10 @@ export async function PUT(req: NextRequest) {
   const user = await findUserById(session.userId);
   if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
+  if (result.data.telegramDisconnect) {
+    await disconnectTelegram(session.userId);
+  }
+
   const updates: Partial<{ alertChannels: NotificationChannel[]; alertDeviceEnabled: boolean; emailNotificationsEnabled: boolean }> = {};
 
   if (result.data.alertChannels !== undefined) {
@@ -49,8 +59,8 @@ export async function PUT(req: NextRequest) {
       } else if (ch === "push") {
         const access = canAccessFeature("alerts-push", { plan: user.plan, aiCallsThisMonth: user.ai_calls_this_month });
         if (access.allowed) allowed.push(ch);
-      } else if (ch === "whatsapp") {
-        const access = canAccessFeature("alerts-whatsapp", { plan: user.plan, aiCallsThisMonth: user.ai_calls_this_month });
+      } else if (ch === "telegram") {
+        const access = canAccessFeature("alerts-telegram", { plan: user.plan, aiCallsThisMonth: user.ai_calls_this_month });
         if (access.allowed) allowed.push(ch);
       } else if (ch === "device") {
         const access = canAccessFeature("alerts-device", { plan: user.plan, aiCallsThisMonth: user.ai_calls_this_month });
@@ -68,12 +78,17 @@ export async function PUT(req: NextRequest) {
     updates.emailNotificationsEnabled = result.data.emailNotificationsEnabled;
   }
 
-  const settings = await updateUserSettings(session.userId, updates);
+  if (Object.keys(updates).length > 0) {
+    await updateUserSettings(session.userId, updates);
+  }
+
+  const fresh = await getUserSettings(session.userId);
+
   return NextResponse.json({
-    alertChannels: settings.alertChannels,
-    whatsappPhone: settings.whatsappPhone,
-    whatsappVerified: settings.whatsappVerified,
-    alertDeviceEnabled: settings.alertDeviceEnabled,
-    emailNotificationsEnabled: settings.emailNotificationsEnabled,
+    alertChannels: fresh.alertChannels,
+    telegramChatId: fresh.telegramChatId,
+    telegramLinked: fresh.telegramChatId.length > 0,
+    alertDeviceEnabled: fresh.alertDeviceEnabled,
+    emailNotificationsEnabled: fresh.emailNotificationsEnabled,
   });
 }

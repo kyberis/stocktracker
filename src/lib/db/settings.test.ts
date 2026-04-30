@@ -29,8 +29,9 @@ const DEFAULT_SETTINGS = {
   language: "en",
   refreshInterval: 15,
   alertChannels: ["email"],
-  whatsappPhone: "",
-  whatsappVerified: false,
+  telegramChatId: "",
+  telegramLinkToken: "",
+  telegramLinkExpiresAt: "",
   alertDeviceEnabled: false,
   dashboardTheme: "default",
   defaultCurrency: "EUR",
@@ -42,8 +43,9 @@ const settingsRow = {
   language: "en",
   refresh_interval: 15,
   alert_channels: "email",
-  whatsapp_phone: "",
-  whatsapp_verified: 0,
+  telegram_chat_id: "",
+  telegram_link_token: "",
+  telegram_link_expires_at: "",
   alert_device_enabled: 0,
   dashboard_theme: "default",
   default_currency: "EUR",
@@ -61,7 +63,7 @@ describe("settings", () => {
       const result = await settings.getUserSettings("u1");
 
       expect(mockExecute).toHaveBeenNthCalledWith(1, {
-        sql: "SELECT language, refresh_interval, alert_channels, whatsapp_phone, whatsapp_verified, alert_device_enabled, dashboard_theme, default_currency, email_notifications_enabled, favorite_tool_ids FROM user_settings WHERE user_id = ?",
+        sql: "SELECT language, refresh_interval, alert_channels, telegram_chat_id, telegram_link_token, telegram_link_expires_at, alert_device_enabled, dashboard_theme, default_currency, email_notifications_enabled, favorite_tool_ids FROM user_settings WHERE user_id = ?",
         args: ["u1"],
       });
       expect(mockExecute).toHaveBeenNthCalledWith(2, {
@@ -77,7 +79,7 @@ describe("settings", () => {
       const result = await settings.getUserSettings("u1");
 
       expect(mockExecute).toHaveBeenCalledWith({
-        sql: "SELECT language, refresh_interval, alert_channels, whatsapp_phone, whatsapp_verified, alert_device_enabled, dashboard_theme, default_currency, email_notifications_enabled, favorite_tool_ids FROM user_settings WHERE user_id = ?",
+        sql: "SELECT language, refresh_interval, alert_channels, telegram_chat_id, telegram_link_token, telegram_link_expires_at, alert_device_enabled, dashboard_theme, default_currency, email_notifications_enabled, favorite_tool_ids FROM user_settings WHERE user_id = ?",
         args: ["u1"],
       });
       expect(result).toEqual(DEFAULT_SETTINGS);
@@ -89,9 +91,10 @@ describe("settings", () => {
           ...settingsRow,
           language: "es",
           refresh_interval: 30,
-          alert_channels: "email,whatsapp",
-          whatsapp_phone: "+1234567890",
-          whatsapp_verified: 1,
+          alert_channels: "email,telegram",
+          telegram_chat_id: "12345",
+          telegram_link_token: "",
+          telegram_link_expires_at: "",
           alert_device_enabled: 1,
           dashboard_theme: "terminal",
           default_currency: "USD",
@@ -103,9 +106,10 @@ describe("settings", () => {
       expect(result).toEqual({
         language: "es",
         refreshInterval: 30,
-        alertChannels: ["email", "whatsapp"],
-        whatsappPhone: "+1234567890",
-        whatsappVerified: true,
+        alertChannels: ["email", "telegram"],
+        telegramChatId: "12345",
+        telegramLinkToken: "",
+        telegramLinkExpiresAt: "",
         alertDeviceEnabled: true,
         dashboardTheme: "terminal",
         defaultCurrency: "USD",
@@ -160,7 +164,7 @@ describe("settings", () => {
       expect(mockExecute).toHaveBeenCalledTimes(2);
       expect(mockExecute).toHaveBeenNthCalledWith(2, {
         sql: expect.stringContaining("UPDATE user_settings SET"),
-        args: expect.arrayContaining(["es", 30, "email", "", 0, 0, "default", "EUR", 1, "[]", "u1"]),
+        args: expect.arrayContaining(["es", 30, "email", "", "", "", 0, "default", "EUR", 1, "[]", "u1"]),
       });
       expect(result).toMatchObject({
         language: "es",
@@ -169,20 +173,7 @@ describe("settings", () => {
     });
   });
 
-  describe("markWhatsAppVerified", () => {
-    it("updates whatsapp_phone and whatsapp_verified", async () => {
-      mockExecute.mockResolvedValue({ rows: [] });
-
-      await settings.markWhatsAppVerified("u1", "+1234567890");
-
-      expect(mockExecute).toHaveBeenCalledWith({
-        sql: "UPDATE user_settings SET whatsapp_phone = ?, whatsapp_verified = 1 WHERE user_id = ?",
-        args: ["+1234567890", "u1"],
-      });
-    });
-  });
-
-  describe("getWhatsAppQuota", () => {
+  describe("getTelegramQuota", () => {
     it("returns allowed=true when under all limits", async () => {
       const now = new Date().toISOString().slice(0, 10);
       mockExecute
@@ -197,7 +188,7 @@ describe("settings", () => {
         .mockResolvedValueOnce({ rows: [{ value: "100" }] })
         .mockResolvedValueOnce({ rows: [{ value: `${now.slice(0, 7)}-01` }] });
 
-      const result = await settings.getWhatsAppQuota("u1");
+      const result = await settings.getTelegramQuota("u1");
 
       expect(result.allowed).toBe(true);
       expect(result.reason).toBeUndefined();
@@ -222,7 +213,7 @@ describe("settings", () => {
         .mockResolvedValueOnce({ rows: [{ value: "0" }] })
         .mockResolvedValueOnce({ rows: [{ value: now }] });
 
-      const result = await settings.getWhatsAppQuota("u1");
+      const result = await settings.getTelegramQuota("u1");
 
       expect(result.allowed).toBe(false);
       expect(result.reason).toBe("daily_limit");
@@ -243,7 +234,7 @@ describe("settings", () => {
         .mockResolvedValueOnce({ rows: [{ value: "0" }] })
         .mockResolvedValueOnce({ rows: [{ value: `${now.slice(0, 7)}-01` }] });
 
-      const result = await settings.getWhatsAppQuota("u1");
+      const result = await settings.getTelegramQuota("u1");
 
       expect(result.allowed).toBe(false);
       expect(result.reason).toBe("monthly_limit");
@@ -264,7 +255,7 @@ describe("settings", () => {
         .mockResolvedValueOnce({ rows: [{ value: "3000" }] })
         .mockResolvedValueOnce({ rows: [{ value: `${now.slice(0, 7)}-01` }] });
 
-      const result = await settings.getWhatsAppQuota("u1");
+      const result = await settings.getTelegramQuota("u1");
 
       expect(result.allowed).toBe(false);
       expect(result.reason).toBe("global_limit");
@@ -272,11 +263,11 @@ describe("settings", () => {
     });
   });
 
-  describe("incrementWhatsAppCounter", () => {
+  describe("incrementTelegramCounter", () => {
     it("returns early when no user row found", async () => {
       mockExecute.mockResolvedValueOnce({ rows: [] });
 
-      await settings.incrementWhatsAppCounter("u1");
+      await settings.incrementTelegramCounter("u1");
 
       expect(mockExecute).toHaveBeenCalledTimes(1);
       expect(mockExecute).toHaveBeenCalledWith({
@@ -300,7 +291,7 @@ describe("settings", () => {
         .mockResolvedValueOnce({ rows: [{ value: monthStart }] })
         .mockResolvedValueOnce({ rows: [] });
 
-      await settings.incrementWhatsAppCounter("u1");
+      await settings.incrementTelegramCounter("u1");
 
       expect(mockExecute).toHaveBeenCalledTimes(4);
       expect(mockExecute).toHaveBeenNthCalledWith(2, {
@@ -330,7 +321,7 @@ describe("settings", () => {
         .mockResolvedValueOnce({ rows: [] })
         .mockResolvedValueOnce({ rows: [] });
 
-      await settings.incrementWhatsAppCounter("u1");
+      await settings.incrementTelegramCounter("u1");
 
       expect(mockExecute).toHaveBeenCalledTimes(5);
       expect(mockExecute).toHaveBeenNthCalledWith(4, {
@@ -382,7 +373,7 @@ describe("settings", () => {
     it("returns true when platform setting is 'true'", async () => {
       mockExecute.mockResolvedValue({ rows: [{ value: "true" }] });
 
-      const result = await settings.isFeatureEnabled("whatsapp_enabled");
+      const result = await settings.isFeatureEnabled("telegram_enabled");
 
       expect(result).toBe(true);
     });
@@ -390,7 +381,7 @@ describe("settings", () => {
     it("returns false when platform setting is 'false'", async () => {
       mockExecute.mockResolvedValue({ rows: [{ value: "false" }] });
 
-      const result = await settings.isFeatureEnabled("whatsapp_enabled");
+      const result = await settings.isFeatureEnabled("telegram_enabled");
 
       expect(result).toBe(false);
     });
@@ -398,7 +389,7 @@ describe("settings", () => {
     it("returns DEFAULT_ENABLED_FLAGS default when no setting", async () => {
       mockExecute.mockResolvedValue({ rows: [] });
 
-      const resultEnabled = await settings.isFeatureEnabled("whatsapp_enabled");
+      const resultEnabled = await settings.isFeatureEnabled("telegram_enabled");
       const resultDisabled = await settings.isFeatureEnabled("alerts_enabled");
 
       expect(resultEnabled).toBe(true);
