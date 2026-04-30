@@ -3,7 +3,7 @@ import { formatChatCardNumber, type AllocationCardData } from "./types";
 export default function AllocationCard({ data }: { data: AllocationCardData }) {
   const showValues = data.privacy === "full";
   return (
-    <div className="rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 min-w-[200px] max-w-[260px]">
+    <div className="rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 p-3 min-w-[200px] max-w-[260px]">
       <div className="text-xs font-semibold mb-2">Portfolio Allocation</div>
       {showValues && data.totalValue != null && (
         <div className="text-lg font-bold mb-2">

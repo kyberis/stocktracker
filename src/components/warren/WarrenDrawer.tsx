@@ -286,24 +286,26 @@ export default function WarrenDrawer({ isOpen, onClose }: Props) {
       <aside
         className={`fixed top-0 right-0 z-[101] w-[460px] max-w-[calc(100vw-1rem)] h-full flex flex-col shadow-2xl transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
           isOpen ? "translate-x-0" : "translate-x-full"
-        } bg-gradient-to-b from-[#15110e] to-[#0e0b09] text-amber-50 border-l border-amber-500/15`}
+        } bg-white dark:bg-[#151e2f] text-gray-900 dark:text-slate-100 border-l border-gray-200 dark:border-amber-500/15`}
         role="dialog"
         aria-label="Warren"
         aria-hidden={!isOpen}
       >
         {/* Header */}
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-amber-500/10 bg-gradient-to-r from-amber-500/[0.05] to-transparent shrink-0">
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200 dark:border-amber-500/10 bg-gradient-to-r from-amber-500/[0.05] to-transparent shrink-0">
           <WarrenAvatar size={42} thinking={streaming} />
           <div className="flex-1 min-w-0">
-            <div className="font-bold text-[16px] leading-tight tracking-tight">{t("warrenName")}</div>
-            <div className="text-[11px] text-amber-300/60 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            <div className="font-bold text-[16px] leading-tight tracking-tight text-amber-700 dark:text-amber-200">
+              {t("warrenName")}
+            </div>
+            <div className="text-[11px] text-gray-500 dark:text-amber-300/60 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
               {t("warrenSubtitle")}
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-lg border border-amber-500/15 bg-white/[0.04] flex items-center justify-center text-amber-200/60 hover:text-amber-200 hover:border-amber-400/40 transition-colors"
+            className="w-8 h-8 rounded-lg border border-gray-200 dark:border-amber-500/15 bg-gray-50 dark:bg-white/[0.04] flex items-center justify-center text-gray-500 dark:text-amber-200/60 hover:text-amber-700 dark:hover:text-amber-200 hover:border-amber-400/50 transition-colors"
             aria-label={t("warrenClose")}
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -312,8 +314,8 @@ export default function WarrenDrawer({ isOpen, onClose }: Props) {
           </button>
         </div>
 
-        <div className="flex items-center gap-1.5 px-4 py-2 text-[11px] text-amber-300/60 border-b border-amber-500/[0.08] shrink-0">
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+        <div className="flex items-center gap-1.5 px-4 py-2 text-[11px] text-gray-500 dark:text-amber-300/60 border-b border-gray-100 dark:border-amber-500/[0.08] shrink-0">
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
           {contextLine}
         </div>
 
@@ -321,7 +323,7 @@ export default function WarrenDrawer({ isOpen, onClose }: Props) {
           {bubbles.length === 0 && (
             <div className="flex gap-2 items-start">
               <WarrenAvatar size={28} />
-              <div className="text-[13px] leading-relaxed px-3.5 py-2.5 rounded-2xl rounded-bl-sm bg-white/[0.04] border border-amber-500/10 text-amber-50 max-w-[82%]">
+              <div className="text-[13px] leading-relaxed px-3.5 py-2.5 rounded-2xl rounded-bl-sm bg-amber-500/[0.06] border border-amber-500/15 text-gray-800 dark:text-amber-50 max-w-[82%]">
                 {t("warrenGreeting")}
               </div>
             </div>
@@ -339,8 +341,11 @@ export default function WarrenDrawer({ isOpen, onClose }: Props) {
             }
             if (b.kind === "tool-step") {
               return (
-                <div key={b.id} className="flex items-center gap-2 pl-9 text-[12px] italic text-amber-300/60">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                <div
+                  key={b.id}
+                  className="flex items-center gap-2 pl-9 text-[12px] italic text-gray-500 dark:text-amber-300/60"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
                   {b.label}
                 </div>
               );
@@ -358,18 +363,18 @@ export default function WarrenDrawer({ isOpen, onClose }: Props) {
             return (
               <div key={b.id} className="flex gap-2 items-start">
                 <WarrenAvatar size={28} />
-                <div className="text-[13px] leading-relaxed px-3.5 py-2.5 rounded-2xl rounded-bl-sm bg-white/[0.04] border border-amber-500/10 text-amber-50 max-w-[82%]">
+                <div className="text-[13px] leading-relaxed px-3.5 py-2.5 rounded-2xl rounded-bl-sm bg-amber-500/[0.06] border border-amber-500/15 text-gray-800 dark:text-amber-50 max-w-[82%]">
                   {b.content ? (
                     <AiMarkdown text={b.content} compact />
                   ) : streaming ? (
                     <span className="inline-flex gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-bounce" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-bounce" />
                       <span
-                        className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-bounce"
+                        className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-bounce"
                         style={{ animationDelay: "0.15s" }}
                       />
                       <span
-                        className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-bounce"
+                        className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-bounce"
                         style={{ animationDelay: "0.3s" }}
                       />
                     </span>
@@ -387,7 +392,7 @@ export default function WarrenDrawer({ isOpen, onClose }: Props) {
               <button
                 key={q}
                 onClick={() => sendMessage(q)}
-                className="text-xs font-medium text-amber-200 bg-amber-500/[0.08] border border-amber-500/20 rounded-full px-3 py-1.5 hover:bg-amber-500/[0.16] hover:border-amber-400/50 transition-colors"
+                className="text-xs font-medium text-amber-700 dark:text-amber-200 bg-amber-500/[0.08] border border-amber-500/25 rounded-full px-3 py-1.5 hover:bg-amber-500/[0.16] hover:border-amber-500/45 transition-colors"
               >
                 {q}
               </button>
@@ -395,8 +400,8 @@ export default function WarrenDrawer({ isOpen, onClose }: Props) {
           </div>
         )}
 
-        <div className="px-4 pt-3 pb-4 border-t border-amber-500/10 bg-amber-500/[0.02] shrink-0">
-          <div className="flex gap-2 items-end bg-white/[0.04] border border-amber-500/15 rounded-2xl px-3 py-2 focus-within:border-amber-400/40">
+        <div className="px-4 pt-3 pb-4 border-t border-gray-200 dark:border-amber-500/10 bg-amber-500/[0.02] shrink-0">
+          <div className="flex gap-2 items-end bg-gray-50 dark:bg-white/[0.04] border border-gray-200 dark:border-amber-500/15 rounded-2xl px-3 py-2 focus-within:border-amber-400/50">
             <textarea
               ref={inputRef}
               value={input}
@@ -409,7 +414,7 @@ export default function WarrenDrawer({ isOpen, onClose }: Props) {
                 }
               }}
               placeholder={t("warrenPlaceholder")}
-              className="flex-1 text-[13.5px] bg-transparent border-0 outline-none text-amber-50 placeholder:text-amber-200/30 resize-none max-h-[110px]"
+              className="flex-1 text-[13.5px] bg-transparent border-0 outline-none text-gray-900 dark:text-amber-50 placeholder:text-gray-400 dark:placeholder:text-amber-200/30 resize-none max-h-[110px]"
             />
             <button
               type="button"
@@ -423,7 +428,9 @@ export default function WarrenDrawer({ isOpen, onClose }: Props) {
               </svg>
             </button>
           </div>
-          <p className="text-[10.5px] text-center text-amber-200/50 mt-2 px-2">{t("warrenDisclaimer")}</p>
+          <p className="text-[10.5px] text-center text-gray-400 dark:text-amber-200/50 mt-2 px-2">
+            {t("warrenDisclaimer")}
+          </p>
         </div>
       </aside>
     </>

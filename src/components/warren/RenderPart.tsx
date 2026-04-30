@@ -33,7 +33,7 @@ function StockSnapshot({
 }) {
   const positive = (data.changePct ?? 0) >= 0;
   return (
-    <div className="rounded-lg border border-amber-500/30 bg-gradient-to-br from-amber-500/[0.06] to-transparent p-3 min-w-[220px] max-w-[280px]">
+    <div className="rounded-lg border border-amber-500/30 bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 p-3 min-w-[220px] max-w-[280px]">
       <div className="flex items-baseline justify-between gap-2 mb-1">
         <div className="font-semibold text-sm text-amber-700 dark:text-amber-200">{data.ticker}</div>
         {data.changePct != null && (

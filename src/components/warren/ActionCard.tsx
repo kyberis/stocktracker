@@ -69,10 +69,10 @@ export default function ActionCard({ proposal, onConfirmed }: Props) {
 
   return (
     <div
-      className={`ml-9 rounded-2xl border p-3.5 max-w-[420px] ${
+      className={`ml-9 rounded-2xl border p-3.5 max-w-[420px] text-gray-900 dark:text-slate-100 ${
         destructive
-          ? "border-red-400/45 bg-gradient-to-br from-red-500/[0.06] to-transparent"
-          : "border-amber-400/40 bg-gradient-to-br from-amber-500/[0.07] to-transparent"
+          ? "border-red-400/45 bg-red-50 dark:bg-red-950/30"
+          : "border-amber-400/40 bg-white dark:bg-slate-800/50"
       }`}
     >
       <div

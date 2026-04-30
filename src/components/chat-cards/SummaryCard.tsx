@@ -4,7 +4,7 @@ export default function SummaryCard({ data }: { data: SummaryCardData }) {
   const showValues = data.privacy === "full";
   const showPcts = data.privacy !== "count_only";
   return (
-    <div className="rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 min-w-[200px] max-w-[260px]">
+    <div className="rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 p-3 min-w-[200px] max-w-[260px]">
       <div className="text-xs font-semibold mb-1">Portfolio Summary</div>
       {showValues && data.totalValue != null && (
         <div className="text-lg font-bold">
