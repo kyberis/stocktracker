@@ -88,6 +88,7 @@ function ExpandedLayout({ chartBlock, holdings, cashEntries, allCashEntries, onA
             <GoalCelebration holdings={holdings} cashEntries={cashEntries} />
           </div>
           <div className="flex flex-col gap-3">
+            <WarrenTrigger onOpen={() => setAiDrawerOpen(true)} />
             <OnboardingChecklist onOpenAddStock={onAddStock} />
             <DailyDigestsTeaserCard />
             <WeeklyDigestCard position="promoted" />
@@ -100,7 +101,6 @@ function ExpandedLayout({ chartBlock, holdings, cashEntries, allCashEntries, onA
             <CompactEarningsCard onNavigateToEvents={onNavigateToEvents} />
             <PortfolioGrowthPeriods holdings={holdings} />
             <PerformanceMetrics holdings={holdings} cashEntries={cashEntries} />
-            <WarrenTrigger onOpen={() => setAiDrawerOpen(true)} />
             <WeeklyDigestCard position="default" />
           </div>
         </div>
@@ -136,6 +136,7 @@ function CollapsedLayout({ chartBlock, holdings, cashEntries, allCashEntries, on
           <GoalCelebration holdings={holdings} cashEntries={cashEntries} />
         </div>
         <div className="flex flex-col gap-3">
+          <WarrenTrigger onOpen={() => setAiDrawerOpen(true)} />
           <OnboardingChecklist onOpenAddStock={onAddStock} />
           <DailyDigestsTeaserCard />
           <WeeklyDigestCard position="promoted" />
@@ -149,7 +150,6 @@ function CollapsedLayout({ chartBlock, holdings, cashEntries, allCashEntries, on
           <CompactEarningsCard onNavigateToEvents={onNavigateToEvents} />
           <PortfolioGrowthPeriods holdings={holdings} />
           <PerformanceMetrics holdings={holdings} cashEntries={cashEntries} />
-          <WarrenTrigger onOpen={() => setAiDrawerOpen(true)} />
           <WeeklyDigestCard position="default" />
         </div>
       </div>
