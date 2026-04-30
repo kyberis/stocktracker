@@ -66,6 +66,10 @@ Source: [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts)
 | `social_post_images` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `social_posts` | [`src/lib/db/feed.ts`](../../src/lib/db/feed.ts) |
 | `support_chat_conversations` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
+| `telegram_chats` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
+| `telegram_link_tokens` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
+| `telegram_messages` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
+| `telegram_proposals` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |
 | `transaction_portfolio_map` | [`src/lib/db/admin-raw-export.ts`](../../src/lib/db/admin-raw-export.ts) |
 | `transactions` | [`src/lib/db/admin-raw-export.ts`](../../src/lib/db/admin-raw-export.ts) |
 | `unsubscribe_tokens` | [`src/lib/db/migrations.ts`](../../src/lib/db/migrations.ts) |

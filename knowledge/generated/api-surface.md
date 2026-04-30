@@ -4,7 +4,7 @@
 > Do not edit by hand.
 
 
-225 routes.
+229 routes.
 
 | Route | Methods | Source |
 |-------|---------|--------|
@@ -162,6 +162,7 @@
 | `/api/holdings` | GET, POST, PUT, DELETE | [`src/app/api/holdings/route.ts`](../../src/app/api/holdings/route.ts) |
 | `/api/holdings/autofill-classification` | POST | [`src/app/api/holdings/autofill-classification/route.ts`](../../src/app/api/holdings/autofill-classification/route.ts) |
 | `/api/import-portfolio` | POST | [`src/app/api/import-portfolio/route.ts`](../../src/app/api/import-portfolio/route.ts) |
+| `/api/integrations/telegram/link` | GET, POST, DELETE | [`src/app/api/integrations/telegram/link/route.ts`](../../src/app/api/integrations/telegram/link/route.ts) |
 | `/api/intelligence` | GET | [`src/app/api/intelligence/route.ts`](../../src/app/api/intelligence/route.ts) |
 | `/api/market-insights` | GET | [`src/app/api/market-insights/route.ts`](../../src/app/api/market-insights/route.ts) |
 | `/api/membership-grant/activate` | POST | [`src/app/api/membership-grant/activate/route.ts`](../../src/app/api/membership-grant/activate/route.ts) |
@@ -174,8 +175,7 @@
 | `/api/notifications/preferences` | GET, PUT | [`src/app/api/notifications/preferences/route.ts`](../../src/app/api/notifications/preferences/route.ts) |
 | `/api/notifications/push/subscribe` | POST, DELETE | [`src/app/api/notifications/push/subscribe/route.ts`](../../src/app/api/notifications/push/subscribe/route.ts) |
 | `/api/notifications/push/vapid-key` | GET | [`src/app/api/notifications/push/vapid-key/route.ts`](../../src/app/api/notifications/push/vapid-key/route.ts) |
-| `/api/notifications/whatsapp/confirm` | POST | [`src/app/api/notifications/whatsapp/confirm/route.ts`](../../src/app/api/notifications/whatsapp/confirm/route.ts) |
-| `/api/notifications/whatsapp/verify` | POST | [`src/app/api/notifications/whatsapp/verify/route.ts`](../../src/app/api/notifications/whatsapp/verify/route.ts) |
+| `/api/notifications/telegram/link` | POST | [`src/app/api/notifications/telegram/link/route.ts`](../../src/app/api/notifications/telegram/link/route.ts) |
 | `/api/overview` | GET | [`src/app/api/overview/route.ts`](../../src/app/api/overview/route.ts) |
 | `/api/p/[token]` | GET | [`src/app/api/p/[token]/route.ts`](../../src/app/api/p/[token]/route.ts) |
 | `/api/portfolio-news` | GET | [`src/app/api/portfolio-news/route.ts`](../../src/app/api/portfolio-news/route.ts) |
@@ -228,8 +228,12 @@
 | `/api/transactions/import-broker` | POST | [`src/app/api/transactions/import-broker/route.ts`](../../src/app/api/transactions/import-broker/route.ts) |
 | `/api/trial/activate` | POST | [`src/app/api/trial/activate/route.ts`](../../src/app/api/trial/activate/route.ts) |
 | `/api/user-settings` | GET, PUT | [`src/app/api/user-settings/route.ts`](../../src/app/api/user-settings/route.ts) |
+| `/api/warren/chat` | POST | [`src/app/api/warren/chat/route.ts`](../../src/app/api/warren/chat/route.ts) |
+| `/api/warren/confirm` | POST | [`src/app/api/warren/confirm/route.ts`](../../src/app/api/warren/confirm/route.ts) |
 | `/api/watchlist` | GET, POST, DELETE | [`src/app/api/watchlist/route.ts`](../../src/app/api/watchlist/route.ts) |
 | `/api/webhooks/linear` | POST | [`src/app/api/webhooks/linear/route.ts`](../../src/app/api/webhooks/linear/route.ts) |
 | `/api/webhooks/resend` | POST | [`src/app/api/webhooks/resend/route.ts`](../../src/app/api/webhooks/resend/route.ts) |
+| `/api/webhooks/telegram` | GET, POST | [`src/app/api/webhooks/telegram/route.ts`](../../src/app/api/webhooks/telegram/route.ts) |
+| `/api/webhooks/telegram/[secret]` | POST | [`src/app/api/webhooks/telegram/[secret]/route.ts`](../../src/app/api/webhooks/telegram/[secret]/route.ts) |
 | `/api/weekly-digest` | GET | [`src/app/api/weekly-digest/route.ts`](../../src/app/api/weekly-digest/route.ts) |
 | `/api/widget-token` | GET, POST, DELETE | [`src/app/api/widget-token/route.ts`](../../src/app/api/widget-token/route.ts) |
