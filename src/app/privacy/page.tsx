@@ -375,6 +375,11 @@ export default function PrivacyPolicyPage() {
                     <td className="py-3">Phone number (E.164 format) for WhatsApp message delivery and verification; messages contain stock ticker and price data only</td>
                   </tr>
                   <tr>
+                    <td className="py-3 pr-6">Telegram Messenger Inc.</td>
+                    <td className="py-3 pr-6">Optional Warren chat over Telegram</td>
+                    <td className="py-3">If you choose to connect your Telegram account, we exchange your Telegram chat ID and the contents of messages you send to our bot with Telegram&apos;s servers; the same messages are then sent to OpenAI to generate Warren&apos;s reply. You can disconnect at any time from your profile.</td>
+                  </tr>
+                  <tr>
                     <td className="py-3 pr-6">Google Analytics / Google Ads tags (Google LLC)</td>
                     <td className="py-3 pr-6">Consent-based analytics and conversion attribution</td>
                     <td className="py-3">Pseudonymous cookie identifiers, page events, and conversion events (signup/checkout milestones) only after consent</td>
@@ -608,7 +613,7 @@ export default function PrivacyPolicyPage() {
             <h2>10. International Transfers</h2>
             <p>
               Your data may be processed outside the EEA by our third-party
-              service providers (Vercel, OpenAI, Stripe, Cloudflare, Google Analytics, Google AdSense, Finnhub, Interactive Brokers, SnapTrade, Resend, Twilio, Linear). Where
+              service providers (Vercel, OpenAI, Stripe, Cloudflare, Google Analytics, Google AdSense, Finnhub, Interactive Brokers, SnapTrade, Resend, Twilio, Telegram, Linear). Where
               this occurs, we ensure appropriate safeguards are in place,
               including Standard Contractual Clauses (SCCs) approved by the
               European Commission.

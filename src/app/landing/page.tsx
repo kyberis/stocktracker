@@ -101,6 +101,19 @@ function getHeroFeatures(t: T) {
         t("landingFeatureImportPoint4"),
       ],
     },
+    {
+      tag: "Telegram",
+      title: "Warren on Telegram",
+      description:
+        "Connect once from your profile and chat with Warren on Telegram — same AI portfolio companion, same write-with-confirmation safety, on any phone or desktop. Ask in plain language, get charts, news, dividends, allocation, performance, and propose adds, removes, cash entries or alerts with a single Confirm tap.",
+      screenshot: "/screenshots/warren-telegram.svg",
+      points: [
+        "One-time deep-link from /profile — no password sharing",
+        "Read holdings, growth, dividends, news, alerts and watchlist",
+        "Add holdings, cash or alerts — every write requires Confirm",
+        "Replies in your language (35 supported); commands /help, /portfolios, /news, /alerts",
+      ],
+    },
   ];
 }
 

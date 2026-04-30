@@ -136,6 +136,56 @@ export async function requireFeatureQuota(
   return { session: null, error: res, quota: result };
 }
 
+/**
+ * Same semantics as `requireFeatureQuota`, but keyed by `userId` instead of an
+ * incoming Next.js request. Use from non-HTTP entrypoints (Telegram webhook
+ * handler, cron jobs, etc.) where there is no `NextRequest` to read a session
+ * cookie from.
+ *
+ * Returns:
+ *   - `{ allowed: true }` when the user is admin or under the quota.
+ *   - `{ allowed: false, reason: "user_not_found" | "quota_exceeded", ... }`
+ *     otherwise; callers must surface a friendly error to the user.
+ */
+export async function requireFeatureQuotaByUserId(
+  userId: string,
+  feature: FeatureQuotaKey,
+): Promise<
+  | {
+      allowed: true;
+      quota: Awaited<ReturnType<typeof checkAndIncrementFeatureQuota>>;
+    }
+  | {
+      allowed: false;
+      reason: "user_not_found" | "quota_exceeded";
+      quota?: Awaited<ReturnType<typeof checkAndIncrementFeatureQuota>>;
+    }
+> {
+  const user = await findUserById(userId);
+  if (!user) return { allowed: false, reason: "user_not_found" };
+
+  if (user.role === "admin") {
+    // Admins bypass — return a synthetic always-allowed result.
+    return {
+      allowed: true,
+      quota: {
+        allowed: true,
+        used: 0,
+        limit: Infinity,
+        resetAt: "",
+      } as Awaited<ReturnType<typeof checkAndIncrementFeatureQuota>>,
+    };
+  }
+
+  const plan = effectivePlan(user.plan, user.plan_expires_at);
+  const result = await checkAndIncrementFeatureQuota(userId, feature, plan);
+  if (result.allowed) return { allowed: true, quota: result };
+
+  paywallHitsTotal.inc({ feature, reason: "quota_exceeded" });
+  trackEvent(userId, "paywall_shown", { feature, reason: "quota_exceeded" });
+  return { allowed: false, reason: "quota_exceeded", quota: result };
+}
+
 export async function requireRateLimit(
   req: NextRequest,
   provider: RateLimitProvider,

@@ -17,6 +17,30 @@ export interface ReleaseEntry {
 
 export const releaseNotes: ReleaseEntry[] = [
   {
+    version: "2.2.0",
+    date: "2026-04-30",
+    title: "Warren on Telegram",
+    titleTranslations: {
+      es: "Warren en Telegram",
+    },
+    changes: [
+      {
+        type: "feature",
+        text: "Warren is now available on Telegram. Connect your account from Profile, then chat with Warren from anywhere — same capabilities as the web drawer: read your portfolio, growth, dividends, news, alerts and watchlist, and ask Warren to add holdings, cash, or alerts (every write shows a Confirm/Cancel card before anything is saved).",
+        translations: {
+          es: "Warren ya est\u00e1 disponible en Telegram. Conecta tu cuenta desde Perfil y chatea con Warren desde donde quieras \u2014 con las mismas capacidades que el panel web: leer tu cartera, crecimiento, dividendos, noticias, alertas y watchlist, y pedirle que a\u00f1ada posiciones, cash o alertas (cada escritura muestra una tarjeta de Confirmar/Cancelar antes de guardarse).",
+        },
+      },
+      {
+        type: "improvement",
+        text: "Telegram replies share Warren's quota (ai_consult), so free users still get 15/month and Pro users 500/month across web and Telegram combined.",
+        translations: {
+          es: "Las respuestas en Telegram comparten la cuota de Warren (ai_consult): los usuarios Free siguen con 15/mes y los Pro con 500/mes, combinando web y Telegram.",
+        },
+      },
+    ],
+  },
+  {
     version: "2.1.2",
     date: "2026-04-30",
     title: "Leaf firmware tooling and display diagnostics",

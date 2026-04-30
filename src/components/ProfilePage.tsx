@@ -13,6 +13,7 @@ import TierIcon from "@/components/TierIcon";
 import TierFeatureBadge from "@/components/TierFeatureBadge";
 import { Smartphone, Monitor, Copy, Check, Trash2, User, Users, CreditCard, Bell, FolderOpen, Gift, Share2, Eye, EyeOff, Globe } from "lucide-react";
 import NotificationChannels from "@/components/NotificationChannels";
+import TelegramConnectCard from "@/components/profile/TelegramConnectCard";
 import { COUNTRIES } from "@/lib/countries";
 
 const PROFILE_TABS = ["account", "subscription", "notifications", "portfolios", "referrals", "social", "devices"] as const;
@@ -1676,6 +1677,9 @@ export default function ProfilePage() {
           {googleMsg && <p className="text-xs text-emerald-600 dark:text-emerald-400" aria-live="polite">{googleMsg}</p>}
           {googleError && <p className="text-xs text-red-500 dark:text-red-400" role="alert">{googleError}</p>}
         </div>
+
+        {/* Warren on Telegram */}
+        <TelegramConnectCard />
 
         {/* Passkeys */}
         <div className="card p-6 space-y-4">

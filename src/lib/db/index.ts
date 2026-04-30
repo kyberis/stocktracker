@@ -626,3 +626,32 @@ export {
   getFeedFromItems,
   seedFeedItems,
 } from "./feed";
+
+export type {
+  TelegramLinkToken,
+  TelegramChatLink,
+  TelegramProposalStatus,
+  TelegramProposalRecord,
+  TelegramMessageRole,
+  TelegramMessageRow,
+} from "./telegram";
+export {
+  createLinkToken,
+  consumeLinkToken,
+  purgeExpiredLinkTokens,
+  linkChat,
+  unlinkChat,
+  unlinkChatByUser,
+  getChatLinkByChatId,
+  getChatLinkByUserId,
+  touchChatLastSeen,
+  setChatActivePortfolio,
+  setChatLanguage,
+  savePendingProposal,
+  getPendingProposal,
+  updateProposalStatus,
+  purgeExpiredProposals,
+  appendChatMessage,
+  loadChatMessages,
+  clearChatHistory,
+} from "./telegram";

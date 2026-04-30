@@ -3219,6 +3219,57 @@ Si crees que esto fue un error o tienes más preguntas, contáctanos en support@
       }
     },
   },
+  {
+    version: 110,
+    description: "Telegram bot integration: link tokens, chats, pending proposals, message history",
+    up: async (client: Client) => {
+      await client.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS telegram_link_tokens (
+          token TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          expires_at TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_telegram_link_tokens_user
+          ON telegram_link_tokens(user_id);
+
+        CREATE TABLE IF NOT EXISTS telegram_chats (
+          chat_id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          language_code TEXT NOT NULL DEFAULT '',
+          linked_at TEXT NOT NULL DEFAULT (datetime('now')),
+          last_seen_at TEXT NOT NULL DEFAULT (datetime('now')),
+          last_active_portfolio_id TEXT NOT NULL DEFAULT ''
+        );
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_telegram_chats_user
+          ON telegram_chats(user_id);
+
+        CREATE TABLE IF NOT EXISTS telegram_proposals (
+          id TEXT PRIMARY KEY,
+          chat_id TEXT NOT NULL,
+          user_id TEXT NOT NULL,
+          kind TEXT NOT NULL,
+          data_json TEXT NOT NULL,
+          summary TEXT NOT NULL DEFAULT '',
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          expires_at TEXT NOT NULL,
+          status TEXT NOT NULL DEFAULT 'pending'
+        );
+        CREATE INDEX IF NOT EXISTS idx_telegram_proposals_chat
+          ON telegram_proposals(chat_id);
+
+        CREATE TABLE IF NOT EXISTS telegram_messages (
+          id TEXT PRIMARY KEY,
+          chat_id TEXT NOT NULL,
+          role TEXT NOT NULL,
+          content TEXT NOT NULL,
+          created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_telegram_messages_chat_created
+          ON telegram_messages(chat_id, created_at);
+      `);
+    },
+  },
 ];
 
 export async function runMigrations(client: Client) {

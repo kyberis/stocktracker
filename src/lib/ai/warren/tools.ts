@@ -7,6 +7,7 @@ import {
   listHoldings as dbListHoldings,
   listCashEntries,
   listWatchlist as dbListWatchlist,
+  listPortfolios as dbListPortfolios,
 } from "@/lib/db";
 import { createProvider } from "@/lib/api-providers";
 import type { WarrenPart, WarrenProposal, StockSnapshotData } from "./types";
@@ -130,6 +131,23 @@ export function buildWarrenTools(ctx: WarrenToolContext) {
       execute: async () => {
         ctx.emitStep("Reading watchlist…");
         return dbListWatchlist(ctx.userId);
+      },
+    }),
+
+    listPortfolios: tool({
+      description:
+        "List all portfolios the user owns (id, name, base currency, default flag). Call this when you need to know which portfolio to act on, or when the user asks 'what portfolios do I have?'.",
+      inputSchema: z.object({}),
+      execute: async () => {
+        ctx.emitStep("Reading portfolios…");
+        const portfolios = await dbListPortfolios(ctx.userId);
+        return portfolios.map((p) => ({
+          id: p.id,
+          name: p.name,
+          currency: p.currency,
+          isDefault: p.isDefault,
+          isActive: p.id === ctx.activePortfolioId,
+        }));
       },
     }),
 

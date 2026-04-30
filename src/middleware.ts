@@ -88,6 +88,10 @@ export async function middleware(req: NextRequest) {
   if (pathname.startsWith("/api/social/posts/") && req.method === "GET") {
     return NextResponse.next();
   }
+  // Telegram webhook (dynamic secret segment) — auth is enforced inside the route.
+  if (pathname.startsWith("/api/webhooks/telegram/")) {
+    return NextResponse.next();
+  }
 
   const token = req.cookies.get("trefolio_session")?.value;
   const session = token ? await verifySessionToken(token) : null;
